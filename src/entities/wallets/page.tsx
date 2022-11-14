@@ -105,7 +105,7 @@ export function WalletPage(props: {}) {
     </ContrastTextButton>
     <ContrastTextButton className="w-[100px]">
       <span className="text-xs">
-        ETHBrno
+        V 0.1
       </span>
     </ContrastTextButton>
   </div>
@@ -161,7 +161,7 @@ export function WalletPage(props: {}) {
       </ContrastTextButton>
       <div className="w-[50px] flex justify-center">
         <div className="p-1">
-          <img className="icon-sm"
+          <img className="w-6 h-4"
             src="logo.svg" alt="logo" />
         </div>
       </div>

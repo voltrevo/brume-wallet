@@ -86,8 +86,6 @@ export function CircuitProvider(props: ChildrenProps) {
         <span className="text-3xl text-center text-colored">
           Brume Wallet
         </span>
-        <img className="icon-xl"
-          src="logo.svg" alt="logo" />
       </div>
       <div className="h-[150px]" />
       <div className="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
