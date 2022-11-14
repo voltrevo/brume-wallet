@@ -40,7 +40,7 @@ export function TorProvider(props: ChildrenProps) {
       <div className="h-2" />
       <div className="flex items-center gap-4">
         <span className="text-3xl text-center text-colored">
-          Lunar Wallet
+          Brume Wallet
         </span>
         <img className="icon-xl"
           src="logo.svg" alt="logo" />

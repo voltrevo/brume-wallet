@@ -1,13 +1,11 @@
 {
   "manifest_version": 2,
-  "name": "Lunar Wallet",
+  "name": "Brume Wallet",
   "description": "The private wallet",
   "version": "0.1",
   "browser_action": {
-    "default_title": "Lunar Wallet",
+    "default_title": "Brume Wallet",
     "default_popup": "index.html"
   },
-  "permissions": [
-    "https://meek.bamsoftware.com/*"
-  ]
+  "permissions": ["https://meek.bamsoftware.com/*"]
 }
