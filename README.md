@@ -1,4 +1,4 @@
-# 🌙 Welcome to Brume Wallet
+#  Welcome to Brume Wallet
 
 ## Summary
 
