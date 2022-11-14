@@ -30,7 +30,7 @@ Your IP is leaked with your wallet address. Both Metamask servers and third part
 
 You don't have to trust our wallet, the third parties just can't see your IP address, as they only receive the TOR's IP address.
 
-<img width="762" alt="Screenshot 2022-11-12 at 11 27 37" src="https://user-images.githubusercontent.com/117318058/201469966-191d2c65-c680-4d52-a9af-93203bf8c1b5.png">
+<img width="762" alt="Screenshot 2022-11-12 at 11 27 37" src="https://user-images.githubusercontent.com/111573119/201625137-293eec93-a6c9-43fd-8eda-56dea0c8e00e.png">
 
 ## 3. How to see that Metamask is leaking IP address?
 
@@ -82,4 +82,4 @@ After ETHBrno, we plan to further develop Brume Wallet by adding several feature
 
 Here is what Brume Wallet features would look like on Q1 2023:
 
-<img width="966" alt="Screenshot 2022-11-12 at 12 00 57" src="https://user-images.githubusercontent.com/117318058/201471000-ab4b3836-227d-46ff-99b8-887968624cfe.png">
+<img width="966" alt="Screenshot 2022-11-12 at 12 00 57" src="https://user-images.githubusercontent.com/111573119/201625406-58c1b481-ce27-47e0-a430-734d03b21fc6.png">
