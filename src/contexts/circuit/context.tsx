@@ -53,8 +53,7 @@ async function extendMiddle(circuit: Circuit) {
 
       console.log("middle", middle.id)
       await circuit._extend(middle)
-
-      break
+      return
     } catch (e: unknown) {
       console.warn(e)
     }
@@ -70,8 +69,7 @@ async function extendExit(circuit: Circuit) {
 
       console.log("exit", exit.id)
       await circuit._extend(exit)
-
-      break
+      return
     } catch (e: unknown) {
       console.warn(e)
     }
