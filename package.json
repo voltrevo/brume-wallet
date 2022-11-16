@@ -13,7 +13,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@hazae41/echalote": "^0.0.8",
+    "@hazae41/echalote": "^0.0.9",
     "@hazae41/xswr": "^1.1.7",
     "@heroicons/react": "^2.0.13",
     "ethers": "^5.7.2",

@@ -80,10 +80,16 @@ async function extendExit(circuit: Circuit) {
 async function createCircuit(tor: Tor) {
   if (!tor) return
 
-  const circuit = await tor.create()
-  await extendMiddle(circuit)
-  await extendExit(circuit)
-  return circuit
+  while (true)
+    try {
+      const circuit = await tor.create()
+      await extendMiddle(circuit)
+      await extendExit(circuit)
+      await circuit.fetch("http://google.com")
+      return circuit
+    } catch (e: unknown) {
+      console.warn(e)
+    }
 }
 
 export function CircuitProvider(props: ChildrenProps) {
