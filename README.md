@@ -72,7 +72,7 @@ Then click on `Save`.
 2. Enter a name for your wallet click on `Add`.
 3. Click on your wallet, copy your wallet address, fund your wallet with Goerli by clicking on the $ icon.
 4. Add a recipient, a value and send some Goerli to a lucky guy.
-5. Click on the TOR logo to analyse your transaction and see on the left side that the IP address is hidden (to analyse the IP, we added a proxy that give us the IP address received by the RPC/third parties, if you don't find the website with the TOR logo, here you go: https://ethbrno-logs.vercel.app/).
+5. Click on the TOR logo to analyse your transaction and see on the left side that the IP address is hidden (to analyse the IP, we added a proxy that give us the IP address received by the RPC/third parties, if you don't find the website with the TOR logo, here you go: https://brume-logs.vercel.app/).
 
 🎉🥳🍾 Congrats, you just used the first privacy oriented wallet on Ethereum.
 
