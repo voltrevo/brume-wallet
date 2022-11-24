@@ -46,7 +46,7 @@ Currency Symbol: ETH
 
 Then click on `Save`.
 
-2. Go there https://ethbrno-logs.vercel.app/ and you can see some Metamask requests on the right side with your IP address.
+2. Go there https://brume-logs.vercel.app/ and you can see some Metamask requests on the right side with your IP address.
 
 ## 4. How to use it?
 
