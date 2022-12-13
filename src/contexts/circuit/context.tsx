@@ -100,8 +100,6 @@ async function extendExit(circuit: Circuit) {
 }
 
 async function createCircuit(tor: Tor) {
-  if (!tor) return
-
   while (true)
     try {
       const circuit = await tor.create()
