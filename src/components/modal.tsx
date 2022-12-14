@@ -4,7 +4,8 @@ import { usePopper } from "react-popper"
 import { useBoolean } from "utils/react/boolean"
 import { useElement } from "utils/react/element"
 import { useLazyMemo } from "utils/react/memo"
-import { ChildrenProps, TargetProps } from "utils/react/props"
+import { ChildrenProps, CloseProps, TargetProps } from "utils/react/props"
+import { keep } from '../utils/react/events'
 
 
 export const ModalContext =
@@ -64,6 +65,22 @@ export function HoverPopper(props: TargetProps & ChildrenProps) {
       onMouseLeave={hovered.disable}
       ref={element.set}>
       <div className="p-2 bg-violet2 border border-default rounded-xl animate-slidedown text-xs">
+        {children}
+      </div>
+    </div>
+  </Modal>
+}
+
+export function DialogFull(props: CloseProps & ChildrenProps) {
+
+  const { close, children } = props
+
+  return <Modal>
+    <div className="p-4 fixed inset-0 bg-backdrop animate-opacity"
+      onMouseDown={close}
+      onClick={keep}>
+      <div className="p-md h-full flex flex-col rounded-xl bg-default animate-opacity-scale"
+        onMouseDown={keep}>
         {children}
       </div>
     </div>
