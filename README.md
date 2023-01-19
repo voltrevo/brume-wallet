@@ -1,5 +1,7 @@
 #  Welcome to Brume Wallet
 
+https://youtu.be/ztqiObogV-c
+
 ## Summary
 
 ##### [1. What is Brume Wallet?](#1-what-is-brume-wallet)
