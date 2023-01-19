@@ -1,33 +1,22 @@
-import { TlsOverHttp, Tor } from "@hazae41/echalote";
+import { BatchedFetchStream } from "@hazae41/cadenas";
+import { Tor } from "@hazae41/echalote";
+import fallbacks from "assets/fallbacks.json";
 import { createContext, useContext, useEffect, useState } from "react";
 import { ChildrenProps } from "utils/react/props";
 
-async function createTlsOverHttp() {
-  while (true)
-    try {
-      const headers = new Headers({ "x-session-id": crypto.randomUUID() })
-      const request = new Request("https://meek.bamsoftware.com/", { headers })
+async function createMeekStream(url: string) {
+  const headers = { "x-session-id": crypto.randomUUID() }
+  const request = new Request(url, { headers })
 
-      const tls = new TlsOverHttp(request)
-      await tls.open()
-      return tls
-    } catch (e: unknown) {
-      console.warn(e)
-    }
+  return new BatchedFetchStream(request, { highDelay: 100 })
 }
 
 async function createTor() {
-  const tls = await createTlsOverHttp()
+  const tcp = await createMeekStream("https://meek.bamsoftware.com/")
 
-  while (true)
-    try {
-      const tor = new Tor(tls)
-      await tor.init()
-      await tor.handshake()
-      return tor
-    } catch (e: unknown) {
-      console.warn(e)
-    }
+  const tor = new Tor(tcp, { fallbacks })
+  await tor.handshake()
+  return tor
 }
 
 export const TorContext =
