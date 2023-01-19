@@ -5,7 +5,8 @@
   "scripts": {
     "dev:website": "next dev",
     "dev:extension": "npm-watch build",
-    "build": "npm run build:next && npm run build:chrome && npm run build:safari",
+    "build:website": "next build",
+    "build:extension": "npm run build:next && npm run build:chrome && npm run build:safari",
     "build:next": "next build && next export && mv out/_next out/next && sed -i '' -e 's/\\/_next/\\.\\/next/g' out/**.html",
     "build:chrome": "rimraf chrome && cp -R out chrome && mv chrome/chrome/* chrome && rimraf chrome/chrome chrome/safari",
     "build:safari": "rimraf safari && cp -R out safari && mv safari/safari/* safari && rm -rf safari/chrome safari/safari",
