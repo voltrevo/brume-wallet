@@ -1,12 +1,11 @@
 import { ExternalDivisionLink } from "@/libs/next/anchor"
+import { Img } from "@/libs/next/image"
 import { useElement } from "@/libs/react/handles/element"
 import { CurrencyDollarIcon } from "@heroicons/react/24/outline"
 import { OppositeTextButtonRounded } from "./button"
 import { HoverPopper } from "./modal"
 
-
 export function ActionButton() {
-
   return <div className="flex justify-center gap-8">
     <FaucetLinkButton />
     <ExternalLinkButton />
@@ -26,7 +25,7 @@ function ExternalLinkButton() {
       <OppositeTextButtonRounded
         onMouseEnter={linkPopper.use}
         onMouseLeave={linkPopper.unset}>
-        <img className="icon-md text-colored"
+        <Img className="icon-md text-colored"
           src="/tor.svg" alt="tor" />
       </OppositeTextButtonRounded>
     </ExternalDivisionLink>
@@ -64,7 +63,7 @@ function GithubLinkButton() {
       <OppositeTextButtonRounded
         onMouseEnter={githubPopper.use}
         onMouseLeave={githubPopper.unset}>
-        <img className="icon-md text-colored"
+        <Img className="icon-md text-colored"
           src="/github.svg" alt="github" />
       </OppositeTextButtonRounded>
     </ExternalDivisionLink>

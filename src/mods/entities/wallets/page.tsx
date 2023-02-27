@@ -2,12 +2,13 @@ import { BigInts } from "@/libs/bigints/bigints";
 import { alertAsJson } from "@/libs/errors";
 import { Hex } from "@/libs/hex/hex";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
+import { Img } from "@/libs/next/image";
 import { useAsyncTry } from "@/libs/react/async";
 import { useInputChange } from "@/libs/react/events";
 import { useBoolean } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
 import { torrpcfetch } from "@/libs/tor/fetcher";
-import { ActionButton } from "@/mods/components/actionButton";
+import { ActionButton } from "@/mods/components/action";
 import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button";
 import { HoverPopper } from "@/mods/components/modal";
 import { useCircuit } from "@/mods/contexts/circuit/context";
@@ -161,7 +162,7 @@ export function WalletPage(props: {}) {
       </ContrastTextButton>
       <div className="w-[50px] flex justify-center">
         <div className="p-1">
-          <img className="w-6 h-4"
+          <Img className="w-6 h-4"
             src="logo.svg" alt="logo" />
         </div>
       </div>

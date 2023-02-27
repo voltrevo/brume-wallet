@@ -4,16 +4,18 @@ import { OppositeTextButton, OppositeTextButtonDeploy, TextButton } from "../but
 import { DialogFull } from "../modal";
 
 export function NetworkSelectionDialog(props: CloseProps) {
-  const blockchain = useBoolean()
-  const network = useBoolean()
-  const rpc = useBoolean()
+  const { close } = props
+
+  const blockchains = useBoolean()
+  const networks = useBoolean()
+  const endpoints = useBoolean()
 
   return <DialogFull close={close}>
-    <OppositeTextButtonDeploy deploy={blockchain}
-      onClick={blockchain.toggle}>
+    <OppositeTextButtonDeploy deploy={blockchains}
+      onClick={blockchains.toggle}>
       Blockchain
     </OppositeTextButtonDeploy>
-    {blockchain.current &&
+    {blockchains.current &&
       <div className="p-md w-full flex flex-col gap-4 overflow-scroll">
         <TextButton>
           Ethereum
@@ -24,14 +26,13 @@ export function NetworkSelectionDialog(props: CloseProps) {
         <TextButton>
           Bitcoin
         </TextButton>
-      </div>
-    }
+      </div>}
     <div className="h-4" />
-    <OppositeTextButtonDeploy deploy={network}
-      onClick={network.toggle}>
+    <OppositeTextButtonDeploy deploy={networks}
+      onClick={networks.toggle}>
       Network
     </OppositeTextButtonDeploy>
-    {network.current &&
+    {networks.current &&
       <div className="p-md w-full flex flex-col gap-4 overflow-scroll">
         <TextButton>
           Mainet
@@ -39,14 +40,13 @@ export function NetworkSelectionDialog(props: CloseProps) {
         <TextButton>
           Goerli
         </TextButton>
-      </div>
-    }
+      </div>}
     <div className="h-4" />
-    <OppositeTextButtonDeploy deploy={rpc}
-      onClick={rpc.toggle}>
+    <OppositeTextButtonDeploy deploy={endpoints}
+      onClick={endpoints.toggle}>
       RPC
     </OppositeTextButtonDeploy>
-    {rpc.current &&
+    {endpoints.current &&
       <div className="p-md w-full flex flex-col gap-4 overflow-scroll">
         <TextButton>
           Infura
@@ -54,8 +54,7 @@ export function NetworkSelectionDialog(props: CloseProps) {
         <TextButton>
           Ankr
         </TextButton>
-      </div>
-    }
+      </div>}
     <div className="h-4" />
     <div className="grow" />
     <OppositeTextButton onClick={close}>

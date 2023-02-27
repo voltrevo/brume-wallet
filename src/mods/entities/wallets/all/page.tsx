@@ -4,7 +4,7 @@ import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button
 import { ShieldCheckIcon } from "@heroicons/react/24/outline"
 import { useRouter } from "next/router"
 import { useCallback } from "react"
-import { NetworkSelectionDialog } from '../../../components/dialogs/selectNetwork'
+import { NetworkSelectionDialog } from '../../../components/dialogs/networks'
 import { Wallet, WalletProps } from "../data"
 import { WalletRow } from "../row"
 import { WalletCreatorDialog } from "./create"
