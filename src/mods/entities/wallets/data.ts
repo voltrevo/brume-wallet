@@ -1,9 +1,8 @@
-import { alertAsJson } from "@/libs/errors"
-import { RPC } from "@/libs/fetch/fetchers"
+import { RPC } from "@/libs/rpc/rpc"
 import { Pipes } from "@/libs/xswr/pipes"
 import { storage } from "@/libs/xswr/storage"
 import { Circuit } from "@hazae41/echalote"
-import { FetcherMore, getSingleSchema, NormalizerMore, useError, useFetch, useQuery } from "@hazae41/xswr"
+import { FetcherMore, getSingleSchema, NormalizerMore, useFetch, useQuery } from "@hazae41/xswr"
 
 export type Wallet =
   | WalletRef
@@ -62,7 +61,6 @@ export function useBalance(address: string, circuit: Circuit) {
   const endpoint = "https://rpc.ankr.com/eth_goerli"
   const query = useQuery(getBalanceSchema, [endpoint, address, circuit])
   useFetch(query)
-  useError(query, alertAsJson)
   return query
 }
 
@@ -83,7 +81,6 @@ export function useNonce(address: string, circuit: Circuit) {
   const endpoint = "https://rpc.ankr.com/eth_goerli"
   const query = useQuery(getNonceSchema, [endpoint, address, circuit])
   useFetch(query)
-  useError(query, alertAsJson)
   return query
 }
 
@@ -104,6 +101,5 @@ export function useGasPrice(circuit: Circuit) {
   const endpoint = "https://rpc.ankr.com/eth_goerli"
   const query = useQuery(getGasPriceSchema, [endpoint, circuit])
   useFetch(query)
-  useError(query, alertAsJson)
   return query
 }

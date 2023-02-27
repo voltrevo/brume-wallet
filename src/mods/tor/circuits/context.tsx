@@ -1,7 +1,7 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { Circuit } from "@hazae41/echalote";
 import { createContext, useContext, useEffect, useState } from "react";
-import { useTor } from "../tor/context";
+import { useTor } from "../context";
 
 export const CircuitContext =
   createContext<Circuit | undefined>(undefined)

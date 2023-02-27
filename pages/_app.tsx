@@ -1,5 +1,5 @@
-import { CircuitProvider } from "@/mods/contexts/circuit/context"
-import { TorProvider } from "@/mods/contexts/tor/context"
+import { CircuitProvider } from "@/mods/tor/circuits/context"
+import { TorProvider } from "@/mods/tor/context"
 import '@/styles/globals.css'
 import { XSWR } from "@hazae41/xswr"
 import type { AppProps } from 'next/app'

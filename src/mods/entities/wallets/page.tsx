@@ -1,6 +1,4 @@
 import { BigInts } from "@/libs/bigints/bigints";
-import { alertAsJson } from "@/libs/errors";
-import { RPC } from "@/libs/fetch/fetchers";
 import { Hex } from "@/libs/hex/hex";
 import { HoverPopper } from "@/libs/modals/popper";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
@@ -9,9 +7,10 @@ import { useAsyncTry } from "@/libs/react/async";
 import { useInputChange } from "@/libs/react/events";
 import { useBoolean } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
+import { RPC } from "@/libs/rpc/rpc";
 import { ActionButton } from "@/mods/components/action";
 import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button";
-import { useCircuit } from "@/mods/contexts/circuit/context";
+import { useCircuit } from "@/mods/tor/circuits/context";
 import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { getAddress, parseUnits, Wallet } from "ethers";
 import { useRouter } from "next/router";
@@ -90,7 +89,7 @@ export function WalletPage(props: {}) {
 
     balance.refetch()
     nonce.refetch()
-  }, [circuit, address, nonce.data, gasPrice.data, recipientInput, valueInput], alertAsJson)
+  }, [circuit, address, nonce.data, gasPrice.data, recipientInput, valueInput], console.error)
 
   const Header = <div className="flex p-md text-colored rounded-b-xl border-b border-violet6 bg-violet2 justify-between">
     <ContrastTextButton className="w-[100px]">
