@@ -1,5 +1,5 @@
 import { alertAsJson } from "@/libs/errors"
-import { RpcRequest, torrpcfetch } from "@/libs/tor/fetcher"
+import { RPC } from "@/libs/fetch/fetchers"
 import { Pipes } from "@/libs/xswr/pipes"
 import { storage } from "@/libs/xswr/storage"
 import { Circuit } from "@hazae41/echalote"
@@ -45,61 +45,64 @@ export function useWallet(address?: string) {
   return useQuery(getWalletSchema, [address])
 }
 
-export function getBalanceSchema(address: string, circuit: Circuit) {
-  async function fetcher(rpcreq: RpcRequest, more: FetcherMore) {
-    const result = await torrpcfetch<string>(rpcreq, more, circuit)
+export function getBalanceSchema(endpoint: string, address: string, circuit: Circuit) {
+  async function fetcher(req: RPC.RequestWithInfo, more: FetcherMore) {
+    const result = await RPC.fetch<string>(req, more, circuit.fetch.bind(circuit))
     return Pipes.data(d => d && BigInt(d))(result)
   }
 
-  return getSingleSchema<bigint, RpcRequest>({
-    endpoint: "https://rpc.ankr.com/eth_goerli",
+  return getSingleSchema<bigint, RPC.RequestWithInfo>({
+    endpoint,
     method: "eth_getBalance",
     params: [address, "pending"]
   }, fetcher)
 }
 
 export function useBalance(address: string, circuit: Circuit) {
-  const query = useQuery(getBalanceSchema, [address, circuit])
+  const endpoint = "https://rpc.ankr.com/eth_goerli"
+  const query = useQuery(getBalanceSchema, [endpoint, address, circuit])
   useFetch(query)
   useError(query, alertAsJson)
   return query
 }
 
-export function getNonceSchema(address: string, circuit: Circuit) {
-  async function fetcher(rpcreq: RpcRequest, more: FetcherMore) {
-    const result = await torrpcfetch<string>(rpcreq, more, circuit)
+export function getNonceSchema(endpoint: string, address: string, circuit: Circuit) {
+  async function fetcher(req: RPC.RequestWithInfo, more: FetcherMore) {
+    const result = await RPC.fetch<string>(req, more, circuit.fetch.bind(circuit))
     return Pipes.data(d => d && BigInt(d))(result)
   }
 
-  return getSingleSchema<bigint, RpcRequest>({
-    endpoint: "https://rpc.ankr.com/eth_goerli",
+  return getSingleSchema<bigint, RPC.RequestWithInfo>({
+    endpoint,
     method: "eth_getTransactionCount",
     params: [address, "pending"]
   }, fetcher)
 }
 
 export function useNonce(address: string, circuit: Circuit) {
-  const query = useQuery(getNonceSchema, [address, circuit])
+  const endpoint = "https://rpc.ankr.com/eth_goerli"
+  const query = useQuery(getNonceSchema, [endpoint, address, circuit])
   useFetch(query)
   useError(query, alertAsJson)
   return query
 }
 
-export function getGasPriceSchema(circuit: Circuit) {
-  async function fetcher(rpcreq: RpcRequest, more: FetcherMore) {
-    const result = await torrpcfetch<string>(rpcreq, more, circuit)
+export function getGasPriceSchema(endpoint: string, circuit: Circuit) {
+  async function fetcher(req: RPC.RequestWithInfo, more: FetcherMore) {
+    const result = await RPC.fetch<string>(req, more, circuit.fetch.bind(circuit))
     return Pipes.data(d => d && BigInt(d))(result)
   }
 
-  return getSingleSchema<bigint, RpcRequest>({
-    endpoint: "https://rpc.ankr.com/eth_goerli",
+  return getSingleSchema<bigint, RPC.RequestWithInfo>({
+    endpoint,
     method: "eth_gasPrice",
     params: []
   }, fetcher)
 }
 
 export function useGasPrice(circuit: Circuit) {
-  const query = useQuery(getGasPriceSchema, [circuit])
+  const endpoint = "https://rpc.ankr.com/eth_goerli"
+  const query = useQuery(getGasPriceSchema, [endpoint, circuit])
   useFetch(query)
   useError(query, alertAsJson)
   return query

@@ -10,7 +10,7 @@ export function Dialog(props: CloseProps & ChildrenProps) {
     <div className="p-4 fixed inset-0 bg-backdrop animate-opacity"
       onMouseDown={close}
       onClick={Events.keep}>
-      <div className="p-4 h-full flex flex-col rounded-xl bg-default animate-opacity-scale"
+      <div className="p-4 h-full w-full max-w-md m-auto flex flex-col rounded-xl bg-default animate-opacity-scale"
         onMouseDown={Events.keep}>
         {children}
       </div>

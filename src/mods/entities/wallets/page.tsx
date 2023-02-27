@@ -1,5 +1,6 @@
 import { BigInts } from "@/libs/bigints/bigints";
 import { alertAsJson } from "@/libs/errors";
+import { RPC } from "@/libs/fetch/fetchers";
 import { Hex } from "@/libs/hex/hex";
 import { HoverPopper } from "@/libs/modals/popper";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
@@ -8,7 +9,6 @@ import { useAsyncTry } from "@/libs/react/async";
 import { useInputChange } from "@/libs/react/events";
 import { useBoolean } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
-import { torrpcfetch } from "@/libs/tor/fetcher";
 import { ActionButton } from "@/mods/components/action";
 import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button";
 import { useCircuit } from "@/mods/contexts/circuit/context";
@@ -55,7 +55,7 @@ export function WalletPage(props: {}) {
 
     const ewallet = new Wallet(wallet.data.privateKey)
 
-    const gas = await torrpcfetch<string>({
+    const gas = await RPC.fetch<string>({
       endpoint: "https://rpc.ankr.com/eth_goerli",
       method: "eth_estimateGas",
       params: [{
@@ -66,11 +66,11 @@ export function WalletPage(props: {}) {
         nonce: Hex.from(nonce.data),
         gasPrice: Hex.from(gasPrice.data)
       }, "latest"]
-    }, {}, circuit)
+    }, {}, circuit.fetch.bind(circuit))
 
     if (gas.error) throw gas.error
 
-    const tx = await torrpcfetch<string>({
+    const tx = await RPC.fetch<string>({
       endpoint: "https://rpc.ankr.com/eth_goerli",
       method: "eth_sendRawTransaction",
       params: [await ewallet.signTransaction({
@@ -82,7 +82,7 @@ export function WalletPage(props: {}) {
         gasPrice: gasPrice.data,
         gasLimit: gas.data
       })]
-    }, {}, circuit)
+    }, {}, circuit.fetch.bind(circuit))
 
     if (tx.error !== undefined) throw tx.error
 

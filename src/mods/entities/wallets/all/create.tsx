@@ -46,6 +46,8 @@ export function WalletCreatorDialog(props: CloseProps) {
   const [wallet, setWallet] = useState<Wallet>()
 
   useEffect(() => {
+    if (!key) return
+
     importWallet(key).then(setWallet)
   }, [key])
 
