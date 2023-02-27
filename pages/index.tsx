@@ -1,5 +1,5 @@
-import { WalletsPage } from "mods/entities/wallets/all/page"
-import { WalletPage } from "mods/entities/wallets/page"
+import { WalletsPage } from "@/mods/entities/wallets/all/page"
+import { WalletPage } from "@/mods/entities/wallets/page"
 
 export default function Home() {
   if (location.hash === undefined)

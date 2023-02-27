@@ -1,6 +1,6 @@
+import { ExternalDivisionLink } from "@/libs/next/anchor"
+import { useElement } from "@/libs/react/handles/element"
 import { CurrencyDollarIcon } from "@heroicons/react/24/outline"
-import { ExternalDivisionLink } from "libs/next/anchor"
-import { useElement } from "libs/react/element"
 import { OppositeTextButtonRounded } from "./button"
 import { HoverPopper } from "./modal"
 

@@ -1,9 +1,9 @@
+import { alertAsJson } from "@/libs/errors"
+import { RpcRequest, torrpcfetch } from "@/libs/tor/fetcher"
+import { storage } from "@/libs/xswr/idb"
+import { dataPipe } from "@/libs/xswr/pipes"
 import { Circuit } from "@hazae41/echalote"
 import { FetcherMore, getSingleSchema, NormalizerMore, useError, useFetch, useQuery } from "@hazae41/xswr"
-import { alertAsJson } from "libs/errors"
-import { RpcRequest, torrpcfetch } from "libs/tor/fetcher"
-import { storage } from "libs/xswr/idb"
-import { dataPipe } from "libs/xswr/pipes"
 
 export type Wallet =
   | WalletRef

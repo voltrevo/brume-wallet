@@ -1,6 +1,6 @@
+import fallbacks from "@/assets/fallbacks.json";
+import { ChildrenProps } from "@/libs/react/props/children";
 import { createWebSocketSnowflakeStream, Tor } from "@hazae41/echalote";
-import fallbacks from "assets/fallbacks.json";
-import { ChildrenProps } from "libs/react/props";
 import { createContext, useContext, useEffect, useState } from "react";
 
 async function createTor() {

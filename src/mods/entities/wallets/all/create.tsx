@@ -1,9 +1,9 @@
+import { useInputChange, useTextAreaChange } from "@/libs/react/events";
+import { CloseProps } from "@/libs/react/props/close";
+import { dataPipe } from "@/libs/xswr/pipes";
+import { OppositeTextButton } from "@/mods/components/button";
+import { Dialog } from "@/mods/components/dialog";
 import { Wallet } from "ethers";
-import { useInputChange, useTextAreaChange } from "libs/react/events";
-import { CloseProps } from "libs/react/props";
-import { dataPipe } from "libs/xswr/pipes";
-import { OppositeTextButton } from "mods/components/button";
-import { Dialog } from "mods/components/dialog";
 import { useCallback, useEffect, useState } from "react";
 import { WalletData } from "../data";
 import { useWallets } from "./data";

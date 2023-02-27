@@ -3,7 +3,7 @@ import { Setter } from "./state"
 
 export type RefState<T> = [RefObject<T>, Setter<T>]
 
-export function useRefState<T>(init?: T): RefState<T | undefined>
+export function useRefState<T>(init?: T): RefState<T | undefined>;
 
 export function useRefState<T>(init: T): RefState<T> {
   const ref = useRef(init)

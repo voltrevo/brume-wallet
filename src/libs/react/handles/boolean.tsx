@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react"
-import { useObjectMemo } from "./memo"
+import { useObjectMemo } from "../memo"
 
 export interface BooleanHandle {
   current: boolean

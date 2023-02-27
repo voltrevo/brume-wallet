@@ -1,7 +1,7 @@
+import { useBoolean } from "@/libs/react/handles/boolean"
+import { OkProps } from "@/libs/react/props/promise"
+import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button"
 import { ShieldCheckIcon } from "@heroicons/react/24/outline"
-import { useBoolean } from "libs/react/boolean"
-import { OkProps } from "libs/react/props"
-import { ContrastTextButton, OppositeTextButton } from "mods/components/button"
 import { useRouter } from "next/router"
 import { useCallback } from "react"
 import { NetworkSelectionDialog } from '../../../components/dialogs/selectNetwork'

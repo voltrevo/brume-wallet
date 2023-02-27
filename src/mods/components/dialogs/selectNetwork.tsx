@@ -1,7 +1,7 @@
-import { useBoolean } from '../../../libs/react/boolean';
-import { CloseProps } from '../../../libs/react/props';
-import { OppositeTextButton, OppositeTextButtonDeploy, TextButton } from '../button';
-import { DialogFull } from '../modal';
+import { CloseProps } from "@/libs/react/props/close";
+import { useBoolean } from "../../../libs/react/handles/boolean";
+import { OppositeTextButton, OppositeTextButtonDeploy, TextButton } from "../button";
+import { DialogFull } from "../modal";
 
 export function NetworkSelectionDialog(props: CloseProps) {
   const blockchain = useBoolean()
@@ -26,7 +26,7 @@ export function NetworkSelectionDialog(props: CloseProps) {
         </TextButton>
       </div>
     }
-    <div className='h-4' />
+    <div className="h-4" />
     <OppositeTextButtonDeploy deploy={network}
       onClick={network.toggle}>
       Network
@@ -41,7 +41,7 @@ export function NetworkSelectionDialog(props: CloseProps) {
         </TextButton>
       </div>
     }
-    <div className='h-4' />
+    <div className="h-4" />
     <OppositeTextButtonDeploy deploy={rpc}
       onClick={rpc.toggle}>
       RPC
@@ -56,8 +56,8 @@ export function NetworkSelectionDialog(props: CloseProps) {
         </TextButton>
       </div>
     }
-    <div className='h-4' />
-    <div className='grow' />
+    <div className="h-4" />
+    <div className="grow" />
     <OppositeTextButton onClick={close}>
       Confirm
     </OppositeTextButton>

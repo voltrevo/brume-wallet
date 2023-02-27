@@ -1,6 +1,4 @@
-import { VectorProps } from "./props";
-
-export type Icon = (props: VectorProps) => JSX.Element;
+import { Icon } from "../icon";
 
 export interface IconProps {
   icon: Icon;

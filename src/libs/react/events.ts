@@ -1,16 +1,20 @@
 import { ChangeEvent, DependencyList, SyntheticEvent, useCallback } from "react"
 
-export function keep(e: SyntheticEvent<any>) {
-  e.stopPropagation()
-}
+export namespace Events {
 
-export function noop(e: SyntheticEvent<any>) {
-  e.preventDefault()
-}
+  export function keep(e: SyntheticEvent<unknown>) {
+    e.stopPropagation()
+  }
 
-export function cancel(e: SyntheticEvent<any>) {
-  e.preventDefault()
-  e.stopPropagation()
+  export function noop(e: SyntheticEvent<unknown>) {
+    e.preventDefault()
+  }
+
+  export function cancel(e: SyntheticEvent<unknown>) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
 }
 
 export function useInputChange<R>(

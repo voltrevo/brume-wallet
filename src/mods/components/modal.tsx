@@ -1,12 +1,13 @@
-import { useBoolean } from "libs/react/boolean"
-import { useElement } from "libs/react/element"
-import { useLazyMemo } from "libs/react/memo"
-import { ChildrenProps, CloseProps, TargetProps } from "libs/react/props"
+import { Events } from "@/libs/react/events"
+import { useBoolean } from "@/libs/react/handles/boolean"
+import { useElement } from "@/libs/react/handles/element"
+import { useLazyMemo } from "@/libs/react/memo"
+import { ChildrenProps } from "@/libs/react/props/children"
+import { CloseProps } from "@/libs/react/props/close"
+import { TargetProps } from "@/libs/react/props/target"
 import { createContext, useContext, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { usePopper } from "react-popper"
-import { keep } from '../../libs/react/events'
-
 
 export const ModalContext =
   createContext<number>(0)
@@ -78,9 +79,9 @@ export function DialogFull(props: CloseProps & ChildrenProps) {
   return <Modal>
     <div className="p-4 fixed inset-0 bg-backdrop animate-opacity"
       onMouseDown={close}
-      onClick={keep}>
+      onClick={Events.keep}>
       <div className="p-md h-full flex flex-col rounded-xl bg-default animate-opacity-scale"
-        onMouseDown={keep}>
+        onMouseDown={Events.keep}>
         {children}
       </div>
     </div>

@@ -1,5 +1,5 @@
+import { ChildrenProps } from "@/libs/react/props/children";
 import { Circuit } from "@hazae41/echalote";
-import { ChildrenProps } from "libs/react/props";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useTor } from "../tor/context";
 
