@@ -1,11 +1,11 @@
+import { useBoolean } from "libs/react/boolean"
+import { useElement } from "libs/react/element"
+import { useLazyMemo } from "libs/react/memo"
+import { ChildrenProps, CloseProps, TargetProps } from "libs/react/props"
 import { createContext, useContext, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { usePopper } from "react-popper"
-import { useBoolean } from "utils/react/boolean"
-import { useElement } from "utils/react/element"
-import { useLazyMemo } from "utils/react/memo"
-import { ChildrenProps, CloseProps, TargetProps } from "utils/react/props"
-import { keep } from '../utils/react/events'
+import { keep } from '../../libs/react/events'
 
 
 export const ModalContext =

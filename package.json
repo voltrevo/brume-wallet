@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev:website": "next dev",
+    "dev": "next dev",
+    "build": "next build",
     "dev:extension": "npm-watch build",
-    "build:website": "next build",
     "build:extension": "npm run build:next && npm run build:chrome && npm run build:safari",
     "build:next": "next build && next export && mv out/_next out/next && sed -i '' -e 's/\\/_next/\\.\\/next/g' out/**.html",
     "build:chrome": "rimraf chrome && cp -R out chrome && mv chrome/chrome/* chrome && rimraf chrome/chrome chrome/safari",
@@ -15,29 +15,29 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@hazae41/cadenas": "^0.0.5",
-    "@hazae41/echalote": "^0.1.4",
-    "@hazae41/xswr": "^1.2.1",
-    "@heroicons/react": "^2.0.13",
-    "ethers": "^5.7.2",
-    "next": "13.1.2",
+    "@hazae41/cadenas": "^0.2.7",
+    "@hazae41/echalote": "^0.2.18",
+    "@hazae41/xswr": "^1.2.3",
+    "@heroicons/react": "^2.0.16",
+    "ethers": "^6.0.8",
+    "next": "13.2.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-popper": "^2.3.0"
   },
   "devDependencies": {
-    "@types/chrome": "^0.0.209",
-    "@types/node": "18.11.18",
-    "@types/react": "18.0.27",
-    "@types/react-dom": "18.0.10",
+    "@types/chrome": "^0.0.217",
+    "@types/node": "18.14.2",
+    "@types/react": "18.0.28",
+    "@types/react-dom": "18.0.11",
     "autoprefixer": "^10.4.13",
-    "eslint": "8.32.0",
-    "eslint-config-next": "13.1.2",
+    "eslint": "8.35.0",
+    "eslint-config-next": "13.2.1",
     "npm-watch": "^0.11.0",
     "postcss": "^8.4.21",
-    "rimraf": "^4.1.1",
-    "tailwindcss": "^3.2.4",
-    "typescript": "4.9.4"
+    "rimraf": "^4.1.2",
+    "tailwindcss": "^3.2.7",
+    "typescript": "4.9.5"
   },
   "watch": {
     "build": {

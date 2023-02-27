@@ -1,5 +1,5 @@
-import { keep } from "utils/react/events";
-import { ChildrenProps, CloseProps } from "utils/react/props";
+import { keep } from "libs/react/events";
+import { ChildrenProps, CloseProps } from "libs/react/props";
 import { Modal } from "./modal";
 
 export function Dialog(props: CloseProps & ChildrenProps) {

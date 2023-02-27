@@ -1,6 +1,6 @@
-import { Circuit, Tor } from "@hazae41/echalote";
+import { Circuit } from "@hazae41/echalote";
+import { ChildrenProps } from "libs/react/props";
 import { createContext, useContext, useEffect, useState } from "react";
-import { ChildrenProps } from "utils/react/props";
 import { useTor } from "../tor/context";
 
 export const CircuitContext =
@@ -8,20 +8,6 @@ export const CircuitContext =
 
 export function useCircuit() {
   return useContext(CircuitContext)!
-}
-
-async function createCircuit(tor: Tor) {
-  while (true)
-    try {
-      const circuit = await tor.create()
-
-      await circuit.extend(false)
-      await circuit.extend(true)
-
-      return circuit
-    } catch (e: unknown) {
-      console.warn("Could not create circuit", e)
-    }
 }
 
 export function CircuitProvider(props: ChildrenProps) {
@@ -34,7 +20,7 @@ export function CircuitProvider(props: ChildrenProps) {
   useEffect(() => {
     if (!tor) return
 
-    createCircuit(tor).then(setCircuit)
+    tor.tryCreateAndExtend().then(setCircuit)
   }, [tor])
 
   if (!circuit)

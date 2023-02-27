@@ -1,20 +1,20 @@
 import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { ActionButton } from "components/actionButton";
-import { ContrastTextButton, OppositeTextButton } from "components/button";
-import { HoverPopper } from "components/modal";
-import { useCircuit } from "contexts/circuit/context";
-import { Wallet } from "ethers";
-import { getAddress, hexValue, parseUnits } from "ethers/lib/utils";
+import { getAddress, parseUnits, Wallet } from "ethers";
+import { BigInts } from "libs/bigints/bigints";
+import { alertAsJson } from "libs/errors";
+import { Hex } from "libs/hex/hex";
+import { ExternalDivisionLink } from "libs/next/anchor";
+import { useAsyncTry } from "libs/react/async";
+import { useBoolean } from "libs/react/boolean";
+import { useElement } from "libs/react/element";
+import { useInputChange } from "libs/react/events";
+import { torrpcfetch } from "libs/tor/fetcher";
+import { ActionButton } from "mods/components/actionButton";
+import { ContrastTextButton, OppositeTextButton } from "mods/components/button";
+import { HoverPopper } from "mods/components/modal";
+import { useCircuit } from "mods/contexts/circuit/context";
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
-import { alertAsJson } from "utils/errors";
-import { tryFloat } from "utils/ethers/bignum";
-import { ExternalDivisionLink } from "utils/next/anchor";
-import { useAsyncTry } from "utils/react/async";
-import { useBoolean } from "utils/react/boolean";
-import { useElement } from "utils/react/element";
-import { useInputChange } from "utils/react/events";
-import { torrpcfetch } from "utils/tor/fetcher";
 import { useBalance, useGasPrice, useNonce, useWallet } from "./data";
 
 export function WalletPage(props: {}) {
@@ -58,12 +58,12 @@ export function WalletPage(props: {}) {
       endpoint: "https://rpc.ankr.com/eth_goerli",
       method: "eth_estimateGas",
       params: [{
-        chainId: hexValue(5),
+        chainId: Hex.from(5),
         from: address,
         to: getAddress(recipientInput),
-        value: hexValue(parseUnits(valueInput, 18)),
-        nonce: hexValue(nonce.data),
-        gasPrice: hexValue(gasPrice.data)
+        value: Hex.from(parseUnits(valueInput, 18)),
+        nonce: Hex.from(nonce.data),
+        gasPrice: Hex.from(gasPrice.data)
       }, "latest"]
     }, {}, circuit)
 
@@ -77,7 +77,7 @@ export function WalletPage(props: {}) {
         from: address,
         to: getAddress(recipientInput),
         value: parseUnits(valueInput, 18),
-        nonce: nonce.data,
+        nonce: Number(nonce.data),
         gasPrice: gasPrice.data,
         gasLimit: gas.data
       })]
@@ -116,7 +116,7 @@ export function WalletPage(props: {}) {
       return "Error"
     if (!balance.data)
       return "..."
-    return tryFloat(balance.data, 18)
+    return BigInts.tryFloat(balance.data, 18)
   })()
 
   const copyPopper = useElement()

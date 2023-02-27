@@ -1,5 +1,5 @@
 import { getSingleSchema, NormalizerMore, useQuery } from "@hazae41/xswr";
-import { storage } from "utils/xswr/idb";
+import { storage } from "libs/xswr/idb";
 import { getWalletNormal, Wallet } from "../data";
 
 export function getWalletsSchema() {
@@ -7,7 +7,7 @@ export function getWalletsSchema() {
     return await Promise.all(wallets.map(wallet => getWalletNormal(wallet, more)))
   }
 
-  return getSingleSchema<Wallet[], never>(
+  return getSingleSchema<Wallet[]>(
     `wallets`,
     undefined,
     { storage, normalizer })

@@ -1,7 +1,7 @@
 import ChevronDownIcon from '@heroicons/react/24/outline/ChevronDownIcon';
-import { OptionalIconProps } from "utils/react/icon";
-import { ButtonProps, RefProps } from "utils/react/props";
-import { BooleanHandle } from '../utils/react/boolean';
+import { OptionalIconProps } from "libs/react/icon";
+import { ButtonProps, RefProps } from "libs/react/props";
+import { BooleanHandle } from '../../libs/react/boolean';
 
 export function ContrastTextButton(props: ButtonProps & OptionalIconProps & RefProps<HTMLButtonElement>) {
 

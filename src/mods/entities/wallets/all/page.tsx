@@ -1,9 +1,9 @@
 import { ShieldCheckIcon } from "@heroicons/react/24/outline"
-import { ContrastTextButton, OppositeTextButton } from "components/button"
+import { useBoolean } from "libs/react/boolean"
+import { OkProps } from "libs/react/props"
+import { ContrastTextButton, OppositeTextButton } from "mods/components/button"
 import { useRouter } from "next/router"
 import { useCallback } from "react"
-import { useBoolean } from "utils/react/boolean"
-import { OkProps } from "utils/react/props"
 import { NetworkSelectionDialog } from '../../../components/dialogs/selectNetwork'
 import { Wallet, WalletProps } from "../data"
 import { WalletRow } from "../row"
@@ -54,7 +54,6 @@ export function WalletsPage(props: {}) {
       key={wallet.address}
       wallet={wallet}
       ok={onWalletClick} />)
-
 
   const Body =
     <ul className="grow flex flex-col">

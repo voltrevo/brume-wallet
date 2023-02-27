@@ -1,10 +1,10 @@
-import { OppositeTextButton } from "components/button";
-import { Dialog } from "components/dialog";
 import { Wallet } from "ethers";
+import { useInputChange, useTextAreaChange } from "libs/react/events";
+import { CloseProps } from "libs/react/props";
+import { dataPipe } from "libs/xswr/pipes";
+import { OppositeTextButton } from "mods/components/button";
+import { Dialog } from "mods/components/dialog";
 import { useCallback, useEffect, useState } from "react";
-import { useInputChange, useTextAreaChange } from "utils/react/events";
-import { CloseProps } from "utils/react/props";
-import { dataPipe } from "utils/xswr/pipes";
 import { WalletData } from "../data";
 import { useWallets } from "./data";
 

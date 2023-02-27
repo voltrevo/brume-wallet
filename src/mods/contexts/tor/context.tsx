@@ -1,21 +1,11 @@
-import { BatchedFetchStream } from "@hazae41/cadenas";
-import { Tor } from "@hazae41/echalote";
+import { createWebSocketSnowflakeStream, Tor } from "@hazae41/echalote";
 import fallbacks from "assets/fallbacks.json";
+import { ChildrenProps } from "libs/react/props";
 import { createContext, useContext, useEffect, useState } from "react";
-import { ChildrenProps } from "utils/react/props";
-
-async function createMeekStream(url: string) {
-  const headers = { "x-session-id": crypto.randomUUID() }
-  const request = new Request(url, { headers })
-
-  return new BatchedFetchStream(request, { highDelay: 100 })
-}
 
 async function createTor() {
-  const tcp = await createMeekStream("https://meek.bamsoftware.com/")
-
+  const tcp = await createWebSocketSnowflakeStream("wss://snowflake.bamsoftware.com/")
   const tor = new Tor(tcp, { fallbacks })
-  await tor.handshake()
   return tor
 }
 

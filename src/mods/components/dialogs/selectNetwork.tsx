@@ -1,5 +1,5 @@
-import { useBoolean } from '../../utils/react/boolean';
-import { CloseProps } from '../../utils/react/props';
+import { useBoolean } from '../../../libs/react/boolean';
+import { CloseProps } from '../../../libs/react/props';
 import { OppositeTextButton, OppositeTextButtonDeploy, TextButton } from '../button';
 import { DialogFull } from '../modal';
 

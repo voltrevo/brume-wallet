@@ -1,9 +1,9 @@
 import { Circuit } from "@hazae41/echalote"
 import { FetcherMore, getSingleSchema, NormalizerMore, useError, useFetch, useQuery } from "@hazae41/xswr"
-import { BigNumber } from "ethers"
-import { alertAsJson } from "utils/errors"
-import { RpcRequest, torrpcfetch } from "utils/tor/fetcher"
-import { storage } from "utils/xswr/idb"
+import { alertAsJson } from "libs/errors"
+import { RpcRequest, torrpcfetch } from "libs/tor/fetcher"
+import { storage } from "libs/xswr/idb"
+import { dataPipe } from "libs/xswr/pipes"
 
 export type Wallet =
   | WalletRef
@@ -47,13 +47,11 @@ export function useWallet(address?: string) {
 
 export function getBalanceSchema(address: string, circuit: Circuit) {
   async function fetcher(rpcreq: RpcRequest, more: FetcherMore) {
-    const { data, error, ...other } = await torrpcfetch<string>(rpcreq, more, circuit)
-    if (error) return { error, ...other }
-    const data2 = BigNumber.from(data)
-    return { data: data2, ...other }
+    const result = await torrpcfetch<string>(rpcreq, more, circuit)
+    return dataPipe(d => d && BigInt(d))(result)
   }
 
-  return getSingleSchema<BigNumber>({
+  return getSingleSchema<bigint, RpcRequest>({
     endpoint: "https://rpc.ankr.com/eth_goerli",
     method: "eth_getBalance",
     params: [address, "pending"]
@@ -69,13 +67,11 @@ export function useBalance(address: string, circuit: Circuit) {
 
 export function getNonceSchema(address: string, circuit: Circuit) {
   async function fetcher(rpcreq: RpcRequest, more: FetcherMore) {
-    const { data, error, ...other } = await torrpcfetch<string>(rpcreq, more, circuit)
-    if (error) return { error, ...other }
-    const data2 = BigNumber.from(data)
-    return { data: data2, ...other }
+    const result = await torrpcfetch<string>(rpcreq, more, circuit)
+    return dataPipe(d => d && BigInt(d))(result)
   }
 
-  return getSingleSchema<BigNumber>({
+  return getSingleSchema<bigint, RpcRequest>({
     endpoint: "https://rpc.ankr.com/eth_goerli",
     method: "eth_getTransactionCount",
     params: [address, "pending"]
@@ -91,13 +87,11 @@ export function useNonce(address: string, circuit: Circuit) {
 
 export function getGasPriceSchema(circuit: Circuit) {
   async function fetcher(rpcreq: RpcRequest, more: FetcherMore) {
-    const { data, error, ...other } = await torrpcfetch<string>(rpcreq, more, circuit)
-    if (error) return { error, ...other }
-    const data2 = BigNumber.from(data)
-    return { data: data2, ...other }
+    const result = await torrpcfetch<string>(rpcreq, more, circuit)
+    return dataPipe(d => d && BigInt(d))(result)
   }
 
-  return getSingleSchema<BigNumber>({
+  return getSingleSchema<bigint, RpcRequest>({
     endpoint: "https://rpc.ankr.com/eth_goerli",
     method: "eth_gasPrice",
     params: []
