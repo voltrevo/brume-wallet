@@ -1,4 +1,4 @@
-import { storage } from "@/libs/xswr/idb";
+import { storage } from "@/libs/xswr/storage";
 import { getSingleSchema, NormalizerMore, useQuery } from "@hazae41/xswr";
 import { getWalletNormal, Wallet } from "../data";
 

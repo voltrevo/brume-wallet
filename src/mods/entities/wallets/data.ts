@@ -1,7 +1,7 @@
 import { alertAsJson } from "@/libs/errors"
 import { RpcRequest, torrpcfetch } from "@/libs/tor/fetcher"
-import { storage } from "@/libs/xswr/idb"
-import { dataPipe } from "@/libs/xswr/pipes"
+import { Pipes } from "@/libs/xswr/pipes"
+import { storage } from "@/libs/xswr/storage"
 import { Circuit } from "@hazae41/echalote"
 import { FetcherMore, getSingleSchema, NormalizerMore, useError, useFetch, useQuery } from "@hazae41/xswr"
 
@@ -48,7 +48,7 @@ export function useWallet(address?: string) {
 export function getBalanceSchema(address: string, circuit: Circuit) {
   async function fetcher(rpcreq: RpcRequest, more: FetcherMore) {
     const result = await torrpcfetch<string>(rpcreq, more, circuit)
-    return dataPipe(d => d && BigInt(d))(result)
+    return Pipes.data(d => d && BigInt(d))(result)
   }
 
   return getSingleSchema<bigint, RpcRequest>({
@@ -68,7 +68,7 @@ export function useBalance(address: string, circuit: Circuit) {
 export function getNonceSchema(address: string, circuit: Circuit) {
   async function fetcher(rpcreq: RpcRequest, more: FetcherMore) {
     const result = await torrpcfetch<string>(rpcreq, more, circuit)
-    return dataPipe(d => d && BigInt(d))(result)
+    return Pipes.data(d => d && BigInt(d))(result)
   }
 
   return getSingleSchema<bigint, RpcRequest>({
@@ -88,7 +88,7 @@ export function useNonce(address: string, circuit: Circuit) {
 export function getGasPriceSchema(circuit: Circuit) {
   async function fetcher(rpcreq: RpcRequest, more: FetcherMore) {
     const result = await torrpcfetch<string>(rpcreq, more, circuit)
-    return dataPipe(d => d && BigInt(d))(result)
+    return Pipes.data(d => d && BigInt(d))(result)
   }
 
   return getSingleSchema<bigint, RpcRequest>({

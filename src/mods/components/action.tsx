@@ -1,9 +1,9 @@
+import { HoverPopper } from "@/libs/modals/popper"
 import { ExternalDivisionLink } from "@/libs/next/anchor"
 import { Img } from "@/libs/next/image"
 import { useElement } from "@/libs/react/handles/element"
 import { CurrencyDollarIcon } from "@heroicons/react/24/outline"
 import { OppositeTextButtonRounded } from "./button"
-import { HoverPopper } from "./modal"
 
 export function ActionButton() {
   return <div className="flex justify-center gap-8">

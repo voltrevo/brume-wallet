@@ -1,7 +1,7 @@
+import { Dialog } from "@/libs/modals/dialog";
 import { CloseProps } from "@/libs/react/props/close";
 import { useBoolean } from "../../../libs/react/handles/boolean";
 import { OppositeTextButton, OppositeTextButtonDeploy, TextButton } from "../button";
-import { DialogFull } from "../modal";
 
 export function NetworkSelectionDialog(props: CloseProps) {
   const { close } = props
@@ -10,7 +10,7 @@ export function NetworkSelectionDialog(props: CloseProps) {
   const networks = useBoolean()
   const endpoints = useBoolean()
 
-  return <DialogFull close={close}>
+  return <Dialog close={close}>
     <OppositeTextButtonDeploy deploy={blockchains}
       onClick={blockchains.toggle}>
       Blockchain
@@ -60,5 +60,5 @@ export function NetworkSelectionDialog(props: CloseProps) {
     <OppositeTextButton onClick={close}>
       Confirm
     </OppositeTextButton>
-  </DialogFull >
+  </Dialog>
 }
