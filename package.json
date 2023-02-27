@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@hazae41/echalote": "^0.2.19",
+    "@hazae41/fleche": "^1.1.9",
     "@hazae41/xswr": "^1.2.3",
     "@heroicons/react": "^2.0.16",
     "ethers": "^6.0.8",

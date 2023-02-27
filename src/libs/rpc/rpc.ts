@@ -1,12 +1,28 @@
+import { XSWR } from "@hazae41/xswr"
+
 export namespace RPC {
 
-  export interface RequestWithInfo<T extends unknown[] = unknown[]> extends Request<T> {
-    endpoint: RequestInfo | URL
+  export interface Request<T extends unknown[] = unknown[]> {
+    readonly method: string,
+    readonly params: T
   }
 
-  export interface Request<T extends unknown[] = unknown[]> {
-    method: string,
-    params: T
+  export interface FullRequest<T extends unknown[] = unknown[]> {
+    readonly jsonrpc: string,
+    readonly id: number,
+    readonly method: string,
+    readonly params: T
+  }
+
+  /**
+   * Transform a Request into a FullRequest
+   * @param request 
+   * @returns 
+   */
+  export function request<T extends unknown[] = unknown[]>(id: number, request: Request<T>): FullRequest<T> {
+    const { method, params } = request
+
+    return { jsonrpc: "2.0", id, method, params }
   }
 
   export type Response<T = any> =
@@ -14,30 +30,24 @@ export namespace RPC {
     | ErrResponse
 
   export interface OkResponse<T = any> {
+    id: number,
     result: T
     error?: undefined
   }
 
   export interface ErrResponse {
+    id: number
     result?: undefined
     error: { message: string }
   }
 
-  export async function fetch<T>(input: RPC.RequestWithInfo, init: RequestInit, subfetch = globalThis.fetch) {
-    const { endpoint, method, params } = input
-    const { signal, cache } = init
+  export function unwrap<T>(response: Response<T>) {
+    if (response.error)
+      throw new Error(response.error.message)
+    return response.result
+  }
 
-    const body = JSON.stringify({ jsonrpc: "2.0", id: 1, method, params })
-    const headers = new Headers({ "Content-Type": "application/json" })
-    const res = await subfetch(endpoint, { method: "POST", body, headers, signal, cache })
-
-    if (!res.ok) {
-      const error = new Error(`${await res.text()}`)
-      return { error }
-    }
-
-    const response = await res.json() as Response<T>
-
+  export function rewrap<T>(response: Response<T>): XSWR.Result<T> {
     if (response.error) {
       const error = new Error(response.error.message)
       return { error }

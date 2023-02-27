@@ -10,7 +10,7 @@ import { useElement } from "@/libs/react/handles/element";
 import { RPC } from "@/libs/rpc/rpc";
 import { ActionButton } from "@/mods/components/action";
 import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button";
-import { useCircuit } from "@/mods/tor/circuits/context";
+import { useCircuits } from "@/mods/tor/circuits/context";
 import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { getAddress, parseUnits, Wallet } from "ethers";
 import { useRouter } from "next/router";
@@ -19,14 +19,14 @@ import { useBalance, useGasPrice, useNonce, useWallet } from "./data";
 
 export function WalletPage(props: {}) {
   const router = useRouter()
-  const circuit = useCircuit()
+  const circuits = useCircuits()
 
   const [, , address] = location.hash.split("/")
 
   const wallet = useWallet(address)
-  const balance = useBalance(address, circuit)
-  const nonce = useNonce(address, circuit)
-  const gasPrice = useGasPrice(circuit)
+  const balance = useBalance(address, circuits)
+  const nonce = useNonce(address, circuits)
+  const gasPrice = useGasPrice(circuits)
 
   const [recipientInput = "", setRecipientInput] = useState<string>()
 
@@ -46,13 +46,13 @@ export function WalletPage(props: {}) {
   const [txHash, setTxHash] = useState<string>()
 
   const trySend = useAsyncTry(async () => {
-    if (!circuit) return
-
     if (!wallet.data) return
     if (!nonce.data) return
     if (!gasPrice.data) return
 
-    const ewallet = new Wallet(wallet.data.privateKey)
+    const circuit = await circuits.get()
+
+    const ethers_wallet = new Wallet(wallet.data.privateKey)
 
     const gas = await RPC.fetch<string>({
       endpoint: "https://rpc.ankr.com/eth_goerli",
@@ -72,7 +72,7 @@ export function WalletPage(props: {}) {
     const tx = await RPC.fetch<string>({
       endpoint: "https://rpc.ankr.com/eth_goerli",
       method: "eth_sendRawTransaction",
-      params: [await ewallet.signTransaction({
+      params: [await ethers_wallet.signTransaction({
         chainId: 5,
         from: address,
         to: getAddress(recipientInput),
@@ -89,7 +89,7 @@ export function WalletPage(props: {}) {
 
     balance.refetch()
     nonce.refetch()
-  }, [circuit, address, nonce.data, gasPrice.data, recipientInput, valueInput], console.error)
+  }, [circuits, address, nonce.data, gasPrice.data, recipientInput, valueInput], console.error)
 
   const Header = <div className="flex p-md text-colored rounded-b-xl border-b border-violet6 bg-violet2 justify-between">
     <ContrastTextButton className="w-[100px]">
