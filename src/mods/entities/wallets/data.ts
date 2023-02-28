@@ -44,10 +44,10 @@ export function useWallet(address?: string) {
 export function getBalanceSchema(address: string, socket?: WebSocket) {
   if (!socket) return
 
-  async function fetcher<T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) {
+  const fetcher = async <T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) => {
     const { signal } = more
     const request = new RPC.Request(init)
-    const response = await request.query(socket!, signal)
+    const response = await request.query(socket, signal)
     return Pipes.data(d => d && BigInt(d))(RPC.rewrap(response))
   }
 
@@ -66,7 +66,7 @@ export function useBalance(address: string, socket?: WebSocket) {
 export function getNonceSchema(address: string, socket?: WebSocket) {
   if (!socket) return
 
-  async function fetcher<T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) {
+  const fetcher = async <T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) => {
     const { signal } = more
     const request = new RPC.Request(init)
     const response = await request.query(socket!, signal)
@@ -88,7 +88,7 @@ export function useNonce(address: string, socket?: WebSocket) {
 export function getGasPriceSchema(socket?: WebSocket) {
   if (!socket) return
 
-  async function fetcher<T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) {
+  const fetcher = async <T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) => {
     const { signal } = more
     const request = new RPC.Request(init)
     const response = await request.query(socket!, signal)

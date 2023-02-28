@@ -3,7 +3,7 @@ import { getSchema, NormalizerMore, useSchema } from "@hazae41/xswr";
 import { getWalletNormal, Wallet } from "../data";
 
 export function getWalletsSchema() {
-  async function normalizer(wallets: Wallet[], more: NormalizerMore) {
+  const normalizer = async (wallets: Wallet[], more: NormalizerMore) => {
     return await Promise.all(wallets.map(wallet => getWalletNormal(wallet, more)))
   }
 
