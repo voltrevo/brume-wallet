@@ -1,28 +1,40 @@
+import { Cursor } from "@hazae41/binary"
 import { XSWR } from "@hazae41/xswr"
+import { Future } from "../futures/future"
+import { WebSockets } from "../websockets/websockets"
 
 export namespace RPC {
 
-  export interface Request<T extends unknown[] = unknown[]> {
+  export interface RequestInit<T extends unknown[] = unknown[]> {
     readonly method: string,
     readonly params: T
   }
 
-  export interface FullRequest<T extends unknown[] = unknown[]> {
-    readonly jsonrpc: string,
-    readonly id: number,
-    readonly method: string,
-    readonly params: T
-  }
+  export class Request<T> {
+    readonly jsonrpc = "2.0"
+    readonly id = Cursor.random(4).readUint32()
 
-  /**
-   * Transform a Request into a FullRequest
-   * @param request 
-   * @returns 
-   */
-  export function request<T extends unknown[] = unknown[]>(id: number, request: Request<T>): FullRequest<T> {
-    const { method, params } = request
+    readonly method: string
+    readonly params: unknown[]
 
-    return { jsonrpc: "2.0", id, method, params }
+    constructor(params: RequestInit) {
+      this.method = params.method
+      this.params = params.params
+    }
+
+    async query(socket: WebSocket, signal?: AbortSignal) {
+      socket.send(JSON.stringify(this))
+
+      const future = new Future<RPC.Response<T>>()
+
+      const onEvent = async (event: Event) => {
+        const msgEvent = event as MessageEvent<string>
+        const response = JSON.parse(msgEvent.data) as RPC.Response<T>
+        if (response.id === this.id) future.ok(response)
+      }
+
+      return await WebSockets.waitFor("message", { socket, future, onEvent, signal })
+    }
   }
 
   export type Response<T = any> =

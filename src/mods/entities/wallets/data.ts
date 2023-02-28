@@ -1,11 +1,7 @@
-import { Future } from "@/libs/futures/future"
 import { RPC } from "@/libs/rpc/rpc"
-import { WebSockets } from "@/libs/websockets/websockets"
 import { Pipes } from "@/libs/xswr/pipes"
 import { storage } from "@/libs/xswr/storage"
-import { CircuitPool } from "@hazae41/echalote"
-import { Fleche } from "@hazae41/fleche"
-import { FetcherMore, getSingleSchema, NormalizerMore, useFetch, useQuery } from "@hazae41/xswr"
+import { FetcherMore, getSchema, NormalizerMore, useFetch, useSchema } from "@hazae41/xswr"
 
 export type Wallet =
   | WalletRef
@@ -31,9 +27,7 @@ export interface WalletData {
 }
 
 export function getWalletSchema(address?: string) {
-  return getSingleSchema<WalletData>(
-    address && `wallet/${address}`,
-    undefined, { storage })
+  return getSchema<WalletData>(address && `wallet/${address}`, undefined, { storage })
 }
 
 export async function getWalletNormal(wallet: Wallet, more: NormalizerMore) {
@@ -44,79 +38,71 @@ export async function getWalletNormal(wallet: Wallet, more: NormalizerMore) {
 }
 
 export function useWallet(address?: string) {
-  return useQuery(getWalletSchema, [address])
+  return useSchema(getWalletSchema, [address])
 }
 
-export function getBalanceSchema(address: string, socket: Fleche.WebSocket) {
+export function getBalanceSchema(address: string, socket?: WebSocket) {
+  if (!socket) return
 
-  async function fetcher<T>(req: RPC.FullRequest, more: FetcherMore) {
+  async function fetcher<T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) {
     const { signal } = more
-
-    const request = RPC.request(req)
-    socket.send(JSON.stringify(request))
-
-    const future = new Future<RPC.Response<T>>()
-
-    const onEvent = async (event: Event) => {
-      const msgEvent = event as MessageEvent<string>
-      const response = JSON.parse(msgEvent.data) as RPC.Response<T>
-      if (response.id === request.id) future.ok(response)
-    }
-
-    const response = await WebSockets.waitFor(socket, { future, onEvent, signal })
+    const request = new RPC.Request(init)
+    const response = await request.query(socket!, signal)
     return Pipes.data(d => d && BigInt(d))(RPC.rewrap(response))
   }
 
-  return getSingleSchema<bigint, RPC.FullRequest>({
+  return getSchema<bigint, RPC.RequestInit>({
     method: "eth_getBalance",
     params: [address, "pending"]
   }, fetcher)
 }
 
-export function useBalance(address: string, socket: Fleche.WebSocket) {
-  const query = useQuery(getBalanceSchema, [address, socket])
+export function useBalance(address: string, socket?: WebSocket) {
+  const query = useSchema(getBalanceSchema, [address, socket])
   useFetch(query)
   return query
 }
 
-export function getNonceSchema(endpoint: string, address: string, circuits: CircuitPool) {
-  async function fetcher(req: RPC.RequestWithInfo, more: FetcherMore) {
-    const circuit = await circuits.get()
-    const result = await RPC.fetch<string>(req, more, circuit.fetch.bind(circuit))
-    return Pipes.data(d => d && BigInt(d))(result)
+export function getNonceSchema(address: string, socket?: WebSocket) {
+  if (!socket) return
+
+  async function fetcher<T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) {
+    const { signal } = more
+    const request = new RPC.Request(init)
+    const response = await request.query(socket!, signal)
+    return Pipes.data(d => d && BigInt(d))(RPC.rewrap(response))
   }
 
-  return getSingleSchema<bigint, RPC.RequestWithInfo>({
-    endpoint,
+  return getSchema<bigint, RPC.RequestInit>({
     method: "eth_getTransactionCount",
     params: [address, "pending"]
   }, fetcher)
 }
 
-export function useNonce(address: string, circuits: CircuitPool) {
-  const endpoint = "https://rpc.ankr.com/eth_goerli"
-  const query = useQuery(getNonceSchema, [endpoint, address, circuits])
+export function useNonce(address: string, socket?: WebSocket) {
+  const query = useSchema(getNonceSchema, [address, socket])
   useFetch(query)
   return query
 }
 
-export function getGasPriceSchema(endpoint: string, circuits: CircuitPool) {
-  async function fetcher(req: RPC.RequestWithInfo, more: FetcherMore) {
-    const circuit = await circuits.get()
-    const result = await RPC.fetch<string>(req, more, circuit.fetch.bind(circuit))
-    return Pipes.data(d => d && BigInt(d))(result)
+export function getGasPriceSchema(socket?: WebSocket) {
+  if (!socket) return
+
+  async function fetcher<T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) {
+    const { signal } = more
+    const request = new RPC.Request(init)
+    const response = await request.query(socket!, signal)
+    return Pipes.data(d => d && BigInt(d))(RPC.rewrap(response))
   }
 
-  return getSingleSchema<bigint, RPC.RequestWithInfo>({
-    endpoint,
+  return getSchema<bigint, RPC.RequestInit>({
     method: "eth_gasPrice",
     params: []
   }, fetcher)
 }
 
-export function useGasPrice(circuit: CircuitPool) {
-  const endpoint = "https://rpc.ankr.com/eth_goerli"
-  const query = useQuery(getGasPriceSchema, [endpoint, circuit])
+export function useGasPrice(socket?: WebSocket) {
+  const query = useSchema(getGasPriceSchema, [socket])
   useFetch(query)
   return query
 }

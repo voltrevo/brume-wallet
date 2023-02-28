@@ -1,5 +1,4 @@
 import { BigInts } from "@/libs/bigints/bigints";
-import { Hex } from "@/libs/hex/hex";
 import { HoverPopper } from "@/libs/modals/popper";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
 import { Img } from "@/libs/next/image";
@@ -7,12 +6,11 @@ import { useAsyncTry } from "@/libs/react/async";
 import { useInputChange } from "@/libs/react/events";
 import { useBoolean } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
-import { RPC } from "@/libs/rpc/rpc";
 import { ActionButton } from "@/mods/components/action";
 import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button";
 import { useCircuits } from "@/mods/tor/circuits/context";
 import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { getAddress, parseUnits, Wallet } from "ethers";
+import { Wallet } from "ethers";
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 import { useBalance, useGasPrice, useNonce, useWallet } from "./data";
@@ -24,9 +22,9 @@ export function WalletPage(props: {}) {
   const [, , address] = location.hash.split("/")
 
   const wallet = useWallet(address)
-  const balance = useBalance(address, circuits)
-  const nonce = useNonce(address, circuits)
-  const gasPrice = useGasPrice(circuits)
+  const balance = useBalance(address)
+  const nonce = useNonce(address)
+  const gasPrice = useGasPrice()
 
   const [recipientInput = "", setRecipientInput] = useState<string>()
 
@@ -54,38 +52,37 @@ export function WalletPage(props: {}) {
 
     const ethers_wallet = new Wallet(wallet.data.privateKey)
 
-    const gas = await RPC.fetch<string>({
-      endpoint: "https://rpc.ankr.com/eth_goerli",
-      method: "eth_estimateGas",
-      params: [{
-        chainId: Hex.from(5),
-        from: address,
-        to: getAddress(recipientInput),
-        value: Hex.from(parseUnits(valueInput, 18)),
-        nonce: Hex.from(nonce.data),
-        gasPrice: Hex.from(gasPrice.data)
-      }, "latest"]
-    }, {}, circuit.fetch.bind(circuit))
+    // const gas = await new RPC.Request<string>({
+    //   method: "eth_estimateGas",
+    //   params: [{
+    //     chainId: Hex.from(5),
+    //     from: address,
+    //     to: getAddress(recipientInput),
+    //     value: Hex.from(parseUnits(valueInput, 18)),
+    //     nonce: Hex.from(nonce.data),
+    //     gasPrice: Hex.from(gasPrice.data)
+    //   }, "latest"]
+    // })
 
-    if (gas.error) throw gas.error
+    // if (gas.error) throw gas.error
 
-    const tx = await RPC.fetch<string>({
-      endpoint: "https://rpc.ankr.com/eth_goerli",
-      method: "eth_sendRawTransaction",
-      params: [await ethers_wallet.signTransaction({
-        chainId: 5,
-        from: address,
-        to: getAddress(recipientInput),
-        value: parseUnits(valueInput, 18),
-        nonce: Number(nonce.data),
-        gasPrice: gasPrice.data,
-        gasLimit: gas.data
-      })]
-    }, {}, circuit.fetch.bind(circuit))
+    // const tx = await RPC.fetch<string>({
+    //   endpoint: "https://rpc.ankr.com/eth_goerli",
+    //   method: "eth_sendRawTransaction",
+    //   params: [await ethers_wallet.signTransaction({
+    //     chainId: 5,
+    //     from: address,
+    //     to: getAddress(recipientInput),
+    //     value: parseUnits(valueInput, 18),
+    //     nonce: Number(nonce.data),
+    //     gasPrice: gasPrice.data,
+    //     gasLimit: gas.data
+    //   })]
+    // }, {}, circuit.fetch.bind(circuit))
 
-    if (tx.error !== undefined) throw tx.error
+    // if (tx.error !== undefined) throw tx.error
 
-    setTxHash(tx.data)
+    // setTxHash(tx.data)
 
     balance.refetch()
     nonce.refetch()
