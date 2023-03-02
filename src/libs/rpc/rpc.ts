@@ -10,31 +10,33 @@ export namespace RPC {
     readonly params: T
   }
 
-  export class Request<T> {
+  export class Request {
     readonly jsonrpc = "2.0"
     readonly id = Cursor.random(4).readUint32()
 
     readonly method: string
     readonly params: unknown[]
 
-    constructor(params: RequestInit) {
-      this.method = params.method
-      this.params = params.params
+    constructor(init: RequestInit) {
+      this.method = init.method
+      this.params = init.params
     }
 
-    async query(socket: WebSocket, signal?: AbortSignal) {
-      socket.send(JSON.stringify(this))
+  }
 
-      const future = new Future<RPC.Response<T>>()
+  export async function fetchWithSocket<T>(init: RequestInit, socket: WebSocket, signal?: AbortSignal) {
+    const request = new Request(init)
+    socket.send(JSON.stringify(request))
 
-      const onEvent = async (event: Event) => {
-        const msgEvent = event as MessageEvent<string>
-        const response = JSON.parse(msgEvent.data) as RPC.Response<T>
-        if (response.id === this.id) future.ok(response)
-      }
+    const future = new Future<Response<T>>()
 
-      return await WebSockets.waitFor("message", { socket, future, onEvent, signal })
+    const onEvent = async (event: Event) => {
+      const msgEvent = event as MessageEvent<string>
+      const response = JSON.parse(msgEvent.data) as Response<T>
+      if (response.id === request.id) future.ok(response)
     }
+
+    return await WebSockets.waitFor("message", { socket, future, onEvent, signal })
   }
 
   export type Response<T = any> =

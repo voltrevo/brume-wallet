@@ -1,11 +1,12 @@
-export interface Data<T> {
-  data?: T
-}
+import { Result } from "@hazae41/xswr"
 
-export namespace Pipes {
+export namespace Results {
 
-  export function data<D = any, R = D>(mutator: (d?: D) => R | undefined) {
-    return (holder?: Data<D>) => ({ data: mutator(holder?.data) })
+  export function map<D, R>(result: Result<D>, mutator: (d: D) => R) {
+    const data = result.data !== undefined
+      ? mutator(result.data)
+      : undefined
+    return { ...result, data } as Result<R>
   }
 
 }

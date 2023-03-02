@@ -1,13 +1,8 @@
 import fallbacks from "@/assets/fallbacks.json";
+import { useAsyncMemo } from "@/libs/react/memo";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { createWebSocketSnowflakeStream, Tor } from "@hazae41/echalote";
-import { createContext, useContext, useEffect, useState } from "react";
-
-async function createTor() {
-  const tcp = await createWebSocketSnowflakeStream("wss://snowflake.bamsoftware.com/")
-  const tor = new Tor(tcp, { fallbacks })
-  return tor
-}
+import { createContext, useContext } from "react";
 
 export const TorContext =
   createContext<Tor | undefined>(undefined)
@@ -19,10 +14,11 @@ export function useTor() {
 export function TorProvider(props: ChildrenProps) {
   const { children } = props
 
-  const [tor, setTor] = useState<Tor>()
+  const tor = useAsyncMemo(async () => {
+    const tcp = await createWebSocketSnowflakeStream("wss://snowflake.bamsoftware.com/")
+    const tor = new Tor(tcp, { fallbacks })
 
-  useEffect(() => {
-    createTor().then(setTor)
+    return tor
   }, [])
 
   if (!tor)

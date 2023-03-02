@@ -1,6 +1,7 @@
 import { Catcher, FallbackProps } from "@/libs/react/error"
 import { CircuitsProvider } from "@/mods/tor/circuits/context"
 import { TorProvider } from "@/mods/tor/context"
+import { SocketsProvider } from "@/mods/tor/sockets/context"
 import '@/styles/globals.css'
 import { XSWR } from "@hazae41/xswr"
 import type { AppProps } from 'next/app'
@@ -14,7 +15,9 @@ export default function App({ Component, pageProps }: AppProps) {
     <XSWR.CoreProvider>
       <TorProvider>
         <CircuitsProvider>
-          <Component {...pageProps} />
+          <SocketsProvider>
+            <Component {...pageProps} />
+          </SocketsProvider>
         </CircuitsProvider>
       </TorProvider>
     </XSWR.CoreProvider>

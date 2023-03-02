@@ -1,7 +1,7 @@
 import { Dialog } from "@/libs/modals/dialog";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
-import { Pipes } from "@/libs/xswr/pipes";
+import { Results } from "@/libs/xswr/pipes";
 import { OppositeTextButton } from "@/mods/components/button";
 import { Wallet } from "ethers";
 import { useCallback, useEffect, useState } from "react";
@@ -56,7 +56,7 @@ export function WalletCreatorDialog(props: CloseProps) {
 
     const { address, privateKey } = wallet
     const walletd: WalletData = { name, address, privateKey }
-    mutate(Pipes.data((prev = []) => [...prev, walletd]))
+    mutate(Results.data((prev = []) => [...prev, walletd]))
 
     close()
   }, [name, wallet, mutate, close])

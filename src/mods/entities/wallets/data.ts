@@ -1,5 +1,6 @@
 import { RPC } from "@/libs/rpc/rpc"
-import { Pipes } from "@/libs/xswr/pipes"
+import { SocketPool } from "@/libs/tor/sockets/pool"
+import { Results } from "@/libs/xswr/pipes"
 import { storage } from "@/libs/xswr/storage"
 import { FetcherMore, getSchema, NormalizerMore, useFetch, useSchema } from "@hazae41/xswr"
 
@@ -41,14 +42,16 @@ export function useWallet(address?: string) {
   return useSchema(getWalletSchema, [address])
 }
 
-export function getBalanceSchema(address: string, socket?: WebSocket) {
-  if (!socket) return
+export function getBalanceSchema(address: string, sockets?: SocketPool) {
+  if (!sockets) return
 
-  const fetcher = async <T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) => {
+  const fetcher = async (init: RPC.RequestInit, more: FetcherMore) => {
     const { signal } = more
-    const request = new RPC.Request(init)
-    const response = await request.query(socket, signal)
-    return Pipes.data(d => d && BigInt(d))(RPC.rewrap(response))
+
+    const socket = await sockets.random()
+    const response = await RPC.fetchWithSocket<string>(init, socket, signal)
+
+    return Results.map(RPC.rewrap(response), BigInt)
   }
 
   return getSchema<bigint, RPC.RequestInit>({
@@ -57,20 +60,22 @@ export function getBalanceSchema(address: string, socket?: WebSocket) {
   }, fetcher)
 }
 
-export function useBalance(address: string, socket?: WebSocket) {
-  const query = useSchema(getBalanceSchema, [address, socket])
+export function useBalance(address: string, sockets?: SocketPool) {
+  const query = useSchema(getBalanceSchema, [address, sockets])
   useFetch(query)
   return query
 }
 
-export function getNonceSchema(address: string, socket?: WebSocket) {
-  if (!socket) return
+export function getNonceSchema(address: string, sockets?: SocketPool) {
+  if (!sockets) return
 
-  const fetcher = async <T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) => {
+  const fetcher = async (init: RPC.RequestInit, more: FetcherMore) => {
     const { signal } = more
-    const request = new RPC.Request(init)
-    const response = await request.query(socket!, signal)
-    return Pipes.data(d => d && BigInt(d))(RPC.rewrap(response))
+
+    const socket = await sockets.random()
+    const response = await RPC.fetchWithSocket<string>(init, socket, signal)
+
+    return Results.map(RPC.rewrap(response), BigInt)
   }
 
   return getSchema<bigint, RPC.RequestInit>({
@@ -79,20 +84,22 @@ export function getNonceSchema(address: string, socket?: WebSocket) {
   }, fetcher)
 }
 
-export function useNonce(address: string, socket?: WebSocket) {
-  const query = useSchema(getNonceSchema, [address, socket])
+export function useNonce(address: string, sockets?: SocketPool) {
+  const query = useSchema(getNonceSchema, [address, sockets])
   useFetch(query)
   return query
 }
 
-export function getGasPriceSchema(socket?: WebSocket) {
-  if (!socket) return
+export function getGasPriceSchema(sockets?: SocketPool) {
+  if (!sockets) return
 
   const fetcher = async <T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) => {
     const { signal } = more
-    const request = new RPC.Request(init)
-    const response = await request.query(socket!, signal)
-    return Pipes.data(d => d && BigInt(d))(RPC.rewrap(response))
+
+    const socket = await sockets.random()
+    const response = await RPC.fetchWithSocket<string>(init, socket, signal)
+
+    return Results.map(RPC.rewrap(response), BigInt)
   }
 
   return getSchema<bigint, RPC.RequestInit>({
@@ -101,8 +108,8 @@ export function getGasPriceSchema(socket?: WebSocket) {
   }, fetcher)
 }
 
-export function useGasPrice(socket?: WebSocket) {
-  const query = useSchema(getGasPriceSchema, [socket])
+export function useGasPrice(sockets?: SocketPool) {
+  const query = useSchema(getGasPriceSchema, [sockets])
   useFetch(query)
   return query
 }

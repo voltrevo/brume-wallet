@@ -16,6 +16,8 @@ export function CircuitsProvider(props: ChildrenProps) {
   const tor = useTor()
 
   const circuits = useMemo(() => {
+    if (!tor) return
+
     return new CircuitPool(tor, {})
   }, [tor])
 
