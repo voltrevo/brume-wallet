@@ -1,4 +1,4 @@
-import { Future } from "libs/futures/future.js"
+import { Future } from "@/libs/futures/future.js"
 import { AbortEvent } from "./abort.js"
 import { AsyncEventTarget } from "./target.js"
 

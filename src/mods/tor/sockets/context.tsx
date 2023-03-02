@@ -18,7 +18,7 @@ export function SocketsProvider(props: ChildrenProps) {
   const sockets = useMemo(() => {
     if (!circuits) return
 
-    const url = new URL("wss://mainnet.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8")
+    const url = new URL("wss://goerli.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8")
 
     return new SocketPool(url, circuits)
   }, [circuits])

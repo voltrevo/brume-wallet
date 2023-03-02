@@ -1,6 +1,6 @@
 import { RPC } from "@/libs/rpc/rpc"
 import { SocketPool } from "@/libs/tor/sockets/pool"
-import { Results } from "@/libs/xswr/pipes"
+import { Results } from "@/libs/xswr/results"
 import { storage } from "@/libs/xswr/storage"
 import { FetcherMore, getSchema, NormalizerMore, useFetch, useSchema } from "@hazae41/xswr"
 
