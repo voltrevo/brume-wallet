@@ -1,26 +1,26 @@
-import { Future } from "../futures/future";
+import { Future } from "@hazae41/future";
 
 export namespace WebSockets {
 
   export async function waitFor<T>(event: string, params: {
     socket: WebSocket,
-    future: Future<T, unknown>,
+    future: Future<T>,
     onEvent: (event: Event) => void,
     signal?: AbortSignal
   }) {
     const { socket, future, onEvent, signal } = params
 
     try {
-      signal?.addEventListener("abort", future.err)
-      socket.addEventListener("error", future.err)
-      socket.addEventListener("close", future.err)
+      signal?.addEventListener("abort", future.reject)
+      socket.addEventListener("error", future.reject)
+      socket.addEventListener("close", future.reject)
       socket.addEventListener(event, onEvent)
 
       return await future.promise
     } finally {
-      signal?.removeEventListener("abort", future.err)
-      socket.removeEventListener("error", future.err)
-      socket.removeEventListener("close", future.err)
+      signal?.removeEventListener("abort", future.reject)
+      socket.removeEventListener("error", future.reject)
+      socket.removeEventListener("close", future.reject)
       socket.removeEventListener(event, onEvent)
     }
   }

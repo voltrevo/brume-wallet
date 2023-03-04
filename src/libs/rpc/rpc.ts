@@ -1,6 +1,6 @@
 import { Cursor } from "@hazae41/binary"
+import { Future } from "@hazae41/future"
 import { XSWR } from "@hazae41/xswr"
-import { Future } from "../futures/future"
 import { WebSockets } from "../websockets/websockets"
 
 export namespace RPC {
@@ -33,7 +33,7 @@ export namespace RPC {
     const onEvent = async (event: Event) => {
       const msgEvent = event as MessageEvent<string>
       const response = JSON.parse(msgEvent.data) as Response<T>
-      if (response.id === request.id) future.ok(response)
+      if (response.id === request.id) future.resolve(response)
     }
 
     return await WebSockets.waitFor("message", { socket, future, onEvent, signal })

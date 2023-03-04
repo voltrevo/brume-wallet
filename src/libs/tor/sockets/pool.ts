@@ -1,25 +1,25 @@
 import { Arrays } from "@/libs/arrays/arrays"
 import { AsyncEventTarget } from "@/libs/events/target"
-import { Future } from "@/libs/futures/future"
-import { Ciphers, TlsStream } from "@hazae41/cadenas"
+import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Circuit, CircuitPool } from "@hazae41/echalote"
 import { Fleche } from "@hazae41/fleche"
+import { Future } from "@hazae41/future"
 
 export async function createWebSocket(url: URL, circuit: Circuit, signal?: AbortSignal) {
   const tcp = await circuit.open(url.hostname, 443)
-  const tls = new TlsStream(tcp, { ciphers: [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384] })
-  const socket = new Fleche.WebSocket(url, undefined, { stream: tls })
+  const tls = new TlsClientDuplex(tcp, { ciphers: [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384] })
+  const socket = new Fleche.WebSocket(url, undefined, { subduplex: tls })
 
   const future = new Future()
 
   try {
-    socket.addEventListener("open", future.ok, { passive: true })
-    socket.addEventListener("error", future.err, { passive: true })
+    socket.addEventListener("open", future.resolve, { passive: true })
+    socket.addEventListener("error", future.reject, { passive: true })
 
     await future.promise
   } finally {
-    socket.removeEventListener("open", future.ok)
-    socket.removeEventListener("error", future.err)
+    socket.removeEventListener("open", future.resolve)
+    socket.removeEventListener("error", future.reject)
   }
 
   return socket

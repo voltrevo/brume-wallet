@@ -1,22 +1,18 @@
-import { Component, ReactNode } from "react"
+import { ChildrenProps } from "@hazae41/xswr/dist/types/libs/react"
+import { Component } from "react"
+import { ErrorProps } from "./props/error"
+import { FallbackProps } from "./props/fallback"
 
-export interface FallbackProps {
-  error: unknown
-}
-
-export type Fallback =
-  (props: FallbackProps) => JSX.Element
-
-export interface CatcherProps {
-  children: ReactNode
-  fallback: Fallback
-}
+export type CatcherProps =
+  & ChildrenProps
+  & FallbackProps<ErrorProps>
 
 export interface CatcherState {
   error?: unknown
 }
 
 export class Catcher extends Component<CatcherProps, CatcherState> {
+
   constructor(props: CatcherProps) {
     super(props)
     this.state = {}
