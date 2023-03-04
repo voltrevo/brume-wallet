@@ -1,12 +1,11 @@
 export interface ErrInit {
-  readonly data?: undefined
-  readonly error: {}
+  readonly error: unknown
 }
 
 export class Err {
 
   constructor(
-    readonly error: {}
+    readonly error: unknown
   ) { }
 
   static from(init: ErrInit) {

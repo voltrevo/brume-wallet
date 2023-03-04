@@ -1,9 +1,8 @@
-export interface OkInit<T = unknown> {
+export interface OkInit<T> {
   readonly data: T
-  readonly error?: undefined
 }
 
-export class Ok<T = unknown> {
+export class Ok<T> {
 
   constructor(
     readonly data: T

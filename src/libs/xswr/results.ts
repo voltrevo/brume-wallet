@@ -9,15 +9,6 @@ export namespace Results {
     return { ...result, data } as Result<R>
   }
 
-  export async function wrap<T>(callback: () => Promise<T>): Promise<Result<T>> {
-    try {
-      const data = await callback()
-      return { data }
-    } catch (error: unknown) {
-      return { error }
-    }
-  }
-
 }
 
 

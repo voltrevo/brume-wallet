@@ -1,6 +1,6 @@
 import { Result } from "../result"
 
-export type ResponseInit<T = unknown> =
+export type ResponseInit<T> =
   | Response.OkInit<T>
   | Response.ErrInit
 
@@ -11,7 +11,7 @@ export type Response<T = unknown> =
 export namespace Response {
 
   export function from<T>(init: ResponseInit<T>) {
-    if (init.error)
+    if ("error" in init)
       return Err.from(init)
     else
       return Ok.from(init)
@@ -20,7 +20,6 @@ export namespace Response {
   export interface OkInit<T = unknown> {
     id: number,
     result: T
-    error?: undefined
   }
 
   export class Ok<T = unknown> {
@@ -49,13 +48,10 @@ export namespace Response {
 
   export interface ErrInit {
     id: number
-    result?: undefined
     error: { message: string }
   }
 
   export class Err {
-
-    readonly result?: undefined
 
     constructor(
       readonly id: number,
