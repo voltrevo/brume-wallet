@@ -1,74 +1,38 @@
-import { Cursor } from "@hazae41/binary"
 import { Future } from "@hazae41/future"
-import { XSWR } from "@hazae41/xswr"
-import { WebSockets } from "../websockets/websockets"
+import { Sockets } from "../sockets/sockets"
+import { Request, RequestInit } from "./request"
+import { Response, ResponseInit } from "./response"
 
-export namespace RPC {
+export * from "./request"
+export * from "./response"
 
-  export interface RequestInit<T extends unknown[] = unknown[]> {
-    readonly method: string,
-    readonly params: T
+export class Client {
+
+  #id = 0
+
+  constructor() { }
+
+  request(init: RequestInit): Request {
+    const { method, params } = init
+
+    const id = this.#id++
+
+    return { jsonrpc: "2.0", id, method, params }
   }
 
-  export class Request {
-    readonly jsonrpc = "2.0"
-    readonly id = Cursor.random(4).readUint32()
+}
 
-    readonly method: string
-    readonly params: unknown[]
+export async function fetchWithSocket<T>(request: Request, socket: WebSocket, signal?: AbortSignal) {
+  socket.send(JSON.stringify(request))
 
-    constructor(init: RequestInit) {
-      this.method = init.method
-      this.params = init.params
-    }
+  const future = new Future<Response<T>>()
 
+  const onEvent = async (event: Event) => {
+    const msgEvent = event as MessageEvent<string>
+    const response = JSON.parse(msgEvent.data) as ResponseInit<T>
+    if (response.id !== request.id) return
+    future.resolve(Response.from(response))
   }
 
-  export async function fetchWithSocket<T>(init: RequestInit, socket: WebSocket, signal?: AbortSignal) {
-    const request = new Request(init)
-    socket.send(JSON.stringify(request))
-
-    const future = new Future<Response<T>>()
-
-    const onEvent = async (event: Event) => {
-      const msgEvent = event as MessageEvent<string>
-      const response = JSON.parse(msgEvent.data) as Response<T>
-      if (response.id === request.id) future.resolve(response)
-    }
-
-    return await WebSockets.waitFor("message", { socket, future, onEvent, signal })
-  }
-
-  export type Response<T = any> =
-    | OkResponse<T>
-    | ErrResponse
-
-  export interface OkResponse<T = any> {
-    id: number,
-    result: T
-    error?: undefined
-  }
-
-  export interface ErrResponse {
-    id: number
-    result?: undefined
-    error: { message: string }
-  }
-
-  export function unwrap<T>(response: Response<T>) {
-    if (response.error)
-      throw new Error(response.error.message)
-    return response.result
-  }
-
-  export function rewrap<T>(response: Response<T>): XSWR.Result<T> {
-    if (response.error) {
-      const error = new Error(response.error.message)
-      return { error }
-    }
-
-    const data = response.result
-    return { data }
-  }
-
+  return await Sockets.waitFor("message", { socket, future, onEvent, signal })
 }

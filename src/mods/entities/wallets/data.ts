@@ -1,4 +1,4 @@
-import { RPC } from "@/libs/rpc/rpc"
+import { Rpc } from "@/libs/rpc"
 import { SocketPool } from "@/libs/tor/sockets/pool"
 import { Results } from "@/libs/xswr/results"
 import { storage } from "@/libs/xswr/storage"
@@ -45,16 +45,19 @@ export function useWallet(address?: string) {
 export function getBalanceSchema(address: string, sockets?: SocketPool) {
   if (!sockets) return
 
-  const fetcher = async (init: RPC.RequestInit, more: FetcherMore) => {
+  const client = new Rpc.Client()
+
+  const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     const { signal } = more
 
     const socket = await sockets.random()
-    const response = await RPC.fetchWithSocket<string>(init, socket, signal)
+    const request = client.request(init)
+    const response = await Rpc.fetchWithSocket<string>(request, socket, signal)
 
-    return Results.map(RPC.rewrap(response), BigInt)
+    return Results.map(response.rewrap(), BigInt)
   }
 
-  return getSchema<bigint, RPC.RequestInit>({
+  return getSchema<bigint, Rpc.RequestInit>({
     method: "eth_getBalance",
     params: [address, "pending"]
   }, fetcher)
@@ -69,16 +72,19 @@ export function useBalance(address: string, sockets?: SocketPool) {
 export function getNonceSchema(address: string, sockets?: SocketPool) {
   if (!sockets) return
 
-  const fetcher = async (init: RPC.RequestInit, more: FetcherMore) => {
+  const client = new Rpc.Client()
+
+  const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     const { signal } = more
 
     const socket = await sockets.random()
-    const response = await RPC.fetchWithSocket<string>(init, socket, signal)
+    const request = client.request(init)
+    const response = await Rpc.fetchWithSocket<string>(request, socket, signal)
 
-    return Results.map(RPC.rewrap(response), BigInt)
+    return Results.map(response.rewrap(), BigInt)
   }
 
-  return getSchema<bigint, RPC.RequestInit>({
+  return getSchema<bigint, Rpc.RequestInit>({
     method: "eth_getTransactionCount",
     params: [address, "pending"]
   }, fetcher)
@@ -93,16 +99,19 @@ export function useNonce(address: string, sockets?: SocketPool) {
 export function getGasPriceSchema(sockets?: SocketPool) {
   if (!sockets) return
 
-  const fetcher = async <T extends unknown[]>(init: RPC.RequestInit<T>, more: FetcherMore) => {
+  const client = new Rpc.Client()
+
+  const fetcher = async <T extends unknown[]>(init: Rpc.RequestInit<T>, more: FetcherMore) => {
     const { signal } = more
 
     const socket = await sockets.random()
-    const response = await RPC.fetchWithSocket<string>(init, socket, signal)
+    const request = client.request(init)
+    const response = await Rpc.fetchWithSocket<string>(request, socket, signal)
 
-    return Results.map(RPC.rewrap(response), BigInt)
+    return Results.map(response.rewrap(), BigInt)
   }
 
-  return getSchema<bigint, RPC.RequestInit>({
+  return getSchema<bigint, Rpc.RequestInit>({
     method: "eth_gasPrice",
     params: []
   }, fetcher)

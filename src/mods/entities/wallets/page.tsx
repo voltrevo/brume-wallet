@@ -7,7 +7,7 @@ import { useAsyncTry } from "@/libs/react/async";
 import { useInputChange } from "@/libs/react/events";
 import { useBoolean } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
-import { RPC } from "@/libs/rpc/rpc";
+import { Rpc } from "@/libs/rpc";
 import { ActionButton } from "@/mods/components/action";
 import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button";
 import { useSockets } from "@/mods/tor/sockets/context";
@@ -54,7 +54,9 @@ export function WalletPage(props: {}) {
 
     const ethers_wallet = new Wallet(wallet.data.privateKey)
 
-    const gas = await RPC.fetchWithSocket<string>({
+    const client = new Rpc.Client()
+
+    const gasReq = client.request({
       method: "eth_estimateGas",
       params: [{
         chainId: Hex.from(5),
@@ -64,11 +66,13 @@ export function WalletPage(props: {}) {
         nonce: Hex.from(nonce.data),
         gasPrice: Hex.from(gasPrice.data)
       }, "latest"]
-    }, socket)
+    })
 
-    if (gas.error) throw gas.error
+    const gasRes = await Rpc.fetchWithSocket<string>(gasReq, socket)
 
-    const tx = await RPC.fetchWithSocket<string>({
+    if (gasRes.error) throw gasRes.error
+
+    const txReq = client.request({
       method: "eth_sendRawTransaction",
       params: [await ethers_wallet.signTransaction({
         chainId: 5,
@@ -77,13 +81,15 @@ export function WalletPage(props: {}) {
         value: parseUnits(valueInput, 18),
         nonce: Number(nonce.data),
         gasPrice: gasPrice.data,
-        gasLimit: gas.result
+        gasLimit: gasRes.result
       })]
-    }, socket)
+    })
 
-    if (tx.error !== undefined) throw tx.error
+    const txRes = await Rpc.fetchWithSocket<string>(txReq, socket)
 
-    setTxHash(tx.result)
+    if (txRes.error !== undefined) throw txRes.error
+
+    setTxHash(txRes.result)
 
     balance.refetch()
     nonce.refetch()

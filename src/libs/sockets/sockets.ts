@@ -1,6 +1,6 @@
 import { Future } from "@hazae41/future";
 
-export namespace WebSockets {
+export namespace Sockets {
 
   export async function waitFor<T>(event: string, params: {
     socket: WebSocket,
