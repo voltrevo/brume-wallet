@@ -19,14 +19,14 @@ import { useBalance, useGasPrice, useNonce, useWallet } from "./data";
 
 export function WalletPage(props: {}) {
   const router = useRouter()
-  const sockets = useSessions()
+  const sessions = useSessions()
 
   const [, , address] = location.hash.split("/")
 
   const wallet = useWallet(address)
-  const balance = useBalance(address, sockets)
-  const nonce = useNonce(address, sockets)
-  const gasPrice = useGasPrice(sockets)
+  const balance = useBalance(address, sessions)
+  const nonce = useNonce(address, sessions)
+  const gasPrice = useGasPrice(sessions)
 
   const [recipientInput = "", setRecipientInput] = useState<string>()
 
@@ -50,7 +50,7 @@ export function WalletPage(props: {}) {
     if (!nonce.data) return
     if (!gasPrice.data) return
 
-    const session = await sockets.random()
+    const session = await sessions.random()
 
     const ethers_wallet = new Wallet(wallet.data.privateKey)
 
@@ -91,7 +91,7 @@ export function WalletPage(props: {}) {
 
     balance.refetch()
     nonce.refetch()
-  }, [sockets, address, nonce.data, gasPrice.data, recipientInput, valueInput], console.error)
+  }, [sessions, address, nonce.data, gasPrice.data, recipientInput, valueInput], console.error)
 
   const Header = <div className="flex p-md text-colored rounded-b-xl border-b border-violet6 bg-violet2 justify-between">
     <ContrastTextButton className="w-[100px]">
