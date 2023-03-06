@@ -1,5 +1,5 @@
 import { Rpc } from "@/libs/rpc"
-import { SocketPool } from "@/libs/tor/sockets/pool"
+import { SessionPool } from "@/libs/tor/sessions/pool"
 import { Results } from "@/libs/xswr/results"
 import { storage } from "@/libs/xswr/storage"
 import { FetcherMore, getSchema, NormalizerMore, useFetch, useSchema } from "@hazae41/xswr"
@@ -42,17 +42,15 @@ export function useWallet(address?: string) {
   return useSchema(getWalletSchema, [address])
 }
 
-export function getBalanceSchema(address: string, sockets?: SocketPool) {
-  if (!sockets) return
-
-  const client = new Rpc.Client()
+export function getBalanceSchema(address: string, sessions?: SessionPool) {
+  if (!sessions) return
 
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     const { signal } = more
 
-    const socket = await sockets.random()
-    const request = client.request(init)
-    const response = await Rpc.fetchWithSocket<string>(request, socket, signal)
+    const session = await sessions.random()
+    const request = session.client.request(init)
+    const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
 
     return Results.map(response.rewrap(), BigInt)
   }
@@ -63,23 +61,21 @@ export function getBalanceSchema(address: string, sockets?: SocketPool) {
   }, fetcher)
 }
 
-export function useBalance(address: string, sockets?: SocketPool) {
+export function useBalance(address: string, sockets?: SessionPool) {
   const query = useSchema(getBalanceSchema, [address, sockets])
   useFetch(query)
   return query
 }
 
-export function getNonceSchema(address: string, sockets?: SocketPool) {
-  if (!sockets) return
-
-  const client = new Rpc.Client()
+export function getNonceSchema(address: string, sessions?: SessionPool) {
+  if (!sessions) return
 
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     const { signal } = more
 
-    const socket = await sockets.random()
-    const request = client.request(init)
-    const response = await Rpc.fetchWithSocket<string>(request, socket, signal)
+    const session = await sessions.random()
+    const request = session.client.request(init)
+    const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
 
     return Results.map(response.rewrap(), BigInt)
   }
@@ -90,23 +86,21 @@ export function getNonceSchema(address: string, sockets?: SocketPool) {
   }, fetcher)
 }
 
-export function useNonce(address: string, sockets?: SocketPool) {
+export function useNonce(address: string, sockets?: SessionPool) {
   const query = useSchema(getNonceSchema, [address, sockets])
   useFetch(query)
   return query
 }
 
-export function getGasPriceSchema(sockets?: SocketPool) {
-  if (!sockets) return
-
-  const client = new Rpc.Client()
+export function getGasPriceSchema(sessions?: SessionPool) {
+  if (!sessions) return
 
   const fetcher = async <T extends unknown[]>(init: Rpc.RequestInit<T>, more: FetcherMore) => {
     const { signal } = more
 
-    const socket = await sockets.random()
-    const request = client.request(init)
-    const response = await Rpc.fetchWithSocket<string>(request, socket, signal)
+    const session = await sessions.random()
+    const request = session.client.request(init)
+    const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
 
     return Results.map(response.rewrap(), BigInt)
   }
@@ -117,7 +111,7 @@ export function getGasPriceSchema(sockets?: SocketPool) {
   }, fetcher)
 }
 
-export function useGasPrice(sockets?: SocketPool) {
+export function useGasPrice(sockets?: SessionPool) {
   const query = useSchema(getGasPriceSchema, [sockets])
   useFetch(query)
   return query

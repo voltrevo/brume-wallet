@@ -10,7 +10,7 @@ import { useElement } from "@/libs/react/handles/element";
 import { Rpc } from "@/libs/rpc";
 import { ActionButton } from "@/mods/components/action";
 import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button";
-import { useSockets } from "@/mods/tor/sockets/context";
+import { useSessions } from "@/mods/tor/sockets/context";
 import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { getAddress, parseUnits, Wallet } from "ethers";
 import { useRouter } from "next/router";
@@ -19,7 +19,7 @@ import { useBalance, useGasPrice, useNonce, useWallet } from "./data";
 
 export function WalletPage(props: {}) {
   const router = useRouter()
-  const sockets = useSockets()
+  const sockets = useSessions()
 
   const [, , address] = location.hash.split("/")
 
@@ -50,13 +50,11 @@ export function WalletPage(props: {}) {
     if (!nonce.data) return
     if (!gasPrice.data) return
 
-    const socket = await sockets.random()
+    const session = await sockets.random()
 
     const ethers_wallet = new Wallet(wallet.data.privateKey)
 
-    const client = new Rpc.Client()
-
-    const gasReq = client.request({
+    const gasReq = session.client.request({
       method: "eth_estimateGas",
       params: [{
         chainId: Hex.from(5),
@@ -68,11 +66,11 @@ export function WalletPage(props: {}) {
       }, "latest"]
     })
 
-    const gasRes = await Rpc.fetchWithSocket<string>(gasReq, socket)
+    const gasRes = await Rpc.fetchWithSocket<string>(gasReq, session.socket)
 
     if (gasRes.error) throw gasRes.error
 
-    const txReq = client.request({
+    const txReq = session.client.request({
       method: "eth_sendRawTransaction",
       params: [await ethers_wallet.signTransaction({
         chainId: 5,
@@ -85,7 +83,7 @@ export function WalletPage(props: {}) {
       })]
     })
 
-    const txRes = await Rpc.fetchWithSocket<string>(txReq, socket)
+    const txRes = await Rpc.fetchWithSocket<string>(txReq, session.socket)
 
     if (txRes.error !== undefined) throw txRes.error
 

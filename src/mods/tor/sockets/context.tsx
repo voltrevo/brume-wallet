@@ -1,29 +1,29 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { SocketPool } from "@/libs/tor/sockets/pool";
+import { SessionPool } from "@/libs/tor/sessions/pool";
 import { createContext, useContext, useMemo } from "react";
 import { useCircuits } from "../circuits/context";
 
-export const SocketsContext =
-  createContext<SocketPool | undefined>(undefined)
+export const SessionsContext =
+  createContext<SessionPool | undefined>(undefined)
 
-export function useSockets() {
-  return useContext(SocketsContext)!
+export function useSessions() {
+  return useContext(SessionsContext)!
 }
 
-export function SocketsProvider(props: ChildrenProps) {
+export function SessionsProvider(props: ChildrenProps) {
   const { children } = props
 
   const circuits = useCircuits()
 
-  const sockets = useMemo(() => {
+  const sessions = useMemo(() => {
     if (!circuits) return
 
     const url = new URL("wss://goerli.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8")
 
-    return new SocketPool(url, circuits)
+    return new SessionPool(url, circuits)
   }, [circuits])
 
-  return <SocketsContext.Provider value={sockets}>
+  return <SessionsContext.Provider value={sessions}>
     {children}
-  </SocketsContext.Provider>
+  </SessionsContext.Provider>
 }

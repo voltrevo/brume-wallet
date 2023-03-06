@@ -1,5 +1,6 @@
 import { Arrays } from "@/libs/arrays/arrays"
 import { AsyncEventTarget } from "@/libs/events/target"
+import { Rpc } from "@/libs/rpc"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Circuit, CircuitPool } from "@hazae41/echalote"
 import { Fleche } from "@hazae41/fleche"
@@ -22,26 +23,33 @@ export async function createWebSocket(url: URL, circuit: Circuit, signal?: Abort
     socket.removeEventListener("error", future.reject)
   }
 
-  return socket
+  const client = new Rpc.Client()
+
+  return { socket, client }
 }
 
-export interface SocketPoolEntry {
+export interface Session {
+  socket: WebSocket,
+  client: Rpc.Client
+}
+
+export interface PoolEntry<T> {
   index: number,
-  socket: WebSocket
+  element: T
 }
 
-export type SocketPoolEvents = {
-  socket: MessageEvent<SocketPoolEntry>
+export type PoolEvents<T> = {
+  element: MessageEvent<PoolEntry<T>>
 }
 
-export class SocketPool {
+export class SessionPool {
 
-  readonly events = new AsyncEventTarget<SocketPoolEvents>()
+  readonly events = new AsyncEventTarget<PoolEvents<Session>>()
 
-  readonly #allSockets: WebSocket[]
-  readonly #allPromises: Promise<WebSocket>[]
+  readonly #allSockets: Session[]
+  readonly #allPromises: Promise<Session>[]
 
-  readonly #openSockets = new Set<WebSocket>()
+  readonly #openSockets = new Set<Session>()
 
   constructor(
     readonly url: URL,
@@ -66,28 +74,28 @@ export class SocketPool {
 
     const circuit = await this.circuits.get(index)
 
-    const socket = await createWebSocket(this.url, circuit, signal)
+    const element = await createWebSocket(this.url, circuit, signal)
 
-    this.#allSockets[index] = socket
-    this.#openSockets.add(socket)
+    this.#allSockets[index] = element
+    this.#openSockets.add(element)
 
     const onSocketCloseOrError = () => {
       delete this.#allSockets[index]
-      this.#openSockets.delete(socket)
+      this.#openSockets.delete(element)
 
-      socket.removeEventListener("close", onSocketCloseOrError)
-      socket.removeEventListener("error", onSocketCloseOrError)
+      element.socket.removeEventListener("close", onSocketCloseOrError)
+      element.socket.removeEventListener("error", onSocketCloseOrError)
 
       this.#start(index)
     }
 
-    socket.addEventListener("close", onSocketCloseOrError)
-    socket.addEventListener("error", onSocketCloseOrError)
+    element.socket.addEventListener("close", onSocketCloseOrError)
+    element.socket.addEventListener("error", onSocketCloseOrError)
 
-    const event = new MessageEvent("socket", { data: { index, socket } })
-    await this.events.dispatchEvent(event, "socket")
+    const event = new MessageEvent("socket", { data: { index, element } })
+    await this.events.dispatchEvent(event, "element")
 
-    return socket
+    return element
   }
 
   async random() {
