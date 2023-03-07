@@ -1,5 +1,5 @@
-import { ChildrenProps } from "@hazae41/xswr/dist/types/libs/react"
 import { Component } from "react"
+import { ChildrenProps } from "./props/children"
 import { ErrorProps } from "./props/error"
 import { FallbackProps } from "./props/fallback"
 
