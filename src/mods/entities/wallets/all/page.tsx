@@ -16,7 +16,7 @@ export function WalletsPage(props: {}) {
   const creator = useBoolean()
 
   const onWalletClick = useCallback((wallet: Wallet) => {
-    router.push(`/#/wallet/${wallet.address}`, undefined, {})
+    router.push(`/wallet/${wallet.address}`)
   }, [router])
 
   const selectNetwork = useBoolean()

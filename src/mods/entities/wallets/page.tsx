@@ -17,11 +17,11 @@ import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 import { useBalance, useGasPrice, useNonce, useWallet } from "./data";
 
-export function WalletPage(props: {}) {
+export function WalletPage(props: { address: string }) {
+  const { address } = props
+
   const router = useRouter()
   const sessions = useSessions()
-
-  const [, , address] = location.hash.split("/")
 
   const wallet = useWallet(address)
   const balance = useBalance(address, sessions)

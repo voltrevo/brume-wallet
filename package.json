@@ -7,7 +7,7 @@
     "build": "next build",
     "dev:extension": "npm-watch build",
     "build:extension": "npm run build:next && npm run build:chrome && npm run build:safari",
-    "build:next": "next build && next export && mv out/_next out/next && sed -i '' -e 's/\\/_next/\\.\\/next/g' out/**.html",
+    "build:next": "next build && next export && mv out/_next out/next && LANG=C && find ./out -type f -exec sed -i '' 's/_next/next/g' {} +",
     "build:chrome": "rimraf chrome && cp -R out chrome && mv chrome/chrome/* chrome && rimraf chrome/chrome chrome/safari",
     "build:safari": "rimraf safari && cp -R out safari && mv safari/safari/* safari && rm -rf safari/chrome safari/safari",
     "xcode": "xcrun safari-web-extension-converter ./safari --project-location xcode --app-name brume-wallet",
