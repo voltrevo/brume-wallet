@@ -2,6 +2,10 @@ import { FixedNumber } from "ethers"
 
 export namespace BigInts {
 
+  export function is(x: unknown): x is bigint {
+    return typeof x === "bigint"
+  }
+
   export function float(x: bigint, d = 180) {
     return FixedNumber
       .fromValue(x, d)

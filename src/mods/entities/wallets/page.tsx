@@ -47,8 +47,9 @@ export function WalletPage(props: {}) {
 
   const trySend = useAsyncTry(async () => {
     if (!wallet.data) return
-    if (!nonce.data) return
-    if (!gasPrice.data) return
+
+    if (!BigInts.is(nonce.data)) return
+    if (!BigInts.is(gasPrice.data)) return
 
     const session = await sessions.random()
 

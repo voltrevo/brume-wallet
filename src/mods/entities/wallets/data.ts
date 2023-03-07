@@ -2,7 +2,7 @@ import { Rpc } from "@/libs/rpc"
 import { SessionPool } from "@/libs/tor/sessions/pool"
 import { Results } from "@/libs/xswr/results"
 import { storage } from "@/libs/xswr/storage"
-import { FetcherMore, getSchema, NormalizerMore, useFetch, useSchema } from "@hazae41/xswr"
+import { FetcherMore, getSchema, NormalizerMore, useError, useFetch, useSchema } from "@hazae41/xswr"
 
 export type Wallet =
   | WalletRef
@@ -55,7 +55,7 @@ export function getBalanceSchema(address: string, sessions?: SessionPool) {
     return Results.map(response.rewrap(), BigInt)
   }
 
-  return getSchema<bigint, Rpc.RequestInit>({
+  return getSchema({
     method: "eth_getBalance",
     params: [address, "pending"]
   }, fetcher)
@@ -64,6 +64,7 @@ export function getBalanceSchema(address: string, sessions?: SessionPool) {
 export function useBalance(address: string, sockets?: SessionPool) {
   const query = useSchema(getBalanceSchema, [address, sockets])
   useFetch(query)
+  useError(query, console.error)
   return query
 }
 
@@ -80,7 +81,7 @@ export function getNonceSchema(address: string, sessions?: SessionPool) {
     return Results.map(response.rewrap(), BigInt)
   }
 
-  return getSchema<bigint, Rpc.RequestInit>({
+  return getSchema({
     method: "eth_getTransactionCount",
     params: [address, "pending"]
   }, fetcher)
@@ -89,6 +90,7 @@ export function getNonceSchema(address: string, sessions?: SessionPool) {
 export function useNonce(address: string, sockets?: SessionPool) {
   const query = useSchema(getNonceSchema, [address, sockets])
   useFetch(query)
+  useError(query, console.error)
   return query
 }
 
@@ -105,7 +107,7 @@ export function getGasPriceSchema(sessions?: SessionPool) {
     return Results.map(response.rewrap(), BigInt)
   }
 
-  return getSchema<bigint, Rpc.RequestInit>({
+  return getSchema({
     method: "eth_gasPrice",
     params: []
   }, fetcher)
@@ -114,5 +116,6 @@ export function getGasPriceSchema(sessions?: SessionPool) {
 export function useGasPrice(sockets?: SessionPool) {
   const query = useSchema(getGasPriceSchema, [sockets])
   useFetch(query)
+  useError(query, console.error)
   return query
 }
