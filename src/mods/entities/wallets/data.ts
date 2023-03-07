@@ -1,8 +1,7 @@
 import { Rpc } from "@/libs/rpc"
 import { SessionPool } from "@/libs/tor/sessions/pool"
-import { Results } from "@/libs/xswr/results"
 import { storage } from "@/libs/xswr/storage"
-import { FetcherMore, getSchema, NormalizerMore, useError, useFetch, useSchema } from "@hazae41/xswr"
+import { FetcherMore, getSchema, NormalizerMore, Result, useError, useFetch, useSchema } from "@hazae41/xswr"
 
 export type Wallet =
   | WalletRef
@@ -52,7 +51,7 @@ export function getBalanceSchema(address: string, sessions?: SessionPool) {
     const request = session.client.request(init)
     const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
 
-    return Results.map(response.rewrap(), BigInt)
+    return Result.rewrap(response).map(BigInt)
   }
 
   return getSchema({
@@ -78,7 +77,7 @@ export function getNonceSchema(address: string, sessions?: SessionPool) {
     const request = session.client.request(init)
     const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
 
-    return Results.map(response.rewrap(), BigInt)
+    return Result.rewrap(response).map(BigInt)
   }
 
   return getSchema({
@@ -104,7 +103,7 @@ export function getGasPriceSchema(sessions?: SessionPool) {
     const request = session.client.request(init)
     const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
 
-    return Results.map(response.rewrap(), BigInt)
+    return Result.rewrap(response).map(BigInt)
   }
 
   return getSchema({

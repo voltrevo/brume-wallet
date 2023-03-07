@@ -1,4 +1,3 @@
-import { Result } from "../result"
 
 export type ResponseInit<T> =
   | Response.OkInit<T>
@@ -40,10 +39,6 @@ export namespace Response {
       return this.result
     }
 
-    rewrap() {
-      return new Result.Ok(this.result)
-    }
-
   }
 
   export interface ErrInit {
@@ -65,10 +60,6 @@ export namespace Response {
 
     unwrap(): never {
       throw new Error(this.error.message)
-    }
-
-    rewrap() {
-      return new Result.Err(this.error)
     }
 
   }
