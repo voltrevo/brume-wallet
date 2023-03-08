@@ -27,13 +27,17 @@ export interface WalletData {
 }
 
 export function getWalletSchema(address?: string) {
-  return getSchema<WalletData>(address && `wallet/${address}`, undefined, { storage })
+  if (!address) return
+
+  return getSchema<WalletData>(`wallet/${address}`, undefined, { storage })
 }
 
 export async function getWalletNormal(wallet: Wallet, more: NormalizerMore) {
   if ("ref" in wallet) return wallet
+
   const schema = getWalletSchema(wallet.address)
-  await schema.normalize(wallet, more)
+  await schema?.normalize(wallet, more)
+
   return { ref: true, address: wallet.address } as WalletRef
 }
 
