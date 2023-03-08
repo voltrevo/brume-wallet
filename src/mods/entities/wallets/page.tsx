@@ -153,7 +153,7 @@ export function WalletPage(props: { address: string }) {
         onMouseLeave={copyPopper.unset}>
         <div className="flex flex-col items-center">
           <span className="text-xl text-colored">
-            {wallet!.data!.name}
+            {wallet.data?.name}
           </span>
           <span className="text-contrast">
             {`${address.slice(0, 5)}...${address.slice(-5)}`}
