@@ -10,7 +10,7 @@ import { useElement } from "@/libs/react/handles/element";
 import { Rpc } from "@/libs/rpc";
 import { ActionButton } from "@/mods/components/action";
 import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button";
-import { useSessions } from "@/mods/tor/sockets/context";
+import { useSessions } from "@/mods/tor/sessions/context";
 import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { getAddress, parseUnits, Wallet } from "ethers";
 import { useRouter } from "next/router";

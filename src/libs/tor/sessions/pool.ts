@@ -1,46 +1,8 @@
 import { Arrays } from "@/libs/arrays/arrays"
 import { AsyncEventTarget } from "@/libs/events/target"
-import { Rpc } from "@/libs/rpc"
-import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
-import { Circuit, CircuitPool } from "@hazae41/echalote"
-import { Fleche } from "@hazae41/fleche"
-import { Future } from "@hazae41/future"
-
-export async function createWebSocket(url: URL, circuit: Circuit, signal?: AbortSignal) {
-  const tcp = await circuit.open(url.hostname, 443)
-  const tls = new TlsClientDuplex(tcp, { ciphers: [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384] })
-  const socket = new Fleche.WebSocket(url, undefined, { subduplex: tls })
-
-  const future = new Future()
-
-  try {
-    socket.addEventListener("open", future.resolve, { passive: true })
-    socket.addEventListener("error", future.reject, { passive: true })
-
-    await future.promise
-  } finally {
-    socket.removeEventListener("open", future.resolve)
-    socket.removeEventListener("error", future.reject)
-  }
-
-  const client = new Rpc.Client()
-
-  return { socket, client }
-}
-
-export interface Session {
-  socket: WebSocket,
-  client: Rpc.Client
-}
-
-export interface PoolEntry<T> {
-  index: number,
-  element: T
-}
-
-export type PoolEvents<T> = {
-  element: MessageEvent<PoolEntry<T>>
-}
+import { CircuitPool } from "@hazae41/echalote"
+import { PoolEvents } from "../pool"
+import { createSession, Session } from "./session"
 
 export class SessionPool {
 
@@ -74,7 +36,7 @@ export class SessionPool {
 
     const circuit = await this.circuits.get(index)
 
-    const element = await createWebSocket(this.url, circuit, signal)
+    const element = await createSession(this.url, circuit, signal)
 
     this.#allSockets[index] = element
     this.#openSockets.add(element)

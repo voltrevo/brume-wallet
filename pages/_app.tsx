@@ -2,8 +2,7 @@ import { Catcher } from "@/libs/react/error"
 import { ErrorProps } from "@/libs/react/props/error"
 import { CircuitsProvider } from "@/mods/tor/circuits/context"
 import { TorProvider } from "@/mods/tor/context"
-import { TorFallback } from "@/mods/tor/fallback"
-import { SessionsProvider } from "@/mods/tor/sockets/context"
+import { SessionsProvider } from "@/mods/tor/sessions/context"
 import '@/styles/globals.css'
 import { XSWR } from "@hazae41/xswr"
 import type { AppProps } from 'next/app'
@@ -17,7 +16,7 @@ export function Fallback(props: ErrorProps) {
 export default function App({ Component, pageProps }: AppProps) {
   return <Catcher fallback={Fallback}>
     <XSWR.CoreProvider>
-      <TorProvider fallback={TorFallback}>
+      <TorProvider>
         <CircuitsProvider>
           <SessionsProvider>
             <Component {...pageProps} />
