@@ -6,4 +6,12 @@ export namespace Types {
     return x
   }
 
+  export function asStringOr<T>(x: unknown, or: T) {
+    try {
+      return asString(x)
+    } catch (e: unknown) {
+      return or
+    }
+  }
+
 }
