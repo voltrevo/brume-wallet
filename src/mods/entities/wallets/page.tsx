@@ -2,13 +2,11 @@ import { BigInts } from "@/libs/bigints/bigints";
 import { Hex } from "@/libs/hex/hex";
 import { HoverPopper } from "@/libs/modals/popper";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
-import { Img } from "@/libs/next/image";
 import { useAsyncTry } from "@/libs/react/async";
 import { useInputChange } from "@/libs/react/events";
 import { useBoolean } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
 import { Rpc } from "@/libs/rpc";
-import { ActionButton } from "@/mods/components/action";
 import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button";
 import { useSessions } from "@/mods/tor/sessions/context";
 import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
@@ -106,11 +104,6 @@ export function WalletPage(props: { address: string }) {
         {"Goerli Tesnet"}
       </span>
     </ContrastTextButton>
-    <ContrastTextButton className="w-[100px]">
-      <span className="text-xs">
-        V 0.1
-      </span>
-    </ContrastTextButton>
   </div>
 
 
@@ -145,31 +138,23 @@ export function WalletPage(props: { address: string }) {
           <ArrowLeftIcon className="icon-xs" />
         </button>
       </div>
-      <HoverPopper target={copyPopper}>
-        {content}
-      </HoverPopper>
-      <ContrastTextButton onClick={onCopyClick.run}
-        onMouseEnter={copyPopper.use}
-        onMouseLeave={copyPopper.unset}>
-        <div className="flex flex-col items-center">
-          <span className="text-xl text-colored">
-            {wallet.data?.name}
-          </span>
-          <span className="text-contrast">
-            {`${address.slice(0, 5)}...${address.slice(-5)}`}
-          </span>
-          <span className="text-contrast">{`${fbalance} Goerli ETH`}</span>
-        </div>
-      </ContrastTextButton>
-      <div className="w-[50px] flex justify-center">
-        <div className="p-1">
-          <Img className="w-6 h-4"
-            src="logo.svg" alt="logo" />
-        </div>
-      </div>
     </div>
-    <div className="h-1" />
-    <ActionButton />
+    <HoverPopper target={copyPopper}>
+      {content}
+    </HoverPopper>
+    <ContrastTextButton onClick={onCopyClick.run}
+      onMouseEnter={copyPopper.use}
+      onMouseLeave={copyPopper.unset}>
+      <div className="flex flex-col items-center">
+        <span className="text-xl text-colored">
+          {wallet.data?.name}
+        </span>
+        <span className="text-contrast">
+          {`${address.slice(0, 5)}...${address.slice(-5)}`}
+        </span>
+        <span className="text-contrast">{`${fbalance} Goerli ETH`}</span>
+      </div>
+    </ContrastTextButton>
   </div>
 
   const RecipientInput = <>

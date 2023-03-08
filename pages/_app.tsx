@@ -1,5 +1,6 @@
 import { Catcher } from "@/libs/react/error"
 import { ErrorProps } from "@/libs/react/props/error"
+import { Overlay } from "@/mods/overlay/overlay"
 import { CircuitsProvider } from "@/mods/tor/circuits/context"
 import { TorProvider } from "@/mods/tor/context"
 import { SessionsProvider } from "@/mods/tor/sessions/context"
@@ -19,7 +20,9 @@ export default function App({ Component, pageProps }: AppProps) {
       <TorProvider>
         <CircuitsProvider>
           <SessionsProvider>
-            <Component {...pageProps} />
+            <Overlay>
+              <Component {...pageProps} />
+            </Overlay>
           </SessionsProvider>
         </CircuitsProvider>
       </TorProvider>
