@@ -36,11 +36,6 @@ export function WalletsPage(props: {}) {
           {"Goerli Tesnet"}
         </span>
       </ContrastTextButton>
-      <ContrastTextButton className="w-[100px]">
-        <span className="text-xs">
-          ETHBrno
-        </span>
-      </ContrastTextButton>
     </div>
   </>
 
