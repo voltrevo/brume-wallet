@@ -13,6 +13,7 @@ import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ShieldCheckIcon } from "@hero
 import { getAddress, parseUnits, Wallet } from "ethers";
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
+import { NetworkSelectionDialog } from "../../components/dialogs/networks";
 import { useBalance, useGasPrice, useNonce, useWallet } from "./data";
 
 export function WalletPage(props: { address: string }) {
@@ -25,6 +26,8 @@ export function WalletPage(props: { address: string }) {
   const balance = useBalance(address, sessions)
   const nonce = useNonce(address, sessions)
   const gasPrice = useGasPrice(sessions)
+
+  const selectNetwork = useBoolean()
 
   const [recipientInput = "", setRecipientInput] = useState<string>()
 
@@ -92,19 +95,30 @@ export function WalletPage(props: { address: string }) {
     nonce.refetch()
   }, [sessions, address, nonce.data, gasPrice.data, recipientInput, valueInput], console.error)
 
-  const Header = <div className="flex p-md text-colored rounded-b-xl border-b border-violet6 bg-violet2 justify-between">
-    <ContrastTextButton className="w-[100px]">
-      <span className="text-xs">
-        Tor
-      </span>
-      <ShieldCheckIcon className="icon-xs text-grass8" />
+  const Header = <>
+  {selectNetwork.current && <NetworkSelectionDialog close={selectNetwork.disable} />}
+  <div className="flex p-md text-colored rounded-b-xl border-b md:border-l md:border-r border-violet6 bg-violet2 justify-between">
+    <ContrastTextButton className="w-[150px]">
+      <img className="icon-sm md:w-16 md:h-6" 
+        src="/logo.svg"/>
+        <span className="text-sm md:text-base">
+          Brume
+        </span>
     </ContrastTextButton>
-    <ContrastTextButton className="w-full">
-      <span className="text-xs">
+    <ContrastTextButton className="w-full sm:w-[250px]"
+      onClick={selectNetwork.enable}>
+      <span className="text-sm md:text-base">
         {"Goerli Tesnet"}
       </span>
     </ContrastTextButton>
+    <ContrastTextButton className="w-[150px]">
+      <span className="text-sm md:text-base">
+        Tor
+      </span>
+      <ShieldCheckIcon className="icon-sm md:icon-base text-grass8" />
+    </ContrastTextButton>
   </div>
+</>
 
 
   const fbalance = (() => {
@@ -135,7 +149,7 @@ export function WalletPage(props: { address: string }) {
     <div className="w-full flex px-4 justify-between items-start">
       <div className="w-[50px] flex justify-center">
         <button className="p-1 bg-ahover rounded-xl" onClick={router.back}>
-          <ArrowLeftIcon className="icon-xs" />
+          <ArrowLeftIcon className="icon-xs md:icon-md" />
         </button>
       </div>
     </div>
@@ -146,7 +160,7 @@ export function WalletPage(props: { address: string }) {
       onMouseEnter={copyPopper.use}
       onMouseLeave={copyPopper.unset}>
       <div className="flex flex-col items-center">
-        <span className="text-xl text-colored">
+        <span className="text-xl text-colored font-bold">
           {wallet.data?.name}
         </span>
         <span className="text-contrast">
@@ -158,9 +172,10 @@ export function WalletPage(props: { address: string }) {
   </div>
 
   const RecipientInput = <>
-    <h3 className="text-colored">
+    <h3 className="text-colored md:text-lg">
       Recipient
     </h3>
+    <div className="h-1"/>
     <input className="py-2 px-4 bg-contrast rounded-xl w-full outline-violet6"
       value={recipientInput}
       placeholder="0x..."
@@ -168,9 +183,10 @@ export function WalletPage(props: { address: string }) {
   </>
 
   const ValueInput = <>
-    <h3 className="text-colored">
+    <h3 className="text-colored md:text-lg">
       Value
     </h3>
+    <div className="h-1"/>
     <input className="py-2 px-4 bg-contrast rounded-xl w-full outline-violet6"
       value={valueInput}
       placeholder="1.0"
@@ -198,7 +214,7 @@ export function WalletPage(props: { address: string }) {
   }, [recipientInput, valueInput])
 
   const SendButton =
-    <OppositeTextButton disabled={disabled} onClick={trySend.run}>
+    <OppositeTextButton className="text-lg md:text-xl" disabled={disabled} onClick={trySend.run}>
       {trySend.loading
         ? "Loading..."
         : "Send transaction"}
@@ -211,7 +227,7 @@ export function WalletPage(props: { address: string }) {
     <div className="h-2" />
     <div className="p-md">
       {RecipientInput}
-      <div className="h-2" />
+      <div className="h-4" />
       {ValueInput}
     </div>
     <div className="grow" />
@@ -219,9 +235,10 @@ export function WalletPage(props: { address: string }) {
       {TxHashDisplay}
       <div className="h-2" />
     </>}
+    <div className="h-1 md:h-4" />
     <div className="p-md">
       {SendButton}
     </div>
-    <div className="h-1" />
+    <div className="h-1 md:h-4" />
   </main>
 }
