@@ -1,5 +1,12 @@
 # Brume Wallet
 
+## DO NOT USE
+
+This is experimental software in early development
+
+1. It has security issues
+2. Things change quickly
+
 ## What
 
 Brume Wallet is the first non-custodial **privacy wallet** created on the Ethereum blockchain, allowing to **guarantee the anonymity of its user** thanks to a **built-in TOR integration**. This integration enables user's personal information, such as **IP addresses** to be completely isolated from stakeholders with whom the wallet directly communicates (RPCs, Etherscan, Coingecko...).
