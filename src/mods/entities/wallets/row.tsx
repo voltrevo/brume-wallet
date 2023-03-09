@@ -19,7 +19,7 @@ export function WalletRow(props: WalletProps) {
     </div>
 
   return <div className="p-md flex items-center gap-2 rounded-xl bg-component border border-default">
-    <div className="truncate">
+    <div className="truncate grow">
       {First}
       {Second}
     </div>

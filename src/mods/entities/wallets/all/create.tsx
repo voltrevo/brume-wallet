@@ -88,7 +88,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     </span>
 
   const DoneButton =
-    <OppositeTextButton
+    <OppositeTextButton className="md:text-xl"
       disabled={!name || !wallet}
       onClick={onDoneClick}>
       Add
