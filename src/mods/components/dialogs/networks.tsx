@@ -16,7 +16,7 @@ export function NetworkSelectionDialog(props: CloseProps) {
       Blockchain
     </OppositeTextButtonDeploy>
     {blockchains.current &&
-      <div className="p-md w-full flex flex-col gap-4 overflow-scroll">
+      <div className="p-md w-full flex flex-col gap-4 overflow-auto">
         <TextButton>
           Ethereum
         </TextButton>
@@ -33,7 +33,7 @@ export function NetworkSelectionDialog(props: CloseProps) {
       Network
     </OppositeTextButtonDeploy>
     {networks.current &&
-      <div className="p-md w-full flex flex-col gap-4 overflow-scroll">
+      <div className="p-md w-full flex flex-col gap-4 overflow-auto">
         <TextButton>
           Mainet
         </TextButton>
@@ -47,7 +47,7 @@ export function NetworkSelectionDialog(props: CloseProps) {
       RPC
     </OppositeTextButtonDeploy>
     {endpoints.current &&
-      <div className="p-md w-full flex flex-col gap-4 overflow-scroll">
+      <div className="p-md w-full flex flex-col gap-4 overflow-auto">
         <TextButton>
           Infura
         </TextButton>

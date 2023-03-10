@@ -25,11 +25,11 @@ export function WalletsPage(props: {}) {
     {selectNetwork.current && <NetworkSelectionDialog close={selectNetwork.disable} />}
     <div className="flex p-md text-colored rounded-b-xl border-b md:border-l md:border-r border-violet6 bg-violet2 justify-between">
       <ContrastTextButton className="w-[150px]">
-        <img className="icon-sm md:w-16 md:h-6" 
-          src="/logo.svg"/>
-          <span className="text-sm md:text-base">
-            Brume
-          </span>
+        <img className="icon-sm md:w-16 md:h-6"
+          src="/logo.svg" />
+        <span className="text-sm md:text-base">
+          Brume
+        </span>
       </ContrastTextButton>
       <ContrastTextButton className="w-full sm:w-[250px]"
         onClick={selectNetwork.enable}>
@@ -53,23 +53,23 @@ export function WalletsPage(props: {}) {
 
   const WalletsList = <div>
     {wallets.data?.map(wallet =>
-    <ClickableWalletRow
-      key={wallet.address}
-      wallet={wallet}
-      ok={onWalletClick} />)}
+      <ClickableWalletRow
+        key={wallet.address}
+        wallet={wallet}
+        ok={onWalletClick} />)}
   </div>
-  
+
 
   const Body = <>
-    <ul className="flex flex-col overflow-scroll">
+    <ul className="flex flex-col overflow-y-auto">
       {WalletsList}
     </ul>
-    <div className="grow"/>
+    <div className="grow" />
     <div className="h-1 md:h-4" />
     <div className="p-md">{CreateButton}</div>
     <div className="h-1 md:h-4" />
   </>
-    
+
 
   return <main className="h-full flex flex-col">
     {Header}
