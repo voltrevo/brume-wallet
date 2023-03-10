@@ -5,6 +5,7 @@ import { Fleche } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
 
 export interface Session {
+  circuit: Circuit,
   socket: WebSocket,
   client: Rpc.Client
 }
@@ -28,5 +29,5 @@ export async function createSession(url: URL, circuit: Circuit, signal?: AbortSi
 
   const client = new Rpc.Client()
 
-  return { socket, client }
+  return { circuit, socket, client }
 }

