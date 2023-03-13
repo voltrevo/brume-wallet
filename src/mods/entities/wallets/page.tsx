@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { BigInts } from "@/libs/bigints/bigints";
 import { Hex } from "@/libs/hex/hex";
 import { HoverPopper } from "@/libs/modals/popper";
@@ -7,6 +8,7 @@ import { useInputChange } from "@/libs/react/events";
 import { useBoolean } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
 import { Rpc } from "@/libs/rpc";
+import { Types } from "@/libs/types/types";
 import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button";
 import { useSessions } from "@/mods/tor/sessions/context";
 import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
@@ -49,12 +51,12 @@ export function WalletPage(props: { address: string }) {
   const trySend = useAsyncTry(async () => {
     if (!wallet.data) return
 
-    if (!BigInts.is(nonce.data)) return
-    if (!BigInts.is(gasPrice.data)) return
+    if (!Types.isBigInt(nonce.data)) return
+    if (!Types.isBigInt(gasPrice.data)) return
 
     const session = await sessions.random()
 
-    const ethers_wallet = new Wallet(wallet.data.privateKey)
+    const ethers = new Wallet(wallet.data.privateKey)
 
     const gasReq = session.client.request({
       method: "eth_estimateGas",
@@ -74,7 +76,7 @@ export function WalletPage(props: { address: string }) {
 
     const txReq = session.client.request({
       method: "eth_sendRawTransaction",
-      params: [await ethers_wallet.signTransaction({
+      params: [await ethers.signTransaction({
         chainId: 5,
         from: address,
         to: getAddress(recipientInput),
@@ -103,6 +105,7 @@ export function WalletPage(props: { address: string }) {
     <div className="flex p-md text-colored rounded-b-xl border-b md:border-l md:border-r border-violet6 bg-violet2 justify-between">
       <ContrastTextButton className="w-[150px]">
         <img className="icon-sm md:w-16 md:h-6"
+          alt="logo"
           src="/logo.svg" />
         <span className="text-sm md:text-base">
           Brume
