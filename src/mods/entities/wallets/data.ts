@@ -1,6 +1,7 @@
 import { Rpc } from "@/libs/rpc"
-import { SessionPool } from "@/libs/tor/sessions/pool"
+import { Session } from "@/libs/tor/sessions/session"
 import { storage } from "@/libs/xswr/storage"
+import { Pool } from "@hazae41/piscine"
 import { FetcherMore, getSchema, NormalizerMore, Result, useError, useFetch, useSchema } from "@hazae41/xswr"
 
 export type Wallet =
@@ -45,7 +46,7 @@ export function useWallet(address?: string) {
   return useSchema(getWalletSchema, [address])
 }
 
-export function getBalanceSchema(address: string, sessions?: SessionPool) {
+export function getBalanceSchema(address: string, sessions?: Pool<Session>) {
   if (!sessions) return
 
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
@@ -64,14 +65,14 @@ export function getBalanceSchema(address: string, sessions?: SessionPool) {
   }, fetcher)
 }
 
-export function useBalance(address: string, sockets?: SessionPool) {
+export function useBalance(address: string, sockets?: Pool<Session>) {
   const query = useSchema(getBalanceSchema, [address, sockets])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getNonceSchema(address: string, sessions?: SessionPool) {
+export function getNonceSchema(address: string, sessions?: Pool<Session>) {
   if (!sessions) return
 
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
@@ -90,14 +91,14 @@ export function getNonceSchema(address: string, sessions?: SessionPool) {
   }, fetcher)
 }
 
-export function useNonce(address: string, sockets?: SessionPool) {
+export function useNonce(address: string, sockets?: Pool<Session>) {
   const query = useSchema(getNonceSchema, [address, sockets])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getGasPriceSchema(sessions?: SessionPool) {
+export function getGasPriceSchema(sessions?: Pool<Session>) {
   if (!sessions) return
 
   const fetcher = async <T extends unknown[]>(init: Rpc.RequestInit<T>, more: FetcherMore) => {
@@ -116,7 +117,7 @@ export function getGasPriceSchema(sessions?: SessionPool) {
   }, fetcher)
 }
 
-export function useGasPrice(sockets?: SessionPool) {
+export function useGasPrice(sockets?: Pool<Session>) {
   const query = useSchema(getGasPriceSchema, [sockets])
   useFetch(query)
   useError(query, console.error)

@@ -1,86 +1,25 @@
-import { Arrays } from "@/libs/arrays/arrays"
-import { AsyncEventTarget } from "@/libs/events/target"
-import { CircuitPool } from "@hazae41/echalote"
-import { PoolEvents } from "../pool"
+import { Circuit } from "@hazae41/echalote"
+import { Pool } from "@hazae41/piscine"
 import { createSession, Session } from "./session"
 
-export class SessionPool {
+export function createSessionPool(url: URL, circuits: Pool<Circuit>) {
+  const { capacity } = circuits
 
-  readonly events = new AsyncEventTarget<PoolEvents<Session>>()
+  return new Pool<Session>(async ({ index, destroy, signal }) => {
+    const circuit = await circuits.get(index)
 
-  readonly #allElements: Session[]
-  readonly #allPromises: Promise<Session>[]
+    const session = await createSession(url, circuit, signal)
 
-  readonly #openElements = new Set<Session>()
+    const onCloseOrError = () => {
+      session.socket.removeEventListener("close", onCloseOrError)
+      session.socket.removeEventListener("error", onCloseOrError)
 
-  constructor(
-    readonly url: URL,
-    readonly circuits: CircuitPool,
-    readonly signal?: AbortSignal
-  ) {
-    this.#allElements = new Array(circuits.capacity)
-    this.#allPromises = new Array(circuits.capacity)
-
-    for (let index = 0; index < circuits.capacity; index++)
-      this.#start(index)
-  }
-
-  #start(index: number) {
-    const promise = this.#create(index)
-    this.#allPromises[index] = promise
-    promise.catch(console.warn)
-  }
-
-  async #create(index: number) {
-    const { signal } = this
-
-    const circuit = await this.circuits.get(index)
-
-    const element = await createSession(this.url, circuit, signal)
-
-    this.#allElements[index] = element
-    this.#openElements.add(element)
-
-    const onSocketCloseOrError = () => {
-      delete this.#allElements[index]
-      this.#openElements.delete(element)
-
-      element.socket.removeEventListener("close", onSocketCloseOrError)
-      element.socket.removeEventListener("error", onSocketCloseOrError)
-
-      this.#start(index)
+      destroy()
     }
 
-    element.socket.addEventListener("close", onSocketCloseOrError)
-    element.socket.addEventListener("error", onSocketCloseOrError)
+    session.socket.addEventListener("close", onCloseOrError)
+    session.socket.addEventListener("error", onCloseOrError)
 
-    const event = new MessageEvent("socket", { data: { index, element } })
-    await this.events.dispatchEvent(event, "element")
-
-    return element
-  }
-
-  /**
-   * Number of open circuits
-   */
-  get size() {
-    return this.#openElements.size
-  }
-
-  async random() {
-    await Promise.any(this.#allPromises)
-
-    return this.randomSync()
-  }
-
-  randomSync() {
-    const sockets = [...this.#openElements]
-    const socket = Arrays.randomOf(sockets)
-
-    if (!socket)
-      throw new Error(`No circuit in pool`)
-
-    return socket
-  }
-
+    return session
+  }, { capacity })
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useBoolean } from "@/libs/react/handles/boolean"
 import { OkProps } from "@/libs/react/props/promise"
 import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button"
@@ -26,6 +27,7 @@ export function WalletsPage(props: {}) {
     <div className="flex p-md text-colored rounded-b-xl border-b md:border-l md:border-r border-violet6 bg-violet2 justify-between">
       <ContrastTextButton className="w-[150px]">
         <img className="icon-sm md:w-16 md:h-6"
+          alt="logo"
           src="/logo.svg" />
         <span className="text-sm md:text-base">
           Brume
