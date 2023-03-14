@@ -8,17 +8,17 @@ export class SessionPool {
 
   readonly events = new AsyncEventTarget<PoolEvents<Session>>()
 
-  readonly #allSockets: Session[]
+  readonly #allElements: Session[]
   readonly #allPromises: Promise<Session>[]
 
-  readonly #openSockets = new Set<Session>()
+  readonly #openElements = new Set<Session>()
 
   constructor(
     readonly url: URL,
     readonly circuits: CircuitPool,
     readonly signal?: AbortSignal
   ) {
-    this.#allSockets = new Array(circuits.capacity)
+    this.#allElements = new Array(circuits.capacity)
     this.#allPromises = new Array(circuits.capacity)
 
     for (let index = 0; index < circuits.capacity; index++)
@@ -38,12 +38,12 @@ export class SessionPool {
 
     const element = await createSession(this.url, circuit, signal)
 
-    this.#allSockets[index] = element
-    this.#openSockets.add(element)
+    this.#allElements[index] = element
+    this.#openElements.add(element)
 
     const onSocketCloseOrError = () => {
-      delete this.#allSockets[index]
-      this.#openSockets.delete(element)
+      delete this.#allElements[index]
+      this.#openElements.delete(element)
 
       element.socket.removeEventListener("close", onSocketCloseOrError)
       element.socket.removeEventListener("error", onSocketCloseOrError)
@@ -60,6 +60,13 @@ export class SessionPool {
     return element
   }
 
+  /**
+   * Number of open circuits
+   */
+  get size() {
+    return this.#openElements.size
+  }
+
   async random() {
     await Promise.any(this.#allPromises)
 
@@ -67,7 +74,7 @@ export class SessionPool {
   }
 
   randomSync() {
-    const sockets = [...this.#openSockets]
+    const sockets = [...this.#openElements]
     const socket = Arrays.randomOf(sockets)
 
     if (!socket)

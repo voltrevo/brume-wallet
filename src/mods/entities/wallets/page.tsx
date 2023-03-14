@@ -121,7 +121,9 @@ export function WalletPage(props: { address: string }) {
         <span className="text-sm md:text-base">
           Tor
         </span>
-        <ShieldCheckIcon className="icon-sm md:icon-base text-grass8" />
+        {sessions.size // TODO else afficher loading
+          ? <ShieldCheckIcon className="icon-sm md:icon-base text-grass8" />
+          : <ShieldCheckIcon className="icon-sm md:icon-base text-grass8" />}
       </ContrastTextButton>
     </div>
   </>
