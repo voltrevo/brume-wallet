@@ -54,7 +54,7 @@ export function WalletPage(props: { address: string }) {
     if (!Types.isBigInt(nonce.data)) return
     if (!Types.isBigInt(gasPrice.data)) return
 
-    const session = await sessions.random()
+    const session = await sessions.cryptoRandom()
 
     const ethers = new Wallet(wallet.data.privateKey)
 

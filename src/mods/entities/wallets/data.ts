@@ -52,7 +52,7 @@ export function getBalanceSchema(address: string, sessions?: Pool<Session>) {
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     const { signal } = more
 
-    const session = await sessions.random()
+    const session = await sessions.cryptoRandom()
     const request = session.client.request(init)
     const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
 
@@ -78,7 +78,7 @@ export function getNonceSchema(address: string, sessions?: Pool<Session>) {
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     const { signal } = more
 
-    const session = await sessions.random()
+    const session = await sessions.cryptoRandom()
     const request = session.client.request(init)
     const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
 
@@ -104,7 +104,7 @@ export function getGasPriceSchema(sessions?: Pool<Session>) {
   const fetcher = async <T extends unknown[]>(init: Rpc.RequestInit<T>, more: FetcherMore) => {
     const { signal } = more
 
-    const session = await sessions.random()
+    const session = await sessions.cryptoRandom()
     const request = session.client.request(init)
     const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
 
