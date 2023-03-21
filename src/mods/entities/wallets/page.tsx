@@ -1,9 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
 import { BigInts } from "@/libs/bigints/bigints";
+import { useCopy } from "@/libs/copy/copy";
 import { Hex } from "@/libs/hex/hex";
 import { HoverPopper } from "@/libs/modals/popper";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
-import { useAsyncTry } from "@/libs/react/async";
+import { useAsyncUniqueCallback } from "@/libs/react/async";
 import { useInputChange } from "@/libs/react/events";
 import { useBoolean } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
@@ -48,7 +49,7 @@ export function WalletPage(props: { address: string }) {
 
   const [txHash, setTxHash] = useState<string>()
 
-  const trySend = useAsyncTry(async () => {
+  const trySend = useAsyncUniqueCallback(async () => {
     if (!sessions) return
     if (!wallet.data) return
 
@@ -129,7 +130,6 @@ export function WalletPage(props: { address: string }) {
     </div>
   </>
 
-
   const fbalance = (() => {
     if (balance.error !== undefined)
       return "Error"
@@ -139,20 +139,7 @@ export function WalletPage(props: { address: string }) {
   })()
 
   const copyPopper = useElement()
-  const copied = useBoolean()
-
-  const content = useMemo(() => {
-    if (!copied.current)
-      return "Copy address to clipboard"
-    else
-      return "Copy address successfully"
-  }, [copied])
-
-  const onCopyClick = useAsyncTry(async () => {
-    await navigator.clipboard.writeText(address)
-    copied.enable()
-    setTimeout(() => copied.disable(), 600)
-  }, [copied], console.error)
+  const copyRunner = useCopy(address)
 
   const WalletInfo = <div className="flex flex-col items-center justify-center gap-2">
     <div className="w-full flex px-4 justify-between items-start">
@@ -163,9 +150,12 @@ export function WalletPage(props: { address: string }) {
       </div>
     </div>
     <HoverPopper target={copyPopper}>
-      {content}
+      {copyRunner.current
+        ? `Address successfully copied`
+        : `Click to copy address`}
     </HoverPopper>
-    <ContrastTextButton onClick={onCopyClick.run}
+    <ContrastTextButton
+      onClick={copyRunner.run}
       onMouseEnter={copyPopper.use}
       onMouseLeave={copyPopper.unset}>
       <div className="flex flex-col items-center">
@@ -202,7 +192,7 @@ export function WalletPage(props: { address: string }) {
       onChange={onValueInputChange} />
   </>
 
-  const TxHashDisplay = <>
+  const TxHashDisplay =
     <div className="text-break p-md">
       <div>
         <span className="text-colored">Transaction hash:</span>
@@ -214,11 +204,12 @@ export function WalletPage(props: { address: string }) {
         <ArrowTopRightOnSquareIcon className="icon-xs" />
       </ExternalDivisionLink>
     </div>
-  </>
 
   const disabled = useMemo(() => {
-    if (recipientInput === "") return true
-    if (valueInput === "") return true
+    if (!recipientInput)
+      return true
+    if (!valueInput)
+      return true
     return false
   }, [recipientInput, valueInput])
 

@@ -1,27 +1,41 @@
 import { DependencyList, useCallback } from "react"
 import { useRefState } from "./ref"
 
-export function useAsyncTry<R, A extends unknown[]>(
-  callback: (...args: A) => Promise<R>,
+export function useAsyncCallback<A extends unknown[], R>(
+  subcallback: (...args: A) => Promise<R>,
+  deps: DependencyList,
+  onerror: (e: any) => void
+) {
+  return useCallback(async (...args: A) => {
+    const promise = subcallback(...args)
+
+    promise.catch(onerror)
+
+    return promise
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...deps, onerror])
+}
+
+export function useAsyncUniqueCallback<A extends unknown[], R>(
+  subcallback: (...args: A) => Promise<R>,
   deps: DependencyList,
   onerror: (e: any) => void
 ) {
   const [promise, setPromise] = useRefState<Promise<R>>()
 
-  const run = useCallback((...args: A) => new Promise<R>((ok, err) => {
+  const run = useCallback(async (...args: A) => {
     if (promise.current) return
 
-    const npromise = callback(...args)
+    const nextPromise = subcallback(...args)
 
-    setPromise(npromise)
-
-    return npromise
-      .then(ok)
+    nextPromise
       .catch(onerror)
-      .catch(err)
       .finally(() => setPromise(undefined))
+
+    setPromise(nextPromise)
+    return nextPromise
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [...deps, onerror])
+  }, [...deps, onerror])
 
   const loading = Boolean(promise.current)
 
