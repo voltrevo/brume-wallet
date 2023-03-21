@@ -9,7 +9,7 @@ export const SessionsContext =
   createContext<Pool<Session> | undefined>(undefined)
 
 export function useSessions() {
-  return useContext(SessionsContext)!
+  return useContext(SessionsContext)
 }
 
 export function SessionsProvider(props: ChildrenProps) {

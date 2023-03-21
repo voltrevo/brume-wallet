@@ -8,7 +8,7 @@ export const CircuitsContext =
   createContext<Pool<Circuit> | undefined>(undefined)
 
 export function useCircuits() {
-  return useContext(CircuitsContext)!
+  return useContext(CircuitsContext)
 }
 
 export function CircuitsProvider(props: ChildrenProps) {

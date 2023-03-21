@@ -49,6 +49,7 @@ export function WalletPage(props: { address: string }) {
   const [txHash, setTxHash] = useState<string>()
 
   const trySend = useAsyncTry(async () => {
+    if (!sessions) return
     if (!wallet.data) return
 
     if (!Types.isBigInt(nonce.data)) return
@@ -121,7 +122,7 @@ export function WalletPage(props: { address: string }) {
         <span className="text-sm md:text-base">
           Tor
         </span>
-        {sessions.size // TODO else afficher loading
+        {sessions?.size // TODO else afficher loading
           ? <ShieldCheckIcon className="icon-sm md:icon-base text-grass8" />
           : <ShieldCheckIcon className="icon-sm md:icon-base text-grass8" />}
       </ContrastTextButton>
