@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@hazae41/binary": "^1.2.10",
-    "@hazae41/echalote": "^0.2.23-2",
+    "@hazae41/echalote": "^0.2.24-1",
     "@hazae41/fleche": "^1.1.14",
     "@hazae41/piscine": "^1.0.2",
     "@hazae41/xswr": "^1.4.1",
