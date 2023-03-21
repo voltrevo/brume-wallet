@@ -87,7 +87,7 @@ export function WalletPage(props: { address: string }) {
       })]
     })
 
-    const body = JSON.stringify(txReq)
+    const body = JSON.stringify({ method: "eth_sendRawTransaction", tor: true })
     session.circuit.fetch("http://proxy.sunship.ml", { method: "POST", body })
 
     const txRes = await Rpc.fetchWithSocket<string>(txReq, session.socket)
