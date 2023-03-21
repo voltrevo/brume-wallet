@@ -8,7 +8,7 @@ export const TorContext =
   createContext<TorClientDuplex | undefined>(undefined)
 
 export function useTor() {
-  return useContext(TorContext)!
+  return useContext(TorContext)
 }
 
 export function TorProvider(props: ChildrenProps) {
@@ -16,9 +16,8 @@ export function TorProvider(props: ChildrenProps) {
 
   const tor = useAsyncMemo(async () => {
     const tcp = await createWebSocketSnowflakeStream("wss://snowflake.bamsoftware.com/")
-    const tor = new TorClientDuplex(tcp, { fallbacks })
 
-    return tor
+    return new TorClientDuplex(tcp, { fallbacks })
   }, [])
 
   return <TorContext.Provider value={tor}>
