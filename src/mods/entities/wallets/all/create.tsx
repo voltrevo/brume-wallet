@@ -69,12 +69,12 @@ export function WalletCreatorDialog(props: CloseProps) {
     </h1>
 
   const NameInput =
-    <input className="p-mdl rounded-xl border border-default outline-violet6"
+    <input className="p-mdl w-full rounded-xl bg-contrast outline-none focus:outline-violet6"
       placeholder="Enter a name"
       value={name} onChange={onNameChange} />
 
   const KeyInput =
-    <textarea className="p-mdl rounded-xl border border-default outline-violet6 resize-none"
+    <textarea className="p-mdl w-full resize-none rounded-xl bg-contrast outline-none focus:outline-violet6"
       placeholder="Enter your private key"
       value={key} onChange={onKeyChange}
       rows={4} />

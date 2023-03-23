@@ -1,10 +1,12 @@
 @layer utilities {
   .text-default {
-    @apply text-violet12;
+    @apply text-black;
+    @apply dark:text-white;
   }
 
   .text-opposite {
     @apply text-white;
+    @apply dark:text-black;
   }
 
   .text-contrast {

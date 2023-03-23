@@ -1,10 +1,18 @@
 @layer utilities {
+
+  .bg-paper {
+   @apply bg-violet1;
+   @apply dark:bg-black; 
+  }
+
   .bg-default {
     @apply bg-violet1;
+    @apply dark:bg-black;
   }
 
   .bg-opposite {
     @apply bg-black;
+    @apply dark:bg-white;
   }
 
   .bg-contrast {
@@ -26,4 +34,5 @@
   .bg-hover {
     @apply ahover:bg-violet4;
   }
+  
 }

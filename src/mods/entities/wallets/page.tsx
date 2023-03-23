@@ -143,7 +143,7 @@ export function WalletPage(props: { address: string }) {
       Recipient
     </h3>
     <div className="h-1" />
-    <input className="py-2 px-4 bg-contrast rounded-xl w-full outline-violet6"
+    <input className="py-2 px-4 w-full bg-contrast rounded-xl outline-none focus:outline-violet6"
       value={recipientInput}
       placeholder="0x..."
       onChange={onRecipientInputChange} />
@@ -154,16 +154,16 @@ export function WalletPage(props: { address: string }) {
       Value
     </h3>
     <div className="h-1" />
-    <input className="py-2 px-4 bg-contrast rounded-xl w-full outline-violet6"
+    <input className="py-2 px-4 w-full bg-contrast rounded-xl outline-none focus:outline-violet6"
       value={valueInput}
       placeholder="1.0"
       onChange={onValueInputChange} />
   </>
 
   const TxHashDisplay =
-    <div className="text-break p-md">
-      <div>
-        <span className="text-colored">Transaction hash:</span>
+    <div className="text-break">
+      <div className="text-colored">
+        Transaction hash:
       </div>
       <span className="text-contrast text-sm">{txHash}</span>
       <ExternalDivisionLink className="flex items-center gap-2 text-colored cursor-pointer hover:underline w-[150px]"
