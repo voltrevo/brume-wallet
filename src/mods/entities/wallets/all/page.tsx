@@ -19,7 +19,7 @@ export function WalletsPage(props: {}) {
   }, [router])
 
   const CreateButton =
-    <OppositeTextButton className="text-lg md:text-xl" onClick={creator.enable}>
+    <OppositeTextButton className="text-lg" onClick={creator.enable}>
       Add wallet
     </OppositeTextButton>
 
@@ -39,16 +39,16 @@ export function WalletsPage(props: {}) {
     <div className="h-1" />
   </>
 
-  return <main className="h-full flex flex-col">
+  return <div className="h-full w-full flex flex-col">
     {creator.current &&
       <WalletCreatorDialog
         close={creator.disable} />}
-    <span className="p-md text-center text-2xl font-bold">
+    <span className="text-center text-xl font-medium">
       My wallets
     </span>
     <div className="h-4" />
     {Body}
-  </main>
+  </div>
 }
 
 export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {

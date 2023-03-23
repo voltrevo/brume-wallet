@@ -6,7 +6,6 @@ import { HoverPopper } from "@/libs/modals/popper";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
 import { useAsyncUniqueCallback } from "@/libs/react/async";
 import { useInputChange } from "@/libs/react/events";
-import { useBoolean } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
 import { Rpc } from "@/libs/rpc";
 import { Types } from "@/libs/types/types";
@@ -29,8 +28,6 @@ export function WalletPage(props: { address: string }) {
   const balance = useBalance(address, sessions)
   const nonce = useNonce(address, sessions)
   const gasPrice = useGasPrice(sessions)
-
-  const selectNetwork = useBoolean()
 
   const [recipientInput = "", setRecipientInput] = useState<string>()
 
@@ -113,21 +110,14 @@ export function WalletPage(props: { address: string }) {
   const copyPopper = useElement()
   const copyRunner = useCopy(address)
 
-  const WalletInfo = <div className="flex flex-col items-center justify-center gap-2">
-    <div className="w-full flex px-4 justify-between items-start">
-      <div className="w-[50px] flex justify-center">
-        <button className="p-1 bg-ahover rounded-xl" onClick={router.back}>
-          <ArrowLeftIcon className="icon-xs md:icon-md" />
-        </button>
-      </div>
-    </div>
+  const WalletInfo =
     <div className="flex flex-col items-center">
       <WalletAvatar
         size={5}
         textSize={3}
         address={address} />
       <div className="h-2" />
-      <div className="text-xl font-bold">
+      <div className="text-xl font-medium max-w-[200px] truncate">
         {wallet.data?.name}
       </div>
       <ContrastTextButton className="px-2 py-0">
@@ -141,16 +131,15 @@ export function WalletPage(props: { address: string }) {
       <span className="text-contrast">
         {`${fbalance} Goerli ETH`}
       </span>
+      <HoverPopper target={copyPopper}>
+        {copyRunner.current
+          ? `Address copied ✅`
+          : `Copy address`}
+      </HoverPopper>
     </div>
-    <HoverPopper target={copyPopper}>
-      {copyRunner.current
-        ? `Address copied ✅`
-        : `Copy address`}
-    </HoverPopper>
-  </div>
 
   const RecipientInput = <>
-    <h3 className="text-colored md:text-lg">
+    <h3 className="text-colored">
       Recipient
     </h3>
     <div className="h-1" />
@@ -161,7 +150,7 @@ export function WalletPage(props: { address: string }) {
   </>
 
   const ValueInput = <>
-    <h3 className="text-colored md:text-lg">
+    <h3 className="text-colored">
       Value
     </h3>
     <div className="h-1" />
@@ -193,29 +182,30 @@ export function WalletPage(props: { address: string }) {
   }, [recipientInput, valueInput])
 
   const SendButton =
-    <OppositeTextButton className="text-lg md:text-xl" disabled={disabled} onClick={trySend.run}>
+    <OppositeTextButton className="text-lg" disabled={disabled} onClick={trySend.run}>
       {trySend.loading
         ? "Loading..."
         : "Send transaction"}
     </OppositeTextButton>
 
-  return <main className="h-full flex flex-col">
-    {WalletInfo}
-    <div className="h-2" />
-    <div className="p-md">
-      {RecipientInput}
-      <div className="h-4" />
-      {ValueInput}
+  return <div className="h-full w-full flex flex-col">
+    <div className="w-full flex items-center">
+      <button className="p-1 bg-ahover rounded-xl"
+        onClick={router.back}>
+        <ArrowLeftIcon className="icon-sm" />
+      </button>
     </div>
+    {WalletInfo}
+    <div className="h-4" />
+    {RecipientInput}
+    <div className="h-4" />
+    {ValueInput}
     <div className="grow" />
     {txHash && <>
       {TxHashDisplay}
       <div className="h-2" />
     </>}
-    <div className="h-1 md:h-4" />
-    <div className="p-md">
-      {SendButton}
-    </div>
-    <div className="h-1 md:h-4" />
-  </main>
+    <div className="h-1" />
+    {SendButton}
+  </div>
 }

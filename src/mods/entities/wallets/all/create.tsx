@@ -64,7 +64,7 @@ export function WalletCreatorDialog(props: CloseProps) {
   }, [name, wallet, mutate, close])
 
   const Header =
-    <h1 className="text-xl font-bold text-colored">
+    <h1 className="text-xl font-medium">
       New wallet
     </h1>
 
@@ -90,7 +90,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     </span>
 
   const DoneButton =
-    <OppositeTextButton className="md:text-xl"
+    <OppositeTextButton
       disabled={!name || !wallet}
       onClick={onDoneClick}>
       Add
