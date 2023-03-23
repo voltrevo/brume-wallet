@@ -5,7 +5,7 @@ import { CircuitsProvider } from "@/mods/tor/circuits/context"
 import { TorProvider } from "@/mods/tor/context"
 import { SessionsProvider } from "@/mods/tor/sessions/context"
 import '@/styles/globals.css'
-import { XSWR } from "@hazae41/xswr"
+import { CoreProvider } from "@hazae41/xswr"
 import type { AppProps } from 'next/app'
 
 export function Fallback(props: ErrorProps) {
@@ -16,7 +16,7 @@ export function Fallback(props: ErrorProps) {
 
 export default function App({ Component, pageProps }: AppProps) {
   return <Catcher fallback={Fallback}>
-    <XSWR.CoreProvider>
+    <CoreProvider>
       <TorProvider>
         <CircuitsProvider>
           <SessionsProvider>
@@ -26,6 +26,6 @@ export default function App({ Component, pageProps }: AppProps) {
           </SessionsProvider>
         </CircuitsProvider>
       </TorProvider>
-    </XSWR.CoreProvider>
+    </CoreProvider>
   </Catcher>
 }
