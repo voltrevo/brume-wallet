@@ -5,7 +5,7 @@ export function Overlay(props: ChildrenProps) {
 
   return <div className="h-full bg-cover bg-center"
     style={{ backgroundImage: "url('https://aztec.network/images/city2.jpg')" }}>
-    <div className="m-auto max-w-3xl h-full bg-violet1 md:px-2 md:rounded-b-xl">
+    <div className="m-auto max-w-3xl h-full bg-violet1 p-4">
       {children}
     </div>
   </div>

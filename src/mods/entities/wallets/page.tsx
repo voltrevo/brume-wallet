@@ -12,11 +12,11 @@ import { Rpc } from "@/libs/rpc";
 import { Types } from "@/libs/types/types";
 import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button";
 import { useSessions } from "@/mods/tor/sessions/context";
-import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { getAddress, parseUnits, Wallet } from "ethers";
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
-import { NetworkSelectionDialog } from "../../components/dialogs/networks";
+import { WalletAvatar } from "./avatar";
 import { useBalance, useGasPrice, useNonce, useWallet } from "./data";
 
 export function WalletPage(props: { address: string }) {
@@ -102,34 +102,6 @@ export function WalletPage(props: { address: string }) {
     nonce.refetch()
   }, [sessions, address, nonce.data, gasPrice.data, recipientInput, valueInput], console.error)
 
-  const Header = <>
-    {selectNetwork.current && <NetworkSelectionDialog close={selectNetwork.disable} />}
-    <div className="flex p-md text-colored rounded-b-xl border-b md:border-l md:border-r border-violet6 bg-violet2 justify-between">
-      <ContrastTextButton className="w-[150px]">
-        <img className="icon-sm md:w-16 md:h-6"
-          alt="logo"
-          src="/logo.svg" />
-        <span className="text-sm md:text-base">
-          Brume
-        </span>
-      </ContrastTextButton>
-      <ContrastTextButton className="w-full sm:w-[250px]"
-        onClick={selectNetwork.enable}>
-        <span className="text-sm md:text-base">
-          {"Goerli Tesnet"}
-        </span>
-      </ContrastTextButton>
-      <ContrastTextButton className="w-[150px]">
-        <span className="text-sm md:text-base">
-          Tor
-        </span>
-        {sessions?.size // TODO else afficher loading
-          ? <ShieldCheckIcon className="icon-sm md:icon-base text-grass8" />
-          : <ShieldCheckIcon className="icon-sm md:icon-base text-grass8" />}
-      </ContrastTextButton>
-    </div>
-  </>
-
   const fbalance = (() => {
     if (balance.error !== undefined)
       return "Error"
@@ -149,25 +121,32 @@ export function WalletPage(props: { address: string }) {
         </button>
       </div>
     </div>
+    <div className="flex flex-col items-center">
+      <WalletAvatar
+        size={5}
+        textSize={3}
+        address={address} />
+      <div className="h-2" />
+      <div className="text-xl font-bold">
+        {wallet.data?.name}
+      </div>
+      <ContrastTextButton className="px-2 py-0">
+        <span className="text-contrast"
+          onClick={copyRunner.run}
+          onMouseEnter={copyPopper.use}
+          onMouseLeave={copyPopper.unset}>
+          {`${address.slice(0, 6)}...${address.slice(-4)}`}
+        </span>
+      </ContrastTextButton>
+      <span className="text-contrast">
+        {`${fbalance} Goerli ETH`}
+      </span>
+    </div>
     <HoverPopper target={copyPopper}>
       {copyRunner.current
-        ? `Address successfully copied`
-        : `Click to copy address`}
+        ? `Address copied ✅`
+        : `Copy address`}
     </HoverPopper>
-    <ContrastTextButton
-      onClick={copyRunner.run}
-      onMouseEnter={copyPopper.use}
-      onMouseLeave={copyPopper.unset}>
-      <div className="flex flex-col items-center">
-        <span className="text-xl text-colored font-bold">
-          {wallet.data?.name}
-        </span>
-        <span className="text-contrast">
-          {`${address.slice(0, 5)}...${address.slice(-5)}`}
-        </span>
-        <span className="text-contrast">{`${fbalance} Goerli ETH`}</span>
-      </div>
-    </ContrastTextButton>
   </div>
 
   const RecipientInput = <>
@@ -221,8 +200,6 @@ export function WalletPage(props: { address: string }) {
     </OppositeTextButton>
 
   return <main className="h-full flex flex-col">
-    {Header}
-    <div className="h-4" />
     {WalletInfo}
     <div className="h-2" />
     <div className="p-md">

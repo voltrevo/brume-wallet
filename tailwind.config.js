@@ -1,11 +1,23 @@
+const plugin = require('tailwindcss/plugin')
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: "class",
-  content: ["./pages/**/*.{js,ts,jsx,tsx}", "./src/**/*.{js,ts,jsx,tsx}"],
+  content: [
+    "./pages/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}"
+  ],
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [
+    plugin(({ addVariant }) => {
+      addVariant('aria-selected', '[aria-selected=true]&')
+      addVariant('aria-unselected', '[aria-selected=false]&')
+
+      addVariant('ahover', ['&:active', '@media(hover: hover){&:hover}'])
+    })
+  ],
   theme: {
     extend: {
       colors: {
