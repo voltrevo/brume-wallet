@@ -18,5 +18,5 @@ body,
 }
 
 body {
-  @apply text-base;
+  @apply text-base bg-violet1;
 }

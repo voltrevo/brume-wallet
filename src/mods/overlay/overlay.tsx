@@ -8,14 +8,11 @@ export function Overlay(props: ChildrenProps) {
     : false
 
   if (extension)
-    return <main className="h-[600px] w-[400px] m-auto max-w-3xl bg-violet1 p-4">
+    return <main className="h-[600px] w-[400px] p-4">
       {children}
     </main>
 
-  return <div className="h-full w-full bg-cover bg-center"
-    style={{ backgroundImage: "url('https://aztec.network/images/city2.jpg')" }}>
-    <main className="h-full w-full m-auto max-w-3xl bg-violet1 p-4">
-      {children}
-    </main>
-  </div>
+  return <main className="h-full w-full m-auto max-w-3xl p-4">
+    {children}
+  </main>
 }

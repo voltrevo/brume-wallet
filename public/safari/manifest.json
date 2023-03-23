@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Brume Wallet",
-  "description": "The private wallet",
+  "description": "The first private Ethereum wallet with built-in Tor",
   "version": "0.1",
   "action": {
     "default_title": "Brume Wallet",
@@ -12,6 +12,5 @@
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval';"
-  },
-  "host_permissions": ["https://meek.bamsoftware.com/*"]
+  }
 }
