@@ -24,6 +24,6 @@
   }
 
   .bg-hover {
-    @apply hover:bg-violet4;
+    @apply ahover:bg-violet4;
   }
 }

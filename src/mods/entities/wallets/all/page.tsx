@@ -23,7 +23,7 @@ export function WalletsPage(props: {}) {
       Add wallet
     </OppositeTextButton>
 
-  const WalletsList = <div className="flex flex-col overflow-y-auto">
+  const WalletsList = <div className="flex flex-col gap-2 overflow-y-auto">
     {wallets.data?.map(wallet =>
       <ClickableWalletRow
         key={wallet.address}
