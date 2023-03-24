@@ -1,3 +1,5 @@
+import { useMemo } from "react"
+
 export namespace Colors {
 
   export const colors = [
@@ -18,4 +20,12 @@ export namespace Colors {
     return colors[index]
   }
 
+}
+
+export function useColor(seed?: string) {
+  return useMemo(() => {
+    if (!seed) return "bg-contrast"
+
+    return Colors.from(seed)
+  }, [seed])
 }

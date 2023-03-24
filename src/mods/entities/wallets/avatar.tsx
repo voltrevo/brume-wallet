@@ -1,5 +1,4 @@
-import { Colors } from "@/libs/colors/color";
-import { useMemo } from "react";
+import { useColor } from "@/libs/colors/color";
 
 export function WalletAvatar(props: {
   address?: string,
@@ -8,11 +7,7 @@ export function WalletAvatar(props: {
 }) {
   const { address, size, textSize } = props
 
-  const color = useMemo(() => {
-    if (!address) return "bg-contrast"
-
-    return Colors.from(address)
-  }, [address])
+  const color = useColor(address)
 
   return <div className={`${color} rounded-full flex justify-center items-center`}
     style={{ fontSize: `${textSize}rem`, height: `${size}rem`, width: `${size}rem` }}>
