@@ -187,7 +187,7 @@ export function WalletPage(props: { address: string }) {
       onClick={trySend.run}>
       {trySend.loading
         ? "Loading..."
-        : "Send transaction"}
+        : "Send"}
     </ContainedButton>
 
   const Toolbar =
@@ -199,24 +199,31 @@ export function WalletPage(props: { address: string }) {
     </div>
 
   const SendBox =
-    <div className="p-xmd">
-      <div className="p-4 rounded-xl border border-contrast">
-        {RecipientInput}
-        <div className="h-2" />
-        {ValueInput}
-        <div className="h-2" />
-        {txHash && <>
-          {TxHashDisplay}
-          <div className="h-2" />
-        </>}
-        <div className="h-2" />
-        {SendButton}
+    <div className="p-4 rounded-xl border border-contrast">
+      <div className="text-xl font-medium">
+        Send
       </div>
+      <div className="h-2" />
+      {RecipientInput}
+      <div className="h-2" />
+      {ValueInput}
+      <div className="h-2" />
+      {txHash && <>
+        {TxHashDisplay}
+        <div className="h-2" />
+      </>}
+      <div className="h-2" />
+      {SendButton}
+    </div>
+
+  const Body =
+    <div className="p-xmd">
+      {SendBox}
     </div>
 
   return <div className="h-full w-full flex flex-col">
     {Toolbar}
     {WalletInfo}
-    {SendBox}
+    {Body}
   </div>
 }

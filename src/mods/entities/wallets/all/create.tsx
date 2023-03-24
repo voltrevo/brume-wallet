@@ -93,7 +93,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     </div>
 
   const DoneButton =
-    <ContainedButton
+    <ContainedButton className="w-full"
       disabled={!name || !wallet}
       icon={Outline.PlusIcon}
       onClick={onDoneClick}>
@@ -108,7 +108,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     {KeyInput}
     <div className="h-2" />
     {Info}
-    <div className="grow" />
+    <div className="h-4" />
     {DoneButton}
   </Dialog>
 }
