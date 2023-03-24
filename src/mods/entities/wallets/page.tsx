@@ -2,6 +2,7 @@
 import { BigInts } from "@/libs/bigints/bigints";
 import { useCopy } from "@/libs/copy/copy";
 import { Hex } from "@/libs/hex/hex";
+import { Outline } from "@/libs/icons/icons";
 import { HoverPopper } from "@/libs/modals/popper";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
 import { useAsyncUniqueCallback } from "@/libs/react/async";
@@ -9,7 +10,7 @@ import { useInputChange } from "@/libs/react/events";
 import { useElement } from "@/libs/react/handles/element";
 import { Rpc } from "@/libs/rpc";
 import { Types } from "@/libs/types/types";
-import { ContrastTextButton, OppositeTextButton } from "@/mods/components/button";
+import { ContainedButton } from "@/mods/components/button";
 import { useSessions } from "@/mods/tor/sessions/context";
 import { ArrowLeftIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { getAddress, parseUnits, Wallet } from "ethers";
@@ -111,7 +112,7 @@ export function WalletPage(props: { address: string }) {
   const copyRunner = useCopy(address)
 
   const WalletInfo =
-    <div className="flex flex-col items-center">
+    <div className="p-xmd flex flex-col items-center">
       <WalletAvatar
         size={5}
         textSize={3}
@@ -120,41 +121,39 @@ export function WalletPage(props: { address: string }) {
       <div className="text-xl font-medium max-w-[200px] truncate">
         {wallet.data?.name}
       </div>
-      <ContrastTextButton className="px-2 py-0">
-        <span className="text-contrast"
-          onClick={copyRunner.run}
-          onMouseEnter={copyPopper.use}
-          onMouseLeave={copyPopper.unset}>
-          {`${address.slice(0, 6)}...${address.slice(-4)}`}
-        </span>
-      </ContrastTextButton>
-      <span className="text-contrast">
+      <button className="text-contrast"
+        onClick={copyRunner.run}
+        onMouseEnter={copyPopper.use}
+        onMouseLeave={copyPopper.unset}>
+        {`${address.slice(0, 6)}...${address.slice(-4)}`}
+      </button>
+      <div className="text-contrast">
         {`${fbalance} Goerli ETH`}
-      </span>
+      </div>
       <HoverPopper target={copyPopper}>
         {copyRunner.current
-          ? `Address copied ✅`
+          ? `Copied ✅`
           : `Copy address`}
       </HoverPopper>
     </div>
 
   const RecipientInput = <>
-    <h3 className="text-colored">
+    <div className="">
       Recipient
-    </h3>
-    <div className="h-1" />
-    <input className="py-2 px-4 w-full bg-contrast rounded-xl outline-none focus:outline-violet6"
+    </div>
+    <div className="h-2" />
+    <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
       value={recipientInput}
       placeholder="0x..."
       onChange={onRecipientInputChange} />
   </>
 
   const ValueInput = <>
-    <h3 className="text-colored">
+    <div className="">
       Value
-    </h3>
-    <div className="h-1" />
-    <input className="py-2 px-4 w-full bg-contrast rounded-xl outline-none focus:outline-violet6"
+    </div>
+    <div className="h-2" />
+    <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
       value={valueInput}
       placeholder="1.0"
       onChange={onValueInputChange} />
@@ -182,30 +181,37 @@ export function WalletPage(props: { address: string }) {
   }, [recipientInput, valueInput])
 
   const SendButton =
-    <OppositeTextButton className="text-lg" disabled={disabled} onClick={trySend.run}>
+    <ContainedButton className="w-full"
+      disabled={disabled}
+      icon={Outline.PaperAirplaneIcon}
+      onClick={trySend.run}>
       {trySend.loading
         ? "Loading..."
         : "Send transaction"}
-    </OppositeTextButton>
+    </ContainedButton>
 
   return <div className="h-full w-full flex flex-col">
-    <div className="w-full flex items-center">
+    <div className="p-xmd w-full flex items-center">
       <button className="p-1 bg-ahover rounded-xl"
         onClick={router.back}>
         <ArrowLeftIcon className="icon-sm" />
       </button>
     </div>
     {WalletInfo}
-    <div className="h-4" />
-    {RecipientInput}
-    <div className="h-4" />
-    {ValueInput}
-    <div className="grow" />
-    {txHash && <>
-      {TxHashDisplay}
-      <div className="h-2" />
-    </>}
-    <div className="h-1" />
-    {SendButton}
+    <div className="h-2" />
+    <div className="p-xmd">
+      <div className="p-4 rounded-xl border border-contrast">
+        {RecipientInput}
+        <div className="h-2" />
+        {ValueInput}
+        <div className="h-2" />
+        {txHash && <>
+          {TxHashDisplay}
+          <div className="h-2" />
+        </>}
+        <div className="h-2" />
+        {SendButton}
+      </div>
+    </div>
   </div>
 }

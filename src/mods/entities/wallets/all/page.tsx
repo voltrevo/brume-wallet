@@ -1,7 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
+import { Outline } from "@/libs/icons/icons"
 import { useBoolean } from "@/libs/react/handles/boolean"
 import { OkProps } from "@/libs/react/props/promise"
-import { OppositeTextButton } from "@/mods/components/button"
+import { ContainedButton } from "@/mods/components/button"
 import { useRouter } from "next/router"
 import { useCallback } from "react"
 import { Wallet, WalletProps } from "../data"
@@ -19,34 +20,39 @@ export function WalletsPage(props: {}) {
   }, [router])
 
   const CreateButton =
-    <OppositeTextButton className="text-lg" onClick={creator.enable}>
-      Add wallet
-    </OppositeTextButton>
+    <ContainedButton className="w-full text-lg"
+      icon={Outline.PlusIcon}
+      onClick={creator.enable}>
+      New wallet
+    </ContainedButton>
 
-  const WalletsList = <div className="flex flex-col gap-2 overflow-y-auto">
-    {wallets.data?.map(wallet =>
-      <ClickableWalletRow
-        key={wallet.address}
-        wallet={wallet}
-        ok={onWalletClick} />)}
-  </div>
+  const WalletsList =
+    <div className="flex flex-col gap-2">
+      {wallets.data?.map(wallet =>
+        <ClickableWalletRow
+          key={wallet.address}
+          wallet={wallet}
+          ok={onWalletClick} />)}
+    </div>
 
-  const Body = <>
-    {WalletsList}
-    <div className="grow" />
-    <div className="h-1" />
-    {CreateButton}
-    <div className="h-1" />
-  </>
+  const Body =
+    <div className="p-xmd">
+      {WalletsList}
+      <div className="h-2" />
+      {CreateButton}
+    </div>
 
-  return <div className="h-full w-full flex flex-col">
+  const Header =
+    <div className="p-xmd text-center text-xl font-medium">
+      My wallets
+    </div>
+
+  return <div className="h-full w-full">
     {creator.current &&
       <WalletCreatorDialog
         close={creator.disable} />}
-    <span className="text-center text-xl font-medium">
-      My wallets
-    </span>
-    <div className="h-4" />
+    {Header}
+    <div className="h-2" />
     {Body}
   </div>
 }
@@ -58,8 +64,7 @@ export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {
     ok(wallet)
   }, [ok, wallet])
 
-  return <div className="cursor-pointer"
-    onClick={onClick}>
+  return <div onClick={onClick}>
     <WalletRow wallet={wallet} />
   </div>
 }

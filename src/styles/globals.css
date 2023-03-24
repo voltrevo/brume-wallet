@@ -3,11 +3,11 @@
 @import "tailwindcss/utilities";
 
 @import "./padding.css";
+@import "./margin.css";
 @import "./animation.css";
 @import "./background.css";
 @import "./text.css";
 @import "./icons.css";
-@import "./loader.css";
 @import "./border.css";
 
 html,

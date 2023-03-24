@@ -1,8 +1,9 @@
+import { Outline } from "@/libs/icons/icons";
 import { Dialog } from "@/libs/modals/dialog";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { Pipes } from "@/libs/xswr/pipes";
-import { OppositeTextButton } from "@/mods/components/button";
+import { ContainedButton } from "@/mods/components/button";
 import { Wallet } from "ethers";
 import { useCallback, useEffect, useState } from "react";
 import { WalletData } from "../data";
@@ -69,32 +70,28 @@ export function WalletCreatorDialog(props: CloseProps) {
     </h1>
 
   const NameInput =
-    <input className="p-mdl w-full rounded-xl bg-contrast outline-none focus:outline-violet6"
+    <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
       placeholder="Enter a name"
       value={name} onChange={onNameChange} />
 
   const KeyInput =
-    <textarea className="p-mdl w-full resize-none rounded-xl bg-contrast outline-none focus:outline-violet6"
+    <textarea className="p-xmd w-full resize-none rounded-xl bg-transparent outline-none border border-contrast focus:border-opposite"
       placeholder="Enter your private key"
       value={key} onChange={onKeyChange}
       rows={4} />
 
   const Info =
-    <span className="text-contrast text-sm">
-      {"We have generated a new private key, just enter the name and add to create a new wallet."}
-    </span>
-
-  const Info2 =
-    <span className="text-contrast text-sm">
-      {"You can also enter an existing private key to import an existent wallet."}
-    </span>
+    <div className="text-contrast text-sm">
+      {`We have generated a new private key, just enter the name and add to create a new wallet. You can also enter a private key to import an existing wallet.`}
+    </div>
 
   const DoneButton =
-    <OppositeTextButton
+    <ContainedButton
       disabled={!name || !wallet}
+      icon={Outline.PlusIcon}
       onClick={onDoneClick}>
       Add
-    </OppositeTextButton>
+    </ContainedButton>
 
   return <Dialog close={close}>
     {Header}
@@ -104,12 +101,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     {KeyInput}
     <div className="h-2" />
     {Info}
-    <div className="h-2" />
-    {Info2}
     <div className="grow" />
-    <div className="">
-      {DoneButton}
-    </div>
-    <div className="h-1" />
+    {DoneButton}
   </Dialog>
 }

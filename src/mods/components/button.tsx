@@ -1,73 +1,59 @@
 import { ButtonProps } from '@/libs/react/props/html';
 import { OptionalIconProps } from '@/libs/react/props/icon';
 import { RefProps } from '@/libs/react/props/ref';
-import ChevronDownIcon from '@heroicons/react/24/outline/ChevronDownIcon';
-import { BooleanHandle } from '../../libs/react/handles/boolean';
 
-export function ContrastTextButton(props: ButtonProps & OptionalIconProps & RefProps<HTMLButtonElement>) {
-  const { xref, icon: Icon, className, children, ...other } = props
+export function ContainedButton(props: ButtonProps & OptionalIconProps & RefProps<HTMLButtonElement>) {
+  const { xref, className, children, ...other } = props
 
-  return <button className={`group rounded-xl p-md bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+  return <button className={`group rounded-xl p-md text-opposite bg-primary border border-primary ahover:text-primary ahover:bg-transparent ahover:dark:bg-transparent ahover:border-secondary transition-colors disabled:opacity-50 ${className}`}
     {...other}
     ref={xref}>
     <div className="flex justify-center items-center gap-2 group-enabled:group-active:scale-90 transition-transform">
-      {Icon &&
-        <Icon className="icon-xs" />}
+      {props.icon &&
+        <props.icon className="icon-xs" />}
       {children}
     </div>
   </button>
 }
 
-export function OppositeTextButton(props: ButtonProps & OptionalIconProps & RefProps<HTMLButtonElement>) {
-  const { xref, icon: Icon, className, children, ...other } = props
-
-  return <button className={`w-full group flex items-center rounded-xl p-md border border-default bg-component text-colored transition-colors disabled:opacity-70 disabled:cursor-not-allowed ${className}`}
-    {...other}
-    ref={xref}>
-    <div className="flex  grow justify-center items-center gap-2 group-enabled:group-active:scale-90 transition-transform">
-      {children}
-    </div>
-    {Icon && <Icon className="icon-sm text-colored" />}
-  </button>
-}
-
-export function OppositeTextButtonRounded(props: ButtonProps & RefProps<HTMLButtonElement>) {
+export function BorderedButton(props: ButtonProps & OptionalIconProps & RefProps<HTMLButtonElement>) {
   const { xref, className, children, ...other } = props
 
-  return <button className={`group flex items-center justify-center rounded-xl p-2 bg-component text-colored transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+  return <button className={`group rounded-xl p-md text-primary border border-primary ahover:text-secondary ahover:border-secondary transition-colors disabled:opacity-50 ${className}`}
     {...other}
     ref={xref}>
-    <div className="flex  justify-center items-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+    <div className="flex justify-center items-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+      {props.icon &&
+        <props.icon className="icon-xs" />}
       {children}
     </div>
   </button>
 }
 
-export function OppositeTextButtonDeploy(props: ButtonProps & RefProps<HTMLButtonElement> & { deploy: BooleanHandle }) {
-  const { xref, className, children, deploy, ...other } = props
+export function GrowButton(props: ButtonProps & OptionalIconProps & RefProps<HTMLButtonElement>) {
+  const { xref, className, children, ...other } = props
 
-  return <button className={`w-full group flex items-center rounded-xl p-md border border-default bg-component text-colored transition-colors disabled:opacity-70 disabled:cursor-not-allowed ${className}`}
+  return <button className={`group rounded-xl p-md border border-contrast ahover:scale-105 ahover:border-opposite transition disabled:opacity-50 ${className}`}
     {...other}
     ref={xref}>
-    <div className="flex grow justify-center items-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+    <div className="flex justify-center items-center gap-2">
+      {props.icon &&
+        <props.icon className="icon-xs" />}
       {children}
     </div>
-    {!deploy?.current
-      ? <ChevronDownIcon className="icon-sm flex-none text-colored transition-transform duration-300" />
-      : <ChevronDownIcon className="icon-sm flex-none text-colored transition-transform rotate-180 duration-300" />}
-  </button >
+  </button>
 }
 
-export function TextButton(props: ButtonProps & OptionalIconProps & RefProps<HTMLButtonElement>) {
-  const { xref, icon: Icon, className, children, ...other } = props
+export function NakedButton(props: ButtonProps & OptionalIconProps & RefProps<HTMLButtonElement>) {
+  const { xref, className, children, ...other } = props
 
-  return <button className={`w-full group flex items-center text-colored rounded-xl p-md border border-default bg-violet2 dark:bg-violet12 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+  return <button className={`group rounded-xl p-md text-primary ahover:text-secondary disabled:opacity-50 ${className}`}
     {...other}
     ref={xref}>
-    <div className="flex grow justify-center items-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+    <div className="flex justify-center items-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+      {props.icon &&
+        <props.icon className="icon-xs" />}
       {children}
     </div>
-    {Icon &&
-      <Icon className="icon-sm" />}
   </button>
 }

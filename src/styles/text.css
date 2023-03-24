@@ -1,4 +1,10 @@
 @layer utilities {
+
+  .text-break {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
   .text-default {
     @apply text-black;
     @apply dark:text-white;
@@ -10,15 +16,18 @@
   }
 
   .text-contrast {
-    @apply text-mauve11;
+    @apply text-black text-opacity-50;
+    @apply dark:text-white dark:text-opacity-50;
   }
 
-  .text-colored {
-    @apply text-violet11;
+  .text-primary {
+    @apply text-violet-400;
+    @apply dark:text-violet-400;
   }
 
-  .text-break {
-    overflow-wrap: anywhere;
-    word-break: break-word;
+  .text-secondary {
+    @apply text-violet-500;
+    @apply dark:text-violet-300;
   }
+
 }

@@ -1,4 +1,4 @@
-import { ChevronRightIcon } from "@heroicons/react/24/outline"
+import { GrowButton } from "@/mods/components/button"
 import { WalletAvatar } from "./avatar"
 import { useWallet, WalletProps } from "./data"
 
@@ -17,7 +17,7 @@ export function WalletRow(props: WalletProps) {
       {wallet.data.address}
     </div>
 
-  return <div className="p-md flex items-center gap-2 rounded-xl bg-component border border-default">
+  return <GrowButton className="w-full text-left">
     <div className="shrink-0">
       <WalletAvatar
         size={2.5}
@@ -28,6 +28,5 @@ export function WalletRow(props: WalletProps) {
       {First}
       {Second}
     </div>
-    <ChevronRightIcon className="icon-sm shrink-0" />
-  </div>
+  </GrowButton>
 }

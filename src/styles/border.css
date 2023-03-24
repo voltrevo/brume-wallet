@@ -1,5 +1,28 @@
 @layer utilities {
+
   .border-default {
-    @apply border-violet6 ahover:border-violet8;
+    @apply border-white;
+    @apply dark:border-black;
   }
+
+  .border-opposite {
+    @apply border-black;
+    @apply dark:border-white;
+  }
+
+  .border-contrast {
+    @apply border-black border-opacity-10;
+    @apply dark:border-white border-opacity-10;
+  }
+
+  .border-primary {
+    @apply border-violet-400;
+    @apply dark:border-b-violet-400;
+  }
+
+  .border-secondary {
+    @apply border-violet-500;
+    @apply dark:border-b-violet-300;
+  }
+  
 }

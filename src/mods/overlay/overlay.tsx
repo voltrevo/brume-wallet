@@ -12,11 +12,11 @@ export function Overlay(props: ChildrenProps) {
   }, [])
 
   if (extension)
-    return <main className="h-[600px] w-[400px] p-4">
+    return <main className="p-safe h-[600px] w-[400px]">
       {children}
     </main>
 
-  return <main className="h-full w-full m-auto max-w-3xl p-4">
+  return <main className="p-safe h-full w-full m-auto max-w-3xl">
     {children}
   </main>
 }
