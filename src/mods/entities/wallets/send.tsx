@@ -14,7 +14,7 @@ import { useMemo, useState } from "react";
 import { useBalance, useGasPrice, useNonce, WalletDataProps } from "./data";
 
 export function SendDialog(props: WalletDataProps & CloseProps) {
-  const { wallet } = props
+  const { wallet, close } = props
 
   const sessions = useSessions()
 

@@ -4,12 +4,14 @@ import { useColor } from "@/libs/colors/color";
 import { useCopy } from "@/libs/copy/copy";
 import { Outline } from "@/libs/icons/icons";
 import { HoverPopper } from "@/libs/modals/popper";
+import { useBoolean } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
 import { useSessions } from "@/mods/tor/sessions/context";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/router";
 import { WalletAvatar } from "./avatar";
 import { useBalance, useWallet } from "./data";
+import { SendDialog } from "./send";
 
 export function WalletPage(props: { address: string }) {
   const { address } = props
@@ -66,10 +68,13 @@ export function WalletPage(props: { address: string }) {
       </button>
     </div>
 
+  const sendDialog = useBoolean()
+
   const Body =
     <div className="p-xmd flex items-center justify-center flex-wrap gap-12">
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white ${color} rounded-xl p-3`}>
+        <button className={`text-white ${color} rounded-xl p-3`}
+          onClick={sendDialog.enable}>
           <Outline.PaperAirplaneIcon className="icon-md" />
         </button>
         <div className="">
@@ -94,7 +99,13 @@ export function WalletPage(props: { address: string }) {
       </div>
     </div>
 
+  if (!wallet.data) return
+
   return <div className="h-full w-full flex flex-col">
+    {sendDialog.current &&
+      <SendDialog
+        wallet={wallet.data}
+        close={sendDialog.disable} />}
     {Toolbar}
     {WalletInfo}
     {Body}
