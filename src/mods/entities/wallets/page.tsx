@@ -73,7 +73,7 @@ export function WalletPage(props: { address: string }) {
   const Body =
     <div className="p-xmd flex items-center justify-center flex-wrap gap-12">
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white ${color} rounded-xl p-3`}
+        <button className={`text-white ${color} rounded-xl p-3 ahover:scale-105 transition-transform`}
           onClick={sendDialog.enable}>
           <Outline.PaperAirplaneIcon className="icon-md" />
         </button>
@@ -82,7 +82,7 @@ export function WalletPage(props: { address: string }) {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white ${color} rounded-xl p-3`}>
+        <button className={`text-white ${color} rounded-xl p-3 ahover:scale-105 transition-transform`}>
           <Outline.QrCodeIcon className="icon-md" />
         </button>
         <div className="">
@@ -90,7 +90,7 @@ export function WalletPage(props: { address: string }) {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white ${color} rounded-xl p-3`}>
+        <button className={`text-white ${color} rounded-xl p-3 ahover:scale-105 transition-transform`}>
           <Outline.ArrowsRightLeftIcon className="icon-md" />
         </button>
         <div className="">

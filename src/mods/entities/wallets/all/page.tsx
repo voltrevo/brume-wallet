@@ -28,6 +28,10 @@ export function WalletsPage(props: {}) {
 
   const WalletsList =
     <div className="flex flex-col gap-2">
+      {!wallets.data?.length &&
+        <div className="p-xmd text-center text-contrast">
+          {`You don't have any wallet`}
+        </div>}
       {wallets.data?.map(wallet =>
         <ClickableWalletRow
           key={wallet.address}
@@ -36,9 +40,9 @@ export function WalletsPage(props: {}) {
     </div>
 
   const Body =
-    <div className="p-xmd">
+    <div className="p-xmd flex flex-col grow">
       {WalletsList}
-      <div className="h-2" />
+      <div className="h-2 grow" />
       {CreateButton}
     </div>
 
@@ -47,7 +51,7 @@ export function WalletsPage(props: {}) {
       My wallets
     </div>
 
-  return <div className="h-full w-full">
+  return <div className="h-full w-full flex flex-col">
     {creator.current &&
       <WalletCreatorDialog
         close={creator.disable} />}
