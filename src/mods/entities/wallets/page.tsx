@@ -99,7 +99,7 @@ export function WalletPage(props: { address: string }) {
       </div>
     </div>
 
-  if (!wallet.data) return
+  if (!wallet.data) return null
 
   return <div className="h-full w-full flex flex-col">
     {sendDialog.current &&
