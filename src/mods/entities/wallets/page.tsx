@@ -190,14 +190,15 @@ export function WalletPage(props: { address: string }) {
         : "Send transaction"}
     </ContainedButton>
 
-  return <div className="h-full w-full flex flex-col">
+  const Toolbar =
     <div className="p-xmd w-full flex items-center">
       <button className="p-1 bg-ahover rounded-xl"
         onClick={router.back}>
         <ArrowLeftIcon className="icon-sm" />
       </button>
     </div>
-    {WalletInfo}
+
+  const SendBox =
     <div className="p-xmd">
       <div className="p-4 rounded-xl border border-contrast">
         {RecipientInput}
@@ -212,5 +213,10 @@ export function WalletPage(props: { address: string }) {
         {SendButton}
       </div>
     </div>
+
+  return <div className="h-full w-full flex flex-col">
+    {Toolbar}
+    {WalletInfo}
+    {SendBox}
   </div>
 }
