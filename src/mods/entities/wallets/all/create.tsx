@@ -3,7 +3,7 @@ import { Dialog } from "@/libs/modals/dialog";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { Pipes } from "@/libs/xswr/pipes";
-import { ContainedButton } from "@/mods/components/button";
+import { ContainedButton } from "@/mods/components/buttons/button";
 import { Wallet } from "ethers";
 import { useCallback, useEffect, useState } from "react";
 import { WalletAvatar } from "../avatar";

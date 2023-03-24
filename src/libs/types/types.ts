@@ -19,7 +19,7 @@ export namespace Types {
   }
 
   export function isBigInt(x: unknown): x is bigint {
-    return typeof x === "string"
+    return typeof x === "bigint"
   }
 
 }

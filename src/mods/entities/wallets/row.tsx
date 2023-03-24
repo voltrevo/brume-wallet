@@ -1,4 +1,4 @@
-import { GrowButton } from "@/mods/components/button"
+import { GrowButton } from "@/mods/components/buttons/button"
 import { WalletAvatar } from "./avatar"
 import { useWallet, WalletProps } from "./data"
 

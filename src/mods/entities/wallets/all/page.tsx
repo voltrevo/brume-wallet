@@ -2,7 +2,7 @@
 import { Outline } from "@/libs/icons/icons"
 import { useBoolean } from "@/libs/react/handles/boolean"
 import { OkProps } from "@/libs/react/props/promise"
-import { ContainedButton } from "@/mods/components/button"
+import { ContainedButton } from "@/mods/components/buttons/button"
 import { useRouter } from "next/router"
 import { useCallback } from "react"
 import { Wallet, WalletProps } from "../data"

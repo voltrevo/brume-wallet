@@ -7,7 +7,8 @@ import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { Rpc } from "@/libs/rpc";
 import { Types } from "@/libs/types/types";
-import { ContainedButton } from "@/mods/components/button";
+import { ContainedButton } from "@/mods/components/buttons/button";
+import { ButtonChip } from "@/mods/components/buttons/chips";
 import { useSessions } from "@/mods/tor/sessions/context";
 import { getAddress, parseUnits, Wallet } from "ethers";
 import { useMemo, useState } from "react";
@@ -62,11 +63,12 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
   const [txHash, setTxHash] = useState<string>()
 
   const trySend = useAsyncUniqueCallback(async () => {
-    if (!sessions) return
-    if (!wallet) return
-
-    if (!Types.isBigInt(nonce.data)) return
-    if (!Types.isBigInt(gasPrice.data)) return
+    if (!sessions)
+      return
+    if (!Types.isBigInt(nonce.data))
+      return
+    if (!Types.isBigInt(gasPrice.data))
+      return
 
     const session = await sessions.cryptoRandom()
 
@@ -114,32 +116,42 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
     nonce.refetch()
   }, [sessions, wallet.address, nonce.data, gasPrice.data, recipientInput, valueInput], console.error)
 
-  const TxHashDisplay =
-    <div className="text-break">
-      <div className="text-colored">
-        Transaction hash:
-      </div>
-      <span className="text-contrast text-sm">
-        {txHash}
-      </span>
-      <ExternalDivisionLink className="flex items-center gap-2 text-colored cursor-pointer hover:underline w-[150px]"
-        href={`https://goerli.etherscan.io/tx/${txHash}`} target="no">
-        <span className="text-sm">See on etherscan</span>
-        <Outline.ArrowTopRightOnSquareIcon className="icon-xs" />
+  const TxHashDisplay = <>
+    <div className="">
+      Transaction hash
+    </div>
+    <div className="text-contrast truncate">
+      {txHash}
+    </div>
+    <div className="h-2" />
+    <div className="flex">
+      <ExternalDivisionLink
+        href={`https://goerli.etherscan.io/tx/${txHash}`}
+        target="_blank" rel="noreferrer">
+        <ButtonChip icon={Outline.ArrowTopRightOnSquareIcon}>
+          Etherscan
+        </ButtonChip>
       </ExternalDivisionLink>
     </div>
+  </>
 
   const disabled = useMemo(() => {
+    if (!sessions)
+      return true
+    if (!Types.isBigInt(nonce.data))
+      return true
+    if (!Types.isBigInt(gasPrice.data))
+      return true
     if (!recipientInput)
       return true
     if (!valueInput)
       return true
     return false
-  }, [recipientInput, valueInput])
+  }, [sessions, nonce.data, gasPrice.data, recipientInput, valueInput])
 
   const SendButton =
     <ContainedButton className="w-full"
-      disabled={disabled}
+      disabled={trySend.loading || disabled}
       icon={Outline.PaperAirplaneIcon}
       onClick={trySend.run}>
       {trySend.loading
