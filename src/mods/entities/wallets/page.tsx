@@ -198,7 +198,6 @@ export function WalletPage(props: { address: string }) {
       </button>
     </div>
     {WalletInfo}
-    <div className="h-2" />
     <div className="p-xmd">
       <div className="p-4 rounded-xl border border-contrast">
         {RecipientInput}

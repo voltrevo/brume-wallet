@@ -2,13 +2,15 @@ import { Colors } from "@/libs/colors/color";
 import { useMemo } from "react";
 
 export function WalletAvatar(props: {
-  address: string,
+  address?: string,
   size: number,
   textSize: number
 }) {
   const { address, size, textSize } = props
 
   const color = useMemo(() => {
+    if (!address) return "bg-contrast"
+
     return Colors.from(address)
   }, [address])
 

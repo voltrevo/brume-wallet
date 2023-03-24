@@ -52,7 +52,6 @@ export function WalletsPage(props: {}) {
       <WalletCreatorDialog
         close={creator.disable} />}
     {Header}
-    <div className="h-2" />
     {Body}
   </div>
 }

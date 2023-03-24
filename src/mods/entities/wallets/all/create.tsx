@@ -6,6 +6,7 @@ import { Pipes } from "@/libs/xswr/pipes";
 import { ContainedButton } from "@/mods/components/button";
 import { Wallet } from "ethers";
 import { useCallback, useEffect, useState } from "react";
+import { WalletAvatar } from "../avatar";
 import { WalletData } from "../data";
 import { useWallets } from "./data";
 
@@ -47,8 +48,6 @@ export function WalletCreatorDialog(props: CloseProps) {
   const [wallet, setWallet] = useState<Wallet>()
 
   useEffect(() => {
-    if (!key) return
-
     importWallet(key)
       .catch(() => undefined)
       .then(setWallet)
@@ -70,9 +69,17 @@ export function WalletCreatorDialog(props: CloseProps) {
     </h1>
 
   const NameInput =
-    <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
-      placeholder="Enter a name"
-      value={name} onChange={onNameChange} />
+    <div className="flex items-center gap-2">
+      <div className="shrink-0">
+        <WalletAvatar
+          size={2.5}
+          textSize={1.5}
+          address={wallet?.address} />
+      </div>
+      <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
+        placeholder="Enter a name"
+        value={name} onChange={onNameChange} />
+    </div>
 
   const KeyInput =
     <textarea className="p-xmd w-full resize-none rounded-xl bg-transparent outline-none border border-contrast focus:border-opposite"
@@ -82,7 +89,7 @@ export function WalletCreatorDialog(props: CloseProps) {
 
   const Info =
     <div className="text-contrast text-sm">
-      {`We have generated a new private key, just enter the name and add to create a new wallet. You can also enter a private key to import an existing wallet.`}
+      {`We have generated a new private key just for you. You can also enter your own private key to import an existing wallet.`}
     </div>
 
   const DoneButton =
