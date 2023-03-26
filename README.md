@@ -55,9 +55,9 @@ npm i && npm run build:extension
 
 Congrats, you just used the first private Ethereum wallet 🎉🥳🍾
 
-## How to see that Metamask is leaking IP address?
+## How to see that MetaMask is leaking IP address?
 
-1. Add our proxy to your metamask networks
+1. Add our proxy to your MetaMask networks
 
 Network name: `Brume Proxy`
 
