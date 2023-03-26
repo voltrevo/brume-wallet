@@ -55,6 +55,18 @@ npm i && npm run build:extension
 
 Congrats, you just used the first private Ethereum wallet 🎉🥳🍾
 
+## How to see that Metamask is leaking IP address?
+
+1. Add our proxy to your metamask networks
+
+Network name: `Brume Proxy`
+
+New RPC URL: `https://proxy.haz.workers.dev`
+
+Chain ID: `1`
+
+2. Go on the logs website https://logs.brume.money/
+
 ## Next
 
 We plan to further develop Brume Wallet by adding several features necessary for everyday use, such as the integration of on-chain privacy tools (Aztec Network), supporting other blockchains (EVM & Non-EVM) and adding a token approval manager.
