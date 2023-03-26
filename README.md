@@ -65,6 +65,8 @@ New RPC URL: `https://proxy.haz.workers.dev`
 
 Chain ID: `1`
 
+Currency Symbol: `ETH`
+
 2. Go on the logs website https://logs.brume.money/
 
 ## Next
