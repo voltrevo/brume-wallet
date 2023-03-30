@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { Outline } from "@/libs/icons/icons"
-import { useBoolean } from "@/libs/react/handles/boolean"
+import { useBooleanState } from "@/libs/react/handles/boolean"
 import { OkProps } from "@/libs/react/props/promise"
 import { ContainedButton } from "@/mods/components/buttons/button"
 import { useRouter } from "next/router"
@@ -13,7 +13,7 @@ import { useWallets } from "./data"
 export function WalletsPage(props: {}) {
   const router = useRouter()
   const wallets = useWallets()
-  const creator = useBoolean()
+  const creator = useBooleanState()
 
   const onWalletClick = useCallback((wallet: Wallet) => {
     router.push(`/wallet/${wallet.address}`)

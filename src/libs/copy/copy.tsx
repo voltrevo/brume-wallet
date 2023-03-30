@@ -1,8 +1,8 @@
-import { useBoolean } from "@/libs/react/handles/boolean";
+import { useBooleanState } from "@/libs/react/handles/boolean";
 import { useAsyncUniqueCallback } from "../react/async";
 
 export function useCopy(text: string) {
-  const { current, enable, disable } = useBoolean()
+  const { current, enable, disable } = useBooleanState()
 
   const { run } = useAsyncUniqueCallback(async () => {
     await navigator.clipboard.writeText(text)

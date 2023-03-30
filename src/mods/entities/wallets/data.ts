@@ -1,8 +1,8 @@
 import { Rpc } from "@/libs/rpc"
 import { Session } from "@/libs/tor/sessions/session"
-import { storage } from "@/libs/xswr/storage"
+import { useStorage } from "@/mods/storage/context"
 import { Pool } from "@hazae41/piscine"
-import { FetcherMore, getSchema, NormalizerMore, Result, useError, useFetch, useSchema } from "@hazae41/xswr"
+import { AsyncStorageQueryParams, FetcherMore, getSchema, NormalizerMore, Result, useError, useFetch, useSchema } from "@hazae41/xswr"
 
 export type Wallet =
   | WalletRef
@@ -27,23 +27,25 @@ export interface WalletData {
   privateKey: string
 }
 
-export function getWalletSchema(address?: string) {
-  if (!address) return
+export function getWalletSchema(address: string | undefined, storage: AsyncStorageQueryParams<any> | undefined) {
+  if (!address || !storage) return
 
   return getSchema<WalletData>(`wallet/${address}`, undefined, { storage })
 }
 
-export async function getWalletNormal(wallet: Wallet, more: NormalizerMore) {
+export async function getWalletNormal(wallet: Wallet, storage: AsyncStorageQueryParams<any> | undefined, more: NormalizerMore) {
   if ("ref" in wallet) return wallet
 
-  const schema = getWalletSchema(wallet.address)
+  const schema = getWalletSchema(wallet.address, storage)
   await schema?.normalize(wallet, more)
 
   return { ref: true, address: wallet.address } as WalletRef
 }
 
-export function useWallet(address?: string) {
-  return useSchema(getWalletSchema, [address])
+export function useWallet(address: string | undefined) {
+  const storage = useStorage()
+
+  return useSchema(getWalletSchema, [address, storage])
 }
 
 export function getBalanceSchema(address: string, sessions?: Pool<Session>) {
@@ -68,14 +70,14 @@ export function getBalanceSchema(address: string, sessions?: Pool<Session>) {
   }, fetcher)
 }
 
-export function useBalance(address: string, sockets?: Pool<Session>) {
+export function useBalance(address: string, sockets: Pool<Session> | undefined) {
   const query = useSchema(getBalanceSchema, [address, sockets])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getNonceSchema(address: string, sessions?: Pool<Session>) {
+export function getNonceSchema(address: string, sessions: Pool<Session> | undefined) {
   if (!sessions) return
 
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
@@ -97,14 +99,14 @@ export function getNonceSchema(address: string, sessions?: Pool<Session>) {
   }, fetcher)
 }
 
-export function useNonce(address: string, sockets?: Pool<Session>) {
-  const query = useSchema(getNonceSchema, [address, sockets])
+export function useNonce(address: string, sessions: Pool<Session> | undefined) {
+  const query = useSchema(getNonceSchema, [address, sessions])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getGasPriceSchema(sessions?: Pool<Session>) {
+export function getGasPriceSchema(sessions: Pool<Session> | undefined) {
   if (!sessions) return
 
   const fetcher = async <T extends unknown[]>(init: Rpc.RequestInit<T>, more: FetcherMore) => {
@@ -126,8 +128,8 @@ export function getGasPriceSchema(sessions?: Pool<Session>) {
   }, fetcher)
 }
 
-export function useGasPrice(sockets?: Pool<Session>) {
-  const query = useSchema(getGasPriceSchema, [sockets])
+export function useGasPrice(sessions: Pool<Session> | undefined) {
+  const query = useSchema(getGasPriceSchema, [sessions])
   useFetch(query)
   useError(query, console.error)
   return query

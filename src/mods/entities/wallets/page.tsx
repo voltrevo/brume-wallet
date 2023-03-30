@@ -4,7 +4,7 @@ import { useColor } from "@/libs/colors/color";
 import { useCopy } from "@/libs/copy/copy";
 import { Outline } from "@/libs/icons/icons";
 import { HoverPopper } from "@/libs/modals/popper";
-import { useBoolean } from "@/libs/react/handles/boolean";
+import { useBooleanState } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
 import { useSessions } from "@/mods/tor/sessions/context";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
@@ -68,7 +68,7 @@ export function WalletPage(props: { address: string }) {
       </button>
     </div>
 
-  const sendDialog = useBoolean()
+  const sendDialog = useBooleanState()
 
   const Body =
     <div className="p-xmd flex items-center justify-center flex-wrap gap-12">

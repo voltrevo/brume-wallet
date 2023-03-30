@@ -17,6 +17,7 @@
   "dependencies": {
     "@hazae41/berith": "^1.1.40",
     "@hazae41/binary": "^1.2.10",
+    "@hazae41/bytes": "^1.0.4",
     "@hazae41/echalote": "^0.2.31",
     "@hazae41/ed25519": "^1.0.0",
     "@hazae41/fleche": "^1.1.16",
@@ -24,7 +25,7 @@
     "@hazae41/piscine": "^1.0.2",
     "@hazae41/sha1": "^1.0.0",
     "@hazae41/x25519": "^1.0.0",
-    "@hazae41/xswr": "^1.5.0",
+    "@hazae41/xswr": "^1.5.1-9",
     "@heroicons/react": "^2.0.16",
     "ethers": "^6.2.2",
     "next": "13.2.4",

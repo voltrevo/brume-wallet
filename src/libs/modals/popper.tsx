@@ -1,4 +1,4 @@
-import { useBoolean } from "@/libs/react/handles/boolean"
+import { useBooleanState } from "@/libs/react/handles/boolean"
 import { useElement } from "@/libs/react/handles/element"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { TargetProps } from "@/libs/react/props/target"
@@ -27,7 +27,7 @@ export function HoverPopper(props: TargetProps & ChildrenProps) {
   const element = useElement<HTMLDivElement>()
   const popper = usePopper(target.current, element.current, Poppers.noOffset)
 
-  const hovered = useBoolean()
+  const hovered = useBooleanState()
 
   if (!hovered.current && !target.current)
     return null
