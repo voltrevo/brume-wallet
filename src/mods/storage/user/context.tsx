@@ -68,7 +68,7 @@ export function UserStorageProvider(props: ChildrenProps) {
         </div>
       </div>
       <div className="h-4" />
-      <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
+      <input className="p-xmd rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
         type="password" autoFocus
         placeholder="Enter your password"
         onKeyDown={onKeyDown} />
