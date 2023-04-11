@@ -44,8 +44,8 @@ export function UserStorageProvider(props: ChildrenProps) {
     const keySaltBytes = Bytes.fromBase64(user.data.keySalt)
     const valueSaltBytes = Bytes.fromBase64(user.data.valueSalt)
 
-    const keySerializer = await HmacEncoder.fromPBKDF2(pbkdf2, keySaltBytes)
-    const valueSerializer = await AesGcmCoder.fromPBKDF2(pbkdf2, valueSaltBytes)
+    const keySerializer = await HmacEncoder.fromPBKDF2(pbkdf2, keySaltBytes, 1_000_000)
+    const valueSerializer = await AesGcmCoder.fromPBKDF2(pbkdf2, valueSaltBytes, 1_000_000)
 
     return { storage, keySerializer, valueSerializer }
   }, [user.data?.uuid, password.current, valid])

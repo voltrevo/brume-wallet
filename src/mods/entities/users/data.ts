@@ -21,8 +21,11 @@ export interface UserRef {
 export interface UserData {
   name: string,
   uuid: string,
+
   keySalt: string,
+
   valueSalt: string
+
   passwordSalt: string
   passwordHash: string
 }
