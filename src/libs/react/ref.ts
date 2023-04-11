@@ -8,14 +8,14 @@ export function useRefState<T>(init?: T): RefState<T | undefined>;
 export function useRefState<T>(init: T): RefState<T> {
   const ref = useRef(init)
 
-  const [, setTime] = useState(Date.now())
+  const [, setCounter] = useState(0)
 
   const setter = useCallback((action: SetStateAction<T>) => {
     const result = action instanceof Function
       ? action(ref.current)
       : action
     ref.current = result
-    setTime(Date.now())
+    setCounter(x => x + 1)
   }, [])
 
   return [ref, setter]

@@ -1,43 +1,44 @@
-import { DependencyList, useCallback } from "react"
+import { DependencyList, useCallback, useState } from "react"
 import { useRefState } from "./ref"
 
 export function useAsyncCallback<A extends unknown[], R>(
   subcallback: (...args: A) => Promise<R>,
   deps: DependencyList,
-  onerror: (e: any) => void = console.error
 ) {
+  const [, setState] = useState<unknown>()
+
   return useCallback(async (...args: A) => {
     const promise = subcallback(...args)
 
-    promise.catch(onerror)
+    promise.catch(e => setState(() => { throw e }))
 
     return promise
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, onerror])
+  }, deps)
 }
 
 export function useAsyncUniqueCallback<A extends unknown[], R>(
   subcallback: (...args: A) => Promise<R>,
-  deps: DependencyList,
-  onerror: (e: any) => void = console.error
+  deps: DependencyList
 ) {
-  const [promise, setPromise] = useRefState<Promise<R>>()
+  const [promiseRef, setPromise] = useRefState<Promise<R>>()
 
   const run = useCallback(async (...args: A) => {
-    if (promise.current) return
+    if (promiseRef.current) return
 
-    const nextPromise = subcallback(...args)
+    const promise = subcallback(...args)
 
-    nextPromise
-      .catch(onerror)
+    promise
+      .catch(e => setPromise(() => { throw e }))
       .finally(() => setPromise(undefined))
 
-    setPromise(nextPromise)
-    return nextPromise
+    setPromise(promise)
+    return promise
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, onerror])
+  }, deps)
 
-  const loading = Boolean(promise.current)
+  const promise = promiseRef.current
+  const loading = Boolean(promise)
 
   return { run, promise, loading }
 }

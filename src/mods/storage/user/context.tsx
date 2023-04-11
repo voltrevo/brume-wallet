@@ -1,12 +1,12 @@
+import { useAsyncUniqueCallback } from "@/libs/react/async";
 import { useKeyboardEnter } from "@/libs/react/events";
-import { useAsyncMemo } from "@/libs/react/memo";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { UserAvatar } from "@/mods/entities/users/all/page";
 import { useCurrentUser } from "@/mods/entities/users/context";
 import { Password } from "@/mods/entities/users/password";
 import { Bytes } from "@hazae41/bytes";
 import { AesGcmCoder, HmacEncoder, IDBStorage, PBKDF2, StorageQueryParams } from "@hazae41/xswr";
-import { KeyboardEvent, createContext, useContext, useState } from "react";
+import { KeyboardEvent, createContext, useContext, useRef, useState } from "react";
 
 export const UserStorageContext = createContext<StorageQueryParams<any> | undefined>(undefined)
 
@@ -19,9 +19,12 @@ export function UserStorageProvider(props: ChildrenProps) {
 
   const user = useCurrentUser()
 
-  const [password, setPassword] = useState<string>()
+  const passwordInputRef = useRef<HTMLInputElement>(null)
 
-  const valid = useAsyncMemo(async () => {
+  const [invalid, setInvalid] = useState(false)
+  const [storage, setStorage] = useState<StorageQueryParams<any>>()
+
+  const validate = useAsyncUniqueCallback(async (password: string) => {
     if (!user.data) return
     if (!password) return
 
@@ -30,13 +33,16 @@ export function UserStorageProvider(props: ChildrenProps) {
 
     const passwordHash = Bytes.toBase64(passwordHashBytes)
 
-    return passwordHash === user.data.passwordHash
-  }, [user.data?.uuid, password])
+    if (passwordHash !== user.data.passwordHash) {
+      setInvalid(true)
 
-  const storage = useAsyncMemo(async () => {
-    if (!user.data) return
-    if (!password) return
-    if (!valid) return
+      setTimeout(() => {
+        setInvalid(false)
+        passwordInputRef.current?.focus()
+      }, 500)
+
+      return
+    }
 
     const storage = IDBStorage.create(user.data.uuid)
     const pbkdf2 = await PBKDF2.from(password)
@@ -47,11 +53,11 @@ export function UserStorageProvider(props: ChildrenProps) {
     const keySerializer = await HmacEncoder.fromPBKDF2(pbkdf2, keySaltBytes, 1_000_000)
     const valueSerializer = await AesGcmCoder.fromPBKDF2(pbkdf2, valueSaltBytes, 1_000_000)
 
-    return { storage, keySerializer, valueSerializer }
-  }, [user.data?.uuid, password, valid])
+    setStorage({ storage, keySerializer, valueSerializer })
+  }, [user.data?.uuid])
 
   const onKeyDown = useKeyboardEnter((e: KeyboardEvent<HTMLInputElement>) => {
-    setPassword(e.currentTarget.value)
+    validate.run(e.currentTarget.value)
   }, [])
 
   if (!user.data) return null
@@ -68,8 +74,11 @@ export function UserStorageProvider(props: ChildrenProps) {
         </div>
       </div>
       <div className="h-4" />
-      <input className="p-xmd rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
+      <input className={`p-xmd rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite data-[invalid=true]:border-red-500 data-[invalid=true]:text-red-500`}
+        ref={passwordInputRef}
         type="password" autoFocus
+        disabled={validate.loading}
+        data-invalid={invalid}
         placeholder="Enter your password"
         onKeyDown={onKeyDown} />
     </div>
