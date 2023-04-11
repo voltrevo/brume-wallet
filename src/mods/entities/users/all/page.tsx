@@ -19,8 +19,8 @@ export function UsersPage(props: OkProps<User>) {
     {createDialog.current &&
       <UserCreateDialog
         close={createDialog.disable} />}
-    <div className="h-full w-full flex justify-center items-center">
-      <div className="flex flex-wrap gap-8">
+    <div className="h-full w-full p-4 flex justify-center items-center">
+      <div className="flex flex-wrap items-center gap-8">
         {users.data?.map(user =>
           <UserOkButton
             key={user.uuid}
