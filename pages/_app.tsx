@@ -31,8 +31,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 <meta key="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
                 <meta key="apple-mobile-web-app-capable" name="apple-mobile-web-app-capable" content="yes" />
                 <meta key="apple-mobile-web-app-status-bar-style" name="apple-mobile-web-app-status-bar-style" content="white" />
-                <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-                <link rel="alternate icon" href="/favicon.ico" />
+                <link rel="icon" href="/favicon.ico" />
                 <link rel="manifest" href="/manifest.json" />
                 <link rel="apple-touch-icon" href="/square.png" />
                 <link rel="apple-touch-startup-image" href="/round.png" />
