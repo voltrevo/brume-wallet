@@ -48,4 +48,16 @@
     @apply w-12 h-12;
   }
 
+  .icon-6xl {
+    @apply w-14 h-14;
+  }
+
+  .icon-7xl {
+    @apply w-16 h-16;
+  }
+
+  .icon-8xl {
+    @apply w-20 h-20;
+  }
+
 }

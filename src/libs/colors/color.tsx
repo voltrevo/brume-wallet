@@ -1,4 +1,5 @@
 import { useMemo } from "react"
+import { Hash } from "../hash/hash"
 
 export namespace Colors {
 
@@ -12,12 +13,7 @@ export namespace Colors {
   ] as const
 
   export function from(seed: string) {
-    let index = 0
-
-    for (let i = 0; i < seed.length; i++)
-      index = (index + seed.charCodeAt(i)) % colors.length
-
-    return colors[index]
+    return colors[Hash.from(seed, colors.length)]
   }
 
 }
