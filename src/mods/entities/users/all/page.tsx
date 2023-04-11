@@ -4,7 +4,7 @@ import { useBooleanState } from "@/libs/react/handles/boolean";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { OkProps } from "@/libs/react/props/promise";
 import { useCallback } from "react";
-import { User, UserDataProps, UserProps, useUser } from "../data";
+import { User, UserProps, useUser } from "../data";
 import { UserCreateDialog } from "./create";
 import { useUsers } from "./data";
 
@@ -33,22 +33,24 @@ export function UsersPage(props: OkProps<User>) {
 }
 
 function UserOkButton(props: UserProps & OkProps<User>) {
-  const { user, ok } = props
+  const { ok } = props
 
-  const { data } = useUser(user.uuid)
+  const user = useUser(props.user.uuid)
 
   const onClick = useCallback(() => {
-    ok(user)
-  }, [user, ok])
+    ok(props.user)
+  }, [props.user, ok])
 
-  if (!data) return null
+  if (!user.data) return null
 
   return <button className="flex flex-col items-center"
     onClick={onClick}>
     <UserAvatar className="icon-7xl text-2xl"
-      user={data} />
+      uuid={props.user.uuid}
+      name={user.data.name} />
+    <div className="h-1" />
     <div className="font-medium">
-      {data.name}
+      {user.data.name}
     </div>
   </button>
 }
@@ -61,18 +63,22 @@ function NewUserButton(props: OkProps<unknown>) {
     <div className="rounded-full icon-7xl flex justify-center items-center border border-contrast border-dashed">
       <Outline.PlusIcon className="icon-sm" />
     </div>
+    <div className="h-1" />
     <div className="font-medium">
       New user
     </div>
   </button>
 }
 
-export function UserAvatar(props: UserDataProps & ClassNameProps) {
-  const { user, className } = props
+export function UserAvatar(props: ClassNameProps & {
+  uuid: string,
+  name: string
+}) {
+  const { uuid, name, className } = props
 
-  const color = useColor(user.uuid)
+  const color = useColor(uuid)
 
   return <div className={`${color} rounded-full flex justify-center items-center ${className} text-white`}>
-    {user.name[0]}
+    {name[0]}
   </div>
 }
