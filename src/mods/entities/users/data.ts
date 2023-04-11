@@ -22,7 +22,9 @@ export interface UserData {
   name: string,
   uuid: string,
   keySalt: string,
-  valueSalt: string
+  valueSalt: string,
+  passwordSalt: string,
+  passwordHash: string
 }
 
 export function getUserSchema(uuid: string | undefined, storage: StorageQueryParams<any> | undefined) {

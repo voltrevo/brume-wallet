@@ -8,6 +8,21 @@ import { useState } from "react";
 import { UserData } from "../data";
 import { useUsers } from "./data";
 
+namespace Password {
+
+  export async function hash(password: string, salt: Uint8Array) {
+    const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits"])
+
+    return new Uint8Array(await crypto.subtle.deriveBits({
+      name: "PBKDF2",
+      salt: salt,
+      iterations: 1_000_000,
+      hash: "SHA-256"
+    }, pbkdf2, 256))
+  }
+
+}
+
 export function UserCreateDialog(props: CloseProps) {
   const { close } = props
 
@@ -27,12 +42,17 @@ export function UserCreateDialog(props: CloseProps) {
 
   const onClick = useAsyncUniqueCallback(async () => {
     const uuid = crypto.randomUUID()
+
     const keySalt = Bytes.toBase64(Bytes.random(16))
     const valueSalt = Bytes.toBase64(Bytes.random(16))
 
-    // const pbkdf2 = await PBKDF2.from(password)
+    const salt = Bytes.random(16)
+    const hash = await Password.hash(password, salt)
 
-    const user: UserData = { name, uuid, keySalt, valueSalt }
+    const passwordSalt = Bytes.toBase64(salt)
+    const passwordHash = Bytes.toBase64(hash)
+
+    const user: UserData = { name, uuid, keySalt, valueSalt, passwordSalt, passwordHash }
     users.mutate(Mutator.data((d = []) => [...d, user]))
 
     close()
