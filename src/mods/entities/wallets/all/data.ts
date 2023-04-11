@@ -1,8 +1,8 @@
 import { useStorage } from "@/mods/storage/context";
-import { AsyncStorageQueryParams, getSchema, NormalizerMore, useSchema } from "@hazae41/xswr";
+import { getSchema, NormalizerMore, StorageQueryParams, useSchema } from "@hazae41/xswr";
 import { getWalletNormal, Wallet } from "../data";
 
-export function getWalletsSchema(storage: AsyncStorageQueryParams<any> | undefined) {
+export function getWalletsSchema(storage: StorageQueryParams<any> | undefined) {
   if (!storage) return
 
   const normalizer = async (wallets: Wallet[], more: NormalizerMore) => {

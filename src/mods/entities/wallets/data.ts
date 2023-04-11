@@ -2,7 +2,7 @@ import { Rpc } from "@/libs/rpc"
 import { Session } from "@/libs/tor/sessions/session"
 import { useStorage } from "@/mods/storage/context"
 import { Pool } from "@hazae41/piscine"
-import { AsyncStorageQueryParams, FetcherMore, getSchema, NormalizerMore, Result, useError, useFetch, useSchema } from "@hazae41/xswr"
+import { FetcherMore, getSchema, NormalizerMore, Result, StorageQueryParams, useError, useFetch, useSchema } from "@hazae41/xswr"
 
 export type Wallet =
   | WalletRef
@@ -27,13 +27,13 @@ export interface WalletData {
   privateKey: string
 }
 
-export function getWalletSchema(address: string | undefined, storage: AsyncStorageQueryParams<any> | undefined) {
+export function getWalletSchema(address: string | undefined, storage: StorageQueryParams<any> | undefined) {
   if (!address || !storage) return
 
   return getSchema<WalletData>(`wallet/${address}`, undefined, { storage })
 }
 
-export async function getWalletNormal(wallet: Wallet, storage: AsyncStorageQueryParams<any> | undefined, more: NormalizerMore) {
+export async function getWalletNormal(wallet: Wallet, storage: StorageQueryParams<any> | undefined, more: NormalizerMore) {
   if ("ref" in wallet) return wallet
 
   const schema = getWalletSchema(wallet.address, storage)
