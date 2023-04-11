@@ -6,22 +6,8 @@ import { Mutator } from "@/libs/xswr/pipes";
 import { Bytes } from "@hazae41/bytes";
 import { useState } from "react";
 import { UserData } from "../data";
+import { Password } from "../password";
 import { useUsers } from "./data";
-
-namespace Password {
-
-  export async function hash(password: string, salt: Uint8Array) {
-    const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits"])
-
-    return new Uint8Array(await crypto.subtle.deriveBits({
-      name: "PBKDF2",
-      salt: salt,
-      iterations: 1_000_000,
-      hash: "SHA-256"
-    }, pbkdf2, 256))
-  }
-
-}
 
 export function UserCreateDialog(props: CloseProps) {
   const { close } = props
@@ -46,17 +32,18 @@ export function UserCreateDialog(props: CloseProps) {
     const keySalt = Bytes.toBase64(Bytes.random(16))
     const valueSalt = Bytes.toBase64(Bytes.random(16))
 
-    const salt = Bytes.random(16)
-    const hash = await Password.hash(password, salt)
+    const passwordSaltBytes = Bytes.random(16)
+    const passwordHashBytes = await Password.hash(password, passwordSaltBytes)
 
-    const passwordSalt = Bytes.toBase64(salt)
-    const passwordHash = Bytes.toBase64(hash)
+    const passwordSalt = Bytes.toBase64(passwordSaltBytes)
+    const passwordHash = Bytes.toBase64(passwordHashBytes)
 
     const user: UserData = { name, uuid, keySalt, valueSalt, passwordSalt, passwordHash }
+
     users.mutate(Mutator.data((d = []) => [...d, user]))
 
     close()
-  }, [name])
+  }, [name, password])
 
   return <Dialog close={close}>
     <input className="w-full"
