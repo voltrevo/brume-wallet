@@ -2,18 +2,13 @@ import { Outline } from "@/libs/icons/icons";
 import { Dialog } from "@/libs/modals/dialog";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
-import { Pipes } from "@/libs/xswr/pipes";
+import { Mutator } from "@/libs/xswr/pipes";
 import { ContainedButton } from "@/mods/components/buttons/button";
 import { Wallet } from "ethers";
 import { useCallback, useEffect, useState } from "react";
 import { WalletAvatar } from "../avatar";
 import { WalletData } from "../data";
 import { useWallets } from "./data";
-
-interface Key {
-  address: string,
-  privateKey: string
-}
 
 async function generateWallet() {
   await new Promise(ok => setTimeout(ok, 0)) // force async
@@ -58,7 +53,7 @@ export function WalletCreatorDialog(props: CloseProps) {
 
     const { address, privateKey } = wallet
     const walletd: WalletData = { name, address, privateKey }
-    mutate(Pipes.data((prev = []) => [...prev, walletd]))
+    mutate(Mutator.data((prev = []) => [...prev, walletd]))
 
     close()
   }, [name, wallet, mutate, close])

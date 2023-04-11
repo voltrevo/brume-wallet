@@ -4,7 +4,7 @@ import { useRefState } from "./ref"
 export function useAsyncCallback<A extends unknown[], R>(
   subcallback: (...args: A) => Promise<R>,
   deps: DependencyList,
-  onerror: (e: any) => void
+  onerror: (e: any) => void = console.error
 ) {
   return useCallback(async (...args: A) => {
     const promise = subcallback(...args)
@@ -19,7 +19,7 @@ export function useAsyncCallback<A extends unknown[], R>(
 export function useAsyncUniqueCallback<A extends unknown[], R>(
   subcallback: (...args: A) => Promise<R>,
   deps: DependencyList,
-  onerror: (e: any) => void
+  onerror: (e: any) => void = console.error
 ) {
   const [promise, setPromise] = useRefState<Promise<R>>()
 

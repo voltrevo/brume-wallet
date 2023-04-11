@@ -114,7 +114,7 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
 
     balance.refetch()
     nonce.refetch()
-  }, [sessions, wallet.address, nonce.data, gasPrice.data, recipientInput, valueInput], console.error)
+  }, [sessions, wallet.address, nonce.data, gasPrice.data, recipientInput, valueInput])
 
   const TxHashDisplay = <>
     <div className="">

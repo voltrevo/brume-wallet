@@ -8,7 +8,7 @@ export function useCopy(text: string) {
     await navigator.clipboard.writeText(text)
     enable()
     setTimeout(() => disable(), 600)
-  }, [text], console.error)
+  }, [text])
 
   return { current, run }
 }
