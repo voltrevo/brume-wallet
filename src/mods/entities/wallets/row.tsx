@@ -39,8 +39,8 @@ export function WalletCard(props: WalletDataProps) {
           Bitcoin
         </div>
         <button className=""
-          onMouseDown={copyBitcoinAddress.run}
-          onClick={Events.cancel}>
+          onMouseDown={Events.cancel}
+          onClick={copyBitcoinAddress.run}>
           {copyBitcoinAddress.current
             ? "Copied"
             : Bitcoin.Address.format(wallet.bitcoinAddress)}
@@ -51,8 +51,8 @@ export function WalletCard(props: WalletDataProps) {
           Ethereum
         </div>
         <button className=""
-          onMouseDown={copyEthereumAddress.run}
-          onClick={Events.cancel}>
+          onMouseDown={Events.cancel}
+          onClick={copyEthereumAddress.run}>
           {copyEthereumAddress.current
             ? "Copied"
             : Ethereum.Address.format(wallet.ethereumAddress)}

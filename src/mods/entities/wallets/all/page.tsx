@@ -75,7 +75,7 @@ export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {
   if (!wallet.data) return null
 
   return <button className="w-full max-w-sm ahover:scale-105 transition-transform"
-    onClick={onClick}>
+    onMouseDown={onClick}>
     <WalletCard wallet={wallet.data} />
   </button>
 }
