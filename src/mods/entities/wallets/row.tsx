@@ -3,32 +3,28 @@ import { FromColors } from "@/libs/colors/from-color"
 import { ToColors } from "@/libs/colors/to-colors"
 import { useCopy } from "@/libs/copy/copy"
 import { Ethereum } from "@/libs/ethereum/ethereum"
-import { useModhash } from "@/libs/modhash/modhash"
 import { Events } from "@/libs/react/events"
 import { WalletIcon } from "./avatar"
-import { WalletProps, useWallet } from "./data"
+import { WalletDataProps } from "./data"
 
-export function WalletRow(props: WalletProps) {
-  const wallet = useWallet(props.wallet.uuid)
+export function WalletCard(props: WalletDataProps) {
+  const { wallet } = props
 
-  const modhash = useModhash(props.wallet.uuid)
-  const fromColor = FromColors.get(modhash)
-  const toColor = ToColors.get(modhash + 1)
+  const fromColor = FromColors.get(wallet.modhash)
+  const toColor = ToColors.get(wallet.modhash + 1)
 
-  const copyBitcoinAddress = useCopy(wallet.data?.bitcoinAddress)
-  const copyEthereumAddress = useCopy(wallet.data?.ethereumAddress)
-
-  if (!wallet.data) return null
+  const copyBitcoinAddress = useCopy(wallet.bitcoinAddress)
+  const copyEthereumAddress = useCopy(wallet.ethereumAddress)
 
   const First =
     <div className="flex items-center">
       <div className="shrink-0">
         <WalletIcon className="text-3xl"
-          uuid={props.wallet.uuid} />
+          modhash={wallet.modhash} />
       </div>
       <div className="w-4" />
       <h2 className="text-xl font-medium truncate">
-        {wallet.data.name}
+        {wallet.name}
       </h2>
       <div className="w-4 grow" />
       <div className="text-xl font-bold">
@@ -47,7 +43,7 @@ export function WalletRow(props: WalletProps) {
           onClick={Events.cancel}>
           {copyBitcoinAddress.current
             ? "Copied"
-            : Bitcoin.Address.format(wallet.data.bitcoinAddress)}
+            : Bitcoin.Address.format(wallet.bitcoinAddress)}
         </button>
       </div>
       <div className="flex justify-between items-center text-sm truncate">
@@ -59,7 +55,7 @@ export function WalletRow(props: WalletProps) {
           onClick={Events.cancel}>
           {copyEthereumAddress.current
             ? "Copied"
-            : Ethereum.Address.format(wallet.data.ethereumAddress)}
+            : Ethereum.Address.format(wallet.ethereumAddress)}
         </button>
       </div>
     </div>

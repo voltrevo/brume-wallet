@@ -1,5 +1,6 @@
 import { Outline } from "@/libs/icons/icons";
 import { Dialog } from "@/libs/modals/dialog";
+import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
@@ -20,6 +21,8 @@ export function UserCreateDialog(props: CloseProps) {
   const uuid = useMemo(() => {
     return crypto.randomUUID()
   }, [])
+
+  const modhash = useModhash(uuid)
 
   const [name = "", setName] = useState<string>()
 
@@ -53,12 +56,12 @@ export function UserCreateDialog(props: CloseProps) {
     const passwordSalt = Bytes.toBase64(passwordSaltBytes)
     const passwordHash = Bytes.toBase64(passwordHashBytes)
 
-    const user: UserData = { name, uuid, keySalt, valueSalt, passwordSalt, passwordHash }
+    const user: UserData = { uuid, name, modhash, keySalt, valueSalt, passwordSalt, passwordHash }
 
     users.mutate(Mutator.data((d = []) => [...d, user]))
 
     close()
-  }, [uuid, name, password])
+  }, [uuid, name, modhash, password])
 
   const Header =
     <h1 className="text-xl font-medium">
@@ -69,7 +72,7 @@ export function UserCreateDialog(props: CloseProps) {
     <div className="flex items-center gap-2">
       <div className="shrink-0">
         <UserAvatar className="icon-5xl text-2xl"
-          uuid={uuid}
+          modhash={modhash}
           name={name} />
       </div>
       <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"

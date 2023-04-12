@@ -2,6 +2,7 @@ import { Bitcoin } from "@/libs/bitcoin/bitcoin";
 import { Ethereum } from "@/libs/ethereum/ethereum";
 import { Outline } from "@/libs/icons/icons";
 import { Dialog } from "@/libs/modals/dialog";
+import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
@@ -31,6 +32,8 @@ export function WalletCreatorDialog(props: CloseProps) {
   const uuid = useMemo(() => {
     return crypto.randomUUID()
   }, [])
+
+  const modhash = useModhash(uuid)
 
   const [name = "", setName] = useState<string>()
 
@@ -67,11 +70,11 @@ export function WalletCreatorDialog(props: CloseProps) {
     const ethereumAddress = Ethereum.Address.from(publicKeyBytes)
     const bitcoinAddress = await Bitcoin.Address.from(publicKeyBytes)
 
-    const walletd: WalletData = { type: "stored", uuid, name, privateKey, publicKey, ethereumAddress, bitcoinAddress }
+    const walletd: WalletData = { type: "stored", uuid, name, modhash, privateKey, publicKey, ethereumAddress, bitcoinAddress }
     mutate(Mutator.data((prev = []) => [...prev, walletd]))
 
     close()
-  }, [uuid, name, wallet, mutate, close])
+  }, [uuid, name, modhash, wallet, mutate, close])
 
   const Header =
     <h1 className="text-xl font-medium">
@@ -82,7 +85,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     <div className="flex items-center gap-2">
       <div className="shrink-0">
         <WalletAvatar className="icon-5xl text-2xl"
-          uuid={uuid} />
+          modhash={modhash} />
       </div>
       <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
         placeholder="Enter a name"

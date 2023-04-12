@@ -2,26 +2,32 @@
 import { BigInts } from "@/libs/bigints/bigints";
 import { Colors } from "@/libs/colors/bg-color";
 import { Outline } from "@/libs/icons/icons";
-import { useModhash } from "@/libs/modhash/modhash";
 import { useBooleanState } from "@/libs/react/handles/boolean";
 import { useSessions } from "@/mods/tor/sessions/context";
 import { useRouter } from "next/router";
-import { useBalance, useWallet } from "./data";
-import { WalletRow } from "./row";
+import { WalletDataProps, useBalance, useWallet } from "./data";
+import { WalletCard } from "./row";
 import { SendDialog } from "./send";
 
 export function WalletPage(props: { uuid: string }) {
   const { uuid } = props
 
+  const wallet = useWallet(uuid)
+
+  if (!wallet.data) return null
+
+  return <WalletDataPage wallet={wallet.data} />
+}
+
+function WalletDataPage(props: WalletDataProps) {
+  const { wallet } = props
+
   const router = useRouter()
   const sessions = useSessions()
 
-  const wallet = useWallet(uuid)
+  const color = Colors.get(wallet.modhash)
 
-  const modhash = useModhash(uuid)
-  const color = Colors.get(modhash)
-
-  const balance = useBalance(wallet.data?.ethereumAddress, sessions)
+  const balance = useBalance(wallet.ethereumAddress, sessions)
 
   const fbalance = (() => {
     if (balance.error !== undefined)
@@ -33,8 +39,6 @@ export function WalletPage(props: { uuid: string }) {
 
   const sendDialog = useBooleanState()
 
-  if (!wallet.data) return null
-
   const Headbar =
     <div className="p-xmd w-full flex items-center">
       <button className="p-1 bg-ahover rounded-xl"
@@ -45,8 +49,8 @@ export function WalletPage(props: { uuid: string }) {
 
   const Card =
     <div className="p-xmd flex justify-center">
-      <WalletRow
-        wallet={wallet.data} />
+      <WalletCard
+        wallet={wallet} />
     </div>
 
   const Body =
@@ -81,7 +85,7 @@ export function WalletPage(props: { uuid: string }) {
   return <div className="h-full w-full flex flex-col">
     {sendDialog.current &&
       <SendDialog
-        wallet={wallet.data}
+        wallet={wallet}
         close={sendDialog.disable} />}
     {Headbar}
     {Card}

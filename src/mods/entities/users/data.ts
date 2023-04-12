@@ -19,8 +19,9 @@ export interface UserRef {
 }
 
 export interface UserData {
-  name: string,
   uuid: string,
+  name: string,
+  modhash: number,
 
   keySalt: string,
 

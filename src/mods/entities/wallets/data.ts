@@ -24,6 +24,7 @@ export interface WalletRef {
 export interface WalletData {
   type: "stored"
   uuid: string
+  modhash: number,
   name: string,
   privateKey: string
   publicKey: string,

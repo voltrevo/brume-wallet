@@ -1,6 +1,5 @@
 import { Colors } from "@/libs/colors/bg-color";
 import { Outline } from "@/libs/icons/icons";
-import { useModhash } from "@/libs/modhash/modhash";
 import { useBooleanState } from "@/libs/react/handles/boolean";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { OkProps } from "@/libs/react/props/promise";
@@ -47,7 +46,7 @@ function UserOkButton(props: UserProps & OkProps<User>) {
   return <button className="flex flex-col items-center"
     onClick={onClick}>
     <UserAvatar className="icon-7xl text-2xl"
-      uuid={props.user.uuid}
+      modhash={user.data.modhash}
       name={user.data.name} />
     <div className="h-1" />
     <div className="font-medium">
@@ -72,12 +71,11 @@ function NewUserButton(props: OkProps<unknown>) {
 }
 
 export function UserAvatar(props: ClassNameProps & {
-  uuid: string,
+  modhash: number,
   name: string
 }) {
-  const { uuid, name, className } = props
+  const { modhash, name, className } = props
 
-  const modhash = useModhash(uuid)
   const color = Colors.get(modhash)
 
   return <div className={`${color} rounded-full flex justify-center items-center ${className} text-white`}>

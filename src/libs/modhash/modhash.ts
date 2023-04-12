@@ -13,16 +13,8 @@ export namespace Modhash {
 
 }
 
-export function useModhash(seed: string, length?: number) {
+export function useModhash(seed: string) {
   return useMemo(() => {
-    return Modhash.from(seed, length)
-  }, [seed, length])
-}
-
-export function useTryModhash(seed?: string, length?: number) {
-  return useMemo(() => {
-    if (!seed) return
-
-    return Modhash.from(seed, length)
-  }, [seed, length])
+    return Modhash.from(seed)
+  }, [seed])
 }

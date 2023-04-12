@@ -4,8 +4,8 @@ import { useBooleanState } from "@/libs/react/handles/boolean"
 import { OkProps } from "@/libs/react/props/promise"
 import { useRouter } from "next/router"
 import { useCallback } from "react"
-import { Wallet, WalletProps } from "../data"
-import { WalletRow } from "../row"
+import { Wallet, WalletProps, useWallet } from "../data"
+import { WalletCard } from "../row"
 import { WalletCreatorDialog } from "./create"
 import { useWallets } from "./data"
 
@@ -64,15 +64,19 @@ export function WalletsPage(props: {}) {
 }
 
 export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {
-  const { ok, wallet } = props
+  const { ok } = props
+
+  const wallet = useWallet(props.wallet.uuid)
 
   const onClick = useCallback(() => {
-    ok(wallet)
-  }, [ok, wallet])
+    ok(props.wallet)
+  }, [ok, props.wallet])
+
+  if (!wallet.data) return null
 
   return <button className="w-full max-w-sm ahover:scale-105 transition-transform"
     onClick={onClick}>
-    <WalletRow wallet={wallet} />
+    <WalletCard wallet={wallet.data} />
   </button>
 }
 
