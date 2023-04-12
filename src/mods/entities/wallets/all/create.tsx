@@ -1,7 +1,7 @@
 import { Bitcoin } from "@/libs/bitcoin/bitcoin";
 import { Outline } from "@/libs/icons/icons";
 import { Dialog } from "@/libs/modals/dialog";
-import { useAsyncUniqueCallback } from "@/libs/react/async";
+import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { Mutator } from "@/libs/xswr/pipes";

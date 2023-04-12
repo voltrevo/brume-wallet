@@ -1,5 +1,5 @@
 import { Outline } from "@/libs/icons/icons";
-import { useAsyncUniqueCallback } from "@/libs/react/async";
+import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useKeyboardEnter } from "@/libs/react/events";
 import { PromiseProps } from "@/libs/react/props/promise";
 import { Bytes } from "@hazae41/bytes";

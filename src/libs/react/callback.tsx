@@ -2,13 +2,13 @@ import { DependencyList, useCallback, useState } from "react"
 import { useRefState } from "./ref"
 
 export function useAsyncCallback<A extends unknown[], R>(
-  subcallback: (...args: A) => Promise<R>,
+  callback: (...args: A) => Promise<R>,
   deps: DependencyList,
 ) {
   const [, setState] = useState<unknown>()
 
   return useCallback(async (...args: A) => {
-    const promise = subcallback(...args)
+    const promise = callback(...args)
 
     promise.catch(e => setState(() => { throw e }))
 
@@ -18,7 +18,7 @@ export function useAsyncCallback<A extends unknown[], R>(
 }
 
 export function useAsyncUniqueCallback<A extends unknown[], R>(
-  subcallback: (...args: A) => Promise<R>,
+  callback: (...args: A) => Promise<R>,
   deps: DependencyList
 ) {
   const [promiseRef, setPromise] = useRefState<Promise<R>>()
@@ -26,7 +26,7 @@ export function useAsyncUniqueCallback<A extends unknown[], R>(
   const run = useCallback(async (...args: A) => {
     if (promiseRef.current) return
 
-    const promise = subcallback(...args)
+    const promise = callback(...args)
 
     promise
       .catch(e => setPromise(() => { throw e }))

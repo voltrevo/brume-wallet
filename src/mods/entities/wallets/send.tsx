@@ -2,7 +2,7 @@ import { Hex } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
 import { Dialog } from "@/libs/modals/dialog";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
-import { useAsyncUniqueCallback } from "@/libs/react/async";
+import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { Rpc } from "@/libs/rpc";

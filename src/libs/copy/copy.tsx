@@ -1,5 +1,5 @@
 import { useBooleanState } from "@/libs/react/handles/boolean";
-import { useAsyncUniqueCallback } from "../react/async";
+import { useAsyncUniqueCallback } from "../react/callback";
 
 export function useCopy(text: string) {
   const { current, enable, disable } = useBooleanState()
