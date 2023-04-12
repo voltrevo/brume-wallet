@@ -20,7 +20,7 @@ export function WalletsPage(props: {}) {
   }, [router])
 
   const WalletsList =
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col items-center gap-2">
       {!wallets.data?.length &&
         <ContainedButton className="w-full text-lg"
           icon={Outline.PlusIcon}
@@ -76,8 +76,9 @@ export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {
     ok(wallet)
   }, [ok, wallet])
 
-  return <button className="ahover:scale-105 transition-transform"
+  return <button className="w-full max-w-sm ahover:scale-105 transition-transform"
     onClick={onClick}>
     <WalletRow wallet={wallet} />
   </button>
+
 }

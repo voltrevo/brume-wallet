@@ -50,10 +50,10 @@ export function WalletRow(props: WalletProps) {
       </div>
     </div>
 
-  return <div className={`rounded-xl p-md text-opposite bg-gradient-to-br ${fromColor} ${toColor}`}>
+  return <div className={`w-full max-w-sm rounded-xl p-md text-opposite bg-gradient-to-br ${fromColor} ${toColor}`}>
     <div className="truncate">
       {First}
-      <div className="h-20" />
+      <div className="h-24" />
       {Second}
     </div>
   </div>
