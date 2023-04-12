@@ -12,7 +12,7 @@ export function Overlay(props: ChildrenProps) {
   }, [])
 
   if (extension)
-    return <main className="p-safe h-[600px] w-[400px]">
+    return <main className="h-[600px] w-[400px] overflow-y-scroll">
       {children}
     </main>
 
