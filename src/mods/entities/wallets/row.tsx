@@ -63,7 +63,7 @@ export function WalletRow(props: WalletProps) {
   return <ColorButton className={`w-full text-left text-opposite bg-gradient-to-br ${fromColor} ${toColor}`}>
     <div className="truncate grow">
       {First}
-      <div className="h-8" />
+      <div className="h-20" />
       {Second}
     </div>
   </ColorButton>

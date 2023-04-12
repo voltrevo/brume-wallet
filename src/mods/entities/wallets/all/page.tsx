@@ -44,7 +44,7 @@ export function WalletsPage(props: {}) {
           $0
         </div>
       </div>
-      <div className="h-4" />
+      <div className="h-8" />
       {WalletsList}
     </div>
 
