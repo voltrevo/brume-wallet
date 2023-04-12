@@ -76,7 +76,8 @@ export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {
     ok(wallet)
   }, [ok, wallet])
 
-  return <div onClick={onClick}>
+  return <button className="ahover:scale-105 transition-transform"
+    onClick={onClick}>
     <WalletRow wallet={wallet} />
-  </div>
+  </button>
 }

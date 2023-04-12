@@ -3,7 +3,6 @@ import { FromColors } from "@/libs/colors/from-color"
 import { ToColors } from "@/libs/colors/to-colors"
 import { Ethereum } from "@/libs/ethereum/ethereum"
 import { useModhash } from "@/libs/modhash/modhash"
-import { ColorButton } from "@/mods/components/buttons/button"
 import { WalletIcon } from "./avatar"
 import { WalletProps, useWallet } from "./data"
 
@@ -51,11 +50,11 @@ export function WalletRow(props: WalletProps) {
       </div>
     </div>
 
-  return <ColorButton className={`w-full text-left text-opposite bg-gradient-to-br ${fromColor} ${toColor}`}>
-    <div className="truncate grow">
+  return <div className={`rounded-xl p-md text-opposite bg-gradient-to-br ${fromColor} ${toColor}`}>
+    <div className="truncate">
       {First}
       <div className="h-20" />
       {Second}
     </div>
-  </ColorButton>
+  </div>
 }

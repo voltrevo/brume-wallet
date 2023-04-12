@@ -1,4 +1,5 @@
 import { Bitcoin } from "@/libs/bitcoin/bitcoin";
+import { Ethereum } from "@/libs/ethereum/ethereum";
 import { Outline } from "@/libs/icons/icons";
 import { Dialog } from "@/libs/modals/dialog";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -61,7 +62,7 @@ export function WalletCreatorDialog(props: CloseProps) {
 
     const publicKeyBytes = Bytes.fromHexSafe(publicKey.slice(2))
 
-    const ethereumAddress = wallet.address
+    const ethereumAddress = Ethereum.Address.from(publicKeyBytes)
     const bitcoinAddress = await Bitcoin.Address.from(publicKeyBytes)
 
     const walletd: WalletData = { type: "stored", uuid, name, privateKey, publicKey, ethereumAddress, bitcoinAddress }

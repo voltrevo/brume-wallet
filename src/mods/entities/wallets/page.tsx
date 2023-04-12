@@ -8,7 +8,6 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useBooleanState } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
 import { useSessions } from "@/mods/tor/sessions/context";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/router";
 import { WalletAvatar } from "./avatar";
 import { useBalance, useWallet } from "./data";
@@ -66,7 +65,7 @@ export function WalletPage(props: { address: string }) {
     <div className="p-xmd w-full flex items-center">
       <button className="p-1 bg-ahover rounded-xl"
         onClick={router.back}>
-        <ArrowLeftIcon className="icon-sm" />
+        <Outline.ChevronLeftIcon className="icon-sm" />
       </button>
     </div>
 
