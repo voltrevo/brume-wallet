@@ -1,4 +1,6 @@
-import { useColor } from "@/libs/colors/color"
+import { useFromColor } from "@/libs/colors/from-color"
+import { useToColor } from "@/libs/colors/to-colors"
+import { useHash } from "@/libs/hash/hash"
 import { ColorButton } from "@/mods/components/buttons/button"
 import { WalletIcon } from "./avatar"
 import { WalletProps, useWallet } from "./data"
@@ -17,7 +19,9 @@ namespace Bitcoin {
 
 export function WalletRow(props: WalletProps) {
   const wallet = useWallet(props.wallet.address)
-  const color = useColor(props.wallet.address)
+  const hash = useHash(props.wallet.address)
+  const fromColor = useFromColor(hash)
+  const toColor = useToColor(hash + 1)
 
   if (!wallet.data) return null
 
@@ -56,11 +60,10 @@ export function WalletRow(props: WalletProps) {
       </div>
     </div>
 
-
-  return <ColorButton className={`w-full text-left text-opposite bg-${color}`}>
+  return <ColorButton className={`w-full text-left text-opposite bg-gradient-to-br ${fromColor} ${toColor}`}>
     <div className="truncate grow">
       {First}
-      <div className="h-4" />
+      <div className="h-8" />
       {Second}
     </div>
   </ColorButton>

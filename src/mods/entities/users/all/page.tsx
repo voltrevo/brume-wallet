@@ -1,4 +1,4 @@
-import { useColor } from "@/libs/colors/color";
+import { useBgColorHash } from "@/libs/colors/bg-color";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanState } from "@/libs/react/handles/boolean";
 import { ClassNameProps } from "@/libs/react/props/className";
@@ -76,9 +76,9 @@ export function UserAvatar(props: ClassNameProps & {
 }) {
   const { uuid, name, className } = props
 
-  const color = useColor(uuid)
+  const color = useBgColorHash(uuid)
 
-  return <div className={`bg-${color} rounded-full flex justify-center items-center ${className} text-white`}>
+  return <div className={`${color} rounded-full flex justify-center items-center ${className} text-white`}>
     {name[0]}
   </div>
 }

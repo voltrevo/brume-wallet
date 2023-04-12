@@ -1,4 +1,4 @@
-import { useColor } from "@/libs/colors/color";
+import { useTryBgColorHash } from "@/libs/colors/bg-color";
 import { ClassNameProps } from "@/libs/react/props/className";
 
 export function WalletIcon(props: ClassNameProps) {
@@ -7,14 +7,12 @@ export function WalletIcon(props: ClassNameProps) {
   return <span className={className}>{`☁️`}</span>
 }
 
-export function WalletAvatar(props: ClassNameProps & {
-  address?: string
-}) {
+export function WalletAvatar(props: ClassNameProps & { address?: string }) {
   const { address, className } = props
 
-  const color = useColor(address)
+  const color = useTryBgColorHash(address) ?? "contrast"
 
-  return <div className={`bg-${color} rounded-full flex justify-center items-center ${className}`}>
+  return <div className={`${color} rounded-full flex justify-center items-center ${className}`}>
     <WalletIcon />
   </div>
 }

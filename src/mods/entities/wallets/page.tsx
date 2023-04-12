@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { BigInts } from "@/libs/bigints/bigints";
-import { useColor } from "@/libs/colors/color";
+import { useBgColorHash } from "@/libs/colors/bg-color";
 import { useCopy } from "@/libs/copy/copy";
 import { Outline } from "@/libs/icons/icons";
 import { HoverPopper } from "@/libs/modals/popper";
@@ -20,7 +20,7 @@ export function WalletPage(props: { address: string }) {
   const sessions = useSessions()
 
   const wallet = useWallet(address)
-  const color = useColor(address)
+  const color = useBgColorHash(address)
   const balance = useBalance(address, sessions)
 
   const fbalance = (() => {
@@ -71,7 +71,7 @@ export function WalletPage(props: { address: string }) {
   const Body =
     <div className="p-xmd flex items-center justify-center flex-wrap gap-12">
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white bg-${color} rounded-xl p-3 ahover:scale-105 transition-transform`}
+        <button className={`text-white ${color} rounded-xl p-3 ahover:scale-105 transition-transform`}
           onClick={sendDialog.enable}>
           <Outline.PaperAirplaneIcon className="icon-md" />
         </button>
@@ -80,7 +80,7 @@ export function WalletPage(props: { address: string }) {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white bg-${color} rounded-xl p-3 ahover:scale-105 transition-transform`}>
+        <button className={`text-white ${color} rounded-xl p-3 ahover:scale-105 transition-transform`}>
           <Outline.QrCodeIcon className="icon-md" />
         </button>
         <div className="">
@@ -88,7 +88,7 @@ export function WalletPage(props: { address: string }) {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white bg-${color} rounded-xl p-3 ahover:scale-105 transition-transform`}>
+        <button className={`text-white ${color} rounded-xl p-3 ahover:scale-105 transition-transform`}>
           <Outline.ArrowsRightLeftIcon className="icon-md" />
         </button>
         <div className="">
