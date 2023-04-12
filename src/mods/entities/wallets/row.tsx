@@ -22,8 +22,9 @@ export function WalletRow(props: WalletProps) {
 
   const First =
     <div className="flex items-center">
-      <div className="shrink-0 self-baseline pt-1">
-        <WalletIcon className="text-4xl" />
+      <div className="shrink-0">
+        <WalletIcon className="text-3xl"
+          uuid={props.wallet.uuid} />
       </div>
       <div className="w-4" />
       <h2 className="text-xl font-medium truncate">

@@ -1,9 +1,7 @@
-import { useMemo } from "react"
-import { Modhash } from "../modhash/modhash"
 
 export namespace Colors {
 
-  export const colors = [
+  export const all = [
     "bg-red-400", "bg-orange-400", "bg-amber-400",
     "bg-yellow-400", "bg-lime-400", "bg-green-400",
     "bg-emerald-400", "bg-teal-400", "bg-cyan-400",
@@ -13,19 +11,7 @@ export namespace Colors {
   ] as const
 
   export function get(index: number) {
-    return colors[index % colors.length]
+    return all[index % all.length]
   }
 
-  export function from(seed: string) {
-    return get(Modhash.from(seed))
-  }
-
-}
-
-export function useTryBgColorHash(seed?: string) {
-  return useMemo(() => {
-    if (!seed) return "contrast"
-
-    return Colors.from(seed)
-  }, [seed])
 }

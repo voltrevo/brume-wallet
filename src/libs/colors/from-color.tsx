@@ -1,8 +1,7 @@
-import { Modhash } from "../modhash/modhash"
 
 export namespace FromColors {
 
-  export const colors = [
+  export const all = [
     "from-red-400", "from-orange-400", "from-amber-400",
     "from-yellow-400", "from-lime-400", "from-green-400",
     "from-emerald-400", "from-teal-400", "from-cyan-400",
@@ -12,11 +11,7 @@ export namespace FromColors {
   ] as const
 
   export function get(index: number) {
-    return colors[index % colors.length]
-  }
-
-  export function from(seed: string) {
-    return get(Modhash.from(seed))
+    return all[index % all.length]
   }
 
 }
