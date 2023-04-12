@@ -19,7 +19,7 @@ export function WalletsPage(props: {}) {
   }, [router])
 
   const WalletsList =
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-4">
       {wallets.data?.map(wallet =>
         <ClickableWalletRow
           key={wallet.uuid}

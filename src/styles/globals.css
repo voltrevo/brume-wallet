@@ -18,5 +18,5 @@ body,
 }
 
 body {
-  @apply text-base text-default bg-paper;
+  @apply text-base text-default bg-paper overflow-y-scroll;
 }
