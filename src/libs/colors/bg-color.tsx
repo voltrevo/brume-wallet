@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { Hash } from "../hash/hash"
+import { Modhash } from "../modhash/modhash"
 
 export namespace Colors {
 
@@ -17,19 +17,9 @@ export namespace Colors {
   }
 
   export function from(seed: string) {
-    return get(Hash.from(seed))
+    return get(Modhash.from(seed))
   }
 
-}
-
-export function useBgColor(index: number) {
-  return Colors.get(index)
-}
-
-export function useBgColorHash(seed: string) {
-  return useMemo(() => {
-    return Colors.from(seed)
-  }, [seed])
 }
 
 export function useTryBgColorHash(seed?: string) {

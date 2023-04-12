@@ -28,6 +28,7 @@ export interface WalletData {
   privateKey: string
   publicKey: string,
   ethereumAddress: string,
+  bitcoinAddress: string
 }
 
 export function getWalletSchema(uuid: string | undefined, storage: StorageQueryParams<any> | undefined) {

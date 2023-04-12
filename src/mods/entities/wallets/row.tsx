@@ -1,27 +1,18 @@
-import { useFromColor } from "@/libs/colors/from-color"
-import { useToColor } from "@/libs/colors/to-colors"
-import { useHash } from "@/libs/hash/hash"
+import { Bitcoin } from "@/libs/bitcoin/bitcoin"
+import { FromColors } from "@/libs/colors/from-color"
+import { ToColors } from "@/libs/colors/to-colors"
+import { Ethereum } from "@/libs/ethereum/ethereum"
+import { useModhash } from "@/libs/modhash/modhash"
 import { ColorButton } from "@/mods/components/buttons/button"
 import { WalletIcon } from "./avatar"
 import { WalletProps, useWallet } from "./data"
 
-namespace Ethereum {
-  export function format(address: string) {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`
-  }
-}
-
-namespace Bitcoin {
-  export function format(address: string) {
-    return `${address.slice(0, 4)}...${address.slice(-4)}`
-  }
-}
-
 export function WalletRow(props: WalletProps) {
   const wallet = useWallet(props.wallet.uuid)
-  const hash = useHash(props.wallet.uuid)
-  const fromColor = useFromColor(hash)
-  const toColor = useToColor(hash + 1)
+
+  const modhash = useModhash(props.wallet.uuid)
+  const fromColor = FromColors.get(modhash)
+  const toColor = ToColors.get(modhash + 1)
 
   if (!wallet.data) return null
 
@@ -47,7 +38,7 @@ export function WalletRow(props: WalletProps) {
           Bitcoin
         </div>
         <div className="">
-          {Bitcoin.format("1Fok5LTPLBdKmgrMquvvUyLc9jp5qsBnrd")}
+          {Bitcoin.Address.format(wallet.data.bitcoinAddress)}
         </div>
       </div>
       <div className="flex justify-between items-center text-sm truncate">
@@ -55,7 +46,7 @@ export function WalletRow(props: WalletProps) {
           Ethereum
         </div>
         <div className="">
-          {Ethereum.format(wallet.data.ethereumAddress)}
+          {Ethereum.Address.format(wallet.data.ethereumAddress)}
         </div>
       </div>
     </div>

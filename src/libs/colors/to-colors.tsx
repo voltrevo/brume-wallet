@@ -1,4 +1,4 @@
-import { Hash } from "../hash/hash"
+import { Modhash } from "../modhash/modhash"
 
 export namespace ToColors {
 
@@ -16,11 +16,7 @@ export namespace ToColors {
   }
 
   export function from(seed: string) {
-    return colors[Hash.from(seed)]
+    return colors[Modhash.from(seed)]
   }
 
-}
-
-export function useToColor(index: number) {
-  return ToColors.get(index)
 }

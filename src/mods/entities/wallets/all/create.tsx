@@ -1,11 +1,14 @@
+import { Bitcoin } from "@/libs/bitcoin/bitcoin";
 import { Outline } from "@/libs/icons/icons";
 import { Dialog } from "@/libs/modals/dialog";
+import { useAsyncUniqueCallback } from "@/libs/react/async";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { Mutator } from "@/libs/xswr/pipes";
 import { ContainedButton } from "@/mods/components/buttons/button";
+import { Bytes } from "@hazae41/bytes";
 import { Wallet } from "ethers";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { WalletAvatar } from "../avatar";
 import { WalletData } from "../data";
 import { useWallets } from "./data";
@@ -48,9 +51,7 @@ export function WalletCreatorDialog(props: CloseProps) {
       .then(setWallet)
   }, [key])
 
-  console.log(wallet)
-
-  const onDoneClick = useCallback(() => {
+  const onDoneClick = useAsyncUniqueCallback(async () => {
     if (!name || !wallet) return
 
     const uuid = crypto.randomUUID()
@@ -58,9 +59,12 @@ export function WalletCreatorDialog(props: CloseProps) {
     const privateKey = wallet.signingKey.privateKey
     const publicKey = wallet.signingKey.publicKey
 
-    const ethereumAddress = wallet.address
+    const publicKeyBytes = Bytes.fromHexSafe(publicKey.slice(2))
 
-    const walletd: WalletData = { type: "stored", uuid, name, ethereumAddress, privateKey, publicKey }
+    const ethereumAddress = wallet.address
+    const bitcoinAddress = await Bitcoin.Address.from(publicKeyBytes)
+
+    const walletd: WalletData = { type: "stored", uuid, name, privateKey, publicKey, ethereumAddress, bitcoinAddress }
     mutate(Mutator.data((prev = []) => [...prev, walletd]))
 
     close()
@@ -97,7 +101,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     <ContainedButton className="w-full"
       disabled={!name || !wallet}
       icon={Outline.PlusIcon}
-      onClick={onDoneClick}>
+      onClick={onDoneClick.run}>
       Add
     </ContainedButton>
 

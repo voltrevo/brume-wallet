@@ -1,9 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
 import { BigInts } from "@/libs/bigints/bigints";
-import { useBgColorHash } from "@/libs/colors/bg-color";
+import { Colors } from "@/libs/colors/bg-color";
 import { useCopy } from "@/libs/copy/copy";
 import { Outline } from "@/libs/icons/icons";
 import { HoverPopper } from "@/libs/modals/popper";
+import { useModhash } from "@/libs/modhash/modhash";
 import { useBooleanState } from "@/libs/react/handles/boolean";
 import { useElement } from "@/libs/react/handles/element";
 import { useSessions } from "@/mods/tor/sessions/context";
@@ -20,7 +21,10 @@ export function WalletPage(props: { address: string }) {
   const sessions = useSessions()
 
   const wallet = useWallet(address)
-  const color = useBgColorHash(address)
+
+  const modhash = useModhash(address)
+  const color = Colors.get(modhash)
+
   const balance = useBalance(address, sessions)
 
   const fbalance = (() => {

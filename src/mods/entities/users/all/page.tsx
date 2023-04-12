@@ -1,5 +1,6 @@
-import { useBgColorHash } from "@/libs/colors/bg-color";
+import { Colors } from "@/libs/colors/bg-color";
 import { Outline } from "@/libs/icons/icons";
+import { useModhash } from "@/libs/modhash/modhash";
 import { useBooleanState } from "@/libs/react/handles/boolean";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { OkProps } from "@/libs/react/props/promise";
@@ -76,7 +77,8 @@ export function UserAvatar(props: ClassNameProps & {
 }) {
   const { uuid, name, className } = props
 
-  const color = useBgColorHash(uuid)
+  const modhash = useModhash(uuid)
+  const color = Colors.get(modhash)
 
   return <div className={`${color} rounded-full flex justify-center items-center ${className} text-white`}>
     {name[0]}
