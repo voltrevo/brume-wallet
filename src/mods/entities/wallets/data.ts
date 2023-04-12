@@ -18,34 +18,37 @@ export interface WalletDataProps {
 
 export interface WalletRef {
   ref: true
-  address: string
+  uuid: string
 }
 
 export interface WalletData {
+  type: "stored"
+  uuid: string
   name: string,
-  address: string,
   privateKey: string
+  publicKey: string,
+  ethereumAddress: string,
 }
 
-export function getWalletSchema(address: string | undefined, storage: StorageQueryParams<any> | undefined) {
-  if (!address || !storage) return
+export function getWalletSchema(uuid: string | undefined, storage: StorageQueryParams<any> | undefined) {
+  if (!uuid || !storage) return
 
-  return getSchema<WalletData>(`wallet/${address}`, undefined, { storage })
+  return getSchema<WalletData>(`wallet/${uuid}`, undefined, { storage })
 }
 
 export async function getWalletRef(wallet: Wallet, storage: StorageQueryParams<any> | undefined, more: NormalizerMore) {
   if ("ref" in wallet) return wallet
 
-  const schema = getWalletSchema(wallet.address, storage)
+  const schema = getWalletSchema(wallet.uuid, storage)
   await schema?.normalize(wallet, more)
 
-  return { ref: true, address: wallet.address } as WalletRef
+  return { ref: true, uuid: wallet.uuid } as WalletRef
 }
 
-export function useWallet(address: string | undefined) {
+export function useWallet(uuid: string | undefined) {
   const storage = useUserStorage()
 
-  return useSchema(getWalletSchema, [address, storage])
+  return useSchema(getWalletSchema, [uuid, storage])
 }
 
 export function getBalanceSchema(address: string, sessions?: Pool<Session>) {

@@ -48,11 +48,19 @@ export function WalletCreatorDialog(props: CloseProps) {
       .then(setWallet)
   }, [key])
 
+  console.log(wallet)
+
   const onDoneClick = useCallback(() => {
     if (!name || !wallet) return
 
-    const { address, privateKey } = wallet
-    const walletd: WalletData = { name, address, privateKey }
+    const uuid = crypto.randomUUID()
+
+    const privateKey = wallet.signingKey.privateKey
+    const publicKey = wallet.signingKey.publicKey
+
+    const ethereumAddress = wallet.address
+
+    const walletd: WalletData = { type: "stored", uuid, name, ethereumAddress, privateKey, publicKey }
     mutate(Mutator.data((prev = []) => [...prev, walletd]))
 
     close()

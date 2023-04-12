@@ -16,7 +16,7 @@ export function WalletsPage(props: {}) {
   const creator = useBooleanState()
 
   const onWalletClick = useCallback((wallet: Wallet) => {
-    router.push(`/wallet/${wallet.address}`)
+    router.push(`/wallet/${wallet.uuid}`)
   }, [router])
 
   const WalletsList =
@@ -29,7 +29,7 @@ export function WalletsPage(props: {}) {
         </ContainedButton>}
       {wallets.data?.map(wallet =>
         <ClickableWalletRow
-          key={wallet.address}
+          key={wallet.uuid}
           wallet={wallet}
           ok={onWalletClick} />)}
     </div>

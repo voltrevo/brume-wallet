@@ -19,8 +19,8 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
 
   const sessions = useSessions()
 
-  const balance = useBalance(wallet.address, sessions)
-  const nonce = useNonce(wallet.address, sessions)
+  const balance = useBalance(wallet.ethereumAddress, sessions)
+  const nonce = useNonce(wallet.ethereumAddress, sessions)
   const gasPrice = useGasPrice(sessions)
 
   const [recipientInput = "", setRecipientInput] = useState<string>()
@@ -78,7 +78,7 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
       method: "eth_estimateGas",
       params: [{
         chainId: Hex.from(5),
-        from: wallet.address,
+        from: wallet.ethereumAddress,
         to: getAddress(recipientInput),
         value: Hex.from(parseUnits(valueInput, 18)),
         nonce: Hex.from(nonce.data),
@@ -94,7 +94,7 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
       method: "eth_sendRawTransaction",
       params: [await ethers.signTransaction({
         chainId: 5,
-        from: wallet.address,
+        from: wallet.ethereumAddress,
         to: getAddress(recipientInput),
         value: parseUnits(valueInput, 18),
         nonce: Number(nonce.data),
@@ -114,7 +114,7 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
 
     balance.refetch()
     nonce.refetch()
-  }, [sessions, wallet.address, nonce.data, gasPrice.data, recipientInput, valueInput])
+  }, [sessions, wallet.ethereumAddress, nonce.data, gasPrice.data, recipientInput, valueInput])
 
   const TxHashDisplay = <>
     <div className="">

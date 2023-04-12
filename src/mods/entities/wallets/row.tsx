@@ -18,8 +18,8 @@ namespace Bitcoin {
 }
 
 export function WalletRow(props: WalletProps) {
-  const wallet = useWallet(props.wallet.address)
-  const hash = useHash(props.wallet.address)
+  const wallet = useWallet(props.wallet.uuid)
+  const hash = useHash(props.wallet.uuid)
   const fromColor = useFromColor(hash)
   const toColor = useToColor(hash + 1)
 
@@ -55,7 +55,7 @@ export function WalletRow(props: WalletProps) {
           Ethereum
         </div>
         <div className="">
-          {Ethereum.format(wallet.data.address)}
+          {Ethereum.format(wallet.data.ethereumAddress)}
         </div>
       </div>
     </div>
