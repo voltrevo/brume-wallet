@@ -36,9 +36,7 @@ export function WalletPage(props: { address: string }) {
 
   const WalletInfo =
     <div className="p-xmd flex flex-col items-center">
-      <WalletAvatar
-        size={5}
-        textSize={3}
+      <WalletAvatar className="icon-7xl text-4xl"
         address={address} />
       <div className="h-2" />
       <div className="text-xl font-medium max-w-[200px] truncate">
@@ -73,7 +71,7 @@ export function WalletPage(props: { address: string }) {
   const Body =
     <div className="p-xmd flex items-center justify-center flex-wrap gap-12">
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white ${color} rounded-xl p-3 ahover:scale-105 transition-transform`}
+        <button className={`text-white bg-${color} rounded-xl p-3 ahover:scale-105 transition-transform`}
           onClick={sendDialog.enable}>
           <Outline.PaperAirplaneIcon className="icon-md" />
         </button>
@@ -82,7 +80,7 @@ export function WalletPage(props: { address: string }) {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white ${color} rounded-xl p-3 ahover:scale-105 transition-transform`}>
+        <button className={`text-white bg-${color} rounded-xl p-3 ahover:scale-105 transition-transform`}>
           <Outline.QrCodeIcon className="icon-md" />
         </button>
         <div className="">
@@ -90,7 +88,7 @@ export function WalletPage(props: { address: string }) {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white ${color} rounded-xl p-3 ahover:scale-105 transition-transform`}>
+        <button className={`text-white bg-${color} rounded-xl p-3 ahover:scale-105 transition-transform`}>
           <Outline.ArrowsRightLeftIcon className="icon-md" />
         </button>
         <div className="">

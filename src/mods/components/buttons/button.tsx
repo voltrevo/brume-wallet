@@ -16,6 +16,20 @@ export function ContainedButton(props: ButtonProps & OptionalIconProps & RefProp
   </button>
 }
 
+export function ColorButton(props: ButtonProps & OptionalIconProps & RefProps<HTMLButtonElement>) {
+  const { xref, className, icon: Icon, children, ...other } = props
+
+  return <button className={`group rounded-xl p-md text-opposite ahover:scale-105 transition disabled:opacity-50 ${className}`}
+    {...other}
+    ref={xref}>
+    <div className="flex justify-center items-center gap-2">
+      {Icon &&
+        <Icon className="icon-xs" />}
+      {children}
+    </div>
+  </button>
+}
+
 export function BorderedButton(props: ButtonProps & OptionalIconProps & RefProps<HTMLButtonElement>) {
   const { xref, className, icon: Icon, children, ...other } = props
 

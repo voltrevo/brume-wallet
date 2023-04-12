@@ -19,19 +19,14 @@ export function WalletsPage(props: {}) {
     router.push(`/wallet/${wallet.address}`)
   }, [router])
 
-  const CreateButton =
-    <ContainedButton className="w-full text-lg"
-      icon={Outline.PlusIcon}
-      onClick={creator.enable}>
-      New wallet
-    </ContainedButton>
-
   const WalletsList =
     <div className="flex flex-col gap-2">
       {!wallets.data?.length &&
-        <div className="p-xmd text-center text-contrast">
-          {`You don't have any wallet`}
-        </div>}
+        <ContainedButton className="w-full text-lg"
+          icon={Outline.PlusIcon}
+          onClick={creator.enable}>
+          New wallet
+        </ContainedButton>}
       {wallets.data?.map(wallet =>
         <ClickableWalletRow
           key={wallet.address}
@@ -41,14 +36,28 @@ export function WalletsPage(props: {}) {
 
   const Body =
     <div className="p-xmd flex flex-col grow">
+      <div className="">
+        <div className="text-lg font-medium">
+          Total balance
+        </div>
+        <div className="text-2xl font-bold">
+          $0
+        </div>
+      </div>
+      <div className="h-4" />
       {WalletsList}
-      <div className="h-2 grow" />
-      {CreateButton}
     </div>
 
   const Header =
-    <div className="p-xmd text-center text-xl font-medium">
-      My wallets
+    <div className="p-xmd flex items-center">
+      <div className="text-2xl font-medium">
+        Wallets
+      </div>
+      <div className="grow" />
+      <button className="rounded-full icon-xl flex justify-center items-center border border-contrast"
+        onClick={creator.enable}>
+        <Outline.PlusIcon className="icon-sm" />
+      </button>
     </div>
 
   return <div className="h-full w-full flex flex-col">

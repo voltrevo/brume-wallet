@@ -78,7 +78,7 @@ export function UserAvatar(props: ClassNameProps & {
 
   const color = useColor(uuid)
 
-  return <div className={`${color} rounded-full flex justify-center items-center ${className} text-white`}>
+  return <div className={`bg-${color} rounded-full flex justify-center items-center ${className} text-white`}>
     {name[0]}
   </div>
 }

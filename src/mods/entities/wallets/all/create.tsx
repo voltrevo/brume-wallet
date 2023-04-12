@@ -66,9 +66,7 @@ export function WalletCreatorDialog(props: CloseProps) {
   const NameInput =
     <div className="flex items-center gap-2">
       <div className="shrink-0">
-        <WalletAvatar
-          size={2.5}
-          textSize={1.5}
+        <WalletAvatar className="icon-5xl text-2xl"
           address={wallet?.address} />
       </div>
       <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
