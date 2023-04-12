@@ -1,8 +1,10 @@
 import { Bitcoin } from "@/libs/bitcoin/bitcoin"
 import { FromColors } from "@/libs/colors/from-color"
 import { ToColors } from "@/libs/colors/to-colors"
+import { useCopy } from "@/libs/copy/copy"
 import { Ethereum } from "@/libs/ethereum/ethereum"
 import { useModhash } from "@/libs/modhash/modhash"
+import { Events } from "@/libs/react/events"
 import { WalletIcon } from "./avatar"
 import { WalletProps, useWallet } from "./data"
 
@@ -12,6 +14,9 @@ export function WalletRow(props: WalletProps) {
   const modhash = useModhash(props.wallet.uuid)
   const fromColor = FromColors.get(modhash)
   const toColor = ToColors.get(modhash + 1)
+
+  const copyBitcoinAddress = useCopy(wallet.data?.bitcoinAddress)
+  const copyEthereumAddress = useCopy(wallet.data?.ethereumAddress)
 
   if (!wallet.data) return null
 
@@ -36,24 +41,32 @@ export function WalletRow(props: WalletProps) {
         <div className="">
           Bitcoin
         </div>
-        <div className="">
-          {Bitcoin.Address.format(wallet.data.bitcoinAddress)}
-        </div>
+        <button className=""
+          onMouseDown={copyBitcoinAddress.run}
+          onClick={Events.cancel}>
+          {copyBitcoinAddress.current
+            ? "Copied"
+            : Bitcoin.Address.format(wallet.data.bitcoinAddress)}
+        </button>
       </div>
       <div className="flex justify-between items-center text-sm truncate">
         <div className="">
           Ethereum
         </div>
-        <div className="">
-          {Ethereum.Address.format(wallet.data.ethereumAddress)}
-        </div>
+        <button className=""
+          onMouseDown={copyEthereumAddress.run}
+          onClick={Events.cancel}>
+          {copyEthereumAddress.current
+            ? "Copied"
+            : Ethereum.Address.format(wallet.data.ethereumAddress)}
+        </button>
       </div>
     </div>
 
-  return <div className={`w-full max-w-sm rounded-xl p-md text-opposite bg-gradient-to-br ${fromColor} ${toColor}`}>
-    <div className="truncate">
+  return <div className={`p-md w-full h-[216px] max-w-sm rounded-xl flex flex-col text-opposite bg-gradient-to-br ${fromColor} ${toColor}`}>
+    <div className="grow truncate flex flex-col">
       {First}
-      <div className="h-24" />
+      <div className="grow" />
       {Second}
     </div>
   </div>

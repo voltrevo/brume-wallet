@@ -1,30 +1,27 @@
 /* eslint-disable @next/next/no-img-element */
 import { BigInts } from "@/libs/bigints/bigints";
 import { Colors } from "@/libs/colors/bg-color";
-import { useCopy } from "@/libs/copy/copy";
 import { Outline } from "@/libs/icons/icons";
-import { HoverPopper } from "@/libs/modals/popper";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useBooleanState } from "@/libs/react/handles/boolean";
-import { useElement } from "@/libs/react/handles/element";
 import { useSessions } from "@/mods/tor/sessions/context";
 import { useRouter } from "next/router";
-import { WalletAvatar } from "./avatar";
 import { useBalance, useWallet } from "./data";
+import { WalletRow } from "./row";
 import { SendDialog } from "./send";
 
-export function WalletPage(props: { address: string }) {
-  const { address } = props
+export function WalletPage(props: { uuid: string }) {
+  const { uuid } = props
 
   const router = useRouter()
   const sessions = useSessions()
 
-  const wallet = useWallet(address)
+  const wallet = useWallet(uuid)
 
-  const modhash = useModhash(address)
+  const modhash = useModhash(uuid)
   const color = Colors.get(modhash)
 
-  const balance = useBalance(address, sessions)
+  const balance = useBalance(wallet.data?.ethereumAddress, sessions)
 
   const fbalance = (() => {
     if (balance.error !== undefined)
@@ -34,34 +31,11 @@ export function WalletPage(props: { address: string }) {
     return BigInts.float(balance.data, 18)
   })()
 
-  const copyPopper = useElement()
-  const copyRunner = useCopy(address)
+  const sendDialog = useBooleanState()
 
-  const WalletInfo =
-    <div className="p-xmd flex flex-col items-center">
-      <WalletAvatar className="icon-7xl text-4xl"
-        address={address} />
-      <div className="h-2" />
-      <div className="text-xl font-medium max-w-[200px] truncate">
-        {wallet.data?.name}
-      </div>
-      <button className="text-contrast"
-        onClick={copyRunner.run}
-        onMouseEnter={copyPopper.use}
-        onMouseLeave={copyPopper.unset}>
-        {`${address.slice(0, 6)}...${address.slice(-4)}`}
-      </button>
-      <div className="text-contrast">
-        {`${fbalance} Goerli ETH`}
-      </div>
-      <HoverPopper target={copyPopper}>
-        {copyRunner.current
-          ? `Copied ✅`
-          : `Copy address`}
-      </HoverPopper>
-    </div>
+  if (!wallet.data) return null
 
-  const Toolbar =
+  const Headbar =
     <div className="p-xmd w-full flex items-center">
       <button className="p-1 bg-ahover rounded-xl"
         onClick={router.back}>
@@ -69,7 +43,11 @@ export function WalletPage(props: { address: string }) {
       </button>
     </div>
 
-  const sendDialog = useBooleanState()
+  const Card =
+    <div className="p-xmd flex justify-center">
+      <WalletRow
+        wallet={wallet.data} />
+    </div>
 
   const Body =
     <div className="p-xmd flex items-center justify-center flex-wrap gap-12">
@@ -100,15 +78,18 @@ export function WalletPage(props: { address: string }) {
       </div>
     </div>
 
-  if (!wallet.data) return null
-
   return <div className="h-full w-full flex flex-col">
     {sendDialog.current &&
       <SendDialog
         wallet={wallet.data}
         close={sendDialog.disable} />}
-    {Toolbar}
-    {WalletInfo}
+    {Headbar}
+    {Card}
     {Body}
+    <div className="p-xmd flex flex-col items-center">
+      <div className="text-contrast">
+        {`${fbalance} Goerli ETH`}
+      </div>
+    </div>
   </div>
 }

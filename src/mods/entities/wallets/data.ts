@@ -52,8 +52,8 @@ export function useWallet(uuid: string | undefined) {
   return useSchema(getWalletSchema, [uuid, storage])
 }
 
-export function getBalanceSchema(address: string, sessions?: Pool<Session>) {
-  if (!sessions) return
+export function getBalanceSchema(address: string | undefined, sessions?: Pool<Session>) {
+  if (!address || !sessions) return
 
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     const { signal } = more
@@ -74,15 +74,15 @@ export function getBalanceSchema(address: string, sessions?: Pool<Session>) {
   }, fetcher)
 }
 
-export function useBalance(address: string, sockets: Pool<Session> | undefined) {
+export function useBalance(address: string | undefined, sockets: Pool<Session> | undefined) {
   const query = useSchema(getBalanceSchema, [address, sockets])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getNonceSchema(address: string, sessions: Pool<Session> | undefined) {
-  if (!sessions) return
+export function getNonceSchema(address: string | undefined, sessions: Pool<Session> | undefined) {
+  if (!address || !sessions) return
 
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     const { signal } = more
@@ -103,7 +103,7 @@ export function getNonceSchema(address: string, sessions: Pool<Session> | undefi
   }, fetcher)
 }
 
-export function useNonce(address: string, sessions: Pool<Session> | undefined) {
+export function useNonce(address: string | undefined, sessions: Pool<Session> | undefined) {
   const query = useSchema(getNonceSchema, [address, sessions])
   useFetch(query)
   useError(query, console.error)

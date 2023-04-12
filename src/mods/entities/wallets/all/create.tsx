@@ -9,7 +9,7 @@ import { Mutator } from "@/libs/xswr/pipes";
 import { ContainedButton } from "@/mods/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
 import { Wallet } from "ethers";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../avatar";
 import { WalletData } from "../data";
 import { useWallets } from "./data";
@@ -27,6 +27,10 @@ async function importWallet(privateKey: string) {
 export function WalletCreatorDialog(props: CloseProps) {
   const { close } = props
   const { mutate } = useWallets()
+
+  const uuid = useMemo(() => {
+    return crypto.randomUUID()
+  }, [])
 
   const [name = "", setName] = useState<string>()
 
@@ -55,8 +59,6 @@ export function WalletCreatorDialog(props: CloseProps) {
   const onDoneClick = useAsyncUniqueCallback(async () => {
     if (!name || !wallet) return
 
-    const uuid = crypto.randomUUID()
-
     const privateKey = wallet.signingKey.privateKey
     const publicKey = wallet.signingKey.publicKey
 
@@ -69,7 +71,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     mutate(Mutator.data((prev = []) => [...prev, walletd]))
 
     close()
-  }, [name, wallet, mutate, close])
+  }, [uuid, name, wallet, mutate, close])
 
   const Header =
     <h1 className="text-xl font-medium">
@@ -80,7 +82,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     <div className="flex items-center gap-2">
       <div className="shrink-0">
         <WalletAvatar className="icon-5xl text-2xl"
-          address={wallet?.address} />
+          uuid={uuid} />
       </div>
       <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
         placeholder="Enter a name"

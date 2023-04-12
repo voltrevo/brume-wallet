@@ -2,7 +2,6 @@
 import { Outline } from "@/libs/icons/icons"
 import { useBooleanState } from "@/libs/react/handles/boolean"
 import { OkProps } from "@/libs/react/props/promise"
-import { ContainedButton } from "@/mods/components/buttons/button"
 import { useRouter } from "next/router"
 import { useCallback } from "react"
 import { Wallet, WalletProps } from "../data"
@@ -21,17 +20,12 @@ export function WalletsPage(props: {}) {
 
   const WalletsList =
     <div className="flex flex-col items-center gap-2">
-      {!wallets.data?.length &&
-        <ContainedButton className="w-full text-lg"
-          icon={Outline.PlusIcon}
-          onClick={creator.enable}>
-          New wallet
-        </ContainedButton>}
       {wallets.data?.map(wallet =>
         <ClickableWalletRow
           key={wallet.uuid}
           wallet={wallet}
           ok={onWalletClick} />)}
+      <NewWalletRow ok={creator.enable} />
     </div>
 
   const Body =
@@ -80,5 +74,16 @@ export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {
     onClick={onClick}>
     <WalletRow wallet={wallet} />
   </button>
+}
 
+export function NewWalletRow(props: OkProps<unknown>) {
+  const { ok } = props
+
+  return <button className="p-md w-full h-[216px] max-w-sm rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed ahover:scale-105 transition-transform"
+    onClick={ok}>
+    <Outline.PlusIcon className="icon-sm" />
+    <div className="font-medium">
+      New wallet
+    </div>
+  </button>
 }
