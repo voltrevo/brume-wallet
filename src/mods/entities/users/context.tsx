@@ -1,10 +1,15 @@
+import { useObjectMemo } from "@/libs/react/memo";
 import { ChildrenProps } from "@/libs/react/props/children";
-import { SingleQuery } from "@hazae41/xswr";
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import { UsersPage } from "./all/page";
-import { User, UserData, useUser } from "./data";
+import { User } from "./data";
 
-export const UserContext = createContext<SingleQuery<UserData, string> | undefined>(undefined)
+export interface UserHandle {
+  current?: User,
+  clear(): void
+}
+
+export const UserContext = createContext<UserHandle | undefined>(undefined)
 
 export function useCurrentUser() {
   return useContext(UserContext)!
@@ -13,11 +18,11 @@ export function useCurrentUser() {
 export function UserProvider(props: ChildrenProps) {
   const { children } = props
 
-  const [userRef, setUser] = useState<User>()
+  const [current, setUser] = useState<User>()
+  const clear = useCallback(() => setUser(undefined), [])
+  const user = useObjectMemo({ current, clear })
 
-  const user = useUser(userRef?.uuid)
-
-  if (!userRef)
+  if (!current)
     return <UsersPage ok={setUser} />
 
   return <UserContext.Provider value={user}>

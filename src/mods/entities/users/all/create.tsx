@@ -73,20 +73,20 @@ export function UserCreateDialog(props: CloseProps) {
           name={name} />
       </div>
       <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
-        placeholder="Enter a name"
+        placeholder="Name"
         value={name} onChange={onNameChange} />
     </div>
 
   const PasswordInput =
     <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
       type="password"
-      placeholder="Enter a password"
+      placeholder="Password"
       value={password} onChange={onPasswordChange} />
 
   const PasswordInput2 =
     <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
       type="password"
-      placeholder="Confirm the password"
+      placeholder="Confirm password"
       value={password2} onChange={onPassword2Change} />
 
   const DoneButton =

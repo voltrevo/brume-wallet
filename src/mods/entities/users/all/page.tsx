@@ -61,7 +61,7 @@ function NewUserButton(props: OkProps<unknown>) {
   return <button className="flex flex-col items-center"
     onClick={ok}>
     <div className="rounded-full icon-7xl flex justify-center items-center border border-contrast border-dashed">
-      <Outline.PlusIcon className="icon-sm" />
+      <Outline.PlusIcon className="icon-md" />
     </div>
     <div className="h-1" />
     <div className="font-medium">
