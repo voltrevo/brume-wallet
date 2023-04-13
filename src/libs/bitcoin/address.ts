@@ -5,8 +5,8 @@ import { Sha256 } from "../hashes/sha256"
 
 export namespace Address {
 
-  export async function from(publicKey: Uint8Array) {
-    const sha256 = await Sha256.digest(publicKey)
+  export async function from(compressedPublicKey: Uint8Array) {
+    const sha256 = await Sha256.digest(compressedPublicKey)
     const ripemd160 = Ripemd160.digest(sha256)
 
     const cursor = Cursor.allocUnsafe(1 + ripemd160.length + 4)

@@ -21,13 +21,15 @@ export interface WalletRef {
   uuid: string
 }
 
-export interface WalletData {
-  type: "stored"
+export type WalletData =
+  | PrivateKeyWallet
+
+export interface PrivateKeyWallet {
+  type: "privateKey"
   uuid: string
   modhash: number,
   name: string,
   privateKey: string
-  publicKey: string,
   ethereumAddress: string,
   bitcoinAddress: string
 }

@@ -9,6 +9,7 @@ import { CloseProps } from "@/libs/react/props/close";
 import { Mutator } from "@/libs/xswr/pipes";
 import { GradientButton } from "@/mods/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
+import { secp256k1 } from "@noble/curves/secp256k1";
 import { Wallet } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../avatar";
@@ -62,15 +63,15 @@ export function WalletCreatorDialog(props: CloseProps) {
   const onDoneClick = useAsyncUniqueCallback(async () => {
     if (!name || !wallet) return
 
-    const privateKey = wallet.signingKey.privateKey
-    const publicKey = wallet.signingKey.publicKey
+    const privateKeyBytes = Bytes.fromHex(wallet.signingKey.privateKey.slice(2))
+    const publicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
+    const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
 
-    const publicKeyBytes = Bytes.fromHex(publicKey.slice(2))
-
+    const privateKey = `0x${Bytes.toHex(privateKeyBytes)}`
     const ethereumAddress = Ethereum.Address.from(publicKeyBytes)
-    const bitcoinAddress = await Bitcoin.Address.from(publicKeyBytes)
+    const bitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
 
-    const walletd: WalletData = { type: "stored", uuid, name, modhash, privateKey, publicKey, ethereumAddress, bitcoinAddress }
+    const walletd: WalletData = { type: "privateKey", uuid, name, modhash, privateKey, ethereumAddress, bitcoinAddress }
     mutate(Mutator.data((prev = []) => [...prev, walletd]))
 
     close()
