@@ -7,7 +7,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { Mutator } from "@/libs/xswr/pipes";
-import { ContainedButton } from "@/mods/components/buttons/button";
+import { GradientButton } from "@/mods/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
 import { Wallet } from "ethers";
 import { useEffect, useMemo, useState } from "react";
@@ -99,12 +99,13 @@ export function WalletCreatorDialog(props: CloseProps) {
     </div>
 
   const DoneButton =
-    <ContainedButton className="w-full"
+    <GradientButton className="w-full"
+      modhash={modhash}
       disabled={!name || !wallet}
       icon={Outline.PlusIcon}
       onClick={onDoneClick.run}>
       Add
-    </ContainedButton>
+    </GradientButton>
 
   return <Dialog close={close}>
     <DialogTitle close={close}>

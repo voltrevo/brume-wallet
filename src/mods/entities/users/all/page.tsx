@@ -1,4 +1,4 @@
-import { Colors } from "@/libs/colors/bg-color";
+import { Colors } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanState } from "@/libs/react/handles/boolean";
 import { ClassNameProps } from "@/libs/react/props/className";
@@ -77,8 +77,9 @@ export function UserAvatar(props: ClassNameProps & {
   const { modhash, name, className } = props
 
   const color = Colors.get(modhash)
+  const color2 = Colors.get(modhash + 1)
 
-  return <div className={`${color} rounded-full flex justify-center items-center ${className} text-white`}>
+  return <div className={`bg-gradient-to-br from-${color} to-${color2} rounded-full flex justify-center items-center ${className} text-white`}>
     {name[0]}
   </div>
 }

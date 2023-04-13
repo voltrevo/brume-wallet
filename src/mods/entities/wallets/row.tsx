@@ -1,6 +1,5 @@
 import { Bitcoin } from "@/libs/bitcoin/bitcoin"
-import { FromColors } from "@/libs/colors/from-color"
-import { ToColors } from "@/libs/colors/to-colors"
+import { Colors } from "@/libs/colors/colors"
 import { useCopy } from "@/libs/copy/copy"
 import { Ethereum } from "@/libs/ethereum/ethereum"
 import { Events } from "@/libs/react/events"
@@ -10,8 +9,8 @@ import { WalletDataProps } from "./data"
 export function WalletCard(props: WalletDataProps) {
   const { wallet } = props
 
-  const fromColor = FromColors.get(wallet.modhash)
-  const toColor = ToColors.get(wallet.modhash + 1)
+  const color = Colors.get(wallet.modhash)
+  const color2 = Colors.get(wallet.modhash + 1)
 
   const copyBitcoinAddress = useCopy(wallet.bitcoinAddress)
   const copyEthereumAddress = useCopy(wallet.ethereumAddress)
@@ -60,7 +59,7 @@ export function WalletCard(props: WalletDataProps) {
       </div>
     </>
 
-  return <div className={`p-md w-full aspect-video rounded-xl flex flex-col text-opposite bg-gradient-to-br ${fromColor} ${toColor}`}>
+  return <div className={`p-md w-full aspect-video rounded-xl flex flex-col text-opposite bg-gradient-to-br from-${color} to-${color2}`}>
     {First}
     <div className="grow" />
     {Second}

@@ -5,7 +5,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { Mutator } from "@/libs/xswr/pipes";
-import { ContainedButton } from "@/mods/components/buttons/button";
+import { GradientButton } from "@/mods/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
 import { useMemo, useState } from "react";
 import { UserData } from "../data";
@@ -88,12 +88,13 @@ export function UserCreateDialog(props: CloseProps) {
       value={password2} onChange={onPassword2Change} />
 
   const DoneButton =
-    <ContainedButton className="w-full"
+    <GradientButton className="w-full"
+      modhash={modhash}
       disabled={!name || !password || !password2 || !isSamePassword}
       icon={Outline.PlusIcon}
       onClick={onClick.run}>
       Add
-    </ContainedButton>
+    </GradientButton>
 
   return <Dialog close={close}>
     <DialogTitle close={close}>

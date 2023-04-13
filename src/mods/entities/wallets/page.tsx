@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { BigInts } from "@/libs/bigints/bigints";
-import { Colors } from "@/libs/colors/bg-color";
+import { Colors } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanState } from "@/libs/react/handles/boolean";
 import { useSessions } from "@/mods/tor/sessions/context";
@@ -26,6 +26,7 @@ function WalletDataPage(props: WalletDataProps) {
   const sessions = useSessions()
 
   const color = Colors.get(wallet.modhash)
+  const color2 = Colors.get(wallet.modhash + 1)
 
   const balance = useBalance(wallet.ethereumAddress, sessions)
 
@@ -58,7 +59,7 @@ function WalletDataPage(props: WalletDataProps) {
   const Body =
     <div className="p-xmd flex items-center justify-center flex-wrap gap-12">
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white ${color} rounded-xl p-3 ahover:scale-105 transition-transform`}
+        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 ahover:scale-105 transition-transform`}
           onClick={sendDialog.enable}>
           <Outline.PaperAirplaneIcon className="icon-md" />
         </button>
@@ -67,7 +68,7 @@ function WalletDataPage(props: WalletDataProps) {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white ${color} rounded-xl p-3 ahover:scale-105 transition-transform`}>
+        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 ahover:scale-105 transition-transform`}>
           <Outline.QrCodeIcon className="icon-md" />
         </button>
         <div className="">
@@ -75,7 +76,7 @@ function WalletDataPage(props: WalletDataProps) {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white ${color} rounded-xl p-3 ahover:scale-105 transition-transform`}>
+        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 ahover:scale-105 transition-transform`}>
           <Outline.ArrowsRightLeftIcon className="icon-md" />
         </button>
         <div className="">

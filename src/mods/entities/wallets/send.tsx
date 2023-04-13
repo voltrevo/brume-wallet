@@ -7,7 +7,7 @@ import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { Rpc } from "@/libs/rpc";
 import { Types } from "@/libs/types/types";
-import { ContainedButton } from "@/mods/components/buttons/button";
+import { GradientButton } from "@/mods/components/buttons/button";
 import { ButtonChip } from "@/mods/components/buttons/chips";
 import { useSessions } from "@/mods/tor/sessions/context";
 import { Wallet, getAddress, parseUnits } from "ethers";
@@ -150,14 +150,15 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
   }, [sessions, nonce.data, gasPrice.data, recipientInput, valueInput])
 
   const SendButton =
-    <ContainedButton className="w-full"
+    <GradientButton className="w-full"
+      modhash={wallet.modhash}
       disabled={trySend.loading || disabled}
       icon={Outline.PaperAirplaneIcon}
       onClick={trySend.run}>
       {trySend.loading
         ? "Loading..."
         : "Send"}
-    </ContainedButton>
+    </GradientButton>
 
   return <Dialog close={close}>
     <DialogTitle close={close}>

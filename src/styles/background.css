@@ -1,12 +1,12 @@
 @layer utilities {
 
   .bg-paper {
-    @apply bg-violet1;
+    @apply bg-white;
     @apply dark:bg-black; 
   }
 
   .bg-default {
-    @apply bg-violet1;
+    @apply bg-white;
     @apply dark:bg-black;
   }
 
@@ -42,18 +42,6 @@
 
   .bg-opaque {
     @apply bg-white bg-opacity-50;
-  }
-
-  .bg-component {
-    @apply bg-violet3 ahover:bg-component-effect;
-  }
-
-  .bg-component-effect {
-    @apply bg-violet4;
-  }
-
-  .bg-button {
-    @apply bg-primary;
   }
   
 }
