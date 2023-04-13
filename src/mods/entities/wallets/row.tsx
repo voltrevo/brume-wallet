@@ -36,7 +36,7 @@ export function WalletCard(props: WalletDataProps) {
     <div className="">
       <div className="flex justify-between items-center text-sm truncate">
         <div className="">
-          Bitcoin
+          BTC
         </div>
         <button className=""
           onMouseDown={Events.cancel}
@@ -48,7 +48,7 @@ export function WalletCard(props: WalletDataProps) {
       </div>
       <div className="flex justify-between items-center text-sm truncate">
         <div className="">
-          Ethereum
+          ETH
         </div>
         <button className=""
           onMouseDown={Events.cancel}

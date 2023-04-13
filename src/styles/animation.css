@@ -6,6 +6,10 @@
   .animate-scale {
     animation: scale 150ms ease;
   }
+
+  .animate-slideup {
+    animation: slideup 150ms ease;
+  }
   
   .animate-opacity-scale {
     animation: opacity 150ms ease, scale 150ms ease;
@@ -17,5 +21,9 @@
 
   @keyframes scale {
     from { transform: scale(0%); }
+  }
+
+  @keyframes slideup {  
+    from { transform: translateY(calc(100vh)); } 
   }
 }

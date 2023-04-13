@@ -19,7 +19,7 @@ export function WalletsPage(props: {}) {
   }, [router])
 
   const WalletsList =
-    <div className="grid grid-rows-auto-fill gap-4">
+    <div className="grid grid-rows-auto-fill gap-2">
       {wallets.data?.map(wallet =>
         <ClickableWalletRow
           key={wallet.uuid}
