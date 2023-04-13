@@ -2,7 +2,7 @@
 	"$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/web-manifest.json",
 	"name": "Brume Wallet",
 	"short_name": "Brume Wallet",
-	"description": "The first private Ethereum wallet with built-in Tor",
+	"description": "The private wallet",
 	"start_url": "./",
 	"display": "standalone",
 	"theme_color": "#eeecf5",

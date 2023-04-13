@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Brume Wallet",
-  "description": "The first private Ethereum wallet with built-in Tor",
+  "description": "The private wallet",
   "version": "0.1",
   "action": {
     "default_title": "Brume Wallet",
