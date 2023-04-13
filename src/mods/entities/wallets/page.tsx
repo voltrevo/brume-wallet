@@ -5,6 +5,7 @@ import { Outline } from "@/libs/icons/icons";
 import { useBooleanState } from "@/libs/react/handles/boolean";
 import { useSessions } from "@/mods/tor/sessions/context";
 import { useRouter } from "next/router";
+import { useMemo } from "react";
 import { WalletDataProps, useBalance, useWallet } from "./data";
 import { WalletCard } from "./row";
 import { SendDialog } from "./send";
@@ -30,17 +31,17 @@ function WalletDataPage(props: WalletDataProps) {
 
   const balance = useBalance(wallet.ethereumAddress, sessions)
 
-  const fbalance = (() => {
+  const balanceFloat = useMemo(() => {
     if (balance.error !== undefined)
       return "Error"
     if (balance.data === undefined)
       return "..."
     return BigInts.float(balance.data, 18)
-  })()
+  }, [balance.data, balance.error])
 
   const sendDialog = useBooleanState()
 
-  const Headbar =
+  const Navbar =
     <div className="p-xmd w-full flex items-center">
       <button className="p-1 bg-ahover rounded-xl"
         onClick={router.back}>
@@ -56,7 +57,7 @@ function WalletDataPage(props: WalletDataProps) {
       </div>
     </div>
 
-  const Body =
+  const Apps =
     <div className="p-xmd flex items-center justify-center flex-wrap gap-12">
       <div className="flex flex-col items-center gap-2">
         <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 ahover:scale-105 transition-transform`}
@@ -90,12 +91,35 @@ function WalletDataPage(props: WalletDataProps) {
       <SendDialog
         wallet={wallet}
         close={sendDialog.disable} />}
-    {Headbar}
+    {Navbar}
     {Card}
-    {Body}
-    <div className="p-xmd flex flex-col items-center">
-      <div className="text-contrast">
-        {`${fbalance} Goerli ETH`}
+    {Apps}
+    <div className="p-xmd flex flex-col gap-2">
+      <div className="p-xmd flex flex-col rounded-xl border border-contrast">
+        <div className="flex justify-between items-center">
+          <div className="">
+            Bitcoin (unimplemented)
+          </div>
+          <div className="">
+            $0.0
+          </div>
+        </div>
+        <div className="text-contrast">
+          {`0 BTC`}
+        </div>
+      </div>
+      <div className="p-xmd flex flex-col rounded-xl border border-contrast">
+        <div className="flex justify-between items-center">
+          <div className="">
+            Ethereum (Goerli testnet)
+          </div>
+          <div className="">
+            $0.0
+          </div>
+        </div>
+        <div className="text-contrast">
+          {`${balanceFloat} ETH`}
+        </div>
       </div>
     </div>
   </div>
