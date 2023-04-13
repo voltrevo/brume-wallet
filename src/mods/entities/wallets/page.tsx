@@ -49,8 +49,10 @@ function WalletDataPage(props: WalletDataProps) {
 
   const Card =
     <div className="p-xmd flex justify-center">
-      <WalletCard
-        wallet={wallet} />
+      <div className="w-full max-w-sm">
+        <WalletCard
+          wallet={wallet} />
+      </div>
     </div>
 
   const Body =

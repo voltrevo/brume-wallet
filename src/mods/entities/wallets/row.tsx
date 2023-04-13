@@ -60,7 +60,7 @@ export function WalletCard(props: WalletDataProps) {
       </div>
     </div>
 
-  return <div className={`p-md w-full h-[216px] max-w-sm rounded-xl flex flex-col text-opposite bg-gradient-to-br ${fromColor} ${toColor}`}>
+  return <div className={`p-md w-full aspect-video rounded-xl flex flex-col text-opposite bg-gradient-to-br ${fromColor} ${toColor}`}>
     <div className="grow truncate flex flex-col">
       {First}
       <div className="grow" />

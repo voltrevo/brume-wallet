@@ -20,3 +20,7 @@ body,
 body {
   @apply text-base text-default bg-paper;
 }
+
+.grid-rows-auto-fill {
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+}

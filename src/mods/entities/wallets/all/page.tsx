@@ -19,7 +19,7 @@ export function WalletsPage(props: {}) {
   }, [router])
 
   const WalletsList =
-    <div className="flex flex-col items-center gap-4">
+    <div className="grid grid-rows-auto-fill gap-4">
       {wallets.data?.map(wallet =>
         <ClickableWalletRow
           key={wallet.uuid}
@@ -74,7 +74,7 @@ export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {
 
   if (!wallet.data) return null
 
-  return <button className="w-full max-w-sm ahover:scale-105 transition-transform"
+  return <button className="w-full ahover:scale-105 transition-transform"
     onMouseDown={onClick}>
     <WalletCard wallet={wallet.data} />
   </button>
@@ -83,7 +83,7 @@ export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {
 export function NewWalletRow(props: OkProps<unknown>) {
   const { ok } = props
 
-  return <button className="p-md w-full h-[216px] max-w-sm rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed ahover:scale-105 transition-transform"
+  return <button className="p-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed ahover:scale-105 transition-transform"
     onClick={ok}>
     <Outline.PlusIcon className="icon-sm" />
     <div className="font-medium">
