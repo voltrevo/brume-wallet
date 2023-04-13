@@ -20,6 +20,16 @@
     @apply dark:text-white dark:text-opacity-50;
   }
 
+  .text-opposite-contrast {
+    @apply text-white text-opacity-50;
+    @apply dark:text-black dark:text-opacity-50;
+  }
+
+  .text-opposite-high-contrast {
+    @apply text-white text-opacity-75;
+    @apply dark:text-black dark:text-opacity-75;
+  }
+
   .text-primary {
     @apply text-violet-400;
     @apply dark:text-violet-400;

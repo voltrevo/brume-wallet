@@ -1,5 +1,5 @@
 import { Outline } from "@/libs/icons/icons";
-import { Dialog } from "@/libs/modals/dialog";
+import { Dialog, DialogTitle } from "@/libs/modals/dialog";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
@@ -63,11 +63,6 @@ export function UserCreateDialog(props: CloseProps) {
     close()
   }, [uuid, name, modhash, password])
 
-  const Header =
-    <h1 className="text-xl font-medium">
-      New user
-    </h1>
-
   const NameInput =
     <div className="flex items-center gap-2">
       <div className="shrink-0">
@@ -101,7 +96,9 @@ export function UserCreateDialog(props: CloseProps) {
     </ContainedButton>
 
   return <Dialog close={close}>
-    {Header}
+    <DialogTitle close={close}>
+      New user
+    </DialogTitle>
     <div className="h-2" />
     {NameInput}
     <div className="h-2" />

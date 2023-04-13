@@ -1,6 +1,6 @@
 import { Hex } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
-import { Dialog } from "@/libs/modals/dialog";
+import { Dialog, DialogTitle } from "@/libs/modals/dialog";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
@@ -10,9 +10,9 @@ import { Types } from "@/libs/types/types";
 import { ContainedButton } from "@/mods/components/buttons/button";
 import { ButtonChip } from "@/mods/components/buttons/chips";
 import { useSessions } from "@/mods/tor/sessions/context";
-import { getAddress, parseUnits, Wallet } from "ethers";
+import { Wallet, getAddress, parseUnits } from "ethers";
 import { useMemo, useState } from "react";
-import { useBalance, useGasPrice, useNonce, WalletDataProps } from "./data";
+import { WalletDataProps, useBalance, useGasPrice, useNonce } from "./data";
 
 export function SendDialog(props: WalletDataProps & CloseProps) {
   const { wallet, close } = props
@@ -160,9 +160,9 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
     </ContainedButton>
 
   return <Dialog close={close}>
-    <div className="text-xl font-medium">
+    <DialogTitle close={close}>
       Send
-    </div>
+    </DialogTitle>
     <div className="h-2" />
     {RecipientInput}
     <div className="h-2" />

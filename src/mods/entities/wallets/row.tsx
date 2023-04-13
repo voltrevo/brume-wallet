@@ -19,26 +19,26 @@ export function WalletCard(props: WalletDataProps) {
   const First =
     <div className="flex items-center">
       <div className="shrink-0">
-        <WalletIcon className="text-3xl"
+        <WalletIcon className=""
           modhash={wallet.modhash} />
       </div>
-      <div className="w-4" />
-      <h2 className="text-xl font-medium truncate">
+      <div className="w-2" />
+      <h2 className="font-medium truncate">
         {wallet.name}
       </h2>
-      <div className="w-4 grow" />
-      <div className="text-xl font-bold">
+      <div className="w-2 grow" />
+      <div className="text-opposite-high-contrast">
         $0
       </div>
     </div>
 
   const Second =
-    <div className="">
-      <div className="flex justify-between items-center text-sm truncate">
+    <>
+      <div className="flex justify-between items-center text-sm">
         <div className="">
           BTC
         </div>
-        <button className=""
+        <button className="text-opposite-high-contrast"
           onMouseDown={Events.cancel}
           onClick={copyBitcoinAddress.run}>
           {copyBitcoinAddress.current
@@ -46,11 +46,11 @@ export function WalletCard(props: WalletDataProps) {
             : Bitcoin.Address.format(wallet.bitcoinAddress)}
         </button>
       </div>
-      <div className="flex justify-between items-center text-sm truncate">
+      <div className="flex justify-between items-center text-sm">
         <div className="">
           ETH
         </div>
-        <button className=""
+        <button className="text-opposite-high-contrast"
           onMouseDown={Events.cancel}
           onClick={copyEthereumAddress.run}>
           {copyEthereumAddress.current
@@ -58,13 +58,11 @@ export function WalletCard(props: WalletDataProps) {
             : Ethereum.Address.format(wallet.ethereumAddress)}
         </button>
       </div>
-    </div>
+    </>
 
   return <div className={`p-md w-full aspect-video rounded-xl flex flex-col text-opposite bg-gradient-to-br ${fromColor} ${toColor}`}>
-    <div className="grow truncate flex flex-col">
-      {First}
-      <div className="grow" />
-      {Second}
-    </div>
+    {First}
+    <div className="grow" />
+    {Second}
   </div>
 }
