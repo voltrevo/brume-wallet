@@ -31,7 +31,8 @@ export interface PrivateKeyWallet {
   name: string,
   privateKey: string
   ethereumAddress: string,
-  bitcoinAddress: string
+  uncompressedBitcoinAddress: string,
+  compressedBitcoinAddress: string
 }
 
 export function getWalletSchema(uuid: string | undefined, storage: StorageQueryParams<any> | undefined) {

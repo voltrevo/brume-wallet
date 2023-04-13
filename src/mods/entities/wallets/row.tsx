@@ -12,7 +12,7 @@ export function WalletCard(props: WalletDataProps) {
   const color = Colors.get(wallet.modhash)
   const color2 = Colors.get(wallet.modhash + 1)
 
-  const copyBitcoinAddress = useCopy(wallet.bitcoinAddress)
+  const copyBitcoinAddress = useCopy(wallet.compressedBitcoinAddress)
   const copyEthereumAddress = useCopy(wallet.ethereumAddress)
 
   const First =
@@ -42,7 +42,7 @@ export function WalletCard(props: WalletDataProps) {
           onClick={copyBitcoinAddress.run}>
           {copyBitcoinAddress.current
             ? "Copied"
-            : Bitcoin.Address.format(wallet.bitcoinAddress)}
+            : Bitcoin.Address.format(wallet.compressedBitcoinAddress)}
         </button>
       </div>
       <div className="flex justify-between items-center text-sm">

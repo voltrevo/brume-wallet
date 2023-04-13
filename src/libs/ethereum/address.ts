@@ -3,8 +3,8 @@ import { Keccak256 } from "../hashes/keccak256"
 
 export namespace Address {
 
-  export function from(publicKey: Uint8Array) {
-    const keccak256 = Keccak256.digest(publicKey.slice(1))
+  export function from(uncompressedPublicKey: Uint8Array) {
+    const keccak256 = Keccak256.digest(uncompressedPublicKey.slice(1))
 
     return `0x${Bytes.toHex(keccak256.slice(-20))}`
   }

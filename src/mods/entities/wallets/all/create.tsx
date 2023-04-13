@@ -64,14 +64,17 @@ export function WalletCreatorDialog(props: CloseProps) {
     if (!name || !wallet) return
 
     const privateKeyBytes = Bytes.fromHex(wallet.signingKey.privateKey.slice(2))
-    const publicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
+
+    const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
     const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
 
     const privateKey = `0x${Bytes.toHex(privateKeyBytes)}`
-    const ethereumAddress = Ethereum.Address.from(publicKeyBytes)
-    const bitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
+    const ethereumAddress = Ethereum.Address.from(uncompressedPublicKeyBytes)
 
-    const walletd: WalletData = { type: "privateKey", uuid, name, modhash, privateKey, ethereumAddress, bitcoinAddress }
+    const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
+    const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
+
+    const walletd: WalletData = { type: "privateKey", uuid, name, modhash, privateKey, ethereumAddress, compressedBitcoinAddress, uncompressedBitcoinAddress }
     mutate(Mutator.data((prev = []) => [...prev, walletd]))
 
     close()
