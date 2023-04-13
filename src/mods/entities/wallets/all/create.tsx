@@ -65,7 +65,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     const privateKey = wallet.signingKey.privateKey
     const publicKey = wallet.signingKey.publicKey
 
-    const publicKeyBytes = Bytes.fromHexSafe(publicKey.slice(2))
+    const publicKeyBytes = Bytes.fromHex(publicKey.slice(2))
 
     const ethereumAddress = Ethereum.Address.from(publicKeyBytes)
     const bitcoinAddress = await Bitcoin.Address.from(publicKeyBytes)
