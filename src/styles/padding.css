@@ -4,6 +4,10 @@
     @apply px-2 py-1;
   }
 
+  .p-xsm {
+    @apply px-2 py-0;
+  }
+
   .p-md {
     @apply px-4 py-2;
   }

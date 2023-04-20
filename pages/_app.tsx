@@ -15,11 +15,13 @@ import Head from "next/head"
 export function Fallback(props: ErrorProps) {
   const { error } = props
 
-  return <>An error occured</>
+  return <div>
+    An error occured: {JSON.stringify(error)}
+  </div>
 }
 
 export default function App({ Component, pageProps }: AppProps) {
-  return <Catcher fallback={Fallback}>
+  return <Overlay>
     <Head>
       <title>Brume Wallet</title>
       <meta key="application-name" name="application-name" content="Brume Wallet" />
@@ -35,8 +37,8 @@ export default function App({ Component, pageProps }: AppProps) {
       <link rel="apple-touch-icon" href="/square.png" />
       <link rel="apple-touch-startup-image" href="/round.png" />
     </Head>
-    <CoreProvider>
-      <Overlay>
+    <Catcher fallback={Fallback}>
+      <CoreProvider>
         <GlobalStorageProvider>
           <UserProvider>
             <UserStorageProvider>
@@ -50,7 +52,7 @@ export default function App({ Component, pageProps }: AppProps) {
             </UserStorageProvider>
           </UserProvider>
         </GlobalStorageProvider>
-      </Overlay>
-    </CoreProvider>
-  </Catcher>
+      </CoreProvider>
+    </Catcher>
+  </Overlay>
 }
