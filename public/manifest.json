@@ -5,8 +5,8 @@
 	"description": "The private wallet",
 	"start_url": "./",
 	"display": "standalone",
-	"theme_color": "#eeecf5",
-	"background_color": "#eeecf5",
+	"theme_color": "#bb78ff",
+	"background_color": "#bb78ff",
 	"lang": "en",
 	"orientation": "any",
 	"categories": [
