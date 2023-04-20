@@ -31,7 +31,7 @@ export default function App({ Component, pageProps }: AppProps) {
                     <Head>
                       <title>Brume Wallet</title>
                       <meta key="application-name" name="application-name" content="Brume Wallet" />
-                      <meta key="description" name="description" content="The first private Ethereum wallet with built-in Tor" />
+                      <meta key="description" name="description" content="The private wallet" />
                       <meta key="color-scheme" name="color-scheme" content="dark light" />
                       <meta key="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
                       <meta key="apple-mobile-web-app-capable" name="apple-mobile-web-app-capable" content="yes" />
