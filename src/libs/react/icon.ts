@@ -1,3 +1,3 @@
-import { VectorProps } from "./props/html";
+import { Outline } from "../icons/icons";
 
-export type Icon = (props: VectorProps) => JSX.Element | null
+export type Icon = typeof Outline.PlusIcon

@@ -2,7 +2,7 @@ import { Rpc } from "@/libs/rpc"
 import { Session } from "@/libs/tor/sessions/session"
 import { useUserStorage } from "@/mods/storage/user/context"
 import { Pool } from "@hazae41/piscine"
-import { FetcherMore, getSchema, NormalizerMore, Result, StorageQueryParams, useError, useFetch, useSchema } from "@hazae41/xswr"
+import { FetchResult, FetcherMore, NormalizerMore, StorageQueryParams, getSchema, useError, useFetch, useSchema } from "@hazae41/xswr"
 
 export type Wallet =
   | WalletRef
@@ -69,7 +69,7 @@ export function getBalanceSchema(address: string | undefined, sessions?: Pool<Se
     const body = JSON.stringify({ method: "eth_getBalance", tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
 
-    return Result.rewrap(response).map(BigInt)
+    return FetchResult.rewrap(response).mapSync(BigInt)
   }
 
   return getSchema({
@@ -98,7 +98,7 @@ export function getNonceSchema(address: string | undefined, sessions: Pool<Sessi
     const body = JSON.stringify({ method: "eth_getTransactionCount", tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
 
-    return Result.rewrap(response).map(BigInt)
+    return FetchResult.rewrap(response).mapSync(BigInt)
   }
 
   return getSchema({
@@ -127,7 +127,7 @@ export function getGasPriceSchema(sessions: Pool<Session> | undefined) {
     const body = JSON.stringify({ method: "eth_gasPrice", tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
 
-    return Result.rewrap(response).map(BigInt)
+    return FetchResult.rewrap(response).mapSync(BigInt)
   }
 
   return getSchema({

@@ -1,12 +1,19 @@
 import { Circuit } from "@hazae41/echalote"
+import { Mutex } from "@hazae41/mutex"
 import { Pool } from "@hazae41/piscine"
 import { createSession, Session } from "./session"
 
 export function createSessionPool(url: URL, circuits: Pool<Circuit>) {
   const { capacity } = circuits
 
-  return new Pool<Session>(async ({ index, destroy, signal }) => {
-    const circuit = await circuits.get(index)
+  const mutex = new Mutex(undefined)
+
+  return new Pool<Session>(async ({ pool, signal }) => {
+    const circuit = await mutex.lock(async () => {
+      const circuit = await circuits.cryptoRandom()
+      circuits.delete(circuit)
+      return circuit
+    })
 
     const session = await createSession(url, circuit, signal)
 
@@ -14,7 +21,7 @@ export function createSessionPool(url: URL, circuits: Pool<Circuit>) {
       session.socket.removeEventListener("close", onCloseOrError)
       session.socket.removeEventListener("error", onCloseOrError)
 
-      destroy()
+      pool.delete(session)
     }
 
     session.socket.addEventListener("close", onCloseOrError)
