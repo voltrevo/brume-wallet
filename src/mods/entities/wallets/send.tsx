@@ -9,19 +9,17 @@ import { Rpc } from "@/libs/rpc";
 import { Types } from "@/libs/types/types";
 import { GradientButton } from "@/mods/components/buttons/button";
 import { ButtonChip } from "@/mods/components/buttons/chips";
-import { useSessions } from "@/mods/tor/sessions/context";
+import { SessionProps } from "@/mods/tor/sessions/props";
 import { Wallet, getAddress, parseUnits } from "ethers";
 import { useMemo, useState } from "react";
 import { WalletDataProps, useBalance, useGasPrice, useNonce } from "./data";
 
-export function SendDialog(props: WalletDataProps & CloseProps) {
-  const { wallet, close } = props
+export function SendDialog(props: WalletDataProps & CloseProps & SessionProps) {
+  const { wallet, session, close } = props
 
-  const sessions = useSessions()
-
-  const balance = useBalance(wallet.ethereumAddress, sessions)
-  const nonce = useNonce(wallet.ethereumAddress, sessions)
-  const gasPrice = useGasPrice(sessions)
+  const balance = useBalance(wallet.ethereumAddress, session)
+  const nonce = useNonce(wallet.ethereumAddress, session)
+  const gasPrice = useGasPrice(session)
 
   const [recipientInput = "", setRecipientInput] = useState<string>()
 
@@ -63,14 +61,10 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
   const [txHash, setTxHash] = useState<string>()
 
   const trySend = useAsyncUniqueCallback(async () => {
-    if (!sessions)
-      return
     if (!Types.isBigInt(nonce.data))
       return
     if (!Types.isBigInt(gasPrice.data))
       return
-
-    const session = await sessions.cryptoRandom()
 
     const ethers = new Wallet(wallet.privateKey)
 
@@ -114,7 +108,7 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
 
     balance.refetch()
     nonce.refetch()
-  }, [sessions, wallet.ethereumAddress, nonce.data, gasPrice.data, recipientInput, valueInput])
+  }, [session, wallet.ethereumAddress, nonce.data, gasPrice.data, recipientInput, valueInput])
 
   const TxHashDisplay = <>
     <div className="">
@@ -136,8 +130,6 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
   </>
 
   const disabled = useMemo(() => {
-    if (!sessions)
-      return true
     if (!Types.isBigInt(nonce.data))
       return true
     if (!Types.isBigInt(gasPrice.data))
@@ -147,7 +139,7 @@ export function SendDialog(props: WalletDataProps & CloseProps) {
     if (!valueInput)
       return true
     return false
-  }, [sessions, nonce.data, gasPrice.data, recipientInput, valueInput])
+  }, [nonce.data, gasPrice.data, recipientInput, valueInput])
 
   const SendButton =
     <GradientButton className="w-full"

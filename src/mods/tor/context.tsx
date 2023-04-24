@@ -1,4 +1,3 @@
-import fallbacks from "@/assets/fallbacks.json";
 import { useAsyncMemo } from "@/libs/react/memo";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { Berith } from "@hazae41/berith";
@@ -26,6 +25,10 @@ export function TorProvider(props: ChildrenProps) {
     const ed25519 = Ed25519.fromBerith(Berith)
     const x25519 = X25519.fromBerith(Berith)
     const sha1 = Sha1.fromMorax(Morax)
+
+    const fallbacksRes = await fetch("https://raw.githubusercontent.com/hazae41/echalote/master/tools/fallbacks/fallbacks.json")
+    if (!fallbacksRes.ok) throw new Error(await fallbacksRes.text())
+    const fallbacks = await fallbacksRes.json()
 
     const tcp = await createWebSocketSnowflakeStream("wss://snowflake.bamsoftware.com/")
 

@@ -3,7 +3,7 @@ import { BigInts } from "@/libs/bigints/bigints";
 import { Colors } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanState } from "@/libs/react/handles/boolean";
-import { useSessions } from "@/mods/tor/sessions/context";
+import { useSession, useSessions } from "@/mods/tor/sessions/context";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
 import { WalletDataProps, useBalance, useWallet } from "./data";
@@ -26,10 +26,12 @@ function WalletDataPage(props: WalletDataProps) {
   const router = useRouter()
   const sessions = useSessions()
 
+  const session = useSession(wallet.uuid, sessions)
+
   const color = Colors.get(wallet.modhash)
   const color2 = Colors.get(wallet.modhash + 1)
 
-  const balance = useBalance(wallet.ethereumAddress, sessions)
+  const balance = useBalance(wallet.ethereumAddress, session)
 
   const balanceFloat = useMemo(() => {
     if (balance.error !== undefined)
@@ -87,9 +89,10 @@ function WalletDataPage(props: WalletDataProps) {
     </div>
 
   return <div className="h-full w-full flex flex-col">
-    {sendDialog.current &&
+    {sendDialog.current && session &&
       <SendDialog
         wallet={wallet}
+        session={session}
         close={sendDialog.disable} />}
     {Navbar}
     {Card}

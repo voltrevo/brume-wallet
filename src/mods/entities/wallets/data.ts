@@ -1,7 +1,6 @@
 import { Rpc } from "@/libs/rpc"
 import { Session } from "@/libs/tor/sessions/session"
 import { useUserStorage } from "@/mods/storage/user/context"
-import { Pool } from "@hazae41/piscine"
 import { FetchResult, FetcherMore, NormalizerMore, StorageQueryParams, getSchema, useError, useFetch, useSchema } from "@hazae41/xswr"
 
 export type Wallet =
@@ -56,17 +55,18 @@ export function useWallet(uuid: string | undefined) {
   return useSchema(getWalletSchema, [uuid, storage])
 }
 
-export function getBalanceSchema(address: string | undefined, sessions?: Pool<Session>) {
-  if (!address || !sessions) return
+export function getBalanceSchema(address: string | undefined, session: Session | undefined) {
+  if (!address || !session) return
 
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     const { signal } = more
 
-    const session = await sessions.cryptoRandom()
+    console.log(session.circuit.id)
+
     const request = session.client.request(init)
     const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
 
-    const body = JSON.stringify({ method: "eth_getBalance", tor: true })
+    const body = JSON.stringify({ method: init.method, tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
 
     return FetchResult.rewrap(response).mapSync(BigInt)
@@ -78,24 +78,25 @@ export function getBalanceSchema(address: string | undefined, sessions?: Pool<Se
   }, fetcher)
 }
 
-export function useBalance(address: string | undefined, sockets: Pool<Session> | undefined) {
-  const query = useSchema(getBalanceSchema, [address, sockets])
+export function useBalance(address: string | undefined, session: Session | undefined) {
+  const query = useSchema(getBalanceSchema, [address, session])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getNonceSchema(address: string | undefined, sessions: Pool<Session> | undefined) {
-  if (!address || !sessions) return
+export function getNonceSchema(address: string | undefined, session: Session | undefined) {
+  if (!address || !session) return
 
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     const { signal } = more
 
-    const session = await sessions.cryptoRandom()
+    console.log(session.circuit.id)
+
     const request = session.client.request(init)
     const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
 
-    const body = JSON.stringify({ method: "eth_getTransactionCount", tor: true })
+    const body = JSON.stringify({ method: init.method, tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
 
     return FetchResult.rewrap(response).mapSync(BigInt)
@@ -107,24 +108,25 @@ export function getNonceSchema(address: string | undefined, sessions: Pool<Sessi
   }, fetcher)
 }
 
-export function useNonce(address: string | undefined, sessions: Pool<Session> | undefined) {
-  const query = useSchema(getNonceSchema, [address, sessions])
+export function useNonce(address: string | undefined, session: Session | undefined) {
+  const query = useSchema(getNonceSchema, [address, session])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getGasPriceSchema(sessions: Pool<Session> | undefined) {
-  if (!sessions) return
+export function getGasPriceSchema(session: Session | undefined) {
+  if (!session) return
 
   const fetcher = async <T extends unknown[]>(init: Rpc.RequestInit<T>, more: FetcherMore) => {
     const { signal } = more
 
-    const session = await sessions.cryptoRandom()
+    console.log(session.circuit.id)
+
     const request = session.client.request(init)
     const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
 
-    const body = JSON.stringify({ method: "eth_gasPrice", tor: true })
+    const body = JSON.stringify({ method: init.method, tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
 
     return FetchResult.rewrap(response).mapSync(BigInt)
@@ -136,8 +138,8 @@ export function getGasPriceSchema(sessions: Pool<Session> | undefined) {
   }, fetcher)
 }
 
-export function useGasPrice(sessions: Pool<Session> | undefined) {
-  const query = useSchema(getGasPriceSchema, [sessions])
+export function useGasPrice(session: Session | undefined) {
+  const query = useSchema(getGasPriceSchema, [session])
   useFetch(query)
   useError(query, console.error)
   return query
