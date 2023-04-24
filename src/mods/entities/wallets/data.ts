@@ -21,17 +21,27 @@ export interface WalletRef {
 }
 
 export type WalletData =
-  | PrivateKeyWallet
+  | PrivateKeyEthereumWallet
 
-export interface PrivateKeyWallet {
+export interface PrivateKeyEthereumWallet {
+  coin: "ethereum"
   type: "privateKey"
   uuid: string
   modhash: number,
   name: string,
   privateKey: string
-  ethereumAddress: string,
-  uncompressedBitcoinAddress: string,
-  compressedBitcoinAddress: string
+  address: string
+}
+
+export interface PrivateKeyBitcoinWallet {
+  coin: "bitcoin"
+  type: "privateKey"
+  uuid: string
+  modhash: number,
+  name: string,
+  privateKey: string
+  compressedAddress: string
+  uncompressedAddress: string
 }
 
 export function getWalletSchema(uuid: string | undefined, storage: StorageQueryParams<any> | undefined) {

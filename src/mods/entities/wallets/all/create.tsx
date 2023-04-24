@@ -1,4 +1,3 @@
-import { Bitcoin } from "@/libs/bitcoin/bitcoin";
 import { Ethereum } from "@/libs/ethereum/ethereum";
 import { Outline } from "@/libs/icons/icons";
 import { Dialog, DialogTitle } from "@/libs/modals/dialog";
@@ -66,15 +65,15 @@ export function WalletCreatorDialog(props: CloseProps) {
     const privateKeyBytes = Bytes.fromHex(wallet.signingKey.privateKey.slice(2))
 
     const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
-    const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
+    // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
 
     const privateKey = `0x${Bytes.toHex(privateKeyBytes)}`
-    const ethereumAddress = Ethereum.Address.from(uncompressedPublicKeyBytes)
+    const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
 
-    const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
-    const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
+    // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
+    // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
 
-    const walletd: WalletData = { type: "privateKey", uuid, name, modhash, privateKey, ethereumAddress, compressedBitcoinAddress, uncompressedBitcoinAddress }
+    const walletd: WalletData = { coin: "ethereum", type: "privateKey", uuid, name, modhash, privateKey, address }
     mutate(Mutator.data((prev = []) => [...prev, walletd]))
 
     close()

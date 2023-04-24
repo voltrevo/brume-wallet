@@ -31,7 +31,7 @@ function WalletDataPage(props: WalletDataProps) {
   const color = Colors.get(wallet.modhash)
   const color2 = Colors.get(wallet.modhash + 1)
 
-  const balance = useBalance(wallet.ethereumAddress, session)
+  const balance = useBalance(wallet.address, session)
 
   const balanceFloat = useMemo(() => {
     if (balance.error !== undefined)
@@ -98,7 +98,7 @@ function WalletDataPage(props: WalletDataProps) {
     {Card}
     {Apps}
     <div className="p-xmd flex flex-col gap-2">
-      <div className="p-xmd flex flex-col rounded-xl border border-contrast">
+      {/* <div className="p-xmd flex flex-col rounded-xl border border-contrast">
         <div className="flex justify-between items-center">
           <div className="">
             Bitcoin (unimplemented)
@@ -110,7 +110,7 @@ function WalletDataPage(props: WalletDataProps) {
         <div className="text-contrast">
           {`0 BTC`}
         </div>
-      </div>
+      </div> */}
       <div className="p-xmd flex flex-col rounded-xl border border-contrast">
         <div className="flex justify-between items-center">
           <div className="">
