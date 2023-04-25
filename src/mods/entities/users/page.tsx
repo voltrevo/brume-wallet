@@ -22,12 +22,14 @@ export function UserPage(props: UserProps & PromiseProps<StorageQueryParams<any>
     if (!user.data) return
     if (!password) return
 
-    const passwordSaltBytes = Bytes.fromBase64(user.data.passwordSalt)
-    const passwordHashBytes = await Password.hash(password, passwordSaltBytes)
+    const passwordHashBase64 = user.data.passwordHashBase64
+    const passwordParamsBase64 = user.data.passwordParamsBase64
+    const passwordParamsBytes = Password.Pbdkf2Params.parse(passwordParamsBase64)
 
-    const passwordHash = Bytes.toBase64(passwordHashBytes)
+    const currentPasswordHashBytes = await Password.pbkdf2(password, passwordParamsBytes)
+    const currentPasswordHashBase64 = Bytes.toBase64(currentPasswordHashBytes)
 
-    if (passwordHash !== user.data.passwordHash) {
+    if (currentPasswordHashBase64 !== passwordHashBase64) {
       setInvalid(true)
 
       setTimeout(() => {

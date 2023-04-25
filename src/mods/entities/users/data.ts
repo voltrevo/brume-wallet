@@ -1,5 +1,6 @@
 import { useGlobalStorage } from "@/mods/storage/global/context"
 import { getSchema, NormalizerMore, StorageQueryParams, useSchema } from "@hazae41/xswr"
+import { Password } from "./password"
 
 export type User =
   | UserRef
@@ -27,8 +28,9 @@ export interface UserData {
 
   keySalt: string,
   valueSalt: string
-  passwordSalt: string
-  passwordHash: string
+
+  passwordParamsBase64: Password.ParamsBase64
+  passwordHashBase64: string
 }
 
 export function getUserSchema(uuid: string | undefined, storage: StorageQueryParams<any> | undefined) {

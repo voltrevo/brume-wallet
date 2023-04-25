@@ -54,13 +54,19 @@ export function UserCreateDialog(props: CloseProps) {
     const keySalt = Bytes.toBase64(Bytes.random(16))
     const valueSalt = Bytes.toBase64(Bytes.random(16))
 
-    const passwordSaltBytes = Bytes.random(16)
-    const passwordHashBytes = await Password.hash(password, passwordSaltBytes)
+    const passwordParamsBytes: Password.Pbkdf2ParamsBytes = {
+      name: "PBKDF2",
+      hash: "SHA-256",
+      iterations: 1_000_000,
+      salt: Bytes.random(16),
+      length: 256
+    }
 
-    const passwordSalt = Bytes.toBase64(passwordSaltBytes)
-    const passwordHash = Bytes.toBase64(passwordHashBytes)
+    const passwordParamsBase64 = Password.Pbdkf2Params.stringify(passwordParamsBytes)
+    const passwordHashBytes = await Password.pbkdf2(password, passwordParamsBytes)
+    const passwordHashBase64 = Bytes.toBase64(passwordHashBytes)
 
-    const user: UserData = { uuid, name, color, emoji, keySalt, valueSalt, passwordSalt, passwordHash }
+    const user: UserData = { uuid, name, color, emoji, keySalt, valueSalt, passwordParamsBase64, passwordHashBase64 }
 
     users.mutate(Mutator.data((d = []) => [...d, user]))
 
