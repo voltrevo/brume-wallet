@@ -1,3 +1,5 @@
+import { Colors } from "@/libs/colors/colors";
+import { Emojis } from "@/libs/emojis/emojis";
 import { Ethereum } from "@/libs/ethereum/ethereum";
 import { Outline } from "@/libs/icons/icons";
 import { Dialog, DialogTitle } from "@/libs/modals/dialog";
@@ -34,6 +36,8 @@ export function WalletCreatorDialog(props: CloseProps) {
   }, [])
 
   const modhash = useModhash(uuid)
+  const color = Colors.mod(modhash)
+  const emoji = Emojis.get(modhash)
 
   const [name = "", setName] = useState<string>()
 
@@ -73,17 +77,18 @@ export function WalletCreatorDialog(props: CloseProps) {
     // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
     // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
 
-    const walletd: WalletData = { coin: "ethereum", type: "privateKey", uuid, name, modhash, privateKey, address }
+    const walletd: WalletData = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, privateKey, address }
     mutate(Mutator.data((prev = []) => [...prev, walletd]))
 
     close()
-  }, [uuid, name, modhash, wallet, mutate, close])
+  }, [uuid, name, color, emoji, wallet, mutate, close])
 
   const NameInput =
     <div className="flex items-center gap-2">
       <div className="shrink-0">
         <WalletAvatar className="icon-5xl text-2xl"
-          modhash={modhash} />
+          color={color}
+          emoji={emoji} />
       </div>
       <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
         placeholder="Enter a name"
@@ -103,7 +108,7 @@ export function WalletCreatorDialog(props: CloseProps) {
 
   const DoneButton =
     <GradientButton className="w-full"
-      modhash={modhash}
+      colorIndex={color}
       disabled={!name || !wallet}
       icon={Outline.PlusIcon}
       onClick={onDoneClick.run}>

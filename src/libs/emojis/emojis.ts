@@ -4,8 +4,12 @@ export namespace Emojis {
     "☁️", "☀️", "🌪️", "🔥"
   ] as const
 
+  export function mod(index: number) {
+    return index % all.length
+  }
+
   export function get(index: number) {
-    return all[index % all.length]
+    return all[mod(index)]
   }
 
 }

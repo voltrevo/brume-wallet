@@ -143,7 +143,7 @@ export function SendDialog(props: WalletDataProps & CloseProps & SessionProps) {
 
   const SendButton =
     <GradientButton className="w-full"
-      modhash={wallet.modhash}
+      colorIndex={wallet.color}
       disabled={trySend.loading || disabled}
       icon={Outline.PaperAirplaneIcon}
       onClick={trySend.run}>

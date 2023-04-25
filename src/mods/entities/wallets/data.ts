@@ -21,24 +21,32 @@ export interface WalletRef {
 }
 
 export type WalletData =
-  | PrivateKeyEthereumWallet
+  | EthereumPrivateKeyWallet
 
-export interface PrivateKeyEthereumWallet {
+export interface EthereumPrivateKeyWallet {
   coin: "ethereum"
   type: "privateKey"
+
   uuid: string
-  modhash: number,
   name: string,
+
+  color: number,
+  emoji: string
+
   privateKey: string
   address: string
 }
 
-export interface PrivateKeyBitcoinWallet {
+export interface BitcoinPrivateKeyWallet {
   coin: "bitcoin"
   type: "privateKey"
+
   uuid: string
-  modhash: number,
   name: string,
+
+  color: number,
+  emoji: string
+
   privateKey: string
   compressedAddress: string
   uncompressedAddress: string

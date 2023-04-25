@@ -1,3 +1,5 @@
+import { Colors } from "@/libs/colors/colors";
+import { Emojis } from "@/libs/emojis/emojis";
 import { Outline } from "@/libs/icons/icons";
 import { Dialog, DialogTitle } from "@/libs/modals/dialog";
 import { useModhash } from "@/libs/modhash/modhash";
@@ -23,6 +25,8 @@ export function UserCreateDialog(props: CloseProps) {
   }, [])
 
   const modhash = useModhash(uuid)
+  const color = Colors.mod(modhash)
+  const emoji = Emojis.get(modhash)
 
   const [name = "", setName] = useState<string>()
 
@@ -56,18 +60,18 @@ export function UserCreateDialog(props: CloseProps) {
     const passwordSalt = Bytes.toBase64(passwordSaltBytes)
     const passwordHash = Bytes.toBase64(passwordHashBytes)
 
-    const user: UserData = { uuid, name, modhash, keySalt, valueSalt, passwordSalt, passwordHash }
+    const user: UserData = { uuid, name, color, emoji, keySalt, valueSalt, passwordSalt, passwordHash }
 
     users.mutate(Mutator.data((d = []) => [...d, user]))
 
     close()
-  }, [uuid, name, modhash, password])
+  }, [uuid, name, color, emoji, password])
 
   const NameInput =
     <div className="flex items-center gap-2">
       <div className="shrink-0">
         <UserAvatar className="icon-5xl text-2xl"
-          modhash={modhash}
+          colorIndex={color}
           name={name} />
       </div>
       <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
@@ -89,7 +93,7 @@ export function UserCreateDialog(props: CloseProps) {
 
   const DoneButton =
     <GradientButton className="w-full"
-      modhash={modhash}
+      colorIndex={color}
       disabled={!name || !password || !password2 || !isSamePassword}
       icon={Outline.PlusIcon}
       onClick={onClick.run}>

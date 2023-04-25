@@ -28,8 +28,8 @@ function WalletDataPage(props: WalletDataProps) {
 
   const session = useSession(wallet.uuid, sessions)
 
-  const color = Colors.get(wallet.modhash)
-  const color2 = Colors.get(wallet.modhash + 1)
+  const color = Colors.get(wallet.color)
+  const color2 = Colors.get(wallet.color + 1)
 
   const balance = useBalance(wallet.address, session)
 

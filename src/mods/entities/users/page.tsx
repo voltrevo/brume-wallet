@@ -61,7 +61,7 @@ export function UserPage(props: UserProps & PromiseProps<StorageQueryParams<any>
       <div className="grow flex flex-col justify-center items-center">
         <div className="flex flex-col items-center">
           <UserAvatar className="icon-7xl text-2xl"
-            modhash={user.data.modhash}
+            colorIndex={user.data.color}
             name={user.data.name} />
           <div className="h-1" />
           <div className="font-medium">

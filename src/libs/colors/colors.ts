@@ -9,8 +9,12 @@ export namespace Colors {
     "pink-400", "rose-400"
   ] as const
 
+  export function mod(index: number) {
+    return index % all.length
+  }
+
   export function get(index: number) {
-    return all[index % all.length]
+    return all[mod(index)]
   }
 
 }

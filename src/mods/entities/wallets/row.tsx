@@ -8,8 +8,8 @@ import { WalletDataProps } from "./data"
 export function WalletCard(props: WalletDataProps) {
   const { wallet } = props
 
-  const color = Colors.get(wallet.modhash)
-  const color2 = Colors.get(wallet.modhash + 1)
+  const color = Colors.get(wallet.color)
+  const color2 = Colors.get(wallet.color + 1)
 
   const copyEthereumAddress = useCopy(wallet.address)
 
@@ -17,7 +17,7 @@ export function WalletCard(props: WalletDataProps) {
     <div className="flex items-center">
       <div className="shrink-0">
         <WalletIcon className=""
-          modhash={wallet.modhash} />
+          emoji={wallet.emoji} />
       </div>
       <div className="w-2" />
       <h2 className="font-medium truncate">

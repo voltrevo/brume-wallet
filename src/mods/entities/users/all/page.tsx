@@ -46,7 +46,7 @@ function UserOkButton(props: UserProps & OkProps<User>) {
   return <button className="flex flex-col items-center"
     onClick={onClick}>
     <UserAvatar className="icon-7xl text-2xl"
-      modhash={user.data.modhash}
+      colorIndex={user.data.color}
       name={user.data.name} />
     <div className="h-1" />
     <div className="font-medium">
@@ -71,15 +71,15 @@ function NewUserButton(props: OkProps<unknown>) {
 }
 
 export function UserAvatar(props: ClassNameProps & {
-  modhash: number,
+  colorIndex: number,
   name: string
 }) {
-  const { modhash, name, className } = props
+  const { colorIndex, name, className } = props
 
-  const color = Colors.get(modhash)
-  const color2 = Colors.get(modhash + 1)
+  const color1 = Colors.get(colorIndex)
+  const color2 = Colors.get(colorIndex + 1)
 
-  return <div className={`bg-gradient-to-br from-${color} to-${color2} rounded-full flex justify-center items-center ${className} text-white`}>
+  return <div className={`bg-gradient-to-br from-${color1} to-${color2} rounded-full flex justify-center items-center ${className} text-white`}>
     {name[0]}
   </div>
 }

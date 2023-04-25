@@ -21,12 +21,12 @@ export interface UserRef {
 export interface UserData {
   uuid: string,
   name: string,
-  modhash: number,
+
+  color: number
+  emoji: string
 
   keySalt: string,
-
   valueSalt: string
-
   passwordSalt: string
   passwordHash: string
 }
