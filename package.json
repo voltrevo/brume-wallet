@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "export": "next export",
     "dev:extension": "npm-watch build",
     "build:extension": "npm run build:next && npm run build:chrome && npm run build:safari",
     "build:next": "next build && next export && mv out/_next out/next && node build.js",
