@@ -1,5 +1,12 @@
+import { Mutex } from "@hazae41/mutex"
 import { RefObject, SetStateAction, useCallback, useRef, useState } from "react"
-import { Setter } from "./state"
+import { Setter, useImmutableState } from "./state"
+
+export type MutexRef<T> = Mutex<{ current: T }>
+
+export function useMutexRef<T>(current: T) {
+  return useImmutableState(() => new Mutex({ current }))
+}
 
 export type RefState<T> = [RefObject<T>, Setter<T>]
 

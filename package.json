@@ -23,6 +23,7 @@
     "@hazae41/fleche": "^1.1.17",
     "@hazae41/morax": "^1.0.20",
     "@hazae41/mutex": "^1.2.5",
+    "@hazae41/option": "^1.0.1",
     "@hazae41/piscine": "^1.0.5",
     "@hazae41/result": "^1.0.4",
     "@hazae41/sha1": "^1.0.0",

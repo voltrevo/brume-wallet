@@ -4,12 +4,15 @@ import { Ethereum } from "@/libs/ethereum/ethereum";
 import { Outline } from "@/libs/icons/icons";
 import { Dialog, DialogTitle } from "@/libs/modals/dialog";
 import { useModhash } from "@/libs/modhash/modhash";
+import { Promises } from "@/libs/promises/promises";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
+import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
 import { Mutator } from "@/libs/xswr/pipes";
 import { GradientButton } from "@/mods/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
+import { Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { Wallet } from "ethers";
 import { useEffect, useMemo, useState } from "react";
@@ -17,14 +20,16 @@ import { WalletAvatar } from "../avatar";
 import { WalletData } from "../data";
 import { useWallets } from "./data";
 
-async function generateWallet() {
-  await new Promise(ok => setTimeout(ok, 0)) // force async
-  return Wallet.createRandom().privateKey
-}
+export namespace Wallets {
 
-async function importWallet(privateKey: string) {
-  await new Promise(ok => setTimeout(ok, 0)) // force async
-  return new Wallet(privateKey)
+  export function random() {
+    return Result.tryWrapSync(() => Wallet.createRandom().privateKey)
+  }
+
+  export function from(privateKey: string) {
+    return Result.tryWrapSync(() => new Wallet(privateKey))
+  }
+
 }
 
 export function WalletCreatorDialog(props: CloseProps) {
@@ -52,15 +57,11 @@ export function WalletCreatorDialog(props: CloseProps) {
   }, [])
 
   useEffect(() => {
-    generateWallet().then(setKey)
+    Promises.fork().then(() => setKey(Wallets.random().ok().inner))
   }, [])
 
-  const [wallet, setWallet] = useState<Wallet>()
-
-  useEffect(() => {
-    importWallet(key)
-      .catch(() => undefined)
-      .then(setWallet)
+  const wallet = useAsyncReplaceMemo(async () => {
+    if (key) return Wallets.from(key).ok().inner
   }, [key])
 
   const onDoneClick = useAsyncUniqueCallback(async () => {

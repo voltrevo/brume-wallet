@@ -1,5 +1,6 @@
-import { DependencyList, useEffect, useMemo, useState } from "react"
-import { useRefState } from "./ref"
+import { Result } from "@hazae41/result"
+import { DependencyList, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Promises } from "../promises/promises"
 
 export function useObjectMemo<T extends {}>(object: T) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -10,7 +11,7 @@ export function useLazyMemo<T>(factory: () => T, deps: DependencyList) {
   const [state, setState] = useState<T>()
 
   useEffect(() => {
-    setState(factory())
+    setState(factory)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 
@@ -20,36 +21,46 @@ export function useLazyMemo<T>(factory: () => T, deps: DependencyList) {
 export function useAsyncMemo<T>(factory: () => Promise<T>, deps: DependencyList) {
   const [state, setState] = useState<T>()
 
-  useEffect(() => {
-    factory()
-      .then(setState)
-      .catch(e => setState(() => { throw e }))
+  const run = useCallback(async () => {
+    await Promises.fork()
+
+    const result = await Result.tryWrap(factory)
+    setState(() => result.unwrap())
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
+
+  useEffect(() => {
+    Promises.fork().then(run)
+  }, [run])
 
   return state
 }
 
-export function useAsyncUniqueMemo<T>(factory: () => Promise<T>, deps: DependencyList) {
-  const [promiseRef, setPromise] = useRefState<Promise<T>>()
-  const [current, setState] = useState<T>()
+export function useAsyncReplaceMemo<T>(factory: () => Promise<T>, deps: DependencyList) {
+  const [state, setState] = useState<T>()
 
-  useEffect(() => {
-    if (promiseRef.current) return
+  const aborterRef = useRef<AbortController | null>(null)
 
-    const promise = factory()
+  const run = useCallback(async () => {
+    const aborter = new AbortController()
 
-    promise
-      .then(setState)
-      .catch(e => setPromise(() => { throw e }))
-      .finally(() => setPromise(undefined))
+    aborterRef.current?.abort()
+    aborterRef.current = aborter
 
-    setPromise(promise)
+    const result = await Result.tryWrap(factory)
+
+    if (aborterRef.current === aborter) {
+      aborterRef.current = null
+      setState(() => result.unwrap())
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 
-  const promise = promiseRef.current
-  const loading = Boolean(promise)
+  useEffect(() => {
+    Promises.fork().then(run)
+  }, [run])
 
-  return { current, promise, loading }
+  return state
 }
