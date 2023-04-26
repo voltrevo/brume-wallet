@@ -1,11 +1,13 @@
 # Brume Wallet
 
-## USE AT YOUR OWN RISK
+## Experimental
 
 This is experimental software in early development
 
 1. It has security issues
 2. Things change quickly
+
+Use at your own risk
 
 ## What
 
