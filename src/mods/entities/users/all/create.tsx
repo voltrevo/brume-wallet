@@ -10,8 +10,8 @@ import { Mutator } from "@/libs/xswr/pipes";
 import { GradientButton } from "@/mods/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
 import { useMemo, useState } from "react";
+import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBytes } from "../../../storage/user/crypto";
 import { UserData } from "../data";
-import { Password } from "../password";
 import { useUsers } from "./data";
 import { UserAvatar } from "./page";
 
@@ -51,22 +51,46 @@ export function UserCreateDialog(props: CloseProps) {
   }, [password, password2])
 
   const onClick = useAsyncUniqueCallback(async () => {
-    const keySalt = Bytes.toBase64(Bytes.random(16))
-    const valueSalt = Bytes.toBase64(Bytes.random(16))
+    const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits"])
 
-    const passwordParamsBytes: Password.Pbkdf2ParamsBytes = {
+    const keyParamsBase64: HmacPbkdf2ParamsBase64 = {
+      derivedKeyType: {
+        name: "HMAC",
+        hash: "SHA-256"
+      },
+      algorithm: Pbdkf2Params.stringify({
+        name: "PBKDF2",
+        hash: "SHA-256",
+        iterations: 1_000_000,
+        salt: Bytes.random(16)
+      })
+    }
+
+    const valueParamsBase64: AesGcmPbkdf2ParamsBase64 = {
+      derivedKeyType: {
+        name: "AES-GCM",
+        length: 256
+      },
+      algorithm: Pbdkf2Params.stringify({
+        name: "PBKDF2",
+        hash: "SHA-256",
+        iterations: 1_000_000,
+        salt: Bytes.random(16)
+      })
+    }
+
+    const passwordParamsBytes: Pbkdf2ParamsBytes = {
       name: "PBKDF2",
       hash: "SHA-256",
       iterations: 1_000_000,
-      salt: Bytes.random(16),
-      length: 256
+      salt: Bytes.random(16)
     }
 
-    const passwordParamsBase64 = Password.Pbdkf2Params.stringify(passwordParamsBytes)
-    const passwordHashBytes = await Password.pbkdf2(password, passwordParamsBytes)
+    const passwordParamsBase64 = Pbdkf2Params.stringify(passwordParamsBytes)
+    const passwordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, 256))
     const passwordHashBase64 = Bytes.toBase64(passwordHashBytes)
 
-    const user: UserData = { uuid, name, color, emoji, keySalt, valueSalt, passwordParamsBase64, passwordHashBase64 }
+    const user: UserData = { uuid, name, color, emoji, keyParamsBase64, valueParamsBase64, passwordParamsBase64, passwordHashBase64 }
 
     users.mutate(Mutator.data((d = []) => [...d, user]))
 

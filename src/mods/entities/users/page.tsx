@@ -3,11 +3,11 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useKeyboardEnter } from "@/libs/react/events";
 import { PromiseProps } from "@/libs/react/props/promise";
 import { Bytes } from "@hazae41/bytes";
-import { AesGcmCoder, HmacEncoder, IDBStorage, PBKDF2, StorageQueryParams } from "@hazae41/xswr";
+import { AesGcmCoder, HmacEncoder, IDBStorage, StorageQueryParams } from "@hazae41/xswr";
 import { useRef, useState } from "react";
+import { Pbdkf2Params } from "../../storage/user/crypto";
 import { UserAvatar } from "./all/page";
 import { UserProps, useUser } from "./data";
-import { Password } from "./password";
 
 export function UserPage(props: UserProps & PromiseProps<StorageQueryParams<any>>) {
   const { user: userRef, ok, err } = props
@@ -22,11 +22,14 @@ export function UserPage(props: UserProps & PromiseProps<StorageQueryParams<any>
     if (!user.data) return
     if (!password) return
 
+    const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"])
+
     const passwordHashBase64 = user.data.passwordHashBase64
     const passwordParamsBase64 = user.data.passwordParamsBase64
-    const passwordParamsBytes = Password.Pbdkf2Params.parse(passwordParamsBase64)
+    const passwordParamsBytes = Pbdkf2Params.parse(passwordParamsBase64)
+    const passwordHashLength = Bytes.fromBase64(passwordHashBase64).length * 8
 
-    const currentPasswordHashBytes = await Password.pbkdf2(password, passwordParamsBytes)
+    const currentPasswordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, passwordHashLength))
     const currentPasswordHashBase64 = Bytes.toBase64(currentPasswordHashBytes)
 
     if (currentPasswordHashBase64 !== passwordHashBase64) {
@@ -41,13 +44,15 @@ export function UserPage(props: UserProps & PromiseProps<StorageQueryParams<any>
     }
 
     const storage = IDBStorage.create(user.data.uuid)
-    const pbkdf2 = await PBKDF2.from(password)
 
-    const keySaltBytes = Bytes.fromBase64(user.data.keySalt)
-    const valueSaltBytes = Bytes.fromBase64(user.data.valueSalt)
+    const keyParamsBytes = Pbdkf2Params.parse(user.data.keyParamsBase64.algorithm)
+    const valueParamsBytes = Pbdkf2Params.parse(user.data.valueParamsBase64.algorithm)
 
-    const keySerializer = await HmacEncoder.fromPBKDF2(pbkdf2, keySaltBytes, 1_000_000)
-    const valueSerializer = await AesGcmCoder.fromPBKDF2(pbkdf2, valueSaltBytes, 1_000_000)
+    const keyKey = await crypto.subtle.deriveKey(keyParamsBytes, pbkdf2, user.data.keyParamsBase64.derivedKeyType, false, ["sign"])
+    const valueKey = await crypto.subtle.deriveKey(valueParamsBytes, pbkdf2, user.data.valueParamsBase64.derivedKeyType, false, ["encrypt", "decrypt"])
+
+    const keySerializer = new HmacEncoder(keyKey)
+    const valueSerializer = new AesGcmCoder(valueKey)
 
     ok({ storage, keySerializer, valueSerializer })
   }, [user.data?.uuid])

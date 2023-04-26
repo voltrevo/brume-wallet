@@ -1,6 +1,6 @@
 import { useGlobalStorage } from "@/mods/storage/global/context"
 import { getSchema, NormalizerMore, StorageQueryParams, useSchema } from "@hazae41/xswr"
-import { Password } from "./password"
+import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbkdf2ParamsBase64 } from "../../storage/user/crypto"
 
 export type User =
   | UserRef
@@ -26,10 +26,10 @@ export interface UserData {
   color: number
   emoji: string
 
-  keySalt: string,
-  valueSalt: string
+  keyParamsBase64: HmacPbkdf2ParamsBase64
+  valueParamsBase64: AesGcmPbkdf2ParamsBase64
 
-  passwordParamsBase64: Password.ParamsBase64
+  passwordParamsBase64: Pbkdf2ParamsBase64
   passwordHashBase64: string
 }
 
