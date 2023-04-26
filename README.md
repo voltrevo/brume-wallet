@@ -1,6 +1,6 @@
 # Brume Wallet
 
-## DO NOT USE
+## USE AT YOUR OWN RISK
 
 This is experimental software in early development
 
