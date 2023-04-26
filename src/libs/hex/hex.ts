@@ -2,9 +2,9 @@ export interface Radixable {
   toString(radix: number): string
 }
 
-export namespace Hex {
+export namespace Radix {
 
-  export function from(x: Radixable) {
+  export function toHex(x: Radixable) {
     return `0x${x.toString(16)}`
   }
 

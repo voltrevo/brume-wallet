@@ -1,4 +1,4 @@
-import { Hex } from "@/libs/hex/hex";
+import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
 import { Dialog, DialogTitle } from "@/libs/modals/dialog";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
@@ -71,12 +71,12 @@ export function SendDialog(props: WalletDataProps & CloseProps & SessionProps) {
     const gasReq = session.client.request({
       method: "eth_estimateGas",
       params: [{
-        chainId: Hex.from(5),
+        chainId: Radix.toHex(5),
         from: wallet.address,
         to: getAddress(recipientInput),
-        value: Hex.from(parseUnits(valueInput, 18)),
-        nonce: Hex.from(nonce.data),
-        gasPrice: Hex.from(gasPrice.data)
+        value: Radix.toHex(parseUnits(valueInput, 18)),
+        nonce: Radix.toHex(nonce.data),
+        gasPrice: Radix.toHex(gasPrice.data)
       }, "latest"]
     })
 
@@ -120,7 +120,7 @@ export function SendDialog(props: WalletDataProps & CloseProps & SessionProps) {
     <div className="h-2" />
     <div className="flex">
       <ExternalDivisionLink
-        href={`https://goerli.etherscan.io/tx/${txHash}`}
+        href={`https://etherscan.io/tx/${txHash}`}
         target="_blank" rel="noreferrer">
         <ButtonChip icon={Outline.ArrowTopRightOnSquareIcon}>
           Etherscan
