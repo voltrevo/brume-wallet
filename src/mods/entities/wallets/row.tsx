@@ -25,7 +25,7 @@ export function WalletCard(props: WalletDataProps) {
       </h2>
       <div className="w-2 grow" />
       <div className="text-opposite-high-contrast">
-        $0
+        $???
       </div>
     </div>
 

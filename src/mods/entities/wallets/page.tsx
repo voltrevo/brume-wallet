@@ -46,11 +46,11 @@ function WalletDataPage(props: WalletDataProps) {
 
   const mainnetBalance = useBalance(wallet.address, mainnet)
   const mainnetBalanceFloat = useFloat(mainnetBalance)
+  const mainnetSendDialog = useBooleanState()
 
   const goerliBalance = useBalance(wallet.address, goerli)
   const goerliBalanceFloat = useFloat(goerliBalance)
-
-  const sendDialog = useBooleanState()
+  const goerliSendDialog = useBooleanState()
 
   const Navbar =
     <div className="p-xmd w-full flex items-center">
@@ -72,7 +72,7 @@ function WalletDataPage(props: WalletDataProps) {
     <div className="p-xmd flex items-center justify-center flex-wrap gap-12">
       <div className="flex flex-col items-center gap-2">
         <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 ahover:scale-105 transition-transform`}
-          onClick={sendDialog.enable}>
+          onClick={mainnetSendDialog.enable}>
           <Outline.PaperAirplaneIcon className="icon-md" />
         </button>
         <div className="">
@@ -98,43 +98,37 @@ function WalletDataPage(props: WalletDataProps) {
     </div>
 
   return <div className="h-full w-full flex flex-col">
-    {sendDialog.current && goerli &&
-      <SendDialog
+    {mainnetSendDialog.current && mainnet &&
+      <SendDialog title="(mainnet)"
+        wallet={wallet}
+        session={mainnet}
+        close={mainnetSendDialog.disable} />}
+    {goerliSendDialog.current && goerli &&
+      <SendDialog title="(Goerli testnet)"
         wallet={wallet}
         session={goerli}
-        close={sendDialog.disable} />}
+        close={goerliSendDialog.disable} />}
     {Navbar}
     {Card}
     {Apps}
     <div className="p-xmd flex flex-col gap-2">
-      {/* <div className="p-xmd flex flex-col rounded-xl border border-contrast">
-        <div className="flex justify-between items-center">
+      <button className="w-full p-xmd flex flex-col rounded-xl border border-contrast"
+        onClick={mainnetSendDialog.enable}>
+        <div className="w-full flex justify-between items-center">
           <div className="">
-            Bitcoin (unimplemented)
+            Ethereum (mainnet)
           </div>
           <div className="">
-            $0.0
-          </div>
-        </div>
-        <div className="text-contrast">
-          {`0 BTC`}
-        </div>
-      </div> */}
-      <div className="p-xmd flex flex-col rounded-xl border border-contrast">
-        <div className="flex justify-between items-center">
-          <div className="">
-            Ethereum
-          </div>
-          <div className="">
-            $?
+            $???
           </div>
         </div>
         <div className="text-contrast">
           {`${mainnetBalanceFloat} ETH`}
         </div>
-      </div>
-      <div className="p-xmd flex flex-col rounded-xl border border-contrast">
-        <div className="flex justify-between items-center">
+      </button>
+      <button className="w-full p-xmd flex flex-col rounded-xl border border-contrast"
+        onClick={goerliSendDialog.enable}>
+        <div className="w-full flex justify-between items-center">
           <div className="">
             Ethereum (Goerli testnet)
           </div>
@@ -145,7 +139,7 @@ function WalletDataPage(props: WalletDataProps) {
         <div className="text-contrast">
           {`${goerliBalanceFloat} ETH`}
         </div>
-      </div>
+      </button>
     </div>
   </div>
 }

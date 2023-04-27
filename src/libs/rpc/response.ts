@@ -39,6 +39,7 @@ export namespace Response {
 
     static from<T>(init: OkInit<T>) {
       const { id, result } = init
+
       return new this(id, result)
     }
 
@@ -49,18 +50,19 @@ export namespace Response {
     error: RawError
   }
 
-  export class RpcErr extends Err<RawError> {
+  export class RpcErr extends Err<Error> {
 
     constructor(
       readonly id: number,
-      readonly error: RawError
+      readonly error: Error
     ) {
       super(error)
     }
 
     static from(init: ErrInit) {
-      const { id, error } = init
-      return new this(id, error)
+      const error = new Error(init.error.message)
+
+      return new this(init.id, error)
     }
 
   }

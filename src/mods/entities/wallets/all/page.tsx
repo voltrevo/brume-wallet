@@ -35,7 +35,7 @@ export function WalletsPage(props: {}) {
           Total balance
         </div>
         <div className="text-2xl font-bold">
-          $0
+          $???
         </div>
       </div>
       <div className="h-8" />

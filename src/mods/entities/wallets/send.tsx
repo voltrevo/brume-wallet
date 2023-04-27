@@ -5,17 +5,17 @@ import { ExternalDivisionLink } from "@/libs/next/anchor";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
+import { TitleProps } from "@/libs/react/props/title";
 import { Rpc } from "@/libs/rpc";
 import { Types } from "@/libs/types/types";
 import { GradientButton } from "@/mods/components/buttons/button";
-import { ButtonChip } from "@/mods/components/buttons/chips";
 import { SessionProps } from "@/mods/tor/sessions/props";
 import { Wallet, getAddress, parseUnits } from "ethers";
 import { useMemo, useState } from "react";
 import { WalletDataProps, useBalance, useGasPrice, useNonce } from "./data";
 
-export function SendDialog(props: WalletDataProps & CloseProps & SessionProps) {
-  const { wallet, session, close } = props
+export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & SessionProps) {
+  const { title, wallet, session, close } = props
 
   const balance = useBalance(wallet.address, session)
   const nonce = useNonce(wallet.address, session)
@@ -58,6 +58,7 @@ export function SendDialog(props: WalletDataProps & CloseProps & SessionProps) {
       onChange={onValueInputChange} />
   </>
 
+  const [error, setError] = useState<Error>()
   const [txHash, setTxHash] = useState<string>()
 
   const trySend = useAsyncUniqueCallback(async () => {
@@ -71,7 +72,7 @@ export function SendDialog(props: WalletDataProps & CloseProps & SessionProps) {
     const gasReq = session.client.request({
       method: "eth_estimateGas",
       params: [{
-        chainId: Radix.toHex(5),
+        chainId: Radix.toHex(session.chain.id),
         from: wallet.address,
         to: getAddress(recipientInput),
         value: Radix.toHex(parseUnits(valueInput, 18)),
@@ -82,18 +83,19 @@ export function SendDialog(props: WalletDataProps & CloseProps & SessionProps) {
 
     const gasRes = await Rpc.fetchWithSocket<string>(gasReq, session.socket)
 
-    if (gasRes.error) throw gasRes.error
+    if (gasRes.isErr())
+      return setError(gasRes.inner)
 
     const txReq = session.client.request({
       method: "eth_sendRawTransaction",
       params: [await ethers.signTransaction({
-        chainId: 5,
+        chainId: session.chain.id,
         from: wallet.address,
         to: getAddress(recipientInput),
         value: parseUnits(valueInput, 18),
         nonce: Number(nonce.data),
         gasPrice: gasPrice.data,
-        gasLimit: gasRes.result
+        gasLimit: gasRes.inner
       })]
     })
 
@@ -102,9 +104,11 @@ export function SendDialog(props: WalletDataProps & CloseProps & SessionProps) {
 
     const txRes = await Rpc.fetchWithSocket<string>(txReq, session.socket)
 
-    if (txRes.error !== undefined) throw txRes.error
+    if (txRes.isErr())
+      return setError(txRes.inner)
 
-    setTxHash(txRes.result)
+    setTxHash(txRes.inner)
+    setError(undefined)
 
     balance.refetch()
     nonce.refetch()
@@ -118,15 +122,15 @@ export function SendDialog(props: WalletDataProps & CloseProps & SessionProps) {
       {txHash}
     </div>
     <div className="h-2" />
-    <div className="flex">
-      <ExternalDivisionLink
-        href={`https://etherscan.io/tx/${txHash}`}
-        target="_blank" rel="noreferrer">
-        <ButtonChip icon={Outline.ArrowTopRightOnSquareIcon}>
-          Etherscan
-        </ButtonChip>
-      </ExternalDivisionLink>
-    </div>
+    <ExternalDivisionLink className="w-full"
+      href={`https://etherscan.io/tx/${txHash}`}
+      target="_blank" rel="noreferrer">
+      <GradientButton className="w-full"
+        colorIndex={wallet.color}
+        icon={Outline.ArrowTopRightOnSquareIcon}>
+        Etherscan
+      </GradientButton>
+    </ExternalDivisionLink>
   </>
 
   const disabled = useMemo(() => {
@@ -154,18 +158,23 @@ export function SendDialog(props: WalletDataProps & CloseProps & SessionProps) {
 
   return <Dialog close={close}>
     <DialogTitle close={close}>
-      Send (Goerli testnet)
+      Send {title}
     </DialogTitle>
     <div className="h-2" />
     {RecipientInput}
     <div className="h-2" />
     {ValueInput}
     <div className="h-2" />
-    {txHash && <>
-      {TxHashDisplay}
+    {error && <>
+      <div className="text-red-500">
+        {error.message}
+      </div>
       <div className="h-2" />
     </>}
-    <div className="h-2" />
-    {SendButton}
+    {txHash ? <>
+      {TxHashDisplay}
+    </> : <>
+      {SendButton}
+    </>}
   </Dialog>
 }
