@@ -3,7 +3,9 @@ import { BigInts } from "@/libs/bigints/bigints";
 import { Colors } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanState } from "@/libs/react/handles/boolean";
-import { useSession, useSessions } from "@/mods/tor/sessions/context";
+import { useEthereumSession } from "@/libs/tor/sessions/session";
+import { useSessions } from "@/mods/tor/sessions/context";
+import { Query } from "@hazae41/xswr";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
 import { WalletDataProps, useBalance, useWallet } from "./data";
@@ -20,26 +22,35 @@ export function WalletPage(props: { uuid: string }) {
   return <WalletDataPage wallet={wallet.data} />
 }
 
+function useFloat(query: Query<bigint>) {
+  return useMemo(() => {
+    if (query.error !== undefined)
+      return "Error"
+    if (query.data === undefined)
+      return "..."
+    return BigInts.float(query.data, 18)
+  }, [query.data, query.error])
+}
+
 function WalletDataPage(props: WalletDataProps) {
   const { wallet } = props
 
   const router = useRouter()
   const sessions = useSessions()
 
-  const session = useSession(wallet.uuid, sessions)
+  console.log("!!!", sessions)
+
+  const mainnet = useEthereumSession(`${wallet.uuid}/1`, sessions?.[1])
+  const goerli = useEthereumSession(`${wallet.uuid}/5`, sessions?.[5])
 
   const color = Colors.get(wallet.color)
   const color2 = Colors.get(wallet.color + 1)
 
-  const balance = useBalance(wallet.address, session)
+  const mainnetBalance = useBalance(wallet.address, mainnet)
+  const mainnetBalanceFloat = useFloat(mainnetBalance)
 
-  const balanceFloat = useMemo(() => {
-    if (balance.error !== undefined)
-      return "Error"
-    if (balance.data === undefined)
-      return "..."
-    return BigInts.float(balance.data, 18)
-  }, [balance.data, balance.error])
+  const goerliBalance = useBalance(wallet.address, goerli)
+  const goerliBalanceFloat = useFloat(goerliBalance)
 
   const sendDialog = useBooleanState()
 
@@ -89,10 +100,10 @@ function WalletDataPage(props: WalletDataProps) {
     </div>
 
   return <div className="h-full w-full flex flex-col">
-    {sendDialog.current && session &&
+    {sendDialog.current && goerli &&
       <SendDialog
         wallet={wallet}
-        session={session}
+        session={goerli}
         close={sendDialog.disable} />}
     {Navbar}
     {Card}
@@ -114,6 +125,19 @@ function WalletDataPage(props: WalletDataProps) {
       <div className="p-xmd flex flex-col rounded-xl border border-contrast">
         <div className="flex justify-between items-center">
           <div className="">
+            Ethereum
+          </div>
+          <div className="">
+            $?
+          </div>
+        </div>
+        <div className="text-contrast">
+          {`${mainnetBalanceFloat} ETH`}
+        </div>
+      </div>
+      <div className="p-xmd flex flex-col rounded-xl border border-contrast">
+        <div className="flex justify-between items-center">
+          <div className="">
             Ethereum (Goerli testnet)
           </div>
           <div className="">
@@ -121,7 +145,7 @@ function WalletDataPage(props: WalletDataProps) {
           </div>
         </div>
         <div className="text-contrast">
-          {`${balanceFloat} ETH`}
+          {`${goerliBalanceFloat} ETH`}
         </div>
       </div>
     </div>

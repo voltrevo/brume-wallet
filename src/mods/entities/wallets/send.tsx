@@ -154,7 +154,7 @@ export function SendDialog(props: WalletDataProps & CloseProps & SessionProps) {
 
   return <Dialog close={close}>
     <DialogTitle close={close}>
-      Send
+      Send (Goerli testnet)
     </DialogTitle>
     <div className="h-2" />
     {RecipientInput}

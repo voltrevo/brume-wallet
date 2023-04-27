@@ -34,5 +34,5 @@ export async function fetchWithSocket<T>(request: Request, socket: WebSocket, si
     future.resolve(Response.from(response))
   }
 
-  return await Sockets.waitFor("message", { socket, future, onEvent, signal })
+  return await Sockets.waitMap(socket, "message", { future, onEvent, signal })
 }

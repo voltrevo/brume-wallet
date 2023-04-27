@@ -1,5 +1,5 @@
 import { Rpc } from "@/libs/rpc"
-import { Session } from "@/libs/tor/sessions/session"
+import { EthereumSocketSession } from "@/libs/tor/sessions/session"
 import { useUserStorage } from "@/mods/storage/user/context"
 import { FetchResult, FetcherMore, NormalizerMore, StorageQueryParams, getSchema, useError, useFetch, useSchema } from "@hazae41/xswr"
 
@@ -73,7 +73,7 @@ export function useWallet(uuid: string | undefined) {
   return useSchema(getWalletSchema, [uuid, storage])
 }
 
-export function getBalanceSchema(address: string | undefined, session: Session | undefined) {
+export function getBalanceSchema(address: string | undefined, session: EthereumSocketSession | undefined) {
   if (!address || !session) return
 
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
@@ -91,19 +91,20 @@ export function getBalanceSchema(address: string | undefined, session: Session |
   }
 
   return getSchema({
+    chainId: session.chain.id,
     method: "eth_getBalance",
     params: [address, "pending"]
   }, fetcher)
 }
 
-export function useBalance(address: string | undefined, session: Session | undefined) {
+export function useBalance(address: string | undefined, session: EthereumSocketSession | undefined) {
   const query = useSchema(getBalanceSchema, [address, session])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getNonceSchema(address: string | undefined, session: Session | undefined) {
+export function getNonceSchema(address: string | undefined, session: EthereumSocketSession | undefined) {
   if (!address || !session) return
 
   const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
@@ -121,19 +122,20 @@ export function getNonceSchema(address: string | undefined, session: Session | u
   }
 
   return getSchema({
+    chainId: session.chain.id,
     method: "eth_getTransactionCount",
     params: [address, "pending"]
   }, fetcher)
 }
 
-export function useNonce(address: string | undefined, session: Session | undefined) {
+export function useNonce(address: string | undefined, session: EthereumSocketSession | undefined) {
   const query = useSchema(getNonceSchema, [address, session])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getGasPriceSchema(session: Session | undefined) {
+export function getGasPriceSchema(session: EthereumSocketSession | undefined) {
   if (!session) return
 
   const fetcher = async <T extends unknown[]>(init: Rpc.RequestInit<T>, more: FetcherMore) => {
@@ -151,12 +153,13 @@ export function getGasPriceSchema(session: Session | undefined) {
   }
 
   return getSchema({
+    chainId: session.chain.id,
     method: "eth_gasPrice",
     params: []
   }, fetcher)
 }
 
-export function useGasPrice(session: Session | undefined) {
+export function useGasPrice(session: EthereumSocketSession | undefined) {
   const query = useSchema(getGasPriceSchema, [session])
   useFetch(query)
   useError(query, console.error)
