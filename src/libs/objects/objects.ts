@@ -1,3 +1,5 @@
+import { Promiseable } from "../promises/promises"
+
 export namespace Objects {
 
   export function fromEntries<K extends keyof any, T>(entries: [K, T][]) {
@@ -8,7 +10,11 @@ export namespace Objects {
     return Object.entries(object) as [K, T][]
   }
 
-  export function mapValues<K extends keyof any, I, O>(object: Record<K, I>, mapper: (v: I) => O) {
+  export async function mapValues<K extends keyof any, I, O>(object: Record<K, I>, mapper: (v: I) => Promiseable<O>) {
+    return fromEntries(await Promise.all(entries(object).map(async ([k, v]) => [k, await mapper(v)])))
+  }
+
+  export function mapValuesSync<K extends keyof any, I, O>(object: Record<K, I>, mapper: (v: I) => O) {
     return fromEntries(entries(object).map(([k, v]) => [k, mapper(v)]))
   }
 
