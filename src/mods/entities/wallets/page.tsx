@@ -38,8 +38,6 @@ function WalletDataPage(props: WalletDataProps) {
   const router = useRouter()
   const sessions = useSessions()
 
-  console.log("!!!", sessions)
-
   const mainnet = useEthereumSession(`${wallet.uuid}/1`, sessions?.[1])
   const goerli = useEthereumSession(`${wallet.uuid}/5`, sessions?.[5])
 
