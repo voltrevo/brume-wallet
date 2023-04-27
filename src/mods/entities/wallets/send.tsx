@@ -49,7 +49,7 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Se
 
   const ValueInput = <>
     <div className="">
-      Value
+      Value (ETH)
     </div>
     <div className="h-2" />
     <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
@@ -164,7 +164,7 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Se
     {RecipientInput}
     <div className="h-2" />
     {ValueInput}
-    <div className="h-2" />
+    <div className="h-4" />
     {error && <>
       <div className="text-red-500">
         {error.message}
