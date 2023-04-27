@@ -13,7 +13,8 @@ export type EthereumChainID = number
 
 export interface EthereumChain {
   id: EthereumChainID,
-  url: string
+  url: string,
+  etherscan: string
 }
 
 export type EthereumChainMap<T> = {

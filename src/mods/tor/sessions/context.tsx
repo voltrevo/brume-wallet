@@ -23,11 +23,13 @@ export function SessionsProvider(props: ChildrenProps) {
     return new Mutex(EthereumSocketSession.createPool({
       1: {
         id: 1,
-        url: "wss://mainnet.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8"
+        url: "wss://mainnet.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8",
+        etherscan: "https://etherscan.io"
       },
       5: {
         id: 5,
-        url: "wss://goerli.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8"
+        url: "wss://goerli.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8",
+        etherscan: "https://goerli.etherscan.io"
       }
     }, circuits))
   }, [circuits])

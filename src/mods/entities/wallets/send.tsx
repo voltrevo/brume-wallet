@@ -6,7 +6,6 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { TitleProps } from "@/libs/react/props/title";
-import { Rpc } from "@/libs/rpc";
 import { Types } from "@/libs/types/types";
 import { GradientButton } from "@/mods/components/buttons/button";
 import { SessionProps } from "@/mods/tor/sessions/props";
@@ -69,7 +68,7 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Se
 
     const ethers = new Wallet(wallet.privateKey)
 
-    const gasReq = session.client.request({
+    const gasRes = await session.client.fetchWithSocket<string>(session.socket, {
       method: "eth_estimateGas",
       params: [{
         chainId: Radix.toHex(session.chain.id),
@@ -81,12 +80,10 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Se
       }, "latest"]
     })
 
-    const gasRes = await Rpc.fetchWithSocket<string>(gasReq, session.socket)
-
     if (gasRes.isErr())
       return setError(gasRes.inner)
 
-    const txReq = session.client.request({
+    const txRes = await session.client.fetchWithSocket<string>(session.socket, {
       method: "eth_sendRawTransaction",
       params: [await ethers.signTransaction({
         chainId: session.chain.id,
@@ -101,8 +98,6 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Se
 
     const body = JSON.stringify({ method: "eth_sendRawTransaction", tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
-
-    const txRes = await Rpc.fetchWithSocket<string>(txReq, session.socket)
 
     if (txRes.isErr())
       return setError(txRes.inner)
@@ -123,7 +118,7 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Se
     </div>
     <div className="h-2" />
     <ExternalDivisionLink className="w-full"
-      href={`https://etherscan.io/tx/${txHash}`}
+      href={`${session.chain.etherscan}/tx/${txHash}`}
       target="_blank" rel="noreferrer">
       <GradientButton className="w-full"
         colorIndex={wallet.color}

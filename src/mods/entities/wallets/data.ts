@@ -76,12 +76,12 @@ export function useWallet(uuid: string | undefined) {
 export function getBalanceSchema(address: string | undefined, session: EthereumSocketSession | undefined) {
   if (!address || !session) return
 
-  const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
+  const fetcher = async (init: Rpc.RpcRequestInit, more: FetcherMore) => {
     const { signal } = more
 
     console.log(session.circuit.id)
 
-    const response = await session.client.requestWithSocket<string>(init, session.socket, signal)
+    const response = await session.client.fetchWithSocket<string>(session.socket, init, signal)
 
     const body = JSON.stringify({ method: init.method, tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
@@ -106,12 +106,12 @@ export function useBalance(address: string | undefined, session: EthereumSocketS
 export function getNonceSchema(address: string | undefined, session: EthereumSocketSession | undefined) {
   if (!address || !session) return
 
-  const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
+  const fetcher = async (init: Rpc.RpcRequestInit, more: FetcherMore) => {
     const { signal } = more
 
     console.log(session.circuit.id)
 
-    const response = await session.client.requestWithSocket<string>(init, session.socket, signal)
+    const response = await session.client.fetchWithSocket<string>(session.socket, init, signal)
 
     const body = JSON.stringify({ method: init.method, tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
@@ -136,12 +136,12 @@ export function useNonce(address: string | undefined, session: EthereumSocketSes
 export function getGasPriceSchema(session: EthereumSocketSession | undefined) {
   if (!session) return
 
-  const fetcher = async <T extends unknown[]>(init: Rpc.RequestInit<T>, more: FetcherMore) => {
+  const fetcher = async <T extends unknown[]>(init: Rpc.RpcRequestInit<T>, more: FetcherMore) => {
     const { signal } = more
 
     console.log(session.circuit.id)
 
-    const response = await session.client.requestWithSocket<string>(init, session.socket, signal)
+    const response = await session.client.fetchWithSocket<string>(session.socket, init, signal)
 
     const body = JSON.stringify({ method: init.method, tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
