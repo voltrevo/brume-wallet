@@ -81,8 +81,7 @@ export function getBalanceSchema(address: string | undefined, session: EthereumS
 
     console.log(session.circuit.id)
 
-    const request = session.client.request(init)
-    const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
+    const response = await session.client.requestWithSocket<string>(init, session.socket, signal)
 
     const body = JSON.stringify({ method: init.method, tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
@@ -112,8 +111,7 @@ export function getNonceSchema(address: string | undefined, session: EthereumSoc
 
     console.log(session.circuit.id)
 
-    const request = session.client.request(init)
-    const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
+    const response = await session.client.requestWithSocket<string>(init, session.socket, signal)
 
     const body = JSON.stringify({ method: init.method, tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
@@ -143,8 +141,7 @@ export function getGasPriceSchema(session: EthereumSocketSession | undefined) {
 
     console.log(session.circuit.id)
 
-    const request = session.client.request(init)
-    const response = await Rpc.fetchWithSocket<string>(request, session.socket, signal)
+    const response = await session.client.requestWithSocket<string>(init, session.socket, signal)
 
     const body = JSON.stringify({ method: init.method, tor: true })
     session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })

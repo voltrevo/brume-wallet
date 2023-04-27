@@ -12,12 +12,20 @@ export class Client {
 
   constructor() { }
 
+  get id() {
+    return this.#id
+  }
+
   request(init: RequestInit): Request {
     const { method, params } = init
 
     const id = this.#id++
 
     return { jsonrpc: "2.0", id, method, params }
+  }
+
+  async requestWithSocket<T>(init: RequestInit, socket: WebSocket, signal?: AbortSignal) {
+    return await fetchWithSocket<T>(this.request(init), socket, signal)
   }
 
 }
