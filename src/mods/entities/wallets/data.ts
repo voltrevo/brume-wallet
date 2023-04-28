@@ -1,5 +1,5 @@
 import { Rpc } from "@/libs/rpc"
-import { EthereumSocketSession } from "@/libs/tor/sessions/session"
+import { EthereumSession } from "@/libs/tor/sessions/session"
 import { useUserStorage } from "@/mods/storage/user/context"
 import { FetchResult, FetcherMore, NormalizerMore, StorageQueryParams, getSchema, useError, useFetch, useSchema } from "@hazae41/xswr"
 
@@ -73,20 +73,24 @@ export function useWallet(uuid: string | undefined) {
   return useSchema(getWalletSchema, [uuid, storage])
 }
 
-export function getBalanceSchema(address: string | undefined, session: EthereumSocketSession | undefined) {
+export async function fetchWithSession(session: EthereumSession, init: Rpc.RpcRequestInit, more: FetcherMore) {
+  const { signal } = more
+
+  console.log(`Fetching ${init.method} with`, session.circuit.id)
+
+  const response = await session.client.fetchWithSocket<string>(session.socket, init, signal)
+
+  const body = JSON.stringify({ method: init.method, tor: true })
+  session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
+
+  return FetchResult.rewrap(response)
+}
+
+export function getBalanceSchema(address: string | undefined, session: EthereumSession | undefined) {
   if (!address || !session) return
 
   const fetcher = async (init: Rpc.RpcRequestInit, more: FetcherMore) => {
-    const { signal } = more
-
-    console.log(`Fetching ${init.method} with`, session.circuit.id)
-
-    const response = await session.client.fetchWithSocket<string>(session.socket, init, signal)
-
-    const body = JSON.stringify({ method: init.method, tor: true })
-    session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
-
-    return FetchResult.rewrap(response).mapSync(BigInt)
+    return await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
   }
 
   return getSchema({
@@ -96,27 +100,18 @@ export function getBalanceSchema(address: string | undefined, session: EthereumS
   }, fetcher)
 }
 
-export function useBalance(address: string | undefined, session: EthereumSocketSession | undefined) {
+export function useBalance(address: string | undefined, session: EthereumSession | undefined) {
   const query = useSchema(getBalanceSchema, [address, session])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getNonceSchema(address: string | undefined, session: EthereumSocketSession | undefined) {
+export function getNonceSchema(address: string | undefined, session: EthereumSession | undefined) {
   if (!address || !session) return
 
   const fetcher = async (init: Rpc.RpcRequestInit, more: FetcherMore) => {
-    const { signal } = more
-
-    console.log(`Fetching ${init.method} with`, session.circuit.id)
-
-    const response = await session.client.fetchWithSocket<string>(session.socket, init, signal)
-
-    const body = JSON.stringify({ method: init.method, tor: true })
-    session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
-
-    return FetchResult.rewrap(response).mapSync(BigInt)
+    return await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
   }
 
   return getSchema({
@@ -126,27 +121,18 @@ export function getNonceSchema(address: string | undefined, session: EthereumSoc
   }, fetcher)
 }
 
-export function useNonce(address: string | undefined, session: EthereumSocketSession | undefined) {
+export function useNonce(address: string | undefined, session: EthereumSession | undefined) {
   const query = useSchema(getNonceSchema, [address, session])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getGasPriceSchema(session: EthereumSocketSession | undefined) {
+export function getGasPriceSchema(session: EthereumSession | undefined) {
   if (!session) return
 
-  const fetcher = async <T extends unknown[]>(init: Rpc.RpcRequestInit<T>, more: FetcherMore) => {
-    const { signal } = more
-
-    console.log(`Fetching ${init.method} with`, session.circuit.id)
-
-    const response = await session.client.fetchWithSocket<string>(session.socket, init, signal)
-
-    const body = JSON.stringify({ method: init.method, tor: true })
-    session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
-
-    return FetchResult.rewrap(response).mapSync(BigInt)
+  const fetcher = async (init: Rpc.RpcRequestInit, more: FetcherMore) => {
+    return await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
   }
 
   return getSchema({
@@ -156,7 +142,7 @@ export function getGasPriceSchema(session: EthereumSocketSession | undefined) {
   }, fetcher)
 }
 
-export function useGasPrice(session: EthereumSocketSession | undefined) {
+export function useGasPrice(session: EthereumSession | undefined) {
   const query = useSchema(getGasPriceSchema, [session])
   useFetch(query)
   useError(query, console.error)
