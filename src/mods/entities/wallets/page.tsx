@@ -157,7 +157,7 @@ function WalletDataPage(props: WalletDataProps) {
             Matic (Polygon mainnet)
           </div>
           <div className="">
-            $0.0
+            $???
           </div>
         </div>
         <div className="text-contrast">
