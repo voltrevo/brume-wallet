@@ -1,13 +1,14 @@
 import { Objects } from "@/libs/objects/objects"
 import { Pools } from "@/libs/pools/pools"
-import { useAsyncMemo } from "@/libs/react/memo"
 import { Rpc } from "@/libs/rpc"
 import { Sockets } from "@/libs/sockets/sockets"
+import { useSessionsPool } from "@/mods/tor/sessions/context"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Circuit } from "@hazae41/echalote"
 import { Fleche } from "@hazae41/fleche"
 import { Mutex } from "@hazae41/mutex"
 import { Pool } from "@hazae41/piscine"
+import { Data, getSchema, useOnce, useSchema } from "@hazae41/xswr"
 
 export type EthereumChainID = number
 
@@ -18,11 +19,32 @@ export interface EthereumChain {
 }
 
 export type EthereumChainMap<T> = {
-  [id: EthereumChainID]: T
+  [chainId: EthereumChainID]: T
 }
 
 export type EthereumSession =
   | EthereumSocketSession
+
+export function getSessions(uuid: string, pool?: Mutex<Pool<EthereumSessions>>) {
+  if (!pool) return
+
+  return getSchema(`sessions/${uuid}`, async () => {
+    return new Data(await Pools.take(pool))
+  }, { cooldown: -1, timeout: -1 })
+}
+
+export function useSessions(uuid: string) {
+  const pool = useSessionsPool()
+
+  const query = useSchema(getSessions, [uuid, pool])
+  useOnce(query)
+  return query.data
+}
+
+export interface EthereumSessions {
+  circuit: Circuit,
+  sessions: EthereumChainMap<EthereumSession>
+}
 
 export interface EthereumSocketSession {
   chain: EthereumChain
@@ -31,39 +53,15 @@ export interface EthereumSocketSession {
   client: Rpc.Client
 }
 
-export namespace EthereumSessions {
-
-  export const all = new Map<string, EthereumChainMap<EthereumSession>>()
-
-  export async function getOrTake(uuid: string, pool: Mutex<Pool<EthereumChainMap<EthereumSession>>>) {
-    let session = all.get(uuid)
-    if (session) return session
-
-    session = await Pools.take(pool)
-    all.set(uuid, session)
-
-    // const destroy = () => {
-    //   all.delete(path)
-    // }
-
-    // session.socket.addEventListener("close", destroy)
-    // session.socket.addEventListener("error", destroy)
-
-    return session
-  }
-
-}
-
-export function useEthereumSession(uuid: string, pool?: Mutex<Pool<EthereumChainMap<EthereumSession>>>) {
-  return useAsyncMemo(async () => {
-    if (!pool) return
-
-    return await EthereumSessions.getOrTake(uuid, pool)
-  }, [uuid, pool])
-}
-
 export namespace EthereumSocketSession {
 
+  /**
+   * Create a WebSocket session, and destroy the circuit when it closes
+   * @param chain 
+   * @param circuit 
+   * @param signal 
+   * @returns 
+   */
   export async function create(chain: EthereumChain, circuit: Circuit, signal?: AbortSignal) {
     const url = new URL(chain.url)
 
@@ -75,31 +73,59 @@ export namespace EthereumSocketSession {
 
     const client = new Rpc.Client()
 
+    console.log("new socket")
+
+    const onCloseOrError = () => {
+      socket.removeEventListener("close", onCloseOrError)
+      socket.removeEventListener("error", onCloseOrError)
+
+      circuit.destroy()
+    }
+
+    socket.addEventListener("close", onCloseOrError, { passive: true })
+    socket.addEventListener("error", onCloseOrError, { passive: true })
+
     return { chain, circuit, socket, client } satisfies EthereumSocketSession
   }
 
-  export function createPool(chains: EthereumChainMap<EthereumChain>, circuits: Mutex<Pool<Circuit>>) {
-    const { capacity } = circuits.inner
+}
 
-    return new Pool<EthereumChainMap<EthereumSession>>(async ({ pool, signal }) => {
-      const circuit = await Pools.take(circuits)
+/**
+ * Create a pool where each element is a **map** of chainId to Ethereum sessions (on the same circuit), where each session corresponds to an Ethereum chain
+ * @param chains 
+ * @param circuits 
+ * @returns 
+ */
+export function createEthereumSessionsPool(chains: EthereumChainMap<EthereumChain>, circuits: Mutex<Pool<Circuit>>) {
+  const { capacity } = circuits.inner
 
-      return await Objects.mapValues(chains, async (chain) => {
-        const session = await create(chain, circuit, signal)
+  return new Pool<EthereumSessions>(async ({ pool, signal }) => {
+    const circuit = await Pools.take(circuits)
 
-        const onCloseOrError = () => {
-          session.socket.removeEventListener("close", onCloseOrError)
-          session.socket.removeEventListener("error", onCloseOrError)
+    try {
+      const sessions = await Objects.mapValues(chains, (chain) => EthereumSocketSession.create(chain, circuit, signal))
 
-          pool.delete(session)
-        }
+      const sessions2 = { circuit, sessions }
 
-        session.socket.addEventListener("close", onCloseOrError)
-        session.socket.addEventListener("error", onCloseOrError)
+      const onCloseOrError = (e: CloseEvent | ErrorEvent) => {
+        circuit.events.removeEventListener("close", onCloseOrError)
+        circuit.events.removeEventListener("error", onCloseOrError)
 
-        return session
-      })
-    }, { capacity })
-  }
+        pool.delete(sessions2)
+      }
 
+      circuit.events.addEventListener("close", onCloseOrError, { passive: true })
+      circuit.events.addEventListener("error", onCloseOrError, { passive: true })
+
+      console.log("done", pool.size)
+
+      return sessions2
+    } catch (e: unknown) {
+      /**
+       * Retry with another circuit
+       */
+      circuit.destroy()
+      throw e
+    }
+  }, { capacity })
 }

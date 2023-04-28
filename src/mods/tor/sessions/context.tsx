@@ -1,14 +1,14 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { EthereumChainMap, EthereumSession, EthereumSocketSession } from "@/libs/tor/sessions/session";
+import { EthereumSessions, createEthereumSessionsPool } from "@/libs/tor/sessions/session";
 import { Mutex } from "@hazae41/mutex";
 import { Pool } from "@hazae41/piscine";
 import { createContext, useContext, useMemo } from "react";
 import { useCircuits } from "../circuits/context";
 
 export const SessionsContext =
-  createContext<Mutex<Pool<EthereumChainMap<EthereumSession>>> | undefined>(undefined)
+  createContext<Mutex<Pool<EthereumSessions>> | undefined>(undefined)
 
-export function useSessions() {
+export function useSessionsPool() {
   return useContext(SessionsContext)
 }
 
@@ -20,7 +20,7 @@ export function SessionsProvider(props: ChildrenProps) {
   const sessions = useMemo(() => {
     if (!circuits) return
 
-    return new Mutex(EthereumSocketSession.createPool({
+    return new Mutex(createEthereumSessionsPool({
       1: {
         id: 1,
         url: "wss://mainnet.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8",

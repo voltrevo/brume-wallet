@@ -3,8 +3,7 @@ import { BigInts } from "@/libs/bigints/bigints";
 import { Colors } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanState } from "@/libs/react/handles/boolean";
-import { useEthereumSession } from "@/libs/tor/sessions/session";
-import { useSessions } from "@/mods/tor/sessions/context";
+import { useSessions } from "@/libs/tor/sessions/session";
 import { Query } from "@hazae41/xswr";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
@@ -36,10 +35,11 @@ function WalletDataPage(props: WalletDataProps) {
   const { wallet } = props
 
   const router = useRouter()
-  const sessions = useSessions()
 
-  const mainnet = useEthereumSession(wallet.uuid, sessions)?.[1]
-  const goerli = useEthereumSession(wallet.uuid, sessions)?.[5]
+  const sessions = useSessions(wallet.uuid)
+
+  const mainnet = sessions?.sessions[1]
+  const goerli = sessions?.sessions[5]
 
   const color = Colors.get(wallet.color)
   const color2 = Colors.get(wallet.color + 1)
