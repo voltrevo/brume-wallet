@@ -24,13 +24,18 @@ export function SessionsProvider(props: ChildrenProps) {
     return new Mutex(createEthereumSessionsPool({
       1: {
         id: 1,
-        url: "wss://mainnet.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8",
+        url: "wss://eth.llamarpc.com",
         etherscan: "https://etherscan.io"
       },
       5: {
         id: 5,
         url: "wss://goerli.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8",
         etherscan: "https://goerli.etherscan.io"
+      },
+      137: {
+        id: 137,
+        url: "wss://polygon.llamarpc.com",
+        etherscan: "https://polygonscan.com"
       }
     }, circuits))
   }, [circuits])

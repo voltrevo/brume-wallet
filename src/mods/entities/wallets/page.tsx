@@ -40,6 +40,7 @@ function WalletDataPage(props: WalletDataProps) {
 
   const mainnet = sessions?.sessions[1]
   const goerli = sessions?.sessions[5]
+  const polygon = sessions?.sessions[137]
 
   const color = Colors.get(wallet.color)
   const color2 = Colors.get(wallet.color + 1)
@@ -51,6 +52,10 @@ function WalletDataPage(props: WalletDataProps) {
   const goerliBalance = useBalance(wallet.address, goerli)
   const goerliBalanceFloat = useFloat(goerliBalance)
   const goerliSendDialog = useBooleanState()
+
+  const polygonBalance = useBalance(wallet.address, polygon)
+  const polygonBalanceFloat = useFloat(polygonBalance)
+  const polygonSendDialog = useBooleanState()
 
   const Navbar =
     <div className="p-xmd w-full flex items-center">
@@ -99,7 +104,7 @@ function WalletDataPage(props: WalletDataProps) {
 
   return <div className="h-full w-full flex flex-col">
     {mainnetSendDialog.current && mainnet &&
-      <SendDialog title="(mainnet)"
+      <SendDialog title="(Ethereum mainnet)"
         wallet={wallet}
         session={mainnet}
         close={mainnetSendDialog.disable} />}
@@ -108,6 +113,11 @@ function WalletDataPage(props: WalletDataProps) {
         wallet={wallet}
         session={goerli}
         close={goerliSendDialog.disable} />}
+    {polygonSendDialog.current && polygon &&
+      <SendDialog title="(Polygon mainnet)"
+        wallet={wallet}
+        session={polygon}
+        close={polygonSendDialog.disable} />}
     {Navbar}
     {Card}
     {Apps}
@@ -116,7 +126,7 @@ function WalletDataPage(props: WalletDataProps) {
         onClick={mainnetSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
-            Ethereum (mainnet)
+            Ethereum (Ethereum mainnet)
           </div>
           <div className="">
             $???
@@ -138,6 +148,20 @@ function WalletDataPage(props: WalletDataProps) {
         </div>
         <div className="text-contrast">
           {`${goerliBalanceFloat} ETH`}
+        </div>
+      </button>
+      <button className="w-full p-xmd flex flex-col rounded-xl border border-contrast"
+        onClick={polygonSendDialog.enable}>
+        <div className="w-full flex justify-between items-center">
+          <div className="">
+            Matic (Polygon mainnet)
+          </div>
+          <div className="">
+            $0.0
+          </div>
+        </div>
+        <div className="text-contrast">
+          {`${polygonBalanceFloat} MATIC`}
         </div>
       </button>
     </div>
