@@ -20,7 +20,7 @@ export function CircuitsProvider(props: ChildrenProps) {
   const circuits = useMemo(() => {
     if (!tor) return
 
-    return new Mutex(createCircuitPool(tor, {}))
+    return new Mutex(createCircuitPool(tor, { capacity: 3 }))
   }, [tor])
 
   return <CircuitsContext.Provider value={circuits}>
