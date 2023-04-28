@@ -73,8 +73,6 @@ export namespace EthereumSocketSession {
 
     const client = new Rpc.Client()
 
-    console.log("new socket")
-
     const onCloseOrError = () => {
       socket.removeEventListener("close", onCloseOrError)
       socket.removeEventListener("error", onCloseOrError)
@@ -116,8 +114,6 @@ export function createEthereumSessionsPool(chains: EthereumChainMap<EthereumChai
 
       circuit.events.addEventListener("close", onCloseOrError, { passive: true })
       circuit.events.addEventListener("error", onCloseOrError, { passive: true })
-
-      console.log("done", pool.size)
 
       return sessions2
     } catch (e: unknown) {

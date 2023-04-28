@@ -79,7 +79,7 @@ export function getBalanceSchema(address: string | undefined, session: EthereumS
   const fetcher = async (init: Rpc.RpcRequestInit, more: FetcherMore) => {
     const { signal } = more
 
-    console.log(session.circuit.id)
+    console.log(`Fetching ${init.method} with`, session.circuit.id)
 
     const response = await session.client.fetchWithSocket<string>(session.socket, init, signal)
 
@@ -109,7 +109,7 @@ export function getNonceSchema(address: string | undefined, session: EthereumSoc
   const fetcher = async (init: Rpc.RpcRequestInit, more: FetcherMore) => {
     const { signal } = more
 
-    console.log(session.circuit.id)
+    console.log(`Fetching ${init.method} with`, session.circuit.id)
 
     const response = await session.client.fetchWithSocket<string>(session.socket, init, signal)
 
@@ -139,7 +139,7 @@ export function getGasPriceSchema(session: EthereumSocketSession | undefined) {
   const fetcher = async <T extends unknown[]>(init: Rpc.RpcRequestInit<T>, more: FetcherMore) => {
     const { signal } = more
 
-    console.log(session.circuit.id)
+    console.log(`Fetching ${init.method} with`, session.circuit.id)
 
     const response = await session.client.fetchWithSocket<string>(session.socket, init, signal)
 
