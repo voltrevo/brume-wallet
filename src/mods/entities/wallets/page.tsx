@@ -38,6 +38,8 @@ function WalletDataPage(props: WalletDataProps) {
 
   const sessions = useSessions(wallet.uuid)
 
+  console.log(sessions)
+
   const mainnet = sessions?.sessions[1]
   const goerli = sessions?.sessions[5]
   const polygon = sessions?.sessions[137]

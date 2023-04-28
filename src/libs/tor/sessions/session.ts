@@ -30,7 +30,7 @@ export function getSessions(uuid: string, pool?: Mutex<Pool<EthereumSessions>>) 
 
   return getSchema(`sessions/${uuid}`, async () => {
     return new Data(await Pools.take(pool))
-  }, { cooldown: -1, timeout: -1 })
+  }, {})
 }
 
 export function useSessions(uuid: string) {
