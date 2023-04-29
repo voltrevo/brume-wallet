@@ -74,7 +74,7 @@ npm i && npm run build:extension
 - Navigate to the Brume Wallet folder
 - Select the `chrome` folder
 
-## Next
+### Next
 
 We plan to further develop Brume Wallet by adding several features necessary for everyday use, such as the integration of on-chain privacy tools (Aztec Network), supporting other blockchains (EVM & Non-EVM) and adding useful features such as a token approval manager
 
