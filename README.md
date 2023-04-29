@@ -2,7 +2,7 @@
 
 Brume Wallet is a non-custodial and private Ethereum wallet with a built-in integration of Tor
 
-### Experimental
+### Experimental ⚠️
 
 This is experimental software in early development
 
