@@ -16,6 +16,7 @@ Use at your own risk
 - Built for strong privacy and supply-chain hardened
 - Available as an extension and on a website
 - Better UX and features than your average wallet
+- Made by french cypherpunks
 
 ### I don't understand that Tor thing
 
