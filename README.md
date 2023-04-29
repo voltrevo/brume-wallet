@@ -10,7 +10,8 @@ This is experimental software in early development
 Use at your own risk
 
 ## TLDR
-- Anonymous requests using Tor (no installation needed)
+- Anonymous requests using Tor, no installation needed
+- Available as an extension and on a website
 - Built for strong privacy
 - Supply-chain hardened
 - Better UX and features
