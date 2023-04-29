@@ -28,7 +28,7 @@ Brume Wallet sends your transactions through the Tor network (the dark web), so 
 
 Metamask sends your IP address and your wallet address to third-parties (RPC, Coingecko, Etherscan)
 
-Those third-party can track you, even if you are using on-chain privacy tools such as Aztec Network or Tornado Cash
+They can track you even if you are using on-chain privacy tools such as Aztec Network or Tornado Cash
 
 <img width="762" src="https://user-images.githubusercontent.com/111573119/201625137-293eec93-a6c9-43fd-8eda-56dea0c8e00e.png">
 
