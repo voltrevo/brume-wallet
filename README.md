@@ -81,7 +81,7 @@ npm i && npm run build:extension
 Your storage is hashed and encrypted using strong cryptography algorithms and parameters
 
 - Cryptography algorithms are seeded by PBKDF2 with 1M+ iterations from your password
-- All storage keys are hashed using HMAC-SHA256
+- All storage keys are hashed using HMAC-SHA256, it is impossible to retrieve the original key
 - All storage values are stored using AES-256-GCM, each with a different ciphertext/IV
 
 That being said, we are limited by the browser APIs, so we can't use hardware secure storages such as Secure Enclave on iOS
