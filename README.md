@@ -9,6 +9,13 @@ This is experimental software in early development
 
 Use at your own risk
 
+## TLDR
+- Anonymous requests using Tor (no installation needed)
+- Built for strong privacy
+- Supply-chain hardened
+- Better UX and features
+- Made by french cypherpunks
+
 ## What
 
 Brume Wallet is the first non-custodial **privacy wallet** created on the Ethereum blockchain, allowing to **guarantee the anonymity of its user** thanks to a **built-in TOR integration**. This integration enables user's personal information, such as **IP addresses** to be completely isolated from stakeholders with whom the wallet directly communicates (RPCs, Etherscan, Coingecko...).
