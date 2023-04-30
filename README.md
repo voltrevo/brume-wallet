@@ -92,7 +92,7 @@ We try our best to avoid supply-chain attacks from external packages
 
 - We use browser APIs when available
 - All WebAssembly packages are reproducible and their dependencies are audited
-- All JavaScript cryptography packages are from Paul Millr and are audited
+- All JavaScript cryptography packages are from [Paul Miller](https://github.com/paulmillr) and are audited
 - We count each individual maintainer in our dependency graph as a risk
 - We use runtime protection techniques such as object-capability model
 - (Soon) We upload each release on IPFS and publish the hash on Ethereum
