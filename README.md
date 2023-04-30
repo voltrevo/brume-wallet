@@ -9,7 +9,7 @@ This is experimental software in early development
 1. It has security issues
 2. Things change quickly
 
-Use at your own risk, see [the following](#secure-by-design) for more details
+Use at your own risk, see [the security](#secure-by-design) for more details
 
 ### TLDR
 - Anonymous requests using Tor, no installation needed, each wallet address has its own IP address
