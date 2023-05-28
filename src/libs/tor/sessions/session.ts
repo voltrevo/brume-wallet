@@ -8,6 +8,7 @@ import { Circuit } from "@hazae41/echalote"
 import { Fleche } from "@hazae41/fleche"
 import { Mutex } from "@hazae41/mutex"
 import { Pool } from "@hazae41/piscine"
+import { Ok } from "@hazae41/result"
 import { Data, getSchema, useOnce, useSchema } from "@hazae41/xswr"
 
 export type EthereumChainID = number
@@ -65,7 +66,7 @@ export namespace EthereumSocketSession {
   export async function create(chain: EthereumChain, circuit: Circuit, signal?: AbortSignal) {
     const url = new URL(chain.url)
 
-    const tcp = await circuit.open(url.hostname, 443, { signal })
+    const tcp = await circuit.tryOpen(url.hostname, 443, { signal }).then(r => r.unwrap())
     const tls = new TlsClientDuplex(tcp, { ciphers: [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384] })
     const socket = new Fleche.WebSocket(url, undefined, { subduplex: tls })
 
@@ -77,7 +78,7 @@ export namespace EthereumSocketSession {
       socket.removeEventListener("close", onCloseOrError)
       socket.removeEventListener("error", onCloseOrError)
 
-      circuit.destroy()
+      circuit.tryDestroy()
     }
 
     socket.addEventListener("close", onCloseOrError, { passive: true })
@@ -105,22 +106,24 @@ export function createEthereumSessionsPool(chains: EthereumChainMap<EthereumChai
 
       const sessions2 = { circuit, sessions }
 
-      const onCloseOrError = (e: CloseEvent | ErrorEvent) => {
-        circuit.events.removeEventListener("close", onCloseOrError)
-        circuit.events.removeEventListener("error", onCloseOrError)
+      const onCloseOrError = async (reason?: unknown) => {
+        circuit.events.off("close", onCloseOrError)
+        circuit.events.off("error", onCloseOrError)
 
-        pool.delete(sessions2)
+        await pool.delete(sessions2)
+
+        return Ok.void()
       }
 
-      circuit.events.addEventListener("close", onCloseOrError, { passive: true })
-      circuit.events.addEventListener("error", onCloseOrError, { passive: true })
+      circuit.events.on("close", onCloseOrError, { passive: true })
+      circuit.events.on("error", onCloseOrError, { passive: true })
 
       return sessions2
     } catch (e: unknown) {
       /**
        * Retry with another circuit
        */
-      circuit.destroy()
+      await circuit.tryDestroy().then(r => r.unwrap())
       throw e
     }
   }, { capacity })

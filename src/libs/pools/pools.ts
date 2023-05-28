@@ -1,5 +1,6 @@
 import { Mutex } from "@hazae41/mutex"
 import { Pool } from "@hazae41/piscine"
+import { Result } from "@hazae41/result"
 import { useEffect } from "react"
 
 export namespace Pools {
@@ -16,18 +17,18 @@ export namespace Pools {
 
 }
 
-export function usePoolChange<T>(pool: Pool<T> | undefined, callback: (pool: Pool<T>) => void) {
+export function usePoolChange<T>(pool: Pool<T> | undefined, callback: (pool: Pool<T>) => Result<void, unknown>) {
   useEffect(() => {
     if (!pool) return
 
     const onCreatedOrDeleted = () => callback(pool)
 
-    pool.events.addEventListener("created", onCreatedOrDeleted, { passive: true })
-    pool.events.addEventListener("deleted", onCreatedOrDeleted, { passive: true })
+    pool.events.on("created", onCreatedOrDeleted, { passive: true })
+    pool.events.on("deleted", onCreatedOrDeleted, { passive: true })
 
     return () => {
-      pool.events.removeEventListener("created", onCreatedOrDeleted)
-      pool.events.removeEventListener("deleted", onCreatedOrDeleted)
+      pool.events.off("created", onCreatedOrDeleted)
+      pool.events.off("deleted", onCreatedOrDeleted)
     }
   }, [pool, callback])
 }

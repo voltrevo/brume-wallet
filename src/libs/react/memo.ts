@@ -24,7 +24,8 @@ export function useAsyncMemo<T>(factory: () => Promise<T>, deps: DependencyList)
   const run = useCallback(async () => {
     await Promises.fork()
 
-    const result = await Result.tryWrap(factory)
+    const result = await Result.catchAndWrap(factory)
+
     setState(() => result.unwrap())
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -48,7 +49,7 @@ export function useAsyncReplaceMemo<T>(factory: () => Promise<T>, deps: Dependen
     aborterRef.current?.abort()
     aborterRef.current = aborter
 
-    const result = await Result.tryWrap(factory)
+    const result = await Result.catchAndWrap(factory)
 
     if (aborterRef.current === aborter) {
       aborterRef.current = null

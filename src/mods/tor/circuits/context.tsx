@@ -3,6 +3,7 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { Circuit, createCircuitPool } from "@hazae41/echalote";
 import { Mutex } from "@hazae41/mutex";
 import { Pool } from "@hazae41/piscine";
+import { Ok } from "@hazae41/result";
 import { createContext, useCallback, useContext, useMemo } from "react";
 import { useTor } from "../context";
 
@@ -26,6 +27,8 @@ export function CircuitsProvider(props: ChildrenProps) {
 
   const onPoolChange = useCallback((pool: Pool<Circuit>) => {
     console.log(`Circuits pool: ${pool.size}/${pool.capacity}`)
+
+    return Ok.void()
   }, [])
 
   usePoolChange(circuits?.inner, onPoolChange)

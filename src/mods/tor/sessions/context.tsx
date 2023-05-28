@@ -3,6 +3,7 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { EthereumSessions, createEthereumSessionsPool } from "@/libs/tor/sessions/session";
 import { Mutex } from "@hazae41/mutex";
 import { Pool } from "@hazae41/piscine";
+import { Ok } from "@hazae41/result";
 import { createContext, useCallback, useContext, useMemo } from "react";
 import { useCircuits } from "../circuits/context";
 
@@ -42,6 +43,8 @@ export function SessionsProvider(props: ChildrenProps) {
 
   const onPoolChange = useCallback((pool: Pool<EthereumSessions>) => {
     console.log(`Sessions pool: ${pool.size}/${pool.capacity}`)
+
+    return Ok.void()
   }, [])
 
   usePoolChange(sessions?.inner, onPoolChange)

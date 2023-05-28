@@ -97,7 +97,7 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Se
     })
 
     const body = JSON.stringify({ method: "eth_sendRawTransaction", tor: true })
-    session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
+    session.circuit.tryFetch("http://proxy.brume.money", { method: "POST", body }).then(r => r.unwrap())
 
     if (txRes.isErr())
       return setError(txRes.inner)

@@ -22,12 +22,12 @@ import { useWallets } from "./data";
 
 export namespace Wallets {
 
-  export function random() {
-    return Result.tryWrapSync(() => Wallet.createRandom().privateKey)
+  export function tryRandom() {
+    return Result.catchAndWrapSync(() => Wallet.createRandom().privateKey)
   }
 
-  export function from(privateKey: string) {
-    return Result.tryWrapSync(() => new Wallet(privateKey))
+  export function tryFrom(privateKey: string) {
+    return Result.catchAndWrapSync(() => new Wallet(privateKey))
   }
 
 }
@@ -57,11 +57,11 @@ export function WalletCreatorDialog(props: CloseProps) {
   }, [])
 
   useEffect(() => {
-    Promises.fork().then(() => setKey(Wallets.random().ok().inner))
+    Promises.fork().then(() => setKey(Wallets.tryRandom().ok().inner))
   }, [])
 
   const wallet = useAsyncReplaceMemo(async () => {
-    if (key) return Wallets.from(key).ok().inner
+    if (key) return Wallets.tryFrom(key).ok().inner
   }, [key])
 
   const onDoneClick = useAsyncUniqueCallback(async () => {

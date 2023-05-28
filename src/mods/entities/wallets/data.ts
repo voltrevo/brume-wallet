@@ -81,7 +81,7 @@ export async function fetchWithSession(session: EthereumSession, init: Rpc.RpcRe
   const response = await session.client.fetchWithSocket<string>(session.socket, init, signal)
 
   const body = JSON.stringify({ method: init.method, tor: true })
-  session.circuit.fetch("http://proxy.brume.money", { method: "POST", body })
+  session.circuit.tryFetch("http://proxy.brume.money", { method: "POST", body }).then(r => r.unwrap())
 
   return FetchResult.rewrap(response)
 }
