@@ -1,4 +1,4 @@
-import { Cursor } from "@hazae41/binary"
+import { Cursor } from "@hazae41/cursor"
 import { Base58 } from "../bases/base58"
 import { Ripemd160 } from "../hashes/ripemd160"
 import { Sha256 } from "../hashes/sha256"
