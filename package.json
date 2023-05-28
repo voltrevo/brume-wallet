@@ -29,7 +29,7 @@
     "@hazae41/result": "^1.0.34",
     "@hazae41/sha1": "^1.0.0",
     "@hazae41/x25519": "^1.0.0",
-    "@hazae41/xswr": "^1.5.18",
+    "@hazae41/xswr": "^1.5.19",
     "@heroicons/react": "^2.0.18",
     "@noble/curves": "^1.0.0",
     "@noble/hashes": "^1.3.0",

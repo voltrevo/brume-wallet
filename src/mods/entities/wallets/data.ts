@@ -1,7 +1,7 @@
 import { Rpc } from "@/libs/rpc"
 import { EthereumSession } from "@/libs/tor/sessions/session"
 import { useUserStorage } from "@/mods/storage/user/context"
-import { FetchResult, FetcherMore, NormalizerMore, StorageQueryParams, getSchema, useError, useFetch, useSchema } from "@hazae41/xswr"
+import { Fetched, FetcherMore, NormalizerMore, StorageQueryParams, getSchema, useError, useFetch, useSchema } from "@hazae41/xswr"
 
 export type Wallet =
   | WalletRef
@@ -83,7 +83,7 @@ export async function fetchWithSession(session: EthereumSession, init: Rpc.RpcRe
   const body = JSON.stringify({ method: init.method, tor: true })
   session.circuit.tryFetch("http://proxy.brume.money", { method: "POST", body }).then(r => r.unwrap())
 
-  return FetchResult.rewrap(response)
+  return Fetched.rewrap(response)
 }
 
 export function getBalanceSchema(address: string | undefined, session: EthereumSession | undefined) {
