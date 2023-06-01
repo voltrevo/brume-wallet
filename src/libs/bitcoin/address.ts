@@ -6,7 +6,7 @@ import { Sha256 } from "../hashes/sha256"
 
 export namespace Address {
 
-  export async function tryFrom(maybeCompressedPublicKey: Uint8Array) {
+  export async function tryFrom(maybeCompressedPublicKey: Uint8Array): Promise<Result<string, unknown>> {
     return await Result.unthrow(async t => {
       const sha256 = await Sha256.digest(maybeCompressedPublicKey)
       const ripemd160 = Ripemd160.digest(sha256)

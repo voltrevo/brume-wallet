@@ -1,24 +1,27 @@
 import { useAsyncMemo } from "@/libs/react/memo";
 import { ChildrenProps } from "@/libs/react/props/children";
+import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors";
 import { Berith } from "@hazae41/berith";
-import { createWebSocketSnowflakeStream, TorClientDuplex } from "@hazae41/echalote";
+import { TorClientDuplex } from "@hazae41/echalote";
 import { Ed25519 } from "@hazae41/ed25519";
 import { Morax } from "@hazae41/morax";
+import { Mutex } from "@hazae41/mutex";
+import { Pool } from "@hazae41/piscine";
 import { Sha1 } from "@hazae41/sha1";
 import { X25519 } from "@hazae41/x25519";
 import { createContext, useContext } from "react";
 
-export const TorContext =
-  createContext<TorClientDuplex | undefined>(undefined)
+export const TorPoolContext =
+  createContext<Mutex<Pool<TorClientDuplex, Error>> | undefined>(undefined)
 
-export function useTor() {
-  return useContext(TorContext)
+export function useTorPool() {
+  return useContext(TorPoolContext)
 }
 
-export function TorProvider(props: ChildrenProps) {
+export function TorPoolProvider(props: ChildrenProps) {
   const { children } = props
 
-  const tor = useAsyncMemo(async () => {
+  const params = useAsyncMemo(async () => {
     await Berith.initBundledOnce()
     await Morax.initBundledOnce()
 
@@ -30,12 +33,20 @@ export function TorProvider(props: ChildrenProps) {
     if (!fallbacksRes.ok) throw new Error(await fallbacksRes.text())
     const fallbacks = await fallbacksRes.json()
 
-    const tcp = await createWebSocketSnowflakeStream("wss://snowflake.bamsoftware.com/")
-
-    return new TorClientDuplex(tcp, { fallbacks, ed25519, x25519, sha1 })
+    return { fallbacks, ed25519, x25519, sha1 }
   }, [])
 
-  return <TorContext.Provider value={tor}>
+  const tors = useAsyncMemo(async () => {
+    if (!params) return
+
+    const tors = createTorPool(async () => {
+      return await tryCreateTor(params)
+    }, { capacity: 3 })
+
+    return tors
+  }, [params])
+
+  return <TorPoolContext.Provider value={tors}>
     {children}
-  </TorContext.Provider>
+  </TorPoolContext.Provider>
 }

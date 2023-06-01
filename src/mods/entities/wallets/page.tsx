@@ -3,7 +3,7 @@ import { BigInts } from "@/libs/bigints/bigints";
 import { Colors } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanState } from "@/libs/react/handles/boolean";
-import { useSessions } from "@/libs/tor/sessions/session";
+import { useEthereumHandle } from "@/libs/tor/sessions/session";
 import { Query } from "@hazae41/xswr";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
@@ -36,7 +36,7 @@ function WalletDataPage(props: WalletDataProps) {
 
   const router = useRouter()
 
-  const sessions = useSessions(wallet.uuid)
+  const sessions = useEthereumHandle(wallet.uuid)
 
   console.log(sessions)
 

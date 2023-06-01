@@ -1,5 +1,6 @@
 import { Future } from "@hazae41/future"
-import { Sockets } from "../sockets/sockets"
+import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
+import { Err, Ok, Result } from "@hazae41/result"
 import { RpcRequest, RpcRequestInit } from "./request"
 import { Response } from "./response"
 
@@ -31,8 +32,8 @@ export class Client {
     return fetch<T>(input, { ...rest, ...request })
   }
 
-  async fetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit, signal?: AbortSignal) {
-    return await fetchWithSocket<T>(socket, this.new(request), signal)
+  async tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit, signal: AbortSignal) {
+    return await tryFetchWithSocket<T>(socket, this.new(request), signal)
   }
 
 }
@@ -63,19 +64,47 @@ export async function fetch<T>(input: RequestInfo | URL, init: RequestInit & Rpc
   return response
 }
 
-export async function fetchWithSocket<T>(socket: WebSocket, request: RpcRequest, signal?: AbortSignal) {
+export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequest, signal: AbortSignal) {
   socket.send(JSON.stringify(request))
 
-  const future = new Future<Response<T>>()
+  const future = new Future<Result<Response<T>, CloseError | ErrorError | AbortError>>()
 
-  const onEvent = async (event: Event) => {
+  const onMessage = async (event: Event) => {
     const msgEvent = event as MessageEvent<string>
     const response = Response.from<T>(JSON.parse(msgEvent.data))
 
-    if (response.id !== request.id) return
-
-    future.resolve(response)
+    if (response.id !== request.id)
+      return
+    future.resolve(new Ok(response))
   }
 
-  return await Sockets.waitMap(socket, "message", { future, onEvent, signal })
+  const onError = (e: unknown) => {
+    const result = new Err(ErrorError.from(e))
+    future.resolve(result)
+  }
+
+  const onClose = (e: unknown) => {
+    const result = new Err(CloseError.from(e))
+    future.resolve(result)
+  }
+
+  const onAbort = () => {
+    socket.close()
+    const result = new Err(AbortError.from(signal.reason))
+    future.resolve(result)
+  }
+
+  try {
+    socket.addEventListener("message", onMessage, { passive: true })
+    socket.addEventListener("close", onClose, { passive: true })
+    socket.addEventListener("error", onError, { passive: true })
+    signal.addEventListener("abort", onAbort, { passive: true })
+
+    return await future.promise
+  } finally {
+    socket.removeEventListener("message", onMessage)
+    socket.removeEventListener("close", onClose)
+    socket.removeEventListener("error", onError)
+    signal.removeEventListener("abort", onAbort)
+  }
 }

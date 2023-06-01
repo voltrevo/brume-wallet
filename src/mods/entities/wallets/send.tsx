@@ -6,9 +6,11 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { TitleProps } from "@/libs/react/props/title";
+import { AbortSignals } from "@/libs/signals/signals";
 import { Types } from "@/libs/types/types";
 import { GradientButton } from "@/mods/components/buttons/button";
 import { SessionProps } from "@/mods/tor/sessions/props";
+import { Err, Ok, Result } from "@hazae41/result";
 import { Wallet, getAddress, parseUnits } from "ethers";
 import { useMemo, useState } from "react";
 import { WalletDataProps, useBalance, useGasPrice, useNonce } from "./data";
@@ -61,52 +63,54 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Se
   const [txHash, setTxHash] = useState<string>()
 
   const trySend = useAsyncUniqueCallback(async () => {
-    if (!Types.isBigInt(nonce.data))
-      return
-    if (!Types.isBigInt(gasPrice.data))
-      return
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      if (!Types.isBigInt(nonce.data))
+        return new Err(new Error(`Invalid nonce`))
+      if (!Types.isBigInt(gasPrice.data))
+        return new Err(new Error(`Invalid gas price`))
 
-    const ethers = new Wallet(wallet.privateKey)
+      const ethers = new Wallet(wallet.privateKey)
+      const socket = await session.socket.tryGet(0).then(r => r.throw(t))
 
-    const gasRes = await session.client.fetchWithSocket<string>(session.socket, {
-      method: "eth_estimateGas",
-      params: [{
-        chainId: Radix.toHex(session.chain.id),
-        from: wallet.address,
-        to: getAddress(recipientInput),
-        value: Radix.toHex(parseUnits(valueInput, 18)),
-        nonce: Radix.toHex(nonce.data),
-        gasPrice: Radix.toHex(gasPrice.data)
-      }, "latest"]
-    })
+      const gasRes = await session.client.tryFetchWithSocket<string>(socket, {
+        method: "eth_estimateGas",
+        params: [{
+          chainId: Radix.toHex(session.chain.id),
+          from: wallet.address,
+          to: getAddress(recipientInput),
+          value: Radix.toHex(parseUnits(valueInput, 18)),
+          nonce: Radix.toHex(nonce.data),
+          gasPrice: Radix.toHex(gasPrice.data)
+        }, "latest"]
+      }, AbortSignals.timeout(5_000)).then(r => r.throw(t).throw(t))
 
-    if (gasRes.isErr())
-      return setError(gasRes.inner)
+      const txRes = await session.client.tryFetchWithSocket<string>(socket, {
+        method: "eth_sendRawTransaction",
+        params: [await ethers.signTransaction({
+          chainId: session.chain.id,
+          from: wallet.address,
+          to: getAddress(recipientInput),
+          value: parseUnits(valueInput, 18),
+          nonce: Number(nonce.data),
+          gasPrice: gasPrice.data,
+          gasLimit: gasRes
+        })]
+      }, AbortSignals.timeout(5_000)).then(r => r.throw(t).throw(t))
 
-    const txRes = await session.client.fetchWithSocket<string>(session.socket, {
-      method: "eth_sendRawTransaction",
-      params: [await ethers.signTransaction({
-        chainId: session.chain.id,
-        from: wallet.address,
-        to: getAddress(recipientInput),
-        value: parseUnits(valueInput, 18),
-        nonce: Number(nonce.data),
-        gasPrice: gasPrice.data,
-        gasLimit: gasRes.inner
-      })]
-    })
+      const body = JSON.stringify({ method: "eth_sendRawTransaction", tor: true })
 
-    const body = JSON.stringify({ method: "eth_sendRawTransaction", tor: true })
-    session.circuit.tryFetch("http://proxy.brume.money", { method: "POST", body }).then(r => r.unwrap())
+      session.circuit
+        .tryFetch("http://proxy.brume.money", { method: "POST", body })
+        .then(r => r.inspectErrSync(console.debug).ignore())
 
-    if (txRes.isErr())
-      return setError(txRes.inner)
+      setTxHash(txRes)
+      setError(undefined)
 
-    setTxHash(txRes.inner)
-    setError(undefined)
+      balance.refetch()
+      nonce.refetch()
 
-    balance.refetch()
-    nonce.refetch()
+      return Ok.void()
+    }).then(r => r.inspectErrSync(setError).ignore())
   }, [session, wallet.address, nonce.data, gasPrice.data, recipientInput, valueInput])
 
   const TxHashDisplay = <>

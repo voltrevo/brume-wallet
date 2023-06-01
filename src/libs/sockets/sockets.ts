@@ -1,34 +1,45 @@
 import { Future } from "@hazae41/future";
+import { AbortError, CloseError, ErrorError } from "@hazae41/plume";
+import { Err, Ok, Result } from "@hazae41/result";
 
 export namespace Sockets {
 
-  export interface WaitParams<T> {
-    future: Future<T>,
-    onEvent: (event: Event) => void,
-    signal?: AbortSignal
-  }
+  export async function tryWaitOpen(socket: WebSocket, signal: AbortSignal) {
+    const future = new Future<Result<void, CloseError | ErrorError | AbortError>>()
 
-  export async function wait(socket: WebSocket, type: string, signal?: AbortSignal) {
-    const future = new Future<Event>()
-    const onEvent = (e: Event) => future.resolve(e)
-    return await waitMap(socket, type, { future, onEvent, signal })
-  }
+    const onOpen = () => {
+      const result = Ok.void()
+      future.resolve(result)
+    }
 
-  export async function waitMap<T>(socket: WebSocket, type: string, params: WaitParams<T>) {
-    const { future, onEvent, signal } = params
+    const onError = (e: unknown) => {
+      const result = new Err(ErrorError.from(e))
+      future.resolve(result)
+    }
+
+    const onClose = (e: unknown) => {
+      const result = new Err(CloseError.from(e))
+      future.resolve(result)
+    }
+
+    const onAbort = () => {
+      socket.close()
+      const result = new Err(AbortError.from(signal.reason))
+      future.resolve(result)
+    }
 
     try {
-      signal?.addEventListener("abort", future.reject)
-      socket.addEventListener("error", future.reject)
-      socket.addEventListener("close", future.reject)
-      socket.addEventListener(type, onEvent)
+      socket.addEventListener("open", onOpen, { passive: true })
+      socket.addEventListener("close", onClose, { passive: true })
+      socket.addEventListener("error", onError, { passive: true })
+      signal.addEventListener("abort", onAbort, { passive: true })
 
       return await future.promise
     } finally {
-      signal?.removeEventListener("abort", future.reject)
-      socket.removeEventListener("error", future.reject)
-      socket.removeEventListener("close", future.reject)
-      socket.removeEventListener(type, onEvent)
+      socket.removeEventListener("open", onOpen,)
+      socket.removeEventListener("close", onClose)
+      socket.removeEventListener("error", onError)
+      signal.removeEventListener("abort", onAbort)
     }
   }
 

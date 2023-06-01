@@ -10,6 +10,10 @@ export namespace Objects {
     return Object.entries(object) as [K, T][]
   }
 
+  export function values<K extends keyof any, T>(object: Record<K, T>) {
+    return Object.values(object) as T[]
+  }
+
   export async function mapValues<K extends keyof any, I, O>(object: Record<K, I>, mapper: (v: I) => Promiseable<O>) {
     return fromEntries(await Promise.all(entries(object).map(async ([k, v]) => [k, await mapper(v)])))
   }

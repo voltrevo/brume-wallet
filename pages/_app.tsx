@@ -5,7 +5,7 @@ import { Overlay } from "@/mods/overlay/overlay"
 import { GlobalStorageProvider } from "@/mods/storage/global/context"
 import { UserStorageProvider } from "@/mods/storage/user/context"
 import { CircuitsProvider } from "@/mods/tor/circuits/context"
-import { TorProvider } from "@/mods/tor/context"
+import { TorPoolProvider } from "@/mods/tor/context"
 import { SessionsProvider } from "@/mods/tor/sessions/context"
 import '@/styles/globals.css'
 import { CoreProvider } from "@hazae41/xswr"
@@ -42,13 +42,13 @@ export default function App({ Component, pageProps }: AppProps) {
         <GlobalStorageProvider>
           <UserProvider>
             <UserStorageProvider>
-              <TorProvider>
+              <TorPoolProvider>
                 <CircuitsProvider>
                   <SessionsProvider>
                     <Component {...pageProps} />
                   </SessionsProvider>
                 </CircuitsProvider>
-              </TorProvider>
+              </TorPoolProvider>
             </UserStorageProvider>
           </UserProvider>
         </GlobalStorageProvider>

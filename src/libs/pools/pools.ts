@@ -1,27 +1,12 @@
-import { Mutex } from "@hazae41/mutex"
-import { Pool } from "@hazae41/piscine"
+import { Pool, PoolEntry } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
 import { useEffect } from "react"
 
-export namespace Pools {
-
-  export async function takeLocked<T>(pool: Pool<T>) {
-    const element = await pool.cryptoRandom()
-    pool.delete(element)
-    return element
-  }
-
-  export async function take<T>(pool: Mutex<Pool<T>>) {
-    return await pool.lock(takeLocked)
-  }
-
-}
-
-export function usePoolChange<T>(pool: Pool<T> | undefined, callback: (pool: Pool<T>) => Result<void, unknown>) {
+export function usePoolChange<T, E>(pool: Pool<T, E> | undefined, callback: (pool: Pool<T, E>, entry: PoolEntry<T, E>) => Result<void, unknown>) {
   useEffect(() => {
     if (!pool) return
 
-    const onCreatedOrDeleted = () => callback(pool)
+    const onCreatedOrDeleted = (entry: PoolEntry<T, E>) => callback(pool, entry)
 
     pool.events.on("created", onCreatedOrDeleted, { passive: true })
     pool.events.on("deleted", onCreatedOrDeleted, { passive: true })

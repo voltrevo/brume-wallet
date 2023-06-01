@@ -1,6 +1,9 @@
 import { Rpc } from "@/libs/rpc"
+import { AbortSignals } from "@/libs/signals/signals"
 import { EthereumSession } from "@/libs/tor/sessions/session"
 import { useUserStorage } from "@/mods/storage/user/context"
+import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
+import { Result } from "@hazae41/result"
 import { Fetched, FetcherMore, NormalizerMore, StorageQueryParams, getSchema, useError, useFetch, useSchema } from "@hazae41/xswr"
 
 export type Wallet =
@@ -74,16 +77,25 @@ export function useWallet(uuid: string | undefined) {
 }
 
 export async function fetchWithSession(session: EthereumSession, init: Rpc.RpcRequestInit, more: FetcherMore) {
-  const { signal } = more
+  return await Result.unthrow<Fetched<string, CloseError | ErrorError | AbortError | unknown>>(async t => {
+    const { signal = AbortSignals.timeout(5_000) } = more
 
-  console.log(`Fetching ${init.method} with`, session.circuit.id)
+    console.log(`Fetching ${init.method} with`, session.circuit.id)
 
-  const response = await session.client.fetchWithSocket<string>(session.socket, init, signal)
+    const socket = await session.socket.tryGet(0).then(r => r.throw(t))
 
-  const body = JSON.stringify({ method: init.method, tor: true })
-  session.circuit.tryFetch("http://proxy.brume.money", { method: "POST", body }).then(r => r.unwrap())
+    const response = await session.client
+      .tryFetchWithSocket<string>(socket, init, signal)
+      .then(r => Fetched.rewrap(r).throw(t))
 
-  return Fetched.rewrap(response)
+    const body = JSON.stringify({ method: init.method, tor: true })
+
+    session.circuit
+      .tryFetch("http://proxy.brume.money", { method: "POST", body })
+      .then(r => r.inspectErrSync(console.warn).ignore())
+
+    return Fetched.rewrap(response)
+  })
 }
 
 export function getBalanceSchema(address: string | undefined, session: EthereumSession | undefined) {

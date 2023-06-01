@@ -1,6 +1,6 @@
 import { usePoolChange } from "@/libs/pools/pools";
 import { ChildrenProps } from "@/libs/react/props/children";
-import { EthereumSessions, createEthereumSessionsPool } from "@/libs/tor/sessions/session";
+import { EthereumHandle, createEthereumHandlePool } from "@/libs/tor/sessions/session";
 import { Mutex } from "@hazae41/mutex";
 import { Pool } from "@hazae41/piscine";
 import { Ok } from "@hazae41/result";
@@ -8,7 +8,7 @@ import { createContext, useCallback, useContext, useMemo } from "react";
 import { useCircuits } from "../circuits/context";
 
 export const SessionsContext =
-  createContext<Mutex<Pool<EthereumSessions>> | undefined>(undefined)
+  createContext<Mutex<Pool<EthereumHandle, Error>> | undefined>(undefined)
 
 export function useSessionsPool() {
   return useContext(SessionsContext)
@@ -22,7 +22,7 @@ export function SessionsProvider(props: ChildrenProps) {
   const sessions = useMemo(() => {
     if (!circuits) return
 
-    return new Mutex(createEthereumSessionsPool({
+    return createEthereumHandlePool({
       1: {
         id: 1,
         url: "wss://eth.llamarpc.com",
@@ -38,10 +38,10 @@ export function SessionsProvider(props: ChildrenProps) {
         url: "wss://polygon.llamarpc.com",
         etherscan: "https://polygonscan.com"
       }
-    }, circuits))
+    }, circuits)
   }, [circuits])
 
-  const onPoolChange = useCallback((pool: Pool<EthereumSessions>) => {
+  const onPoolChange = useCallback((pool: Pool<EthereumHandle, Error>) => {
     console.log(`Sessions pool: ${pool.size}/${pool.capacity}`)
 
     return Ok.void()

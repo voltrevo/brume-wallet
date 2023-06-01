@@ -1,5 +1,5 @@
-import { EthereumSocketSession } from "@/libs/tor/sessions/session";
+import { EthereumSocket } from "@/libs/tor/sessions/session";
 
 export interface SessionProps {
-  session: EthereumSocketSession
+  session: EthereumSocket
 }
