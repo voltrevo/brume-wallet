@@ -10,10 +10,11 @@ import { Cleaner } from "@hazae41/cleaner"
 import { Circuit, TooManyRetriesError } from "@hazae41/echalote"
 import { Fleche } from "@hazae41/fleche"
 import { Mutex } from "@hazae41/mutex"
-import { Pool } from "@hazae41/piscine"
+import { Pool, PoolParams } from "@hazae41/piscine"
 import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
-import { Fetched, getSchema, useOnce, useSchema } from "@hazae41/xswr"
+import { Data, getSchema, useOnce, useSchema } from "@hazae41/xswr"
+import { useEffect, useState } from "react"
 
 export type EthereumChainID = number
 
@@ -30,22 +31,37 @@ export interface EthereumChain {
 export type EthereumSession =
   | EthereumSocket
 
-export function getEthereumHandle(uuid: string, pool?: Mutex<Pool<EthereumHandle, Error>>) {
-  if (!pool) return
+export function getEthereumHandle(uuid: string, handles?: Mutex<Pool<EthereumHandle, Error>>) {
+  if (!handles) return
 
-  return getSchema<EthereumHandle>(`sessions/${uuid}`, async () => {
-    return Fetched
-      .rewrap(await Pool.takeCryptoRandom(pool))
-      .mapSync(r => r.result.get())
+  return getSchema<Mutex<Pool<EthereumHandle, Error>>>(`sessions/${uuid}`, async () => {
+    return new Data(EthereumHandle.createSubpool(handles, { capacity: 1 }))
   }, {})
 }
 
 export function useEthereumHandle(uuid: string) {
-  const pool = useSessionsPool()
+  const handles = useSessionsPool()
 
-  const query = useSchema(getEthereumHandle, [uuid, pool])
+  const query = useSchema(getEthereumHandle, [uuid, handles])
   useOnce(query)
-  return query.data
+
+  const [handle, setHandle] = useState<Result<EthereumHandle, Error>>()
+
+  useEffect(() => {
+    if (!query.data) return
+
+    setHandle(query.data.inner.tryGetSync(0).ok().inner)
+
+    const offCreated = query.data.inner.events.on("created", e => new Ok(setHandle(e.result)))
+    const offDeleted = query.data.inner.events.on("deleted", _ => new Ok(setHandle(undefined)))
+
+    return () => {
+      offCreated()
+      offDeleted()
+    }
+  }, [query.data])
+
+  return handle?.unwrap()
 }
 
 export interface EthereumHandle {
@@ -93,7 +109,7 @@ export namespace EthereumSocket {
         return new Ok(result.get())
 
       if (!circuit.destroyed) {
-        console.warn(`EthereumSocketSession.tryCreate failed`, { e: result.get() })
+        console.warn(`tryCreate failed`, { e: result.get() })
         await new Promise(ok => setTimeout(ok, 1000 * (2 ** i)))
         continue
       }
@@ -106,7 +122,7 @@ export namespace EthereumSocket {
     return new Err(new TooManyRetriesError())
   }
 
-  export function createUnipool(circuit: Circuit, chain: EthereumChain, signal?: AbortSignal) {
+  export function createPool(circuit: Circuit, chain: EthereumChain, params: PoolParams) {
     return new Pool<WebSocket, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index, signal } = params
@@ -127,47 +143,76 @@ export namespace EthereumSocket {
 
         return new Ok(new Cleaner(socket, onClean))
       })
-    }, { capacity: 1, signal })
+    }, params)
   }
 
 }
 
-/**
- * Create a pool where each element is a **map** of chainId to Ethereum sessions (on the same circuit), where each session corresponds to an Ethereum chain
- * @param chains 
- * @param circuits 
- * @returns 
- */
-export function createEthereumHandlePool(chains: EthereumChains, circuits: Mutex<Pool<Circuit, Error>>) {
-  const { capacity, signal } = circuits.inner
 
-  return new Mutex(new Pool<EthereumHandle, Error>(async (params) => {
-    return await Result.unthrow(async t => {
-      const { pool, index, signal } = params
+export namespace EthereumHandle {
 
-      const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get())
+  /**
+   * Create a pool where each element is a **map** of chainId to Ethereum sessions (on the same circuit), where each session corresponds to an Ethereum chain
+   * @param chains 
+   * @param circuits 
+   * @returns 
+   */
+  export function createPool(chains: EthereumChains, circuits: Mutex<Pool<Circuit, Error>>, params: PoolParams) {
+    return new Mutex(new Pool<EthereumHandle, Error>(async (params) => {
+      return await Result.unthrow(async t => {
+        const { pool, index } = params
 
-      const sessions = Objects.mapValuesSync(chains, chain => {
-        const socket = EthereumSocket.createUnipool(circuit, chain, signal)
-        const client = new Rpc.Client()
+        const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get())
 
-        return { chain, circuit, socket, client }
+        const sessions = Objects.mapValuesSync(chains, chain => {
+          const socket = EthereumSocket.createPool(circuit, chain, { capacity: 1 })
+          const client = new Rpc.Client()
+
+          return { chain, circuit, socket, client }
+        })
+
+        const handle = { circuit, sessions }
+
+        const onCloseOrError = async (reason?: unknown) => {
+          pool.delete(index)
+          return Ok.void()
+        }
+
+        handle.circuit.events.on("close", onCloseOrError, { passive: true })
+        handle.circuit.events.on("error", onCloseOrError, { passive: true })
+
+        const onClean = () => {
+          handle.circuit.events.off("close", onCloseOrError)
+          handle.circuit.events.off("error", onCloseOrError)
+        }
+        return new Ok(new Cleaner(handle, onClean))
       })
+    }, params))
+  }
 
-      const onCloseOrError = async (reason?: unknown) => {
-        pool.delete(index)
-        return Ok.void()
-      }
+  export function createSubpool(handles: Mutex<Pool<EthereumHandle, Error>>, params: PoolParams) {
+    return new Mutex(new Pool<EthereumHandle, Error>(async (params) => {
+      return await Result.unthrow(async t => {
+        const { pool, index } = params
 
-      circuit.events.on("close", onCloseOrError, { passive: true })
-      circuit.events.on("error", onCloseOrError, { passive: true })
+        const handle = await Pool.takeCryptoRandom(handles).then(r => r.throw(t).result.get())
 
-      const onClean = () => {
-        circuit.events.off("close", onCloseOrError)
-        circuit.events.off("error", onCloseOrError)
-      }
+        const onCloseOrError = async (reason?: unknown) => {
+          pool.delete(index)
+          return Ok.void()
+        }
 
-      return new Ok(new Cleaner({ circuit, sessions }, onClean))
-    })
-  }, { capacity, signal }))
+        handle.circuit.events.on("close", onCloseOrError, { passive: true })
+        handle.circuit.events.on("error", onCloseOrError, { passive: true })
+
+        const onClean = () => {
+          handle.circuit.events.off("close", onCloseOrError)
+          handle.circuit.events.off("error", onCloseOrError)
+        }
+
+        return new Ok(new Cleaner(handle, onClean))
+      })
+    }, params))
+  }
+
 }
