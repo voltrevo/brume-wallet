@@ -50,7 +50,7 @@ export function useEthereumHandle(uuid: string) {
   useEffect(() => {
     if (!query.data) return
 
-    setHandle(query.data.inner.tryGetSync(0).ok().inner)
+    setHandle(query.data.inner.tryGetSync(0).ok().get())
 
     const offCreated = query.data.inner.events.on("created", e => new Ok(setHandle(e.result)))
     const offDeleted = query.data.inner.events.on("deleted", _ => new Ok(setHandle(undefined)))
