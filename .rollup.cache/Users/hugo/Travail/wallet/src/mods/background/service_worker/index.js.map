@@ -1,1 +1,0 @@
-{"version":3,"file":"index.js","sourceRoot":"","sources":["index.ts"],"names":[],"mappings":";;AAEA,OAAO,CAAC,GAAG,CAAC,KAAK,CAAC,CAAA","sourcesContent":["declare var self: ServiceWorkerGlobalScope\n\nconsole.log(\"lol\")"]}

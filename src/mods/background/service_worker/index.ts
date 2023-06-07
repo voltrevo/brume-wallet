@@ -4,9 +4,6 @@ import { Ed25519 } from "@hazae41/ed25519"
 import { Morax } from "@hazae41/morax"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
-import { Buffer } from "buffer"
-
-globalThis.Buffer = Buffer
 
 declare var self: ServiceWorkerGlobalScope
 

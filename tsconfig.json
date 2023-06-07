@@ -5,7 +5,8 @@
     "lib": [
       "dom",
       "dom.iterable",
-      "esnext"
+      "esnext",
+      "WebWorker"
     ],
     "paths": {
       "@/*": [
@@ -31,8 +32,8 @@
     "jsx": "preserve"
   },
   "include": [
-    "./pages/**/*.ts",
-    "./pages/**/*.tsx"
+    "./pages/**/*",
+    "./src/**/*"
   ],
   "exclude": [
     "node_modules"
