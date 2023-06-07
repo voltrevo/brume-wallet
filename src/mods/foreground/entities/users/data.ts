@@ -1,4 +1,4 @@
-import { useGlobalStorage } from "@/mods/storage/global/context"
+import { useGlobalStorage } from "@/mods/foreground/storage/global/context"
 import { getSchema, NormalizerMore, StorageQueryParams, useSchema } from "@hazae41/xswr"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbkdf2ParamsBase64 } from "../../storage/user/crypto"
 

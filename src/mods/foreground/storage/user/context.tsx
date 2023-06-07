@@ -1,6 +1,6 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { useCurrentUser } from "@/mods/entities/users/context";
-import { UserPage } from "@/mods/entities/users/page";
+import { useCurrentUser } from "@/mods/foreground/entities/users/context";
+import { UserPage } from "@/mods/foreground/entities/users/page";
 import { StorageQueryParams } from "@hazae41/xswr";
 import { createContext, useContext, useState } from "react";
 

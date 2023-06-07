@@ -1,4 +1,4 @@
-import { WalletsPage } from "@/mods/entities/wallets/all/page"
+import { WalletsPage } from "@/mods/foreground/entities/wallets/all/page"
 
 export default function Page() {
   return <WalletsPage />

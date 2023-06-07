@@ -1,4 +1,4 @@
-import { useGlobalStorage } from "@/mods/storage/global/context";
+import { useGlobalStorage } from "@/mods/foreground/storage/global/context";
 import { getSchema, NormalizerMore, StorageQueryParams, useSchema } from "@hazae41/xswr";
 import { getUserRef, User } from "../data";
 

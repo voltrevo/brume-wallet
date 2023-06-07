@@ -10,7 +10,7 @@ import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
 import { Mutator } from "@/libs/xswr/pipes";
-import { GradientButton } from "@/mods/components/buttons/button";
+import { GradientButton } from "@/mods/foreground/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
 import { Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";

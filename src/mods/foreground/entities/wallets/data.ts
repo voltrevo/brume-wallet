@@ -1,7 +1,7 @@
 import { Rpc } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { EthereumSession } from "@/libs/tor/sessions/session"
-import { useUserStorage } from "@/mods/storage/user/context"
+import { useUserStorage } from "@/mods/foreground/storage/user/context"
 import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
 import { Result } from "@hazae41/result"
 import { Fetched, FetcherMore, NormalizerMore, StorageQueryParams, getSchema, useError, useFetch, useSchema } from "@hazae41/xswr"
