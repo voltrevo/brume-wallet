@@ -23,7 +23,7 @@ export function Overlay(props: ChildrenProps) {
     location.reload()
   }, [])
 
-  const Banner =
+  const ExperimentBanner =
     <div className="w-full text-white bg-yellow-500 p-1">
       <div className="w-full max-w-[400px] m-auto flex flex-wrap gap-2 items-center text-sm">
         <div className="grow">
@@ -38,12 +38,12 @@ export function Overlay(props: ChildrenProps) {
 
   if (extension)
     return <main className="h-[600px] w-[400px] overflow-y-scroll">
-      {Banner}
+      {ExperimentBanner}
       {children}
     </main>
 
   return <main className="p-safe h-full w-full">
-    {Banner}
+    {ExperimentBanner}
     <div className="h-full w-full m-auto max-w-3xl">
       {children}
     </div>

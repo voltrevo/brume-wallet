@@ -1,9 +1,11 @@
-const path = require("path")
 const webpack = require("webpack")
 const TerserPlugin = require('terser-webpack-plugin')
 const { copyFileSync } = require("fs")
+const Log = require("next/dist/build/output/log")
 
-/** @type {import('next').NextConfig} */
+/**
+ * @type {import('next').NextConfig}
+ */
 const nextConfig = {
   reactStrictMode: false, // TODO
   swcMinify: true,
@@ -25,13 +27,16 @@ const nextConfig = {
  * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
  */
 function compile(name, config, options) {
+  Log.wait(`compiling ${name}...`)
+
+  const start = Date.now()
+
   webpack(config).run((_, status) => {
     if (status?.hasErrors()) {
-      console.error(`> [PWA] Failed to build ${name}`)
-      console.error(status.toString({ colors: true }))
-      process.exit(-1)
+      Log.error(`failed to compile ${name}`)
+      Log.error(status.toString({ colors: true }))
     } else {
-      console.info(`> [PWA] Successfully built ${name}`)
+      Log.ready(`compiled ${name} in ${Date.now() - start} ms`)
     }
   })
 }
@@ -41,19 +46,19 @@ function compile(name, config, options) {
  */
 function compileServiceWorker(config, options) {
   compile("service_worker", {
-    mode: "production",
     devtool: false,
     target: "webworker",
+    mode: config.mode,
     resolve: config.resolve,
     resolveLoader: config.resolveLoader,
     module: config.module,
+    plugins: config.plugins,
     entry: "./src/mods/background/service_worker/index.ts",
     output: {
       filename: "service_worker.js"
     },
-    plugins: config.plugins,
     optimization: {
-      minimize: true,
+      minimize: config.mode === "production",
       minimizer: [new TerserPlugin()]
     }
   })
@@ -64,19 +69,19 @@ function compileServiceWorker(config, options) {
  */
 function compileContentScript(config, options) {
   compile("content_script", {
-    mode: "production",
     devtool: false,
     target: "webworker",
+    mode: config.mode,
     resolve: config.resolve,
     resolveLoader: config.resolveLoader,
     module: config.module,
+    plugins: config.plugins,
     entry: "./src/mods/background/content_script/index.ts",
     output: {
       filename: "content_script.js"
     },
-    plugins: config.plugins,
     optimization: {
-      minimize: true,
+      minimize: config.mode === "production",
       minimizer: [new TerserPlugin()]
     }
   })
