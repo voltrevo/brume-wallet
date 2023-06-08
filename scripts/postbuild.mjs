@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { injectManifest } from "workbox-build";
+import workbox from "workbox-build";
 
 function* walkSync(dir) {
   const files = fs.readdirSync(dir, { withFileTypes: true })
@@ -14,17 +14,22 @@ function* walkSync(dir) {
   }
 }
 
-injectManifest({
+workbox.injectManifest({
   globDirectory: "./out",
   swSrc: "./out/service_worker.js",
   swDest: "./out/service_worker.js",
   dontCacheBustURLsMatching: /^\/_next\/static\/.*/iu
 })
 
+const original = fs.readFileSync("./out/service_worker.js", "utf8")
+const replaced = original.replaceAll("self.__WB", "true")
+fs.writeFileSync("./out/service_worker.js", replaced, "utf8")
+
 for (const filePath of walkSync("./out")) {
   if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
-    const content = fs.readFileSync(filePath, "utf8")
-    fs.writeFileSync(filePath, content.replaceAll("/_next", "/next"), "utf8")
+    const original = fs.readFileSync(filePath, "utf8")
+    const replaced = original.replaceAll("/_next", "/next")
+    fs.writeFileSync(filePath, replaced, "utf8")
   }
 }
 

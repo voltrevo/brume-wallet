@@ -1,7 +1,12 @@
+import { PrecacheEntry, precacheAndRoute } from "workbox-precaching"
+
 declare interface ServiceWorkerGlobalScope {
-  __WB_MANIFEST: string
+  __WB?: true,
+  __WB_MANIFEST: PrecacheEntry[]
 }
 
 declare var self: ServiceWorkerGlobalScope
 
-console.log(self.__WB_MANIFEST)
+if (self.__WB) {
+  precacheAndRoute(self.__WB_MANIFEST)
+}

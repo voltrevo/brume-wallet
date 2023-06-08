@@ -4,14 +4,18 @@ import { Ed25519 } from "@hazae41/ed25519"
 import { Morax } from "@hazae41/morax"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
+import { PrecacheEntry, precacheAndRoute } from "workbox-precaching"
 
 declare interface ServiceWorkerGlobalScope {
-  __WB_MANIFEST: string
+  __WB?: true,
+  __WB_MANIFEST: PrecacheEntry[]
 }
 
 declare var self: ServiceWorkerGlobalScope
 
-console.log(self.__WB_MANIFEST)
+if (self.__WB) {
+  precacheAndRoute(self.__WB_MANIFEST)
+}
 
 async function main() {
   await Berith.initBundledOnce()
