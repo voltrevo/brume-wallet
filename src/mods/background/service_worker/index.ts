@@ -5,7 +5,13 @@ import { Morax } from "@hazae41/morax"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
 
+declare interface ServiceWorkerGlobalScope {
+  __WB_MANIFEST: string
+}
+
 declare var self: ServiceWorkerGlobalScope
+
+console.log(self.__WB_MANIFEST)
 
 async function main() {
   await Berith.initBundledOnce()
