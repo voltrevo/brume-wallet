@@ -1,3 +1,5 @@
+import { Errors } from "@/libs/errors/errors"
+import { useAsyncCallback } from "@/libs/react/callback"
 import { Catcher } from "@/libs/react/error"
 import { ErrorProps } from "@/libs/react/props/error"
 import { UserProvider } from "@/mods/foreground/entities/users/context"
@@ -15,13 +17,37 @@ import Head from "next/head"
 export function Fallback(props: ErrorProps) {
   const { error } = props
 
-  return <div>
-    An error occured: {JSON.stringify(error)}
+  const reset = useAsyncCallback(async () => {
+    if (!confirm(`You will lose all your wallets if you didn't made backups, are you sure?`))
+      return
+
+    const databases = await indexedDB.databases()
+
+    for (const database of databases)
+      if (database.name)
+        indexedDB.deleteDatabase(database.name)
+
+    localStorage.clear()
+    location.reload()
+  }, [])
+
+  return <div className="p-4">
+    <div className="text-red-500">
+      An unexpected error occured
+    </div>
+    <div className="text-contrast">
+      {Errors.toString(error)}
+    </div>
+    <div className="h-2" />
+    <button className="px-2 border border-contrast rounded-xl"
+      onClick={reset}>
+      Click me to clear everything
+    </button>
   </div>
 }
 
 export default function App({ Component, pageProps }: AppProps) {
-  return <Overlay>
+  return <>
     <Head>
       <title>Brume Wallet</title>
       <meta key="application-name" name="application-name" content="Brume Wallet" />
@@ -40,19 +66,21 @@ export default function App({ Component, pageProps }: AppProps) {
     <Catcher fallback={Fallback}>
       <CoreProvider>
         <GlobalStorageProvider>
-          <UserProvider>
-            <UserStorageProvider>
-              <TorPoolProvider>
-                <CircuitsProvider>
-                  <SessionsProvider>
-                    <Component {...pageProps} />
-                  </SessionsProvider>
-                </CircuitsProvider>
-              </TorPoolProvider>
-            </UserStorageProvider>
-          </UserProvider>
+          <Overlay>
+            <UserProvider>
+              <UserStorageProvider>
+                <TorPoolProvider>
+                  <CircuitsProvider>
+                    <SessionsProvider>
+                      <Component {...pageProps} />
+                    </SessionsProvider>
+                  </CircuitsProvider>
+                </TorPoolProvider>
+              </UserStorageProvider>
+            </UserProvider>
+          </Overlay>
         </GlobalStorageProvider>
       </CoreProvider>
     </Catcher>
-  </Overlay>
+  </>
 }
