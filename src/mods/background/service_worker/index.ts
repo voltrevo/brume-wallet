@@ -7,15 +7,14 @@ import { X25519 } from "@hazae41/x25519"
 import { PrecacheEntry, precacheAndRoute } from "workbox-precaching"
 
 declare interface ServiceWorkerGlobalScope {
-  __WB?: true,
+  __WB_PRODUCTION?: boolean,
   __WB_MANIFEST: PrecacheEntry[]
 }
 
 declare var self: ServiceWorkerGlobalScope
 
-if (self.__WB) {
+if (self.__WB_PRODUCTION)
   precacheAndRoute(self.__WB_MANIFEST)
-}
 
 async function main() {
   await Berith.initBundledOnce()

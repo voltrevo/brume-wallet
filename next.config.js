@@ -16,9 +16,6 @@ const nextConfig = {
     compileServiceWorker(config, options)
     compileContentScript(config, options)
 
-    copyFileSync("./dist/service_worker.js", "./public/service_worker.js")
-    copyFileSync("./dist/content_script.js", "./public/content_script.js")
-
     return config
   }
 }
@@ -37,6 +34,7 @@ function compile(name, config, options) {
       Log.error(status.toString({ colors: true }))
     } else {
       Log.ready(`compiled ${name} in ${Date.now() - start} ms`)
+      copyFileSync(`./dist/${config.output.filename}`, `./public/${config.output.filename}`)
     }
   })
 }
@@ -81,7 +79,7 @@ function compileContentScript(config, options) {
       filename: "content_script.js"
     },
     optimization: {
-      minimize: config.mode === "production",
+      minimize: false,
       minimizer: [new TerserPlugin()]
     }
   })

@@ -22,7 +22,7 @@ workbox.injectManifest({
 })
 
 const original = fs.readFileSync("./out/service_worker.js", "utf8")
-const replaced = original.replaceAll("self.__WB", "true")
+const replaced = original.replaceAll("self.__WB_PRODUCTION", "true")
 fs.writeFileSync("./out/service_worker.js", replaced, "utf8")
 
 for (const filePath of walkSync("./out")) {
