@@ -1,21 +1,20 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "Brume Wallet",
   "description": "The private wallet",
   "version": "0.1",
-  "action": {
+  "browser_action": {
     "default_title": "Brume Wallet",
     "default_popup": "index.html"
   },
   "icons": {
     "512": "favicon.png"
   },
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'none';"
-  },
   "background": {
-    "type": "module",
-    "service_worker": "/service_worker.js"
+    "scripts": [
+      "service_worker.js"
+    ],
+    "persistent": true
   },
   "content_scripts": [
     {

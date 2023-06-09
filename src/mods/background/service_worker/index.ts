@@ -13,7 +13,7 @@ declare interface ServiceWorkerGlobalScope {
 
 declare var self: ServiceWorkerGlobalScope
 
-if (self.__WB_PRODUCTION)
+if (self.__WB_PRODUCTION && !location.protocol.endsWith("extension:"))
   precacheAndRoute(self.__WB_MANIFEST)
 
 async function main() {
