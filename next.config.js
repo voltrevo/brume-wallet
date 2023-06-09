@@ -11,10 +11,6 @@ const nextConfig = {
   swcMinify: true,
   output: "export",
   productionBrowserSourceMaps: true,
-  i18n: {
-    locales: ['en-US'],
-    defaultLocale: 'en-US'
-  },
   webpack(config, options) {
     if (options.isServer) return config
 
