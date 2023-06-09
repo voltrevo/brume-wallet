@@ -79,7 +79,7 @@ function compileContentScript(config, options) {
       filename: "content_script.js"
     },
     optimization: {
-      minimize: false,
+      minimize: config.mode === "production",
       minimizer: [new TerserPlugin()]
     }
   })
