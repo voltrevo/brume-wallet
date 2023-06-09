@@ -1,3 +1,1 @@
-declare var self: ServiceWorkerGlobalScope
-
-console.log("lol")
+declare const self: ServiceWorkerGlobalScope
