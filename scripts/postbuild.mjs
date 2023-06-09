@@ -20,6 +20,7 @@ workbox.injectManifest({
     "**\/*.{js,css,html,ico,png,json}",
   ],
   globIgnores: [
+    "404.html",
     "chrome\/**\/*",
     "firefox\/**\/*",
     "safari\/**\/*",
