@@ -16,6 +16,14 @@ function* walkSync(dir) {
 
 workbox.injectManifest({
   globDirectory: "./out",
+  globPatterns: [
+    "**\/*.{js,css,html,ico,png,json}",
+  ],
+  globIgnores: [
+    "chrome\/**\/*",
+    "firefox\/**\/*",
+    "safari\/**\/*",
+  ],
   swSrc: "./out/service_worker.js",
   swDest: "./out/service_worker.js",
   dontCacheBustURLsMatching: /^\/_next\/static\/.*/iu
