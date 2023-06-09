@@ -64,9 +64,9 @@ export default function App({ Component, pageProps }: AppProps) {
       <link rel="apple-touch-startup-image" href="/round.png" />
     </Head>
     <Catcher fallback={Fallback}>
-      <CoreProvider>
-        <GlobalStorageProvider>
-          <Overlay>
+      <Overlay>
+        <CoreProvider>
+          <GlobalStorageProvider>
             <UserProvider>
               <UserStorageProvider>
                 <TorPoolProvider>
@@ -78,9 +78,9 @@ export default function App({ Component, pageProps }: AppProps) {
                 </TorPoolProvider>
               </UserStorageProvider>
             </UserProvider>
-          </Overlay>
-        </GlobalStorageProvider>
-      </CoreProvider>
+          </GlobalStorageProvider>
+        </CoreProvider>
+      </Overlay>
     </Catcher>
   </>
 }
