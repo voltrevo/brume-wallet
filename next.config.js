@@ -10,6 +10,7 @@ const nextConfig = {
   reactStrictMode: false, // TODO
   swcMinify: true,
   output: "export",
+  productionBrowserSourceMaps: true,
   webpack(config, options) {
     if (options.isServer) return config
 
