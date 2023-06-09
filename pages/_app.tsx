@@ -2,7 +2,6 @@ import { Catcher } from "@/libs/react/error"
 import { ErrorProps } from "@/libs/react/props/error"
 import { UserProvider } from "@/mods/foreground/entities/users/context"
 import { Overlay } from "@/mods/foreground/overlay/overlay"
-import { registerServiceWorker } from "@/mods/foreground/service_worker/service_worker"
 import { GlobalStorageProvider } from "@/mods/foreground/storage/global/context"
 import { UserStorageProvider } from "@/mods/foreground/storage/user/context"
 import { CircuitsProvider } from "@/mods/foreground/tor/circuits/context"
@@ -12,7 +11,6 @@ import '@/styles/globals.css'
 import { CoreProvider } from "@hazae41/xswr"
 import type { AppProps } from 'next/app'
 import Head from "next/head"
-import { useEffect } from "react"
 
 export function Fallback(props: ErrorProps) {
   const { error } = props
@@ -23,11 +21,6 @@ export function Fallback(props: ErrorProps) {
 }
 
 export default function App({ Component, pageProps }: AppProps) {
-
-  useEffect(() => {
-    registerServiceWorker()
-  }, [])
-
   return <Overlay>
     <Head>
       <title>Brume Wallet</title>
