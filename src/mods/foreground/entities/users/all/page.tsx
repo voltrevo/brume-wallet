@@ -3,12 +3,13 @@ import { Outline } from "@/libs/icons/icons";
 import { useBooleanState } from "@/libs/react/handles/boolean";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { OkProps } from "@/libs/react/props/promise";
+import { Some } from "@hazae41/option";
 import { useCallback } from "react";
 import { User, UserProps, useUser } from "../data";
 import { UserCreateDialog } from "./create";
 import { useUsers } from "./data";
 
-export function UsersPage(props: OkProps<User>) {
+export function UsersPage(props: OkProps<Some<User>>) {
   const { ok } = props
 
   const users = useUsers()
@@ -32,13 +33,13 @@ export function UsersPage(props: OkProps<User>) {
   </>
 }
 
-function UserOkButton(props: UserProps & OkProps<User>) {
+function UserOkButton(props: UserProps & OkProps<Some<User>>) {
   const { ok } = props
 
   const user = useUser(props.user.uuid)
 
   const onClick = useCallback(() => {
-    ok(props.user)
+    ok(new Some(props.user))
   }, [props.user, ok])
 
   if (!user.data) return null
