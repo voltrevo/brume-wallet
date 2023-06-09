@@ -3,7 +3,7 @@
 	"name": "Brume Wallet",
 	"short_name": "Brume Wallet",
 	"description": "The private wallet",
-	"start_url": "./",
+	"start_url": "/",
 	"display": "standalone",
 	"theme_color": "#bb78ff",
 	"background_color": "#ffffff",
