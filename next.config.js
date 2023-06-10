@@ -16,6 +16,7 @@ const nextConfig = {
 
     compileServiceWorker(config, options)
     compileContentScript(config, options)
+    compileInjectedScript(config, options)
 
     return config
   }
@@ -53,9 +54,7 @@ function compileServiceWorker(config, options) {
     module: config.module,
     plugins: config.plugins,
     entry: "./src/mods/background/service_worker/index.ts",
-    output: {
-      filename: "service_worker.js"
-    },
+    output: { filename: "service_worker.js" },
     optimization: {
       minimize: config.mode === "production",
       minimizer: [new TerserPlugin()]
@@ -76,9 +75,28 @@ function compileContentScript(config, options) {
     module: config.module,
     plugins: config.plugins,
     entry: "./src/mods/background/content_script/index.ts",
-    output: {
-      filename: "content_script.js"
-    },
+    output: { filename: "content_script.js" },
+    optimization: {
+      minimize: config.mode === "production",
+      minimizer: [new TerserPlugin()]
+    }
+  })
+}
+
+/**
+ * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
+ */
+function compileInjectedScript(config, options) {
+  compile("injected_script", {
+    devtool: false,
+    target: "web",
+    mode: config.mode,
+    resolve: config.resolve,
+    resolveLoader: config.resolveLoader,
+    module: config.module,
+    plugins: config.plugins,
+    entry: "./src/mods/background/injected_script/index.ts",
+    output: { filename: "injected_script.js" },
     optimization: {
       minimize: config.mode === "production",
       minimizer: [new TerserPlugin()]

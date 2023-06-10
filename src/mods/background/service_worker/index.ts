@@ -17,9 +17,11 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope
 
-const EXTENSION = location.protocol.endsWith("extension:")
+const IS_EXTENSION = location.protocol.endsWith("extension:")
+const IS_CHROME_EXTENSION = location.protocol === "chrome-extension:"
+const IS_FIREFOX_EXTENSION = location.protocol === "moz-extension:"
 
-if (self.__WB_PRODUCTION && !EXTENSION) {
+if (self.__WB_PRODUCTION && !IS_EXTENSION) {
   clientsClaim()
 
   precacheAndRoute(self.__WB_MANIFEST)
@@ -57,10 +59,6 @@ async function main() {
   const tors = createTorPool(async () => {
     return await tryCreateTor2({ fallbacks, ed25519, x25519, sha1 })
   }, { capacity: 3 })
-
-  chrome.runtime.onMessage.addListener(message => {
-    console.log(message)
-  })
 }
 
 main()

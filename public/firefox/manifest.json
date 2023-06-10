@@ -10,11 +10,12 @@
   "icons": {
     "512": "favicon.png"
   },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'none';"
+  },
   "background": {
-    "scripts": [
-      "service_worker.js"
-    ],
-    "persistent": true
+    "type":"module",
+    "scripts": ["service_worker.js"]
   },
   "content_scripts": [
     {
