@@ -3,6 +3,7 @@ import { browser } from "@/libs/browser/browser"
 declare const self: ServiceWorkerGlobalScope
 
 const IS_FIREFOX = navigator.userAgent.includes("Firefox")
+const IS_SAFARI = navigator.userAgent.includes("Safari")
 
 function inject() {
   const container = document.documentElement
@@ -18,5 +19,7 @@ function inject() {
   container.removeChild(element)
 }
 
-if (IS_FIREFOX)
+if (IS_FIREFOX || IS_SAFARI)
   inject()
+
+setInterval(() => console.log("content script"), 1000)

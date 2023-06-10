@@ -18,8 +18,10 @@ declare global {
 declare const self: ServiceWorkerGlobalScope
 
 const IS_EXTENSION = location.protocol.endsWith("extension:")
+
 const IS_CHROME_EXTENSION = location.protocol === "chrome-extension:"
 const IS_FIREFOX_EXTENSION = location.protocol === "moz-extension:"
+const IS_SAFARI_EXTENSION = location.protocol === "safari-web-extension:"
 
 if (self.__WB_PRODUCTION && !IS_EXTENSION) {
   clientsClaim()

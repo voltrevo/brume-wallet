@@ -1,1 +1,1 @@
-console.log("hello world")
+setInterval(() => console.log("injected script"), 1000)
