@@ -7,25 +7,14 @@ export interface CreateTorParams extends Omit<TorClientParams, "fallbacks"> {
   fallbacks: Result<Fallback[], Error>
 }
 
-export async function tryCreateTor2(params: CreateTorParams): Promise<Result<TorClientDuplex, Cancel<Error> | Retry<Error>>> {
+export async function tryCreateTor(params: CreateTorParams): Promise<Result<TorClientDuplex, Cancel<Error> | Retry<Error>>> {
   return await Result.unthrow(async t => {
     const fallbacks = params.fallbacks.mapErrSync(Cancel.new).throw(t)
 
     const tcp = await createWebSocketSnowflakeStream("wss://snowflake.torproject.net/")
     const tor = new TorClientDuplex(tcp, { ...params, fallbacks })
 
-    tor.tryWait().then(r => r.mapErrSync(Retry.new).throw(t))
-
-    return new Ok(tor)
-  })
-}
-
-export async function tryCreateTor(params: TorClientParams): Promise<Result<TorClientDuplex, Retry<Error>>> {
-  return await Result.unthrow(async t => {
-    const tcp = await createWebSocketSnowflakeStream("wss://snowflake.torproject.net/")
-    const tor = new TorClientDuplex(tcp, params)
-
-    tor.tryWait().then(r => r.mapErrSync(Retry.new).throw(t))
+    await tor.tryWait().then(r => r.mapErrSync(Retry.new).throw(t))
 
     return new Ok(tor)
   })
