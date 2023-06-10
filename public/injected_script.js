@@ -1,1 +1,1 @@
-setInterval((()=>console.log("injected script")),1e3);
+setInterval((()=>console.log("injected script2")),1e3);

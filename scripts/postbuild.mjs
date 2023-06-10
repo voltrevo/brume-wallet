@@ -20,8 +20,6 @@ function* walkSync(dir) {
   const original = fs.readFileSync("./out/content_script.js", "utf8")
   const replaced = original.replaceAll("INJECTED_SCRIPT", injected_script_base64)
   fs.writeFileSync("./out/content_script.js", replaced, "utf8")
-
-  fs.rmSync("./out/injected_script.js")
 }
 
 {

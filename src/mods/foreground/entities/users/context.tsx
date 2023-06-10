@@ -23,10 +23,7 @@ export function UserProvider(props: ChildrenProps) {
   const clear = useCallback(() => setUser(new None()), [])
   const memo = useObjectMemo({ current: user?.inner, clear })
 
-  if (user === undefined)
-    return null
-
-  if (user.isNone())
+  if (user === undefined || user.isNone())
     return <UsersPage ok={setUser} />
 
   return <UserContext.Provider value={memo}>

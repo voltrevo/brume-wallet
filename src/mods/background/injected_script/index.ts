@@ -1,1 +1,1 @@
-setInterval(() => console.log("injected script"), 1000)
+setInterval(() => console.log("injected script2"), 1000)
