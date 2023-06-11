@@ -59,9 +59,19 @@ async function main() {
 
   if (IS_EXTENSION) {
     browser.runtime.onConnect.addListener(port => {
-      if (port.name !== "ethereum")
+      if (port.name !== "content_script")
         return
       port.onMessage.addListener(async (msg: RpcRequestInit) => {
+        const response = RpcResponse.rewrap(msg.id, tryRoute(msg))
+        const init = RpcResponseInit.from(response)
+        port.postMessage(init)
+      })
+    })
+
+    browser.runtime.onConnect.addListener(port => {
+      if (port.name !== "foreground")
+        return
+      port.onMessage.addListener(async (msg) => {
         const response = RpcResponse.rewrap(msg.id, tryRoute(msg))
         const init = RpcResponseInit.from(response)
         port.postMessage(init)

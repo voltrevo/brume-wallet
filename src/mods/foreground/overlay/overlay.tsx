@@ -1,3 +1,4 @@
+import { browser } from "@/libs/browser/browser";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { useCallback, useEffect, useState } from "react";
 import { registerServiceWorker } from "../service_worker/service_worker";
@@ -11,11 +12,15 @@ export function Overlay(props: ChildrenProps) {
     setExtension(location.protocol.endsWith("extension:"))
   }, [])
 
+  const [active, setActive] = useState<ServiceWorker>()
   const [updating, setUpdating] = useState<ServiceWorker>()
+  const [port, setPort] = useState<chrome.runtime.Port>()
 
   useEffect(() => {
+    if (extension === true)
+      setPort(browser.runtime.connect({ name: "foreground" }))
     if (extension === false)
-      registerServiceWorker({ onUpdating: setUpdating })
+      registerServiceWorker({ onActive: setActive, onUpdating: setUpdating })
   }, [extension])
 
   const update = useCallback(() => {

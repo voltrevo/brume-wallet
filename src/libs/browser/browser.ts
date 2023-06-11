@@ -1,5 +1,8 @@
+type Chrome = typeof chrome
+
 declare module globalThis {
-  const browser: typeof chrome | undefined
+  const browser: Chrome
+  const chrome: Chrome
 }
 
-export const browser = globalThis.browser ?? chrome
+export const browser = globalThis.browser ?? globalThis.chrome

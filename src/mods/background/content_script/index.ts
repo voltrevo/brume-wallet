@@ -30,7 +30,7 @@ function inject() {
 if (IS_FIREFOX || IS_SAFARI)
   inject()
 
-const ethereum = browser.runtime.connect({ name: "ethereum" })
+const ethereum = browser.runtime.connect({ name: "content_script" })
 
 ethereum.onMessage.addListener((msg: RpcResponseInit) => {
   window.dispatchEvent(new CustomEvent("ethereum#response", { detail: msg }))
