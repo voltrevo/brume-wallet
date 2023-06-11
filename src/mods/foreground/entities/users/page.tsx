@@ -5,12 +5,15 @@ import { PromiseProps } from "@/libs/react/props/promise";
 import { Bytes } from "@hazae41/bytes";
 import { AesGcmCoder, HmacEncoder, IDBStorage, StorageQueryParams } from "@hazae41/xswr";
 import { useRef, useState } from "react";
+import { useBackground } from "../../background/context";
 import { Pbdkf2Params } from "../../storage/user/crypto";
 import { UserAvatar } from "./all/page";
 import { UserProps, useUser } from "./data";
 
 export function UserPage(props: UserProps & PromiseProps<StorageQueryParams<any>>) {
   const { user: userRef, ok, err } = props
+
+  const background = useBackground()
 
   const user = useUser(userRef.uuid)
 
@@ -21,6 +24,10 @@ export function UserPage(props: UserProps & PromiseProps<StorageQueryParams<any>
   const validate = useAsyncUniqueCallback(async (password: string) => {
     if (!user.data) return
     if (!password) return
+
+    const request = background.client.create({ method: "brume_login", params: [user.data.uuid, password] })
+    background.postMessage(request)
+    background.onMessage(console.log)
 
     const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"])
 
@@ -55,7 +62,7 @@ export function UserPage(props: UserProps & PromiseProps<StorageQueryParams<any>
     const valueSerializer = new AesGcmCoder(valueKey)
 
     ok({ storage, keySerializer, valueSerializer })
-  }, [user.data?.uuid])
+  }, [user.data?.uuid, background])
 
   const onKeyDown = useKeyboardEnter<HTMLInputElement>(e => {
     validate.run(e.currentTarget.value)

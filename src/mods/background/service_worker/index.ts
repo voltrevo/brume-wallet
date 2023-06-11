@@ -13,6 +13,7 @@ declare global {
 declare const self: ServiceWorkerGlobalScope
 
 const IS_EXTENSION = location.protocol.endsWith("extension:")
+const IS_WEBSITE = !IS_EXTENSION
 
 const IS_CHROME_EXTENSION = location.protocol === "chrome-extension:"
 const IS_FIREFOX_EXTENSION = location.protocol === "moz-extension:"
@@ -43,6 +44,20 @@ async function tryFetch<T>(url: string): Promise<Result<T, Error>> {
 
 const FALLBACKS_URL = "https://raw.githubusercontent.com/hazae41/echalote/master/tools/fallbacks/fallbacks.json"
 
+function tryRoute(request: RpcRequestInit): Result<unknown, Error> {
+  if (request.method === "brume_login")
+    return new Ok("logged in!")
+  if (request.method === "eth_requestAccounts")
+    return new Ok(["0x39dfd20386F5d17eBa42763606B8c704FcDd1c1D"])
+  if (request.method === "eth_accounts")
+    return new Ok(["0x39dfd20386F5d17eBa42763606B8c704FcDd1c1D"])
+  if (request.method === "eth_chainId")
+    return new Ok("0x1")
+  if (request.method === "eth_blockNumber")
+    return new Ok("0x65a8db")
+  return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
+}
+
 async function main() {
   // await Berith.initBundledOnce()
   // await Morax.initBundledOnce()
@@ -56,6 +71,17 @@ async function main() {
   // const tors = createTorPool(async () => {
   //   return await tryCreateTor2({ fallbacks, ed25519, x25519, sha1 })
   // }, { capacity: 3 })
+
+  if (IS_WEBSITE) {
+    const channel = new BroadcastChannel("foreground")
+
+    channel.addEventListener("message", (e: MessageEvent<RpcRequestInit>) => {
+      console.log(e)
+      const response = RpcResponse.rewrap(e.data.id, tryRoute(e.data))
+      const init = RpcResponseInit.from(response)
+      channel.postMessage(init)
+    })
+  }
 
   if (IS_EXTENSION) {
     browser.runtime.onConnect.addListener(port => {
@@ -77,18 +103,6 @@ async function main() {
         port.postMessage(init)
       })
     })
-
-    function tryRoute(request: RpcRequestInit): Result<unknown, Error> {
-      if (request.method === "eth_requestAccounts")
-        return new Ok(["0x39dfd20386F5d17eBa42763606B8c704FcDd1c1D"])
-      if (request.method === "eth_accounts")
-        return new Ok(["0x39dfd20386F5d17eBa42763606B8c704FcDd1c1D"])
-      if (request.method === "eth_chainId")
-        return new Ok("0x1")
-      if (request.method === "eth_blockNumber")
-        return new Ok("0x65a8db")
-      return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
-    }
   }
 }
 

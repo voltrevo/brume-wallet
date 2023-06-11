@@ -1,9 +1,13 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { createContext, useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { Background, ExtensionBackground, WebsiteBackground } from "./background";
 
 export const BackgroundContext =
   createContext<Background | undefined>(undefined)
+
+export function useBackground() {
+  return useContext(BackgroundContext)!
+}
 
 export function WebsiteBackgroundProvider(props: ChildrenProps) {
   const { children } = props

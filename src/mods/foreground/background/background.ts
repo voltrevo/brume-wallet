@@ -1,4 +1,5 @@
 import { browser } from "@/libs/browser/browser"
+import { RpcClient } from "@/libs/rpc"
 
 export type Background =
   | WebsiteBackground
@@ -6,6 +7,7 @@ export type Background =
 
 export class WebsiteBackground {
   readonly channel = new BroadcastChannel("foreground")
+  readonly client = new RpcClient()
 
   isWebsite(): this is WebsiteBackground {
     return true
@@ -27,6 +29,7 @@ export class WebsiteBackground {
 
 export class ExtensionBackground {
   readonly port = browser.runtime.connect({ name: "foreground" })
+  readonly client = new RpcClient()
 
   isWebsite(): false {
     return false
