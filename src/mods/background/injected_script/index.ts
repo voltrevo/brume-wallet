@@ -1,4 +1,4 @@
-import { RequestInit, Rpc } from "@/libs/rpc"
+import { Rpc, RpcRequestPreinit, RpcResponseInit } from "@/libs/rpc"
 import { Future } from "@hazae41/future"
 
 declare global {
@@ -9,7 +9,7 @@ declare global {
 
 declare global {
   interface DedicatedWorkerGlobalScopeEventMap {
-    "ethereum#response": CustomEvent<Rpc.ResponseInit>
+    "ethereum#response": CustomEvent<RpcResponseInit>
   }
 }
 
@@ -20,19 +20,19 @@ interface JsonRpcResponse {
 class Provider {
 
   constructor(
-    readonly client = new Rpc.Client()
+    readonly client = new Rpc.RpcClient()
   ) { }
 
   get isConnected() {
     return true
   }
 
-  async request(init: RequestInit) {
-    const request = this.client.new(init)
+  async request(init: RpcRequestPreinit) {
+    const request = this.client.create(init)
 
     const future = new Future<JsonRpcResponse>()
 
-    const onResponse = (e: CustomEvent<Rpc.ResponseInit>) => {
+    const onResponse = (e: CustomEvent<RpcResponseInit>) => {
       if (request.id !== e.detail.id)
         return
       future.resolve(e.detail)

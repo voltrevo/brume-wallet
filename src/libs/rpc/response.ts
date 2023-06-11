@@ -1,69 +1,20 @@
-import { Err, Ok } from "@hazae41/result"
+import { RpcErr, RpcErrInit } from "./err"
+import { RpcOk, RpcOkInit } from "./ok"
 
-export type ResponseInit<T = unknown> =
-  | Response.OkInit<T>
-  | Response.ErrInit
+export type RpcResponseInit<T = unknown> =
+  | RpcOkInit<T>
+  | RpcErrInit
 
-export type Response<T = unknown> =
-  | Response.RpcOk<T>
-  | Response.RpcErr
+export type RpcResponse<T = unknown> =
+  | RpcOk<T>
+  | RpcErr
 
-export interface RawError {
-  message: string
-}
+export namespace RpcResponse {
 
-export namespace Response {
-
-  export function from<T>(init: ResponseInit<T>) {
+  export function from<T>(init: RpcResponseInit<T>) {
     if ("error" in init)
       return RpcErr.from(init)
-    else
-      return RpcOk.from(init)
+    return RpcOk.from(init)
   }
 
-  export interface OkInit<T = unknown> {
-    id: number,
-    result: T
-  }
-
-  export class RpcOk<T = unknown> extends Ok<T> {
-
-    readonly error?: undefined
-
-    constructor(
-      readonly id: number,
-      readonly result: T
-    ) {
-      super(result)
-    }
-
-    static from<T>(init: OkInit<T>) {
-      const { id, result } = init
-
-      return new this(id, result)
-    }
-
-  }
-
-  export interface ErrInit {
-    id: number
-    error: RawError
-  }
-
-  export class RpcErr extends Err<Error> {
-
-    constructor(
-      readonly id: number,
-      readonly error: Error
-    ) {
-      super(error)
-    }
-
-    static from(init: ErrInit) {
-      const error = new Error(init.error.message)
-
-      return new this(init.id, error)
-    }
-
-  }
 }

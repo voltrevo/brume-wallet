@@ -73,7 +73,7 @@ export interface EthereumSocket {
   chain: EthereumChain
   circuit: Circuit,
   socket: Pool<WebSocket, Error>
-  client: Rpc.Client
+  client: Rpc.RpcClient
 }
 
 export namespace EthereumSocket {
@@ -166,7 +166,7 @@ export namespace EthereumHandle {
 
         const sessions = Objects.mapValuesSync(chains, chain => {
           const socket = EthereumSocket.createPool(circuit, chain, { capacity: 1 })
-          const client = new Rpc.Client()
+          const client = new Rpc.RpcClient()
 
           return { chain, circuit, socket, client }
         })
