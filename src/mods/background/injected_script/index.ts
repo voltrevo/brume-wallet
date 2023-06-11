@@ -1,4 +1,4 @@
-import { Rpc, RpcRequestPreinit, RpcResponseInit } from "@/libs/rpc"
+import { RpcClient, RpcRequestPreinit, RpcResponseInit } from "@/libs/rpc"
 import { Future } from "@hazae41/future"
 
 declare global {
@@ -20,7 +20,7 @@ interface JsonRpcResponse {
 class Provider {
 
   constructor(
-    readonly client = new Rpc.RpcClient()
+    readonly client = new RpcClient()
   ) { }
 
   get isConnected() {

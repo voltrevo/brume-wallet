@@ -1,5 +1,5 @@
 import { Objects } from "@/libs/objects/objects"
-import { Rpc } from "@/libs/rpc"
+import { RpcClient } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Sockets } from "@/libs/sockets/sockets"
 import { useSessionsPool } from "@/mods/foreground/tor/sessions/context"
@@ -73,7 +73,7 @@ export interface EthereumSocket {
   chain: EthereumChain
   circuit: Circuit,
   socket: Pool<WebSocket, Error>
-  client: Rpc.RpcClient
+  client: RpcClient
 }
 
 export namespace EthereumSocket {
@@ -166,7 +166,7 @@ export namespace EthereumHandle {
 
         const sessions = Objects.mapValuesSync(chains, chain => {
           const socket = EthereumSocket.createPool(circuit, chain, { capacity: 1 })
-          const client = new Rpc.RpcClient()
+          const client = new RpcClient()
 
           return { chain, circuit, socket, client }
         })
