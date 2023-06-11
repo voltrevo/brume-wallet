@@ -1,26 +1,21 @@
-import { browser } from "@/libs/browser/browser";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { useCallback, useEffect, useState } from "react";
+import { ExtensionBackgroundProvider, WebsiteBackgroundProvider } from "../background/context";
+import { useExtension } from "../extension/context";
 import { registerServiceWorker } from "../service_worker/service_worker";
 
 export function Overlay(props: ChildrenProps) {
   const { children } = props
 
-  const [extension, setExtension] = useState<boolean>()
-
-  useEffect(() => {
-    setExtension(location.protocol.endsWith("extension:"))
-  }, [])
+  const extension = useExtension()
 
   const [active, setActive] = useState<ServiceWorker>()
   const [updating, setUpdating] = useState<ServiceWorker>()
-  const [port, setPort] = useState<chrome.runtime.Port>()
 
   useEffect(() => {
-    if (extension === true)
-      setPort(browser.runtime.connect({ name: "foreground" }))
-    if (extension === false)
-      registerServiceWorker({ onActive: setActive, onUpdating: setUpdating })
+    if (extension)
+      return
+    registerServiceWorker({ onActive: setActive, onUpdating: setUpdating })
   }, [extension])
 
   const update = useCallback(() => {
@@ -40,18 +35,19 @@ export function Overlay(props: ChildrenProps) {
       </div>
     </div>
 
-  if (extension === true)
-    return <main className="h-[600px] w-[400px] overflow-y-scroll">
-      {children}
-    </main>
+  if (extension)
+    return <ExtensionBackgroundProvider>
+      <main className="h-[600px] w-[400px] overflow-y-scroll">
+        {children}
+      </main>
+    </ExtensionBackgroundProvider>
 
-  if (extension === false)
-    return <main className="p-safe h-full w-full">
+  return <WebsiteBackgroundProvider>
+    <main className="p-safe h-full w-full">
       {updating && UpdateBanner}
       <div className="h-full w-full m-auto max-w-3xl">
         {children}
       </div>
     </main>
-
-  return null
+  </WebsiteBackgroundProvider>
 }
