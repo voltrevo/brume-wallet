@@ -1,18 +1,10 @@
 import fs from "fs";
-import path from "path";
 import workbox from "workbox-build";
+import { walkSync } from "./libs/walkSync.mjs";
 
-function* walkSync(dir) {
-  const files = fs.readdirSync(dir, { withFileTypes: true })
-
-  for (const file of files) {
-    if (file.isDirectory()) {
-      yield* walkSync(path.join(dir, file.name))
-    } else {
-      yield path.join(dir, file.name)
-    }
-  }
-}
+/**
+ * This is run after "npm run build"
+ */
 
 {
   const injected_script_base64 = fs.readFileSync("./out/injected_script.js", "base64")

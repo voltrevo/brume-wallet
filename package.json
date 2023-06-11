@@ -6,7 +6,7 @@
     "dev": "next dev",
     "dev:extension": "npm-watch build:extension",
     "build": "next build && mv ./out/_next ./out/next && node ./scripts/postbuild.mjs",
-    "build:extension": "npm run build && npm run build:extension:chrome && npm run build:extension:safari && npm run build:extension:firefox",
+    "build:extension": "npm run build && npm run build:extension:chrome && npm run build:extension:safari && npm run build:extension:firefox && node ./scripts/postbuild2.mjs",
     "build:extension:chrome": "rimraf ./chrome && cp -R ./out ./chrome && cd ./chrome && mv ./chrome/* . && rimraf ./firefox ./chrome ./safari",
     "build:extension:firefox": "rimraf ./firefox && cp -R ./out ./firefox && cd ./firefox && mv ./firefox/* . && rimraf ./firefox ./chrome ./safari",
     "build:extension:safari": "rimraf ./safari && cp -R ./out ./safari && cd ./safari && mv ./safari/* . && rimraf ./firefox ./chrome ./safari",

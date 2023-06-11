@@ -2,8 +2,9 @@ import { browser } from "@/libs/browser/browser"
 
 declare const self: ServiceWorkerGlobalScope
 
-const IS_FIREFOX = navigator.userAgent.includes("Firefox")
-const IS_SAFARI = navigator.userAgent.includes("Safari")
+declare const IS_FIREFOX: boolean
+declare const IS_SAFARI: boolean
+declare const IS_CHROME: boolean
 
 function inject() {
   const container = document.documentElement
@@ -21,5 +22,3 @@ function inject() {
 
 if (IS_FIREFOX || IS_SAFARI)
   inject()
-
-setInterval(() => console.log("content script"), 1000)
