@@ -1,4 +1,5 @@
-import { Panic } from "@hazae41/result"
+import { RequestInit, Rpc } from "@/libs/rpc"
+import { Future } from "@hazae41/future"
 
 declare global {
   interface Window {
@@ -6,27 +7,44 @@ declare global {
   }
 }
 
-interface JsonRpcRequestInit {
-  method: string
-  params?: unknown[]
+declare global {
+  interface DedicatedWorkerGlobalScopeEventMap {
+    "ethereum#response": CustomEvent<Rpc.ResponseInit>
+  }
+}
+
+interface JsonRpcResponse {
+  id: number
 }
 
 class Provider {
+
+  constructor(
+    readonly client = new Rpc.Client()
+  ) { }
 
   get isConnected() {
     return true
   }
 
-  async request(request: JsonRpcRequestInit) {
-    if (request.method === "eth_requestAccounts")
-      return ["0x39dfd20386F5d17eBa42763606B8c704FcDd1c1D"]
-    if (request.method === "eth_accounts")
-      return ["0x39dfd20386F5d17eBa42763606B8c704FcDd1c1D"]
-    if (request.method === "eth_chainId")
-      return "0x1"
-    if (request.method === "eth_blockNumber")
-      return "0x65a8db"
-    throw new Panic(`Invalid JSON-RPC request ${request.method}`)
+  async request(init: RequestInit) {
+    const request = this.client.new(init)
+
+    const future = new Future<JsonRpcResponse>()
+
+    const onResponse = (e: CustomEvent<Rpc.ResponseInit>) => {
+      if (request.id !== e.detail.id)
+        return
+      future.resolve(e.detail)
+    }
+
+    try {
+      window.addEventListener("ethereum#response", onResponse)
+      window.dispatchEvent(new CustomEvent("ethereum#request", { detail: init }))
+      return await future.promise
+    } finally {
+      window.removeEventListener("ethereum#response", onResponse)
+    }
   }
 
   on(event: string, listener: () => void) {

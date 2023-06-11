@@ -1,10 +1,17 @@
 import { browser } from "@/libs/browser/browser"
+import { Rpc } from "@/libs/rpc"
 
 declare const self: ServiceWorkerGlobalScope
 
 declare const IS_FIREFOX: boolean
 declare const IS_SAFARI: boolean
 declare const IS_CHROME: boolean
+
+declare global {
+  interface DedicatedWorkerGlobalScopeEventMap {
+    "ethereum#request": CustomEvent<Rpc.Request>
+  }
+}
 
 function inject() {
   const container = document.documentElement
@@ -22,3 +29,9 @@ function inject() {
 
 if (IS_FIREFOX || IS_SAFARI)
   inject()
+
+function onRequest(e: CustomEvent<Rpc.Request>) {
+  browser.runtime.sendMessage({})
+}
+
+window.addEventListener("ethereum#request", onRequest)

@@ -1,6 +1,6 @@
 import { Err, Ok } from "@hazae41/result"
 
-export type ResponseInit<T> =
+export type ResponseInit<T = unknown> =
   | Response.OkInit<T>
   | Response.ErrInit
 

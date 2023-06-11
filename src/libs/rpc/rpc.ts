@@ -1,7 +1,7 @@
 import { Future } from "@hazae41/future"
 import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
-import { RpcRequest, RpcRequestInit } from "./request"
+import { Request, RequestInit } from "./request"
 import { Response } from "./response"
 
 export * from "./request"
@@ -17,28 +17,28 @@ export class Client {
     return this.#id
   }
 
-  new<T extends unknown[] = unknown[]>(init: RpcRequestInit<T>) {
+  new<T extends unknown[] = unknown[]>(init: RequestInit<T>) {
     const { method, params } = init
 
     const id = this.#id++
 
-    return { jsonrpc: "2.0", id, method, params } satisfies RpcRequest<T>
+    return { jsonrpc: "2.0", id, method, params } satisfies Request<T>
   }
 
-  async fetch<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit) {
+  async fetch<T>(input: RequestInfo | URL, init: RequestInit & RequestInit) {
     const { method, params, ...rest } = init
 
     const request = this.new({ method, params })
     return fetch<T>(input, { ...rest, ...request })
   }
 
-  async tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit, signal: AbortSignal) {
+  async tryFetchWithSocket<T>(socket: WebSocket, request: RequestInit, signal: AbortSignal) {
     return await tryFetchWithSocket<T>(socket, this.new(request), signal)
   }
 
 }
 
-export async function fetch<T>(input: RequestInfo | URL, init: RequestInit & RpcRequest) {
+export async function fetch<T>(input: RequestInfo | URL, init: RequestInit & Request) {
   const { jsonrpc, id, method, params, ...rest } = init
 
   const headers = new Headers(rest.headers)
@@ -64,7 +64,7 @@ export async function fetch<T>(input: RequestInfo | URL, init: RequestInit & Rpc
   return response
 }
 
-export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequest, signal: AbortSignal) {
+export async function tryFetchWithSocket<T>(socket: WebSocket, request: Request, signal: AbortSignal) {
   socket.send(JSON.stringify(request))
 
   const future = new Future<Result<Response<T>, CloseError | ErrorError | AbortError>>()

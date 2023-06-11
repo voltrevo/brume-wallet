@@ -76,7 +76,7 @@ export function useWallet(uuid: string | undefined) {
   return useSchema(getWalletSchema, [uuid, storage])
 }
 
-export async function fetchWithSession(session: EthereumSession, init: Rpc.RpcRequestInit, more: FetcherMore) {
+export async function fetchWithSession(session: EthereumSession, init: Rpc.RequestInit, more: FetcherMore) {
   return await Result.unthrow<Fetched<string, CloseError | ErrorError | AbortError | unknown>>(async t => {
     const { signal = AbortSignals.timeout(5_000) } = more
 
@@ -101,7 +101,7 @@ export async function fetchWithSession(session: EthereumSession, init: Rpc.RpcRe
 export function getBalanceSchema(address: string | undefined, session: EthereumSession | undefined) {
   if (!address || !session) return
 
-  const fetcher = async (init: Rpc.RpcRequestInit, more: FetcherMore) => {
+  const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     return await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
   }
 
@@ -122,7 +122,7 @@ export function useBalance(address: string | undefined, session: EthereumSession
 export function getNonceSchema(address: string | undefined, session: EthereumSession | undefined) {
   if (!address || !session) return
 
-  const fetcher = async (init: Rpc.RpcRequestInit, more: FetcherMore) => {
+  const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     return await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
   }
 
@@ -143,7 +143,7 @@ export function useNonce(address: string | undefined, session: EthereumSession |
 export function getGasPriceSchema(session: EthereumSession | undefined) {
   if (!session) return
 
-  const fetcher = async (init: Rpc.RpcRequestInit, more: FetcherMore) => {
+  const fetcher = async (init: Rpc.RequestInit, more: FetcherMore) => {
     return await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
   }
 
