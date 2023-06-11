@@ -1,3 +1,5 @@
+import { browser } from "@/libs/browser/browser"
+import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Catched, Err, Ok, Result } from "@hazae41/result"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
@@ -54,6 +56,30 @@ async function main() {
   // const tors = createTorPool(async () => {
   //   return await tryCreateTor2({ fallbacks, ed25519, x25519, sha1 })
   // }, { capacity: 3 })
+
+  if (IS_EXTENSION) {
+    browser.runtime.onConnect.addListener(port => {
+      if (port.name !== "ethereum")
+        return
+      port.onMessage.addListener(async (msg: RpcRequestInit) => {
+        const response = RpcResponse.rewrap(msg.id, tryRoute(msg))
+        const init = RpcResponseInit.from(response)
+        port.postMessage(init)
+      })
+    })
+
+    function tryRoute(request: RpcRequestInit): Result<unknown, Error> {
+      if (request.method === "eth_requestAccounts")
+        return new Ok(["0x39dfd20386F5d17eBa42763606B8c704FcDd1c1D"])
+      if (request.method === "eth_accounts")
+        return new Ok(["0x39dfd20386F5d17eBa42763606B8c704FcDd1c1D"])
+      if (request.method === "eth_chainId")
+        return new Ok("0x1")
+      if (request.method === "eth_blockNumber")
+        return new Ok("0x65a8db")
+      return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
+    }
+  }
 }
 
 main()

@@ -6,9 +6,17 @@ export interface RpcOkInit<T = unknown> {
   readonly result: T
 }
 
-export class RpcOk<T = unknown> extends Ok<T> {
+export namespace RpcOkInit {
 
-  readonly error?: undefined
+  export function from<T>(response: RpcOk<T>): RpcOkInit<T> {
+    const { jsonrpc, id, result } = response
+    return { jsonrpc, id, result }
+  }
+
+}
+
+export class RpcOk<T = unknown> extends Ok<T> {
+  readonly jsonrpc = "2.0"
 
   constructor(
     readonly id: number,
@@ -18,9 +26,7 @@ export class RpcOk<T = unknown> extends Ok<T> {
   }
 
   static from<T>(init: RpcOkInit<T>) {
-    const { id, result } = init
-
-    return new this(id, result)
+    return new RpcOk(init.id, init.result)
   }
 
 }

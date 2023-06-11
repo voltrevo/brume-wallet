@@ -1,4 +1,4 @@
-import { RpcClient, RpcRequestPreinit, RpcResponseInit } from "@/libs/rpc"
+import { RpcClient, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Future } from "@hazae41/future"
 
 declare global {
@@ -30,17 +30,23 @@ class Provider {
   async request(init: RpcRequestPreinit) {
     const request = this.client.create(init)
 
-    const future = new Future<JsonRpcResponse>()
+    const future = new Future<unknown>()
 
     const onResponse = (e: CustomEvent<RpcResponseInit>) => {
-      if (request.id !== e.detail.id)
+      const response = RpcResponse.from(e.detail)
+
+      if (request.id !== response.id)
         return
-      future.resolve(e.detail)
+
+      if (response.isOk())
+        future.resolve(response.result)
+      else
+        future.reject(response.error)
     }
 
     try {
       window.addEventListener("ethereum#response", onResponse)
-      window.dispatchEvent(new CustomEvent("ethereum#request", { detail: init }))
+      window.dispatchEvent(new CustomEvent("ethereum#request", { detail: request }))
       return await future.promise
     } finally {
       window.removeEventListener("ethereum#response", onResponse)

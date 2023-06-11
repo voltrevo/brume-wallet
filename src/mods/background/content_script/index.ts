@@ -1,5 +1,5 @@
 import { browser } from "@/libs/browser/browser"
-import { RpcRequestInit } from "@/libs/rpc"
+import { RpcRequestInit, RpcResponseInit } from "@/libs/rpc"
 
 declare const self: ServiceWorkerGlobalScope
 
@@ -30,8 +30,12 @@ function inject() {
 if (IS_FIREFOX || IS_SAFARI)
   inject()
 
-function onRequest(e: CustomEvent<RpcRequestInit>) {
-  browser.runtime.sendMessage(e.detail)
-}
+const ethereum = browser.runtime.connect({ name: "ethereum" })
 
-window.addEventListener("ethereum#request", onRequest)
+ethereum.onMessage.addListener((msg: RpcResponseInit) => {
+  window.dispatchEvent(new CustomEvent("ethereum#response", { detail: msg }))
+})
+
+window.addEventListener("ethereum#request", (e: CustomEvent<RpcRequestInit>) => {
+  ethereum.postMessage(e.detail)
+})
