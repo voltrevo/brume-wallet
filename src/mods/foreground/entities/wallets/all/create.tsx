@@ -10,6 +10,7 @@ import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
 import { Mutators } from "@/libs/xswr/mutators";
+import { useBackground } from "@/mods/foreground/background/context";
 import { GradientButton } from "@/mods/foreground/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
 import { Result } from "@hazae41/result";
@@ -33,7 +34,9 @@ export namespace Wallets {
 
 export function WalletCreatorDialog(props: CloseProps) {
   const { close } = props
-  const { mutate } = useWallets()
+
+  const background = useBackground()
+  const { mutate } = useWallets(background)
 
   const uuid = useMemo(() => {
     return crypto.randomUUID()

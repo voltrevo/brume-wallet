@@ -7,6 +7,7 @@ import { useEthereumHandle } from "@/libs/tor/sessions/session";
 import { Query } from "@hazae41/xswr";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
+import { useBackground } from "../../background/context";
 import { WalletDataProps, useBalance, useWallet } from "./data";
 import { WalletCard } from "./row";
 import { SendDialog } from "./send";
@@ -14,7 +15,8 @@ import { SendDialog } from "./send";
 export function WalletPage(props: { uuid: string }) {
   const { uuid } = props
 
-  const wallet = useWallet(uuid)
+  const background = useBackground()
+  const wallet = useWallet(uuid, background)
 
   if (wallet.data === undefined)
     return null

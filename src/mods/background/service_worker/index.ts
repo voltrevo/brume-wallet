@@ -8,6 +8,8 @@ import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getUser, tryCreateUser, tryCreateUserStorage } from "./entities/users/data"
+import { getWallets } from "./entities/wallets/all/data"
+import { Wallet, WalletData, getWallet } from "./entities/wallets/data"
 import { tryCreateGlobalStorage } from "./storage"
 
 declare global {
@@ -108,8 +110,28 @@ async function brume_getCurrentUser(request: RpcRequestInit): Promise<Result<Opt
   return new Ok(memory.session?.user)
 }
 
-async function brume_getWallets(request: RpcRequestInit) {
+async function brume_getWallets(request: RpcRequestInit): Promise<Result<Wallet[], unknown>> {
+  return Result.unthrow(async t => {
+    const { userStorage } = Option.from(memory.session).ok().throw(t)
 
+    const walletsQuery = await getWallets(userStorage)?.make(core)
+    const wallets = Option.from(walletsQuery?.current).ok().throw(t).throw(t)
+
+    return new Ok(wallets)
+  })
+}
+
+async function brume_getWallet(request: RpcRequestInit): Promise<Result<WalletData, unknown>> {
+  return Result.unthrow(async t => {
+    const [uuid] = request.params as [string]
+
+    const { userStorage } = Option.from(memory.session).ok().throw(t)
+
+    const walletQuery = await getWallet(uuid, userStorage)?.make(core)
+    const wallet = Option.from(walletQuery?.current).ok().throw(t).throw(t)
+
+    return new Ok(wallet)
+  })
 }
 
 async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unknown, unknown>> {
@@ -123,6 +145,10 @@ async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unkno
     return await brume_setCurrentUser(request)
   if (request.method === "brume_getCurrentUser")
     return await brume_getCurrentUser(request)
+  if (request.method === "brume_getWallets")
+    return await brume_getWallets(request)
+  if (request.method === "brume_getWallet")
+    return await brume_getWallet(request)
   return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
 }
 

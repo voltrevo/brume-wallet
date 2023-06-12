@@ -1,16 +1,18 @@
-import { NormalizerMore, StorageQueryParams, createQuerySchema, useQuery } from "@hazae41/xswr";
-import { Wallet, getWalletRef } from "../data";
+import { RpcRequestPreinit } from "@/libs/rpc";
+import { Background } from "@/mods/foreground/background/background";
+import { Fetched, FetcherMore, createQuerySchema, useQuery } from "@hazae41/xswr";
+import { Wallet } from "../data";
 
-export function getWalletsSchema(storage: StorageQueryParams<any> | undefined) {
-  if (!storage) return
+export function getWalletsSchema(background: Background) {
+  const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
+    Fetched.rewrap(await background.request<T>(init))
 
-  const normalizer = async (wallets: Wallet[], more: NormalizerMore) => {
-    return await Promise.all(wallets.map(wallet => getWalletRef(wallet, storage, more)))
-  }
-
-  return createQuerySchema<Wallet[]>(`wallets`, undefined, { storage, normalizer })
+  return createQuerySchema<Wallet[], RpcRequestPreinit>({
+    method: "brume_getWallets",
+    params: undefined
+  }, fetcher)
 }
 
-export function useWallets() {
-  return useQuery(getWalletsSchema, [undefined])
+export function useWallets(background: Background) {
+  return useQuery(getWalletsSchema, [background])
 }

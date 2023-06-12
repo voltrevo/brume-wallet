@@ -2,6 +2,7 @@
 import { Outline } from "@/libs/icons/icons"
 import { useBooleanState } from "@/libs/react/handles/boolean"
 import { OkProps } from "@/libs/react/props/promise"
+import { useBackground } from "@/mods/foreground/background/context"
 import { useRouter } from "next/router"
 import { useCallback } from "react"
 import { Wallet, WalletProps, useWallet } from "../data"
@@ -11,7 +12,10 @@ import { useWallets } from "./data"
 
 export function WalletsPage(props: {}) {
   const router = useRouter()
-  const wallets = useWallets()
+
+  const background = useBackground()
+  const wallets = useWallets(background)
+
   const creator = useBooleanState()
 
   const onWalletClick = useCallback((wallet: Wallet) => {
@@ -66,7 +70,8 @@ export function WalletsPage(props: {}) {
 export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {
   const { ok } = props
 
-  const wallet = useWallet(props.wallet.uuid)
+  const background = useBackground()
+  const wallet = useWallet(props.wallet.uuid, background)
 
   const onClick = useCallback(() => {
     ok(props.wallet)

@@ -1,11 +1,9 @@
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { EthereumSession } from "@/libs/tor/sessions/session"
-import { Optional } from "@hazae41/option"
 import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
 import { Result } from "@hazae41/result"
-import { Fetched, FetcherMore, createQuerySchema, useError, useFetch, useOnce, useQuery } from "@hazae41/xswr"
-import { Background } from "../../background/background"
+import { Fetched, FetcherMore, NormalizerMore, StorageQueryParams, createQuerySchema } from "@hazae41/xswr"
 
 export type Wallet =
   | WalletRef
@@ -56,23 +54,17 @@ export interface BitcoinPrivateKeyWallet {
   uncompressedAddress: string
 }
 
-export function getWallet(uuid: Optional<string>, background: Background) {
-  if (uuid === undefined)
-    return undefined
-
-  const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
-    Fetched.rewrap(await background.request<T>(init))
-
-  return createQuerySchema<WalletData, RpcRequestPreinit>({
-    method: "brume_getWallet",
-    params: [uuid]
-  }, fetcher)
+export function getWallet(uuid: string, storage: StorageQueryParams<any>) {
+  return createQuerySchema<WalletData>(`wallet/${uuid}`, undefined, { storage })
 }
 
-export function useWallet(uuid: Optional<string>, background: Background) {
-  const query = useQuery(getWallet, [uuid, background])
-  useOnce(query)
-  return query
+export async function getWalletRef(wallet: Wallet, storage: StorageQueryParams<any>, more: NormalizerMore) {
+  if ("ref" in wallet) return wallet
+
+  const schema = getWallet(wallet.uuid, storage)
+  await schema?.normalize(wallet, more)
+
+  return { ref: true, uuid: wallet.uuid } as WalletRef
 }
 
 export async function fetchWithSession(session: EthereumSession, init: RpcRequestPreinit, more: FetcherMore) {
@@ -111,13 +103,6 @@ export function getBalanceSchema(address: string | undefined, session: EthereumS
   }, fetcher)
 }
 
-export function useBalance(address: string | undefined, session: EthereumSession | undefined) {
-  const query = useQuery(getBalanceSchema, [address, session])
-  useFetch(query)
-  useError(query, console.error)
-  return query
-}
-
 export function getNonceSchema(address: string | undefined, session: EthereumSession | undefined) {
   if (!address || !session) return
 
@@ -132,13 +117,6 @@ export function getNonceSchema(address: string | undefined, session: EthereumSes
   }, fetcher)
 }
 
-export function useNonce(address: string | undefined, session: EthereumSession | undefined) {
-  const query = useQuery(getNonceSchema, [address, session])
-  useFetch(query)
-  useError(query, console.error)
-  return query
-}
-
 export function getGasPriceSchema(session: EthereumSession | undefined) {
   if (!session) return
 
@@ -151,11 +129,4 @@ export function getGasPriceSchema(session: EthereumSession | undefined) {
     method: "eth_gasPrice",
     params: []
   }, fetcher)
-}
-
-export function useGasPrice(session: EthereumSession | undefined) {
-  const query = useQuery(getGasPriceSchema, [session])
-  useFetch(query)
-  useError(query, console.error)
-  return query
 }

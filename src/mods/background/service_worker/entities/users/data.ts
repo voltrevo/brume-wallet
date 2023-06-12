@@ -1,5 +1,4 @@
 import { Bytes } from "@hazae41/bytes"
-import { Optional } from "@hazae41/option"
 import { Err, Ok, Result } from "@hazae41/result"
 import { AesGcmCoder, HmacEncoder, IDBStorage, NormalizerMore, StorageQueryParams, createQuerySchema } from "@hazae41/xswr"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBase64, Pbkdf2ParamsBytes } from "./crypto"
@@ -50,16 +49,11 @@ export interface UserSession {
   userStorage: StorageQueryParams<any>
 }
 
-export function getUser(uuid: Optional<string>, storage: Optional<StorageQueryParams<any>>) {
-  if (uuid === undefined)
-    return undefined
-  if (storage === undefined)
-    return undefined
-
+export function getUser(uuid: string, storage: StorageQueryParams<any>) {
   return createQuerySchema<UserData>(`user/${uuid}`, undefined, { storage })
 }
 
-export async function getUserRef(wallet: User, storage: Optional<StorageQueryParams<any>>, more: NormalizerMore) {
+export async function getUserRef(wallet: User, storage: StorageQueryParams<any>, more: NormalizerMore) {
   if ("ref" in wallet) return wallet
 
   const schema = getUser(wallet.uuid, storage)
