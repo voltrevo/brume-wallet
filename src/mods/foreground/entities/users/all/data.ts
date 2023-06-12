@@ -8,7 +8,8 @@ export function getUsers(background: Background) {
     Fetched.rewrap(await background.request<T>(init))
 
   return createQuerySchema<User[], RpcRequestPreinit>({
-    method: "brume_getUsers"
+    method: "brume_getUsers",
+    params: undefined
   }, fetcher)
 }
 
