@@ -6,13 +6,12 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
+import { UserInit } from "@/mods/background/service_worker/entities/users/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { GradientButton } from "@/mods/foreground/components/buttons/button";
-import { Bytes } from "@hazae41/bytes";
 import { Some } from "@hazae41/option";
 import { Data } from "@hazae41/xswr";
 import { useMemo, useState } from "react";
-import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBytes } from "../../../storage/user/crypto";
 import { User } from "../data";
 import { useUsers } from "./data";
 import { UserAvatar } from "./page";
@@ -54,52 +53,13 @@ export function UserCreateDialog(props: CloseProps) {
   }, [password, password2])
 
   const onClick = useAsyncUniqueCallback(async () => {
-    const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits"])
+    const user: UserInit = { uuid, name, color, emoji, password }
 
-    const keyParamsBase64: HmacPbkdf2ParamsBase64 = {
-      derivedKeyType: {
-        name: "HMAC",
-        hash: "SHA-256"
-      },
-      algorithm: Pbdkf2Params.stringify({
-        name: "PBKDF2",
-        hash: "SHA-256",
-        iterations: 1_000_000,
-        salt: Bytes.random(16)
-      })
-    }
-
-    const valueParamsBase64: AesGcmPbkdf2ParamsBase64 = {
-      derivedKeyType: {
-        name: "AES-GCM",
-        length: 256
-      },
-      algorithm: Pbdkf2Params.stringify({
-        name: "PBKDF2",
-        hash: "SHA-256",
-        iterations: 1_000_000,
-        salt: Bytes.random(16)
-      })
-    }
-
-    const passwordParamsBytes: Pbkdf2ParamsBytes = {
-      name: "PBKDF2",
-      hash: "SHA-256",
-      iterations: 1_000_000,
-      salt: Bytes.random(16)
-    }
-
-    const passwordParamsBase64 = Pbdkf2Params.stringify(passwordParamsBytes)
-    const passwordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, 256))
-    const passwordHashBase64 = Bytes.toBase64(passwordHashBytes)
-
-    const user = { uuid, name, color, emoji, keyParamsBase64, valueParamsBase64, passwordParamsBase64, passwordHashBase64 }
-
-    const users2 = await background
+    const usersData = await background
       .request<User[]>({ method: "brume_newUser", params: [user] })
       .then(r => r.unwrap())
 
-    users.mutate(() => new Some(new Data(users2)))
+    users.mutate(() => new Some(new Data(usersData)))
 
     close()
   }, [uuid, name, color, emoji, password])

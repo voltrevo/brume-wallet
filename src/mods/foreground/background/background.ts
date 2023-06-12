@@ -65,8 +65,8 @@ export class ExtensionBackground {
 
     const future = new Future<RpcResponse<T>>()
 
-    const onMessage = (event: MessageEvent<RpcResponseInit<T>>) => {
-      const response = RpcResponse.from(event.data)
+    const onMessage = (message: RpcResponseInit<T>) => {
+      const response = RpcResponse.from(message)
 
       if (response.id !== request.id)
         return
