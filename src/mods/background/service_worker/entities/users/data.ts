@@ -33,7 +33,7 @@ export interface UserData {
   passwordHashBase64: string
 }
 
-export function getUserSchema(uuid: Optional<string>, storage: Optional<StorageQueryParams<any>>) {
+export function getUser(uuid: Optional<string>, storage: Optional<StorageQueryParams<any>>) {
   if (uuid === undefined)
     return undefined
   if (storage === undefined)
@@ -45,7 +45,7 @@ export function getUserSchema(uuid: Optional<string>, storage: Optional<StorageQ
 export async function getUserRef(wallet: User, storage: Optional<StorageQueryParams<any>>, more: NormalizerMore) {
   if ("ref" in wallet) return wallet
 
-  const schema = getUserSchema(wallet.uuid, storage)
+  const schema = getUser(wallet.uuid, storage)
   await schema?.normalize(wallet, more)
 
   return { ref: true, uuid: wallet.uuid } as UserRef

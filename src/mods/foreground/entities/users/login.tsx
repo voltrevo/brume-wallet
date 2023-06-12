@@ -6,6 +6,7 @@ import { Bytes } from "@hazae41/bytes";
 import { Err, Ok } from "@hazae41/result";
 import { AesGcmCoder, HmacEncoder, IDBStorage, StorageQueryParams } from "@hazae41/xswr";
 import { useRef, useState } from "react";
+import { useBackground } from "../../background/context";
 import { Pbdkf2Params } from "../../storage/user/crypto";
 import { UserAvatar } from "./all/page";
 import { UserData, UserProps, useUser } from "./data";
@@ -44,7 +45,8 @@ async function tryValidate(user: UserData, password: string) {
 export function UserLoginPage(props: UserProps & PromiseProps<StorageQueryParams<any>>) {
   const { user: userRef, ok, err } = props
 
-  const user = useUser(userRef.uuid)
+  const background = useBackground()
+  const user = useUser(userRef.uuid, background)
 
   const passwordInputRef = useRef<HTMLInputElement>(null)
 

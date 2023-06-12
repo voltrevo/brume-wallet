@@ -37,7 +37,8 @@ export function UsersPage(props: OkProps<User>) {
 function UserOkButton(props: UserProps & OkProps<User>) {
   const { ok } = props
 
-  const user = useUser(props.user.uuid)
+  const background = useBackground()
+  const user = useUser(props.user.uuid, background)
 
   const onClick = useCallback(() => {
     ok(props.user)

@@ -6,7 +6,7 @@ import { Core } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { getUsers } from "./entities/users/all/data"
-import { User, UserData } from "./entities/users/data"
+import { User, UserData, getUser } from "./entities/users/data"
 import { createGlobalStorage } from "./storage"
 
 declare global {
@@ -73,14 +73,20 @@ async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], un
   const [user] = request.params as [UserData]
   const users = await getUsers(storage)?.make(core)
 
-  if (!users)
+  await users?.mutate(Mutators.push(user))
+
+  if (!users?.current)
     return new Err(new Panic(`No users`))
-
-  await users.mutate(Mutators.push(user))
-
-  if (!users.current)
-    return new Err(new Panic(`No current users`))
   return users.current
+}
+
+async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, unknown>> {
+  const [uuid] = request.params as [string]
+  const user = await getUser(uuid, storage)?.make(core)
+
+  if (!user?.current)
+    return new Err(new Panic(`No user`))
+  return user.current
 }
 
 async function brume_session(request: RpcRequestInit) {
@@ -98,6 +104,8 @@ async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unkno
     return await brume_getUsers(request)
   if (request.method === "brume_newUser")
     return await brume_newUser(request)
+  if (request.method === "brume_getUser")
+    return await brume_getUser(request)
   if (request.method === "brume_login")
     return await brume_login(request)
   if (request.method === "brume_session")

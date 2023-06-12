@@ -1,5 +1,7 @@
-import { useGlobalStorage } from "@/mods/foreground/storage/global/context"
-import { NormalizerMore, StorageQueryParams, createQuerySchema, useQuery } from "@hazae41/xswr"
+import { RpcRequestPreinit } from "@/libs/rpc"
+import { Optional } from "@hazae41/option"
+import { Fetched, FetcherMore, createQuerySchema, useOnce, useQuery } from "@hazae41/xswr"
+import { Background } from "../../background/background"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbkdf2ParamsBase64 } from "../../storage/user/crypto"
 
 export type User =
@@ -33,23 +35,21 @@ export interface UserData {
   passwordHashBase64: string
 }
 
-export function getUserSchema(uuid: string | undefined, storage: StorageQueryParams<any> | undefined) {
-  if (!uuid || !storage) return
+export function getUserSchema(uuid: Optional<string>, background: Background) {
+  if (uuid === undefined)
+    return undefined
 
-  return createQuerySchema<UserData>(`user/${uuid}`, undefined, { storage })
+  const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
+    Fetched.rewrap(await background.request<T>(init))
+
+  return createQuerySchema<UserData, RpcRequestPreinit>({
+    method: "brume_getUser",
+    params: [uuid]
+  }, fetcher)
 }
 
-export async function getUserRef(wallet: User, storage: StorageQueryParams<any> | undefined, more: NormalizerMore) {
-  if ("ref" in wallet) return wallet
-
-  const schema = getUserSchema(wallet.uuid, storage)
-  await schema?.normalize(wallet, more)
-
-  return { ref: true, uuid: wallet.uuid } as UserRef
-}
-
-export function useUser(uuid: string | undefined) {
-  const storage = useGlobalStorage()
-
-  return useQuery(getUserSchema, [uuid, storage])
+export function useUser(uuid: Optional<string>, background: Background) {
+  const query = useQuery(getUserSchema, [uuid, background])
+  useOnce(query)
+  return query
 }
