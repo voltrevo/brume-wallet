@@ -62,7 +62,7 @@ export function UserCreateDialog(props: CloseProps) {
     users.mutate(() => new Some(new Data(usersData)))
 
     close()
-  }, [uuid, name, color, emoji, password])
+  }, [uuid, name, color, emoji, password, background, users.mutate, close])
 
   const NameInput =
     <div className="flex items-center gap-2">

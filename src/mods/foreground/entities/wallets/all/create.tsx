@@ -9,25 +9,27 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
-import { Mutators } from "@/libs/xswr/mutators";
 import { useBackground } from "@/mods/foreground/background/context";
 import { GradientButton } from "@/mods/foreground/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
+import { Some } from "@hazae41/option";
 import { Result } from "@hazae41/result";
+import { Data } from "@hazae41/xswr";
 import { secp256k1 } from "@noble/curves/secp256k1";
-import { Wallet } from "ethers";
+import * as Ethers from "ethers";
 import { useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../avatar";
+import { Wallet, WalletData } from "../data";
 import { useWallets } from "./data";
 
 export namespace Wallets {
 
   export function tryRandom() {
-    return Result.catchAndWrapSync(() => Wallet.createRandom().privateKey)
+    return Result.catchAndWrapSync(() => Ethers.Wallet.createRandom().privateKey)
   }
 
   export function tryFrom(privateKey: string) {
-    return Result.catchAndWrapSync(() => new Wallet(privateKey))
+    return Result.catchAndWrapSync(() => new Ethers.Wallet(privateKey))
   }
 
 }
@@ -36,7 +38,7 @@ export function WalletCreatorDialog(props: CloseProps) {
   const { close } = props
 
   const background = useBackground()
-  const { mutate } = useWallets(background)
+  const wallets = useWallets(background)
 
   const uuid = useMemo(() => {
     return crypto.randomUUID()
@@ -62,14 +64,14 @@ export function WalletCreatorDialog(props: CloseProps) {
     Promises.fork().then(() => setKey(Wallets.tryRandom().ok().inner))
   }, [])
 
-  const wallet = useAsyncReplaceMemo(async () => {
+  const ethersWallet = useAsyncReplaceMemo(async () => {
     if (key) return Wallets.tryFrom(key).ok().inner
   }, [key])
 
   const onDoneClick = useAsyncUniqueCallback(async () => {
-    if (!name || !wallet) return
+    if (!name || !ethersWallet) return
 
-    const privateKeyBytes = Bytes.fromHex(wallet.signingKey.privateKey.slice(2))
+    const privateKeyBytes = Bytes.fromHex(ethersWallet.signingKey.privateKey.slice(2))
 
     const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
     // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
@@ -80,10 +82,17 @@ export function WalletCreatorDialog(props: CloseProps) {
     // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
     // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
 
-    mutate(Mutators.push({ coin: "ethereum", type: "privateKey", uuid, name, color, emoji, privateKey, address }))
+
+    const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, privateKey, address }
+
+    const walletsData = await background
+      .request<Wallet[]>({ method: "brume_newWallet", params: [wallet] })
+      .then(r => r.unwrap())
+
+    wallets.mutate(() => new Some(new Data(walletsData)))
 
     close()
-  }, [uuid, name, color, emoji, wallet, mutate, close])
+  }, [uuid, name, color, emoji, ethersWallet, background, wallets.mutate, close])
 
   const NameInput =
     <div className="flex items-center gap-2">
@@ -111,7 +120,7 @@ export function WalletCreatorDialog(props: CloseProps) {
   const DoneButton =
     <GradientButton className="w-full"
       colorIndex={color}
-      disabled={!name || !wallet}
+      disabled={!name || !ethersWallet}
       icon={Outline.PlusIcon}
       onClick={onDoneClick.run}>
       Add
