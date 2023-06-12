@@ -3,12 +3,12 @@ import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Optional } from "@hazae41/option"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
-import { Core, StorageQueryParams } from "@hazae41/xswr"
+import { Core } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { getUsers } from "./entities/users/all/data"
-import { User, UserData, UserInit, getUser, tryCreateUser, tryCreateUserStorage } from "./entities/users/data"
-import { createGlobalStorage } from "./storage"
+import { User, UserData, UserInit, UserSession, getUser, tryCreateUser, tryCreateUserStorage } from "./entities/users/data"
+import { tryCreateGlobalStorage } from "./storage"
 
 declare global {
   interface ServiceWorkerGlobalScope {
@@ -50,23 +50,20 @@ async function tryFetch<T>(url: string): Promise<Result<T, Error>> {
 
 const FALLBACKS_URL = "https://raw.githubusercontent.com/hazae41/echalote/master/tools/fallbacks/fallbacks.json"
 
-const memory: {
-  session?: {
-    user: UserData,
-    storage: StorageQueryParams<any>
-  }
-} = {}
-
 const core = new Core({})
-const globalStorage = createGlobalStorage()
+const globalStorage = tryCreateGlobalStorage().unwrap()
+
+const memory: {
+  session?: UserSession
+} = {}
 
 async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], unknown>> {
   const users = await getUsers(globalStorage)?.make(core)
 
-  if (!users)
-    return new Err(new Panic(`No users`))
-  if (!users.current)
+  if (!users?.current)
     return new Ok([])
+  if (users.current.isErr())
+    return users.current
   return users.current
 }
 
@@ -80,6 +77,8 @@ async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], un
 
     if (!users?.current)
       return new Err(new Panic(`No users`))
+    if (users.current.isErr())
+      return users.current
     return users.current
   })
 }
@@ -90,6 +89,8 @@ async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, 
 
   if (!user?.current)
     return new Err(new Panic(`No user`))
+  if (user.current.isErr())
+    return user.current
   return user.current
 }
 
@@ -103,8 +104,8 @@ async function brume_setCurrentUser(request: RpcRequestInit): Promise<Result<voi
     if (user.current.isErr())
       return user.current
 
-    const storage = await tryCreateUserStorage(user.current.inner, password).then(r => r.throw(t))
-    memory.session = { user: user.current.inner, storage }
+    const userStorage = await tryCreateUserStorage(user.current.inner, password).then(r => r.throw(t))
+    memory.session = { user: user.current.inner, userStorage }
     return Ok.void()
   })
 }

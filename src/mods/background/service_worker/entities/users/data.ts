@@ -45,6 +45,11 @@ export interface UserData {
   passwordHashBase64: string
 }
 
+export interface UserSession {
+  user: UserData,
+  userStorage: StorageQueryParams<any>
+}
+
 export function getUser(uuid: Optional<string>, storage: Optional<StorageQueryParams<any>>) {
   if (uuid === undefined)
     return undefined
