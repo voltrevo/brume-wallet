@@ -1,7 +1,7 @@
 import { browser } from "@/libs/browser/browser"
 import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Mutators } from "@/libs/xswr/mutators"
-import { Optional } from "@hazae41/option"
+import { Option, Optional } from "@hazae41/option"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Core } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
@@ -58,60 +58,58 @@ const memory: {
 } = {}
 
 async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], unknown>> {
-  const users = await getUsers(globalStorage)?.make(core)
+  return await Result.unthrow(async t => {
+    const usersQuery = await getUsers(globalStorage)?.make(core)
+    const users = Option.from(usersQuery?.current).ok().throw(t).throw(t)
 
-  if (!users?.current)
-    return new Ok([])
-  if (users.current.isErr())
-    return users.current
-  return users.current
+    return new Ok(users)
+  })
 }
 
 async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], unknown>> {
   return await Result.unthrow(async t => {
     const [init] = request.params as [UserInit]
-    const users = await getUsers(globalStorage)?.make(core)
+    const usersQuery = await getUsers(globalStorage)?.make(core)
 
     const user = await tryCreateUser(init).then(r => r.throw(t))
-    await users?.mutate(Mutators.push(user))
+    await usersQuery?.mutate(Mutators.push(user))
 
-    if (!users?.current)
-      return new Err(new Panic(`No users`))
-    if (users.current.isErr())
-      return users.current
-    return users.current
+    const users = Option.from(usersQuery?.current).ok().throw(t).throw(t)
+
+    return new Ok(users)
   })
 }
 
 async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, unknown>> {
-  const [uuid] = request.params as [string]
-  const user = await getUser(uuid, globalStorage)?.make(core)
+  return await Result.unthrow(async t => {
+    const [uuid] = request.params as [string]
 
-  if (!user?.current)
-    return new Err(new Panic(`No user`))
-  if (user.current.isErr())
-    return user.current
-  return user.current
+    const userQuery = await getUser(uuid, globalStorage)?.make(core)
+    const user = Option.from(userQuery?.current).ok().throw(t).throw(t)
+
+    return new Ok(user)
+  })
 }
 
 async function brume_setCurrentUser(request: RpcRequestInit): Promise<Result<void, unknown>> {
   return Result.unthrow(async t => {
     const [uuid, password] = request.params as [string, string]
-    const user = await getUser(uuid, globalStorage)?.make(core)
 
-    if (!user?.current)
-      return new Err(new Panic(`No user`))
-    if (user.current.isErr())
-      return user.current
+    const userQuery = await getUser(uuid, globalStorage)?.make(core)
+    const user = Option.from(userQuery?.current).ok().throw(t).throw(t)
 
-    const userStorage = await tryCreateUserStorage(user.current.inner, password).then(r => r.throw(t))
-    memory.session = { user: user.current.inner, userStorage }
+    const userStorage = await tryCreateUserStorage(user, password).then(r => r.throw(t))
+    memory.session = { user, userStorage }
     return Ok.void()
   })
 }
 
-async function brume_getCurrentUser(request: RpcRequestInit): Promise<Result<Optional<UserData>, unknown>> {
+async function brume_getCurrentUser(request: RpcRequestInit): Promise<Result<Optional<UserData>, never>> {
   return new Ok(memory.session?.user)
+}
+
+async function brume_getWallets(request: RpcRequestInit) {
+
 }
 
 async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unknown, unknown>> {
