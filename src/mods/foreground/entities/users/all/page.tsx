@@ -4,18 +4,28 @@ import { useBooleanState } from "@/libs/react/handles/boolean";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { OkProps } from "@/libs/react/props/promise";
 import { useBackground } from "@/mods/foreground/background/context";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { User, UserProps, useUser } from "../data";
+import { UserLoginPage } from "../login";
 import { UserCreateDialog } from "./create";
 import { useUsers } from "./data";
 
 export function UsersPage(props: OkProps<User>) {
   const { ok } = props
 
+  const [user, setUser] = useState<User>()
+  const clear = useCallback(() => setUser(undefined), [])
+
   const background = useBackground()
   const users = useUsers(background)
 
   const createDialog = useBooleanState()
+
+  if (user !== undefined)
+    return <UserLoginPage
+      user={user}
+      ok={ok}
+      err={clear} />
 
   return <>
     {createDialog.current &&
@@ -27,7 +37,7 @@ export function UsersPage(props: OkProps<User>) {
           <UserOkButton
             key={user.uuid}
             user={user}
-            ok={ok} />)}
+            ok={setUser} />)}
         <NewUserButton ok={createDialog.enable} />
       </div>
     </div>

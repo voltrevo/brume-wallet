@@ -2,7 +2,6 @@ import { RpcRequestPreinit } from "@/libs/rpc"
 import { Optional } from "@hazae41/option"
 import { Fetched, FetcherMore, createQuerySchema, useOnce, useQuery } from "@hazae41/xswr"
 import { Background } from "../../background/background"
-import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbkdf2ParamsBase64 } from "../../storage/user/crypto"
 
 export type User =
   | UserRef
@@ -27,12 +26,6 @@ export interface UserData {
 
   color: number
   emoji: string
-
-  keyParamsBase64: HmacPbkdf2ParamsBase64
-  valueParamsBase64: AesGcmPbkdf2ParamsBase64
-
-  passwordParamsBase64: Pbkdf2ParamsBase64
-  passwordHashBase64: string
 }
 
 export function getUserSchema(uuid: Optional<string>, background: Background) {

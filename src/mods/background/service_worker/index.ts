@@ -1,12 +1,13 @@
 import { browser } from "@/libs/browser/browser"
 import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Mutators } from "@/libs/xswr/mutators"
+import { Optional } from "@hazae41/option"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
-import { Core } from "@hazae41/xswr"
+import { Core, StorageQueryParams } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { getUsers } from "./entities/users/all/data"
-import { User, UserData, UserInit, getUser, tryCreateUser } from "./entities/users/data"
+import { User, UserData, UserInit, getUser, tryCreateUser, tryCreateUserStorage } from "./entities/users/data"
 import { createGlobalStorage } from "./storage"
 
 declare global {
@@ -51,16 +52,16 @@ const FALLBACKS_URL = "https://raw.githubusercontent.com/hazae41/echalote/master
 
 const memory: {
   session?: {
-    uuid: string,
-    password: string
+    user: UserData,
+    storage: StorageQueryParams<any>
   }
 } = {}
 
 const core = new Core({})
-const storage = createGlobalStorage()
+const globalStorage = createGlobalStorage()
 
 async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], unknown>> {
-  const users = await getUsers(storage)?.make(core)
+  const users = await getUsers(globalStorage)?.make(core)
 
   if (!users)
     return new Err(new Panic(`No users`))
@@ -72,7 +73,7 @@ async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], u
 async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], unknown>> {
   return await Result.unthrow(async t => {
     const [init] = request.params as [UserInit]
-    const users = await getUsers(storage)?.make(core)
+    const users = await getUsers(globalStorage)?.make(core)
 
     const user = await tryCreateUser(init).then(r => r.throw(t))
     await users?.mutate(Mutators.push(user))
@@ -85,22 +86,31 @@ async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], un
 
 async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, unknown>> {
   const [uuid] = request.params as [string]
-  const user = await getUser(uuid, storage)?.make(core)
+  const user = await getUser(uuid, globalStorage)?.make(core)
 
   if (!user?.current)
     return new Err(new Panic(`No user`))
   return user.current
 }
 
+async function brume_setCurrentUser(request: RpcRequestInit): Promise<Result<void, unknown>> {
+  return Result.unthrow(async t => {
+    const [uuid, password] = request.params as [string, string]
+    const user = await getUser(uuid, globalStorage)?.make(core)
 
-async function brume_session(request: RpcRequestInit) {
-  return new Ok(memory.session)
+    if (!user?.current)
+      return new Err(new Panic(`No user`))
+    if (user.current.isErr())
+      return user.current
+
+    const storage = await tryCreateUserStorage(user.current.inner, password).then(r => r.throw(t))
+    memory.session = { user: user.current.inner, storage }
+    return Ok.void()
+  })
 }
 
-async function brume_login(request: RpcRequestInit) {
-  const [uuid, password] = request.params as [string, string]
-  memory.session = { uuid, password }
-  return Ok.void()
+async function brume_getCurrentUser(request: RpcRequestInit): Promise<Result<Optional<UserData>, unknown>> {
+  return new Ok(memory.session?.user)
 }
 
 async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unknown, unknown>> {
@@ -110,10 +120,10 @@ async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unkno
     return await brume_newUser(request)
   if (request.method === "brume_getUser")
     return await brume_getUser(request)
-  if (request.method === "brume_login")
-    return await brume_login(request)
-  if (request.method === "brume_session")
-    return await brume_session(request)
+  if (request.method === "brume_setCurrentUser")
+    return await brume_setCurrentUser(request)
+  if (request.method === "brume_getCurrentUser")
+    return await brume_getCurrentUser(request)
   return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
 }
 

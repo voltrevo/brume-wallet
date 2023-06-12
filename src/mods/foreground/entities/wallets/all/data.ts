@@ -1,4 +1,3 @@
-import { useUserStorage } from "@/mods/foreground/storage/user/context";
 import { NormalizerMore, StorageQueryParams, createQuerySchema, useQuery } from "@hazae41/xswr";
 import { Wallet, getWalletRef } from "../data";
 
@@ -13,7 +12,5 @@ export function getWalletsSchema(storage: StorageQueryParams<any> | undefined) {
 }
 
 export function useWallets() {
-  const storage = useUserStorage()
-
-  return useQuery(getWalletsSchema, [storage])
+  return useQuery(getWalletsSchema, [undefined])
 }

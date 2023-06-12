@@ -1,15 +1,11 @@
-import { useObjectMemo } from "@/libs/react/memo";
 import { ChildrenProps } from "@/libs/react/props/children";
-import { createContext, useCallback, useContext, useState } from "react";
+import { Option, Optional, Some } from "@hazae41/option";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { useBackground } from "../../background/context";
 import { UsersPage } from "./all/page";
-import { User } from "./data";
+import { User, UserData } from "./data";
 
-export interface UserHandle {
-  current?: User,
-  clear(): void
-}
-
-export const UserContext = createContext<UserHandle | undefined>(undefined)
+export const UserContext = createContext<Optional<User>>(undefined)
 
 export function useCurrentUser() {
   return useContext(UserContext)!
@@ -18,30 +14,24 @@ export function useCurrentUser() {
 export function UserProvider(props: ChildrenProps) {
   const { children } = props
 
-  const [user, setUser] = useState<User>()
-  const clear = useCallback(() => setUser(undefined), [])
-  const memo = useObjectMemo({ current: user, clear })
+  const background = useBackground()
 
-  // const getSession = useCallback(async () => {
-  //   return await Result.unthrow<Result>(async t => {
-  //     const session = await background
-  //       .request<Optional<Session>>({ method: "brume_session" })
-  //       .then(r => r.throw(t))
+  const [user, setUser] = useState<Option<User>>()
+  const set = useCallback((user: User) => setUser(new Some(user)), [])
 
-  //     return Ok.void()
-  //   })
-  // }, [background])
-
-  // useEffect(() => {
-  //   background
-  //     .request<Optional<Session>>({ method: "brume_session" })
-  //     .then(r => setSession(r.unwrap()))
-  // }, [background])
+  useEffect(() => {
+    background
+      .request<Optional<UserData>>({ method: "brume_getCurrentUser", params: undefined })
+      .then(r => setUser(Option.from(r.unwrap())))
+  }, [background])
 
   if (user === undefined)
-    return <UsersPage ok={setUser} />
+    return null
 
-  return <UserContext.Provider value={memo}>
+  if (user.isNone())
+    return <UsersPage ok={set} />
+
+  return <UserContext.Provider value={user.inner}>
     {children}
   </UserContext.Provider>
 }

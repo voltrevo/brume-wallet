@@ -1,7 +1,6 @@
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { EthereumSession } from "@/libs/tor/sessions/session"
-import { useUserStorage } from "@/mods/foreground/storage/user/context"
 import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
 import { Result } from "@hazae41/result"
 import { Fetched, FetcherMore, NormalizerMore, StorageQueryParams, createQuerySchema, useError, useFetch, useQuery } from "@hazae41/xswr"
@@ -71,9 +70,8 @@ export async function getWalletRef(wallet: Wallet, storage: StorageQueryParams<a
 }
 
 export function useWallet(uuid: string | undefined) {
-  const storage = useUserStorage()
 
-  return useQuery(getWalletSchema, [uuid, storage])
+  return useQuery(getWalletSchema, [uuid, undefined])
 }
 
 export async function fetchWithSession(session: EthereumSession, init: RpcRequestPreinit, more: FetcherMore) {
