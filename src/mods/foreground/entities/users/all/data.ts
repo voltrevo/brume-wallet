@@ -1,19 +1,19 @@
-import { useGlobalStorage } from "@/mods/foreground/storage/global/context";
-import { NormalizerMore, StorageQueryParams, createQuerySchema, useQuery } from "@hazae41/xswr";
-import { User, getUserRef } from "../data";
+import { RpcRequestPreinit } from "@/libs/rpc";
+import { Background } from "@/mods/foreground/background/background";
+import { Fetched, FetcherMore, createQuerySchema, useOnce, useQuery } from "@hazae41/xswr";
+import { User } from "../data";
 
-export function getUsers(storage: StorageQueryParams<any> | undefined) {
-  if (!storage) return
+export function getUsers(background: Background) {
+  const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
+    Fetched.rewrap(await background.request<T>(init))
 
-  const normalizer = async (users: User[], more: NormalizerMore) => {
-    return await Promise.all(users.map(user => getUserRef(user, storage, more)))
-  }
-
-  return createQuerySchema<User[]>(`users`, undefined, { storage, normalizer })
+  return createQuerySchema<User[], RpcRequestPreinit>({
+    method: "brume_getUsers"
+  }, fetcher)
 }
 
-export function useUsers() {
-  const storage = useGlobalStorage()
-
-  return useQuery(getUsers, [storage])
+export function useUsers(background: Background) {
+  const query = useQuery(getUsers, [background])
+  useOnce(query)
+  return query
 }

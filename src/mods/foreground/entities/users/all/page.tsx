@@ -3,6 +3,7 @@ import { Outline } from "@/libs/icons/icons";
 import { useBooleanState } from "@/libs/react/handles/boolean";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { OkProps } from "@/libs/react/props/promise";
+import { useBackground } from "@/mods/foreground/background/context";
 import { useCallback } from "react";
 import { User, UserProps, useUser } from "../data";
 import { UserCreateDialog } from "./create";
@@ -11,7 +12,8 @@ import { useUsers } from "./data";
 export function UsersPage(props: OkProps<User>) {
   const { ok } = props
 
-  const users = useUsers()
+  const background = useBackground()
+  const users = useUsers(background)
 
   const createDialog = useBooleanState()
 

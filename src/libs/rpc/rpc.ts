@@ -1,4 +1,5 @@
 import { Future } from "@hazae41/future"
+import { Optional } from "@hazae41/option"
 import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
 import { RpcErr } from "./err"
@@ -15,13 +16,11 @@ export class RpcClient {
     return this.#id
   }
 
-  create<T>(init: RpcRequestPreinit<T>): RpcRequestInit<T> {
+  create<T extends Optional<unknown[]>>(init: RpcRequestPreinit<T>): RpcRequestInit<T> {
     const { method, params } = init
 
     const id = this.#id++
 
-    if (!params)
-      return { jsonrpc: "2.0", id, method }
     return { jsonrpc: "2.0", id, method, params }
   }
 

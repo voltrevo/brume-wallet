@@ -1,8 +1,13 @@
 import { browser } from "@/libs/browser/browser"
 import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
+import { Mutators } from "@/libs/xswr/mutators"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
+import { Core } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
+import { getUsers } from "./entities/users/all/data"
+import { User, UserData } from "./entities/users/data"
+import { createGlobalStorage } from "./storage"
 
 declare global {
   interface ServiceWorkerGlobalScope {
@@ -51,6 +56,33 @@ const memory: {
   }
 } = {}
 
+const core = new Core({})
+const storage = createGlobalStorage()
+
+async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], unknown>> {
+  const users = await getUsers(storage)?.make(core)
+
+  if (!users)
+    return new Err(new Panic(`No users`))
+  if (!users.current)
+    return new Ok([])
+  return users.current
+}
+
+async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], unknown>> {
+  const [user] = request.params as [UserData]
+  const users = await getUsers(storage)?.make(core)
+
+  if (!users)
+    return new Err(new Panic(`No users`))
+
+  await users.mutate(Mutators.push(user))
+
+  if (!users.current)
+    return new Err(new Panic(`No current users`))
+  return users.current
+}
+
 async function brume_session(request: RpcRequestInit) {
   return new Ok(memory.session)
 }
@@ -61,7 +93,11 @@ async function brume_login(request: RpcRequestInit) {
   return Ok.void()
 }
 
-async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unknown, Error>> {
+async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unknown, unknown>> {
+  if (request.method === "brume_getUsers")
+    return await brume_getUsers(request)
+  if (request.method === "brume_newUser")
+    return await brume_newUser(request)
   if (request.method === "brume_login")
     return await brume_login(request)
   if (request.method === "brume_session")
@@ -104,9 +140,15 @@ async function main() {
       const port = event.ports[0]
 
       port.addEventListener("message", async (event: MessageEvent<RpcRequestInit>) => {
-        const result = await tryRouteForeground(event.data)
-        const response = RpcResponse.rewrap(event.data.id, result)
-        port.postMessage(RpcResponseInit.from(response))
+        try {
+          console.log("->", event.data)
+          const result = await tryRouteForeground(event.data)
+          const response = RpcResponse.rewrap(event.data.id, result)
+          console.log("<-", response)
+          port.postMessage(RpcResponseInit.from(response))
+        } catch (e: unknown) {
+          console.error(e)
+        }
       })
 
       port.start()
