@@ -1,13 +1,16 @@
-import { browser } from "@/libs/browser/browser"
-import { RpcClient } from "@/libs/rpc"
+import { RpcClient, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
+import { Future } from "@hazae41/future"
 
 export type Background =
   | WebsiteBackground
   | ExtensionBackground
 
 export class WebsiteBackground {
-  readonly channel = new BroadcastChannel("foreground")
-  readonly client = new RpcClient()
+  readonly #client = new RpcClient()
+
+  constructor(
+    readonly channel: MessageChannel
+  ) { }
 
   isWebsite(): this is WebsiteBackground {
     return true
@@ -17,19 +20,37 @@ export class WebsiteBackground {
     return false
   }
 
-  postMessage(message: unknown) {
-    this.channel.postMessage(message)
-  }
+  async request<T>(init: RpcRequestPreinit) {
+    const request = this.#client.create(init)
 
-  onMessage(listener: (message: unknown) => void) {
-    this.channel.addEventListener("message", e => listener(e.data))
+    const future = new Future<RpcResponse<T>>()
+
+    const onMessage = (event: MessageEvent<RpcResponseInit<T>>) => {
+      const response = RpcResponse.from(event.data)
+
+      if (response.id !== request.id)
+        return
+      future.resolve(response)
+    }
+
+    try {
+      this.channel.port1.addEventListener("message", onMessage, { passive: true })
+      this.channel.port1.postMessage(request)
+
+      return await future.promise
+    } finally {
+      this.channel.port1.removeEventListener("message", onMessage)
+    }
   }
 
 }
 
 export class ExtensionBackground {
-  readonly port = browser.runtime.connect({ name: "foreground" })
-  readonly client = new RpcClient()
+  readonly #client = new RpcClient()
+
+  constructor(
+    readonly port: chrome.runtime.Port
+  ) { }
 
   isWebsite(): false {
     return false
@@ -39,12 +60,27 @@ export class ExtensionBackground {
     return true
   }
 
-  postMessage(message: unknown) {
-    this.port.postMessage(message)
-  }
+  async request<T>(init: RpcRequestPreinit) {
+    const request = this.#client.create(init)
 
-  onMessage(listener: (message: unknown) => void) {
-    this.port.onMessage.addListener(listener)
+    const future = new Future<RpcResponse<T>>()
+
+    const onMessage = (event: MessageEvent<RpcResponseInit<T>>) => {
+      const response = RpcResponse.from(event.data)
+
+      if (response.id !== request.id)
+        return
+      future.resolve(response)
+    }
+
+    try {
+      this.port.onMessage.addListener(onMessage)
+      this.port.postMessage(request)
+
+      return await future.promise
+    } finally {
+      this.port.onMessage.removeListener(onMessage)
+    }
   }
 
 }

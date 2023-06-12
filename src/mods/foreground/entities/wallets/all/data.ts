@@ -1,6 +1,6 @@
 import { useUserStorage } from "@/mods/foreground/storage/user/context";
-import { getSchema, NormalizerMore, StorageQueryParams, useSchema } from "@hazae41/xswr";
-import { getWalletRef, Wallet } from "../data";
+import { NormalizerMore, StorageQueryParams, createQuerySchema, useQuery } from "@hazae41/xswr";
+import { Wallet, getWalletRef } from "../data";
 
 export function getWalletsSchema(storage: StorageQueryParams<any> | undefined) {
   if (!storage) return
@@ -9,11 +9,11 @@ export function getWalletsSchema(storage: StorageQueryParams<any> | undefined) {
     return await Promise.all(wallets.map(wallet => getWalletRef(wallet, storage, more)))
   }
 
-  return getSchema<Wallet[]>(`wallets`, undefined, { storage, normalizer })
+  return createQuerySchema<Wallet[]>(`wallets`, undefined, { storage, normalizer })
 }
 
 export function useWallets() {
   const storage = useUserStorage()
 
-  return useSchema(getWalletsSchema, [storage])
+  return useQuery(getWalletsSchema, [storage])
 }

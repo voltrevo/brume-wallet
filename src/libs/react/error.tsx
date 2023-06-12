@@ -1,4 +1,4 @@
-import { Component } from "react"
+import { Component, useEffect, useState } from "react"
 import { ChildrenProps } from "./props/children"
 import { ErrorProps } from "./props/error"
 import { FallbackProps } from "./props/fallback"
@@ -33,4 +33,19 @@ export class Catcher extends Component<CatcherProps, CatcherState> {
       return <this.props.fallback error={error} />
     return this.props.children
   }
+}
+
+export function PromiseCatcher(props: ChildrenProps) {
+  const { children } = props
+
+  const [event, setEvent] = useState<PromiseRejectionEvent>()
+
+  useEffect(() => {
+    addEventListener("unhandledrejection", setEvent)
+  }, [])
+
+  if (event !== undefined)
+    throw event
+
+  return <>{children}</>
 }

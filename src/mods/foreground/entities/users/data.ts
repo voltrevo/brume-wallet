@@ -1,5 +1,5 @@
 import { useGlobalStorage } from "@/mods/foreground/storage/global/context"
-import { getSchema, NormalizerMore, StorageQueryParams, useSchema } from "@hazae41/xswr"
+import { NormalizerMore, StorageQueryParams, createQuerySchema, useQuery } from "@hazae41/xswr"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbkdf2ParamsBase64 } from "../../storage/user/crypto"
 
 export type User =
@@ -36,7 +36,7 @@ export interface UserData {
 export function getUserSchema(uuid: string | undefined, storage: StorageQueryParams<any> | undefined) {
   if (!uuid || !storage) return
 
-  return getSchema<UserData>(`user/${uuid}`, undefined, { storage })
+  return createQuerySchema<UserData>(`user/${uuid}`, undefined, { storage })
 }
 
 export async function getUserRef(wallet: User, storage: StorageQueryParams<any> | undefined, more: NormalizerMore) {
@@ -51,5 +51,5 @@ export async function getUserRef(wallet: User, storage: StorageQueryParams<any> 
 export function useUser(uuid: string | undefined) {
   const storage = useGlobalStorage()
 
-  return useSchema(getUserSchema, [uuid, storage])
+  return useQuery(getUserSchema, [uuid, storage])
 }

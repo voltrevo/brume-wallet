@@ -22,8 +22,6 @@ export function useAsyncMemo<T>(factory: () => Promise<T>, deps: DependencyList)
   const [state, setState] = useState<T>()
 
   const run = useCallback(async () => {
-    await Promises.fork()
-
     const result = await Result.catchAndWrap(factory)
 
     setState(() => result.unwrap())
@@ -40,8 +38,7 @@ export function useAsyncMemo<T>(factory: () => Promise<T>, deps: DependencyList)
 
 export function useAsyncReplaceMemo<T>(factory: () => Promise<T>, deps: DependencyList) {
   const [state, setState] = useState<T>()
-
-  const aborterRef = useRef<AbortController | null>(null)
+  const aborterRef = useRef<AbortController>()
 
   const run = useCallback(async () => {
     const aborter = new AbortController()
@@ -52,7 +49,7 @@ export function useAsyncReplaceMemo<T>(factory: () => Promise<T>, deps: Dependen
     const result = await Result.catchAndWrap(factory)
 
     if (aborterRef.current === aborter) {
-      aborterRef.current = null
+      aborterRef.current = undefined
       setState(() => result.unwrap())
     }
 

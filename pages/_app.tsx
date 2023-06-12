@@ -1,6 +1,6 @@
 import { Errors } from "@/libs/errors/errors"
 import { useAsyncCallback } from "@/libs/react/callback"
-import { Catcher } from "@/libs/react/error"
+import { Catcher, PromiseCatcher } from "@/libs/react/error"
 import { ErrorProps } from "@/libs/react/props/error"
 import { UserProvider } from "@/mods/foreground/entities/users/context"
 import { ExtensionProvider } from "@/mods/foreground/extension/context"
@@ -53,25 +53,27 @@ export default function App({ Component, pageProps }: AppProps) {
       <title>Brume Wallet</title>
     </Head>
     <Catcher fallback={Fallback}>
-      <ExtensionProvider>
-        <Overlay>
-          <CoreProvider>
-            <GlobalStorageProvider>
-              <UserProvider>
-                <UserStorageProvider>
-                  <TorPoolProvider>
-                    <CircuitsProvider>
-                      <SessionsProvider>
-                        <Component {...pageProps} />
-                      </SessionsProvider>
-                    </CircuitsProvider>
-                  </TorPoolProvider>
-                </UserStorageProvider>
-              </UserProvider>
-            </GlobalStorageProvider>
-          </CoreProvider>
-        </Overlay>
-      </ExtensionProvider>
+      <PromiseCatcher>
+        <ExtensionProvider>
+          <Overlay>
+            <CoreProvider>
+              <GlobalStorageProvider>
+                <UserProvider>
+                  <UserStorageProvider>
+                    <TorPoolProvider>
+                      <CircuitsProvider>
+                        <SessionsProvider>
+                          <Component {...pageProps} />
+                        </SessionsProvider>
+                      </CircuitsProvider>
+                    </TorPoolProvider>
+                  </UserStorageProvider>
+                </UserProvider>
+              </GlobalStorageProvider>
+            </CoreProvider>
+          </Overlay>
+        </ExtensionProvider>
+      </PromiseCatcher>
     </Catcher>
   </>
 }

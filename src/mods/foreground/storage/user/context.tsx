@@ -1,6 +1,6 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { useCurrentUser } from "@/mods/foreground/entities/users/context";
-import { UserPage } from "@/mods/foreground/entities/users/page";
+import { UserLoginPage } from "@/mods/foreground/entities/users/login";
 import { StorageQueryParams } from "@hazae41/xswr";
 import { createContext, useContext, useState } from "react";
 
@@ -21,7 +21,7 @@ export function UserStorageProvider(props: ChildrenProps) {
     return null
 
   if (!storage)
-    return <UserPage
+    return <UserLoginPage
       user={user.current}
       ok={setStorage}
       err={user.clear} />

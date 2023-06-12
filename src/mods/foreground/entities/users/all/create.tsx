@@ -6,12 +6,11 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
-import { Mutator } from "@/libs/xswr/pipes";
+import { Mutators } from "@/libs/xswr/mutators";
 import { GradientButton } from "@/mods/foreground/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
 import { useMemo, useState } from "react";
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBytes } from "../../../storage/user/crypto";
-import { UserData } from "../data";
 import { useUsers } from "./data";
 import { UserAvatar } from "./page";
 
@@ -90,9 +89,7 @@ export function UserCreateDialog(props: CloseProps) {
     const passwordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, 256))
     const passwordHashBase64 = Bytes.toBase64(passwordHashBytes)
 
-    const user: UserData = { uuid, name, color, emoji, keyParamsBase64, valueParamsBase64, passwordParamsBase64, passwordHashBase64 }
-
-    users.mutate(Mutator.data((d = []) => [...d, user]))
+    users.mutate(Mutators.push({ uuid, name, color, emoji, keyParamsBase64, valueParamsBase64, passwordParamsBase64, passwordHashBase64 }))
 
     close()
   }, [uuid, name, color, emoji, password])

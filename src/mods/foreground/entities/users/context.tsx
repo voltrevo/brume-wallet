@@ -1,6 +1,5 @@
 import { useObjectMemo } from "@/libs/react/memo";
 import { ChildrenProps } from "@/libs/react/props/children";
-import { None, Option } from "@hazae41/option";
 import { createContext, useCallback, useContext, useState } from "react";
 import { UsersPage } from "./all/page";
 import { User } from "./data";
@@ -19,11 +18,27 @@ export function useCurrentUser() {
 export function UserProvider(props: ChildrenProps) {
   const { children } = props
 
-  const [user, setUser] = useState<Option<User>>()
-  const clear = useCallback(() => setUser(new None()), [])
-  const memo = useObjectMemo({ current: user?.inner, clear })
+  const [user, setUser] = useState<User>()
+  const clear = useCallback(() => setUser(undefined), [])
+  const memo = useObjectMemo({ current: user, clear })
 
-  if (user === undefined || user.isNone())
+  // const getSession = useCallback(async () => {
+  //   return await Result.unthrow<Result>(async t => {
+  //     const session = await background
+  //       .request<Optional<Session>>({ method: "brume_session" })
+  //       .then(r => r.throw(t))
+
+  //     return Ok.void()
+  //   })
+  // }, [background])
+
+  // useEffect(() => {
+  //   background
+  //     .request<Optional<Session>>({ method: "brume_session" })
+  //     .then(r => setSession(r.unwrap()))
+  // }, [background])
+
+  if (user === undefined)
     return <UsersPage ok={setUser} />
 
   return <UserContext.Provider value={memo}>

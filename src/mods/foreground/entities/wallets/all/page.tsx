@@ -20,7 +20,7 @@ export function WalletsPage(props: {}) {
 
   const WalletsList =
     <div className="grid grid-rows-auto-fill gap-2">
-      {wallets.data?.map(wallet =>
+      {wallets.data?.inner.map(wallet =>
         <ClickableWalletRow
           key={wallet.uuid}
           wallet={wallet}
@@ -72,11 +72,12 @@ export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {
     ok(props.wallet)
   }, [ok, props.wallet])
 
-  if (!wallet.data) return null
+  if (wallet.data === undefined)
+    return null
 
   return <button className="w-full ahover:scale-105 transition-transform"
     onMouseDown={onClick}>
-    <WalletCard wallet={wallet.data} />
+    <WalletCard wallet={wallet.data.inner} />
   </button>
 }
 

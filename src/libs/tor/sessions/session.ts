@@ -13,7 +13,7 @@ import { Mutex } from "@hazae41/mutex"
 import { Pool, PoolParams, TooManyRetriesError } from "@hazae41/piscine"
 import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
-import { Data, getSchema, useOnce, useSchema } from "@hazae41/xswr"
+import { Data, createQuerySchema, useOnce, useQuery } from "@hazae41/xswr"
 import { useEffect, useState } from "react"
 
 export type EthereumChainID = number
@@ -34,7 +34,7 @@ export type EthereumSession =
 export function getEthereumHandle(uuid: string, handles?: Mutex<Pool<EthereumHandle, Error>>) {
   if (!handles) return
 
-  return getSchema<Mutex<Pool<EthereumHandle, Error>>>(`sessions/${uuid}`, async () => {
+  return createQuerySchema<Mutex<Pool<EthereumHandle, Error>>>(`sessions/${uuid}`, async () => {
     return new Data(EthereumHandle.createSubpool(handles, { capacity: 1 }))
   }, {})
 }
@@ -42,7 +42,7 @@ export function getEthereumHandle(uuid: string, handles?: Mutex<Pool<EthereumHan
 export function useEthereumHandle(uuid: string) {
   const handles = useSessionsPool()
 
-  const query = useSchema(getEthereumHandle, [uuid, handles])
+  const query = useQuery(getEthereumHandle, [uuid, handles])
   useOnce(query)
 
   const [handle, setHandle] = useState<Result<EthereumHandle, Error>>()
@@ -50,10 +50,10 @@ export function useEthereumHandle(uuid: string) {
   useEffect(() => {
     if (!query.data) return
 
-    setHandle(query.data.inner.tryGetSync(0).ok().get())
+    setHandle(query.data.inner.inner.tryGetSync(0).ok().get())
 
-    const offCreated = query.data.inner.events.on("created", e => new Ok(setHandle(e.result)))
-    const offDeleted = query.data.inner.events.on("deleted", _ => new Ok(setHandle(undefined)))
+    const offCreated = query.data.inner.inner.events.on("created", e => new Ok(setHandle(e.result)))
+    const offDeleted = query.data.inner.inner.events.on("deleted", _ => new Ok(setHandle(undefined)))
 
     return () => {
       offCreated()

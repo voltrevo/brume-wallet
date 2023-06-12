@@ -15,11 +15,13 @@ export class RpcClient {
     return this.#id
   }
 
-  create<T extends unknown[] = unknown[]>(init: RpcRequestPreinit<T>): RpcRequestInit<T> {
+  create<T>(init: RpcRequestPreinit<T>): RpcRequestInit<T> {
     const { method, params } = init
 
     const id = this.#id++
 
+    if (!params)
+      return { jsonrpc: "2.0", id, method }
     return { jsonrpc: "2.0", id, method, params }
   }
 

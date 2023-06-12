@@ -19,7 +19,7 @@ export function Overlay(props: ChildrenProps) {
   }, [extension])
 
   const update = useCallback(() => {
-    updating?.postMessage({ type: "SKIP_WAITING" })
+    updating?.postMessage("SKIP_WAITING")
   }, [updating])
 
   const UpdateBanner =

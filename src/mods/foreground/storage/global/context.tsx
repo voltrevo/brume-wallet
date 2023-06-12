@@ -12,12 +12,15 @@ export function GlobalStorageProvider(props: ChildrenProps) {
   const { children } = props
 
   const storage = useMemo(() => {
-    const storage = IDBStorage.create("global")
-
-    return { storage }
+    return IDBStorage
+      .tryCreate("global")
+      .mapSync(storage => ({ storage }))
   }, [])
 
-  return <GlobalStorageContext.Provider value={storage}>
+  if (storage.isErr())
+    throw storage.get()
+
+  return <GlobalStorageContext.Provider value={storage.get()}>
     {children}
   </GlobalStorageContext.Provider>
 }

@@ -9,7 +9,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
-import { Mutator } from "@/libs/xswr/pipes";
+import { Mutators } from "@/libs/xswr/mutators";
 import { GradientButton } from "@/mods/foreground/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
 import { Result } from "@hazae41/result";
@@ -17,7 +17,6 @@ import { secp256k1 } from "@noble/curves/secp256k1";
 import { Wallet } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../avatar";
-import { WalletData } from "../data";
 import { useWallets } from "./data";
 
 export namespace Wallets {
@@ -78,8 +77,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
     // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
 
-    const walletd: WalletData = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, privateKey, address }
-    mutate(Mutator.data((prev = []) => [...prev, walletd]))
+    mutate(Mutators.push({ coin: "ethereum", type: "privateKey", uuid, name, color, emoji, privateKey, address }))
 
     close()
   }, [uuid, name, color, emoji, wallet, mutate, close])

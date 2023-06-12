@@ -16,9 +16,10 @@ export function WalletPage(props: { uuid: string }) {
 
   const wallet = useWallet(uuid)
 
-  if (!wallet.data) return null
+  if (wallet.data === undefined)
+    return null
 
-  return <WalletDataPage wallet={wallet.data} />
+  return <WalletDataPage wallet={wallet.data.inner} />
 }
 
 function useFloat(query: Query<bigint>) {
@@ -27,7 +28,7 @@ function useFloat(query: Query<bigint>) {
       return "Error"
     if (query.data === undefined)
       return "..."
-    return BigInts.float(query.data, 18)
+    return BigInts.float(query.data.inner, 18)
   }, [query.data, query.error])
 }
 

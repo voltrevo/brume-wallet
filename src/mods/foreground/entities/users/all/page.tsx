@@ -3,13 +3,12 @@ import { Outline } from "@/libs/icons/icons";
 import { useBooleanState } from "@/libs/react/handles/boolean";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { OkProps } from "@/libs/react/props/promise";
-import { Some } from "@hazae41/option";
 import { useCallback } from "react";
 import { User, UserProps, useUser } from "../data";
 import { UserCreateDialog } from "./create";
 import { useUsers } from "./data";
 
-export function UsersPage(props: OkProps<Some<User>>) {
+export function UsersPage(props: OkProps<User>) {
   const { ok } = props
 
   const users = useUsers()
@@ -22,7 +21,7 @@ export function UsersPage(props: OkProps<Some<User>>) {
         close={createDialog.disable} />}
     <div className="h-full w-full p-4 flex justify-center items-center">
       <div className="flex flex-wrap items-center gap-8">
-        {users.data?.map(user =>
+        {users.data?.inner.map(user =>
           <UserOkButton
             key={user.uuid}
             user={user}
@@ -33,25 +32,26 @@ export function UsersPage(props: OkProps<Some<User>>) {
   </>
 }
 
-function UserOkButton(props: UserProps & OkProps<Some<User>>) {
+function UserOkButton(props: UserProps & OkProps<User>) {
   const { ok } = props
 
   const user = useUser(props.user.uuid)
 
   const onClick = useCallback(() => {
-    ok(new Some(props.user))
+    ok(props.user)
   }, [props.user, ok])
 
-  if (!user.data) return null
+  if (user.data === undefined)
+    return null
 
   return <button className="flex flex-col items-center"
     onClick={onClick}>
     <UserAvatar className="icon-7xl text-2xl"
-      colorIndex={user.data.color}
-      name={user.data.name} />
+      colorIndex={user.data.inner.color}
+      name={user.data.inner.name} />
     <div className="h-1" />
     <div className="font-medium">
-      {user.data.name}
+      {user.data.inner.name}
     </div>
   </button>
 }
