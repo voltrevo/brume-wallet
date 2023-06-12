@@ -148,15 +148,11 @@ async function main() {
       const port = event.ports[0]
 
       port.addEventListener("message", async (event: MessageEvent<RpcRequestInit>) => {
-        try {
-          console.log("->", event.data)
-          const result = await tryRouteForeground(event.data)
-          const response = RpcResponse.rewrap(event.data.id, result)
-          console.log("<-", response)
-          port.postMessage(RpcResponseInit.from(response))
-        } catch (e: unknown) {
-          console.error(e)
-        }
+        console.log("->", event.data)
+        const result = await tryRouteForeground(event.data)
+        const response = RpcResponse.rewrap(event.data.id, result)
+        console.log("<-", response)
+        port.postMessage(RpcResponseInit.from(response))
       })
 
       port.start()
@@ -186,8 +182,10 @@ async function main() {
       if (port.name !== "foreground")
         return
       port.onMessage.addListener(async (msg) => {
+        console.log("->", msg)
         const result = await tryRouteForeground(msg)
         const response = RpcResponse.rewrap(msg.id, result)
+        console.log("<-", response)
         port.postMessage(RpcResponseInit.from(response))
       })
     })
