@@ -1,6 +1,6 @@
 import { RpcRequestPreinit } from "@/libs/rpc";
 import { Background } from "@/mods/foreground/background/background";
-import { Fetched, FetcherMore, createQuerySchema, useQuery } from "@hazae41/xswr";
+import { Fetched, FetcherMore, createQuerySchema, useOnce, useQuery } from "@hazae41/xswr";
 import { Wallet } from "../data";
 
 export function getWalletsSchema(background: Background) {
@@ -14,5 +14,7 @@ export function getWalletsSchema(background: Background) {
 }
 
 export function useWallets(background: Background) {
-  return useQuery(getWalletsSchema, [background])
+  const query = useQuery(getWalletsSchema, [background])
+  useOnce(query)
+  return query
 }
