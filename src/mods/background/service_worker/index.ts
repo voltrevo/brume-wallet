@@ -102,14 +102,14 @@ async function brume_setCurrentUser(request: RpcRequestInit): Promise<Result<voi
     const user = Option.from(userQuery?.current?.get()).ok().throw(t)
 
     const userStorage = await tryCreateUserStorage(user, password).then(r => r.throw(t))
-    memory.session = { user, userStorage }
+    memory.session = { userData: user, userStorage }
 
     return Ok.void()
   })
 }
 
 async function brume_getCurrentUser(request: RpcRequestInit): Promise<Result<Optional<UserData>, never>> {
-  return new Ok(memory.session?.user)
+  return new Ok(memory.session?.userData)
 }
 
 async function brume_getWallets(request: RpcRequestInit): Promise<Result<Wallet[], Error>> {

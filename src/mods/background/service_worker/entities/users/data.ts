@@ -44,9 +44,12 @@ export interface UserData {
   passwordHashBase64: string
 }
 
+export type UserStorage =
+  StorageQuerySettings<any, never>
+
 export interface UserSession {
-  user: UserData,
-  userStorage: StorageQuerySettings<any, never>
+  userData: UserData,
+  userStorage: UserStorage
 }
 
 export function getUser(uuid: string, storage: StorageQuerySettings<any, never>) {
