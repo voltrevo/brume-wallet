@@ -1,9 +1,10 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { Option, Optional, Some } from "@hazae41/option";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { Optional, Some } from "@hazae41/option";
+import { Data, useOnce, useQuery } from "@hazae41/xswr";
+import { createContext, useCallback, useContext } from "react";
 import { useBackground } from "../../background/context";
 import { UsersPage } from "./all/page";
-import { User, UserData } from "./data";
+import { User, getCurrentUser } from "./data";
 
 export const UserContext = createContext<Optional<User>>(undefined)
 
@@ -16,22 +17,24 @@ export function UserProvider(props: ChildrenProps) {
 
   const background = useBackground()
 
-  const [user, setUser] = useState<Option<User>>()
-  const set = useCallback((user: User) => setUser(new Some(user)), [])
+  const userQuery = useQuery(getCurrentUser, [background])
 
-  useEffect(() => {
-    background
-      .request<Optional<UserData>>({ method: "brume_getCurrentUser", params: undefined })
-      .then(r => setUser(Option.from(r.unwrap())))
-  }, [background])
+  const setCurrentUser = useCallback((user: User) => {
+    userQuery.mutate(() => new Some(new Data(user)))
+  }, [userQuery])
 
-  if (user === undefined)
+  useOnce(userQuery)
+
+  if (userQuery.current === undefined)
     return null
 
-  if (user.isNone())
-    return <UsersPage ok={set} />
+  if (userQuery.current.isErr())
+    throw userQuery.current.inner
 
-  return <UserContext.Provider value={user.inner}>
+  if (userQuery.current.inner === undefined)
+    return <UsersPage ok={setCurrentUser} />
+
+  return <UserContext.Provider value={userQuery.current.inner}>
     {children}
   </UserContext.Provider>
 }

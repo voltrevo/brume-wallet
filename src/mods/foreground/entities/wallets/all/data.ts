@@ -5,7 +5,7 @@ import { Wallet } from "../data";
 
 export function getWalletsSchema(background: Background) {
   const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
-    Fetched.rewrap(await background.request<T>(init))
+    Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
   return createQuerySchema<Wallet[], RpcRequestPreinit>({
     method: "brume_getWallets",

@@ -1,9 +1,38 @@
+import { browser } from "@/libs/browser/browser"
 import { RpcClient, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
+import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
+import { Pool } from "@hazae41/piscine"
+import { Ok, Result } from "@hazae41/result"
 
 export type Background =
-  | WebsiteBackground
-  | ExtensionBackground
+  | Pool<WebsiteBackground, Error>
+  | Pool<ExtensionBackground, Error>
+
+export function createWebsiteBackgroundPool() {
+  return new Pool<WebsiteBackground, Error>(async (params) => {
+    return Result.unthrow(async t => {
+      const registration = await Result
+        .catchAndWrap(() => navigator.serviceWorker.ready)
+        .then(r => r.throw(t))
+
+      const channel = new MessageChannel()
+
+      registration.active!.postMessage("HELLO_WORLD", [channel.port2])
+
+      channel.port1.start()
+      channel.port2.start()
+
+      const onClean = () => {
+        channel.port1.close()
+        channel.port2.close()
+      }
+
+      const background = new WebsiteBackground(channel)
+      return new Ok(new Cleaner(background, onClean))
+    })
+  }, { capacity: 1 })
+}
 
 export class WebsiteBackground {
   readonly #client = new RpcClient()
@@ -44,6 +73,31 @@ export class WebsiteBackground {
   }
 
 }
+
+export function createExtensionBackgroundPool() {
+  return new Pool<ExtensionBackground, Error>(async (params) => {
+    return Result.unthrow(async t => {
+      const { index, pool } = params
+
+      const port = browser.runtime.connect({ name: "foreground" })
+
+      const onDisconnect = () => {
+        pool.delete(index)
+        return Ok.void()
+      }
+
+      port.onDisconnect.addListener(onDisconnect)
+
+      const onClean = () => {
+        port.onDisconnect.removeListener(onDisconnect)
+      }
+
+      const background = new ExtensionBackground(port)
+      return new Ok(new Cleaner(background, onClean))
+    })
+  }, { capacity: 1 })
+}
+
 
 export class ExtensionBackground {
   readonly #client = new RpcClient()

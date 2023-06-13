@@ -28,12 +28,12 @@ export interface UserData {
   emoji: string
 }
 
-export function getUserSchema(uuid: Optional<string>, background: Background) {
+export function getUser(uuid: Optional<string>, background: Background) {
   if (uuid === undefined)
     return undefined
 
   const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
-    Fetched.rewrap(await background.request<T>(init))
+    Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
   return createQuerySchema<UserData, RpcRequestPreinit>({
     method: "brume_getUser",
@@ -42,7 +42,23 @@ export function getUserSchema(uuid: Optional<string>, background: Background) {
 }
 
 export function useUser(uuid: Optional<string>, background: Background) {
-  const query = useQuery(getUserSchema, [uuid, background])
+  const query = useQuery(getUser, [uuid, background])
+  useOnce(query)
+  return query
+}
+
+export function getCurrentUser(background: Background) {
+  const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
+    Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
+
+  return createQuerySchema<User, RpcRequestPreinit>({
+    method: "brume_getCurrentUser",
+    params: undefined
+  }, fetcher)
+}
+
+export function useCurrentUser(background: Background) {
+  const query = useQuery(getCurrentUser, [background])
   useOnce(query)
   return query
 }

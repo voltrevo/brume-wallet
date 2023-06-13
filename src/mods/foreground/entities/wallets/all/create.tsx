@@ -85,7 +85,9 @@ export function WalletCreatorDialog(props: CloseProps) {
 
     const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, privateKey, address }
 
-    const walletsData = await background
+    const currentBackground = await background.tryGet(0).then(r => r.unwrap())
+
+    const walletsData = await currentBackground
       .request<Wallet[]>({ method: "brume_newWallet", params: [wallet] })
       .then(r => r.unwrap())
 
