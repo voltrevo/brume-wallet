@@ -90,6 +90,7 @@ export function createExtensionBackgroundPool() {
 
       const onClean = () => {
         port.onDisconnect.removeListener(onDisconnect)
+        port.disconnect()
       }
 
       const background = new ExtensionBackground(port)

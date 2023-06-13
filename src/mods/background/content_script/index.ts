@@ -1,5 +1,8 @@
 import { browser } from "@/libs/browser/browser"
-import { RpcRequestInit, RpcResponseInit } from "@/libs/rpc"
+import { RpcErr, RpcErrInit, RpcRequestInit, RpcResponseInit } from "@/libs/rpc"
+import { Cleaner } from "@hazae41/cleaner"
+import { Pool } from "@hazae41/piscine"
+import { Ok, Result } from "@hazae41/result"
 
 declare const self: ServiceWorkerGlobalScope
 
@@ -13,7 +16,7 @@ declare global {
   }
 }
 
-function inject() {
+if (IS_FIREFOX || IS_SAFARI) {
   const container = document.documentElement
 
   const scriptBody = atob("INJECTED_SCRIPT")
@@ -27,15 +30,41 @@ function inject() {
   container.removeChild(element)
 }
 
-if (IS_FIREFOX || IS_SAFARI)
-  inject()
+const ports = new Pool<chrome.runtime.Port, never>(async (params) => {
+  return Result.unthrow(async t => {
+    const { index, pool } = params
 
-const ethereum = browser.runtime.connect({ name: "content_script" })
+    const port = browser.runtime.connect({ name: "content_script" })
 
-ethereum.onMessage.addListener((msg: RpcResponseInit) => {
-  window.dispatchEvent(new CustomEvent("ethereum#response", { detail: msg }))
-})
+    const onMessage = (msg: RpcResponseInit) => {
+      window.dispatchEvent(new CustomEvent("ethereum#response", { detail: msg }))
+    }
 
-window.addEventListener("ethereum#request", (e: CustomEvent<RpcRequestInit>) => {
-  ethereum.postMessage(e.detail)
+    const onDisconnect = () => {
+      pool.delete(index)
+      return Ok.void()
+    }
+
+    port.onMessage.addListener(onMessage)
+    port.onDisconnect.addListener(onDisconnect)
+
+    const onClean = () => {
+      port.onMessage.removeListener(onMessage)
+      port.onDisconnect.removeListener(onDisconnect)
+      port.disconnect()
+    }
+
+    return new Ok(new Cleaner(port, onClean))
+  })
+}, { capacity: 1 })
+
+
+window.addEventListener("ethereum#request", async (e: CustomEvent<RpcRequestInit>) => {
+  const port = await ports.tryGet(0)
+
+  if (port.isOk())
+    return port.get().postMessage(e.detail)
+
+  const response = RpcErrInit.from(new RpcErr(e.detail.id, port.get()))
+  window.dispatchEvent(new CustomEvent("ethereum#response", { detail: response }))
 })
