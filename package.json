@@ -20,7 +20,7 @@
     "@hazae41/binary": "^1.2.33",
     "@hazae41/bytes": "^1.1.19",
     "@hazae41/cascade": "^1.1.25",
-    "@hazae41/cleaner": "^1.0.0",
+    "@hazae41/cleaner": "^1.0.2",
     "@hazae41/cursor": "^1.1.18",
     "@hazae41/echalote": "^0.2.48",
     "@hazae41/ed25519": "^1.0.0",

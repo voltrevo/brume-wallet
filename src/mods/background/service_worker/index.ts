@@ -1,6 +1,7 @@
 import { browser } from "@/libs/browser/browser"
 import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Mutators } from "@/libs/xswr/mutators"
+import { Cleanable } from "@hazae41/cleaner"
 import { Option, Optional } from "@hazae41/option"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Core } from "@hazae41/xswr"
@@ -62,9 +63,12 @@ const memory: {
 async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], never>> {
   return await Result.unthrow(async t => {
     const usersQuery = await getUsers(globalStorage)?.make(core)
-    const users = usersQuery?.current?.get() ?? []
 
-    return new Ok(users)
+    return Cleanable.use(usersQuery, async () => {
+      const users = usersQuery?.current?.get() ?? []
+
+      return new Ok(users)
+    })
   })
 }
 
@@ -73,13 +77,16 @@ async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], Er
     const [init] = request.params as [UserInit]
 
     const usersQuery = await getUsers(globalStorage)?.make(core)
-    const user = await tryCreateUser(init).then(r => r.throw(t))
 
-    await usersQuery?.mutate(Mutators.push(user))
+    return Cleanable.use(usersQuery, async () => {
+      const user = await tryCreateUser(init).then(r => r.throw(t))
 
-    const users = Option.from(usersQuery?.current?.get()).ok().throw(t)
+      await usersQuery?.mutate(Mutators.push(user))
 
-    return new Ok(users)
+      const users = Option.from(usersQuery?.current?.get()).ok().throw(t)
+
+      return new Ok(users)
+    })
   })
 }
 
@@ -88,9 +95,12 @@ async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, 
     const [uuid] = request.params as [string]
 
     const userQuery = await getUser(uuid, globalStorage)?.make(core)
-    const user = Option.from(userQuery?.current?.get()).ok().throw(t)
 
-    return new Ok(user)
+    return Cleanable.use(userQuery, async () => {
+      const user = Option.from(userQuery?.current?.get()).ok().throw(t)
+
+      return new Ok(user)
+    })
   })
 }
 
@@ -99,12 +109,15 @@ async function brume_setCurrentUser(request: RpcRequestInit): Promise<Result<voi
     const [uuid, password] = request.params as [string, string]
 
     const userQuery = await getUser(uuid, globalStorage)?.make(core)
-    const user = Option.from(userQuery?.current?.get()).ok().throw(t)
 
-    const userStorage = await tryCreateUserStorage(user, password).then(r => r.throw(t))
-    memory.session = { userData: user, userStorage }
+    return Cleanable.use(userQuery, async () => {
+      const user = Option.from(userQuery?.current?.get()).ok().throw(t)
 
-    return Ok.void()
+      const userStorage = await tryCreateUserStorage(user, password).then(r => r.throw(t))
+      memory.session = { userData: user, userStorage }
+
+      return Ok.void()
+    })
   })
 }
 
@@ -117,9 +130,12 @@ async function brume_getWallets(request: RpcRequestInit): Promise<Result<Wallet[
     const { userStorage } = Option.from(memory.session).ok().throw(t)
 
     const walletsQuery = await getWallets(userStorage)?.make(core)
-    const wallets = walletsQuery?.current?.get() ?? []
 
-    return new Ok(wallets)
+    return await Cleanable.use(walletsQuery, async () => {
+      const wallets = walletsQuery?.current?.get() ?? []
+
+      return new Ok(wallets)
+    })
   })
 }
 
@@ -130,11 +146,13 @@ async function brume_newWallet(request: RpcRequestInit): Promise<Result<Wallet[]
     const [wallet] = request.params as [EthereumPrivateKeyWallet]
     const walletsQuery = await getWallets(userStorage)?.make(core)
 
-    await walletsQuery?.mutate(Mutators.push(wallet))
+    return await Cleanable.use(walletsQuery, async () => {
+      await walletsQuery?.mutate(Mutators.push(wallet))
 
-    const wallets = Option.from(walletsQuery?.current?.get()).ok().throw(t)
+      const wallets = Option.from(walletsQuery?.current?.get()).ok().throw(t)
 
-    return new Ok(wallets)
+      return new Ok(wallets)
+    })
   })
 }
 
@@ -145,9 +163,12 @@ async function brume_getWallet(request: RpcRequestInit): Promise<Result<WalletDa
     const { userStorage } = Option.from(memory.session).ok().throw(t)
 
     const walletQuery = await getWallet(uuid, userStorage)?.make(core)
-    const wallet = Option.from(walletQuery?.current?.get()).ok().throw(t)
 
-    return new Ok(wallet)
+    return await Cleanable.use(walletQuery, async () => {
+      const wallet = Option.from(walletQuery?.current?.get()).ok().throw(t)
+
+      return new Ok(wallet)
+    })
   })
 }
 
@@ -226,19 +247,16 @@ async function main() {
   }
 
   if (IS_EXTENSION) {
-    browser.runtime.onConnect.addListener(port => {
-      if (port.name !== "content_script")
-        return
+
+    const onContentScript = (port: chrome.runtime.Port) => {
       port.onMessage.addListener(async (msg: RpcRequestInit) => {
         const result = await tryRouteContentScript(msg)
         const response = RpcResponse.rewrap(msg.id, result)
         port.postMessage(RpcResponseInit.from(response))
       })
-    })
+    }
 
-    browser.runtime.onConnect.addListener(port => {
-      if (port.name !== "foreground")
-        return
+    const onForeground = (port: chrome.runtime.Port) => {
       port.onMessage.addListener(async (msg) => {
         console.log("->", msg)
         const result = await tryRouteForeground(msg)
@@ -246,6 +264,14 @@ async function main() {
         console.log("<-", response)
         port.postMessage(RpcResponseInit.from(response))
       })
+    }
+
+    browser.runtime.onConnect.addListener(port => {
+      if (port.name === "content_script")
+        return onContentScript(port)
+      if (port.name === "foreground")
+        return onForeground(port)
+      throw new Panic(`Invalid port name`)
     })
   }
 }
