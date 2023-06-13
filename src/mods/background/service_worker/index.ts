@@ -59,7 +59,7 @@ const memory: {
   session?: UserSession
 } = {}
 
-async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], unknown>> {
+async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], never>> {
   return await Result.unthrow(async t => {
     const usersQuery = await getUsers(globalStorage)?.make(core)
     const users = usersQuery?.current?.get() ?? []
@@ -68,7 +68,7 @@ async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], u
   })
 }
 
-async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], unknown>> {
+async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], Error>> {
   return await Result.unthrow(async t => {
     const [init] = request.params as [UserInit]
 
@@ -83,7 +83,7 @@ async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], un
   })
 }
 
-async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, unknown>> {
+async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, Error>> {
   return await Result.unthrow(async t => {
     const [uuid] = request.params as [string]
 
@@ -94,7 +94,7 @@ async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, 
   })
 }
 
-async function brume_setCurrentUser(request: RpcRequestInit): Promise<Result<void, unknown>> {
+async function brume_setCurrentUser(request: RpcRequestInit): Promise<Result<void, Error>> {
   return Result.unthrow(async t => {
     const [uuid, password] = request.params as [string, string]
 
@@ -112,7 +112,7 @@ async function brume_getCurrentUser(request: RpcRequestInit): Promise<Result<Opt
   return new Ok(memory.session?.user)
 }
 
-async function brume_getWallets(request: RpcRequestInit): Promise<Result<Wallet[], unknown>> {
+async function brume_getWallets(request: RpcRequestInit): Promise<Result<Wallet[], Error>> {
   return Result.unthrow(async t => {
     const { userStorage } = Option.from(memory.session).ok().throw(t)
 
@@ -123,7 +123,7 @@ async function brume_getWallets(request: RpcRequestInit): Promise<Result<Wallet[
   })
 }
 
-async function brume_newWallet(request: RpcRequestInit): Promise<Result<Wallet[], unknown>> {
+async function brume_newWallet(request: RpcRequestInit): Promise<Result<Wallet[], Error>> {
   return Result.unthrow(async t => {
     const { userStorage } = Option.from(memory.session).ok().throw(t)
 
@@ -138,7 +138,7 @@ async function brume_newWallet(request: RpcRequestInit): Promise<Result<Wallet[]
   })
 }
 
-async function brume_getWallet(request: RpcRequestInit): Promise<Result<WalletData, unknown>> {
+async function brume_getWallet(request: RpcRequestInit): Promise<Result<WalletData, Error>> {
   return Result.unthrow(async t => {
     const [uuid] = request.params as [string]
 
@@ -151,7 +151,7 @@ async function brume_getWallet(request: RpcRequestInit): Promise<Result<WalletDa
   })
 }
 
-async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unknown, unknown>> {
+async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unknown, Error>> {
   if (request.method === "brume_getUsers")
     return await brume_getUsers(request)
   if (request.method === "brume_newUser")
