@@ -197,12 +197,18 @@ async function eth_requestAccounts(request: RpcRequestInit): Promise<Result<unkn
     const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
     const walletsQuery = await getWallets(userStorage).make(core)
-    const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
 
-    const walletQuery = await getWallet(first.uuid, userStorage).make(core)
-    const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
+    return await Cleanable.runWith(walletsQuery, async () => {
+      const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
 
-    return new Ok([address])
+      const walletQuery = await getWallet(first.uuid, userStorage).make(core)
+
+      return await Cleanable.runWith(walletQuery, async () => {
+        const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
+
+        return new Ok([address])
+      })
+    })
   })
 }
 
@@ -211,12 +217,18 @@ async function eth_accounts(request: RpcRequestInit): Promise<Result<unknown, Er
     const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
     const walletsQuery = await getWallets(userStorage).make(core)
-    const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
 
-    const walletQuery = await getWallet(first.uuid, userStorage).make(core)
-    const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
+    return await Cleanable.runWith(walletsQuery, async () => {
+      const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
 
-    return new Ok([address])
+      const walletQuery = await getWallet(first.uuid, userStorage).make(core)
+
+      return await Cleanable.runWith(walletQuery, async () => {
+        const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
+
+        return new Ok([address])
+      })
+    })
   })
 }
 
