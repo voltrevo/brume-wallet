@@ -62,7 +62,7 @@ const memory: {
 async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], unknown>> {
   return await Result.unthrow(async t => {
     const usersQuery = await getUsers(globalStorage)?.make(core)
-    const users = Option.from(usersQuery?.current).ok().throw(t).throw(t)
+    const users = usersQuery?.current?.get() ?? []
 
     return new Ok(users)
   })
@@ -71,12 +71,13 @@ async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], u
 async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], unknown>> {
   return await Result.unthrow(async t => {
     const [init] = request.params as [UserInit]
-    const usersQuery = await getUsers(globalStorage)?.make(core)
 
+    const usersQuery = await getUsers(globalStorage)?.make(core)
     const user = await tryCreateUser(init).then(r => r.throw(t))
+
     await usersQuery?.mutate(Mutators.push(user))
 
-    const users = Option.from(usersQuery?.current).ok().throw(t).throw(t)
+    const users = Option.from(usersQuery?.current?.get()).ok().throw(t)
 
     return new Ok(users)
   })
@@ -87,7 +88,7 @@ async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, 
     const [uuid] = request.params as [string]
 
     const userQuery = await getUser(uuid, globalStorage)?.make(core)
-    const user = Option.from(userQuery?.current).ok().throw(t).throw(t)
+    const user = Option.from(userQuery?.current?.get()).ok().throw(t)
 
     return new Ok(user)
   })
@@ -98,10 +99,11 @@ async function brume_setCurrentUser(request: RpcRequestInit): Promise<Result<voi
     const [uuid, password] = request.params as [string, string]
 
     const userQuery = await getUser(uuid, globalStorage)?.make(core)
-    const user = Option.from(userQuery?.current).ok().throw(t).throw(t)
+    const user = Option.from(userQuery?.current?.get()).ok().throw(t)
 
     const userStorage = await tryCreateUserStorage(user, password).then(r => r.throw(t))
     memory.session = { user, userStorage }
+
     return Ok.void()
   })
 }
@@ -115,7 +117,7 @@ async function brume_getWallets(request: RpcRequestInit): Promise<Result<Wallet[
     const { userStorage } = Option.from(memory.session).ok().throw(t)
 
     const walletsQuery = await getWallets(userStorage)?.make(core)
-    const wallets = Option.from(walletsQuery?.current).ok().throw(t).throw(t)
+    const wallets = walletsQuery?.current?.get() ?? []
 
     return new Ok(wallets)
   })
@@ -130,7 +132,7 @@ async function brume_newWallet(request: RpcRequestInit): Promise<Result<Wallet[]
 
     await walletsQuery?.mutate(Mutators.push(wallet))
 
-    const wallets = Option.from(walletsQuery?.current).ok().throw(t).throw(t)
+    const wallets = Option.from(walletsQuery?.current?.get()).ok().throw(t)
 
     return new Ok(wallets)
   })
@@ -143,7 +145,7 @@ async function brume_getWallet(request: RpcRequestInit): Promise<Result<WalletDa
     const { userStorage } = Option.from(memory.session).ok().throw(t)
 
     const walletQuery = await getWallet(uuid, userStorage)?.make(core)
-    const wallet = Option.from(walletQuery?.current).ok().throw(t).throw(t)
+    const wallet = Option.from(walletQuery?.current?.get()).ok().throw(t)
 
     return new Ok(wallet)
   })
