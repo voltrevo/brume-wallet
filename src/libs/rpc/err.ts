@@ -1,46 +1,47 @@
 import { Err } from "@hazae41/result"
 
-export interface RawError {
-  message: string
-}
-
-export namespace RawError {
-
-  export function from(error: Error): RawError {
-    const { message } = error
-    return { message }
-  }
-
+export interface ErrorInit {
+  readonly message: string
 }
 
 export interface RpcErrInit {
   readonly jsonrpc: "2.0"
   readonly id: number
-  readonly error: RawError
+  readonly error: ErrorInit
 }
 
-export namespace RpcErrInit {
+export class RpcError extends Error {
 
-  export function from(response: RpcErr): RpcErrInit {
-    const { jsonrpc, id } = response
-    const error = RawError.from(response.error)
-    return { jsonrpc, id, error }
+  static from(error: Error) {
+    const { message, name, cause, stack } = error
+
+    const rpcError = new RpcError(message, { cause })
+
+    rpcError.name = name
+    rpcError.stack = stack
+
+    return rpcError
+  }
+
+  toJSON() {
+    const { message } = this
+    return { message }
   }
 
 }
 
-export class RpcErr extends Err<Error> {
+export class RpcErr extends Err<RpcError> {
   readonly jsonrpc = "2.0"
 
   constructor(
     readonly id: number,
-    readonly error: Error
+    readonly error: RpcError
   ) {
     super(error)
   }
 
   static from(init: RpcErrInit) {
-    return new RpcErr(init.id, new Error(init.error.message))
+    return new RpcErr(init.id, new RpcError(init.error.message))
   }
 
 }

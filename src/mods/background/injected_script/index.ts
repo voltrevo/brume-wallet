@@ -13,10 +13,6 @@ declare global {
   }
 }
 
-interface JsonRpcResponse {
-  id: number
-}
-
 class Provider {
 
   constructor(

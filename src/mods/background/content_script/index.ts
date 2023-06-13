@@ -1,5 +1,5 @@
 import { browser } from "@/libs/browser/browser"
-import { RpcErr, RpcErrInit, RpcRequestInit, RpcResponseInit } from "@/libs/rpc"
+import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
 import { Pool } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
@@ -58,13 +58,32 @@ const ports = new Pool<chrome.runtime.Port, never>(async (params) => {
   })
 }, { capacity: 1 })
 
+export class PostMessageError extends Error {
+  readonly #class = PostMessageError
+  readonly name = this.#class.name
 
-window.addEventListener("ethereum#request", async (e: CustomEvent<RpcRequestInit>) => {
-  const port = await ports.tryGet(0)
+  constructor() {
+    super(`Could not send message to the background`)
+  }
 
-  if (port.isOk())
-    return port.get().postMessage(e.detail)
+}
 
-  const response = RpcErrInit.from(new RpcErr(e.detail.id, port.get()))
+async function tryPostMessage(message: unknown): Promise<Result<void, Error>> {
+  return await Result.unthrow(async t => {
+    const port = await ports.tryGet(0).then(r => r.throw(t))
+
+    return Result.catchAndWrapSync(() => {
+      port.postMessage(message)
+    }).mapErrSync(() => new PostMessageError())
+  })
+}
+
+window.addEventListener("ethereum#request", async (event: CustomEvent<RpcRequestInit>) => {
+  const result = await tryPostMessage(event.detail)
+
+  if (result.isOk())
+    return
+
+  const response = RpcResponse.rewrap(event.detail.id, result)
   window.dispatchEvent(new CustomEvent("ethereum#response", { detail: response }))
 })

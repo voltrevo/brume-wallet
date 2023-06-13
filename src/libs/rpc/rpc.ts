@@ -1,8 +1,8 @@
 import { Future } from "@hazae41/future"
 import { Optional } from "@hazae41/option"
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
-import { Err, Ok, Result } from "@hazae41/result"
-import { RpcErr } from "./err"
+import { Err, Ok, Panic, Result } from "@hazae41/result"
+import { RpcErr, RpcError } from "./err"
 import { RpcRequestInit, RpcRequestPreinit } from "./request"
 import { RpcResponse } from "./response"
 
@@ -51,16 +51,14 @@ export namespace Rpc {
     const res = await globalThis.fetch(input, { ...init, headers, body })
 
     if (!res.ok) {
-      const error = new Error(await res.text())
+      const error = new RpcError(await res.text())
       return new RpcErr(request.id, error)
     }
 
     const response = RpcResponse.from<T>(await res.json())
 
-    if (response.id !== request.id) {
-      const error = new Error(`Invalid response ID`)
-      return new RpcErr(request.id, error)
-    }
+    if (response.id !== request.id)
+      return new Err(new Panic(`Invalid response ID`))
 
     return response
   }

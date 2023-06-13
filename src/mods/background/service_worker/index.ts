@@ -1,5 +1,5 @@
 import { browser } from "@/libs/browser/browser"
-import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
+import { RpcRequestInit, RpcResponse } from "@/libs/rpc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Option, Optional } from "@hazae41/option"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
@@ -232,11 +232,11 @@ async function main() {
       const port = event.ports[0]
 
       port.addEventListener("message", async (event: MessageEvent<RpcRequestInit>) => {
-        console.log("->", event.data)
+        console.log("foreground", "->", event.data)
         const result = await tryRouteForeground(event.data)
         const response = RpcResponse.rewrap(event.data.id, result)
-        console.log("<-", response)
-        port.postMessage(RpcResponseInit.from(response))
+        console.log("foreground", "<-", response)
+        port.postMessage(response)
       })
 
       port.start()
@@ -255,19 +255,21 @@ async function main() {
 
     const onContentScript = (port: chrome.runtime.Port) => {
       port.onMessage.addListener(async (msg: RpcRequestInit) => {
+        console.log("content_script", "->", msg)
         const result = await tryRouteContentScript(msg)
         const response = RpcResponse.rewrap(msg.id, result)
-        port.postMessage(RpcResponseInit.from(response))
+        console.log("content_script", "<-", response)
+        port.postMessage(response)
       })
     }
 
     const onForeground = (port: chrome.runtime.Port) => {
       port.onMessage.addListener(async (msg) => {
-        console.log("->", msg)
+        console.log("foreground", "->", msg)
         const result = await tryRouteForeground(msg)
         const response = RpcResponse.rewrap(msg.id, result)
-        console.log("<-", response)
-        port.postMessage(RpcResponseInit.from(response))
+        console.log("foreground", "<-", response)
+        port.postMessage(response)
       })
     }
 
