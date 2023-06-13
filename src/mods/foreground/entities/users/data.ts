@@ -35,7 +35,7 @@ export function getUser(uuid: Optional<string>, background: Background) {
   const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
     Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
-  return createQuerySchema<UserData, RpcRequestPreinit>({
+  return createQuerySchema<RpcRequestPreinit, UserData, Error>({
     method: "brume_getUser",
     params: [uuid]
   }, fetcher)
@@ -51,7 +51,7 @@ export function getCurrentUser(background: Background) {
   const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
     Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
-  return createQuerySchema<User, RpcRequestPreinit>({
+  return createQuerySchema<RpcRequestPreinit, User, Error>({
     method: "brume_getCurrentUser",
     params: undefined
   }, fetcher)

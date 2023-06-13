@@ -24,7 +24,7 @@ export function WalletPage(props: { uuid: string }) {
   return <WalletDataPage wallet={wallet.data.inner} />
 }
 
-function useFloat(query: Query<bigint>) {
+function useFloat<K, D extends bigint, F>(query: Query<K, D, F>) {
   return useMemo(() => {
     if (query.error !== undefined)
       return "Error"

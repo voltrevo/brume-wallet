@@ -7,7 +7,7 @@ export function getUsers(background: Background) {
   const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
     Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
-  return createQuerySchema<User[], RpcRequestPreinit>({
+  return createQuerySchema<RpcRequestPreinit, User[], Error>({
     method: "brume_getUsers",
     params: undefined
   }, fetcher)

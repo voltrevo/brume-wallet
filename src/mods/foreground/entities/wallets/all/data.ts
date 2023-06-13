@@ -7,7 +7,7 @@ export function getWalletsSchema(background: Background) {
   const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
     Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
-  return createQuerySchema<Wallet[], RpcRequestPreinit>({
+  return createQuerySchema<RpcRequestPreinit, Wallet[], Error>({
     method: "brume_getWallets",
     params: undefined
   }, fetcher)

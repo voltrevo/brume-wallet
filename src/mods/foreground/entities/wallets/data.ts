@@ -63,7 +63,7 @@ export function getWallet(uuid: Optional<string>, background: Background) {
   const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
     Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
-  return createQuerySchema<WalletData, RpcRequestPreinit>({
+  return createQuerySchema<RpcRequestPreinit, WalletData, Error>({
     method: "brume_getWallet",
     params: [uuid]
   }, fetcher)

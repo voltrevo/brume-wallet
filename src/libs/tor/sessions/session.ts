@@ -34,7 +34,7 @@ export type EthereumSession =
 export function getEthereumHandle(uuid: string, handles?: Mutex<Pool<EthereumHandle, Error>>) {
   if (!handles) return
 
-  return createQuerySchema<Mutex<Pool<EthereumHandle, Error>>>(`sessions/${uuid}`, async () => {
+  return createQuerySchema<string, Mutex<Pool<EthereumHandle, Error>>, never>(`sessions/${uuid}`, async () => {
     return new Data(EthereumHandle.createSubpool(handles, { capacity: 1 }))
   }, {})
 }

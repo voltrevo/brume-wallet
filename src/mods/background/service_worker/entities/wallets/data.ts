@@ -3,7 +3,7 @@ import { AbortSignals } from "@/libs/signals/signals"
 import { EthereumSession } from "@/libs/tor/sessions/session"
 import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
 import { Result } from "@hazae41/result"
-import { Fetched, FetcherMore, NormalizerMore, StorageQueryParams, createQuerySchema } from "@hazae41/xswr"
+import { Fetched, FetcherMore, NormalizerMore, StorageQuerySettings, createQuerySchema } from "@hazae41/xswr"
 
 export type Wallet =
   | WalletRef
@@ -54,11 +54,11 @@ export interface BitcoinPrivateKeyWallet {
   uncompressedAddress: string
 }
 
-export function getWallet(uuid: string, storage: StorageQueryParams<any>) {
-  return createQuerySchema<WalletData>(`wallet/${uuid}`, undefined, { storage })
+export function getWallet(uuid: string, storage: StorageQuerySettings<any, never>) {
+  return createQuerySchema<string, WalletData, never>(`wallet/${uuid}`, undefined, { storage })
 }
 
-export async function getWalletRef(wallet: Wallet, storage: StorageQueryParams<any>, more: NormalizerMore) {
+export async function getWalletRef(wallet: Wallet, storage: StorageQuerySettings<any, never>, more: NormalizerMore) {
   if ("ref" in wallet) return wallet
 
   const schema = getWallet(wallet.uuid, storage)

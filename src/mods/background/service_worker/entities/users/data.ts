@@ -1,6 +1,6 @@
 import { Bytes } from "@hazae41/bytes"
 import { Err, Ok, Result } from "@hazae41/result"
-import { AesGcmCoder, HmacEncoder, IDBStorage, NormalizerMore, StorageQueryParams, createQuerySchema } from "@hazae41/xswr"
+import { AesGcmCoder, HmacEncoder, IDBStorage, NormalizerMore, StorageQuerySettings, createQuerySchema } from "@hazae41/xswr"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBase64, Pbkdf2ParamsBytes } from "./crypto"
 
 export type User =
@@ -46,14 +46,14 @@ export interface UserData {
 
 export interface UserSession {
   user: UserData,
-  userStorage: StorageQueryParams<any>
+  userStorage: StorageQuerySettings<any, never>
 }
 
-export function getUser(uuid: string, storage: StorageQueryParams<any>) {
-  return createQuerySchema<UserData>(`user/${uuid}`, undefined, { storage })
+export function getUser(uuid: string, storage: StorageQuerySettings<any, never>) {
+  return createQuerySchema<string, UserData, never>(`user/${uuid}`, undefined, { storage })
 }
 
-export async function getUserRef(wallet: User, storage: StorageQueryParams<any>, more: NormalizerMore) {
+export async function getUserRef(wallet: User, storage: StorageQuerySettings<any, never>, more: NormalizerMore) {
   if ("ref" in wallet) return wallet
 
   const schema = getUser(wallet.uuid, storage)
@@ -109,7 +109,7 @@ export async function tryCreateUser(init: UserInit): Promise<Result<UserData, Er
   })
 }
 
-export async function tryCreateUserStorage(user: UserData, password: string): Promise<Result<StorageQueryParams<any>, Error>> {
+export async function tryCreateUserStorage(user: UserData, password: string): Promise<Result<StorageQuerySettings<any, never>, Error>> {
   return await Result.unthrow(async t => {
     const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"])
 

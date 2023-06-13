@@ -3,8 +3,8 @@ import { Data, Mutator, State } from "@hazae41/xswr";
 
 export namespace Mutators {
 
-  export function push<S, D extends S>(element: D): Mutator<S[]> {
-    return (previous: State<S[]>) => {
+  export function push<S, D extends S, F>(element: D): Mutator<S[], F> {
+    return (previous: State<S[], F>) => {
       const previousData = previous.real?.data?.inner
 
       if (previousData !== undefined)
