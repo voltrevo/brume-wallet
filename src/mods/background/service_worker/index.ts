@@ -1,7 +1,6 @@
 import { browser } from "@/libs/browser/browser"
 import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Mutators } from "@/libs/xswr/mutators"
-import { Cleanable } from "@hazae41/cleaner"
 import { Option, Optional } from "@hazae41/option"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Core } from "@hazae41/xswr"
@@ -63,12 +62,9 @@ const memory: {
 async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], never>> {
   return await Result.unthrow(async t => {
     const usersQuery = await getUsers(globalStorage)?.make(core)
+    const users = usersQuery?.current?.get() ?? []
 
-    return Cleanable.runWith(usersQuery, async () => {
-      const users = usersQuery?.current?.get() ?? []
-
-      return new Ok(users)
-    })
+    return new Ok(users)
   })
 }
 
@@ -77,16 +73,12 @@ async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], Er
     const [init] = request.params as [UserInit]
 
     const usersQuery = await getUsers(globalStorage).make(core)
+    const user = await tryCreateUser(init).then(r => r.throw(t))
 
-    return Cleanable.runWith(usersQuery, async () => {
-      const user = await tryCreateUser(init).then(r => r.throw(t))
+    const usersState = await usersQuery.mutate(Mutators.push(user))
+    const users = Option.wrap(usersState.get().current?.get()).ok().throw(t)
 
-      await usersQuery.mutate(Mutators.push(user))
-
-      const users = Option.wrap(usersQuery.current?.get()).ok().throw(t)
-
-      return new Ok(users)
-    })
+    return new Ok(users)
   })
 }
 
@@ -95,12 +87,9 @@ async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, 
     const [uuid] = request.params as [string]
 
     const userQuery = await getUser(uuid, globalStorage).make(core)
+    const user = Option.wrap(userQuery.current?.get()).ok().throw(t)
 
-    return Cleanable.runWith(userQuery, async () => {
-      const user = Option.wrap(userQuery.current?.get()).ok().throw(t)
-
-      return new Ok(user)
-    })
+    return new Ok(user)
   })
 }
 
@@ -109,15 +98,12 @@ async function brume_setCurrentUser(request: RpcRequestInit): Promise<Result<voi
     const [uuid, password] = request.params as [string, string]
 
     const userQuery = await getUser(uuid, globalStorage).make(core)
+    const user = Option.wrap(userQuery.current?.get()).ok().throw(t)
 
-    return Cleanable.runWith(userQuery, async () => {
-      const user = Option.wrap(userQuery.current?.get()).ok().throw(t)
+    const userStorage = await tryCreateUserStorage(user, password).then(r => r.throw(t))
+    memory.session = { userData: user, userStorage }
 
-      const userStorage = await tryCreateUserStorage(user, password).then(r => r.throw(t))
-      memory.session = { userData: user, userStorage }
-
-      return Ok.void()
-    })
+    return Ok.void()
   })
 }
 
@@ -130,12 +116,9 @@ async function brume_getWallets(request: RpcRequestInit): Promise<Result<Wallet[
     const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
     const walletsQuery = await getWallets(userStorage).make(core)
+    const wallets = walletsQuery.current?.get() ?? []
 
-    return await Cleanable.runWith(walletsQuery, async () => {
-      const wallets = walletsQuery.current?.get() ?? []
-
-      return new Ok(wallets)
-    })
+    return new Ok(wallets)
   })
 }
 
@@ -146,13 +129,10 @@ async function brume_newWallet(request: RpcRequestInit): Promise<Result<Wallet[]
     const [wallet] = request.params as [EthereumPrivateKeyWallet]
     const walletsQuery = await getWallets(userStorage).make(core)
 
-    return await Cleanable.runWith(walletsQuery, async () => {
-      await walletsQuery?.mutate(Mutators.push(wallet))
+    const usersState = await walletsQuery?.mutate(Mutators.push(wallet))
+    const wallets = Option.wrap(usersState.get().current?.get()).ok().throw(t)
 
-      const wallets = Option.wrap(walletsQuery.current?.get()).ok().throw(t)
-
-      return new Ok(wallets)
-    })
+    return new Ok(wallets)
   })
 }
 
@@ -163,12 +143,9 @@ async function brume_getWallet(request: RpcRequestInit): Promise<Result<WalletDa
     const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
     const walletQuery = await getWallet(uuid, userStorage).make(core)
+    const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
-    return await Cleanable.runWith(walletQuery, async () => {
-      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
-
-      return new Ok(wallet)
-    })
+    return new Ok(wallet)
   })
 }
 
@@ -197,18 +174,12 @@ async function eth_requestAccounts(request: RpcRequestInit): Promise<Result<unkn
     const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
     const walletsQuery = await getWallets(userStorage).make(core)
+    const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
 
-    return await Cleanable.runWith(walletsQuery, async () => {
-      const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
+    const walletQuery = await getWallet(first.uuid, userStorage).make(core)
+    const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
 
-      const walletQuery = await getWallet(first.uuid, userStorage).make(core)
-
-      return await Cleanable.runWith(walletQuery, async () => {
-        const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
-
-        return new Ok([address])
-      })
-    })
+    return new Ok([address])
   })
 }
 
@@ -217,18 +188,12 @@ async function eth_accounts(request: RpcRequestInit): Promise<Result<unknown, Er
     const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
     const walletsQuery = await getWallets(userStorage).make(core)
+    const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
 
-    return await Cleanable.runWith(walletsQuery, async () => {
-      const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
+    const walletQuery = await getWallet(first.uuid, userStorage).make(core)
+    const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
 
-      const walletQuery = await getWallet(first.uuid, userStorage).make(core)
-
-      return await Cleanable.runWith(walletQuery, async () => {
-        const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
-
-        return new Ok([address])
-      })
-    })
+    return new Ok([address])
   })
 }
 
