@@ -1,7 +1,6 @@
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { EthereumSession } from "@/libs/tor/sessions/session"
-import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
 import { Result } from "@hazae41/result"
 import { Fetched, FetcherMore, NormalizerMore, StorageQuerySettings, createQuerySchema } from "@hazae41/xswr"
 
@@ -68,7 +67,7 @@ export async function getWalletRef(wallet: Wallet, storage: StorageQuerySettings
 }
 
 export async function fetchWithSession(session: EthereumSession, init: RpcRequestPreinit, more: FetcherMore) {
-  return await Result.unthrow<Fetched<string, CloseError | ErrorError | AbortError | unknown>>(async t => {
+  return await Result.unthrow<Fetched<string, Error>>(async t => {
     const { signal = AbortSignals.timeout(5_000) } = more
 
     console.log(`Fetching ${init.method} with`, session.circuit.id)
@@ -89,28 +88,30 @@ export async function fetchWithSession(session: EthereumSession, init: RpcReques
   })
 }
 
+export interface EthereumQueryKey extends RpcRequestPreinit {
+  chainId: number
+}
+
 export function getBalanceSchema(address: string | undefined, session: EthereumSession | undefined) {
   if (!address || !session) return
 
-  const fetcher = async (init: RpcRequestPreinit, more: FetcherMore) => {
-    return await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
-  }
+  const fetcher = async (init: RpcRequestPreinit, more: FetcherMore) =>
+    await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
 
-  return createQuerySchema({
+  return createQuerySchema<EthereumQueryKey, bigint, Error>({
     chainId: session.chain.id,
     method: "eth_getBalance",
     params: [address, "pending"]
-  }, fetcher)
+  }, fetcher, {})
 }
 
 export function getNonceSchema(address: string | undefined, session: EthereumSession | undefined) {
   if (!address || !session) return
 
-  const fetcher = async (init: RpcRequestPreinit, more: FetcherMore) => {
-    return await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
-  }
+  const fetcher = async (init: RpcRequestPreinit, more: FetcherMore) =>
+    await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
 
-  return createQuerySchema({
+  return createQuerySchema<EthereumQueryKey, bigint, Error>({
     chainId: session.chain.id,
     method: "eth_getTransactionCount",
     params: [address, "pending"]
@@ -120,11 +121,10 @@ export function getNonceSchema(address: string | undefined, session: EthereumSes
 export function getGasPriceSchema(session: EthereumSession | undefined) {
   if (!session) return
 
-  const fetcher = async (init: RpcRequestPreinit, more: FetcherMore) => {
-    return await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
-  }
+  const fetcher = async (init: RpcRequestPreinit, more: FetcherMore) =>
+    await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
 
-  return createQuerySchema({
+  return createQuerySchema<EthereumQueryKey, bigint, Error>({
     chainId: session.chain.id,
     method: "eth_gasPrice",
     params: []

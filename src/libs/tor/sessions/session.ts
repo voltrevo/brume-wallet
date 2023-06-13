@@ -11,7 +11,7 @@ import { Circuit } from "@hazae41/echalote"
 import { Fleche } from "@hazae41/fleche"
 import { Mutex } from "@hazae41/mutex"
 import { Pool, PoolParams, TooManyRetriesError } from "@hazae41/piscine"
-import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
+import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
 import { Data, createQuerySchema, useOnce, useQuery } from "@hazae41/xswr"
 import { useEffect, useState } from "react"
@@ -85,7 +85,7 @@ export namespace EthereumSocket {
    * @param signal 
    * @returns 
    */
-  export async function tryCreate(circuit: Circuit, chain: EthereumChain, signal?: AbortSignal): Promise<Result<WebSocket, BinaryError | ErrorError | CloseError | AbortError | ControllerError>> {
+  export async function tryCreate(circuit: Circuit, chain: EthereumChain, signal?: AbortSignal): Promise<Result<WebSocket, BinaryError | ErroredError | ClosedError | AbortedError | ControllerError>> {
     return await Result.unthrow(async t => {
       const signal2 = AbortSignals.timeout(5_000, signal)
 
@@ -101,7 +101,7 @@ export namespace EthereumSocket {
     })
   }
 
-  export async function tryCreateLoop(circuit: Circuit, chain: EthereumChain, signal?: AbortSignal): Promise<Result<WebSocket, TooManyRetriesError | BinaryError | ErrorError | CloseError | AbortError | ControllerError>> {
+  export async function tryCreateLoop(circuit: Circuit, chain: EthereumChain, signal?: AbortSignal): Promise<Result<WebSocket, TooManyRetriesError | BinaryError | ErroredError | ClosedError | AbortedError | ControllerError>> {
     for (let i = 0; !signal?.aborted && i < 3; i++) {
       const result = await tryCreate(circuit, chain, signal)
 
@@ -118,7 +118,7 @@ export namespace EthereumSocket {
     }
 
     if (signal?.aborted)
-      return new Err(AbortError.from(signal.reason))
+      return new Err(AbortedError.from(signal.reason))
     return new Err(new TooManyRetriesError())
   }
 

@@ -1,6 +1,6 @@
 import { Future } from "@hazae41/future"
 import { Optional } from "@hazae41/option"
-import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
+import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
 import { RpcErr } from "./err"
 import { RpcRequestInit, RpcRequestPreinit } from "./request"
@@ -68,7 +68,7 @@ export namespace Rpc {
   export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit, signal: AbortSignal) {
     socket.send(JSON.stringify(request))
 
-    const future = new Future<Result<RpcResponse<T>, CloseError | ErrorError | AbortError>>()
+    const future = new Future<Result<RpcResponse<T>, ClosedError | ErroredError | AbortedError>>()
 
     const onMessage = async (event: Event) => {
       const msgEvent = event as MessageEvent<string>
@@ -80,18 +80,18 @@ export namespace Rpc {
     }
 
     const onError = (e: unknown) => {
-      const result = new Err(ErrorError.from(e))
+      const result = new Err(ErroredError.from(e))
       future.resolve(result)
     }
 
     const onClose = (e: unknown) => {
-      const result = new Err(CloseError.from(e))
+      const result = new Err(ClosedError.from(e))
       future.resolve(result)
     }
 
     const onAbort = () => {
       socket.close()
-      const result = new Err(AbortError.from(signal.reason))
+      const result = new Err(AbortedError.from(signal.reason))
       future.resolve(result)
     }
 

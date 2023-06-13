@@ -2,7 +2,7 @@ import { RpcRequestPreinit } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { EthereumSession } from "@/libs/tor/sessions/session"
 import { Optional } from "@hazae41/option"
-import { AbortError, CloseError, ErrorError } from "@hazae41/plume"
+import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Result } from "@hazae41/result"
 import { Fetched, FetcherMore, createQuerySchema, useError, useFetch, useOnce, useQuery } from "@hazae41/xswr"
 import { Background } from "../../background/background"
@@ -76,7 +76,7 @@ export function useWallet(uuid: Optional<string>, background: Background) {
 }
 
 export async function fetchWithSession(session: EthereumSession, init: RpcRequestPreinit, more: FetcherMore) {
-  return await Result.unthrow<Fetched<string, CloseError | ErrorError | AbortError | unknown>>(async t => {
+  return await Result.unthrow<Fetched<string, ClosedError | ErroredError | AbortedError | unknown>>(async t => {
     const { signal = AbortSignals.timeout(5_000) } = more
 
     console.log(`Fetching ${init.method} with`, session.circuit.id)

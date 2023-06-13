@@ -1,11 +1,11 @@
 import { Future } from "@hazae41/future";
-import { AbortError, CloseError, ErrorError } from "@hazae41/plume";
+import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume";
 import { Err, Ok, Result } from "@hazae41/result";
 
 export namespace Sockets {
 
   export async function tryWaitOpen(socket: WebSocket, signal: AbortSignal) {
-    const future = new Future<Result<void, CloseError | ErrorError | AbortError>>()
+    const future = new Future<Result<void, ClosedError | ErroredError | AbortedError>>()
 
     const onOpen = () => {
       const result = Ok.void()
@@ -13,18 +13,18 @@ export namespace Sockets {
     }
 
     const onError = (e: unknown) => {
-      const result = new Err(ErrorError.from(e))
+      const result = new Err(ErroredError.from(e))
       future.resolve(result)
     }
 
     const onClose = (e: unknown) => {
-      const result = new Err(CloseError.from(e))
+      const result = new Err(ClosedError.from(e))
       future.resolve(result)
     }
 
     const onAbort = () => {
       socket.close()
-      const result = new Err(AbortError.from(signal.reason))
+      const result = new Err(AbortedError.from(signal.reason))
       future.resolve(result)
     }
 

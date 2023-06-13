@@ -11,7 +11,7 @@ export type Background =
 
 export function createWebsiteBackgroundPool() {
   return new Pool<WebsiteBackground, Error>(async (params) => {
-    return Result.unthrow(async t => {
+    return await Result.unthrow(async t => {
       const registration = await Result
         .catchAndWrap(() => navigator.serviceWorker.ready)
         .then(r => r.throw(t))
@@ -76,7 +76,7 @@ export class WebsiteBackground {
 
 export function createExtensionBackgroundPool() {
   return new Pool<ExtensionBackground, Error>(async (params) => {
-    return Result.unthrow(async t => {
+    return await Result.unthrow(async t => {
       const { index, pool } = params
 
       const port = browser.runtime.connect({ name: "foreground" })

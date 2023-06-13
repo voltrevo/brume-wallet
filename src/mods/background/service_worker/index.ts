@@ -64,7 +64,7 @@ async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], n
   return await Result.unthrow(async t => {
     const usersQuery = await getUsers(globalStorage)?.make(core)
 
-    return Cleanable.use(usersQuery, async () => {
+    return Cleanable.runWith(usersQuery, async () => {
       const users = usersQuery?.current?.get() ?? []
 
       return new Ok(users)
@@ -76,14 +76,14 @@ async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], Er
   return await Result.unthrow(async t => {
     const [init] = request.params as [UserInit]
 
-    const usersQuery = await getUsers(globalStorage)?.make(core)
+    const usersQuery = await getUsers(globalStorage).make(core)
 
-    return Cleanable.use(usersQuery, async () => {
+    return Cleanable.runWith(usersQuery, async () => {
       const user = await tryCreateUser(init).then(r => r.throw(t))
 
-      await usersQuery?.mutate(Mutators.push(user))
+      await usersQuery.mutate(Mutators.push(user))
 
-      const users = Option.from(usersQuery?.current?.get()).ok().throw(t)
+      const users = Option.wrap(usersQuery.current?.get()).ok().throw(t)
 
       return new Ok(users)
     })
@@ -94,10 +94,10 @@ async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, 
   return await Result.unthrow(async t => {
     const [uuid] = request.params as [string]
 
-    const userQuery = await getUser(uuid, globalStorage)?.make(core)
+    const userQuery = await getUser(uuid, globalStorage).make(core)
 
-    return Cleanable.use(userQuery, async () => {
-      const user = Option.from(userQuery?.current?.get()).ok().throw(t)
+    return Cleanable.runWith(userQuery, async () => {
+      const user = Option.wrap(userQuery.current?.get()).ok().throw(t)
 
       return new Ok(user)
     })
@@ -105,13 +105,13 @@ async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, 
 }
 
 async function brume_setCurrentUser(request: RpcRequestInit): Promise<Result<void, Error>> {
-  return Result.unthrow(async t => {
+  return await Result.unthrow(async t => {
     const [uuid, password] = request.params as [string, string]
 
-    const userQuery = await getUser(uuid, globalStorage)?.make(core)
+    const userQuery = await getUser(uuid, globalStorage).make(core)
 
-    return Cleanable.use(userQuery, async () => {
-      const user = Option.from(userQuery?.current?.get()).ok().throw(t)
+    return Cleanable.runWith(userQuery, async () => {
+      const user = Option.wrap(userQuery.current?.get()).ok().throw(t)
 
       const userStorage = await tryCreateUserStorage(user, password).then(r => r.throw(t))
       memory.session = { userData: user, userStorage }
@@ -126,13 +126,13 @@ async function brume_getCurrentUser(request: RpcRequestInit): Promise<Result<Opt
 }
 
 async function brume_getWallets(request: RpcRequestInit): Promise<Result<Wallet[], Error>> {
-  return Result.unthrow(async t => {
-    const { userStorage } = Option.from(memory.session).ok().throw(t)
+  return await Result.unthrow(async t => {
+    const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
-    const walletsQuery = await getWallets(userStorage)?.make(core)
+    const walletsQuery = await getWallets(userStorage).make(core)
 
-    return await Cleanable.use(walletsQuery, async () => {
-      const wallets = walletsQuery?.current?.get() ?? []
+    return await Cleanable.runWith(walletsQuery, async () => {
+      const wallets = walletsQuery.current?.get() ?? []
 
       return new Ok(wallets)
     })
@@ -140,16 +140,16 @@ async function brume_getWallets(request: RpcRequestInit): Promise<Result<Wallet[
 }
 
 async function brume_newWallet(request: RpcRequestInit): Promise<Result<Wallet[], Error>> {
-  return Result.unthrow(async t => {
-    const { userStorage } = Option.from(memory.session).ok().throw(t)
+  return await Result.unthrow(async t => {
+    const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
     const [wallet] = request.params as [EthereumPrivateKeyWallet]
-    const walletsQuery = await getWallets(userStorage)?.make(core)
+    const walletsQuery = await getWallets(userStorage).make(core)
 
-    return await Cleanable.use(walletsQuery, async () => {
+    return await Cleanable.runWith(walletsQuery, async () => {
       await walletsQuery?.mutate(Mutators.push(wallet))
 
-      const wallets = Option.from(walletsQuery?.current?.get()).ok().throw(t)
+      const wallets = Option.wrap(walletsQuery.current?.get()).ok().throw(t)
 
       return new Ok(wallets)
     })
@@ -157,15 +157,15 @@ async function brume_newWallet(request: RpcRequestInit): Promise<Result<Wallet[]
 }
 
 async function brume_getWallet(request: RpcRequestInit): Promise<Result<WalletData, Error>> {
-  return Result.unthrow(async t => {
+  return await Result.unthrow(async t => {
     const [uuid] = request.params as [string]
 
-    const { userStorage } = Option.from(memory.session).ok().throw(t)
+    const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
-    const walletQuery = await getWallet(uuid, userStorage)?.make(core)
+    const walletQuery = await getWallet(uuid, userStorage).make(core)
 
-    return await Cleanable.use(walletQuery, async () => {
-      const wallet = Option.from(walletQuery?.current?.get()).ok().throw(t)
+    return await Cleanable.runWith(walletQuery, async () => {
+      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
       return new Ok(wallet)
     })
@@ -192,11 +192,39 @@ async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unkno
   return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
 }
 
+async function eth_requestAccounts(request: RpcRequestInit): Promise<Result<unknown, Error>> {
+  return await Result.unthrow(async t => {
+    const { userStorage } = Option.wrap(memory.session).ok().throw(t)
+
+    const walletsQuery = await getWallets(userStorage).make(core)
+    const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
+
+    const walletQuery = await getWallet(first.uuid, userStorage).make(core)
+    const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
+
+    return new Ok([address])
+  })
+}
+
+async function eth_accounts(request: RpcRequestInit): Promise<Result<unknown, Error>> {
+  return await Result.unthrow(async t => {
+    const { userStorage } = Option.wrap(memory.session).ok().throw(t)
+
+    const walletsQuery = await getWallets(userStorage).make(core)
+    const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
+
+    const walletQuery = await getWallet(first.uuid, userStorage).make(core)
+    const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
+
+    return new Ok([address])
+  })
+}
+
 async function tryRouteContentScript(request: RpcRequestInit): Promise<Result<unknown, Error>> {
   if (request.method === "eth_requestAccounts")
-    return new Ok(["0x39dfd20386F5d17eBa42763606B8c704FcDd1c1D"])
+    return await eth_requestAccounts(request)
   if (request.method === "eth_accounts")
-    return new Ok(["0x39dfd20386F5d17eBa42763606B8c704FcDd1c1D"])
+    return await eth_accounts(request)
   if (request.method === "eth_chainId")
     return new Ok("0x1")
   if (request.method === "eth_blockNumber")
