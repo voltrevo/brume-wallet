@@ -63,7 +63,10 @@ export namespace Rpc {
   }
 
   export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit<unknown>, signal: AbortSignal) {
-    socket.send(JSON.stringify(request))
+    const { jsonrpc, id, method, params = [] } = request
+    const request2 = { jsonrpc, id, method, params }
+
+    socket.send(JSON.stringify(request2))
 
     const future = new Future<Result<RpcResponse<T>, ClosedError | ErroredError | AbortedError>>()
 

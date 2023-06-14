@@ -24,7 +24,7 @@ class Provider {
     readonly client = new RpcClient()
   ) { }
 
-  get isConnected() {
+  isConnected() {
     return true
   }
 

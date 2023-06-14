@@ -15,6 +15,7 @@ import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
 import { Core, Makeable } from "@hazae41/xswr"
+import { ethers } from "ethers"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { CircuitSession, EthereumConnection, EthereumSocket, SessionData, getSession } from "./entities/sessions/data"
@@ -81,6 +82,15 @@ export class Global {
     return await makeable.make(this.core)
   }
 
+  async destroy(sessionId: string) {
+    const sessionQuery = await this.make(getSession(sessionId))
+
+    if (sessionQuery.data === undefined)
+      return
+    for (const entry of sessionQuery.data?.get().circuits.inner)
+      entry.result.andThenSync(circuit => circuit.circuit.tryDestroy().then(r => r.ignore()))
+  }
+
   async tryRouteForeground(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
     if (request.method === "brume_getUsers")
       return await this.brume_getUsers(request)
@@ -103,18 +113,50 @@ export class Global {
     return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
   }
 
-  async tryRouteContentScript(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
+  async tryRouteContentScript(sessionId: string, request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
     if (request.method === "brume_ping")
       return new Ok(undefined)
     if (request.method === "eth_requestAccounts")
       return await this.eth_requestAccounts(request)
     if (request.method === "eth_accounts")
       return await this.eth_accounts(request)
-    if (request.method === "eth_chainId")
-      return new Ok("0x1")
-    if (request.method === "eth_blockNumber")
-      return new Ok("0x65a8db")
-    return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
+    if (request.method === "eth_sendTransaction")
+      return await this.eth_sendTransaction(sessionId, request)
+
+    return await Result.unthrow(async t => {
+      const session = await this.#tryGetOrCreateSession(sessionId).then(r => r.throw(t))
+      const circuit = await session.circuits.inner.tryGet(0).then(r => r.throw(t))
+      const ethereum = Option.wrap(circuit.ethereum[137]).ok().throw(t)
+
+      console.log("lol", request)
+
+      return await EthereumSocket.tryFetch(ethereum, request, {})
+    })
+  }
+
+  async eth_sendTransaction(sessionId: string, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const { userStorage } = Option.wrap(this.#session).ok().throw(t)
+
+      const walletsQuery = await this.make(getWallets(userStorage))
+      const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
+
+      const walletQuery = await this.make(getWallet(first.uuid, userStorage))
+      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
+
+      const session = await this.#tryGetOrCreateSession(sessionId).then(r => r.throw(t))
+      const circuit = await session.circuits.inner.tryGet(0).then(r => r.throw(t))
+      const ethereum = Option.wrap(circuit.ethereum[137]).ok().throw(t)
+
+      const nonce = await EthereumSocket.tryFetch(ethereum, { method: "eth_getTransactionCount", params: [wallet.address, "pending"] }).then(r => r.throw(t))
+      const gasPrice = await EthereumSocket.tryFetch(ethereum, { method: "eth_gasPrice" }, {}).then(r => r.throw(t))
+
+      const [{ data, gas, from, to }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string }]>).params
+
+      const signature = await new ethers.Wallet(wallet.privateKey).signTransaction({ data, to, from, gasLimit: gas, chainId: 137, gasPrice, nonce: parseInt(nonce, 16) })
+
+      return await EthereumSocket.tryFetch(ethereum, { method: "eth_sendRawTransaction", params: [signature] }, {})
+    })
   }
 
   async brume_getUsers(request: RpcRequestInit<unknown>): Promise<Result<User[], never>> {
@@ -318,7 +360,7 @@ if (IS_WEBSITE) {
   const onSkipWaiting = (event: ExtendableMessageEvent) =>
     self.skipWaiting()
 
-  const onHelloWorld = (event: ExtendableMessageEvent) => {
+  const onHelloWorld = async (event: ExtendableMessageEvent) => {
     const port = event.ports[0]
 
     port.addEventListener("message", async (event: MessageEvent<RpcRequestInit<unknown>>) => {
@@ -334,9 +376,9 @@ if (IS_WEBSITE) {
 
   self.addEventListener("message", (event) => {
     if (event.data === "SKIP_WAITING")
-      return onSkipWaiting(event)
+      return void onSkipWaiting(event)
     if (event.data === "HELLO_WORLD")
-      return onHelloWorld(event)
+      return void onHelloWorld(event)
     throw new Panic(`Invalid message`)
   })
 }
@@ -344,12 +386,18 @@ if (IS_WEBSITE) {
 if (IS_EXTENSION) {
 
   const onContentScript = (port: chrome.runtime.Port) => {
+    const uuid = crypto.randomUUID()
+
     port.onMessage.addListener(async (msg: RpcRequestInit<unknown>) => {
-      // console.log(port.name, "->", msg)
-      const result = await inited.then(r => r.andThenSync(g => g.tryRouteContentScript(msg)))
+      if (msg.id !== "ping") console.log(port.name, "->", msg)
+      const result = await inited.then(r => r.andThenSync(g => g.tryRouteContentScript(uuid, msg)))
       const response = RpcResponse.rewrap(msg.id, result)
-      // console.log(port.name, "<-", response)
+      if (msg.id !== "ping") console.log(port.name, "<-", response)
       port.postMessage(response)
+    })
+
+    port.onDisconnect.addListener(async () => {
+      await inited.then(async r => r.andThenSync(g => g.destroy(uuid)))
     })
   }
 
@@ -365,9 +413,9 @@ if (IS_EXTENSION) {
 
   browser.runtime.onConnect.addListener(port => {
     if (port.name === "content_script")
-      return onContentScript(port)
+      return void onContentScript(port)
     if (port.name === "foreground")
-      return onForeground(port)
+      return void onForeground(port)
     throw new Panic(`Invalid port name`)
   })
 

@@ -56,7 +56,7 @@ function compileServiceWorker(config, options) {
     entry: "./src/mods/background/service_worker/index.ts",
     output: { filename: "service_worker.js" },
     optimization: {
-      minimize: config.mode === "production",
+      minimize: false,
       minimizer: [new TerserPlugin()]
     }
   })
