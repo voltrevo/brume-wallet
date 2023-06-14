@@ -32,7 +32,7 @@ export function getUser(uuid: Optional<string>, background: Backgrounds) {
   if (uuid === undefined)
     return undefined
 
-  const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore) =>
+  const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, UserData, Error>({
@@ -48,7 +48,7 @@ export function useUser(uuid: Optional<string>, background: Backgrounds) {
 }
 
 export function getCurrentUser(background: Backgrounds) {
-  const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore) =>
+  const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, User, Error>({

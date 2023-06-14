@@ -121,26 +121,26 @@ export namespace EthereumSocket {
     }, params)
   }
 
-  export async function tryFetch(session: EthereumConnection, init: RpcRequestPreinit<unknown>, more: FetcherMore = {}): Promise<Fetched<string, Error>> {
-    return await Result.unthrow(async t => {
+  export async function tryFetch(connection: EthereumSocket, init: RpcRequestPreinit<unknown>, more: FetcherMore = {}): Promise<Fetched<string, Error>> {
+    return await Result.unthrow<Result<string, Error>>(async t => {
       const { signal = AbortSignals.timeout(5_000) } = more
 
-      console.log(`Fetching ${init.method} with`, session.circuit.id)
+      console.log(`Fetching ${init.method} with`, connection.circuit.id)
 
-      const socket = await session.socket.tryGet(0).then(r => r.throw(t))
+      const socket = await connection.socket.tryGet(0).then(r => r.throw(t))
 
-      const response = await session.client
+      const response = await connection.client
         .tryFetchWithSocket<string>(socket, init, signal)
-        .then(r => Fetched.rewrap(r).throw(t))
+        .then(r => r.throw(t))
 
       const body = JSON.stringify({ method: init.method, tor: true })
 
-      session.circuit
+      connection.circuit
         .tryFetch("http://proxy.brume.money", { method: "POST", body })
         .then(r => r.inspectErrSync(console.warn).ignore())
 
-      return Fetched.rewrap(response)
-    })
+      return response
+    }).then(r => Fetched.rewrap(r))
   }
 
 }

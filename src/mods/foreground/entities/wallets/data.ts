@@ -59,7 +59,7 @@ export function getWallet(uuid: Optional<string>, background: Backgrounds) {
   if (uuid === undefined)
     return undefined
 
-  const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore) =>
+  const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, WalletData, Error>({
@@ -93,9 +93,9 @@ export function useEthereumHandle(session: string, chain: EthereumChain): Ethere
   return { session, chain, backgrounds }
 }
 
-export async function tryFetch<T>(key: EthereumQueryKey<unknown>, handle: EthereumHandle): Promise<Fetched<T, Error>> {
+export async function tryFetch<T>(key: EthereumQueryKey<unknown>, ethereum: EthereumHandle): Promise<Fetched<T, Error>> {
   return await Result.unthrow<Result<T, Error>>(async t => {
-    const { backgrounds, session, chain } = handle
+    const { backgrounds, session, chain } = ethereum
 
     const background = await backgrounds.tryGet(0).then(r => r.throw(t))
 
@@ -111,55 +111,55 @@ export async function tryFetch<T>(key: EthereumQueryKey<unknown>, handle: Ethere
   }).then(r => Fetched.rewrap(r))
 }
 
-export function getBalanceSchema(address: string, handle: EthereumHandle) {
-  const fetcher = async (init: EthereumQueryKey<unknown>, more: FetcherMore) =>
-    await tryFetch<string>(init, handle).then(r => r.mapSync(BigInt))
+export function getBalanceSchema(address: string, ethereum: EthereumHandle) {
+  const fetcher = async (init: EthereumQueryKey<unknown>, more: FetcherMore = {}) =>
+    await tryFetch<string>(init, ethereum).then(r => r.mapSync(BigInt))
 
   return createQuerySchema({
-    chainId: handle.chain.id,
+    chainId: ethereum.chain.id,
     method: "eth_getBalance",
     params: [address, "pending"]
   }, fetcher)
 }
 
-export function useBalance(address: string, handle: EthereumHandle) {
-  const query = useQuery(getBalanceSchema, [address, handle])
+export function useBalance(address: string, ethereum: EthereumHandle) {
+  const query = useQuery(getBalanceSchema, [address, ethereum])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getNonceSchema(address: string, handle: EthereumHandle) {
-  const fetcher = async (init: EthereumQueryKey<unknown>, more: FetcherMore) =>
-    await tryFetch<string>(init, handle).then(r => r.mapSync(BigInt))
+export function getNonceSchema(address: string, ethereum: EthereumHandle) {
+  const fetcher = async (init: EthereumQueryKey<unknown>, more: FetcherMore = {}) =>
+    await tryFetch<string>(init, ethereum).then(r => r.mapSync(BigInt))
 
   return createQuerySchema({
-    chainId: handle.chain.id,
+    chainId: ethereum.chain.id,
     method: "eth_getTransactionCount",
     params: [address, "pending"]
   }, fetcher)
 }
 
-export function useNonce(address: string, handle: EthereumHandle) {
-  const query = useQuery(getNonceSchema, [address, handle])
+export function useNonce(address: string, ethereum: EthereumHandle) {
+  const query = useQuery(getNonceSchema, [address, ethereum])
   useFetch(query)
   useError(query, console.error)
   return query
 }
 
-export function getGasPriceSchema(handle: EthereumHandle) {
-  const fetcher = async (init: EthereumQueryKey<unknown>, more: FetcherMore) =>
-    await tryFetch<string>(init, handle).then(r => r.mapSync(BigInt))
+export function getGasPriceSchema(ethereum: EthereumHandle) {
+  const fetcher = async (init: EthereumQueryKey<unknown>, more: FetcherMore = {}) =>
+    await tryFetch<string>(init, ethereum).then(r => r.mapSync(BigInt))
 
   return createQuerySchema({
-    chainId: handle.chain.id,
+    chainId: ethereum.chain.id,
     method: "eth_gasPrice",
     params: []
   }, fetcher)
 }
 
-export function useGasPrice(handle: EthereumHandle) {
-  const query = useQuery(getGasPriceSchema, [handle])
+export function useGasPrice(ethereum: EthereumHandle) {
+  const query = useQuery(getGasPriceSchema, [ethereum])
   useFetch(query)
   useError(query, console.error)
   return query
