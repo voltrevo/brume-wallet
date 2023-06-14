@@ -1,19 +1,14 @@
-import { Fallback, TorClientDuplex, TorClientParams, createPooledTor, createWebSocketSnowflakeStream } from "@hazae41/echalote"
+import { TorClientDuplex, TorClientParams, createPooledTor, createWebSocketSnowflakeStream } from "@hazae41/echalote"
 import { Mutex } from "@hazae41/mutex"
 import { Cancel, Looped, Looper, Pool, PoolParams, Retry, TooManyRetriesError, tryLoop } from "@hazae41/piscine"
 import { AbortedError } from "@hazae41/plume"
 import { Ok, Result } from "@hazae41/result"
 
-export interface CreateTorParams extends Omit<TorClientParams, "fallbacks"> {
-  fallbacks: Result<Fallback[], Error>
-}
 
-export async function tryCreateTor(params: CreateTorParams): Promise<Result<TorClientDuplex, Cancel<Error> | Retry<Error>>> {
+export async function tryCreateTor(params: TorClientParams): Promise<Result<TorClientDuplex, Cancel<Error> | Retry<Error>>> {
   return await Result.unthrow(async t => {
-    const fallbacks = params.fallbacks.mapErrSync(Cancel.new).throw(t)
-
     const tcp = await createWebSocketSnowflakeStream("wss://snowflake.torproject.net/")
-    const tor = new TorClientDuplex(tcp, { ...params, fallbacks })
+    const tor = new TorClientDuplex(tcp, params)
 
     await tor.tryWait().then(r => r.mapErrSync(Retry.new).throw(t))
 

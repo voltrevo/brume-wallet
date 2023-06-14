@@ -3,11 +3,21 @@ import { RpcClient, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/li
 import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
 import { Cancel, Looped, Pool, Retry, Skip, tryLoop } from "@hazae41/piscine"
-import { Err, Ok, Result } from "@hazae41/result"
+import { Err, Ok, Panic, Result } from "@hazae41/result"
 
 export type Background =
   | WebsiteBackground
   | ExtensionBackground
+
+export class MessageError extends Error {
+  readonly #class = MessageError
+  readonly name = this.#class.name
+
+  constructor() {
+    super(`Message error`)
+  }
+
+}
 
 export function createMessageChannelPool() {
   return new Pool<MessageChannel, Error>(async (params) => {
@@ -19,10 +29,13 @@ export function createMessageChannelPool() {
 
       const channel = new MessageChannel()
 
-      registration.active!.postMessage("HELLO_WORLD", [channel.port2])
-
       channel.port1.start()
       channel.port2.start()
+
+      if (registration.active === null)
+        throw new Panic(`registration.active is null`)
+
+      registration.active.postMessage("HELLO_WORLD", [channel.port2])
 
       const onClean = () => {
         channel.port1.close()
@@ -65,9 +78,8 @@ export class WebsiteBackground {
         future.resolve(new Ok(response))
       }
 
-      const onMessageError = () => {
-        future.resolve(new Err(new Error(`Message error`)))
-      }
+      const onMessageError = () =>
+        future.resolve(new Err(new MessageError()))
 
       try {
         channel.port1.addEventListener("message", onMessage, { passive: true })

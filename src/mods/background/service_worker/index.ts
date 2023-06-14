@@ -288,84 +288,92 @@ export class Global {
 
 }
 
-async function main() {
-  await Berith.initBundledOnce()
-  await Morax.initBundledOnce()
+async function init() {
+  return await Result.recatch(async () => {
+    return await Result.unthrow<Result<Global, Error>>(async t => {
+      await Berith.initBundledOnce()
+      await Morax.initBundledOnce()
 
-  const ed25519 = Ed25519.fromBerith(Berith)
-  const x25519 = X25519.fromBerith(Berith)
-  const sha1 = Sha1.fromMorax(Morax)
+      const ed25519 = Ed25519.fromBerith(Berith)
+      const x25519 = X25519.fromBerith(Berith)
+      const sha1 = Sha1.fromMorax(Morax)
 
-  const fallbacks = await tryFetch<Fallback[]>(FALLBACKS_URL)
+      const fallbacks = await tryFetch<Fallback[]>(FALLBACKS_URL).then(r => r.throw(t))
 
-  const tors = createTorPool(async () => {
-    return await tryCreateTor({ fallbacks, ed25519, x25519, sha1 })
-  }, { capacity: 3 })
+      const tors = createTorPool(async () => {
+        return await tryCreateTor({ fallbacks, ed25519, x25519, sha1 })
+      }, { capacity: 3 })
 
-  const circuits = Circuits.createPool(tors, { capacity: 3 })
-  const sessions = CircuitSession.createPool(chains, circuits, { capacity: 3 })
+      const circuits = Circuits.createPool(tors, { capacity: 3 })
+      const sessions = CircuitSession.createPool(chains, circuits, { capacity: 3 })
 
-  const storage = tryCreateGlobalStorage().unwrap()
-  const global = new Global(tors, circuits, sessions, storage)
+      const storage = tryCreateGlobalStorage().unwrap()
+      const global = new Global(tors, circuits, sessions, storage)
 
-  if (IS_WEBSITE) {
-
-    const onSkipWaiting = (event: ExtendableMessageEvent) =>
-      self.skipWaiting()
-
-    const onHelloWorld = (event: ExtendableMessageEvent) => {
-      const port = event.ports[0]
-
-      port.addEventListener("message", async (event: MessageEvent<RpcRequestInit<unknown>>) => {
-        console.log("foreground", "->", event.data)
-        const result = await global.tryRouteForeground(event.data)
-        const response = RpcResponse.rewrap(event.data.id, result)
-        console.log("foreground", "<-", response)
-        port.postMessage(response)
-      })
-
-      port.start()
-    }
-
-    self.addEventListener("message", (event) => {
-      if (event.data === "SKIP_WAITING")
-        return onSkipWaiting(event)
-      if (event.data === "HELLO_WORLD")
-        return onHelloWorld(event)
-      throw new Panic(`Invalid message`)
+      return new Ok(global)
     })
-  }
-
-  if (IS_EXTENSION) {
-
-    const onContentScript = (port: chrome.runtime.Port) => {
-      port.onMessage.addListener(async (msg: RpcRequestInit<unknown>) => {
-        console.log(port.name, "->", msg)
-        const result = await global.tryRouteContentScript(msg)
-        const response = RpcResponse.rewrap(msg.id, result)
-        console.log(port.name, "<-", response)
-        port.postMessage(response)
-      })
-    }
-
-    const onForeground = (port: chrome.runtime.Port) => {
-      port.onMessage.addListener(async (msg) => {
-        console.log(port.name, "->", msg, Date.now())
-        const result = await global.tryRouteForeground(msg)
-        const response = RpcResponse.rewrap(msg.id, result)
-        console.log(port.name, "<-", response, Date.now())
-        port.postMessage(response)
-      })
-    }
-
-    browser.runtime.onConnect.addListener(port => {
-      if (port.name === "content_script")
-        return onContentScript(port)
-      if (port.name === "foreground")
-        return onForeground(port)
-      throw new Panic(`Invalid port name`)
-    })
-  }
+  })
 }
 
-main()
+const inited = init()
+
+if (IS_WEBSITE) {
+
+  const onSkipWaiting = (event: ExtendableMessageEvent) =>
+    self.skipWaiting()
+
+  const onHelloWorld = (event: ExtendableMessageEvent) => {
+    const port = event.ports[0]
+
+    port.addEventListener("message", async (event: MessageEvent<RpcRequestInit<unknown>>) => {
+      console.log("foreground", "->", event.data)
+      const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(event.data)))
+      const response = RpcResponse.rewrap(event.data.id, result)
+      console.log("foreground", "<-", response)
+      port.postMessage(response)
+    })
+
+    port.start()
+  }
+
+  self.addEventListener("message", (event) => {
+    console.log("message", event.data)
+    if (event.data === "SKIP_WAITING")
+      return onSkipWaiting(event)
+    if (event.data === "HELLO_WORLD")
+      return onHelloWorld(event)
+    throw new Panic(`Invalid message`)
+  })
+}
+
+if (IS_EXTENSION) {
+
+  const onContentScript = (port: chrome.runtime.Port) => {
+    port.onMessage.addListener(async (msg: RpcRequestInit<unknown>) => {
+      console.log(port.name, "->", msg)
+      const result = await inited.then(r => r.andThenSync(g => g.tryRouteContentScript(msg)))
+      const response = RpcResponse.rewrap(msg.id, result)
+      console.log(port.name, "<-", response)
+      port.postMessage(response)
+    })
+  }
+
+  const onForeground = (port: chrome.runtime.Port) => {
+    port.onMessage.addListener(async (msg) => {
+      console.log(port.name, "->", msg, Date.now())
+      const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(msg)))
+      const response = RpcResponse.rewrap(msg.id, result)
+      console.log(port.name, "<-", response, Date.now())
+      port.postMessage(response)
+    })
+  }
+
+  browser.runtime.onConnect.addListener(port => {
+    if (port.name === "content_script")
+      return onContentScript(port)
+    if (port.name === "foreground")
+      return onForeground(port)
+    throw new Panic(`Invalid port name`)
+  })
+
+}
