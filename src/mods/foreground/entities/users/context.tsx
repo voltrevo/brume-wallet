@@ -1,6 +1,7 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { Optional, Some } from "@hazae41/option";
-import { Data, useOnce, useQuery } from "@hazae41/xswr";
+import { Mutators } from "@/libs/xswr/mutators";
+import { Optional } from "@hazae41/option";
+import { useOnce, useQuery } from "@hazae41/xswr";
 import { createContext, useCallback, useContext } from "react";
 import { useBackground } from "../../background/context";
 import { UsersPage } from "./all/page";
@@ -20,7 +21,7 @@ export function UserProvider(props: ChildrenProps) {
   const userQuery = useQuery(getCurrentUser, [background])
 
   const setCurrentUser = useCallback((user: User) => {
-    userQuery.mutate(() => new Some(new Data(user)))
+    userQuery.mutate(Mutators.data(user))
   }, [userQuery])
 
   useOnce(userQuery)

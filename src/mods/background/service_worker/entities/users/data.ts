@@ -56,13 +56,13 @@ export function getUser(uuid: string, storage: StorageQuerySettings<any, never>)
   return createQuerySchema<string, UserData, never>(`user/${uuid}`, undefined, { storage })
 }
 
-export async function getUserRef(wallet: User, storage: StorageQuerySettings<any, never>, more: NormalizerMore) {
-  if ("ref" in wallet) return wallet
+export async function getUserRef(user: User, storage: StorageQuerySettings<any, never>, more: NormalizerMore) {
+  if ("ref" in user) return user
 
-  const schema = getUser(wallet.uuid, storage)
-  await schema?.normalize(wallet, more)
+  const schema = getUser(user.uuid, storage)
+  await schema?.normalize(user, more)
 
-  return { ref: true, uuid: wallet.uuid } as UserRef
+  return { ref: true, uuid: user.uuid } as UserRef
 }
 
 export async function tryCreateUser(init: UserInit): Promise<Result<UserData, Error>> {

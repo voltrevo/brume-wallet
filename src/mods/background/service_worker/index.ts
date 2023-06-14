@@ -1,11 +1,19 @@
 import { browser } from "@/libs/browser/browser"
 import { RpcParamfulRequestInit, RpcRequestInit, RpcResponse } from "@/libs/rpc"
+import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { Mutators } from "@/libs/xswr/mutators"
+import { Berith } from "@hazae41/berith"
+import { Fallback } from "@hazae41/echalote"
+import { Ed25519 } from "@hazae41/ed25519"
+import { Morax } from "@hazae41/morax"
 import { Option, Optional } from "@hazae41/option"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
+import { Sha1 } from "@hazae41/sha1"
+import { X25519 } from "@hazae41/x25519"
 import { Core } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
+import { SessionData, getSession } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getUser, tryCreateUser, tryCreateUserStorage } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
@@ -75,7 +83,7 @@ async function brume_newUser(request: RpcRequestInit<unknown>): Promise<Result<U
     const usersQuery = await getUsers(globalStorage).make(core)
     const user = await tryCreateUser(init).then(r => r.throw(t))
 
-    const usersState = await usersQuery.mutate(Mutators.push(user))
+    const usersState = await usersQuery.mutate(Mutators.push<User, never>(user))
     const users = Option.wrap(usersState.get().current?.get()).ok().throw(t)
 
     return new Ok(users)
@@ -129,8 +137,8 @@ async function brume_newWallet(request: RpcRequestInit<unknown>): Promise<Result
     const [wallet] = (request as RpcParamfulRequestInit<[EthereumPrivateKeyWallet]>).params
     const walletsQuery = await getWallets(userStorage).make(core)
 
-    const usersState = await walletsQuery?.mutate(Mutators.push(wallet))
-    const wallets = Option.wrap(usersState.get().current?.get()).ok().throw(t)
+    const walletsState = await walletsQuery.mutate(Mutators.push<Wallet, never>(wallet))
+    const wallets = Option.wrap(walletsState.get().current?.get()).ok().throw(t)
 
     return new Ok(wallets)
   })
@@ -146,6 +154,24 @@ async function brume_getWallet(request: RpcRequestInit<unknown>): Promise<Result
     const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
     return new Ok(wallet)
+  })
+}
+
+async function tor_getSession(request: RpcRequestInit<unknown>): Promise<Result<SessionData, Error>> {
+  return await Result.unthrow(async t => {
+    const [uuid] = (request as RpcParamfulRequestInit<[string]>).params
+
+    const sessionQuery = await getSession(uuid).make(core)
+
+    if (sessionQuery.current !== undefined)
+      return sessionQuery.current
+
+    const sessionData = { uuid }
+
+    const sessionState = await sessionQuery.mutate(Mutators.data(sessionData))
+    const session = Option.wrap(sessionState.get().current?.get()).ok().throw(t)
+
+    return new Ok(session)
   })
 }
 
@@ -166,6 +192,8 @@ async function tryRouteForeground(request: RpcRequestInit<unknown>): Promise<Res
     return await brume_newWallet(request)
   if (request.method === "brume_getWallet")
     return await brume_getWallet(request)
+  if (request.method === "tor_getSession")
+    return await tor_getSession(request)
   return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
 }
 
@@ -212,18 +240,18 @@ async function tryRouteContentScript(request: RpcRequestInit<unknown>): Promise<
 }
 
 async function main() {
-  // await Berith.initBundledOnce()
-  // await Morax.initBundledOnce()
+  await Berith.initBundledOnce()
+  await Morax.initBundledOnce()
 
-  // const ed25519 = Ed25519.fromBerith(Berith)
-  // const x25519 = X25519.fromBerith(Berith)
-  // const sha1 = Sha1.fromMorax(Morax)
+  const ed25519 = Ed25519.fromBerith(Berith)
+  const x25519 = X25519.fromBerith(Berith)
+  const sha1 = Sha1.fromMorax(Morax)
 
-  // const fallbacks = await tryFetch<Fallback[]>(FALLBACKS_URL)
+  const fallbacks = await tryFetch<Fallback[]>(FALLBACKS_URL)
 
-  // const tors = createTorPool(async () => {
-  //   return await tryCreateTor2({ fallbacks, ed25519, x25519, sha1 })
-  // }, { capacity: 3 })
+  const tors = createTorPool(async () => {
+    return await tryCreateTor({ fallbacks, ed25519, x25519, sha1 })
+  }, { capacity: 3 })
 
   if (IS_WEBSITE) {
 

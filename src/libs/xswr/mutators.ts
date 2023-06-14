@@ -1,10 +1,22 @@
 import { Some } from "@hazae41/option";
-import { Data, Mutator, State } from "@hazae41/xswr";
+import { Data, Fail, Mutator, State, TimesInit } from "@hazae41/xswr";
 
 export namespace Mutators {
 
-  export function push<S, D extends S, F>(element: D): Mutator<S[], F> {
-    return (previous: State<S[], F>) => {
+  export function data<D, F>(data: D, times: TimesInit = {}): Mutator<D, F> {
+    return (previous: State<D, F>) => {
+      return new Some(new Data(data, times))
+    }
+  }
+
+  export function error<D, F>(error: F, times: TimesInit = {}): Mutator<D, F> {
+    return (previous: State<D, F>) => {
+      return new Some(new Fail(error, times))
+    }
+  }
+
+  export function push<D, F>(element: D): Mutator<D[], F> {
+    return (previous: State<D[], F>) => {
       const previousData = previous.real?.data?.inner
 
       if (previousData !== undefined)

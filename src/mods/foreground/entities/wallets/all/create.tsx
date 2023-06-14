@@ -9,12 +9,11 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
+import { Mutators } from "@/libs/xswr/mutators";
 import { useBackground } from "@/mods/foreground/background/context";
 import { GradientButton } from "@/mods/foreground/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
-import { Some } from "@hazae41/option";
 import { Result } from "@hazae41/result";
-import { Data } from "@hazae41/xswr";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import * as Ethers from "ethers";
 import { useEffect, useMemo, useState } from "react";
@@ -91,7 +90,7 @@ export function WalletCreatorDialog(props: CloseProps) {
       .request<Wallet[]>({ method: "brume_newWallet", params: [wallet] })
       .then(r => r.unwrap())
 
-    wallets.mutate(() => new Some(new Data(walletsData)))
+    wallets.mutate(Mutators.data(walletsData))
 
     close()
   }, [uuid, name, color, emoji, ethersWallet, background, wallets.mutate, close])

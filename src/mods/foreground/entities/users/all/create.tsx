@@ -6,11 +6,10 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
+import { Mutators } from "@/libs/xswr/mutators";
 import { UserInit } from "@/mods/background/service_worker/entities/users/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { GradientButton } from "@/mods/foreground/components/buttons/button";
-import { Some } from "@hazae41/option";
-import { Data } from "@hazae41/xswr";
 import { useMemo, useState } from "react";
 import { User } from "../data";
 import { useUsers } from "./data";
@@ -61,7 +60,7 @@ export function UserCreateDialog(props: CloseProps) {
       .request<User[]>({ method: "brume_newUser", params: [user] })
       .then(r => r.unwrap())
 
-    users.mutate(() => new Some(new Data(usersData)))
+    users.mutate(Mutators.data(usersData))
 
     close()
   }, [uuid, name, color, emoji, password, background, users.mutate, close])
