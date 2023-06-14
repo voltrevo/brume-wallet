@@ -3,7 +3,7 @@ import { Mutators } from "@/libs/xswr/mutators";
 import { Optional } from "@hazae41/option";
 import { useOnce, useQuery } from "@hazae41/xswr";
 import { createContext, useCallback, useContext } from "react";
-import { useBackgrounds } from "../../background/context";
+import { useBackground } from "../../background/context";
 import { UsersPage } from "./all/page";
 import { User, getCurrentUser } from "./data";
 
@@ -16,7 +16,7 @@ export function useCurrentUser() {
 export function UserProvider(props: ChildrenProps) {
   const { children } = props
 
-  const background = useBackgrounds()
+  const background = useBackground()
 
   const userQuery = useQuery(getCurrentUser, [background])
 
@@ -27,7 +27,7 @@ export function UserProvider(props: ChildrenProps) {
   useOnce(userQuery)
 
   if (userQuery.current === undefined)
-    return null
+    return <>No user</>
 
   if (userQuery.current.isErr())
     throw userQuery.current.inner

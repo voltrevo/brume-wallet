@@ -3,14 +3,14 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useKeyboardEnter } from "@/libs/react/events";
 import { PromiseProps } from "@/libs/react/props/promise";
 import { useRef, useState } from "react";
-import { useBackgrounds } from "../../background/context";
+import { useBackground } from "../../background/context";
 import { UserAvatar } from "./all/page";
 import { User, UserProps, useUser } from "./data";
 
 export function UserLoginPage(props: UserProps & PromiseProps<User>) {
   const { user: userRef, ok, err } = props
 
-  const background = useBackgrounds()
+  const background = useBackground()
   const user = useUser(userRef.uuid, background)
 
   const passwordInputRef = useRef<HTMLInputElement>(null)
@@ -23,12 +23,10 @@ export function UserLoginPage(props: UserProps & PromiseProps<User>) {
     if (password?.length < 3)
       return
 
-    const currentBackground = await background.tryGet(0).then(r => r.unwrap())
-
-    const response = await currentBackground.request({
+    const response = await background.tryRequest({
       method: "brume_setCurrentUser",
       params: [user.data.inner.uuid, password]
-    })
+    }).then(r => r.unwrap())
 
     if (response.isErr()) {
       setInvalid(true)

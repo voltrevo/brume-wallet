@@ -8,7 +8,7 @@ import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { Mutators } from "@/libs/xswr/mutators";
 import { UserInit } from "@/mods/background/service_worker/entities/users/data";
-import { useBackgrounds } from "@/mods/foreground/background/context";
+import { useBackground } from "@/mods/foreground/background/context";
 import { GradientButton } from "@/mods/foreground/components/buttons/button";
 import { useMemo, useState } from "react";
 import { User } from "../data";
@@ -18,7 +18,7 @@ import { UserAvatar } from "./page";
 export function UserCreateDialog(props: CloseProps) {
   const { close } = props
 
-  const background = useBackgrounds()
+  const background = useBackground()
   const users = useUsers(background)
 
   const uuid = useMemo(() => {
@@ -54,11 +54,9 @@ export function UserCreateDialog(props: CloseProps) {
   const onClick = useAsyncUniqueCallback(async () => {
     const user: UserInit = { uuid, name, color, emoji, password }
 
-    const currentBackground = await background.tryGet(0).then(r => r.unwrap())
-
-    const usersData = await currentBackground
-      .request<User[]>({ method: "brume_newUser", params: [user] })
-      .then(r => r.unwrap())
+    const usersData = await background
+      .tryRequest<User[]>({ method: "brume_newUser", params: [user] })
+      .then(r => r.unwrap().unwrap())
 
     users.mutate(Mutators.data(usersData))
 

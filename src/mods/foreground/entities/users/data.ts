@@ -1,7 +1,7 @@
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { Optional } from "@hazae41/option"
 import { Fetched, FetcherMore, createQuerySchema, useOnce, useQuery } from "@hazae41/xswr"
-import { Backgrounds } from "../../background/background"
+import { Background } from "../../background/background"
 
 export type User =
   | UserRef
@@ -28,12 +28,12 @@ export interface UserData {
   emoji: string
 }
 
-export function getUser(uuid: Optional<string>, background: Backgrounds) {
+export function getUser(uuid: Optional<string>, background: Background) {
   if (uuid === undefined)
     return undefined
 
   const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
+    Fetched.rewrap(await background.tryRequest<T>(init).then(r => r.andThenSync(x => x)))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, UserData, Error>({
     method: "brume_getUser",
@@ -41,22 +41,22 @@ export function getUser(uuid: Optional<string>, background: Backgrounds) {
   }, fetcher)
 }
 
-export function useUser(uuid: Optional<string>, background: Backgrounds) {
+export function useUser(uuid: Optional<string>, background: Background) {
   const query = useQuery(getUser, [uuid, background])
   useOnce(query)
   return query
 }
 
-export function getCurrentUser(background: Backgrounds) {
+export function getCurrentUser(background: Background) {
   const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
+    Fetched.rewrap(await background.tryRequest<T>(init).then(r => r.andThenSync(x => x)))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, User, Error>({
     method: "brume_getCurrentUser"
   }, fetcher)
 }
 
-export function useCurrentUser(background: Backgrounds) {
+export function useCurrentUser(background: Background) {
   const query = useQuery(getCurrentUser, [background])
   useOnce(query)
   return query

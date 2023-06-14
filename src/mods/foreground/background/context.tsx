@@ -1,34 +1,34 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { createContext, useContext, useMemo } from "react";
-import { Backgrounds, createExtensionBackgroundPool, createWebsiteBackgroundPool } from "./background";
+import { Background, ExtensionBackground, WebsiteBackground, createMessageChannelPool, createPortPool } from "./background";
 
-export const BackgroundsContext =
-  createContext<Backgrounds | undefined>(undefined)
+export const BackgroundContext =
+  createContext<Background | undefined>(undefined)
 
-export function useBackgrounds() {
-  return useContext(BackgroundsContext)!
+export function useBackground() {
+  return useContext(BackgroundContext)!
 }
 
-export function WebsiteBackgroundsProvider(props: ChildrenProps) {
+export function WebsiteBackgroundProvider(props: ChildrenProps) {
   const { children } = props
 
-  const backgrounds = useMemo(() => {
-    return createWebsiteBackgroundPool()
+  const background = useMemo(() => {
+    return new WebsiteBackground(createMessageChannelPool())
   }, [])
 
-  return <BackgroundsContext.Provider value={backgrounds}>
+  return <BackgroundContext.Provider value={background}>
     {children}
-  </BackgroundsContext.Provider>
+  </BackgroundContext.Provider>
 }
 
-export function ExtensionBackgroundsProvider(props: ChildrenProps) {
+export function ExtensionBackgroundProvider(props: ChildrenProps) {
   const { children } = props
 
-  const backgrounds = useMemo(() => {
-    return createExtensionBackgroundPool()
+  const background = useMemo(() => {
+    return new ExtensionBackground(createPortPool())
   }, [])
 
-  return <BackgroundsContext.Provider value={backgrounds}>
+  return <BackgroundContext.Provider value={background}>
     {children}
-  </BackgroundsContext.Provider>
+  </BackgroundContext.Provider>
 }

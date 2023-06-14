@@ -1,6 +1,6 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { useCallback, useEffect, useState } from "react";
-import { ExtensionBackgroundsProvider, WebsiteBackgroundsProvider } from "../background/context";
+import { ExtensionBackgroundProvider, WebsiteBackgroundProvider } from "../background/context";
 import { useExtension } from "../extension/context";
 import { registerServiceWorker } from "../service_worker/service_worker";
 
@@ -36,18 +36,18 @@ export function Overlay(props: ChildrenProps) {
     </div>
 
   if (extension)
-    return <ExtensionBackgroundsProvider>
+    return <ExtensionBackgroundProvider>
       <main className="h-[600px] w-[400px] overflow-y-scroll">
         {children}
       </main>
-    </ExtensionBackgroundsProvider>
+    </ExtensionBackgroundProvider>
 
-  return <WebsiteBackgroundsProvider>
+  return <WebsiteBackgroundProvider>
     <main className="p-safe h-full w-full">
       {updating && UpdateBanner}
       <div className="h-full w-full m-auto max-w-3xl">
         {children}
       </div>
     </main>
-  </WebsiteBackgroundsProvider>
+  </WebsiteBackgroundProvider>
 }

@@ -18,7 +18,7 @@ export function ExtensionProvider(props: ChildrenProps) {
   }, [])
 
   if (extension === undefined)
-    return null
+    return <>No extension</>
 
   return <ExtensionContext.Provider value={extension}>
     {children}

@@ -1,7 +1,7 @@
-import { browser } from "@/libs/browser/browser"
+import { Ports, browser, tryBrowserSync } from "@/libs/browser/browser"
 import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
-import { Pool } from "@hazae41/piscine"
+import { Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
 
 declare const self: ServiceWorkerGlobalScope
@@ -30,11 +30,17 @@ if (IS_FIREFOX || IS_SAFARI) {
   container.removeChild(element)
 }
 
-const ports = new Pool<chrome.runtime.Port, never>(async (params) => {
+const ports = new Pool<chrome.runtime.Port, Error>(async (params) => {
   return Result.unthrow(async t => {
     const { index, pool } = params
 
-    const port = browser.runtime.connect({ name: "content_script" })
+    const port = await tryLoop(async () => {
+      return tryBrowserSync(() => {
+        const port = browser.runtime.connect({ name: "content_script" })
+        port.onDisconnect.addListener(() => void chrome.runtime.lastError)
+        return port
+      }).mapErrSync(Retry.new)
+    }).then(r => r.throw(t))
 
     const onMessage = (msg: RpcResponseInit) => {
       window.dispatchEvent(new CustomEvent("ethereum#response", { detail: msg }))
@@ -61,37 +67,12 @@ const ports = new Pool<chrome.runtime.Port, never>(async (params) => {
 
       port.onMessage.removeListener(onMessage)
       port.onDisconnect.removeListener(onDisconnect)
-
       port.disconnect()
     }
 
     return new Ok(new Cleaner(port, onClean))
   })
 }, { capacity: 1 })
-
-export class PostMessageError extends Error {
-  readonly #class = PostMessageError
-  readonly name = this.#class.name
-
-  constructor() {
-    super(`Could not send message to the background`)
-  }
-
-}
-
-export namespace Ports {
-
-  export function tryPostMessage(port: chrome.runtime.Port, message: unknown): Result<void, PostMessageError> {
-    return Result.catchAndWrapSync(() => {
-      port.postMessage(message)
-    }).mapErrSync(() => new PostMessageError())
-  }
-
-  export async function tryGetAndPostMessage(ports: Pool<chrome.runtime.Port, never>, message: unknown): Promise<Result<void, Error>> {
-    return await ports.tryGet(0).then(r => r.andThenSync(port => tryPostMessage(port, message)))
-  }
-
-}
 
 window.addEventListener("ethereum#request", async (event: CustomEvent<RpcRequestInit<unknown>>) => {
   const result = await Ports.tryGetAndPostMessage(ports, event.detail)

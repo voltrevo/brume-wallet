@@ -10,7 +10,7 @@ import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
 import { Mutators } from "@/libs/xswr/mutators";
-import { useBackgrounds } from "@/mods/foreground/background/context";
+import { useBackground } from "@/mods/foreground/background/context";
 import { GradientButton } from "@/mods/foreground/components/buttons/button";
 import { Bytes } from "@hazae41/bytes";
 import { Result } from "@hazae41/result";
@@ -36,7 +36,7 @@ export namespace Wallets {
 export function WalletCreatorDialog(props: CloseProps) {
   const { close } = props
 
-  const background = useBackgrounds()
+  const background = useBackground()
   const wallets = useWallets(background)
 
   const uuid = useMemo(() => {
@@ -84,11 +84,9 @@ export function WalletCreatorDialog(props: CloseProps) {
 
     const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, privateKey, address }
 
-    const currentBackground = await background.tryGet(0).then(r => r.unwrap())
-
-    const walletsData = await currentBackground
-      .request<Wallet[]>({ method: "brume_newWallet", params: [wallet] })
-      .then(r => r.unwrap())
+    const walletsData = await background
+      .tryRequest<Wallet[]>({ method: "brume_newWallet", params: [wallet] })
+      .then(r => r.unwrap().unwrap())
 
     wallets.mutate(Mutators.data(walletsData))
 

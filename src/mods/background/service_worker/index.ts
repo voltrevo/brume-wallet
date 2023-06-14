@@ -349,11 +349,12 @@ async function main() {
     }
 
     const onForeground = (port: chrome.runtime.Port) => {
+      console.log("Foreground connected", port.name)
       port.onMessage.addListener(async (msg) => {
-        console.log("foreground", "->", msg)
+        console.log(port.name, "->", msg, Date.now())
         const result = await global.tryRouteForeground(msg)
         const response = RpcResponse.rewrap(msg.id, result)
-        console.log("foreground", "<-", response)
+        console.log(port.name, "<-", response, Date.now())
         port.postMessage(response)
       })
     }

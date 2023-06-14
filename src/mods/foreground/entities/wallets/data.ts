@@ -1,10 +1,10 @@
 import { EthereumChain } from "@/libs/ethereum/chain"
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { Optional } from "@hazae41/option"
-import { Ok, Result } from "@hazae41/result"
+import { Result } from "@hazae41/result"
 import { Fetched, FetcherMore, createQuerySchema, useError, useFetch, useOnce, useQuery } from "@hazae41/xswr"
-import { Backgrounds } from "../../background/background"
-import { useBackgrounds } from "../../background/context"
+import { Background } from "../../background/background"
+import { useBackground } from "../../background/context"
 
 export type Wallet =
   | WalletRef
@@ -55,12 +55,12 @@ export interface BitcoinPrivateKeyWallet {
   uncompressedAddress: string
 }
 
-export function getWallet(uuid: Optional<string>, background: Backgrounds) {
+export function getWallet(uuid: Optional<string>, background: Background) {
   if (uuid === undefined)
     return undefined
 
   const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
+    Fetched.rewrap(await background.tryRequest<T>(init).then(r => r.andThenSync(x => x)))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, WalletData, Error>({
     method: "brume_getWallet",
@@ -68,7 +68,7 @@ export function getWallet(uuid: Optional<string>, background: Backgrounds) {
   }, fetcher)
 }
 
-export function useWallet(uuid: Optional<string>, background: Backgrounds) {
+export function useWallet(uuid: Optional<string>, background: Background) {
   const query = useQuery(getWallet, [uuid, background])
   useOnce(query)
   return query
@@ -81,7 +81,7 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
 export interface EthereumHandle {
   session: string,
   chain: EthereumChain,
-  backgrounds: Backgrounds
+  background: Background
 }
 
 export interface EthereumHandleProps {
@@ -89,25 +89,21 @@ export interface EthereumHandleProps {
 }
 
 export function useEthereumHandle(session: string, chain: EthereumChain): EthereumHandle {
-  const backgrounds = useBackgrounds()
-  return { session, chain, backgrounds }
+  const background = useBackground()
+  return { session, chain, background }
 }
 
 export async function tryFetch<T>(key: EthereumQueryKey<unknown>, ethereum: EthereumHandle): Promise<Fetched<T, Error>> {
   return await Result.unthrow<Result<T, Error>>(async t => {
-    const { backgrounds, session, chain } = ethereum
-
-    const background = await backgrounds.tryGet(0).then(r => r.throw(t))
+    const { background, session, chain } = ethereum
 
     const { method, params } = key
     const subrequest = { method, params }
 
-    const response = await background.request<T>({
+    return await background.tryRequest<T>({
       method: "brume_fetchEthereum",
       params: [session, chain.id, subrequest]
     }).then(r => r.throw(t))
-
-    return new Ok(response)
   }).then(r => Fetched.rewrap(r))
 }
 
