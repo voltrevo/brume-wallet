@@ -130,8 +130,6 @@ export class Global {
       const circuit = await session.circuits.inner.tryGet(0).then(r => r.throw(t))
       const ethereum = Option.wrap(circuit.ethereum[137]).ok().throw(t)
 
-      console.log("lol", request)
-
       return await EthereumSocket.tryFetch(ethereum, request, {})
     })
   }
