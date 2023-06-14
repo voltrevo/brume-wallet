@@ -21,7 +21,8 @@ export function Modal(props: ChildrenProps & {
     return () => void document.body.removeChild(element)
   }, [element])
 
-  if (!element) return null
+  if (element === undefined)
+    return null
 
   return <ModalContext.Provider value={number + 1}>
     {createPortal(children, element)}

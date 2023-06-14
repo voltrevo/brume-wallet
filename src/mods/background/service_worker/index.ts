@@ -340,16 +340,15 @@ async function main() {
 
     const onContentScript = (port: chrome.runtime.Port) => {
       port.onMessage.addListener(async (msg: RpcRequestInit<unknown>) => {
-        console.log("content_script", "->", msg)
+        console.log(port.name, "->", msg)
         const result = await global.tryRouteContentScript(msg)
         const response = RpcResponse.rewrap(msg.id, result)
-        console.log("content_script", "<-", response)
+        console.log(port.name, "<-", response)
         port.postMessage(response)
       })
     }
 
     const onForeground = (port: chrome.runtime.Port) => {
-      console.log("Foreground connected", port.name)
       port.onMessage.addListener(async (msg) => {
         console.log(port.name, "->", msg, Date.now())
         const result = await global.tryRouteForeground(msg)

@@ -27,7 +27,7 @@ export function UserProvider(props: ChildrenProps) {
   useOnce(userQuery)
 
   if (userQuery.current === undefined)
-    return <>No user</>
+    return null
 
   if (userQuery.current.isErr())
     throw userQuery.current.inner

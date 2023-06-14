@@ -7,7 +7,8 @@ export default function Page() {
 
   const uuid = Types.asStringOr(router.query.uuid, undefined)
 
-  if (!uuid) return null
+  if (uuid === undefined)
+    return null
 
   return <WalletPage uuid={uuid} />
 }

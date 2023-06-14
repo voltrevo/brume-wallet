@@ -151,8 +151,6 @@ export class ExtensionBackground {
           future.resolve(new Err(new BrowserError(`Port disconnected`)))
         }
 
-        console.log("Sending...", port)
-
         tryBrowserSync(() => {
           port.postMessage(request)
         }).mapErrSync(Skip.new).throw(t)
