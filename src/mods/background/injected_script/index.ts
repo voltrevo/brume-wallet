@@ -1,4 +1,4 @@
-import { RpcClient, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
+import { RpcClient, RpcRequestPreinit, RpcResponseInit } from "@/libs/rpc"
 import { Future } from "@hazae41/future"
 
 declare global {
@@ -9,9 +9,14 @@ declare global {
 
 declare global {
   interface DedicatedWorkerGlobalScopeEventMap {
-    "ethereum#response": CustomEvent<RpcResponseInit>
+    "ethereum#response": CustomEvent<string>
   }
 }
+
+const ping = setInterval(() => {
+  const detail = JSON.stringify({ id: "ping", jsonrpc: "2.0", method: "brume_ping" })
+  window.dispatchEvent(new CustomEvent("ethereum#request", { detail }))
+}, 1_000)
 
 class Provider {
 
@@ -28,21 +33,25 @@ class Provider {
 
     const future = new Future<unknown>()
 
-    const onResponse = (e: CustomEvent<RpcResponseInit>) => {
-      const response = RpcResponse.from(e.detail)
+    const onResponse = (e: CustomEvent<string>) => {
+      const response = JSON.parse(e.detail) as RpcResponseInit<unknown>
 
       if (request.id !== response.id)
         return
 
-      if (response.isOk())
-        future.resolve(response.result)
-      else
+      if ("error" in response)
         future.reject(response.error)
+      else
+        future.resolve(response.result)
     }
 
     try {
       window.addEventListener("ethereum#response", onResponse)
-      window.dispatchEvent(new CustomEvent("ethereum#request", { detail: request }))
+
+      const detail = JSON.stringify(request)
+      const event = new CustomEvent("ethereum#request", { detail })
+      window.dispatchEvent(event)
+
       return await future.promise
     } finally {
       window.removeEventListener("ethereum#response", onResponse)

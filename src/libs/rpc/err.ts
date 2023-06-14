@@ -5,10 +5,28 @@ export interface ErrorInit {
   readonly message: string
 }
 
+export namespace ErrorInit {
+
+  export function clone(init: ErrorInit): ErrorInit {
+    const { message } = init
+    return { message }
+  }
+
+}
+
 export interface RpcErrInit {
   readonly jsonrpc: "2.0"
   readonly id: RpcId
   readonly error: ErrorInit
+}
+
+export namespace RpcErrInit {
+
+  export function clone(init: RpcErrInit): RpcErrInit {
+    const { jsonrpc, id, error } = init
+    return { jsonrpc, id, error }
+  }
+
 }
 
 export class RpcError extends Error {

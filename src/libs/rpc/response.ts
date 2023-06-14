@@ -7,6 +7,16 @@ export type RpcResponseInit<T = unknown> =
   | RpcOkInit<T>
   | RpcErrInit
 
+export namespace RpcResponseInit {
+
+  export function clone<T>(init: RpcResponseInit<T>) {
+    if ("error" in init)
+      return RpcErrInit.clone(init)
+    return RpcOkInit.clone(init)
+  }
+
+}
+
 export type RpcResponse<T = unknown> =
   | RpcOk<T>
   | RpcErr

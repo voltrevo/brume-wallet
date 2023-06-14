@@ -12,7 +12,7 @@ declare const IS_CHROME: boolean
 
 declare global {
   interface DedicatedWorkerGlobalScopeEventMap {
-    "ethereum#request": CustomEvent<RpcRequestInit<unknown>>
+    "ethereum#request": CustomEvent<string>
   }
 }
 
@@ -42,8 +42,10 @@ const ports = new Pool<chrome.runtime.Port, Error>(async (params) => {
       }).mapErrSync(Retry.new)
     }).then(r => r.throw(t))
 
-    const onMessage = (msg: RpcResponseInit) => {
-      window.dispatchEvent(new CustomEvent("ethereum#response", { detail: msg }))
+    const onMessage = (response: RpcResponseInit) => {
+      const detail = JSON.stringify(response)
+      const event = new CustomEvent("ethereum#response", { detail })
+      window.dispatchEvent(event)
     }
 
     const onDisconnect = () => {
@@ -51,20 +53,10 @@ const ports = new Pool<chrome.runtime.Port, Error>(async (params) => {
       return Ok.void()
     }
 
-    const ping = setInterval(() => {
-      Ports.tryPostMessage(port, {
-        id: "ping",
-        jsonrpc: "2.0",
-        method: "brume_ping"
-      }).ignore()
-    }, 1_000)
-
     port.onMessage.addListener(onMessage)
     port.onDisconnect.addListener(onDisconnect)
 
     const onClean = () => {
-      clearInterval(ping)
-
       port.onMessage.removeListener(onMessage)
       port.onDisconnect.removeListener(onDisconnect)
       port.disconnect()
@@ -74,12 +66,15 @@ const ports = new Pool<chrome.runtime.Port, Error>(async (params) => {
   })
 }, { capacity: 1 })
 
-window.addEventListener("ethereum#request", async (event: CustomEvent<RpcRequestInit<unknown>>) => {
-  const result = await Ports.tryGetAndPostMessage(ports, event.detail)
+window.addEventListener("ethereum#request", async (event: CustomEvent<string>) => {
+  const request = JSON.parse(event.detail) as RpcRequestInit<unknown>
+  const result = await Ports.tryGetAndPostMessage(ports, request)
 
   if (result.isOk())
     return
 
-  const response = RpcResponse.rewrap(event.detail.id, result)
-  window.dispatchEvent(new CustomEvent("ethereum#response", { detail: response }))
+  const response = RpcResponse.rewrap(request.id, result)
+  const detail = JSON.stringify(response)
+  const event2 = new CustomEvent("ethereum#response", { detail })
+  window.dispatchEvent(event2)
 })
