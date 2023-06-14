@@ -14,7 +14,7 @@ import { Pool } from "@hazae41/piscine"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
-import { Core } from "@hazae41/xswr"
+import { Core, Makeable } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { CircuitSession, EthereumConnection, EthereumSocket, SessionData, getSession } from "./entities/sessions/data"
@@ -63,10 +63,6 @@ async function tryFetch<T>(url: string): Promise<Result<T, Error>> {
 }
 
 const FALLBACKS_URL = "https://raw.githubusercontent.com/hazae41/echalote/master/tools/fallbacks/fallbacks.json"
-
-export interface Makeable<T> {
-  make(core: Core): Promise<T>
-}
 
 export class Global {
 
