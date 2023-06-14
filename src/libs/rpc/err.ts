@@ -1,4 +1,5 @@
 import { Err } from "@hazae41/result"
+import { RpcId } from "./request"
 
 export interface ErrorInit {
   readonly message: string
@@ -6,7 +7,7 @@ export interface ErrorInit {
 
 export interface RpcErrInit {
   readonly jsonrpc: "2.0"
-  readonly id: number
+  readonly id: RpcId
   readonly error: ErrorInit
 }
 
@@ -34,7 +35,7 @@ export class RpcErr extends Err<RpcError> {
   readonly jsonrpc = "2.0"
 
   constructor(
-    readonly id: number,
+    readonly id: RpcId,
     readonly error: RpcError
   ) {
     super(error)

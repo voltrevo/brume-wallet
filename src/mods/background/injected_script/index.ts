@@ -23,7 +23,7 @@ class Provider {
     return true
   }
 
-  async request(init: RpcRequestPreinit) {
+  async request(init: RpcRequestPreinit<unknown>) {
     const request = this.client.create(init)
 
     const future = new Future<unknown>()

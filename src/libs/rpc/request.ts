@@ -1,13 +1,35 @@
-import { Optional } from "@hazae41/option"
+import { NonOptional } from "@hazae41/option"
 
-export interface RpcRequestPreinit<P extends Optional<unknown[]> = Optional<unknown[]>> {
+export type RpcId = number | string
+
+export type RpcRequestPreinit<P> =
+  | RpcParamlessRequestPreinit
+  | RpcParamfulRequestPreinit<P>
+
+export interface RpcParamfulRequestPreinit<P> {
   readonly method: string,
-  readonly params: P
+  readonly params: NonOptional<P>
 }
 
-export interface RpcRequestInit<P extends Optional<unknown[]> = Optional<unknown[]>> {
-  readonly jsonrpc: "2.0"
-  readonly id: number
+export interface RpcParamlessRequestPreinit {
   readonly method: string
-  readonly params: P
+  readonly params?: undefined
+}
+
+export type RpcRequestInit<P> =
+  | RpcParamlessRequestInit
+  | RpcParamfulRequestInit<P>
+
+export interface RpcParamfulRequestInit<P> {
+  readonly jsonrpc: "2.0"
+  readonly id: RpcId
+  readonly method: string
+  readonly params: NonOptional<P>
+}
+
+export interface RpcParamlessRequestInit {
+  readonly jsonrpc: "2.0"
+  readonly id: RpcId
+  readonly method: string
+  readonly params?: undefined
 }

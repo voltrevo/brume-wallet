@@ -1,5 +1,5 @@
 import { browser } from "@/libs/browser/browser"
-import { RpcRequestInit, RpcResponse } from "@/libs/rpc"
+import { RpcParamfulRequestInit, RpcRequestInit, RpcResponse } from "@/libs/rpc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Option, Optional } from "@hazae41/option"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
@@ -59,7 +59,7 @@ const memory: {
   session?: UserSession
 } = {}
 
-async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], never>> {
+async function brume_getUsers(request: RpcRequestInit<unknown>): Promise<Result<User[], never>> {
   return await Result.unthrow(async t => {
     const usersQuery = await getUsers(globalStorage)?.make(core)
     const users = usersQuery?.current?.get() ?? []
@@ -68,9 +68,9 @@ async function brume_getUsers(request: RpcRequestInit): Promise<Result<User[], n
   })
 }
 
-async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], Error>> {
+async function brume_newUser(request: RpcRequestInit<unknown>): Promise<Result<User[], Error>> {
   return await Result.unthrow(async t => {
-    const [init] = request.params as [UserInit]
+    const [init] = (request as RpcParamfulRequestInit<[UserInit]>).params
 
     const usersQuery = await getUsers(globalStorage).make(core)
     const user = await tryCreateUser(init).then(r => r.throw(t))
@@ -82,9 +82,9 @@ async function brume_newUser(request: RpcRequestInit): Promise<Result<User[], Er
   })
 }
 
-async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, Error>> {
+async function brume_getUser(request: RpcRequestInit<unknown>): Promise<Result<UserData, Error>> {
   return await Result.unthrow(async t => {
-    const [uuid] = request.params as [string]
+    const [uuid] = (request as RpcParamfulRequestInit<[string]>).params
 
     const userQuery = await getUser(uuid, globalStorage).make(core)
     const user = Option.wrap(userQuery.current?.get()).ok().throw(t)
@@ -93,9 +93,9 @@ async function brume_getUser(request: RpcRequestInit): Promise<Result<UserData, 
   })
 }
 
-async function brume_setCurrentUser(request: RpcRequestInit): Promise<Result<void, Error>> {
+async function brume_setCurrentUser(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
   return await Result.unthrow(async t => {
-    const [uuid, password] = request.params as [string, string]
+    const [uuid, password] = (request as RpcParamfulRequestInit<[string, string]>).params
 
     const userQuery = await getUser(uuid, globalStorage).make(core)
     const user = Option.wrap(userQuery.current?.get()).ok().throw(t)
@@ -107,11 +107,11 @@ async function brume_setCurrentUser(request: RpcRequestInit): Promise<Result<voi
   })
 }
 
-async function brume_getCurrentUser(request: RpcRequestInit): Promise<Result<Optional<UserData>, never>> {
+async function brume_getCurrentUser(request: RpcRequestInit<unknown>): Promise<Result<Optional<UserData>, never>> {
   return new Ok(memory.session?.userData)
 }
 
-async function brume_getWallets(request: RpcRequestInit): Promise<Result<Wallet[], Error>> {
+async function brume_getWallets(request: RpcRequestInit<unknown>): Promise<Result<Wallet[], Error>> {
   return await Result.unthrow(async t => {
     const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
@@ -122,11 +122,11 @@ async function brume_getWallets(request: RpcRequestInit): Promise<Result<Wallet[
   })
 }
 
-async function brume_newWallet(request: RpcRequestInit): Promise<Result<Wallet[], Error>> {
+async function brume_newWallet(request: RpcRequestInit<unknown>): Promise<Result<Wallet[], Error>> {
   return await Result.unthrow(async t => {
     const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
-    const [wallet] = request.params as [EthereumPrivateKeyWallet]
+    const [wallet] = (request as RpcParamfulRequestInit<[EthereumPrivateKeyWallet]>).params
     const walletsQuery = await getWallets(userStorage).make(core)
 
     const usersState = await walletsQuery?.mutate(Mutators.push(wallet))
@@ -136,9 +136,9 @@ async function brume_newWallet(request: RpcRequestInit): Promise<Result<Wallet[]
   })
 }
 
-async function brume_getWallet(request: RpcRequestInit): Promise<Result<WalletData, Error>> {
+async function brume_getWallet(request: RpcRequestInit<unknown>): Promise<Result<WalletData, Error>> {
   return await Result.unthrow(async t => {
-    const [uuid] = request.params as [string]
+    const [uuid] = (request as RpcParamfulRequestInit<[string]>).params
 
     const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
@@ -149,7 +149,7 @@ async function brume_getWallet(request: RpcRequestInit): Promise<Result<WalletDa
   })
 }
 
-async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unknown, Error>> {
+async function tryRouteForeground(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
   if (request.method === "brume_getUsers")
     return await brume_getUsers(request)
   if (request.method === "brume_newUser")
@@ -169,7 +169,7 @@ async function tryRouteForeground(request: RpcRequestInit): Promise<Result<unkno
   return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
 }
 
-async function eth_requestAccounts(request: RpcRequestInit): Promise<Result<unknown, Error>> {
+async function eth_requestAccounts(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
   return await Result.unthrow(async t => {
     const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
@@ -183,7 +183,7 @@ async function eth_requestAccounts(request: RpcRequestInit): Promise<Result<unkn
   })
 }
 
-async function eth_accounts(request: RpcRequestInit): Promise<Result<unknown, Error>> {
+async function eth_accounts(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
   return await Result.unthrow(async t => {
     const { userStorage } = Option.wrap(memory.session).ok().throw(t)
 
@@ -197,7 +197,9 @@ async function eth_accounts(request: RpcRequestInit): Promise<Result<unknown, Er
   })
 }
 
-async function tryRouteContentScript(request: RpcRequestInit): Promise<Result<unknown, Error>> {
+async function tryRouteContentScript(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
+  if (request.method === "brume_ping")
+    return new Ok(undefined)
   if (request.method === "eth_requestAccounts")
     return await eth_requestAccounts(request)
   if (request.method === "eth_accounts")
@@ -231,7 +233,7 @@ async function main() {
     const onHelloWorld = (event: ExtendableMessageEvent) => {
       const port = event.ports[0]
 
-      port.addEventListener("message", async (event: MessageEvent<RpcRequestInit>) => {
+      port.addEventListener("message", async (event: MessageEvent<RpcRequestInit<unknown>>) => {
         console.log("foreground", "->", event.data)
         const result = await tryRouteForeground(event.data)
         const response = RpcResponse.rewrap(event.data.id, result)
@@ -254,7 +256,7 @@ async function main() {
   if (IS_EXTENSION) {
 
     const onContentScript = (port: chrome.runtime.Port) => {
-      port.onMessage.addListener(async (msg: RpcRequestInit) => {
+      port.onMessage.addListener(async (msg: RpcRequestInit<unknown>) => {
         console.log("content_script", "->", msg)
         const result = await tryRouteContentScript(msg)
         const response = RpcResponse.rewrap(msg.id, result)

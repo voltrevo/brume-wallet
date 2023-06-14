@@ -4,12 +4,11 @@ import { Fetched, FetcherMore, createQuerySchema, useOnce, useQuery } from "@haz
 import { Wallet } from "../data";
 
 export function getWalletsSchema(background: Background) {
-  const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
+  const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore) =>
     Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
-  return createQuerySchema<RpcRequestPreinit, Wallet[], Error>({
-    method: "brume_getWallets",
-    params: undefined
+  return createQuerySchema<RpcRequestPreinit<unknown>, Wallet[], Error>({
+    method: "brume_getWallets"
   }, fetcher)
 }
 

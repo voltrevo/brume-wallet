@@ -60,10 +60,10 @@ export function getWallet(uuid: Optional<string>, background: Background) {
   if (uuid === undefined)
     return undefined
 
-  const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
+  const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore) =>
     Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
-  return createQuerySchema<RpcRequestPreinit, WalletData, Error>({
+  return createQuerySchema<RpcRequestPreinit<unknown>, WalletData, Error>({
     method: "brume_getWallet",
     params: [uuid]
   }, fetcher)
@@ -75,7 +75,7 @@ export function useWallet(uuid: Optional<string>, background: Background) {
   return query
 }
 
-export async function fetchWithSession(session: EthereumSession, init: RpcRequestPreinit, more: FetcherMore) {
+export async function fetchWithSession(session: EthereumSession, init: RpcRequestPreinit<unknown>, more: FetcherMore) {
   return await Result.unthrow<Fetched<string, ClosedError | ErroredError | AbortedError | unknown>>(async t => {
     const { signal = AbortSignals.timeout(5_000) } = more
 
@@ -100,7 +100,7 @@ export async function fetchWithSession(session: EthereumSession, init: RpcReques
 export function getBalanceSchema(address: string | undefined, session: EthereumSession | undefined) {
   if (!address || !session) return
 
-  const fetcher = async (init: RpcRequestPreinit, more: FetcherMore) => {
+  const fetcher = async (init: RpcRequestPreinit<unknown>, more: FetcherMore) => {
     return await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
   }
 
@@ -121,7 +121,7 @@ export function useBalance(address: string | undefined, session: EthereumSession
 export function getNonceSchema(address: string | undefined, session: EthereumSession | undefined) {
   if (!address || !session) return
 
-  const fetcher = async (init: RpcRequestPreinit, more: FetcherMore) => {
+  const fetcher = async (init: RpcRequestPreinit<unknown>, more: FetcherMore) => {
     return await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
   }
 
@@ -142,7 +142,7 @@ export function useNonce(address: string | undefined, session: EthereumSession |
 export function getGasPriceSchema(session: EthereumSession | undefined) {
   if (!session) return
 
-  const fetcher = async (init: RpcRequestPreinit, more: FetcherMore) => {
+  const fetcher = async (init: RpcRequestPreinit<unknown>, more: FetcherMore) => {
     return await fetchWithSession(session, init, more).then(r => r.mapSync(BigInt))
   }
 

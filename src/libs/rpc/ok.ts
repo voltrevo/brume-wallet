@@ -1,8 +1,9 @@
 import { Ok } from "@hazae41/result"
+import { RpcId } from "./request"
 
 export interface RpcOkInit<T = unknown> {
   readonly jsonrpc: "2.0"
-  readonly id: number,
+  readonly id: RpcId,
   readonly result: T
 }
 
@@ -19,7 +20,7 @@ export class RpcOk<T = unknown> extends Ok<T> {
   readonly jsonrpc = "2.0"
 
   constructor(
-    readonly id: number,
+    readonly id: RpcId,
     readonly result: T
   ) {
     super(result)

@@ -4,12 +4,11 @@ import { Fetched, FetcherMore, createQuerySchema, useOnce, useQuery } from "@haz
 import { User } from "../data";
 
 export function getUsers(background: Background) {
-  const fetcher = async <T>(init: RpcRequestPreinit, more: FetcherMore) =>
+  const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore) =>
     Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
-  return createQuerySchema<RpcRequestPreinit, User[], Error>({
-    method: "brume_getUsers",
-    params: undefined
+  return createQuerySchema<RpcRequestPreinit<unknown>, User[], Error>({
+    method: "brume_getUsers"
   }, fetcher)
 }
 

@@ -1,5 +1,4 @@
 import { Future } from "@hazae41/future"
-import { Optional } from "@hazae41/option"
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { RpcErr, RpcError } from "./err"
@@ -16,22 +15,22 @@ export class RpcClient {
     return this.#id
   }
 
-  create<T extends Optional<unknown[]>>(init: RpcRequestPreinit<T>): RpcRequestInit<T> {
+  create<T>(init: RpcRequestPreinit<T>): RpcRequestInit<T> {
     const { method, params } = init
 
     const id = this.#id++
 
-    return { jsonrpc: "2.0", id, method, params }
+    return { jsonrpc: "2.0", id, method, params } as RpcRequestInit<T>
   }
 
-  async fetch<T>(input: RequestInfo | URL, init: RpcRequestPreinit & RequestInit) {
+  async fetch<T>(input: RequestInfo | URL, init: RpcRequestPreinit<unknown> & RequestInit) {
     const { method, params, ...rest } = init
 
     const request = this.create({ method, params })
     return Rpc.fetch<T>(input, { ...rest, ...request })
   }
 
-  async tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestPreinit, signal: AbortSignal) {
+  async tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestPreinit<unknown>, signal: AbortSignal) {
     return await Rpc.tryFetchWithSocket<T>(socket, this.create(request), signal)
   }
 
@@ -39,7 +38,7 @@ export class RpcClient {
 
 export namespace Rpc {
 
-  export async function fetch<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit) {
+  export async function fetch<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit<unknown>) {
     const { jsonrpc, id, method, params, ...rest } = init
 
     const headers = new Headers(rest.headers)
@@ -63,7 +62,7 @@ export namespace Rpc {
     return response
   }
 
-  export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit, signal: AbortSignal) {
+  export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit<unknown>, signal: AbortSignal) {
     socket.send(JSON.stringify(request))
 
     const future = new Future<Result<RpcResponse<T>, ClosedError | ErroredError | AbortedError>>()

@@ -12,7 +12,7 @@ declare const IS_CHROME: boolean
 
 declare global {
   interface DedicatedWorkerGlobalScopeEventMap {
-    "ethereum#request": CustomEvent<RpcRequestInit>
+    "ethereum#request": CustomEvent<RpcRequestInit<unknown>>
   }
 }
 
@@ -45,12 +45,23 @@ const ports = new Pool<chrome.runtime.Port, never>(async (params) => {
       return Ok.void()
     }
 
+    const ping = setInterval(() => {
+      Ports.tryPostMessage(port, {
+        id: "ping",
+        jsonrpc: "2.0",
+        method: "brume_ping"
+      }).ignore()
+    }, 1_000)
+
     port.onMessage.addListener(onMessage)
     port.onDisconnect.addListener(onDisconnect)
 
     const onClean = () => {
+      clearInterval(ping)
+
       port.onMessage.removeListener(onMessage)
       port.onDisconnect.removeListener(onDisconnect)
+
       port.disconnect()
     }
 
@@ -68,18 +79,22 @@ export class PostMessageError extends Error {
 
 }
 
-async function tryPostMessage(message: unknown): Promise<Result<void, Error>> {
-  return await Result.unthrow(async t => {
-    const port = await ports.tryGet(0).then(r => r.throw(t))
+export namespace Ports {
 
+  export function tryPostMessage(port: chrome.runtime.Port, message: unknown): Result<void, PostMessageError> {
     return Result.catchAndWrapSync(() => {
       port.postMessage(message)
     }).mapErrSync(() => new PostMessageError())
-  })
+  }
+
+  export async function tryGetAndPostMessage(ports: Pool<chrome.runtime.Port, never>, message: unknown): Promise<Result<void, Error>> {
+    return await ports.tryGet(0).then(r => r.andThenSync(port => tryPostMessage(port, message)))
+  }
+
 }
 
-window.addEventListener("ethereum#request", async (event: CustomEvent<RpcRequestInit>) => {
-  const result = await tryPostMessage(event.detail)
+window.addEventListener("ethereum#request", async (event: CustomEvent<RpcRequestInit<unknown>>) => {
+  const result = await Ports.tryGetAndPostMessage(ports, event.detail)
 
   if (result.isOk())
     return

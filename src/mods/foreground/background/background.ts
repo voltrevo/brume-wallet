@@ -49,7 +49,7 @@ export class WebsiteBackground {
     return false
   }
 
-  async request<T>(init: RpcRequestPreinit) {
+  async request<T>(init: RpcRequestPreinit<unknown>) {
     const request = this.#client.create(init)
 
     const future = new Future<RpcResponse<T>>()
@@ -115,7 +115,7 @@ export class ExtensionBackground {
     return true
   }
 
-  async request<T>(init: RpcRequestPreinit) {
+  async request<T>(init: RpcRequestPreinit<unknown>) {
     const request = this.#client.create(init)
 
     const future = new Future<RpcResponse<T>>()

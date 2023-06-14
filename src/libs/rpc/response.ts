@@ -1,6 +1,7 @@
 import { Err, Ok, Result } from "@hazae41/result"
 import { RpcErr, RpcErrInit, RpcError } from "./err"
 import { RpcOk, RpcOkInit } from "./ok"
+import { RpcId } from "./request"
 
 export type RpcResponseInit<T = unknown> =
   | RpcOkInit<T>
@@ -18,13 +19,13 @@ export namespace RpcResponse {
     return RpcOk.from(init)
   }
 
-  export function rewrap<T extends Ok.Infer<T>>(id: number, result: T): RpcOk<T>
+  export function rewrap<T extends Ok.Infer<T>>(id: RpcId, result: T): RpcOk<T>
 
-  export function rewrap<T extends Err.Infer<T>>(id: number, result: T): RpcErr
+  export function rewrap<T extends Err.Infer<T>>(id: RpcId, result: T): RpcErr
 
-  export function rewrap<T extends Result.Infer<T>>(id: number, result: T): RpcResponse<T>
+  export function rewrap<T extends Result.Infer<T>>(id: RpcId, result: T): RpcResponse<T>
 
-  export function rewrap<T extends Result.Infer<T>>(id: number, result: T) {
+  export function rewrap<T extends Result.Infer<T>>(id: RpcId, result: T) {
     result.ignore()
 
     if (result.isOk())
