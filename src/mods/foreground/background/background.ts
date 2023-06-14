@@ -2,8 +2,8 @@ import { browser } from "@/libs/browser/browser"
 import { RpcClient, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
-import { Pool } from "@hazae41/piscine"
-import { Ok, Result } from "@hazae41/result"
+import { Pool, Retry, tryLoop } from "@hazae41/piscine"
+import { Err, Ok, Result } from "@hazae41/result"
 
 export type Backgrounds =
   | Pool<WebsiteBackground, Error>
@@ -12,6 +12,7 @@ export type Backgrounds =
 export function createWebsiteBackgroundPool() {
   return new Pool<WebsiteBackground, Error>(async (params) => {
     return await Result.unthrow(async t => {
+
       const registration = await Result
         .catchAndWrap(() => navigator.serviceWorker.ready)
         .then(r => r.throw(t))
@@ -79,7 +80,13 @@ export function createExtensionBackgroundPool() {
     return await Result.unthrow(async t => {
       const { index, pool } = params
 
-      const port = browser.runtime.connect({ name: "foreground" })
+      const port = await tryLoop(async () => {
+        try {
+          return new Ok(browser.runtime.connect({ name: "foreground" }))
+        } catch (e: unknown) {
+          return new Err(new Retry(e))
+        }
+      }).then(r => r.throw(t))
 
       const onDisconnect = () => {
         pool.delete(index)
