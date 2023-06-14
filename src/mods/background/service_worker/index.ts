@@ -333,7 +333,6 @@ if (IS_WEBSITE) {
   }
 
   self.addEventListener("message", (event) => {
-    console.log("message", event.data)
     if (event.data === "SKIP_WAITING")
       return onSkipWaiting(event)
     if (event.data === "HELLO_WORLD")
