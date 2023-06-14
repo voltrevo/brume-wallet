@@ -122,6 +122,8 @@ export class Global {
       return await this.eth_accounts(request)
     if (request.method === "eth_sendTransaction")
       return await this.eth_sendTransaction(sessionId, request)
+    if (request.method === "eth_signTypedData_v4")
+      return await this.eth_signTypedData_v4(request)
 
     return await Result.unthrow(async t => {
       const session = await this.#tryGetOrCreateSession(sessionId).then(r => r.throw(t))
@@ -156,6 +158,26 @@ export class Global {
       const signature = await new ethers.Wallet(wallet.privateKey).signTransaction({ data, to, from, gasLimit: gas, chainId: 137, gasPrice, nonce: parseInt(nonce, 16) })
 
       return await EthereumSocket.tryFetch(ethereum, { method: "eth_sendRawTransaction", params: [signature] }, {})
+    })
+  }
+
+  async eth_signTypedData_v4(request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const { userStorage } = Option.wrap(this.#session).ok().throw(t)
+
+      const walletsQuery = await this.make(getWallets(userStorage))
+      const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
+
+      const walletQuery = await this.make(getWallet(first.uuid, userStorage))
+      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
+
+      const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
+
+      const { domain, types, message } = JSON.parse(data)
+
+      const signature = await new ethers.Wallet(wallet.privateKey).signTypedData(domain, types, message)
+
+      return new Ok(signature)
     })
   }
 
