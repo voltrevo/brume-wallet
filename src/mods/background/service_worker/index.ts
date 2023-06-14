@@ -322,10 +322,10 @@ if (IS_WEBSITE) {
     const port = event.ports[0]
 
     port.addEventListener("message", async (event: MessageEvent<RpcRequestInit<unknown>>) => {
-      console.log("foreground", "->", event.data)
+      // console.log("foreground", "->", event.data)
       const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(event.data)))
       const response = RpcResponse.rewrap(event.data.id, result)
-      console.log("foreground", "<-", response)
+      // console.log("foreground", "<-", response)
       port.postMessage(response)
     })
 
@@ -345,20 +345,20 @@ if (IS_EXTENSION) {
 
   const onContentScript = (port: chrome.runtime.Port) => {
     port.onMessage.addListener(async (msg: RpcRequestInit<unknown>) => {
-      console.log(port.name, "->", msg)
+      // console.log(port.name, "->", msg)
       const result = await inited.then(r => r.andThenSync(g => g.tryRouteContentScript(msg)))
       const response = RpcResponse.rewrap(msg.id, result)
-      console.log(port.name, "<-", response)
+      // console.log(port.name, "<-", response)
       port.postMessage(response)
     })
   }
 
   const onForeground = (port: chrome.runtime.Port) => {
     port.onMessage.addListener(async (msg) => {
-      console.log(port.name, "->", msg, Date.now())
+      // console.log(port.name, "->", msg, Date.now())
       const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(msg)))
       const response = RpcResponse.rewrap(msg.id, result)
-      console.log(port.name, "<-", response, Date.now())
+      // console.log(port.name, "<-", response, Date.now())
       port.postMessage(response)
     })
   }
