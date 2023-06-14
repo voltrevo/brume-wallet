@@ -232,8 +232,8 @@ export class Global {
       const circuit = await session.circuits.inner.tryGet(0).then(r => r.throw(t))
       const ethereum = Option.wrap(circuit.ethereum[chainId]).ok().throw(t)
 
-      if (subrequest.method === "eth_getBalance")
-        return await this.eth_getBalance(subrequest, ethereum)
+      // if (subrequest.method === "eth_getBalance")
+      //   return await this.eth_getBalance(subrequest, ethereum)
       return await EthereumSocket.tryFetch(ethereum, subrequest, {})
     })
   }
