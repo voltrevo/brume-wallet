@@ -5,7 +5,7 @@ import { Future } from "@hazae41/future"
 import { Pool } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
 
-export type Background =
+export type Backgrounds =
   | Pool<WebsiteBackground, Error>
   | Pool<ExtensionBackground, Error>
 

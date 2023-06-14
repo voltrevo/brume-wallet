@@ -1,4 +1,3 @@
-import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
 import { Dialog, DialogTitle } from "@/libs/modals/dialog";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
@@ -6,21 +5,18 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { TitleProps } from "@/libs/react/props/title";
-import { AbortSignals } from "@/libs/signals/signals";
 import { Types } from "@/libs/types/types";
 import { GradientButton } from "@/mods/foreground/components/buttons/button";
-import { SessionProps } from "@/mods/foreground/tor/sessions/props";
 import { Err, Ok, Result } from "@hazae41/result";
-import { Wallet, getAddress, parseUnits } from "ethers";
 import { useMemo, useState } from "react";
-import { WalletDataProps, useBalance, useGasPrice, useNonce } from "./data";
+import { EthereumHandleProps, WalletDataProps, useBalance, useGasPrice, useNonce } from "./data";
 
-export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & SessionProps) {
-  const { title, wallet, session, close } = props
+export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & EthereumHandleProps) {
+  const { title, wallet, handle, close } = props
 
-  const balance = useBalance(wallet.address, session)
-  const nonce = useNonce(wallet.address, session)
-  const gasPrice = useGasPrice(session)
+  const balance = useBalance(wallet.address, handle)
+  const nonce = useNonce(wallet.address, handle)
+  const gasPrice = useGasPrice(handle)
 
   const [recipientInput = "", setRecipientInput] = useState<string>()
 
@@ -69,49 +65,49 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Se
       if (!Types.isBigInt(gasPrice.data))
         return new Err(new Error(`Invalid gas price`))
 
-      const ethers = new Wallet(wallet.privateKey)
-      const socket = await session.socket.tryGet(0).then(r => r.throw(t))
+      // const ethers = new Wallet(wallet.privateKey)
+      // const socket = await session.socket.tryGet(0).then(r => r.throw(t))
 
-      const gasRes = await session.client.tryFetchWithSocket<string>(socket, {
-        method: "eth_estimateGas",
-        params: [{
-          chainId: Radix.toHex(session.chain.id),
-          from: wallet.address,
-          to: getAddress(recipientInput),
-          value: Radix.toHex(parseUnits(valueInput, 18)),
-          nonce: Radix.toHex(nonce.data),
-          gasPrice: Radix.toHex(gasPrice.data)
-        }, "latest"]
-      }, AbortSignals.timeout(5_000)).then(r => r.throw(t).throw(t))
+      // const gasRes = await session.client.tryFetchWithSocket<string>(socket, {
+      //   method: "eth_estimateGas",
+      //   params: [{
+      //     chainId: Radix.toHex(session.chain.id),
+      //     from: wallet.address,
+      //     to: getAddress(recipientInput),
+      //     value: Radix.toHex(parseUnits(valueInput, 18)),
+      //     nonce: Radix.toHex(nonce.data),
+      //     gasPrice: Radix.toHex(gasPrice.data)
+      //   }, "latest"]
+      // }, AbortSignals.timeout(5_000)).then(r => r.throw(t).throw(t))
 
-      const txRes = await session.client.tryFetchWithSocket<string>(socket, {
-        method: "eth_sendRawTransaction",
-        params: [await ethers.signTransaction({
-          chainId: session.chain.id,
-          from: wallet.address,
-          to: getAddress(recipientInput),
-          value: parseUnits(valueInput, 18),
-          nonce: Number(nonce.data),
-          gasPrice: gasPrice.data,
-          gasLimit: gasRes
-        })]
-      }, AbortSignals.timeout(5_000)).then(r => r.throw(t).throw(t))
+      // const txRes = await session.client.tryFetchWithSocket<string>(socket, {
+      //   method: "eth_sendRawTransaction",
+      //   params: [await ethers.signTransaction({
+      //     chainId: session.chain.id,
+      //     from: wallet.address,
+      //     to: getAddress(recipientInput),
+      //     value: parseUnits(valueInput, 18),
+      //     nonce: Number(nonce.data),
+      //     gasPrice: gasPrice.data,
+      //     gasLimit: gasRes
+      //   })]
+      // }, AbortSignals.timeout(5_000)).then(r => r.throw(t).throw(t))
 
-      const body = JSON.stringify({ method: "eth_sendRawTransaction", tor: true })
+      // const body = JSON.stringify({ method: "eth_sendRawTransaction", tor: true })
 
-      session.circuit
-        .tryFetch("http://proxy.brume.money", { method: "POST", body })
-        .then(r => r.inspectErrSync(console.debug).ignore())
+      // session.circuit
+      //   .tryFetch("http://proxy.brume.money", { method: "POST", body })
+      //   .then(r => r.inspectErrSync(console.debug).ignore())
 
-      setTxHash(txRes)
-      setError(undefined)
+      // setTxHash(txRes)
+      // setError(undefined)
 
-      balance.refetch()
-      nonce.refetch()
+      // balance.refetch()
+      // nonce.refetch()
 
       return Ok.void()
     }).then(r => r.inspectErrSync(setError).ignore())
-  }, [session, wallet.address, nonce.data, gasPrice.data, recipientInput, valueInput])
+  }, [handle, wallet.address, nonce.data, gasPrice.data, recipientInput, valueInput])
 
   const TxHashDisplay = <>
     <div className="">
@@ -122,7 +118,7 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Se
     </div>
     <div className="h-2" />
     <ExternalDivisionLink className="w-full"
-      href={`${session.chain.etherscan}/tx/${txHash}`}
+      href={`${handle.chain.etherscan}/tx/${txHash}`}
       target="_blank" rel="noreferrer">
       <GradientButton className="w-full"
         colorIndex={wallet.color}

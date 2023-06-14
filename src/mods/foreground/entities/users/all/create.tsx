@@ -8,7 +8,7 @@ import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { Mutators } from "@/libs/xswr/mutators";
 import { UserInit } from "@/mods/background/service_worker/entities/users/data";
-import { useBackground } from "@/mods/foreground/background/context";
+import { useBackgrounds } from "@/mods/foreground/background/context";
 import { GradientButton } from "@/mods/foreground/components/buttons/button";
 import { useMemo, useState } from "react";
 import { User } from "../data";
@@ -18,7 +18,7 @@ import { UserAvatar } from "./page";
 export function UserCreateDialog(props: CloseProps) {
   const { close } = props
 
-  const background = useBackground()
+  const background = useBackgrounds()
   const users = useUsers(background)
 
   const uuid = useMemo(() => {

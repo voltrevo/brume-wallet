@@ -8,40 +8,40 @@ export type User =
   | UserData
 
 export interface UserProps {
-  user: User
+  readonly user: User
 }
 
 export interface UserDataProps {
-  user: UserData
+  readonly user: UserData
 }
 
 export interface UserRef {
-  ref: true
-  uuid: string
+  readonly ref: true
+  readonly uuid: string
 }
 
 export interface UserInit {
-  uuid: string,
-  name: string,
+  readonly uuid: string,
+  readonly name: string,
 
-  color: number
-  emoji: string
+  readonly color: number
+  readonly emoji: string
 
-  password: string
+  readonly password: string
 }
 
 export interface UserData {
-  uuid: string,
-  name: string,
+  readonly uuid: string,
+  readonly name: string,
 
-  color: number
-  emoji: string
+  readonly color: number
+  readonly emoji: string
 
-  keyParamsBase64: HmacPbkdf2ParamsBase64
-  valueParamsBase64: AesGcmPbkdf2ParamsBase64
+  readonly keyParamsBase64: HmacPbkdf2ParamsBase64
+  readonly valueParamsBase64: AesGcmPbkdf2ParamsBase64
 
-  passwordParamsBase64: Pbkdf2ParamsBase64
-  passwordHashBase64: string
+  readonly passwordParamsBase64: Pbkdf2ParamsBase64
+  readonly passwordHashBase64: string
 }
 
 export type UserStorage =

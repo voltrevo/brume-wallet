@@ -1,7 +1,7 @@
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { Optional } from "@hazae41/option"
 import { Fetched, FetcherMore, createQuerySchema, useOnce, useQuery } from "@hazae41/xswr"
-import { Background } from "../../background/background"
+import { Backgrounds } from "../../background/background"
 
 export type User =
   | UserRef
@@ -28,7 +28,7 @@ export interface UserData {
   emoji: string
 }
 
-export function getUser(uuid: Optional<string>, background: Background) {
+export function getUser(uuid: Optional<string>, background: Backgrounds) {
   if (uuid === undefined)
     return undefined
 
@@ -41,13 +41,13 @@ export function getUser(uuid: Optional<string>, background: Background) {
   }, fetcher)
 }
 
-export function useUser(uuid: Optional<string>, background: Background) {
+export function useUser(uuid: Optional<string>, background: Backgrounds) {
   const query = useQuery(getUser, [uuid, background])
   useOnce(query)
   return query
 }
 
-export function getCurrentUser(background: Background) {
+export function getCurrentUser(background: Backgrounds) {
   const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore) =>
     Fetched.rewrap(await background.tryGet(0).then(async r => r.andThen(bg => bg.request<T>(init))))
 
@@ -56,7 +56,7 @@ export function getCurrentUser(background: Background) {
   }, fetcher)
 }
 
-export function useCurrentUser(background: Background) {
+export function useCurrentUser(background: Backgrounds) {
   const query = useQuery(getCurrentUser, [background])
   useOnce(query)
   return query

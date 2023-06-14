@@ -5,9 +5,6 @@ import { ErrorProps } from "@/libs/react/props/error"
 import { UserProvider } from "@/mods/foreground/entities/users/context"
 import { ExtensionProvider } from "@/mods/foreground/extension/context"
 import { Overlay } from "@/mods/foreground/overlay/overlay"
-import { CircuitsProvider } from "@/mods/foreground/tor/circuits/context"
-import { TorPoolProvider } from "@/mods/foreground/tor/context"
-import { SessionsProvider } from "@/mods/foreground/tor/sessions/context"
 import '@/styles/globals.css'
 import { CoreProvider } from "@hazae41/xswr"
 import type { AppProps } from 'next/app'
@@ -56,13 +53,7 @@ export default function App({ Component, pageProps }: AppProps) {
           <Overlay>
             <CoreProvider>
               <UserProvider>
-                <TorPoolProvider>
-                  <CircuitsProvider>
-                    <SessionsProvider>
-                      <Component {...pageProps} />
-                    </SessionsProvider>
-                  </CircuitsProvider>
-                </TorPoolProvider>
+                <Component {...pageProps} />
               </UserProvider>
             </CoreProvider>
           </Overlay>

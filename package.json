@@ -19,6 +19,7 @@
     "@hazae41/berith": "^1.1.40",
     "@hazae41/binary": "^1.2.34",
     "@hazae41/bytes": "^1.1.21",
+    "@hazae41/cadenas": "^0.2.30",
     "@hazae41/cascade": "^1.1.26",
     "@hazae41/cleaner": "^1.0.4",
     "@hazae41/cursor": "^1.1.19",

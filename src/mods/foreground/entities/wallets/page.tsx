@@ -1,21 +1,21 @@
 /* eslint-disable @next/next/no-img-element */
 import { BigInts } from "@/libs/bigints/bigints";
 import { Colors } from "@/libs/colors/colors";
+import { chains } from "@/libs/ethereum/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanState } from "@/libs/react/handles/boolean";
-import { useEthereumHandle } from "@/libs/tor/sessions/session";
 import { Query } from "@hazae41/xswr";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
-import { useBackground } from "../../background/context";
-import { WalletDataProps, useBalance, useWallet } from "./data";
+import { useBackgrounds } from "../../background/context";
+import { WalletDataProps, useBalance, useEthereumHandle, useWallet } from "./data";
 import { WalletCard } from "./row";
 import { SendDialog } from "./send";
 
 export function WalletPage(props: { uuid: string }) {
   const { uuid } = props
 
-  const background = useBackground()
+  const background = useBackgrounds()
   const wallet = useWallet(uuid, background)
 
   if (wallet.data === undefined)
@@ -39,13 +39,9 @@ function WalletDataPage(props: WalletDataProps) {
 
   const router = useRouter()
 
-  const sessions = useEthereumHandle(wallet.uuid)
-
-  console.log(sessions)
-
-  const mainnet = sessions?.sessions[1]
-  const goerli = sessions?.sessions[5]
-  const polygon = sessions?.sessions[137]
+  const mainnet = useEthereumHandle(wallet.address, chains[1])
+  const goerli = useEthereumHandle(wallet.address, chains[5])
+  const polygon = useEthereumHandle(wallet.address, chains[137])
 
   const color = Colors.get(wallet.color)
   const color2 = Colors.get(wallet.color + 1)
@@ -111,17 +107,17 @@ function WalletDataPage(props: WalletDataProps) {
     {mainnetSendDialog.current && mainnet &&
       <SendDialog title="(Ethereum mainnet)"
         wallet={wallet}
-        session={mainnet}
+        handle={mainnet}
         close={mainnetSendDialog.disable} />}
     {goerliSendDialog.current && goerli &&
       <SendDialog title="(Goerli testnet)"
         wallet={wallet}
-        session={goerli}
+        handle={goerli}
         close={goerliSendDialog.disable} />}
     {polygonSendDialog.current && polygon &&
       <SendDialog title="(Polygon mainnet)"
         wallet={wallet}
-        session={polygon}
+        handle={polygon}
         close={polygonSendDialog.disable} />}
     {Navbar}
     {Card}

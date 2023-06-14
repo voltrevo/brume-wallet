@@ -1,10 +1,10 @@
-import { IDBStorage, StorageQuerySettings } from "@hazae41/xswr"
+import { Result } from "@hazae41/result"
+import { IDBStorage } from "@hazae41/xswr"
 
-export type GlobalStorage =
-  StorageQuerySettings<any, never>
+export interface GlobalStorage {
+  storage: IDBStorage
+}
 
-export function tryCreateGlobalStorage() {
-  return IDBStorage
-    .tryCreate("memory")
-    .mapSync(storage => ({ storage }))
+export function tryCreateGlobalStorage(): Result<GlobalStorage, Error> {
+  return IDBStorage.tryCreate("memory").mapSync(storage => ({ storage }))
 }
