@@ -69,6 +69,17 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
   chainId: number
 }
 
+export function getEthereum(request: RpcRequestPreinit<unknown>, connection: EthereumConnection, storage: IDBStorage) {
+  const fetcher = async ({ method, params }: EthereumQueryKey<unknown>) =>
+    await EthereumSocket.tryFetch(connection, { method, params }, {}).then(x => new Ok(x))
+
+  return createQuerySchema<EthereumQueryKey<unknown>, unknown, Error>({
+    chainId: connection.chain.id,
+    method: request.method,
+    params: request.params
+  }, fetcher, { storage })
+}
+
 export function getBalance(address: string, block: string, connection: EthereumConnection, storage: IDBStorage) {
   const fetcher = async ({ method, params }: EthereumQueryKey<unknown>) =>
     await EthereumSocket.tryFetch(connection, { method, params }, {}).then(x => new Ok(x))

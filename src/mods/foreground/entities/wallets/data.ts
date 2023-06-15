@@ -105,7 +105,7 @@ export async function tryFetch<T>(key: EthereumQueryKey<unknown>, ethereum: Ethe
   const subrequest = { method, params }
 
   return await background.tryRequest<T>({
-    method: "brume_fetchEthereum",
+    method: "brume_fetch",
     params: [session, chain.id, subrequest]
   }).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 }
@@ -134,11 +134,13 @@ export function getNonceSchema(address: string, ethereum: EthereumHandle) {
   const fetcher = async (init: EthereumQueryKey<unknown>, more: FetcherMore = {}) =>
     await tryFetch<string>(init, ethereum).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
+  const storage = new UserStorage(ethereum.user, ethereum.background)
+
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
     chainId: ethereum.chain.id,
     method: "eth_getTransactionCount",
     params: [address, "pending"]
-  }, fetcher)
+  }, fetcher, { storage, dataSerializer: BigInts })
 }
 
 export function useNonce(address: string, ethereum: EthereumHandle) {
@@ -152,11 +154,13 @@ export function getGasPriceSchema(ethereum: EthereumHandle) {
   const fetcher = async (init: EthereumQueryKey<unknown>, more: FetcherMore = {}) =>
     await tryFetch<string>(init, ethereum).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
+  const storage = new UserStorage(ethereum.user, ethereum.background)
+
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
     chainId: ethereum.chain.id,
     method: "eth_gasPrice",
     params: []
-  }, fetcher)
+  }, fetcher, { storage, dataSerializer: BigInts })
 }
 
 export function useGasPrice(ethereum: EthereumHandle) {

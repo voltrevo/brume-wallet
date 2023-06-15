@@ -14,15 +14,15 @@ import { Pool } from "@hazae41/piscine"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
-import { Core, IDBStorage, Makeable, StoredState } from "@hazae41/xswr"
+import { Core, Fetched, IDBStorage, Makeable, StoredState } from "@hazae41/xswr"
 import { ethers } from "ethers"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
-import { CircuitSession, EthereumConnection, EthereumSocket, SessionData, getSession } from "./entities/sessions/data"
+import { CircuitSession, EthereumSocket, SessionData, getSession } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
-import { EthereumPrivateKeyWallet, Wallet, WalletData, getBalance, getWallet } from "./entities/wallets/data"
+import { EthereumPrivateKeyWallet, Wallet, WalletData, getEthereum, getWallet } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -110,8 +110,8 @@ export class Global {
       return await this.brume_newWallet(request)
     if (request.method === "brume_getWallet")
       return await this.brume_getWallet(request)
-    if (request.method === "brume_fetchEthereum")
-      return await this.brume_fetchEthereum(request)
+    if (request.method === "brume_fetch")
+      return await this.brume_fetch(request)
     return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
   }
 
@@ -299,7 +299,7 @@ export class Global {
     })
   }
 
-  async brume_fetchEthereum(request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
+  async brume_fetch(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [sessionId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
 
@@ -307,24 +307,16 @@ export class Global {
       const circuit = await session.circuits.inner.tryGet(0).then(r => r.throw(t))
       const ethereum = Option.wrap(circuit.ethereum[chainId]).ok().throw(t)
 
-      if (subrequest.method === "eth_getBalance")
-        return await this.eth_getBalance(subrequest, ethereum)
-      return await EthereumSocket.tryFetch(ethereum, subrequest, {})
-    })
-  }
-
-  async eth_getBalance(request: RpcRequestPreinit<unknown>, ethereum: EthereumConnection): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const [address, block] = (request as RpcParamfulRequestInit<[string, string]>).params
-
       const { userStorage } = Option.wrap(this.#session).ok().throw(t)
+      const query = await this.make(getEthereum(subrequest, ethereum, userStorage))
 
-      const balanceQuery = await this.make(getBalance(address, block, ethereum, userStorage))
+      const fetched = await query.fetcher(query.key)
+        .then(r => r.throw(t))
+        .then(r => Fetched.from(r))
 
-      const fetched = await balanceQuery.fetcher(balanceQuery.key, {}).then(r => r.throw(t))
-      const balanceQueryState = await balanceQuery.mutate(() => new Some(fetched))
+      await query.mutate(() => new Some(fetched))
 
-      return Option.wrap(balanceQueryState.current).ok().throw(t)
+      return fetched
     })
   }
 
