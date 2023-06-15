@@ -133,11 +133,11 @@ export namespace EthereumSocket {
         .tryFetchWithSocket<string>(socket, init, signal)
         .then(r => r.throw(t))
 
-      const body = JSON.stringify({ method: init.method, tor: true })
+      // const body = JSON.stringify({ method: init.method, tor: true })
 
-      connection.circuit
-        .tryFetch("http://proxy.brume.money", { method: "POST", body })
-        .then(r => r.inspectErrSync(console.warn).ignore())
+      // connection.circuit
+      //   .tryFetch("http://proxy.brume.money", { method: "POST", body })
+      //   .then(r => r.inspectErrSync(console.warn).ignore())
 
       return response
     }).then(r => Fetched.rewrap(r))
