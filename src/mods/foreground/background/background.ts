@@ -4,7 +4,7 @@ import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
 import { Cancel, Looped, Pool, Retry, Skip, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
-import { AsyncStorage, AsyncStorageSettings, StoredState } from "@hazae41/xswr"
+import { AsyncStorage, StoredState } from "@hazae41/xswr"
 import { User } from "../entities/users/data"
 
 export type Background =
@@ -188,7 +188,7 @@ export function createUserStorage(background: Background) {
 
 }
 
-export class UserStorage implements AsyncStorage<string, StoredState<unknown, unknown>> {
+export class UserStorage implements AsyncStorage {
   readonly async: true = true
 
   constructor(
@@ -196,17 +196,17 @@ export class UserStorage implements AsyncStorage<string, StoredState<unknown, un
     readonly background: Background
   ) { }
 
-  async get<D, F>(cacheKey: string, settings: AsyncStorageSettings<D, F, unknown, unknown>) {
+  async get(cacheKey: string) {
     return await this.background
-      .tryRequest<StoredState<D, F>>({ method: "brume_get", params: [this.user.uuid, cacheKey] })
+      .tryRequest<StoredState<unknown, unknown>>({ method: "brume_get", params: [this.user.uuid, cacheKey] })
       .then(r => r.unwrap().unwrap())
   }
 
-  async set<D, F>(cacheKey: string, state: StoredState<D, F>, settings: AsyncStorageSettings<D, F, unknown, unknown>) {
+  async set(cacheKey: string, state: StoredState<unknown, unknown>) {
     // TODO
   }
 
-  async delete<D, F>(cacheKey: string, settings: AsyncStorageSettings<D, F, unknown, unknown>) {
+  async delete(cacheKey: string) {
     // TODO
   }
 

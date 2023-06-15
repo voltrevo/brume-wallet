@@ -119,7 +119,7 @@ export function getBalanceSchema(address: string, ethereum: EthereumHandle) {
     chainId: ethereum.chain.id,
     method: "eth_getBalance",
     params: [address, "pending"]
-  }, fetcher, { storage: { storage } })
+  }, fetcher, { storage })
 }
 
 export function useBalance(address: string, ethereum: EthereumHandle) {

@@ -295,7 +295,7 @@ export class Global {
       if (uuid !== this.#session?.userData.uuid)
         return new Ok(undefined)
 
-      return new Ok(await this.#session.userStorage.get(cacheKey, {}))
+      return new Ok(await this.#session.userStorage.get(cacheKey))
     })
   }
 
@@ -377,7 +377,7 @@ async function init() {
       const circuits = Circuits.createPool(tors, { capacity: 3 })
       const sessions = CircuitSession.createPool(chains, circuits, { capacity: 3 })
 
-      const storage = IDBStorage.tryCreate("memory").unwrap()
+      const storage = IDBStorage.tryCreate({ name: "memory" }).unwrap()
       const global = new Global(tors, circuits, sessions, storage)
 
       return new Ok(global)
