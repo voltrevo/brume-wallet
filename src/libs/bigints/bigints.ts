@@ -18,5 +18,13 @@ export namespace BigInts {
       .toUnsafeFloat()
   }
 
+  export function stringify(value: bigint) {
+    return `0x${value.toString(16)}`
+  }
+
+  export function parse(value: string) {
+    return BigInt(value)
+  }
+
 }
 

@@ -1,3 +1,4 @@
+import { BigInts } from "@/libs/bigints/bigints"
 import { EthereumChain } from "@/libs/ethereum/chain"
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { Optional } from "@hazae41/option"
@@ -119,7 +120,7 @@ export function getBalanceSchema(address: string, ethereum: EthereumHandle) {
     chainId: ethereum.chain.id,
     method: "eth_getBalance",
     params: [address, "pending"]
-  }, fetcher, { storage })
+  }, fetcher, { storage, dataSerializer: BigInts })
 }
 
 export function useBalance(address: string, ethereum: EthereumHandle) {
