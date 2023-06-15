@@ -288,14 +288,18 @@ export class Global {
     })
   }
 
-  async brume_get(request: RpcRequestInit<unknown>): Promise<Result<Optional<StoredState<unknown, unknown>>, never>> {
+  async brume_get(request: RpcRequestInit<unknown>): Promise<Result<Optional<StoredState<unknown, unknown>>, Error>> {
     return await Result.unthrow(async t => {
       const [uuid, cacheKey] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      if (uuid !== this.#session?.userData.uuid)
+      const { userData, userStorage } = Option.wrap(this.#session).ok().throw(t)
+
+      if (uuid !== userData.uuid)
         return new Ok(undefined)
 
-      return new Ok(await this.#session.userStorage.get(cacheKey))
+      const state = await this.core.get(cacheKey, { storage: userStorage })
+
+      return new Ok(this.core.store(state, {}))
     })
   }
 
