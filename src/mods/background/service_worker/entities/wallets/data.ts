@@ -1,6 +1,6 @@
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { Ok } from "@hazae41/result"
-import { IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
+import { Core, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
 import { EthereumConnection, EthereumSocket } from "../sessions/data"
 
 export type Wallet =
@@ -80,7 +80,7 @@ export function getEthereum(request: RpcRequestPreinit<unknown>, connection: Eth
   }, fetcher, { storage })
 }
 
-export function getBalance(address: string, block: string, connection: EthereumConnection, storage: IDBStorage) {
+export function getBalance(address: string, block: string, connection: EthereumConnection, core: Core) {
   const fetcher = async ({ method, params }: EthereumQueryKey<unknown>) =>
     await EthereumSocket.tryFetch(connection, { method, params }, {}).then(x => new Ok(x))
 
@@ -88,5 +88,5 @@ export function getBalance(address: string, block: string, connection: EthereumC
     chainId: connection.chain.id,
     method: "eth_getBalance",
     params: [address, block]
-  }, fetcher, { storage })
+  }, fetcher, {})
 }

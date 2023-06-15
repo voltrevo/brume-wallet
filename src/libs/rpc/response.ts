@@ -29,13 +29,13 @@ export namespace RpcResponse {
     return RpcOk.from(init)
   }
 
-  export function rewrap<T extends Ok.Infer<T>>(id: RpcId, result: T): RpcOk<T>
+  export function rewrap<T extends Ok.Infer<T>>(id: RpcId, result: T): RpcOk<Ok.Inner<T>>
 
   export function rewrap<T extends Err.Infer<T>>(id: RpcId, result: T): RpcErr
 
-  export function rewrap<T extends Result.Infer<T>>(id: RpcId, result: T): RpcResponse<T>
+  export function rewrap<T extends Result.Infer<T>>(id: RpcId, result: T): RpcResponse<Ok.Inner<T>>
 
-  export function rewrap<T extends Result.Infer<T>>(id: RpcId, result: T) {
+  export function rewrap<T extends Result.Infer<T>>(id: RpcId, result: T): RpcResponse<Ok.Inner<T>> {
     result.ignore()
 
     if (result.isOk())
