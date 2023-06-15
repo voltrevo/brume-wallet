@@ -1,6 +1,6 @@
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { Optional } from "@hazae41/option"
-import { Fetched, FetcherMore, createQuerySchema, useOnce, useQuery } from "@hazae41/xswr"
+import { FetchError, Fetched, FetcherMore, createQuerySchema, useOnce, useQuery } from "@hazae41/xswr"
 import { Background } from "../../background/background"
 
 export type User =
@@ -33,7 +33,7 @@ export function getUser(uuid: Optional<string>, background: Background) {
     return undefined
 
   const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    Fetched.rewrap(await background.tryRequest<T>(init).then(r => r.andThenSync(x => x)))
+    await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, UserData, Error>({
     method: "brume_getUser",
@@ -49,7 +49,7 @@ export function useUser(uuid: Optional<string>, background: Background) {
 
 export function getCurrentUser(background: Background) {
   const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    Fetched.rewrap(await background.tryRequest<T>(init).then(r => r.andThenSync(x => x)))
+    await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, User, Error>({
     method: "brume_getCurrentUser"

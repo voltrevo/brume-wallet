@@ -309,7 +309,7 @@ export class Global {
       if (balanceQuery.current !== undefined)
         return balanceQuery.current
 
-      const fetched = await balanceQuery.fetcher(balanceQuery.key, {})
+      const fetched = await balanceQuery.fetcher(balanceQuery.key, {}).then(r => r.throw(t))
       const balanceQueryState = await balanceQuery.mutate(() => new Some(fetched))
 
       return Option.wrap(balanceQueryState.current).ok().throw(t)

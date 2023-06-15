@@ -1,4 +1,5 @@
 import { RpcRequestPreinit } from "@/libs/rpc"
+import { Ok } from "@hazae41/result"
 import { NormalizerMore, StorageQuerySettings, createQuerySchema } from "@hazae41/xswr"
 import { EthereumConnection, EthereumSocket } from "../sessions/data"
 
@@ -70,7 +71,7 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
 
 export function getBalance(address: string, block: string, connection: EthereumConnection) {
   const fetcher = async ({ method, params }: EthereumQueryKey<unknown>) =>
-    await EthereumSocket.tryFetch(connection, { method, params }, {})
+    await EthereumSocket.tryFetch(connection, { method, params }, {}).then(Ok.new)
 
   return createQuerySchema({
     chainId: connection.chain.id,
