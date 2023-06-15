@@ -3,8 +3,10 @@ import { RpcRequestPreinit } from "@/libs/rpc"
 import { Optional } from "@hazae41/option"
 import { Result } from "@hazae41/result"
 import { FetchError, Fetched, FetcherMore, createQuerySchema, useError, useFetch, useOnce, useQuery } from "@hazae41/xswr"
-import { Background } from "../../background/background"
+import { Background, UserStorage } from "../../background/background"
 import { useBackground } from "../../background/context"
+import { useCurrentUser } from "../users/context"
+import { User } from "../users/data"
 
 export type Wallet =
   | WalletRef
@@ -79,6 +81,7 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
 }
 
 export interface EthereumHandle {
+  user: User,
   session: string,
   chain: EthereumChain,
   background: Background
@@ -89,8 +92,9 @@ export interface EthereumHandleProps {
 }
 
 export function useEthereumHandle(session: string, chain: EthereumChain): EthereumHandle {
+  const user = useCurrentUser()
   const background = useBackground()
-  return { session, chain, background }
+  return { user, session, chain, background }
 }
 
 export async function tryFetch<T>(key: EthereumQueryKey<unknown>, ethereum: EthereumHandle): Promise<Result<Fetched<T, Error>, FetchError>> {
@@ -109,11 +113,13 @@ export function getBalanceSchema(address: string, ethereum: EthereumHandle) {
   const fetcher = async (init: EthereumQueryKey<unknown>, more: FetcherMore = {}) =>
     await tryFetch<string>(init, ethereum).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
+  const storage = new UserStorage(ethereum.user, ethereum.background)
+
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
     chainId: ethereum.chain.id,
     method: "eth_getBalance",
     params: [address, "pending"]
-  }, fetcher)
+  }, fetcher, { storage: { storage } })
 }
 
 export function useBalance(address: string, ethereum: EthereumHandle) {

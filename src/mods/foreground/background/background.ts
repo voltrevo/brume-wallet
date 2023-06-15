@@ -4,6 +4,8 @@ import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
 import { Cancel, Looped, Pool, Retry, Skip, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
+import { AsyncStorage, AsyncStorageSettings, StoredState } from "@hazae41/xswr"
+import { User } from "../entities/users/data"
 
 export type Background =
   | WebsiteBackground
@@ -178,6 +180,34 @@ export class ExtensionBackground {
         }
       })
     })
+  }
+
+}
+
+export function createUserStorage(background: Background) {
+
+}
+
+export class UserStorage implements AsyncStorage<string, StoredState<unknown, unknown>> {
+  readonly async: true = true
+
+  constructor(
+    readonly user: User,
+    readonly background: Background
+  ) { }
+
+  async get<D, F>(cacheKey: string, settings: AsyncStorageSettings<D, F, unknown, unknown>) {
+    return await this.background
+      .tryRequest<StoredState<D, F>>({ method: "brume_get", params: [this.user.uuid, cacheKey] })
+      .then(r => r.unwrap().unwrap())
+  }
+
+  async set<D, F>(cacheKey: string, state: StoredState<D, F>, settings: AsyncStorageSettings<D, F, unknown, unknown>) {
+    // TODO
+  }
+
+  async delete<D, F>(cacheKey: string, settings: AsyncStorageSettings<D, F, unknown, unknown>) {
+    // TODO
   }
 
 }

@@ -1,4 +1,4 @@
-import { browser } from "@/libs/browser/browser"
+import { browser, tryBrowserSync } from "@/libs/browser/browser"
 import { chains } from "@/libs/ethereum/chain"
 import { RpcParamfulRequestInit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"
@@ -14,16 +14,16 @@ import { Pool } from "@hazae41/piscine"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
-import { Core, Makeable } from "@hazae41/xswr"
+import { Core, IDBStorage, Makeable, StoredState } from "@hazae41/xswr"
 import { ethers } from "ethers"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { CircuitSession, EthereumConnection, EthereumSocket, SessionData, getSession } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
-import { User, UserData, UserInit, UserSession, getUser, tryCreateUser, tryCreateUserStorage } from "./entities/users/data"
+import { User, UserData, UserInit, UserSession, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
 import { EthereumPrivateKeyWallet, Wallet, WalletData, getBalance, getWallet } from "./entities/wallets/data"
-import { GlobalStorage, tryCreateGlobalStorage } from "./storage"
+import { tryCreateUserStorage } from "./storage"
 
 declare global {
   interface ServiceWorkerGlobalScope {
@@ -75,7 +75,7 @@ export class Global {
     readonly tors: Mutex<Pool<TorClientDuplex, Error>>,
     readonly circuits: Mutex<Pool<Circuit, Error>>,
     readonly sessions: Mutex<Pool<CircuitSession, Error>>,
-    readonly storage: GlobalStorage
+    readonly storage: IDBStorage
   ) { }
 
   async make<T>(makeable: Makeable<T>) {
@@ -92,6 +92,8 @@ export class Global {
   }
 
   async tryRouteForeground(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
+    if (request.method === "brume_get")
+      return await this.brume_get(request)
     if (request.method === "brume_getUsers")
       return await this.brume_getUsers(request)
     if (request.method === "brume_newUser")
@@ -286,6 +288,17 @@ export class Global {
     })
   }
 
+  async brume_get(request: RpcRequestInit<unknown>): Promise<Result<Optional<StoredState<unknown, unknown>>, never>> {
+    return await Result.unthrow(async t => {
+      const [uuid, cacheKey] = (request as RpcParamfulRequestInit<[string, string]>).params
+
+      if (uuid !== this.#session?.userData.uuid)
+        return new Ok(undefined)
+
+      return new Ok(await this.#session.userStorage.get(cacheKey, {}))
+    })
+  }
+
   async brume_fetchEthereum(request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [sessionId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
@@ -294,8 +307,8 @@ export class Global {
       const circuit = await session.circuits.inner.tryGet(0).then(r => r.throw(t))
       const ethereum = Option.wrap(circuit.ethereum[chainId]).ok().throw(t)
 
-      // if (subrequest.method === "eth_getBalance")
-      //   return await this.eth_getBalance(subrequest, ethereum)
+      if (subrequest.method === "eth_getBalance")
+        return await this.eth_getBalance(subrequest, ethereum)
       return await EthereumSocket.tryFetch(ethereum, subrequest, {})
     })
   }
@@ -304,10 +317,9 @@ export class Global {
     return await Result.unthrow(async t => {
       const [address, block] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      const balanceQuery = await this.make(getBalance(address, block, ethereum))
+      const { userStorage } = Option.wrap(this.#session).ok().throw(t)
 
-      if (balanceQuery.current !== undefined)
-        return balanceQuery.current
+      const balanceQuery = await this.make(getBalance(address, block, ethereum, userStorage))
 
       const fetched = await balanceQuery.fetcher(balanceQuery.key, {}).then(r => r.throw(t))
       const balanceQueryState = await balanceQuery.mutate(() => new Some(fetched))
@@ -365,7 +377,7 @@ async function init() {
       const circuits = Circuits.createPool(tors, { capacity: 3 })
       const sessions = CircuitSession.createPool(chains, circuits, { capacity: 3 })
 
-      const storage = tryCreateGlobalStorage().unwrap()
+      const storage = IDBStorage.tryCreate("memory").unwrap()
       const global = new Global(tors, circuits, sessions, storage)
 
       return new Ok(global)
@@ -388,7 +400,7 @@ if (IS_WEBSITE) {
       const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(event.data)))
       const response = RpcResponse.rewrap(event.data.id, result)
       // console.log("foreground", "<-", response)
-      port.postMessage(response)
+      Result.catchAndWrapSync(() => port.postMessage(response)).ignore()
     })
 
     port.start()
@@ -413,7 +425,7 @@ if (IS_EXTENSION) {
       const result = await inited.then(r => r.andThenSync(g => g.tryRouteContentScript(uuid, msg)))
       const response = RpcResponse.rewrap(msg.id, result)
       if (msg.id !== "ping") console.log(port.name, "<-", response)
-      port.postMessage(response)
+      tryBrowserSync(() => port.postMessage(response)).ignore()
     })
 
     port.onDisconnect.addListener(async () => {
@@ -427,7 +439,7 @@ if (IS_EXTENSION) {
       const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(msg)))
       const response = RpcResponse.rewrap(msg.id, result)
       // console.log(port.name, "<-", response, Date.now())
-      port.postMessage(response)
+      tryBrowserSync(() => port.postMessage(response)).ignore()
     })
   }
 
