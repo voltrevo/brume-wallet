@@ -128,7 +128,6 @@ export function createPortPool() {
   }, { capacity: 1 })
 }
 
-
 export class ExtensionBackground {
   readonly #client = new RpcClient()
 
@@ -181,10 +180,6 @@ export class ExtensionBackground {
       })
     })
   }
-
-}
-
-export function createUserStorage(background: Background) {
 
 }
 
