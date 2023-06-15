@@ -13,7 +13,7 @@ import { Mutex } from "@hazae41/mutex"
 import { Cancel, Looped, Pool, PoolParams, Retry, tryLoop } from "@hazae41/piscine"
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Ok, Result } from "@hazae41/result"
-import { Fetched, FetcherMore, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
+import { FetchError, Fetched, FetcherMore, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
 
 export type Session =
   | SessionRef
@@ -76,7 +76,7 @@ export namespace EthereumSocket {
 
   export async function tryCreateSocket(circuit: Circuit, chain: EthereumChain, signal?: AbortSignal): Promise<Result<WebSocket, Looped<Error>>> {
     const result = await Result.unthrow<Result<WebSocket, BinaryError | ErroredError | ClosedError | AbortedError | ControllerError>>(async t => {
-      const signal2 = AbortSignals.timeout(5_000, signal)
+      const signal2 = AbortSignals.timeout(15_000, signal)
 
       const url = new URL(chain.url)
 
@@ -121,9 +121,9 @@ export namespace EthereumSocket {
     }, params)
   }
 
-  export async function tryFetch(connection: EthereumSocket, init: RpcRequestPreinit<unknown>, more: FetcherMore = {}): Promise<Fetched<string, Error>> {
-    return await Result.unthrow<Result<string, Error>>(async t => {
-      const { signal = AbortSignals.timeout(5_000) } = more
+  export async function tryFetch(connection: EthereumSocket, init: RpcRequestPreinit<unknown>, more: FetcherMore = {}): Promise<Result<Fetched<string, Error>, FetchError>> {
+    return await Result.unthrow<Result<Fetched<string, Error>, Error>>(async t => {
+      const { signal = AbortSignals.timeout(15_000) } = more
 
       console.log(`Fetching ${init.method} with`, connection.circuit.id)
 
@@ -139,8 +139,8 @@ export namespace EthereumSocket {
       //   .tryFetch("http://proxy.brume.money", { method: "POST", body })
       //   .then(r => r.inspectErrSync(console.warn).ignore())
 
-      return response
-    }).then(r => Fetched.rewrap(r))
+      return new Ok(Fetched.rewrap(response))
+    }).then(r => r.mapErrSync(FetchError.from))
   }
 
 }

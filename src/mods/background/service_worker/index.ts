@@ -10,7 +10,7 @@ import { Ed25519 } from "@hazae41/ed25519"
 import { Morax } from "@hazae41/morax"
 import { Mutex } from "@hazae41/mutex"
 import { Option, Optional, Some } from "@hazae41/option"
-import { Pool } from "@hazae41/piscine"
+import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
@@ -127,21 +127,23 @@ export class Global {
     if (request.method === "eth_signTypedData_v4")
       return await this.eth_signTypedData_v4(request)
 
-    return await Result.unthrow(async t => {
-      const session = await this.#tryGetOrCreateSession(sessionId).then(r => r.throw(t))
-      const circuit = await session.circuits.inner.tryGet(0).then(r => r.throw(t))
-      const ethereum = Option.wrap(circuit.ethereum[137]).ok().throw(t)
+    return tryLoop(async (i) => {
+      return await Result.unthrow<Result<unknown, Looped<Error>>>(async t => {
+        const session = await this.#tryGetOrCreateSession(sessionId).then(r => r.mapErrSync(Cancel.new).throw(t))
+        const circuit = await session.circuits.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
+        const ethereum = Option.wrap(circuit.ethereum[137]).ok().mapErrSync(Cancel.new).throw(t)
 
-      const { userStorage } = Option.wrap(this.#session).ok().throw(t)
-      const query = await this.make(getEthereum(request, ethereum, userStorage))
+        const { userStorage } = Option.wrap(this.#session).ok().mapErrSync(Cancel.new).throw(t)
+        const query = await this.make(getEthereum(request, ethereum, userStorage))
 
-      const fetched = await query.fetcher(query.key)
-        .then(r => r.throw(t))
-        .then(r => Fetched.from(r))
+        const fetched = await query.fetcher(query.key)
+          .then(r => r.mapErrSync(Retry.new).throw(t))
+          .then(r => Fetched.from(r))
 
-      await query.mutate(() => new Some(fetched))
+        await query.mutate(() => new Some(fetched))
 
-      return fetched
+        return fetched.mapErrSync(Cancel.new)
+      }).then(r => r.inspectErrSync(console.error))
     })
   }
 
@@ -159,14 +161,14 @@ export class Global {
       const circuit = await session.circuits.inner.tryGet(0).then(r => r.throw(t))
       const ethereum = Option.wrap(circuit.ethereum[137]).ok().throw(t)
 
-      const nonce = await EthereumSocket.tryFetch(ethereum, { method: "eth_getTransactionCount", params: [wallet.address, "pending"] }).then(r => r.throw(t))
-      const gasPrice = await EthereumSocket.tryFetch(ethereum, { method: "eth_gasPrice" }, {}).then(r => r.throw(t))
+      const nonce = await EthereumSocket.tryFetch(ethereum, { method: "eth_getTransactionCount", params: [wallet.address, "pending"] }).then(r => r.throw(t).throw(t))
+      const gasPrice = await EthereumSocket.tryFetch(ethereum, { method: "eth_gasPrice" }, {}).then(r => r.throw(t).throw(t))
 
       const [{ data, gas, from, to }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string }]>).params
 
       const signature = await new ethers.Wallet(wallet.privateKey).signTransaction({ data, to, from, gasLimit: gas, chainId: 137, gasPrice, nonce: parseInt(nonce, 16) })
 
-      return await EthereumSocket.tryFetch(ethereum, { method: "eth_sendRawTransaction", params: [signature] }, {})
+      return await EthereumSocket.tryFetch(ethereum, { method: "eth_sendRawTransaction", params: [signature] }, {}).then(r => r.throw(t))
     })
   }
 
@@ -281,19 +283,19 @@ export class Global {
     })
   }
 
-  async #tryGetOrCreateSession(uuid: string): Promise<Result<SessionData, Error>> {
+  async #tryGetOrCreateSession(uuid: string): Promise<Result<SessionData, never>> {
     return await Result.unthrow(async t => {
       const sessionQuery = await this.make(getSession(uuid))
 
       if (sessionQuery.current !== undefined)
         return sessionQuery.current
 
-      const circuits = CircuitSession.createSubpool(this.sessions, { capacity: 1 })
+      const circuits = CircuitSession.createSubpool(this.sessions, { capacity: 3 })
 
-      const sessionState = await sessionQuery.mutate(Mutators.data({ uuid, circuits }))
-      const session = Option.wrap(sessionState.get().current?.get()).ok().throw(t)
+      const sessionData = { uuid, circuits }
+      await sessionQuery.mutate(Mutators.data(sessionData))
 
-      return new Ok(session)
+      return new Ok(sessionData)
     })
   }
 
@@ -316,20 +318,24 @@ export class Global {
     return await Result.unthrow(async t => {
       const [sessionId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
 
-      const session = await this.#tryGetOrCreateSession(sessionId).then(r => r.throw(t))
-      const circuit = await session.circuits.inner.tryGet(0).then(r => r.throw(t))
-      const ethereum = Option.wrap(circuit.ethereum[chainId]).ok().throw(t)
+      return await tryLoop(async (i) => {
+        return await Result.unthrow<Result<unknown, Looped<Error>>>(async t => {
+          const session = await this.#tryGetOrCreateSession(sessionId).then(r => r.mapErrSync(Cancel.new).throw(t))
+          const circuit = await session.circuits.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
+          const ethereum = Option.wrap(circuit.ethereum[chainId]).ok().mapErrSync(Cancel.new).throw(t)
 
-      const { userStorage } = Option.wrap(this.#session).ok().throw(t)
-      const query = await this.make(getEthereum(subrequest, ethereum, userStorage))
+          const { userStorage } = Option.wrap(this.#session).ok().mapErrSync(Cancel.new).throw(t)
+          const query = await this.make(getEthereum(subrequest, ethereum, userStorage))
 
-      const fetched = await query.fetcher(query.key)
-        .then(r => r.throw(t))
-        .then(r => Fetched.from(r))
+          const fetched = await query.fetcher(query.key)
+            .then(r => r.mapErrSync(Retry.new).throw(t))
+            .then(r => Fetched.from(r))
 
-      await query.mutate(() => new Some(fetched))
+          await query.mutate(() => new Some(fetched))
 
-      return fetched
+          return fetched.mapErrSync(Cancel.new)
+        })
+      })
     })
   }
 
@@ -379,8 +385,8 @@ async function init() {
         return await tryCreateTor({ fallbacks, ed25519, x25519, sha1 })
       }, { capacity: 3 })
 
-      const circuits = Circuits.createPool(tors, { capacity: 3 })
-      const sessions = CircuitSession.createPool(chains, circuits, { capacity: 3 })
+      const circuits = Circuits.createPool(tors, { capacity: 9 })
+      const sessions = CircuitSession.createPool(chains, circuits, { capacity: 9 })
 
       const storage = IDBStorage.tryCreate({ name: "memory" }).unwrap()
       const global = new Global(tors, circuits, sessions, storage)

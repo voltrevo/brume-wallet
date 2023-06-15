@@ -1,5 +1,4 @@
 import { RpcRequestPreinit } from "@/libs/rpc"
-import { Ok } from "@hazae41/result"
 import { Core, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
 import { EthereumConnection, EthereumSocket } from "../sessions/data"
 
@@ -71,7 +70,7 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
 
 export function getEthereum(request: RpcRequestPreinit<unknown>, connection: EthereumConnection, storage: IDBStorage) {
   const fetcher = async ({ method, params }: EthereumQueryKey<unknown>) =>
-    await EthereumSocket.tryFetch(connection, { method, params }, {}).then(x => new Ok(x))
+    await EthereumSocket.tryFetch(connection, { method, params }, {})
 
   return createQuerySchema<EthereumQueryKey<unknown>, unknown, Error>({
     chainId: connection.chain.id,
@@ -82,7 +81,7 @@ export function getEthereum(request: RpcRequestPreinit<unknown>, connection: Eth
 
 export function getBalance(address: string, block: string, connection: EthereumConnection, core: Core) {
   const fetcher = async ({ method, params }: EthereumQueryKey<unknown>) =>
-    await EthereumSocket.tryFetch(connection, { method, params }, {}).then(x => new Ok(x))
+    await EthereumSocket.tryFetch(connection, { method, params }, {})
 
   return createQuerySchema({
     chainId: connection.chain.id,
