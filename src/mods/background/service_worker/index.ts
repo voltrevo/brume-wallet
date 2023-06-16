@@ -9,16 +9,16 @@ import { Circuit, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Morax } from "@hazae41/morax"
 import { Mutex } from "@hazae41/mutex"
-import { Option, Optional, Some } from "@hazae41/option"
+import { Option, Optional } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
-import { Core, Fetched, IDBStorage, Makeable, StoredState } from "@hazae41/xswr"
+import { Core, IDBStorage, Makeable, StoredState } from "@hazae41/xswr"
 import { ethers } from "ethers"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
-import { CircuitSession, EthereumSocket, SessionData, getSession } from "./entities/sessions/data"
+import { Brume, EthereumSocket, SessionData, getSession } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
@@ -69,12 +69,12 @@ export class Global {
 
   readonly core = new Core({})
 
-  #session?: UserSession
+  #user?: UserSession
 
   constructor(
     readonly tors: Mutex<Pool<TorClientDuplex, Error>>,
     readonly circuits: Mutex<Pool<Circuit, Error>>,
-    readonly sessions: Mutex<Pool<CircuitSession, Error>>,
+    readonly brumes: Mutex<Pool<Brume, Error>>,
     readonly storage: IDBStorage
   ) { }
 
@@ -87,7 +87,7 @@ export class Global {
 
     if (sessionQuery.data === undefined)
       return
-    for (const entry of sessionQuery.data?.get().circuits.inner)
+    for (const entry of sessionQuery.data?.get().brumes.inner)
       entry.result.andThenSync(circuit => circuit.circuit.tryDestroy().then(r => r.ignore()))
   }
 
@@ -115,41 +115,41 @@ export class Global {
     return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
   }
 
-  async tryRouteContentScript(sessionId: string, request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
+  async tryRouteContentScript(session: SessionData, request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
     if (request.method === "brume_ping")
       return new Ok(undefined)
     if (request.method === "eth_requestAccounts")
-      return await this.eth_requestAccounts(request)
+      return await this.eth_requestAccounts(session, request)
     if (request.method === "eth_accounts")
-      return await this.eth_accounts(request)
+      return await this.eth_accounts(session, request)
     if (request.method === "eth_sendTransaction")
-      return await this.eth_sendTransaction(sessionId, request)
+      return await this.eth_sendTransaction(session, request)
     if (request.method === "eth_signTypedData_v4")
-      return await this.eth_signTypedData_v4(request)
+      return await this.eth_signTypedData_v4(session, request)
 
     return tryLoop(async (i) => {
       return await Result.unthrow<Result<unknown, Looped<Error>>>(async t => {
-        const session = await this.#tryGetOrCreateSession(sessionId).then(r => r.mapErrSync(Cancel.new).throw(t))
-        const circuit = await session.circuits.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
+        const circuit = await session.brumes.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
         const ethereum = Option.wrap(circuit.ethereum[137]).ok().mapErrSync(Cancel.new).throw(t)
 
-        const { userStorage } = Option.wrap(this.#session).ok().mapErrSync(Cancel.new).throw(t)
+        const { userStorage } = Option.wrap(this.#user).ok().mapErrSync(Cancel.new).throw(t)
         const query = await this.make(getEthereum(request, ethereum, userStorage))
 
-        const fetched = await query.fetcher(query.key)
-          .then(r => r.mapErrSync(Retry.new).throw(t))
-          .then(r => Fetched.from(r))
+        const result = await query.fetch().then(r => r.ignore())
+        result.inspectSync(r => r.mapErrSync(Retry.new).throw(t))
 
-        await query.mutate(() => new Some(fetched))
+        const fetched = Option
+          .wrap(query.state.current).ok()
+          .mapErrSync(Cancel.new).throw(t)
 
         return fetched.mapErrSync(Cancel.new)
       }).then(r => r.inspectErrSync(console.error))
     })
   }
 
-  async eth_sendTransaction(sessionId: string, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
+  async eth_sendTransaction(session: SessionData, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const { userStorage } = Option.wrap(this.#session).ok().throw(t)
+      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
 
       const walletsQuery = await this.make(getWallets(userStorage))
       const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
@@ -157,8 +157,7 @@ export class Global {
       const walletQuery = await this.make(getWallet(first.uuid, userStorage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
-      const session = await this.#tryGetOrCreateSession(sessionId).then(r => r.throw(t))
-      const circuit = await session.circuits.inner.tryGet(0).then(r => r.throw(t))
+      const circuit = await session.brumes.inner.tryGet(0).then(r => r.throw(t))
       const ethereum = Option.wrap(circuit.ethereum[137]).ok().throw(t)
 
       const nonce = await EthereumSocket.tryFetch(ethereum, { method: "eth_getTransactionCount", params: [wallet.address, "pending"] }).then(r => r.throw(t).throw(t))
@@ -172,9 +171,9 @@ export class Global {
     })
   }
 
-  async eth_signTypedData_v4(request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
+  async eth_signTypedData_v4(session: SessionData, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const { userStorage } = Option.wrap(this.#session).ok().throw(t)
+      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
 
       const walletsQuery = await this.make(getWallets(userStorage))
       const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
@@ -235,19 +234,19 @@ export class Global {
 
       const userStorage = await tryCreateUserStorage(userData, password).then(r => r.throw(t))
 
-      this.#session = { userData, userStorage }
+      this.#user = { userData, userStorage }
 
       return Ok.void()
     })
   }
 
   async brume_getCurrentUser(request: RpcRequestInit<unknown>): Promise<Result<Optional<UserData>, never>> {
-    return new Ok(this.#session?.userData)
+    return new Ok(this.#user?.userData)
   }
 
   async brume_getWallets(request: RpcRequestInit<unknown>): Promise<Result<Wallet[], Error>> {
     return await Result.unthrow(async t => {
-      const { userStorage } = Option.wrap(this.#session).ok().throw(t)
+      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
 
       const walletsQuery = await this.make(getWallets(userStorage))
       const wallets = walletsQuery.current?.get() ?? []
@@ -258,7 +257,7 @@ export class Global {
 
   async brume_newWallet(request: RpcRequestInit<unknown>): Promise<Result<Wallet[], Error>> {
     return await Result.unthrow(async t => {
-      const { userStorage } = Option.wrap(this.#session).ok().throw(t)
+      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
 
       const [wallet] = (request as RpcParamfulRequestInit<[EthereumPrivateKeyWallet]>).params
       const walletsQuery = await this.make(getWallets(userStorage))
@@ -274,7 +273,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [uuid] = (request as RpcParamfulRequestInit<[string]>).params
 
-      const { userStorage } = Option.wrap(this.#session).ok().throw(t)
+      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
 
       const walletQuery = await this.make(getWallet(uuid, userStorage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
@@ -283,16 +282,16 @@ export class Global {
     })
   }
 
-  async #tryGetOrCreateSession(uuid: string): Promise<Result<SessionData, never>> {
+  async tryGetOrCreateSession(uuid: string): Promise<Result<SessionData, never>> {
     return await Result.unthrow(async t => {
       const sessionQuery = await this.make(getSession(uuid))
 
       if (sessionQuery.current !== undefined)
         return sessionQuery.current
 
-      const circuits = CircuitSession.createSubpool(this.sessions, { capacity: 3 })
+      const brumes = Brume.createSubpool(this.brumes, { capacity: 3 })
 
-      const sessionData = { uuid, circuits }
+      const sessionData = { uuid, brumes }
       await sessionQuery.mutate(Mutators.data(sessionData))
 
       return new Ok(sessionData)
@@ -303,7 +302,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [uuid, cacheKey] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      const { userData, userStorage } = Option.wrap(this.#session).ok().throw(t)
+      const { userData, userStorage } = Option.wrap(this.#user).ok().throw(t)
 
       if (uuid !== userData.uuid)
         return new Ok(undefined)
@@ -321,18 +320,19 @@ export class Global {
 
       return await tryLoop(async (i) => {
         return await Result.unthrow<Result<unknown, Looped<Error>>>(async t => {
-          const session = await this.#tryGetOrCreateSession(sessionId).then(r => r.mapErrSync(Cancel.new).throw(t))
-          const circuit = await session.circuits.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
+          const session = await this.tryGetOrCreateSession(sessionId).then(r => r.mapErrSync(Cancel.new).throw(t))
+          const circuit = await session.brumes.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
           const ethereum = Option.wrap(circuit.ethereum[chainId]).ok().mapErrSync(Cancel.new).throw(t)
 
-          const { userStorage } = Option.wrap(this.#session).ok().mapErrSync(Cancel.new).throw(t)
+          const { userStorage } = Option.wrap(this.#user).ok().mapErrSync(Cancel.new).throw(t)
           const query = await this.make(getEthereum(subrequest, ethereum, userStorage))
 
-          const fetched = await query.fetcher(query.key)
-            .then(r => r.mapErrSync(Retry.new).throw(t))
-            .then(r => Fetched.from(r))
+          const result = await query.fetch().then(r => r.ignore())
+          result.inspectSync(r => r.mapErrSync(Retry.new).throw(t))
 
-          await query.mutate(() => new Some(fetched))
+          const fetched = Option
+            .wrap(query.state.current).ok()
+            .mapErrSync(Cancel.new).throw(t)
 
           return fetched.mapErrSync(Cancel.new)
         })
@@ -340,9 +340,9 @@ export class Global {
     })
   }
 
-  async eth_requestAccounts(request: RpcRequestInit<unknown>): Promise<Result<[string], Error>> {
+  async eth_requestAccounts(session: SessionData, request: RpcRequestInit<unknown>): Promise<Result<[string], Error>> {
     return await Result.unthrow(async t => {
-      const { userStorage } = Option.wrap(this.#session).ok().throw(t)
+      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
 
       const walletsQuery = await this.make(getWallets(userStorage))
       const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
@@ -354,9 +354,9 @@ export class Global {
     })
   }
 
-  async eth_accounts(request: RpcRequestInit<unknown>): Promise<Result<[string], Error>> {
+  async eth_accounts(session: SessionData, request: RpcRequestInit<unknown>): Promise<Result<[string], Error>> {
     return await Result.unthrow(async t => {
-      const { userStorage } = Option.wrap(this.#session).ok().throw(t)
+      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
 
       const walletsQuery = await this.make(getWallets(userStorage))
       const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
@@ -387,7 +387,7 @@ async function init() {
       }, { capacity: 3 })
 
       const circuits = Circuits.createPool(tors, { capacity: 9 })
-      const sessions = CircuitSession.createPool(chains, circuits, { capacity: 9 })
+      const sessions = Brume.createPool(chains, circuits, { capacity: 9 })
 
       const storage = IDBStorage.tryCreate({ name: "memory" }).unwrap()
       const global = new Global(tors, circuits, sessions, storage)
@@ -408,10 +408,10 @@ if (IS_WEBSITE) {
     const port = event.ports[0]
 
     port.addEventListener("message", async (event: MessageEvent<RpcRequestInit<unknown>>) => {
-      // console.log("foreground", "->", event.data)
+      console.log("foreground", "->", event.data)
       const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(event.data)))
       const response = RpcResponse.rewrap(event.data.id, result)
-      // console.log("foreground", "<-", response)
+      console.log("foreground", "<-", response)
       Result.catchAndWrapSync(() => port.postMessage(response)).ignore()
     })
 
@@ -434,7 +434,15 @@ if (IS_EXTENSION) {
 
     port.onMessage.addListener(async (msg: RpcRequestInit<unknown>) => {
       if (msg.id !== "ping") console.log(port.name, "->", msg)
-      const result = await inited.then(r => r.andThenSync(g => g.tryRouteContentScript(uuid, msg)))
+
+      const result = await Result.unthrow<Result<unknown, unknown>>(async t => {
+        const global = await inited.then(r => r.throw(t))
+        const session = await global.tryGetOrCreateSession(uuid).then(r => r.throw(t))
+        const result = await global.tryRouteContentScript(session, msg).then(r => r.throw(t))
+
+        return new Ok(result)
+      })
+
       const response = RpcResponse.rewrap(msg.id, result)
       if (msg.id !== "ping") console.log(port.name, "<-", response)
       tryBrowserSync(() => port.postMessage(response)).ignore()
@@ -447,10 +455,10 @@ if (IS_EXTENSION) {
 
   const onForeground = (port: chrome.runtime.Port) => {
     port.onMessage.addListener(async (msg) => {
-      // console.log(port.name, "->", msg, Date.now())
+      console.log(port.name, "->", msg, Date.now())
       const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(msg)))
       const response = RpcResponse.rewrap(msg.id, result)
-      // console.log(port.name, "<-", response, Date.now())
+      console.log(port.name, "<-", response, Date.now())
       tryBrowserSync(() => port.postMessage(response)).ignore()
     })
   }

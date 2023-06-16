@@ -34,10 +34,10 @@ export interface SessionRef {
 
 export interface SessionData {
   readonly uuid: string
-  readonly circuits: Mutex<Pool<CircuitSession, Error>>
+  readonly brumes: Mutex<Pool<Brume, Error>>
 }
 
-export interface CircuitSession {
+export interface Brume {
   readonly circuit: Circuit,
   readonly ethereum: EthereumChains<EthereumConnection>
 }
@@ -145,17 +145,17 @@ export namespace EthereumSocket {
 
 }
 
-export namespace CircuitSession {
+export namespace Brume {
 
   export function createPool(chains: EthereumChains, circuits: Mutex<Pool<Circuit, Error>>, params: PoolParams) {
-    return new Mutex(new Pool<CircuitSession, Error>(async (params) => {
+    return new Mutex(new Pool<Brume, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index } = params
 
         const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get())
         const ethereum = Objects.mapValuesSync(chains, chain => EthereumSocket.create(circuit, chain))
 
-        const session: CircuitSession = { circuit, ethereum }
+        const session: Brume = { circuit, ethereum }
 
         const onCloseOrError = async (reason?: unknown) => {
           pool.delete(index)
@@ -175,8 +175,8 @@ export namespace CircuitSession {
     }, params))
   }
 
-  export function createSubpool(handles: Mutex<Pool<CircuitSession, Error>>, params: PoolParams) {
-    return new Mutex(new Pool<CircuitSession, Error>(async (params) => {
+  export function createSubpool(handles: Mutex<Pool<Brume, Error>>, params: PoolParams) {
+    return new Mutex(new Pool<Brume, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index } = params
 
