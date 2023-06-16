@@ -307,9 +307,13 @@ export class Global {
       if (uuid !== userData.uuid)
         return new Ok(undefined)
 
-      const state = await this.core.get(cacheKey, { storage: userStorage })
-      const stored = await this.core.store(state, {})
+      const cached = this.core.getStoredSync(cacheKey)
 
+      if (cached !== undefined)
+        return new Ok(cached.inner)
+
+      const stored = await userStorage.get(cacheKey)
+      this.core.setStoredSync(cacheKey, Option.wrap(stored))
       return new Ok(stored)
     })
   }
@@ -330,9 +334,9 @@ export class Global {
           const result = await query.fetch().then(r => r.ignore())
           result.inspectSync(r => r.mapErrSync(Retry.new).throw(t))
 
-          const fetched = Option
-            .wrap(query.state.current).ok()
-            .mapErrSync(Cancel.new).throw(t)
+          const stored = this.core.getStoredSync(query.cacheKey)?.inner
+          const unstored = await this.core.unstore<any, unknown, Error>(stored, {})
+          const fetched = Option.wrap(unstored.current).ok().mapErrSync(Cancel.new).throw(t)
 
           return fetched.mapErrSync(Cancel.new)
         })

@@ -1,5 +1,6 @@
-import { RpcRequestPreinit } from "@/libs/rpc"
-import { Core, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
+import { BigInts } from "@/libs/bigints/bigints"
+import { RpcParamfulRequestPreinit, RpcRequestPreinit } from "@/libs/rpc"
+import { IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
 import { EthereumConnection, EthereumSocket } from "../sessions/data"
 
 export type Wallet =
@@ -68,24 +69,36 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
   chainId: number
 }
 
-export function getEthereum(request: RpcRequestPreinit<unknown>, connection: EthereumConnection, storage: IDBStorage) {
+export function getUnknown(request: RpcRequestPreinit<unknown>, connection: EthereumConnection, storage: IDBStorage) {
   const fetcher = async ({ method, params }: EthereumQueryKey<unknown>) =>
     await EthereumSocket.tryFetch(connection, { method, params }, {})
 
-  return createQuerySchema<EthereumQueryKey<unknown>, unknown, Error>({
+  return createQuerySchema<EthereumQueryKey<unknown>, any, Error>({
     chainId: connection.chain.id,
     method: request.method,
     params: request.params
   }, fetcher, { storage })
 }
 
-export function getBalance(address: string, block: string, connection: EthereumConnection, core: Core) {
+export function getBalance(address: string, block: string, connection: EthereumConnection, storage: IDBStorage) {
   const fetcher = async ({ method, params }: EthereumQueryKey<unknown>) =>
-    await EthereumSocket.tryFetch(connection, { method, params }, {})
+    await EthereumSocket.tryFetch(connection, { method, params }, {}).then(r => r.mapSync(d => d.mapSync(BigInt)))
 
-  return createQuerySchema({
+  return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
     chainId: connection.chain.id,
     method: "eth_getBalance",
     params: [address, block]
-  }, fetcher, {})
+  }, fetcher, { storage, dataSerializer: BigInts })
+}
+
+export function getRpcBalance(request: RpcRequestPreinit<unknown>, connection: EthereumConnection, storage: IDBStorage) {
+  const [address, block] = (request as RpcParamfulRequestPreinit<[string, string]>).params
+
+  return getBalance(address, block, connection, storage)
+}
+
+export function getEthereum(request: RpcRequestPreinit<any>, connection: EthereumConnection, storage: IDBStorage) {
+  if (request.method === "eth_getBalance")
+    return getRpcBalance(request, connection, storage)
+  return getUnknown(request, connection, storage)
 }
