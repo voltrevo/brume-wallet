@@ -309,8 +309,9 @@ export class Global {
         return new Ok(undefined)
 
       const state = await this.core.get(cacheKey, { storage: userStorage })
+      const stored = await this.core.store(state, {})
 
-      return new Ok(this.core.store(state, {}))
+      return new Ok(stored)
     })
   }
 

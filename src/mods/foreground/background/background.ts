@@ -4,7 +4,7 @@ import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
 import { Cancel, Looped, Pool, Retry, Skip, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
-import { AsyncStorage, StoredState } from "@hazae41/xswr"
+import { Storage, StoredState } from "@hazae41/xswr"
 import { User } from "../entities/users/data"
 
 export type Background =
@@ -183,7 +183,7 @@ export class ExtensionBackground {
 
 }
 
-export class UserStorage implements AsyncStorage {
+export class UserStorage implements Storage {
   readonly async: true = true
 
   constructor(

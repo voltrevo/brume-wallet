@@ -1,6 +1,6 @@
 import { Bytes } from "@hazae41/bytes"
 import { Err, Result } from "@hazae41/result"
-import { AesGcmCoder, AsyncBicoder, AsyncEncoder, Bicoder, HmacEncoder, IDBStorage, SyncBicoder } from "@hazae41/xswr"
+import { AesGcmCoder, AsyncPipeBicoder, HmacEncoder, IDBStorage } from "@hazae41/xswr"
 import { Pbdkf2Params } from "./entities/users/crypto"
 import { UserData } from "./entities/users/data"
 
@@ -25,41 +25,7 @@ export async function tryCreateUserStorage(user: UserData, password: string): Pr
   const valueKey = await crypto.subtle.deriveKey(valueParamsBytes, pbkdf2, user.valueParamsBase64.derivedKeyType, false, ["encrypt", "decrypt"])
 
   const keySerializer = new HmacEncoder(keyKey)
-
-  const innerValueSerializer: AsyncBicoder<any, any> = new AesGcmCoder(valueKey)
-  const outerValueSerializer: SyncBicoder<any, any> = JSON
-
-  const valueSerializer = new PipeBicoder(outerValueSerializer, innerValueSerializer)
+  const valueSerializer = new AsyncPipeBicoder(JSON, new AesGcmCoder(valueKey))
 
   return IDBStorage.tryCreate({ name: user.uuid, keySerializer, valueSerializer })
-}
-
-export class PipeBicoder<I, X, O> implements AsyncBicoder<I, O> {
-
-  constructor(
-    readonly outer: Bicoder<I, X>,
-    readonly inner: Bicoder<X, O>
-  ) { }
-
-  async stringify(input: I): Promise<O> {
-    return await this.inner.stringify(await this.outer.stringify(input))
-  }
-
-  async parse(output: O): Promise<I> {
-    return await this.outer.parse(await this.inner.parse(output))
-  }
-
-}
-
-export class PipeEncoder<I, X, O> implements AsyncEncoder<I, O>{
-
-  constructor(
-    readonly outer: AsyncEncoder<I, X>,
-    readonly inner: AsyncEncoder<X, O>
-  ) { }
-
-  async stringify(input: I): Promise<O> {
-    return await this.inner.stringify(await this.outer.stringify(input))
-  }
-
 }
