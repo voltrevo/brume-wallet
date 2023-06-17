@@ -1,6 +1,6 @@
 import { EthereumChain, EthereumChains } from "@/libs/ethereum/chain"
 import { Objects } from "@/libs/objects/objects"
-import { RpcClient, RpcRequestPreinit } from "@/libs/rpc"
+import { RpcClient, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Sockets } from "@/libs/sockets/sockets"
 import { BinaryError } from "@hazae41/binary"
@@ -13,7 +13,7 @@ import { Mutex } from "@hazae41/mutex"
 import { Cancel, Looped, Pool, PoolParams, Retry, tryLoop } from "@hazae41/piscine"
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Ok, Result } from "@hazae41/result"
-import { FetchError, Fetched, FetcherMore, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
+import { NormalizerMore, createQuerySchema } from "@hazae41/xswr"
 
 export type Session =
   | SessionRef
@@ -121,20 +121,14 @@ export namespace EthereumSocket {
     }, params)
   }
 
-  export async function tryFetch(connection: EthereumSocket, init: RpcRequestPreinit<unknown>, more: FetcherMore = {}): Promise<Result<Fetched<string, Error>, FetchError>> {
-    return await Result.unthrow<Result<Fetched<string, Error>, Error>>(async t => {
-      const { signal = AbortSignals.timeout(15_000) } = more
-
-      console.log(`Fetching ${init.method} with`, connection.circuit.id)
-
+  export async function request<T>(connection: EthereumSocket, request: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
+    return await Result.unthrow(async t => {
+      const signal = AbortSignals.timeout(15_000)
       const socket = await connection.socket.tryGet(0).then(r => r.throw(t))
 
-      const response = await connection.client
-        .tryFetchWithSocket<string>(socket, init, signal)
-        .then(r => r.throw(t))
-
-      return new Ok(Fetched.rewrap(response))
-    }).then(r => r.mapErrSync(FetchError.from))
+      console.log(`Fetching ${request.method} with`, connection.circuit.id)
+      return await connection.client.tryFetchWithSocket<T>(socket, request, signal)
+    })
   }
 
 }

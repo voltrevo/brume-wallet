@@ -5,7 +5,6 @@ import { Future } from "@hazae41/future"
 import { Cancel, Looped, Pool, Retry, Skip, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { Storage, StoredState } from "@hazae41/xswr"
-import { User } from "../entities/users/data"
 
 export type Background =
   | WebsiteBackground
@@ -183,17 +182,16 @@ export class ExtensionBackground {
 
 }
 
-export class UserStorage implements Storage {
+export class BackgroundStorage implements Storage {
   readonly async: true = true
 
   constructor(
-    readonly user: User,
     readonly background: Background
   ) { }
 
   async get(cacheKey: string) {
     return await this.background
-      .tryRequest<StoredState>({ method: "brume_get", params: [this.user.uuid, cacheKey] })
+      .tryRequest<StoredState>({ method: "brume_get", params: [cacheKey] })
       .then(r => r.unwrap().unwrap())
   }
 

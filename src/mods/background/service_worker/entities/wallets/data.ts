@@ -1,7 +1,10 @@
 import { BigInts } from "@/libs/bigints/bigints"
-import { RpcParamfulRequestPreinit, RpcRequestPreinit } from "@/libs/rpc"
-import { IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
-import { EthereumConnection, EthereumSocket } from "../sessions/data"
+import { RpcRequestPreinit } from "@/libs/rpc"
+import { Option } from "@hazae41/option"
+import { Cancel, Looped, Retry, tryLoop } from "@hazae41/piscine"
+import { Err, Ok, Result } from "@hazae41/result"
+import { FetchError, Fetched, FetcherMore, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
+import { EthereumSocket, SessionData } from "../sessions/data"
 
 export type Wallet =
   | WalletRef
@@ -69,36 +72,46 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
   chainId: number
 }
 
-export function getUnknown(request: RpcRequestPreinit<unknown>, connection: EthereumConnection, storage: IDBStorage) {
+export interface EthereumSession {
+  chainId: number,
+  session?: SessionData
+}
+
+export async function tryFetch<T>(ethereum: EthereumSession, request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
+  if (ethereum.session === undefined)
+    return new Err(new FetchError())
+
+  const { chainId, session } = ethereum
+
+  return await tryLoop(async (i) => {
+    return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
+      const brume = await session.brumes.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
+      const socket = Option.wrap(brume.ethereum[chainId]).ok().mapErrSync(Cancel.new).throw(t)
+      const response = await EthereumSocket.request<T>(socket, request).then(r => r.mapErrSync(Retry.new).throw(t))
+
+      return new Ok(Fetched.rewrap(response))
+    })
+  }).then(r => r.mapErrSync(FetchError.from))
+}
+
+export function getEthereumUnknown(ethereum: EthereumSession, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
   const fetcher = async ({ method, params }: EthereumQueryKey<unknown>) =>
-    await EthereumSocket.tryFetch(connection, { method, params }, {})
+    await tryFetch(ethereum, { method, params }, {})
 
   return createQuerySchema<EthereumQueryKey<unknown>, any, Error>({
-    chainId: connection.chain.id,
+    chainId: ethereum.chainId,
     method: request.method,
     params: request.params
   }, fetcher, { storage })
 }
 
-export function getBalance(address: string, block: string, connection: EthereumConnection, storage: IDBStorage) {
+export function getEthereumBalance(ethereum: EthereumSession, address: string, block: string, storage: IDBStorage) {
   const fetcher = async ({ method, params }: EthereumQueryKey<unknown>) =>
-    await EthereumSocket.tryFetch(connection, { method, params }, {}).then(r => r.mapSync(d => d.mapSync(BigInt)))
+    await tryFetch<string>(ethereum, { method, params }, {}).then(r => r.mapSync(d => d.mapSync(BigInt)))
 
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
-    chainId: connection.chain.id,
+    chainId: ethereum.chainId,
     method: "eth_getBalance",
     params: [address, block]
   }, fetcher, { storage, dataSerializer: BigInts })
-}
-
-export function getRpcBalance(request: RpcRequestPreinit<unknown>, connection: EthereumConnection, storage: IDBStorage) {
-  const [address, block] = (request as RpcParamfulRequestPreinit<[string, string]>).params
-
-  return getBalance(address, block, connection, storage)
-}
-
-export function getEthereum(request: RpcRequestPreinit<any>, connection: EthereumConnection, storage: IDBStorage) {
-  if (request.method === "eth_getBalance")
-    return getRpcBalance(request, connection, storage)
-  return getUnknown(request, connection, storage)
 }

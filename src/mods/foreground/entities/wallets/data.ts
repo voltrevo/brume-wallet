@@ -4,7 +4,7 @@ import { RpcRequestPreinit } from "@/libs/rpc"
 import { Optional } from "@hazae41/option"
 import { Result } from "@hazae41/result"
 import { FetchError, Fetched, FetcherMore, createQuerySchema, useError, useFetch, useOnce, useQuery } from "@hazae41/xswr"
-import { Background, UserStorage } from "../../background/background"
+import { Background, BackgroundStorage } from "../../background/background"
 import { useBackground } from "../../background/context"
 import { useCurrentUser } from "../users/context"
 import { User } from "../users/data"
@@ -99,14 +99,11 @@ export function useEthereumHandle(session: string, chain: EthereumChain): Ethere
 }
 
 export async function tryFetch<T>(key: EthereumQueryKey<unknown>, ethereum: EthereumHandle): Promise<Result<Fetched<T, Error>, FetchError>> {
-  const { background, session, chain } = ethereum
-
-  const { method, params } = key
-  const subrequest = { method, params }
+  const { background, session } = ethereum
 
   return await background.tryRequest<T>({
     method: "brume_fetch",
-    params: [session, chain.id, subrequest]
+    params: [session, JSON.stringify(key)]
   }).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 }
 
@@ -114,7 +111,7 @@ export function getBalanceSchema(address: string, ethereum: EthereumHandle) {
   const fetcher = async (init: EthereumQueryKey<unknown>, more: FetcherMore = {}) =>
     await tryFetch<string>(init, ethereum).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
-  const storage = new UserStorage(ethereum.user, ethereum.background)
+  const storage = new BackgroundStorage(ethereum.background)
 
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
     chainId: ethereum.chain.id,
@@ -134,7 +131,7 @@ export function getNonceSchema(address: string, ethereum: EthereumHandle) {
   const fetcher = async (init: EthereumQueryKey<unknown>, more: FetcherMore = {}) =>
     await tryFetch<string>(init, ethereum).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
-  const storage = new UserStorage(ethereum.user, ethereum.background)
+  const storage = new BackgroundStorage(ethereum.background)
 
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
     chainId: ethereum.chain.id,
@@ -154,7 +151,7 @@ export function getGasPriceSchema(ethereum: EthereumHandle) {
   const fetcher = async (init: EthereumQueryKey<unknown>, more: FetcherMore = {}) =>
     await tryFetch<string>(init, ethereum).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
-  const storage = new UserStorage(ethereum.user, ethereum.background)
+  const storage = new BackgroundStorage(ethereum.background)
 
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
     chainId: ethereum.chain.id,
