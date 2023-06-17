@@ -1,3 +1,4 @@
+import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
 import { Dialog, DialogTitle } from "@/libs/modals/dialog";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
@@ -5,9 +6,9 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { TitleProps } from "@/libs/react/props/title";
-import { Types } from "@/libs/types/types";
 import { GradientButton } from "@/mods/foreground/components/buttons/button";
 import { Err, Ok, Result } from "@hazae41/result";
+import { ethers } from "ethers";
 import { useMemo, useState } from "react";
 import { EthereumHandleProps, WalletDataProps, useBalance, useGasPrice, useNonce } from "./data";
 
@@ -60,50 +61,49 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Et
 
   const trySend = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!Types.isBigInt(nonce.data))
+      if (nonce.data === undefined)
         return new Err(new Error(`Invalid nonce`))
-      if (!Types.isBigInt(gasPrice.data))
+      if (gasPrice.data === undefined)
         return new Err(new Error(`Invalid gas price`))
 
-      // const ethers = new Wallet(wallet.privateKey)
-      // const socket = await session.socket.tryGet(0).then(r => r.throw(t))
+      const gas = await handle.background.tryRequest<string>({
+        method: "brume_fetch",
+        params: [handle.uuid, {
+          chainId: handle.chain.id,
+          method: "eth_estimateGas",
+          params: [{
+            chainId: Radix.toHex(handle.chain.id),
+            from: wallet.address,
+            to: ethers.getAddress(recipientInput),
+            value: Radix.toHex(ethers.parseUnits(valueInput, 18)),
+            nonce: Radix.toHex(nonce.data.inner),
+            gasPrice: Radix.toHex(gasPrice.data.inner)
+          }, "latest"]
+        }]
+      }).then(r => r.throw(t).throw(t))
 
-      // const gasRes = await session.client.tryFetchWithSocket<string>(socket, {
-      //   method: "eth_estimateGas",
-      //   params: [{
-      //     chainId: Radix.toHex(session.chain.id),
-      //     from: wallet.address,
-      //     to: getAddress(recipientInput),
-      //     value: Radix.toHex(parseUnits(valueInput, 18)),
-      //     nonce: Radix.toHex(nonce.data),
-      //     gasPrice: Radix.toHex(gasPrice.data)
-      //   }, "latest"]
-      // }, AbortSignals.timeout(5_000)).then(r => r.throw(t).throw(t))
+      const txHash = await handle.background.tryRequest<string>({
+        method: "brume_eth_sendTransaction",
+        params: [handle.uuid, {
+          chainId: handle.chain.id,
+          method: "eth_sendTransaction",
+          params: [{
+            chainId: handle.chain.id,
+            from: wallet.address,
+            to: ethers.getAddress(recipientInput),
+            value: Radix.toHex(ethers.parseUnits(valueInput, 18)),
+            nonce: Radix.toHex(nonce.data.inner),
+            gasPrice: Radix.toHex(gasPrice.data.inner),
+            gas: gas
+          }]
+        }]
+      }).then(r => r.throw(t).throw(t))
 
-      // const txRes = await session.client.tryFetchWithSocket<string>(socket, {
-      //   method: "eth_sendRawTransaction",
-      //   params: [await ethers.signTransaction({
-      //     chainId: session.chain.id,
-      //     from: wallet.address,
-      //     to: getAddress(recipientInput),
-      //     value: parseUnits(valueInput, 18),
-      //     nonce: Number(nonce.data),
-      //     gasPrice: gasPrice.data,
-      //     gasLimit: gasRes
-      //   })]
-      // }, AbortSignals.timeout(5_000)).then(r => r.throw(t).throw(t))
+      setTxHash(txHash)
+      setError(undefined)
 
-      // const body = JSON.stringify({ method: "eth_sendRawTransaction", tor: true })
-
-      // session.circuit
-      //   .tryFetch("http://proxy.brume.money", { method: "POST", body })
-      //   .then(r => r.inspectErrSync(console.debug).ignore())
-
-      // setTxHash(txRes)
-      // setError(undefined)
-
-      // balance.refetch()
-      // nonce.refetch()
+      balance.refetch()
+      nonce.refetch()
 
       return Ok.void()
     }).then(r => r.inspectErrSync(setError).ignore())
@@ -129,9 +129,9 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Et
   </>
 
   const disabled = useMemo(() => {
-    if (!Types.isBigInt(nonce.data))
+    if (nonce.data === undefined)
       return true
-    if (!Types.isBigInt(gasPrice.data))
+    if (gasPrice.data === undefined)
       return true
     if (!recipientInput)
       return true

@@ -154,6 +154,8 @@ export class Global {
       return await this.brume_fetch(request)
     if (request.method === "brume_log")
       return await this.brume_log(request)
+    if (request.method === "brume_eth_sendTransaction")
+      return await this.brume_eth_sendTransaction(request)
     return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
   }
 
@@ -192,14 +194,11 @@ export class Global {
     })
   }
 
-  async eth_sendTransaction(ethereum: EthereumSessionAndBrumes, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
+  async eth_sendTransaction(ethereum: EthereumSessionAndBrumes, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const { storage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
-      const walletsQuery = await this.make(getWallets(storage))
-      const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
-
-      const walletQuery = await this.make(getWallet(first.uuid, storage))
+      const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
       const circuit = await ethereum.brumes.inner.tryGet(0).then(r => r.throw(t))
@@ -411,10 +410,30 @@ export class Global {
     })
   }
 
+  async brume_eth_sendTransaction(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+    return await Result.unthrow(async t => {
+      const [uuid, subrequest] = (request as RpcParamfulRequestInit<[string, EthereumQueryKey<unknown>]>).params
+
+      const { chainId, method, params } = subrequest as EthereumQueryKey<unknown>
+
+      const { storage } = await this.tryGetCurrentUser().then(r => r.throw(t))
+
+      const walletQuery = await this.make(getWallet(uuid, storage))
+      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
+
+      const session: EthereumSession = { wallet, chainId }
+
+      const brumes = await this.getOrCreateEthereumBrumes(wallet)
+
+      const ethereum = { session, brumes }
+
+      return this.eth_sendTransaction(ethereum, { method, params })
+    })
+  }
+
   async brume_fetch(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
-      const [uuid, cacheKey] = (request as RpcParamfulRequestInit<[string, string]>).params
-      const subrequest = JSON.parse(cacheKey) as RpcRequestPreinit<unknown>
+      const [uuid, subrequest] = (request as RpcParamfulRequestInit<[string, RpcRequestPreinit<unknown>]>).params
 
       const query = await this.tryRouteUnknownRpc(uuid, subrequest).then(r => r.throw(t))
 

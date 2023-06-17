@@ -103,7 +103,7 @@ export async function tryFetch<T>(key: EthereumQueryKey<unknown>, ethereum: Ethe
 
   return await background.tryRequest<T>({
     method: "brume_fetch",
-    params: [uuid, JSON.stringify(key)]
+    params: [uuid, key]
   }).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 }
 
