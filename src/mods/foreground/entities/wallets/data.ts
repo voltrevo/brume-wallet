@@ -82,8 +82,8 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
 }
 
 export interface EthereumHandle {
+  uuid: string,
   user: User,
-  session: string,
   chain: EthereumChain,
   background: Background
 }
@@ -92,18 +92,18 @@ export interface EthereumHandleProps {
   handle: EthereumHandle
 }
 
-export function useEthereumHandle(session: string, chain: EthereumChain): EthereumHandle {
+export function useEthereumHandle(uuid: string, chain: EthereumChain): EthereumHandle {
   const user = useCurrentUser()
   const background = useBackground()
-  return { user, session, chain, background }
+  return { user, uuid, chain, background }
 }
 
 export async function tryFetch<T>(key: EthereumQueryKey<unknown>, ethereum: EthereumHandle): Promise<Result<Fetched<T, Error>, FetchError>> {
-  const { background, session } = ethereum
+  const { background, uuid } = ethereum
 
   return await background.tryRequest<T>({
     method: "brume_fetch",
-    params: [session, JSON.stringify(key)]
+    params: [uuid, JSON.stringify(key)]
   }).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 }
 

@@ -4,7 +4,7 @@ import { Option } from "@hazae41/option"
 import { Cancel, Looped, Retry, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Result } from "@hazae41/result"
 import { FetchError, Fetched, FetcherMore, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
-import { EthereumSocket, SessionData } from "../sessions/data"
+import { EthereumBrumes, EthereumSocket } from "../sessions/data"
 
 export type Wallet =
   | WalletRef
@@ -73,20 +73,34 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
 }
 
 export interface EthereumSession {
-  chainId: number,
-  session?: SessionData
+  wallet: Wallet
+  chainId: number
 }
 
-export async function tryFetch<T>(ethereum: EthereumSession, request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
-  if (ethereum.session === undefined)
+export function getEthereumSession(uuid: string) {
+  return createQuerySchema<string, EthereumSession, never>(`sessions/${uuid}`, undefined)
+}
+
+export interface EthereumSessionAndBrumes {
+  session: EthereumSession
+  brumes: EthereumBrumes
+}
+
+export interface EthereumQueryMore {
+  session: { chainId: number }
+  brumes?: EthereumBrumes
+}
+
+export async function tryFetch<T>(ethereum: EthereumQueryMore, request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
+  if (ethereum.brumes === undefined)
     return new Err(new FetchError())
 
-  const { chainId, session } = ethereum
+  const brumes = ethereum.brumes
 
   return await tryLoop(async (i) => {
     return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
-      const brume = await session.brumes.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
-      const socket = Option.wrap(brume.ethereum[chainId]).ok().mapErrSync(Cancel.new).throw(t)
+      const brume = await brumes.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
+      const socket = Option.wrap(brume.chains[ethereum.session.chainId]).ok().mapErrSync(Cancel.new).throw(t)
       const response = await EthereumSocket.request<T>(socket, request).then(r => r.mapErrSync(Retry.new).throw(t))
 
       return new Ok(Fetched.rewrap(response))
@@ -94,23 +108,23 @@ export async function tryFetch<T>(ethereum: EthereumSession, request: RpcRequest
   }).then(r => r.mapErrSync(FetchError.from))
 }
 
-export function getEthereumUnknown(ethereum: EthereumSession, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+export function getEthereumUnknown(ethereum: EthereumQueryMore, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
   const fetcher = async ({ method, params }: EthereumQueryKey<unknown>) =>
-    await tryFetch(ethereum, { method, params }, {})
+    await tryFetch<unknown>(ethereum, { method, params }, {})
 
   return createQuerySchema<EthereumQueryKey<unknown>, any, Error>({
-    chainId: ethereum.chainId,
+    chainId: ethereum.session.chainId,
     method: request.method,
     params: request.params
   }, fetcher, { storage })
 }
 
-export function getEthereumBalance(ethereum: EthereumSession, address: string, block: string, storage: IDBStorage) {
+export function getEthereumBalance(ethereum: EthereumQueryMore, address: string, block: string, storage: IDBStorage) {
   const fetcher = async ({ method, params }: EthereumQueryKey<unknown>) =>
     await tryFetch<string>(ethereum, { method, params }, {}).then(r => r.mapSync(d => d.mapSync(BigInt)))
 
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
-    chainId: ethereum.chainId,
+    chainId: ethereum.session.chainId,
     method: "eth_getBalance",
     params: [address, block]
   }, fetcher, { storage, dataSerializer: BigInts })

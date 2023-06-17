@@ -13,7 +13,8 @@ import { Mutex } from "@hazae41/mutex"
 import { Cancel, Looped, Pool, PoolParams, Retry, tryLoop } from "@hazae41/piscine"
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Ok, Result } from "@hazae41/result"
-import { NormalizerMore, createQuerySchema } from "@hazae41/xswr"
+import { createQuerySchema } from "@hazae41/xswr"
+import { Wallet } from "../wallets/data"
 
 export type Session =
   | SessionRef
@@ -34,12 +35,19 @@ export interface SessionRef {
 
 export interface SessionData {
   readonly uuid: string
-  readonly brumes: Mutex<Pool<Brume, Error>>
+  readonly brumes: Mutex<Pool<EthereumBrume, Error>>
 }
 
-export interface Brume {
+export type EthereumBrumes =
+  Mutex<Pool<EthereumBrume, Error>>
+
+export interface EthereumBrume {
   readonly circuit: Circuit,
-  readonly ethereum: EthereumChains<EthereumConnection>
+  readonly chains: EthereumChains<EthereumConnection>
+}
+
+export function getEthereumBrumes(wallet: Wallet) {
+  return createQuerySchema<string, Mutex<Pool<EthereumBrume, Error>>, never>(`brumes/${wallet.uuid}`, undefined)
 }
 
 export type EthereumConnection =
@@ -54,15 +62,6 @@ export interface EthereumSocket {
 
 export function getSession(uuid: string) {
   return createQuerySchema<string, SessionData, never>(`session/${uuid}`, undefined)
-}
-
-export async function getSessionRef(session: Session, more: NormalizerMore) {
-  if ("ref" in session) return session
-
-  const schema = getSession(session.uuid)
-  await schema?.normalize(session, more)
-
-  return { ref: true, uuid: session.uuid } as SessionRef
 }
 
 export namespace EthereumSocket {
@@ -133,38 +132,38 @@ export namespace EthereumSocket {
 
 }
 
-export namespace Brume {
+export namespace EthereumBrume {
 
   export function createPool(chains: EthereumChains, circuits: Mutex<Pool<Circuit, Error>>, params: PoolParams) {
-    return new Mutex(new Pool<Brume, Error>(async (params) => {
+    return new Mutex(new Pool<EthereumBrume, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index } = params
 
         const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get())
-        const ethereum = Objects.mapValuesSync(chains, chain => EthereumSocket.create(circuit, chain))
+        const sockets = Objects.mapValuesSync(chains, chain => EthereumSocket.create(circuit, chain))
 
-        const session: Brume = { circuit, ethereum }
+        const brume: EthereumBrume = { circuit, chains: sockets }
 
         const onCloseOrError = async (reason?: unknown) => {
           pool.delete(index)
           return Ok.void()
         }
 
-        session.circuit.events.on("close", onCloseOrError, { passive: true })
-        session.circuit.events.on("error", onCloseOrError, { passive: true })
+        brume.circuit.events.on("close", onCloseOrError, { passive: true })
+        brume.circuit.events.on("error", onCloseOrError, { passive: true })
 
         const onClean = () => {
-          session.circuit.events.off("close", onCloseOrError)
-          session.circuit.events.off("error", onCloseOrError)
+          brume.circuit.events.off("close", onCloseOrError)
+          brume.circuit.events.off("error", onCloseOrError)
         }
 
-        return new Ok(new Cleaner(session, onClean))
+        return new Ok(new Cleaner(brume, onClean))
       })
     }, params))
   }
 
-  export function createSubpool(handles: Mutex<Pool<Brume, Error>>, params: PoolParams) {
-    return new Mutex(new Pool<Brume, Error>(async (params) => {
+  export function createSubpool(handles: Mutex<Pool<EthereumBrume, Error>>, params: PoolParams) {
+    return new Mutex(new Pool<EthereumBrume, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index } = params
 
