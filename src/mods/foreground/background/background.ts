@@ -193,11 +193,11 @@ export class UserStorage implements Storage {
 
   async get(cacheKey: string) {
     return await this.background
-      .tryRequest<StoredState<unknown, unknown>>({ method: "brume_get", params: [this.user.uuid, cacheKey] })
+      .tryRequest<StoredState>({ method: "brume_get", params: [this.user.uuid, cacheKey] })
       .then(r => r.unwrap().unwrap())
   }
 
-  async set(cacheKey: string, state: StoredState<unknown, unknown>) {
+  async set(cacheKey: string, state: StoredState) {
     // TODO
   }
 

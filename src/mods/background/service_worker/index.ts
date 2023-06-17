@@ -298,7 +298,7 @@ export class Global {
     })
   }
 
-  async brume_get(request: RpcRequestInit<unknown>): Promise<Result<Optional<StoredState<unknown, unknown>>, Error>> {
+  async brume_get(request: RpcRequestInit<unknown>): Promise<Result<Optional<StoredState>, Error>> {
     return await Result.unthrow(async t => {
       const [uuid, cacheKey] = (request as RpcParamfulRequestInit<[string, string]>).params
 
