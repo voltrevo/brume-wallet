@@ -1,4 +1,5 @@
 import { Ports, browser, tryBrowserSync } from "@/libs/browser/browser"
+import { Mouse } from "@/libs/mouse/mouse"
 import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
 import { Pool, Retry, tryLoop } from "@hazae41/piscine"
@@ -15,6 +16,16 @@ declare global {
     "ethereum#request": CustomEvent<string>
   }
 }
+
+const mouse: Mouse = {
+  x: window.screen.width / 2,
+  y: window.screen.height / 2
+}
+
+addEventListener("mousemove", (e: MouseEvent) => {
+  mouse.x = e.screenX
+  mouse.y = e.screenY
+}, { passive: true })
 
 if (IS_FIREFOX || IS_SAFARI) {
   const container = document.documentElement
@@ -68,7 +79,7 @@ const ports = new Pool<chrome.runtime.Port, Error>(async (params) => {
 
 window.addEventListener("ethereum#request", async (event: CustomEvent<string>) => {
   const request = JSON.parse(event.detail) as RpcRequestInit<unknown>
-  const result = await Ports.tryGetAndPostMessage(ports, request)
+  const result = await Ports.tryGetAndPostMessage(ports, { request, mouse })
 
   if (result.isOk())
     return

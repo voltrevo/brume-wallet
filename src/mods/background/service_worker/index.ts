@@ -1,5 +1,6 @@
 import { browser, tryBrowser, tryBrowserSync } from "@/libs/browser/browser"
 import { chains } from "@/libs/ethereum/chain"
+import { Mouse } from "@/libs/mouse/mouse"
 import { RpcParamfulRequestInit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
@@ -96,15 +97,21 @@ export class Global {
     return Option.wrap(currentUserQuery.current?.inner).ok()
   }
 
-  async tryGetOrWaitCurrentUser(): Promise<Result<UserSession, Error>> {
+  async tryGetOrWaitCurrentUser(mouse: Mouse): Promise<Result<UserSession, Error>> {
     return await Result.unthrow(async t => {
       const currentUserQuery = await this.make(getCurrentUser())
 
       if (currentUserQuery.current !== undefined)
         return new Ok(currentUserQuery.current.inner)
 
+      const height = 630
+      const width = 400
+
+      const top = Math.max(mouse.y - (height / 2), 0)
+      const left = Math.max(mouse.x - (width / 2), 0)
+
       const popup = await tryBrowser(async () => {
-        return await browser.windows.create({ type: "popup", url: "index.html", height: 630, width: 400 })
+        return await browser.windows.create({ type: "popup", url: "index.html", height, width, top, left })
       }).then(r => r.throw(t))
 
       const future = new Future<Result<UserSession, Error>>()
@@ -157,11 +164,11 @@ export class Global {
     return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
   }
 
-  async tryRouteContentScript(session: SessionData, request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
+  async tryRouteContentScript(session: SessionData, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<unknown, Error>> {
     if (request.method === "brume_ping")
       return new Ok(undefined)
     if (request.method === "eth_requestAccounts")
-      return await this.eth_requestAccounts(session, request)
+      return await this.eth_requestAccounts(session, request, mouse)
     if (request.method === "eth_accounts")
       return await this.eth_accounts(session, request)
     if (request.method === "eth_sendTransaction")
@@ -397,9 +404,9 @@ export class Global {
     })
   }
 
-  async eth_requestAccounts(session: SessionData, request: RpcRequestInit<unknown>): Promise<Result<[string], Error>> {
+  async eth_requestAccounts(session: SessionData, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<[string], Error>> {
     return await Result.unthrow(async t => {
-      const { storage } = await this.tryGetOrWaitCurrentUser().then(r => r.throw(t))
+      const { storage } = await this.tryGetOrWaitCurrentUser(mouse).then(r => r.throw(t))
 
       const walletsQuery = await this.make(getWallets(storage))
       const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
@@ -489,19 +496,28 @@ if (IS_EXTENSION) {
   const onContentScript = (port: chrome.runtime.Port) => {
     const uuid = crypto.randomUUID()
 
-    port.onMessage.addListener(async (msg: RpcRequestInit<unknown>) => {
-      if (msg.id !== "ping") console.log(port.name, "->", msg)
+    port.onMessage.addListener(async (message: {
+      request: RpcRequestInit<unknown>
+      mouse: Mouse
+    }) => {
+      const { request, mouse } = message
+
+      if (request.id !== "ping")
+        console.log(port.name, "->", request)
 
       const result = await Result.unthrow<Result<unknown, unknown>>(async t => {
         const global = await inited.then(r => r.throw(t))
         const session = await global.tryGetOrCreateSession(uuid).then(r => r.throw(t))
-        const result = await global.tryRouteContentScript(session, msg).then(r => r.throw(t))
+        const result = await global.tryRouteContentScript(session, request, mouse).then(r => r.throw(t))
 
         return new Ok(result)
       })
 
-      const response = RpcResponse.rewrap(msg.id, result)
-      if (msg.id !== "ping") console.log(port.name, "<-", response)
+      const response = RpcResponse.rewrap(request.id, result)
+
+      if (request.id !== "ping")
+        console.log(port.name, "<-", response)
+
       tryBrowserSync(() => port.postMessage(response)).ignore()
     })
 
