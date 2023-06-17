@@ -45,8 +45,8 @@ export interface UserData {
 }
 
 export interface UserSession {
-  userData: UserData,
-  userStorage: IDBStorage
+  user: User,
+  storage: IDBStorage
 }
 
 export function getCurrentUser() {
