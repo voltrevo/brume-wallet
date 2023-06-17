@@ -1,4 +1,4 @@
-import { browser, tryBrowserSync } from "@/libs/browser/browser"
+import { browser, tryBrowser, tryBrowserSync } from "@/libs/browser/browser"
 import { chains } from "@/libs/ethereum/chain"
 import { RpcParamfulRequestInit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"
@@ -7,9 +7,10 @@ import { Mutators } from "@/libs/xswr/mutators"
 import { Berith } from "@hazae41/berith"
 import { Circuit, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
+import { Future } from "@hazae41/future"
 import { Morax } from "@hazae41/morax"
 import { Mutex } from "@hazae41/mutex"
-import { Option, Optional } from "@hazae41/option"
+import { NoneError, Option, Optional } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Sha1 } from "@hazae41/sha1"
@@ -20,7 +21,7 @@ import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { Brume, EthereumSocket, SessionData, getSession } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
-import { User, UserData, UserInit, UserSession, getUser, tryCreateUser } from "./entities/users/data"
+import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
 import { EthereumPrivateKeyWallet, Wallet, WalletData, getEthereum, getWallet } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
@@ -69,8 +70,6 @@ export class Global {
 
   readonly core = new Core({})
 
-  #user?: UserSession
-
   constructor(
     readonly tors: Mutex<Pool<TorClientDuplex, Error>>,
     readonly circuits: Mutex<Pool<Circuit, Error>>,
@@ -87,8 +86,51 @@ export class Global {
 
     if (sessionQuery.data === undefined)
       return
+
     for (const entry of sessionQuery.data?.get().brumes.inner)
-      entry.result.andThenSync(circuit => circuit.circuit.tryDestroy().then(r => r.ignore()))
+      entry.result.andThenSync(brume => brume.circuit.tryDestroy().then(r => r.ignore()))
+  }
+
+  async tryGetCurrentUser(): Promise<Result<UserSession, NoneError>> {
+    const currentUserQuery = await this.make(getCurrentUser())
+    return Option.wrap(currentUserQuery.current?.inner).ok()
+  }
+
+  async tryGetOrWaitCurrentUser(): Promise<Result<UserSession, Error>> {
+    return await Result.unthrow(async t => {
+      const currentUserQuery = await this.make(getCurrentUser())
+
+      if (currentUserQuery.current !== undefined)
+        return new Ok(currentUserQuery.current.inner)
+
+      const popup = await tryBrowser(async () => {
+        return await browser.windows.create({ type: "popup", url: "index.html", height: 630, width: 400 })
+      }).then(r => r.throw(t))
+
+      const future = new Future<Result<UserSession, Error>>()
+
+      const onState = () => {
+        if (currentUserQuery.current === undefined)
+          return
+        future.resolve(new Ok(currentUserQuery.current.inner))
+      }
+
+      const onRemoved = (id: number) => {
+        if (id !== popup.id)
+          return
+        future.resolve(new Err(new Error()))
+      }
+
+      try {
+        this.core.onState.addListener(currentUserQuery.key, onState)
+        browser.windows.onRemoved.addListener(onRemoved)
+
+        return await future.promise
+      } finally {
+        this.core.onState.removeListener(currentUserQuery.key, onState)
+        browser.windows.onRemoved.removeListener(onRemoved)
+      }
+    })
   }
 
   async tryRouteForeground(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
@@ -132,7 +174,7 @@ export class Global {
         const circuit = await session.brumes.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
         const ethereum = Option.wrap(circuit.ethereum[137]).ok().mapErrSync(Cancel.new).throw(t)
 
-        const { userStorage } = Option.wrap(this.#user).ok().mapErrSync(Cancel.new).throw(t)
+        const { userStorage } = await this.tryGetCurrentUser().then(r => r.mapErrSync(Cancel.new).throw(t))
         const query = await this.make(getEthereum(request, ethereum, userStorage))
 
         const result = await query.fetch().then(r => r.ignore())
@@ -149,7 +191,7 @@ export class Global {
 
   async eth_sendTransaction(session: SessionData, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
+      const { userStorage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
       const walletsQuery = await this.make(getWallets(userStorage))
       const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
@@ -173,7 +215,7 @@ export class Global {
 
   async eth_signTypedData_v4(session: SessionData, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
+      const { userStorage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
       const walletsQuery = await this.make(getWallets(userStorage))
       const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
@@ -234,19 +276,22 @@ export class Global {
 
       const userStorage = await tryCreateUserStorage(userData, password).then(r => r.throw(t))
 
-      this.#user = { userData, userStorage }
+      const currentUserQuery = await this.make(getCurrentUser())
+      const currentUserData = { userData, userStorage }
+      await currentUserQuery.mutate(Mutators.data(currentUserData))
 
       return Ok.void()
     })
   }
 
   async brume_getCurrentUser(request: RpcRequestInit<unknown>): Promise<Result<Optional<UserData>, never>> {
-    return new Ok(this.#user?.userData)
+    const currentUserQuery = await this.make(getCurrentUser())
+    return new Ok(currentUserQuery.current?.inner.userData)
   }
 
   async brume_getWallets(request: RpcRequestInit<unknown>): Promise<Result<Wallet[], Error>> {
     return await Result.unthrow(async t => {
-      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
+      const { userStorage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
       const walletsQuery = await this.make(getWallets(userStorage))
       const wallets = walletsQuery.current?.get() ?? []
@@ -257,7 +302,7 @@ export class Global {
 
   async brume_newWallet(request: RpcRequestInit<unknown>): Promise<Result<Wallet[], Error>> {
     return await Result.unthrow(async t => {
-      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
+      const { userStorage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
       const [wallet] = (request as RpcParamfulRequestInit<[EthereumPrivateKeyWallet]>).params
       const walletsQuery = await this.make(getWallets(userStorage))
@@ -273,7 +318,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [uuid] = (request as RpcParamfulRequestInit<[string]>).params
 
-      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
+      const { userStorage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
       const walletQuery = await this.make(getWallet(uuid, userStorage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
@@ -302,7 +347,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [uuid, cacheKey] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      const { userData, userStorage } = Option.wrap(this.#user).ok().throw(t)
+      const { userData, userStorage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
       if (uuid !== userData.uuid)
         return new Ok(undefined)
@@ -328,7 +373,7 @@ export class Global {
           const circuit = await session.brumes.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
           const ethereum = Option.wrap(circuit.ethereum[chainId]).ok().mapErrSync(Cancel.new).throw(t)
 
-          const { userStorage } = Option.wrap(this.#user).ok().mapErrSync(Cancel.new).throw(t)
+          const { userStorage } = await this.tryGetCurrentUser().then(r => r.mapErrSync(Cancel.new).throw(t))
           const query = await this.make(getEthereum(subrequest, ethereum, userStorage))
 
           const result = await query.fetch().then(r => r.ignore())
@@ -346,7 +391,7 @@ export class Global {
 
   async eth_requestAccounts(session: SessionData, request: RpcRequestInit<unknown>): Promise<Result<[string], Error>> {
     return await Result.unthrow(async t => {
-      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
+      const { userStorage } = await this.tryGetOrWaitCurrentUser().then(r => r.throw(t))
 
       const walletsQuery = await this.make(getWallets(userStorage))
       const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
@@ -360,7 +405,7 @@ export class Global {
 
   async eth_accounts(session: SessionData, request: RpcRequestInit<unknown>): Promise<Result<[string], Error>> {
     return await Result.unthrow(async t => {
-      const { userStorage } = Option.wrap(this.#user).ok().throw(t)
+      const { userStorage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
       const walletsQuery = await this.make(getWallets(userStorage))
       const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)

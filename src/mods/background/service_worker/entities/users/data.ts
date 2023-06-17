@@ -49,6 +49,10 @@ export interface UserSession {
   userStorage: IDBStorage
 }
 
+export function getCurrentUser() {
+  return createQuerySchema<string, UserSession, never>(`user`, undefined)
+}
+
 export function getUser(uuid: string, storage: IDBStorage) {
   return createQuerySchema<string, UserData, never>(`user/${uuid}`, undefined, { storage })
 }
