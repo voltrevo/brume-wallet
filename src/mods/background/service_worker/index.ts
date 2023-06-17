@@ -161,6 +161,8 @@ export class Global {
       return await this.brume_getWallet(request)
     if (request.method === "brume_fetch")
       return await this.brume_fetch(request)
+    if (request.method === "brume_log")
+      return await this.brume_log(request)
     return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
   }
 
@@ -379,27 +381,39 @@ export class Global {
   }
 
   async brume_fetch(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
-    return await Result.unthrow(async t => {
-      const [sessionId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
+    const [sessionId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
 
-      return await tryLoop(async (i) => {
-        return await Result.unthrow<Result<unknown, Looped<Error>>>(async t => {
-          const session = await this.tryGetOrCreateSession(sessionId).then(r => r.mapErrSync(Cancel.new).throw(t))
-          const circuit = await session.brumes.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
-          const ethereum = Option.wrap(circuit.ethereum[chainId]).ok().mapErrSync(Cancel.new).throw(t)
+    return await tryLoop(async (i) => {
+      return await Result.unthrow<Result<unknown, Looped<Error>>>(async t => {
+        const session = await this.tryGetOrCreateSession(sessionId).then(r => r.mapErrSync(Cancel.new).throw(t))
+        const circuit = await session.brumes.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
+        const ethereum = Option.wrap(circuit.ethereum[chainId]).ok().mapErrSync(Cancel.new).throw(t)
 
-          const { storage } = await this.tryGetCurrentUser().then(r => r.mapErrSync(Cancel.new).throw(t))
-          const query = await this.make(getEthereum(subrequest, ethereum, storage))
+        const { storage } = await this.tryGetCurrentUser().then(r => r.mapErrSync(Cancel.new).throw(t))
+        const query = await this.make(getEthereum(subrequest, ethereum, storage))
 
-          const result = await query.fetch().then(r => r.ignore())
-          result.inspectSync(r => r.mapErrSync(Retry.new).throw(t))
+        const result = await query.fetch().then(r => r.ignore())
+        result.inspectSync(r => r.mapErrSync(Retry.new).throw(t))
 
-          const stored = this.core.getStoredSync(query.cacheKey)?.inner
-          const unstored = await this.core.unstore<any, unknown, Error>(stored, {})
-          const fetched = Option.wrap(unstored.current).ok().mapErrSync(Cancel.new).throw(t)
+        const stored = this.core.getStoredSync(query.cacheKey)?.inner
+        const unstored = await this.core.unstore<any, unknown, Error>(stored, {})
+        const fetched = Option.wrap(unstored.current).ok().mapErrSync(Cancel.new).throw(t)
 
-          return fetched.mapErrSync(Cancel.new)
-        })
+        return fetched.mapErrSync(Cancel.new)
+      })
+    })
+  }
+
+  async brume_log(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
+    return await tryLoop(async (i) => {
+      return await Result.unthrow<Result<void, Looped<Error>>>(async t => {
+        const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Retry.new).throw(t).result.get())
+
+        const body = JSON.stringify({ method: "eth_getBalance", tor: true })
+        await circuit.tryFetch("http://proxy.brume.money", { method: "POST", body }).then(r => r.mapErrSync(Cancel.new).throw(t))
+        await circuit.tryDestroy()
+
+        return Ok.void()
       })
     })
   }
