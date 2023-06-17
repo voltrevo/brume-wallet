@@ -6,6 +6,7 @@ import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Berith } from "@hazae41/berith"
+import { Bytes } from "@hazae41/bytes"
 import { Circuit, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Future } from "@hazae41/future"
@@ -101,7 +102,7 @@ export class Global {
       const left = Math.max(mouse.x - (width / 2), 0)
 
       const popup = await tryBrowser(async () => {
-        return await browser.windows.create({ type: "popup", url: "index.html", height, width, top, left })
+        return await browser.windows.create({ type: "popup", url: "index.html", state: "normal", height, width, top, left })
       }).then(r => r.throw(t))
 
       const future = new Future<Result<UserSession, Error>>()
@@ -174,6 +175,8 @@ export class Global {
         return await this.eth_accounts(ethereum, request)
       if (request.method === "eth_sendTransaction")
         return await this.eth_sendTransaction(ethereum, request)
+      if (request.method === "personal_sign")
+        return await this.personal_sign(ethereum, request)
       if (request.method === "eth_signTypedData_v4")
         return await this.eth_signTypedData_v4(ethereum, request)
 
@@ -212,6 +215,25 @@ export class Global {
       return await EthereumSocket.request<string>(socket, { method: "eth_sendRawTransaction", params: [signature] }).then(r => r.throw(t))
     })
   }
+
+  async personal_sign(ethereum: EthereumSessionAndBrumes, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const { storage } = await this.tryGetCurrentUser().then(r => r.throw(t))
+
+      const walletsQuery = await this.make(getWallets(storage))
+      const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
+
+      const walletQuery = await this.make(getWallet(first.uuid, storage))
+      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
+
+      const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
+
+      const signature = await new ethers.Wallet(wallet.privateKey).signMessage(Bytes.fromHexSafe(data))
+
+      return new Ok(signature)
+    })
+  }
+
 
   async eth_signTypedData_v4(ethereum: EthereumSessionAndBrumes, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
