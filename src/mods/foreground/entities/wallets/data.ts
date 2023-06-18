@@ -104,6 +104,28 @@ export async function tryFetch<T>(request: RpcRequestPreinit<unknown>, ethereum:
   }).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 }
 
+export function useSync<K, D, F>(query: Query<K, D, F>) {
+  const core = useCore().unwrap()
+  const { cacheKey } = query
+
+  const sync = useCallback(async () => {
+    if (cacheKey === undefined)
+      return
+    if (query.storage === undefined)
+      return
+
+    const stored = await query.storage.get?.(cacheKey)
+    const unstored = await core.unstore(stored, query)
+    await core.update(cacheKey, () => new Some(unstored), query)
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [core, cacheKey])
+
+  useEffect(() => {
+    sync()
+  }, [sync])
+}
+
 export function getBalanceSchema(address: string, ethereum: EthereumHandle) {
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     await tryFetch<string>(request, ethereum).then(r => r.mapSync(r => r.mapSync(BigInt)))
@@ -115,29 +137,6 @@ export function getBalanceSchema(address: string, ethereum: EthereumHandle) {
     method: "eth_getBalance",
     params: [address, "pending"]
   }, fetcher, { storage, dataSerializer: BigInts })
-}
-
-export function useSync<K, D, F>(query: Query<K, D, F>) {
-  const core = useCore().unwrap()
-  const { cacheKey } = query
-
-  const sync = useCallback(async () => {
-    if (cacheKey === undefined)
-      return
-    if (query.storage === undefined)
-      return
-
-    console.log("syncing")
-    const stored = await query.storage.get?.(cacheKey)
-    const unstored = await core.unstore(stored, query)
-    await core.update(cacheKey, () => new Some(unstored), query)
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [core, cacheKey])
-
-  useEffect(() => {
-    sync()
-  }, [sync])
 }
 
 export function useBalance(address: string, ethereum: EthereumHandle) {
@@ -164,6 +163,7 @@ export function getNonceSchema(address: string, ethereum: EthereumHandle) {
 export function useNonce(address: string, ethereum: EthereumHandle) {
   const query = useQuery(getNonceSchema, [address, ethereum])
   useFetch(query)
+  useSync(query)
   useError(query, console.error)
   return query
 }
@@ -184,6 +184,7 @@ export function getGasPriceSchema(ethereum: EthereumHandle) {
 export function useGasPrice(ethereum: EthereumHandle) {
   const query = useQuery(getGasPriceSchema, [ethereum])
   useFetch(query)
+  useSync(query)
   useError(query, console.error)
   return query
 }

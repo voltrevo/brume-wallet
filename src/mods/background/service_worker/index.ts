@@ -253,16 +253,35 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
       const circuit = await ethereum.brumes.inner.tryGet(0).then(r => r.throw(t))
-      const socket = Option.wrap(circuit.chains[137]).ok().throw(t)
+      const socket = Option.wrap(circuit.chains[ethereum.session.chain.id]).ok().throw(t)
 
-      const nonce = await EthereumSocket.request<string>(socket, { method: "eth_getTransactionCount", params: [wallet.address, "pending"] }).then(r => r.throw(t).throw(t))
-      const gasPrice = await EthereumSocket.request<string>(socket, { method: "eth_gasPrice" }).then(r => r.throw(t).throw(t))
+      const nonce = await EthereumSocket.request<string>(socket, {
+        method: "eth_getTransactionCount",
+        params: [wallet.address, "pending"]
+      }).then(r => r.throw(t).throw(t))
+
+      const gasPrice = await EthereumSocket.request<string>(socket, {
+        method: "eth_gasPrice"
+      }).then(r => r.throw(t).throw(t))
 
       const [{ data, gas, from, to }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string }]>).params
 
-      const signature = await new ethers.Wallet(wallet.privateKey).signTransaction({ data, to, from, gasLimit: gas, chainId: 137, gasPrice, nonce: parseInt(nonce, 16) })
+      const signature = await new ethers.Wallet(wallet.privateKey).signTransaction({
+        data: data,
+        to: to,
+        from: from,
+        gasLimit: gas,
+        chainId: ethereum.session.chain.id,
+        gasPrice: gasPrice,
+        nonce: parseInt(nonce, 16)
+      })
 
-      return await EthereumSocket.request<string>(socket, { method: "eth_sendRawTransaction", params: [signature] }).then(r => r.throw(t))
+      const signal = AbortSignal.timeout(60_000)
+
+      return await EthereumSocket.request<string>(socket, {
+        method: "eth_sendRawTransaction",
+        params: [signature]
+      }, signal).then(r => r.throw(t))
     })
   }
 
@@ -297,6 +316,8 @@ export class Global {
       const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
       const { domain, types, message } = JSON.parse(data)
+
+      delete types["EIP712Domain"]
 
       const signature = await new ethers.Wallet(wallet.privateKey).signTypedData(domain, types, message)
 
@@ -472,7 +493,7 @@ export class Global {
       if (subrequest.method === "eth_sendTransaction")
         return await this.eth_sendTransaction(ethereum, subrequest)
 
-      const query = await this.make(getEthereumUnknown(ethereum, request, storage))
+      const query = await this.make(getEthereumUnknown(ethereum, subrequest, storage))
 
       await query.fetch().then(r => r.ignore())
 

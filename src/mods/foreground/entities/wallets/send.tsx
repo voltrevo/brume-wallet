@@ -86,7 +86,7 @@ export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & Et
         params: [handle.wallet.uuid, handle.chain.id, {
           method: "eth_sendTransaction",
           params: [{
-            chainId: handle.chain.id,
+            chainId: Radix.toHex(handle.chain.id),
             from: wallet.address,
             to: ethers.getAddress(recipientInput),
             value: Radix.toHex(ethers.parseUnits(valueInput, 18)),

@@ -120,11 +120,9 @@ export namespace EthereumSocket {
     }, params)
   }
 
-  export async function request<T>(connection: EthereumSocket, request: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
+  export async function request<T>(connection: EthereumSocket, request: RpcRequestPreinit<unknown>, signal: AbortSignal = AbortSignals.timeout(30_000)): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
-      const signal = AbortSignals.timeout(15_000)
       const socket = await connection.socket.tryGet(0).then(r => r.throw(t))
-
       console.log(`Fetching ${request.method} with`, connection.circuit.id)
       return await connection.client.tryFetchWithSocket<T>(socket, request, signal)
     })
