@@ -207,7 +207,7 @@ export class UserStorage implements Storage {
   async get(cacheKey: string) {
     return await this.background
       .tryRequest<RawState>({ method: "brume_get_user", params: [cacheKey] })
-      .then(r => r.unwrap().unwrap())
+      .then(r => r.ok().inner?.ok().inner)
   }
 
 }

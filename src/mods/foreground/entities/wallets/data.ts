@@ -1,9 +1,10 @@
 import { BigInts } from "@/libs/bigints/bigints"
 import { EthereumChain } from "@/libs/ethereum/chain"
 import { RpcRequestPreinit } from "@/libs/rpc"
-import { Optional } from "@hazae41/option"
+import { Optional, Some } from "@hazae41/option"
 import { Result } from "@hazae41/result"
-import { FetchError, Fetched, FetcherMore, createQuerySchema, useError, useFetch, useOnce, useQuery } from "@hazae41/xswr"
+import { FetchError, Fetched, FetcherMore, Query, createQuerySchema, useCore, useError, useFetch, useOnce, useQuery } from "@hazae41/xswr"
+import { useCallback, useEffect } from "react"
 import { Background, UserStorage } from "../../background/background"
 import { useBackground } from "../../background/context"
 
@@ -116,8 +117,32 @@ export function getBalanceSchema(address: string, ethereum: EthereumHandle) {
   }, fetcher, { storage, dataSerializer: BigInts })
 }
 
+export function useSync<K, D, F>(query: Query<K, D, F>) {
+  const core = useCore().unwrap()
+  const { cacheKey } = query
+
+  const sync = useCallback(async () => {
+    if (cacheKey === undefined)
+      return
+    if (query.storage === undefined)
+      return
+
+    console.log("syncing")
+    const stored = await query.storage.get?.(cacheKey)
+    const unstored = await core.unstore(stored, query)
+    await core.update(cacheKey, () => new Some(unstored), query)
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [core, cacheKey])
+
+  useEffect(() => {
+    sync()
+  }, [sync])
+}
+
 export function useBalance(address: string, ethereum: EthereumHandle) {
   const query = useQuery(getBalanceSchema, [address, ethereum])
+  useSync(query)
   useFetch(query)
   useError(query, console.error)
   return query
