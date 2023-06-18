@@ -21,14 +21,12 @@ export type RpcRequestInit<T = unknown> =
   | RpcParamfulRequestInit<T>
 
 export interface RpcParamfulRequestInit<T = unknown> {
-  readonly jsonrpc: "2.0"
   readonly id: RpcId
   readonly method: string
   readonly params: NonOptional<T>
 }
 
 export interface RpcParamlessRequestInit {
-  readonly jsonrpc: "2.0"
   readonly id: RpcId
   readonly method: string
   readonly params?: undefined
@@ -37,8 +35,23 @@ export interface RpcParamlessRequestInit {
 export namespace RpcRequestInit {
 
   export function clone<P, T extends RpcRequestInit<P>>(init: T): T {
-    const { id, jsonrpc, method, params } = init
-    return { id, jsonrpc, method, params } as T
+    const { id, method, params } = init
+    return { id, method, params } as T
   }
 
+}
+
+export class RpcRequest<T> {
+  readonly jsonrpc = "2.0" as const
+
+  constructor(
+    readonly id: RpcId,
+    readonly method: string,
+    readonly params?: T
+  ) { }
+
+  static from<T>(init: RpcRequestInit<T>) {
+    const { id, method, params } = init
+    return new RpcRequest(id, method, params)
+  }
 }

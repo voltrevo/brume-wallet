@@ -2,7 +2,7 @@ import { Future } from "@hazae41/future"
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { RpcErr, RpcError } from "./err"
-import { RpcRequestInit, RpcRequestPreinit } from "./request"
+import { RpcRequest, RpcRequestInit, RpcRequestPreinit } from "./request"
 import { RpcResponse } from "./response"
 
 export class RpcClient {
@@ -39,12 +39,12 @@ export class RpcClient {
 export namespace Rpc {
 
   export async function fetch<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit<unknown>) {
-    const { jsonrpc, id, method, params, ...rest } = init
+    const { id, method, params, ...rest } = init
 
     const headers = new Headers(rest.headers)
     headers.set("Content-Type", "application/json")
 
-    const request = { jsonrpc, id, method, params }
+    const request = new RpcRequest(id, method, params)
     const body = JSON.stringify(request)
 
     const res = await globalThis.fetch(input, { ...init, headers, body })
@@ -63,9 +63,9 @@ export namespace Rpc {
   }
 
   export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit<unknown>, signal: AbortSignal) {
-    const { jsonrpc, id, method, params = [] } = request
+    const { id, method, params = [] } = request
 
-    socket.send(JSON.stringify({ jsonrpc, id, method, params }))
+    socket.send(JSON.stringify(new RpcRequest(id, method, params)))
 
     const future = new Future<Result<RpcResponse<T>, ClosedError | ErroredError | AbortedError>>()
 

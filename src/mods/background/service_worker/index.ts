@@ -14,6 +14,7 @@ import { Morax } from "@hazae41/morax"
 import { Mutex } from "@hazae41/mutex"
 import { NoneError, Option, Optional } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
+import { SuperEventTarget } from "@hazae41/plume"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
@@ -68,9 +69,19 @@ async function tryFetch<T>(url: string): Promise<Result<T, Error>> {
 
 const FALLBACKS_URL = "https://raw.githubusercontent.com/hazae41/echalote/master/tools/fallbacks/fallbacks.json"
 
+export interface PopupData {
+  walletId: string,
+  chainId: number
+}
+
 export class Global {
 
   readonly core = new Core({})
+
+  readonly events = new SuperEventTarget<{
+    "popup_hello": ExtensionChannel
+    "popup_data": [ExtensionChannel, PopupData]
+  }>()
 
   #path: string = "/"
 
@@ -90,12 +101,95 @@ export class Global {
     return Option.wrap(currentUserQuery.current?.inner).ok()
   }
 
-  async tryGetOrWaitCurrentUser(mouse: Mouse): Promise<Result<UserSession, Error>> {
-    return await Result.unthrow(async t => {
-      const currentUserQuery = await this.make(getCurrentUser())
+  async tryGetOrWaitPopupUser(popup: chrome.windows.Window) {
+    const currentUserQuery = await this.make(getCurrentUser())
 
-      if (currentUserQuery.current !== undefined)
-        return new Ok(currentUserQuery.current.inner)
+    if (currentUserQuery.current !== undefined)
+      return new Ok(currentUserQuery.current.inner)
+
+    const future = new Future<Result<UserSession, Error>>()
+
+    const onState = () => {
+      if (currentUserQuery.current === undefined)
+        return
+      future.resolve(new Ok(currentUserQuery.current.inner))
+    }
+
+    const onRemoved = (id: number) => {
+      if (id !== popup.id)
+        return
+      future.resolve(new Err(new Error()))
+    }
+
+    try {
+      this.core.onState.addListener(currentUserQuery.key, onState)
+      browser.windows.onRemoved.addListener(onRemoved)
+
+      return await future.promise
+    } finally {
+      this.core.onState.removeListener(currentUserQuery.key, onState)
+      browser.windows.onRemoved.removeListener(onRemoved)
+    }
+  }
+
+  async tryWaitPopupHello(popup: chrome.windows.Window) {
+    const future = new Future<Result<ExtensionChannel, Error>>()
+
+    const onHello = (channel: ExtensionChannel) => {
+      future.resolve(new Ok(channel))
+      return Ok.void()
+    }
+
+    const onRemoved = (id: number) => {
+      if (id !== popup.id)
+        return
+      future.resolve(new Err(new Error()))
+    }
+
+    try {
+      this.events.on("popup_hello", onHello, { passive: true })
+      browser.windows.onRemoved.addListener(onRemoved)
+
+      return await future.promise
+    } finally {
+      this.events.off("popup_hello", onHello)
+      browser.windows.onRemoved.removeListener(onRemoved)
+    }
+  }
+
+  async tryWaitPopupData(foreground: ExtensionChannel, popup: chrome.windows.Window) {
+    const future = new Future<Result<PopupData, Error>>()
+
+    const onData = ([channel, data]: [ExtensionChannel, PopupData]) => {
+      if (channel.uuid !== foreground.uuid)
+        return Ok.void()
+      future.resolve(new Ok(data))
+      return Ok.void()
+    }
+
+    const onRemoved = (id: number) => {
+      if (id !== popup.id)
+        return
+      future.resolve(new Err(new Error()))
+    }
+
+    try {
+      this.events.on("popup_data", onData, { passive: true })
+      browser.windows.onRemoved.addListener(onRemoved)
+
+      return await future.promise
+    } finally {
+      this.events.off("popup_data", onData)
+      browser.windows.onRemoved.removeListener(onRemoved)
+    }
+  }
+
+  async tryGetOrWaitEthereumSession(channel: ExtensionChannel, mouse: Mouse): Promise<Result<EthereumSession, Error>> {
+    return await Result.unthrow(async t => {
+      const sessionQuery = await this.make(getEthereumSession(channel))
+
+      if (sessionQuery.current !== undefined)
+        return new Ok(sessionQuery.current.inner)
 
       const height = 630
       const width = 400
@@ -107,41 +201,34 @@ export class Global {
         return await browser.windows.create({ type: "popup", url: "popup.html", state: "normal", height, width, top, left })
       }).then(r => r.throw(t))
 
-      const future = new Future<Result<UserSession, Error>>()
+      const { storage } = await this.tryGetOrWaitPopupUser(popup).then(r => r.throw(t))
+      const foreground = await this.tryWaitPopupHello(popup).then(r => r.throw(t))
 
-      const onState = () => {
-        if (currentUserQuery.current === undefined)
-          return
-        future.resolve(new Ok(currentUserQuery.current.inner))
-      }
+      // TODO send some data about the dapp
+      foreground.port.postMessage({ id: "hello", method: "brume_hello", params: [] })
 
-      const onRemoved = (id: number) => {
-        if (id !== popup.id)
-          return
-        future.resolve(new Err(new Error()))
-      }
+      const { walletId, chainId } = await this.tryWaitPopupData(foreground, popup).then(r => r.throw(t))
 
-      try {
-        this.core.onState.addListener(currentUserQuery.key, onState)
-        browser.windows.onRemoved.addListener(onRemoved)
+      const walletQuery = await this.make(getWallet(walletId, storage))
+      const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
+      const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
-        return await future.promise
-      } finally {
-        this.core.onState.removeListener(currentUserQuery.key, onState)
-        browser.windows.onRemoved.removeListener(onRemoved)
-      }
+      const sessionData: EthereumSession = { wallet, chain }
+      await sessionQuery.mutate(Mutators.data(sessionData))
+
+      return new Ok(sessionData)
     })
   }
 
-  async tryRouteContentScript(uuid: string, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<unknown, Error>> {
+  async tryRouteContentScript(channel: ExtensionChannel, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<unknown, Error>> {
     return Result.unthrow(async t => {
       if (request.method === "brume_ping")
         return new Ok(undefined)
 
       if (request.method === "eth_requestAccounts")
-        return await this.eth_requestAccounts(uuid, request, mouse)
+        return await this.eth_requestAccounts(channel, request, mouse)
 
-      const sessionQuery = await this.make(getEthereumSession(uuid))
+      const sessionQuery = await this.make(getEthereumSession(channel))
       const session = Option.wrap(sessionQuery.current?.inner).ok().throw(t)
 
       const brumes = await this.#getOrCreateEthereumBrumes(session.wallet)
@@ -171,19 +258,12 @@ export class Global {
     })
   }
 
-  async eth_requestAccounts(uuid: string, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<[string], Error>> {
+  async eth_requestAccounts(channel: ExtensionChannel, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<[string], Error>> {
     return await Result.unthrow(async t => {
-      const { storage } = await this.tryGetOrWaitCurrentUser(mouse).then(r => r.throw(t))
+      const sessionData = await this.tryGetOrWaitEthereumSession(channel, mouse).then(r => r.throw(t))
+      const { storage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
-      const walletsQuery = await this.make(getWallets(storage))
-      const wallet = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
-      const chain = Option.wrap(chains[137]).ok().throw(t)
-
-      const sessionQuery = await this.make(getEthereumSession(uuid))
-      const sessionData: EthereumSession = { wallet, chain }
-      await sessionQuery.mutate(Mutators.data(sessionData))
-
-      const walletQuery = await this.make(getWallet(wallet.uuid, storage))
+      const walletQuery = await this.make(getWallet(sessionData.wallet.uuid, storage))
       const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
 
       return new Ok([address])
@@ -300,7 +380,7 @@ export class Global {
     })
   }
 
-  async tryRouteForeground(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
+  async tryRouteForeground(channel: Optional<ExtensionChannel>, request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
     if (request.method === "brume_getPath")
       return await this.brume_getPath(request)
     if (request.method === "brume_setPath")
@@ -342,6 +422,26 @@ export class Global {
     this.#path = path
 
     return Ok.void()
+  }
+
+  async brume_popupHello(maybeChannel: Optional<ExtensionChannel>, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+    return Result.unthrow(async t => {
+      const channel = Option.wrap(maybeChannel).ok().throw(t)
+      await this.events.tryEmit("popup_hello", channel).then(r => r.throw(t))
+
+      return Ok.void()
+    })
+  }
+
+  async brume_popupData(maybeChannel: Optional<ExtensionChannel>, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+    return Result.unthrow(async t => {
+      const [data] = (request as RpcParamfulRequestInit<[PopupData]>).params
+
+      const channel = Option.wrap(maybeChannel).ok().throw(t)
+      await this.events.tryEmit("popup_data", [channel, data]).then(r => r.throw(t))
+
+      return Ok.void()
+    })
   }
 
   async brume_getUsers(request: RpcRequestPreinit<unknown>): Promise<Result<User[], never>> {
@@ -579,7 +679,7 @@ if (IS_WEBSITE) {
 
     port.addEventListener("message", async (event: MessageEvent<RpcRequestInit<unknown>>) => {
       console.log("foreground", "->", event.data)
-      const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(event.data)))
+      const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(undefined, event.data)))
       const response = RpcResponse.rewrap(event.data.id, result)
       console.log("foreground", "<-", response)
       Result.catchAndWrapSync(() => port.postMessage(response)).ignore()
@@ -597,10 +697,18 @@ if (IS_WEBSITE) {
   })
 }
 
+export class ExtensionChannel {
+  readonly uuid = crypto.randomUUID()
+
+  constructor(
+    readonly port: chrome.runtime.Port
+  ) { }
+}
+
 if (IS_EXTENSION) {
 
   const onContentScript = (port: chrome.runtime.Port) => {
-    const uuid = crypto.randomUUID()
+    const channel = new ExtensionChannel(port)
 
     port.onMessage.addListener(async (message: {
       request: RpcRequestInit<unknown>
@@ -611,13 +719,7 @@ if (IS_EXTENSION) {
       if (request.id !== "ping")
         console.log(port.name, "->", request)
 
-      const result = await Result.unthrow<Result<unknown, unknown>>(async t => {
-        const global = await inited.then(r => r.throw(t))
-        const result = await global.tryRouteContentScript(uuid, request, mouse).then(r => r.throw(t))
-
-        return new Ok(result)
-      })
-
+      const result = await inited.then(r => r.andThenSync(g => g.tryRouteContentScript(channel, request, mouse)))
       const response = RpcResponse.rewrap(request.id, result)
 
       if (request.id !== "ping")
@@ -628,9 +730,11 @@ if (IS_EXTENSION) {
   }
 
   const onForeground = (port: chrome.runtime.Port) => {
+    const channel = new ExtensionChannel(port)
+
     port.onMessage.addListener(async (msg) => {
       console.log(port.name, "->", msg, Date.now())
-      const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(msg)))
+      const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(channel, msg)))
       const response = RpcResponse.rewrap(msg.id, result)
       console.log(port.name, "<-", response, Date.now())
       tryBrowserSync(() => port.postMessage(response)).ignore()
