@@ -79,7 +79,8 @@ export class Global {
   readonly core = new Core({})
 
   readonly events = new SuperEventTarget<{
-    "popup_hello": ExtensionChannel
+    "popup_hello_request": ExtensionChannel
+    "popup_hello_response": void
     "popup_data": [ExtensionChannel, PopupData]
   }>()
 
@@ -101,43 +102,12 @@ export class Global {
     return Option.wrap(currentUserQuery.current?.inner).ok()
   }
 
-  async tryGetOrWaitPopupUser(popup: chrome.windows.Window) {
-    const currentUserQuery = await this.make(getCurrentUser())
-
-    if (currentUserQuery.current !== undefined)
-      return new Ok(currentUserQuery.current.inner)
-
-    const future = new Future<Result<UserSession, Error>>()
-
-    const onState = () => {
-      if (currentUserQuery.current === undefined)
-        return
-      future.resolve(new Ok(currentUserQuery.current.inner))
-    }
-
-    const onRemoved = (id: number) => {
-      if (id !== popup.id)
-        return
-      future.resolve(new Err(new Error()))
-    }
-
-    try {
-      this.core.onState.addListener(currentUserQuery.key, onState)
-      browser.windows.onRemoved.addListener(onRemoved)
-
-      return await future.promise
-    } finally {
-      this.core.onState.removeListener(currentUserQuery.key, onState)
-      browser.windows.onRemoved.removeListener(onRemoved)
-    }
-  }
-
   async tryWaitPopupHello(popup: chrome.windows.Window) {
     const future = new Future<Result<ExtensionChannel, Error>>()
 
-    const onHello = (channel: ExtensionChannel) => {
+    const onRequest = (channel: ExtensionChannel) => {
       future.resolve(new Ok(channel))
-      return Ok.void()
+      return this.events.tryEmit("popup_hello_response", undefined)
     }
 
     const onRemoved = (id: number) => {
@@ -147,12 +117,12 @@ export class Global {
     }
 
     try {
-      this.events.on("popup_hello", onHello, { passive: true })
+      this.events.on("popup_hello_request", onRequest, { passive: true })
       browser.windows.onRemoved.addListener(onRemoved)
 
       return await future.promise
     } finally {
-      this.events.off("popup_hello", onHello)
+      this.events.off("popup_hello_request", onRequest)
       browser.windows.onRemoved.removeListener(onRemoved)
     }
   }
@@ -201,13 +171,10 @@ export class Global {
         return await browser.windows.create({ type: "popup", url: "popup.html", state: "normal", height, width, top, left })
       }).then(r => r.throw(t))
 
-      const { storage } = await this.tryGetOrWaitPopupUser(popup).then(r => r.throw(t))
       const foreground = await this.tryWaitPopupHello(popup).then(r => r.throw(t))
 
-      // TODO send some data about the dapp
-      foreground.port.postMessage({ id: "hello", method: "brume_hello", params: [] })
-
       const { walletId, chainId } = await this.tryWaitPopupData(foreground, popup).then(r => r.throw(t))
+      const { storage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
       const walletQuery = await this.make(getWallet(walletId, storage))
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
@@ -409,6 +376,10 @@ export class Global {
       return await this.brume_call_ethereum(request)
     if (request.method === "brume_log")
       return await this.brume_log(request)
+    if (request.method === "brume_popupHello")
+      return await this.brume_popupHello(channel, request)
+    if (request.method === "brume_popupData")
+      return await this.brume_popupData(channel, request)
     return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
   }
 
@@ -427,18 +398,33 @@ export class Global {
   async brume_popupHello(maybeChannel: Optional<ExtensionChannel>, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
       const channel = Option.wrap(maybeChannel).ok().throw(t)
-      await this.events.tryEmit("popup_hello", channel).then(r => r.throw(t))
 
+      const future = new Future<void>()
+
+      const onResponse = () => {
+        future.resolve()
+        return Ok.void()
+      }
+
+      try {
+        this.events.on("popup_hello_response", onResponse, { passive: true })
+        await this.events.tryEmit("popup_hello_request", channel).then(r => r.throw(t))
+        await future.promise
+      } finally {
+        this.events.off("popup_hello_response", onResponse)
+      }
+
+      // TODO return infos about the dapp
       return Ok.void()
     })
   }
 
   async brume_popupData(maybeChannel: Optional<ExtensionChannel>, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
-      const [data] = (request as RpcParamfulRequestInit<[PopupData]>).params
+      const [walletId, chainId] = (request as RpcParamfulRequestInit<[string, number]>).params
 
       const channel = Option.wrap(maybeChannel).ok().throw(t)
-      await this.events.tryEmit("popup_data", [channel, data]).then(r => r.throw(t))
+      await this.events.tryEmit("popup_data", [channel, { walletId, chainId }]).then(r => r.throw(t))
 
       return Ok.void()
     })
