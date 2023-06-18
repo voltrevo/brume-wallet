@@ -4,7 +4,7 @@ import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
 import { Cancel, Looped, Pool, Retry, Skip, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
-import { Storage, StoredState } from "@hazae41/xswr"
+import { RawState, Storage } from "@hazae41/xswr"
 
 export type Background =
   | WebsiteBackground
@@ -191,16 +191,8 @@ export class BackgroundStorage implements Storage {
 
   async get(cacheKey: string) {
     return await this.background
-      .tryRequest<StoredState>({ method: "brume_get", params: [cacheKey] })
+      .tryRequest<RawState>({ method: "brume_get", params: [cacheKey] })
       .then(r => r.unwrap().unwrap())
-  }
-
-  async set(cacheKey: string, state: StoredState) {
-    // TODO
-  }
-
-  async delete(cacheKey: string) {
-    // TODO
   }
 
 }

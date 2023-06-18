@@ -17,7 +17,7 @@ import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
-import { Core, IDBStorage, Makeable, SimpleQueryInstance, StoredState } from "@hazae41/xswr"
+import { Core, IDBStorage, Makeable, RawState, SimpleQueryInstance } from "@hazae41/xswr"
 import { ethers } from "ethers"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
@@ -186,7 +186,7 @@ export class Global {
 
       await query.fetch().then(r => r.ignore())
 
-      const stored = this.core.getStoredSync(query.cacheKey)?.inner
+      const stored = this.core.raw.get(query.cacheKey)
       const unstored = await this.core.unstore<any, unknown, Error>(stored, {})
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
@@ -397,14 +397,14 @@ export class Global {
     })
   }
 
-  async brume_get(request: RpcRequestPreinit<unknown>): Promise<Result<Optional<StoredState>, Error>> {
+  async brume_get(request: RpcRequestPreinit<unknown>): Promise<Result<Optional<RawState>, Error>> {
     return await Result.unthrow(async t => {
       const [cacheKey] = (request as RpcParamfulRequestPreinit<[string]>).params
       const subrequest = JSON.parse(cacheKey) as RpcRequestPreinit<unknown>
 
       const query = await this.tryRouteUnknownRpc(undefined, subrequest).then(r => r.throw(t))
 
-      const stored = this.core.getStoredSync(query.cacheKey)?.inner
+      const stored = this.core.raw.get(query.cacheKey)
 
       return new Ok(stored)
     })
@@ -439,7 +439,7 @@ export class Global {
 
       await query.fetch().then(r => r.ignore())
 
-      const stored = this.core.getStoredSync(query.cacheKey)?.inner
+      const stored = this.core.raw.get(query.cacheKey)
       const unstored = await this.core.unstore<any, unknown, Error>(stored, {})
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
