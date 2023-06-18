@@ -264,7 +264,7 @@ export class Global {
         method: "eth_gasPrice"
       }).then(r => r.throw(t).throw(t))
 
-      const [{ data, gas, from, to }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string }]>).params
+      const [{ data, gas, from, to, value }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string, value: string }]>).params
 
       const signature = await new ethers.Wallet(wallet.privateKey).signTransaction({
         data: data,
@@ -273,10 +273,11 @@ export class Global {
         gasLimit: gas,
         chainId: ethereum.session.chain.id,
         gasPrice: gasPrice,
-        nonce: parseInt(nonce, 16)
+        nonce: parseInt(nonce, 16),
+        value: value
       })
 
-      const signal = AbortSignal.timeout(60_000)
+      const signal = AbortSignal.timeout(600_000)
 
       return await EthereumSocket.request<string>(socket, {
         method: "eth_sendRawTransaction",
