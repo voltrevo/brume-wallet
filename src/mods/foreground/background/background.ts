@@ -182,7 +182,7 @@ export class ExtensionBackground {
 
 }
 
-export class BackgroundStorage implements Storage {
+export class GlobalStorage implements Storage {
   readonly async: true = true
 
   constructor(
@@ -191,7 +191,22 @@ export class BackgroundStorage implements Storage {
 
   async get(cacheKey: string) {
     return await this.background
-      .tryRequest<RawState>({ method: "brume_get", params: [cacheKey] })
+      .tryRequest<RawState>({ method: "brume_get_global", params: [cacheKey] })
+      .then(r => r.unwrap().unwrap())
+  }
+
+}
+
+export class UserStorage implements Storage {
+  readonly async: true = true
+
+  constructor(
+    readonly background: Background
+  ) { }
+
+  async get(cacheKey: string) {
+    return await this.background
+      .tryRequest<RawState>({ method: "brume_get_user", params: [cacheKey] })
       .then(r => r.unwrap().unwrap())
   }
 

@@ -39,9 +39,9 @@ function WalletDataPage(props: WalletDataProps) {
 
   const router = useRouter()
 
-  const mainnet = useEthereumHandle(wallet.uuid, chains[1])
-  const goerli = useEthereumHandle(wallet.uuid, chains[5])
-  const polygon = useEthereumHandle(wallet.uuid, chains[137])
+  const mainnet = useEthereumHandle(wallet, chains[1])
+  const goerli = useEthereumHandle(wallet, chains[5])
+  const polygon = useEthereumHandle(wallet, chains[137])
 
   const color = Colors.get(wallet.color)
   const color2 = Colors.get(wallet.color + 1)
