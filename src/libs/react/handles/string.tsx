@@ -1,21 +1,32 @@
+import { Optional } from "@hazae41/option"
 import { useCallback, useState } from "react"
 import { useObjectMemo } from "../memo"
 import { State } from "../state"
 
-export interface OptionalStringHandle {
-  current?: string
-  set(value?: string): void
+export interface Handle<T> {
+  readonly current: T
+  set(next: T): void
+}
+
+export function useHandleState<T>(state: State<T>): Handle<T> {
+  const [current, set] = state
+  return useObjectMemo({ current, set })
+}
+
+export function useHandle<T>(init: T) {
+  return useHandleState<T>(useState<T>(init))
+}
+
+export interface OptionalHandle<T> {
+  current?: T
+  set(next?: T): void
   unset(): void
 }
 
-export function useOptionalString(state: State<string | undefined>): OptionalStringHandle {
-  const [current, set] = state
+export function useOptional<T>(init?: T) {
+  const [current, set] = useState<Optional<T>>(init)
 
   const unset = useCallback(() => set(undefined), [set])
 
   return useObjectMemo({ current, set, unset })
-}
-
-export function useOptionalStringState(init?: string) {
-  return useOptionalString(useState(init))
 }

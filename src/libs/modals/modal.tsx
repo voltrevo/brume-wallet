@@ -17,8 +17,8 @@ export function Modal(props: ChildrenProps & {
 
   useEffect(() => {
     if (!element) return
-    document.body.appendChild(element)
-    return () => void document.body.removeChild(element)
+    document.getElementById("__next")?.appendChild(element)
+    return () => void document.getElementById("__next")?.removeChild(element)
   }, [element])
 
   if (element === undefined)

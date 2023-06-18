@@ -1,5 +1,5 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { createContext, useContext, useEffect, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Background, ExtensionBackground, WebsiteBackground, createMessageChannelPool, createPortPool } from "./background";
 
 export const BackgroundContext =
@@ -7,6 +7,28 @@ export const BackgroundContext =
 
 export function useBackground() {
   return useContext(BackgroundContext)!
+}
+
+export function BackgroundProvider(props: ChildrenProps) {
+  const { children } = props
+
+  const [extension, setExtension] = useState<boolean>()
+
+  useEffect(() => {
+    setExtension(location.protocol.endsWith("extension:"))
+  }, [])
+
+  if (extension === undefined)
+    return null
+
+  if (extension)
+    return <ExtensionBackgroundProvider>
+      {children}
+    </ExtensionBackgroundProvider>
+
+  return <WebsiteBackgroundProvider>
+    {children}
+  </WebsiteBackgroundProvider>
 }
 
 export function WebsiteBackgroundProvider(props: ChildrenProps) {

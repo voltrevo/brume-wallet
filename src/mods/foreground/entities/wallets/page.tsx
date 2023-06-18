@@ -3,7 +3,7 @@ import { BigInts } from "@/libs/bigints/bigints";
 import { Colors } from "@/libs/colors/colors";
 import { chains } from "@/libs/ethereum/chain";
 import { Outline } from "@/libs/icons/icons";
-import { useBooleanState } from "@/libs/react/handles/boolean";
+import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { Query } from "@hazae41/xswr";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
@@ -48,15 +48,15 @@ function WalletDataPage(props: WalletDataProps) {
 
   const mainnetBalance = useBalance(wallet.address, mainnet)
   const mainnetBalanceFloat = useFloat(mainnetBalance)
-  const mainnetSendDialog = useBooleanState()
+  const mainnetSendDialog = useBooleanHandle(false)
 
   const goerliBalance = useBalance(wallet.address, goerli)
   const goerliBalanceFloat = useFloat(goerliBalance)
-  const goerliSendDialog = useBooleanState()
+  const goerliSendDialog = useBooleanHandle(false)
 
   const polygonBalance = useBalance(wallet.address, polygon)
   const polygonBalanceFloat = useFloat(polygonBalance)
-  const polygonSendDialog = useBooleanState()
+  const polygonSendDialog = useBooleanHandle(false)
 
   const Navbar =
     <div className="p-xmd w-full flex items-center">

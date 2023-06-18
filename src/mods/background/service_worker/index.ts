@@ -17,7 +17,7 @@ import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
-import { Core, IDBStorage, Makeable, RawState } from "@hazae41/xswr"
+import { Core, Data, IDBStorage, Makeable, RawState } from "@hazae41/xswr"
 import { ethers } from "ethers"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
@@ -72,6 +72,8 @@ export class Global {
 
   readonly core = new Core({})
 
+  #path: string = "/"
+
   constructor(
     readonly tors: Mutex<Pool<TorClientDuplex, Error>>,
     readonly circuits: Mutex<Pool<Circuit, Error>>,
@@ -102,7 +104,7 @@ export class Global {
       const left = Math.max(mouse.x - (width / 2), 0)
 
       const popup = await tryBrowser(async () => {
-        return await browser.windows.create({ type: "popup", url: "index.html", state: "normal", height, width, top, left })
+        return await browser.windows.create({ type: "popup", url: "popup.html", state: "normal", height, width, top, left })
       }).then(r => r.throw(t))
 
       const future = new Future<Result<UserSession, Error>>()
@@ -129,34 +131,6 @@ export class Global {
         browser.windows.onRemoved.removeListener(onRemoved)
       }
     })
-  }
-
-  async tryRouteForeground(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
-    if (request.method === "brume_getUsers")
-      return await this.brume_getUsers(request)
-    if (request.method === "brume_newUser")
-      return await this.brume_newUser(request)
-    if (request.method === "brume_getUser")
-      return await this.brume_getUser(request)
-    if (request.method === "brume_setCurrentUser")
-      return await this.brume_setCurrentUser(request)
-    if (request.method === "brume_getCurrentUser")
-      return await this.brume_getCurrentUser(request)
-    if (request.method === "brume_getWallets")
-      return await this.brume_getWallets(request)
-    if (request.method === "brume_newWallet")
-      return await this.brume_newWallet(request)
-    if (request.method === "brume_getWallet")
-      return await this.brume_getWallet(request)
-    if (request.method === "brume_get_global")
-      return await this.brume_get_global(request)
-    if (request.method === "brume_get_user")
-      return await this.brume_get_user(request)
-    if (request.method === "brume_call_ethereum")
-      return await this.brume_call_ethereum(request)
-    if (request.method === "brume_log")
-      return await this.brume_log(request)
-    return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
   }
 
   async tryRouteContentScript(uuid: string, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<unknown, Error>> {
@@ -326,6 +300,50 @@ export class Global {
     })
   }
 
+  async tryRouteForeground(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
+    if (request.method === "brume_getPath")
+      return await this.brume_getPath(request)
+    if (request.method === "brume_setPath")
+      return await this.brume_setPath(request)
+    if (request.method === "brume_getUsers")
+      return await this.brume_getUsers(request)
+    if (request.method === "brume_newUser")
+      return await this.brume_newUser(request)
+    if (request.method === "brume_getUser")
+      return await this.brume_getUser(request)
+    if (request.method === "brume_setCurrentUser")
+      return await this.brume_setCurrentUser(request)
+    if (request.method === "brume_getCurrentUser")
+      return await this.brume_getCurrentUser(request)
+    if (request.method === "brume_getWallets")
+      return await this.brume_getWallets(request)
+    if (request.method === "brume_newWallet")
+      return await this.brume_newWallet(request)
+    if (request.method === "brume_getWallet")
+      return await this.brume_getWallet(request)
+    if (request.method === "brume_get_global")
+      return await this.brume_get_global(request)
+    if (request.method === "brume_get_user")
+      return await this.brume_get_user(request)
+    if (request.method === "brume_call_ethereum")
+      return await this.brume_call_ethereum(request)
+    if (request.method === "brume_log")
+      return await this.brume_log(request)
+    return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
+  }
+
+  async brume_getPath(request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+    return new Ok(this.#path)
+  }
+
+  async brume_setPath(request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+    const [path] = (request as RpcParamfulRequestInit<[string]>).params
+
+    this.#path = path
+
+    return Ok.void()
+  }
+
   async brume_getUsers(request: RpcRequestPreinit<unknown>): Promise<Result<User[], never>> {
     return await Result.unthrow(async t => {
       const usersQuery = await this.make(getUsers(this.storage))
@@ -342,7 +360,7 @@ export class Global {
       const usersQuery = await this.make(getUsers(this.storage))
       const user = await tryCreateUser(init).then(r => r.throw(t))
 
-      const usersState = await usersQuery.mutate(Mutators.push<User, never>(user))
+      const usersState = await usersQuery.mutate(Mutators.pushData<User, never>(new Data(user)))
       const users = Option.wrap(usersState.get().current?.get()).ok().throw(t)
 
       return new Ok(users)
@@ -408,7 +426,7 @@ export class Global {
       const [wallet] = (request as RpcParamfulRequestInit<[EthereumPrivateKeyWallet]>).params
       const walletsQuery = await this.make(getWallets(storage))
 
-      const walletsState = await walletsQuery.mutate(Mutators.push<Wallet, never>(wallet))
+      const walletsState = await walletsQuery.mutate(Mutators.pushData<Wallet, never>(new Data(wallet)))
       const wallets = Option.wrap(walletsState.get().current?.get()).ok().throw(t)
 
       return new Ok(wallets)

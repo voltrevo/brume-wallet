@@ -1,29 +1,32 @@
-import { Some } from "@hazae41/option";
-import { Data, Fail, Mutator, State, TimesInit } from "@hazae41/xswr";
+import { Option, Some } from "@hazae41/option";
+import { Data, Fail, Fetched, Mutator, State, TimesInit } from "@hazae41/xswr";
 
 export namespace Mutators {
 
+  export function mapDataOrNone<D, F>(piper: (data: Data<D>) => Data<D>) {
+    return (state: State<D, F>) => Option.wrap(state.data).mapSync(piper)
+  }
+
+  export function set<D, F>(fetched: Fetched<D, F>) {
+    return () => new Some(fetched)
+  }
+
   export function data<D, F>(data: D, times: TimesInit = {}): Mutator<D, F> {
-    return (previous: State<D, F>) => {
-      return new Some(new Data(data, times))
-    }
+    return set(new Data(data, times))
   }
 
   export function error<D, F>(error: F, times: TimesInit = {}): Mutator<D, F> {
-    return (previous: State<D, F>) => {
-      return new Some(new Fail(error, times))
-    }
+    return set(new Fail(error, times))
   }
 
-  export function push<D, F>(element: D): Mutator<D[], F> {
-    return (previous: State<D[], F>) => {
-      const previousData = previous.real?.data?.inner
+  export function mapData<D, F>(piper: (data?: Data<D>) => Data<D>) {
+    return (state: State<D, F>) => new Some(piper(state.data))
+  }
 
-      if (previousData !== undefined)
-        return new Some(new Data([...previousData, element]))
-
-      return new Some(new Data([element]))
-    }
+  export function pushData<D, F>(element: Data<D>): Mutator<D[], F> {
+    return mapData<D[], F>(d => Option.wrap(d)
+      .mapSync(d => element.mapSync(e => [...d.inner, e]))
+      .unwrapOr(element.mapSync(d => [d])))
   }
 
 }

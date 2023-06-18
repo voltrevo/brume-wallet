@@ -1,6 +1,6 @@
 import { Colors } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
-import { useBooleanState } from "@/libs/react/handles/boolean";
+import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { OkProps } from "@/libs/react/props/promise";
 import { useBackground } from "@/mods/foreground/background/context";
@@ -19,7 +19,7 @@ export function UsersPage(props: OkProps<User>) {
   const background = useBackground()
   const users = useUsers(background)
 
-  const createDialog = useBooleanState()
+  const createDialog = useBooleanHandle(false)
 
   if (user !== undefined)
     return <UserLoginPage

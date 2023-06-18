@@ -2,9 +2,8 @@ import { Errors } from "@/libs/errors/errors"
 import { useAsyncCallback } from "@/libs/react/callback"
 import { Catcher, PromiseCatcher } from "@/libs/react/error"
 import { ErrorProps } from "@/libs/react/props/error"
-import { UserProvider } from "@/mods/foreground/entities/users/context"
-import { ExtensionProvider } from "@/mods/foreground/extension/context"
-import { Overlay } from "@/mods/foreground/overlay/overlay"
+import { BackgroundProvider } from "@/mods/foreground/background/context"
+import { PathProvider } from "@/mods/foreground/router/path"
 import '@/styles/globals.css'
 import { CoreProvider } from "@hazae41/xswr"
 import type { AppProps } from 'next/app'
@@ -49,15 +48,13 @@ export default function App({ Component, pageProps }: AppProps) {
     </Head>
     <Catcher fallback={Fallback}>
       <PromiseCatcher>
-        <ExtensionProvider>
-          <Overlay>
-            <CoreProvider>
-              <UserProvider>
-                <Component {...pageProps} />
-              </UserProvider>
-            </CoreProvider>
-          </Overlay>
-        </ExtensionProvider>
+        <CoreProvider>
+          <BackgroundProvider>
+            <PathProvider>
+              <Component {...pageProps} />
+            </PathProvider>
+          </BackgroundProvider>
+        </CoreProvider>
       </PromiseCatcher>
     </Catcher>
   </>

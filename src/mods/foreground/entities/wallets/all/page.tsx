@@ -1,9 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 import { Outline } from "@/libs/icons/icons"
-import { useBooleanState } from "@/libs/react/handles/boolean"
+import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { OkProps } from "@/libs/react/props/promise"
 import { useBackground } from "@/mods/foreground/background/context"
-import { useRouter } from "next/router"
+import { Path } from "@/mods/foreground/router/path"
 import { useCallback } from "react"
 import { Wallet, WalletProps, useWallet } from "../data"
 import { WalletCard } from "../row"
@@ -11,16 +11,14 @@ import { WalletCreatorDialog } from "./create"
 import { useWallets } from "./data"
 
 export function WalletsPage(props: {}) {
-  const router = useRouter()
-
   const background = useBackground()
   const wallets = useWallets(background)
 
-  const creator = useBooleanState()
+  const creator = useBooleanHandle(false)
 
   const onWalletClick = useCallback((wallet: Wallet) => {
-    router.push(`/wallet/${wallet.uuid}`)
-  }, [router])
+    Path.go(`/wallet/${wallet.uuid}`)
+  }, [])
 
   const WalletsList =
     <div className="grid grid-rows-auto-fill gap-2">

@@ -1,22 +1,21 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { useCallback, useEffect, useState } from "react";
-import { ExtensionBackgroundProvider, WebsiteBackgroundProvider } from "../background/context";
-import { useExtension } from "../extension/context";
+import { useBackground } from "../background/context";
 import { registerServiceWorker } from "../service_worker/service_worker";
 
 export function Overlay(props: ChildrenProps) {
   const { children } = props
 
-  const extension = useExtension()
+  const background = useBackground()
 
   const [active, setActive] = useState<ServiceWorker>()
   const [updating, setUpdating] = useState<ServiceWorker>()
 
   useEffect(() => {
-    if (extension)
+    if (!background.isWebsite())
       return
     registerServiceWorker({ onActive: setActive, onUpdating: setUpdating })
-  }, [extension])
+  }, [background])
 
   const update = useCallback(() => {
     updating?.postMessage("SKIP_WAITING")
@@ -35,19 +34,15 @@ export function Overlay(props: ChildrenProps) {
       </div>
     </div>
 
-  if (extension)
-    return <ExtensionBackgroundProvider>
-      <main className="h-[600px] w-[400px] overflow-y-scroll">
-        {children}
-      </main>
-    </ExtensionBackgroundProvider>
+  if (background)
+    return <div className="h-full w-full m-auto max-w-3xl">
+      {children}
+    </div>
 
-  return <WebsiteBackgroundProvider>
-    <main className="p-safe h-full w-full">
-      {updating && UpdateBanner}
-      <div className="h-full w-full m-auto max-w-3xl">
-        {children}
-      </div>
-    </main>
-  </WebsiteBackgroundProvider>
+  return <>
+    {updating && UpdateBanner}
+    <div className="h-full w-full m-auto max-w-3xl">
+      {children}
+    </div>
+  </>
 }
