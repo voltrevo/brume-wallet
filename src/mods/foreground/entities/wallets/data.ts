@@ -16,10 +16,6 @@ export interface WalletProps {
   wallet: Wallet
 }
 
-export interface WalletDataProps {
-  wallet: WalletData
-}
-
 export interface WalletRef {
   ref: true
   uuid: string

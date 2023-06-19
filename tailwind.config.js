@@ -13,6 +13,7 @@ module.exports = {
   plugins: [
     plugin(({ addVariant }) => {
       addVariant('ahover', ['&:active', '@media(hover: hover){&:hover}'])
+      addVariant("hovered-or-active-or-selected", ["&:active", "&[aria-selected=true]", "@media(hover: hover){&:hover}"])
     })
   ],
   safelist: [

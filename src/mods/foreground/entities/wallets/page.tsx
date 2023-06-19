@@ -4,24 +4,22 @@ import { Colors } from "@/libs/colors/colors";
 import { chains } from "@/libs/ethereum/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
+import { UUIDProps } from "@/libs/react/props/uuid";
 import { Query } from "@hazae41/xswr";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
-import { useBackground } from "../../background/context";
-import { WalletDataProps, useBalance, useEthereumHandle, useWallet } from "./data";
-import { WalletCard } from "./row";
-import { SendDialog } from "./send";
+import { Page } from "../../components/page/page";
+import { WalletDataProvider, useWalletData } from "./context";
+import { useBalance, useEthereumHandle } from "./data";
+import { WalletDataCard } from "./row";
+import { WalletDataSendDialog } from "./send";
 
-export function WalletPage(props: { uuid: string }) {
+export function WalletPage(props: UUIDProps) {
   const { uuid } = props
 
-  const background = useBackground()
-  const wallet = useWallet(uuid, background)
-
-  if (wallet.data === undefined)
-    return null
-
-  return <WalletDataPage wallet={wallet.data.inner} />
+  return <WalletDataProvider uuid={uuid}>
+    <WalletDataPage />
+  </WalletDataProvider>
 }
 
 function useFloat<K, D extends bigint, F>(query: Query<K, D, F>) {
@@ -34,8 +32,8 @@ function useFloat<K, D extends bigint, F>(query: Query<K, D, F>) {
   }, [query.data, query.error])
 }
 
-function WalletDataPage(props: WalletDataProps) {
-  const { wallet } = props
+function WalletDataPage() {
+  const wallet = useWalletData()
 
   const router = useRouter()
 
@@ -69,8 +67,7 @@ function WalletDataPage(props: WalletDataProps) {
   const Card =
     <div className="p-xmd flex justify-center">
       <div className="w-full max-w-sm">
-        <WalletCard
-          wallet={wallet} />
+        <WalletDataCard />
       </div>
     </div>
 
@@ -103,20 +100,17 @@ function WalletDataPage(props: WalletDataProps) {
       </div>
     </div>
 
-  return <div className="h-full w-full flex flex-col">
+  return <Page>
     {mainnetSendDialog.current && mainnet &&
-      <SendDialog title="(Ethereum mainnet)"
-        wallet={wallet}
+      <WalletDataSendDialog title="(Ethereum mainnet)"
         handle={mainnet}
         close={mainnetSendDialog.disable} />}
     {goerliSendDialog.current && goerli &&
-      <SendDialog title="(Goerli testnet)"
-        wallet={wallet}
+      <WalletDataSendDialog title="(Goerli testnet)"
         handle={goerli}
         close={goerliSendDialog.disable} />}
     {polygonSendDialog.current && polygon &&
-      <SendDialog title="(Polygon mainnet)"
-        wallet={wallet}
+      <WalletDataSendDialog title="(Polygon mainnet)"
         handle={polygon}
         close={polygonSendDialog.disable} />}
     {Navbar}
@@ -166,5 +160,5 @@ function WalletDataPage(props: WalletDataProps) {
         </div>
       </button>
     </div>
-  </div>
+  </Page>
 }

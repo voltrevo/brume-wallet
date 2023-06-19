@@ -3,10 +3,10 @@ import { useCopy } from "@/libs/copy/copy"
 import { Ethereum } from "@/libs/ethereum/ethereum"
 import { useMouseCancel } from "@/libs/react/events"
 import { WalletIcon } from "./avatar"
-import { WalletDataProps } from "./data"
+import { useWalletData } from "./context"
 
-export function WalletCard(props: WalletDataProps) {
-  const { wallet } = props
+export function WalletDataCard() {
+  const wallet = useWalletData()
 
   const color = Colors.get(wallet.color)
   const color2 = Colors.get(wallet.color + 1)

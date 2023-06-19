@@ -1,15 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
 import { Outline } from "@/libs/icons/icons"
 import { useBooleanHandle } from "@/libs/react/handles/boolean"
-import { OkProps, OptionalOkProps } from "@/libs/react/props/promise"
-import { OptionalTitleProps } from "@/libs/react/props/title"
+import { CreateProps } from "@/libs/react/props/create"
+import { OkProps } from "@/libs/react/props/promise"
 import { useBackground } from "@/mods/foreground/background/context"
-import { PageHeader } from "@/mods/foreground/components/page/header"
+import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path"
 import { useCallback } from "react"
-import { Wallet, WalletProps, useWallet } from "../data"
-import { WalletCard } from "../row"
+import { WalletDataProvider, useWalletData } from "../context"
+import { Wallet } from "../data"
+import { WalletDataCard } from "../row"
 import { WalletCreatorDialog } from "./create"
 import { useWallets } from "./data"
 
@@ -17,44 +18,34 @@ function go(wallet: Wallet) {
   Path.go(`/wallet/${wallet.uuid}`)
 }
 
-export function WalletsPage(props: OptionalTitleProps & OptionalOkProps<Wallet> & { showTotalBalance?: boolean }) {
-  const { title = "Wallets", ok = go, showTotalBalance = true } = props
-
+export function WalletsPage() {
   const background = useBackground()
   const wallets = useWallets(background)
 
   const creator = useBooleanHandle(false)
 
   const onWalletClick = useCallback((wallet: Wallet) => {
-    ok(wallet)
-  }, [ok])
-
-  const WalletsList =
-    <div className="grid grow place-content-start place-items-center gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
-      {wallets.data?.inner.map(wallet =>
-        <ClickableWalletRow
-          key={wallet.uuid}
-          wallet={wallet}
-          ok={onWalletClick} />)}
-      <NewWalletRow ok={creator.enable} />
-    </div>
+    Path.go(`/wallet/${wallet.uuid}`)
+  }, [])
 
   const Body =
-    <div className="p-xmd flex flex-col grow">
-      {showTotalBalance &&
-        <div className="mb-8">
-          <div className="text-lg font-medium">
-            Total balance
-          </div>
-          <div className="text-2xl font-bold">
-            $???
-          </div>
-        </div>}
-      {WalletsList}
-    </div>
+    <PageBody>
+      <div className="mb-8">
+        <div className="text-lg font-medium">
+          Total balance
+        </div>
+        <div className="text-2xl font-bold">
+          $???
+        </div>
+      </div>
+      <ClickableWalletGrid
+        ok={onWalletClick}
+        create={creator.enable}
+        wallets={wallets.data?.inner} />
+    </PageBody>
 
   const Header =
-    <PageHeader title={title}>
+    <PageHeader title="Wallets">
       <button className="rounded-full icon-xl flex justify-center items-center border border-contrast"
         onClick={creator.enable}>
         <Outline.PlusIcon className="icon-sm" />
@@ -70,26 +61,35 @@ export function WalletsPage(props: OptionalTitleProps & OptionalOkProps<Wallet> 
   </Page>
 }
 
-export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {
+export function ClickableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] }) {
+  const { wallets, ok, create } = props
+
+  return <div className="grid grow place-content-start place-items-center gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
+    {wallets?.map(wallet =>
+      <WalletDataProvider
+        key={wallet.uuid}
+        uuid={wallet.uuid}>
+        <ClickableWalletDataCard ok={ok} />
+      </WalletDataProvider>)}
+    <NewWalletCard ok={create} />
+  </div>
+}
+
+export function ClickableWalletDataCard(props: OkProps<Wallet>) {
+  const wallet = useWalletData()
   const { ok } = props
 
-  const background = useBackground()
-  const wallet = useWallet(props.wallet.uuid, background)
-
   const onClick = useCallback(() => {
-    ok(props.wallet)
-  }, [ok, props.wallet])
-
-  if (wallet.data === undefined)
-    return null
+    ok(wallet)
+  }, [ok, wallet])
 
   return <button className="w-full ahover:scale-105 transition-transform"
     onClick={onClick}>
-    <WalletCard wallet={wallet.data.inner} />
+    <WalletDataCard />
   </button>
 }
 
-export function NewWalletRow(props: OkProps<unknown>) {
+export function NewWalletCard(props: OkProps<unknown>) {
   const { ok } = props
 
   return <button className="p-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed ahover:scale-105 transition-transform"

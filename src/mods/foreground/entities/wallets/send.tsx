@@ -10,10 +10,12 @@ import { GradientButton } from "@/mods/foreground/components/buttons/button";
 import { Err, Ok, Result } from "@hazae41/result";
 import { ethers } from "ethers";
 import { useMemo, useState } from "react";
-import { EthereumHandleProps, WalletDataProps, useBalance, useGasPrice, useNonce } from "./data";
+import { useWalletData } from "./context";
+import { EthereumHandleProps, useBalance, useGasPrice, useNonce } from "./data";
 
-export function SendDialog(props: TitleProps & CloseProps & WalletDataProps & EthereumHandleProps) {
-  const { title, wallet, handle, close } = props
+export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumHandleProps) {
+  const wallet = useWalletData()
+  const { title, handle, close } = props
 
   const balance = useBalance(wallet.address, handle)
   const nonce = useNonce(wallet.address, handle)

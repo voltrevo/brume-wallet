@@ -1,9 +1,9 @@
 import { Colors } from "@/libs/colors/colors";
 import { ClassNameProps } from "@/libs/react/props/className";
+import { ColorIndexProps } from "@/libs/react/props/color";
+import { EmojiProps } from "@/libs/react/props/emoji";
 
-export function WalletIcon(props: ClassNameProps & {
-  emoji: string
-}) {
+export function WalletIcon(props: ClassNameProps & EmojiProps) {
   const { emoji, className } = props
 
   return <span className={className}>
@@ -11,11 +11,8 @@ export function WalletIcon(props: ClassNameProps & {
   </span>
 }
 
-export function WalletAvatar(props: ClassNameProps & {
-  color: number,
-  emoji: string
-}) {
-  const { color, emoji, className } = props
+export function WalletAvatar(props: ClassNameProps & ColorIndexProps & EmojiProps) {
+  const { colorIndex: color, emoji, className } = props
 
   const color1 = Colors.get(color)
   const color2 = Colors.get(color + 1)

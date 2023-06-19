@@ -97,7 +97,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     <div className="flex items-center gap-2">
       <div className="shrink-0">
         <WalletAvatar className="icon-5xl text-2xl"
-          color={color}
+          colorIndex={color}
           emoji={emoji} />
       </div>
       <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"

@@ -28,7 +28,7 @@ export function Dialog(props: ChildrenProps & CloseProps) {
 
   const onEscape = useKeyboardEscape(close)
 
-  return <Modal>
+  return <Modal type="div">
     <div className="p-safe fixed inset-0 z-10 flex flex-col bg-backdrop animate-opacity"
       onMouseDown={onClose}
       onClick={Events.keep}>

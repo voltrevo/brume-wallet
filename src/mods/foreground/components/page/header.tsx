@@ -12,3 +12,11 @@ export function PageHeader(props: TitleProps & ChildrenProps) {
     {children}
   </div>
 }
+
+export function PageBody(props: ChildrenProps) {
+  const { children } = props
+
+  return <div className="p-xmd flex flex-col grow">
+    {children}
+  </div>
+}

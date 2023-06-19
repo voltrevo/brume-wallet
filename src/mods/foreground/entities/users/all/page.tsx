@@ -2,6 +2,8 @@ import { Colors } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ClassNameProps } from "@/libs/react/props/className";
+import { ColorIndexProps } from "@/libs/react/props/color";
+import { NameProps } from "@/libs/react/props/name";
 import { OkProps } from "@/libs/react/props/promise";
 import { useBackground } from "@/mods/foreground/background/context";
 import { Page } from "@/mods/foreground/components/page/page";
@@ -83,14 +85,11 @@ function NewUserButton(props: OkProps<unknown>) {
   </button>
 }
 
-export function UserAvatar(props: ClassNameProps & {
-  colorIndex: number,
-  name: string
-}) {
-  const { colorIndex, name, className } = props
+export function UserAvatar(props: ClassNameProps & ColorIndexProps & NameProps) {
+  const { colorIndex: color, name, className } = props
 
-  const color1 = Colors.get(colorIndex)
-  const color2 = Colors.get(colorIndex + 1)
+  const color1 = Colors.get(color)
+  const color2 = Colors.get(color + 1)
 
   return <div className={`bg-gradient-to-br from-${color1} to-${color2} rounded-full flex justify-center items-center ${className} text-white`}>
     {name[0]}
