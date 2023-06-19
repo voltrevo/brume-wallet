@@ -24,16 +24,19 @@ export default function Popup() {
       .then(r => r.unwrap().ignore())
   }, [background])
 
-  const [connected, setConnected] = useState(false)
-  const onConnected = useCallback(() => setConnected(true), [])
+  const [step, setStep] = useState(0)
+
+  const next = useCallback(() => {
+    setStep(x => x + 1)
+  }, [])
 
   return <main className="p-safe h-full w-full">
     <Overlay>
       <UserProvider>
-        {connected
-          ? <ConnectedPage />
-          : <WalletAndChainSelectPage
-            ok={onConnected} />}
+        {step === 0 &&
+          <WalletAndChainSelectPage ok={next} />}
+        {step === 1 &&
+          <ConnectedPage />}
       </UserProvider>
     </Overlay>
   </main>
