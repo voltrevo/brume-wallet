@@ -115,7 +115,7 @@ export function WalletAndChainSelectPage(props: OkProps<void>) {
     </PageBody>
 
   const Header =
-    <PageHeader title="Select wallet">
+    <PageHeader title="Choose a wallet">
       <button className="group icon-xl flex justify-center items-center"
         onClick={creator.enable}>
         <Outline.PlusIcon className="icon-sm" />
