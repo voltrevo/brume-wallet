@@ -210,6 +210,8 @@ export class Global {
         return await this.personal_sign(ethereum, request)
       if (request.method === "eth_signTypedData_v4")
         return await this.eth_signTypedData_v4(ethereum, request)
+      if (request.method === "wallet_switchEthereumChain")
+        return await this.wallet_switchEthereumChain(ethereum, channel, request)
 
       const { storage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
@@ -309,15 +311,12 @@ export class Global {
 
   async personal_sign(ethereum: EthereumSessionAndBrumes, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
+      const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
+
       const { storage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
-      const walletsQuery = await this.make(getWallets(storage))
-      const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
-
-      const walletQuery = await this.make(getWallet(first.uuid, storage))
+      const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
-
-      const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
       const signature = await new ethers.Wallet(wallet.privateKey).signMessage(Bytes.fromHexSafe(data))
 
@@ -327,15 +326,12 @@ export class Global {
 
   async eth_signTypedData_v4(ethereum: EthereumSessionAndBrumes, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
+      const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
+
       const { storage } = await this.tryGetCurrentUser().then(r => r.throw(t))
 
-      const walletsQuery = await this.make(getWallets(storage))
-      const first = Option.wrap(walletsQuery.current?.get().at(0)).ok().throw(t)
-
-      const walletQuery = await this.make(getWallet(first.uuid, storage))
+      const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
-
-      const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
       const { domain, types, message } = JSON.parse(data)
 
@@ -346,6 +342,20 @@ export class Global {
       return new Ok(signature)
     })
   }
+
+  async wallet_switchEthereumChain(ethereum: EthereumSessionAndBrumes, channel: ExtensionChannel, request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
+    return await Result.unthrow(async t => {
+      const [{ chainId }] = (request as RpcParamfulRequestInit<[{ chainId: string }]>).params
+
+      const chain = Option.wrap(chains[parseInt(chainId, 16)]).ok().throw(t)
+
+      const sessionQuery = await this.make(getEthereumSession(channel))
+      await sessionQuery.mutate(Mutators.mapDataOrNone(d => d.mapSync(d => ({ ...d, chain }))))
+
+      return Ok.void()
+    })
+  }
+
 
   async tryRouteForeground(channel: Optional<ExtensionChannel>, request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
     if (request.method === "brume_getPath")
