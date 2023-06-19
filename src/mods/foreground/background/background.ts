@@ -2,6 +2,7 @@ import { BrowserError, browser, tryBrowser, tryBrowserSync } from "@/libs/browse
 import { RpcClient, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
+import { Optional } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, Skip, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { RawState, Storage } from "@hazae41/xswr"
@@ -23,6 +24,7 @@ export class MessageError extends Error {
 export function createMessageChannelPool() {
   return new Pool<MessageChannel, Error>(async (params) => {
     return await Result.unthrow(async t => {
+      const { pool, index } = params
 
       const registration = await Result
         .catchAndWrap(() => navigator.serviceWorker.ready)
@@ -33,17 +35,30 @@ export function createMessageChannelPool() {
       channel.port1.start()
       channel.port2.start()
 
-      const interval = setInterval(() => {
-        channel.port1.postMessage({ id: "ping", method: "brume_ping" })
-      }, 1000)
-
       if (registration.active === null)
         throw new Panic(`registration.active is null`)
 
       registration.active.postMessage("HELLO_WORLD", [channel.port2])
 
+      let pong: Optional<NodeJS.Timeout> = undefined
+
+      const ping = setInterval(() => {
+        channel.port1.postMessage({ id: "ping", method: "brume_ping" })
+        pong = setTimeout(() => void pool.delete(index), 1000)
+      }, 1000)
+
+      const onPong = (event: MessageEvent<RpcResponseInit<unknown>>) => {
+        if (event.data.id !== "ping")
+          return
+        clearTimeout(pong)
+      }
+
+      channel.port1.addEventListener("message", onPong)
+
       const onClean = () => {
-        clearInterval(interval)
+        clearInterval(ping)
+        clearTimeout(pong)
+        channel.port1.removeEventListener("message", onPong)
         channel.port1.close()
         channel.port2.close()
       }
