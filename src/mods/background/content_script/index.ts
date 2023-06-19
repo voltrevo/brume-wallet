@@ -51,7 +51,7 @@ const ports = new Pool<chrome.runtime.Port, Error>(async (params) => {
         port.onDisconnect.addListener(() => void chrome.runtime.lastError)
         return port
       }).mapErrSync(Retry.new)
-    }).then(r => r.throw(t))
+    }, { base: 1, max: Number.MAX_SAFE_INTEGER }).then(r => r.throw(t))
 
     const onMessage = (response: RpcResponseInit) => {
       const detail = JSON.stringify(response)

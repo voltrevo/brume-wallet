@@ -33,12 +33,17 @@ export function createMessageChannelPool() {
       channel.port1.start()
       channel.port2.start()
 
+      const interval = setInterval(() => {
+        channel.port1.postMessage({ id: "ping", method: "brume_ping" })
+      }, 1000)
+
       if (registration.active === null)
         throw new Panic(`registration.active is null`)
 
       registration.active.postMessage("HELLO_WORLD", [channel.port2])
 
       const onClean = () => {
+        clearInterval(interval)
         channel.port1.close()
         channel.port2.close()
       }
@@ -108,7 +113,7 @@ export function createPortPool() {
           port.onDisconnect.addListener(() => void chrome.runtime.lastError)
           return port
         }).then(r => r.mapErrSync(Retry.new))
-      }).then(r => r.throw(t))
+      }, { base: 1, max: Number.MAX_SAFE_INTEGER }).then(r => r.throw(t))
 
       const onDisconnect = () => {
         pool.delete(index)

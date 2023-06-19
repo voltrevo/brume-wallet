@@ -358,6 +358,8 @@ export class Global {
 
 
   async tryRouteForeground(channel: Optional<ExtensionChannel>, request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
+    if (request.method === "brume_ping")
+      return new Ok(undefined)
     if (request.method === "brume_getPath")
       return await this.brume_getPath(request)
     if (request.method === "brume_setPath")
