@@ -128,8 +128,6 @@ export class Global {
       if (!uuid || !password)
         return new Ok(undefined)
 
-      console.log(uuid, password)
-
       const userQuery = await this.make(getUser(uuid, this.storage))
       const userData = Option.wrap(userQuery.current?.get()).ok().throw(t)
 
