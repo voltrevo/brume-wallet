@@ -119,7 +119,7 @@ function WalletDataPage() {
         onClick={mainnetSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
-            Ethereum (Ethereum mainnet)
+            Ethereum
           </div>
           <div className="">
             $???
@@ -133,7 +133,7 @@ function WalletDataPage() {
         onClick={goerliSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
-            Ethereum (Goerli testnet)
+            Goerli
           </div>
           <div className="">
             $0.0
@@ -147,7 +147,7 @@ function WalletDataPage() {
         onClick={polygonSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
-            Matic (Polygon mainnet)
+            Polygon
           </div>
           <div className="">
             $???
