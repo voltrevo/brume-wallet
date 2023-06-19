@@ -13,7 +13,9 @@
     "install:xcode": "xcrun safari-web-extension-converter ./safari --project-location xcode --app-name brume-wallet",
     "clean": "rimraf ./node_modules ./.next ./out ./chrome ./safari ./package-lock.json",
     "lint": "next lint",
-    "start": "serve out"
+    "start": "serve out",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@hazae41/berith": "^1.1.40",
@@ -48,6 +50,13 @@
     "workbox-precaching": "^7.0.0"
   },
   "devDependencies": {
+    "@storybook/addon-essentials": "^7.0.22",
+    "@storybook/addon-interactions": "^7.0.22",
+    "@storybook/addon-links": "^7.0.22",
+    "@storybook/blocks": "^7.0.22",
+    "@storybook/nextjs": "^7.0.22",
+    "@storybook/react": "^7.0.22",
+    "@storybook/testing-library": "^0.0.14-next.2",
     "@types/chrome": "^0.0.237",
     "@types/node": "20.3.1",
     "@types/react": "18.2.12",
@@ -60,6 +69,7 @@
     "postcss": "^8.4.24",
     "rimraf": "^5.0.1",
     "serve": "^14.2.0",
+    "storybook": "^7.0.22",
     "tailwindcss": "^3.3.2",
     "typescript": "5.1.3",
     "webpack": "^5.87.0",

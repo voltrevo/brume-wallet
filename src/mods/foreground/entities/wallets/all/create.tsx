@@ -11,7 +11,8 @@ import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
 import { Mutators } from "@/libs/xswr/mutators";
 import { useBackground } from "@/mods/foreground/background/context";
-import { GradientButton } from "@/mods/foreground/components/buttons/button";
+import { InnerButton } from "@/mods/foreground/components/buttons/button";
+import { GradientButton } from "@/mods/foreground/components/buttons/gradient";
 import { Bytes } from "@hazae41/bytes";
 import { Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
@@ -120,9 +121,10 @@ export function WalletCreatorDialog(props: CloseProps) {
     <GradientButton className="w-full"
       colorIndex={color}
       disabled={!name || !ethersWallet}
-      icon={Outline.PlusIcon}
       onClick={onDoneClick.run}>
-      Add
+      <InnerButton icon={Outline.PlusIcon}>
+        Add
+      </InnerButton>
     </GradientButton>
 
   return <Dialog close={close}>

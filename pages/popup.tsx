@@ -1,7 +1,9 @@
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
+import { OkProps } from "@/libs/react/props/promise";
 import { useBackground } from "@/mods/foreground/background/context";
-import { ButtonChipChildren, ContrastButtonChip } from "@/mods/foreground/components/buttons/chips";
+import { ContrastButtonChip } from "@/mods/foreground/components/buttons/chips/contrast";
+import { InnerButtonChip } from "@/mods/foreground/components/buttons/chips/naked";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
@@ -22,18 +24,51 @@ export default function Popup() {
       .then(r => r.unwrap().ignore())
   }, [background])
 
+  const [connected, setConnected] = useState(false)
+  const onConnected = useCallback(() => setConnected(true), [])
+
   return <main className="p-safe h-full w-full">
     <Overlay>
       <UserProvider>
-        <WalletAndChainSelectPage />
+        {connected
+          ? <ConnectedPage />
+          : <WalletAndChainSelectPage
+            ok={onConnected} />}
       </UserProvider>
     </Overlay>
   </main>
 }
 
-export function WalletAndChainSelectPage() {
+export function ConnectedPage() {
   const router = useRouter()
+
+  const onOkClick = useCallback(() => {
+    router.push("/")
+  }, [router])
+
+  return <Page>
+    <div className="p-4 grow flex flex-col items-center justify-evenly">
+      <div className="w-full">
+        <div className="text-center text-xl font-medium">
+          Connected
+        </div>
+        <div className="w-full max-w-[230px] m-auto text-center text-contrast">
+          You can now close this window or go to the home page
+        </div>
+      </div>
+      <ContrastButtonChip onClick={onOkClick} >
+        <InnerButtonChip icon={Outline.HomeIcon}>
+          Go to the home page
+        </InnerButtonChip>
+      </ContrastButtonChip>
+    </div>
+  </Page>
+}
+
+export function WalletAndChainSelectPage(props: OkProps<void>) {
   const background = useBackground()
+  const { ok } = props
+
   const wallets = useWallets(background)
 
   const creator = useBooleanHandle(false)
@@ -44,8 +79,8 @@ export function WalletAndChainSelectPage() {
     await background
       .tryRequest({ method: "brume_popupData", params: [wallet.uuid, chain] })
       .then(r => r.unwrap().unwrap())
-    router.push("/")
-  }, [background, router, chain])
+    ok()
+  }, [background, chain, ok])
 
   const Body =
     <PageBody>
@@ -53,23 +88,23 @@ export function WalletAndChainSelectPage() {
         <ContrastButtonChip
           aria-selected={chain === 1}
           onClick={() => setChain(1)}>
-          <ButtonChipChildren icon={Outline.CubeIcon}>
+          <InnerButtonChip icon={Outline.CubeIcon}>
             Ethereum
-          </ButtonChipChildren>
+          </InnerButtonChip>
         </ContrastButtonChip>
         <ContrastButtonChip
           aria-selected={chain === 137}
           onClick={() => setChain(137)}>
-          <ButtonChipChildren icon={Outline.CubeIcon}>
+          <InnerButtonChip icon={Outline.CubeIcon}>
             Polygon
-          </ButtonChipChildren>
+          </InnerButtonChip>
         </ContrastButtonChip>
         <ContrastButtonChip
           aria-selected={chain === 5}
           onClick={() => setChain(5)}>
-          <ButtonChipChildren icon={Outline.CubeIcon}>
+          <InnerButtonChip icon={Outline.CubeIcon}>
             Goerli
-          </ButtonChipChildren>
+          </InnerButtonChip>
         </ContrastButtonChip>
       </div>
       <div className="h-4" />

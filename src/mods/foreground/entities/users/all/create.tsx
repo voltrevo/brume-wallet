@@ -9,7 +9,8 @@ import { CloseProps } from "@/libs/react/props/close";
 import { Mutators } from "@/libs/xswr/mutators";
 import { UserInit } from "@/mods/background/service_worker/entities/users/data";
 import { useBackground } from "@/mods/foreground/background/context";
-import { GradientButton } from "@/mods/foreground/components/buttons/button";
+import { InnerButton } from "@/mods/foreground/components/buttons/button";
+import { GradientButton } from "@/mods/foreground/components/buttons/gradient";
 import { useMemo, useState } from "react";
 import { User } from "../data";
 import { useUsers } from "./data";
@@ -91,9 +92,10 @@ export function UserCreateDialog(props: CloseProps) {
     <GradientButton className="w-full"
       colorIndex={color}
       disabled={!name || !password || !password2 || !isSamePassword}
-      icon={Outline.PlusIcon}
       onClick={onClick.run}>
-      Add
+      <InnerButton icon={Outline.PlusIcon}>
+        Add
+      </InnerButton>
     </GradientButton>
 
   return <Dialog close={close}>

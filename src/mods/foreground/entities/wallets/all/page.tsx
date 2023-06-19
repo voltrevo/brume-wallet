@@ -4,7 +4,7 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
 import { useBackground } from "@/mods/foreground/background/context"
-import { ButtonChildren, NakedButton } from "@/mods/foreground/components/buttons/button"
+import { InnerButton, NakedButton } from "@/mods/foreground/components/buttons/button"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path"
@@ -49,7 +49,7 @@ export function WalletsPage() {
     <PageHeader title="Wallets">
       <NakedButton
         onClick={creator.enable}>
-        <ButtonChildren icon={Outline.PlusIcon} />
+        <InnerButton icon={Outline.PlusIcon} />
       </NakedButton>
     </PageHeader>
 
@@ -84,7 +84,7 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
     ok(wallet)
   }, [ok, wallet])
 
-  return <button className="w-full ahover:scale-105 transition-transform"
+  return <button className="w-full hovered-or-active-or-selected:scale-105 transition-transform"
     onClick={onClick}>
     <WalletDataCard />
   </button>
@@ -93,7 +93,7 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
 export function NewWalletCard(props: OkProps<unknown>) {
   const { ok } = props
 
-  return <button className="p-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed ahover:scale-105 transition-transform"
+  return <button className="p-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-active-or-selected:scale-105 transition-transform"
     onClick={ok}>
     <Outline.PlusIcon className="icon-sm" />
     <div className="font-medium">

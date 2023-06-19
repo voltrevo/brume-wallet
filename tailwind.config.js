@@ -12,14 +12,13 @@ module.exports = {
   },
   plugins: [
     plugin(({ addVariant }) => {
-      addVariant('ahover', ['&:active', '@media(hover: hover){&:hover}'])
       addVariant("hovered-or-active-or-selected", ["&:active", "&[aria-selected=true]", "@media(hover: hover){&:hover}"])
     })
   ],
   safelist: [
     {
       pattern: /(text|bg|border|from|to)-(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(400)/,
-      variants: ['ahover'],
+      variants: ['hovered-or-active-or-selected'],
     },
   ],
 };

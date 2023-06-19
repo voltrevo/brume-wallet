@@ -6,10 +6,11 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { TitleProps } from "@/libs/react/props/title";
-import { GradientButton } from "@/mods/foreground/components/buttons/button";
 import { Err, Ok, Result } from "@hazae41/result";
 import { ethers } from "ethers";
 import { useMemo, useState } from "react";
+import { InnerButton } from "../../components/buttons/button";
+import { GradientButton } from "../../components/buttons/gradient";
 import { useWalletData } from "./context";
 import { EthereumHandleProps, useBalance, useGasPrice, useNonce } from "./data";
 
@@ -121,9 +122,10 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumHa
       href={`${handle.chain.etherscan}/tx/${txHash}`}
       target="_blank" rel="noreferrer">
       <GradientButton className="w-full"
-        colorIndex={wallet.color}
-        icon={Outline.ArrowTopRightOnSquareIcon}>
-        Etherscan
+        colorIndex={wallet.color}>
+        <InnerButton icon={Outline.ArrowTopRightOnSquareIcon}>
+          Etherscan
+        </InnerButton>
       </GradientButton>
     </ExternalDivisionLink>
   </>
@@ -144,11 +146,12 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumHa
     <GradientButton className="w-full"
       colorIndex={wallet.color}
       disabled={trySend.loading || disabled}
-      icon={Outline.PaperAirplaneIcon}
       onClick={trySend.run}>
-      {trySend.loading
-        ? "Loading..."
-        : "Send"}
+      <InnerButton icon={Outline.PaperAirplaneIcon}>
+        {trySend.loading
+          ? "Loading..."
+          : "Send"}
+      </InnerButton>
     </GradientButton>
 
   return <Dialog close={close}>

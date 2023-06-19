@@ -12,7 +12,7 @@ export function DialogTitle(props: ChildrenProps & CloseProps) {
       {children}
     </div>
     <div className="grow" />
-    <button className="group icon-md flex justify-center items-center rounded-full bg-low-contrast ahover:scale-105 transition-transform"
+    <button className="group icon-md flex justify-center items-center rounded-full bg-low-contrast hovered-or-active-or-selected:scale-105 transition-transform"
       onClick={close}>
       <Outline.XMarkIcon className="icon-xs text-contrast group-enabled:group-active:scale-90 transition-transform" />
     </button>
