@@ -30,7 +30,7 @@ export function WalletsPage(props: OptionalTitleProps & OptionalOkProps<Wallet> 
   }, [ok])
 
   const WalletsList =
-    <div className="grid grid-rows-auto-fill gap-2">
+    <div className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
       {wallets.data?.inner.map(wallet =>
         <ClickableWalletRow
           key={wallet.uuid}
