@@ -82,8 +82,8 @@ export interface EthereumSession {
   chain: EthereumChain
 }
 
-export function getEthereumSession(channel: ExtensionChannel) {
-  return createQuerySchema<string, EthereumSession, never>(`sessions/${channel.uuid}`, undefined)
+export function getEthereumSession(channel: ExtensionChannel, storage: IDBStorage) {
+  return createQuerySchema<string, EthereumSession, never>(`sessions/${channel.port.name}`, undefined, { storage })
 }
 
 export interface EthereumSessionAndBrumes {

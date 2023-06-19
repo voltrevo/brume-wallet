@@ -47,7 +47,7 @@ const ports = new Pool<chrome.runtime.Port, Error>(async (params) => {
 
     const port = await tryLoop(async () => {
       return tryBrowserSync(() => {
-        const port = browser.runtime.connect({ name: "content_script" })
+        const port = browser.runtime.connect({ name: location.origin })
         port.onDisconnect.addListener(() => void chrome.runtime.lastError)
         return port
       }).mapErrSync(Retry.new)
