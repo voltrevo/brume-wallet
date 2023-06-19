@@ -1,10 +1,18 @@
+import { Outline } from "@/libs/icons/icons";
+import { OptionalBackProps } from "@/libs/react/props/back";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { TitleProps } from "@/libs/react/props/title";
+import { NakedButton } from "../buttons/button";
 
-export function PageHeader(props: TitleProps & ChildrenProps) {
-  const { title, children } = props
+export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps) {
+  const { title, children, back } = props
 
   return <div className="p-xmd flex items-center">
+    {back &&
+      <NakedButton className="mr-2"
+        onClick={back}>
+        <Outline.ChevronLeftIcon className="icon-sm" />
+      </NakedButton>}
     <div className="text-2xl font-medium">
       {title}
     </div>

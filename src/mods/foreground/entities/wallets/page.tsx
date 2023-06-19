@@ -8,6 +8,7 @@ import { UUIDProps } from "@/libs/react/props/uuid";
 import { Query } from "@hazae41/xswr";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
+import { PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { WalletDataProvider, useWalletData } from "./context";
 import { useBalance, useEthereumHandle } from "./data";
@@ -56,13 +57,10 @@ function WalletDataPage() {
   const polygonBalanceFloat = useFloat(polygonBalance)
   const polygonSendDialog = useBooleanHandle(false)
 
-  const Navbar =
-    <div className="p-xmd w-full flex items-center">
-      <button className="p-1 bg-ahover rounded-xl"
-        onClick={router.back}>
-        <Outline.ChevronLeftIcon className="icon-sm" />
-      </button>
-    </div>
+  const Header =
+    <PageHeader
+      title="Wallet"
+      back={router.back} />
 
   const Card =
     <div className="p-xmd flex justify-center">
@@ -113,7 +111,7 @@ function WalletDataPage() {
       <WalletDataSendDialog title="(Polygon mainnet)"
         handle={polygon}
         close={polygonSendDialog.disable} />}
-    {Navbar}
+    {Header}
     {Card}
     {Apps}
     <div className="p-xmd flex flex-col gap-2">

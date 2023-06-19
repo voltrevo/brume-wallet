@@ -4,6 +4,7 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
 import { useBackground } from "@/mods/foreground/background/context"
+import { ButtonChildren, NakedButton } from "@/mods/foreground/components/buttons/button"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path"
@@ -46,10 +47,10 @@ export function WalletsPage() {
 
   const Header =
     <PageHeader title="Wallets">
-      <button className="rounded-full icon-xl flex justify-center items-center border border-contrast"
+      <NakedButton
         onClick={creator.enable}>
-        <Outline.PlusIcon className="icon-sm" />
-      </button>
+        <ButtonChildren icon={Outline.PlusIcon} />
+      </NakedButton>
     </PageHeader>
 
   return <Page>

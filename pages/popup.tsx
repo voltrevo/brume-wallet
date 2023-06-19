@@ -1,7 +1,7 @@
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { useBackground } from "@/mods/foreground/background/context";
-import { ButtonInner, ContrastButtonChip } from "@/mods/foreground/components/buttons/chips";
+import { ButtonChipChildren, ContrastButtonChip } from "@/mods/foreground/components/buttons/chips";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
@@ -53,23 +53,23 @@ export function WalletAndChainSelectPage() {
         <ContrastButtonChip
           aria-selected={chain === 1}
           onClick={() => setChain(1)}>
-          <ButtonInner icon={Outline.CubeIcon}>
+          <ButtonChipChildren icon={Outline.CubeIcon}>
             Ethereum
-          </ButtonInner>
+          </ButtonChipChildren>
         </ContrastButtonChip>
         <ContrastButtonChip
           aria-selected={chain === 137}
           onClick={() => setChain(137)}>
-          <ButtonInner icon={Outline.CubeIcon}>
+          <ButtonChipChildren icon={Outline.CubeIcon}>
             Polygon
-          </ButtonInner>
+          </ButtonChipChildren>
         </ContrastButtonChip>
         <ContrastButtonChip
           aria-selected={chain === 5}
           onClick={() => setChain(5)}>
-          <ButtonInner icon={Outline.CubeIcon}>
+          <ButtonChipChildren icon={Outline.CubeIcon}>
             Goerli
-          </ButtonInner>
+          </ButtonChipChildren>
         </ContrastButtonChip>
       </div>
       <div className="h-4" />
@@ -81,7 +81,7 @@ export function WalletAndChainSelectPage() {
 
   const Header =
     <PageHeader title="Select wallet">
-      <button className="rounded-full icon-xl flex justify-center items-center border border-contrast"
+      <button className="group icon-xl flex justify-center items-center"
         onClick={creator.enable}>
         <Outline.PlusIcon className="icon-sm" />
       </button>
