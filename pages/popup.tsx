@@ -4,7 +4,7 @@ import { WalletsPage } from "@/mods/foreground/entities/wallets/all/page";
 import { Wallet } from "@/mods/foreground/entities/wallets/data";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { useRouter } from "next/router";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function Page() {
   const router = useRouter()
@@ -23,10 +23,15 @@ export default function Page() {
     router.push("/")
   }, [background, router])
 
+  const [wallet, setWallet] = useState<Wallet>()
+
   return <main className="p-safe h-full w-full">
     <Overlay>
       <UserProvider>
-        <WalletsPage ok={onWalletClick} />
+        <WalletsPage
+          title="Select a wallet"
+          showBalance={false}
+          ok={setWallet} />
       </UserProvider>
     </Overlay>
   </main>

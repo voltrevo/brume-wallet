@@ -1,6 +1,6 @@
-export type PromiseProps<T> =
+export type PromiseProps<T, E> =
   & OkProps<T>
-  & ErrProps
+  & ErrProps<E>
 
 export interface OptionalOkProps<T> {
   ok?(value: T): void
@@ -10,6 +10,6 @@ export interface OkProps<T> {
   ok(value: T): void
 }
 
-export interface ErrProps {
-  err(error: unknown): void
+export interface ErrProps<T> {
+  err(error: T): void
 }

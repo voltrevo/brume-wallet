@@ -2,7 +2,10 @@
 import { Outline } from "@/libs/icons/icons"
 import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { OkProps, OptionalOkProps } from "@/libs/react/props/promise"
+import { OptionalTitleProps } from "@/libs/react/props/title"
 import { useBackground } from "@/mods/foreground/background/context"
+import { PageHeader } from "@/mods/foreground/components/page/header"
+import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path"
 import { useCallback } from "react"
 import { Wallet, WalletProps, useWallet } from "../data"
@@ -10,12 +13,12 @@ import { WalletCard } from "../row"
 import { WalletCreatorDialog } from "./create"
 import { useWallets } from "./data"
 
-export function defaultOk(wallet: Wallet) {
+function go(wallet: Wallet) {
   Path.go(`/wallet/${wallet.uuid}`)
 }
 
-export function WalletsPage(props: OptionalOkProps<Wallet>) {
-  const { ok = defaultOk } = props
+export function WalletsPage(props: OptionalTitleProps & OptionalOkProps<Wallet> & { showBalance?: boolean }) {
+  const { title = "Wallets", ok = go, showBalance = true } = props
 
   const background = useBackground()
   const wallets = useWallets(background)
@@ -38,37 +41,33 @@ export function WalletsPage(props: OptionalOkProps<Wallet>) {
 
   const Body =
     <div className="p-xmd flex flex-col grow">
-      <div className="">
-        <div className="text-lg font-medium">
-          Total balance
-        </div>
-        <div className="text-2xl font-bold">
-          $???
-        </div>
-      </div>
-      <div className="h-8" />
+      {showBalance &&
+        <div className="mb-8">
+          <div className="text-lg font-medium">
+            Total balance
+          </div>
+          <div className="text-2xl font-bold">
+            $???
+          </div>
+        </div>}
       {WalletsList}
     </div>
 
   const Header =
-    <div className="p-xmd flex items-center">
-      <div className="text-2xl font-medium">
-        Wallets
-      </div>
-      <div className="grow" />
+    <PageHeader title={title}>
       <button className="rounded-full icon-xl flex justify-center items-center border border-contrast"
         onClick={creator.enable}>
         <Outline.PlusIcon className="icon-sm" />
       </button>
-    </div>
+    </PageHeader>
 
-  return <div className="h-full w-full flex flex-col">
+  return <Page>
     {creator.current &&
       <WalletCreatorDialog
         close={creator.disable} />}
     {Header}
     {Body}
-  </div>
+  </Page>
 }
 
 export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {

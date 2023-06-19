@@ -4,6 +4,7 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { OkProps } from "@/libs/react/props/promise";
 import { useBackground } from "@/mods/foreground/background/context";
+import { Page } from "@/mods/foreground/components/page/page";
 import { useCallback, useState } from "react";
 import { User, UserProps, useUser } from "../data";
 import { UserLoginPage } from "../login";
@@ -27,21 +28,19 @@ export function UsersPage(props: OkProps<User>) {
       ok={ok}
       err={clear} />
 
-  return <>
+  return <Page>
     {createDialog.current &&
       <UserCreateDialog
         close={createDialog.disable} />}
-    <div className="h-full w-full p-4 flex justify-center items-center">
-      <div className="flex flex-wrap items-center gap-8">
-        {users.data?.inner.map(user =>
-          <UserOkButton
-            key={user.uuid}
-            user={user}
-            ok={setUser} />)}
-        <NewUserButton ok={createDialog.enable} />
-      </div>
+    <div className="grid grow place-items-center place-content-center grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] auto-rows-[10rem]">
+      {users.data?.inner.map(user =>
+        <UserOkButton
+          key={user.uuid}
+          user={user}
+          ok={setUser} />)}
+      <NewUserButton ok={createDialog.enable} />
     </div>
-  </>
+  </Page>
 }
 
 function UserOkButton(props: UserProps & OkProps<User>) {
