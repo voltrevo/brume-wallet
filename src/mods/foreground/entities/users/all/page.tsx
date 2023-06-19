@@ -32,7 +32,7 @@ export function UsersPage(props: OkProps<User>) {
     {createDialog.current &&
       <UserCreateDialog
         close={createDialog.disable} />}
-    <div className="grid grow place-items-center place-content-center grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] auto-rows-[10rem]">
+    <div className="grid grow place-items-center place-content-center grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] auto-rows-[10rem]">
       {users.data?.inner.map(user =>
         <UserOkButton
           key={user.uuid}

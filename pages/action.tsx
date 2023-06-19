@@ -4,7 +4,7 @@ import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Router } from "@/mods/foreground/router/router";
 import { useEffect } from "react";
 
-export default function Page() {
+export default function Action() {
   const background = useBackground()
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { Colors } from "@/libs/colors/colors"
 import { useCopy } from "@/libs/copy/copy"
 import { Ethereum } from "@/libs/ethereum/ethereum"
-import { Events } from "@/libs/react/events"
+import { useMouseCancel } from "@/libs/react/events"
 import { WalletIcon } from "./avatar"
 import { WalletDataProps } from "./data"
 
@@ -12,6 +12,7 @@ export function WalletCard(props: WalletDataProps) {
   const color2 = Colors.get(wallet.color + 1)
 
   const copyEthereumAddress = useCopy(wallet.address)
+  const onClickCopyEthereumAddress = useMouseCancel(copyEthereumAddress.run)
 
   const First =
     <div className="flex items-center">
@@ -34,13 +35,12 @@ export function WalletCard(props: WalletDataProps) {
       <div className="">
         ETH
       </div>
-      <button className="text-opposite-high-contrast"
-        onMouseDown={Events.cancel}
-        onClick={copyEthereumAddress.run}>
+      <div className="cursor-pointer text-opposite-high-contrast"
+        onClick={onClickCopyEthereumAddress}>
         {copyEthereumAddress.current
           ? "Copied"
           : Ethereum.Address.format(wallet.address)}
-      </button>
+      </div>
     </div>
 
   return <div className={`p-md w-full aspect-video rounded-xl flex flex-col text-opposite bg-gradient-to-br from-${color} to-${color2}`}>

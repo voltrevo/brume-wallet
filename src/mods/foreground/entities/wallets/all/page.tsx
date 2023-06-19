@@ -17,8 +17,8 @@ function go(wallet: Wallet) {
   Path.go(`/wallet/${wallet.uuid}`)
 }
 
-export function WalletsPage(props: OptionalTitleProps & OptionalOkProps<Wallet> & { showBalance?: boolean }) {
-  const { title = "Wallets", ok = go, showBalance = true } = props
+export function WalletsPage(props: OptionalTitleProps & OptionalOkProps<Wallet> & { showTotalBalance?: boolean }) {
+  const { title = "Wallets", ok = go, showTotalBalance = true } = props
 
   const background = useBackground()
   const wallets = useWallets(background)
@@ -30,7 +30,7 @@ export function WalletsPage(props: OptionalTitleProps & OptionalOkProps<Wallet> 
   }, [ok])
 
   const WalletsList =
-    <div className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
+    <div className="grid grow place-content-start place-items-center gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
       {wallets.data?.inner.map(wallet =>
         <ClickableWalletRow
           key={wallet.uuid}
@@ -41,7 +41,7 @@ export function WalletsPage(props: OptionalTitleProps & OptionalOkProps<Wallet> 
 
   const Body =
     <div className="p-xmd flex flex-col grow">
-      {showBalance &&
+      {showTotalBalance &&
         <div className="mb-8">
           <div className="text-lg font-medium">
             Total balance
@@ -84,7 +84,7 @@ export function ClickableWalletRow(props: WalletProps & OkProps<Wallet>) {
     return null
 
   return <button className="w-full ahover:scale-105 transition-transform"
-    onMouseDown={onClick}>
+    onClick={onClick}>
     <WalletCard wallet={wallet.data.inner} />
   </button>
 }

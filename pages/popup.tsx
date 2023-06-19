@@ -6,7 +6,7 @@ import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 
-export default function Page() {
+export default function Popup() {
   const router = useRouter()
   const background = useBackground()
 
@@ -16,23 +16,24 @@ export default function Page() {
       .then(r => r.unwrap().unwrap())
   }, [background])
 
-  const onWalletClick = useCallback(async (wallet: Wallet) => {
+  const [chain, setChain] = useState<number>(137)
+
+  const onWalletSelected = useCallback(async (wallet: Wallet) => {
     await background
-      .tryRequest({ method: "brume_popupData", params: [wallet.uuid, 137] })
+      .tryRequest({ method: "brume_popupData", params: [wallet.uuid, chain] })
       .then(r => r.unwrap().unwrap())
     router.push("/")
-  }, [background, router])
-
-  const [wallet, setWallet] = useState<Wallet>()
+  }, [background, router, chain])
 
   return <main className="p-safe h-full w-full">
     <Overlay>
       <UserProvider>
         <WalletsPage
           title="Select a wallet"
-          showBalance={false}
-          ok={setWallet} />
+          showTotalBalance={false}
+          ok={onWalletSelected} />
       </UserProvider>
     </Overlay>
   </main>
 }
+
