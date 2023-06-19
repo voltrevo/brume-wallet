@@ -45,7 +45,7 @@ export default function Popup() {
 export function ConnectedPage() {
   const router = useRouter()
 
-  const onOkClick = useCallback(() => {
+  const onDone = useCallback(() => {
     router.push("/")
   }, [router])
 
@@ -59,7 +59,7 @@ export function ConnectedPage() {
           You can now close this window or go to the home page
         </div>
       </div>
-      <ContrastButtonChip onClick={onOkClick} >
+      <ContrastButtonChip onClick={onDone} >
         <InnerButtonChip icon={Outline.HomeIcon}>
           Go to the home page
         </InnerButtonChip>
