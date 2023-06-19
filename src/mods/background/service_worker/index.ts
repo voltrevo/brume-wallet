@@ -275,7 +275,9 @@ export class Global {
 
       const query = await this.make(getEthereumUnknown(ethereum, request, storage))
 
-      await query.fetch().then(r => r.ignore())
+      const result = await query.fetch().then(r => r.ignore())
+
+      result.inspectSync(r => r.throw(t))
 
       const stored = this.core.raw.get(query.cacheKey)?.inner
       const unstored = await this.core.unstore<any, unknown, Error>(stored, {})
@@ -316,7 +318,9 @@ export class Global {
 
       const query = await this.make(getEthereumBalance(ethereum, address, block, storage))
 
-      await query.fetch().then(r => r.ignore())
+      const result = await query.fetch().then(r => r.ignore())
+
+      result.inspectSync(r => r.throw(t))
 
       const stored = this.core.raw.get(query.cacheKey)?.inner
       const unstored = await this.core.unstore<any, unknown, Error>(stored, {})
@@ -660,7 +664,9 @@ export class Global {
 
       const query = await this.make(getEthereumUnknown(ethereum, subrequest, storage))
 
-      await query.fetch().then(r => r.ignore())
+      const result = await query.fetch().then(r => r.ignore())
+
+      result.inspectSync(r => r.throw(t))
 
       const stored = this.core.raw.get(query.cacheKey)?.inner
       const unstored = await this.core.unstore<any, unknown, Error>(stored, {})
