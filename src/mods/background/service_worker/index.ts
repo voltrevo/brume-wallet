@@ -79,10 +79,11 @@ export class Global {
   readonly core = new Core({})
 
   readonly events = new SuperEventTarget<{
-    "popup_hello_request": ExtensionChannel
-    "popup_hello_response": void
+    "popup_hello": [ExtensionChannel, Future<Result<void, Error>>]
     "popup_data": [ExtensionChannel, PopupData]
   }>()
+
+  readonly hello = new Mutex(undefined)
 
   #path: string = "/"
 
@@ -103,26 +104,27 @@ export class Global {
   }
 
   async tryWaitPopupHello(popup: chrome.windows.Window) {
-    const future = new Future<Result<ExtensionChannel, Error>>()
+    const request = new Future<Result<ExtensionChannel, Error>>()
 
-    const onRequest = (channel: ExtensionChannel) => {
-      future.resolve(new Ok(channel))
-      return this.events.tryEmit("popup_hello_response", undefined)
+    const onRequest = ([channel, response]: [ExtensionChannel, Future<Result<void, Error>>]) => {
+      request.resolve(new Ok(channel))
+      response.resolve(Ok.void())
+      return Ok.void()
     }
 
     const onRemoved = (id: number) => {
       if (id !== popup.id)
         return
-      future.resolve(new Err(new Error()))
+      request.resolve(new Err(new Error()))
     }
 
     try {
-      this.events.on("popup_hello_request", onRequest, { passive: true })
+      this.events.on("popup_hello", onRequest, { passive: true })
       browser.windows.onRemoved.addListener(onRemoved)
 
-      return await future.promise
+      return await request.promise
     } finally {
-      this.events.off("popup_hello_request", onRequest)
+      this.events.off("popup_hello", onRequest)
       browser.windows.onRemoved.removeListener(onRemoved)
     }
   }
@@ -154,9 +156,9 @@ export class Global {
     }
   }
 
-  async tryGetOrWaitEthereumSession(channel: ExtensionChannel, mouse: Mouse): Promise<Result<EthereumSession, Error>> {
+  async tryGetOrWaitEthereumSession(script: ExtensionChannel, mouse: Mouse): Promise<Result<EthereumSession, Error>> {
     return await Result.unthrow(async t => {
-      const sessionQuery = await this.make(getEthereumSession(channel))
+      const sessionQuery = await this.make(getEthereumSession(script))
 
       if (sessionQuery.current !== undefined)
         return new Ok(sessionQuery.current.inner)
@@ -167,11 +169,15 @@ export class Global {
       const top = Math.max(mouse.y - (height / 2), 0)
       const left = Math.max(mouse.x - (width / 2), 0)
 
-      const popup = await tryBrowser(async () => {
-        return await browser.windows.create({ type: "popup", url: "popup.html", state: "normal", height, width, top, left })
-      }).then(r => r.throw(t))
+      const [popup, foreground] = await this.hello.lock(async () => {
+        const popup = await tryBrowser(async () => {
+          return await browser.windows.create({ type: "popup", url: "popup.html", state: "normal", height, width, top, left })
+        }).then(r => r.throw(t))
 
-      const foreground = await this.tryWaitPopupHello(popup).then(r => r.throw(t))
+        const foreground = await this.tryWaitPopupHello(popup).then(r => r.throw(t))
+
+        return [popup, foreground]
+      })
 
       const { walletId, chainId } = await this.tryWaitPopupData(foreground, popup).then(r => r.throw(t))
       const { storage } = await this.tryGetCurrentUser().then(r => r.throw(t))
@@ -411,23 +417,9 @@ export class Global {
     return Result.unthrow(async t => {
       const channel = Option.wrap(maybeChannel).ok().throw(t)
 
-      const future = new Future<void>()
-
-      const onResponse = () => {
-        future.resolve()
-        return Ok.void()
-      }
-
-      try {
-        this.events.on("popup_hello_response", onResponse, { passive: true })
-        await this.events.tryEmit("popup_hello_request", channel).then(r => r.throw(t))
-        await future.promise
-      } finally {
-        this.events.off("popup_hello_response", onResponse)
-      }
-
-      // TODO return infos about the dapp
-      return Ok.void()
+      const response = new Future<Result<void, Error>>()
+      await this.events.tryEmit("popup_hello", [channel, response]).then(r => r.throw(t))
+      return await response.promise
     })
   }
 
