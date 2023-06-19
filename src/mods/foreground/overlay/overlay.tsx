@@ -34,15 +34,18 @@ export function Overlay(props: ChildrenProps) {
       </div>
     </div>
 
-  if (background)
+  if (background.isExtension())
     return <div className="h-full w-full m-auto max-w-3xl">
       {children}
     </div>
 
-  return <>
-    {updating && UpdateBanner}
-    <div className="h-full w-full m-auto max-w-3xl">
-      {children}
-    </div>
-  </>
+  if (background.isWebsite())
+    return <>
+      {updating && UpdateBanner}
+      <div className="h-full w-full m-auto max-w-3xl">
+        {children}
+      </div>
+    </>
+
+  return null
 }
