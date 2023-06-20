@@ -69,14 +69,13 @@ async function tryFetch<T>(url: string): Promise<Result<T, Error>> {
 
 const FALLBACKS_URL = "https://raw.githubusercontent.com/hazae41/echalote/master/tools/fallbacks/fallbacks.json"
 
-export interface PopupData {
-  walletId: string,
-  chainId: number
-}
-
 export interface PasswordData {
   uuid?: string
   password?: string
+}
+
+export interface PopupData {
+  window: chrome.windows.Window
 }
 
 export class Global {
@@ -84,11 +83,13 @@ export class Global {
   readonly core = new Core({})
 
   readonly events = new SuperEventTarget<{
-    "popup_hello": [ExtensionChannel, Future<Result<void, Error>>]
-    "popup_data": [ExtensionChannel, PopupData]
+    "hello": Future<Result<void, Error>>
+    "data": RpcRequestPreinit<unknown>
   }>()
 
-  readonly popup = new Mutex(undefined)
+  readonly popupMutex = new Mutex(undefined)
+
+  popup?: PopupData
 
   #path: string = "/"
 
@@ -162,10 +163,10 @@ export class Global {
   }
 
   async tryWaitPopupHello(popup: chrome.windows.Window) {
-    const request = new Future<Result<ExtensionChannel, Error>>()
+    const request = new Future<Result<void, Error>>()
 
-    const onRequest = ([channel, response]: [ExtensionChannel, Future<Result<void, Error>>]) => {
-      request.resolve(new Ok(channel))
+    const onRequest = (response: Future<Result<void, Error>>) => {
+      request.resolve(Ok.void())
       response.resolve(Ok.void())
       return Ok.void()
     }
@@ -177,39 +178,79 @@ export class Global {
     }
 
     try {
-      this.events.on("popup_hello", onRequest, { passive: true })
+      this.events.on("hello", onRequest, { passive: true })
       browser.windows.onRemoved.addListener(onRemoved)
 
       return await request.promise
     } finally {
-      this.events.off("popup_hello", onRequest)
+      this.events.off("hello", onRequest)
       browser.windows.onRemoved.removeListener(onRemoved)
     }
   }
 
-  async tryWaitPopupData(foreground: ExtensionChannel, popup: chrome.windows.Window) {
-    const future = new Future<Result<PopupData, Error>>()
+  async tryOpenOrNavigatePopup(pathname: string, mouse: Mouse): Promise<Result<PopupData, Error>> {
+    return await Result.unthrow(async t => {
+      return await this.popupMutex.lock(async () => {
+        if (this.popup !== undefined) {
+          const tabId = Option.wrap(this.popup.window.tabs?.[0].id).ok().throw(t)
 
-    const onData = ([channel, data]: [ExtensionChannel, PopupData]) => {
-      if (channel.uuid !== foreground.uuid)
+          await tryBrowser(async () => {
+            return await browser.tabs.update(tabId, { url: `index.html#${pathname}` })
+          }).then(r => r.throw(t))
+
+          return new Ok(this.popup)
+        }
+
+        const height = 630
+        const width = 400
+
+        const top = Math.max(mouse.y - (height / 2), 0)
+        const left = Math.max(mouse.x - (width / 2), 0)
+
+        const window = await tryBrowser(async () => {
+          return await browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left })
+        }).then(r => r.throw(t))
+
+        const channel = await this.tryWaitPopupHello(window).then(r => r.throw(t))
+
+        this.popup = { window }
+
+        const onRemoved = () => {
+          this.popup = undefined
+
+          browser.windows.onRemoved.removeListener(onRemoved)
+        }
+
+        browser.windows.onRemoved.addListener(onRemoved)
+
+        return new Ok(this.popup)
+      })
+    })
+  }
+
+  async tryWaitPopupData(popup: PopupData, method: string) {
+    const future = new Future<Result<RpcRequestPreinit<unknown>, Error>>()
+
+    const onData = (data: RpcRequestPreinit<unknown>) => {
+      if (data.method !== method)
         return Ok.void()
       future.resolve(new Ok(data))
       return Ok.void()
     }
 
     const onRemoved = (id: number) => {
-      if (id !== popup.id)
+      if (id !== popup.window.id)
         return
       future.resolve(new Err(new Error()))
     }
 
     try {
-      this.events.on("popup_data", onData, { passive: true })
+      this.events.on("data", onData, { passive: true })
       browser.windows.onRemoved.addListener(onRemoved)
 
       return await future.promise
     } finally {
-      this.events.off("popup_data", onData)
+      this.events.off("data", onData)
       browser.windows.onRemoved.removeListener(onRemoved)
     }
   }
@@ -231,23 +272,11 @@ export class Global {
       if (session !== undefined)
         return new Ok(session)
 
-      const height = 630
-      const width = 400
+      const popup = await this.tryOpenOrNavigatePopup("/eth_requestAccounts", mouse).then(r => r.throw(t))
 
-      const top = Math.max(mouse.y - (height / 2), 0)
-      const left = Math.max(mouse.x - (width / 2), 0)
+      const request = await this.tryWaitPopupData(popup, "eth_requestAccounts").then(r => r.throw(t))
+      const [walletId, chainId] = (request as RpcParamfulRequestPreinit<[string, number]>).params
 
-      const [popup, foreground] = await this.popup.lock(async () => {
-        const popup = await tryBrowser(async () => {
-          return await browser.windows.create({ type: "popup", url: "popup.html", state: "normal", height, width, top, left })
-        }).then(r => r.throw(t))
-
-        const foreground = await this.tryWaitPopupHello(popup).then(r => r.throw(t))
-
-        return [popup, foreground]
-      })
-
-      const { walletId, chainId } = await this.tryWaitPopupData(foreground, popup).then(r => r.throw(t))
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const walletQuery = await this.make(getWallet(walletId, storage))
@@ -284,9 +313,9 @@ export class Global {
       if (request.method === "personal_sign")
         return await this.personal_sign(ethereum, request)
       if (request.method === "eth_signTypedData_v4")
-        return await this.eth_signTypedData_v4(ethereum, request)
+        return await this.eth_signTypedData_v4(ethereum, request, mouse)
       if (request.method === "wallet_switchEthereumChain")
-        return await this.wallet_switchEthereumChain(ethereum, script, request)
+        return await this.wallet_switchEthereumChain(ethereum, script, request, mouse)
 
       const query = await this.make(getEthereumUnknown(ethereum, request, storage))
 
@@ -401,9 +430,11 @@ export class Global {
     })
   }
 
-  async eth_signTypedData_v4(ethereum: EthereumSessionAndBrumes, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
+  async eth_signTypedData_v4(ethereum: EthereumSessionAndBrumes, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
+
+      await this.tryOpenOrNavigatePopup("/eth_signTypedData_v4", mouse).then(r => r.throw(t))
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
@@ -420,11 +451,18 @@ export class Global {
     })
   }
 
-  async wallet_switchEthereumChain(ethereum: EthereumSessionAndBrumes, script: ExtensionChannel, request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
+  async wallet_switchEthereumChain(ethereum: EthereumSessionAndBrumes, script: ExtensionChannel, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
       const [{ chainId }] = (request as RpcParamfulRequestInit<[{ chainId: string }]>).params
 
       const chain = Option.wrap(chains[parseInt(chainId, 16)]).ok().throw(t)
+
+      const popup = await this.tryOpenOrNavigatePopup("/wallet_switchEthereumChain", mouse).then(r => r.throw(t))
+      const data = await this.tryWaitPopupData(popup, "wallet_switchEthereumChain").then(r => r.throw(t))
+      const [approved] = (data as RpcParamfulRequestPreinit<[boolean]>).params
+
+      if (!approved)
+        return new Err(new Error(`User rejected request`))
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
       const sessionQuery = await this.make(getEthereumSession(script, storage))
@@ -465,10 +503,10 @@ export class Global {
       return await this.brume_call_ethereum(request)
     if (request.method === "brume_log")
       return await this.brume_log(request)
-    if (request.method === "brume_popupHello")
-      return await this.brume_popupHello(channel, request)
-    if (request.method === "brume_popupData")
-      return await this.brume_popupData(channel, request)
+    if (request.method === "brume_hello")
+      return await this.brume_hello(channel, request)
+    if (request.method === "brume_data")
+      return await this.brume_data(channel, request)
     return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
   }
 
@@ -488,22 +526,21 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_popupHello(maybeChannel: Optional<ExtensionChannel>, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_hello(maybeChannel: Optional<ExtensionChannel>, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
-      const channel = Option.wrap(maybeChannel).ok().throw(t)
-
       const response = new Future<Result<void, Error>>()
-      await this.events.tryEmit("popup_hello", [channel, response]).then(r => r.throw(t))
+
+      await this.events.tryEmit("hello", response).then(r => r.throw(t))
+
       return await response.promise
     })
   }
 
-  async brume_popupData(maybeChannel: Optional<ExtensionChannel>, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_data(maybeChannel: Optional<ExtensionChannel>, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
-      const [walletId, chainId] = (request as RpcParamfulRequestInit<[string, number]>).params
+      const [subrequest] = (request as RpcParamfulRequestInit<[RpcRequestPreinit<unknown>]>).params
 
-      const channel = Option.wrap(maybeChannel).ok().throw(t)
-      await this.events.tryEmit("popup_data", [channel, { walletId, chainId }]).then(r => r.throw(t))
+      await this.events.tryEmit("data", subrequest).then(r => r.throw(t))
 
       return Ok.void()
     })

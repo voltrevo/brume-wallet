@@ -1,6 +1,7 @@
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { OkProps } from "@/libs/react/props/promise";
+import { TitleProps } from "@/libs/react/props/title";
 import { useBackground } from "@/mods/foreground/background/context";
 import { ContrastButtonChip } from "@/mods/foreground/components/buttons/chips/contrast";
 import { InnerButtonChip } from "@/mods/foreground/components/buttons/chips/naked";
@@ -12,6 +13,8 @@ import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
 import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { Wallet } from "@/mods/foreground/entities/wallets/data";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
+import { Path } from "@/mods/foreground/router/path";
+import { Router } from "@/mods/foreground/router/router";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 
@@ -20,40 +23,116 @@ export default function Popup() {
 
   useEffect(() => {
     background
-      .tryRequest<void>({ method: "brume_popupHello" })
+      .tryRequest<void>({ method: "brume_hello" })
       .then(r => r.unwrap().ignore())
   }, [background])
 
+  return <main className="p-safe h-full w-full">
+    <Overlay>
+      <UserProvider>
+        <Router />
+      </UserProvider>
+    </Overlay>
+  </main>
+}
+
+
+export function SwitchPage() {
   const [step, setStep] = useState(0)
 
   const next = useCallback(() => {
     setStep(x => x + 1)
   }, [])
 
-  return <main className="p-safe h-full w-full">
-    <Overlay>
-      <UserProvider>
-        {step === 0 &&
-          <WalletAndChainSelectPage ok={next} />}
-        {step === 1 &&
-          <ConnectedPage />}
-      </UserProvider>
-    </Overlay>
-  </main>
+  return <>
+    {step === 0 &&
+      <ApproveSwitchPage ok={next} />}
+    {step === 1 &&
+      <DonePage title="Approved" />}
+  </>
 }
 
-export function ConnectedPage() {
+export function ApproveSwitchPage(props: OkProps<void>) {
+  const { ok } = props
+
+  const background = useBackground()
+
+  const onApprove = useCallback(async () => {
+    await background.tryRequest({
+      method: "brume_data",
+      params: [{
+        method: "wallet_switchEthereumChain",
+        params: [true]
+      }]
+    }).then(r => r.unwrap().unwrap())
+    ok()
+  }, [background, ok])
+
+  const onReject = useCallback(async () => {
+    await background.tryRequest({
+      method: "brume_data",
+      params: [{
+        method: "wallet_switchEthereumChain",
+        params: [false]
+      }]
+    }).then(r => r.unwrap().unwrap())
+    ok()
+  }, [background, ok])
+
+  return <Page>
+    <div className="p-4 grow flex flex-col items-center justify-evenly">
+      <div className="w-full">
+        <div className="text-center text-xl font-medium">
+          Switch chain
+        </div>
+        <div className="w-full max-w-[230px] m-auto text-center text-contrast">
+          Do you want to switch the Ethereum chain?
+        </div>
+      </div>
+      <ContrastButtonChip onClick={onApprove} >
+        <InnerButtonChip icon={Outline.CheckIcon}>
+          Yes, approve it
+        </InnerButtonChip>
+      </ContrastButtonChip>
+      <ContrastButtonChip onClick={onReject} >
+        <InnerButtonChip icon={Outline.XMarkIcon}>
+          No, reject it
+        </InnerButtonChip>
+      </ContrastButtonChip>
+    </div>
+  </Page>
+}
+
+export function ConnectPage() {
+  const [step, setStep] = useState(0)
+
+  const next = useCallback(() => {
+    setStep(x => x + 1)
+  }, [])
+
+  return <>
+    {step === 0 &&
+      <WalletAndChainSelectPage ok={next} />}
+    {step === 1 &&
+      <DonePage title="Connected" />}
+  </>
+}
+
+export function DonePage(props: TitleProps) {
+  const { title } = props
+
   const router = useRouter()
 
   const onDone = useCallback(() => {
     router.push("/")
+    Path.go("/")
   }, [router])
 
   return <Page>
     <div className="p-4 grow flex flex-col items-center justify-evenly">
       <div className="w-full">
         <div className="text-center text-xl font-medium">
-          Connected
+          {title}
         </div>
         <div className="w-full max-w-[230px] m-auto text-center text-contrast">
           You can now close this window or go to the home page
@@ -79,9 +158,13 @@ export function WalletAndChainSelectPage(props: OkProps<void>) {
   const [chain, setChain] = useState<number>(1)
 
   const onWalletClick = useCallback(async (wallet: Wallet) => {
-    await background
-      .tryRequest({ method: "brume_popupData", params: [wallet.uuid, chain] })
-      .then(r => r.unwrap().unwrap())
+    await background.tryRequest({
+      method: "brume_data",
+      params: [{
+        method: "eth_requestAccounts",
+        params: [wallet.uuid, chain]
+      }]
+    }).then(r => r.unwrap().unwrap())
     ok()
   }, [background, chain, ok])
 
