@@ -1,6 +1,6 @@
 {
   "name": "@brume/wallet",
-  "version": "0.3.4",
+  "version": "0.3.3",
   "private": true,
   "scripts": {
     "dev:website": "next dev",
@@ -12,6 +12,7 @@
     "build:!firefox": "mkdir ./dist/firefox && cp -R ./out/* ./dist/firefox && cd ./dist/firefox && mv ./firefox/* . && rimraf ./firefox ./chrome ./safari",
     "build:!safari": "mkdir ./dist/safari && cp -R ./out/* ./dist/safari && cd ./dist/safari && mv ./safari/* . && rimraf ./firefox ./chrome ./safari",
     "build:!after": "node ./scripts/postbuild2.mjs && rimraf ./out",
+    "build:website": "npm run build:!before && npm run build:!website",
     "zip": "npm run zip:website && npm run zip:chrome && npm run zip:firefox && npm run zip:safari",
     "zip:website": "zip -r ./dist/website.zip ./dist/website",
     "zip:chrome": "zip -r ./dist/chrome.zip ./dist/chrome",
