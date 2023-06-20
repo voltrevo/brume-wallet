@@ -40,6 +40,9 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, MouseEvent>)
       return
     }
 
+    sessionStorage.setItem("uuid", userQuery.data.inner.uuid)
+    sessionStorage.setItem("password", password)
+
     ok(userQuery.data.inner)
   }, [userQuery.data?.inner.uuid, background])
 

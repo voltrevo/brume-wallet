@@ -12,7 +12,7 @@ import { Ed25519 } from "@hazae41/ed25519"
 import { Future } from "@hazae41/future"
 import { Morax } from "@hazae41/morax"
 import { Mutex } from "@hazae41/mutex"
-import { NoneError, Option, Optional } from "@hazae41/option"
+import { Option, Optional } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { SuperEventTarget } from "@hazae41/plume"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
@@ -74,6 +74,11 @@ export interface PopupData {
   chainId: number
 }
 
+export interface PasswordData {
+  uuid?: string
+  password?: string
+}
+
 export class Global {
 
   readonly core = new Core({})
@@ -83,7 +88,7 @@ export class Global {
     "popup_data": [ExtensionChannel, PopupData]
   }>()
 
-  readonly hello = new Mutex(undefined)
+  readonly popup = new Mutex(undefined)
 
   #path: string = "/"
 
@@ -98,35 +103,38 @@ export class Global {
     return await makeable.make(this.core)
   }
 
-  async tryGetStoredPassword() {
-    if (IS_EXTENSION)
-      return await tryBrowser(() => browser.storage.session.get(["uuid", "password"]))
-
-    const uuid = sessionStorage.getItem("uuid")
-    const password = sessionStorage.getItem("password")
-    return new Ok({ uuid, password })
+  async tryGetStoredPassword(): Promise<Result<PasswordData, Error>> {
+    return await tryBrowser(() => browser.storage.session.get(["uuid", "password"]))
   }
 
   async trySetStoredPassword(uuid: string, password: string) {
-    if (IS_EXTENSION)
-      return await tryBrowser(() => browser.storage.session.set({ uuid, password }))
-
-    sessionStorage.setItem("uuid", uuid)
-    sessionStorage.setItem("password", password)
-    return Ok.void()
+    return await tryBrowser(() => browser.storage.session.set({ uuid, password }))
   }
 
-  async tryGetCurrentUser(): Promise<Result<Optional<UserSession>, NoneError>> {
-    return Result.unthrow(async t => {
-      const currentUserQuery = await this.make(getCurrentUser())
+  async tryInit(): Promise<Result<void, Error>> {
+    return await Result.unthrow(async t => {
+      if (IS_EXTENSION) {
+        const { uuid, password } = await this.tryGetStoredPassword().then(r => r.throw(t))
+        await this.trySetCurrentUser(uuid, password).then(r => r.throw(t))
+      }
 
-      if (currentUserQuery.current !== undefined)
-        return new Ok(currentUserQuery.current.inner)
+      return Ok.void()
+    })
+  }
 
-      const { uuid, password } = await this.tryGetStoredPassword().then(r => r.throw(t))
+  async getCurrentUser(): Promise<Optional<UserSession>> {
+    const currentUserQuery = await this.make(getCurrentUser())
+    return currentUserQuery.current?.inner
+  }
 
-      if (!uuid || !password)
+  async trySetCurrentUser(uuid: Optional<string>, password: Optional<string>): Promise<Result<Optional<UserSession>, Error>> {
+    return await Result.unthrow(async t => {
+      if (uuid === undefined)
         return new Ok(undefined)
+      if (password === undefined)
+        return new Ok(undefined)
+
+      const currentUserQuery = await this.make(getCurrentUser())
 
       const userQuery = await this.make(getUser(uuid, this.storage))
       const userData = Option.wrap(userQuery.current?.get()).ok().throw(t)
@@ -194,22 +202,19 @@ export class Global {
     }
   }
 
-  async tryGetEthereumSession(script: ExtensionChannel): Promise<Result<Optional<EthereumSession>, Error>> {
-    return await Result.unthrow(async t => {
-      const currentUser = await this.tryGetCurrentUser().then(r => r.throw(t))
+  async getEthereumSession(script: ExtensionChannel): Promise<Optional<EthereumSession>> {
+    const currentUser = await this.getCurrentUser()
 
-      if (currentUser === undefined)
-        return new Ok(undefined)
+    if (currentUser === undefined)
+      return undefined
 
-      const sessionQuery = await this.make(getEthereumSession(script, currentUser.storage))
-
-      return new Ok(sessionQuery.current?.inner)
-    })
+    const sessionQuery = await this.make(getEthereumSession(script, currentUser.storage))
+    return sessionQuery.current?.inner
   }
 
   async tryGetOrWaitEthereumSession(script: ExtensionChannel, mouse: Mouse): Promise<Result<EthereumSession, Error>> {
     return await Result.unthrow(async t => {
-      const session = await this.tryGetEthereumSession(script).then(r => r.throw(t))
+      const session = await this.getEthereumSession(script)
 
       if (session !== undefined)
         return new Ok(session)
@@ -220,7 +225,7 @@ export class Global {
       const top = Math.max(mouse.y - (height / 2), 0)
       const left = Math.max(mouse.x - (width / 2), 0)
 
-      const [popup, foreground] = await this.hello.lock(async () => {
+      const [popup, foreground] = await this.popup.lock(async () => {
         const popup = await tryBrowser(async () => {
           return await browser.windows.create({ type: "popup", url: "popup.html", state: "normal", height, width, top, left })
         }).then(r => r.throw(t))
@@ -231,7 +236,7 @@ export class Global {
       })
 
       const { walletId, chainId } = await this.tryWaitPopupData(foreground, popup).then(r => r.throw(t))
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const walletQuery = await this.make(getWallet(walletId, storage))
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
@@ -252,7 +257,7 @@ export class Global {
       if (request.method === "eth_requestAccounts")
         return await this.eth_requestAccounts(script, request, mouse)
 
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
       const sessionQuery = await this.make(getEthereumSession(script, storage))
       const session = Option.wrap(sessionQuery.current?.inner).ok().throw(t)
 
@@ -289,7 +294,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const sessionData = await this.tryGetOrWaitEthereumSession(script, mouse).then(r => r.throw(t))
 
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
       const walletQuery = await this.make(getWallet(sessionData.wallet.uuid, storage))
       const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
 
@@ -299,7 +304,7 @@ export class Global {
 
   async eth_accounts(ethereum: EthereumSessionAndBrumes, request: RpcRequestPreinit<unknown>): Promise<Result<[string], Error>> {
     return await Result.unthrow(async t => {
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
       const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
@@ -312,7 +317,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [address, block] = (request as RpcParamfulRequestPreinit<[string, string]>).params
 
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const query = await this.make(getEthereumBalance(ethereum, address, block, storage))
 
@@ -330,7 +335,7 @@ export class Global {
 
   async eth_sendTransaction(ethereum: EthereumSessionAndBrumes, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
@@ -373,7 +378,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
@@ -388,7 +393,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
@@ -409,14 +414,13 @@ export class Global {
 
       const chain = Option.wrap(chains[parseInt(chainId, 16)]).ok().throw(t)
 
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
       const sessionQuery = await this.make(getEthereumSession(script, storage))
       await sessionQuery.mutate(Mutators.mapDataOrNone(d => d.mapSync(d => ({ ...d, chain }))))
 
       return Ok.void()
     })
   }
-
 
   async tryRouteForeground(channel: Optional<ExtensionChannel>, request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
     if (request.method === "brume_ping")
@@ -454,6 +458,10 @@ export class Global {
     if (request.method === "brume_popupData")
       return await this.brume_popupData(channel, request)
     return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
+  }
+
+  async brume_ping(request: RpcRequestPreinit<unknown>) {
+    return Ok.void()
   }
 
   async brume_getPath(request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
@@ -527,17 +535,10 @@ export class Global {
     return await Result.unthrow(async t => {
       const [uuid, password] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      const userQuery = await this.make(getUser(uuid, this.storage))
-      const userData = Option.wrap(userQuery.current?.get()).ok().throw(t)
+      await this.trySetCurrentUser(uuid, password).then(r => r.throw(t))
 
-      const user: User = { ref: true, uuid: userData.uuid }
-      const storage = await tryCreateUserStorage(userData, password).then(r => r.throw(t))
-
-      const currentUserQuery = await this.make(getCurrentUser())
-      const currentUserData: UserSession = { user, storage }
-      await currentUserQuery.mutate(Mutators.data(currentUserData))
-
-      await this.trySetStoredPassword(uuid, password).then(r => r.throw(t))
+      if (IS_EXTENSION)
+        await this.trySetStoredPassword(uuid, password).then(r => r.throw(t))
 
       return Ok.void()
     })
@@ -545,7 +546,7 @@ export class Global {
 
   async brume_getCurrentUser(request: RpcRequestPreinit<unknown>): Promise<Result<Optional<UserData>, Error>> {
     return await Result.unthrow(async t => {
-      const userSession = await this.tryGetCurrentUser().then(r => r.throw(t))
+      const userSession = await this.getCurrentUser()
 
       if (userSession === undefined)
         return new Ok(undefined)
@@ -558,7 +559,7 @@ export class Global {
 
   async brume_getWallets(request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
     return await Result.unthrow(async t => {
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const walletsQuery = await this.make(getWallets(storage))
       const wallets = walletsQuery.current?.get() ?? []
@@ -569,7 +570,7 @@ export class Global {
 
   async brume_newWallet(request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
     return await Result.unthrow(async t => {
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const [wallet] = (request as RpcParamfulRequestInit<[EthereumPrivateKeyWallet]>).params
       const walletsQuery = await this.make(getWallets(storage))
@@ -585,7 +586,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [uuid] = (request as RpcParamfulRequestInit<[string]>).params
 
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const walletQuery = await this.make(getWallet(uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
@@ -625,7 +626,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [cacheKey] = (request as RpcParamfulRequestInit<[string]>).params
 
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const cached = this.core.raw.get(cacheKey)
 
@@ -643,7 +644,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [walletId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
 
-      const { storage } = Option.wrap(await this.tryGetCurrentUser().then(r => r.throw(t))).ok().throw(t)
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const walletQuery = await this.make(getWallet(walletId, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
@@ -712,6 +713,8 @@ async function init() {
       const storage = IDBStorage.tryCreate({ name: "memory" }).unwrap()
       const global = new Global(tors, circuits, sessions, storage)
 
+      await global.tryInit().then(r => r.throw(t))
+
       return new Ok(global)
     })
   })
@@ -741,6 +744,8 @@ if (IS_WEBSITE) {
 
       Result.catchAndWrapSync(() => port.postMessage(response)).ignore()
     })
+
+    port.postMessage({ id: "hello", method: "brume_hello" })
 
     port.start()
   }

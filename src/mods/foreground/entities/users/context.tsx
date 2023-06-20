@@ -1,7 +1,7 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { Mutators } from "@/libs/xswr/mutators";
 import { Optional } from "@hazae41/option";
-import { useOnce, useQuery } from "@hazae41/xswr";
+import { useOnce, useQuery, useVisible } from "@hazae41/xswr";
 import { createContext, useCallback, useContext } from "react";
 import { useBackground } from "../../background/context";
 import { UsersPage } from "./all/page";
@@ -25,6 +25,7 @@ export function UserProvider(props: ChildrenProps) {
   }, [userQuery])
 
   useOnce(userQuery)
+  useVisible(userQuery)
 
   if (userQuery.current === undefined)
     return null
