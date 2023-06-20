@@ -7,6 +7,9 @@ export function Router() {
 
   let matches: RegExpMatchArray | null
 
+  if (url.pathname === "")
+    return <WalletsPage />
+
   if (matches = url.pathname.match(/^\/$/))
     return <WalletsPage />
 

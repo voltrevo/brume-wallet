@@ -3,9 +3,8 @@ import workbox from "workbox-build";
 import { walkSync } from "./libs/walkSync.mjs";
 
 /**
- * This is run after "npm run build"
+ * Inline the injected script for Firefox (MV2)
  */
-
 {
   const injected_script_base64 = fs.readFileSync("./out/injected_script.js", "base64")
 
@@ -14,6 +13,9 @@ import { walkSync } from "./libs/walkSync.mjs";
   fs.writeFileSync("./out/content_script.js", replaced, "utf8")
 }
 
+/**
+ * Generate Workbox files for the website to work in offline mode
+ */
 {
   workbox.injectManifest({
     globDirectory: "./out",
@@ -36,11 +38,16 @@ import { walkSync } from "./libs/walkSync.mjs";
   fs.writeFileSync("./out/service_worker.js", replaced, "utf8")
 }
 
-for (const filePath of walkSync("./out")) {
-  if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
-    const original = fs.readFileSync(filePath, "utf8")
-    const replaced = original.replaceAll("/_next", "/next")
-    fs.writeFileSync(filePath, replaced, "utf8")
+/**
+ * Rename all "/_next" to "/next" because Chrome doesn't allow "_"
+ */
+{
+  for (const filePath of walkSync("./out")) {
+    if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
+      const original = fs.readFileSync(filePath, "utf8")
+      const replaced = original.replaceAll("/_next", "/next")
+      fs.writeFileSync(filePath, replaced, "utf8")
+    }
   }
 }
 

@@ -1,7 +1,8 @@
 const webpack = require("webpack")
 const TerserPlugin = require('terser-webpack-plugin')
-const { copyFileSync } = require("fs")
+const { copyFileSync, rmSync, rmdirSync } = require("fs")
 const Log = require("next/dist/build/output/log")
+const path = require("path")
 
 /**
  * @type {import('next').NextConfig}
@@ -13,6 +14,8 @@ const nextConfig = {
   productionBrowserSourceMaps: true,
   webpack(config, options) {
     if (options.isServer) return config
+
+    rmSync("./.webpack", { force: true, recursive: true })
 
     compileServiceWorker(config, options)
     compileContentScript(config, options)
@@ -36,7 +39,7 @@ function compile(name, config, options) {
       Log.error(status.toString({ colors: true }))
     } else {
       Log.ready(`compiled ${name} in ${Date.now() - start} ms`)
-      copyFileSync(`./dist/${config.output.filename}`, `./public/${config.output.filename}`)
+      copyFileSync(`./.webpack/${config.output.filename}`, `./public/${config.output.filename}`)
     }
   })
 }
@@ -54,7 +57,10 @@ function compileServiceWorker(config, options) {
     module: config.module,
     plugins: config.plugins,
     entry: "./src/mods/background/service_worker/index.ts",
-    output: { filename: "service_worker.js" },
+    output: {
+      path: path.join(process.cwd(), ".webpack"),
+      filename: "service_worker.js"
+    },
     optimization: {
       minimize: false,
       minimizer: [new TerserPlugin()]
@@ -75,7 +81,10 @@ function compileContentScript(config, options) {
     module: config.module,
     plugins: config.plugins,
     entry: "./src/mods/background/content_script/index.ts",
-    output: { filename: "content_script.js" },
+    output: {
+      path: path.join(process.cwd(), ".webpack"),
+      filename: "content_script.js"
+    },
     optimization: {
       minimize: config.mode === "production",
       minimizer: [new TerserPlugin()]
@@ -96,7 +105,10 @@ function compileInjectedScript(config, options) {
     module: config.module,
     plugins: config.plugins,
     entry: "./src/mods/background/injected_script/index.ts",
-    output: { filename: "injected_script.js" },
+    output: {
+      path: path.join(process.cwd(), ".webpack"),
+      filename: "injected_script.js"
+    },
     optimization: {
       minimize: config.mode === "production",
       minimizer: [new TerserPlugin()]

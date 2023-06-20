@@ -2,7 +2,7 @@
 
 A non-custodial and private Ethereum wallet with a built-in implementation of the Tor network
 
-### Experimental ⚠️
+## Experimental ⚠️
 
 This is experimental software in early development
 
@@ -11,14 +11,14 @@ This is experimental software in early development
 
 Use at your own risk, see [the security](#secure-by-design) for more details
 
-### TLDR
+## TLDR
 - Anonymous requests using Tor, no installation needed, each wallet address has its own IP address
 - Built for strong privacy and supply-chain hardened
 - Available as an extension and on a website
 - Pleasant user experience
 - Made by french cypherpunks
 
-### I don't understand that Tor thing
+## I don't understand that Tor thing
 
 Brume Wallet sends your transactions through the Tor network (the dark web), so people at the end of the pipe can't use your IP address to: 
 - Know your location and ISP
@@ -31,7 +31,7 @@ They can track you even if you are using on-chain privacy tools such as Aztec Ne
 
 <img width="762" src="https://user-images.githubusercontent.com/111573119/201625137-293eec93-a6c9-43fd-8eda-56dea0c8e00e.png">
 
-### How to check IP address leaks?
+## How to check IP address leaks?
 
 - Add our proxy to your MetaMask networks
 
@@ -45,38 +45,74 @@ Currency Symbol: `ETH`
 
 - Go on the logs website https://logs.brume.money/
 
-### Getting started
+## Getting started
 
 You can use Brume Wallet as an extension and on a website
 
-#### Using the website
+### Using the website
 
 - Click here https://wallet.brume.money
 
-#### Using the extension
+### Using the extension
 
-- Clone
+- Extract the .zip file in a location you want
+- [Install the extension](#installing-the-extension)
 
-```bash
-git clone https://github.com/brume-wallet/brume-wallet && cd brume-wallet
-```
+### Installing the extension
 
-- Build
-
-```bash
-npm i && npm run build:extension
-```
+#### Chrome 
 
 - Open Chrome, open settings
 - Left panel, bottom, click `Extensions`
 - Top bar, right, enable `Developer mode`
 - Click `Load unpacked`
-- Navigate to the Brume Wallet folder
 - Select the `chrome` folder
 
-### Secure by design
+#### Firefox 
 
-#### Encrypted storage
+- Open Firefox, navigate to `about:debugging`
+- Left panel, click `This Firefox`
+- `Temporary Extensions`, click `Load Temporary Add-on`
+- Navigate to the Brume Wallet folder
+- Open the `firefox` folder
+- Select the `manifest.json` file
+
+#### Safari (build only)
+
+- Get a mac
+- Install Xcode
+- Enable `Developer mode` in Safari
+- Run `npm run build && npm run xcode`
+- Enter `y` to everything and/or ignore warnings
+
+*Xcode will start*
+
+- Top bar, center, left, select `brume-wallet (macOS)`
+- Top bar, left, click the play button to build the extension
+- Open Safari
+- Reach macOS toolbar, click `Development`, click `Allow unsigned extensions` at the very bottom
+- Reach macOS toolbar, click `Safari`, click `Settings`
+- Top bar, click `Extensions`, find `Brume Wallet`, enable it
+
+### Building
+
+- Clone the repository
+
+```bash
+git clone https://github.com/brumewallet/wallet && cd wallet
+```
+
+- Build the website and extension
+
+```bash
+npm install && npm run build
+```
+
+- Website and extension files are in the `dist` folder
+
+## Secure by design
+
+### Encrypted storage
 
 Your storage is hashed and encrypted using strong cryptography algorithms and parameters
 
@@ -86,7 +122,7 @@ Your storage is hashed and encrypted using strong cryptography algorithms and pa
 
 That being said, we are limited by the browser APIs, so we can't use hardware secure storages such as Secure Enclave on iOS
 
-#### Supply-chain hardened
+### Supply-chain hardened
 
 We try our best to avoid supply-chain attacks from external packages
 
@@ -97,7 +133,7 @@ We try our best to avoid supply-chain attacks from external packages
 - We use runtime protection techniques such as object-capability model
 - (Soon) We upload each release on IPFS and publish the hash on Ethereum
 
-#### Safe Tor and TLS protocols
+### Safe Tor and TLS protocols
 
 We use the Tor and the TLS protocols in a way that's mostly safe, even though they are not fully implemented nor audited
 
@@ -113,7 +149,7 @@ Keep in mind that the zero risk doesn't exist, and a highly motivated attacker c
 
 3. Correlating IP addresses logs with wallet addresses logs, and if both sides are small enough, linking a particular IP address to a particular wallet address
 
-### Next
+## Next
 
 We plan to further develop Brume Wallet by adding several features necessary for everyday use, such as the integration of on-chain privacy tools (Aztec Network), supporting other blockchains (EVM & Non-EVM) and adding useful features such as a token approval manager
 

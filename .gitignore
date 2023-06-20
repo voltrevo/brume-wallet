@@ -35,9 +35,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/chrome
-/firefox
-/safari
+.webpack
+
 /xcode
 
 /dist

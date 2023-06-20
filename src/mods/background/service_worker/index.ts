@@ -104,10 +104,22 @@ export class Global {
   }
 
   async tryGetStoredPassword(): Promise<Result<PasswordData, Error>> {
+    if (IS_FIREFOX_EXTENSION) {
+      const uuid = sessionStorage.getItem("uuid") ?? undefined
+      const password = sessionStorage.getItem("password") ?? undefined
+      return new Ok({ uuid, password })
+    }
+
     return await tryBrowser(() => browser.storage.session.get(["uuid", "password"]))
   }
 
   async trySetStoredPassword(uuid: string, password: string) {
+    if (IS_FIREFOX_EXTENSION) {
+      sessionStorage.setItem("uuid", uuid)
+      sessionStorage.setItem("password", password)
+      return new Ok({ uuid, password })
+    }
+
     return await tryBrowser(() => browser.storage.session.set({ uuid, password }))
   }
 
