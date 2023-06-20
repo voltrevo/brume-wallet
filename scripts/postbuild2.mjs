@@ -3,7 +3,7 @@ import fs from "fs";
 /**
  * Setup global variables for Chrome
  */
-{
+if (fs.existsSync("./dist/chrome")) {
   const original = fs.readFileSync("./dist/chrome/content_script.js", "utf8")
 
   const replaced = original
@@ -17,7 +17,7 @@ import fs from "fs";
 /**
  * Setup global variables for Firefox
  */
-{
+if (fs.existsSync("./dist/firefox")) {
   const original = fs.readFileSync("./dist/firefox/content_script.js", "utf8")
 
   const replaced = original
@@ -31,7 +31,7 @@ import fs from "fs";
 /**
  * Setup global variables for Safari
  */
-{
+if (fs.existsSync("./dist/safari")) {
   const original = fs.readFileSync("./dist/safari/content_script.js", "utf8")
 
   const replaced = original
