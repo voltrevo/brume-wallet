@@ -1,4 +1,4 @@
-import { DonePage, SwitchPage, WalletAndChainSelectPage } from "pages/popup"
+import { DonePage, PersonalSignPage, SwitchPage, TransactPage, TypedSignPage, WalletAndChainSelectPage } from "pages/popup"
 import { WalletsPage } from "../entities/wallets/all/page"
 import { WalletPage } from "../entities/wallets/page"
 import { usePath } from "./path"
@@ -23,8 +23,17 @@ export function Router() {
   if (matches = url.pathname.match(/^\/eth_requestAccounts$/))
     return <WalletAndChainSelectPage />
 
+  if (matches = url.pathname.match(/^\/eth_sendTransaction$/))
+    return <TransactPage />
+
   if (matches = url.pathname.match(/^\/wallet_switchEthereumChain$/))
     return <SwitchPage />
+
+  if (matches = url.pathname.match(/^\/personal_sign$/))
+    return <PersonalSignPage />
+
+  if (matches = url.pathname.match(/^\/eth_signTypedData_v4$/))
+    return <TypedSignPage />
 
   if (matches = url.pathname.match(/^\/done$/))
     return <DonePage />

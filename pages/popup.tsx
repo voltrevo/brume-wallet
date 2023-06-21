@@ -1,3 +1,4 @@
+import { BigInts } from "@/libs/bigints/bigints";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { useBackground } from "@/mods/foreground/background/context";
@@ -14,7 +15,7 @@ import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
 import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { Wallet } from "@/mods/foreground/entities/wallets/data";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
-import { Path } from "@/mods/foreground/router/path";
+import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
 import { useCallback, useEffect, useState } from "react";
 
@@ -34,6 +35,77 @@ export default function Popup() {
       </UserProvider>
     </Overlay>
   </main>
+}
+
+export function TransactPage() {
+  const { searchParams } = usePath()
+  const background = useBackground()
+
+  const onApprove = useCallback(async () => {
+    await background.tryRequest({
+      method: "brume_data",
+      params: [{
+        method: "eth_sendTransaction",
+        params: [true]
+      }]
+    }).then(r => r.unwrap().unwrap())
+    Path.go("/done")
+  }, [background])
+
+  const onReject = useCallback(async () => {
+    await background.tryRequest({
+      method: "brume_data",
+      params: [{
+        method: "eth_sendTransaction",
+        params: [false]
+      }]
+    }).then(r => r.unwrap().unwrap())
+    Path.go("/done")
+  }, [background])
+
+  const to = searchParams.get("to")
+  const value = searchParams.get("value")
+  const data = searchParams.get("data")
+
+  return <Page>
+    <div className="p-xmd grow flex flex-col items-center justify-center">
+      <div className="text-center text-xl font-medium">
+        Transaction
+      </div>
+      <div className="w-full max-w-[230px] text-center text-contrast">
+        Do you want to approve this transaction?
+      </div>
+    </div>
+    <div className="w-full p-xmd grow flex flex-col">
+      <div className="w-full p-xmd border border-contrast rounded-xl whitespace-pre-wrap break-words">
+        To: {to}
+      </div>
+      {value &&
+        <div className="w-full p-xmd border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
+          Value: {BigInts.float(BigInts.parse(value), 18)}
+        </div>}
+      {data &&
+        <div className="grow w-full p-xmd border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
+          Data: {data}
+        </div>}
+    </div>
+    <div className="p-xmd w-full flex items-center gap-2">
+      <ContrastButton className="grow"
+        onClick={onReject}>
+        <InnerButton
+          icon={Outline.XMarkIcon}>
+          No, reject it
+        </InnerButton>
+      </ContrastButton>
+      <GradientButton className="grow"
+        onClick={onApprove}
+        colorIndex={5}>
+        <InnerButton icon={Outline.CheckIcon}>
+          Yes, approve it
+        </InnerButton>
+      </GradientButton>
+    </div>
+  </Page>
 }
 
 export function SwitchPage() {
@@ -62,14 +134,12 @@ export function SwitchPage() {
   }, [background])
 
   return <Page>
-    <div className="p-xmd grow flex flex-col items-center justify-evenly">
-      <div className="w-full">
-        <div className="text-center text-xl font-medium">
-          Switch chain
-        </div>
-        <div className="w-full max-w-[230px] m-auto text-center text-contrast">
-          Do you want to switch the Ethereum chain?
-        </div>
+    <div className="p-xmd grow flex flex-col items-center justify-center">
+      <div className="text-center text-xl font-medium">
+        Switch chain
+      </div>
+      <div className="w-full max-w-[230px] text-center text-contrast">
+        Do you want to switch the Ethereum chain?
       </div>
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
@@ -91,31 +161,130 @@ export function SwitchPage() {
   </Page>
 }
 
-export function DonePage() {
+export function PersonalSignPage() {
+  const { searchParams } = usePath()
+  const background = useBackground()
 
-  const onDone = useCallback(() => {
-    Path.go("/")
-  }, [])
+  const onApprove = useCallback(async () => {
+    await background.tryRequest({
+      method: "brume_data",
+      params: [{
+        method: "personal_sign",
+        params: [true]
+      }]
+    }).then(r => r.unwrap().unwrap())
+    Path.go("/done")
+  }, [background])
+
+  const onReject = useCallback(async () => {
+    await background.tryRequest({
+      method: "brume_data",
+      params: [{
+        method: "personal_sign",
+        params: [false]
+      }]
+    }).then(r => r.unwrap().unwrap())
+    Path.go("/done")
+  }, [background])
+
+  const message = searchParams.get("message")
+
+  if (message === null)
+    return null
 
   return <Page>
-    <div className="p-xmd grow flex flex-col items-center justify-evenly">
-      <div className="w-full">
-        <div className="text-center text-xl font-medium">
-          Done
-        </div>
-        <div className="w-full max-w-[230px] m-auto text-center text-contrast">
-          You can now close this window or go to the home page
-        </div>
+    <div className="p-xmd grow flex flex-col items-center justify-center">
+      <div className="text-center text-xl font-medium">
+        Sign message
+      </div>
+      <div className="w-full max-w-[230px] text-center text-contrast">
+        Do you want to sign the following message?
+      </div>
+    </div>
+    <div className="w-full p-xmd grow">
+      <div className="h-full w-full p-xmd border border-contrast rounded-xl whitespace-pre-wrap break-words">
+        {message}
       </div>
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
       <ContrastButton className="grow"
-        onClick={onDone}>
+        onClick={onReject}>
         <InnerButton
-          icon={Outline.HomeIcon}>
-          Go to the home page
+          icon={Outline.XMarkIcon}>
+          No, reject it
         </InnerButton>
       </ContrastButton>
+      <GradientButton className="grow"
+        onClick={onApprove}
+        colorIndex={5}>
+        <InnerButton icon={Outline.CheckIcon}>
+          Yes, approve it
+        </InnerButton>
+      </GradientButton>
+    </div>
+  </Page>
+}
+
+export function TypedSignPage() {
+  const { searchParams } = usePath()
+  const background = useBackground()
+
+  const onApprove = useCallback(async () => {
+    await background.tryRequest({
+      method: "brume_data",
+      params: [{
+        method: "eth_signTypedData_v4",
+        params: [true]
+      }]
+    }).then(r => r.unwrap().unwrap())
+    Path.go("/done")
+  }, [background])
+
+  const onReject = useCallback(async () => {
+    await background.tryRequest({
+      method: "brume_data",
+      params: [{
+        method: "eth_signTypedData_v4",
+        params: [false]
+      }]
+    }).then(r => r.unwrap().unwrap())
+    Path.go("/done")
+  }, [background])
+
+  const message = searchParams.get("message")
+
+  if (message === null)
+    return null
+
+  return <Page>
+    <div className="p-xmd grow flex flex-col items-center justify-center">
+      <div className="text-center text-xl font-medium">
+        Sign message
+      </div>
+      <div className="w-full max-w-[230px] text-center text-contrast">
+        Do you want to sign the following message?
+      </div>
+    </div>
+    <div className="w-full p-xmd grow">
+      <div className="h-full w-full p-xmd border border-contrast rounded-xl whitespace-pre-wrap break-words">
+        {JSON.stringify(JSON.parse(message))}
+      </div>
+    </div>
+    <div className="p-xmd w-full flex items-center gap-2">
+      <ContrastButton className="grow"
+        onClick={onReject}>
+        <InnerButton
+          icon={Outline.XMarkIcon}>
+          No, reject it
+        </InnerButton>
+      </ContrastButton>
+      <GradientButton className="grow"
+        onClick={onApprove}
+        colorIndex={5}>
+        <InnerButton icon={Outline.CheckIcon}>
+          Yes, approve it
+        </InnerButton>
+      </GradientButton>
     </div>
   </Page>
 }
@@ -189,3 +358,28 @@ export function WalletAndChainSelectPage() {
   </Page>
 }
 
+export function DonePage() {
+  const onDone = useCallback(() => {
+    Path.go("/")
+  }, [])
+
+  return <Page>
+    <div className="p-xmd grow flex flex-col items-center justify-center">
+      <div className="text-center text-xl font-medium">
+        Done
+      </div>
+      <div className="w-full max-w-[230px] text-center text-contrast">
+        You can now close this window or go to the home page
+      </div>
+    </div>
+    <div className="p-xmd w-full flex items-center gap-2">
+      <ContrastButton className="grow"
+        onClick={onDone}>
+        <InnerButton
+          icon={Outline.HomeIcon}>
+          Go to the home page
+        </InnerButton>
+      </ContrastButton>
+    </div>
+  </Page>
+}

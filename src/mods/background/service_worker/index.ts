@@ -4,6 +4,7 @@ import { Mouse } from "@/libs/mouse/mouse"
 import { RpcParamfulRequestInit, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
+import { qurl } from "@/libs/url/url"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Berith } from "@hazae41/berith"
 import { Bytes } from "@hazae41/bytes"
@@ -77,6 +78,20 @@ export interface PasswordData {
 export interface PopupData {
   window: chrome.windows.Window,
   channel: ExtensionChannel
+}
+
+export class UserRejectionError extends Error {
+  readonly #class = UserRejectionError
+  readonly name = this.#class.name
+
+  constructor() {
+    super(`User rejected the request`)
+  }
+
+  static new() {
+    return new UserRejectionError()
+  }
+
 }
 
 export class Global {
@@ -191,12 +206,6 @@ export class Global {
 
   async tryOpenOrNavigatePopup(pathname: string, mouse: Mouse): Promise<Result<PopupData, Error>> {
     return await Result.unthrow(async t => {
-      const height = 630
-      const width = 400
-
-      const top = Math.max(mouse.y - (height / 2), 0)
-      const left = Math.max(mouse.x - (width / 2), 0)
-
       if (this.popup !== undefined) {
         const windowId = Option.wrap(this.popup.window.id).ok().throw(t)
         const tabId = Option.wrap(this.popup.window.tabs?.[0].id).ok().throw(t)
@@ -206,11 +215,17 @@ export class Global {
         }).then(r => r.throw(t))
 
         await tryBrowser(async () => {
-          return await browser.windows.update(windowId, { focused: true, height, width, top, left })
+          return await browser.windows.update(windowId, { focused: true })
         }).then(r => r.throw(t))
 
         return new Ok(this.popup)
       }
+
+      const height = 630
+      const width = 400
+
+      const top = Math.max(mouse.y - (height / 2), 0)
+      const left = Math.max(mouse.x - (width / 2), 0)
 
       const window = await tryBrowser(async () => {
         return await browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left })
@@ -261,19 +276,19 @@ export class Global {
     }
   }
 
-  async getEthereumSession(script: ExtensionChannel): Promise<Optional<EthereumSession>> {
+  async getEthereumSession(origin: string): Promise<Optional<EthereumSession>> {
     const currentUser = await this.getCurrentUser()
 
     if (currentUser === undefined)
       return undefined
 
-    const sessionQuery = await this.make(getEthereumSession(script, currentUser.storage))
+    const sessionQuery = await this.make(getEthereumSession(origin, currentUser.storage))
     return sessionQuery.current?.inner
   }
 
-  async tryGetOrWaitEthereumSession(script: ExtensionChannel, mouse: Mouse): Promise<Result<EthereumSession, Error>> {
+  async tryGetOrWaitEthereumSession(origin: string, mouse: Mouse): Promise<Result<EthereumSession, Error>> {
     return await Result.unthrow(async t => {
-      const session = await this.getEthereumSession(script)
+      const session = await this.getEthereumSession(origin)
 
       if (session !== undefined)
         return new Ok(session)
@@ -294,7 +309,7 @@ export class Global {
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
       const sessionData: EthereumSession = { wallet, chain }
-      const sessionQuery = await this.make(getEthereumSession(script, storage))
+      const sessionQuery = await this.make(getEthereumSession(origin, storage))
       await sessionQuery.mutate(Mutators.data(sessionData))
 
       return new Ok(sessionData)
@@ -303,25 +318,27 @@ export class Global {
 
   async tryRouteContentScript(script: ExtensionChannel, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<unknown, Error>> {
     return Result.unthrow(async t => {
+      const origin = script.port.name
+
       if (request.method === "brume_ping")
         return new Ok(undefined)
       if (request.method === "eth_requestAccounts")
-        return await this.eth_requestAccounts(script, request, mouse)
+        return await this.eth_requestAccounts(origin, request, mouse)
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
-      const sessionQuery = await this.make(getEthereumSession(script, storage))
+      const sessionQuery = await this.make(getEthereumSession(origin, storage))
       const session = Option.wrap(sessionQuery.current?.inner).ok().throw(t)
 
       const brumes = await this.#getOrCreateEthereumBrumes(session.wallet)
 
-      const ethereum = { session, brumes }
+      const ethereum = { origin, session, brumes }
 
       if (request.method === "eth_accounts")
         return await this.eth_accounts(ethereum, request)
       if (request.method === "eth_sendTransaction")
-        return await this.eth_sendTransaction(ethereum, request)
+        return await this.eth_sendTransaction(ethereum, request, mouse)
       if (request.method === "personal_sign")
-        return await this.personal_sign(ethereum, request)
+        return await this.personal_sign(ethereum, request, mouse)
       if (request.method === "eth_signTypedData_v4")
         return await this.eth_signTypedData_v4(ethereum, request, mouse)
       if (request.method === "wallet_switchEthereumChain")
@@ -341,9 +358,9 @@ export class Global {
     })
   }
 
-  async eth_requestAccounts(script: ExtensionChannel, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<[string], Error>> {
+  async eth_requestAccounts(origin: string, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<[string], Error>> {
     return await Result.unthrow(async t => {
-      const sessionData = await this.tryGetOrWaitEthereumSession(script, mouse).then(r => r.throw(t))
+      const sessionData = await this.tryGetOrWaitEthereumSession(origin, mouse).then(r => r.throw(t))
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
       const walletQuery = await this.make(getWallet(sessionData.wallet.uuid, storage))
@@ -384,8 +401,22 @@ export class Global {
     })
   }
 
-  async eth_sendTransaction(ethereum: EthereumSessionAndBrumes, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+  async eth_sendTransaction(ethereum: EthereumSessionAndBrumes, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
+      const [{ data, gas, from, to, value }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string, value: string }]>).params
+
+      const reply = await this.popupMutex.lock(async () => {
+        const url = qurl(`/eth_sendTransaction`, { to, value, data })
+
+        const popup = await this.tryOpenOrNavigatePopup(url, mouse).then(r => r.throw(t))
+        const reply = await this.tryWaitPopupData(popup, "eth_sendTransaction").then(r => r.throw(t))
+
+        return new Ok(reply)
+      }).then(r => r.throw(t))
+
+      const [approved] = (reply as RpcParamfulRequestPreinit<[boolean]>).params
+      Result.assert(approved).mapErrSync(UserRejectionError.new).throw(t)
+
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
@@ -402,8 +433,6 @@ export class Global {
       const gasPrice = await EthereumSocket.request<string>(socket, {
         method: "eth_gasPrice"
       }).then(r => r.throw(t).throw(t))
-
-      const [{ data, gas, from, to, value }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string, value: string }]>).params
 
       const signature = await new ethers.Wallet(wallet.privateKey).signTransaction({
         data: data,
@@ -425,16 +454,67 @@ export class Global {
     })
   }
 
-  async personal_sign(ethereum: EthereumSessionAndBrumes, request: RpcRequestInit<unknown>): Promise<Result<string, Error>> {
+  async eth_sendTransaction2(ethereum: EthereumSessionAndBrumes, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
+      const [{ data, gas, from, to, value }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string, value: string }]>).params
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
-      const signature = await new ethers.Wallet(wallet.privateKey).signMessage(Bytes.fromHexSafe(data))
+      const circuit = await ethereum.brumes.inner.tryGet(0).then(r => r.throw(t))
+      const socket = Option.wrap(circuit.chains[ethereum.session.chain.id]).ok().throw(t)
+
+      const nonce = await EthereumSocket.request<string>(socket, {
+        method: "eth_getTransactionCount",
+        params: [wallet.address, "pending"]
+      }).then(r => r.throw(t).throw(t))
+
+      const gasPrice = await EthereumSocket.request<string>(socket, {
+        method: "eth_gasPrice"
+      }).then(r => r.throw(t).throw(t))
+
+      const signature = await new ethers.Wallet(wallet.privateKey).signTransaction({
+        data: data,
+        to: to,
+        from: from,
+        gasLimit: gas,
+        chainId: ethereum.session.chain.id,
+        gasPrice: gasPrice,
+        nonce: parseInt(nonce, 16),
+        value: value
+      })
+
+      const signal = AbortSignal.timeout(600_000)
+
+      return await EthereumSocket.request<string>(socket, {
+        method: "eth_sendRawTransaction",
+        params: [signature]
+      }, signal).then(r => r.throw(t))
+    })
+  }
+
+  async personal_sign(ethereum: EthereumSessionAndBrumes, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const [message, address] = (request as RpcParamfulRequestInit<[string, string]>).params
+
+      const reply = await this.popupMutex.lock(async () => {
+        const popup = await this.tryOpenOrNavigatePopup(`/personal_sign?message=${message}`, mouse).then(r => r.throw(t))
+        const reply = await this.tryWaitPopupData(popup, "personal_sign").then(r => r.throw(t))
+
+        return new Ok(reply)
+      }).then(r => r.throw(t))
+
+      const [approved] = (reply as RpcParamfulRequestPreinit<[boolean]>).params
+      Result.assert(approved).mapErrSync(UserRejectionError.new).throw(t)
+
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
+
+      const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
+      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
+
+      const signature = await new ethers.Wallet(wallet.privateKey).signMessage(Bytes.fromHexSafe(message))
 
       return new Ok(signature)
     })
@@ -444,8 +524,15 @@ export class Global {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      // TODO mutex
-      const popup = await this.tryOpenOrNavigatePopup("/eth_signTypedData_v4", mouse).then(r => r.throw(t))
+      const reply = await this.popupMutex.lock(async () => {
+        const popup = await this.tryOpenOrNavigatePopup(`/eth_signTypedData_v4?message=${data}`, mouse).then(r => r.throw(t))
+        const reply = await this.tryWaitPopupData(popup, "eth_signTypedData_v4").then(r => r.throw(t))
+
+        return new Ok(reply)
+      }).then(r => r.throw(t))
+
+      const [approved] = (reply as RpcParamfulRequestPreinit<[boolean]>).params
+      Result.assert(approved).mapErrSync(UserRejectionError.new).throw(t)
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
@@ -468,20 +555,18 @@ export class Global {
 
       const chain = Option.wrap(chains[parseInt(chainId, 16)]).ok().throw(t)
 
-      const data = await this.popupMutex.lock(async () => {
+      const popup = await this.popupMutex.lock(async () => {
         const popup = await this.tryOpenOrNavigatePopup("/wallet_switchEthereumChain", mouse).then(r => r.throw(t))
         const data = await this.tryWaitPopupData(popup, "wallet_switchEthereumChain").then(r => r.throw(t))
 
         return new Ok(data)
       }).then(r => r.throw(t))
 
-      const [approved] = (data as RpcParamfulRequestPreinit<[boolean]>).params
-
-      if (!approved)
-        return new Err(new Error(`User rejected request`))
+      const [approved] = (popup as RpcParamfulRequestPreinit<[boolean]>).params
+      Result.assert(approved).mapErrSync(UserRejectionError.new).throw(t)
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
-      const sessionQuery = await this.make(getEthereumSession(script, storage))
+      const sessionQuery = await this.make(getEthereumSession(ethereum.origin, storage))
       await sessionQuery.mutate(Mutators.mapDataOrNone(d => d.mapSync(d => ({ ...d, chain }))))
 
       return Ok.void()
@@ -721,12 +806,12 @@ export class Global {
 
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
-      const ethereum = { session, brumes }
+      const ethereum = { origin: "foreground", session, brumes }
 
       if (subrequest.method === "eth_getBalance")
         return await this.eth_getBalance(ethereum, subrequest)
       if (subrequest.method === "eth_sendTransaction")
-        return await this.eth_sendTransaction(ethereum, subrequest)
+        return await this.eth_sendTransaction2(ethereum, subrequest)
 
       const query = await this.make(getEthereumUnknown(ethereum, subrequest, storage))
 

@@ -5,7 +5,6 @@ import { Option } from "@hazae41/option"
 import { Cancel, Looped, Retry, tryLoop } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
 import { FetchError, Fetched, FetcherMore, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
-import { ExtensionChannel } from "../.."
 import { EthereumBrumes, EthereumSocket } from "../sessions/data"
 
 export type Wallet =
@@ -82,11 +81,12 @@ export interface EthereumSession {
   chain: EthereumChain
 }
 
-export function getEthereumSession(channel: ExtensionChannel, storage: IDBStorage) {
-  return createQuerySchema<string, EthereumSession, never>(`sessions/${channel.port.name}`, undefined, { storage })
+export function getEthereumSession(origin: string, storage: IDBStorage) {
+  return createQuerySchema<string, EthereumSession, never>(`sessions/${origin}`, undefined, { storage })
 }
 
 export interface EthereumSessionAndBrumes {
+  origin: string
   session: EthereumSession
   brumes: EthereumBrumes
 }
