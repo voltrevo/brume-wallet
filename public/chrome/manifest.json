@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Brume Wallet",
   "description": "The private wallet",
-  "version": "0.3.6",
+  "version": "VERSION",
   "action": {
     "default_title": "Brume Wallet",
     "default_popup": "action.html"

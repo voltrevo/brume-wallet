@@ -1,5 +1,5 @@
 {
-  "name": "@brume/wallet",
+  "name": "@brumewallet/wallet",
   "version": "0.3.6",
   "private": true,
   "scripts": {
@@ -15,10 +15,10 @@
     "build:website": "npm run build:!before && npm run build:!website && npm run build:!after",
     "build:vercel": "npm run build:website && cp -R ./dist/website ./out",
     "zip": "npm run zip:website && npm run zip:chrome && npm run zip:firefox && npm run zip:safari",
-    "zip:website": "zip -r ./dist/website.zip ./dist/website",
-    "zip:chrome": "zip -r ./dist/chrome.zip ./dist/chrome",
-    "zip:firefox": "zip -r ./dist/firefox.zip ./dist/firefox",
-    "zip:safari": "zip -r ./dist/safari.zip ./dist/safari",
+    "zip:website": "cd ./dist/website && zip -r ../website.zip .",
+    "zip:chrome": "cd ./dist/chrome && zip -r ../chrome.zip .",
+    "zip:firefox": "cd ./dist/firefox && zip -r ../firefox.zip .",
+    "zip:safari": "cd ./dist/safari && zip -r ../safari.zip .",
     "xcode": "xcrun safari-web-extension-converter ./dist/safari --project-location xcode --app-name brume-wallet",
     "clean": "rimraf ./node_modules ./.next ./out ./dist ./website ./chrome ./firefox ./safari ./package-lock.json",
     "lint": "next lint",
