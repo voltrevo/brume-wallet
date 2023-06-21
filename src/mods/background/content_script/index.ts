@@ -1,8 +1,8 @@
-import { Ports, browser, tryBrowserSync } from "@/libs/browser/browser"
+import { Ports, browser, tryBrowser } from "@/libs/browser/browser"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
-import { Pool, Retry, tryLoop } from "@hazae41/piscine"
+import { Pool } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
 
 declare const self: ServiceWorkerGlobalScope
@@ -41,51 +41,55 @@ if (IS_FIREFOX || IS_SAFARI) {
   container.removeChild(element)
 }
 
-const ports = new Pool<chrome.runtime.Port, Error>(async (params) => {
+new Pool<chrome.runtime.Port, Error>(async (params) => {
   return Result.unthrow(async t => {
     const { index, pool } = params
 
-    const port = await tryLoop(async () => {
-      return tryBrowserSync(() => {
-        const port = browser.runtime.connect({ name: location.origin })
-        port.onDisconnect.addListener(() => void chrome.runtime.lastError)
-        return port
-      }).mapErrSync(Retry.new)
-    }, { base: 1, max: Number.MAX_SAFE_INTEGER }).then(r => r.throw(t))
+    await new Promise(ok => setTimeout(ok, 1))
 
-    const onMessage = (response: RpcResponseInit) => {
+    const port = await tryBrowser(async () => {
+      const port = browser.runtime.connect({ name: location.origin })
+      port.onDisconnect.addListener(() => void chrome.runtime.lastError)
+      return port
+    }).then(r => r.throw(t))
+
+    const onRequest = async (event: CustomEvent<string>) => {
+      const request = JSON.parse(event.detail) as RpcRequestInit<unknown>
+      const result = Ports.tryPostMessage(port, { request, mouse })
+
+      if (result.isOk())
+        return
+
+      const response = RpcResponse.rewrap(request.id, result)
+      const detail = JSON.stringify(response)
+      const event2 = new CustomEvent("ethereum#response", { detail })
+      window.dispatchEvent(event2)
+    }
+
+    const onResponse = (response: RpcResponseInit) => {
       const detail = JSON.stringify(response)
       const event = new CustomEvent("ethereum#response", { detail })
       window.dispatchEvent(event)
     }
 
-    const onDisconnect = () => {
+    const onDisconnect = async () => {
       pool.delete(index)
-      return Ok.void()
     }
 
-    port.onMessage.addListener(onMessage)
+    port.onMessage.addListener(onResponse)
     port.onDisconnect.addListener(onDisconnect)
 
+    window.addEventListener("ethereum#request", onRequest, { passive: true })
+
     const onClean = () => {
-      port.onMessage.removeListener(onMessage)
+      port.onMessage.removeListener(onResponse)
       port.onDisconnect.removeListener(onDisconnect)
+
+      window.removeEventListener("ethereum#request", onRequest)
+
       port.disconnect()
     }
 
     return new Ok(new Cleaner(port, onClean))
   })
 }, { capacity: 1 })
-
-window.addEventListener("ethereum#request", async (event: CustomEvent<string>) => {
-  const request = JSON.parse(event.detail) as RpcRequestInit<unknown>
-  const result = await Ports.tryGetAndPostMessage(ports, { request, mouse })
-
-  if (result.isOk())
-    return
-
-  const response = RpcResponse.rewrap(request.id, result)
-  const detail = JSON.stringify(response)
-  const event2 = new CustomEvent("ethereum#response", { detail })
-  window.dispatchEvent(event2)
-})
