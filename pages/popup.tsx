@@ -1,8 +1,11 @@
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { useBackground } from "@/mods/foreground/background/context";
+import { InnerButton } from "@/mods/foreground/components/buttons/button";
 import { ContrastButtonChip } from "@/mods/foreground/components/buttons/chips/contrast";
 import { InnerButtonChip } from "@/mods/foreground/components/buttons/chips/naked";
+import { ContrastButton } from "@/mods/foreground/components/buttons/contrast";
+import { GradientButton } from "@/mods/foreground/components/buttons/gradient";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
@@ -59,7 +62,7 @@ export function SwitchPage() {
   }, [background])
 
   return <Page>
-    <div className="p-4 grow flex flex-col items-center justify-evenly">
+    <div className="p-xmd grow flex flex-col items-center justify-evenly">
       <div className="w-full">
         <div className="text-center text-xl font-medium">
           Switch chain
@@ -68,16 +71,22 @@ export function SwitchPage() {
           Do you want to switch the Ethereum chain?
         </div>
       </div>
-      <ContrastButtonChip onClick={onApprove} >
-        <InnerButtonChip icon={Outline.CheckIcon}>
-          Yes, approve it
-        </InnerButtonChip>
-      </ContrastButtonChip>
-      <ContrastButtonChip onClick={onReject} >
-        <InnerButtonChip icon={Outline.XMarkIcon}>
+    </div>
+    <div className="p-xmd w-full flex items-center gap-2">
+      <ContrastButton className="grow"
+        onClick={onReject}>
+        <InnerButton
+          icon={Outline.XMarkIcon}>
           No, reject it
-        </InnerButtonChip>
-      </ContrastButtonChip>
+        </InnerButton>
+      </ContrastButton>
+      <GradientButton className="grow"
+        onClick={onApprove}
+        colorIndex={5}>
+        <InnerButton icon={Outline.CheckIcon}>
+          Yes, approve it
+        </InnerButton>
+      </GradientButton>
     </div>
   </Page>
 }
@@ -89,7 +98,7 @@ export function DonePage() {
   }, [])
 
   return <Page>
-    <div className="p-4 grow flex flex-col items-center justify-evenly">
+    <div className="p-xmd grow flex flex-col items-center justify-evenly">
       <div className="w-full">
         <div className="text-center text-xl font-medium">
           Done
@@ -98,11 +107,15 @@ export function DonePage() {
           You can now close this window or go to the home page
         </div>
       </div>
-      <ContrastButtonChip onClick={onDone} >
-        <InnerButtonChip icon={Outline.HomeIcon}>
+    </div>
+    <div className="p-xmd w-full flex items-center gap-2">
+      <ContrastButton className="grow"
+        onClick={onDone}>
+        <InnerButton
+          icon={Outline.HomeIcon}>
           Go to the home page
-        </InnerButtonChip>
-      </ContrastButtonChip>
+        </InnerButton>
+      </ContrastButton>
     </div>
   </Page>
 }

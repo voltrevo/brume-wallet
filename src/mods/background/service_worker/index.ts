@@ -191,21 +191,26 @@ export class Global {
 
   async tryOpenOrNavigatePopup(pathname: string, mouse: Mouse): Promise<Result<PopupData, Error>> {
     return await Result.unthrow(async t => {
-      if (this.popup !== undefined) {
-        const tabId = Option.wrap(this.popup.window.tabs?.[0].id).ok().throw(t)
-
-        await tryBrowser(async () => {
-          return await browser.tabs.update(tabId, { url: `popup.html#${pathname}` })
-        }).then(r => r.throw(t))
-
-        return new Ok(this.popup)
-      }
-
       const height = 630
       const width = 400
 
       const top = Math.max(mouse.y - (height / 2), 0)
       const left = Math.max(mouse.x - (width / 2), 0)
+
+      if (this.popup !== undefined) {
+        const windowId = Option.wrap(this.popup.window.id).ok().throw(t)
+        const tabId = Option.wrap(this.popup.window.tabs?.[0].id).ok().throw(t)
+
+        await tryBrowser(async () => {
+          return await browser.tabs.update(tabId, { url: `popup.html#${pathname}`, highlighted: true })
+        }).then(r => r.throw(t))
+
+        await tryBrowser(async () => {
+          return await browser.windows.update(windowId, { focused: true, height, width, top, left })
+        }).then(r => r.throw(t))
+
+        return new Ok(this.popup)
+      }
 
       const window = await tryBrowser(async () => {
         return await browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left })
