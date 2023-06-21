@@ -75,7 +75,8 @@ export interface PasswordData {
 }
 
 export interface PopupData {
-  window: chrome.windows.Window
+  window: chrome.windows.Window,
+  channel: ExtensionChannel
 }
 
 export class Global {
@@ -83,8 +84,8 @@ export class Global {
   readonly core = new Core({})
 
   readonly events = new SuperEventTarget<{
-    "hello": Future<Result<void, Error>>
-    "data": RpcRequestPreinit<unknown>
+    "hello": [ExtensionChannel, Future<Result<void, Error>>]
+    "data": [ExtensionChannel, RpcRequestPreinit<unknown>]
   }>()
 
   readonly popupMutex = new Mutex(undefined)
@@ -163,10 +164,10 @@ export class Global {
   }
 
   async tryWaitPopupHello(popup: chrome.windows.Window) {
-    const request = new Future<Result<void, Error>>()
+    const request = new Future<Result<ExtensionChannel, Error>>()
 
-    const onRequest = (response: Future<Result<void, Error>>) => {
-      request.resolve(Ok.void())
+    const onRequest = ([channel, response]: [ExtensionChannel, Future<Result<void, Error>>]) => {
+      request.resolve(new Ok(channel))
       response.resolve(Ok.void())
       return Ok.void()
     }
@@ -190,51 +191,51 @@ export class Global {
 
   async tryOpenOrNavigatePopup(pathname: string, mouse: Mouse): Promise<Result<PopupData, Error>> {
     return await Result.unthrow(async t => {
-      return await this.popupMutex.lock(async () => {
-        if (this.popup !== undefined) {
-          const tabId = Option.wrap(this.popup.window.tabs?.[0].id).ok().throw(t)
+      if (this.popup !== undefined) {
+        const tabId = Option.wrap(this.popup.window.tabs?.[0].id).ok().throw(t)
 
-          await tryBrowser(async () => {
-            return await browser.tabs.update(tabId, { url: `index.html#${pathname}` })
-          }).then(r => r.throw(t))
-
-          return new Ok(this.popup)
-        }
-
-        const height = 630
-        const width = 400
-
-        const top = Math.max(mouse.y - (height / 2), 0)
-        const left = Math.max(mouse.x - (width / 2), 0)
-
-        const window = await tryBrowser(async () => {
-          return await browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left })
+        await tryBrowser(async () => {
+          return await browser.tabs.update(tabId, { url: `popup.html#${pathname}` })
         }).then(r => r.throw(t))
 
-        const channel = await this.tryWaitPopupHello(window).then(r => r.throw(t))
-
-        this.popup = { window }
-
-        const onRemoved = () => {
-          this.popup = undefined
-
-          browser.windows.onRemoved.removeListener(onRemoved)
-        }
-
-        browser.windows.onRemoved.addListener(onRemoved)
-
         return new Ok(this.popup)
-      })
+      }
+
+      const height = 630
+      const width = 400
+
+      const top = Math.max(mouse.y - (height / 2), 0)
+      const left = Math.max(mouse.x - (width / 2), 0)
+
+      const window = await tryBrowser(async () => {
+        return await browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left })
+      }).then(r => r.throw(t))
+
+      const channel = await this.tryWaitPopupHello(window).then(r => r.throw(t))
+
+      this.popup = { window, channel }
+
+      const onRemoved = () => {
+        this.popup = undefined
+
+        browser.windows.onRemoved.removeListener(onRemoved)
+      }
+
+      browser.windows.onRemoved.addListener(onRemoved)
+
+      return new Ok(this.popup)
     })
   }
 
   async tryWaitPopupData(popup: PopupData, method: string) {
     const future = new Future<Result<RpcRequestPreinit<unknown>, Error>>()
 
-    const onData = (data: RpcRequestPreinit<unknown>) => {
-      if (data.method !== method)
+    const onData = ([channel, request]: [ExtensionChannel, RpcRequestPreinit<unknown>]) => {
+      if (channel.uuid !== popup.channel.uuid)
         return Ok.void()
-      future.resolve(new Ok(data))
+      if (request.method !== method)
+        return Ok.void()
+      future.resolve(new Ok(request))
       return Ok.void()
     }
 
@@ -272,10 +273,14 @@ export class Global {
       if (session !== undefined)
         return new Ok(session)
 
-      const popup = await this.tryOpenOrNavigatePopup("/eth_requestAccounts", mouse).then(r => r.throw(t))
+      const data = await this.popupMutex.lock(async () => {
+        const popup = await this.tryOpenOrNavigatePopup("/eth_requestAccounts", mouse).then(r => r.throw(t))
+        const data = await this.tryWaitPopupData(popup, "eth_requestAccounts").then(r => r.throw(t))
 
-      const request = await this.tryWaitPopupData(popup, "eth_requestAccounts").then(r => r.throw(t))
-      const [walletId, chainId] = (request as RpcParamfulRequestPreinit<[string, number]>).params
+        return new Ok(data)
+      }).then(r => r.throw(t))
+
+      const [walletId, chainId] = (data as RpcParamfulRequestPreinit<[string, number]>).params
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
@@ -434,7 +439,8 @@ export class Global {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      await this.tryOpenOrNavigatePopup("/eth_signTypedData_v4", mouse).then(r => r.throw(t))
+      // TODO mutex
+      const popup = await this.tryOpenOrNavigatePopup("/eth_signTypedData_v4", mouse).then(r => r.throw(t))
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
@@ -457,8 +463,13 @@ export class Global {
 
       const chain = Option.wrap(chains[parseInt(chainId, 16)]).ok().throw(t)
 
-      const popup = await this.tryOpenOrNavigatePopup("/wallet_switchEthereumChain", mouse).then(r => r.throw(t))
-      const data = await this.tryWaitPopupData(popup, "wallet_switchEthereumChain").then(r => r.throw(t))
+      const data = await this.popupMutex.lock(async () => {
+        const popup = await this.tryOpenOrNavigatePopup("/wallet_switchEthereumChain", mouse).then(r => r.throw(t))
+        const data = await this.tryWaitPopupData(popup, "wallet_switchEthereumChain").then(r => r.throw(t))
+
+        return new Ok(data)
+      }).then(r => r.throw(t))
+
       const [approved] = (data as RpcParamfulRequestPreinit<[boolean]>).params
 
       if (!approved)
@@ -530,7 +541,8 @@ export class Global {
     return Result.unthrow(async t => {
       const response = new Future<Result<void, Error>>()
 
-      await this.events.tryEmit("hello", response).then(r => r.throw(t))
+      const channel = Option.wrap(maybeChannel).ok().throw(t)
+      await this.events.tryEmit("hello", [channel, response]).then(r => r.throw(t))
 
       return await response.promise
     })
@@ -540,7 +552,8 @@ export class Global {
     return Result.unthrow(async t => {
       const [subrequest] = (request as RpcParamfulRequestInit<[RpcRequestPreinit<unknown>]>).params
 
-      await this.events.tryEmit("data", subrequest).then(r => r.throw(t))
+      const channel = Option.wrap(maybeChannel).ok().throw(t)
+      await this.events.tryEmit("data", [channel, subrequest]).then(r => r.throw(t))
 
       return Ok.void()
     })

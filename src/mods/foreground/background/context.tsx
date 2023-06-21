@@ -1,6 +1,6 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { Background, ExtensionBackground, WebsiteBackground, createMessageChannelPool, createPortPool } from "./background";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Background, ExtensionBackground, ExtensionEvents, WebsiteBackground, createMessageChannelPool, createPortPool } from "./background";
 
 export const BackgroundContext =
   createContext<Background | undefined>(undefined)
@@ -50,8 +50,10 @@ export function WebsiteBackgroundProvider(props: ChildrenProps) {
 export function ExtensionBackgroundProvider(props: ChildrenProps) {
   const { children } = props
 
+  const events = useRef<ExtensionEvents>({})
+
   const background = useMemo(() => {
-    return new ExtensionBackground(createPortPool())
+    return new ExtensionBackground(createPortPool(events.current), events.current)
   }, [])
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { ConnectPage, SwitchPage } from "pages/popup"
+import { DonePage, SwitchPage, WalletAndChainSelectPage } from "pages/popup"
 import { WalletsPage } from "../entities/wallets/all/page"
 import { WalletPage } from "../entities/wallets/page"
 import { usePath } from "./path"
@@ -21,10 +21,13 @@ export function Router() {
     return <WalletPage uuid={matches[1]} />
 
   if (matches = url.pathname.match(/^\/eth_requestAccounts$/))
-    return <ConnectPage />
+    return <WalletAndChainSelectPage />
 
   if (matches = url.pathname.match(/^\/wallet_switchEthereumChain$/))
     return <SwitchPage />
+
+  if (matches = url.pathname.match(/^\/done$/))
+    return <DonePage />
 
   return <>Error 404</>
 }

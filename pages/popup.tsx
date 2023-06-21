@@ -1,7 +1,5 @@
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
-import { OkProps } from "@/libs/react/props/promise";
-import { TitleProps } from "@/libs/react/props/title";
 import { useBackground } from "@/mods/foreground/background/context";
 import { ContrastButtonChip } from "@/mods/foreground/components/buttons/chips/contrast";
 import { InnerButtonChip } from "@/mods/foreground/components/buttons/chips/naked";
@@ -15,7 +13,6 @@ import { Wallet } from "@/mods/foreground/entities/wallets/data";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
-import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 
 export default function Popup() {
@@ -36,25 +33,7 @@ export default function Popup() {
   </main>
 }
 
-
 export function SwitchPage() {
-  const [step, setStep] = useState(0)
-
-  const next = useCallback(() => {
-    setStep(x => x + 1)
-  }, [])
-
-  return <>
-    {step === 0 &&
-      <ApproveSwitchPage ok={next} />}
-    {step === 1 &&
-      <DonePage title="Approved" />}
-  </>
-}
-
-export function ApproveSwitchPage(props: OkProps<void>) {
-  const { ok } = props
-
   const background = useBackground()
 
   const onApprove = useCallback(async () => {
@@ -65,8 +44,8 @@ export function ApproveSwitchPage(props: OkProps<void>) {
         params: [true]
       }]
     }).then(r => r.unwrap().unwrap())
-    ok()
-  }, [background, ok])
+    Path.go("/done")
+  }, [background])
 
   const onReject = useCallback(async () => {
     await background.tryRequest({
@@ -76,8 +55,8 @@ export function ApproveSwitchPage(props: OkProps<void>) {
         params: [false]
       }]
     }).then(r => r.unwrap().unwrap())
-    ok()
-  }, [background, ok])
+    Path.go("/done")
+  }, [background])
 
   return <Page>
     <div className="p-4 grow flex flex-col items-center justify-evenly">
@@ -103,36 +82,17 @@ export function ApproveSwitchPage(props: OkProps<void>) {
   </Page>
 }
 
-export function ConnectPage() {
-  const [step, setStep] = useState(0)
-
-  const next = useCallback(() => {
-    setStep(x => x + 1)
-  }, [])
-
-  return <>
-    {step === 0 &&
-      <WalletAndChainSelectPage ok={next} />}
-    {step === 1 &&
-      <DonePage title="Connected" />}
-  </>
-}
-
-export function DonePage(props: TitleProps) {
-  const { title } = props
-
-  const router = useRouter()
+export function DonePage() {
 
   const onDone = useCallback(() => {
-    router.push("/")
     Path.go("/")
-  }, [router])
+  }, [])
 
   return <Page>
     <div className="p-4 grow flex flex-col items-center justify-evenly">
       <div className="w-full">
         <div className="text-center text-xl font-medium">
-          {title}
+          Done
         </div>
         <div className="w-full max-w-[230px] m-auto text-center text-contrast">
           You can now close this window or go to the home page
@@ -147,9 +107,8 @@ export function DonePage(props: TitleProps) {
   </Page>
 }
 
-export function WalletAndChainSelectPage(props: OkProps<void>) {
+export function WalletAndChainSelectPage() {
   const background = useBackground()
-  const { ok } = props
 
   const wallets = useWallets(background)
 
@@ -165,8 +124,8 @@ export function WalletAndChainSelectPage(props: OkProps<void>) {
         params: [wallet.uuid, chain]
       }]
     }).then(r => r.unwrap().unwrap())
-    ok()
-  }, [background, chain, ok])
+    Path.go("/done")
+  }, [background, chain])
 
   const Body =
     <PageBody>

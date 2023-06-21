@@ -168,7 +168,11 @@ export class WebsiteBackground {
 
 }
 
-export function createPortPool() {
+export interface ExtensionEvents {
+  onMessage?: (request: RpcRequestInit<unknown>) => Promise<Result<unknown, Error>>
+}
+
+export function createPortPool(events: ExtensionEvents) {
   return new Pool<chrome.runtime.Port, Error>(async (params) => {
     return await Result.unthrow(async t => {
       const { index, pool } = params
@@ -186,6 +190,17 @@ export function createPortPool() {
         return Ok.void()
       }
 
+      const onMessage = async (message: RpcRequestInit<unknown> | RpcResponseInit<unknown>) => {
+        if (!("method" in message))
+          return
+        if (events.onMessage === undefined)
+          return
+        const result = await events.onMessage(message)
+        const response = RpcResponse.rewrap(message.id, result)
+        port.postMessage(response)
+      }
+
+      port.onMessage.addListener(onMessage)
       port.onDisconnect.addListener(onDisconnect)
 
       const onClean = () => {
@@ -202,7 +217,8 @@ export class ExtensionBackground {
   readonly #client = new RpcClient()
 
   constructor(
-    readonly ports: Pool<chrome.runtime.Port, Error>
+    readonly ports: Pool<chrome.runtime.Port, Error>,
+    readonly events: ExtensionEvents
   ) { }
 
   isWebsite(): false {
