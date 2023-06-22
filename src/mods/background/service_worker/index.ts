@@ -423,7 +423,7 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
       const circuit = await ethereum.brumes.inner.tryGet(0).then(r => r.throw(t))
-      const socket = Option.wrap(circuit.chains[ethereum.session.chain.id]).ok().throw(t)
+      const socket = Option.wrap(circuit.chains[ethereum.session.chain.chainId]).ok().throw(t)
 
       const nonce = await EthereumSocket.request<string>(socket, {
         method: "eth_getTransactionCount",
@@ -439,7 +439,7 @@ export class Global {
         to: to,
         from: from,
         gasLimit: gas,
-        chainId: ethereum.session.chain.id,
+        chainId: ethereum.session.chain.chainId,
         gasPrice: gasPrice,
         nonce: parseInt(nonce, 16),
         value: value
@@ -464,7 +464,7 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
       const circuit = await ethereum.brumes.inner.tryGet(0).then(r => r.throw(t))
-      const socket = Option.wrap(circuit.chains[ethereum.session.chain.id]).ok().throw(t)
+      const socket = Option.wrap(circuit.chains[ethereum.session.chain.chainId]).ok().throw(t)
 
       const nonce = await EthereumSocket.request<string>(socket, {
         method: "eth_getTransactionCount",
@@ -480,7 +480,7 @@ export class Global {
         to: to,
         from: from,
         gasLimit: gas,
-        chainId: ethereum.session.chain.id,
+        chainId: ethereum.session.chain.chainId,
         gasPrice: gasPrice,
         nonce: parseInt(nonce, 16),
         value: value

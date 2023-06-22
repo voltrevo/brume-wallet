@@ -1,10 +1,12 @@
-import { BigInts } from "@/libs/bigints/bigints"
-import { EthereumChain } from "@/libs/ethereum/chain"
+import PairAbi from "@/assets/Pair.json"
+import { BigInts, Fixed } from "@/libs/bigints/bigints"
+import { EthereumChain, PairInfo, tokensByAddress } from "@/libs/ethereum/chain"
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { Optional, Some } from "@hazae41/option"
-import { Result } from "@hazae41/result"
-import { FetchError, Fetched, FetcherMore, Query, createQuerySchema, useCore, useError, useFetch, useOnce, useQuery } from "@hazae41/xswr"
-import { useCallback, useEffect } from "react"
+import { Ok, Result } from "@hazae41/result"
+import { Data, FetchError, Fetched, FetcherMore, Query, createQuerySchema, useCore, useError, useFetch, useOnce, useQuery } from "@hazae41/xswr"
+import { Contract, ContractRunner, TransactionRequest, TransactionResponse } from "ethers"
+import { useCallback, useEffect, useMemo } from "react"
 import { Background, UserStorage } from "../../background/background"
 import { useBackground } from "../../background/context"
 
@@ -96,7 +98,7 @@ export async function tryFetch<T>(request: RpcRequestPreinit<unknown>, ethereum:
 
   return await background.tryRequest<T>({
     method: "brume_call_ethereum",
-    params: [wallet.uuid, chain.id, request]
+    params: [wallet.uuid, chain.chainId, request]
   }).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 }
 
@@ -129,7 +131,7 @@ export function getBalanceSchema(address: string, ethereum: EthereumHandle) {
   const storage = new UserStorage(ethereum.background)
 
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
-    chainId: ethereum.chain.id,
+    chainId: ethereum.chain.chainId,
     method: "eth_getBalance",
     params: [address, "pending"]
   }, fetcher, { storage, dataSerializer: BigInts })
@@ -150,7 +152,7 @@ export function getNonceSchema(address: string, ethereum: EthereumHandle) {
   const storage = new UserStorage(ethereum.background)
 
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
-    chainId: ethereum.chain.id,
+    chainId: ethereum.chain.chainId,
     method: "eth_getTransactionCount",
     params: [address, "pending"]
   }, fetcher, { storage, dataSerializer: BigInts })
@@ -171,7 +173,7 @@ export function getGasPriceSchema(ethereum: EthereumHandle) {
   const storage = new UserStorage(ethereum.background)
 
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
-    chainId: ethereum.chain.id,
+    chainId: ethereum.chain.chainId,
     method: "eth_gasPrice",
     params: []
   }, fetcher, { storage, dataSerializer: BigInts })
@@ -183,4 +185,64 @@ export function useGasPrice(ethereum: EthereumHandle) {
   useSync(query)
   useError(query, console.error)
   return query
+}
+
+export class BrumeProvider implements ContractRunner {
+  provider = null
+
+  constructor(
+    readonly ethereum: EthereumHandle
+  ) { }
+
+  async call(tx: TransactionRequest) {
+    return await tryFetch<string>({
+      method: "eth_call",
+      params: [{
+        to: tx.to,
+        data: tx.data
+      }, "pending"]
+    }, this.ethereum).then(r => r.unwrap().unwrap())
+  }
+
+  estimateGas?: ((tx: TransactionRequest) => Promise<bigint>) | undefined
+  resolveName?: ((name: string) => Promise<string | null>) | undefined
+  sendTransaction?: ((tx: TransactionRequest) => Promise<TransactionResponse>) | undefined
+}
+
+export function getPairReserves(address: string, ethereum: EthereumHandle) {
+  const fetcher = async () => new Ok(new Data(await new Contract(address, PairAbi, new BrumeProvider(ethereum)).getReserves()))
+
+  return createQuerySchema<string, [bigint, bigint, bigint], Error>(`pair_price/${address}`, fetcher)
+}
+
+export function usePairReserves(address: string, ethereum: EthereumHandle) {
+  const query = useQuery(getPairReserves, [address, ethereum])
+  useFetch(query)
+  useSync(query)
+  useError(query, console.error)
+  return query
+}
+
+export function usePairPrice(pair: PairInfo, ethereum: EthereumHandle) {
+  const reserves = usePairReserves(pair.address, ethereum)
+
+  return useMemo(() => {
+    if (reserves.current === undefined)
+      return undefined
+    if (reserves.current.isErr())
+      return reserves.current
+
+    const decimals0 = tokensByAddress[pair.token0].decimals
+    const decimals1 = tokensByAddress[pair.token1].decimals
+
+    const [reserve0, reserve1] = reserves.current.inner
+
+    const quantity0 = new Fixed(reserve0, decimals0)
+    const quantity1 = new Fixed(reserve1, decimals1)
+
+    const price = quantity1.div(quantity0)
+
+    return new Ok(price)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pair, reserves.current])
 }

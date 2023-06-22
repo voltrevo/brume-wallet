@@ -71,10 +71,10 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumHa
 
       const gas = await handle.background.tryRequest<string>({
         method: "brume_call_ethereum",
-        params: [handle.wallet.uuid, handle.chain.id, {
+        params: [handle.wallet.uuid, handle.chain.chainId, {
           method: "eth_estimateGas",
           params: [{
-            chainId: Radix.toHex(handle.chain.id),
+            chainId: Radix.toHex(handle.chain.chainId),
             from: wallet.address,
             to: ethers.getAddress(recipientInput),
             value: Radix.toHex(ethers.parseUnits(valueInput, 18)),
@@ -86,10 +86,10 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumHa
 
       const txHash = await handle.background.tryRequest<string>({
         method: "brume_call_ethereum",
-        params: [handle.wallet.uuid, handle.chain.id, {
+        params: [handle.wallet.uuid, handle.chain.chainId, {
           method: "eth_sendTransaction",
           params: [{
-            chainId: Radix.toHex(handle.chain.id),
+            chainId: Radix.toHex(handle.chain.chainId),
             from: wallet.address,
             to: ethers.getAddress(recipientInput),
             value: Radix.toHex(ethers.parseUnits(valueInput, 18)),

@@ -1,17 +1,18 @@
 /* eslint-disable @next/next/no-img-element */
-import { BigInts } from "@/libs/bigints/bigints";
+import { Fixed } from "@/libs/bigints/bigints";
 import { Colors } from "@/libs/colors/colors";
-import { chains } from "@/libs/ethereum/chain";
+import { chains, pairsByAddress, pairsByName } from "@/libs/ethereum/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";
-import { Query } from "@hazae41/xswr";
+import { Option, Optional } from "@hazae41/option";
+import { Result } from "@hazae41/result";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
 import { PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { WalletDataProvider, useWalletData } from "./context";
-import { useBalance, useEthereumHandle } from "./data";
+import { useBalance, useEthereumHandle, usePairPrice } from "./data";
 import { WalletDataCard } from "./row";
 import { WalletDataSendDialog } from "./send";
 
@@ -23,14 +24,23 @@ export function WalletPage(props: UUIDProps) {
   </WalletDataProvider>
 }
 
-function useFloat<K, D extends bigint, F>(query: Query<K, D, F>) {
+function useDisplay(option: Optional<Result<Fixed, Error>>) {
   return useMemo(() => {
-    if (query.error !== undefined)
-      return "Error"
-    if (query.data === undefined)
-      return "..."
-    return BigInts.float(query.data.inner, 18)
-  }, [query.data, query.error])
+    return Option.wrap(option).mapSync(result => result.mapSync(fixed => fixed.toString()).mapErrSync(() => "Error").inner).unwrapOr("...")
+  }, [option])
+}
+
+function useProduct(option: Optional<Result<Fixed[], Error>>) {
+  return useMemo(() => {
+    return Option.mapSync(option, result => result.mapSync(fixeds => fixeds.reduce((x, y) => y.mul(x), new Fixed(1n, 0))))
+  }, [option])
+}
+
+function useMerge<T, E>(...results: Optional<Result<T, E>>[]) {
+  return useMemo(() => {
+    return Result.maybeAll(results)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...results])
 }
 
 function WalletDataPage() {
@@ -45,17 +55,29 @@ function WalletDataPage() {
   const color = Colors.get(wallet.color)
   const color2 = Colors.get(wallet.color + 1)
 
-  const mainnetBalance = useBalance(wallet.address, mainnet)
-  const mainnetBalanceFloat = useFloat(mainnetBalance)
+  const mainnetBalanceQuery = useBalance(wallet.address, mainnet)
+  const mainnetBalanceFixed = mainnetBalanceQuery.current?.mapSync(x => new Fixed(x, 18))
+  const mainnetBalanceDisplay = useDisplay(mainnetBalanceFixed?.mapSync(x => x.move(3)))
   const mainnetSendDialog = useBooleanHandle(false)
 
   const goerliBalance = useBalance(wallet.address, goerli)
-  const goerliBalanceFloat = useFloat(goerliBalance)
+  const goerliBalanceFixed = goerliBalance.current?.mapSync(x => new Fixed(x, 18))
+  const goerliBalanceDisplay = useDisplay(goerliBalanceFixed?.mapSync(x => x.move(3)))
   const goerliSendDialog = useBooleanHandle(false)
 
-  const polygonBalance = useBalance(wallet.address, polygon)
-  const polygonBalanceFloat = useFloat(polygonBalance)
+  const polygonBalanceQuery = useBalance(wallet.address, polygon)
+  const polygonBalanceFixed = polygonBalanceQuery.current?.mapSync(x => new Fixed(x, 18))
+  const polygonBalanceDisplay = useDisplay(polygonBalanceFixed?.mapSync(x => x.move(3)))
   const polygonSendDialog = useBooleanHandle(false)
+
+  const wethUsdPriceFixed = usePairPrice(pairsByAddress[pairsByName.WETH_USDT], mainnet)
+  const maticWethPriceFixed = usePairPrice(pairsByAddress[pairsByName.MATIC_WETH], mainnet)
+
+  const ethBalanceUsdBigint = useProduct(useMerge(mainnetBalanceFixed, wethUsdPriceFixed))
+  const ethBalanceUsdDisplay = useDisplay(ethBalanceUsdBigint?.mapSync(x => x.move(3)))
+
+  const maticBalanceUsdBigint = useProduct(useMerge(polygonBalanceFixed, maticWethPriceFixed, wethUsdPriceFixed))
+  const maticBalanceUsdDisplay = useDisplay(maticBalanceUsdBigint?.mapSync(x => x.move(3)))
 
   const Header =
     <PageHeader
@@ -122,11 +144,11 @@ function WalletDataPage() {
             Ethereum
           </div>
           <div className="">
-            $???
+            ${ethBalanceUsdDisplay}
           </div>
         </div>
         <div className="text-contrast">
-          {`${mainnetBalanceFloat} ETH`}
+          {`${mainnetBalanceDisplay} ETH`}
         </div>
       </button>
       <button className="w-full p-xmd flex flex-col rounded-xl border border-contrast"
@@ -140,7 +162,7 @@ function WalletDataPage() {
           </div>
         </div>
         <div className="text-contrast">
-          {`${goerliBalanceFloat} ETH`}
+          {`${goerliBalanceDisplay} ETH`}
         </div>
       </button>
       <button className="w-full p-xmd flex flex-col rounded-xl border border-contrast"
@@ -150,11 +172,11 @@ function WalletDataPage() {
             Polygon
           </div>
           <div className="">
-            $???
+            ${maticBalanceUsdDisplay}
           </div>
         </div>
         <div className="text-contrast">
-          {`${polygonBalanceFloat} MATIC`}
+          {`${polygonBalanceDisplay} MATIC`}
         </div>
       </button>
     </div>
