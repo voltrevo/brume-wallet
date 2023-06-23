@@ -567,7 +567,7 @@ export class Global {
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
       const sessionQuery = await this.make(getEthereumSession(ethereum.origin, storage))
-      await sessionQuery.mutate(Mutators.mapDataOrNone(d => d.mapSync(d => ({ ...d, chain }))))
+      await sessionQuery.mutate(Mutators.mapDataIfItExists(d => d.mapSync(d => ({ ...d, chain }))))
 
       return Ok.void()
     })

@@ -2,11 +2,12 @@ import PairAbi from "@/assets/Pair.json"
 import { BigInts, Fixed } from "@/libs/bigints/bigints"
 import { EthereumChain, PairInfo, tokensByAddress } from "@/libs/ethereum/chain"
 import { RpcRequestPreinit } from "@/libs/rpc"
+import { Mutators } from "@/libs/xswr/mutators"
 import { Optional, Some } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
-import { Data, FetchError, Fetched, FetcherMore, Query, createQuerySchema, useCore, useError, useFetch, useOnce, useQuery } from "@hazae41/xswr"
+import { Core, Data, FetchError, Fetched, FetcherMore, NormalizerMore, Query, createQuerySchema, useCore, useError, useFetch, useOnce, useQuery } from "@hazae41/xswr"
 import { Contract, ContractRunner, TransactionRequest, TransactionResponse } from "ethers"
-import { useCallback, useEffect, useMemo } from "react"
+import { useCallback, useEffect } from "react"
 import { Background, UserStorage } from "../../background/background"
 import { useBackground } from "../../background/context"
 
@@ -114,7 +115,7 @@ export function useSync<K, D, F>(query: Query<K, D, F>) {
 
     const stored = await query.storage.get?.(cacheKey)
     const unstored = await core.unstore(stored, query)
-    await core.update(cacheKey, () => new Some(unstored), query)
+    await core.update(cacheKey, () => unstored, query)
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [core, cacheKey])
@@ -124,9 +125,37 @@ export function useSync<K, D, F>(query: Query<K, D, F>) {
   }, [sync])
 }
 
-export function getBalanceSchema(address: string, ethereum: EthereumHandle) {
+export function getTotalBalance(address: string) {
+  return createQuerySchema<string, Fixed, Error>(`totalBalance/${address}`, undefined)
+}
+
+export function getBalanceByToken(address: string) {
+  const normalizer = async (fetched: Optional<Fetched<Record<string, Fixed>, Error>>, more: NormalizerMore) =>
+    await fetched?.map(async index => {
+      console.log(index)
+      const total = Object.values(index).reduce((x, y) => y.add(x), new Fixed(0n, 0))
+      console.log(total)
+      const totalBalance = await getTotalBalance(address).make(more.core)
+      await totalBalance.mutate(Mutators.data(total))
+      return index
+    })
+
+  return createQuerySchema<string, Record<string, Fixed>, Error>(`balanceByToken/${address}`, undefined, { normalizer })
+}
+
+export function getBalance(address: string, ethereum: EthereumHandle) {
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     await tryFetch<string>(request, ethereum).then(r => r.mapSync(r => r.mapSync(BigInt)))
+
+  const normalizer = async (fetched: Optional<Fetched<bigint, Error>>, more: NormalizerMore) => {
+    return fetched?.map(async balance => {
+      const key = `${ethereum.chain.chainId}`
+      const value = new Fixed(balance, 18)
+      const balanceByToken = await getBalanceByToken(address).make(more.core)
+      await balanceByToken.mutate(Mutators.mapData((d = new Data({})) => d.mapSync(p => ({ ...p, [key]: value }))))
+      return balance
+    })
+  }
 
   const storage = new UserStorage(ethereum.background)
 
@@ -134,11 +163,11 @@ export function getBalanceSchema(address: string, ethereum: EthereumHandle) {
     chainId: ethereum.chain.chainId,
     method: "eth_getBalance",
     params: [address, "pending"]
-  }, fetcher, { storage, dataSerializer: BigInts })
+  }, fetcher, { storage, dataSerializer: BigInts, normalizer })
 }
 
 export function useBalance(address: string, ethereum: EthereumHandle) {
-  const query = useQuery(getBalanceSchema, [address, ethereum])
+  const query = useQuery(getBalance, [address, ethereum])
   useSync(query)
   useFetch(query)
   useError(query, console.error)
@@ -209,14 +238,21 @@ export class BrumeProvider implements ContractRunner {
   sendTransaction?: ((tx: TransactionRequest) => Promise<TransactionResponse>) | undefined
 }
 
-export function getPairReserves(address: string, ethereum: EthereumHandle) {
-  const fetcher = async () => new Ok(new Data(await new Contract(address, PairAbi, new BrumeProvider(ethereum)).getReserves()))
+export function getPairReserves(core: Core, pair: PairInfo, ethereum: EthereumHandle) {
+  const fetcher = async () => new Ok(new Data(await new Contract(pair.address, PairAbi, new BrumeProvider(ethereum)).getReserves()))
 
-  return createQuerySchema<string, [bigint, bigint, bigint], Error>(`pair_price/${address}`, fetcher)
+  const normalizer = async (fetched: Optional<Fetched<[bigint, bigint, bigint], Error>>) => {
+    const priceQuery = await getPairPrice(pair).make(core)
+    await priceQuery.mutate(() => new Some(computePairPrice(pair, fetched)))
+    return fetched
+  }
+
+  return createQuerySchema<string, [bigint, bigint, bigint], Error>(`pair/${pair.address}/reserves`, fetcher, { normalizer })
 }
 
-export function usePairReserves(address: string, ethereum: EthereumHandle) {
-  const query = useQuery(getPairReserves, [address, ethereum])
+export function usePairReserves(pair: PairInfo, ethereum: EthereumHandle) {
+  const core = useCore().unwrap()
+  const query = useQuery(getPairReserves, [core, pair, ethereum])
   useFetch(query)
   useSync(query)
   useError(query, console.error)
@@ -224,25 +260,33 @@ export function usePairReserves(address: string, ethereum: EthereumHandle) {
 }
 
 export function usePairPrice(pair: PairInfo, ethereum: EthereumHandle) {
-  const reserves = usePairReserves(pair.address, ethereum)
+  const reserves = usePairReserves(pair, ethereum)
+  useFetch(reserves)
+  useSync(reserves)
+  useError(reserves, console.error)
 
-  return useMemo(() => {
-    if (reserves.current === undefined)
-      return undefined
-    if (reserves.current.isErr())
-      return reserves.current
+  const price = useQuery(getPairPrice, [pair])
+  useFetch(price)
+  useSync(price)
+  useError(price, console.error)
 
+  return price
+}
+
+export function computePairPrice(pair: PairInfo, reserves: Optional<Fetched<[bigint, bigint, bigint], Error>>) {
+  return reserves?.mapSync(reserves => {
     const decimals0 = tokensByAddress[pair.token0].decimals
     const decimals1 = tokensByAddress[pair.token1].decimals
 
-    const [reserve0, reserve1] = reserves.current.inner
+    const [reserve0, reserve1] = reserves
 
     const quantity0 = new Fixed(reserve0, decimals0)
     const quantity1 = new Fixed(reserve1, decimals1)
 
-    const price = quantity1.div(quantity0)
+    return quantity1.div(quantity0)
+  })
+}
 
-    return new Ok(price)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pair, reserves.current])
+export function getPairPrice(pair: PairInfo) {
+  return createQuerySchema<string, Fixed, Error>(`pair/${pair.address}/price`, undefined)
 }

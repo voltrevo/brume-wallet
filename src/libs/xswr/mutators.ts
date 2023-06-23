@@ -3,8 +3,12 @@ import { Data, Fail, Fetched, Mutator, State, TimesInit } from "@hazae41/xswr";
 
 export namespace Mutators {
 
-  export function mapDataOrNone<D, F>(piper: (data: Data<D>) => Data<D>) {
+  export function mapDataIfItExists<D, F>(piper: (data: Data<D>) => Data<D>) {
     return (state: State<D, F>) => Option.wrap(state.data).mapSync(piper)
+  }
+
+  export function mapInnerDataIfItExists<D, F>(piper: (data: D) => D) {
+    return (state: State<D, F>) => Option.wrap(state.data).mapSync(d => d.mapSync(piper))
   }
 
   export function set<D, F>(fetched: Fetched<D, F>) {

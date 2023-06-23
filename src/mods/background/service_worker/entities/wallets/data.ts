@@ -4,7 +4,7 @@ import { RpcRequestPreinit } from "@/libs/rpc"
 import { Option } from "@hazae41/option"
 import { Cancel, Looped, Retry, tryLoop } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
-import { FetchError, Fetched, FetcherMore, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
+import { Data, FetchError, Fetched, FetcherMore, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
 import { EthereumBrumes, EthereumSocket } from "../sessions/data"
 
 export type Wallet =
@@ -67,7 +67,7 @@ export async function getWalletRef(wallet: Wallet, storage: IDBStorage, more: No
   if ("ref" in wallet) return wallet
 
   const schema = getWallet(wallet.uuid, storage)
-  await schema?.normalize(wallet, more)
+  await schema?.normalize(new Data(wallet), more)
 
   return { ref: true, uuid: wallet.uuid } as WalletRef
 }

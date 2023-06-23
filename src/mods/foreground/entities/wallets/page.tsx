@@ -24,7 +24,7 @@ export function WalletPage(props: UUIDProps) {
   </WalletDataProvider>
 }
 
-function useDisplay(option: Optional<Result<Fixed, Error>>) {
+export function useDisplay(option: Optional<Result<Fixed, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => fixed.toString()).mapErrSync(() => "Error").inner).unwrapOr("...")
   }, [option])
@@ -73,10 +73,10 @@ function WalletDataPage() {
   const wethUsdPriceFixed = usePairPrice(pairsByAddress[pairsByName.WETH_USDT], mainnet)
   const maticWethPriceFixed = usePairPrice(pairsByAddress[pairsByName.MATIC_WETH], mainnet)
 
-  const ethBalanceUsdBigint = useProduct(useMerge(mainnetBalanceFixed, wethUsdPriceFixed))
+  const ethBalanceUsdBigint = useProduct(useMerge(mainnetBalanceFixed, wethUsdPriceFixed.current))
   const ethBalanceUsdDisplay = useDisplay(ethBalanceUsdBigint?.mapSync(x => x.move(3)))
 
-  const maticBalanceUsdBigint = useProduct(useMerge(polygonBalanceFixed, maticWethPriceFixed, wethUsdPriceFixed))
+  const maticBalanceUsdBigint = useProduct(useMerge(polygonBalanceFixed, maticWethPriceFixed.current, wethUsdPriceFixed.current))
   const maticBalanceUsdDisplay = useDisplay(maticBalanceUsdBigint?.mapSync(x => x.move(3)))
 
   const Header =

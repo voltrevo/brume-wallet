@@ -1,6 +1,6 @@
 import { Bytes } from "@hazae41/bytes"
 import { Ok, Result } from "@hazae41/result"
-import { IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
+import { Data, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBase64, Pbkdf2ParamsBytes } from "./crypto"
 
 export type User =
@@ -61,7 +61,7 @@ export async function getUserRef(user: User, storage: IDBStorage, more: Normaliz
   if ("ref" in user) return user
 
   const schema = getUser(user.uuid, storage)
-  await schema?.normalize(user, more)
+  await schema?.normalize(new Data(user), more)
 
   return { ref: true, uuid: user.uuid } as UserRef
 }

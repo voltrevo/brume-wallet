@@ -60,6 +60,14 @@ export class Fixed<D extends number = number> {
     return new Fixed((this.value * other.move(this.decimals).value) / this.#tens, this.decimals)
   }
 
+  add(other: Fixed) {
+    return new Fixed(this.value + other.move(this.decimals).value, this.decimals)
+  }
+
+  sub(other: Fixed) {
+    return new Fixed(this.value - other.move(this.decimals).value, this.decimals)
+  }
+
   toString() {
     const raw = this.value.toString().padStart(this.decimals + 1, "0")
     const whole = raw.slice(0, -this.decimals).replaceAll("0", " ").trimStart().replaceAll(" ", "0")
