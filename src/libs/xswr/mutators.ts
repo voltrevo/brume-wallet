@@ -27,6 +27,14 @@ export namespace Mutators {
     return (state: State<D, F>) => new Some(piper(state.data))
   }
 
+  export function mapDataOr<D, F>(piper: (data?: Data<D>) => Data<D>, or: Data<D>) {
+    return (state: State<D, F>) => new Some(piper(state.data ?? or))
+  }
+
+  export function mapInnerDataOr<D, F>(piper: (data: D) => D, or: Data<D>) {
+    return (state: State<D, F>) => new Some((state.data ?? or).mapSync(piper))
+  }
+
   export function pushData<D, F>(element: Data<D>): Mutator<D[], F> {
     return mapData<D[], F>(d => Option.wrap(d)
       .mapSync(d => element.mapSync(e => [...d.inner, e]))

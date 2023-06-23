@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Fixed } from "@/libs/bigints/bigints";
 import { Colors } from "@/libs/colors/colors";
-import { chains, pairsByAddress, pairsByName } from "@/libs/ethereum/chain";
+import { chains, pairsByAddress, pairsByName, tokensBySymbol } from "@/libs/ethereum/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";
@@ -12,7 +12,7 @@ import { useMemo } from "react";
 import { PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { WalletDataProvider, useWalletData } from "./context";
-import { useBalance, useEthereumHandle, usePairPrice } from "./data";
+import { useBalance, useBalanceNoIndex, useEthereumHandle, usePairPrice } from "./data";
 import { WalletDataCard } from "./row";
 import { WalletDataSendDialog } from "./send";
 
@@ -55,17 +55,17 @@ function WalletDataPage() {
   const color = Colors.get(wallet.color)
   const color2 = Colors.get(wallet.color + 1)
 
-  const mainnetBalanceQuery = useBalance(wallet.address, mainnet)
+  const mainnetBalanceQuery = useBalance(wallet.address, tokensBySymbol["WETH"], mainnet)
   const mainnetBalanceFixed = mainnetBalanceQuery.current?.mapSync(x => new Fixed(x, 18))
   const mainnetBalanceDisplay = useDisplay(mainnetBalanceFixed?.mapSync(x => x.move(3)))
   const mainnetSendDialog = useBooleanHandle(false)
 
-  const goerliBalance = useBalance(wallet.address, goerli)
+  const goerliBalance = useBalanceNoIndex(wallet.address, goerli)
   const goerliBalanceFixed = goerliBalance.current?.mapSync(x => new Fixed(x, 18))
   const goerliBalanceDisplay = useDisplay(goerliBalanceFixed?.mapSync(x => x.move(3)))
   const goerliSendDialog = useBooleanHandle(false)
 
-  const polygonBalanceQuery = useBalance(wallet.address, polygon)
+  const polygonBalanceQuery = useBalance(wallet.address, tokensBySymbol["MATIC"], polygon)
   const polygonBalanceFixed = polygonBalanceQuery.current?.mapSync(x => new Fixed(x, 18))
   const polygonBalanceDisplay = useDisplay(polygonBalanceFixed?.mapSync(x => x.move(3)))
   const polygonSendDialog = useBooleanHandle(false)

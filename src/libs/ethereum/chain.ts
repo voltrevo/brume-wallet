@@ -26,10 +26,11 @@ export const chains: EthereumChains = {
 }
 
 export interface TokenInfo<D extends number = number> {
-  chainId: number,
-  symbol: string,
-  decimals: number,
-  address: string
+  readonly chainId: number,
+  readonly symbol: string,
+  readonly decimals: number,
+  readonly address: string
+  readonly pairs: readonly string[]
 }
 
 export const tokensByAddress: Record<string, TokenInfo> = {
@@ -37,28 +38,37 @@ export const tokensByAddress: Record<string, TokenInfo> = {
     chainId: 1,
     symbol: "WETH",
     decimals: 18,
-    address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
   },
   "0xdAC17F958D2ee523a2206206994597C13D831ec7": {
     chainId: 1,
     symbol: "USDC",
     decimals: 6,
-    address: "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+    address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    pairs: []
   },
   "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0": {
     chainId: 1,
     symbol: "MATIC",
     decimals: 18,
-    address: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0"
+    address: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
+    pairs: ["0x819f3450dA6f110BA6Ea52195B3beaFa246062dE", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"],
   }
 } as const
 
+export const tokensBySymbol: Record<string, TokenInfo> = {
+  "WETH": tokensByAddress["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"],
+  "USDC": tokensByAddress["0xdAC17F958D2ee523a2206206994597C13D831ec7"],
+  "MATIC": tokensByAddress["0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0"]
+} as const
+
 export interface PairInfo {
-  chainId: number,
-  name: string
-  address: string,
-  token0: string,
-  token1: string,
+  readonly chainId: number,
+  readonly name: string
+  readonly address: string,
+  readonly token0: string,
+  readonly token1: string,
 }
 
 export const pairsByAddress: Record<string, PairInfo> = {
@@ -76,9 +86,9 @@ export const pairsByAddress: Record<string, PairInfo> = {
     token0: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
     token1: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
   }
-}
+} as const
 
 export const pairsByName = {
   WETH_USDT: "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
   MATIC_WETH: "0x819f3450dA6f110BA6Ea52195B3beaFa246062dE"
-}
+} as const

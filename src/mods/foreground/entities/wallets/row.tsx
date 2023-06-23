@@ -5,7 +5,7 @@ import { useMouseCancel } from "@/libs/react/events"
 import { useQuery } from "@hazae41/xswr"
 import { WalletIcon } from "./avatar"
 import { useWalletData } from "./context"
-import { getTotalBalance } from "./data"
+import { getTotalWalletPricedBalance } from "./data"
 import { useDisplay } from "./page"
 
 export function WalletDataCard() {
@@ -17,7 +17,7 @@ export function WalletDataCard() {
   const copyEthereumAddress = useCopy(wallet.address)
   const onClickCopyEthereumAddress = useMouseCancel(copyEthereumAddress.run)
 
-  const totalBalanceQuery = useQuery(getTotalBalance, [wallet.address])
+  const totalBalanceQuery = useQuery(getTotalWalletPricedBalance, [wallet.address])
   const totalBalanceDisplay = useDisplay(totalBalanceQuery.current?.mapSync(x => x.move(3)))
 
   const First =

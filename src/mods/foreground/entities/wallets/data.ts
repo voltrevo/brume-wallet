@@ -1,6 +1,6 @@
 import PairAbi from "@/assets/Pair.json"
 import { BigInts, Fixed } from "@/libs/bigints/bigints"
-import { EthereumChain, PairInfo, tokensByAddress } from "@/libs/ethereum/chain"
+import { EthereumChain, PairInfo, TokenInfo, pairsByAddress, tokensByAddress } from "@/libs/ethereum/chain"
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Optional, Some } from "@hazae41/option"
@@ -125,36 +125,101 @@ export function useSync<K, D, F>(query: Query<K, D, F>) {
   }, [sync])
 }
 
-export function getTotalBalance(address: string) {
-  return createQuerySchema<string, Fixed, Error>(`totalBalance/${address}`, undefined)
+export function getTotalPricedBalance() {
+  return createQuerySchema<string, Fixed, Error>(`totalPricedBalance`, undefined)
 }
 
-export function getBalanceByToken(address: string) {
+export function useTotalPricedBalance() {
+  return useQuery(getTotalPricedBalance, [])
+}
+
+export function getTotalPricedBalanceByWallet() {
   const normalizer = async (fetched: Optional<Fetched<Record<string, Fixed>, Error>>, more: NormalizerMore) =>
     await fetched?.map(async index => {
-      console.log(index)
       const total = Object.values(index).reduce((x, y) => y.add(x), new Fixed(0n, 0))
-      console.log(total)
-      const totalBalance = await getTotalBalance(address).make(more.core)
+
+      const totalBalance = await getTotalPricedBalance().make(more.core)
       await totalBalance.mutate(Mutators.data(total))
+
       return index
     })
 
-  return createQuerySchema<string, Record<string, Fixed>, Error>(`balanceByToken/${address}`, undefined, { normalizer })
+  return createQuerySchema<string, Record<string, Fixed>, Error>(`totalPricedBalanceByWallet`, undefined, { normalizer })
 }
 
-export function getBalance(address: string, ethereum: EthereumHandle) {
+export function getTotalWalletPricedBalance(address: string) {
+  const normalizer = async (fetched: Optional<Fetched<Fixed, Error>>, more: NormalizerMore) =>
+    await fetched?.map(async totalWalletPricedBalance => {
+      const key = address
+      const value = totalWalletPricedBalance
+
+      const indexQuery = await getTotalPricedBalanceByWallet().make(more.core)
+      await indexQuery.mutate(Mutators.mapInnerDataOr(p => ({ ...p, [key]: value }), new Data({})))
+
+      return totalWalletPricedBalance
+    })
+
+  return createQuerySchema<string, Fixed, Error>(`totalPricedBalance/${address}`, undefined, { normalizer })
+}
+
+export function getPricedBalanceByToken(address: string) {
+  const normalizer = async (fetched: Optional<Fetched<Record<string, Fixed>, Error>>, more: NormalizerMore) =>
+    await fetched?.map(async index => {
+      const total = Object.values(index).reduce((x, y) => y.add(x), new Fixed(0n, 0))
+
+      const totalBalance = await getTotalWalletPricedBalance(address).make(more.core)
+      await totalBalance.mutate(Mutators.data(total))
+
+      return index
+    })
+
+  return createQuerySchema<string, Record<string, Fixed>, Error>(`pricedBalanceByToken/${address}`, undefined, { normalizer })
+}
+
+export function getPricedBalance(address: string, token: TokenInfo, ethereum: EthereumHandle) {
+  const normalizer = async (fetched: Optional<Fetched<Fixed, Error>>, more: NormalizerMore) =>
+    await fetched?.map(async pricedBalance => {
+      const key = ethereum.chain.chainId
+      const value = pricedBalance
+
+      const indexQuery = await getPricedBalanceByToken(address).make(more.core)
+      await indexQuery.mutate(Mutators.mapInnerDataOr(p => ({ ...p, [key]: value }), new Data({})))
+
+      return pricedBalance
+    })
+
+  return createQuerySchema<string, Fixed, Error>(`pricedBalance/${address}/${ethereum.chain.chainId}`, undefined, { normalizer })
+}
+
+export function usePricedBalance(address: string, token: TokenInfo, ethereum: EthereumHandle) {
+  const query = useQuery(getPricedBalance, [address, token, ethereum])
+  useSync(query)
+  useFetch(query)
+  useError(query, console.error)
+  return query
+}
+
+export function getBalance(address: string, token: TokenInfo, ethereum: EthereumHandle) {
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     await tryFetch<string>(request, ethereum).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
   const normalizer = async (fetched: Optional<Fetched<bigint, Error>>, more: NormalizerMore) => {
-    return fetched?.map(async balance => {
-      const key = `${ethereum.chain.chainId}`
-      const value = new Fixed(balance, 18)
-      const balanceByToken = await getBalanceByToken(address).make(more.core)
-      await balanceByToken.mutate(Mutators.mapData((d = new Data({})) => d.mapSync(p => ({ ...p, [key]: value }))))
-      return balance
-    })
+    const balance = fetched?.mapSync(x => new Fixed(x, 18))
+
+    let current: Optional<Result<Fixed, Error>> = balance
+
+    for (const pair of token.pairs) {
+      const price = await getPairPrice(pairsByAddress[pair]).make(more.core)
+      current = Result.maybeAll([current, price.current])?.mapSync(([x, y]) => x.mul(y))
+    }
+
+    if (current === undefined)
+      return fetched
+
+    const pricedBalanceQuery = await getPricedBalance(address, token, ethereum).make(more.core)
+    await pricedBalanceQuery.mutate(Mutators.set(Fetched.rewrap(current)))
+
+    return fetched
   }
 
   const storage = new UserStorage(ethereum.background)
@@ -166,8 +231,29 @@ export function getBalance(address: string, ethereum: EthereumHandle) {
   }, fetcher, { storage, dataSerializer: BigInts, normalizer })
 }
 
-export function useBalance(address: string, ethereum: EthereumHandle) {
-  const query = useQuery(getBalance, [address, ethereum])
+export function useBalance(address: string, token: TokenInfo, ethereum: EthereumHandle) {
+  const query = useQuery(getBalance, [address, token, ethereum])
+  useSync(query)
+  useFetch(query)
+  useError(query, console.error)
+  return query
+}
+
+export function getBalanceNoIndex(address: string, ethereum: EthereumHandle) {
+  const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
+    await tryFetch<string>(request, ethereum).then(r => r.mapSync(r => r.mapSync(BigInt)))
+
+  const storage = new UserStorage(ethereum.background)
+
+  return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
+    chainId: ethereum.chain.chainId,
+    method: "eth_getBalance",
+    params: [address, "pending"]
+  }, fetcher, { storage, dataSerializer: BigInts })
+}
+
+export function useBalanceNoIndex(address: string, ethereum: EthereumHandle) {
+  const query = useQuery(getBalanceNoIndex, [address, ethereum])
   useSync(query)
   useFetch(query)
   useError(query, console.error)
