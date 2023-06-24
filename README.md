@@ -96,7 +96,7 @@ You can use Brume Wallet as an extension and on a website
 
 ### Reproducible building
 
-- Install Node 18.12.1 and NPM 8.19.2 on macOS or Linux
+- Install node v20.3.1 (npm v9.6.7)
 
 - Clone the repository
 
