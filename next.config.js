@@ -14,8 +14,7 @@ const nextConfig = {
   swcMinify: true,
   output: "export",
   generateBuildId: async () => {
-    // You can, for example, get the latest git commit hash here
-    return 'my-build-id'
+    return "brume"
   },
   webpack(config, options) {
     if (options.isServer) return config
@@ -35,8 +34,6 @@ const nextConfig = {
     return map
   }
 }
-
-
 
 /**
  * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
