@@ -114,7 +114,7 @@ https://github.com/brumewallet/wallet/actions/workflows/release.yml
 You can check the comparison yourself by running the following
 
 ```bash
-wget https://github.com/brumewallet/wallet/releases/download/VERSION/TARGET.zip
+curl https://github.com/brumewallet/wallet/releases/download/VERSION/TARGET.zip -o TARGET.zip
 unzip TARGET.zip -d ./TARGET
 diff -r ./dist/TARGET ./TARGET
 ```
