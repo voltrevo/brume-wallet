@@ -11,14 +11,10 @@ import { Path } from "@/mods/foreground/router/path"
 import { useCallback } from "react"
 import { WalletDataProvider, useWalletData } from "../context"
 import { Wallet, useTotalPricedBalance } from "../data"
-import { useDisplay } from "../page"
+import { useDisplayUsd } from "../page"
 import { WalletDataCard } from "../row"
 import { WalletCreatorDialog } from "./create"
 import { useWallets } from "./data"
-
-function go(wallet: Wallet) {
-  Path.go(`/wallet/${wallet.uuid}`)
-}
 
 export function WalletsPage() {
   const background = useBackground()
@@ -27,7 +23,7 @@ export function WalletsPage() {
   const creator = useBooleanHandle(false)
 
   const totalPricedBalance = useTotalPricedBalance()
-  const totalPricedBalanceDisplay = useDisplay(totalPricedBalance.current?.mapSync(x => x.move(3)))
+  const totalPricedBalanceDisplay = useDisplayUsd(totalPricedBalance.current)
 
   const onWalletClick = useCallback((wallet: Wallet) => {
     Path.go(`/wallet/${wallet.uuid}`)
@@ -40,7 +36,7 @@ export function WalletsPage() {
           Total balance
         </div>
         <div className="text-2xl font-bold">
-          ${totalPricedBalanceDisplay}
+          {totalPricedBalanceDisplay}
         </div>
       </div>
       <ClickableWalletGrid

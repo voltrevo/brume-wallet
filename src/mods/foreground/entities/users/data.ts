@@ -1,6 +1,6 @@
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { Optional } from "@hazae41/option"
-import { FetchError, Fetched, FetcherMore, createQuerySchema, useOnce, useQuery } from "@hazae41/xswr"
+import { FetchError, Fetched, FetcherMore, createQuerySchema, useOnce, useQuery, useVisible } from "@hazae41/xswr"
 import { Background } from "../../background/background"
 
 export type User =
@@ -59,5 +59,6 @@ export function getCurrentUser(background: Background) {
 export function useCurrentUser(background: Background) {
   const query = useQuery(getCurrentUser, [background])
   useOnce(query)
+  useVisible(query)
   return query
 }

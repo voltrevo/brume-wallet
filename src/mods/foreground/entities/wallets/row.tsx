@@ -2,11 +2,10 @@ import { Colors } from "@/libs/colors/colors"
 import { useCopy } from "@/libs/copy/copy"
 import { Ethereum } from "@/libs/ethereum/ethereum"
 import { useMouseCancel } from "@/libs/react/events"
-import { useQuery } from "@hazae41/xswr"
 import { WalletIcon } from "./avatar"
 import { useWalletData } from "./context"
-import { getTotalWalletPricedBalance } from "./data"
-import { useDisplay } from "./page"
+import { useTotalWalletPricedBalance } from "./data"
+import { useDisplayUsd } from "./page"
 
 export function WalletDataCard() {
   const wallet = useWalletData()
@@ -17,8 +16,8 @@ export function WalletDataCard() {
   const copyEthereumAddress = useCopy(wallet.address)
   const onClickCopyEthereumAddress = useMouseCancel(copyEthereumAddress.run)
 
-  const totalBalanceQuery = useQuery(getTotalWalletPricedBalance, [wallet.address])
-  const totalBalanceDisplay = useDisplay(totalBalanceQuery.current?.mapSync(x => x.move(3)))
+  const totalBalanceQuery = useTotalWalletPricedBalance(wallet.address)
+  const totalBalanceDisplay = useDisplayUsd(totalBalanceQuery.current)
 
   const First =
     <div className="flex items-center">
@@ -32,7 +31,7 @@ export function WalletDataCard() {
       </h2>
       <div className="w-2 grow" />
       <div className="text-opposite-high-contrast">
-        ${totalBalanceDisplay}
+        {totalBalanceDisplay}
       </div>
     </div>
 
