@@ -86,7 +86,7 @@ function compileContentScript(config, options) {
       filename: "content_script.js"
     },
     optimization: {
-      minimize: config.mode === "production",
+      minimize: false,
       minimizer: [new TerserPlugin()]
     }
   })
@@ -110,7 +110,7 @@ function compileInjectedScript(config, options) {
       filename: "injected_script.js"
     },
     optimization: {
-      minimize: config.mode === "production",
+      minimize: false,
       minimizer: [new TerserPlugin()]
     }
   })
