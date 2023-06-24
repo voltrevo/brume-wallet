@@ -2,15 +2,6 @@
 
 A non-custodial and private Ethereum wallet with a built-in implementation of the Tor network
 
-## Experimental ⚠️
-
-This is experimental software in early development
-
-1. It has security issues
-2. Things change quickly
-
-Use at your own risk, see [the security](#secure-by-design) for more details
-
 ## TLDR
 - Anonymous requests using Tor, no installation needed, each wallet address has its own IP address
 - Built for strong privacy and supply-chain hardened
