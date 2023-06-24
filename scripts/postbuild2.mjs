@@ -2,6 +2,15 @@ import fs from "fs";
 
 const thepackage = JSON.parse(fs.readFileSync("./package.json", "utf8"))
 
+if (fs.existsSync("./dist/website")) {
+  {
+    const original = fs.readFileSync("./dist/website/manifest.json", "utf8")
+    const replaced = original.replaceAll("VERSION", thepackage.version)
+
+    fs.writeFileSync("./dist/website/manifest.json", replaced, "utf8")
+  }
+}
+
 /**
  * Setup global variables for Chrome
  */

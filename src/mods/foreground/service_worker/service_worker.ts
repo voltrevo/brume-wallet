@@ -1,16 +1,16 @@
 export interface ServiceWorkerParams {
-  onActive(active: ServiceWorker): void
-  onUpdating(updating: ServiceWorker): void
+  onActive?(active: ServiceWorker): void
+  onUpdating?(updating: ServiceWorker): void
 }
 
 export async function registerServiceWorker(params: ServiceWorkerParams) {
   const registration = await navigator.serviceWorker.register("/service_worker.js")
 
   if (registration.waiting !== null)
-    params.onUpdating(registration.waiting)
+    params.onUpdating?.(registration.waiting)
 
   navigator.serviceWorker.ready.then(() =>
-    params.onActive(registration.active!))
+    params.onActive?.(registration.active!))
 
   registration.addEventListener("updatefound", () => {
     const { installing } = registration
@@ -23,7 +23,7 @@ export async function registerServiceWorker(params: ServiceWorkerParams) {
         return
       if (navigator.serviceWorker.controller === null)
         return
-      params.onUpdating(installing)
+      params.onUpdating?.(installing)
     })
   })
 

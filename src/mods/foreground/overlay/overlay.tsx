@@ -47,31 +47,62 @@ export function Overlay(props: ChildrenProps) {
   return null
 }
 
+async function tryCheckWebsiteUpdate(): Promise<Result<boolean, Error>> {
+  return await Result.unthrow(async t => {
+    const cached = await tryFetchAsJson<{
+      version: string
+    }>("/manifest.json").then(r => r.throw(t))
+
+    const current = await tryFetchAsJson<{
+      version: string
+    }>("/manifest.json?").then(r => r.throw(t))
+
+    if (current.version !== cached.version)
+      return new Ok(false) // Will be handled by SW
+
+    const main = await tryFetchAsJson<{
+      version: string
+    }>(MAIN_PACKAGE_URL).then(r => r.throw(t))
+
+    return new Ok(Semver.isGreater(main.version, cached.version))
+  })
+}
+
 export function WebsiteOverlay(props: ChildrenProps) {
   const { children } = props
 
   const background = useBackground()
 
-  const [active, setActive] = useState<ServiceWorker>()
   const [updating, setUpdating] = useState<ServiceWorker>()
 
   useEffect(() => {
-    registerServiceWorker({ onActive: setActive, onUpdating: setUpdating })
+    registerServiceWorker({ onUpdating: setUpdating })
   }, [background])
 
   const update = useCallback(() => {
     updating?.postMessage("SKIP_WAITING")
   }, [updating])
 
+  const [updatable, setUpdatable] = useState(false)
+
+  useEffect(() => {
+    tryCheckWebsiteUpdate().then(r => r.inspectSync(setUpdatable).inspectErrSync(console.warn).ignore())
+  }, [])
+
+  const update2 = useCallback(() => {
+    open("https://github.com/brumewallet/wallet/releases", "_blank", "noreferrer")
+  }, [])
+
   return <>
     {updating && <UpdateBanner ok={update} />}
+    {updatable && <UpdateBanner ok={update2} />}
     <div className="h-full w-full m-auto max-w-3xl flex flex-col">
       {children}
     </div>
   </>
 }
 
-async function tryCheckUpdate(): Promise<Result<boolean, Error>> {
+async function tryCheckExtensionUpdate(): Promise<Result<boolean, Error>> {
   return await Result.unthrow(async t => {
     const self = await tryBrowser(() => {
       return browser.management.getSelf()
@@ -91,10 +122,10 @@ async function tryCheckUpdate(): Promise<Result<boolean, Error>> {
 export function ExtensionOverlay(props: ChildrenProps) {
   const { children } = props
 
-  const [updating, setUpdating] = useState(false)
+  const [updatable, setUpdatable] = useState(false)
 
   useEffect(() => {
-    tryCheckUpdate().then(r => r.inspectSync(setUpdating).inspectErrSync(console.error).ignore())
+    tryCheckExtensionUpdate().then(r => r.inspectSync(setUpdatable).inspectErrSync(console.warn).ignore())
   }, [])
 
   const update = useCallback(() => {
@@ -102,7 +133,7 @@ export function ExtensionOverlay(props: ChildrenProps) {
   }, [])
 
   return <div className="h-full w-full m-auto max-w-3xl flex flex-col">
-    {updating && <UpdateBanner ok={update} />}
+    {updatable && <UpdateBanner ok={update} />}
     {children}
   </div>
 }

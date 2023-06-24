@@ -1,6 +1,7 @@
 {
 	"$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/web-manifest.json",
 	"name": "Brume Wallet",
+  "version": "VERSION",
 	"short_name": "Brume Wallet",
 	"description": "The private wallet",
 	"start_url": "/",
