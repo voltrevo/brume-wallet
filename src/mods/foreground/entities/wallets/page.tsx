@@ -27,7 +27,7 @@ export function WalletPage(props: UUIDProps) {
 export function useDisplay(option: Optional<Result<Fixed, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return fixed.move(5).toString()
+      return Number(fixed.move(5).toString()).toLocaleString(undefined, {})
     }).mapErrSync(() => "Error").inner).unwrapOr("...")
   }, [option])
 }
@@ -36,6 +36,14 @@ export function useDisplayUsd(option: Optional<Result<Fixed, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
       return Number(fixed.toString()).toLocaleString(undefined, { style: "currency", currency: "USD" })
+    }).mapErrSync(() => "Error").inner).unwrapOr("...")
+  }, [option])
+}
+
+export function useCompactDisplayUsd(option: Optional<Result<Fixed, Error>>) {
+  return useMemo(() => {
+    return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
+      return Number(fixed.toString()).toLocaleString(undefined, { style: "currency", currency: "USD", notation: "compact" })
     }).mapErrSync(() => "Error").inner).unwrapOr("...")
   }, [option])
 }

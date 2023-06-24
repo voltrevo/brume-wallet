@@ -5,7 +5,7 @@ import { useMouseCancel } from "@/libs/react/events"
 import { WalletIcon } from "./avatar"
 import { useWalletData } from "./context"
 import { useTotalWalletPricedBalance } from "./data"
-import { useDisplayUsd } from "./page"
+import { useCompactDisplayUsd } from "./page"
 
 export function WalletDataCard() {
   const wallet = useWalletData()
@@ -17,7 +17,7 @@ export function WalletDataCard() {
   const onClickCopyEthereumAddress = useMouseCancel(copyEthereumAddress.run)
 
   const totalBalanceQuery = useTotalWalletPricedBalance(wallet.address)
-  const totalBalanceDisplay = useDisplayUsd(totalBalanceQuery.current)
+  const totalBalanceDisplay = useCompactDisplayUsd(totalBalanceQuery.current)
 
   const First =
     <div className="flex items-center">
