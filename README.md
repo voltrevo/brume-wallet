@@ -94,7 +94,9 @@ You can use Brume Wallet as an extension and on a website
 - Reach macOS toolbar, click `Safari`, click `Settings`
 - Top bar, click `Extensions`, find `Brume Wallet`, enable it
 
-### Reproducible building
+## Reproducible building
+
+### Installing and building
 
 - Install node v20.3.1 (npm v9.6.7)
 
@@ -111,6 +113,21 @@ npm install && npm run build && npm run zip
 ```
 
 - Website and extension files are in the `dist` folder
+
+### Comparing released files with built files
+
+GitHub Actions automatically rebuilds each release and checks that the released files are the same as the built ones
+
+You can check the comparison yourself by running the following
+
+```bash
+wget https://github.com/brumewallet/wallet/releases/download/VERSION/TARGET.zip
+unzip TARGET.zip -d ./TARGET
+diff -r ./dist/TARGET ./TARGET
+```
+
+- Replace `VERSION` with the version you want to check
+- Replace `TARGET` with `chrome`, `firefox`, `safari`, `website`, ...
 
 ## Secure by design
 
