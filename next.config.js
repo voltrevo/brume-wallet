@@ -66,7 +66,7 @@ function compileServiceWorker(config, options) {
       filename: "service_worker.js"
     },
     optimization: {
-      minimize: config.mode === "production",
+      minimize: false,
       minimizer: [new TerserPlugin()]
     }
   })
@@ -90,7 +90,7 @@ function compileContentScript(config, options) {
       filename: "content_script.js"
     },
     optimization: {
-      minimize: config.mode === "production",
+      minimize: false,
       minimizer: [new TerserPlugin()]
     }
   })
@@ -114,7 +114,7 @@ function compileInjectedScript(config, options) {
       filename: "injected_script.js"
     },
     optimization: {
-      minimize: config.mode === "production",
+      minimize: false,
       minimizer: [new TerserPlugin()]
     }
   })
