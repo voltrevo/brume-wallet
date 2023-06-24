@@ -109,6 +109,8 @@ npm install && npm run build && npm run zip
 
 GitHub Actions automatically rebuilds each release and checks that the released files are the same as the built ones
 
+https://github.com/brumewallet/wallet/actions/workflows/release.yml
+
 You can check the comparison yourself by running the following
 
 ```bash
