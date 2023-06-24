@@ -1,0 +1,24 @@
+on:
+  push:
+    tags:
+    - '*'
+
+name: release
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+    - run: "npm ci"
+    - run: "npm run build"
+    - run: "npm run zip"
+    - run: "wget https://github.com/brumewallet/wallet/releases/download/{{github.ref_name}}/chrome.zip"
+    - run: "wget https://github.com/brumewallet/wallet/releases/download/{{github.ref_name}}/firefox.zip"
+    - run: "wget https://github.com/brumewallet/wallet/releases/download/{{github.ref_name}}/safari.zip"
+    - run: "wget https://github.com/brumewallet/wallet/releases/download/{{github.ref_name}}/website.zip"
+    - run: "[[ -z $(diff ./dist/chrome.zip ./chrome.zip && diff ./dist/firefox.zip ./firefox.zip && diff ./dist/firefox.zip ./firefox.zip && diff ./dist/website.zip ./website.zip) ]]"
