@@ -102,10 +102,10 @@ You can use Brume Wallet as an extension and on a website
 git clone https://github.com/brumewallet/wallet && cd wallet
 ```
 
-- Build the website and extension
+- Build the website and extension (Node 18.12.1, NPM 8.19.2)
 
 ```bash
-npm install && npm run build
+npm install && npm run build && npm run zip
 ```
 
 - Website and extension files are in the `dist` folder
