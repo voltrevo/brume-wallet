@@ -4,6 +4,9 @@ const { copyFileSync, rmSync } = require("fs")
 const Log = require("next/dist/build/output/log")
 const path = require("path")
 
+/**
+ * @type {Promise<void> | undefined}
+ */
 let promise = undefined
 
 /**
