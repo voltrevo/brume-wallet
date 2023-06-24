@@ -14,8 +14,7 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 20.x
-    - run: "npm ci"
-    - run: "npm run build"
+    - run: "npm ci && npm run build"
     - run: "wget https://github.com/brumewallet/wallet/releases/download/${{github.ref_name}}/chrome.zip && unzip chrome.zip -d ./chrome"
     - run: "wget https://github.com/brumewallet/wallet/releases/download/${{github.ref_name}}/firefox.zip && unzip firefox.zip -d ./firefox"
     - run: "wget https://github.com/brumewallet/wallet/releases/download/${{github.ref_name}}/safari.zip && unzip safari.zip -d ./safari"
