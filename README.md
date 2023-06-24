@@ -94,7 +94,9 @@ You can use Brume Wallet as an extension and on a website
 - Reach macOS toolbar, click `Safari`, click `Settings`
 - Top bar, click `Extensions`, find `Brume Wallet`, enable it
 
-### Building
+### Reproducible building
+
+- Install Node 18.12.1 and NPM 8.19.2 on macOS or Linux
 
 - Clone the repository
 
@@ -102,7 +104,7 @@ You can use Brume Wallet as an extension and on a website
 git clone https://github.com/brumewallet/wallet && cd wallet
 ```
 
-- Build the website and extension (Node 18.12.1, NPM 8.19.2)
+- Build the website and extension
 
 ```bash
 npm install && npm run build && npm run zip
