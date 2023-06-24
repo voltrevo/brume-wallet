@@ -1,8 +1,10 @@
 const webpack = require("webpack")
 const TerserPlugin = require('terser-webpack-plugin')
-const { copyFileSync, rmSync, rmdirSync } = require("fs")
+const { copyFileSync, rmSync } = require("fs")
 const Log = require("next/dist/build/output/log")
 const path = require("path")
+
+let promise = undefined
 
 /**
  * @type {import('next').NextConfig}
@@ -20,38 +22,47 @@ const nextConfig = {
 
     rmSync("./.webpack", { force: true, recursive: true })
 
-    compileServiceWorker(config, options)
-    compileContentScript(config, options)
-    compileInjectedScript(config, options)
+    promise = Promise.all([
+      compileServiceWorker(config, options),
+      compileContentScript(config, options),
+      compileInjectedScript(config, options)
+    ])
 
     return config
+  },
+  exportPathMap: async (map) => {
+    await promise
+    return map
   }
 }
+
+
 
 /**
  * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
  */
-function compile(name, config, options) {
+async function compile(name, config, options) {
   Log.wait(`compiling ${name}...`)
 
   const start = Date.now()
 
-  webpack(config).run((_, status) => {
-    if (status?.hasErrors()) {
-      Log.error(`failed to compile ${name}`)
-      Log.error(status.toString({ colors: true }))
-    } else {
-      Log.ready(`compiled ${name} in ${Date.now() - start} ms`)
-      copyFileSync(`./.webpack/${config.output.filename}`, `./public/${config.output.filename}`)
-    }
-  })
+  const status = await new Promise(ok => webpack(config).run((_, status) => ok(status)))
+
+  if (status?.hasErrors()) {
+    Log.error(`failed to compile ${name}`)
+    Log.error(status.toString({ colors: true }))
+    throw new Error(`Compilation failed`)
+  }
+
+  Log.ready(`compiled ${name} in ${Date.now() - start} ms`)
+  copyFileSync(`./.webpack/${config.output.filename}`, `./public/${config.output.filename}`)
 }
 
 /**
  * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
  */
-function compileServiceWorker(config, options) {
-  compile("service_worker", {
+async function compileServiceWorker(config, options) {
+  await compile("service_worker", {
     devtool: false,
     target: "webworker",
     mode: config.mode,
@@ -74,8 +85,8 @@ function compileServiceWorker(config, options) {
 /**
  * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
  */
-function compileContentScript(config, options) {
-  compile("content_script", {
+async function compileContentScript(config, options) {
+  await compile("content_script", {
     devtool: false,
     target: "webworker",
     mode: config.mode,
@@ -98,8 +109,8 @@ function compileContentScript(config, options) {
 /**
  * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
  */
-function compileInjectedScript(config, options) {
-  compile("injected_script", {
+async function compileInjectedScript(config, options) {
+  await compile("injected_script", {
     devtool: false,
     target: "web",
     mode: config.mode,
