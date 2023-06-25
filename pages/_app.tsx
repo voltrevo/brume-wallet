@@ -4,6 +4,7 @@ import { Catcher, PromiseCatcher } from "@/libs/react/error"
 import { ErrorProps } from "@/libs/react/props/error"
 import { BackgroundProvider } from "@/mods/foreground/background/context"
 import { PathProvider } from "@/mods/foreground/router/path"
+import { UserStorageProvider } from "@/mods/foreground/storage/context"
 import '@/styles/globals.css'
 import { CoreProvider } from "@hazae41/xswr"
 import type { AppProps } from 'next/app'
@@ -50,9 +51,11 @@ export default function App({ Component, pageProps }: AppProps) {
       <PromiseCatcher>
         <CoreProvider>
           <BackgroundProvider>
-            <PathProvider>
-              <Component {...pageProps} />
-            </PathProvider>
+            <UserStorageProvider>
+              <PathProvider>
+                <Component {...pageProps} />
+              </PathProvider>
+            </UserStorageProvider>
           </BackgroundProvider>
         </CoreProvider>
       </PromiseCatcher>

@@ -1,7 +1,7 @@
 import { browser, tryBrowser, tryBrowserSync } from "@/libs/browser/browser"
 import { chains } from "@/libs/ethereum/chain"
 import { Mouse } from "@/libs/mouse/mouse"
-import { RpcParamfulRequestInit, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
+import { RpcParamfulRequestInit, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { qurl } from "@/libs/url/url"
@@ -19,7 +19,7 @@ import { SuperEventTarget } from "@hazae41/plume"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
-import { Core, Data, IDBStorage, Makeable, RawState } from "@hazae41/xswr"
+import { Core, Data, IDBStorage, Makeable, RawState, State } from "@hazae41/xswr"
 import { ethers } from "ethers"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
@@ -77,7 +77,7 @@ export interface PasswordData {
 
 export interface PopupData {
   window: chrome.windows.Window,
-  channel: ExtensionChannel
+  channel: Channel
 }
 
 export class UserRejectionError extends Error {
@@ -99,8 +99,8 @@ export class Global {
   readonly core = new Core({})
 
   readonly events = new SuperEventTarget<{
-    "hello": [ExtensionChannel, Future<Result<void, Error>>]
-    "data": [ExtensionChannel, RpcRequestPreinit<unknown>]
+    "hello": [Channel, Future<Result<void, Error>>]
+    "data": [Channel, RpcRequestPreinit<unknown>]
   }>()
 
   readonly popupMutex = new Mutex(undefined)
@@ -179,9 +179,9 @@ export class Global {
   }
 
   async tryWaitPopupHello(popup: chrome.windows.Window) {
-    const request = new Future<Result<ExtensionChannel, Error>>()
+    const request = new Future<Result<Channel, Error>>()
 
-    const onRequest = ([channel, response]: [ExtensionChannel, Future<Result<void, Error>>]) => {
+    const onRequest = ([channel, response]: [Channel, Future<Result<void, Error>>]) => {
       request.resolve(new Ok(channel))
       response.resolve(Ok.void())
       return Ok.void()
@@ -250,7 +250,7 @@ export class Global {
   async tryWaitPopupData(popup: PopupData, method: string) {
     const future = new Future<Result<RpcRequestPreinit<unknown>, Error>>()
 
-    const onData = ([channel, request]: [ExtensionChannel, RpcRequestPreinit<unknown>]) => {
+    const onData = ([channel, request]: [Channel, RpcRequestPreinit<unknown>]) => {
       if (channel.uuid !== popup.channel.uuid)
         return Ok.void()
       if (request.method !== method)
@@ -573,7 +573,7 @@ export class Global {
     })
   }
 
-  async tryRouteForeground(channel: Optional<ExtensionChannel>, request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
+  async tryRouteForeground(channel: Channel, request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
     if (request.method === "brume_ping")
       return new Ok(undefined)
     if (request.method === "brume_getPath")
@@ -600,6 +600,8 @@ export class Global {
       return await this.brume_get_global(request)
     if (request.method === "brume_get_user")
       return await this.brume_get_user(request)
+    if (request.method === "brume_subscribe")
+      return await this.brume_subscribe(channel, request)
     if (request.method === "brume_call_ethereum")
       return await this.brume_call_ethereum(request)
     if (request.method === "brume_log")
@@ -627,22 +629,20 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_hello(maybeChannel: Optional<ExtensionChannel>, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_hello(channel: Channel, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
       const response = new Future<Result<void, Error>>()
 
-      const channel = Option.wrap(maybeChannel).ok().throw(t)
       await this.events.tryEmit("hello", [channel, response]).then(r => r.throw(t))
 
       return await response.promise
     })
   }
 
-  async brume_data(maybeChannel: Optional<ExtensionChannel>, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_data(channel: Channel, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
       const [subrequest] = (request as RpcParamfulRequestInit<[RpcRequestPreinit<unknown>]>).params
 
-      const channel = Option.wrap(maybeChannel).ok().throw(t)
       await this.events.tryEmit("data", [channel, subrequest]).then(r => r.throw(t))
 
       return Ok.void()
@@ -792,6 +792,36 @@ export class Global {
     })
   }
 
+  async brume_subscribe(channel: Channel, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+    return await Result.unthrow(async t => {
+      const [cacheKey] = (request as RpcParamfulRequestInit<[string]>).params
+
+      const onState = async (event: CustomEvent<State<any, any>>) => {
+        const stored = await this.core.store(event.detail, {})
+
+        console.log(channel.uuid, "<-", {
+          method: "brume_update",
+          params: [cacheKey, stored]
+        })
+
+        channel.tryRequest({
+          method: "brume_update",
+          params: [cacheKey, stored]
+        }).ignore()
+      }
+
+      this.core.onState.addListener(cacheKey, onState)
+
+      const onClose = () => {
+        this.core.onState.removeListener(cacheKey, onState)
+      }
+
+      channel.onClose(onClose)
+
+      return Ok.void()
+    })
+  }
+
   async brume_call_ethereum(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [walletId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
@@ -872,6 +902,44 @@ async function init() {
 
 const inited = init()
 
+export type Channel =
+  | WebsiteChannel
+  | ExtensionChannel
+
+export class WebsiteChannel {
+  readonly uuid = crypto.randomUUID()
+
+  constructor(
+    readonly port: MessagePort
+  ) { }
+
+  tryRequest(request: RpcRequestPreinit<unknown>): Result<void, never> {
+    return new Ok(this.port.postMessage(request))
+  }
+
+  onClose(listener: () => void) {
+    // TODO
+  }
+
+}
+
+export class ExtensionChannel {
+  readonly uuid = crypto.randomUUID()
+
+  constructor(
+    readonly port: chrome.runtime.Port
+  ) { }
+
+  tryRequest(request: RpcRequestPreinit<unknown>): Result<void, Error> {
+    return tryBrowserSync(() => this.port.postMessage(request))
+  }
+
+  onClose(listener: () => void) {
+    this.port.onDisconnect.addListener(listener)
+  }
+
+}
+
 if (IS_WEBSITE) {
 
   const onSkipWaiting = (event: ExtendableMessageEvent) =>
@@ -880,13 +948,18 @@ if (IS_WEBSITE) {
   const onHelloWorld = async (event: ExtendableMessageEvent) => {
     const port = event.ports[0]
 
-    port.addEventListener("message", async (event: MessageEvent<RpcRequestInit<unknown>>) => {
+    const channel = new WebsiteChannel(port)
+
+    port.addEventListener("message", async (event: MessageEvent<RpcRequestInit<unknown> | RpcResponseInit<unknown>>) => {
+      if (!("method" in event.data))
+        return
+
       const request = event.data
 
       if (request.id !== "ping")
         console.log("foreground", "->", request)
 
-      const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(undefined, request)))
+      const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(channel, request)))
       const response = RpcResponse.rewrap(request.id, result)
 
       if (request.id !== "ping")
@@ -907,14 +980,6 @@ if (IS_WEBSITE) {
       return void onHelloWorld(event)
     throw new Panic(`Invalid message`)
   })
-}
-
-export class ExtensionChannel {
-  readonly uuid = crypto.randomUUID()
-
-  constructor(
-    readonly port: chrome.runtime.Port
-  ) { }
 }
 
 if (IS_EXTENSION) {
@@ -944,14 +1009,17 @@ if (IS_EXTENSION) {
   const onForeground = (port: chrome.runtime.Port) => {
     const channel = new ExtensionChannel(port)
 
-    port.onMessage.addListener(async (request: RpcRequestInit<unknown>) => {
-      if (request.id !== "ping")
-        console.log(port.name, "->", request)
+    port.onMessage.addListener(async (message: RpcRequestInit<unknown> | RpcResponseInit<unknown>) => {
+      if (!("method" in message))
+        return
 
-      const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(channel, request)))
-      const response = RpcResponse.rewrap(request.id, result)
+      if (message.id !== "ping")
+        console.log(port.name, "->", message)
 
-      if (request.id !== "ping")
+      const result = await inited.then(r => r.andThenSync(g => g.tryRouteForeground(channel, message)))
+      const response = RpcResponse.rewrap(message.id, result)
+
+      if (message.id !== "ping")
         console.log(port.name, "<-", response)
 
       tryBrowserSync(() => port.postMessage(response)).ignore()

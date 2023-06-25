@@ -2,10 +2,9 @@ import { BrowserError, browser, tryBrowser, tryBrowserSync } from "@/libs/browse
 import { RpcClient, RpcId, RpcRequest, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
-import { Optional } from "@hazae41/option"
+import { Option, Optional } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, Skip, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
-import { RawState, Storage } from "@hazae41/xswr"
 
 export type Background =
   | WebsiteBackground
@@ -19,6 +18,10 @@ export class MessageError extends Error {
     super(`Message error`)
   }
 
+}
+
+export interface BackgroundEvents {
+  onMessage: ((request: RpcRequestInit<unknown>) => Promise<Option<Result<unknown, Error>>>)[]
 }
 
 export class WebsiteClient {
@@ -59,7 +62,10 @@ export class WebsiteClient {
 
       const future = new Future<Result<RpcResponse<T>, Error>>()
 
-      const onMessage = (event: MessageEvent<RpcResponseInit<T>>) => {
+      const onMessage = (event: MessageEvent<RpcRequestInit<unknown> | RpcResponseInit<T>>) => {
+        if ("method" in event.data)
+          return
+
         const response = RpcResponse.from(event.data)
 
         if (response.id !== request.id)
@@ -84,7 +90,7 @@ export class WebsiteClient {
   }
 }
 
-export function createMessageChannelPool() {
+export function createMessageChannelPool(events: BackgroundEvents) {
   return new Pool<WebsiteClient, Error>(async (params) => {
     return await Result.unthrow(async t => {
       const { pool, index } = params
@@ -122,18 +128,39 @@ export function createMessageChannelPool() {
         pong = setTimeout(() => void pool.delete(index), 1000)
       }, 1000)
 
-      const onPong = (event: MessageEvent<RpcResponseInit<unknown>>) => {
-        if (event.data.id !== "ping")
-          return
+      const onPong = async () => {
         clearTimeout(pong)
       }
 
-      channel.port1.addEventListener("message", onPong)
+      const onRequest = async (request: RpcRequestInit<unknown>) => {
+        if (events.onMessage === undefined)
+          return
+
+        for (const listener of events.onMessage) {
+          const option = await listener(request)
+
+          if (option.isNone())
+            continue
+
+          const response = RpcResponse.rewrap(request.id, option.inner)
+          channel.port1.postMessage(response)
+        }
+      }
+
+      const onMessage = async (message: MessageEvent<RpcRequestInit<unknown> | RpcResponseInit<unknown>>) => {
+        if ("method" in message.data)
+          return await onRequest(message.data)
+        if (message.data.id === "ping")
+          return await onPong()
+        return
+      }
+
+      channel.port1.addEventListener("message", onMessage)
 
       const onClean = () => {
         clearInterval(ping)
         clearTimeout(pong)
-        channel.port1.removeEventListener("message", onPong)
+        channel.port1.removeEventListener("message", onMessage)
         channel.port1.close()
         channel.port2.close()
       }
@@ -146,7 +173,8 @@ export function createMessageChannelPool() {
 export class WebsiteBackground {
 
   constructor(
-    readonly channels: Pool<WebsiteClient, Error>
+    readonly channels: Pool<WebsiteClient, Error>,
+    readonly events: BackgroundEvents
   ) { }
 
   isWebsite(): this is WebsiteBackground {
@@ -168,11 +196,7 @@ export class WebsiteBackground {
 
 }
 
-export interface ExtensionEvents {
-  onMessage?: (request: RpcRequestInit<unknown>) => Promise<Result<unknown, Error>>
-}
-
-export function createPortPool(events: ExtensionEvents) {
+export function createPortPool(events: BackgroundEvents) {
   return new Pool<chrome.runtime.Port, Error>(async (params) => {
     return await Result.unthrow(async t => {
       const { index, pool } = params
@@ -183,21 +207,32 @@ export function createPortPool(events: ExtensionEvents) {
           port.onDisconnect.addListener(() => void chrome.runtime.lastError)
           return port
         }).then(r => r.mapErrSync(Retry.new))
-      }, { base: 1, max: Number.MAX_SAFE_INTEGER }).then(r => r.throw(t))
+      }).then(r => r.throw(t))
 
       const onDisconnect = () => {
         pool.delete(index)
         return Ok.void()
       }
 
-      const onMessage = async (message: RpcRequestInit<unknown> | RpcResponseInit<unknown>) => {
-        if (!("method" in message))
-          return
+      const onRequest = async (request: RpcRequestInit<unknown>) => {
         if (events.onMessage === undefined)
           return
-        const result = await events.onMessage(message)
-        const response = RpcResponse.rewrap(message.id, result)
-        port.postMessage(response)
+
+        for (const listener of events.onMessage) {
+          const option = await listener(request)
+
+          if (option.isNone())
+            continue
+
+          const response = RpcResponse.rewrap(request.id, option.inner)
+          port.postMessage(response)
+        }
+      }
+
+      const onMessage = async (message: RpcRequestInit<unknown> | RpcResponseInit<unknown>) => {
+        if ("method" in message)
+          return await onRequest(message)
+        return
       }
 
       port.onMessage.addListener(onMessage)
@@ -205,6 +240,7 @@ export function createPortPool(events: ExtensionEvents) {
 
       const onClean = () => {
         port.onDisconnect.removeListener(onDisconnect)
+        port.onMessage.removeListener(onMessage)
         port.disconnect()
       }
 
@@ -218,7 +254,7 @@ export class ExtensionBackground {
 
   constructor(
     readonly ports: Pool<chrome.runtime.Port, Error>,
-    readonly events: ExtensionEvents
+    readonly events: BackgroundEvents
   ) { }
 
   isWebsite(): false {
@@ -238,7 +274,10 @@ export class ExtensionBackground {
 
         const future = new Future<Result<RpcResponse<T>, BrowserError>>()
 
-        const onMessage = (message: RpcResponseInit<T>) => {
+        const onMessage = (message: RpcRequestInit<unknown> | RpcResponseInit<T>) => {
+          if ("method" in message)
+            return
+
           const response = RpcResponse.from(message)
 
           if (response.id !== request.id)
@@ -265,36 +304,6 @@ export class ExtensionBackground {
         }
       })
     })
-  }
-
-}
-
-export class GlobalStorage implements Storage {
-  readonly async: true = true
-
-  constructor(
-    readonly background: Background
-  ) { }
-
-  async get(cacheKey: string) {
-    return await this.background
-      .tryRequest<RawState>({ method: "brume_get_global", params: [cacheKey] })
-      .then(r => r.unwrap().unwrap())
-  }
-
-}
-
-export class UserStorage implements Storage {
-  readonly async: true = true
-
-  constructor(
-    readonly background: Background
-  ) { }
-
-  async get(cacheKey: string) {
-    return await this.background
-      .tryRequest<RawState>({ method: "brume_get_user", params: [cacheKey] })
-      .then(r => r.ok().inner?.ok().inner)
   }
 
 }

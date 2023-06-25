@@ -5,10 +5,12 @@ import { RpcRequestPreinit } from "@/libs/rpc"
 import { EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data"
 import { Optional } from "@hazae41/option"
 import { Result } from "@hazae41/result"
-import { Data, FetchError, Fetched, FetcherMore, Query, createQuerySchema, useCore, useError, useFallback, useFetch, useOnce, useQuery } from "@hazae41/xswr"
-import { useCallback, useEffect } from "react"
-import { Background, UserStorage } from "../../background/background"
+import { Core, Data, FetchError, Fetched, FetcherMore, Query, createQuerySchema, useCore, useError, useFallback, useFetch, useOnce, useQuery } from "@hazae41/xswr"
+import { useEffect } from "react"
+import { Background } from "../../background/background"
 import { useBackground } from "../../background/context"
+import { useUserStorage } from "../../storage/context"
+import { UserStorage } from "../../storage/storage"
 import { useCurrentUser } from "../users/context"
 import { User } from "../users/data"
 
@@ -77,6 +79,7 @@ export function useWallet(uuid: Optional<string>, background: Background) {
 }
 
 export interface EthereumContext {
+  core: Core,
   user: User,
   background: Background
   wallet: Wallet,
@@ -84,6 +87,7 @@ export interface EthereumContext {
 }
 
 export interface GeneralContext {
+  core: Core,
   user: User,
   background: Background
 }
@@ -93,15 +97,17 @@ export interface EthereumContextProps {
 }
 
 export function useGeneralContext() {
+  const core = useCore().unwrap()
   const user = useCurrentUser()
   const background = useBackground()
-  return useObjectMemo({ user, background })
+  return useObjectMemo({ core, user, background })
 }
 
 export function useEthereumContext(wallet: Wallet, chain: EthereumChain): EthereumContext {
+  const core = useCore().unwrap()
   const user = useCurrentUser()
   const background = useBackground()
-  return useObjectMemo({ user, background, wallet, chain })
+  return useObjectMemo({ core, user, background, wallet, chain })
 }
 
 export async function tryFetch<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext): Promise<Result<Fetched<T, Error>, FetchError>> {
@@ -113,147 +119,115 @@ export async function tryFetch<T>(request: RpcRequestPreinit<unknown>, ethereum:
   }).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 }
 
-export function useSync<K, D, F>(query: Query<K, D, F>) {
-  const core = useCore().unwrap()
+export function useSubscribe<K, D, F>(query: Query<K, D, F>, storage: UserStorage) {
   const { cacheKey } = query
 
-  const sync = useCallback(async () => {
+  useEffect(() => {
     if (cacheKey === undefined)
       return
-    if (query.storage === undefined)
-      return
-
-    const stored = await query.storage.get?.(cacheKey)
-    const unstored = await core.unstore(stored, query)
-    await core.update(cacheKey, () => unstored, query)
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [core, cacheKey])
-
-  useEffect(() => {
-    sync()
-  }, [sync])
+    storage.trySubscribe(cacheKey).then(r => r.ignore())
+  }, [cacheKey, storage])
 }
 
-export function getTotalPricedBalance(context: GeneralContext, coin: "usd") {
-  const storage = new UserStorage(context.background)
-
+export function getTotalPricedBalance(context: GeneralContext, coin: "usd", storage: UserStorage) {
   return createQuerySchema<string, FixedInit, Error>(`totalPricedBalance/${context.user.uuid}/${coin}`, undefined, { storage })
 }
 
 export function useTotalPricedBalance(coin: "usd") {
   const context = useGeneralContext()
-  const query = useQuery(getTotalPricedBalance, [context, coin])
-  useSync(query)
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getTotalPricedBalance, [context, coin, storage])
   useFetch(query)
+  useSubscribe(query, storage)
   useError(query, console.error)
   useFallback(query, new Data(new Fixed(0n, 0)))
   return query
 }
 
-export function getTotalWalletPricedBalance(context: GeneralContext, address: string, coin: "usd") {
-  const storage = new UserStorage(context.background)
-
+export function getTotalWalletPricedBalance(context: GeneralContext, address: string, coin: "usd", storage: UserStorage) {
   return createQuerySchema<string, FixedInit, Error>(`totalPricedBalance/${address}/${coin}`, undefined, { storage })
 }
 
 export function useTotalWalletPricedBalance(address: string, coin: "usd") {
   const context = useGeneralContext()
-  const query = useQuery(getTotalWalletPricedBalance, [context, address, coin])
-  useSync(query)
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getTotalWalletPricedBalance, [context, address, coin, storage])
   useFetch(query)
+  useSubscribe(query, storage)
   useError(query, console.error)
   return query
 }
 
-export function getPricedBalance(ethereum: EthereumContext, address: string, coin: "usd") {
-  const storage = new UserStorage(ethereum.background)
-
-  return createQuerySchema<string, FixedInit, Error>(`pricedBalance/${address}/${ethereum.chain.chainId}/${coin}`, undefined, { storage })
+export function getPricedBalance(context: EthereumContext, address: string, coin: "usd", storage: UserStorage) {
+  return createQuerySchema<string, FixedInit, Error>(`pricedBalance/${address}/${context.chain.chainId}/${coin}`, undefined, { storage })
 }
 
-export function usePricedBalance(ethereum: EthereumContext, address: string, coin: "usd") {
-  const query = useQuery(getPricedBalance, [ethereum, address, coin])
-  useSync(query)
+export function usePricedBalance(context: EthereumContext, address: string, coin: "usd") {
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getPricedBalance, [context, address, coin, storage])
   useFetch(query)
+  useSubscribe(query, storage)
   useError(query, console.error)
   return query
 }
 
-export function getPendingBalance(address: string, ethereum: EthereumContext) {
+export function getPendingBalance(address: string, context: EthereumContext, storage: UserStorage) {
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await tryFetch<FixedInit>(request, ethereum)
-
-  const storage = new UserStorage(ethereum.background)
+    await tryFetch<FixedInit>(request, context)
 
   return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
     version: 2,
-    chainId: ethereum.chain.chainId,
+    chainId: context.chain.chainId,
     method: "eth_getBalance",
     params: [address, "pending"]
   }, fetcher, { storage })
 }
 
 export function usePendingBalance(address: string, ethereum: EthereumContext) {
-  const query = useQuery(getPendingBalance, [address, ethereum])
-  useSync(query)
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getPendingBalance, [address, ethereum, storage])
   useFetch(query)
+  useSubscribe(query, storage)
   useError(query, console.error)
   return query
 }
 
-export function getNonceSchema(address: string, ethereum: EthereumContext) {
+export function getNonceSchema(address: string, context: EthereumContext, storage: UserStorage) {
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await tryFetch<string>(request, ethereum).then(r => r.mapSync(r => r.mapSync(BigInt)))
-
-  const storage = new UserStorage(ethereum.background)
+    await tryFetch<string>(request, context).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
-    chainId: ethereum.chain.chainId,
+    chainId: context.chain.chainId,
     method: "eth_getTransactionCount",
     params: [address, "pending"]
   }, fetcher, { storage, dataSerializer: BigInts })
 }
 
 export function useNonce(address: string, ethereum: EthereumContext) {
-  const query = useQuery(getNonceSchema, [address, ethereum])
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getNonceSchema, [address, ethereum, storage])
   useFetch(query)
-  useSync(query)
+  useSubscribe(query, storage)
   useError(query, console.error)
   return query
 }
 
-export function getGasPriceSchema(ethereum: EthereumContext) {
+export function getGasPriceSchema(context: EthereumContext, storage: UserStorage) {
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryFetch<string>(request, ethereum).then(r => r.mapSync(r => r.mapSync(BigInt)))
-
-  const storage = new UserStorage(ethereum.background)
+    await tryFetch<string>(request, context).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
-    chainId: ethereum.chain.chainId,
+    chainId: context.chain.chainId,
     method: "eth_gasPrice",
     params: []
   }, fetcher, { storage, dataSerializer: BigInts })
 }
 
 export function useGasPrice(ethereum: EthereumContext) {
-  const query = useQuery(getGasPriceSchema, [ethereum])
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getGasPriceSchema, [ethereum, storage])
   useFetch(query)
-  useSync(query)
+  useSubscribe(query, storage)
   useError(query, console.error)
   return query
-}
-
-export function getPairPrice(address: string, ethereum: EthereumContext) {
-  const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await tryFetch<FixedInit>(request, ethereum)
-
-  const storage = new UserStorage(ethereum.background)
-
-  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
-    version: 2,
-    chainId: ethereum.chain.chainId,
-    method: "eth_getBalance",
-    params: [address, "pending"]
-  }, fetcher, { storage })
 }
