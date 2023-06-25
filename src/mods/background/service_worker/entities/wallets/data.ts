@@ -78,7 +78,7 @@ export async function getWalletRef(wallet: Wallet, storage: IDBStorage, more: No
 
 export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
   version?: number
-  chainId: number
+  chainId?: number
 }
 
 export interface EthereumSession {
@@ -201,8 +201,6 @@ export function getEthereumBalance(ethereum: EthereumContext, address: string, b
         const chain = chains[pair.chainId]
 
         const price = await getPairPrice({ ...ethereum, chain }, pair, storage).make(more.core)
-
-        await price.fetch().then(r => r.ignore())
 
         if (price.data === undefined)
           return balance

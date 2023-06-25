@@ -55,7 +55,6 @@ export class UserStorage implements Storage {
           if (cacheKey2 !== cacheKey)
             return new None()
 
-          console.log("stored", stored)
           const unstored = await this.core.unstore(stored ?? undefined, {})
           this.core.update(cacheKey, () => unstored, {})
 

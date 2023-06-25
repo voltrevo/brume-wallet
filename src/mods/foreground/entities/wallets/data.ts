@@ -1,11 +1,12 @@
 import { BigInts, Fixed, FixedInit } from "@/libs/bigints/bigints"
-import { EthereumChain } from "@/libs/ethereum/chain"
+import { EthereumChain, PairInfo } from "@/libs/ethereum/chain"
 import { useObjectMemo } from "@/libs/react/memo"
 import { RpcRequestPreinit } from "@/libs/rpc"
 import { EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data"
 import { Optional } from "@hazae41/option"
 import { Result } from "@hazae41/result"
-import { Core, Data, FetchError, Fetched, FetcherMore, Query, createQuerySchema, useCore, useError, useFallback, useFetch, useOnce, useQuery } from "@hazae41/xswr"
+import { Core, Data, FetchError, Fetched, FetcherMore, Query, createQuerySchema, useCore, useError, useFallback, useFetch, useOnce, useQuery, useVisible } from "@hazae41/xswr"
+import { ContractRunner, TransactionRequest } from "ethers"
 import { useEffect } from "react"
 import { Background } from "../../background/background"
 import { useBackground } from "../../background/context"
@@ -227,6 +228,45 @@ export function useGasPrice(ethereum: EthereumContext) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getGasPriceSchema, [ethereum, storage])
   useFetch(query)
+  useSubscribe(query, storage)
+  useError(query, console.error)
+  return query
+}
+
+export class BrumeProvider implements ContractRunner {
+  provider = null
+
+  constructor(
+    readonly ethereum: EthereumContext
+  ) { }
+
+  async call(tx: TransactionRequest) {
+    return await tryFetch<string>({
+      method: "eth_call",
+      params: [{
+        to: tx.to,
+        data: tx.data
+      }, "pending"]
+    }, this.ethereum).then(r => r.unwrap().unwrap())
+  }
+
+}
+
+export function getPairPrice(context: EthereumContext, pair: PairInfo, storage: UserStorage) {
+  const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
+    await tryFetch<FixedInit>(request, context)
+
+  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+    method: "eth_getPairPrice",
+    params: [pair.address]
+  }, fetcher, { storage })
+}
+
+export function usePairPrice(ethereum: EthereumContext, pair: PairInfo) {
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getPairPrice, [ethereum, pair, storage])
+  useOnce(query)
+  useVisible(query)
   useSubscribe(query, storage)
   useError(query, console.error)
   return query

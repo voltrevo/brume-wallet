@@ -1,5 +1,5 @@
 import { browser, tryBrowser, tryBrowserSync } from "@/libs/browser/browser"
-import { chains } from "@/libs/ethereum/chain"
+import { chains, pairsByAddress } from "@/libs/ethereum/chain"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcParamfulRequestInit, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"
@@ -27,7 +27,7 @@ import { EthereumBrume, EthereumBrumes, EthereumSocket, getEthereumBrumes } from
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
-import { EthereumContext, EthereumPrivateKeyWallet, EthereumSession, Wallet, WalletData, getEthereumBalance, getEthereumSession, getEthereumUnknown, getWallet } from "./entities/wallets/data"
+import { EthereumContext, EthereumPrivateKeyWallet, EthereumSession, Wallet, WalletData, getEthereumBalance, getEthereumSession, getEthereumUnknown, getPairPrice, getWallet } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -388,6 +388,27 @@ export class Global {
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const query = await this.make(getEthereumBalance(ethereum, address, block, storage))
+
+      const result = await query.fetch().then(r => r.ignore())
+
+      result.inspectSync(r => r.throw(t))
+
+      const stored = this.core.raw.get(query.cacheKey)?.inner
+      const unstored = await this.core.unstore<any, unknown, any>(stored, {})
+      const fetched = Option.wrap(unstored.current).ok().throw(t)
+
+      return fetched
+    })
+  }
+
+  async eth_getPairPrice(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+    return await Result.unthrow(async t => {
+      const [address] = (request as RpcParamfulRequestPreinit<[string]>).params
+
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
+
+      const pair = Option.wrap(pairsByAddress[address]).ok().throw(t)
+      const query = await this.make(getPairPrice(ethereum, pair, storage))
 
       const result = await query.fetch().then(r => r.ignore())
 
@@ -799,11 +820,6 @@ export class Global {
       const onState = async (event: CustomEvent<State<any, any>>) => {
         const stored = await this.core.store(event.detail, {})
 
-        console.log(channel.uuid, "<-", {
-          method: "brume_update",
-          params: [cacheKey, stored]
-        })
-
         channel.tryRequest({
           method: "brume_update",
           params: [cacheKey, stored]
@@ -840,6 +856,8 @@ export class Global {
         return await this.eth_getBalance(ethereum, subrequest)
       if (subrequest.method === "eth_sendTransaction")
         return await this.eth_sendTransaction2(ethereum, subrequest)
+      if (subrequest.method === "eth_getPairPrice")
+        return await this.eth_getPairPrice(ethereum, subrequest)
 
       const query = await this.make(getEthereumUnknown(ethereum, subrequest, storage))
 

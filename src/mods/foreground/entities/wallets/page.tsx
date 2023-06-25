@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Fixed, FixedInit } from "@/libs/bigints/bigints";
 import { Colors } from "@/libs/colors/colors";
-import { chains } from "@/libs/ethereum/chain";
+import { chains, pairsByAddress, pairsByName } from "@/libs/ethereum/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";
@@ -12,7 +12,7 @@ import { useMemo } from "react";
 import { PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { WalletDataProvider, useWalletData } from "./context";
-import { useEthereumContext, usePendingBalance, usePricedBalance } from "./data";
+import { useEthereumContext, usePairPrice, usePendingBalance, usePricedBalance } from "./data";
 import { WalletDataCard } from "./row";
 import { WalletDataSendDialog } from "./send";
 
@@ -59,6 +59,9 @@ function WalletDataPage() {
 
   const color = Colors.get(wallet.color)
   const color2 = Colors.get(wallet.color + 1)
+
+  usePairPrice(mainnet, pairsByAddress[pairsByName.WETH_USDT])
+  usePairPrice(mainnet, pairsByAddress[pairsByName.MATIC_WETH])
 
   const mainnetBalanceQuery = usePendingBalance(wallet.address, mainnet)
   const mainnetBalanceDisplay = useDisplay(mainnetBalanceQuery.current)
