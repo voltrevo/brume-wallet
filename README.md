@@ -46,7 +46,7 @@ You can use Brume Wallet as an extension and on a website
 
 ### Installing the extension
 
-### Firefox
+#### Firefox
 
 - Click on the `firefox.xpi` file on the [release page](https://github.com/brumewallet/wallet/releases)
 
