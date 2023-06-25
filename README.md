@@ -44,36 +44,38 @@ You can use Brume Wallet as an extension and on a website
 
 - Click here https://wallet.brume.money
 
-### Using the extension
-
-- Extract the .zip file in a location you want
-- [Install the extension](#installing-the-extension)
-
 ### Installing the extension
 
-#### Chrome 
+### Firefox
 
+- Click on the `firefox.xpi` file on the [release page](https://github.com/brumewallet/wallet/releases)
+
+#### Chrome (permanent developer mode)
+
+- Download and extract the `chrome.zip` file on the [release page](https://github.com/brumewallet/wallet/releases)
 - Open Chrome, open settings
 - Left panel, bottom, click `Extensions`
 - Top bar, right, enable `Developer mode`
 - Click `Load unpacked`
-- Select the `chrome` folder
+- Select the folder where `chrome.zip` was extracted
 
-#### Firefox 
+#### Firefox (temporary developer mode)
 
+- Download and extract the `firefox.zip` file on the [release page](https://github.com/brumewallet/wallet/releases)
 - Open Firefox, navigate to `about:debugging`
 - Left panel, click `This Firefox`
 - `Temporary Extensions`, click `Load Temporary Add-on`
 - Navigate to the Brume Wallet folder
-- Open the `firefox` folder
+- Open the folder where `firefox.zip` was extracted
 - Select the `manifest.json` file
 
-#### Safari (build only)
+#### Safari (temporary developer mode)
 
 - Get a mac
 - Install Xcode
 - Enable `Developer mode` in Safari
-- Run `npm run build && npm run xcode`
+- [Build the extension](#reproducible-building)
+- Run `npm run xcode`
 - Enter `y` to everything and/or ignore warnings
 
 *Xcode will start*
