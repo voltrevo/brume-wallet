@@ -54,8 +54,9 @@ function WalletDataPage() {
   const router = useRouter()
 
   const mainnet = useEthereumContext(wallet, chains[1])
-  const goerli = useEthereumContext(wallet, chains[5])
   const polygon = useEthereumContext(wallet, chains[137])
+  const goerli = useEthereumContext(wallet, chains[5])
+  const sepolia = useEthereumContext(wallet, chains[11155111])
 
   const color = Colors.get(wallet.color)
   const color2 = Colors.get(wallet.color + 1)
@@ -67,21 +68,27 @@ function WalletDataPage() {
   const mainnetBalanceDisplay = useDisplay(mainnetBalanceQuery.current)
   const mainnetSendDialog = useBooleanHandle(false)
 
-  const goerliBalance = usePendingBalance(wallet.address, goerli)
-  const goerliBalanceDisplay = useDisplay(goerliBalance.current)
-  const goerliSendDialog = useBooleanHandle(false)
+  const ethBalanceUsdBigint = usePricedBalance(mainnet, wallet.address, "usd")
+  const ethBalanceUsdDisplay = useDisplayUsd(ethBalanceUsdBigint.current)
 
   const polygonBalanceQuery = usePendingBalance(wallet.address, polygon, wethUsdPriceQuery.data, maticWethPriceQuery.data)
   const polygonBalanceDisplay = useDisplay(polygonBalanceQuery.current)
   const polygonSendDialog = useBooleanHandle(false)
 
-  const ethBalanceUsdBigint = usePricedBalance(mainnet, wallet.address, "usd")
-  const ethBalanceUsdDisplay = useDisplayUsd(ethBalanceUsdBigint.current)
+  const maticBalanceUsdBigint = usePricedBalance(polygon, wallet.address, "usd")
+  const maticBalanceUsdDisplay = useDisplayUsd(maticBalanceUsdBigint.current)
+
+  const goerliBalance = usePendingBalance(wallet.address, goerli)
+  const goerliBalanceDisplay = useDisplay(goerliBalance.current)
+  const goerliSendDialog = useBooleanHandle(false)
 
   const goerliBalanceUsdDisplay = useDisplayUsd(new Ok(new Fixed(0n, 0)))
 
-  const maticBalanceUsdBigint = usePricedBalance(polygon, wallet.address, "usd")
-  const maticBalanceUsdDisplay = useDisplayUsd(maticBalanceUsdBigint.current)
+  const sepoliaBalance = usePendingBalance(wallet.address, sepolia)
+  const sepoliaBalanceDisplay = useDisplay(sepoliaBalance.current)
+  const sepoliaSendDialog = useBooleanHandle(false)
+
+  const sepoliaBalanceUsdDisplay = useDisplayUsd(new Ok(new Fixed(0n, 0)))
 
   const Header =
     <PageHeader
@@ -126,17 +133,21 @@ function WalletDataPage() {
 
   return <Page>
     {mainnetSendDialog.current && mainnet &&
-      <WalletDataSendDialog title="(Ethereum mainnet)"
+      <WalletDataSendDialog title="(Ethereum)"
         handle={mainnet}
         close={mainnetSendDialog.disable} />}
-    {goerliSendDialog.current && goerli &&
-      <WalletDataSendDialog title="(Goerli testnet)"
-        handle={goerli}
-        close={goerliSendDialog.disable} />}
     {polygonSendDialog.current && polygon &&
-      <WalletDataSendDialog title="(Polygon mainnet)"
+      <WalletDataSendDialog title="(Polygon)"
         handle={polygon}
         close={polygonSendDialog.disable} />}
+    {goerliSendDialog.current && goerli &&
+      <WalletDataSendDialog title="(Goerli)"
+        handle={goerli}
+        close={goerliSendDialog.disable} />}
+    {sepoliaSendDialog.current && sepolia &&
+      <WalletDataSendDialog title="(Sepolia)"
+        handle={sepolia}
+        close={sepoliaSendDialog.disable} />}
     {Header}
     {Card}
     {Apps}
@@ -156,6 +167,20 @@ function WalletDataPage() {
         </div>
       </button>
       <button className="w-full p-xmd flex flex-col rounded-xl border border-contrast"
+        onClick={polygonSendDialog.enable}>
+        <div className="w-full flex justify-between items-center">
+          <div className="">
+            Polygon
+          </div>
+          <div className="">
+            {maticBalanceUsdDisplay}
+          </div>
+        </div>
+        <div className="text-contrast">
+          {`${polygonBalanceDisplay} MATIC`}
+        </div>
+      </button>
+      <button className="w-full p-xmd flex flex-col rounded-xl border border-contrast"
         onClick={goerliSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
@@ -170,17 +195,17 @@ function WalletDataPage() {
         </div>
       </button>
       <button className="w-full p-xmd flex flex-col rounded-xl border border-contrast"
-        onClick={polygonSendDialog.enable}>
+        onClick={sepoliaSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
-            Polygon
+            Sepolia
           </div>
           <div className="">
-            {maticBalanceUsdDisplay}
+            {sepoliaBalanceUsdDisplay}
           </div>
         </div>
         <div className="text-contrast">
-          {`${polygonBalanceDisplay} MATIC`}
+          {`${sepoliaBalanceDisplay} ETH`}
         </div>
       </button>
     </div>

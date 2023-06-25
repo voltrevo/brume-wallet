@@ -1,14 +1,16 @@
 import PairAbi from "@/assets/Pair.json"
 import { Fixed, FixedInit } from "@/libs/bigints/bigints"
 import { EthereumChain, PairInfo, chains, pairsByAddress, tokensByAddress } from "@/libs/ethereum/chain"
-import { RpcRequestPreinit } from "@/libs/rpc"
+import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
+import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
+import { Arrays } from "@hazae41/arrays"
 import { Option, Optional } from "@hazae41/option"
 import { Cancel, Looped, Retry, tryLoop } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
 import { Data, FetchError, Fetched, FetcherMore, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
-import { EthereumBrumes, EthereumSocket } from "../sessions/data"
+import { EthereumBrumes } from "../sessions/data"
 import { User } from "../users/data"
 
 export type Wallet =
@@ -98,21 +100,45 @@ export interface EthereumContext {
   brumes: EthereumBrumes
 }
 
-export async function tryFetch<T>(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
-  return await tryLoop(async (i) => {
+export async function tryEthereumFetch<T>(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
+  const { signal = AbortSignals.timeout(30_000) } = more
+
+  const entries = [...ethereum.brumes.inner]
+
+  return await tryLoop(async () => {
     return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
-      const brume = await ethereum.brumes.inner.tryGet(i).then(r => r.mapErrSync(Retry.new).throw(t))
-      const socket = Option.wrap(brume.chains[ethereum.chain.chainId]).ok().mapErrSync(Cancel.new).throw(t)
-      const response = await EthereumSocket.request<T>(socket, request).then(r => r.mapErrSync(Retry.new).throw(t))
+      const index = Arrays.cryptoRandomIndex(entries)
+      const brume = entries[index].result.get()
+
+      entries.splice(index, 1)
+
+      const sockets = Option.wrap(brume.sockets[ethereum.chain.chainId]).ok().mapErrSync(Cancel.new).throw(t)
+
+      console.log(`Fetching ${request.method} with`, brume.circuit.id)
+
+      const entries2 = [...sockets]
+
+      const response = await tryLoop(async (i) => {
+        return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
+          const index2 = Arrays.cryptoRandomIndex(entries2)
+          const socket = entries2[index2].result.get()
+
+          entries2.splice(index2, 1)
+
+          const response = await brume.client.tryFetchWithSocket<T>(socket, request, signal).then(r => r.mapErrSync(Retry.new).throw(t))
+
+          return new Ok(response)
+        })
+      }, { base: 1, max: entries2.length }).then(r => r.mapErrSync(Retry.new).throw(t))
 
       return new Ok(Fetched.rewrap(response))
     })
-  }).then(r => r.mapErrSync(FetchError.from))
+  }, { base: 1, max: entries.length }).then(r => r.mapErrSync(FetchError.from))
 }
 
 export function getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryFetch<unknown>(ethereum, request)
+    await tryEthereumFetch<unknown>(ethereum, request)
 
   return createQuerySchema<EthereumQueryKey<unknown>, any, Error>({
     chainId: ethereum.chain.chainId,
@@ -185,7 +211,7 @@ export function getPricedEthereumBalance(ethereum: EthereumContext, address: str
 
 export function getEthereumBalance(ethereum: EthereumContext, address: string, block: string, storage: IDBStorage) {
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals))))
+    await tryEthereumFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals))))
 
   const normalizer = async (fetched: Optional<Fetched<FixedInit, Error>>, more: NormalizerMore) =>
     await fetched?.map(async balance => {
@@ -230,7 +256,7 @@ export class BrumeProvider implements ContractRunner {
   ) { }
 
   async call(tx: TransactionRequest) {
-    return await tryFetch<string>(this.ethereum, {
+    return await tryEthereumFetch<string>(this.ethereum, {
       method: "eth_call",
       params: [{
         to: tx.to,

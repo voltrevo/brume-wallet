@@ -2,16 +2,16 @@ export type EthereumChains<T = EthereumChain> =
   Record<number, T>
 
 export interface EthereumChain {
-  chainId: number,
-  url: string,
-  etherscan: string
-  token: TokenInfo
+  readonly chainId: number,
+  readonly urls: readonly string[],
+  readonly etherscan: string
+  readonly token: TokenInfo
 }
 
 export const chains: EthereumChains = {
   1: {
     chainId: 1,
-    url: "wss://eth.llamarpc.com",
+    urls: ["wss://eth.llamarpc.com"],
     etherscan: "https://etherscan.io",
     token: {
       chainId: 1,
@@ -22,7 +22,7 @@ export const chains: EthereumChains = {
   },
   5: {
     chainId: 5,
-    url: "wss://goerli.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8",
+    urls: ["wss://goerli.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8"],
     etherscan: "https://goerli.etherscan.io",
     token: {
       chainId: 5,
@@ -32,7 +32,7 @@ export const chains: EthereumChains = {
   },
   137: {
     chainId: 137,
-    url: "wss://polygon.llamarpc.com",
+    urls: ["wss://polygon.llamarpc.com"],
     etherscan: "https://polygonscan.com",
     token: {
       chainId: 137,
@@ -40,8 +40,18 @@ export const chains: EthereumChains = {
       decimals: 18,
       pairs: ["0x819f3450dA6f110BA6Ea52195B3beaFa246062dE", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
     }
+  },
+  11155111: {
+    chainId: 11155111,
+    urls: ["wss://sepolia.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8"],
+    etherscan: "https://sepolia.etherscan.io",
+    token: {
+      chainId: 11155111,
+      symbol: "ETH",
+      decimals: 18
+    }
   }
-}
+} as const
 
 export type TokenInfo =
   | NativeTokenInfo
@@ -58,7 +68,7 @@ export interface ContractTokenInfo {
   readonly chainId: number,
   readonly symbol: string,
   readonly decimals: number,
-  readonly address?: string
+  readonly address: string
   readonly pairs?: readonly string[]
 }
 

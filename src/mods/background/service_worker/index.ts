@@ -23,11 +23,11 @@ import { Core, Data, IDBStorage, Makeable, RawState, State } from "@hazae41/xswr
 import { ethers } from "ethers"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
-import { EthereumBrume, EthereumBrumes, EthereumSocket, getEthereumBrumes } from "./entities/sessions/data"
+import { EthereumBrume, EthereumBrumes, getEthereumBrumes } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
-import { EthereumContext, EthereumPrivateKeyWallet, EthereumSession, Wallet, WalletData, getEthereumBalance, getEthereumSession, getEthereumUnknown, getPairPrice, getWallet } from "./entities/wallets/data"
+import { EthereumContext, EthereumPrivateKeyWallet, EthereumSession, Wallet, WalletData, getEthereumBalance, getEthereumSession, getEthereumUnknown, getPairPrice, getWallet, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -443,15 +443,12 @@ export class Global {
       const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
-      const circuit = await ethereum.brumes.inner.tryGet(0).then(r => r.throw(t))
-      const socket = Option.wrap(circuit.chains[ethereum.chain.chainId]).ok().throw(t)
-
-      const nonce = await EthereumSocket.request<string>(socket, {
+      const nonce = await tryEthereumFetch<string>(ethereum, {
         method: "eth_getTransactionCount",
         params: [wallet.address, "pending"]
       }).then(r => r.throw(t).throw(t))
 
-      const gasPrice = await EthereumSocket.request<string>(socket, {
+      const gasPrice = await tryEthereumFetch<string>(ethereum, {
         method: "eth_gasPrice"
       }).then(r => r.throw(t).throw(t))
 
@@ -468,10 +465,10 @@ export class Global {
 
       const signal = AbortSignal.timeout(600_000)
 
-      return await EthereumSocket.request<string>(socket, {
+      return await tryEthereumFetch<string>(ethereum, {
         method: "eth_sendRawTransaction",
         params: [signature]
-      }, signal).then(r => r.throw(t))
+      }, { signal }).then(r => r.throw(t))
     })
   }
 
@@ -484,15 +481,12 @@ export class Global {
       const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
-      const circuit = await ethereum.brumes.inner.tryGet(0).then(r => r.throw(t))
-      const socket = Option.wrap(circuit.chains[ethereum.chain.chainId]).ok().throw(t)
-
-      const nonce = await EthereumSocket.request<string>(socket, {
+      const nonce = await tryEthereumFetch<string>(ethereum, {
         method: "eth_getTransactionCount",
         params: [wallet.address, "pending"]
       }).then(r => r.throw(t).throw(t))
 
-      const gasPrice = await EthereumSocket.request<string>(socket, {
+      const gasPrice = await tryEthereumFetch<string>(ethereum, {
         method: "eth_gasPrice"
       }).then(r => r.throw(t).throw(t))
 
@@ -509,10 +503,10 @@ export class Global {
 
       const signal = AbortSignal.timeout(600_000)
 
-      return await EthereumSocket.request<string>(socket, {
+      return await tryEthereumFetch<string>(ethereum, {
         method: "eth_sendRawTransaction",
         params: [signature]
-      }, signal).then(r => r.throw(t))
+      }, { signal }).then(r => r.throw(t))
     })
   }
 
