@@ -19,6 +19,7 @@
     "zip:chrome": "cd ./dist/chrome && zip -r ../chrome.zip .",
     "zip:firefox": "cd ./dist/firefox && zip -r ../firefox.zip .",
     "zip:safari": "cd ./dist/safari && zip -r ../safari.zip .",
+    "sign:firefox": "source .env.local && web-ext sign --source-dir ./dist/firefox --api-key $FIREFOX_KEY --api-secret $FIREFOX_SECRET && mv ./web-ext-artifacts/* ./dist/firefox.xpi && rimraf ./web-ext-artifacts",
     "xcode": "xcrun safari-web-extension-converter ./dist/safari --project-location xcode --app-name brume-wallet",
     "clean": "rimraf ./node_modules ./.next ./out ./dist ./website ./chrome ./firefox ./safari ./package-lock.json",
     "lint": "next lint",
