@@ -60,10 +60,10 @@ function WalletDataPage() {
   const color = Colors.get(wallet.color)
   const color2 = Colors.get(wallet.color + 1)
 
-  usePairPrice(mainnet, pairsByAddress[pairsByName.WETH_USDT])
-  usePairPrice(mainnet, pairsByAddress[pairsByName.MATIC_WETH])
+  const wethUsdPriceQuery = usePairPrice(mainnet, pairsByAddress[pairsByName.WETH_USDT])
+  const maticWethPriceQuery = usePairPrice(mainnet, pairsByAddress[pairsByName.MATIC_WETH])
 
-  const mainnetBalanceQuery = usePendingBalance(wallet.address, mainnet)
+  const mainnetBalanceQuery = usePendingBalance(wallet.address, mainnet, wethUsdPriceQuery.data)
   const mainnetBalanceDisplay = useDisplay(mainnetBalanceQuery.current)
   const mainnetSendDialog = useBooleanHandle(false)
 
@@ -71,7 +71,7 @@ function WalletDataPage() {
   const goerliBalanceDisplay = useDisplay(goerliBalance.current)
   const goerliSendDialog = useBooleanHandle(false)
 
-  const polygonBalanceQuery = usePendingBalance(wallet.address, polygon)
+  const polygonBalanceQuery = usePendingBalance(wallet.address, polygon, wethUsdPriceQuery.data, maticWethPriceQuery.data)
   const polygonBalanceDisplay = useDisplay(polygonBalanceQuery.current)
   const polygonSendDialog = useBooleanHandle(false)
 

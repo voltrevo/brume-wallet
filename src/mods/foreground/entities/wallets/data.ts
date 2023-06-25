@@ -184,12 +184,18 @@ export function getPendingBalance(address: string, context: EthereumContext, sto
   }, fetcher, { storage })
 }
 
-export function usePendingBalance(address: string, ethereum: EthereumContext) {
+export function usePendingBalance(address: string, ethereum: EthereumContext, ...prices: Optional<Data<FixedInit>>[]) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getPendingBalance, [address, ethereum, storage])
   useFetch(query)
   useSubscribe(query, storage)
   useError(query, console.error)
+
+  useEffect(() => {
+    query.fetch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...prices])
+
   return query
 }
 
