@@ -27,7 +27,7 @@ import { EthereumBrume, EthereumBrumes, EthereumSocket, getEthereumBrumes } from
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
-import { EthereumPrivateKeyWallet, EthereumSession, EthereumSessionAndBrumes, Wallet, WalletData, getEthereumBalance, getEthereumSession, getEthereumUnknown, getWallet } from "./entities/wallets/data"
+import { EthereumContext, EthereumPrivateKeyWallet, EthereumSession, Wallet, WalletData, getEthereumBalance, getEthereumSession, getEthereumUnknown, getWallet } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -325,13 +325,13 @@ export class Global {
       if (request.method === "eth_requestAccounts")
         return await this.eth_requestAccounts(origin, request, mouse)
 
-      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
+      const { user, storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
       const sessionQuery = await this.make(getEthereumSession(origin, storage))
-      const session = Option.wrap(sessionQuery.current?.inner).ok().throw(t)
+      const { wallet, chain } = Option.wrap(sessionQuery.current?.inner).ok().throw(t)
 
-      const brumes = await this.#getOrCreateEthereumBrumes(session.wallet)
+      const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
-      const ethereum = { origin, session, brumes }
+      const ethereum = { user, origin, wallet, chain, brumes }
 
       if (request.method === "eth_accounts")
         return await this.eth_accounts(ethereum, request)
@@ -370,18 +370,18 @@ export class Global {
     })
   }
 
-  async eth_accounts(ethereum: EthereumSessionAndBrumes, request: RpcRequestPreinit<unknown>): Promise<Result<[string], Error>> {
+  async eth_accounts(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<[string], Error>> {
     return await Result.unthrow(async t => {
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
-      const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
+      const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
       const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
 
       return new Ok([address])
     })
   }
 
-  async eth_getBalance(ethereum: EthereumSessionAndBrumes, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async eth_getBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [address, block] = (request as RpcParamfulRequestPreinit<[string, string]>).params
 
@@ -394,14 +394,14 @@ export class Global {
       result.inspectSync(r => r.throw(t))
 
       const stored = this.core.raw.get(query.cacheKey)?.inner
-      const unstored = await this.core.unstore<any, unknown, Error>(stored, {})
+      const unstored = await this.core.unstore<any, unknown, any>(stored, {})
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
       return fetched
     })
   }
 
-  async eth_sendTransaction(ethereum: EthereumSessionAndBrumes, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
+  async eth_sendTransaction(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [{ data, gas, from, to, value }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string, value: string }]>).params
 
@@ -419,11 +419,11 @@ export class Global {
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
-      const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
+      const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
       const circuit = await ethereum.brumes.inner.tryGet(0).then(r => r.throw(t))
-      const socket = Option.wrap(circuit.chains[ethereum.session.chain.chainId]).ok().throw(t)
+      const socket = Option.wrap(circuit.chains[ethereum.chain.chainId]).ok().throw(t)
 
       const nonce = await EthereumSocket.request<string>(socket, {
         method: "eth_getTransactionCount",
@@ -439,7 +439,7 @@ export class Global {
         to: to,
         from: from,
         gasLimit: gas,
-        chainId: ethereum.session.chain.chainId,
+        chainId: ethereum.chain.chainId,
         gasPrice: gasPrice,
         nonce: parseInt(nonce, 16),
         value: value
@@ -454,17 +454,17 @@ export class Global {
     })
   }
 
-  async eth_sendTransaction2(ethereum: EthereumSessionAndBrumes, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+  async eth_sendTransaction2(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [{ data, gas, from, to, value }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string, value: string }]>).params
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
-      const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
+      const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
       const circuit = await ethereum.brumes.inner.tryGet(0).then(r => r.throw(t))
-      const socket = Option.wrap(circuit.chains[ethereum.session.chain.chainId]).ok().throw(t)
+      const socket = Option.wrap(circuit.chains[ethereum.chain.chainId]).ok().throw(t)
 
       const nonce = await EthereumSocket.request<string>(socket, {
         method: "eth_getTransactionCount",
@@ -480,7 +480,7 @@ export class Global {
         to: to,
         from: from,
         gasLimit: gas,
-        chainId: ethereum.session.chain.chainId,
+        chainId: ethereum.chain.chainId,
         gasPrice: gasPrice,
         nonce: parseInt(nonce, 16),
         value: value
@@ -495,7 +495,7 @@ export class Global {
     })
   }
 
-  async personal_sign(ethereum: EthereumSessionAndBrumes, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
+  async personal_sign(ethereum: EthereumContext, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [message, address] = (request as RpcParamfulRequestInit<[string, string]>).params
 
@@ -511,7 +511,7 @@ export class Global {
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
-      const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
+      const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
       const signature = await new ethers.Wallet(wallet.privateKey).signMessage(Bytes.fromHexSafe(message))
@@ -520,7 +520,7 @@ export class Global {
     })
   }
 
-  async eth_signTypedData_v4(ethereum: EthereumSessionAndBrumes, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
+  async eth_signTypedData_v4(ethereum: EthereumContext, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
@@ -536,7 +536,7 @@ export class Global {
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
-      const walletQuery = await this.make(getWallet(ethereum.session.wallet.uuid, storage))
+      const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
       const { domain, types, message } = JSON.parse(data)
@@ -549,7 +549,7 @@ export class Global {
     })
   }
 
-  async wallet_switchEthereumChain(ethereum: EthereumSessionAndBrumes, script: ExtensionChannel, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
+  async wallet_switchEthereumChain(ethereum: EthereumContext, script: ExtensionChannel, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
       const [{ chainId }] = (request as RpcParamfulRequestInit<[{ chainId: string }]>).params
 
@@ -796,17 +796,15 @@ export class Global {
     return await Result.unthrow(async t => {
       const [walletId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
 
-      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
+      const { user, storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
       const walletQuery = await this.make(getWallet(walletId, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
-      const session: EthereumSession = { wallet, chain }
-
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
-      const ethereum = { origin: "foreground", session, brumes }
+      const ethereum = { user, origin: "foreground", wallet, chain, brumes }
 
       if (subrequest.method === "eth_getBalance")
         return await this.eth_getBalance(ethereum, subrequest)

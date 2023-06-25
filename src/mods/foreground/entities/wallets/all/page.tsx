@@ -22,8 +22,8 @@ export function WalletsPage() {
 
   const creator = useBooleanHandle(false)
 
-  const totalPricedBalance = useTotalPricedBalance()
-  const totalPricedBalanceDisplay = useCompactDisplayUsd(totalPricedBalance.current)
+  const totalPricedBalanceQuery = useTotalPricedBalance("usd")
+  const totalPricedBalanceDisplay = useCompactDisplayUsd(totalPricedBalanceQuery.current)
 
   const onWalletClick = useCallback((wallet: Wallet) => {
     Path.go(`/wallet/${wallet.uuid}`)

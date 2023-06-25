@@ -12,13 +12,13 @@ import { useMemo, useState } from "react";
 import { InnerButton } from "../../components/buttons/button";
 import { GradientButton } from "../../components/buttons/gradient";
 import { useWalletData } from "./context";
-import { EthereumHandleProps, useBalance, useGasPrice, useNonce } from "./data";
+import { EthereumContextProps, useGasPrice, useNonce, usePendingBalance } from "./data";
 
-export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumHandleProps) {
+export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumContextProps) {
   const wallet = useWalletData()
   const { title, handle, close } = props
 
-  const balance = useBalance(wallet.address, handle)
+  const balance = usePendingBalance(wallet.address, handle)
   const nonce = useNonce(wallet.address, handle)
   const gasPrice = useGasPrice(handle)
 

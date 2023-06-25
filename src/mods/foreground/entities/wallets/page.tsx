@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
-import { Fixed } from "@/libs/bigints/bigints";
+import { Fixed, FixedInit } from "@/libs/bigints/bigints";
 import { Colors } from "@/libs/colors/colors";
-import { chains, pairsByAddress, pairsByName } from "@/libs/ethereum/chain";
+import { chains } from "@/libs/ethereum/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";
@@ -12,7 +12,7 @@ import { useMemo } from "react";
 import { PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { WalletDataProvider, useWalletData } from "./context";
-import { useBalance, useEthereumHandle, usePairPrice } from "./data";
+import { useEthereumContext, usePendingBalance, usePricedBalance } from "./data";
 import { WalletDataCard } from "./row";
 import { WalletDataSendDialog } from "./send";
 
@@ -24,41 +24,28 @@ export function WalletPage(props: UUIDProps) {
   </WalletDataProvider>
 }
 
-export function useDisplay(option: Optional<Result<Fixed, Error>>) {
+export function useDisplay(option: Optional<Result<FixedInit, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return Number(fixed.move(5).toString()).toLocaleString(undefined, {})
+      return Number(Fixed.from(fixed).move(5).toString()).toLocaleString(undefined, {})
     }).mapErrSync(() => "Error").inner).unwrapOr("...")
   }, [option])
 }
 
-export function useDisplayUsd(option: Optional<Result<Fixed, Error>>) {
+export function useDisplayUsd(option: Optional<Result<FixedInit, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return Number(fixed.toString()).toLocaleString(undefined, { style: "currency", currency: "USD" })
+      return Number(Fixed.from(fixed).toString()).toLocaleString(undefined, { style: "currency", currency: "USD" })
     }).mapErrSync(() => "Error").inner).unwrapOr("...")
   }, [option])
 }
 
-export function useCompactDisplayUsd(option: Optional<Result<Fixed, Error>>) {
+export function useCompactDisplayUsd(option: Optional<Result<FixedInit, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return Number(fixed.toString()).toLocaleString(undefined, { style: "currency", currency: "USD", notation: "compact" })
+      return Number(Fixed.from(fixed).toString()).toLocaleString(undefined, { style: "currency", currency: "USD", notation: "compact" })
     }).mapErrSync(() => "Error").inner).unwrapOr("...")
   }, [option])
-}
-
-function useProduct(option: Optional<Result<Fixed[], Error>>) {
-  return useMemo(() => {
-    return Option.mapSync(option, result => result.mapSync(fixeds => fixeds.reduce((x, y) => y.mul(x), new Fixed(1n, 0))))
-  }, [option])
-}
-
-function useMerge<T, E>(...results: Optional<Result<T, E>>[]) {
-  return useMemo(() => {
-    return Result.maybeAll(results)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...results])
 }
 
 function WalletDataPage() {
@@ -66,38 +53,32 @@ function WalletDataPage() {
 
   const router = useRouter()
 
-  const mainnet = useEthereumHandle(wallet, chains[1])
-  const goerli = useEthereumHandle(wallet, chains[5])
-  const polygon = useEthereumHandle(wallet, chains[137])
+  const mainnet = useEthereumContext(wallet, chains[1])
+  const goerli = useEthereumContext(wallet, chains[5])
+  const polygon = useEthereumContext(wallet, chains[137])
 
   const color = Colors.get(wallet.color)
   const color2 = Colors.get(wallet.color + 1)
 
-  const mainnetBalanceQuery = useBalance(wallet.address, mainnet)
-  const mainnetBalanceFixed = mainnetBalanceQuery.current?.mapSync(x => new Fixed(x, 18))
-  const mainnetBalanceDisplay = useDisplay(mainnetBalanceFixed)
+  const mainnetBalanceQuery = usePendingBalance(wallet.address, mainnet)
+  const mainnetBalanceDisplay = useDisplay(mainnetBalanceQuery.current)
   const mainnetSendDialog = useBooleanHandle(false)
 
-  const goerliBalance = useBalance(wallet.address, goerli)
-  const goerliBalanceFixed = goerliBalance.current?.mapSync(x => new Fixed(x, 18))
-  const goerliBalanceDisplay = useDisplay(goerliBalanceFixed)
+  const goerliBalance = usePendingBalance(wallet.address, goerli)
+  const goerliBalanceDisplay = useDisplay(goerliBalance.current)
   const goerliSendDialog = useBooleanHandle(false)
 
-  const polygonBalanceQuery = useBalance(wallet.address, polygon)
-  const polygonBalanceFixed = polygonBalanceQuery.current?.mapSync(x => new Fixed(x, 18))
-  const polygonBalanceDisplay = useDisplay(polygonBalanceFixed)
+  const polygonBalanceQuery = usePendingBalance(wallet.address, polygon)
+  const polygonBalanceDisplay = useDisplay(polygonBalanceQuery.current)
   const polygonSendDialog = useBooleanHandle(false)
 
-  const wethUsdPriceFixed = usePairPrice(pairsByAddress[pairsByName.WETH_USDT], mainnet)
-  const maticWethPriceFixed = usePairPrice(pairsByAddress[pairsByName.MATIC_WETH], mainnet)
-
-  const ethBalanceUsdBigint = useProduct(useMerge(mainnetBalanceFixed, wethUsdPriceFixed.current))
-  const ethBalanceUsdDisplay = useDisplayUsd(ethBalanceUsdBigint)
+  const ethBalanceUsdBigint = usePricedBalance(mainnet, wallet.address, "usd")
+  const ethBalanceUsdDisplay = useDisplayUsd(ethBalanceUsdBigint.current)
 
   const goerliBalanceUsdDisplay = useDisplayUsd(new Ok(new Fixed(0n, 0)))
 
-  const maticBalanceUsdBigint = useProduct(useMerge(polygonBalanceFixed, maticWethPriceFixed.current, wethUsdPriceFixed.current))
-  const maticBalanceUsdDisplay = useDisplayUsd(maticBalanceUsdBigint)
+  const maticBalanceUsdBigint = usePricedBalance(polygon, wallet.address, "usd")
+  const maticBalanceUsdDisplay = useDisplayUsd(maticBalanceUsdBigint.current)
 
   const Header =
     <PageHeader

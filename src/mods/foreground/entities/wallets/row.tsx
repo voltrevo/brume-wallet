@@ -16,7 +16,7 @@ export function WalletDataCard() {
   const copyEthereumAddress = useCopy(wallet.address)
   const onClickCopyEthereumAddress = useMouseCancel(copyEthereumAddress.run)
 
-  const totalBalanceQuery = useTotalWalletPricedBalance(wallet.address)
+  const totalBalanceQuery = useTotalWalletPricedBalance(wallet.address, "usd")
   const totalBalanceDisplay = useCompactDisplayUsd(totalBalanceQuery.current)
 
   const First =
