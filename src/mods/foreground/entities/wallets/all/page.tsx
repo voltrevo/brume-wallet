@@ -11,7 +11,7 @@ import { Path } from "@/mods/foreground/router/path"
 import { useCallback } from "react"
 import { WalletDataProvider, useWalletData } from "../context"
 import { Wallet, useTotalPricedBalance } from "../data"
-import { useCompactDisplayUsd } from "../page"
+import { useDisplayUsd } from "../page"
 import { WalletDataCard } from "../row"
 import { WalletCreatorDialog } from "./create"
 import { useWallets } from "./data"
@@ -23,7 +23,7 @@ export function WalletsPage() {
   const creator = useBooleanHandle(false)
 
   const totalPricedBalanceQuery = useTotalPricedBalance("usd")
-  const totalPricedBalanceDisplay = useCompactDisplayUsd(totalPricedBalanceQuery.current)
+  const totalPricedBalanceDisplay = useDisplayUsd(totalPricedBalanceQuery.current)
 
   const onWalletClick = useCallback((wallet: Wallet) => {
     Path.go(`/wallet/${wallet.uuid}`)
