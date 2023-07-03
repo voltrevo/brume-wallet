@@ -103,37 +103,29 @@ export interface EthereumContext {
 export async function tryEthereumFetch<T>(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
   const { signal = AbortSignals.timeout(30_000) } = more
 
-  const entries = [...ethereum.brumes.inner]
+  const openBrumes = [...ethereum.brumes.inner]
 
   return await tryLoop(async () => {
     return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
-      const index = Arrays.cryptoRandomIndex(entries)
-      const brume = entries[index].result.get()
-
-      entries.splice(index, 1)
-
+      const brume = Arrays.takeCryptoRandom(openBrumes).result.get()
       const sockets = Option.wrap(brume.sockets[ethereum.chain.chainId]).ok().mapErrSync(Cancel.new).throw(t)
 
       console.log(`Fetching ${request.method} with`, brume.circuit.id)
 
-      const entries2 = [...sockets]
+      const openSockets = [...sockets]
 
       const response = await tryLoop(async (i) => {
         return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
-          const index2 = Arrays.cryptoRandomIndex(entries2)
-          const socket = entries2[index2].result.get()
-
-          entries2.splice(index2, 1)
-
+          const socket = Arrays.takeCryptoRandom(openSockets).result.get()
           const response = await brume.client.tryFetchWithSocket<T>(socket, request, signal).then(r => r.mapErrSync(Retry.new).throw(t))
 
           return new Ok(response)
         })
-      }, { base: 1, max: entries2.length }).then(r => r.mapErrSync(Retry.new).throw(t))
+      }, { base: 1, max: openSockets.length }).then(r => r.mapErrSync(Retry.new).throw(t))
 
       return new Ok(Fetched.rewrap(response))
     })
-  }, { base: 1, max: entries.length }).then(r => r.mapErrSync(FetchError.from))
+  }, { base: 1, max: openBrumes.length }).then(r => r.mapErrSync(FetchError.from))
 }
 
 export function getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
