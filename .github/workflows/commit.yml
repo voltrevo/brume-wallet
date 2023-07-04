@@ -12,6 +12,7 @@ jobs:
       with:
         node-version: 20.x
     # Unzip committed zip files into ./unzipped
+    - run: "mkdir ./unzipped"
     - run: "unzip ./dist/chrome.zip -d ./unzipped/chrome"
     - run: "unzip ./dist/firefox.zip -d ./unzipped/firefox"
     - run: "unzip ./dist/safari.zip -d ./unzipped/safari"
