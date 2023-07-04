@@ -1,7 +1,7 @@
 import { BigInts, Fixed, FixedInit } from "@/libs/bigints/bigints"
 import { EthereumChain, PairInfo } from "@/libs/ethereum/chain"
 import { useObjectMemo } from "@/libs/react/memo"
-import { RpcRequestPreinit } from "@/libs/rpc"
+import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data"
 import { Optional } from "@hazae41/option"
 import { Result } from "@hazae41/result"
@@ -123,6 +123,15 @@ export async function tryFetch<T>(request: RpcRequestPreinit<unknown>, ethereum:
   }).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 }
 
+export async function tryIndex<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext): Promise<Result<RpcResponse<T>, Error>> {
+  const { background, wallet, chain } = ethereum
+
+  return await background.tryRequest<T>({
+    method: "brume_index_ethereum",
+    params: [wallet.uuid, chain.chainId, request]
+  })
+}
+
 export function useSubscribe<K, D, F>(query: Query<K, D, F>, storage: UserStorage) {
   const { cacheKey } = query
 
@@ -191,15 +200,17 @@ export function getPendingBalance(address: string, context: EthereumContext, sto
   })
 }
 
-export function usePendingBalance(address: string, ethereum: EthereumContext, ...prices: Optional<Data<FixedInit>>[]) {
+export function usePendingBalance(address: string, context: EthereumContext, ...prices: Optional<Data<FixedInit>>[]) {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(getPendingBalance, [address, ethereum, storage])
+  const query = useQuery(getPendingBalance, [address, context, storage])
   useFetch(query)
   useSubscribe(query, storage)
   useError(query, console.error)
 
   useEffect(() => {
-    query.fetch()
+    tryIndex(query.key, context)
+      .then(r => r.ignore())
+      .catch(console.error)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...prices])
 
@@ -292,7 +303,7 @@ export function getPairPrice(context: EthereumContext, pair: PairInfo, storage: 
 export function usePairPrice(ethereum: EthereumContext, pair: PairInfo) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getPairPrice, [ethereum, pair, storage])
-  useOnce(query)
+  useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
   useError(query, console.error)
