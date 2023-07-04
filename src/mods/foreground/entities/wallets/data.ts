@@ -144,7 +144,7 @@ export function useTotalPricedBalance(coin: "usd") {
   useFetch(query)
   useSubscribe(query, storage)
   useError(query, console.error)
-  useFallback(query, new Data(new Fixed(0n, 0)))
+  useFallback(query, () => new Data(new Fixed(0n, 0)))
   return query
 }
 

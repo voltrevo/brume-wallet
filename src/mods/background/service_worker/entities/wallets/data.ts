@@ -5,10 +5,11 @@ import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Arrays } from "@hazae41/arrays"
-import { Option, Optional } from "@hazae41/option"
+import { Option } from "@hazae41/option"
 import { Cancel, Looped, Retry, tryLoop } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
-import { Data, FetchError, Fetched, FetcherMore, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
+import { Data, FetchError, Fetched, FetcherMore, IDBStorage, NormalizerMore, State, createQuerySchema } from "@hazae41/xswr"
+import { IndexerMore } from "@hazae41/xswr/dist/types/mods/types/indexer"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
 import { EthereumBrumes } from "../sessions/data"
 import { User } from "../users/data"
@@ -151,26 +152,26 @@ export function getTotalPricedBalance(user: User, coin: "usd", storage: IDBStora
 }
 
 export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: IDBStorage) {
-  const normalizer = async (fetched: Optional<Fetched<Record<string, FixedInit>, Error>>, more: NormalizerMore) =>
-    await fetched?.map(async index => {
+  const indexer = async (state: State<Record<string, FixedInit>, Error>, more: IndexerMore) =>
+    await state.current?.map(async index => {
       const total = Object.values(index).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
       const totalBalance = await getTotalPricedBalance(user, coin, storage).make(more.core)
       await totalBalance.mutate(Mutators.data<FixedInit, Error>(total))
 
       return index
-    })
+    }).then(() => { })
 
   return createQuerySchema<string, Record<string, FixedInit>, Error>({
     key: `totalPricedBalanceByWallet/${user.uuid}/${coin}`,
-    normalizer,
+    indexer,
     storage
   })
 }
 
 export function getTotalWalletPricedBalance(user: User, address: string, coin: "usd", storage: IDBStorage) {
-  const normalizer = async (fetched: Optional<Fetched<FixedInit, Error>>, more: NormalizerMore) =>
-    await fetched?.map(async totalWalletPricedBalance => {
+  const indexer = async (state: State<FixedInit, Error>, more: IndexerMore) =>
+    await state.current?.map(async totalWalletPricedBalance => {
       const key = address
       const value = totalWalletPricedBalance
 
@@ -178,36 +179,36 @@ export function getTotalWalletPricedBalance(user: User, address: string, coin: "
       await indexQuery.mutate(Mutators.mapInnerDataOr(p => ({ ...p, [key]: value }), new Data({})))
 
       return totalWalletPricedBalance
-    })
+    }).then(() => { })
 
   return createQuerySchema<string, FixedInit, Error>({
     key: `totalPricedBalance/${address}/${coin}`,
-    normalizer,
+    indexer,
     storage
   })
 }
 
 export function getPricedBalanceByToken(user: User, address: string, coin: "usd", storage: IDBStorage) {
-  const normalizer = async (fetched: Optional<Fetched<Record<string, FixedInit>, Error>>, more: NormalizerMore) =>
-    await fetched?.map(async index => {
+  const indexer = async (state: State<Record<string, FixedInit>, Error>, more: IndexerMore) =>
+    await state.current?.map(async index => {
       const total = Object.values(index).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
       const totalBalance = await getTotalWalletPricedBalance(user, address, coin, storage).make(more.core)
       await totalBalance.mutate(Mutators.data<FixedInit, Error>(total))
 
       return index
-    })
+    }).then(() => { })
 
   return createQuerySchema<string, Record<string, FixedInit>, Error>({
     key: `pricedBalanceByToken/${address}/${coin}`,
-    normalizer,
+    indexer,
     storage
   })
 }
 
 export function getPricedEthereumBalance(ethereum: EthereumContext, address: string, coin: "usd", storage: IDBStorage) {
-  const normalizer = async (fetched: Optional<Fetched<FixedInit, Error>>, more: NormalizerMore) =>
-    await fetched?.map(async pricedBalance => {
+  const indexer = async (state: State<FixedInit, Error>, more: IndexerMore) =>
+    await state.current?.map(async pricedBalance => {
       const key = ethereum.chain.chainId
       const value = pricedBalance
 
@@ -215,11 +216,11 @@ export function getPricedEthereumBalance(ethereum: EthereumContext, address: str
       await indexQuery.mutate(Mutators.mapInnerDataOr(p => ({ ...p, [key]: value }), new Data({})))
 
       return pricedBalance
-    })
+    }).then(() => { })
 
   return createQuerySchema<string, FixedInit, Error>({
     key: `pricedBalance/${address}/${ethereum.chain.chainId}/${coin}`,
-    normalizer,
+    indexer,
     storage
   })
 }
@@ -228,12 +229,12 @@ export function getEthereumBalance(ethereum: EthereumContext, address: string, b
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
     await tryEthereumFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals))))
 
-  const normalizer = async (fetched: Optional<Fetched<FixedInit, Error>>, more: NormalizerMore) =>
-    await fetched?.map(async balance => {
+  const indexer = async (state: State<FixedInit, Error>, more: IndexerMore) =>
+    await state.current?.map(async balance => {
       if (block !== "pending")
-        return balance
+        return
       if (ethereum.chain.token.pairs == null)
-        return balance
+        return
 
       let pricedBalance: Fixed = Fixed.from(balance)
 
@@ -251,9 +252,7 @@ export function getEthereumBalance(ethereum: EthereumContext, address: string, b
 
       const pricedBalanceQuery = await getPricedEthereumBalance(ethereum, address, "usd", storage).make(more.core)
       await pricedBalanceQuery.mutate(Mutators.set(new Data(pricedBalance)))
-
-      return balance
-    })
+    }).then(() => { })
 
   return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
     key: {
@@ -263,7 +262,7 @@ export function getEthereumBalance(ethereum: EthereumContext, address: string, b
       params: [address, block]
     },
     fetcher,
-    normalizer,
+    indexer,
     storage
   })
 }
