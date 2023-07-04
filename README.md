@@ -113,9 +113,9 @@ npm install && npm run build && npm run zip
 
 ### Comparing released files with built files
 
-GitHub Actions automatically rebuilds each commit and checks that the committed files are the same as the built ones
+GitHub Actions automatically rebuilds each release and checks that the committed files are the same as the built ones
 
-https://github.com/brumewallet/wallet/actions/workflows/commit.yml
+https://github.com/brumewallet/wallet/actions/workflows/release.yml
 
 You can check the comparison yourself by running the following
 
@@ -144,6 +144,8 @@ git restore ./dist/chrome.zip
 git restore ./dist/firefox.zip
 git restore ./dist/safari.zip
 git restore ./dist/website.zip
+
+# Restore .xpi file as it is signed locally and can't be reproduced
 git restore ./dist/firefox.xpi
 
 # Compare other files

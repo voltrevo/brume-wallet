@@ -1,6 +1,9 @@
-on: [push]
+on:
+  push:
+    tags:
+    - '*'
 
-name: commit
+name: release
 
 jobs:
   check:
@@ -31,6 +34,7 @@ jobs:
     - run: "git restore ./dist/firefox.zip"
     - run: "git restore ./dist/safari.zip"
     - run: "git restore ./dist/website.zip"
+    # Restore .xpi file as it is signed locally and can't be reproduced
     - run: "git restore ./dist/firefox.xpi"
     # Compare other files
     - run: "[[ -z $(git status --porcelain) ]]"
