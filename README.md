@@ -113,20 +113,43 @@ npm install && npm run build && npm run zip
 
 ### Comparing released files with built files
 
-GitHub Actions automatically rebuilds each release and checks that the released files are the same as the built ones
+GitHub Actions automatically rebuilds each commit and checks that the committed files are the same as the built ones
 
-https://github.com/brumewallet/wallet/actions/workflows/release.yml
+https://github.com/brumewallet/wallet/actions/workflows/commit.yml
 
 You can check the comparison yourself by running the following
 
 ```bash
-curl https://github.com/brumewallet/wallet/releases/download/VERSION/TARGET.zip -o TARGET.zip
-unzip TARGET.zip -d ./TARGET
-diff -r ./dist/TARGET ./TARGET
-```
+# Unzip committed zip files into ./unzipped
+mkdir ./unzipped
+unzip ./dist/chrome.zip -d ./unzipped/chrome
+unzip ./dist/firefox.zip -d ./unzipped/firefox
+unzip ./dist/safari.zip -d ./unzipped/safari
+unzip ./dist/website.zip -d ./unzipped/website
 
-- Replace `VERSION` with the version you want to check
-- Replace `TARGET` with `chrome`, `firefox`, `safari`, `website`, ...
+# Build folders and zip files into ./dist
+npm ci && npm run build && npm run zip
+
+# Compare unzipped committed zip files and built folders
+diff -r ./unzipped/chrome ./dist/chrome
+diff -r ./unzipped/firefox ./dist/firefox
+diff -r ./unzipped/safari ./dist/safari
+diff -r ./unzipped/website ./dist/website
+
+# Clean ./unzipped
+rm -rf ./unzipped
+
+# Restore built zip files
+git restore ./dist/chrome.zip
+git restore ./dist/firefox.zip
+git restore ./dist/safari.zip
+git restore ./dist/website.zip
+git restore ./dist/firefox.xpi
+
+# Compare other files
+[[ -z $(git status --porcelain) ]]
+echo $?
+```
 
 ## Secure by design
 
