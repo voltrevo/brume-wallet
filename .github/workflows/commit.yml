@@ -11,6 +11,25 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 20.x
+    # Unzip committed zip files into ./unzipped
+    - run: "unzip ./dist/chrome.zip -d ./unzipped/chrome"
+    - run: "unzip ./dist/firefox.zip -d ./unzipped/firefox"
+    - run: "unzip ./dist/safari.zip -d ./unzipped/safari"
+    - run: "unzip ./dist/website.zip -d ./unzipped/website"
+    # Build folders and zip files into ./dist
     - run: "npm ci && npm run build && npm run zip"
-    - run: "git status --porcelain"
+    # Compare unzipped committed zip files and built folders
+    - run: "diff -r ./unzipped/chrome ./dist/chrome"
+    - run: "diff -r ./unzipped/firefox ./dist/firefox"
+    - run: "diff -r ./unzipped/safari ./dist/safari"
+    - run: "diff -r ./unzipped/website ./dist/website"
+    # Clean ./unzipped
+    - run: "rm -rf ./unzipped"
+    # Revert built zip files
+    - run: "git revert ./dist/chrome.zip"
+    - run: "git revert ./dist/firefox.zip"
+    - run: "git revert ./dist/safari.zip"
+    - run: "git revert ./dist/website.zip"
+    - run: "git revert ./dist/firefox.xpi"
+    # Compare other files
     - run: "[[ -z $(git status --porcelain) ]]"
