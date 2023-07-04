@@ -2,7 +2,7 @@ import { BrowserError, browser, tryBrowser, tryBrowserSync } from "@/libs/browse
 import { RpcClient, RpcId, RpcRequest, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
-import { Option, Optional } from "@hazae41/option"
+import { Option } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, Skip, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 
@@ -121,7 +121,7 @@ export function createMessageChannelPool(events: BackgroundEvents) {
           params: [uuid, password]
         }).then(r => r.throw(t))
 
-      let pong: Optional<NodeJS.Timeout> = undefined
+      let pong: NodeJS.Timeout | undefined = undefined
 
       const ping = setInterval(() => {
         channel.port1.postMessage({ id: "ping", method: "brume_ping" })
@@ -133,7 +133,7 @@ export function createMessageChannelPool(events: BackgroundEvents) {
       }
 
       const onRequest = async (request: RpcRequestInit<unknown>) => {
-        if (events.onMessage === undefined)
+        if (events.onMessage == null)
           return
 
         for (const listener of events.onMessage) {
@@ -215,7 +215,7 @@ export function createPortPool(events: BackgroundEvents) {
       }
 
       const onRequest = async (request: RpcRequestInit<unknown>) => {
-        if (events.onMessage === undefined)
+        if (events.onMessage == null)
           return
 
         for (const listener of events.onMessage) {

@@ -29,16 +29,19 @@ export interface UserData {
 }
 
 export function getUser(uuid: Optional<string>, background: Background) {
-  if (uuid === undefined)
+  if (uuid == null)
     return undefined
 
   const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, UserData, Error>({
-    method: "brume_getUser",
-    params: [uuid]
-  }, fetcher)
+    key: {
+      method: "brume_getUser",
+      params: [uuid]
+    },
+    fetcher
+  })
 }
 
 export function useUser(uuid: Optional<string>, background: Background) {
@@ -52,8 +55,11 @@ export function getCurrentUser(background: Background) {
     await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, User, Error>({
-    method: "brume_getCurrentUser"
-  }, fetcher)
+    key: {
+      method: "brume_getCurrentUser"
+    },
+    fetcher
+  })
 }
 
 export function useCurrentUser(background: Background) {

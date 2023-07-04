@@ -1,7 +1,16 @@
+import { Outline } from "@/libs/icons/icons";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { ButtonProps } from '@/libs/react/props/html';
 import { OptionalIconProps } from '@/libs/react/props/icon';
+
+export default function Page() {
+  return <NakedButton>
+    <InnerButton icon={Outline.GlobeAltIcon}>
+      Hello world
+    </InnerButton>
+  </NakedButton>
+}
 
 export function NakedButton(props: ButtonProps) {
   const { className, children, ...button } = props

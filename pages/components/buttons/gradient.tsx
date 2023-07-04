@@ -1,7 +1,16 @@
 import { Colors } from "@/libs/colors/colors";
+import { Outline } from "@/libs/icons/icons";
 import { ColorIndexProps } from "@/libs/react/props/color";
 import { ButtonProps } from '@/libs/react/props/html';
-import { NakedButton } from "./button";
+import { InnerButton, NakedButton } from "./naked";
+
+export default function Page() {
+  return <GradientButton colorIndex={5}>
+    <InnerButton icon={Outline.GlobeAltIcon}>
+      Hello world
+    </InnerButton>
+  </GradientButton>
+}
 
 export function GradientButton(props: ButtonProps & ColorIndexProps) {
   const { className, children, colorIndex, ...button } = props

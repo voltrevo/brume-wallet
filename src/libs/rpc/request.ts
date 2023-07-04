@@ -1,5 +1,3 @@
-import { NonOptional } from "@hazae41/option"
-
 export type RpcId = number | string
 
 export type RpcRequestPreinit<T = unknown> =
@@ -8,7 +6,7 @@ export type RpcRequestPreinit<T = unknown> =
 
 export interface RpcParamfulRequestPreinit<T = unknown> {
   readonly method: string,
-  readonly params: NonOptional<T>
+  readonly params: NonNullable<T>
 }
 
 export interface RpcParamlessRequestPreinit {
@@ -23,7 +21,7 @@ export type RpcRequestInit<T = unknown> =
 export interface RpcParamfulRequestInit<T = unknown> {
   readonly id: RpcId
   readonly method: string
-  readonly params: NonOptional<T>
+  readonly params: NonNullable<T>
 }
 
 export interface RpcParamlessRequestInit {

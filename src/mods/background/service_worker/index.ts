@@ -158,9 +158,9 @@ export class Global {
 
   async trySetCurrentUser(uuid: Optional<string>, password: Optional<string>): Promise<Result<Optional<UserSession>, Error>> {
     return await Result.unthrow(async t => {
-      if (uuid === undefined)
+      if (uuid == null)
         return new Ok(undefined)
-      if (password === undefined)
+      if (password == null)
         return new Ok(undefined)
 
       const currentUserQuery = await this.make(getCurrentUser())
@@ -206,7 +206,7 @@ export class Global {
 
   async tryOpenOrNavigatePopup(pathname: string, mouse: Mouse): Promise<Result<PopupData, Error>> {
     return await Result.unthrow(async t => {
-      if (this.popup !== undefined) {
+      if (this.popup != null) {
         const windowId = Option.wrap(this.popup.window.id).ok().throw(t)
         const tabId = Option.wrap(this.popup.window.tabs?.[0].id).ok().throw(t)
 
@@ -279,7 +279,7 @@ export class Global {
   async getEthereumSession(origin: string): Promise<Optional<EthereumSession>> {
     const currentUser = await this.getCurrentUser()
 
-    if (currentUser === undefined)
+    if (currentUser == null)
       return undefined
 
     const sessionQuery = await this.make(getEthereumSession(origin, currentUser.storage))
@@ -290,7 +290,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const session = await this.getEthereumSession(origin)
 
-      if (session !== undefined)
+      if (session != null)
         return new Ok(session)
 
       const data = await this.popupMutex.lock(async () => {
@@ -351,7 +351,7 @@ export class Global {
       result.inspectSync(r => r.throw(t))
 
       const stored = this.core.raw.get(query.cacheKey)?.inner
-      const unstored = await this.core.unstore<any, unknown, Error>(stored, {})
+      const unstored = await this.core.unstore<any, unknown, Error>(stored, { key: query.cacheKey })
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
       return fetched
@@ -394,7 +394,7 @@ export class Global {
       result.inspectSync(r => r.throw(t))
 
       const stored = this.core.raw.get(query.cacheKey)?.inner
-      const unstored = await this.core.unstore<any, unknown, any>(stored, {})
+      const unstored = await this.core.unstore<any, unknown, any>(stored, { key: query.cacheKey })
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
       return fetched
@@ -415,7 +415,7 @@ export class Global {
       result.inspectSync(r => r.throw(t))
 
       const stored = this.core.raw.get(query.cacheKey)?.inner
-      const unstored = await this.core.unstore<any, unknown, any>(stored, {})
+      const unstored = await this.core.unstore<any, unknown, any>(stored, { key: query.cacheKey })
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
       return fetched
@@ -681,7 +681,7 @@ export class Global {
       const user = await tryCreateUser(init).then(r => r.throw(t))
 
       const usersState = await usersQuery.mutate(Mutators.pushData<User, never>(new Data(user)))
-      const users = Option.wrap(usersState.get().current?.get()).ok().throw(t)
+      const users = Option.wrap(usersState.current?.get()).ok().throw(t)
 
       return new Ok(users)
     })
@@ -715,7 +715,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const userSession = await this.getCurrentUser()
 
-      if (userSession === undefined)
+      if (userSession == null)
         return new Ok(undefined)
 
       const userQuery = await this.make(getUser(userSession.user.uuid, this.storage))
@@ -743,7 +743,7 @@ export class Global {
       const walletsQuery = await this.make(getWallets(storage))
 
       const walletsState = await walletsQuery.mutate(Mutators.pushData<Wallet, never>(new Data(wallet)))
-      const wallets = Option.wrap(walletsState.get().current?.get()).ok().throw(t)
+      const wallets = Option.wrap(walletsState.current?.get()).ok().throw(t)
 
       return new Ok(wallets)
     })
@@ -765,7 +765,7 @@ export class Global {
   async #getOrCreateEthereumBrumes(wallet: Wallet): Promise<EthereumBrumes> {
     const brumesQuery = await this.make(getEthereumBrumes(wallet))
 
-    if (brumesQuery.current !== undefined)
+    if (brumesQuery.current != null)
       return brumesQuery.current.inner
 
     const brumes = EthereumBrume.createSubpool(this.brumes, { capacity: 3 })
@@ -779,7 +779,7 @@ export class Global {
 
       const cached = this.core.raw.get(cacheKey)
 
-      if (cached !== undefined)
+      if (cached != null)
         return new Ok(cached.inner)
 
       const stored = await this.storage.get(cacheKey)
@@ -797,7 +797,7 @@ export class Global {
 
       const cached = this.core.raw.get(cacheKey)
 
-      if (cached !== undefined)
+      if (cached != null)
         return new Ok(cached.inner)
 
       const stored = await storage.get(cacheKey)
@@ -812,7 +812,7 @@ export class Global {
       const [cacheKey] = (request as RpcParamfulRequestInit<[string]>).params
 
       const onState = async (event: CustomEvent<State<any, any>>) => {
-        const stored = await this.core.store(event.detail, {})
+        const stored = await this.core.store(event.detail, { key: cacheKey })
 
         channel.tryRequest({
           method: "brume_update",
@@ -860,7 +860,7 @@ export class Global {
       result.inspectSync(r => r.throw(t))
 
       const stored = this.core.raw.get(query.cacheKey)?.inner
-      const unstored = await this.core.unstore<any, unknown, Error>(stored, {})
+      const unstored = await this.core.unstore<any, unknown, Error>(stored, { key: query.cacheKey })
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
       return fetched

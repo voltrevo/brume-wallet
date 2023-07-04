@@ -33,7 +33,8 @@
   },
   "include": [
     "./pages/**/*",
-    "./src/**/*"
+    "./src/**/*",
+    "./_storybook/**/*"
   ],
   "exclude": [
     "node_modules"

@@ -6,5 +6,5 @@ export function getUsers(storage: IDBStorage) {
   const normalizer = async (fetched: Optional<Fetched<User[], never>>, more: NormalizerMore) =>
     fetched?.map(async users => await Promise.all(users.map(user => getUserRef(user, storage, more))))
 
-  return createQuerySchema<string, User[], never>(`users`, undefined, { storage, normalizer })
+  return createQuerySchema<string, User[], never>({ key: `users`, storage, normalizer })
 }

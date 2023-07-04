@@ -8,8 +8,11 @@ export function getUsers(background: Background) {
     await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, User[], Error>({
-    method: "brume_getUsers"
-  }, fetcher)
+    key: {
+      method: "brume_getUsers"
+    },
+    fetcher
+  })
 }
 
 export function useUsers(background: Background) {

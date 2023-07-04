@@ -61,16 +61,19 @@ export interface BitcoinPrivateKeyWallet {
 }
 
 export function getWallet(uuid: Optional<string>, background: Background) {
-  if (uuid === undefined)
+  if (uuid == null)
     return undefined
 
   const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, WalletData, Error>({
-    method: "brume_getWallet",
-    params: [uuid]
-  }, fetcher)
+    key: {
+      method: "brume_getWallet",
+      params: [uuid]
+    },
+    fetcher
+  })
 }
 
 export function useWallet(uuid: Optional<string>, background: Background) {
@@ -124,14 +127,14 @@ export function useSubscribe<K, D, F>(query: Query<K, D, F>, storage: UserStorag
   const { cacheKey } = query
 
   useEffect(() => {
-    if (cacheKey === undefined)
+    if (cacheKey == null)
       return
     storage.trySubscribe(cacheKey).then(r => r.ignore())
   }, [cacheKey, storage])
 }
 
 export function getTotalPricedBalance(context: GeneralContext, coin: "usd", storage: UserStorage) {
-  return createQuerySchema<string, FixedInit, Error>(`totalPricedBalance/${context.user.uuid}/${coin}`, undefined, { storage })
+  return createQuerySchema<string, FixedInit, Error>({ key: `totalPricedBalance/${context.user.uuid}/${coin}`, storage })
 }
 
 export function useTotalPricedBalance(coin: "usd") {
@@ -146,7 +149,7 @@ export function useTotalPricedBalance(coin: "usd") {
 }
 
 export function getTotalWalletPricedBalance(context: GeneralContext, address: string, coin: "usd", storage: UserStorage) {
-  return createQuerySchema<string, FixedInit, Error>(`totalPricedBalance/${address}/${coin}`, undefined, { storage })
+  return createQuerySchema<string, FixedInit, Error>({ key: `totalPricedBalance/${address}/${coin}`, storage })
 }
 
 export function useTotalWalletPricedBalance(address: string, coin: "usd") {
@@ -160,7 +163,7 @@ export function useTotalWalletPricedBalance(address: string, coin: "usd") {
 }
 
 export function getPricedBalance(context: EthereumContext, address: string, coin: "usd", storage: UserStorage) {
-  return createQuerySchema<string, FixedInit, Error>(`pricedBalance/${address}/${context.chain.chainId}/${coin}`, undefined, { storage })
+  return createQuerySchema<string, FixedInit, Error>({ key: `pricedBalance/${address}/${context.chain.chainId}/${coin}`, storage })
 }
 
 export function usePricedBalance(context: EthereumContext, address: string, coin: "usd") {
@@ -177,11 +180,15 @@ export function getPendingBalance(address: string, context: EthereumContext, sto
     await tryFetch<FixedInit>(request, context)
 
   return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
-    version: 2,
-    chainId: context.chain.chainId,
-    method: "eth_getBalance",
-    params: [address, "pending"]
-  }, fetcher, { storage })
+    key: {
+      version: 2,
+      chainId: context.chain.chainId,
+      method: "eth_getBalance",
+      params: [address, "pending"]
+    },
+    fetcher,
+    storage
+  })
 }
 
 export function usePendingBalance(address: string, ethereum: EthereumContext, ...prices: Optional<Data<FixedInit>>[]) {
@@ -204,10 +211,15 @@ export function getNonceSchema(address: string, context: EthereumContext, storag
     await tryFetch<string>(request, context).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
-    chainId: context.chain.chainId,
-    method: "eth_getTransactionCount",
-    params: [address, "pending"]
-  }, fetcher, { storage, dataSerializer: BigInts })
+    key: {
+      chainId: context.chain.chainId,
+      method: "eth_getTransactionCount",
+      params: [address, "pending"]
+    },
+    fetcher,
+    storage,
+    dataSerializer: BigInts
+  })
 }
 
 export function useNonce(address: string, ethereum: EthereumContext) {
@@ -224,10 +236,15 @@ export function getGasPriceSchema(context: EthereumContext, storage: UserStorage
     await tryFetch<string>(request, context).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
   return createQuerySchema<EthereumQueryKey<unknown>, bigint, Error>({
-    chainId: context.chain.chainId,
-    method: "eth_gasPrice",
-    params: []
-  }, fetcher, { storage, dataSerializer: BigInts })
+    key: {
+      chainId: context.chain.chainId,
+      method: "eth_gasPrice",
+      params: []
+    },
+    fetcher,
+    storage,
+    dataSerializer: BigInts
+  })
 }
 
 export function useGasPrice(ethereum: EthereumContext) {
@@ -263,9 +280,13 @@ export function getPairPrice(context: EthereumContext, pair: PairInfo, storage: 
     await tryFetch<FixedInit>(request, context)
 
   return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
-    method: "eth_getPairPrice",
-    params: [pair.address]
-  }, fetcher, { storage })
+    key: {
+      method: "eth_getPairPrice",
+      params: [pair.address]
+    },
+    fetcher,
+    storage
+  })
 }
 
 export function usePairPrice(ethereum: EthereumContext, pair: PairInfo) {

@@ -10,7 +10,7 @@ export namespace BigInts {
   }
 
   export function tryFloat(x?: bigint, d = 18) {
-    if (x === undefined) return
+    if (x == null) return
 
     return FixedNumber
       .fromValue(x, d)

@@ -20,7 +20,7 @@ export function Modal(props: ElementTypeProps & ChildrenProps) {
     return () => void document.getElementById("__next")?.removeChild(element)
   }, [element])
 
-  if (element === undefined)
+  if (element == null)
     return null
 
   return <ModalContext.Provider value={number + 1}>

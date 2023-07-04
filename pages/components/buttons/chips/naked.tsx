@@ -1,8 +1,17 @@
+import { Outline } from "@/libs/icons/icons"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { ClassNameProps } from "@/libs/react/props/className"
 import { ButtonProps } from "@/libs/react/props/html"
 import { OptionalIconProps } from "@/libs/react/props/icon"
-import { NakedButton } from "../button"
+import { NakedButton } from "../naked"
+
+export default function Page() {
+  return <NakedButtonChip>
+    <InnerButtonChip icon={Outline.GlobeAltIcon}>
+      Hello world
+    </InnerButtonChip>
+  </NakedButtonChip>
+}
 
 export function NakedButtonChip(props: ButtonProps & ClassNameProps) {
   const { children, className, ...button } = props

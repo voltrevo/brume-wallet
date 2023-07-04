@@ -40,7 +40,7 @@ export interface SessionData {
 }
 
 export function getSession(uuid: string) {
-  return createQuerySchema<string, SessionData, never>(`session/${uuid}`, undefined)
+  return createQuerySchema<string, SessionData, never>({ key: `session/${uuid}` })
 }
 
 export type EthereumBrumes =
@@ -53,13 +53,13 @@ export interface EthereumBrume {
 }
 
 export function getEthereumBrumes(wallet: Wallet) {
-  return createQuerySchema<string, Mutex<Pool<EthereumBrume, Error>>, never>(`brumes/${wallet.uuid}`, undefined)
+  return createQuerySchema<string, Mutex<Pool<EthereumBrume, Error>>, never>({ key: `brumes/${wallet.uuid}` })
 }
 
 export namespace EthereumConnection {
 
   export function create(circuit: Circuit, chain: EthereumChain): Optional<Pool<WebSocket, Error>> {
-    if (chain.urls === undefined)
+    if (chain.urls == null)
       return undefined
     return createPool(circuit, chain, { capacity: chain.urls.length })
   }

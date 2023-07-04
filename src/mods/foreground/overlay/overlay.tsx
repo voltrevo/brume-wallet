@@ -5,9 +5,9 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { OkProps } from "@/libs/react/props/promise";
 import { Semver } from "@/libs/semver/semver";
 import { Ok, Result } from "@hazae41/result";
+import { InnerButtonChip, NakedButtonChip } from "pages/components/buttons/chips/naked";
 import { useCallback, useEffect, useState } from "react";
 import { useBackground } from "../background/context";
-import { InnerButtonChip, NakedButtonChip } from "../components/buttons/chips/naked";
 import { registerServiceWorker } from "../service_worker/service_worker";
 
 const MAIN_PACKAGE_URL = "https://raw.githubusercontent.com/brumewallet/wallet/main/package.json"

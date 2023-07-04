@@ -2,11 +2,6 @@ import { BigInts } from "@/libs/bigints/bigints";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { useBackground } from "@/mods/foreground/background/context";
-import { InnerButton } from "@/mods/foreground/components/buttons/button";
-import { ContrastButtonChip } from "@/mods/foreground/components/buttons/chips/contrast";
-import { InnerButtonChip } from "@/mods/foreground/components/buttons/chips/naked";
-import { ContrastButton } from "@/mods/foreground/components/buttons/contrast";
-import { GradientButton } from "@/mods/foreground/components/buttons/gradient";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
@@ -17,7 +12,12 @@ import { Wallet } from "@/mods/foreground/entities/wallets/data";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
+import { ContrastButtonChip } from "pages/components/buttons/chips/contrast";
+import { ContrastButton } from "pages/components/buttons/contrast";
+import { GradientButton } from "pages/components/buttons/gradient";
+import { InnerButton } from "pages/components/buttons/naked";
 import { useCallback, useEffect, useState } from "react";
+import { InnerButtonChip } from "./components/buttons/chips/naked";
 
 export default function Popup() {
   const background = useBackground()

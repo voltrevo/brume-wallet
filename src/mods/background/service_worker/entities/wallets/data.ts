@@ -66,7 +66,7 @@ export interface BitcoinPrivateKeyWallet {
 }
 
 export function getWallet(uuid: string, storage: IDBStorage) {
-  return createQuerySchema<string, WalletData, never>(`wallet/${uuid}`, undefined, { storage })
+  return createQuerySchema<string, WalletData, never>({ key: `wallet/${uuid}`, storage })
 }
 
 export async function getWalletRef(wallet: Wallet, storage: IDBStorage, more: NormalizerMore) {
@@ -89,7 +89,7 @@ export interface EthereumSession {
 }
 
 export function getEthereumSession(origin: string, storage: IDBStorage) {
-  return createQuerySchema<string, EthereumSession, never>(`sessions/${origin}`, undefined, { storage })
+  return createQuerySchema<string, EthereumSession, never>({ key: `sessions/${origin}`, storage })
 }
 
 export interface EthereumContext {
@@ -133,14 +133,21 @@ export function getEthereumUnknown(ethereum: EthereumContext, request: RpcReques
     await tryEthereumFetch<unknown>(ethereum, request)
 
   return createQuerySchema<EthereumQueryKey<unknown>, any, Error>({
-    chainId: ethereum.chain.chainId,
-    method: request.method,
-    params: request.params
-  }, fetcher, { storage })
+    key: {
+      chainId: ethereum.chain.chainId,
+      method: request.method,
+      params: request.params
+    },
+    fetcher,
+    storage
+  })
 }
 
 export function getTotalPricedBalance(user: User, coin: "usd", storage: IDBStorage) {
-  return createQuerySchema<string, FixedInit, Error>(`totalPricedBalance/${user.uuid}/${coin}`, undefined, { storage })
+  return createQuerySchema<string, FixedInit, Error>({
+    key: `totalPricedBalance/${user.uuid}/${coin}`,
+    storage
+  })
 }
 
 export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: IDBStorage) {
@@ -154,7 +161,11 @@ export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: 
       return index
     })
 
-  return createQuerySchema<string, Record<string, FixedInit>, Error>(`totalPricedBalanceByWallet/${user.uuid}/${coin}`, undefined, { normalizer, storage })
+  return createQuerySchema<string, Record<string, FixedInit>, Error>({
+    key: `totalPricedBalanceByWallet/${user.uuid}/${coin}`,
+    normalizer,
+    storage
+  })
 }
 
 export function getTotalWalletPricedBalance(user: User, address: string, coin: "usd", storage: IDBStorage) {
@@ -169,7 +180,11 @@ export function getTotalWalletPricedBalance(user: User, address: string, coin: "
       return totalWalletPricedBalance
     })
 
-  return createQuerySchema<string, FixedInit, Error>(`totalPricedBalance/${address}/${coin}`, undefined, { normalizer, storage })
+  return createQuerySchema<string, FixedInit, Error>({
+    key: `totalPricedBalance/${address}/${coin}`,
+    normalizer,
+    storage
+  })
 }
 
 export function getPricedBalanceByToken(user: User, address: string, coin: "usd", storage: IDBStorage) {
@@ -183,7 +198,11 @@ export function getPricedBalanceByToken(user: User, address: string, coin: "usd"
       return index
     })
 
-  return createQuerySchema<string, Record<string, FixedInit>, Error>(`pricedBalanceByToken/${address}/${coin}`, undefined, { normalizer, storage })
+  return createQuerySchema<string, Record<string, FixedInit>, Error>({
+    key: `pricedBalanceByToken/${address}/${coin}`,
+    normalizer,
+    storage
+  })
 }
 
 export function getPricedEthereumBalance(ethereum: EthereumContext, address: string, coin: "usd", storage: IDBStorage) {
@@ -198,7 +217,11 @@ export function getPricedEthereumBalance(ethereum: EthereumContext, address: str
       return pricedBalance
     })
 
-  return createQuerySchema<string, FixedInit, Error>(`pricedBalance/${address}/${ethereum.chain.chainId}/${coin}`, undefined, { normalizer, storage })
+  return createQuerySchema<string, FixedInit, Error>({
+    key: `pricedBalance/${address}/${ethereum.chain.chainId}/${coin}`,
+    normalizer,
+    storage
+  })
 }
 
 export function getEthereumBalance(ethereum: EthereumContext, address: string, block: string, storage: IDBStorage) {
@@ -209,7 +232,7 @@ export function getEthereumBalance(ethereum: EthereumContext, address: string, b
     await fetched?.map(async balance => {
       if (block !== "pending")
         return balance
-      if (ethereum.chain.token.pairs === undefined)
+      if (ethereum.chain.token.pairs == null)
         return balance
 
       let pricedBalance: Fixed = Fixed.from(balance)
@@ -220,7 +243,7 @@ export function getEthereumBalance(ethereum: EthereumContext, address: string, b
 
         const price = await getPairPrice({ ...ethereum, chain }, pair, storage).make(more.core)
 
-        if (price.data === undefined)
+        if (price.data == null)
           return balance
 
         pricedBalance = pricedBalance.mul(Fixed.from(price.data.inner))
@@ -233,11 +256,16 @@ export function getEthereumBalance(ethereum: EthereumContext, address: string, b
     })
 
   return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
-    version: 2,
-    chainId: ethereum.chain.chainId,
-    method: "eth_getBalance",
-    params: [address, block]
-  }, fetcher, { normalizer, storage })
+    key: {
+      version: 2,
+      chainId: ethereum.chain.chainId,
+      method: "eth_getBalance",
+      params: [address, block]
+    },
+    fetcher,
+    normalizer,
+    storage
+  })
 }
 
 export class BrumeProvider implements ContractRunner {
@@ -269,7 +297,11 @@ export function getPairPrice(ethereum: EthereumContext, pair: PairInfo, storage:
     return new Ok(new Data(price))
   }
 
-  return createQuerySchema<string, FixedInit, Error>(`pairs/${pair.address}/price`, fetcher, { storage })
+  return createQuerySchema<string, FixedInit, Error>({
+    key: `pairs/${pair.address}/price`,
+    fetcher,
+    storage
+  })
 }
 
 export function computePairPrice(pair: PairInfo, reserves: [bigint, bigint]) {

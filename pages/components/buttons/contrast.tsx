@@ -1,5 +1,14 @@
+import { Outline } from "@/libs/icons/icons"
 import { ButtonProps } from "@/libs/react/props/html"
-import { NakedButton } from "./button"
+import { InnerButton, NakedButton } from "./naked"
+
+export default function Page() {
+  return <ContrastButton>
+    <InnerButton icon={Outline.GlobeAltIcon}>
+      Hello world
+    </InnerButton>
+  </ContrastButton>
+}
 
 export function ContrastButton(props: ButtonProps) {
   const { className, children, ...button } = props

@@ -27,13 +27,13 @@ export function UserProvider(props: ChildrenProps) {
   useOnce(userQuery)
   useVisible(userQuery)
 
-  if (userQuery.current === undefined)
+  if (userQuery.current == null)
     return null
 
   if (userQuery.current.isErr())
     throw userQuery.current.inner
 
-  if (userQuery.current.inner === undefined)
+  if (userQuery.current.inner == null)
     return <UsersPage ok={setCurrentUser} />
 
   return <UserContext.Provider value={userQuery.current.inner}>

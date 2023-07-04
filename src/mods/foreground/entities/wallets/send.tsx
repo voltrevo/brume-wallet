@@ -9,8 +9,8 @@ import { TitleProps } from "@/libs/react/props/title";
 import { Err, Ok, Result } from "@hazae41/result";
 import { ethers } from "ethers";
 import { useMemo, useState } from "react";
-import { InnerButton } from "../../components/buttons/button";
-import { GradientButton } from "../../components/buttons/gradient";
+import { GradientButton } from "../../../../../pages/components/buttons/gradient";
+import { InnerButton } from "../../../../../pages/components/buttons/naked";
 import { useWalletData } from "./context";
 import { EthereumContextProps, useGasPrice, useNonce, usePendingBalance } from "./data";
 
@@ -64,9 +64,9 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
 
   const trySend = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (nonce.data === undefined)
+      if (nonce.data == null)
         return new Err(new Error(`Invalid nonce`))
-      if (gasPrice.data === undefined)
+      if (gasPrice.data == null)
         return new Err(new Error(`Invalid gas price`))
 
       const gas = await handle.background.tryRequest<string>({
@@ -131,9 +131,9 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
   </>
 
   const disabled = useMemo(() => {
-    if (nonce.data === undefined)
+    if (nonce.data == null)
       return true
-    if (gasPrice.data === undefined)
+    if (gasPrice.data == null)
       return true
     if (!recipientInput)
       return true

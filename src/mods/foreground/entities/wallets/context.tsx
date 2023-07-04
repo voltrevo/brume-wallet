@@ -18,7 +18,7 @@ export function WalletDataProvider(props: UUIDProps & ChildrenProps) {
 
   const wallet = useWallet(uuid, background)
 
-  if (wallet.data === undefined)
+  if (wallet.data == null)
     return null
 
   return <WalletDataContext.Provider value={wallet.data.inner}>

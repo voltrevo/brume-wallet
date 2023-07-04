@@ -19,7 +19,7 @@ export function UserStorageProvider(props: ChildrenProps) {
 
   const storage = useRef<UserStorage>()
 
-  if (storage.current === undefined)
+  if (storage.current == null)
     storage.current = new UserStorage(core, background)
 
   return <UserStorageContext.Provider value={storage.current}>

@@ -1,7 +1,16 @@
 import { Colors } from "@/libs/colors/colors";
+import { Outline } from "@/libs/icons/icons";
 import { ColorIndexProps } from "@/libs/react/props/color";
 import { ButtonProps } from "@/libs/react/props/html";
-import { NakedButtonChip } from "./naked";
+import { InnerButtonChip, NakedButtonChip } from "./naked";
+
+export default function Page() {
+  return <GradientButtonChip colorIndex={5}>
+    <InnerButtonChip icon={Outline.GlobeAltIcon}>
+      Hello world
+    </InnerButtonChip>
+  </GradientButtonChip>
+}
 
 export function GradientButtonChip(props: ButtonProps & ColorIndexProps) {
   const { colorIndex, className, children, ...button } = props

@@ -44,7 +44,7 @@ export function PromiseCatcher(props: ChildrenProps) {
     addEventListener("unhandledrejection", setEvent)
   }, [])
 
-  if (event !== undefined)
+  if (event != null)
     throw event
 
   return <>{children}</>

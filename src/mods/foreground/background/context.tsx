@@ -18,7 +18,7 @@ export function BackgroundProvider(props: ChildrenProps) {
     setExtension(location.protocol.endsWith("extension:"))
   }, [])
 
-  if (extension === undefined)
+  if (extension == null)
     return null
 
   if (extension)
@@ -36,7 +36,7 @@ export function WebsiteBackgroundProvider(props: ChildrenProps) {
 
   const events = useRef<BackgroundEvents>()
 
-  if (events.current === undefined)
+  if (events.current == null)
     events.current = { onMessage: [] }
 
   const background = useMemo(() => {
@@ -57,7 +57,7 @@ export function ExtensionBackgroundProvider(props: ChildrenProps) {
 
   const events = useRef<BackgroundEvents>()
 
-  if (events.current === undefined)
+  if (events.current == null)
     events.current = { onMessage: [] }
 
   const background = useMemo(() => {

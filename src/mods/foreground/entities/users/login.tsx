@@ -19,7 +19,7 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, MouseEvent>)
   const [invalid, setInvalid] = useState(false)
 
   const login = useAsyncUniqueCallback(async (password: string) => {
-    if (userQuery.data === undefined)
+    if (userQuery.data == null)
       return
     if (password?.length < 3)
       return
@@ -50,7 +50,7 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, MouseEvent>)
     login.run(e.currentTarget.value)
   }, [login.run])
 
-  if (userQuery.data === undefined)
+  if (userQuery.data == null)
     return null
 
   return <Page>

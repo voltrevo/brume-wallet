@@ -35,7 +35,7 @@ export function PathProvider(props: ChildrenProps) {
     return () => removeEventListener("hashchange", onHashChange)
   }, [])
 
-  if (path === undefined)
+  if (path == null)
     return null
 
   return <PathContext.Provider value={path}>

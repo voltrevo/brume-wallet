@@ -1,6 +1,10 @@
-import fs from "fs";
+import fs, { rmSync } from "fs";
 import workbox from "workbox-build";
 import { walkSync } from "./libs/walkSync.mjs";
+
+{
+  rmSync("./out/components", { force: true, recursive: true })
+}
 
 /**
  * Inline the injected script for Firefox (MV2)

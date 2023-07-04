@@ -1,6 +1,6 @@
 import { RpcParamfulRequestInit, RpcResponse } from "@/libs/rpc"
 import { Mutex } from "@hazae41/mutex"
-import { None, Nullable, Some } from "@hazae41/option"
+import { None, Optional, Some } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
 import { Core, RawState, Storage } from "@hazae41/xswr"
 import { Background } from "../background/background"
@@ -50,13 +50,13 @@ export class UserStorage implements Storage {
           if (request.method !== "brume_update")
             return new None()
 
-          const [cacheKey2, stored] = (request as RpcParamfulRequestInit<[string, Nullable<RawState>]>).params
+          const [cacheKey2, stored] = (request as RpcParamfulRequestInit<[string, Optional<RawState>]>).params
 
           if (cacheKey2 !== cacheKey)
             return new None()
 
-          const unstored = await this.core.unstore(stored ?? undefined, {})
-          this.core.update(cacheKey, () => unstored, {})
+          const unstored = await this.core.unstore(stored, { key: cacheKey })
+          this.core.update(cacheKey, () => unstored, { key: cacheKey })
 
           return new Some(RpcResponse.rewrap(request.id, Ok.void()))
         })

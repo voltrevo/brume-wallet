@@ -8,8 +8,11 @@ export function getWalletsSchema(background: Background) {
     await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, Wallet[], Error>({
-    method: "brume_getWallets"
-  }, fetcher)
+    key: {
+      method: "brume_getWallets"
+    },
+    fetcher
+  })
 }
 
 export function useWallets(background: Background) {

@@ -24,7 +24,7 @@ export function UsersPage(props: OkProps<User>) {
 
   const createDialog = useBooleanHandle(false)
 
-  if (user !== undefined)
+  if (user != null)
     return <UserLoginPage
       user={user}
       ok={ok}
@@ -55,7 +55,7 @@ function UserOkButton(props: UserProps & OkProps<User>) {
     ok(props.user)
   }, [props.user, ok])
 
-  if (user.data === undefined)
+  if (user.data == null)
     return null
 
   return <button className="flex flex-col items-center"

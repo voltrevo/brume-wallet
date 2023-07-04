@@ -50,11 +50,11 @@ export interface UserSession {
 }
 
 export function getCurrentUser() {
-  return createQuerySchema<string, UserSession, never>(`user`, undefined)
+  return createQuerySchema<string, UserSession, never>({ key: `user` })
 }
 
 export function getUser(uuid: string, storage: IDBStorage) {
-  return createQuerySchema<string, UserData, never>(`user/${uuid}`, undefined, { storage })
+  return createQuerySchema<string, UserData, never>({ key: `user/${uuid}`, storage })
 }
 
 export async function getUserRef(user: User, storage: IDBStorage, more: NormalizerMore) {
