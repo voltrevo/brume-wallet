@@ -5,11 +5,19 @@ import { ButtonProps } from '@/libs/react/props/html';
 import { InnerButton, NakedButton } from "./naked";
 
 export default function Page() {
-  return <GradientButton colorIndex={5}>
-    <InnerButton icon={Outline.GlobeAltIcon}>
-      Hello world
-    </InnerButton>
-  </GradientButton>
+  return <div className="p-1">
+    <GradientButton colorIndex={5}>
+      <InnerButton icon={Outline.GlobeAltIcon}>
+        Hello world
+      </InnerButton>
+    </GradientButton>
+    <div className="h-1" />
+    <GradientButton colorIndex={5}>
+      <InnerButton>
+        Hello world
+      </InnerButton>
+    </GradientButton>
+  </div>
 }
 
 export function GradientButton(props: ButtonProps & ColorIndexProps) {

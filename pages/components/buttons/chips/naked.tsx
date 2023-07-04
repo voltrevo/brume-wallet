@@ -6,11 +6,19 @@ import { OptionalIconProps } from "@/libs/react/props/icon"
 import { NakedButton } from "../naked"
 
 export default function Page() {
-  return <NakedButtonChip>
-    <InnerButtonChip icon={Outline.GlobeAltIcon}>
-      Hello world
-    </InnerButtonChip>
-  </NakedButtonChip>
+  return <div className="p-1">
+    <NakedButtonChip>
+      <InnerButtonChip icon={Outline.GlobeAltIcon}>
+        Hello world
+      </InnerButtonChip>
+    </NakedButtonChip>
+    <div className="h-1" />
+    <NakedButtonChip>
+      <InnerButtonChip>
+        Hello world
+      </InnerButtonChip>
+    </NakedButtonChip>
+  </div>
 }
 
 export function NakedButtonChip(props: ButtonProps & ClassNameProps) {

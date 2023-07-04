@@ -4,11 +4,19 @@ import { ButtonProps } from "@/libs/react/props/html"
 import { InnerButtonChip, NakedButtonChip } from "./naked"
 
 export default function Page() {
-  return <ContrastButtonChip>
-    <InnerButtonChip icon={Outline.GlobeAltIcon}>
-      Hello world
-    </InnerButtonChip>
-  </ContrastButtonChip>
+  return <div className="p-1">
+    <ContrastButtonChip>
+      <InnerButtonChip icon={Outline.GlobeAltIcon}>
+        Hello world
+      </InnerButtonChip>
+    </ContrastButtonChip>
+    <div className="h-1" />
+    <ContrastButtonChip>
+      <InnerButtonChip>
+        Hello world
+      </InnerButtonChip>
+    </ContrastButtonChip>
+  </div>
 }
 
 export function ContrastButtonChip(props: ButtonProps & ClassNameProps) {

@@ -5,11 +5,19 @@ import { ButtonProps } from "@/libs/react/props/html";
 import { InnerButtonChip, NakedButtonChip } from "./naked";
 
 export default function Page() {
-  return <GradientButtonChip colorIndex={5}>
-    <InnerButtonChip icon={Outline.GlobeAltIcon}>
-      Hello world
-    </InnerButtonChip>
-  </GradientButtonChip>
+  return <div className="p-1">
+    <GradientButtonChip colorIndex={5}>
+      <InnerButtonChip icon={Outline.GlobeAltIcon}>
+        Hello world
+      </InnerButtonChip>
+    </GradientButtonChip>
+    <div className="h-1" />
+    <GradientButtonChip colorIndex={5}>
+      <InnerButtonChip>
+        Hello world
+      </InnerButtonChip>
+    </GradientButtonChip>
+  </div>
 }
 
 export function GradientButtonChip(props: ButtonProps & ColorIndexProps) {

@@ -3,11 +3,19 @@ import { ButtonProps } from "@/libs/react/props/html"
 import { InnerButton, NakedButton } from "./naked"
 
 export default function Page() {
-  return <ContrastButton>
-    <InnerButton icon={Outline.GlobeAltIcon}>
-      Hello world
-    </InnerButton>
-  </ContrastButton>
+  return <div className="p-1">
+    <ContrastButton>
+      <InnerButton icon={Outline.GlobeAltIcon}>
+        Hello world
+      </InnerButton>
+    </ContrastButton>
+    <div className="h-1" />
+    <ContrastButton>
+      <InnerButton>
+        Hello world
+      </InnerButton>
+    </ContrastButton>
+  </div>
 }
 
 export function ContrastButton(props: ButtonProps) {

@@ -5,11 +5,19 @@ import { ButtonProps } from '@/libs/react/props/html';
 import { OptionalIconProps } from '@/libs/react/props/icon';
 
 export default function Page() {
-  return <NakedButton>
-    <InnerButton icon={Outline.GlobeAltIcon}>
-      Hello world
-    </InnerButton>
-  </NakedButton>
+  return <div className="p-1">
+    <NakedButton>
+      <InnerButton icon={Outline.GlobeAltIcon}>
+        Hello world
+      </InnerButton>
+    </NakedButton>
+    <div className="h-1" />
+    <NakedButton>
+      <InnerButton>
+        Hello world
+      </InnerButton>
+    </NakedButton>
+  </div>
 }
 
 export function NakedButton(props: ButtonProps) {
