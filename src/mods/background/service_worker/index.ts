@@ -906,8 +906,8 @@ export class Global {
 
       const ethereum = { user, origin: "foreground", wallet, chain, brumes }
 
-      if (request.method === "eth_sendTransaction")
-        return await this.brume_eth_sendTransaction(ethereum, request)
+      if (subrequest.method === "eth_sendTransaction")
+        return await this.brume_eth_sendTransaction(ethereum, subrequest)
 
       const query = await this.getEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
