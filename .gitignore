@@ -37,6 +37,9 @@ next-env.d.ts
 
 .webpack
 
-/xcode
+xcode
 
-/dist
+dist/chrome
+dist/firefox
+dist/safari
+dist/website
