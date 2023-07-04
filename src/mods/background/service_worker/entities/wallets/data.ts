@@ -5,7 +5,7 @@ import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Arrays } from "@hazae41/arrays"
-import { Option } from "@hazae41/option"
+import { None, Option, Some } from "@hazae41/option"
 import { Cancel, Looped, Retry, tryLoop } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
 import { Data, FetchError, Fetched, FetcherMore, IDBStorage, NormalizerMore, State, createQuerySchema } from "@hazae41/xswr"
@@ -152,15 +152,13 @@ export function getTotalPricedBalance(user: User, coin: "usd", storage: IDBStora
 }
 
 export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: IDBStorage) {
-  const indexer = async (state: State<Record<string, FixedInit>, Error>, more: IndexerMore) =>
-    await state.current?.map(async index => {
-      const total = Object.values(index).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
+  const indexer = async (state: State<Record<string, FixedInit>, Error>, more: IndexerMore) => {
+    const values = Option.wrap(state.real?.data).mapSync(d => d.inner).unwrapOr({})
+    const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-      const totalBalance = await getTotalPricedBalance(user, coin, storage).make(more.core)
-      await totalBalance.mutate(Mutators.data<FixedInit, Error>(total))
-
-      return index
-    }).then(() => { })
+    const totalBalance = await getTotalPricedBalance(user, coin, storage).make(more.core)
+    await totalBalance.mutate(Mutators.data<FixedInit, Error>(total))
+  }
 
   return createQuerySchema<string, Record<string, FixedInit>, Error>({
     key: `totalPricedBalanceByWallet/${user.uuid}/${coin}`,
@@ -170,16 +168,12 @@ export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: 
 }
 
 export function getTotalWalletPricedBalance(user: User, address: string, coin: "usd", storage: IDBStorage) {
-  const indexer = async (state: State<FixedInit, Error>, more: IndexerMore) =>
-    await state.current?.map(async totalWalletPricedBalance => {
-      const key = address
-      const value = totalWalletPricedBalance
+  const indexer = async (state: State<FixedInit, Error>, more: IndexerMore) => {
+    const value = Option.wrap(state.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-      const indexQuery = await getTotalPricedBalanceByWallet(user, coin, storage).make(more.core)
-      await indexQuery.mutate(Mutators.mapInnerDataOr(p => ({ ...p, [key]: value }), new Data({})))
-
-      return totalWalletPricedBalance
-    }).then(() => { })
+    const indexQuery = await getTotalPricedBalanceByWallet(user, coin, storage).make(more.core)
+    await indexQuery.mutate(Mutators.mapInnerDataOr(p => ({ ...p, [address]: value }), new Data({})))
+  }
 
   return createQuerySchema<string, FixedInit, Error>({
     key: `totalPricedBalance/${address}/${coin}`,
@@ -189,15 +183,13 @@ export function getTotalWalletPricedBalance(user: User, address: string, coin: "
 }
 
 export function getPricedBalanceByToken(user: User, address: string, coin: "usd", storage: IDBStorage) {
-  const indexer = async (state: State<Record<string, FixedInit>, Error>, more: IndexerMore) =>
-    await state.current?.map(async index => {
-      const total = Object.values(index).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
+  const indexer = async (state: State<Record<string, FixedInit>, Error>, more: IndexerMore) => {
+    const values = Option.wrap(state.real?.data).mapSync(d => d.inner).unwrapOr({})
+    const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-      const totalBalance = await getTotalWalletPricedBalance(user, address, coin, storage).make(more.core)
-      await totalBalance.mutate(Mutators.data<FixedInit, Error>(total))
-
-      return index
-    }).then(() => { })
+    const totalBalance = await getTotalWalletPricedBalance(user, address, coin, storage).make(more.core)
+    await totalBalance.mutate(Mutators.data<FixedInit, Error>(total))
+  }
 
   return createQuerySchema<string, Record<string, FixedInit>, Error>({
     key: `pricedBalanceByToken/${address}/${coin}`,
@@ -207,16 +199,12 @@ export function getPricedBalanceByToken(user: User, address: string, coin: "usd"
 }
 
 export function getPricedEthereumBalance(ethereum: EthereumContext, address: string, coin: "usd", storage: IDBStorage) {
-  const indexer = async (state: State<FixedInit, Error>, more: IndexerMore) =>
-    await state.current?.map(async pricedBalance => {
-      const key = ethereum.chain.chainId
-      const value = pricedBalance
+  const indexer = async (state: State<FixedInit, Error>, more: IndexerMore) => {
+    const value = Option.wrap(state.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-      const indexQuery = await getPricedBalanceByToken(ethereum.user, address, coin, storage).make(more.core)
-      await indexQuery.mutate(Mutators.mapInnerDataOr(p => ({ ...p, [key]: value }), new Data({})))
-
-      return pricedBalance
-    }).then(() => { })
+    const indexQuery = await getPricedBalanceByToken(ethereum.user, address, coin, storage).make(more.core)
+    await indexQuery.mutate(Mutators.mapInnerDataOr(p => ({ ...p, [ethereum.chain.chainId]: value }), new Data({})))
+  }
 
   return createQuerySchema<string, FixedInit, Error>({
     key: `pricedBalance/${address}/${ethereum.chain.chainId}/${coin}`,
@@ -229,12 +217,13 @@ export function getEthereumBalance(ethereum: EthereumContext, address: string, b
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
     await tryEthereumFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals))))
 
-  const indexer = async (state: State<FixedInit, Error>, more: IndexerMore) =>
-    await state.current?.map(async balance => {
-      if (block !== "pending")
-        return
+  const indexer = async (state: State<FixedInit, Error>, more: IndexerMore) => {
+    if (block !== "pending")
+      return
+
+    const pricedBalance = await Option.wrap(state.real?.data?.get()).andThen(async balance => {
       if (ethereum.chain.token.pairs == null)
-        return
+        return new None()
 
       let pricedBalance: Fixed = Fixed.from(balance)
 
@@ -245,14 +234,17 @@ export function getEthereumBalance(ethereum: EthereumContext, address: string, b
         const price = await getPairPrice({ ...ethereum, chain }, pair, storage).make(more.core)
 
         if (price.data == null)
-          return balance
+          return new None()
 
         pricedBalance = pricedBalance.mul(Fixed.from(price.data.inner))
       }
 
-      const pricedBalanceQuery = await getPricedEthereumBalance(ethereum, address, "usd", storage).make(more.core)
-      await pricedBalanceQuery.mutate(Mutators.set(new Data(pricedBalance)))
-    }).then(() => { })
+      return new Some(pricedBalance)
+    }).then(o => o.unwrapOr(new Fixed(0n, 0)))
+
+    const pricedBalanceQuery = await getPricedEthereumBalance(ethereum, address, "usd", storage).make(more.core)
+    await pricedBalanceQuery.mutate(Mutators.set(new Data(pricedBalance)))
+  }
 
   return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
     key: {
