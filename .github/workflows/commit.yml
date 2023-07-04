@@ -26,11 +26,11 @@ jobs:
     - run: "diff -r ./unzipped/website ./dist/website"
     # Clean ./unzipped
     - run: "rm -rf ./unzipped"
-    # Revert built zip files
-    - run: "git revert ./dist/chrome.zip"
-    - run: "git revert ./dist/firefox.zip"
-    - run: "git revert ./dist/safari.zip"
-    - run: "git revert ./dist/website.zip"
-    - run: "git revert ./dist/firefox.xpi"
+    # Restore built zip files
+    - run: "git restore ./dist/chrome.zip"
+    - run: "git restore ./dist/firefox.zip"
+    - run: "git restore ./dist/safari.zip"
+    - run: "git restore ./dist/website.zip"
+    - run: "git restore ./dist/firefox.xpi"
     # Compare other files
     - run: "[[ -z $(git status --porcelain) ]]"
