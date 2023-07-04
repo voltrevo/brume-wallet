@@ -6,7 +6,7 @@ import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Option, Optional } from "@hazae41/option";
-import { Ok, Result } from "@hazae41/result";
+import { Result } from "@hazae41/result";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
 import { PageHeader } from "../../components/page/header";
@@ -82,13 +82,15 @@ function WalletDataPage() {
   const goerliBalanceDisplay = useDisplay(goerliBalance.current)
   const goerliSendDialog = useBooleanHandle(false)
 
-  const goerliBalanceUsdDisplay = useDisplayUsd(new Ok(new Fixed(0n, 0)))
+  const goerliBalanceUsdBigint = usePricedBalance(goerli, wallet.address, "usd")
+  const goerliBalanceUsdDisplay = useDisplayUsd(goerliBalanceUsdBigint.current)
 
   const sepoliaBalance = usePendingBalance(wallet.address, sepolia)
   const sepoliaBalanceDisplay = useDisplay(sepoliaBalance.current)
   const sepoliaSendDialog = useBooleanHandle(false)
 
-  const sepoliaBalanceUsdDisplay = useDisplayUsd(new Ok(new Fixed(0n, 0)))
+  const sepoliaBalanceUsdBigint = usePricedBalance(sepolia, wallet.address, "usd")
+  const sepoliaBalanceUsdDisplay = useDisplayUsd(sepoliaBalanceUsdBigint.current)
 
   const Header =
     <PageHeader
