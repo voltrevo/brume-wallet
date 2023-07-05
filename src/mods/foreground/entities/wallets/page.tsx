@@ -159,7 +159,7 @@ function WalletDataPage() {
     {Card}
     {Apps}
     <div className="p-xmd flex flex-col gap-2">
-      <button className="w-full p-xmd flex flex-col rounded-xl border border-contrast"
+      <button className="w-full p-xmd flex flex-col rounded-xl bg-low-contrast"
         onClick={mainnetSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
@@ -173,7 +173,7 @@ function WalletDataPage() {
           {`${mainnetBalanceDisplay} ETH`}
         </div>
       </button>
-      <button className="w-full p-xmd flex flex-col rounded-xl border border-contrast"
+      <button className="w-full p-xmd flex flex-col rounded-xl bg-low-contrast"
         onClick={polygonSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
@@ -187,7 +187,7 @@ function WalletDataPage() {
           {`${polygonBalanceDisplay} MATIC`}
         </div>
       </button>
-      <button className="w-full p-xmd flex flex-col rounded-xl border border-contrast"
+      <button className="w-full p-xmd flex flex-col rounded-xl bg-low-contrast"
         onClick={goerliSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
@@ -201,7 +201,7 @@ function WalletDataPage() {
           {`${goerliBalanceDisplay} ETH`}
         </div>
       </button>
-      <button className="w-full p-xmd flex flex-col rounded-xl border border-contrast"
+      <button className="w-full p-xmd flex flex-col rounded-xl bg-low-contrast"
         onClick={sepoliaSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
