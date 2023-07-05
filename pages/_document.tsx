@@ -1,8 +1,6 @@
 import { Head, Html, Main, NextScript } from 'next/document'
 import Script from "next/script"
 
-const themer = `const t=matchMedia("(prefers-color-scheme: dark)"),e=document.querySelector("meta[name=theme-color]");function c(c){const o=t.matches?"dark":"white",n=c||o;"dark"===n&&(document.documentElement.classList.add("dark"),e.setAttribute("content","#000000")),"light"===n&&(document.documentElement.classList.remove("dark"),e.setAttribute("content","#ffffff"))}!function(){const t=localStorage.getItem("theme");"dark"===t&&c("dark"),"light"===t&&c("light")}();`
-
 export default function Document() {
   return (
     <Html lang="en">
@@ -18,7 +16,7 @@ export default function Document() {
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/square.png" />
         <link rel="apple-touch-startup-image" href="/round.png" />
-        <Script id="themer" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themer }} />
+        <Script id="themer" strategy="beforeInteractive" src="/themer.js" />
       </Head>
       <body>
         <Main />
