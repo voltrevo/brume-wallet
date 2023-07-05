@@ -8,9 +8,10 @@ import { UUIDProps } from "@/libs/react/props/uuid";
 import { Option, Optional } from "@hazae41/option";
 import { Result } from "@hazae41/result";
 import { useRouter } from "next/router";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
+import { Path } from "../../router/path";
 import { WalletDataProvider, useWalletData } from "./context";
 import { useEthereumContext, usePairPrice, usePendingBalance, usePricedBalance } from "./data";
 import { WalletDataCard } from "./row";
@@ -92,10 +93,14 @@ function WalletDataPage() {
   const sepoliaBalanceUsdBigint = usePricedBalance(sepolia, wallet.address, "usd")
   const sepoliaBalanceUsdDisplay = useDisplayUsd(sepoliaBalanceUsdBigint.current)
 
+  const back = useCallback(() => {
+    Path.go("/")
+  }, [])
+
   const Header =
     <PageHeader
       title="Wallet"
-      back={router.back} />
+      back={back} />
 
   const Card =
     <div className="p-xmd flex justify-center">
