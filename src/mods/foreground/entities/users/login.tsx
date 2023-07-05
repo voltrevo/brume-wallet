@@ -89,14 +89,14 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
           onKeyDown={onKeyDown} />
         <div className="h-2" />
         <div className="flex items-center gap-2">
-          <Button.Contrast className="grow p-sm hovered-or-clicked:scale-105 transition-transform"
+          <Button.Contrast className="grow p-sm hovered-or-clicked-or-focused:scale-105 transition-transform"
             onClick={err}>
             <Button.Shrink>
               <Outline.ChevronLeftIcon className="icon-sm" />
               Cancel
             </Button.Shrink>
           </Button.Contrast>
-          <Button.Opposite className="grow p-sm hovered-or-clicked:scale-105 transition-transform"
+          <Button.Opposite className="grow p-sm hovered-or-clicked-or-focused:scale-105 transition-transform"
             onClick={onLogin}>
             <Button.Shrink>
               <Outline.LockOpenIcon className="icon-sm" />

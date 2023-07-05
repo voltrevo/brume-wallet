@@ -46,7 +46,7 @@ export namespace Dialog {
         {children}
       </div>
       <div className="grow" />
-      <Button.Naked className="icon-xl hovered-or-clicked:scale-105 transition"
+      <Button.Naked className="icon-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={close}>
         <Button.Shrink>
           <Outline.XMarkIcon className="icon-sm" />

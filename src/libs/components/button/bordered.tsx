@@ -5,7 +5,7 @@ import { Button } from "../button";
 export function Bordered(props: ButtonProps) {
   const { children, className, ...button } = props
 
-  return <Button.Naked className={`text-contrast hovered-or-clicked-or-selected:text-default border border-contrast hovered-or-clicked-or-selected:border-opposite ${className}`}
+  return <Button.Naked className={`text-contrast hovered-or-clicked-or-focused-or-selected:text-default border border-contrast hovered-or-clicked-or-focused-or-selected:border-opposite ${className}`}
     {...button}>
     {children}
   </Button.Naked>

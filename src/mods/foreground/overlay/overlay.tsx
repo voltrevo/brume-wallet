@@ -20,7 +20,7 @@ export function UpdateBanner(props: OkProps<unknown>) {
       <div className="grow">
         {`An update is available`}
       </div>
-      <Button.Naked className="hovered-or-clicked:scale-105 transition"
+      <Button.Naked className="hovered-or-clicked-or-focused:scale-105 transition"
         onClick={ok}>
         <Button.Shrink>
           <Outline.ArrowPathIcon className="icon-sm" />

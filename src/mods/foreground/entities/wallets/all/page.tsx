@@ -47,7 +47,7 @@ export function WalletsPage() {
 
   const Header =
     <PageHeader title="Wallets">
-      <Button.Naked className="icon-xl hovered-or-clicked:scale-105 transition"
+      <Button.Naked className="icon-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={creator.enable}>
         <Button.Shrink>
           <Outline.PlusIcon className="icon-sm" />
@@ -86,7 +86,7 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
     ok(wallet)
   }, [ok, wallet])
 
-  return <button className="w-full hovered-or-clicked:scale-105 transition-transform"
+  return <button className="w-full hovered-or-clicked-or-focused:scale-105 transition-transform"
     onClick={onClick}>
     <WalletDataCard />
   </button>
@@ -95,7 +95,7 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
 export function NewWalletCard(props: OkProps<unknown>) {
   const { ok } = props
 
-  return <button className="p-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-clicked:scale-105 transition-transform"
+  return <button className="p-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-clicked-or-focused:scale-105 transition-transform"
     onClick={ok}>
     <Outline.PlusIcon className="icon-sm" />
     <div className="font-medium">

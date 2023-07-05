@@ -9,7 +9,7 @@ export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps
 
   return <div className="p-xmd flex items-center">
     {back && <div className="mr-2">
-      <Button.Naked className="icon-xl hovered-or-clicked:scale-105 transition"
+      <Button.Naked className="icon-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={back}>
         <Button.Shrink>
           <Outline.ChevronLeftIcon className="icon-sm" />

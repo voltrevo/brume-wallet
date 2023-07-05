@@ -5,7 +5,7 @@ import { Button } from "../button";
 export function Contrast(props: ButtonProps) {
   const { children, className, ...button } = props
 
-  return <Button.Naked className={`text-default border border-transparent hovered-or-clicked-or-selected:border-opposite bg-low-contrast transition ${className}`}
+  return <Button.Naked className={`text-default border border-transparent hovered-or-clicked-or-focused-or-selected:border-opposite bg-low-contrast transition ${className}`}
     {...button}>
     {children}
   </Button.Naked>
