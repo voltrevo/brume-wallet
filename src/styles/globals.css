@@ -16,15 +16,15 @@ html {
 }
 
 html {
-  @apply flex flex-col;
+  @apply w-full flex flex-col;
 }
 
 body {
-  @apply grow flex flex-col text-base text-default bg-paper;
+  @apply grow w-full flex flex-col text-base text-default bg-paper;
 }
 
 #__next {
-  @apply grow flex flex-col;
+  @apply grow w-full flex flex-col;
 }
 
 * {

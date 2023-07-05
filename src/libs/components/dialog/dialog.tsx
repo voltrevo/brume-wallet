@@ -16,7 +16,7 @@ export function Dialog(props: ChildrenProps & CloseProps) {
   const onEscape = useKeyboardEscape(close)
 
   return <Portal type="div">
-    <dialog open className="fixed inset-0 z-10">
+    <div className="fixed inset-0 z-10">
       <div className="p-safe fixed inset-0 z-10 flex flex-col bg-backdrop animate-opacity"
         onMouseDown={onClose}
         onClick={Events.keep}>
@@ -32,7 +32,7 @@ export function Dialog(props: ChildrenProps & CloseProps) {
         </div>
         <div className="hidden md:block grow" />
       </div>
-    </dialog>
+    </div>
   </Portal>
 }
 
