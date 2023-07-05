@@ -10,19 +10,21 @@
 @import "./icons.css";
 @import "./border.css";
 
-html,
-body,
-#__next {
-  width: 100%;
-  height: 100%;
+html {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+html {
+  @apply flex flex-col;
 }
 
 body {
-  overflow-y: scroll;
+  @apply grow flex flex-col text-base text-default bg-paper;
 }
 
 #__next {
-  @apply text-base text-default bg-paper;
+  @apply grow flex flex-col;
 }
 
 * {

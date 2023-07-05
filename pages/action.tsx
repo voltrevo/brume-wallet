@@ -22,7 +22,7 @@ export default function Action() {
     return () => removeEventListener("hashchange", onHashChange)
   }, [background])
 
-  return <main id="main" className="h-[600px] w-[400px] overflow-y-scroll">
+  return <main id="main" className="h-[600px] w-[400px] overflow-y-scroll flex flex-col">
     <Overlay>
       <UserProvider>
         <Router />

@@ -24,7 +24,7 @@ export default function Popup() {
       .then(r => r.unwrap().ignore())
   }, [background])
 
-  return <main id="main" className="p-safe h-full w-full">
+  return <main id="main" className="p-safe grow w-full flex flex-col">
     <Overlay>
       <UserProvider>
         <Router />
