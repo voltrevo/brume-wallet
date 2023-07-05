@@ -10,8 +10,7 @@ export default function Document() {
         <meta key="application-name" name="application-name" content="Brume Wallet" />
         <meta key="description" name="description" content="The private wallet" />
         <meta key="color-scheme" name="color-scheme" content="dark light" />
-        <meta key="theme-color" name="theme-color" content="#ffffff" />
-        <meta key="theme-color-light" name="theme-color" content="#ffffff" media="(prefers-color-scheme: dark)" />
+        <meta key="theme-color-light" name="theme-color" content="#ffffff" />
         <meta key="theme-color-dark" name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
         <meta key="apple-mobile-web-app-capable" name="apple-mobile-web-app-capable" content="yes" />
         <meta key="apple-mobile-web-app-status-bar-style" name="apple-mobile-web-app-status-bar-style" content="white" />
