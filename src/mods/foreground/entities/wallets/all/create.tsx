@@ -1,8 +1,9 @@
 import { Colors } from "@/libs/colors/colors";
+import { Button } from "@/libs/components/button";
+import { Dialog, DialogTitle } from "@/libs/components/dialog/dialog";
 import { Emojis } from "@/libs/emojis/emojis";
 import { Ethereum } from "@/libs/ethereum/ethereum";
 import { Outline } from "@/libs/icons/icons";
-import { Dialog, DialogTitle } from "@/libs/modals/dialog";
 import { useModhash } from "@/libs/modhash/modhash";
 import { Promises } from "@/libs/promises/promises";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -15,8 +16,6 @@ import { Bytes } from "@hazae41/bytes";
 import { Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import * as Ethers from "ethers";
-import { GradientButton } from "pages/components/buttons/gradient";
-import { InnerButton } from "pages/components/buttons/naked";
 import { useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../avatar";
 import { Wallet, WalletData } from "../data";
@@ -118,14 +117,15 @@ export function WalletCreatorDialog(props: CloseProps) {
     </div>
 
   const DoneButton =
-    <GradientButton className="w-full"
+    <Button.Gradient className="w-full p-md"
       colorIndex={color}
       disabled={!name || !ethersWallet}
       onClick={onDoneClick.run}>
-      <InnerButton icon={Outline.PlusIcon}>
+      <Button.Shrink>
+        <Outline.PlusIcon className="icon-sm" />
         Add
-      </InnerButton>
-    </GradientButton>
+      </Button.Shrink>
+    </Button.Gradient>
 
   return <Dialog close={close}>
     <DialogTitle close={close}>

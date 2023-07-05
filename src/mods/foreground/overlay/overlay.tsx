@@ -1,11 +1,11 @@
 import { browser, tryBrowser } from "@/libs/browser/browser";
+import { Button } from "@/libs/components/button";
 import { tryFetchAsJson } from "@/libs/fetch/fetch";
 import { Outline } from "@/libs/icons/icons";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { OkProps } from "@/libs/react/props/promise";
 import { Semver } from "@/libs/semver/semver";
 import { Ok, Result } from "@hazae41/result";
-import { InnerChip, NakedChip } from "pages/components/buttons/chips/naked";
 import { useCallback, useEffect, useState } from "react";
 import { useBackground } from "../background/context";
 import { registerServiceWorker } from "../service_worker/service_worker";
@@ -20,11 +20,13 @@ export function UpdateBanner(props: OkProps<unknown>) {
       <div className="grow">
         {`An update is available`}
       </div>
-      <NakedChip onClick={ok}>
-        <InnerChip icon={Outline.ArrowPathIcon}>
+      <Button.Naked className="hovered-or-active:scale-105 transition"
+        onClick={ok}>
+        <Button.Shrink>
+          <Outline.ArrowPathIcon className="icon-sm" />
           Update
-        </InnerChip>
-      </NakedChip>
+        </Button.Shrink>
+      </Button.Naked>
     </div>
   </div>
 }

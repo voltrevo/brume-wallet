@@ -1,18 +1,20 @@
+import { Button } from "@/libs/components/button";
 import { Outline } from "@/libs/icons/icons";
 import { OptionalBackProps } from "@/libs/react/props/back";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { TitleProps } from "@/libs/react/props/title";
-import { InnerButton, NakedButton } from "../../../../../pages/components/buttons/naked";
 
 export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps) {
   const { title, children, back } = props
 
   return <div className="p-xmd flex items-center">
     {back &&
-      <NakedButton className="mr-2"
+      <Button.Naked className="mr-2 hovered-or-active:scale-105 transition"
         onClick={back}>
-        <InnerButton icon={Outline.ChevronLeftIcon} />
-      </NakedButton>}
+        <Button.Shrink>
+          <Outline.ChevronLeftIcon className="icon-sm" />
+        </Button.Shrink>
+      </Button.Naked>}
     <div className="text-2xl font-medium">
       {title}
     </div>

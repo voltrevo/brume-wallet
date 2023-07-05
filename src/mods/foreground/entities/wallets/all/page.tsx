@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import { Button } from "@/libs/components/button"
 import { Outline } from "@/libs/icons/icons"
 import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { CreateProps } from "@/libs/react/props/create"
@@ -7,7 +8,6 @@ import { useBackground } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path"
-import { InnerButton, NakedButton } from "pages/components/buttons/naked"
 import { useCallback } from "react"
 import { WalletDataProvider, useWalletData } from "../context"
 import { Wallet, useTotalPricedBalance } from "../data"
@@ -47,10 +47,12 @@ export function WalletsPage() {
 
   const Header =
     <PageHeader title="Wallets">
-      <NakedButton
+      <Button.Naked className="hovered-or-active:scale-105 transition"
         onClick={creator.enable}>
-        <InnerButton icon={Outline.PlusIcon} />
-      </NakedButton>
+        <Button.Shrink>
+          <Outline.PlusIcon className="icon-sm" />
+        </Button.Shrink>
+      </Button.Naked>
     </PageHeader>
 
   return <Page>
@@ -84,7 +86,7 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
     ok(wallet)
   }, [ok, wallet])
 
-  return <button className="w-full hovered-or-active-or-selected:scale-105 transition-transform"
+  return <button className="w-full hovered-or-active:scale-105 transition-transform"
     onClick={onClick}>
     <WalletDataCard />
   </button>
@@ -93,7 +95,7 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
 export function NewWalletCard(props: OkProps<unknown>) {
   const { ok } = props
 
-  return <button className="p-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-active-or-selected:scale-105 transition-transform"
+  return <button className="p-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-active:scale-105 transition-transform"
     onClick={ok}>
     <Outline.PlusIcon className="icon-sm" />
     <div className="font-medium">

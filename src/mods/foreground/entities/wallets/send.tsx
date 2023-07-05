@@ -1,6 +1,7 @@
+import { Button } from "@/libs/components/button";
+import { Dialog, DialogTitle } from "@/libs/components/dialog/dialog";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
-import { Dialog, DialogTitle } from "@/libs/modals/dialog";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
@@ -9,8 +10,6 @@ import { TitleProps } from "@/libs/react/props/title";
 import { Err, Ok, Result } from "@hazae41/result";
 import { ethers } from "ethers";
 import { useMemo, useState } from "react";
-import { GradientButton } from "../../../../../pages/components/buttons/gradient";
-import { InnerButton } from "../../../../../pages/components/buttons/naked";
 import { useWalletData } from "./context";
 import { EthereumContextProps, useGasPrice, useNonce, usePendingBalance } from "./data";
 
@@ -121,12 +120,13 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
     <ExternalDivisionLink className="w-full"
       href={`${handle.chain.etherscan}/tx/${txHash}`}
       target="_blank" rel="noreferrer">
-      <GradientButton className="w-full"
+      <Button.Gradient className="w-full p-md"
         colorIndex={wallet.color}>
-        <InnerButton icon={Outline.ArrowTopRightOnSquareIcon}>
+        <Button.Shrink>
+          <Outline.ArrowTopRightOnSquareIcon className="icon-sm" />
           Etherscan
-        </InnerButton>
-      </GradientButton>
+        </Button.Shrink>
+      </Button.Gradient>
     </ExternalDivisionLink>
   </>
 
@@ -143,16 +143,17 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
   }, [nonce.data, gasPrice.data, recipientInput, valueInput])
 
   const SendButton =
-    <GradientButton className="w-full"
+    <Button.Gradient className="w-full p-md"
       colorIndex={wallet.color}
       disabled={trySend.loading || disabled}
       onClick={trySend.run}>
-      <InnerButton icon={Outline.PaperAirplaneIcon}>
+      <Button.Shrink>
+        <Outline.PaperAirplaneIcon className="icon-sm" />
         {trySend.loading
           ? "Loading..."
           : "Send"}
-      </InnerButton>
-    </GradientButton>
+      </Button.Shrink>
+    </Button.Gradient>
 
   return <Dialog close={close}>
     <DialogTitle close={close}>

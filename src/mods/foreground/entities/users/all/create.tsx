@@ -1,7 +1,8 @@
 import { Colors } from "@/libs/colors/colors";
+import { Button } from "@/libs/components/button";
+import { Dialog, DialogTitle } from "@/libs/components/dialog/dialog";
 import { Emojis } from "@/libs/emojis/emojis";
 import { Outline } from "@/libs/icons/icons";
-import { Dialog, DialogTitle } from "@/libs/modals/dialog";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
@@ -9,8 +10,6 @@ import { CloseProps } from "@/libs/react/props/close";
 import { Mutators } from "@/libs/xswr/mutators";
 import { UserInit } from "@/mods/background/service_worker/entities/users/data";
 import { useBackground } from "@/mods/foreground/background/context";
-import { GradientButton } from "pages/components/buttons/gradient";
-import { InnerButton } from "pages/components/buttons/naked";
 import { useMemo, useState } from "react";
 import { User } from "../data";
 import { useUsers } from "./data";
@@ -89,14 +88,15 @@ export function UserCreateDialog(props: CloseProps) {
       value={password2} onChange={onPassword2Change} />
 
   const DoneButton =
-    <GradientButton className="w-full"
+    <Button.Gradient className="w-full p-md"
       colorIndex={color}
       disabled={!name || !password || !password2 || !isSamePassword}
       onClick={onClick.run}>
-      <InnerButton icon={Outline.PlusIcon}>
+      <Button.Shrink>
+        <Outline.PlusIcon className="icon-sm" />
         Add
-      </InnerButton>
-    </GradientButton>
+      </Button.Shrink>
+    </Button.Gradient>
 
   return <Dialog close={close}>
     <DialogTitle close={close}>

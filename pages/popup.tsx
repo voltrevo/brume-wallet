@@ -1,4 +1,5 @@
 import { BigInts } from "@/libs/bigints/bigints";
+import { Button } from "@/libs/components/button";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { useBackground } from "@/mods/foreground/background/context";
@@ -12,12 +13,7 @@ import { Wallet } from "@/mods/foreground/entities/wallets/data";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
-import { ContrastChip } from "pages/components/buttons/chips/contrast";
-import { ContrastButton } from "pages/components/buttons/contrast";
-import { GradientButton } from "pages/components/buttons/gradient";
-import { InnerButton } from "pages/components/buttons/naked";
 import { useCallback, useEffect, useState } from "react";
-import { InnerChip } from "./components/buttons/chips/naked";
 
 export default function Popup() {
   const background = useBackground()
@@ -90,20 +86,21 @@ export function TransactPage() {
         </div>}
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
-      <ContrastButton className="grow"
+      <Button.Contrast className="grow p-md hovered-or-active:scale-105 transition"
         onClick={onReject}>
-        <InnerButton
-          icon={Outline.XMarkIcon}>
+        <Button.Shrink>
+          <Outline.XMarkIcon className="icon-sm" />
           No, reject it
-        </InnerButton>
-      </ContrastButton>
-      <GradientButton className="grow"
+        </Button.Shrink>
+      </Button.Contrast>
+      <Button.Gradient className="grow p-md hovered-or-active:scale-105 transition"
         onClick={onApprove}
         colorIndex={5}>
-        <InnerButton icon={Outline.CheckIcon}>
+        <Button.Shrink>
+          <Outline.CheckIcon className="icon-sm" />
           Yes, approve it
-        </InnerButton>
-      </GradientButton>
+        </Button.Shrink>
+      </Button.Gradient>
     </div>
   </Page>
 }
@@ -143,20 +140,21 @@ export function SwitchPage() {
       </div>
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
-      <ContrastButton className="grow"
+      <Button.Contrast className="grow p-md hovered-or-active:scale-105 transition"
         onClick={onReject}>
-        <InnerButton
-          icon={Outline.XMarkIcon}>
+        <Button.Shrink>
+          <Outline.XMarkIcon className="icon-sm" />
           No, reject it
-        </InnerButton>
-      </ContrastButton>
-      <GradientButton className="grow"
+        </Button.Shrink>
+      </Button.Contrast>
+      <Button.Gradient className="grow p-md hovered-or-active:scale-105 transition"
         onClick={onApprove}
         colorIndex={5}>
-        <InnerButton icon={Outline.CheckIcon}>
+        <Button.Shrink>
+          <Outline.CheckIcon className="icon-sm" />
           Yes, approve it
-        </InnerButton>
-      </GradientButton>
+        </Button.Shrink>
+      </Button.Gradient>
     </div>
   </Page>
 }
@@ -207,20 +205,21 @@ export function PersonalSignPage() {
       </div>
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
-      <ContrastButton className="grow"
+      <Button.Contrast className="grow p-md hovered-or-active:scale-105 transition"
         onClick={onReject}>
-        <InnerButton
-          icon={Outline.XMarkIcon}>
+        <Button.Shrink>
+          <Outline.XMarkIcon className="icon-sm" />
           No, reject it
-        </InnerButton>
-      </ContrastButton>
-      <GradientButton className="grow"
+        </Button.Shrink>
+      </Button.Contrast>
+      <Button.Gradient className="grow p-md hovered-or-active:scale-105 transition"
         onClick={onApprove}
         colorIndex={5}>
-        <InnerButton icon={Outline.CheckIcon}>
+        <Button.Shrink>
+          <Outline.CheckIcon className="icon-sm" />
           Yes, approve it
-        </InnerButton>
-      </GradientButton>
+        </Button.Shrink>
+      </Button.Gradient>
     </div>
   </Page>
 }
@@ -271,20 +270,21 @@ export function TypedSignPage() {
       </div>
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
-      <ContrastButton className="grow"
+      <Button.Contrast className="grow p-md hovered-or-active:scale-105 transition"
         onClick={onReject}>
-        <InnerButton
-          icon={Outline.XMarkIcon}>
+        <Button.Shrink>
+          <Outline.XMarkIcon className="icon-sm" />
           No, reject it
-        </InnerButton>
-      </ContrastButton>
-      <GradientButton className="grow"
+        </Button.Shrink>
+      </Button.Contrast>
+      <Button.Gradient className="grow p-md hovered-or-active:scale-105 transition"
         onClick={onApprove}
         colorIndex={5}>
-        <InnerButton icon={Outline.CheckIcon}>
+        <Button.Shrink>
+          <Outline.CheckIcon className="icon-sm" />
           Yes, approve it
-        </InnerButton>
-      </GradientButton>
+        </Button.Shrink>
+      </Button.Gradient>
     </div>
   </Page>
 }
@@ -312,27 +312,30 @@ export function WalletAndChainSelectPage() {
   const Body =
     <PageBody>
       <div className="flex flex-wrap items-center gap-1">
-        <ContrastChip
+        <Button.Contrast className="p-sm hovered-or-active:scale-105 transition"
           aria-selected={chain === 1}
           onClick={() => setChain(1)}>
-          <InnerChip icon={Outline.CubeIcon}>
+          <Button.Shrink>
+            <Outline.CubeIcon className="icon-xs" />
             Ethereum
-          </InnerChip>
-        </ContrastChip>
-        <ContrastChip
+          </Button.Shrink>
+        </Button.Contrast>
+        <Button.Contrast className="p-sm hovered-or-active:scale-105 transition"
           aria-selected={chain === 137}
           onClick={() => setChain(137)}>
-          <InnerChip icon={Outline.CubeIcon}>
+          <Button.Shrink>
+            <Outline.CubeIcon className="icon-xs" />
             Polygon
-          </InnerChip>
-        </ContrastChip>
-        <ContrastChip
+          </Button.Shrink>
+        </Button.Contrast>
+        <Button.Contrast className="p-sm hovered-or-active:scale-105 transition"
           aria-selected={chain === 5}
           onClick={() => setChain(5)}>
-          <InnerChip icon={Outline.CubeIcon}>
+          <Button.Shrink>
+            <Outline.CubeIcon className="icon-xs" />
             Goerli
-          </InnerChip>
-        </ContrastChip>
+          </Button.Shrink>
+        </Button.Contrast>
       </div>
       <div className="h-4" />
       <ClickableWalletGrid
@@ -373,13 +376,13 @@ export function DonePage() {
       </div>
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
-      <ContrastButton className="grow"
+      <Button.Opposite className="grow p-md hovered-or-active:scale-105 transition"
         onClick={onDone}>
-        <InnerButton
-          icon={Outline.HomeIcon}>
+        <Button.Shrink>
+          <Outline.HomeIcon className="icon-xs" />
           Go to the home page
-        </InnerButton>
-      </ContrastButton>
+        </Button.Shrink>
+      </Button.Opposite>
     </div>
   </Page>
 }
