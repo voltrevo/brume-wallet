@@ -1,5 +1,5 @@
 import { Button } from "@/libs/components/button";
-import { Dialog, DialogTitle } from "@/libs/components/dialog/dialog";
+import { Dialog } from "@/libs/components/dialog/dialog";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
@@ -156,9 +156,9 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
     </Button.Gradient>
 
   return <Dialog close={close}>
-    <DialogTitle close={close}>
+    <Dialog.Title close={close}>
       Send {title}
-    </DialogTitle>
+    </Dialog.Title>
     <div className="h-2" />
     {RecipientInput}
     <div className="h-2" />

@@ -1,6 +1,6 @@
 import { Colors } from "@/libs/colors/colors";
 import { Button } from "@/libs/components/button";
-import { Dialog, DialogTitle } from "@/libs/components/dialog/dialog";
+import { Dialog } from "@/libs/components/dialog/dialog";
 import { Emojis } from "@/libs/emojis/emojis";
 import { Ethereum } from "@/libs/ethereum/ethereum";
 import { Outline } from "@/libs/icons/icons";
@@ -128,9 +128,9 @@ export function WalletCreatorDialog(props: CloseProps) {
     </Button.Gradient>
 
   return <Dialog close={close}>
-    <DialogTitle close={close}>
+    <Dialog.Title close={close}>
       New wallet
-    </DialogTitle>
+    </Dialog.Title>
     <div className="h-2" />
     {NameInput}
     <div className="h-2" />

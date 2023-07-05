@@ -6,23 +6,6 @@ import { CloseProps } from "../../react/props/close"
 import { Button } from "../button"
 import { Portal } from "../portal/portal"
 
-export function DialogTitle(props: ChildrenProps & CloseProps) {
-  const { children, close } = props
-
-  return <h1 className="flex items-center">
-    <div className="text-xl font-medium">
-      {children}
-    </div>
-    <div className="grow" />
-    <Button.Naked className="hovered-or-active:scale-105 transition"
-      onClick={close}>
-      <Button.Shrink>
-        <Outline.XMarkIcon className="icon-sm" />
-      </Button.Shrink>
-    </Button.Naked>
-  </h1>
-}
-
 export function Dialog(props: ChildrenProps & CloseProps) {
   const { children, close } = props
 
@@ -55,15 +38,32 @@ export function Dialog(props: ChildrenProps & CloseProps) {
 
 export namespace Dialog {
 
+  export function Title(props: ChildrenProps & CloseProps) {
+    const { children, close } = props
+
+    return <h1 className="flex items-center">
+      <div className="text-xl font-medium">
+        {children}
+      </div>
+      <div className="grow" />
+      <Button.Naked className="hovered-or-active:scale-105 transition"
+        onClick={close}>
+        <Button.Shrink>
+          <Outline.XMarkIcon className="icon-sm" />
+        </Button.Shrink>
+      </Button.Naked>
+    </h1>
+  }
+
   export function Test() {
     const open = useBooleanHandle(false)
 
     return <div className="p-1">
       {open.current &&
         <Dialog close={open.disable}>
-          <DialogTitle close={open.disable}>
+          <Dialog.Title close={open.disable}>
             Hello world
-          </DialogTitle>
+          </Dialog.Title>
           Hello world
           <div className="h-2" />
           <div className="flex items-center gap-2">
