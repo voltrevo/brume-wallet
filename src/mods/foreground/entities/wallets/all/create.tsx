@@ -2,6 +2,7 @@ import { Colors } from "@/libs/colors/colors";
 import { Button } from "@/libs/components/button";
 import { Dialog } from "@/libs/components/dialog/dialog";
 import { Input } from "@/libs/components/input";
+import { Textarea } from "@/libs/components/textarea";
 import { Emojis } from "@/libs/emojis/emojis";
 import { Ethereum } from "@/libs/ethereum/ethereum";
 import { Outline } from "@/libs/icons/icons";
@@ -107,7 +108,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     </div>
 
   const KeyInput =
-    <textarea className="p-xmd w-full resize-none rounded-xl bg-transparent outline-none border border-contrast focus:border-opposite"
+    <Textarea.Contrast className="w-full resize-none"
       placeholder="Enter your private key"
       value={key} onChange={onKeyChange}
       rows={4} />
@@ -134,7 +135,7 @@ export function WalletCreatorDialog(props: CloseProps) {
     </Dialog.Title>
     <div className="h-2" />
     {NameInput}
-    <div className="h-2" />
+    <div className="h-4" />
     {KeyInput}
     <div className="h-2" />
     {Info}
