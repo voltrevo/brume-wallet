@@ -24,7 +24,7 @@ export default function Popup() {
       .then(r => r.unwrap().ignore())
   }, [background])
 
-  return <main className="p-safe h-full w-full">
+  return <main id="main" className="p-safe h-full w-full">
     <Overlay>
       <UserProvider>
         <Router />
@@ -86,14 +86,14 @@ export function TransactPage() {
         </div>}
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
-      <Button.Contrast className="grow p-md hovered-or-active:scale-105 transition"
+      <Button.Contrast className="grow p-md hovered-or-clicked:scale-105 transition"
         onClick={onReject}>
         <Button.Shrink>
           <Outline.XMarkIcon className="icon-sm" />
           No, reject it
         </Button.Shrink>
       </Button.Contrast>
-      <Button.Gradient className="grow p-md hovered-or-active:scale-105 transition"
+      <Button.Gradient className="grow p-md hovered-or-clicked:scale-105 transition"
         onClick={onApprove}
         colorIndex={5}>
         <Button.Shrink>
@@ -140,14 +140,14 @@ export function SwitchPage() {
       </div>
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
-      <Button.Contrast className="grow p-md hovered-or-active:scale-105 transition"
+      <Button.Contrast className="grow p-md hovered-or-clicked:scale-105 transition"
         onClick={onReject}>
         <Button.Shrink>
           <Outline.XMarkIcon className="icon-sm" />
           No, reject it
         </Button.Shrink>
       </Button.Contrast>
-      <Button.Gradient className="grow p-md hovered-or-active:scale-105 transition"
+      <Button.Gradient className="grow p-md hovered-or-clicked:scale-105 transition"
         onClick={onApprove}
         colorIndex={5}>
         <Button.Shrink>
@@ -205,14 +205,14 @@ export function PersonalSignPage() {
       </div>
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
-      <Button.Contrast className="grow p-md hovered-or-active:scale-105 transition"
+      <Button.Contrast className="grow p-md hovered-or-clicked:scale-105 transition"
         onClick={onReject}>
         <Button.Shrink>
           <Outline.XMarkIcon className="icon-sm" />
           No, reject it
         </Button.Shrink>
       </Button.Contrast>
-      <Button.Gradient className="grow p-md hovered-or-active:scale-105 transition"
+      <Button.Gradient className="grow p-md hovered-or-clicked:scale-105 transition"
         onClick={onApprove}
         colorIndex={5}>
         <Button.Shrink>
@@ -270,14 +270,14 @@ export function TypedSignPage() {
       </div>
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
-      <Button.Contrast className="grow p-md hovered-or-active:scale-105 transition"
+      <Button.Contrast className="grow p-md hovered-or-clicked:scale-105 transition"
         onClick={onReject}>
         <Button.Shrink>
           <Outline.XMarkIcon className="icon-sm" />
           No, reject it
         </Button.Shrink>
       </Button.Contrast>
-      <Button.Gradient className="grow p-md hovered-or-active:scale-105 transition"
+      <Button.Gradient className="grow p-md hovered-or-clicked:scale-105 transition"
         onClick={onApprove}
         colorIndex={5}>
         <Button.Shrink>
@@ -312,30 +312,30 @@ export function WalletAndChainSelectPage() {
   const Body =
     <PageBody>
       <div className="flex flex-wrap items-center gap-1">
-        <Button.Contrast className="p-sm hovered-or-active:scale-105 transition"
+        <Button.Bordered className="p-sm hovered-or-clicked:scale-105 transition"
           aria-selected={chain === 1}
           onClick={() => setChain(1)}>
           <Button.Shrink>
             <Outline.CubeIcon className="icon-xs" />
             Ethereum
           </Button.Shrink>
-        </Button.Contrast>
-        <Button.Contrast className="p-sm hovered-or-active:scale-105 transition"
+        </Button.Bordered>
+        <Button.Bordered className="p-sm hovered-or-clicked:scale-105 transition"
           aria-selected={chain === 137}
           onClick={() => setChain(137)}>
           <Button.Shrink>
             <Outline.CubeIcon className="icon-xs" />
             Polygon
           </Button.Shrink>
-        </Button.Contrast>
-        <Button.Contrast className="p-sm hovered-or-active:scale-105 transition"
+        </Button.Bordered>
+        <Button.Bordered className="p-sm hovered-or-clicked:scale-105 transition"
           aria-selected={chain === 5}
           onClick={() => setChain(5)}>
           <Button.Shrink>
             <Outline.CubeIcon className="icon-xs" />
             Goerli
           </Button.Shrink>
-        </Button.Contrast>
+        </Button.Bordered>
       </div>
       <div className="h-4" />
       <ClickableWalletGrid
@@ -346,10 +346,10 @@ export function WalletAndChainSelectPage() {
 
   const Header =
     <PageHeader title="Choose a wallet">
-      <button className="group icon-xl flex justify-center items-center"
+      <Button.Naked className="icon-xl hovered-or-clicked:scale-105 transition"
         onClick={creator.enable}>
         <Outline.PlusIcon className="icon-sm" />
-      </button>
+      </Button.Naked>
     </PageHeader>
 
   return <Page>
@@ -376,7 +376,7 @@ export function DonePage() {
       </div>
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
-      <Button.Opposite className="grow p-md hovered-or-active:scale-105 transition"
+      <Button.Opposite className="grow p-md hovered-or-clicked:scale-105 transition"
         onClick={onDone}>
         <Button.Shrink>
           <Outline.HomeIcon className="icon-xs" />

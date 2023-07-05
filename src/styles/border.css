@@ -10,19 +10,14 @@
     @apply dark:border-white;
   }
 
+  .border-low-contrast {
+    @apply border-black border-opacity-5;
+    @apply dark:border-white dark:border-opacity-5;
+  }
+
   .border-contrast {
     @apply border-black border-opacity-10;
-    @apply dark:border-white border-opacity-10;
-  }
-
-  .border-primary {
-    @apply border-violet-400;
-    @apply dark:border-b-violet-400;
-  }
-
-  .border-secondary {
-    @apply border-violet-500;
-    @apply dark:border-b-violet-300;
+    @apply dark:border-white dark:border-opacity-10;
   }
   
 }

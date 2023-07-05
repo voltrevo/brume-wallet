@@ -1,6 +1,7 @@
 import { Colors } from "@/libs/colors/colors";
 import { Button } from "@/libs/components/button";
 import { Dialog } from "@/libs/components/dialog/dialog";
+import { Input } from "@/libs/components/input";
 import { Emojis } from "@/libs/emojis/emojis";
 import { Ethereum } from "@/libs/ethereum/ethereum";
 import { Outline } from "@/libs/icons/icons";
@@ -94,13 +95,13 @@ export function WalletCreatorDialog(props: CloseProps) {
   }, [uuid, name, color, emoji, ethersWallet, background, wallets.mutate, close])
 
   const NameInput =
-    <div className="flex items-center gap-2">
+    <div className="flex items-stretch gap-2">
       <div className="shrink-0">
         <WalletAvatar className="icon-5xl text-2xl"
           colorIndex={color}
           emoji={emoji} />
       </div>
-      <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
+      <Input.Contrast className="w-full"
         placeholder="Enter a name"
         value={name} onChange={onNameChange} />
     </div>

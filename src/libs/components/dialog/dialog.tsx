@@ -16,7 +16,7 @@ export function Dialog(props: ChildrenProps & CloseProps) {
   const onEscape = useKeyboardEscape(close)
 
   return <Portal type="div">
-    <dialog open>
+    <dialog open className="fixed inset-0 z-10">
       <div className="p-safe fixed inset-0 z-10 flex flex-col bg-backdrop animate-opacity"
         onMouseDown={onClose}
         onClick={Events.keep}>
@@ -46,7 +46,7 @@ export namespace Dialog {
         {children}
       </div>
       <div className="grow" />
-      <Button.Naked className="hovered-or-active:scale-105 transition"
+      <Button.Naked className="icon-xl hovered-or-clicked:scale-105 transition"
         onClick={close}>
         <Button.Shrink>
           <Outline.XMarkIcon className="icon-sm" />
@@ -67,12 +67,12 @@ export namespace Dialog {
           Hello world
           <div className="h-2" />
           <div className="flex items-center gap-2">
-            <Button.Contrast className="w-full p-md"
+            <Button.Naked className="w-full p-md"
               onClick={open.disable}>
               <Button.Shrink>
                 Click me
               </Button.Shrink>
-            </Button.Contrast>
+            </Button.Naked>
             <Button.Opposite className="w-full p-md"
               onClick={open.disable}>
               <Button.Shrink>

@@ -6,7 +6,7 @@ import { Naked } from "./naked"
 export function Opposite(props: ButtonProps) {
   const { className, children, ...button } = props
 
-  return <Naked className={`text-opposite hovered-or-active-or-selected:text-default border border-opposite bg-opposite hovered-or-active-or-selected:bg-transparent transition ${className}`}
+  return <Naked className={`text-opposite hovered-or-clicked-or-selected:text-default border border-opposite bg-opposite hovered-or-clicked-or-selected:bg-transparent transition ${className}`}
     {...button}>
     {children}
   </Naked>

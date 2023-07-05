@@ -1,5 +1,6 @@
 import { Button } from "@/libs/components/button";
 import { Dialog } from "@/libs/components/dialog/dialog";
+import { Input } from "@/libs/components/input";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
@@ -32,7 +33,7 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
       Recipient
     </div>
     <div className="h-2" />
-    <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
+    <Input.Contrast className="w-full"
       value={recipientInput}
       placeholder="0x..."
       onChange={onRecipientInputChange} />
@@ -52,7 +53,7 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
       Value (ETH)
     </div>
     <div className="h-2" />
-    <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
+    <Input.Contrast className="w-full"
       value={valueInput}
       placeholder="1.0"
       onChange={onValueInputChange} />

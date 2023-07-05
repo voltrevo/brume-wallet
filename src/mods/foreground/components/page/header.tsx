@@ -8,13 +8,14 @@ export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps
   const { title, children, back } = props
 
   return <div className="p-xmd flex items-center">
-    {back &&
-      <Button.Naked className="mr-2 hovered-or-active:scale-105 transition"
+    {back && <div className="mr-2">
+      <Button.Naked className="icon-xl hovered-or-clicked:scale-105 transition"
         onClick={back}>
         <Button.Shrink>
           <Outline.ChevronLeftIcon className="icon-sm" />
         </Button.Shrink>
-      </Button.Naked>}
+      </Button.Naked>
+    </div>}
     <div className="text-2xl font-medium">
       {title}
     </div>

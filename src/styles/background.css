@@ -25,14 +25,9 @@
     @apply dark:bg-white dark:bg-opacity-5;
   }
 
-  .bg-primary {
-    @apply bg-violet-400;
-    @apply dark:bg-violet-400;
-  }
-
-  .bg-secondary {
-    @apply bg-violet-500;
-    @apply dark:bg-violet-300;
+  .bg-lowest-contrast {
+    @apply bg-black bg-opacity-[0.025];
+    @apply dark:bg-white dark:bg-opacity-[0.025];
   }
 
   .bg-backdrop {

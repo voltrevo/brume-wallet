@@ -1,3 +1,4 @@
+export * from "./bordered"
 export * from "./contrast"
 export * from "./gradient"
 export * from "./naked"

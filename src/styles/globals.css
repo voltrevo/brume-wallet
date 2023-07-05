@@ -17,6 +17,14 @@ body,
   height: 100%;
 }
 
+body {
+  overflow-y: scroll;
+}
+
 #__next {
   @apply text-base text-default bg-paper;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
 }

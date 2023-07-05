@@ -107,7 +107,7 @@ function WalletDataPage() {
   const Apps =
     <div className="p-xmd flex items-center justify-center flex-wrap gap-12">
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-active:scale-105 transition-transform`}
+        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked:scale-105 transition-transform`}
           onClick={mainnetSendDialog.enable}>
           <Outline.PaperAirplaneIcon className="icon-md" />
         </button>
@@ -116,7 +116,7 @@ function WalletDataPage() {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-active:scale-105 transition-transform`}>
+        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked:scale-105 transition-transform`}>
           <Outline.QrCodeIcon className="icon-md" />
         </button>
         <div className="">
@@ -124,7 +124,7 @@ function WalletDataPage() {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-active:scale-105 transition-transform`}>
+        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked:scale-105 transition-transform`}>
           <Outline.ArrowsRightLeftIcon className="icon-md" />
         </button>
         <div className="">

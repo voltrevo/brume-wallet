@@ -1,6 +1,7 @@
 import { Colors } from "@/libs/colors/colors";
 import { Button } from "@/libs/components/button";
 import { Dialog } from "@/libs/components/dialog/dialog";
+import { Input } from "@/libs/components/input";
 import { Emojis } from "@/libs/emojis/emojis";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
@@ -64,27 +65,27 @@ export function UserCreateDialog(props: CloseProps) {
   }, [uuid, name, color, emoji, password, background, users.mutate, close])
 
   const NameInput =
-    <div className="flex items-center gap-2">
+    <div className="flex items-stretch gap-2">
       <div className="shrink-0">
         <UserAvatar className="icon-5xl text-2xl"
           colorIndex={color}
           name={name} />
       </div>
-      <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
-        placeholder="Name"
+      <Input.Contrast className="w-full"
+        placeholder="Enter a name"
         value={name} onChange={onNameChange} />
     </div>
 
   const PasswordInput =
-    <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
+    <Input.Contrast className="w-full"
       type="password"
-      placeholder="Password"
+      placeholder="Enter a password"
       value={password} onChange={onPasswordChange} />
 
   const PasswordInput2 =
-    <input className="p-xmd w-full rounded-xl outline-none bg-transparent border border-contrast focus:border-opposite"
+    <Input.Contrast className="w-full"
       type="password"
-      placeholder="Confirm password"
+      placeholder="Confirm the password"
       value={password2} onChange={onPassword2Change} />
 
   const DoneButton =
@@ -104,7 +105,7 @@ export function UserCreateDialog(props: CloseProps) {
     </Dialog.Title>
     <div className="h-2" />
     {NameInput}
-    <div className="h-2" />
+    <div className="h-4" />
     {PasswordInput}
     <div className="h-2" />
     {PasswordInput2}
