@@ -1,8 +1,8 @@
+import { Portal } from "../../../pages/components/portal/portal"
 import { Outline } from "../icons/icons"
 import { Events, useKeyboardEscape, useMouse } from "../react/events"
 import { ChildrenProps } from "../react/props/children"
 import { CloseProps } from "../react/props/close"
-import { Modal } from "./modal"
 
 export function DialogTitle(props: ChildrenProps & CloseProps) {
   const { children, close } = props
@@ -28,7 +28,7 @@ export function Dialog(props: ChildrenProps & CloseProps) {
 
   const onEscape = useKeyboardEscape(close)
 
-  return <Modal type="div">
+  return <Portal type="div">
     <div className="p-safe fixed inset-0 z-10 flex flex-col bg-backdrop animate-opacity"
       onMouseDown={onClose}
       onClick={Events.keep}>
@@ -44,5 +44,5 @@ export function Dialog(props: ChildrenProps & CloseProps) {
       </div>
       <div className="hidden md:block grow" />
     </div>
-  </Modal>
+  </Portal>
 }

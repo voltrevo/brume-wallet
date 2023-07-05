@@ -3,34 +3,33 @@ import { ChildrenProps } from "@/libs/react/props/children"
 import { ClassNameProps } from "@/libs/react/props/className"
 import { ButtonProps } from "@/libs/react/props/html"
 import { OptionalIconProps } from "@/libs/react/props/icon"
-import { NakedButton } from "../naked"
 
 export default function Page() {
   return <div className="p-1">
-    <NakedButtonChip>
-      <InnerButtonChip icon={Outline.GlobeAltIcon}>
+    <NakedChip>
+      <InnerChip icon={Outline.GlobeAltIcon}>
         Hello world
-      </InnerButtonChip>
-    </NakedButtonChip>
+      </InnerChip>
+    </NakedChip>
     <div className="h-1" />
-    <NakedButtonChip>
-      <InnerButtonChip>
+    <NakedChip>
+      <InnerChip>
         Hello world
-      </InnerButtonChip>
-    </NakedButtonChip>
+      </InnerChip>
+    </NakedChip>
   </div>
 }
 
-export function NakedButtonChip(props: ButtonProps & ClassNameProps) {
+export function NakedChip(props: ButtonProps & ClassNameProps) {
   const { children, className, ...button } = props
 
-  return <NakedButton className={`p-sm rounded-full ${className}`}
+  return <button className={`group disabled:opacity-50 p-sm rounded-full ${className}`}
     {...button}>
     {children}
-  </NakedButton>
+  </button>
 }
 
-export function InnerButtonChip(props: OptionalIconProps & ChildrenProps & ClassNameProps) {
+export function InnerChip(props: OptionalIconProps & ChildrenProps & ClassNameProps) {
   const { icon: Icon, children, className } = props
 
   return <div className={`flex justify-center items-center gap-2 group-enabled:group-active:scale-90 transition-transform ${className}`}>

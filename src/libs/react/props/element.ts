@@ -1,7 +1,9 @@
-export interface ElementTypeProps {
-  type: string
+import { Optional } from "@hazae41/option"
+
+export type ElementProps<Key extends string = "element"> = {
+  [x in Key]: HTMLElement;
 }
 
-export interface OptionalElementTypeProps {
-  type?: string
+export type OptionalElementProps<Key extends string = "element"> = {
+  [x in Key]?: Optional<HTMLElement>;
 }

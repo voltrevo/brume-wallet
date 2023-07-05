@@ -12,12 +12,12 @@ import { Wallet } from "@/mods/foreground/entities/wallets/data";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
-import { ContrastButtonChip } from "pages/components/buttons/chips/contrast";
+import { ContrastChip } from "pages/components/buttons/chips/contrast";
 import { ContrastButton } from "pages/components/buttons/contrast";
 import { GradientButton } from "pages/components/buttons/gradient";
 import { InnerButton } from "pages/components/buttons/naked";
 import { useCallback, useEffect, useState } from "react";
-import { InnerButtonChip } from "./components/buttons/chips/naked";
+import { InnerChip } from "./components/buttons/chips/naked";
 
 export default function Popup() {
   const background = useBackground()
@@ -312,27 +312,27 @@ export function WalletAndChainSelectPage() {
   const Body =
     <PageBody>
       <div className="flex flex-wrap items-center gap-1">
-        <ContrastButtonChip
+        <ContrastChip
           aria-selected={chain === 1}
           onClick={() => setChain(1)}>
-          <InnerButtonChip icon={Outline.CubeIcon}>
+          <InnerChip icon={Outline.CubeIcon}>
             Ethereum
-          </InnerButtonChip>
-        </ContrastButtonChip>
-        <ContrastButtonChip
+          </InnerChip>
+        </ContrastChip>
+        <ContrastChip
           aria-selected={chain === 137}
           onClick={() => setChain(137)}>
-          <InnerButtonChip icon={Outline.CubeIcon}>
+          <InnerChip icon={Outline.CubeIcon}>
             Polygon
-          </InnerButtonChip>
-        </ContrastButtonChip>
-        <ContrastButtonChip
+          </InnerChip>
+        </ContrastChip>
+        <ContrastChip
           aria-selected={chain === 5}
           onClick={() => setChain(5)}>
-          <InnerButtonChip icon={Outline.CubeIcon}>
+          <InnerChip icon={Outline.CubeIcon}>
             Goerli
-          </InnerButtonChip>
-        </ContrastButtonChip>
+          </InnerChip>
+        </ContrastChip>
       </div>
       <div className="h-4" />
       <ClickableWalletGrid

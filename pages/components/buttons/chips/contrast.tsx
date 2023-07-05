@@ -1,30 +1,30 @@
 import { Outline } from "@/libs/icons/icons"
 import { ClassNameProps } from "@/libs/react/props/className"
 import { ButtonProps } from "@/libs/react/props/html"
-import { InnerButtonChip, NakedButtonChip } from "./naked"
+import { InnerChip, NakedChip } from "./naked"
 
 export default function Page() {
   return <div className="p-1">
-    <ContrastButtonChip>
-      <InnerButtonChip icon={Outline.GlobeAltIcon}>
+    <ContrastChip>
+      <InnerChip icon={Outline.GlobeAltIcon}>
         Hello world
-      </InnerButtonChip>
-    </ContrastButtonChip>
+      </InnerChip>
+    </ContrastChip>
     <div className="h-1" />
-    <ContrastButtonChip>
-      <InnerButtonChip>
+    <ContrastChip>
+      <InnerChip>
         Hello world
-      </InnerButtonChip>
-    </ContrastButtonChip>
+      </InnerChip>
+    </ContrastChip>
   </div>
 }
 
-export function ContrastButtonChip(props: ButtonProps & ClassNameProps) {
+export function ContrastChip(props: ButtonProps & ClassNameProps) {
   const { children, className, ...others } = props
 
-  return <NakedButtonChip className={`text-contrast border border-contrast hovered-or-active-or-selected:text-default hovered-or-active-or-selected:border-opposite transition-colors ${className}`}
+  return <NakedChip className={`text-contrast border border-contrast hovered-or-active-or-selected:text-default hovered-or-active-or-selected:border-opposite transition-colors ${className}`}
     {...others}>
     {children}
-  </NakedButtonChip>
+  </NakedChip>
 }
 

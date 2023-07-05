@@ -23,7 +23,7 @@ export default function Page() {
 export function NakedButton(props: ButtonProps) {
   const { className, children, ...button } = props
 
-  return <button className={`group disabled:opacity-50 ${className}`}
+  return <button className={`group disabled:opacity-50 rounded-full p-md ${className}`}
     {...button}>
     {children}
   </button>

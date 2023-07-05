@@ -26,7 +26,7 @@ export function GradientButton(props: ButtonProps & ColorIndexProps) {
   const color1 = Colors.get(colorIndex)
   const color2 = Colors.get(colorIndex + 1)
 
-  return <NakedButton className={`rounded-xl p-md text-opposite hovered-or-active-or-selected:text-${color1} border border-${color1} bg-gradient-to-r from-${color1} to-${color2} hovered-or-active-or-selected:bg-none transition-colors ${className}`}
+  return <NakedButton className={`text-opposite hovered-or-active-or-selected:text-${color1} border border-${color1} bg-gradient-to-r from-${color1} to-${color2} hovered-or-active-or-selected:bg-none transition-colors ${className}`}
     {...button}>
     {children}
   </NakedButton>
