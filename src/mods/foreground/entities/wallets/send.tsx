@@ -70,7 +70,7 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
         return new Err(new Error(`Invalid gas price`))
 
       const gas = await handle.background.tryRequest<string>({
-        method: "brume_call_ethereum",
+        method: "brume_eth_fetch",
         params: [handle.wallet.uuid, handle.chain.chainId, {
           method: "eth_estimateGas",
           params: [{
@@ -85,7 +85,7 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
       }).then(r => r.throw(t).throw(t))
 
       const txHash = await handle.background.tryRequest<string>({
-        method: "brume_call_ethereum",
+        method: "brume_eth_run",
         params: [handle.wallet.uuid, handle.chain.chainId, {
           method: "eth_sendTransaction",
           params: [{

@@ -382,7 +382,7 @@ export class Global {
     })
   }
 
-  async getEthereumBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
+  async makeEthereumBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
     return await Result.unthrow(async t => {
       const [address, block] = (request as RpcParamfulRequestPreinit<[string, string]>).params
 
@@ -412,7 +412,7 @@ export class Global {
     })
   }
 
-  async getEthereumPairPrice(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<string, FixedInit, Error>, Error>> {
+  async makeEthereumPairPrice(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<string, FixedInit, Error>, Error>> {
     return await Result.unthrow(async t => {
       const [address] = (request as RpcParamfulRequestPreinit<[string]>).params
 
@@ -639,10 +639,12 @@ export class Global {
       return await this.brume_get_user(request)
     if (request.method === "brume_subscribe")
       return await this.brume_subscribe(channel, request)
-    if (request.method === "brume_call_ethereum")
-      return await this.brume_call_ethereum(request)
-    if (request.method === "brume_index_ethereum")
-      return await this.brume_index_ethereum(request)
+    if (request.method === "brume_eth_fetch")
+      return await this.brume_eth_fetch(request)
+    if (request.method === "brume_eth_index")
+      return await this.brume_eth_index(request)
+    if (request.method === "brume_eth_run")
+      return await this.brume_eth_run(request)
     if (request.method === "brume_log")
       return await this.brume_log(request)
     if (request.method === "brume_hello")
@@ -856,21 +858,19 @@ export class Global {
     })
   }
 
-  async getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+  async makeEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
     return new Ok(await this.make(getEthereumUnknown(ethereum, request, storage)))
   }
 
-  async getEthereum(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<any, FixedInit, Error>, Error>> {
-    return await Result.unthrow(async t => {
-      if (request.method === "eth_getBalance")
-        return await this.getEthereumBalance(ethereum, request, storage)
-      if (request.method === "eth_getPairPrice")
-        return await this.getEthereumPairPrice(ethereum, request, storage)
-      return await this.getEthereumUnknown(ethereum, request, storage)
-    })
+  async routeAndMakeEthereum(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<any, FixedInit, Error>, Error>> {
+    if (request.method === "eth_getBalance")
+      return await this.makeEthereumBalance(ethereum, request, storage)
+    if (request.method === "eth_getPairPrice")
+      return await this.makeEthereumPairPrice(ethereum, request, storage)
+    return await this.makeEthereumUnknown(ethereum, request, storage)
   }
 
-  async brume_index_ethereum(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_eth_index(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [walletId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
 
@@ -884,7 +884,7 @@ export class Global {
 
       const ethereum = { user, origin: "foreground", wallet, chain, brumes }
 
-      const query = await this.getEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
+      const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
       await query.settings.indexer?.(query.state, { core: this.core })
 
@@ -892,7 +892,35 @@ export class Global {
     })
   }
 
-  async brume_call_ethereum(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_eth_fetch(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+    return await Result.unthrow(async t => {
+      const [walletId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
+
+      const { user, storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
+
+      const walletQuery = await this.make(getWallet(walletId, storage))
+      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
+      const chain = Option.wrap(chains[chainId]).ok().throw(t)
+
+      const brumes = await this.#getOrCreateEthereumBrumes(wallet)
+
+      const ethereum = { user, origin: "foreground", wallet, chain, brumes }
+
+      const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
+
+      const result = await query.fetch().then(r => r.ignore())
+
+      result.inspectSync(r => r.throw(t))
+
+      const stored = this.core.raw.get(query.cacheKey)?.inner
+      const unstored = await this.core.unstore<any, unknown, Error>(stored, { key: query.cacheKey })
+      const fetched = Option.wrap(unstored.current).ok().throw(t)
+
+      return fetched
+    })
+  }
+
+  async brume_eth_run(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [walletId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
 
@@ -909,17 +937,7 @@ export class Global {
       if (subrequest.method === "eth_sendTransaction")
         return await this.brume_eth_sendTransaction(ethereum, subrequest)
 
-      const query = await this.getEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
-
-      const result = await query.fetch().then(r => r.ignore())
-
-      result.inspectSync(r => r.throw(t))
-
-      const stored = this.core.raw.get(query.cacheKey)?.inner
-      const unstored = await this.core.unstore<any, unknown, Error>(stored, { key: query.cacheKey })
-      const fetched = Option.wrap(unstored.current).ok().throw(t)
-
-      return fetched
+      return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
     })
   }
 

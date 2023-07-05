@@ -117,17 +117,21 @@ export function useEthereumContext(wallet: Wallet, chain: EthereumChain): Ethere
 export async function tryFetch<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext): Promise<Result<Fetched<T, Error>, FetchError>> {
   const { background, wallet, chain } = ethereum
 
-  return await background.tryRequest<T>({
-    method: "brume_call_ethereum",
+  const response = await background.tryRequest<T>({
+    method: "brume_eth_fetch",
     params: [wallet.uuid, chain.chainId, request]
-  }).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
+  })
+
+  return response
+    .mapSync(x => Fetched.rewrap(x))
+    .mapErrSync(FetchError.from)
 }
 
 export async function tryIndex<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext): Promise<Result<RpcResponse<T>, Error>> {
   const { background, wallet, chain } = ethereum
 
   return await background.tryRequest<T>({
-    method: "brume_index_ethereum",
+    method: "brume_eth_index",
     params: [wallet.uuid, chain.chainId, request]
   })
 }
