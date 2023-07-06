@@ -1,11 +1,25 @@
 import { Catched, Err, Ok, Result } from "@hazae41/result"
 
-export async function tryFetchAsJson<T>(url: string): Promise<Result<T, Error>> {
+export async function tryFetch(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Result<Response, Error>> {
   try {
-    const res = await fetch(url)
+    const res = await fetch(input, init)
 
     if (!res.ok)
       return new Err(new Error(await res.text()))
+
+    return new Ok(res)
+  } catch (e: unknown) {
+    return new Err(Catched.from(e))
+  }
+}
+
+export async function tryFetchAsJson<T>(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Result<T, Error>> {
+  try {
+    const res = await fetch(input, init)
+
+    if (!res.ok)
+      return new Err(new Error(await res.text()))
+
     return new Ok(await res.json() as T)
   } catch (e: unknown) {
     return new Err(Catched.from(e))

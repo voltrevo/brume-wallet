@@ -104,20 +104,39 @@ export function WebsiteOverlay(props: ChildrenProps) {
   </>
 }
 
+async function tryCheckDevExtensionUpdate(self: chrome.management.ExtensionInfo): Promise<Result<boolean, Error>> {
+  return await Result.unthrow(async t => {
+    const main = await tryFetchAsJson<{
+      version: string
+    }>(MAIN_PACKAGE_URL).then(r => r.throw(t))
+
+    return new Ok(Semver.isGreater(main.version, self.version))
+  })
+}
+
+async function tryCheckFirefoxSignedExtensionUpdate(self: chrome.management.ExtensionInfo): Promise<Result<boolean, Error>> {
+  return await Result.unthrow(async t => {
+    const main = await tryFetchAsJson<{
+      versions: { "firefox.xpi": string }
+    }>(MAIN_PACKAGE_URL).then(r => r.throw(t))
+
+    return new Ok(Semver.isGreater(main.versions["firefox.xpi"], self.version))
+  })
+}
+
 async function tryCheckExtensionUpdate(): Promise<Result<boolean, Error>> {
   return await Result.unthrow(async t => {
     const self = await tryBrowser(() => {
       return browser.management.getSelf()
     }).then(r => r.throw(t))
 
-    if (self.installType !== "development")
-      return new Ok(false)
+    if (self.installType === "development")
+      return await tryCheckDevExtensionUpdate(self)
 
-    const main = await tryFetchAsJson<{
-      version: string
-    }>(MAIN_PACKAGE_URL).then(r => r.throw(t))
+    if (self.id === "wallet@brume.money")
+      return await tryCheckFirefoxSignedExtensionUpdate(self)
 
-    return new Ok(Semver.isGreater(main.version, self.version))
+    return new Ok(false)
   })
 }
 

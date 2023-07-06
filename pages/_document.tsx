@@ -1,5 +1,4 @@
 import { Head, Html, Main, NextScript } from 'next/document'
-import Script from "next/script"
 
 export default function Document() {
   return (
@@ -16,7 +15,6 @@ export default function Document() {
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/square.png" />
         <link rel="apple-touch-startup-image" href="/round.png" />
-        <Script id="themer" strategy="beforeInteractive" src="/themer.js" />
       </Head>
       <body>
         <Main />
