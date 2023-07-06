@@ -1,13 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 import { Fixed, FixedInit } from "@/libs/bigints/bigints";
-import { Colors } from "@/libs/colors/colors";
+import { Gradients } from "@/libs/colors/colors";
 import { chains, pairsByAddress, pairsByName } from "@/libs/ethereum/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Option, Optional } from "@hazae41/option";
 import { Result } from "@hazae41/result";
-import { useRouter } from "next/router";
 import { useCallback, useMemo } from "react";
 import { PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
@@ -45,22 +44,19 @@ export function useCompactDisplayUsd(option: Optional<Result<FixedInit, Error>>)
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
       return Number(Fixed.from(fixed).move(2).toString()).toLocaleString(undefined, { style: "currency", currency: "USD", notation: "compact" })
-    }).mapErrSync(() => "Error").inner).unwrapOr("...")
+    }).mapErrSync(() => "Error").inner).unwrapOr("??")
   }, [option])
 }
 
 function WalletDataPage() {
   const wallet = useWalletData()
 
-  const router = useRouter()
-
   const mainnet = useEthereumContext(wallet, chains[1])
   const polygon = useEthereumContext(wallet, chains[137])
   const goerli = useEthereumContext(wallet, chains[5])
   const sepolia = useEthereumContext(wallet, chains[11155111])
 
-  const color = Colors.get(wallet.color)
-  const color2 = Colors.get(wallet.color + 1)
+  const [color, color2] = Gradients.get(wallet.color)
 
   const wethUsdPriceQuery = usePairPrice(mainnet, pairsByAddress[pairsByName.WETH_USDT])
   const maticWethPriceQuery = usePairPrice(mainnet, pairsByAddress[pairsByName.MATIC_WETH])
