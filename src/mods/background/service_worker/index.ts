@@ -1,5 +1,6 @@
 import { FixedInit } from "@/libs/bigints/bigints"
 import { browser, tryBrowser, tryBrowserSync } from "@/libs/browser/browser"
+import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { chains, pairsByAddress } from "@/libs/ethereum/chain"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcParamfulRequestInit, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
@@ -78,7 +79,7 @@ export interface PasswordData {
 
 export interface PopupData {
   window: chrome.windows.Window,
-  channel: Channel
+  channel: Port
 }
 
 export class UserRejectionError extends Error {
@@ -100,8 +101,8 @@ export class Global {
   readonly core = new Core({})
 
   readonly events = new SuperEventTarget<{
-    "hello": [Channel, Future<Result<void, Error>>]
-    "data": [Channel, RpcRequestPreinit<unknown>]
+    "hello": [Port, Future<Result<void, Error>>]
+    "data": [Port, RpcRequestPreinit<unknown>]
   }>()
 
   readonly popupMutex = new Mutex(undefined)
@@ -180,9 +181,9 @@ export class Global {
   }
 
   async tryWaitPopupHello(popup: chrome.windows.Window) {
-    const request = new Future<Result<Channel, Error>>()
+    const request = new Future<Result<Port, Error>>()
 
-    const onRequest = ([channel, response]: [Channel, Future<Result<void, Error>>]) => {
+    const onRequest = ([channel, response]: [Port, Future<Result<void, Error>>]) => {
       request.resolve(new Ok(channel))
       response.resolve(Ok.void())
       return Ok.void()
@@ -251,7 +252,7 @@ export class Global {
   async tryWaitPopupData(popup: PopupData, method: string) {
     const future = new Future<Result<RpcRequestPreinit<unknown>, Error>>()
 
-    const onData = ([channel, request]: [Channel, RpcRequestPreinit<unknown>]) => {
+    const onData = ([channel, request]: [Port, RpcRequestPreinit<unknown>]) => {
       if (channel.uuid !== popup.channel.uuid)
         return Ok.void()
       if (request.method !== method)
@@ -317,7 +318,7 @@ export class Global {
     })
   }
 
-  async tryRouteContentScript(script: ExtensionChannel, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<unknown, Error>> {
+  async tryRouteContentScript(script: ExtensionPort, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<unknown, Error>> {
     return Result.unthrow(async t => {
       const origin = script.port.name
 
@@ -586,7 +587,7 @@ export class Global {
     })
   }
 
-  async wallet_switchEthereumChain(ethereum: EthereumContext, script: ExtensionChannel, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
+  async wallet_switchEthereumChain(ethereum: EthereumContext, script: ExtensionPort, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
       const [{ chainId }] = (request as RpcParamfulRequestInit<[{ chainId: string }]>).params
 
@@ -610,7 +611,7 @@ export class Global {
     })
   }
 
-  async tryRouteForeground(channel: Channel, request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
+  async tryRouteForeground(channel: Port, request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
     if (request.method === "brume_ping")
       return new Ok(undefined)
     if (request.method === "brume_getPath")
@@ -620,7 +621,7 @@ export class Global {
     if (request.method === "brume_getUsers")
       return await this.brume_getUsers(request)
     if (request.method === "brume_newUser")
-      return await this.brume_newUser(request)
+      return await this.brume_newUser(channel, request)
     if (request.method === "brume_getUser")
       return await this.brume_getUser(request)
     if (request.method === "brume_setCurrentUser")
@@ -670,7 +671,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_hello(channel: Channel, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_hello(channel: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
       const response = new Future<Result<void, Error>>()
 
@@ -680,7 +681,7 @@ export class Global {
     })
   }
 
-  async brume_data(channel: Channel, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_data(channel: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
       const [subrequest] = (request as RpcParamfulRequestInit<[RpcRequestPreinit<unknown>]>).params
 
@@ -699,7 +700,7 @@ export class Global {
     })
   }
 
-  async brume_newUser(request: RpcRequestPreinit<unknown>): Promise<Result<User[], Error>> {
+  async brume_newUser(channel: Port, request: RpcRequestPreinit<unknown>): Promise<Result<User[], Error>> {
     return await Result.unthrow(async t => {
       const [init] = (request as RpcParamfulRequestInit<[UserInit]>).params
 
@@ -833,14 +834,14 @@ export class Global {
     })
   }
 
-  async brume_subscribe(channel: Channel, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_subscribe(channel: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
       const [cacheKey] = (request as RpcParamfulRequestInit<[string]>).params
 
       const onState = async (event: CustomEvent<State<any, any>>) => {
         const stored = await this.core.store(event.detail, { key: cacheKey })
 
-        channel.tryRequest({
+        channel.trySend({
           method: "brume_update",
           params: [cacheKey, stored]
         }).ignore()
@@ -988,44 +989,6 @@ async function init() {
 
 const inited = init()
 
-export type Channel =
-  | WebsiteChannel
-  | ExtensionChannel
-
-export class WebsiteChannel {
-  readonly uuid = crypto.randomUUID()
-
-  constructor(
-    readonly port: MessagePort
-  ) { }
-
-  tryRequest(request: RpcRequestPreinit<unknown>): Result<void, never> {
-    return new Ok(this.port.postMessage(request))
-  }
-
-  onClose(listener: () => void) {
-    // TODO
-  }
-
-}
-
-export class ExtensionChannel {
-  readonly uuid = crypto.randomUUID()
-
-  constructor(
-    readonly port: chrome.runtime.Port
-  ) { }
-
-  tryRequest(request: RpcRequestPreinit<unknown>): Result<void, Error> {
-    return tryBrowserSync(() => this.port.postMessage(request))
-  }
-
-  onClose(listener: () => void) {
-    this.port.onDisconnect.addListener(listener)
-  }
-
-}
-
 if (IS_WEBSITE) {
 
   const onSkipWaiting = (event: ExtendableMessageEvent) =>
@@ -1034,7 +997,7 @@ if (IS_WEBSITE) {
   const onHelloWorld = async (event: ExtendableMessageEvent) => {
     const port = event.ports[0]
 
-    const channel = new WebsiteChannel(port)
+    const channel = new WebsitePort(port)
 
     port.addEventListener("message", async (event: MessageEvent<RpcRequestInit<unknown> | RpcResponseInit<unknown>>) => {
       if (!("method" in event.data))
@@ -1071,7 +1034,7 @@ if (IS_WEBSITE) {
 if (IS_EXTENSION) {
 
   const onContentScript = (port: chrome.runtime.Port) => {
-    const channel = new ExtensionChannel(port)
+    const channel = new ExtensionPort(port)
 
     port.onMessage.addListener(async (message: {
       request: RpcRequestInit<unknown>
@@ -1093,7 +1056,7 @@ if (IS_EXTENSION) {
   }
 
   const onForeground = (port: chrome.runtime.Port) => {
-    const channel = new ExtensionChannel(port)
+    const channel = new ExtensionPort(port)
 
     port.onMessage.addListener(async (message: RpcRequestInit<unknown> | RpcResponseInit<unknown>) => {
       if (!("method" in message))

@@ -1,9 +1,12 @@
-import { BrowserError, browser, tryBrowser, tryBrowserSync } from "@/libs/browser/browser"
-import { RpcClient, RpcId, RpcRequest, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
+import { browser, tryBrowser } from "@/libs/browser/browser"
+import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
+import { RpcClient, RpcId, RpcParamfulRequestPreinit, RpcRequest, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
+import { Bytes } from "@hazae41/bytes"
 import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
-import { Option } from "@hazae41/option"
+import { Optional } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, Skip, tryLoop } from "@hazae41/piscine"
+import { SuperEventTarget } from "@hazae41/plume"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 
 export type Background =
@@ -20,19 +23,20 @@ export class MessageError extends Error {
 
 }
 
-export interface BackgroundEvents {
-  onMessage: ((request: RpcRequestInit<unknown>) => Promise<Option<Result<unknown, Error>>>)[]
+export interface BackgroundHandler {
+  onRequest?: (request: RpcRequestInit<unknown>) => void
+  onResponse?: (response: RpcResponseInit<unknown>) => void
 }
 
-export class WebsiteClient {
-  readonly client = new RpcClient()
+export class WebsitePortAndClient {
 
   constructor(
-    readonly channel: MessageChannel
+    readonly channel: MessageChannel,
+    readonly client: RpcClient
   ) { }
 
   async tryWait<T>(id: RpcId): Promise<Result<RpcRequest<T>, Error>> {
-    const future = new Future<Result<RpcRequest<T>, Error>>()
+    const future = new Future<Result<RpcRequest<T>, never>>()
 
     const onMessage = (event: MessageEvent<RpcRequestInit<T>>) => {
       const response = RpcRequest.from(event.data)
@@ -42,56 +46,45 @@ export class WebsiteClient {
       future.resolve(new Ok(response))
     }
 
-    const onMessageError = () =>
-      future.resolve(new Err(new MessageError()))
-
     try {
       this.channel.port1.addEventListener("message", onMessage, { passive: true })
-      this.channel.port1.addEventListener("messageerror", onMessageError, { passive: true })
 
       return await future.promise
     } finally {
       this.channel.port1.removeEventListener("message", onMessage)
-      this.channel.port1.removeEventListener("messageerror", onMessageError)
     }
   }
 
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return await Result.unthrow(async t => {
-      const request = this.client.create(init)
+  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, never>> {
+    const request = this.client.create(init)
 
-      const future = new Future<Result<RpcResponse<T>, Error>>()
+    const future = new Future<Result<RpcResponse<T>, never>>()
 
-      const onMessage = (event: MessageEvent<RpcRequestInit<unknown> | RpcResponseInit<T>>) => {
-        if ("method" in event.data)
-          return
+    const onMessage = (event: MessageEvent<RpcRequestInit<unknown> | RpcResponseInit<T>>) => {
+      if ("method" in event.data)
+        return
 
-        const response = RpcResponse.from(event.data)
+      const response = RpcResponse.from(event.data)
 
-        if (response.id !== request.id)
-          return
-        future.resolve(new Ok(response))
-      }
+      if (response.id !== request.id)
+        return
+      future.resolve(new Ok(response))
+    }
 
-      const onMessageError = () =>
-        future.resolve(new Err(new MessageError()))
+    try {
+      this.channel.port1.addEventListener("message", onMessage, { passive: true })
 
-      try {
-        this.channel.port1.addEventListener("message", onMessage, { passive: true })
-        this.channel.port1.addEventListener("messageerror", onMessageError, { passive: true })
-        this.channel.port1.postMessage(request)
+      this.channel.port1.postMessage(request)
 
-        return await future.promise
-      } finally {
-        this.channel.port1.removeEventListener("message", onMessage)
-        this.channel.port1.removeEventListener("messageerror", onMessageError)
-      }
-    })
+      return await future.promise
+    } finally {
+      this.channel.port1.removeEventListener("message", onMessage)
+    }
   }
 }
 
-export function createMessageChannelPool(events: BackgroundEvents) {
-  return new Pool<WebsiteClient, Error>(async (params) => {
+export function createWebsitePortPool(background: WebsiteBackground) {
+  return new Pool<Port, Error>(async (params) => {
     return await Result.unthrow(async t => {
       const { pool, index } = params
 
@@ -100,7 +93,8 @@ export function createMessageChannelPool(events: BackgroundEvents) {
         .then(r => r.throw(t))
 
       const channel = new MessageChannel()
-      const client = new WebsiteClient(channel)
+
+      const client = new WebsitePortAndClient(channel, background.router.client)
 
       channel.port1.start()
       channel.port2.start()
@@ -128,31 +122,24 @@ export function createMessageChannelPool(events: BackgroundEvents) {
         pong = setTimeout(() => void pool.delete(index), 1000)
       }, 1000)
 
-      const onPong = async () => {
+      const onPong = () => {
         clearTimeout(pong)
       }
 
-      const onRequest = async (request: RpcRequestInit<unknown>) => {
-        if (events.onMessage == null)
-          return
-
-        for (const listener of events.onMessage) {
-          const option = await listener(request)
-
-          if (option.isNone())
-            continue
-
-          const response = RpcResponse.rewrap(request.id, option.inner)
-          channel.port1.postMessage(response)
-        }
+      const onRequest = (request: RpcRequestInit<unknown>) => {
+        background.router.onRequest(request)
       }
 
-      const onMessage = async (message: MessageEvent<RpcRequestInit<unknown> | RpcResponseInit<unknown>>) => {
+      const onResponse = (response: RpcResponseInit<unknown>) => {
+        background.router.onResponse(response)
+      }
+
+      const onMessage = (message: MessageEvent<RpcRequestInit<unknown> | RpcResponseInit<unknown>>) => {
         if ("method" in message.data)
-          return await onRequest(message.data)
+          return onRequest(message.data)
         if (message.data.id === "ping")
-          return await onPong()
-        return
+          return onPong()
+        return onResponse(message.data)
       }
 
       channel.port1.addEventListener("message", onMessage)
@@ -165,17 +152,15 @@ export function createMessageChannelPool(events: BackgroundEvents) {
         channel.port2.close()
       }
 
-      return new Ok(new Cleaner(client, onClean))
+      const port = new WebsitePort(channel.port1)
+      return new Ok(new Cleaner(port, onClean))
     })
   }, { capacity: 1 })
 }
 
 export class WebsiteBackground {
-
-  constructor(
-    readonly channels: Pool<WebsiteClient, Error>,
-    readonly events: BackgroundEvents
-  ) { }
+  readonly ports = createWebsitePortPool(this)
+  readonly router = new BackgroundRouter(this.ports)
 
   isWebsite(): this is WebsiteBackground {
     return true
@@ -185,19 +170,24 @@ export class WebsiteBackground {
     return false
   }
 
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return await Result.unthrow(async t => {
-      const client = await this.channels.tryGet(0).then(r => r.throw(t))
-      const response = await client.tryRequest<T>(init).then(r => r.throw(t))
+}
 
-      return new Ok(response)
-    })
+export class ExtensionBackground {
+  readonly channels = createExtensionChannelPool(this)
+  readonly router = new BackgroundRouter(this.channels)
+
+  isWebsite(): false {
+    return false
+  }
+
+  isExtension(): this is ExtensionBackground {
+    return true
   }
 
 }
 
-export function createPortPool(events: BackgroundEvents) {
-  return new Pool<chrome.runtime.Port, Error>(async (params) => {
+export function createExtensionChannelPool(background: ExtensionBackground) {
+  return new Pool<Port, Error>(async (params) => {
     return await Result.unthrow(async t => {
       const { index, pool } = params
 
@@ -214,25 +204,18 @@ export function createPortPool(events: BackgroundEvents) {
         return Ok.void()
       }
 
-      const onRequest = async (request: RpcRequestInit<unknown>) => {
-        if (events.onMessage == null)
-          return
-
-        for (const listener of events.onMessage) {
-          const option = await listener(request)
-
-          if (option.isNone())
-            continue
-
-          const response = RpcResponse.rewrap(request.id, option.inner)
-          port.postMessage(response)
-        }
+      const onRequest = (request: RpcRequestInit<unknown>) => {
+        background.router.onRequest(request)
       }
 
-      const onMessage = async (message: RpcRequestInit<unknown> | RpcResponseInit<unknown>) => {
+      const onResponse = (response: RpcResponseInit<unknown>) => {
+        background.router.onResponse(response)
+      }
+
+      const onMessage = (message: RpcRequestInit<unknown> | RpcResponseInit<unknown>) => {
         if ("method" in message)
-          return await onRequest(message)
-        return
+          return onRequest(message)
+        return onResponse(message)
       }
 
       port.onMessage.addListener(onMessage)
@@ -244,18 +227,36 @@ export function createPortPool(events: BackgroundEvents) {
         port.disconnect()
       }
 
-      return new Ok(new Cleaner(port, onClean))
+      const channel = new ExtensionPort(port)
+      return new Ok(new Cleaner(channel, onClean))
     })
   }, { capacity: 1 })
 }
 
-export class ExtensionBackground {
-  readonly #client = new RpcClient()
+export type Handler =
+  (request: RpcRequestPreinit<unknown>) => Promise<Optional<Result<unknown, Error>>>
+
+export class BackgroundRouter {
+  readonly client = new RpcClient()
+
+  readonly handlers = new Array<Handler>()
+
+  readonly events = new SuperEventTarget<{
+    "response": RpcResponseInit<unknown>
+    "errored": Error
+  }>()
 
   constructor(
-    readonly ports: Pool<chrome.runtime.Port, Error>,
-    readonly events: BackgroundEvents
-  ) { }
+    readonly ports: Pool<Port, Error>
+  ) {
+    ports.events.on("created", async e => {
+      if (e.result.isOk())
+        return Ok.void()
+      return await this.events
+        .tryEmit("errored", e.result.inner)
+        .then(r => r.clear())
+    })
+  }
 
   isWebsite(): false {
     return false
@@ -265,45 +266,133 @@ export class ExtensionBackground {
     return true
   }
 
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return tryLoop(async () => {
-      return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
-        const port = await this.ports.tryGet(0).then(r => r.mapErrSync(Cancel.new).throw(t))
+  async brume_auth_create(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+    return await Result.unthrow(async t => {
+      const [name, displayName, dataBase64] = (request as RpcParamfulRequestPreinit<[string, string, string]>).params
 
-        const request = this.#client.create(init)
+      const credential = await Result.catchAndWrap<any>(async () => {
+        return await navigator.credentials.create({
+          publicKey: {
+            challenge: new Uint8Array([117, 61, 252, 231, 191, 241]),
+            rp: {
+              id: location.hostname,
+              name: "Brume Wallet"
+            },
+            user: {
+              id: Bytes.fromBase64(dataBase64),
+              name: name,
+              displayName: displayName
+            },
+            pubKeyCredParams: [
+              { type: "public-key", alg: -7 },
+              { type: "public-key", alg: -8 },
+              { type: "public-key", alg: -257 }
+            ],
+            authenticatorSelection: {
+              authenticatorAttachment: "platform"
+            }
+          }
+        })
+      }).then(r => r.throw(t))
 
-        const future = new Future<Result<RpcResponse<T>, BrowserError>>()
+      const id = new Uint8Array(credential.rawId)
+      return new Ok(Bytes.toBase64(id))
+    })
+  }
 
-        const onMessage = (message: RpcRequestInit<unknown> | RpcResponseInit<T>) => {
-          if ("method" in message)
-            return
+  async brume_auth_get(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+    return await Result.unthrow(async t => {
+      const [idBase64] = (request as RpcParamfulRequestPreinit<[string]>).params
 
-          const response = RpcResponse.from(message)
+      const credential = await Result.catchAndWrap<any>(async () => {
+        return await navigator.credentials.get({
+          publicKey: {
+            challenge: new Uint8Array([117, 61, 252, 231, 191, 241]),
+            allowCredentials: [{
+              type: "public-key",
+              id: Bytes.fromBase64(idBase64)
+            }],
+          }
+        })
+      }).then(r => r.throw(t))
 
-          if (response.id !== request.id)
-            return
-          future.resolve(new Ok(response))
-        }
+      const data = credential.response.userHandle
+      return new Ok(Bytes.toBase64(data))
+    })
+  }
 
-        const onDisconnect = () => {
-          future.resolve(new Err(new BrowserError(`Port disconnected`)))
-        }
+  async tryRoute(request: RpcRequestInit<unknown>): Promise<Result<unknown, Error>> {
+    if (request.method === "brume_auth_create")
+      return await this.brume_auth_create(request)
+    if (request.method === "brume_auth_get")
+      return await this.brume_auth_get(request)
 
-        tryBrowserSync(() => {
-          port.postMessage(request)
-        }).mapErrSync(Skip.new).throw(t)
+    for (const handler of this.handlers) {
+      const result = await handler(request)
 
-        try {
-          port.onMessage.addListener(onMessage)
-          port.onDisconnect.addListener(onDisconnect)
+      if (result == null)
+        continue
 
-          return await future.promise.then(r => r.mapErrSync(Skip.new))
-        } finally {
-          port.onMessage.removeListener(onMessage)
-          port.onDisconnect.removeListener(onDisconnect)
-        }
+      return result
+    }
+
+    return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
+  }
+
+  async onRequest(request: RpcRequestInit<unknown>) {
+    const result = await this.tryRoute(request)
+    const response = RpcResponse.rewrap(request.id, result)
+
+    await this.trySend(response).then(r => r.ignore())
+  }
+
+  async onResponse(response: RpcResponseInit<unknown>) {
+    await this.events
+      .tryEmit("response", response)
+      .then(r => r.ignore())
+  }
+
+  async trySend(message: unknown) {
+    return await tryLoop(async () => {
+      return await Result.unthrow<Result<void, Looped<Error>>>(async t => {
+        const channel = await this.ports.tryGet(0).then(r => r.mapErrSync(Cancel.new).throw(t))
+        channel.trySend(message).mapErrSync(Skip.new).throw(t)
+        return Ok.void()
       })
     })
   }
 
+  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
+    return await Result.unthrow(async t => {
+      const request = this.client.create(init)
+
+      await this.trySend(request).then(r => r.throw(t))
+
+      const future = new Future<Result<RpcResponse<T>, Error>>()
+
+      const onResponse = (message: RpcResponseInit<any>) => {
+        if (message.id !== request.id)
+          return Ok.void()
+
+        const response = RpcResponse.from<T>(message)
+        future.resolve(new Ok(response))
+        return Ok.void()
+      }
+
+      const onErrored = (error: Error) => {
+        future.resolve(new Err(error))
+        return Ok.void()
+      }
+
+      try {
+        this.events.on("response", onResponse)
+        this.events.on("errored", onErrored)
+
+        return await future.promise
+      } finally {
+        this.events.off("response", onResponse)
+        this.events.off("errored", onErrored)
+      }
+    })
+  }
 }

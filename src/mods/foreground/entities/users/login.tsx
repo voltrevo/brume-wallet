@@ -31,7 +31,7 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
     if (password?.length < 3)
       return
 
-    const response = await background.tryRequest({
+    const response = await background.router.tryRequest({
       method: "brume_setCurrentUser",
       params: [userQuery.data.inner.uuid, password]
     }).then(r => r.unwrap())

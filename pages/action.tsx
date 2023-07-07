@@ -8,12 +8,12 @@ export default function Action() {
   const background = useBackground()
 
   useEffect(() => {
-    background
+    background.router
       .tryRequest<string>({ method: "brume_getPath" })
       .then(r => r.unwrap().unwrap())
       .then(r => location.hash = r)
 
-    const onHashChange = () => background.tryRequest({
+    const onHashChange = () => background.router.tryRequest({
       method: "brume_setPath",
       params: [location.hash]
     }).then(r => r.unwrap().unwrap())
