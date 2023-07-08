@@ -5,7 +5,7 @@ import { Wallet } from "../data";
 
 export function getWalletsSchema(background: Background) {
   const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await background.router.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
+    await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, Wallet[], Error>({
     key: {

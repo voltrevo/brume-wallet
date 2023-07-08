@@ -55,7 +55,7 @@ export function UserCreateDialog(props: CloseProps) {
   const onClick = useAsyncUniqueCallback(async () => {
     const user: UserInit = { uuid, name, color, emoji, password }
 
-    const usersData = await background.router
+    const usersData = await background
       .tryRequest<User[]>({ method: "brume_newUser", params: [user] })
       .then(r => r.unwrap().unwrap())
 

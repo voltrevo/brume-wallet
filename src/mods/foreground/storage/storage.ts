@@ -1,6 +1,6 @@
 import { RpcParamfulRequestInit } from "@/libs/rpc"
 import { Mutex } from "@hazae41/mutex"
-import { Optional } from "@hazae41/option"
+import { None, Optional, Some } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
 import { Core, RawState, Storage } from "@hazae41/xswr"
 import { Background } from "../background/background"
@@ -13,7 +13,7 @@ export class GlobalStorage implements Storage {
   ) { }
 
   async get(cacheKey: string) {
-    return await this.background.router
+    return await this.background
       .tryRequest<RawState>({ method: "brume_get_global", params: [cacheKey] })
       .then(r => r.unwrap().unwrap())
   }
@@ -31,7 +31,7 @@ export class UserStorage implements Storage {
   ) { }
 
   async get(cacheKey: string) {
-    return await this.background.router
+    return await this.background
       .tryRequest<RawState>({ method: "brume_get_user", params: [cacheKey] })
       .then(r => r.ok().inner?.ok().inner)
   }
@@ -42,23 +42,23 @@ export class UserStorage implements Storage {
         return Ok.void()
 
       return await Result.unthrow(async t => {
-        await this.background.router
+        await this.background
           .tryRequest<void>({ method: "brume_subscribe", params: [cacheKey] })
           .then(r => r.throw(t).throw(t))
 
-        this.background.router.handlers.push(async request => {
+        this.background.router.events.on("request", async (request) => {
           if (request.method !== "brume_update")
-            return
+            return new None()
 
           const [cacheKey2, stored] = (request as RpcParamfulRequestInit<[string, Optional<RawState>]>).params
 
           if (cacheKey2 !== cacheKey)
-            return
+            return new None()
 
           const unstored = await this.core.unstore(stored, { key: cacheKey })
           this.core.update(cacheKey, () => unstored, { key: cacheKey })
 
-          return Ok.void()
+          return new Some(Ok.void())
         })
 
         keys.add(cacheKey)

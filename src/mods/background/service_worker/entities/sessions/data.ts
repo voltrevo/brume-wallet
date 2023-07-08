@@ -10,7 +10,7 @@ import { Cleaner } from "@hazae41/cleaner"
 import { Circuit } from "@hazae41/echalote"
 import { Fleche } from "@hazae41/fleche"
 import { Mutex } from "@hazae41/mutex"
-import { Optional } from "@hazae41/option"
+import { None, Optional } from "@hazae41/option"
 import { Cancel, Looped, Pool, PoolParams, Retry, tryLoop } from "@hazae41/piscine"
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
@@ -141,7 +141,7 @@ export namespace EthereumBrume {
 
         const onCloseOrError = async (reason?: unknown) => {
           pool.delete(index)
-          return Ok.void()
+          return new None()
         }
 
         brume.circuit.events.on("close", onCloseOrError, { passive: true })
@@ -166,7 +166,7 @@ export namespace EthereumBrume {
 
         const onCloseOrError = async (reason?: unknown) => {
           pool.delete(index)
-          return Ok.void()
+          return new None()
         }
 
         brume.circuit.events.on("close", onCloseOrError, { passive: true })

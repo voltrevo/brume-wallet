@@ -65,7 +65,7 @@ export function getWallet(uuid: Optional<string>, background: Background) {
     return undefined
 
   const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await background.router.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
+    await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 
   return createQuerySchema<RpcRequestPreinit<unknown>, WalletData, Error>({
     key: {
@@ -117,7 +117,7 @@ export function useEthereumContext(wallet: Wallet, chain: EthereumChain): Ethere
 export async function tryFetch<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext): Promise<Result<Fetched<T, Error>, FetchError>> {
   const { background, wallet, chain } = ethereum
 
-  const response = await background.router.tryRequest<T>({
+  const response = await background.tryRequest<T>({
     method: "brume_eth_fetch",
     params: [wallet.uuid, chain.chainId, request]
   })
@@ -130,7 +130,7 @@ export async function tryFetch<T>(request: RpcRequestPreinit<unknown>, ethereum:
 export async function tryIndex<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext): Promise<Result<RpcResponse<T>, Error>> {
   const { background, wallet, chain } = ethereum
 
-  return await background.router.tryRequest<T>({
+  return await background.tryRequest<T>({
     method: "brume_eth_index",
     params: [wallet.uuid, chain.chainId, request]
   })
