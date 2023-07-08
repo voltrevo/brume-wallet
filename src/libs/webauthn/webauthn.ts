@@ -1,5 +1,13 @@
 import { Ok, Result } from "@hazae41/result"
 
+/**
+ * Use WebAuthn as a authentication-protected storage of arbitrary bytes
+ * This WON'T use the Secure Enclave as it stores the bytes in `userHandle` (probably on disk)
+ * 
+ * This is used to prevent unauthenticated access to the (encrypted) bytes in the case of:
+ * - supply-chain attack where the attacker has the encryption password: it would still require user approval before stealing the private key
+ * - phishing, misclick, phone-left-on-the-table attack: it would still require user approval before signing transactions
+ */
 export namespace WebAuthnStorage {
 
   export async function create(name: string, data: Uint8Array): Promise<Result<Uint8Array, Error>> {
