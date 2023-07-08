@@ -1,6 +1,7 @@
 import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { RpcClient, RpcId, RpcParamfulRequestPreinit, RpcRequest, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
+import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { Bytes } from "@hazae41/bytes"
 import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
@@ -268,34 +269,12 @@ export class BackgroundRouter {
 
   async brume_auth_create(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
-      const [name, displayName, dataBase64] = (request as RpcParamfulRequestPreinit<[string, string, string]>).params
+      const [name, dataBase64] = (request as RpcParamfulRequestPreinit<[string, string]>).params
 
-      const credential = await Result.catchAndWrap<any>(async () => {
-        return await navigator.credentials.create({
-          publicKey: {
-            challenge: new Uint8Array([117, 61, 252, 231, 191, 241]),
-            rp: {
-              id: location.hostname,
-              name: "Brume Wallet"
-            },
-            user: {
-              id: Bytes.fromBase64(dataBase64),
-              name: name,
-              displayName: displayName
-            },
-            pubKeyCredParams: [
-              { type: "public-key", alg: -7 },
-              { type: "public-key", alg: -8 },
-              { type: "public-key", alg: -257 }
-            ],
-            authenticatorSelection: {
-              authenticatorAttachment: "platform"
-            }
-          }
-        })
-      }).then(r => r.throw(t))
+      const id = await WebAuthnStorage
+        .create(name, Bytes.fromBase64(dataBase64))
+        .then(r => r.throw(t))
 
-      const id = new Uint8Array(credential.rawId)
       return new Ok(Bytes.toBase64(id))
     })
   }
@@ -304,19 +283,10 @@ export class BackgroundRouter {
     return await Result.unthrow(async t => {
       const [idBase64] = (request as RpcParamfulRequestPreinit<[string]>).params
 
-      const credential = await Result.catchAndWrap<any>(async () => {
-        return await navigator.credentials.get({
-          publicKey: {
-            challenge: new Uint8Array([117, 61, 252, 231, 191, 241]),
-            allowCredentials: [{
-              type: "public-key",
-              id: Bytes.fromBase64(idBase64)
-            }],
-          }
-        })
-      }).then(r => r.throw(t))
+      const data = await WebAuthnStorage
+        .get(Bytes.fromBase64(idBase64))
+        .then(r => r.throw(t))
 
-      const data = credential.response.userHandle
       return new Ok(Bytes.toBase64(data))
     })
   }
