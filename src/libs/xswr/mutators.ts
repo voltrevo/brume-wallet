@@ -3,11 +3,11 @@ import { Data, Fail, Fetched, Mutator, State, TimesInit } from "@hazae41/xswr";
 
 export namespace Mutators {
 
-  export function mapDataIfItExists<D, F>(piper: (data: Data<D>) => Data<D>) {
+  export function mapExistingData<D, F>(piper: (data: Data<D>) => Data<D>) {
     return (state: State<D, F>) => Option.wrap(state.data).mapSync(piper)
   }
 
-  export function mapInnerDataIfItExists<D, F>(piper: (data: D) => D) {
+  export function mapExistingInnerData<D, F>(piper: (data: D) => D) {
     return (state: State<D, F>) => Option.wrap(state.data).mapSync(d => d.mapSync(piper))
   }
 
@@ -27,18 +27,12 @@ export namespace Mutators {
     return (state: State<D, F>) => new Some(piper(state.data))
   }
 
-  export function mapDataOr<D, F>(piper: (data?: Data<D>) => Data<D>, or: Data<D>) {
-    return (state: State<D, F>) => new Some(piper(state.data ?? or))
-  }
-
-  export function mapInnerDataOr<D, F>(piper: (data: D) => D, or: Data<D>) {
-    return (state: State<D, F>) => new Some((state.data ?? or).mapSync(piper))
+  export function mapInnerData<D, F>(piper: (data: D) => D, init: Data<D>) {
+    return (state: State<D, F>) => new Some((state.data ?? init).mapSync(piper))
   }
 
   export function pushData<D, F>(element: Data<D>): Mutator<D[], F> {
-    return mapData<D[], F>(d => Option.wrap(d)
-      .mapSync(d => element.mapSync(e => [...d.inner, e]))
-      .unwrapOr(element.mapSync(d => [d])))
+    return mapData<D[], F>((array = new Data([])) => new Data([...array.inner, element.inner]))
   }
 
 }

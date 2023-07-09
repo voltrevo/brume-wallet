@@ -1,4 +1,5 @@
 import { DonePage, PersonalSignPage, SwitchPage, TransactPage, TypedSignPage, WalletAndChainSelectPage } from "pages/popup"
+import { SessionsPage } from "../entities/sessions/all/page"
 import { WalletsPage } from "../entities/wallets/all/page"
 import { WalletPage } from "../entities/wallets/page"
 import { usePath } from "./path"
@@ -16,6 +17,9 @@ export function Router() {
 
   if (matches = url.pathname.match(/^\/wallets$/))
     return <WalletsPage />
+
+  if (matches = url.pathname.match(/^\/sessions$/))
+    return <SessionsPage />
 
   if (matches = url.pathname.match(/^\/wallet\/([^\/]+)$/))
     return <WalletPage uuid={matches[1]} />

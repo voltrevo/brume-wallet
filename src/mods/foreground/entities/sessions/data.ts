@@ -3,8 +3,8 @@ import { createQuerySchema, useError, useFetch, useQuery } from "@hazae41/xswr"
 import { useUserStorage } from "../../storage/context"
 import { UserStorage, useSubscribe } from "../../storage/storage"
 
-export function getSession(origin: string, storage: UserStorage) {
-  return createQuerySchema<string, SessionData, never>({ key: `sessions/${origin}`, storage })
+export function getSession(name: string, storage: UserStorage) {
+  return createQuerySchema<string, SessionData, never>({ key: `sessions/v2/${name}`, storage })
 }
 
 export function useSession(origin: string) {

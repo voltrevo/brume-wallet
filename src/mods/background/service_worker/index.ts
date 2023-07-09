@@ -314,7 +314,7 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
-      const sessionData: SessionData = { origin: script.name, wallet, chain }
+      const sessionData: SessionData = { name: script.name, origin: script.name, wallet, chain }
 
       const sessionsQuery = await this.make(getSessions(storage))
       sessionsQuery.mutate(Mutators.pushData<Session, never>(new Data(sessionData)))
@@ -642,7 +642,7 @@ export class Global {
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
       const sessionQuery = await this.make(getSession(ethereum.port.name, storage))
-      await sessionQuery.mutate(Mutators.mapDataIfItExists(d => d.mapSync(d => ({ ...d, chain }))))
+      await sessionQuery.mutate(Mutators.mapExistingInnerData(d => ({ ...d, chain })))
 
       for (const script of Option.wrap(this.scripts.get(ethereum.port.name)).unwrapOr([]))
         await script.tryRequest({ method: "chainChanged", params: [chainId] }).then(r => r.ignore())

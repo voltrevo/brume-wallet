@@ -12,13 +12,14 @@ export interface SessionRef {
 }
 
 export interface SessionData {
+  name: string,
   origin: string
   wallet: Wallet
   chain: EthereumChain
 }
 
-export function getSession(origin: string, storage: IDBStorage) {
-  return createQuerySchema<string, SessionData, never>({ key: `sessions/${origin}`, storage })
+export function getSession(name: string, storage: IDBStorage) {
+  return createQuerySchema<string, SessionData, never>({ key: `sessions/v2/${name}`, storage })
 }
 
 export async function getSessionRef(session: Session, storage: IDBStorage, more: NormalizerMore): Promise<SessionRef> {

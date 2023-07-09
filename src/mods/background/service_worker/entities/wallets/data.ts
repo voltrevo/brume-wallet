@@ -185,7 +185,7 @@ export function getTotalWalletPricedBalance(user: User, address: string, coin: "
     const value = Option.wrap(state.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
     const indexQuery = await getTotalPricedBalanceByWallet(user, coin, storage).make(more.core)
-    await indexQuery.mutate(Mutators.mapInnerDataOr(p => ({ ...p, [address]: value }), new Data({})))
+    await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [address]: value }), new Data({})))
   }
 
   return createQuerySchema<string, FixedInit, Error>({
@@ -216,7 +216,7 @@ export function getPricedEthereumBalance(ethereum: EthereumContext, address: str
     const value = Option.wrap(state.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
     const indexQuery = await getPricedBalanceByToken(ethereum.user, address, coin, storage).make(more.core)
-    await indexQuery.mutate(Mutators.mapInnerDataOr(p => ({ ...p, [ethereum.chain.chainId]: value }), new Data({})))
+    await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [ethereum.chain.chainId]: value }), new Data({})))
   }
 
   return createQuerySchema<string, FixedInit, Error>({
