@@ -1,9 +1,11 @@
-import { browser, tryBrowser, tryBrowserSync } from "@/libs/browser/browser"
+import { browser, tryBrowser } from "@/libs/browser/browser"
+import { ExtensionPort } from "@/libs/channel/channel"
 import { Mouse } from "@/libs/mouse/mouse"
-import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
+import { RpcRequestInit, RpcResponse } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
+import { None } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
-import { Ok, Result } from "@hazae41/result"
+import { Err, Ok, Result } from "@hazae41/result"
 
 declare const self: ServiceWorkerGlobalScope
 
@@ -47,49 +49,42 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
 
     await new Promise(ok => setTimeout(ok, 1))
 
-    const port = await tryBrowser(async () => {
+    const raw = await tryBrowser(async () => {
       const port = browser.runtime.connect({ name: location.origin })
       port.onDisconnect.addListener(() => void chrome.runtime.lastError)
       return port
     }).then(r => r.throw(t))
 
+    const port = new ExtensionPort("background", raw)
+
     const onRequest = async (event: CustomEvent<string>) => {
       const request = JSON.parse(event.detail) as RpcRequestInit<unknown>
-      const result = tryBrowserSync(() => port.postMessage({ request, mouse }))
 
-      if (result.isOk())
-        return
+      const response = await port
+        .tryRequest({ method: "brume_mouse", params: [request, mouse] })
+        .then(r => r.unwrapOrElseSync(e => RpcResponse.rewrap(request.id, new Err(e))))
 
-      const response = RpcResponse.rewrap(request.id, result)
       const detail = JSON.stringify(response)
       const event2 = new CustomEvent("ethereum#response", { detail })
       window.dispatchEvent(event2)
     }
 
-    const onResponse = (response: RpcResponseInit) => {
-      const detail = JSON.stringify(response)
-      const event = new CustomEvent("ethereum#response", { detail })
-      window.dispatchEvent(event)
-    }
-
-    const onDisconnect = async () => {
-      pool.delete(index)
-    }
-
-    port.onMessage.addListener(onResponse)
-    port.onDisconnect.addListener(onDisconnect)
-
     window.addEventListener("ethereum#request", onRequest, { passive: true })
 
-    const onClean = () => {
-      port.onMessage.removeListener(onResponse)
-      port.onDisconnect.removeListener(onDisconnect)
-
-      window.removeEventListener("ethereum#request", onRequest)
-
-      port.disconnect()
+    const onClose = () => {
+      pool.delete(index)
+      return new None()
     }
 
-    return new Ok(new Cleaner(port, onClean))
+    port.events.on("close", onClose, { passive: true })
+
+    const onClean = () => {
+      window.removeEventListener("ethereum#request", onRequest)
+      port.events.off("close", onClose)
+      port.clean()
+      raw.disconnect()
+    }
+
+    return new Ok(new Cleaner(raw, onClean))
   })
 }, { capacity: 1 })

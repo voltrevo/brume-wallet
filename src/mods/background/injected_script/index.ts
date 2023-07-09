@@ -13,11 +13,6 @@ declare global {
   }
 }
 
-setInterval(() => {
-  const detail = JSON.stringify({ id: "ping", jsonrpc: "2.0", method: "brume_ping" })
-  window.dispatchEvent(new CustomEvent("ethereum#request", { detail }))
-}, 1_000)
-
 class Provider {
 
   constructor(

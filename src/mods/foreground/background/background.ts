@@ -1,5 +1,5 @@
 import { browser, tryBrowser } from "@/libs/browser/browser"
-import { ExtensionForegroundPort, Port, WebsitePort } from "@/libs/channel/channel"
+import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { RpcClient, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { Bytes } from "@hazae41/bytes"
@@ -171,7 +171,7 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
         }).then(r => r.mapErrSync(Retry.new))
       }).then(r => r.throw(t))
 
-      const port = new ExtensionForegroundPort("background", raw)
+      const port = new ExtensionPort("background", raw)
 
       const onRequest = (request: RpcRequestInit<unknown>) =>
         background.router.onRequest(port, request)

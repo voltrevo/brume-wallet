@@ -1,6 +1,6 @@
 import { FixedInit } from "@/libs/bigints/bigints"
 import { browser, tryBrowser } from "@/libs/browser/browser"
-import { ExtensionForegroundPort, ExtensionScriptPort, Port, WebsitePort } from "@/libs/channel/channel"
+import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { chains, pairsByAddress } from "@/libs/ethereum/chain"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcParamfulRequestInit, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit } from "@/libs/rpc"
@@ -278,19 +278,19 @@ export class Global {
     }
   }
 
-  async getEthereumSession(origin: string): Promise<Optional<EthereumSession>> {
+  async getEthereumSession(port: Port): Promise<Optional<EthereumSession>> {
     const currentUser = await this.getCurrentUser()
 
     if (currentUser == null)
       return undefined
 
-    const sessionQuery = await this.make(getEthereumSession(origin, currentUser.storage))
+    const sessionQuery = await this.make(getEthereumSession(port.name, currentUser.storage))
     return sessionQuery.current?.inner
   }
 
-  async tryGetOrWaitEthereumSession(origin: string, mouse: Mouse): Promise<Result<EthereumSession, Error>> {
+  async tryGetOrWaitEthereumSession(port: Port, mouse: Mouse): Promise<Result<EthereumSession, Error>> {
     return await Result.unthrow(async t => {
-      const session = await this.getEthereumSession(origin)
+      const session = await this.getEthereumSession(port)
 
       if (session != null)
         return new Ok(session)
@@ -311,27 +311,25 @@ export class Global {
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
       const sessionData: EthereumSession = { wallet, chain }
-      const sessionQuery = await this.make(getEthereumSession(origin, storage))
+      const sessionQuery = await this.make(getEthereumSession(port.name, storage))
       await sessionQuery.mutate(Mutators.data(sessionData))
 
       return new Ok(sessionData)
     })
   }
 
-  async tryRouteContentScript(script: ExtensionScriptPort, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<unknown, Error>> {
+  async tryRouteContentScript(script: ExtensionPort, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
-      const origin = script.port.name
-
       if (request.method === "eth_requestAccounts")
-        return await this.eth_requestAccounts(origin, request, mouse)
+        return await this.eth_requestAccounts(script, request, mouse)
 
       const { user, storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
-      const sessionQuery = await this.make(getEthereumSession(origin, storage))
+      const sessionQuery = await this.make(getEthereumSession(script.name, storage))
       const { wallet, chain } = Option.wrap(sessionQuery.current?.inner).ok().throw(t)
 
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
-      const ethereum = { user, origin, wallet, chain, brumes }
+      const ethereum = { user, origin: script.name, wallet, chain, brumes }
 
       if (request.method === "eth_accounts")
         return await this.eth_accounts(ethereum, request)
@@ -358,9 +356,9 @@ export class Global {
     })
   }
 
-  async eth_requestAccounts(origin: string, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<[string], Error>> {
+  async eth_requestAccounts(script: ExtensionPort, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<[string], Error>> {
     return await Result.unthrow(async t => {
-      const sessionData = await this.tryGetOrWaitEthereumSession(origin, mouse).then(r => r.throw(t))
+      const sessionData = await this.tryGetOrWaitEthereumSession(script, mouse).then(r => r.throw(t))
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
       const walletQuery = await this.make(getWallet(sessionData.wallet.uuid, storage))
@@ -559,7 +557,7 @@ export class Global {
     })
   }
 
-  async personal_sign(ethereum: EthereumContext, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
+  async personal_sign(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [message, address] = (request as RpcParamfulRequestInit<[string, string]>).params
 
@@ -588,7 +586,7 @@ export class Global {
     })
   }
 
-  async eth_signTypedData_v4(ethereum: EthereumContext, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
+  async eth_signTypedData_v4(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
@@ -621,7 +619,7 @@ export class Global {
     })
   }
 
-  async wallet_switchEthereumChain(ethereum: EthereumContext, request: RpcRequestInit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
+  async wallet_switchEthereumChain(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
       const [{ chainId }] = (request as RpcParamfulRequestInit<[{ chainId: string }]>).params
 
@@ -989,7 +987,7 @@ export class Global {
 
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
-      const ethereum = { user, origin: "foreground", wallet, chain, brumes }
+      const ethereum = { user, origin: channel.name, wallet, chain, brumes }
 
       if (subrequest.method === "eth_sendTransaction")
         return await this.brume_eth_sendTransaction(channel, ethereum, subrequest)
@@ -1081,20 +1079,21 @@ if (IS_WEBSITE) {
 if (IS_EXTENSION) {
 
   const onContentScript = (port: chrome.runtime.Port) => {
-    const channel = new ExtensionScriptPort(port)
+    const channel = new ExtensionPort(port.name, port)
 
-    channel.events.on("request", async (request, mouse) => {
+    channel.events.on("request", async (request) => {
       const inited = await init
 
       if (inited.isErr())
         return new Some(inited)
 
-      return new Some(await inited.get().tryRouteContentScript(channel, request, mouse))
+      const [subrequest, mouse] = (request as RpcParamfulRequestInit<[RpcRequestPreinit<unknown>, Mouse]>).params
+      return new Some(await inited.get().tryRouteContentScript(channel, subrequest, mouse))
     })
   }
 
   const onForeground = (port: chrome.runtime.Port) => {
-    const channel = new ExtensionForegroundPort("foreground", port)
+    const channel = new ExtensionPort("foreground", port)
 
     channel.events.on("request", async (request) => {
       const inited = await init
