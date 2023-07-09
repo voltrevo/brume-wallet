@@ -33,9 +33,11 @@ export interface WalletRef {
 
 export type WalletData =
   | EthereumPrivateKeyWallet
+  | EthereumAuthPrivateKeyWallet
 
 export type EthereumWalletData =
   | EthereumPrivateKeyWallet
+  | EthereumAuthPrivateKeyWallet
 
 export interface EthereumPrivateKeyWallet {
   readonly coin: "ethereum"
@@ -47,8 +49,27 @@ export interface EthereumPrivateKeyWallet {
   readonly color: number,
   readonly emoji: string
 
-  readonly privateKey: string
   readonly address: string
+
+  readonly privateKey: string
+}
+
+export interface EthereumAuthPrivateKeyWallet {
+  readonly coin: "ethereum"
+  readonly type: "authPrivateKey"
+
+  readonly uuid: string
+  readonly name: string,
+
+  readonly color: number,
+  readonly emoji: string
+
+  readonly address: string
+
+  readonly privateKey: {
+    readonly ivBase64: string,
+    readonly idBase64: string
+  }
 }
 
 export interface BitcoinPrivateKeyWallet {

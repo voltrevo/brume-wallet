@@ -1,6 +1,6 @@
 import { Bytes } from "@hazae41/bytes"
 import { Ok, Result } from "@hazae41/result"
-import { Data, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
+import { AesGcmCoder, Data, HmacEncoder, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBase64, Pbkdf2ParamsBytes } from "./crypto"
 
 export type User =
@@ -47,6 +47,8 @@ export interface UserData {
 export interface UserSession {
   user: User,
   storage: IDBStorage
+  hasher: HmacEncoder
+  crypter: AesGcmCoder
 }
 
 export function getCurrentUser() {

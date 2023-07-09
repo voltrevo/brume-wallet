@@ -163,7 +163,7 @@ export class ExtensionForegroundPort {
     const response = RpcResponse.rewrap(request.id, result)
     console.log(this.name, "<-", response)
 
-    this.port.postMessage(response)
+    tryBrowserSync(() => this.port.postMessage(response)).ignore()
   }
 
   async onResponse(response: RpcResponseInit<unknown>) {
@@ -253,7 +253,7 @@ export class ExtensionScriptPort {
     const response = RpcResponse.rewrap(request.id, result)
     console.log("content_script", "<-", response)
 
-    this.port.postMessage(response)
+    tryBrowserSync(() => this.port.postMessage(response)).ignore()
   }
 
   async onResponse(response: RpcResponseInit<unknown>) {

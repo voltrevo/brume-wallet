@@ -29,7 +29,7 @@ import { EthereumBrume, EthereumBrumes, getEthereumBrumes } from "./entities/ses
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
-import { EthereumContext, EthereumPrivateKeyWallet, EthereumQueryKey, EthereumSession, Wallet, WalletData, getEthereumBalance, getEthereumSession, getEthereumUnknown, getPairPrice, getWallet, tryEthereumFetch } from "./entities/wallets/data"
+import { EthereumAuthPrivateKeyWallet, EthereumContext, EthereumPrivateKeyWallet, EthereumQueryKey, EthereumSession, Wallet, WalletData, getEthereumBalance, getEthereumSession, getEthereumUnknown, getPairPrice, getWallet, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -79,7 +79,7 @@ export interface PasswordData {
 
 export interface PopupData {
   window: chrome.windows.Window,
-  channel: Port
+  port: Port
 }
 
 export class UserRejectionError extends Error {
@@ -171,9 +171,10 @@ export class Global {
       const userData = Option.wrap(userQuery.current?.get()).ok().throw(t)
 
       const user: User = { ref: true, uuid: userData.uuid }
-      const storage = await tryCreateUserStorage(userData, password).then(r => r.throw(t))
 
-      const currentUserData: UserSession = { user, storage }
+      const { storage, hasher, crypter } = await tryCreateUserStorage(userData, password).then(r => r.throw(t))
+
+      const currentUserData: UserSession = { user, storage, hasher, crypter }
       await currentUserQuery.mutate(Mutators.data(currentUserData))
 
       return new Ok(currentUserData)
@@ -234,7 +235,7 @@ export class Global {
 
       const channel = await this.tryWaitPopupHello(window).then(r => r.throw(t))
 
-      this.popup = { window, channel }
+      this.popup = { window, port: channel }
 
       const onRemoved = () => {
         this.popup = undefined
@@ -252,7 +253,7 @@ export class Global {
     const future = new Future<Result<RpcRequestPreinit<unknown>, Error>>()
 
     const onData = (port: Port, request: RpcRequestPreinit<unknown>) => {
-      if (port.uuid !== popup.channel.uuid)
+      if (port.uuid !== popup.port.uuid)
         return new None()
       if (request.method !== method)
         return new None()
@@ -442,6 +443,28 @@ export class Global {
     })
   }
 
+  async tryGetPrivateKey(wallet: WalletData, port: Port): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      if (wallet.type === "privateKey")
+        return new Ok(wallet.privateKey)
+
+      const { crypter } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
+
+      const { idBase64, ivBase64 } = wallet.privateKey
+
+      const cipherBase64 = await port.tryRequest<string>({
+        method: "brume_auth_get",
+        params: [idBase64]
+      }).then(r => r.throw(t).throw(t))
+
+      const cipher = Bytes.fromBase64(cipherBase64)
+      const iv = Bytes.fromBase64(ivBase64)
+      const plain = await crypter.decrypt(cipher, iv)
+
+      return new Ok(`0x${Bytes.toHex(plain)}`)
+    })
+  }
+
   async eth_sendTransaction(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [{ data, gas, from, to, value }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string, value: string }]>).params
@@ -472,7 +495,11 @@ export class Global {
         method: "eth_gasPrice"
       }).then(r => r.throw(t).throw(t))
 
-      const signature = await new ethers.Wallet(wallet.privateKey).signTransaction({
+      const popup = Option.wrap(this.popup).ok().throw(t)
+
+      const privateKey = await this.tryGetPrivateKey(wallet, popup.port).then(r => r.throw(t))
+
+      const signature = await new ethers.Wallet(privateKey).signTransaction({
         data: data,
         to: to,
         from: from,
@@ -492,7 +519,7 @@ export class Global {
     })
   }
 
-  async brume_eth_sendTransaction(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+  async brume_eth_sendTransaction(port: Port, ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [{ data, gas, from, to, value }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string, value: string }]>).params
 
@@ -510,7 +537,9 @@ export class Global {
         method: "eth_gasPrice"
       }).then(r => r.throw(t).throw(t))
 
-      const signature = await new ethers.Wallet(wallet.privateKey).signTransaction({
+      const privateKey = await this.tryGetPrivateKey(wallet, port).then(r => r.throw(t))
+
+      const signature = await new ethers.Wallet(privateKey).signTransaction({
         data: data,
         to: to,
         from: from,
@@ -549,7 +578,11 @@ export class Global {
       const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
 
-      const signature = await new ethers.Wallet(wallet.privateKey).signMessage(Bytes.fromHexSafe(message))
+      const popup = Option.wrap(this.popup).ok().throw(t)
+
+      const privateKey = await this.tryGetPrivateKey(wallet, popup.port).then(r => r.throw(t))
+
+      const signature = await new ethers.Wallet(privateKey).signMessage(Bytes.fromHexSafe(message))
 
       return new Ok(signature)
     })
@@ -578,7 +611,11 @@ export class Global {
 
       delete types["EIP712Domain"]
 
-      const signature = await new ethers.Wallet(wallet.privateKey).signTypedData(domain, types, message)
+      const popup = Option.wrap(this.popup).ok().throw(t)
+
+      const privateKey = await this.tryGetPrivateKey(wallet, popup.port).then(r => r.throw(t))
+
+      const signature = await new ethers.Wallet(privateKey).signTypedData(domain, types, message)
 
       return new Ok(signature)
     })
@@ -626,7 +663,7 @@ export class Global {
     if (request.method === "brume_getWallets")
       return new Some(await this.brume_getWallets(request))
     if (request.method === "brume_newWallet")
-      return new Some(await this.brume_newWallet(request))
+      return new Some(await this.brume_newWallet(channel, request))
     if (request.method === "brume_getWallet")
       return new Some(await this.brume_getWallet(request))
     if (request.method === "brume_get_global")
@@ -640,7 +677,7 @@ export class Global {
     if (request.method === "brume_eth_index")
       return new Some(await this.brume_eth_index(request))
     if (request.method === "brume_eth_run")
-      return new Some(await this.brume_eth_run(request))
+      return new Some(await this.brume_eth_run(channel, request))
     if (request.method === "brume_log")
       return new Some(await this.brume_log(request))
     if (request.method === "popup_hello")
@@ -757,14 +794,39 @@ export class Global {
     })
   }
 
-  async brume_newWallet(request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
+  async brume_newWallet(channel: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
     return await Result.unthrow(async t => {
-      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
+      const { storage, crypter } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
-      const [wallet] = (request as RpcParamfulRequestInit<[EthereumPrivateKeyWallet]>).params
+      const [auth, wallet] = (request as RpcParamfulRequestInit<[boolean, EthereumPrivateKeyWallet]>).params
       const walletsQuery = await this.make(getWallets(storage))
 
-      const walletsState = await walletsQuery.mutate(Mutators.pushData<Wallet, never>(new Data(wallet)))
+      if (!auth) {
+        const walletsState = await walletsQuery.mutate(Mutators.pushData<Wallet, never>(new Data(wallet)))
+        const wallets = Option.wrap(walletsState.current?.get()).ok().throw(t)
+
+        return new Ok(wallets)
+      }
+
+      const plain = Bytes.fromHexSafe(wallet.privateKey.slice(2))
+      const iv = Bytes.tryRandom(16).throw(t)
+      const cipher = await crypter.encrypt(plain, iv)
+
+      const ivBase64 = Bytes.toBase64(iv)
+      const cipherBase64 = Bytes.toBase64(cipher)
+
+      const idBase64 = await channel.tryRequest<string>({
+        method: "brume_auth_create",
+        params: [wallet.name, cipherBase64]
+      }).then(r => r.throw(t).throw(t))
+
+      const authWallet: EthereumAuthPrivateKeyWallet = {
+        ...wallet,
+        type: "authPrivateKey",
+        privateKey: { ivBase64, idBase64 }
+      }
+
+      const walletsState = await walletsQuery.mutate(Mutators.pushData<Wallet, never>(new Data(authWallet)))
       const wallets = Option.wrap(walletsState.current?.get()).ok().throw(t)
 
       return new Ok(wallets)
@@ -915,7 +977,7 @@ export class Global {
     })
   }
 
-  async brume_eth_run(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_eth_run(channel: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [walletId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
 
@@ -930,7 +992,7 @@ export class Global {
       const ethereum = { user, origin: "foreground", wallet, chain, brumes }
 
       if (subrequest.method === "eth_sendTransaction")
-        return await this.brume_eth_sendTransaction(ethereum, subrequest)
+        return await this.brume_eth_sendTransaction(channel, ethereum, subrequest)
 
       return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
     })

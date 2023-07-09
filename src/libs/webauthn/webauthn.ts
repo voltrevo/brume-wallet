@@ -1,4 +1,19 @@
-import { Ok, Result } from "@hazae41/result"
+import { Bytes } from "@hazae41/bytes"
+import { Err, Ok, Result } from "@hazae41/result"
+
+export class WebAuthnStorageError extends Error {
+  readonly #class = WebAuthnStorageError
+  readonly name = this.#class.name
+
+  constructor(options?: ErrorOptions) {
+    super(`Could not use authenticated storage`, options)
+  }
+
+  static from(cause: unknown) {
+    return new WebAuthnStorageError({ cause })
+  }
+
+}
 
 /**
  * Use WebAuthn as a authentication-protected storage of arbitrary bytes
@@ -10,7 +25,7 @@ import { Ok, Result } from "@hazae41/result"
  */
 export namespace WebAuthnStorage {
 
-  export async function create(name: string, data: Uint8Array): Promise<Result<Uint8Array, Error>> {
+  export async function create(name: string, data: Uint8Array): Promise<Result<Uint8Array, WebAuthnStorageError>> {
     return await Result.unthrow(async t => {
 
       const options: CredentialCreationOptions = {
@@ -38,13 +53,19 @@ export namespace WebAuthnStorage {
 
       const credential = await Result.catchAndWrap(async () => {
         return await navigator.credentials.create(options) as any
-      }).then(r => r.throw(t))
+      }).then(r => r.mapErrSync(WebAuthnStorageError.from).throw(t))
 
-      return new Ok(new Uint8Array(credential.rawId))
+      const id = new Uint8Array(credential.rawId)
+      const data2 = await get(id).then(r => r.throw(t))
+
+      if (!Bytes.equals(data, data2))
+        return new Err(new WebAuthnStorageError())
+
+      return new Ok(id)
     })
   }
 
-  export async function get(id: Uint8Array): Promise<Result<Uint8Array, Error>> {
+  export async function get(id: Uint8Array): Promise<Result<Uint8Array, WebAuthnStorageError>> {
     return await Result.unthrow(async t => {
 
       const options: CredentialRequestOptions = {
@@ -56,9 +77,11 @@ export namespace WebAuthnStorage {
 
       const credential = await Result.catchAndWrap(async () => {
         return await navigator.credentials.get(options) as any
-      }).then(r => r.throw(t))
+      }).then(r => r.mapErrSync(WebAuthnStorageError.from).throw(t))
 
-      return new Ok(credential.response.userHandle)
+      const data = new Uint8Array(credential.response.userHandle)
+
+      return new Ok(data)
     })
   }
 }

@@ -1,4 +1,4 @@
-import { Ports, browser, tryBrowser } from "@/libs/browser/browser"
+import { browser, tryBrowser, tryBrowserSync } from "@/libs/browser/browser"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcRequestInit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
@@ -55,7 +55,7 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
 
     const onRequest = async (event: CustomEvent<string>) => {
       const request = JSON.parse(event.detail) as RpcRequestInit<unknown>
-      const result = Ports.tryPostMessage(port, { request, mouse })
+      const result = tryBrowserSync(() => port.postMessage({ request, mouse }))
 
       if (result.isOk())
         return

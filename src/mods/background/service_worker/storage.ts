@@ -1,31 +1,44 @@
 import { Bytes } from "@hazae41/bytes"
-import { Err, Result } from "@hazae41/result"
+import { Err, Ok, Result } from "@hazae41/result"
 import { AesGcmCoder, AsyncPipeBicoder, HmacEncoder, IDBStorage } from "@hazae41/xswr"
 import { Pbdkf2Params } from "./entities/users/crypto"
 import { UserData } from "./entities/users/data"
 
-export async function tryCreateUserStorage(user: UserData, password: string): Promise<Result<IDBStorage, Error>> {
-  const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"])
+export interface UserStorage {
+  storage: IDBStorage
+  hasher: HmacEncoder
+  crypter: AesGcmCoder
+}
 
-  const passwordHashBase64 = user.passwordHashBase64
-  const passwordParamsBase64 = user.passwordParamsBase64
-  const passwordParamsBytes = Pbdkf2Params.parse(passwordParamsBase64)
-  const passwordHashLength = Bytes.fromBase64(passwordHashBase64).length * 8
+export async function tryCreateUserStorage(user: UserData, password: string): Promise<Result<UserStorage, Error>> {
+  return await Result.unthrow(async t => {
+    const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"])
 
-  const currentPasswordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, passwordHashLength))
-  const currentPasswordHashBase64 = Bytes.toBase64(currentPasswordHashBytes)
+    const passwordHashBase64 = user.passwordHashBase64
+    const passwordParamsBase64 = user.passwordParamsBase64
+    const passwordParamsBytes = Pbdkf2Params.parse(passwordParamsBase64)
+    const passwordHashLength = Bytes.fromBase64(passwordHashBase64).length * 8
 
-  if (currentPasswordHashBase64 !== passwordHashBase64)
-    return new Err(new Error(`Invalid password`))
+    const currentPasswordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, passwordHashLength))
+    const currentPasswordHashBase64 = Bytes.toBase64(currentPasswordHashBytes)
 
-  const keyParamsBytes = Pbdkf2Params.parse(user.keyParamsBase64.algorithm)
-  const valueParamsBytes = Pbdkf2Params.parse(user.valueParamsBase64.algorithm)
+    if (currentPasswordHashBase64 !== passwordHashBase64)
+      return new Err(new Error(`Invalid password`))
 
-  const keyKey = await crypto.subtle.deriveKey(keyParamsBytes, pbkdf2, user.keyParamsBase64.derivedKeyType, false, ["sign"])
-  const valueKey = await crypto.subtle.deriveKey(valueParamsBytes, pbkdf2, user.valueParamsBase64.derivedKeyType, false, ["encrypt", "decrypt"])
+    const keyParamsBytes = Pbdkf2Params.parse(user.keyParamsBase64.algorithm)
+    const valueParamsBytes = Pbdkf2Params.parse(user.valueParamsBase64.algorithm)
 
-  const keySerializer = new HmacEncoder(keyKey)
-  const valueSerializer = new AsyncPipeBicoder(JSON, new AesGcmCoder(valueKey))
+    const keyKey = await crypto.subtle.deriveKey(keyParamsBytes, pbkdf2, user.keyParamsBase64.derivedKeyType, false, ["sign"])
+    const valueKey = await crypto.subtle.deriveKey(valueParamsBytes, pbkdf2, user.valueParamsBase64.derivedKeyType, false, ["encrypt", "decrypt"])
 
-  return IDBStorage.tryCreate({ name: user.uuid, keySerializer, valueSerializer })
+    const hasher = new HmacEncoder(keyKey)
+    const crypter = new AesGcmCoder(valueKey)
+
+    const keySerializer = hasher
+    const valueSerializer = new AsyncPipeBicoder(JSON, crypter)
+
+    const storage = IDBStorage.tryCreate({ name: user.uuid, keySerializer, valueSerializer }).throw(t)
+
+    return new Ok({ storage, hasher, crypter })
+  })
 }

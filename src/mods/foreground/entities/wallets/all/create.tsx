@@ -4,6 +4,7 @@ import { Dialog } from "@/libs/components/dialog/dialog";
 import { Input } from "@/libs/components/input";
 import { Textarea } from "@/libs/components/textarea";
 import { Emojis } from "@/libs/emojis/emojis";
+import { Errors } from "@/libs/errors/errors";
 import { Ethereum } from "@/libs/ethereum/ethereum";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
@@ -15,10 +16,10 @@ import { CloseProps } from "@/libs/react/props/close";
 import { Mutators } from "@/libs/xswr/mutators";
 import { useBackground } from "@/mods/foreground/background/context";
 import { Bytes } from "@hazae41/bytes";
-import { Result } from "@hazae41/result";
+import { Ok, Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import * as Ethers from "ethers";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../avatar";
 import { Wallet, WalletData } from "../data";
 import { useWallets } from "./data";
@@ -69,31 +70,46 @@ export function WalletCreatorDialog(props: CloseProps) {
     if (key) return Wallets.tryFrom(key).ok().inner
   }, [key])
 
-  const onDoneClick = useAsyncUniqueCallback(async () => {
-    if (!name || !ethersWallet) return
+  const [error, setError] = useState<Error>()
 
-    const privateKeyBytes = Bytes.fromHex(ethersWallet.signingKey.privateKey.slice(2))
+  const tryAdd = useCallback(async (authentication: boolean) => {
+    if (!name || !ethersWallet)
+      throw new Panic()
 
-    const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
-    // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      const privateKeyBytes = Bytes.fromHexSafe(ethersWallet.privateKey.slice(2))
 
-    const privateKey = `0x${Bytes.toHex(privateKeyBytes)}`
-    const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
+      const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
+      // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
 
-    // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
-    // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
+      const privateKey = `0x${Bytes.toHex(privateKeyBytes)}`
+      const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
 
+      // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
+      // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
 
-    const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, privateKey, address }
+      const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, privateKey, address }
 
-    const walletsData = await background
-      .tryRequest<Wallet[]>({ method: "brume_newWallet", params: [wallet] })
-      .then(r => r.unwrap().unwrap())
+      const walletsData = await background
+        .tryRequest<Wallet[]>({ method: "brume_newWallet", params: [authentication, wallet] })
+        .then(r => r.throw(t).throw(t))
 
-    wallets.mutate(Mutators.data(walletsData))
+      wallets.mutate(Mutators.data(walletsData))
 
-    close()
+      close()
+
+      return Ok.void()
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uuid, name, color, emoji, ethersWallet, background, wallets.mutate, close])
+
+  const onNoAuthClick = useAsyncUniqueCallback(async () => {
+    await tryAdd(false).then(r => r.inspectErrSync(setError))
+  }, [tryAdd])
+
+  const onAuthClick = useAsyncUniqueCallback(async () => {
+    await tryAdd(true).then(r => r.inspectErrSync(setError))
+  }, [tryAdd])
 
   const NameInput =
     <div className="flex items-stretch gap-2">
@@ -114,18 +130,28 @@ export function WalletCreatorDialog(props: CloseProps) {
       rows={4} />
 
   const Info =
-    <div className="text-contrast text-sm">
+    <div className="text-contrast">
       {`We have generated a new private key just for you. You can also enter your own private key to import an existing wallet.`}
     </div>
 
-  const DoneButton =
+  const NoAuthButton =
+    <Button.Contrast className="w-full p-md"
+      disabled={!name || !ethersWallet}
+      onClick={onNoAuthClick.run}>
+      <Button.Shrink>
+        <Outline.PlusIcon className="icon-sm" />
+        Add without authentication
+      </Button.Shrink>
+    </Button.Contrast>
+
+  const AuthButton =
     <Button.Gradient className="w-full p-md"
       colorIndex={color}
       disabled={!name || !ethersWallet}
-      onClick={onDoneClick.run}>
+      onClick={onAuthClick.run}>
       <Button.Shrink>
-        <Outline.PlusIcon className="icon-sm" />
-        Add
+        <Outline.LockClosedIcon className="icon-sm" />
+        Add with authentication
       </Button.Shrink>
     </Button.Gradient>
 
@@ -139,7 +165,13 @@ export function WalletCreatorDialog(props: CloseProps) {
     {KeyInput}
     <div className="h-2" />
     {Info}
+    {error && <div className="mt-2 text-red-400">
+      An error occured: {Errors.toString(error)}
+    </div>}
     <div className="h-4" />
-    {DoneButton}
+    <div className="flex items-center flex-wrap-reverse gap-2">
+      {NoAuthButton}
+      {AuthButton}
+    </div>
   </Dialog>
 }
