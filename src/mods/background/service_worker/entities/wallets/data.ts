@@ -12,7 +12,7 @@ import { Ok, Result } from "@hazae41/result"
 import { Data, FetchError, Fetched, FetcherMore, IDBStorage, NormalizerMore, State, createQuerySchema } from "@hazae41/xswr"
 import { IndexerMore } from "@hazae41/xswr/dist/types/mods/types/indexer"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
-import { EthereumBrumes } from "../sessions/data"
+import { EthereumBrumes } from "../brumes/data"
 import { User } from "../users/data"
 
 export type Wallet =
@@ -104,15 +104,6 @@ export async function getWalletRef(wallet: Wallet, storage: IDBStorage, more: No
 export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
   version?: number
   chainId?: number
-}
-
-export interface EthereumSession {
-  wallet: Wallet
-  chain: EthereumChain
-}
-
-export function getEthereumSession(origin: string, storage: IDBStorage) {
-  return createQuerySchema<string, EthereumSession, never>({ key: `sessions/${origin}`, storage })
 }
 
 export interface EthereumContext {

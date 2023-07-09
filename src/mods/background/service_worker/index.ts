@@ -25,11 +25,12 @@ import { Core, Data, IDBStorage, Makeable, RawState, SimpleFetcherfulQueryInstan
 import { ethers } from "ethers"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
-import { EthereumBrume, EthereumBrumes, getEthereumBrumes } from "./entities/sessions/data"
+import { EthereumBrume, EthereumBrumes, getEthereumBrumes } from "./entities/brumes/data"
+import { EthereumSession, getEthereumSession } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
-import { EthereumAuthPrivateKeyWallet, EthereumContext, EthereumPrivateKeyWallet, EthereumQueryKey, EthereumSession, Wallet, WalletData, getEthereumBalance, getEthereumSession, getEthereumUnknown, getPairPrice, getWallet, tryEthereumFetch } from "./entities/wallets/data"
+import { EthereumAuthPrivateKeyWallet, EthereumContext, EthereumPrivateKeyWallet, EthereumQueryKey, Wallet, WalletData, getEthereumBalance, getEthereumUnknown, getPairPrice, getWallet, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -312,7 +313,7 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
-      const sessionData: EthereumSession = { wallet, chain }
+      const sessionData: EthereumSession = { origin: script.name, wallet, chain }
       const sessionQuery = await this.make(getEthereumSession(script.name, storage))
       await sessionQuery.mutate(Mutators.data(sessionData))
 

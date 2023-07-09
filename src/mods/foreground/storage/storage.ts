@@ -2,7 +2,8 @@ import { RpcParamfulRequestInit } from "@/libs/rpc"
 import { Mutex } from "@hazae41/mutex"
 import { None, Optional, Some } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
-import { Core, RawState, Storage } from "@hazae41/xswr"
+import { Core, Query, RawState, Storage } from "@hazae41/xswr"
+import { useEffect } from "react"
 import { Background } from "../background/background"
 
 export class GlobalStorage implements Storage {
@@ -68,4 +69,14 @@ export class UserStorage implements Storage {
     })
   }
 
+}
+
+export function useSubscribe<K, D, F>(query: Query<K, D, F>, storage: UserStorage) {
+  const { cacheKey } = query
+
+  useEffect(() => {
+    if (cacheKey == null)
+      return
+    storage.trySubscribe(cacheKey).then(r => r.ignore())
+  }, [cacheKey, storage])
 }

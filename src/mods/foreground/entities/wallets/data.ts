@@ -2,68 +2,24 @@ import { BigInts, Fixed, FixedInit } from "@/libs/bigints/bigints"
 import { EthereumChain, PairInfo } from "@/libs/ethereum/chain"
 import { useObjectMemo } from "@/libs/react/memo"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
-import { EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data"
+import { EthereumQueryKey, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Optional } from "@hazae41/option"
 import { Result } from "@hazae41/result"
-import { Core, Data, FetchError, Fetched, FetcherMore, Query, createQuerySchema, useCore, useError, useFallback, useFetch, useOnce, useQuery, useVisible } from "@hazae41/xswr"
+import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useOnce, useQuery, useVisible } from "@hazae41/xswr"
 import { ContractRunner, TransactionRequest } from "ethers"
 import { useEffect } from "react"
 import { Background } from "../../background/background"
 import { useBackground } from "../../background/context"
 import { useUserStorage } from "../../storage/context"
-import { UserStorage } from "../../storage/storage"
+import { UserStorage, useSubscribe } from "../../storage/storage"
 import { useCurrentUser } from "../users/context"
 import { User } from "../users/data"
-
-export type Wallet =
-  | WalletRef
-  | WalletData
 
 export interface WalletProps {
   wallet: Wallet
 }
 
-export interface WalletRef {
-  ref: true
-  uuid: string
-}
-
-export type WalletData =
-  | EthereumPrivateKeyWallet
-
-export interface EthereumPrivateKeyWallet {
-  coin: "ethereum"
-  type: "privateKey"
-
-  uuid: string
-  name: string,
-
-  color: number,
-  emoji: string
-
-  privateKey: string
-  address: string
-}
-
-export interface BitcoinPrivateKeyWallet {
-  coin: "bitcoin"
-  type: "privateKey"
-
-  uuid: string
-  name: string,
-
-  color: number,
-  emoji: string
-
-  privateKey: string
-  compressedAddress: string
-  uncompressedAddress: string
-}
-
-export function getWallet(uuid: Optional<string>, background: Background) {
-  if (uuid == null)
-    return undefined
-
+export function getWallet(uuid: string, background: Background) {
   const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 
@@ -76,7 +32,7 @@ export function getWallet(uuid: Optional<string>, background: Background) {
   })
 }
 
-export function useWallet(uuid: Optional<string>, background: Background) {
+export function useWallet(uuid: string, background: Background) {
   const query = useQuery(getWallet, [uuid, background])
   useOnce(query)
   return query
@@ -134,16 +90,6 @@ export async function tryIndex<T>(request: RpcRequestPreinit<unknown>, ethereum:
     method: "brume_eth_index",
     params: [wallet.uuid, chain.chainId, request]
   })
-}
-
-export function useSubscribe<K, D, F>(query: Query<K, D, F>, storage: UserStorage) {
-  const { cacheKey } = query
-
-  useEffect(() => {
-    if (cacheKey == null)
-      return
-    storage.trySubscribe(cacheKey).then(r => r.ignore())
-  }, [cacheKey, storage])
 }
 
 export function getTotalPricedBalance(context: GeneralContext, coin: "usd", storage: UserStorage) {

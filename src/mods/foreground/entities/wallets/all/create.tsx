@@ -14,6 +14,7 @@ import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
 import { Mutators } from "@/libs/xswr/mutators";
+import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { Bytes } from "@hazae41/bytes";
 import { Ok, Panic, Result } from "@hazae41/result";
@@ -21,7 +22,6 @@ import { secp256k1 } from "@noble/curves/secp256k1";
 import * as Ethers from "ethers";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../avatar";
-import { Wallet, WalletData } from "../data";
 import { useWallets } from "./data";
 
 export namespace Wallets {
