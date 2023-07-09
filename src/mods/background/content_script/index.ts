@@ -1,9 +1,9 @@
 import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort } from "@/libs/channel/channel"
 import { Mouse } from "@/libs/mouse/mouse"
-import { RpcRequestInit, RpcResponse } from "@/libs/rpc"
+import { RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
-import { None } from "@hazae41/option"
+import { None, Some } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
 import { Err, Ok, Result } from "@hazae41/result"
 
@@ -57,19 +57,47 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
 
     const port = new ExtensionPort("background", raw)
 
-    const onRequest = async (event: CustomEvent<string>) => {
-      const request = JSON.parse(event.detail) as RpcRequestInit<unknown>
+    const onScriptRequest = async (input: CustomEvent<string>) => {
+      const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
 
       const response = await port
         .tryRequest({ method: "brume_mouse", params: [request, mouse] })
         .then(r => r.unwrapOrElseSync(e => RpcResponse.rewrap(request.id, new Err(e))))
 
       const detail = JSON.stringify(response)
-      const event2 = new CustomEvent("ethereum#response", { detail })
-      window.dispatchEvent(event2)
+      const output = new CustomEvent("ethereum#response", { detail })
+      window.dispatchEvent(output)
     }
 
-    window.addEventListener("ethereum#request", onRequest, { passive: true })
+    window.addEventListener("ethereum#request", onScriptRequest, { passive: true })
+
+    const onAccountsChanged = async (request: RpcRequestPreinit<unknown>) => {
+      const [accounts] = (request as RpcParamfulRequestPreinit<[string[]]>).params
+
+      const detail = JSON.stringify(accounts)
+      const output = new CustomEvent("ethereum#accountsChanged", { detail })
+      window.dispatchEvent(output)
+      return Ok.void()
+    }
+
+    const onChainChanged = async (request: RpcRequestPreinit<unknown>) => {
+      const [chainId] = (request as RpcParamfulRequestPreinit<[string]>).params
+
+      const detail = JSON.stringify(chainId)
+      const output = new CustomEvent("ethereum#chainChanged", { detail })
+      window.dispatchEvent(output)
+      return Ok.void()
+    }
+
+    const onBackgroundRequest = async (request: RpcRequestPreinit<unknown>) => {
+      if (request.method === "accountsChanged")
+        return new Some(await onAccountsChanged(request))
+      if (request.method === "chainChanged")
+        return new Some(await onChainChanged(request))
+      return new None()
+    }
+
+    port.events.on("request", onBackgroundRequest, { passive: true })
 
     const onClose = () => {
       pool.delete(index)
@@ -79,7 +107,7 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
     port.events.on("close", onClose, { passive: true })
 
     const onClean = () => {
-      window.removeEventListener("ethereum#request", onRequest)
+      window.removeEventListener("ethereum#request", onScriptRequest)
       port.events.off("close", onClose)
       port.clean()
       raw.disconnect()

@@ -1,5 +1,6 @@
 import PairAbi from "@/assets/Pair.json"
 import { Fixed, FixedInit } from "@/libs/bigints/bigints"
+import { Port } from "@/libs/channel/channel"
 import { EthereumChain, PairInfo, chains, pairsByAddress, tokensByAddress } from "@/libs/ethereum/chain"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
@@ -116,7 +117,7 @@ export function getEthereumSession(origin: string, storage: IDBStorage) {
 
 export interface EthereumContext {
   user: User,
-  origin: string
+  port: Port
   wallet: Wallet
   chain: EthereumChain
   brumes: EthereumBrumes

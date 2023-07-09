@@ -7,24 +7,31 @@ declare global {
   }
 }
 
+type EthereumEventKey = `ethereum#${string}`
+
+type Sublistener = (...params: any[]) => void
+type Suplistener = (e: CustomEvent<string>) => void
+
 declare global {
   interface DedicatedWorkerGlobalScopeEventMap {
-    "ethereum#response": CustomEvent<string>
+    [k: EthereumEventKey]: CustomEvent<string>
   }
 }
 
 class Provider {
 
-  constructor(
-    readonly client = new RpcClient()
-  ) { }
+  readonly #client = new RpcClient()
+
+  readonly #listeners = new Map<string, Map<Sublistener, Suplistener>>()
+
+  constructor() { }
 
   isConnected() {
     return true
   }
 
   async request(init: RpcRequestPreinit<unknown>) {
-    const request = this.client.create(init)
+    const request = this.#client.create(init)
 
     const future = new Future<unknown>()
 
@@ -53,8 +60,43 @@ class Provider {
     }
   }
 
-  on(event: string, listener: () => void) {
+  on(key: string, sublistener: Sublistener) {
+    let listeners = this.#listeners.get(key)
 
+    if (listeners == null) {
+      listeners = new Map()
+      this.#listeners.set(key, listeners)
+    }
+
+    let suplistener = listeners.get(sublistener)
+
+    if (suplistener == null) {
+      suplistener = (e: CustomEvent<string>) => void sublistener(JSON.parse(e.detail))
+      listeners.set(sublistener, suplistener)
+    }
+
+    window.addEventListener(`ethereum#${key}`, suplistener, { passive: true })
+  }
+
+  off(key: string, sublistener: Sublistener) {
+    const listeners = this.#listeners.get(key)
+
+    if (listeners == null)
+      return
+
+    const suplistener = listeners.get(sublistener)
+
+    if (suplistener == null)
+      return
+
+    window.removeEventListener(`ethereum#${key}`, suplistener)
+
+    listeners.delete(sublistener)
+
+    if (listeners.size !== 0)
+      return
+
+    this.#listeners.delete(key)
   }
 
 }

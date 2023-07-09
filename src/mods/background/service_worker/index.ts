@@ -101,9 +101,11 @@ export class Global {
   readonly core = new Core({})
 
   readonly events = new SuperEventTarget<{
-    "hello": (port: Port) => Result<void, Error>
-    "data": (port: Port, request: RpcRequestPreinit<unknown>) => Result<void, Error>
+    "hello": (foreground: Port) => Result<void, Error>
+    "data": (foreground: Port, request: RpcRequestPreinit<unknown>) => Result<void, Error>
   }>()
+
+  readonly scripts = new Map<string, Set<Port>>()
 
   readonly popupMutex = new Mutex(undefined)
 
@@ -181,16 +183,16 @@ export class Global {
     })
   }
 
-  async tryWaitPopupHello(popup: chrome.windows.Window) {
+  async tryWaitPopupHello(window: chrome.windows.Window) {
     const future = new Future<Result<Port, Error>>()
 
-    const onRequest = (port: Port) => {
-      future.resolve(new Ok(port))
+    const onRequest = (foreground: Port) => {
+      future.resolve(new Ok(foreground))
       return new Some(Ok.void())
     }
 
     const onRemoved = (id: number) => {
-      if (id !== popup.id)
+      if (id !== window.id)
         return
       future.resolve(new Err(new Error()))
     }
@@ -252,8 +254,8 @@ export class Global {
   async tryWaitPopupData(popup: PopupData, method: string) {
     const future = new Future<Result<RpcRequestPreinit<unknown>, Error>>()
 
-    const onData = (port: Port, request: RpcRequestPreinit<unknown>) => {
-      if (port.uuid !== popup.port.uuid)
+    const onData = (foreground: Port, request: RpcRequestPreinit<unknown>) => {
+      if (foreground.uuid !== popup.port.uuid)
         return new None()
       if (request.method !== method)
         return new None()
@@ -278,19 +280,19 @@ export class Global {
     }
   }
 
-  async getEthereumSession(port: Port): Promise<Optional<EthereumSession>> {
+  async getEthereumSession(script: Port): Promise<Optional<EthereumSession>> {
     const currentUser = await this.getCurrentUser()
 
     if (currentUser == null)
       return undefined
 
-    const sessionQuery = await this.make(getEthereumSession(port.name, currentUser.storage))
+    const sessionQuery = await this.make(getEthereumSession(script.name, currentUser.storage))
     return sessionQuery.current?.inner
   }
 
-  async tryGetOrWaitEthereumSession(port: Port, mouse: Mouse): Promise<Result<EthereumSession, Error>> {
+  async tryGetOrWaitEthereumSession(script: Port, mouse: Mouse): Promise<Result<EthereumSession, Error>> {
     return await Result.unthrow(async t => {
-      const session = await this.getEthereumSession(port)
+      const session = await this.getEthereumSession(script)
 
       if (session != null)
         return new Ok(session)
@@ -311,14 +313,14 @@ export class Global {
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
       const sessionData: EthereumSession = { wallet, chain }
-      const sessionQuery = await this.make(getEthereumSession(port.name, storage))
+      const sessionQuery = await this.make(getEthereumSession(script.name, storage))
       await sessionQuery.mutate(Mutators.data(sessionData))
 
       return new Ok(sessionData)
     })
   }
 
-  async tryRouteContentScript(script: ExtensionPort, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<unknown, Error>> {
+  async tryRouteContentScript(script: Port, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       if (request.method === "eth_requestAccounts")
         return await this.eth_requestAccounts(script, request, mouse)
@@ -329,7 +331,7 @@ export class Global {
 
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
-      const ethereum = { user, origin: script.name, wallet, chain, brumes }
+      const ethereum: EthereumContext = { user, port: script, wallet, chain, brumes }
 
       if (request.method === "eth_accounts")
         return await this.eth_accounts(ethereum, request)
@@ -356,7 +358,7 @@ export class Global {
     })
   }
 
-  async eth_requestAccounts(script: ExtensionPort, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<[string], Error>> {
+  async eth_requestAccounts(script: Port, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<[string], Error>> {
     return await Result.unthrow(async t => {
       const sessionData = await this.tryGetOrWaitEthereumSession(script, mouse).then(r => r.throw(t))
 
@@ -441,7 +443,7 @@ export class Global {
     })
   }
 
-  async tryGetPrivateKey(wallet: WalletData, port: Port): Promise<Result<string, Error>> {
+  async tryGetPrivateKey(wallet: WalletData, foreground: Port): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       if (wallet.type === "privateKey")
         return new Ok(wallet.privateKey)
@@ -450,7 +452,7 @@ export class Global {
 
       const { idBase64, ivBase64 } = wallet.privateKey
 
-      const cipherBase64 = await port.tryRequest<string>({
+      const cipherBase64 = await foreground.tryRequest<string>({
         method: "brume_auth_get",
         params: [idBase64]
       }).then(r => r.throw(t).throw(t))
@@ -517,7 +519,7 @@ export class Global {
     })
   }
 
-  async brume_eth_sendTransaction(port: Port, ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+  async brume_eth_sendTransaction(foreground: Port, ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [{ data, gas, from, to, value }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string, value: string }]>).params
 
@@ -535,7 +537,7 @@ export class Global {
         method: "eth_gasPrice"
       }).then(r => r.throw(t).throw(t))
 
-      const privateKey = await this.tryGetPrivateKey(wallet, port).then(r => r.throw(t))
+      const privateKey = await this.tryGetPrivateKey(wallet, foreground).then(r => r.throw(t))
 
       const signature = await new ethers.Wallet(privateKey).signTransaction({
         data: data,
@@ -636,14 +638,17 @@ export class Global {
       Result.assert(approved).mapErrSync(UserRejectionError.new).throw(t)
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
-      const sessionQuery = await this.make(getEthereumSession(ethereum.origin, storage))
+      const sessionQuery = await this.make(getEthereumSession(ethereum.port.name, storage))
       await sessionQuery.mutate(Mutators.mapDataIfItExists(d => d.mapSync(d => ({ ...d, chain }))))
+
+      for (const script of Option.wrap(this.scripts.get(ethereum.port.name)).unwrapOr([]))
+        await script.tryRequest({ method: "chainChanged", params: [chainId] }).then(r => r.ignore())
 
       return Ok.void()
     })
   }
 
-  async tryRouteForeground(channel: Port, request: RpcRequestInit<unknown>): Promise<Option<Result<unknown, Error>>> {
+  async tryRouteForeground(foreground: Port, request: RpcRequestInit<unknown>): Promise<Option<Result<unknown, Error>>> {
     if (request.method === "brume_getPath")
       return new Some(await this.brume_getPath(request))
     if (request.method === "brume_setPath")
@@ -651,7 +656,7 @@ export class Global {
     if (request.method === "brume_getUsers")
       return new Some(await this.brume_getUsers(request))
     if (request.method === "brume_newUser")
-      return new Some(await this.brume_newUser(channel, request))
+      return new Some(await this.brume_newUser(foreground, request))
     if (request.method === "brume_getUser")
       return new Some(await this.brume_getUser(request))
     if (request.method === "brume_setCurrentUser")
@@ -661,7 +666,7 @@ export class Global {
     if (request.method === "brume_getWallets")
       return new Some(await this.brume_getWallets(request))
     if (request.method === "brume_newWallet")
-      return new Some(await this.brume_newWallet(channel, request))
+      return new Some(await this.brume_newWallet(foreground, request))
     if (request.method === "brume_getWallet")
       return new Some(await this.brume_getWallet(request))
     if (request.method === "brume_get_global")
@@ -669,19 +674,19 @@ export class Global {
     if (request.method === "brume_get_user")
       return new Some(await this.brume_get_user(request))
     if (request.method === "brume_subscribe")
-      return new Some(await this.brume_subscribe(channel, request))
+      return new Some(await this.brume_subscribe(foreground, request))
     if (request.method === "brume_eth_fetch")
-      return new Some(await this.brume_eth_fetch(request))
+      return new Some(await this.brume_eth_fetch(foreground, request))
     if (request.method === "brume_eth_index")
-      return new Some(await this.brume_eth_index(request))
+      return new Some(await this.brume_eth_index(foreground, request))
     if (request.method === "brume_eth_run")
-      return new Some(await this.brume_eth_run(channel, request))
+      return new Some(await this.brume_eth_run(foreground, request))
     if (request.method === "brume_log")
       return new Some(await this.brume_log(request))
     if (request.method === "popup_hello")
-      return new Some(await this.popup_hello(channel, request))
+      return new Some(await this.popup_hello(foreground, request))
     if (request.method === "brume_data")
-      return new Some(await this.popup_data(channel, request))
+      return new Some(await this.popup_data(foreground, request))
     return new None()
   }
 
@@ -697,9 +702,9 @@ export class Global {
     return Ok.void()
   }
 
-  async popup_hello(channel: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async popup_hello(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
-      const returned = await this.events.emit("hello", [channel])
+      const returned = await this.events.emit("hello", [foreground])
 
       if (returned.isSome() && returned.inner.isErr())
         return returned.inner
@@ -708,11 +713,11 @@ export class Global {
     })
   }
 
-  async popup_data(channel: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async popup_data(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
       const [subrequest] = (request as RpcParamfulRequestInit<[RpcRequestPreinit<unknown>]>).params
 
-      const returned = await this.events.emit("data", [channel, subrequest])
+      const returned = await this.events.emit("data", [foreground, subrequest])
 
       if (returned.isSome() && returned.inner.isErr())
         return returned.inner
@@ -730,7 +735,7 @@ export class Global {
     })
   }
 
-  async brume_newUser(channel: Port, request: RpcRequestPreinit<unknown>): Promise<Result<User[], Error>> {
+  async brume_newUser(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<User[], Error>> {
     return await Result.unthrow(async t => {
       const [init] = (request as RpcParamfulRequestInit<[UserInit]>).params
 
@@ -792,7 +797,7 @@ export class Global {
     })
   }
 
-  async brume_newWallet(channel: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
+  async brume_newWallet(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
     return await Result.unthrow(async t => {
       const { storage, crypter } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
@@ -813,7 +818,7 @@ export class Global {
       const ivBase64 = Bytes.toBase64(iv)
       const cipherBase64 = Bytes.toBase64(cipher)
 
-      const idBase64 = await channel.tryRequest<string>({
+      const idBase64 = await foreground.tryRequest<string>({
         method: "brume_auth_create",
         params: [wallet.name, cipherBase64]
       }).then(r => r.throw(t).throw(t))
@@ -889,14 +894,14 @@ export class Global {
     })
   }
 
-  async brume_subscribe(channel: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_subscribe(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
       const [cacheKey] = (request as RpcParamfulRequestInit<[string]>).params
 
       const onState = async (event: CustomEvent<State<any, any>>) => {
         const stored = await this.core.store(event.detail, { key: cacheKey })
 
-        await channel.tryRequest({
+        await foreground.tryRequest({
           method: "brume_update",
           params: [cacheKey, stored]
         }).then(r => r.ignore())
@@ -904,7 +909,7 @@ export class Global {
 
       this.core.onState.addListener(cacheKey, onState)
 
-      channel.events.on("close", () => {
+      foreground.events.on("close", () => {
         this.core.onState.removeListener(cacheKey, onState)
         return new None()
       })
@@ -925,7 +930,7 @@ export class Global {
     return await this.makeEthereumUnknown(ethereum, request, storage)
   }
 
-  async brume_eth_index(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_eth_index(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [walletId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
 
@@ -937,7 +942,7 @@ export class Global {
 
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
-      const ethereum = { user, origin: "foreground", wallet, chain, brumes }
+      const ethereum = { user, port: foreground, wallet, chain, brumes }
 
       const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
@@ -947,7 +952,7 @@ export class Global {
     })
   }
 
-  async brume_eth_fetch(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_eth_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [walletId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
 
@@ -959,7 +964,7 @@ export class Global {
 
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
-      const ethereum = { user, origin: "foreground", wallet, chain, brumes }
+      const ethereum = { user, port: foreground, wallet, chain, brumes }
 
       const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
@@ -975,7 +980,7 @@ export class Global {
     })
   }
 
-  async brume_eth_run(channel: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_eth_run(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [walletId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
 
@@ -987,10 +992,10 @@ export class Global {
 
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
-      const ethereum = { user, origin: channel.name, wallet, chain, brumes }
+      const ethereum = { user, port: foreground, wallet, chain, brumes }
 
       if (subrequest.method === "eth_sendTransaction")
-        return await this.brume_eth_sendTransaction(channel, ethereum, subrequest)
+        return await this.brume_eth_sendTransaction(foreground, ethereum, subrequest)
 
       return new Err(new Error(`Invalid JSON-RPC request ${request.method}`))
     })
@@ -1079,17 +1084,33 @@ if (IS_WEBSITE) {
 if (IS_EXTENSION) {
 
   const onContentScript = (port: chrome.runtime.Port) => {
-    const channel = new ExtensionPort(port.name, port)
+    const script = new ExtensionPort(port.name, port)
 
-    channel.events.on("request", async (request) => {
+    script.events.on("request", async (request) => {
       const inited = await init
 
       if (inited.isErr())
         return new Some(inited)
 
       const [subrequest, mouse] = (request as RpcParamfulRequestInit<[RpcRequestPreinit<unknown>, Mouse]>).params
-      return new Some(await inited.get().tryRouteContentScript(channel, subrequest, mouse))
+      return new Some(await inited.get().tryRouteContentScript(script, subrequest, mouse))
     })
+
+    init.then(inited => inited.inspectSync(global => {
+      let scripts = global.scripts.get(script.name)
+
+      if (scripts == null) {
+        scripts = new Set()
+        global.scripts.set(script.name, scripts)
+      }
+
+      script.events.on("close", () => {
+        scripts?.delete(script)
+        return new None()
+      })
+
+      scripts.add(script)
+    }))
   }
 
   const onForeground = (port: chrome.runtime.Port) => {
