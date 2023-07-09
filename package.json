@@ -1,6 +1,6 @@
 {
   "name": "@brumewallet/wallet",
-  "version": "0.3.17",
+  "version": "0.3.18",
   "versions": {
     "firefox.xpi": "0.3.11"
   },
