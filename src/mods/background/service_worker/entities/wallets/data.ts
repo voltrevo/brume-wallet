@@ -92,13 +92,13 @@ export function getWallet(uuid: string, storage: IDBStorage) {
   return createQuerySchema<string, WalletData, never>({ key: `wallet/${uuid}`, storage })
 }
 
-export async function getWalletRef(wallet: Wallet, storage: IDBStorage, more: NormalizerMore) {
+export async function getWalletRef(wallet: Wallet, storage: IDBStorage, more: NormalizerMore): Promise<WalletRef> {
   if ("ref" in wallet) return wallet
 
   const schema = getWallet(wallet.uuid, storage)
   await schema?.normalize(new Data(wallet), more)
 
-  return { ref: true, uuid: wallet.uuid } as WalletRef
+  return { ref: true, uuid: wallet.uuid }
 }
 
 export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {

@@ -26,7 +26,8 @@ import { ethers } from "ethers"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { EthereumBrume, EthereumBrumes, getEthereumBrumes } from "./entities/brumes/data"
-import { EthereumSession, getEthereumSession } from "./entities/sessions/data"
+import { getSessions } from "./entities/sessions/all/data"
+import { Session, SessionData, getSession } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
@@ -281,17 +282,17 @@ export class Global {
     }
   }
 
-  async getEthereumSession(script: Port): Promise<Optional<EthereumSession>> {
+  async getEthereumSession(script: Port): Promise<Optional<SessionData>> {
     const currentUser = await this.getCurrentUser()
 
     if (currentUser == null)
       return undefined
 
-    const sessionQuery = await this.make(getEthereumSession(script.name, currentUser.storage))
+    const sessionQuery = await this.make(getSession(script.name, currentUser.storage))
     return sessionQuery.current?.inner
   }
 
-  async tryGetOrWaitEthereumSession(script: Port, mouse: Mouse): Promise<Result<EthereumSession, Error>> {
+  async tryGetOrWaitEthereumSession(script: Port, mouse: Mouse): Promise<Result<SessionData, Error>> {
     return await Result.unthrow(async t => {
       const session = await this.getEthereumSession(script)
 
@@ -313,9 +314,10 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
-      const sessionData: EthereumSession = { origin: script.name, wallet, chain }
-      const sessionQuery = await this.make(getEthereumSession(script.name, storage))
-      await sessionQuery.mutate(Mutators.data(sessionData))
+      const sessionData: SessionData = { origin: script.name, wallet, chain }
+
+      const sessionsQuery = await this.make(getSessions(storage))
+      sessionsQuery.mutate(Mutators.pushData<Session, never>(new Data(sessionData)))
 
       return new Ok(sessionData)
     })
@@ -327,7 +329,7 @@ export class Global {
         return await this.eth_requestAccounts(script, request, mouse)
 
       const { user, storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
-      const sessionQuery = await this.make(getEthereumSession(script.name, storage))
+      const sessionQuery = await this.make(getSession(script.name, storage))
       const { wallet, chain } = Option.wrap(sessionQuery.current?.inner).ok().throw(t)
 
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
@@ -639,7 +641,7 @@ export class Global {
       Result.assert(approved).mapErrSync(UserRejectionError.new).throw(t)
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
-      const sessionQuery = await this.make(getEthereumSession(ethereum.port.name, storage))
+      const sessionQuery = await this.make(getSession(ethereum.port.name, storage))
       await sessionQuery.mutate(Mutators.mapDataIfItExists(d => d.mapSync(d => ({ ...d, chain }))))
 
       for (const script of Option.wrap(this.scripts.get(ethereum.port.name)).unwrapOr([]))
