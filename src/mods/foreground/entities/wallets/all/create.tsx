@@ -112,9 +112,11 @@ export function WalletCreatorDialog(props: CloseProps) {
       if (authenticated) {
         const [ivBase64, cipherBase64] = encryptedPrivateKeyResult.throw(t)
 
-        const idBase64 = await WebAuthnStorage
-          .create(name, Bytes.fromBase64(cipherBase64))
-          .then(r => Bytes.toBase64(r.throw(t)))
+        const cipher = Bytes.fromBase64(cipherBase64)
+
+        const id = await WebAuthnStorage.create(name, cipher).then(r => r.throw(t))
+
+        const idBase64 = Bytes.toBase64(id)
 
         const privateKey = { ivBase64, idBase64 }
 
