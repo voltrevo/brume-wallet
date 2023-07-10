@@ -67,7 +67,7 @@ export class WebsitePort {
     const response = RpcResponse.rewrap(request.id, result)
     console.log(this.name, "<-", response)
 
-    this.port.postMessage(response)
+    this.port.postMessage(JSON.stringify(response))
   }
 
   async onResponse(response: RpcResponseInit<unknown>) {
@@ -79,16 +79,18 @@ export class WebsitePort {
     return new Err(new Error(`Unhandled JSON-RPC response ${response}`))
   }
 
-  async onMessage(message: MessageEvent<RpcRequestInit<unknown> | RpcResponseInit<unknown>>) {
-    if ("method" in message.data)
-      return await this.onRequest(message.data)
-    return await this.onResponse(message.data)
+  async onMessage(message: MessageEvent<string>) {
+    const data = JSON.parse(message.data) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
+
+    if ("method" in data)
+      return await this.onRequest(data)
+    return await this.onResponse(data)
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     const request = this.client.create(init)
 
-    this.port.postMessage(request)
+    this.port.postMessage(JSON.stringify(request))
 
     return Plume.tryWaitOrCloseOrError(this.events, "response", (future: Future<Ok<RpcResponse<T>>>, init: RpcResponseInit<any>) => {
       if (init.id !== request.id)
@@ -103,7 +105,7 @@ export class WebsitePort {
   async tryRequestOrSignal<T>(init: RpcRequestPreinit<unknown>, signal: AbortSignal): Promise<Result<RpcResponse<T>, Error>> {
     const request = this.client.create(init)
 
-    this.port.postMessage(request)
+    this.port.postMessage(JSON.stringify(request))
 
     return Plume.tryWaitOrCloseOrErrorOrSignal(this.events, "response", (future: Future<Ok<RpcResponse<T>>>, init: RpcResponseInit<any>) => {
       if (init.id !== request.id)
@@ -162,7 +164,9 @@ export class ExtensionPort {
     const response = RpcResponse.rewrap(request.id, result)
     console.log(this.name, "<-", response)
 
-    tryBrowserSync(() => this.port.postMessage(response)).ignore()
+    tryBrowserSync(() => {
+      this.port.postMessage(JSON.stringify(response))
+    }).ignore()
   }
 
   async onResponse(response: RpcResponseInit<unknown>) {
@@ -174,10 +178,12 @@ export class ExtensionPort {
     return new Err(new Error(`Unhandled JSON-RPC response ${response}`))
   }
 
-  async onMessage(message: RpcRequestInit<unknown> | RpcResponseInit<unknown>) {
-    if ("method" in message)
-      return await this.onRequest(message)
-    return await this.onResponse(message)
+  async onMessage(message: string) {
+    const data = JSON.parse(message) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
+
+    if ("method" in data)
+      return await this.onRequest(data)
+    return await this.onResponse(data)
   }
 
   async onDisconnect() {
@@ -188,7 +194,9 @@ export class ExtensionPort {
     return await Result.unthrow(async t => {
       const request = this.client.create(init)
 
-      tryBrowserSync(() => this.port.postMessage(request)).throw(t)
+      tryBrowserSync(() => {
+        this.port.postMessage(JSON.stringify(request))
+      }).throw(t)
 
       return Plume.tryWaitOrCloseOrError(this.events, "response", (future: Future<Ok<RpcResponse<T>>>, init: RpcResponseInit<any>) => {
         if (init.id !== request.id)

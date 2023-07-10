@@ -1,45 +1,20 @@
 import { Err } from "@hazae41/result"
 import { RpcId } from "./request"
 
-export interface ErrorInit {
+export interface RpcErrorInit {
   readonly message: string
-}
-
-export namespace ErrorInit {
-
-  export function clone(init: ErrorInit): ErrorInit {
-    const { message } = init
-    return { message }
-  }
-
 }
 
 export interface RpcErrInit {
   readonly jsonrpc: "2.0"
   readonly id: RpcId
-  readonly error: ErrorInit
-}
-
-export namespace RpcErrInit {
-
-  export function clone(init: RpcErrInit): RpcErrInit {
-    const { jsonrpc, id, error } = init
-    return { jsonrpc, id, error }
-  }
-
+  readonly error: RpcErrorInit
 }
 
 export class RpcError extends Error {
 
   static from(error: Error) {
-    const { message, name, cause, stack } = error
-
-    const rpcError = new RpcError(message, { cause })
-
-    rpcError.name = name
-    rpcError.stack = stack
-
-    return rpcError
+    return new RpcError(error.message)
   }
 
   toJSON() {

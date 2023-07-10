@@ -60,9 +60,8 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
     const onScriptRequest = async (input: CustomEvent<string>) => {
       const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
 
-      const response = await port
-        .tryRequest({ method: "brume_mouse", params: [request, mouse] })
-        .then(r => r.unwrapOrElseSync(e => RpcResponse.rewrap(request.id, new Err(e))))
+      const result = await port.tryRequest({ method: "brume_mouse", params: [request, mouse] })
+      const response = result.unwrapOrElseSync(e => RpcResponse.rewrap(request.id, new Err(e)))
 
       const detail = JSON.stringify(response)
       const output = new CustomEvent("ethereum#response", { detail })
