@@ -31,7 +31,7 @@ import { Session, SessionData, getSession } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
-import { EthereumAuthPrivateKeyWallet, EthereumContext, EthereumPrivateKeyWallet, EthereumQueryKey, Wallet, WalletData, getEthereumBalance, getEthereumUnknown, getPairPrice, getWallet, tryEthereumFetch } from "./entities/wallets/data"
+import { EthereumContext, EthereumQueryKey, EthereumWalletData, Wallet, WalletData, getEthereumBalance, getEthereumUnknown, getPairPrice, getWallet, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -686,9 +686,11 @@ export class Global {
       return new Some(await this.brume_eth_run(foreground, request))
     if (request.method === "brume_log")
       return new Some(await this.brume_log(request))
+    if (request.method === "brume_encrypt")
+      return new Some(await this.brume_encrypt(foreground, request))
     if (request.method === "popup_hello")
       return new Some(await this.popup_hello(foreground, request))
-    if (request.method === "brume_data")
+    if (request.method === "popup_data")
       return new Some(await this.popup_data(foreground, request))
     return new None()
   }
@@ -800,39 +802,31 @@ export class Global {
     })
   }
 
-  async brume_newWallet(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
+  async brume_encrypt(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<[string, string], Error>> {
     return await Result.unthrow(async t => {
-      const { storage, crypter } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
+      const [plainBase64] = (request as RpcParamfulRequestInit<[string]>).params
 
-      const [auth, wallet] = (request as RpcParamfulRequestInit<[boolean, EthereumPrivateKeyWallet]>).params
-      const walletsQuery = await this.make(getWallets(storage))
+      const { crypter } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
-      if (!auth) {
-        const walletsState = await walletsQuery.mutate(Mutators.pushData<Wallet, never>(new Data(wallet)))
-        const wallets = Option.wrap(walletsState.current?.get()).ok().throw(t)
-
-        return new Ok(wallets)
-      }
-
-      const plain = Bytes.fromHexSafe(wallet.privateKey.slice(2))
+      const plain = Bytes.fromBase64(plainBase64)
       const iv = Bytes.tryRandom(16).throw(t)
       const cipher = await crypter.encrypt(plain, iv)
 
       const ivBase64 = Bytes.toBase64(iv)
       const cipherBase64 = Bytes.toBase64(cipher)
 
-      const idBase64 = await foreground.tryRequest<string>({
-        method: "brume_auth_create",
-        params: [wallet.name, cipherBase64]
-      }).then(r => r.throw(t).throw(t))
+      return new Ok([ivBase64, cipherBase64])
+    })
+  }
 
-      const authWallet: EthereumAuthPrivateKeyWallet = {
-        ...wallet,
-        type: "authPrivateKey",
-        privateKey: { ivBase64, idBase64 }
-      }
+  async brume_newWallet(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
+    return await Result.unthrow(async t => {
+      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
-      const walletsState = await walletsQuery.mutate(Mutators.pushData<Wallet, never>(new Data(authWallet)))
+      const [wallet] = (request as RpcParamfulRequestInit<[EthereumWalletData]>).params
+      const walletsQuery = await this.make(getWallets(storage))
+
+      const walletsState = await walletsQuery.mutate(Mutators.pushData<Wallet, never>(new Data(wallet)))
       const wallets = Option.wrap(walletsState.current?.get()).ok().throw(t)
 
       return new Ok(wallets)

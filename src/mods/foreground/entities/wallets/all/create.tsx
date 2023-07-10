@@ -13,8 +13,9 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
+import { WebAuthnStorage } from "@/libs/webauthn/webauthn";
 import { Mutators } from "@/libs/xswr/mutators";
-import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
+import { EthereumWalletData, Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { Bytes } from "@hazae41/bytes";
 import { Ok, Panic, Result } from "@hazae41/result";
@@ -88,11 +89,30 @@ export function WalletCreatorDialog(props: CloseProps) {
       // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
       // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
 
-      const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, privateKey, address }
+      let wallet: EthereumWalletData
 
-      const walletsData = await background
-        .tryRequest<Wallet[]>({ method: "brume_newWallet", params: [authentication, wallet] })
-        .then(r => r.throw(t).throw(t))
+      if (authentication) {
+        const plainBase64 = Bytes.toBase64(privateKeyBytes)
+
+        const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
+          method: "brume_encrypt",
+          params: [plainBase64]
+        }).then(r => r.throw(t).throw(t))
+
+        const cipher = Bytes.fromBase64(cipherBase64)
+        const id = await WebAuthnStorage.create(name, cipher).then(r => r.throw(t))
+        const idBase64 = Bytes.toBase64(id)
+        const privateKey = { ivBase64, idBase64 }
+
+        wallet = { coin: "ethereum", type: "authPrivateKey", uuid, name, color, emoji, address, privateKey }
+      } else {
+        wallet = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, privateKey, address }
+      }
+
+      const walletsData = await background.tryRequest<Wallet[]>({
+        method: "brume_newWallet",
+        params: [wallet]
+      }).then(r => r.throw(t).throw(t))
 
       wallets.mutate(Mutators.data(walletsData))
 

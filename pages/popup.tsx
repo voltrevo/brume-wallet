@@ -39,7 +39,7 @@ export function TransactPage() {
 
   const onApprove = useCallback(async () => {
     await background.tryRequest({
-      method: "brume_data",
+      method: "popup_data",
       params: [{
         method: "eth_sendTransaction",
         params: [true]
@@ -50,7 +50,7 @@ export function TransactPage() {
 
   const onReject = useCallback(async () => {
     await background.tryRequest({
-      method: "brume_data",
+      method: "popup_data",
       params: [{
         method: "eth_sendTransaction",
         params: [false]
@@ -110,7 +110,7 @@ export function SwitchPage() {
 
   const onApprove = useCallback(async () => {
     await background.tryRequest({
-      method: "brume_data",
+      method: "popup_data",
       params: [{
         method: "wallet_switchEthereumChain",
         params: [true]
@@ -121,7 +121,7 @@ export function SwitchPage() {
 
   const onReject = useCallback(async () => {
     await background.tryRequest({
-      method: "brume_data",
+      method: "popup_data",
       params: [{
         method: "wallet_switchEthereumChain",
         params: [false]
@@ -165,7 +165,7 @@ export function PersonalSignPage() {
 
   const onApprove = useCallback(async () => {
     await background.tryRequest({
-      method: "brume_data",
+      method: "popup_data",
       params: [{
         method: "personal_sign",
         params: [true]
@@ -176,7 +176,7 @@ export function PersonalSignPage() {
 
   const onReject = useCallback(async () => {
     await background.tryRequest({
-      method: "brume_data",
+      method: "popup_data",
       params: [{
         method: "personal_sign",
         params: [false]
@@ -230,7 +230,7 @@ export function TypedSignPage() {
 
   const onApprove = useCallback(async () => {
     await background.tryRequest({
-      method: "brume_data",
+      method: "popup_data",
       params: [{
         method: "eth_signTypedData_v4",
         params: [true]
@@ -241,7 +241,7 @@ export function TypedSignPage() {
 
   const onReject = useCallback(async () => {
     await background.tryRequest({
-      method: "brume_data",
+      method: "popup_data",
       params: [{
         method: "eth_signTypedData_v4",
         params: [false]
@@ -300,7 +300,7 @@ export function WalletAndChainSelectPage() {
 
   const onWalletClick = useCallback(async (wallet: Wallet) => {
     await background.tryRequest({
-      method: "brume_data",
+      method: "popup_data",
       params: [{
         method: "eth_requestAccounts",
         params: [wallet.uuid, chain]
