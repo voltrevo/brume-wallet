@@ -27,7 +27,6 @@ export namespace WebAuthnStorage {
 
   export async function create(name: string, data: Uint8Array): Promise<Result<Uint8Array, WebAuthnStorageError>> {
     return await Result.unthrow(async t => {
-
       const options: CredentialCreationOptions = {
         publicKey: {
           challenge: new Uint8Array([117, 61, 252, 231, 191, 241]),

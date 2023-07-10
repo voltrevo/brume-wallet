@@ -1,6 +1,6 @@
 import { Button } from "@/libs/components/button"
 import { Errors } from "@/libs/errors/errors"
-import { useAsyncCallback } from "@/libs/react/callback"
+import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { Catcher, PromiseCatcher } from "@/libs/react/error"
 import { ErrorProps } from "@/libs/react/props/error"
 import { BackgroundProvider } from "@/mods/foreground/background/context"
@@ -21,7 +21,7 @@ export function Fallback(props: ErrorProps) {
     location.reload()
   }, [])
 
-  const reset = useAsyncCallback(async () => {
+  const reset = useAsyncUniqueCallback(async () => {
     if (!confirm(`You will lose all your wallets if you didn't made backups, are you sure?`))
       return
 
@@ -47,7 +47,7 @@ export function Fallback(props: ErrorProps) {
     </PageBody>
     <div className="p-xmd flex items-center flex-wrap-reverse gap-2">
       <Button.Contrast className="p-md grow"
-        onClick={reset}>
+        onClick={reset.run}>
         Clear everything and reload the page
       </Button.Contrast>
       <Button.Gradient className="p-md grow"

@@ -18,10 +18,10 @@ import { Mutators } from "@/libs/xswr/mutators";
 import { EthereumWalletData, Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { Bytes } from "@hazae41/bytes";
-import { Ok, Panic, Result } from "@hazae41/result";
+import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import * as Ethers from "ethers";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../avatar";
 import { useWallets } from "./data";
 
@@ -73,11 +73,29 @@ export function WalletCreatorDialog(props: CloseProps) {
 
   const [error, setError] = useState<Error>()
 
-  const tryAdd = useCallback(async (authentication: boolean) => {
-    if (!name || !ethersWallet)
-      throw new Panic()
+  const encryptedPrivateKeyResult = useAsyncReplaceMemo(async () => {
+    return await Result.unthrow<Result<[string, string], Error>>(async t => {
+      if (!ethersWallet)
+        return new Err(new Panic())
 
+      const privateKeyBytes = Bytes.fromHexSafe(ethersWallet.privateKey.slice(2))
+
+      const plainBase64 = Bytes.toBase64(privateKeyBytes)
+
+      const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
+        method: "brume_encrypt",
+        params: [plainBase64]
+      }).then(r => r.throw(t).throw(t))
+
+      return new Ok([ivBase64, cipherBase64])
+    })
+  }, [ethersWallet, background])
+
+  const tryAddWallet = useAsyncUniqueCallback(async (authenticated: boolean) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
+      if (!name || !ethersWallet || !encryptedPrivateKeyResult)
+        return new Err(new Panic())
+
       const privateKeyBytes = Bytes.fromHexSafe(ethersWallet.privateKey.slice(2))
 
       const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
@@ -91,22 +109,18 @@ export function WalletCreatorDialog(props: CloseProps) {
 
       let wallet: EthereumWalletData
 
-      if (authentication) {
-        const plainBase64 = Bytes.toBase64(privateKeyBytes)
+      if (authenticated) {
+        const [ivBase64, cipherBase64] = encryptedPrivateKeyResult.throw(t)
 
-        const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
-          method: "brume_encrypt",
-          params: [plainBase64]
-        }).then(r => r.throw(t).throw(t))
+        const idBase64 = await WebAuthnStorage
+          .create(name, Bytes.fromBase64(cipherBase64))
+          .then(r => Bytes.toBase64(r.throw(t)))
 
-        const cipher = Bytes.fromBase64(cipherBase64)
-        const id = await WebAuthnStorage.create(name, cipher).then(r => r.throw(t))
-        const idBase64 = Bytes.toBase64(id)
         const privateKey = { ivBase64, idBase64 }
 
         wallet = { coin: "ethereum", type: "authPrivateKey", uuid, name, color, emoji, address, privateKey }
       } else {
-        wallet = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, privateKey, address }
+        wallet = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, address, privateKey }
       }
 
       const walletsData = await background.tryRequest<Wallet[]>({
@@ -119,17 +133,17 @@ export function WalletCreatorDialog(props: CloseProps) {
       close()
 
       return Ok.void()
-    })
+    }).then(r => r.inspectErrSync(setError))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uuid, name, color, emoji, ethersWallet, background, wallets.mutate, close])
+  }, [uuid, name, color, emoji, ethersWallet, background, encryptedPrivateKeyResult, wallets.mutate, close])
 
   const onNoAuthClick = useAsyncUniqueCallback(async () => {
-    await tryAdd(false).then(r => r.inspectErrSync(setError))
-  }, [tryAdd])
+    await tryAddWallet.run(false)
+  }, [tryAddWallet])
 
   const onAuthClick = useAsyncUniqueCallback(async () => {
-    await tryAdd(true).then(r => r.inspectErrSync(setError))
-  }, [tryAdd])
+    await tryAddWallet.run(true)
+  }, [tryAddWallet])
 
   const NameInput =
     <div className="flex items-stretch gap-2">

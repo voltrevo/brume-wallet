@@ -1,22 +1,12 @@
-import { DependencyList, useCallback, useState } from "react"
+import { DependencyList, useCallback } from "react"
 import { useRefState } from "./ref"
 
-export function useAsyncCallback<A extends unknown[], R>(
-  callback: (...args: A) => Promise<R>,
-  deps: DependencyList,
-) {
-  const [, setState] = useState<unknown>()
-
-  return useCallback(async (...args: A) => {
-    const promise = callback(...args)
-
-    promise.catch(e => setState(() => { throw e }))
-
-    return promise
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps)
-}
-
+/**
+ * Like useCallback() but it accepts a callback that won't run if already running
+ * @param callback 
+ * @param deps 
+ * @returns 
+ */
 export function useAsyncUniqueCallback<A extends unknown[], R>(
   callback: (...args: A) => Promise<R>,
   deps: DependencyList

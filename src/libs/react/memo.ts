@@ -18,24 +18,12 @@ export function useLazyMemo<T>(factory: () => T, deps: DependencyList) {
   return state
 }
 
-export function useAsyncMemo<T>(factory: () => Promise<T>, deps: DependencyList) {
-  const [state, setState] = useState<T>()
-
-  const run = useCallback(async () => {
-    const result = await Result.catchAndWrap(factory)
-
-    setState(() => result.unwrap())
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps)
-
-  useEffect(() => {
-    Promises.fork().then(run)
-  }, [run])
-
-  return state
-}
-
+/**
+ * Like useMemo() but it accepts a promise that will replace the pending promise
+ * @param factory 
+ * @param deps 
+ * @returns 
+ */
 export function useAsyncReplaceMemo<T>(factory: () => Promise<T>, deps: DependencyList) {
   const [state, setState] = useState<T>()
   const aborterRef = useRef<AbortController>()
@@ -48,11 +36,11 @@ export function useAsyncReplaceMemo<T>(factory: () => Promise<T>, deps: Dependen
 
     const result = await Result.catchAndWrap(factory)
 
-    if (aborterRef.current === aborter) {
-      aborterRef.current = undefined
-      setState(() => result.unwrap())
-    }
+    if (aborterRef.current !== aborter)
+      return
 
+    aborterRef.current = undefined
+    setState(() => result.unwrap())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 
