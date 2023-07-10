@@ -13,6 +13,7 @@ import { Data, FetchError, Fetched, FetcherMore, IDBStorage, NormalizerMore, Sta
 import { IndexerMore } from "@hazae41/xswr/dist/types/mods/types/indexer"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
 import { EthereumBrumes } from "../brumes/data"
+import { SessionData } from "../sessions/data"
 import { User } from "../users/data"
 
 export type Wallet =
@@ -112,6 +113,7 @@ export interface EthereumContext {
   wallet: Wallet
   chain: EthereumChain
   brumes: EthereumBrumes
+  session?: SessionData
 }
 
 export async function tryEthereumFetch<T>(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {

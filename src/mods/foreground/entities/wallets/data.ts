@@ -2,9 +2,11 @@ import { BigInts, Fixed, FixedInit } from "@/libs/bigints/bigints"
 import { EthereumChain, PairInfo } from "@/libs/ethereum/chain"
 import { useObjectMemo } from "@/libs/react/memo"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
-import { EthereumQueryKey, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
+import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
+import { EthereumQueryKey, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
+import { Bytes } from "@hazae41/bytes"
 import { Optional } from "@hazae41/option"
-import { Result } from "@hazae41/result"
+import { Ok, Result } from "@hazae41/result"
 import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useOnce, useQuery, useVisible } from "@hazae41/xswr"
 import { ContractRunner, TransactionRequest } from "ethers"
 import { useEffect } from "react"
@@ -36,6 +38,32 @@ export function useWallet(uuid: string, background: Background) {
   const query = useQuery(getWallet, [uuid, background])
   useOnce(query)
   return query
+}
+
+export namespace Wallets {
+
+  export async function tryGetPrivateKey(wallet: EthereumWalletData, background: Background): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      if (wallet.type === "privateKey")
+        return new Ok(wallet.privateKey)
+
+      const { idBase64, ivBase64 } = wallet.privateKey
+
+      const id = Bytes.fromBase64(idBase64)
+      const cipher = await WebAuthnStorage.get(id).then(r => r.throw(t))
+      const cipherBase64 = Bytes.toBase64(cipher)
+
+      const plainBase64 = await background.tryRequest<string>({
+        method: "brume_decrypt",
+        params: [ivBase64, cipherBase64]
+      }).then(r => r.throw(t).throw(t))
+
+      const plain = Bytes.fromBase64(plainBase64)
+
+      return new Ok(`0x${Bytes.toHex(plain)}`)
+    })
+  }
+
 }
 
 export interface EthereumContext {

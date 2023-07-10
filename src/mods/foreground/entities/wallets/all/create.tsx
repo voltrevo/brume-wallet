@@ -6,6 +6,7 @@ import { Textarea } from "@/libs/components/textarea";
 import { Emojis } from "@/libs/emojis/emojis";
 import { Errors } from "@/libs/errors/errors";
 import { Ethereum } from "@/libs/ethereum/ethereum";
+import { Ethers } from "@/libs/ethers/ethers";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { Promises } from "@/libs/promises/promises";
@@ -20,22 +21,9 @@ import { useBackground } from "@/mods/foreground/background/context";
 import { Bytes } from "@hazae41/bytes";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
-import * as Ethers from "ethers";
 import { useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../avatar";
 import { useWallets } from "./data";
-
-export namespace Wallets {
-
-  export function tryRandom() {
-    return Result.catchAndWrapSync(() => Ethers.Wallet.createRandom().privateKey)
-  }
-
-  export function tryFrom(privateKey: string) {
-    return Result.catchAndWrapSync(() => new Ethers.Wallet(privateKey))
-  }
-
-}
 
 export function WalletCreatorDialog(props: CloseProps) {
   const { close } = props
@@ -64,11 +52,11 @@ export function WalletCreatorDialog(props: CloseProps) {
   }, [])
 
   useEffect(() => {
-    Promises.fork().then(() => setKey(Wallets.tryRandom().ok().inner))
+    Promises.fork().then(() => setKey(Ethers.Wallet.tryRandom().ok().inner?.privateKey))
   }, [])
 
   const ethersWallet = useAsyncReplaceMemo(async () => {
-    if (key) return Wallets.tryFrom(key).ok().inner
+    if (key) return Ethers.Wallet.tryFrom(key).ok().inner
   }, [key])
 
   const [error, setError] = useState<Error>()

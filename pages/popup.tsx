@@ -1,6 +1,8 @@
 import { BigInts } from "@/libs/bigints/bigints";
 import { Button } from "@/libs/components/button";
+import { Ethers } from "@/libs/ethers/ethers";
 import { Outline } from "@/libs/icons/icons";
+import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
@@ -10,9 +12,13 @@ import { UserProvider } from "@/mods/foreground/entities/users/context";
 import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
 import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
 import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
+import { Wallets, useWallet } from "@/mods/foreground/entities/wallets/data";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
+import { Bytes } from "@hazae41/bytes";
+import { Option } from "@hazae41/option";
+import { Ok, Result } from "@hazae41/result";
 import { useCallback, useEffect, useState } from "react";
 
 export default function Popup() {
@@ -37,7 +43,11 @@ export function TransactPage() {
   const { searchParams } = usePath()
   const background = useBackground()
 
-  const onApprove = useCallback(async () => {
+  const to = searchParams.get("to")
+  const value = searchParams.get("value")
+  const data = searchParams.get("data")
+
+  const onApprove = useAsyncUniqueCallback(async () => {
     await background.tryRequest({
       method: "popup_data",
       params: [{
@@ -45,10 +55,11 @@ export function TransactPage() {
         params: [true]
       }]
     }).then(r => r.unwrap().unwrap())
+
     Path.go("/done")
   }, [background])
 
-  const onReject = useCallback(async () => {
+  const onReject = useAsyncUniqueCallback(async () => {
     await background.tryRequest({
       method: "popup_data",
       params: [{
@@ -56,12 +67,9 @@ export function TransactPage() {
         params: [false]
       }]
     }).then(r => r.unwrap().unwrap())
+
     Path.go("/done")
   }, [background])
-
-  const to = searchParams.get("to")
-  const value = searchParams.get("value")
-  const data = searchParams.get("data")
 
   return <Page>
     <div className="p-xmd grow flex flex-col items-center justify-center">
@@ -87,14 +95,16 @@ export function TransactPage() {
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
       <Button.Contrast className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
-        onClick={onReject}>
+        onClick={onReject.run}
+        disabled={onReject.loading}>
         <Button.Shrink>
           <Outline.XMarkIcon className="icon-sm" />
           No, reject it
         </Button.Shrink>
       </Button.Contrast>
       <Button.Gradient className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
-        onClick={onApprove}
+        onClick={onApprove.run}
+        disabled={onApprove.loading}
         colorIndex={5}>
         <Button.Shrink>
           <Outline.CheckIcon className="icon-sm" />
@@ -108,26 +118,36 @@ export function TransactPage() {
 export function SwitchPage() {
   const background = useBackground()
 
-  const onApprove = useCallback(async () => {
-    await background.tryRequest({
-      method: "popup_data",
-      params: [{
-        method: "wallet_switchEthereumChain",
-        params: [true]
-      }]
-    }).then(r => r.unwrap().unwrap())
-    Path.go("/done")
+  const onApprove = useAsyncUniqueCallback(async () => {
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      await background.tryRequest({
+        method: "popup_data",
+        params: [{
+          method: "wallet_switchEthereumChain",
+          params: [true]
+        }]
+      }).then(r => r.throw(t).throw(t))
+
+      Path.go("/done")
+
+      return Ok.void()
+    }).then(r => r.unwrap())
   }, [background])
 
-  const onReject = useCallback(async () => {
-    await background.tryRequest({
-      method: "popup_data",
-      params: [{
-        method: "wallet_switchEthereumChain",
-        params: [false]
-      }]
-    }).then(r => r.unwrap().unwrap())
-    Path.go("/done")
+  const onReject = useAsyncUniqueCallback(async () => {
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      await background.tryRequest({
+        method: "popup_data",
+        params: [{
+          method: "wallet_switchEthereumChain",
+          params: [false]
+        }]
+      }).then(r => r.throw(t).throw(t))
+
+      Path.go("/done")
+
+      return Ok.void()
+    }).then(r => r.unwrap())
   }, [background])
 
   return <Page>
@@ -141,14 +161,16 @@ export function SwitchPage() {
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
       <Button.Contrast className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
-        onClick={onReject}>
+        onClick={onReject.run}
+        disabled={onReject.loading}>
         <Button.Shrink>
           <Outline.XMarkIcon className="icon-sm" />
           No, reject it
         </Button.Shrink>
       </Button.Contrast>
       <Button.Gradient className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
-        onClick={onApprove}
+        onClick={onApprove.run}
+        disabled={onApprove.loading}
         colorIndex={5}>
         <Button.Shrink>
           <Outline.CheckIcon className="icon-sm" />
@@ -163,32 +185,53 @@ export function PersonalSignPage() {
   const { searchParams } = usePath()
   const background = useBackground()
 
-  const onApprove = useCallback(async () => {
-    await background.tryRequest({
-      method: "popup_data",
-      params: [{
-        method: "personal_sign",
-        params: [true]
-      }]
-    }).then(r => r.unwrap().unwrap())
-    Path.go("/done")
+  const walletId = Option.wrap(searchParams.get("wallet")).unwrap()
+  const message = Option.wrap(searchParams.get("message")).unwrap()
+
+  const walletQuery = useWallet(walletId, background)
+  const walletData = Option.wrap(walletQuery.data).unwrap()
+
+  const onApprove = useAsyncUniqueCallback(async () => {
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      const wallet = walletData.inner
+
+      const privateKey = await Wallets.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
+
+      const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
+
+      const signature = Result.catchAndWrap(async () => {
+        return await ewallet.signMessage(Bytes.fromHexSafe(message))
+      }).then(r => r.throw(t))
+
+      await background.tryRequest({
+        method: "popup_data",
+        params: [{
+          method: "personal_sign",
+          params: [signature]
+        }]
+      }).then(r => r.throw(t).throw(t))
+
+      Path.go("/done")
+
+      return Ok.void()
+    }).then(r => r.unwrap())
+  }, [walletData, background])
+
+  const onReject = useAsyncUniqueCallback(async () => {
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      await background.tryRequest({
+        method: "popup_data",
+        params: [{
+          method: "personal_sign",
+          params: [undefined]
+        }]
+      }).then(r => r.throw(t).throw(t))
+
+      Path.go("/done")
+
+      return Ok.void()
+    }).then(r => r.unwrap())
   }, [background])
-
-  const onReject = useCallback(async () => {
-    await background.tryRequest({
-      method: "popup_data",
-      params: [{
-        method: "personal_sign",
-        params: [false]
-      }]
-    }).then(r => r.unwrap().unwrap())
-    Path.go("/done")
-  }, [background])
-
-  const message = searchParams.get("message")
-
-  if (message === null)
-    return null
 
   return <Page>
     <div className="p-xmd grow flex flex-col items-center justify-center">
@@ -206,14 +249,16 @@ export function PersonalSignPage() {
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
       <Button.Contrast className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
-        onClick={onReject}>
+        onClick={onReject.run}
+        disabled={onReject.loading}>
         <Button.Shrink>
           <Outline.XMarkIcon className="icon-sm" />
           No, reject it
         </Button.Shrink>
       </Button.Contrast>
       <Button.Gradient className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
-        onClick={onApprove}
+        onClick={onApprove.run}
+        disabled={onApprove.loading}
         colorIndex={5}>
         <Button.Shrink>
           <Outline.CheckIcon className="icon-sm" />
@@ -228,32 +273,57 @@ export function TypedSignPage() {
   const { searchParams } = usePath()
   const background = useBackground()
 
-  const onApprove = useCallback(async () => {
-    await background.tryRequest({
-      method: "popup_data",
-      params: [{
-        method: "eth_signTypedData_v4",
-        params: [true]
-      }]
-    }).then(r => r.unwrap().unwrap())
-    Path.go("/done")
+  const walletId = Option.wrap(searchParams.get("wallet")).unwrap()
+  const data = Option.wrap(searchParams.get("data")).unwrap()
+
+  const walletQuery = useWallet(walletId, background)
+  const walletData = Option.wrap(walletQuery.data).unwrap()
+
+  const onApprove = useAsyncUniqueCallback(async () => {
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      const wallet = walletData.inner
+
+      const { domain, types, message } = JSON.parse(data)
+
+      delete types["EIP712Domain"]
+
+      const privateKey = await Wallets.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
+
+      const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
+
+      const signature = Result.catchAndWrap(async () => {
+        return await ewallet.signTypedData(domain, types, message)
+      }).then(r => r.throw(t))
+
+      await background.tryRequest({
+        method: "popup_data",
+        params: [{
+          method: "eth_signTypedData_v4",
+          params: [signature]
+        }]
+      }).then(r => r.throw(t).throw(t))
+
+      Path.go("/done")
+
+      return Ok.void()
+    }).then(r => r.unwrap())
+  }, [walletData, background])
+
+  const onReject = useAsyncUniqueCallback(async () => {
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      await background.tryRequest({
+        method: "popup_data",
+        params: [{
+          method: "eth_signTypedData_v4",
+          params: [false]
+        }]
+      }).then(r => r.throw(t).throw(t))
+
+      Path.go("/done")
+
+      return Ok.void()
+    }).then(r => r.unwrap())
   }, [background])
-
-  const onReject = useCallback(async () => {
-    await background.tryRequest({
-      method: "popup_data",
-      params: [{
-        method: "eth_signTypedData_v4",
-        params: [false]
-      }]
-    }).then(r => r.unwrap().unwrap())
-    Path.go("/done")
-  }, [background])
-
-  const message = searchParams.get("message")
-
-  if (message === null)
-    return null
 
   return <Page>
     <div className="p-xmd grow flex flex-col items-center justify-center">
@@ -266,19 +336,21 @@ export function TypedSignPage() {
     </div>
     <div className="w-full p-xmd grow">
       <div className="h-full w-full p-xmd border border-contrast rounded-xl whitespace-pre-wrap break-words">
-        {JSON.stringify(JSON.parse(message))}
+        {JSON.stringify(JSON.parse(data))}
       </div>
     </div>
     <div className="p-xmd w-full flex items-center gap-2">
       <Button.Contrast className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
-        onClick={onReject}>
+        onClick={onReject.run}
+        disabled={onReject.loading}>
         <Button.Shrink>
           <Outline.XMarkIcon className="icon-sm" />
           No, reject it
         </Button.Shrink>
       </Button.Contrast>
       <Button.Gradient className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
-        onClick={onApprove}
+        onClick={onApprove.run}
+        disabled={onApprove.loading}
         colorIndex={5}>
         <Button.Shrink>
           <Outline.CheckIcon className="icon-sm" />
@@ -298,7 +370,7 @@ export function WalletAndChainSelectPage() {
 
   const [chain, setChain] = useState<number>(1)
 
-  const onWalletClick = useCallback(async (wallet: Wallet) => {
+  const onWalletClick = useAsyncUniqueCallback(async (wallet: Wallet) => {
     await background.tryRequest({
       method: "popup_data",
       params: [{
@@ -339,7 +411,7 @@ export function WalletAndChainSelectPage() {
       </div>
       <div className="h-4" />
       <ClickableWalletGrid
-        ok={onWalletClick}
+        ok={onWalletClick.run}
         create={creator.enable}
         wallets={wallets.data?.inner} />
     </PageBody>

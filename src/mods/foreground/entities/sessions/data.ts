@@ -7,9 +7,9 @@ export function getSession(name: string, storage: UserStorage) {
   return createQuerySchema<string, SessionData, never>({ key: `sessions/v2/${name}`, storage })
 }
 
-export function useSession(origin: string) {
+export function useSession(name: string) {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(getSession, [origin, storage])
+  const query = useQuery(getSession, [name, storage])
   useFetch(query)
   useSubscribe(query, storage)
   useError(query, console.error)

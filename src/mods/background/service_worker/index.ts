@@ -330,11 +330,13 @@ export class Global {
 
       const { user, storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
       const sessionQuery = await this.make(getSession(script.name, storage))
-      const { wallet, chain } = Option.wrap(sessionQuery.current?.inner).ok().throw(t)
+      const session = Option.wrap(sessionQuery.current?.inner).ok().throw(t)
+
+      const { wallet, chain } = session
 
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
-      const ethereum: EthereumContext = { user, port: script, wallet, chain, brumes }
+      const ethereum: EthereumContext = { user, port: script, session, wallet, chain, brumes }
 
       if (request.method === "eth_accounts")
         return await this.eth_accounts(ethereum, request)
@@ -566,28 +568,18 @@ export class Global {
     return await Result.unthrow(async t => {
       const [message, address] = (request as RpcParamfulRequestInit<[string, string]>).params
 
+      const session = Option.wrap(ethereum.session).ok().throw(t)
+
       const reply = await this.popupMutex.lock(async () => {
-        const popup = await this.tryOpenOrNavigatePopup(`/personal_sign?message=${message}`, mouse).then(r => r.throw(t))
+        const popup = await this.tryOpenOrNavigatePopup(`/personal_sign?wallet=${session.wallet.uuid}&message=${message}`, mouse).then(r => r.throw(t))
         const reply = await this.tryWaitPopupData(popup, "personal_sign").then(r => r.throw(t))
 
         return new Ok(reply)
       }).then(r => r.throw(t))
 
-      const [approved] = (reply as RpcParamfulRequestPreinit<[boolean]>).params
-      Result.assert(approved).mapErrSync(UserRejectionError.new).throw(t)
+      const [signature] = (reply as RpcParamfulRequestPreinit<[Optional<string>]>).params
 
-      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
-
-      const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
-      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
-
-      const popup = Option.wrap(this.popup).ok().throw(t)
-
-      const privateKey = await this.tryGetPrivateKey(wallet, popup.port).then(r => r.throw(t))
-
-      const signature = await new ethers.Wallet(privateKey).signMessage(Bytes.fromHexSafe(message))
-
-      return new Ok(signature)
+      return Option.wrap(signature).ok()
     })
   }
 
@@ -595,32 +587,18 @@ export class Global {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
+      const session = Option.wrap(ethereum.session).ok().throw(t)
+
       const reply = await this.popupMutex.lock(async () => {
-        const popup = await this.tryOpenOrNavigatePopup(`/eth_signTypedData_v4?message=${data}`, mouse).then(r => r.throw(t))
+        const popup = await this.tryOpenOrNavigatePopup(`/eth_signTypedData_v4?wallet=${session.wallet.uuid}&data=${data}`, mouse).then(r => r.throw(t))
         const reply = await this.tryWaitPopupData(popup, "eth_signTypedData_v4").then(r => r.throw(t))
 
         return new Ok(reply)
       }).then(r => r.throw(t))
 
-      const [approved] = (reply as RpcParamfulRequestPreinit<[boolean]>).params
-      Result.assert(approved).mapErrSync(UserRejectionError.new).throw(t)
+      const [signature] = (reply as RpcParamfulRequestPreinit<[Optional<string>]>).params
 
-      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
-
-      const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
-      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
-
-      const { domain, types, message } = JSON.parse(data)
-
-      delete types["EIP712Domain"]
-
-      const popup = Option.wrap(this.popup).ok().throw(t)
-
-      const privateKey = await this.tryGetPrivateKey(wallet, popup.port).then(r => r.throw(t))
-
-      const signature = await new ethers.Wallet(privateKey).signTypedData(domain, types, message)
-
-      return new Ok(signature)
+      return Option.wrap(signature).ok()
     })
   }
 
@@ -688,6 +666,8 @@ export class Global {
       return new Some(await this.brume_log(request))
     if (request.method === "brume_encrypt")
       return new Some(await this.brume_encrypt(foreground, request))
+    if (request.method === "brume_decrypt")
+      return new Some(await this.brume_decrypt(foreground, request))
     if (request.method === "popup_hello")
       return new Some(await this.popup_hello(foreground, request))
     if (request.method === "popup_data")
@@ -816,6 +796,22 @@ export class Global {
       const cipherBase64 = Bytes.toBase64(cipher)
 
       return new Ok([ivBase64, cipherBase64])
+    })
+  }
+
+  async brume_decrypt(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const [ivBase64, cipherBase64] = (request as RpcParamfulRequestInit<[string, string]>).params
+
+      const { crypter } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
+
+      const iv = Bytes.fromBase64(ivBase64)
+      const cipher = Bytes.fromBase64(cipherBase64)
+      const plain = await crypter.decrypt(cipher, iv)
+
+      const plainBase64 = Bytes.toBase64(plain)
+
+      return new Ok(plainBase64)
     })
   }
 

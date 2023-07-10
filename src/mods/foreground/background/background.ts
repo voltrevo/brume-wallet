@@ -54,7 +54,7 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Port,
       channel.port1.start()
       channel.port2.start()
 
-      if (registration.active === null)
+      if (registration.active == null)
         throw new Panic(`registration.active is null`)
 
       registration.active.postMessage("HELLO_WORLD", [channel.port2])
