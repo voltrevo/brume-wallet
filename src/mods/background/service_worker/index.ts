@@ -313,7 +313,7 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
-      const sessionData: SessionData = { name: script.name, origin: script.name, wallet, chain }
+      const sessionData: SessionData = { id: script.name, origin: script.name, wallet, chain }
 
       const sessionsQuery = await this.make(getSessions(storage))
       sessionsQuery.mutate(Mutators.pushData<Session, never>(new Data(sessionData)))
@@ -457,7 +457,7 @@ export class Global {
         data: Optional<string>
       }]>).params
 
-      const sessionId = Option.wrap(ethereum.session?.name).ok().throw(t)
+      const sessionId = Option.wrap(ethereum.session?.id).ok().throw(t)
 
       const reply = await this.popupMutex.lock(async () => {
         const url = qurl(`/eth_sendTransaction`, { sessionId, from, to, gas, value, data })
@@ -484,7 +484,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [message, address] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      const sessionId = Option.wrap(ethereum.session?.name).ok().throw(t)
+      const sessionId = Option.wrap(ethereum.session?.id).ok().throw(t)
 
       const reply = await this.popupMutex.lock(async () => {
         const url = qurl(`/personal_sign`, { sessionId, message, address })
@@ -506,7 +506,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      const sessionId = Option.wrap(ethereum.session?.name).ok().throw(t)
+      const sessionId = Option.wrap(ethereum.session?.id).ok().throw(t)
 
       const reply = await this.popupMutex.lock(async () => {
         const url = qurl(`/eth_signTypedData_v4`, { sessionId, data, address })
@@ -528,7 +528,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [{ chainId }] = (request as RpcParamfulRequestInit<[{ chainId: string }]>).params
 
-      const sessionId = Option.wrap(ethereum.session?.name).ok().throw(t)
+      const sessionId = Option.wrap(ethereum.session?.id).ok().throw(t)
 
       const chain = Option.wrap(chains[parseInt(chainId, 16)]).ok().throw(t)
 

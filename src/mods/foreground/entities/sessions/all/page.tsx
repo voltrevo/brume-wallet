@@ -12,7 +12,7 @@ export function SessionsPage() {
     <PageBody>
       {sessions.data?.inner.map(session =>
         <div role="button" className="p-md rounded-xl flex items-center gap-4"
-          key={session.origin}>
+          key={session.id}>
           <div className="shrink-0">
             <img className="s-10"
               alt="icon"
@@ -23,7 +23,7 @@ export function SessionsPage() {
               Uniswap
             </div>
             <div className="text-contrast">
-              {session.origin}
+              {session.id}
             </div>
           </div>
           <Button.Naked>

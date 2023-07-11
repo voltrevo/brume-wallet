@@ -8,18 +8,18 @@ export type Session =
 
 export interface SessionRef {
   ref: true
-  origin: string
+  id: string
 }
 
 export interface SessionData {
-  name: string,
+  id: string,
   origin: string
   wallet: Wallet
   chain: EthereumChain
 }
 
-export function getSession(name: string, storage: IDBStorage) {
-  return createQuerySchema<string, SessionData, never>({ key: `sessions/v2/${name}`, storage })
+export function getSession(id: string, storage: IDBStorage) {
+  return createQuerySchema<string, SessionData, never>({ key: `sessions/v2/${id}`, storage })
 }
 
 export async function getSessionRef(session: Session, storage: IDBStorage, more: NormalizerMore): Promise<SessionRef> {
@@ -28,5 +28,5 @@ export async function getSessionRef(session: Session, storage: IDBStorage, more:
   const schema = getSession(session.origin, storage)
   await schema?.normalize(new Data(session), more)
 
-  return { ref: true, origin: session.origin }
+  return { ref: true, id: session.id }
 }
