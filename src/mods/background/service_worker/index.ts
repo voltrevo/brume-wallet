@@ -107,8 +107,8 @@ export class Global {
     "data": (foreground: Port, request: RpcRequestPreinit<unknown>) => Result<void, Error>
   }>()
 
-  readonly origins = new Map<Port, OriginData>()
   readonly scripts = new Map<string, Set<Port>>()
+  readonly mutexes = new Map<string, Mutex<void>>()
 
   readonly popupMutex = new Mutex(undefined)
 
@@ -284,16 +284,14 @@ export class Global {
   }
 
   async getEthereumSession(script: Port): Promise<Result<Optional<SessionData>, Error>> {
-    return await Result.unthrow(async t => {
-      const currentUser = await this.getCurrentUser()
+    const currentUser = await this.getCurrentUser()
 
-      if (currentUser == null)
-        return new Ok(undefined)
+    if (currentUser == null)
+      return new Ok(undefined)
 
-      const { origin } = Option.wrap(this.origins.get(script)).ok().throw(t)
-      const sessionQuery = await this.make(getSession(origin, currentUser.storage))
-      return new Ok(sessionQuery.current?.inner)
-    })
+    const sessionQuery = await this.make(getSession(script.name, currentUser.storage))
+
+    return new Ok(sessionQuery.current?.inner)
   }
 
   async tryGetOrWaitEthereumSession(script: Port, mouse: Mouse): Promise<Result<SessionData, Error>> {
@@ -318,13 +316,16 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
-      const { origin } = Option.wrap(this.origins.get(script)).ok().throw(t)
-      const sessionData: SessionData = { id: origin, origin, wallet, chain }
+      const origin = await script.tryRequest<OriginData>({ method: "brume_origin" }).then(r => r.throw(t).throw(t))
+
+      const originQuery = await this.make(getOrigin(origin.origin, storage))
+      await originQuery.mutate(Mutators.data(origin))
+
+      const sessionData: SessionData = { id: origin.origin, origin: origin.origin, wallet, chain }
 
       const sessionsQuery = await this.make(getSessions(storage))
 
       await sessionsQuery.mutate(Mutators.mapInnerData(d => {
-        console.log(d, sessionData)
         return [...d.filter(it => it.id !== sessionData.id), sessionData]
       }, new Data<Session[]>([])))
 
@@ -333,39 +334,18 @@ export class Global {
   }
 
   async tryRouteContentScript(script: Port, request: RpcRequestPreinit<unknown>) {
-    if (request.method === "brume_origin")
-      return new Some(await this.brume_origin(script, request))
     if (request.method === "brume_run")
       return new Some(await this.brume_run(script, request))
     return new None()
-  }
-
-  async brume_origin(script: Port, request: RpcRequestPreinit<unknown>) {
-    const [origin] = (request as RpcParamfulRequestPreinit<[Partial<OriginData>]>).params
-
-    this.origins.set(script, { ...origin, origin: script.name })
-
-    return Ok.void()
   }
 
   async brume_run(script: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [subrequest, mouse] = (request as RpcParamfulRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
 
-      let origin = this.origins.get(script)
-
-      if (origin == null) {
-        origin = { origin: script.name }
-        this.origins.set(script, origin)
-      }
-
-      if (subrequest.method === "eth_requestAccounts")
-        return await this.eth_requestAccounts(script, subrequest, mouse)
+      const session = await this.tryGetOrWaitEthereumSession(script, mouse).then(r => r.throw(t))
 
       const { user, storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
-
-      const sessionQuery = await this.make(getSession(origin.origin, storage))
-      const session = Option.wrap(sessionQuery.current?.inner).ok().throw(t)
 
       const { wallet, chain } = session
 
@@ -373,6 +353,8 @@ export class Global {
 
       const ethereum: EthereumContext = { user, port: script, session, wallet, chain, brumes }
 
+      if (subrequest.method === "eth_requestAccounts")
+        return await this.eth_requestAccounts(ethereum, subrequest)
       if (subrequest.method === "eth_accounts")
         return await this.eth_accounts(ethereum, subrequest)
       if (subrequest.method === "eth_sendTransaction")
@@ -398,17 +380,11 @@ export class Global {
     })
   }
 
-  async eth_requestAccounts(script: Port, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<[string], Error>> {
+  async eth_requestAccounts(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<[string], Error>> {
     return await Result.unthrow(async t => {
-      const sessionData = await this.tryGetOrWaitEthereumSession(script, mouse).then(r => r.throw(t))
-
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
-      const origin = Option.wrap(this.origins.get(script)).ok().throw(t)
-      const originQuery = await this.make(getOrigin(origin.origin, storage))
-      await originQuery.mutate(Mutators.data(origin))
-
-      const walletQuery = await this.make(getWallet(sessionData.wallet.uuid, storage))
+      const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
       const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
 
       return new Ok([address])

@@ -1,6 +1,6 @@
 import { Blobs } from "@/libs/blob/blob"
 import { browser, tryBrowser } from "@/libs/browser/browser"
-import { ExtensionPort, Port } from "@/libs/channel/channel"
+import { ExtensionPort } from "@/libs/channel/channel"
 import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
@@ -46,8 +46,9 @@ if (IS_FIREFOX || IS_SAFARI) {
   container.removeChild(element)
 }
 
-async function trySendOrigin(port: Port) {
-  const origin: Partial<OriginData> = {
+async function tryGetOrigin() {
+  const origin: OriginData = {
+    origin: location.origin,
     title: document.title
   }
 
@@ -106,7 +107,7 @@ async function trySendOrigin(port: Port) {
     })()
   }
 
-  return await port.tryRequest({ method: "brume_origin", params: [origin] })
+  return new Ok(origin)
 }
 
 new Pool<chrome.runtime.Port, Error>(async (params) => {
@@ -155,6 +156,8 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
     }
 
     const onBackgroundRequest = async (request: RpcRequestPreinit<unknown>) => {
+      if (request.method === "brume_origin")
+        return new Some(await tryGetOrigin())
       if (request.method === "accountsChanged")
         return new Some(await onAccountsChanged(request))
       if (request.method === "chainChanged")
@@ -176,12 +179,6 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
 
     const output = new CustomEvent("ethereum#connect", {})
     window.dispatchEvent(output)
-
-    setTimeout(() => {
-      trySendOrigin(port)
-        .then(r => r.ignore())
-        .catch(() => { })
-    }, 1000)
 
     const onClean = () => {
       window.removeEventListener("ethereum#request", onScriptRequest)
