@@ -1,8 +1,5 @@
-import { Blobs } from "@/libs/blob/blob"
-import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch"
 import { RpcClient, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Future } from "@hazae41/future"
-import { OriginData } from "../service_worker/entities/origins/data"
 
 declare global {
   interface Window {
@@ -112,73 +109,3 @@ class Provider {
 
 const provider = new Provider()
 window.ethereum = provider
-
-const onFirstConnect = async () => {
-  provider.off("connect", onFirstConnect)
-
-  const origin: Partial<OriginData> = {
-    title: document.title
-  }
-
-  for (const meta of document.getElementsByTagName("meta")) {
-    if (meta.name === "application-name") {
-      origin.title = meta.content
-      continue
-    }
-  }
-
-  for (const link of document.getElementsByTagName("link")) {
-    if (["icon", "shortcut icon", "icon shortcut"].includes(link.rel)) {
-      const blob = await tryFetchAsBlob(link.href)
-
-      if (blob.isErr())
-        continue
-
-      const data = await Blobs.toData(blob.inner)
-
-      if (data.isErr())
-        continue
-
-      origin.icon = data.inner
-      continue
-    }
-
-    if (link.rel === "manifest") {
-      const manifest = await tryFetchAsJson<any>(link.href)
-
-      if (manifest.isErr())
-        continue
-
-      if (manifest.inner.name)
-        origin.title = manifest.inner.name
-      if (manifest.inner.short_name)
-        origin.title = manifest.inner.short_name
-      if (manifest.inner.description)
-        origin.description = manifest.inner.description
-      continue
-    }
-  }
-
-  if (!origin.icon) {
-    await (async () => {
-      const blob = await tryFetchAsBlob("/favicon.ico")
-
-      if (blob.isErr())
-        return
-
-      const data = await Blobs.toData(blob.inner)
-
-      if (data.isErr())
-        return
-
-      origin.icon = data.inner
-    })()
-  }
-
-  provider.tryRequest({
-    method: "brume_origin",
-    params: [origin]
-  }).then(r => r.ignore())
-}
-
-provider.on("connect", onFirstConnect)

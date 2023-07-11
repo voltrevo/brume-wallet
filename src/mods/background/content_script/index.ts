@@ -1,11 +1,14 @@
+import { Blobs } from "@/libs/blob/blob"
 import { browser, tryBrowser } from "@/libs/browser/browser"
-import { ExtensionPort } from "@/libs/channel/channel"
+import { ExtensionPort, Port } from "@/libs/channel/channel"
+import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
 import { None, Some } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
+import { OriginData } from "../service_worker/entities/origins/data"
 
 declare const self: ServiceWorkerGlobalScope
 
@@ -41,6 +44,69 @@ if (IS_FIREFOX || IS_SAFARI) {
 
   container.insertBefore(element, container.children[0])
   container.removeChild(element)
+}
+
+async function trySendOrigin(port: Port) {
+  const origin: Partial<OriginData> = {
+    title: document.title
+  }
+
+  for (const meta of document.getElementsByTagName("meta")) {
+    if (meta.name === "application-name") {
+      origin.title = meta.content
+      continue
+    }
+  }
+
+  for (const link of document.getElementsByTagName("link")) {
+    if (["icon", "shortcut icon", "icon shortcut"].includes(link.rel)) {
+      const blob = await tryFetchAsBlob(link.href)
+
+      if (blob.isErr())
+        continue
+
+      const data = await Blobs.toData(blob.inner)
+
+      if (data.isErr())
+        continue
+
+      origin.icon = data.inner
+      continue
+    }
+
+    if (link.rel === "manifest") {
+      const manifest = await tryFetchAsJson<any>(link.href)
+
+      if (manifest.isErr())
+        continue
+
+      if (manifest.inner.name)
+        origin.title = manifest.inner.name
+      if (manifest.inner.short_name)
+        origin.title = manifest.inner.short_name
+      if (manifest.inner.description)
+        origin.description = manifest.inner.description
+      continue
+    }
+  }
+
+  if (!origin.icon) {
+    await (async () => {
+      const blob = await tryFetchAsBlob("/favicon.ico")
+
+      if (blob.isErr())
+        return
+
+      const data = await Blobs.toData(blob.inner)
+
+      if (data.isErr())
+        return
+
+      origin.icon = data.inner
+    })()
+  }
+
+  return await port.tryRequest({ method: "brume_origin", params: [origin] })
 }
 
 new Pool<chrome.runtime.Port, Error>(async (params) => {
@@ -110,6 +176,12 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
 
     const output = new CustomEvent("ethereum#connect", {})
     window.dispatchEvent(output)
+
+    setTimeout(() => {
+      trySendOrigin(port)
+        .then(r => r.ignore())
+        .catch(() => { })
+    }, 1000)
 
     const onClean = () => {
       window.removeEventListener("ethereum#request", onScriptRequest)

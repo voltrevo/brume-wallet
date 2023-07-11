@@ -333,6 +333,8 @@ export class Global {
   }
 
   async tryRouteContentScript(script: Port, request: RpcRequestPreinit<unknown>) {
+    if (request.method === "brume_origin")
+      return new Some(await this.brume_origin(script, request))
     if (request.method === "brume_run")
       return new Some(await this.brume_run(script, request))
     return new None()
@@ -357,8 +359,6 @@ export class Global {
         this.origins.set(script, origin)
       }
 
-      if (subrequest.method === "brume_origin")
-        return await this.brume_origin(script, subrequest)
       if (subrequest.method === "eth_requestAccounts")
         return await this.eth_requestAccounts(script, subrequest, mouse)
 
