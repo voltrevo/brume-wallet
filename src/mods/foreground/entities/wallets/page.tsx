@@ -137,19 +137,19 @@ function WalletDataPage() {
   return <Page>
     {mainnetSendDialog.current && mainnet &&
       <WalletDataSendDialog title="(Ethereum)"
-        handle={mainnet}
+        context={mainnet}
         close={mainnetSendDialog.disable} />}
     {polygonSendDialog.current && polygon &&
       <WalletDataSendDialog title="(Polygon)"
-        handle={polygon}
+        context={polygon}
         close={polygonSendDialog.disable} />}
     {goerliSendDialog.current && goerli &&
       <WalletDataSendDialog title="(Goerli)"
-        handle={goerli}
+        context={goerli}
         close={goerliSendDialog.disable} />}
     {sepoliaSendDialog.current && sepolia &&
       <WalletDataSendDialog title="(Sepolia)"
-        handle={sepolia}
+        context={sepolia}
         close={sepoliaSendDialog.disable} />}
     {Header}
     {Card}

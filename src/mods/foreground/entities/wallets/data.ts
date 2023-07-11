@@ -84,7 +84,7 @@ export interface GeneralContext {
 }
 
 export interface EthereumContextProps {
-  handle: EthereumContext
+  context: EthereumContext
 }
 
 export function useGeneralContext() {

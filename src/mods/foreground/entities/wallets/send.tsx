@@ -1,6 +1,7 @@
 import { Button } from "@/libs/components/button";
 import { Dialog } from "@/libs/components/dialog/dialog";
 import { Input } from "@/libs/components/input";
+import { Ethers } from "@/libs/ethers/ethers";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
@@ -8,19 +9,25 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { TitleProps } from "@/libs/react/props/title";
-import { Err, Ok, Result } from "@hazae41/result";
+import { Option } from "@hazae41/option";
+import { Ok, Result } from "@hazae41/result";
 import { ethers } from "ethers";
 import { useMemo, useState } from "react";
 import { useWalletData } from "./context";
-import { EthereumContextProps, useGasPrice, useNonce, usePendingBalance } from "./data";
+import { EthereumContextProps, Wallets, useGasPrice, useNonce, usePendingBalance } from "./data";
 
 export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumContextProps) {
   const wallet = useWalletData()
-  const { title, handle, close } = props
+  const { title, context, close } = props
 
-  const balance = usePendingBalance(wallet.address, handle)
-  const nonce = useNonce(wallet.address, handle)
-  const gasPrice = useGasPrice(handle)
+  const balanceQuery = usePendingBalance(wallet.address, context)
+  const maybeBalance = balanceQuery.data?.inner
+
+  const nonceQuery = useNonce(wallet.address, context)
+  const maybeNonce = nonceQuery.data?.inner
+
+  const gasPriceQuery = useGasPrice(context)
+  const maybeGasPrice = gasPriceQuery.data?.inner
 
   const [recipientInput = "", setRecipientInput] = useState<string>()
 
@@ -64,51 +71,57 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
 
   const trySend = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (nonce.data == null)
-        return new Err(new Error(`Invalid nonce`))
-      if (gasPrice.data == null)
-        return new Err(new Error(`Invalid gas price`))
+      const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
+      const nonce = Option.wrap(maybeNonce).ok().throw(t)
 
-      const gas = await handle.background.tryRequest<string>({
+      const privateKey = await Wallets.tryGetPrivateKey(wallet, context.background).then(r => r.throw(t))
+
+      const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
+
+      const gas = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",
-        params: [handle.wallet.uuid, handle.chain.chainId, {
+        params: [context.wallet.uuid, context.chain.chainId, {
           method: "eth_estimateGas",
           params: [{
-            chainId: Radix.toHex(handle.chain.chainId),
+            chainId: Radix.toHex(context.chain.chainId),
             from: wallet.address,
             to: ethers.getAddress(recipientInput),
+            gasPrice: Radix.toHex(gasPrice),
             value: Radix.toHex(ethers.parseUnits(valueInput, 18)),
-            nonce: Radix.toHex(nonce.data.inner),
-            gasPrice: Radix.toHex(gasPrice.data.inner)
+            nonce: Radix.toHex(nonce)
           }, "latest"]
         }]
       }).then(r => r.throw(t).throw(t))
 
-      const txHash = await handle.background.tryRequest<string>({
-        method: "brume_eth_run",
-        params: [handle.wallet.uuid, handle.chain.chainId, {
-          method: "eth_sendTransaction",
-          params: [{
-            chainId: Radix.toHex(handle.chain.chainId),
-            from: wallet.address,
-            to: ethers.getAddress(recipientInput),
-            value: Radix.toHex(ethers.parseUnits(valueInput, 18)),
-            nonce: Radix.toHex(nonce.data.inner),
-            gasPrice: Radix.toHex(gasPrice.data.inner),
-            gas: gas
-          }]
+      const signature = await Result.catchAndWrap(async () => {
+        return await ewallet.signTransaction({
+          to: ethers.getAddress(recipientInput),
+          from: wallet.address,
+          gasLimit: gas,
+          chainId: context.chain.chainId,
+          gasPrice: gasPrice,
+          nonce: Number(nonce),
+          value: ethers.parseUnits(valueInput, 18)
+        })
+      }).then(r => r.throw(t))
+
+      const txHash = await context.background.tryRequest<string>({
+        method: "brume_eth_fetch",
+        params: [context.wallet.uuid, context.chain.chainId, {
+          method: "eth_sendRawTransaction",
+          params: [signature]
         }]
       }).then(r => r.throw(t).throw(t))
 
       setTxHash(txHash)
       setError(undefined)
 
-      balance.refetch()
-      nonce.refetch()
+      balanceQuery.refetch()
+      nonceQuery.refetch()
 
       return Ok.void()
     }).then(r => r.inspectErrSync(setError).ignore())
-  }, [handle, wallet.address, nonce.data, gasPrice.data, recipientInput, valueInput])
+  }, [context, wallet, maybeNonce, maybeGasPrice, recipientInput, valueInput])
 
   const TxHashDisplay = <>
     <div className="">
@@ -119,7 +132,7 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
     </div>
     <div className="h-2" />
     <ExternalDivisionLink className="w-full"
-      href={`${handle.chain.etherscan}/tx/${txHash}`}
+      href={`${context.chain.etherscan}/tx/${txHash}`}
       target="_blank" rel="noreferrer">
       <Button.Gradient className="w-full p-md"
         colorIndex={wallet.color}>
@@ -132,21 +145,23 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
   </>
 
   const disabled = useMemo(() => {
-    if (nonce.data == null)
+    if (trySend.loading)
       return true
-    if (gasPrice.data == null)
+    if (maybeNonce == null)
+      return true
+    if (maybeGasPrice == null)
       return true
     if (!recipientInput)
       return true
     if (!valueInput)
       return true
     return false
-  }, [nonce.data, gasPrice.data, recipientInput, valueInput])
+  }, [trySend.loading, maybeNonce, maybeGasPrice, recipientInput, valueInput])
 
   const SendButton =
     <Button.Gradient className="w-full p-md"
       colorIndex={wallet.color}
-      disabled={trySend.loading || disabled}
+      disabled={disabled}
       onClick={trySend.run}>
       <Button.Shrink>
         <Outline.PaperAirplaneIcon className="icon-sm" />

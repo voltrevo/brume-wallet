@@ -71,13 +71,12 @@ export function TransactPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const session = Option.wrap(maybeSession).ok().throw(t)
       const wallet = Option.wrap(maybeWallet).ok().throw(t)
+      const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
+      const nonce = Option.wrap(maybeNonce).ok().throw(t)
 
       const privateKey = await Wallets.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
-
-      const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
-      const nonce = Option.wrap(maybeNonce).ok().throw(t)
 
       const signature = await Result.catchAndWrap(async () => {
         return await ewallet.signTransaction({
