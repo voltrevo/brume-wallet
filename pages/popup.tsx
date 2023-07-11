@@ -17,6 +17,7 @@ import { Wallets, useEthereumContext2, useGasPrice, useNonce, useWallet } from "
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
+import { Bytes } from "@hazae41/bytes";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -254,6 +255,12 @@ export function PersonalSignPage() {
   const walletQuery = useWallet(maybeSession?.wallet.uuid, background)
   const maybeWallet = walletQuery.data?.inner
 
+  const userMessage = useMemo(() => {
+    return message.startsWith("0x")
+      ? Bytes.toUtf8(Bytes.fromHexSafe(message.slice(2)))
+      : message
+  }, [message])
+
   const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const wallet = Option.wrap(maybeWallet).ok().throw(t)
@@ -263,7 +270,7 @@ export function PersonalSignPage() {
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 
       const signature = await Result.catchAndWrap(async () => {
-        return await ewallet.signMessage(message)
+        return await ewallet.signMessage(userMessage)
       }).then(r => r.throw(t))
 
       await background.tryRequest({
@@ -278,7 +285,7 @@ export function PersonalSignPage() {
 
       return Ok.void()
     }).then(r => r.unwrap())
-  }, [background, maybeWallet, message])
+  }, [background, maybeWallet, userMessage])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -307,7 +314,7 @@ export function PersonalSignPage() {
     </div>
     <div className="w-full p-xmd grow">
       <div className="h-full w-full p-xmd border border-contrast rounded-xl whitespace-pre-wrap break-words">
-        {message}
+        {userMessage}
       </div>
     </div>
     <div className="p-xmd w-full flex items-center gap-2">

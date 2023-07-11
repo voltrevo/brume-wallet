@@ -26,6 +26,10 @@ class Provider {
 
   constructor() { }
 
+  get isBrume() {
+    return true
+  }
+
   isConnected() {
     return true
   }
