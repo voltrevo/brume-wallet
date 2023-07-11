@@ -5,7 +5,7 @@ import { RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcRespon
 import { Cleaner } from "@hazae41/cleaner"
 import { None, Some } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
-import { Err, Ok, Result } from "@hazae41/result"
+import { Ok, Result } from "@hazae41/result"
 
 declare const self: ServiceWorkerGlobalScope
 
@@ -60,8 +60,8 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
     const onScriptRequest = async (input: CustomEvent<string>) => {
       const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
 
-      const result = await port.tryRequest({ method: "brume_mouse", params: [request, mouse] })
-      const response = result.unwrapOrElseSync(e => RpcResponse.rewrap(request.id, new Err(e)))
+      const result = await port.tryRequest({ method: "brume_run", params: [request, mouse] })
+      const response = RpcResponse.rewrap(request.id, result.andThenSync(r => r))
 
       const detail = JSON.stringify(response)
       const output = new CustomEvent("ethereum#response", { detail })
@@ -99,11 +99,17 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
     port.events.on("request", onBackgroundRequest, { passive: true })
 
     const onClose = () => {
+      const output = new CustomEvent("ethereum#disconnect", {})
+      window.dispatchEvent(output)
+
       pool.delete(index)
       return new None()
     }
 
     port.events.on("close", onClose, { passive: true })
+
+    const output = new CustomEvent("ethereum#connect", {})
+    window.dispatchEvent(output)
 
     const onClean = () => {
       window.removeEventListener("ethereum#request", onScriptRequest)
