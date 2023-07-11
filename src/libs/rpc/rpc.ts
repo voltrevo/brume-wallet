@@ -7,18 +7,14 @@ import { RpcResponse } from "./response"
 
 export class RpcClient {
 
-  #id = 0
+  id = 0
 
   constructor() { }
-
-  get id() {
-    return this.#id
-  }
 
   create<T>(init: RpcRequestPreinit<T>): RpcRequestInit<T> {
     const { method, params } = init
 
-    const id = this.#id++
+    const id = this.id++
 
     return { jsonrpc: "2.0", id, method, params } as RpcRequestInit<T>
   }

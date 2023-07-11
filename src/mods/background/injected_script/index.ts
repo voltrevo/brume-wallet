@@ -20,9 +20,9 @@ declare global {
 
 class Provider {
 
-  readonly #client = new RpcClient()
+  readonly client = new RpcClient()
 
-  readonly #listeners = new Map<string, Map<Sublistener, Suplistener>>()
+  readonly listeners = new Map<string, Map<Sublistener, Suplistener>>()
 
   constructor() { }
 
@@ -35,7 +35,7 @@ class Provider {
   }
 
   async tryRequest(init: RpcRequestPreinit<unknown>) {
-    const request = this.#client.create(init)
+    const request = this.client.create(init)
 
     const future = new Future<RpcResponse<unknown>>()
 
@@ -67,11 +67,11 @@ class Provider {
   }
 
   on(key: string, sublistener: Sublistener) {
-    let listeners = this.#listeners.get(key)
+    let listeners = this.listeners.get(key)
 
     if (listeners == null) {
       listeners = new Map()
-      this.#listeners.set(key, listeners)
+      this.listeners.set(key, listeners)
     }
 
     let suplistener = listeners.get(sublistener)
@@ -85,7 +85,7 @@ class Provider {
   }
 
   off(key: string, sublistener: Sublistener) {
-    const listeners = this.#listeners.get(key)
+    const listeners = this.listeners.get(key)
 
     if (listeners == null)
       return
@@ -102,7 +102,7 @@ class Provider {
     if (listeners.size !== 0)
       return
 
-    this.#listeners.delete(key)
+    this.listeners.delete(key)
   }
 
 }
