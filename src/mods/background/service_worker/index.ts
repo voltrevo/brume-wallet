@@ -472,10 +472,18 @@ export class Global {
 
   async eth_sendTransaction(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const [{ data, gas, from, to, value }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string, value: string }]>).params
+      const [{ from, to, gas, value, data }] = (request as RpcParamfulRequestInit<[{
+        from: string,
+        to: string,
+        gas: string,
+        value: Optional<string>,
+        data: Optional<string>
+      }]>).params
+
+      const sessionId = Option.wrap(ethereum.session?.name).ok().throw(t)
 
       const reply = await this.popupMutex.lock(async () => {
-        const url = qurl(`/eth_sendTransaction`, { to, value, data })
+        const url = qurl(`/eth_sendTransaction`, { sessionId, from, to, gas, value, data })
 
         const popup = await this.tryOpenOrNavigatePopup(url, mouse).then(r => r.throw(t))
         const reply = await this.tryWaitPopupData(popup, "eth_sendTransaction").then(r => r.throw(t))
@@ -483,37 +491,8 @@ export class Global {
         return new Ok(reply)
       }).then(r => r.throw(t))
 
-      const [approved] = (reply as RpcParamfulRequestPreinit<[boolean]>).params
-      Result.assert(approved).mapErrSync(UserRejectionError.new).throw(t)
-
-      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
-
-      const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
-      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
-
-      const nonce = await tryEthereumFetch<string>(ethereum, {
-        method: "eth_getTransactionCount",
-        params: [wallet.address, "pending"]
-      }).then(r => r.throw(t).throw(t))
-
-      const gasPrice = await tryEthereumFetch<string>(ethereum, {
-        method: "eth_gasPrice"
-      }).then(r => r.throw(t).throw(t))
-
-      const popup = Option.wrap(this.popup).ok().throw(t)
-
-      const privateKey = await this.tryGetPrivateKey(wallet, popup.port).then(r => r.throw(t))
-
-      const signature = await new ethers.Wallet(privateKey).signTransaction({
-        data: data,
-        to: to,
-        from: from,
-        gasLimit: gas,
-        chainId: ethereum.chain.chainId,
-        gasPrice: gasPrice,
-        nonce: parseInt(nonce, 16),
-        value: value
-      })
+      const [maybeSignature] = (reply as RpcParamfulRequestPreinit<[Optional<string>]>).params
+      const signature = Option.wrap(maybeSignature).ok().mapErrSync(UserRejectionError.new).throw(t)
 
       const signal = AbortSignal.timeout(600_000)
 
@@ -526,7 +505,13 @@ export class Global {
 
   async brume_eth_sendTransaction(foreground: Port, ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const [{ data, gas, from, to, value }] = (request as RpcParamfulRequestInit<[{ data: string, gas: string, from: string, to: string, value: string }]>).params
+      const [{ from, to, gas, value, data }] = (request as RpcParamfulRequestInit<[{
+        from: string,
+        to: string,
+        gas: string,
+        value: Optional<string>,
+        data: Optional<string>
+      }]>).params
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
@@ -568,18 +553,21 @@ export class Global {
     return await Result.unthrow(async t => {
       const [message, address] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      const session = Option.wrap(ethereum.session).ok().throw(t)
+      const sessionId = Option.wrap(ethereum.session?.name).ok().throw(t)
 
       const reply = await this.popupMutex.lock(async () => {
-        const popup = await this.tryOpenOrNavigatePopup(`/personal_sign?wallet=${session.wallet.uuid}&message=${message}`, mouse).then(r => r.throw(t))
+        const url = qurl(`/personal_sign`, { sessionId, message, address })
+
+        const popup = await this.tryOpenOrNavigatePopup(url, mouse).then(r => r.throw(t))
         const reply = await this.tryWaitPopupData(popup, "personal_sign").then(r => r.throw(t))
 
         return new Ok(reply)
       }).then(r => r.throw(t))
 
-      const [signature] = (reply as RpcParamfulRequestPreinit<[Optional<string>]>).params
+      const [maybeSignature] = (reply as RpcParamfulRequestPreinit<[Optional<string>]>).params
+      const signature = Option.wrap(maybeSignature).ok().mapErrSync(UserRejectionError.new).throw(t)
 
-      return Option.wrap(signature).ok()
+      return new Ok(signature)
     })
   }
 
@@ -587,18 +575,21 @@ export class Global {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      const session = Option.wrap(ethereum.session).ok().throw(t)
+      const sessionId = Option.wrap(ethereum.session?.name).ok().throw(t)
 
       const reply = await this.popupMutex.lock(async () => {
-        const popup = await this.tryOpenOrNavigatePopup(`/eth_signTypedData_v4?wallet=${session.wallet.uuid}&data=${data}`, mouse).then(r => r.throw(t))
+        const url = qurl(`/eth_signTypedData_v4`, { sessionId, data, address })
+
+        const popup = await this.tryOpenOrNavigatePopup(url, mouse).then(r => r.throw(t))
         const reply = await this.tryWaitPopupData(popup, "eth_signTypedData_v4").then(r => r.throw(t))
 
         return new Ok(reply)
       }).then(r => r.throw(t))
 
-      const [signature] = (reply as RpcParamfulRequestPreinit<[Optional<string>]>).params
+      const [maybeSignature] = (reply as RpcParamfulRequestPreinit<[Optional<string>]>).params
+      const signature = Option.wrap(maybeSignature).ok().mapErrSync(UserRejectionError.new).throw(t)
 
-      return Option.wrap(signature).ok()
+      return new Ok(signature)
     })
   }
 
@@ -606,10 +597,14 @@ export class Global {
     return await Result.unthrow(async t => {
       const [{ chainId }] = (request as RpcParamfulRequestInit<[{ chainId: string }]>).params
 
+      const sessionId = Option.wrap(ethereum.session?.name).ok().throw(t)
+
       const chain = Option.wrap(chains[parseInt(chainId, 16)]).ok().throw(t)
 
       const popup = await this.popupMutex.lock(async () => {
-        const popup = await this.tryOpenOrNavigatePopup("/wallet_switchEthereumChain", mouse).then(r => r.throw(t))
+        const url = qurl(`/wallet_switchEthereumChain`, { sessionId, chainId })
+
+        const popup = await this.tryOpenOrNavigatePopup(url, mouse).then(r => r.throw(t))
         const data = await this.tryWaitPopupData(popup, "wallet_switchEthereumChain").then(r => r.throw(t))
 
         return new Ok(data)

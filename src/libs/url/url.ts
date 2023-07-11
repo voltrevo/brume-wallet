@@ -1,4 +1,6 @@
-export function qurl(pathname: string, query: Record<string, string | undefined>) {
+import { Optional } from "@hazae41/option"
+
+export function qurl(pathname: string, query: Record<string, Optional<string>>) {
   const url = new URL(pathname, "https://nowhere")
 
   for (const [key, value] of Object.entries(query))

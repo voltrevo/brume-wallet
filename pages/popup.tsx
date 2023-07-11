@@ -8,18 +8,19 @@ import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
+import { useSession } from "@/mods/foreground/entities/sessions/data";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
 import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
 import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
 import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
-import { Wallets, useWallet } from "@/mods/foreground/entities/wallets/data";
+import { Wallets, useEthereumContext2, useGasPrice, useNonce, useWallet } from "@/mods/foreground/entities/wallets/data";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
 import { Bytes } from "@hazae41/bytes";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
   const background = useBackground()
@@ -43,33 +44,93 @@ export function TransactPage() {
   const { searchParams } = usePath()
   const background = useBackground()
 
-  const to = searchParams.get("to")
+  const sessionId = Option.wrap(searchParams.get("sessionId")).unwrap()
+
+  const from = Option.wrap(searchParams.get("from")).unwrap()
+  const to = Option.wrap(searchParams.get("to")).unwrap()
+  const gas = Option.wrap(searchParams.get("gas")).unwrap()
+
   const value = searchParams.get("value")
   const data = searchParams.get("data")
 
-  const onApprove = useAsyncUniqueCallback(async () => {
-    await background.tryRequest({
-      method: "popup_data",
-      params: [{
-        method: "eth_sendTransaction",
-        params: [true]
-      }]
-    }).then(r => r.unwrap().unwrap())
+  const sessionQuery = useSession(sessionId)
+  const maybeSession = sessionQuery.data?.inner
 
-    Path.go("/done")
-  }, [background])
+  const walletQuery = useWallet(maybeSession?.wallet.uuid, background)
+  const maybeWallet = walletQuery.data?.inner
+
+  const context = useEthereumContext2(maybeSession?.wallet, maybeSession?.chain)
+
+  const gasPriceQuery = useGasPrice(context)
+  const maybeGasPrice = gasPriceQuery.data?.inner
+
+  const nonceQuery = useNonce(maybeWallet?.address, context)
+  const maybeNonce = nonceQuery.data?.inner
+
+  const onApprove = useAsyncUniqueCallback(async () => {
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      const session = Option.wrap(maybeSession).ok().throw(t)
+      const wallet = Option.wrap(maybeWallet).ok().throw(t)
+
+      const privateKey = await Wallets.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
+
+      const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
+
+      const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
+      const nonce = Option.wrap(maybeNonce).ok().throw(t)
+
+      const signature = await Result.catchAndWrap(async () => {
+        return await ewallet.signTransaction({
+          data: data,
+          to: to,
+          from: from,
+          gasLimit: gas,
+          chainId: session.chain.chainId,
+          gasPrice: gasPrice,
+          nonce: Number(nonce),
+          value: value
+        })
+      }).then(r => r.throw(t))
+
+      await background.tryRequest({
+        method: "popup_data",
+        params: [{
+          method: "eth_sendTransaction",
+          params: [signature]
+        }]
+      }).then(r => r.throw(t).throw(t))
+
+      Path.go("/done")
+
+      return Ok.void()
+    }).then(r => r.unwrap())
+  }, [background, maybeWallet, maybeSession, maybeGasPrice, maybeNonce])
 
   const onReject = useAsyncUniqueCallback(async () => {
-    await background.tryRequest({
-      method: "popup_data",
-      params: [{
-        method: "eth_sendTransaction",
-        params: [false]
-      }]
-    }).then(r => r.unwrap().unwrap())
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      await background.tryRequest({
+        method: "popup_data",
+        params: [{
+          method: "eth_sendTransaction",
+          params: [undefined]
+        }]
+      }).then(r => r.throw(t).throw(t))
 
-    Path.go("/done")
+      Path.go("/done")
+
+      return Ok.void()
+    }).then(r => r.unwrap())
   }, [background])
+
+  const loading = useMemo(() => {
+    if (onApprove.loading)
+      return true
+    if (gasPriceQuery.data == null)
+      return true
+    if (nonceQuery.data == null)
+      return true
+    return false
+  }, [onApprove.loading, gasPriceQuery.data, nonceQuery.data])
 
   return <Page>
     <div className="p-xmd grow flex flex-col items-center justify-center">
@@ -104,7 +165,7 @@ export function TransactPage() {
       </Button.Contrast>
       <Button.Gradient className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onApprove.run}
-        disabled={onApprove.loading}
+        disabled={loading}
         colorIndex={5}>
         <Button.Shrink>
           <Outline.CheckIcon className="icon-sm" />
@@ -185,21 +246,25 @@ export function PersonalSignPage() {
   const { searchParams } = usePath()
   const background = useBackground()
 
-  const walletId = Option.wrap(searchParams.get("wallet")).unwrap()
+  const sessionId = Option.wrap(searchParams.get("sessionId")).unwrap()
+
   const message = Option.wrap(searchParams.get("message")).unwrap()
 
-  const walletQuery = useWallet(walletId, background)
-  const walletData = Option.wrap(walletQuery.data).unwrap()
+  const sessionQuery = useSession(sessionId)
+  const maybeSession = sessionQuery.data?.inner
+
+  const walletQuery = useWallet(maybeSession?.wallet.uuid, background)
+  const maybeWallet = walletQuery.data?.inner
 
   const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      const wallet = walletData.inner
+      const wallet = Option.wrap(maybeWallet).ok().throw(t)
 
       const privateKey = await Wallets.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 
-      const signature = Result.catchAndWrap(async () => {
+      const signature = await Result.catchAndWrap(async () => {
         return await ewallet.signMessage(Bytes.fromHexSafe(message))
       }).then(r => r.throw(t))
 
@@ -215,7 +280,7 @@ export function PersonalSignPage() {
 
       return Ok.void()
     }).then(r => r.unwrap())
-  }, [walletData, background])
+  }, [background, maybeWallet, message])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -273,15 +338,19 @@ export function TypedSignPage() {
   const { searchParams } = usePath()
   const background = useBackground()
 
-  const walletId = Option.wrap(searchParams.get("wallet")).unwrap()
+  const sessionId = Option.wrap(searchParams.get("sessionId")).unwrap()
+
   const data = Option.wrap(searchParams.get("data")).unwrap()
 
-  const walletQuery = useWallet(walletId, background)
-  const walletData = Option.wrap(walletQuery.data).unwrap()
+  const sessionQuery = useSession(sessionId)
+  const maybeSession = sessionQuery.data?.inner
+
+  const walletQuery = useWallet(maybeSession?.wallet.uuid, background)
+  const maybeWallet = walletQuery.data?.inner
 
   const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      const wallet = walletData.inner
+      const wallet = Option.wrap(maybeWallet).ok().throw(t)
 
       const { domain, types, message } = JSON.parse(data)
 
@@ -291,7 +360,7 @@ export function TypedSignPage() {
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 
-      const signature = Result.catchAndWrap(async () => {
+      const signature = await Result.catchAndWrap(async () => {
         return await ewallet.signTypedData(domain, types, message)
       }).then(r => r.throw(t))
 
@@ -307,7 +376,7 @@ export function TypedSignPage() {
 
       return Ok.void()
     }).then(r => r.unwrap())
-  }, [walletData, background])
+  }, [background, maybeWallet, data])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -371,14 +440,19 @@ export function WalletAndChainSelectPage() {
   const [chain, setChain] = useState<number>(1)
 
   const onWalletClick = useAsyncUniqueCallback(async (wallet: Wallet) => {
-    await background.tryRequest({
-      method: "popup_data",
-      params: [{
-        method: "eth_requestAccounts",
-        params: [wallet.uuid, chain]
-      }]
-    }).then(r => r.unwrap().unwrap())
-    Path.go("/done")
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      await background.tryRequest({
+        method: "popup_data",
+        params: [{
+          method: "eth_requestAccounts",
+          params: [wallet.uuid, chain]
+        }]
+      }).then(r => r.throw(t).throw(t))
+
+      Path.go("/done")
+
+      return Ok.void()
+    })
   }, [background, chain])
 
   const Body =

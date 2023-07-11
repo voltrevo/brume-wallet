@@ -9,7 +9,7 @@ import { Optional } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
 import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useOnce, useQuery, useVisible } from "@hazae41/xswr"
 import { ContractRunner, TransactionRequest } from "ethers"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { Background } from "../../background/background"
 import { useBackground } from "../../background/context"
 import { useUserStorage } from "../../storage/context"
@@ -21,7 +21,10 @@ export interface WalletProps {
   wallet: Wallet
 }
 
-export function getWallet(uuid: string, background: Background) {
+export function getWallet(uuid: Optional<string>, background: Background) {
+  if (uuid == null)
+    return undefined
+
   const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
 
@@ -34,7 +37,7 @@ export function getWallet(uuid: string, background: Background) {
   })
 }
 
-export function useWallet(uuid: string, background: Background) {
+export function useWallet(uuid: Optional<string>, background: Background) {
   const query = useQuery(getWallet, [uuid, background])
   useOnce(query)
   return query
@@ -91,10 +94,25 @@ export function useGeneralContext() {
   return useObjectMemo({ core, user, background })
 }
 
+export function useEthereumContext2(wallet: Optional<Wallet>, chain: Optional<EthereumChain>) {
+  const core = useCore().unwrap()
+  const user = useCurrentUser()
+  const background = useBackground()
+
+  return useMemo(() => {
+    if (wallet == null)
+      return
+    if (chain == null)
+      return
+    return { core, user, background, wallet, chain }
+  }, [core, user, background, wallet, chain])
+}
+
 export function useEthereumContext(wallet: Wallet, chain: EthereumChain): EthereumContext {
   const core = useCore().unwrap()
   const user = useCurrentUser()
   const background = useBackground()
+
   return useObjectMemo({ core, user, background, wallet, chain })
 }
 
@@ -195,7 +213,12 @@ export function usePendingBalance(address: string, context: EthereumContext, ...
   return query
 }
 
-export function getNonceSchema(address: string, context: EthereumContext, storage: UserStorage) {
+export function getNonceSchema(address: Optional<string>, context: Optional<EthereumContext>, storage: UserStorage) {
+  if (address == null)
+    return undefined
+  if (context == null)
+    return undefined
+
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     await tryFetch<string>(request, context).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
@@ -211,16 +234,19 @@ export function getNonceSchema(address: string, context: EthereumContext, storag
   })
 }
 
-export function useNonce(address: string, ethereum: EthereumContext) {
+export function useNonce(address: Optional<string>, context: Optional<EthereumContext>) {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(getNonceSchema, [address, ethereum, storage])
+  const query = useQuery(getNonceSchema, [address, context, storage])
   useFetch(query)
   useSubscribe(query, storage)
   useError(query, console.error)
   return query
 }
 
-export function getGasPriceSchema(context: EthereumContext, storage: UserStorage) {
+export function getGasPriceSchema(context: Optional<EthereumContext>, storage: UserStorage) {
+  if (context == null)
+    return undefined
+
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
     await tryFetch<string>(request, context).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
@@ -236,7 +262,7 @@ export function getGasPriceSchema(context: EthereumContext, storage: UserStorage
   })
 }
 
-export function useGasPrice(ethereum: EthereumContext) {
+export function useGasPrice(ethereum: Optional<EthereumContext>) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getGasPriceSchema, [ethereum, storage])
   useFetch(query)
