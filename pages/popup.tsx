@@ -17,7 +17,6 @@ import { Wallets, useEthereumContext2, useGasPrice, useNonce, useWallet } from "
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
-import { Bytes } from "@hazae41/bytes";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -264,7 +263,7 @@ export function PersonalSignPage() {
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 
       const signature = await Result.catchAndWrap(async () => {
-        return await ewallet.signMessage(Bytes.fromHexSafe(message))
+        return await ewallet.signMessage(message)
       }).then(r => r.throw(t))
 
       await background.tryRequest({
