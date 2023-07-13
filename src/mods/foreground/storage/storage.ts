@@ -47,7 +47,7 @@ export class UserStorage implements Storage {
           .tryRequest<void>({ method: "brume_subscribe", params: [cacheKey] })
           .then(r => r.throw(t).throw(t))
 
-        this.background.router.events.on("request", async (request) => {
+        this.background.events.on("request", async (request) => {
           if (request.method !== "brume_update")
             return new None()
 

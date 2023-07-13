@@ -98,6 +98,12 @@ export class UserRejectionError extends Error {
 
 }
 
+export interface Exchange {
+  readonly id: string,
+  readonly request: RpcRequestPreinit<unknown>
+  readonly response: Future<Result<unknown, Error>>
+}
+
 export class Global {
 
   readonly core = new Core({})
@@ -108,7 +114,8 @@ export class Global {
   }>()
 
   readonly scripts = new Map<string, Set<Port>>()
-  readonly mutexes = new Map<string, Mutex<void>>()
+
+  readonly exchanges = new Map<string, Exchange>()
 
   readonly popupMutex = new Mutex(undefined)
 

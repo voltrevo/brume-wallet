@@ -1,8 +1,6 @@
 import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
-import { RpcClient, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
-import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
-import { Bytes } from "@hazae41/bytes"
+import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Cleaner } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
 import { None, Some } from "@hazae41/option"
@@ -24,17 +22,40 @@ export class MessageError extends Error {
 
 }
 
-export interface BackgroundHandler {
-  onRequest?: (request: RpcRequestInit<unknown>) => void
-  onResponse?: (response: RpcResponseInit<unknown>) => void
-}
+export class WebsiteBackground {
+  readonly ports = createWebsitePortPool(this)
 
-export class WebsitePortAndClient {
+  readonly events = new SuperEventTarget<{
+    "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
+    "response": (response: RpcResponseInit<unknown>) => void
+  }>()
 
-  constructor(
-    readonly channel: MessageChannel,
-    readonly client: RpcClient
-  ) { }
+  isWebsite(): this is WebsiteBackground {
+    return true
+  }
+
+  isExtension(): false {
+    return false
+  }
+
+  async onRequest(port: Port, request: RpcRequestInit<unknown>) {
+    return await this.events.emit("request", [request])
+  }
+
+  async onResponse(port: Port, response: RpcResponseInit<unknown>) {
+    return await this.events.emit("response", [response])
+  }
+
+  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
+    return await tryLoop(async () => {
+      return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
+        const port = await this.ports.tryGet(0).then(r => r.mapErrSync(Cancel.new).throw(t))
+        const response = await port.tryRequest<T>(init).then(r => r.mapErrSync(Retry.new).throw(t))
+
+        return new Ok(response)
+      })
+    })
+  }
 
 }
 
@@ -79,10 +100,10 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Port,
         }).then(r => r.throw(t))
 
       const onRequest = (request: RpcRequestInit<unknown>) =>
-        background.router.onRequest(port, request)
+        background.onRequest(port, request)
 
       const onResponse = (response: RpcResponseInit<unknown>) =>
-        background.router.onResponse(port, response)
+        background.onResponse(port, response)
 
       port.events.on("request", onRequest, { passive: true })
       port.events.on("response", onResponse, { passive: true })
@@ -108,34 +129,13 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Port,
   }, { capacity: 1 })
 }
 
-export class WebsiteBackground {
-  readonly ports = createWebsitePortPool(this)
-  readonly router = new BackgroundRouter()
-
-  isWebsite(): this is WebsiteBackground {
-    return true
-  }
-
-  isExtension(): false {
-    return false
-  }
-
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return await tryLoop(async () => {
-      return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
-        const port = await this.ports.tryGet(0).then(r => r.mapErrSync(Cancel.new).throw(t))
-        const response = await port.tryRequest<T>(init).then(r => r.mapErrSync(Retry.new).throw(t))
-
-        return new Ok(response)
-      })
-    })
-  }
-
-}
-
 export class ExtensionBackground {
   readonly ports = createExtensionChannelPool(this)
-  readonly router = new BackgroundRouter()
+
+  readonly events = new SuperEventTarget<{
+    "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
+    "response": (response: RpcResponseInit<unknown>) => void
+  }>()
 
   isWebsite(): false {
     return false
@@ -143,6 +143,14 @@ export class ExtensionBackground {
 
   isExtension(): this is ExtensionBackground {
     return true
+  }
+
+  async onRequest(port: Port, request: RpcRequestInit<unknown>) {
+    return await this.events.emit("request", [request])
+  }
+
+  async onResponse(port: Port, response: RpcResponseInit<unknown>) {
+    return await this.events.emit("response", [response])
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
@@ -174,10 +182,10 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
       const port = new ExtensionPort("background", raw)
 
       const onRequest = (request: RpcRequestInit<unknown>) =>
-        background.router.onRequest(port, request)
+        background.onRequest(port, request)
 
       const onResponse = (response: RpcResponseInit<unknown>) =>
-        background.router.onResponse(port, response)
+        background.onResponse(port, response)
 
       port.events.on("request", onRequest, { passive: true })
       port.events.on("response", onResponse, { passive: true })
@@ -200,59 +208,4 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
       return new Ok(new Cleaner(port, onClean))
     })
   }, { capacity: 1 })
-}
-
-export class BackgroundRouter {
-  readonly client = new RpcClient()
-
-  readonly events = new SuperEventTarget<{
-    "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
-    "response": (response: RpcResponseInit<unknown>) => void
-  }>()
-
-  isWebsite(): false {
-    return false
-  }
-
-  isExtension(): this is ExtensionBackground {
-    return true
-  }
-
-  async brume_auth_create(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
-    return await Result.unthrow(async t => {
-      const [name, dataBase64] = (request as RpcParamfulRequestPreinit<[string, string]>).params
-
-      const id = await WebAuthnStorage
-        .create(name, Bytes.fromBase64(dataBase64))
-        .then(r => r.throw(t))
-
-      return new Ok(Bytes.toBase64(id))
-    })
-  }
-
-  async brume_auth_get(request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
-    return await Result.unthrow(async t => {
-      const [idBase64] = (request as RpcParamfulRequestPreinit<[string]>).params
-
-      const data = await WebAuthnStorage
-        .get(Bytes.fromBase64(idBase64))
-        .then(r => r.throw(t))
-
-      return new Ok(Bytes.toBase64(data))
-    })
-  }
-
-  async onRequest(port: Port, request: RpcRequestInit<unknown>) {
-    if (request.method === "brume_auth_create")
-      return new Some(await this.brume_auth_create(request))
-    if (request.method === "brume_auth_get")
-      return new Some(await this.brume_auth_get(request))
-
-    return await this.events.emit("request", [request])
-  }
-
-  async onResponse(port: Port, response: RpcResponseInit<unknown>) {
-    return await this.events.emit("response", [response])
-  }
-
 }
