@@ -23,7 +23,7 @@
     "zip:safari": "cd ./dist/safari && zip -r ../safari.zip .",
     "sign:firefox": "source .env.local && web-ext sign --id wallet@brume.money --source-dir ./dist/firefox --api-key $FIREFOX_KEY --api-secret $FIREFOX_SECRET && mv ./web-ext-artifacts/* ./dist/firefox.xpi && rimraf ./web-ext-artifacts",
     "version": "npm run build && npm run zip && git update-index --no-assume-unchanged ./dist/chrome.zip ./dist/firefox.zip ./dist/safari.zip ./dist/website.zip && git add --force ./dist/*.zip",
-    "postversion": "git update-index --assume-unchanged ./dist/chrome.zip ./dist/firefox.zip ./dist/safari.zip ./dist/website.zip && npm run sign:firefox",
+    "postversion": "git update-index --assume-unchanged ./dist/chrome.zip ./dist/firefox.zip ./dist/safari.zip ./dist/website.zip",
     "xcode": "xcrun safari-web-extension-converter ./dist/safari --project-location xcode --app-name brume-wallet",
     "clean": "rimraf ./node_modules ./.next ./out ./dist ./website ./chrome ./firefox ./safari ./package-lock.json",
     "lint": "next lint",
