@@ -16,11 +16,12 @@ import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn";
 import { Mutators } from "@/libs/xswr/mutators";
-import { EthereumWalletData, Wallet } from "@/mods/background/service_worker/entities/wallets/data";
+import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { Bytes } from "@hazae41/bytes";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
+import { ethers } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../avatar";
 import { useWallets } from "./data";
@@ -98,10 +99,10 @@ export function WalletCreatorDialog(props: CloseProps) {
       if (!name || !type)
         return new Err(new Panic())
 
-      let wallet: EthereumWalletData
-
       if (type === "address") {
-        wallet = { coin: "ethereum", type: "readonly", uuid, name, color, emoji, address: input }
+        const address = ethers.getAddress(input)
+
+        const wallet = { coin: "ethereum", type: "readonly", uuid, name, color, emoji, address }
 
         const walletsData = await background.tryRequest<Wallet[]>({
           method: "brume_newWallet",
@@ -141,7 +142,7 @@ export function WalletCreatorDialog(props: CloseProps) {
 
           const privateKey = { ivBase64, idBase64 }
 
-          wallet = { coin: "ethereum", type: "authPrivateKey", uuid, name, color, emoji, address, privateKey }
+          const wallet = { coin: "ethereum", type: "authPrivateKey", uuid, name, color, emoji, address, privateKey }
 
           const walletsData = await background.tryRequest<Wallet[]>({
             method: "brume_newWallet",
@@ -154,7 +155,7 @@ export function WalletCreatorDialog(props: CloseProps) {
 
           return Ok.void()
         } else {
-          wallet = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, address, privateKey }
+          const wallet = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, address, privateKey }
 
           const walletsData = await background.tryRequest<Wallet[]>({
             method: "brume_newWallet",
@@ -205,7 +206,7 @@ export function WalletCreatorDialog(props: CloseProps) {
       {`We have generated a new Ethereum private key just for you. You can enter your own private key to import an existing wallet. You can enter an Ethereum address to add a readonly wallet.`}
     </div>
 
-  const NoAuthButton =
+  const AddWithoutAuthButton =
     <Button.Contrast className="w-full p-md"
       disabled={!name || !type}
       onClick={onNoAuthClick.run}>
@@ -215,7 +216,7 @@ export function WalletCreatorDialog(props: CloseProps) {
       </Button.Shrink>
     </Button.Contrast>
 
-  const AuthButton =
+  const AddWithAuthButton =
     <Button.Gradient className="w-full p-md"
       colorIndex={color}
       disabled={!name || !type}
@@ -223,6 +224,17 @@ export function WalletCreatorDialog(props: CloseProps) {
       <Button.Shrink>
         <Outline.LockClosedIcon className="icon-sm" />
         Add with authentication
+      </Button.Shrink>
+    </Button.Gradient>
+
+  const AddReadonlyButon =
+    <Button.Gradient className="w-full p-md"
+      colorIndex={color}
+      disabled={!name || !type}
+      onClick={onNoAuthClick.run}>
+      <Button.Shrink>
+        <Outline.PlusIcon className="icon-sm" />
+        Add
       </Button.Shrink>
     </Button.Gradient>
 
@@ -240,9 +252,14 @@ export function WalletCreatorDialog(props: CloseProps) {
       An error occured: {Errors.toString(error)}
     </div>}
     <div className="h-4" />
-    <div className="flex items-center flex-wrap-reverse gap-2">
-      {NoAuthButton}
-      {AuthButton}
-    </div>
+    {type === "address" &&
+      <div className="flex items-center flex-wrap-reverse gap-2">
+        {AddReadonlyButon}
+      </div>}
+    {type !== "address" &&
+      <div className="flex items-center flex-wrap-reverse gap-2">
+        {AddWithoutAuthButton}
+        {AddWithAuthButton}
+      </div>}
   </Dialog>
 }
