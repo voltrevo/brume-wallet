@@ -145,9 +145,6 @@ git restore ./dist/firefox.zip
 git restore ./dist/safari.zip
 git restore ./dist/website.zip
 
-# Restore .xpi file as it is signed locally and can't be reproduced
-git restore ./dist/firefox.xpi
-
 # Compare other files
 [[ -z $(git status --porcelain) ]]
 echo $?
