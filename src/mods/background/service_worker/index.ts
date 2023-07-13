@@ -326,7 +326,12 @@ export class Global {
       const originQuery = await this.make(getOrigin(origin.origin, storage))
       await originQuery.mutate(Mutators.data(origin))
 
-      const sessionData: SessionData = { id: origin.origin, origin: origin.origin, wallet, chain }
+      const sessionData: SessionData = {
+        id: origin.origin,
+        origin: origin.origin,
+        wallets: [wallet],
+        chain: chain
+      }
 
       const sessionsQuery = await this.make(getSessions(storage))
 
@@ -352,8 +357,9 @@ export class Global {
 
       const { user, storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
-      const { wallet, chain } = session
+      const { wallets, chain } = session
 
+      const wallet = Option.wrap(wallets[0]).ok().throw(t)
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
       const ethereum: EthereumContext = { user, port: script, session, wallet, chain, brumes }
@@ -385,25 +391,39 @@ export class Global {
     })
   }
 
-  async eth_requestAccounts(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<[string], Error>> {
+  async eth_requestAccounts(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
     return await Result.unthrow(async t => {
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
+      const session = Option.wrap(ethereum.session).ok().throw(t)
 
-      const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
-      const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
+      const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
+        return await Result.unthrow<Result<string, Error>>(async t => {
+          const walletQuery = await this.make(getWallet(wallet.uuid, storage))
+          const walletData = Option.wrap(walletQuery.data?.inner).ok().throw(t)
 
-      return new Ok([address])
+          return new Ok(walletData.address)
+        })
+      }))).throw(t)
+
+      return new Ok(addresses)
     })
   }
 
-  async eth_accounts(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<[string], Error>> {
+  async eth_accounts(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
     return await Result.unthrow(async t => {
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
+      const session = Option.wrap(ethereum.session).ok().throw(t)
 
-      const walletQuery = await this.make(getWallet(ethereum.wallet.uuid, storage))
-      const address = Option.wrap(walletQuery.current?.get().address).ok().throw(t)
+      const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
+        return await Result.unthrow<Result<string, Error>>(async t => {
+          const walletQuery = await this.make(getWallet(wallet.uuid, storage))
+          const walletData = Option.wrap(walletQuery.data?.inner).ok().throw(t)
 
-      return new Ok([address])
+          return new Ok(walletData.address)
+        })
+      }))).throw(t)
+
+      return new Ok(addresses)
     })
   }
 

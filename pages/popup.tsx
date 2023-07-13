@@ -60,10 +60,10 @@ export function TransactPage() {
   const sessionQuery = useSession(sessionId)
   const maybeSession = sessionQuery.data?.inner
 
-  const walletQuery = useWallet(maybeSession?.wallet.uuid, background)
+  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid, background)
   const maybeWallet = walletQuery.data?.inner
 
-  const context = useEthereumContext2(maybeSession?.wallet, maybeSession?.chain)
+  const context = useEthereumContext2(maybeSession?.wallets.at(0), maybeSession?.chain)
 
   const gasPriceQuery = useGasPrice(context)
   const maybeGasPrice = gasPriceQuery.data?.inner
@@ -249,7 +249,7 @@ export function PersonalSignPage() {
   const sessionQuery = useSession(sessionId)
   const maybeSession = sessionQuery.data?.inner
 
-  const walletQuery = useWallet(maybeSession?.wallet.uuid, background)
+  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid, background)
   const maybeWallet = walletQuery.data?.inner
 
   const userMessage = useMemo(() => {
@@ -343,7 +343,7 @@ export function TypedSignPage() {
   const sessionQuery = useSession(sessionId)
   const maybeSession = sessionQuery.data?.inner
 
-  const walletQuery = useWallet(maybeSession?.wallet.uuid, background)
+  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid, background)
   const maybeWallet = walletQuery.data?.inner
 
   const onApprove = useAsyncUniqueCallback(async () => {

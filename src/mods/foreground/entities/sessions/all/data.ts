@@ -4,7 +4,7 @@ import { UserStorage, useSubscribe } from "@/mods/foreground/storage/storage"
 import { createQuerySchema, useError, useFetch, useQuery } from "@hazae41/xswr"
 
 export function getSessions(storage: UserStorage) {
-  return createQuerySchema<string, Session[], never>({ key: `sessions/v2`, storage })
+  return createQuerySchema<string, Session[], never>({ key: `sessions/v3`, storage })
 }
 
 export function useSessions() {
