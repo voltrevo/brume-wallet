@@ -10,7 +10,7 @@ import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { TitleProps } from "@/libs/react/props/title";
 import { Option } from "@hazae41/option";
-import { Ok, Result } from "@hazae41/result";
+import { Err, Ok, Result } from "@hazae41/result";
 import { ethers } from "ethers";
 import { useMemo, useState } from "react";
 import { useWalletData } from "./context";
@@ -73,6 +73,9 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
     return await Result.unthrow<Result<void, Error>>(async t => {
       const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
       const nonce = Option.wrap(maybeNonce).ok().throw(t)
+
+      if (wallet.type === "readonly")
+        return new Err(new Error(`This wallet is readonly`))
 
       const privateKey = await Wallets.tryGetPrivateKey(wallet, context.background).then(r => r.throw(t))
 

@@ -45,28 +45,42 @@ export function WalletCreatorDialog(props: CloseProps) {
     setName(e.currentTarget.value)
   }, [])
 
-  const [key = "", setKey] = useState<string>()
+  const [input = "", setInput] = useState<string>()
 
-  const onKeyChange = useTextAreaChange(e => {
-    setKey(e.currentTarget.value)
+  const onInputChange = useTextAreaChange(e => {
+    setInput(e.currentTarget.value)
   }, [])
 
   useEffect(() => {
-    Promises.fork().then(() => setKey(Ethers.Wallet.tryRandom().ok().inner?.privateKey))
+    Promises.fork().then(() => setInput(Ethers.Wallet.tryRandom().ok().inner?.privateKey))
   }, [])
 
-  const ethersWallet = useAsyncReplaceMemo(async () => {
-    if (key) return Ethers.Wallet.tryFrom(key).ok().inner
-  }, [key])
+  const type = useMemo(() => {
+    if (!input.startsWith("0x"))
+      return undefined
+    if (input.length === 42)
+      return "address"
+    if (input.length === 66)
+      return "privateKey"
+    return undefined
+  }, [input])
+
+  const ewallet = useAsyncReplaceMemo(async () => {
+    if (type !== "privateKey")
+      return undefined
+    return Ethers.Wallet.tryFrom(input).ok().inner
+  }, [input])
 
   const [error, setError] = useState<Error>()
 
   const encryptedPrivateKeyResult = useAsyncReplaceMemo(async () => {
     return await Result.unthrow<Result<[string, string], Error>>(async t => {
-      if (!ethersWallet)
+      if (type !== "privateKey")
+        return new Err(new Panic())
+      if (!ewallet)
         return new Err(new Panic())
 
-      const privateKeyBytes = Bytes.fromHexSafe(ethersWallet.privateKey.slice(2))
+      const privateKeyBytes = Bytes.fromHexSafe(ewallet.privateKey.slice(2))
 
       const plainBase64 = Bytes.toBase64(privateKeyBytes)
 
@@ -77,55 +91,88 @@ export function WalletCreatorDialog(props: CloseProps) {
 
       return new Ok([ivBase64, cipherBase64])
     })
-  }, [ethersWallet, background])
+  }, [type, ewallet, background])
 
   const tryAddWallet = useAsyncUniqueCallback(async (authenticated: boolean) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!name || !ethersWallet || !encryptedPrivateKeyResult)
+      if (!name || !type)
         return new Err(new Panic())
-
-      const privateKeyBytes = Bytes.fromHexSafe(ethersWallet.privateKey.slice(2))
-
-      const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
-      // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
-
-      const privateKey = `0x${Bytes.toHex(privateKeyBytes)}`
-      const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
-
-      // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
-      // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
 
       let wallet: EthereumWalletData
 
-      if (authenticated) {
-        const [ivBase64, cipherBase64] = encryptedPrivateKeyResult.throw(t)
+      if (type === "address") {
+        wallet = { coin: "ethereum", type: "readonly", uuid, name, color, emoji, address: input }
 
-        const cipher = Bytes.fromBase64(cipherBase64)
+        const walletsData = await background.tryRequest<Wallet[]>({
+          method: "brume_newWallet",
+          params: [wallet]
+        }).then(r => r.throw(t).throw(t))
 
-        const id = await WebAuthnStorage.create(name, cipher).then(r => r.throw(t))
+        wallets.mutate(Mutators.data(walletsData))
 
-        const idBase64 = Bytes.toBase64(id)
+        close()
 
-        const privateKey = { ivBase64, idBase64 }
-
-        wallet = { coin: "ethereum", type: "authPrivateKey", uuid, name, color, emoji, address, privateKey }
-      } else {
-        wallet = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, address, privateKey }
+        return Ok.void()
       }
 
-      const walletsData = await background.tryRequest<Wallet[]>({
-        method: "brume_newWallet",
-        params: [wallet]
-      }).then(r => r.throw(t).throw(t))
+      if (type === "privateKey") {
+        if (!ewallet || !encryptedPrivateKeyResult)
+          return new Err(new Panic())
 
-      wallets.mutate(Mutators.data(walletsData))
+        const privateKeyBytes = Bytes.fromHexSafe(ewallet.privateKey.slice(2))
 
-      close()
+        const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
+        // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
 
-      return Ok.void()
+        const privateKey = `0x${Bytes.toHex(privateKeyBytes)}`
+        const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
+
+        // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
+        // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
+
+        if (authenticated) {
+          const [ivBase64, cipherBase64] = encryptedPrivateKeyResult.throw(t)
+
+          const cipher = Bytes.fromBase64(cipherBase64)
+
+          const id = await WebAuthnStorage.create(name, cipher).then(r => r.throw(t))
+
+          const idBase64 = Bytes.toBase64(id)
+
+          const privateKey = { ivBase64, idBase64 }
+
+          wallet = { coin: "ethereum", type: "authPrivateKey", uuid, name, color, emoji, address, privateKey }
+
+          const walletsData = await background.tryRequest<Wallet[]>({
+            method: "brume_newWallet",
+            params: [wallet]
+          }).then(r => r.throw(t).throw(t))
+
+          wallets.mutate(Mutators.data(walletsData))
+
+          close()
+
+          return Ok.void()
+        } else {
+          wallet = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, address, privateKey }
+
+          const walletsData = await background.tryRequest<Wallet[]>({
+            method: "brume_newWallet",
+            params: [wallet]
+          }).then(r => r.throw(t).throw(t))
+
+          wallets.mutate(Mutators.data(walletsData))
+
+          close()
+
+          return Ok.void()
+        }
+      }
+
+      throw new Panic()
     }).then(r => r.inspectErrSync(setError))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uuid, name, color, emoji, ethersWallet, background, encryptedPrivateKeyResult, wallets.mutate, close])
+  }, [input, type, ewallet, uuid, name, color, emoji, background, encryptedPrivateKeyResult, wallets.mutate, close])
 
   const onNoAuthClick = useAsyncUniqueCallback(async () => {
     await tryAddWallet.run(false)
@@ -150,17 +197,17 @@ export function WalletCreatorDialog(props: CloseProps) {
   const KeyInput =
     <Textarea.Contrast className="w-full resize-none"
       placeholder="Enter your private key"
-      value={key} onChange={onKeyChange}
+      value={input} onChange={onInputChange}
       rows={4} />
 
   const Info =
     <div className="text-contrast">
-      {`We have generated a new private key just for you. You can also enter your own private key to import an existing wallet.`}
+      {`We have generated a new Ethereum private key just for you. You can enter your own private key to import an existing wallet. You can enter an Ethereum address to add a readonly wallet.`}
     </div>
 
   const NoAuthButton =
     <Button.Contrast className="w-full p-md"
-      disabled={!name || !ethersWallet}
+      disabled={!name || !type}
       onClick={onNoAuthClick.run}>
       <Button.Shrink>
         <Outline.PlusIcon className="icon-sm" />
@@ -171,7 +218,7 @@ export function WalletCreatorDialog(props: CloseProps) {
   const AuthButton =
     <Button.Gradient className="w-full p-md"
       colorIndex={color}
-      disabled={!name || !ethersWallet}
+      disabled={!name || !type}
       onClick={onAuthClick.run}>
       <Button.Shrink>
         <Outline.LockClosedIcon className="icon-sm" />

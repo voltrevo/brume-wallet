@@ -3,7 +3,7 @@ import { EthereumChain, PairInfo } from "@/libs/ethereum/chain"
 import { useObjectMemo } from "@/libs/react/memo"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
-import { EthereumQueryKey, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
+import { EthereumQueryKey, EthereumSignableWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Bytes } from "@hazae41/bytes"
 import { Optional } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
@@ -45,7 +45,7 @@ export function useWallet(uuid: Optional<string>, background: Background) {
 
 export namespace Wallets {
 
-  export async function tryGetPrivateKey(wallet: EthereumWalletData, background: Background): Promise<Result<string, Error>> {
+  export async function tryGetPrivateKey(wallet: EthereumSignableWalletData, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       if (wallet.type === "privateKey")
         return new Ok(wallet.privateKey)

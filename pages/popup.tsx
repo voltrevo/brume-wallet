@@ -21,7 +21,7 @@ import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
 import { Bytes } from "@hazae41/bytes";
 import { Option } from "@hazae41/option";
-import { Ok, Result } from "@hazae41/result";
+import { Err, Ok, Result } from "@hazae41/result";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
@@ -77,6 +77,9 @@ export function TransactPage() {
       const wallet = Option.wrap(maybeWallet).ok().throw(t)
       const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
       const nonce = Option.wrap(maybeNonce).ok().throw(t)
+
+      if (wallet.type === "readonly")
+        return new Err(new Error(`This wallet is readonly`))
 
       const privateKey = await Wallets.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
 
@@ -262,6 +265,9 @@ export function PersonalSignPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const wallet = Option.wrap(maybeWallet).ok().throw(t)
 
+      if (wallet.type === "readonly")
+        return new Err(new Error(`This wallet is readonly`))
+
       const privateKey = await Wallets.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
@@ -352,13 +358,16 @@ export function TypedSignPage() {
 
       const { domain, types, message } = JSON.parse(data)
 
-      delete types["EIP712Domain"]
+      if (wallet.type === "readonly")
+        return new Err(new Error(`This wallet is readonly`))
 
       const privateKey = await Wallets.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 
       const signature = await Result.catchAndWrap(async () => {
+        delete types["EIP712Domain"]
+
         return await ewallet.signTypedData(domain, types, message)
       }).then(r => r.throw(t))
 
