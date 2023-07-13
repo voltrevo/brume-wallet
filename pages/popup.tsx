@@ -4,6 +4,7 @@ import { Ethers } from "@/libs/ethers/ethers";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
+import { RpcErr, RpcError, RpcOk } from "@/libs/rpc";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
@@ -14,6 +15,7 @@ import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/crea
 import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
 import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { Wallets, useEthereumContext2, useGasPrice, useNonce, useWallet } from "@/mods/foreground/entities/wallets/data";
+import { UserRejectionError } from "@/mods/foreground/errors/errors";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
@@ -43,6 +45,8 @@ export default function Popup() {
 export function TransactPage() {
   const { searchParams } = usePath()
   const background = useBackground()
+
+  const id = Option.wrap(searchParams.get("id")).unwrap()
 
   const sessionId = Option.wrap(searchParams.get("sessionId")).unwrap()
 
@@ -93,33 +97,27 @@ export function TransactPage() {
 
       await background.tryRequest({
         method: "popup_data",
-        params: [{
-          method: "eth_sendTransaction",
-          params: [signature]
-        }]
+        params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
       Path.go("/done")
 
       return Ok.void()
     }).then(r => r.unwrap())
-  }, [background, maybeWallet, maybeSession, maybeGasPrice, maybeNonce])
+  }, [background, id, maybeWallet, maybeSession, maybeGasPrice, maybeNonce])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "popup_data",
-        params: [{
-          method: "eth_sendTransaction",
-          params: [undefined]
-        }]
+        params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
       Path.go("/done")
 
       return Ok.void()
     }).then(r => r.unwrap())
-  }, [background])
+  }, [background, id])
 
   const loading = useMemo(() => {
     if (onApprove.loading)
@@ -176,39 +174,36 @@ export function TransactPage() {
 }
 
 export function SwitchPage() {
+  const { searchParams } = usePath()
   const background = useBackground()
+
+  const id = Option.wrap(searchParams.get("id")).unwrap()
 
   const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "popup_data",
-        params: [{
-          method: "wallet_switchEthereumChain",
-          params: [true]
-        }]
+        params: [new RpcOk(id, undefined)]
       }).then(r => r.throw(t).throw(t))
 
       Path.go("/done")
 
       return Ok.void()
     }).then(r => r.unwrap())
-  }, [background])
+  }, [background, id])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "popup_data",
-        params: [{
-          method: "wallet_switchEthereumChain",
-          params: [false]
-        }]
+        params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
       Path.go("/done")
 
       return Ok.void()
     }).then(r => r.unwrap())
-  }, [background])
+  }, [background, id])
 
   return <Page>
     <div className="p-xmd grow flex flex-col items-center justify-center">
@@ -245,6 +240,8 @@ export function PersonalSignPage() {
   const { searchParams } = usePath()
   const background = useBackground()
 
+  const id = Option.wrap(searchParams.get("id")).unwrap()
+
   const sessionId = Option.wrap(searchParams.get("sessionId")).unwrap()
 
   const message = Option.wrap(searchParams.get("message")).unwrap()
@@ -275,33 +272,27 @@ export function PersonalSignPage() {
 
       await background.tryRequest({
         method: "popup_data",
-        params: [{
-          method: "personal_sign",
-          params: [signature]
-        }]
+        params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
       Path.go("/done")
 
       return Ok.void()
     }).then(r => r.unwrap())
-  }, [background, maybeWallet, userMessage])
+  }, [background, id, maybeWallet, userMessage])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "popup_data",
-        params: [{
-          method: "personal_sign",
-          params: [undefined]
-        }]
+        params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
       Path.go("/done")
 
       return Ok.void()
     }).then(r => r.unwrap())
-  }, [background])
+  }, [background, id])
 
   return <Page>
     <div className="p-xmd grow flex flex-col items-center justify-center">
@@ -343,6 +334,8 @@ export function TypedSignPage() {
   const { searchParams } = usePath()
   const background = useBackground()
 
+  const id = Option.wrap(searchParams.get("id")).unwrap()
+
   const sessionId = Option.wrap(searchParams.get("sessionId")).unwrap()
 
   const data = Option.wrap(searchParams.get("data")).unwrap()
@@ -371,33 +364,27 @@ export function TypedSignPage() {
 
       await background.tryRequest({
         method: "popup_data",
-        params: [{
-          method: "eth_signTypedData_v4",
-          params: [signature]
-        }]
+        params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
       Path.go("/done")
 
       return Ok.void()
     }).then(r => r.unwrap())
-  }, [background, maybeWallet, data])
+  }, [background, id, maybeWallet, data])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "popup_data",
-        params: [{
-          method: "eth_signTypedData_v4",
-          params: [false]
-        }]
+        params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
       Path.go("/done")
 
       return Ok.void()
     }).then(r => r.unwrap())
-  }, [background])
+  }, [background, id])
 
   return <Page>
     <div className="p-xmd grow flex flex-col items-center justify-center">
@@ -436,7 +423,10 @@ export function TypedSignPage() {
 }
 
 export function WalletAndChainSelectPage() {
+  const { searchParams } = usePath()
   const background = useBackground()
+
+  const id = Option.wrap(searchParams.get("id")).unwrap()
 
   const wallets = useWallets(background)
 
@@ -448,17 +438,14 @@ export function WalletAndChainSelectPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "popup_data",
-        params: [{
-          method: "eth_requestAccounts",
-          params: [wallet.uuid, chain]
-        }]
+        params: [new RpcOk(id, [wallet.uuid, chain])]
       }).then(r => r.throw(t).throw(t))
 
       Path.go("/done")
 
       return Ok.void()
-    })
-  }, [background, chain])
+    }).then(r => r.unwrap())
+  }, [background, id, chain])
 
   const Body =
     <PageBody>

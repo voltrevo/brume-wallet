@@ -3,7 +3,7 @@ import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { chains, pairsByAddress } from "@/libs/ethereum/chain"
 import { Mouse } from "@/libs/mouse/mouse"
-import { RpcParamfulRequestInit, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit } from "@/libs/rpc"
+import { RpcParamfulRequestInit, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { qurl } from "@/libs/url/url"
@@ -84,20 +84,6 @@ export interface PopupData {
   port: Port
 }
 
-export class UserRejectionError extends Error {
-  readonly #class = UserRejectionError
-  readonly name = this.#class.name
-
-  constructor() {
-    super(`User rejected the request`)
-  }
-
-  static new() {
-    return new UserRejectionError()
-  }
-
-}
-
 export interface Exchange {
   readonly id: string,
   readonly request: RpcRequestPreinit<unknown>
@@ -109,8 +95,8 @@ export class Global {
   readonly core = new Core({})
 
   readonly events = new SuperEventTarget<{
-    "hello": (foreground: Port) => Result<void, Error>
-    "data": (foreground: Port, request: RpcRequestPreinit<unknown>) => Result<void, Error>
+    "popup_hello": (foreground: Port) => Result<void, Error>
+    "popup_data": (response: RpcResponseInit<unknown>) => Result<void, Error>
   }>()
 
   readonly scripts = new Map<string, Set<Port>>()
@@ -208,12 +194,12 @@ export class Global {
     }
 
     try {
-      this.events.on("hello", onRequest, { passive: true })
+      this.events.on("popup_hello", onRequest, { passive: true })
       browser.windows.onRemoved.addListener(onRemoved)
 
       return await future.promise
     } finally {
-      this.events.off("hello", onRequest)
+      this.events.off("popup_hello", onRequest)
       browser.windows.onRemoved.removeListener(onRemoved)
     }
   }
@@ -261,15 +247,32 @@ export class Global {
     })
   }
 
-  async tryWaitPopupData(popup: PopupData, method: string) {
-    const future = new Future<Result<RpcRequestPreinit<unknown>, Error>>()
+  async tryRequestPopup<T>(request: RpcRequestPreinit<Record<string, Optional<string>>>, mouse: Mouse): Promise<Result<RpcResponse<T>, Error>> {
+    return await Result.unthrow(async t => {
+      const uuid = crypto.randomUUID()
 
-    const onData = (foreground: Port, request: RpcRequestPreinit<unknown>) => {
-      if (foreground.uuid !== popup.port.uuid)
+      const response = await this.popupMutex.lock(async () => {
+        const url = qurl(`/${request.method}?id=${uuid}`, request.params)
+
+        const popup = await this.tryOpenOrNavigatePopup(url, mouse).then(r => r.throw(t))
+        const data = await this.tryWaitPopupData<T>(popup, uuid).then(r => r.throw(t))
+
+        return new Ok(data)
+      }).then(r => r.throw(t))
+
+      return new Ok(response)
+    })
+  }
+
+  async tryWaitPopupData<T>(popup: PopupData, id: string) {
+    const future = new Future<Result<RpcResponse<T>, Error>>()
+
+    const onData = (init: RpcResponseInit<any>) => {
+      if (init.id !== id)
         return new None()
-      if (request.method !== method)
-        return new None()
-      future.resolve(new Ok(request))
+
+      const response = RpcResponse.from<T>(init)
+      future.resolve(new Ok(response))
       return new Some(Ok.void())
     }
 
@@ -280,12 +283,12 @@ export class Global {
     }
 
     try {
-      this.events.on("data", onData, { passive: true })
+      this.events.on("popup_data", onData, { passive: true })
       browser.windows.onRemoved.addListener(onRemoved)
 
       return await future.promise
     } finally {
-      this.events.off("data", onData)
+      this.events.off("popup_data", onData)
       browser.windows.onRemoved.removeListener(onRemoved)
     }
   }
@@ -308,14 +311,9 @@ export class Global {
       if (session != null)
         return new Ok(session)
 
-      const data = await this.popupMutex.lock(async () => {
-        const popup = await this.tryOpenOrNavigatePopup("/eth_requestAccounts", mouse).then(r => r.throw(t))
-        const data = await this.tryWaitPopupData(popup, "eth_requestAccounts").then(r => r.throw(t))
-
-        return new Ok(data)
-      }).then(r => r.throw(t))
-
-      const [walletId, chainId] = (data as RpcParamfulRequestPreinit<[string, number]>).params
+      const [walletId, chainId] = await this.tryRequestPopup<[string, number]>({
+        method: "eth_requestAccounts"
+      }, mouse).then(r => r.throw(t).throw(t))
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
 
@@ -483,17 +481,10 @@ export class Global {
 
       const sessionId = Option.wrap(ethereum.session?.id).ok().throw(t)
 
-      const reply = await this.popupMutex.lock(async () => {
-        const url = qurl(`/eth_sendTransaction`, { sessionId, from, to, gas, value, data })
-
-        const popup = await this.tryOpenOrNavigatePopup(url, mouse).then(r => r.throw(t))
-        const reply = await this.tryWaitPopupData(popup, "eth_sendTransaction").then(r => r.throw(t))
-
-        return new Ok(reply)
-      }).then(r => r.throw(t))
-
-      const [maybeSignature] = (reply as RpcParamfulRequestPreinit<[Optional<string>]>).params
-      const signature = Option.wrap(maybeSignature).ok().mapErrSync(UserRejectionError.new).throw(t)
+      const signature = await this.tryRequestPopup<string>({
+        method: "eth_sendTransaction",
+        params: { sessionId, from, to, gas, value, data }
+      }, mouse).then(r => r.throw(t).throw(t))
 
       const signal = AbortSignal.timeout(600_000)
 
@@ -510,17 +501,10 @@ export class Global {
 
       const sessionId = Option.wrap(ethereum.session?.id).ok().throw(t)
 
-      const reply = await this.popupMutex.lock(async () => {
-        const url = qurl(`/personal_sign`, { sessionId, message, address })
-
-        const popup = await this.tryOpenOrNavigatePopup(url, mouse).then(r => r.throw(t))
-        const reply = await this.tryWaitPopupData(popup, "personal_sign").then(r => r.throw(t))
-
-        return new Ok(reply)
-      }).then(r => r.throw(t))
-
-      const [maybeSignature] = (reply as RpcParamfulRequestPreinit<[Optional<string>]>).params
-      const signature = Option.wrap(maybeSignature).ok().mapErrSync(UserRejectionError.new).throw(t)
+      const signature = await this.tryRequestPopup<string>({
+        method: "personal_sign",
+        params: { sessionId, message, address }
+      }, mouse).then(r => r.throw(t).throw(t))
 
       return new Ok(signature)
     })
@@ -532,17 +516,10 @@ export class Global {
 
       const sessionId = Option.wrap(ethereum.session?.id).ok().throw(t)
 
-      const reply = await this.popupMutex.lock(async () => {
-        const url = qurl(`/eth_signTypedData_v4`, { sessionId, data, address })
-
-        const popup = await this.tryOpenOrNavigatePopup(url, mouse).then(r => r.throw(t))
-        const reply = await this.tryWaitPopupData(popup, "eth_signTypedData_v4").then(r => r.throw(t))
-
-        return new Ok(reply)
-      }).then(r => r.throw(t))
-
-      const [maybeSignature] = (reply as RpcParamfulRequestPreinit<[Optional<string>]>).params
-      const signature = Option.wrap(maybeSignature).ok().mapErrSync(UserRejectionError.new).throw(t)
+      const signature = await this.tryRequestPopup<string>({
+        method: "eth_signTypedData_v4",
+        params: { sessionId, data, address }
+      }, mouse).then(r => r.throw(t).throw(t))
 
       return new Ok(signature)
     })
@@ -556,17 +533,10 @@ export class Global {
 
       const chain = Option.wrap(chains[parseInt(chainId, 16)]).ok().throw(t)
 
-      const popup = await this.popupMutex.lock(async () => {
-        const url = qurl(`/wallet_switchEthereumChain`, { sessionId, chainId })
-
-        const popup = await this.tryOpenOrNavigatePopup(url, mouse).then(r => r.throw(t))
-        const data = await this.tryWaitPopupData(popup, "wallet_switchEthereumChain").then(r => r.throw(t))
-
-        return new Ok(data)
-      }).then(r => r.throw(t))
-
-      const [approved] = (popup as RpcParamfulRequestPreinit<[boolean]>).params
-      Result.assert(approved).mapErrSync(UserRejectionError.new).throw(t)
+      await this.tryRequestPopup<void>({
+        method: "wallet_switchEthereumChain",
+        params: { sessionId, chainId }
+      }, mouse).then(r => r.throw(t).throw(t))
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
       const sessionQuery = await this.make(getSession(ethereum.port.name, storage))
@@ -637,7 +607,7 @@ export class Global {
 
   async popup_hello(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
-      const returned = await this.events.emit("hello", [foreground])
+      const returned = await this.events.emit("popup_hello", [foreground])
 
       if (returned.isSome() && returned.inner.isErr())
         return returned.inner
@@ -648,9 +618,9 @@ export class Global {
 
   async popup_data(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
-      const [subrequest] = (request as RpcParamfulRequestInit<[RpcRequestPreinit<unknown>]>).params
+      const [response] = (request as RpcParamfulRequestPreinit<[RpcResponseInit<unknown>]>).params
 
-      const returned = await this.events.emit("data", [foreground, subrequest])
+      const returned = await this.events.emit("popup_data", [response])
 
       if (returned.isSome() && returned.inner.isErr())
         return returned.inner
