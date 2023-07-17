@@ -877,7 +877,7 @@ export class Global {
 
       const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
-      await query.settings.indexer?.(query.state, { core: this.core })
+      await this.core.reindex(query.cacheKey, query.settings)
 
       return Ok.void()
     })
