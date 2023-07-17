@@ -1,10 +1,10 @@
-import { Optional } from "@hazae41/option"
-import { Fetched, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
-import { Session, getSessionRef } from "../data"
+import { IDBStorage, createQuerySchema } from "@hazae41/xswr"
+import { Session } from "../data"
 
 export function getSessions(storage: IDBStorage) {
-  const normalizer = async (fetched: Optional<Fetched<Session[], never>>, more: NormalizerMore) =>
-    fetched?.map(async sessions => await Promise.all(sessions.map(session => getSessionRef(session, storage, more))))
+  return createQuerySchema<string, Session[], never>({ key: `sessions/v3`, storage })
+}
 
-  return createQuerySchema<string, Session[], never>({ key: `sessions/v3`, storage, normalizer })
+export function getSessionsByWallet(wallet: string, storage: IDBStorage) {
+  return createQuerySchema<string, Session[], never>({ key: `sessionsByWallet/${wallet}`, storage })
 }

@@ -15,3 +15,16 @@ export function useSessions() {
   useError(query, console.error)
   return query
 }
+
+export function getSessionsByWallet(wallet: string, storage: UserStorage) {
+  return createQuerySchema<string, Session[], never>({ key: `sessionsByWallet/${wallet}`, storage })
+}
+
+export function useSessionsByWallet(wallet: string) {
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getSessionsByWallet, [wallet, storage])
+  useFetch(query)
+  useSubscribe(query, storage)
+  useError(query, console.error)
+  return query
+}

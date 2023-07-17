@@ -26,8 +26,7 @@ import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { EthereumBrume, EthereumBrumes, getEthereumBrumes } from "./entities/brumes/data"
 import { OriginData, getOrigin } from "./entities/origins/data"
-import { getSessions } from "./entities/sessions/all/data"
-import { Session, SessionData, getSession } from "./entities/sessions/data"
+import { Session, SessionData } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
@@ -299,7 +298,7 @@ export class Global {
     if (currentUser == null)
       return new Ok(undefined)
 
-    const sessionQuery = await this.make(getSession(script.name, currentUser.storage))
+    const sessionQuery = await this.make(Session.get(script.name, currentUser.storage))
 
     return new Ok(sessionQuery.current?.inner)
   }
@@ -333,11 +332,8 @@ export class Global {
         chain: chain
       }
 
-      const sessionsQuery = await this.make(getSessions(storage))
-
-      await sessionsQuery.mutate(Mutators.mapInnerData(d => {
-        return [...d.filter(it => it.id !== sessionData.id), sessionData]
-      }, new Data<Session[]>([])))
+      const sessionQuery = await this.make(Session.get(script.name, storage))
+      await sessionQuery.mutate(Mutators.data(sessionData))
 
       return new Ok(sessionData)
     })
@@ -559,7 +555,8 @@ export class Global {
       }, mouse).then(r => r.throw(t).throw(t))
 
       const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
-      const sessionQuery = await this.make(getSession(ethereum.port.name, storage))
+
+      const sessionQuery = await this.make(Session.get(ethereum.port.name, storage))
       await sessionQuery.mutate(Mutators.mapExistingInnerData(d => ({ ...d, chain })))
 
       for (const script of Option.wrap(this.scripts.get(ethereum.port.name)).unwrapOr([]))
