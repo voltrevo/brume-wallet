@@ -20,8 +20,8 @@ jobs:
     - run: "unzip ./dist/firefox.zip -d ./unzipped/firefox"
     - run: "unzip ./dist/safari.zip -d ./unzipped/safari"
     - run: "unzip ./dist/website.zip -d ./unzipped/website"
-    # Build folders and zip files into ./dist
-    - run: "npm ci && npm run build && npm run zip"
+    # Build folders into ./dist
+    - run: "npm ci && npm run build"
     # Compare unzipped committed zip files and built folders
     - run: "diff -r ./unzipped/chrome ./dist/chrome"
     - run: "diff -r ./unzipped/firefox ./dist/firefox"

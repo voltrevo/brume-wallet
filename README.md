@@ -127,8 +127,8 @@ unzip ./dist/firefox.zip -d ./unzipped/firefox
 unzip ./dist/safari.zip -d ./unzipped/safari
 unzip ./dist/website.zip -d ./unzipped/website
 
-# Build folders and zip files into ./dist
-npm ci && npm run build && npm run zip
+# Build folders into ./dist
+npm ci && npm run build
 
 # Compare unzipped committed zip files and built folders
 diff -r ./unzipped/chrome ./dist/chrome
