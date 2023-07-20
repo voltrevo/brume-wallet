@@ -1,6 +1,6 @@
 import { OriginData } from "@/mods/background/service_worker/entities/origins/data"
 import { Optional } from "@hazae41/option"
-import { Query, createQuerySchema, useError, useFetch, useQuery } from "@hazae41/xswr"
+import { Query, createQuerySchema, useQuery } from "@hazae41/xswr"
 import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorage } from "../../storage/user"
 
@@ -14,8 +14,6 @@ export function getOrigin(origin: Optional<string>, storage: UserStorage) {
 export function useOrigin(origin: Optional<string>) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getOrigin, [origin, storage]) as Query<string, OriginData, any>
-  useFetch(query)
   useSubscribe(query, storage)
-  useError(query, console.error)
   return query
 }

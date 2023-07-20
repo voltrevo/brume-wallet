@@ -18,9 +18,9 @@ import { UserAvatar } from "./page";
 
 export function UserCreateDialog(props: CloseProps) {
   const { close } = props
-
   const background = useBackground()
-  const users = useUsers(background)
+
+  const users = useUsers()
 
   const uuid = useMemo(() => {
     return crypto.randomUUID()
@@ -56,7 +56,7 @@ export function UserCreateDialog(props: CloseProps) {
     const user: UserInit = { uuid, name, color, emoji, password }
 
     const usersData = await background
-      .tryRequest<User[]>({ method: "brume_newUser", params: [user] })
+      .tryRequest<User[]>({ method: "brume_createUser", params: [user] })
       .then(r => r.unwrap().unwrap())
 
     users.mutate(Mutators.data(usersData))

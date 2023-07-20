@@ -30,7 +30,7 @@ import { Session, SessionData } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
-import { EthereumContext, EthereumQueryKey, EthereumWalletData, Wallet, WalletData, getEthereumBalance, getEthereumUnknown, getPairPrice, getWallet, tryEthereumFetch } from "./entities/wallets/data"
+import { EthereumContext, EthereumQueryKey, EthereumWalletData, Wallet, getEthereumBalance, getEthereumUnknown, getPairPrice, getWallet, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -568,18 +568,18 @@ export class Global {
       return new Some(await this.brume_getPath(request))
     if (request.method === "brume_setPath")
       return new Some(await this.brume_setPath(request))
-    if (request.method === "brume_getUsers")
-      return new Some(await this.brume_getUsers(request))
-    if (request.method === "brume_newUser")
-      return new Some(await this.brume_newUser(foreground, request))
-    if (request.method === "brume_getUser")
-      return new Some(await this.brume_getUser(request))
-    if (request.method === "brume_setCurrentUser")
-      return new Some(await this.brume_setCurrentUser(request))
-    if (request.method === "brume_newWallet")
-      return new Some(await this.brume_newWallet(foreground, request))
-    if (request.method === "brume_getWallet")
-      return new Some(await this.brume_getWallet(request))
+    if (request.method === "brume_login")
+      return new Some(await this.brume_login(request))
+    if (request.method === "brume_createUser")
+      return new Some(await this.brume_createUser(foreground, request))
+    // if (request.method === "brume_removeUser")
+    //   return new Some(await this.brume_removeUser(foreground, request))
+    if (request.method === "brume_createWallet")
+      return new Some(await this.brume_createWallet(foreground, request))
+    // if (request.method === "brume_removeWallet")
+    //   return new Some(await this.brume_removeWallet(foreground, request))
+    // if (request.method === "brume_removeSession")
+    //   return new Some(await this.brume_removeSession(foreground, request))
     if (request.method === "brume_get_global")
       return new Some(await this.brume_get_global(request))
     if (request.method === "brume_get_user")
@@ -590,8 +590,6 @@ export class Global {
       return new Some(await this.brume_eth_fetch(foreground, request))
     if (request.method === "brume_eth_index")
       return new Some(await this.brume_eth_index(foreground, request))
-    // if (request.method === "brume_removeSession")
-    //   return new Some(await this.brume_removeSession(foreground, request))
     if (request.method === "brume_log")
       return new Some(await this.brume_log(request))
     if (request.method === "brume_encrypt")
@@ -641,16 +639,7 @@ export class Global {
     })
   }
 
-  async brume_getUsers(request: RpcRequestPreinit<unknown>): Promise<Result<User[], never>> {
-    return await Result.unthrow(async t => {
-      const usersQuery = await this.make(getUsers(this.storage))
-      const users = usersQuery?.current?.get() ?? []
-
-      return new Ok(users)
-    })
-  }
-
-  async brume_newUser(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<User[], Error>> {
+  async brume_createUser(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<User[], Error>> {
     return await Result.unthrow(async t => {
       const [init] = (request as RpcParamfulRequestInit<[UserInit]>).params
 
@@ -664,18 +653,7 @@ export class Global {
     })
   }
 
-  async brume_getUser(request: RpcRequestPreinit<unknown>): Promise<Result<UserData, Error>> {
-    return await Result.unthrow(async t => {
-      const [uuid] = (request as RpcParamfulRequestInit<[string]>).params
-
-      const userQuery = await this.make(getUser(uuid, this.storage))
-      const user = Option.wrap(userQuery.current?.get()).ok().throw(t)
-
-      return new Ok(user)
-    })
-  }
-
-  async brume_setCurrentUser(request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_login(request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
       const [uuid, password] = (request as RpcParamfulRequestInit<[string, string]>).params
 
@@ -734,7 +712,7 @@ export class Global {
     })
   }
 
-  async brume_newWallet(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
+  async brume_createWallet(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
     return await Result.unthrow(async t => {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
@@ -745,19 +723,6 @@ export class Global {
       const wallets = Option.wrap(walletsState.current?.get()).ok().throw(t)
 
       return new Ok(wallets)
-    })
-  }
-
-  async brume_getWallet(request: RpcRequestPreinit<unknown>): Promise<Result<WalletData, Error>> {
-    return await Result.unthrow(async t => {
-      const [uuid] = (request as RpcParamfulRequestInit<[string]>).params
-
-      const { storage } = Option.wrap(this.#user).ok().throw(t)
-
-      const walletQuery = await this.make(getWallet(uuid, storage))
-      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
-
-      return new Ok(wallet)
     })
   }
 

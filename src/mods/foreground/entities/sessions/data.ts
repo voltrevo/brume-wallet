@@ -1,5 +1,5 @@
 import { SessionData } from "@/mods/background/service_worker/entities/sessions/data"
-import { createQuerySchema, useError, useFetch, useQuery } from "@hazae41/xswr"
+import { createQuerySchema, useQuery } from "@hazae41/xswr"
 import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorage } from "../../storage/user"
 
@@ -10,8 +10,6 @@ export function getSession(id: string, storage: UserStorage) {
 export function useSession(name: string) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getSession, [name, storage])
-  useFetch(query)
   useSubscribe(query, storage)
-  useError(query, console.error)
   return query
 }

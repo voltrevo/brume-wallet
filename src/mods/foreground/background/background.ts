@@ -95,7 +95,7 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Port,
 
       if (uuid && password)
         await port.tryRequest({
-          method: "brume_setCurrentUser",
+          method: "brume_login",
           params: [uuid, password]
         }).then(r => r.throw(t))
 

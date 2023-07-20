@@ -1,7 +1,5 @@
-import { RpcRequestPreinit } from "@/libs/rpc"
 import { Optional } from "@hazae41/option"
-import { FetchError, Fetched, FetcherMore, createQuerySchema, useOnce, useQuery } from "@hazae41/xswr"
-import { Background } from "../../background/background"
+import { createQuerySchema, useQuery } from "@hazae41/xswr"
 import { GlobalStorage, useGlobalStorage } from "../../storage/global"
 import { useSubscribe } from "../../storage/storage"
 
@@ -30,25 +28,17 @@ export interface UserData {
   emoji: string
 }
 
-export function getUser(uuid: Optional<string>, background: Background) {
+export function getUser(uuid: Optional<string>, storage: GlobalStorage) {
   if (uuid == null)
     return undefined
 
-  const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
-
-  return createQuerySchema<RpcRequestPreinit<unknown>, UserData, Error>({
-    key: {
-      method: "brume_getUser",
-      params: [uuid]
-    },
-    fetcher
-  })
+  return createQuerySchema<string, UserData, never>({ key: `user/${uuid}`, storage })
 }
 
-export function useUser(uuid: Optional<string>, background: Background) {
-  const query = useQuery(getUser, [uuid, background])
-  useOnce(query)
+export function useUser(uuid: Optional<string>) {
+  const storage = useGlobalStorage().unwrap()
+  const query = useQuery(getUser, [uuid, storage])
+  useSubscribe(query as any, storage)
   return query
 }
 

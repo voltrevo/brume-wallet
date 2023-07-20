@@ -1,7 +1,7 @@
 import { Session } from "@/mods/background/service_worker/entities/sessions/data"
 import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { UserStorage, useUserStorage } from "@/mods/foreground/storage/user"
-import { createQuerySchema, useError, useFetch, useQuery } from "@hazae41/xswr"
+import { createQuerySchema, useQuery } from "@hazae41/xswr"
 
 export function getSessions(storage: UserStorage) {
   return createQuerySchema<string, Session[], never>({ key: `sessions/v3`, storage })
@@ -10,9 +10,7 @@ export function getSessions(storage: UserStorage) {
 export function useSessions() {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getSessions, [storage])
-  useFetch(query)
   useSubscribe(query, storage)
-  useError(query, console.error)
   return query
 }
 
@@ -23,8 +21,6 @@ export function getSessionsByWallet(wallet: string, storage: UserStorage) {
 export function useSessionsByWallet(wallet: string) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getSessionsByWallet, [wallet, storage])
-  useFetch(query)
   useSubscribe(query, storage)
-  useError(query, console.error)
   return query
 }

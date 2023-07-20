@@ -105,7 +105,7 @@ export function WalletCreatorDialog(props: CloseProps) {
         const wallet = { coin: "ethereum", type: "readonly", uuid, name, color, emoji, address }
 
         const walletsData = await background.tryRequest<Wallet[]>({
-          method: "brume_newWallet",
+          method: "brume_createWallet",
           params: [wallet]
         }).then(r => r.throw(t).throw(t))
 
@@ -145,7 +145,7 @@ export function WalletCreatorDialog(props: CloseProps) {
           const wallet = { coin: "ethereum", type: "authPrivateKey", uuid, name, color, emoji, address, privateKey }
 
           const walletsData = await background.tryRequest<Wallet[]>({
-            method: "brume_newWallet",
+            method: "brume_createWallet",
             params: [wallet]
           }).then(r => r.throw(t).throw(t))
 
@@ -158,7 +158,7 @@ export function WalletCreatorDialog(props: CloseProps) {
           const wallet = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, address, privateKey }
 
           const walletsData = await background.tryRequest<Wallet[]>({
-            method: "brume_newWallet",
+            method: "brume_createWallet",
             params: [wallet]
           }).then(r => r.throw(t).throw(t))
 

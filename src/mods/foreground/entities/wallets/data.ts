@@ -25,13 +25,13 @@ export function getWallet(uuid: Optional<string>, storage: UserStorage) {
   if (uuid == null)
     return undefined
 
-  return createQuerySchema<string, WalletData, Error>({ key: `wallet/${uuid}`, storage })
+  return createQuerySchema<string, WalletData, never>({ key: `wallet/${uuid}`, storage })
 }
 
 export function useWallet(uuid: Optional<string>) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getWallet, [uuid, storage])
-  useSubscribe(query, storage)
+  useSubscribe(query as any, storage)
   return query
 }
 
@@ -131,7 +131,7 @@ export async function tryIndex<T>(request: RpcRequestPreinit<unknown>, ethereum:
 }
 
 export function getTotalPricedBalance(context: GeneralContext, coin: "usd", storage: UserStorage) {
-  return createQuerySchema<string, FixedInit, Error>({ key: `totalPricedBalance/${context.user.uuid}/${coin}`, storage })
+  return createQuerySchema<string, FixedInit, never>({ key: `totalPricedBalance/${context.user.uuid}/${coin}`, storage })
 }
 
 export function useTotalPricedBalance(coin: "usd") {
@@ -139,6 +139,7 @@ export function useTotalPricedBalance(coin: "usd") {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getTotalPricedBalance, [context, coin, storage])
   useFetch(query)
+  useVisible(query)
   useSubscribe(query, storage)
   useError(query, console.error)
   useFallback(query, () => new Data(new Fixed(0n, 0)))
@@ -154,8 +155,10 @@ export function useTotalWalletPricedBalance(address: string, coin: "usd") {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getTotalWalletPricedBalance, [context, address, coin, storage])
   useFetch(query)
+  useVisible(query)
   useSubscribe(query, storage)
   useError(query, console.error)
+  useFallback(query, () => new Data(new Fixed(0n, 0)))
   return query
 }
 
@@ -167,8 +170,10 @@ export function usePricedBalance(context: EthereumContext, address: string, coin
   const storage = useUserStorage().unwrap()
   const query = useQuery(getPricedBalance, [context, address, coin, storage])
   useFetch(query)
+  useVisible(query)
   useSubscribe(query, storage)
   useError(query, console.error)
+  useFallback(query, () => new Data(new Fixed(0n, 0)))
   return query
 }
 
@@ -192,8 +197,10 @@ export function usePendingBalance(address: string, context: EthereumContext, ...
   const storage = useUserStorage().unwrap()
   const query = useQuery(getPendingBalance, [address, context, storage])
   useFetch(query)
+  useVisible(query)
   useSubscribe(query, storage)
   useError(query, console.error)
+  useFallback(query, () => new Data(new Fixed(0n, 0)))
 
   useEffect(() => {
     tryIndex(query.key, context)
@@ -230,6 +237,7 @@ export function useNonce(address: Optional<string>, context: Optional<EthereumCo
   const storage = useUserStorage().unwrap()
   const query = useQuery(getNonceSchema, [address, context, storage])
   useFetch(query)
+  useVisible(query)
   useSubscribe(query, storage)
   useError(query, console.error)
   return query
@@ -258,6 +266,7 @@ export function useGasPrice(ethereum: Optional<EthereumContext>) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getGasPriceSchema, [ethereum, storage])
   useFetch(query)
+  useVisible(query)
   useSubscribe(query, storage)
   useError(query, console.error)
   return query

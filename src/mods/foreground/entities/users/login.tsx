@@ -14,7 +14,7 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
   const { user, ok, err } = props
 
   const background = useBackground()
-  const userQuery = useUser(user.uuid, background)
+  const userQuery = useUser(user.uuid)
 
   const [password = "", setPassword] = useState<string>()
   const passwordInputRef = useRef<HTMLInputElement>(null)
@@ -32,7 +32,7 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
       return
 
     const response = await background.tryRequest({
-      method: "brume_setCurrentUser",
+      method: "brume_login",
       params: [userQuery.data.inner.uuid, password]
     }).then(r => r.unwrap())
 

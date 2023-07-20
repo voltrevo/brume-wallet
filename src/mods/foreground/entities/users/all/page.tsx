@@ -19,8 +19,7 @@ export function UsersPage(props: OkProps<User>) {
   const [user, setUser] = useState<User>()
   const clear = useCallback(() => setUser(undefined), [])
 
-  const background = useBackground()
-  const users = useUsers(background)
+  const users = useUsers()
 
   const createDialog = useBooleanHandle(false)
 
@@ -49,7 +48,7 @@ function UserOkButton(props: UserProps & OkProps<User>) {
   const { ok } = props
 
   const background = useBackground()
-  const user = useUser(props.user.uuid, background)
+  const user = useUser(props.user.uuid)
 
   const onClick = useCallback(() => {
     ok(props.user)
