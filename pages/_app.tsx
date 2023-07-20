@@ -7,6 +7,7 @@ import { BackgroundProvider } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { PathProvider } from "@/mods/foreground/router/path"
+import { GlobalStorageProvider } from "@/mods/foreground/storage/global"
 import { UserStorageProvider } from "@/mods/foreground/storage/user"
 import '@/styles/globals.css'
 import { CoreProvider } from "@hazae41/xswr"
@@ -69,11 +70,13 @@ export default function App({ Component, pageProps }: AppProps) {
       <PromiseCatcher>
         <CoreProvider>
           <BackgroundProvider>
-            <UserStorageProvider>
-              <PathProvider>
-                <Component {...pageProps} />
-              </PathProvider>
-            </UserStorageProvider>
+            <GlobalStorageProvider>
+              <UserStorageProvider>
+                <PathProvider>
+                  <Component {...pageProps} />
+                </PathProvider>
+              </UserStorageProvider>
+            </GlobalStorageProvider>
           </BackgroundProvider>
         </CoreProvider>
       </PromiseCatcher>

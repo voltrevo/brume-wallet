@@ -1,7 +1,7 @@
 import { SessionData } from "@/mods/background/service_worker/entities/sessions/data"
 import { createQuerySchema, useError, useFetch, useQuery } from "@hazae41/xswr"
-import { UserStorage, useSubscribe } from "../../storage/storage"
-import { useUserStorage } from "../../storage/user"
+import { useSubscribe } from "../../storage/storage"
+import { UserStorage, useUserStorage } from "../../storage/user"
 
 export function getSession(id: string, storage: UserStorage) {
   return createQuerySchema<string, SessionData, never>({ key: `session/v3/${id}`, storage })

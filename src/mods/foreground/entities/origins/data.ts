@@ -1,8 +1,8 @@
 import { OriginData } from "@/mods/background/service_worker/entities/origins/data"
 import { Optional } from "@hazae41/option"
 import { Query, createQuerySchema, useError, useFetch, useQuery } from "@hazae41/xswr"
-import { UserStorage, useSubscribe } from "../../storage/storage"
-import { useUserStorage } from "../../storage/user"
+import { useSubscribe } from "../../storage/storage"
+import { UserStorage, useUserStorage } from "../../storage/user"
 
 export function getOrigin(origin: Optional<string>, storage: UserStorage) {
   if (origin == null)

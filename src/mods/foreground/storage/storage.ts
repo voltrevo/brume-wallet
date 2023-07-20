@@ -2,28 +2,11 @@ import { RpcParamfulRequestInit } from "@/libs/rpc"
 import { Mutex } from "@hazae41/mutex"
 import { None, Optional, Some } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
-import { Core, Query, RawState, Storage } from "@hazae41/xswr"
+import { Core, Query, RawState } from "@hazae41/xswr"
 import { useEffect } from "react"
 import { Background } from "../background/background"
 
-export class GlobalStorage implements Storage {
-  readonly async: true = true
-
-  constructor(
-    readonly background: Background
-  ) { }
-
-  async get(cacheKey: string) {
-    return await this.background
-      .tryRequest<RawState>({ method: "brume_get_global", params: [cacheKey] })
-      .then(r => r.unwrap().unwrap())
-  }
-
-}
-
-export class UserStorage implements Storage {
-  readonly async: true = true
-
+export class Subscriber {
   readonly keys = new Mutex(new Set<string>())
 
   constructor(
@@ -31,18 +14,12 @@ export class UserStorage implements Storage {
     readonly background: Background
   ) { }
 
-  async get(cacheKey: string) {
-    return await this.background
-      .tryRequest<RawState>({ method: "brume_get_user", params: [cacheKey] })
-      .then(r => r.ok().inner?.ok().inner)
-  }
-
   async trySubscribe(cacheKey: string): Promise<Result<void, Error>> {
-    return this.keys.lock(async (keys) => {
-      if (keys.has(cacheKey))
-        return Ok.void()
+    return await Result.unthrow(async t => {
+      return this.keys.lock(async (keys) => {
+        if (keys.has(cacheKey))
+          return Ok.void()
 
-      return await Result.unthrow(async t => {
         await this.background
           .tryRequest<void>({ method: "brume_subscribe", params: [cacheKey] })
           .then(r => r.throw(t).throw(t))
@@ -71,7 +48,11 @@ export class UserStorage implements Storage {
 
 }
 
-export function useSubscribe<K, D, F>(query: Query<K, D, F>, storage: UserStorage) {
+export interface Subscribable {
+  trySubscribe(cacheKey: string): Promise<Result<void, Error>>
+}
+
+export function useSubscribe<K, D, F>(query: Query<K, D, F>, storage: Subscribable) {
   const { cacheKey } = query
 
   useEffect(() => {

@@ -52,7 +52,7 @@ export interface UserSession {
 }
 
 export function getCurrentUser() {
-  return createQuerySchema<string, UserSession, never>({ key: `user` })
+  return createQuerySchema<string, User, never>({ key: `user` })
 }
 
 export function getUser(uuid: string, storage: IDBStorage) {

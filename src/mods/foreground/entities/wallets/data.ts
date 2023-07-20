@@ -12,9 +12,9 @@ import { ContractRunner, TransactionRequest } from "ethers"
 import { useEffect, useMemo } from "react"
 import { Background } from "../../background/background"
 import { useBackground } from "../../background/context"
-import { UserStorage, useSubscribe } from "../../storage/storage"
-import { useUserStorage } from "../../storage/user"
-import { useCurrentUser } from "../users/context"
+import { useSubscribe } from "../../storage/storage"
+import { UserStorage, useUserStorage } from "../../storage/user"
+import { useCurrentUserRef } from "../users/context"
 import { User } from "../users/data"
 
 export interface WalletProps {
@@ -81,14 +81,14 @@ export interface EthereumContextProps {
 
 export function useGeneralContext() {
   const core = useCore().unwrap()
-  const user = useCurrentUser()
+  const user = useCurrentUserRef()
   const background = useBackground()
   return useObjectMemo({ core, user, background })
 }
 
 export function useEthereumContext2(wallet: Optional<Wallet>, chain: Optional<EthereumChain>) {
   const core = useCore().unwrap()
-  const user = useCurrentUser()
+  const user = useCurrentUserRef()
   const background = useBackground()
 
   return useMemo(() => {
@@ -102,7 +102,7 @@ export function useEthereumContext2(wallet: Optional<Wallet>, chain: Optional<Et
 
 export function useEthereumContext(wallet: Wallet, chain: EthereumChain): EthereumContext {
   const core = useCore().unwrap()
-  const user = useCurrentUser()
+  const user = useCurrentUserRef()
   const background = useBackground()
 
   return useObjectMemo({ core, user, background, wallet, chain })
