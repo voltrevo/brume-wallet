@@ -576,8 +576,6 @@ export class Global {
       return new Some(await this.brume_getUser(request))
     if (request.method === "brume_setCurrentUser")
       return new Some(await this.brume_setCurrentUser(request))
-    if (request.method === "brume_getCurrentUser")
-      return new Some(await this.brume_getCurrentUser(request))
     if (request.method === "brume_newWallet")
       return new Some(await this.brume_newWallet(foreground, request))
     if (request.method === "brume_getWallet")

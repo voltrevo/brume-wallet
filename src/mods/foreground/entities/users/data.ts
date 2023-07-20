@@ -53,7 +53,7 @@ export function useUser(uuid: Optional<string>, background: Background) {
 }
 
 export function getCurrentUser(storage: GlobalStorage) {
-  return createQuerySchema<string, User, Error>({ key: `user`, storage })
+  return createQuerySchema<string, User, never>({ key: `user`, storage })
 }
 
 export function useCurrentUserQuery() {

@@ -21,12 +21,6 @@ export function UserProvider(props: ChildrenProps) {
   }, [userQuery])
 
   if (userQuery.current == null)
-    return null
-
-  if (userQuery.current.isErr())
-    throw userQuery.current.inner
-
-  if (userQuery.current.inner == null)
     return <UsersPage ok={setCurrentUser} />
 
   return <UserContext.Provider value={userQuery.current.inner}>
