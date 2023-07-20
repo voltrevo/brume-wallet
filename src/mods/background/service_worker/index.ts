@@ -578,8 +578,8 @@ export class Global {
       return new Some(await this.brume_createWallet(foreground, request))
     // if (request.method === "brume_removeWallet")
     //   return new Some(await this.brume_removeWallet(foreground, request))
-    // if (request.method === "brume_removeSession")
-    //   return new Some(await this.brume_removeSession(foreground, request))
+    if (request.method === "brume_disconnect")
+      return new Some(await this.brume_disconnect(foreground, request))
     if (request.method === "brume_get_global")
       return new Some(await this.brume_get_global(request))
     if (request.method === "brume_get_user")
@@ -676,6 +676,20 @@ export class Global {
       const userQuery = await this.make(getUser(userSession.user.uuid, this.storage))
 
       return new Ok(userQuery.current?.inner)
+    })
+  }
+
+  async brume_disconnect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+    return await Result.unthrow(async t => {
+      const [id] = (request as RpcParamfulRequestInit<[string]>).params
+
+      const sessionQuery = await this.make(Session.get(id, this.storage))
+      await sessionQuery.delete()
+
+      for (const script of Option.wrap(this.scripts.get(id)).unwrapOr([]))
+        await script.tryRequest({ method: "accountsChanged", params: [[]] }).then(r => r.ignore())
+
+      return Ok.void()
     })
   }
 
