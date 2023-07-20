@@ -17,6 +17,7 @@ import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
 import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { Wallets, useEthereumContext2, useGasPrice, useNonce, useWallet } from "@/mods/foreground/entities/wallets/data";
 import { UserRejectionError } from "@/mods/foreground/errors/errors";
+import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
@@ -38,6 +39,7 @@ export default function Popup() {
     <Overlay>
       <UserProvider>
         <Router />
+        <Bottom />
       </UserProvider>
     </Overlay>
   </main>
