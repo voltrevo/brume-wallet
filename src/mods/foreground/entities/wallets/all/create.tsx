@@ -30,7 +30,7 @@ export function WalletCreatorDialog(props: CloseProps) {
   const { close } = props
 
   const background = useBackground()
-  const wallets = useWallets(background)
+  const wallets = useWallets()
 
   const uuid = useMemo(() => {
     return crypto.randomUUID()

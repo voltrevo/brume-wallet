@@ -1,6 +1,6 @@
 import { Session } from "@/mods/background/service_worker/entities/sessions/data"
-import { useUserStorage } from "@/mods/foreground/storage/context"
 import { UserStorage, useSubscribe } from "@/mods/foreground/storage/storage"
+import { useUserStorage } from "@/mods/foreground/storage/user"
 import { createQuerySchema, useError, useFetch, useQuery } from "@hazae41/xswr"
 
 export function getSessions(storage: UserStorage) {

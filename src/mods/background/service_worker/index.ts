@@ -581,8 +581,6 @@ export class Global {
       return new Some(await this.brume_setCurrentUser(request))
     if (request.method === "brume_getCurrentUser")
       return new Some(await this.brume_getCurrentUser(request))
-    if (request.method === "brume_getWallets")
-      return new Some(await this.brume_getWallets(request))
     if (request.method === "brume_newWallet")
       return new Some(await this.brume_newWallet(foreground, request))
     if (request.method === "brume_getWallet")
@@ -597,6 +595,8 @@ export class Global {
       return new Some(await this.brume_eth_fetch(foreground, request))
     if (request.method === "brume_eth_index")
       return new Some(await this.brume_eth_index(foreground, request))
+    // if (request.method === "brume_removeSession")
+    //   return new Some(await this.brume_removeSession(foreground, request))
     if (request.method === "brume_log")
       return new Some(await this.brume_log(request))
     if (request.method === "brume_encrypt")
@@ -703,17 +703,6 @@ export class Global {
       const userQuery = await this.make(getUser(userSession.user.uuid, this.storage))
 
       return new Ok(userQuery.current?.inner)
-    })
-  }
-
-  async brume_getWallets(request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
-    return await Result.unthrow(async t => {
-      const { storage } = Option.wrap(await this.getCurrentUser()).ok().throw(t)
-
-      const walletsQuery = await this.make(getWallets(storage))
-      const wallets = walletsQuery.current?.get() ?? []
-
-      return new Ok(wallets)
     })
   }
 

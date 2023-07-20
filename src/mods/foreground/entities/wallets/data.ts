@@ -7,13 +7,13 @@ import { EthereumQueryKey, EthereumSignableWalletData, Wallet, WalletData } from
 import { Bytes } from "@hazae41/bytes"
 import { Optional } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
-import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useOnce, useQuery, useVisible } from "@hazae41/xswr"
+import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/xswr"
 import { ContractRunner, TransactionRequest } from "ethers"
 import { useEffect, useMemo } from "react"
 import { Background } from "../../background/background"
 import { useBackground } from "../../background/context"
-import { useUserStorage } from "../../storage/context"
 import { UserStorage, useSubscribe } from "../../storage/storage"
+import { useUserStorage } from "../../storage/user"
 import { useCurrentUser } from "../users/context"
 import { User } from "../users/data"
 
@@ -21,25 +21,17 @@ export interface WalletProps {
   wallet: Wallet
 }
 
-export function getWallet(uuid: Optional<string>, background: Background) {
+export function getWallet(uuid: Optional<string>, storage: UserStorage) {
   if (uuid == null)
     return undefined
 
-  const fetcher = async <T>(init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await background.tryRequest<T>(init).then(r => r.mapSync(x => Fetched.rewrap(x)).mapErrSync(FetchError.from))
-
-  return createQuerySchema<RpcRequestPreinit<unknown>, WalletData, Error>({
-    key: {
-      method: "brume_getWallet",
-      params: [uuid]
-    },
-    fetcher
-  })
+  return createQuerySchema<string, WalletData, Error>({ key: `wallet/${uuid}`, storage })
 }
 
-export function useWallet(uuid: Optional<string>, background: Background) {
-  const query = useQuery(getWallet, [uuid, background])
-  useOnce(query)
+export function useWallet(uuid: Optional<string>) {
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getWallet, [uuid, storage])
+  useSubscribe(query, storage)
   return query
 }
 

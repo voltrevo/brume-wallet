@@ -5,7 +5,6 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
-import { useBackground } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path"
@@ -18,8 +17,7 @@ import { WalletCreatorDialog } from "./create"
 import { useWallets } from "./data"
 
 export function WalletsPage() {
-  const background = useBackground()
-  const wallets = useWallets(background)
+  const wallets = useWallets()
 
   const creator = useBooleanHandle(false)
 

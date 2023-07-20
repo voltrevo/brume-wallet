@@ -7,7 +7,7 @@ import { BackgroundProvider } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { PathProvider } from "@/mods/foreground/router/path"
-import { UserStorageProvider } from "@/mods/foreground/storage/context"
+import { UserStorageProvider } from "@/mods/foreground/storage/user"
 import '@/styles/globals.css'
 import { CoreProvider } from "@hazae41/xswr"
 import type { AppProps } from 'next/app'

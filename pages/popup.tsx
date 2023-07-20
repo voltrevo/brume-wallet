@@ -60,7 +60,7 @@ export function TransactPage() {
   const sessionQuery = useSession(sessionId)
   const maybeSession = sessionQuery.data?.inner
 
-  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid, background)
+  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)
   const maybeWallet = walletQuery.data?.inner
 
   const context = useEthereumContext2(maybeSession?.wallets.at(0), maybeSession?.chain)
@@ -252,7 +252,7 @@ export function PersonalSignPage() {
   const sessionQuery = useSession(sessionId)
   const maybeSession = sessionQuery.data?.inner
 
-  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid, background)
+  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)
   const maybeWallet = walletQuery.data?.inner
 
   const userMessage = useMemo(() => {
@@ -349,7 +349,7 @@ export function TypedSignPage() {
   const sessionQuery = useSession(sessionId)
   const maybeSession = sessionQuery.data?.inner
 
-  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid, background)
+  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)
   const maybeWallet = walletQuery.data?.inner
 
   const onApprove = useAsyncUniqueCallback(async () => {
@@ -437,7 +437,7 @@ export function WalletAndChainSelectPage() {
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
-  const wallets = useWallets(background)
+  const wallets = useWallets()
 
   const creator = useBooleanHandle(false)
 

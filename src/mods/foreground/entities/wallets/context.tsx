@@ -3,7 +3,6 @@ import { UUIDProps } from "@/libs/react/props/uuid"
 import { WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Option, Optional } from "@hazae41/option"
 import { createContext, useContext } from "react"
-import { useBackground } from "../../background/context"
 import { useWallet } from "./data"
 
 export const WalletDataContext =
@@ -15,9 +14,8 @@ export function useWalletData() {
 
 export function WalletDataProvider(props: UUIDProps & ChildrenProps) {
   const { uuid, children } = props
-  const background = useBackground()
 
-  const wallet = useWallet(uuid, background)
+  const wallet = useWallet(uuid)
 
   if (wallet.data == null)
     return null
