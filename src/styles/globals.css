@@ -20,7 +20,7 @@ html {
 }
 
 body {
-  @apply grow w-full flex flex-col text-base text-default bg-paper;
+  @apply grow w-full flex flex-col text-base text-default bg-paper overflow-y-scroll;
 }
 
 #__next {

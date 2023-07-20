@@ -1,5 +1,6 @@
 import { useBackground } from "@/mods/foreground/background/context";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
+import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Router } from "@/mods/foreground/router/router";
 import { useEffect } from "react";
@@ -26,6 +27,7 @@ export default function Action() {
     <Overlay>
       <UserProvider>
         <Router />
+        <Bottom />
       </UserProvider>
     </Overlay>
   </main>
