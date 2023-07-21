@@ -26,6 +26,7 @@ import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { EthereumBrume, EthereumBrumes, getEthereumBrumes } from "./entities/brumes/data"
 import { OriginData, getOrigin } from "./entities/origins/data"
+import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { Session, SessionData } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
@@ -83,10 +84,8 @@ export interface PopupData {
   port: Port
 }
 
-export interface Exchange {
-  readonly id: string,
-  readonly request: RpcRequestPreinit<unknown>
-  readonly response: Future<Result<unknown, Error>>
+export interface Slot<T> {
+  current?: T
 }
 
 export class Global {
@@ -102,11 +101,7 @@ export class Global {
 
   readonly scripts = new Map<string, Set<Port>>()
 
-  readonly exchanges = new Map<string, Exchange>()
-
-  readonly popupMutex = new Mutex(undefined)
-
-  popup?: PopupData
+  readonly popup = new Mutex<Slot<PopupData>>({})
 
   #path: string = "/"
 
@@ -202,61 +197,63 @@ export class Global {
     }
   }
 
-  async tryOpenOrNavigatePopup(pathname: string, mouse: Mouse): Promise<Result<PopupData, Error>> {
+  async tryOpenOrFocusPopup(pathname: string, mouse: Mouse): Promise<Result<PopupData, Error>> {
     return await Result.unthrow(async t => {
-      if (this.popup != null) {
-        const windowId = Option.wrap(this.popup.window.id).ok().throw(t)
-        const tabId = Option.wrap(this.popup.window.tabs?.[0].id).ok().throw(t)
+      return await this.popup.lock(async (slot) => {
+        if (slot.current != null) {
+          const windowId = Option.wrap(slot.current.window.id).ok().throw(t)
+          const tabId = Option.wrap(slot.current.window.tabs?.[0].id).ok().throw(t)
 
-        await tryBrowser(async () => {
-          return await browser.tabs.update(tabId, { url: `popup.html#${pathname}`, highlighted: true })
+          await tryBrowser(async () => {
+            return await browser.tabs.update(tabId, { highlighted: true })
+          }).then(r => r.throw(t))
+
+          await tryBrowser(async () => {
+            return await browser.windows.update(windowId, { focused: true })
+          }).then(r => r.throw(t))
+
+          return new Ok(slot.current)
+        }
+
+        const height = 630
+        const width = 400
+
+        const top = Math.max(mouse.y - (height / 2), 0)
+        const left = Math.max(mouse.x - (width / 2), 0)
+
+        const window = await tryBrowser(async () => {
+          return await browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left })
         }).then(r => r.throw(t))
 
-        await tryBrowser(async () => {
-          return await browser.windows.update(windowId, { focused: true })
-        }).then(r => r.throw(t))
+        const channel = await this.tryWaitPopupHello(window).then(r => r.throw(t))
 
-        return new Ok(this.popup)
-      }
+        slot.current = { window, port: channel }
 
-      const height = 630
-      const width = 400
+        const onRemoved = () => {
+          slot.current = undefined
 
-      const top = Math.max(mouse.y - (height / 2), 0)
-      const left = Math.max(mouse.x - (width / 2), 0)
+          browser.windows.onRemoved.removeListener(onRemoved)
+        }
 
-      const window = await tryBrowser(async () => {
-        return await browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left })
-      }).then(r => r.throw(t))
+        browser.windows.onRemoved.addListener(onRemoved)
 
-      const channel = await this.tryWaitPopupHello(window).then(r => r.throw(t))
-
-      this.popup = { window, port: channel }
-
-      const onRemoved = () => {
-        this.popup = undefined
-
-        browser.windows.onRemoved.removeListener(onRemoved)
-      }
-
-      browser.windows.onRemoved.addListener(onRemoved)
-
-      return new Ok(this.popup)
+        return new Ok(slot.current)
+      })
     })
   }
 
-  async tryRequestPopup<T>(request: RpcRequestPreinit<Record<string, Optional<string>>>, mouse: Mouse): Promise<Result<RpcResponse<T>, Error>> {
+  async tryRequestPopup<T>(request: AppRequestData, mouse: Mouse): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
-      const uuid = crypto.randomUUID()
+      const requestQuery = await AppRequest.get(request.id).make(this.core)
+      await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
 
-      const response = await this.popupMutex.lock(async () => {
-        const url = qurl(`/${request.method}?id=${uuid}`, request.params)
+      const { id, method, params } = request
+      const url = qurl(`/${method}?id=${id}`, params)
 
-        const popup = await this.tryOpenOrNavigatePopup(url, mouse).then(r => r.throw(t))
-        const data = await this.tryWaitPopupData<T>(popup, uuid).then(r => r.throw(t))
+      const popup = await this.tryOpenOrFocusPopup(url, mouse).then(r => r.throw(t))
+      const response = await this.tryWaitPopupData<T>(popup, request.id).then(r => r.throw(t))
 
-        return new Ok(data)
-      }).then(r => r.throw(t))
+      await requestQuery.delete()
 
       return new Ok(response)
     })
@@ -307,8 +304,13 @@ export class Global {
       if (session != null)
         return new Ok(session)
 
+      const origin = await script.tryRequest<OriginData>({ method: "brume_origin" }).then(r => r.throw(t).throw(t))
+
       const [walletId, chainId] = await this.tryRequestPopup<[string, number]>({
-        method: "eth_requestAccounts"
+        id: crypto.randomUUID(),
+        origin: origin.origin,
+        method: "eth_requestAccounts",
+        params: {}
       }, mouse).then(r => r.throw(t).throw(t))
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
@@ -316,8 +318,6 @@ export class Global {
       const walletQuery = await this.make(getWallet(walletId, storage))
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
-
-      const origin = await script.tryRequest<OriginData>({ method: "brume_origin" }).then(r => r.throw(t).throw(t))
 
       const originQuery = await this.make(getOrigin(origin.origin, storage))
       await originQuery.mutate(Mutators.data(origin))
@@ -492,11 +492,14 @@ export class Global {
         data: Optional<string>
       }]>).params
 
-      const sessionId = Option.wrap(ethereum.session?.id).ok().throw(t)
+      const session = Option.wrap(ethereum.session).ok().throw(t)
 
       const signature = await this.tryRequestPopup<string>({
+        id: crypto.randomUUID(),
         method: "eth_sendTransaction",
-        params: { sessionId, from, to, gas, value, data }
+        params: { from, to, gas, value, data },
+        origin: session.origin,
+        session: session.id
       }, mouse).then(r => r.throw(t).throw(t))
 
       const signal = AbortSignal.timeout(600_000)
@@ -512,11 +515,14 @@ export class Global {
     return await Result.unthrow(async t => {
       const [message, address] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      const sessionId = Option.wrap(ethereum.session?.id).ok().throw(t)
+      const session = Option.wrap(ethereum.session).ok().throw(t)
 
       const signature = await this.tryRequestPopup<string>({
+        id: crypto.randomUUID(),
         method: "personal_sign",
-        params: { sessionId, message, address }
+        params: { message, address },
+        origin: session.origin,
+        session: session.id
       }, mouse).then(r => r.throw(t).throw(t))
 
       return new Ok(signature)
@@ -527,11 +533,14 @@ export class Global {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
 
-      const sessionId = Option.wrap(ethereum.session?.id).ok().throw(t)
+      const session = Option.wrap(ethereum.session).ok().throw(t)
 
       const signature = await this.tryRequestPopup<string>({
+        id: crypto.randomUUID(),
         method: "eth_signTypedData_v4",
-        params: { sessionId, data, address }
+        params: { data, address },
+        origin: session.origin,
+        session: session.id
       }, mouse).then(r => r.throw(t).throw(t))
 
       return new Ok(signature)
@@ -542,13 +551,16 @@ export class Global {
     return await Result.unthrow(async t => {
       const [{ chainId }] = (request as RpcParamfulRequestInit<[{ chainId: string }]>).params
 
-      const sessionId = Option.wrap(ethereum.session?.id).ok().throw(t)
+      const session = Option.wrap(ethereum.session).ok().throw(t)
 
       const chain = Option.wrap(chains[parseInt(chainId, 16)]).ok().throw(t)
 
       await this.tryRequestPopup<void>({
+        id: crypto.randomUUID(),
         method: "wallet_switchEthereumChain",
-        params: { sessionId, chainId }
+        params: { chainId },
+        origin: session.origin,
+        session: session.id
       }, mouse).then(r => r.throw(t).throw(t))
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)

@@ -10,6 +10,7 @@ import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
+import { AppRequests } from "@/mods/foreground/entities/requests/all/data";
 import { useSession } from "@/mods/foreground/entities/sessions/data";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
 import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
@@ -21,10 +22,12 @@ import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
+import { useUserStorage } from "@/mods/foreground/storage/user";
 import { Bytes } from "@hazae41/bytes";
 import { Option } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCore } from "@hazae41/xswr";
+import { useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
   const background = useBackground()
@@ -47,6 +50,8 @@ export default function Popup() {
 
 export function TransactPage() {
   const { searchParams } = usePath()
+  const core = useCore().unwrap()
+  const storage = useUserStorage().unwrap()
   const background = useBackground()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -106,11 +111,16 @@ export function TransactPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      const requestsQuery = await AppRequests.get(storage).make(core)
+
+      if (requestsQuery.data?.inner.length)
+        Path.go("/requests")
+      else
+        Path.go("/done")
 
       return Ok.void()
     }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
-  }, [background, id, maybeWallet, maybeSession, maybeGasPrice, maybeNonce])
+  }, [core, storage, background, id, maybeWallet, maybeSession, maybeGasPrice, maybeNonce])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -119,11 +129,16 @@ export function TransactPage() {
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      const requestsQuery = await AppRequests.get(storage).make(core)
+
+      if (requestsQuery.data?.inner.length)
+        Path.go("/requests")
+      else
+        Path.go("/done")
 
       return Ok.void()
     }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
-  }, [background, id])
+  }, [core, storage, background, id])
 
   const loading = useMemo(() => {
     if (onApprove.loading)
@@ -181,6 +196,8 @@ export function TransactPage() {
 
 export function SwitchPage() {
   const { searchParams } = usePath()
+  const core = useCore().unwrap()
+  const storage = useUserStorage().unwrap()
   const background = useBackground()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -192,11 +209,16 @@ export function SwitchPage() {
         params: [new RpcOk(id, undefined)]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      const requestsQuery = await AppRequests.get(storage).make(core)
+
+      if (requestsQuery.data?.inner.length)
+        Path.go("/requests")
+      else
+        Path.go("/done")
 
       return Ok.void()
     }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
-  }, [background, id])
+  }, [core, storage, background, id])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -205,11 +227,16 @@ export function SwitchPage() {
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      const requestsQuery = await AppRequests.get(storage).make(core)
+
+      if (requestsQuery.data?.inner.length)
+        Path.go("/requests")
+      else
+        Path.go("/done")
 
       return Ok.void()
     }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
-  }, [background, id])
+  }, [core, storage, background, id])
 
   return <Page>
     <div className="p-xmd grow flex flex-col items-center justify-center">
@@ -244,6 +271,8 @@ export function SwitchPage() {
 
 export function PersonalSignPage() {
   const { searchParams } = usePath()
+  const core = useCore().unwrap()
+  const storage = useUserStorage().unwrap()
   const background = useBackground()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -284,11 +313,16 @@ export function PersonalSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      const requestsQuery = await AppRequests.get(storage).make(core)
+
+      if (requestsQuery.data?.inner.length)
+        Path.go("/requests")
+      else
+        Path.go("/done")
 
       return Ok.void()
     }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
-  }, [background, id, maybeWallet, userMessage])
+  }, [core, storage, background, id, maybeWallet, userMessage])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -297,11 +331,16 @@ export function PersonalSignPage() {
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      const requestsQuery = await AppRequests.get(storage).make(core)
+
+      if (requestsQuery.data?.inner.length)
+        Path.go("/requests")
+      else
+        Path.go("/done")
 
       return Ok.void()
     }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
-  }, [background, id])
+  }, [core, storage, background, id])
 
   return <Page>
     <div className="p-xmd grow flex flex-col items-center justify-center">
@@ -341,6 +380,8 @@ export function PersonalSignPage() {
 
 export function TypedSignPage() {
   const { searchParams } = usePath()
+  const core = useCore().unwrap()
+  const storage = useUserStorage().unwrap()
   const background = useBackground()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -379,11 +420,16 @@ export function TypedSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      const requestsQuery = await AppRequests.get(storage).make(core)
+
+      if (requestsQuery.data?.inner.length)
+        Path.go("/requests")
+      else
+        Path.go("/done")
 
       return Ok.void()
     }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
-  }, [background, id, maybeWallet, data])
+  }, [core, storage, background, id, maybeWallet, data])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -392,11 +438,16 @@ export function TypedSignPage() {
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      const requestsQuery = await AppRequests.get(storage).make(core)
+
+      if (requestsQuery.data?.inner.length)
+        Path.go("/requests")
+      else
+        Path.go("/done")
 
       return Ok.void()
     }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
-  }, [background, id])
+  }, [core, storage, background, id])
 
   return <Page>
     <div className="p-xmd grow flex flex-col items-center justify-center">
@@ -436,6 +487,8 @@ export function TypedSignPage() {
 
 export function WalletAndChainSelectPage() {
   const { searchParams } = usePath()
+  const core = useCore().unwrap()
+  const storage = useUserStorage().unwrap()
   const background = useBackground()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -453,11 +506,16 @@ export function WalletAndChainSelectPage() {
         params: [new RpcOk(id, [wallet.uuid, chain])]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      const requestsQuery = await AppRequests.get(storage).make(core)
+
+      if (requestsQuery.data?.inner.length)
+        Path.go("/requests")
+      else
+        Path.go("/done")
 
       return Ok.void()
     }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
-  }, [background, id, chain])
+  }, [core, storage, background, id, chain])
 
   const Body =
     <PageBody>
@@ -512,27 +570,14 @@ export function WalletAndChainSelectPage() {
 }
 
 export function DonePage() {
-  const onDone = useCallback(() => {
-    Path.go("/")
-  }, [])
-
   return <Page>
     <div className="p-xmd grow flex flex-col items-center justify-center">
       <div className="text-center text-xl font-medium">
         Done
       </div>
       <div className="w-full max-w-[230px] text-center text-contrast">
-        You can now close this window or go to the home page
+        You can now close this window or continue using it
       </div>
-    </div>
-    <div className="p-xmd w-full flex items-center gap-2">
-      <Button.Opposite className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
-        onClick={onDone}>
-        <Button.Shrink>
-          <Outline.HomeIcon className="icon-xs" />
-          Go to the home page
-        </Button.Shrink>
-      </Button.Opposite>
     </div>
   </Page>
 }

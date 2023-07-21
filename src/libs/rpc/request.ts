@@ -52,4 +52,5 @@ export class RpcRequest<T> {
     const { id, method, params } = init
     return new RpcRequest(id, method, params)
   }
+
 }
