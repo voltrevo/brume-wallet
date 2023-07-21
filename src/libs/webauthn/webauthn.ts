@@ -1,5 +1,4 @@
-import { Bytes } from "@hazae41/bytes"
-import { Err, Ok, Result } from "@hazae41/result"
+import { Ok, Result } from "@hazae41/result"
 
 export class WebAuthnStorageError extends Error {
   readonly #class = WebAuthnStorageError
@@ -55,10 +54,6 @@ export namespace WebAuthnStorage {
       }).then(r => r.mapErrSync(WebAuthnStorageError.from).throw(t))
 
       const id = new Uint8Array(credential.rawId)
-      const data2 = await get(id).then(r => r.throw(t))
-
-      if (!Bytes.equals(data, data2))
-        return new Err(new WebAuthnStorageError())
 
       return new Ok(id)
     })
