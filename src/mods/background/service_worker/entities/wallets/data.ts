@@ -209,7 +209,7 @@ export function getTotalWalletPricedBalance(user: User, address: string, coin: "
   }
 
   return createQuerySchema<string, FixedInit, Error>({
-    key: `totalPricedBalance/${address}/${coin}`,
+    key: `totalWalletPricedBalance/${address}/${coin}`,
     indexer,
     storage
   })

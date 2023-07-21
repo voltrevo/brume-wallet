@@ -147,7 +147,7 @@ export function useTotalPricedBalance(coin: "usd") {
 }
 
 export function getTotalWalletPricedBalance(context: GeneralContext, address: string, coin: "usd", storage: UserStorage) {
-  return createQuerySchema<string, FixedInit, Error>({ key: `totalPricedBalance/${address}/${coin}`, storage })
+  return createQuerySchema<string, FixedInit, never>({ key: `totalWalletPricedBalance/${address}/${coin}`, storage })
 }
 
 export function useTotalWalletPricedBalance(address: string, coin: "usd") {
