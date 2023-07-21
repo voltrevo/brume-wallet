@@ -7,6 +7,6 @@ export namespace Promises {
    * @returns 
    */
   export function fork() {
-    return new Promise(ok => setTimeout(ok, 0))
+    return new Promise(ok => setTimeout(ok, 100))
   }
 }
