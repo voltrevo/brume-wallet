@@ -18,7 +18,7 @@ export function Bottom() {
 
   return <>
     <div className="h-16" />
-    <nav className="fixed bottom-0 w-full h-16 bg-paper flex items-center">
+    <nav className="fixed bottom-0 left-0 w-full h-16 bg-paper flex items-center">
       <Button.Naked className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/" || path.pathname === "/wallets"}
         onClick={wallets}>
