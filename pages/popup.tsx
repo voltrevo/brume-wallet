@@ -11,6 +11,7 @@ import { useBackground } from "@/mods/foreground/background/context";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
 import { AppRequests } from "@/mods/foreground/entities/requests/all/data";
+import { useAppRequest } from "@/mods/foreground/entities/requests/data";
 import { useSession } from "@/mods/foreground/entities/sessions/data";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
 import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
@@ -56,7 +57,14 @@ export function TransactPage() {
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
-  const sessionId = Option.wrap(searchParams.get("sessionId")).unwrap()
+  const requestQuery = useAppRequest(id)
+  const maybeRequest = requestQuery.data?.inner
+
+  const sessionQuery = useSession(maybeRequest?.session)
+  const maybeSession = sessionQuery.data?.inner
+
+  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)
+  const maybeWallet = walletQuery.data?.inner
 
   const from = Option.wrap(searchParams.get("from")).unwrap()
   const to = Option.wrap(searchParams.get("to")).unwrap()
@@ -64,12 +72,6 @@ export function TransactPage() {
 
   const value = searchParams.get("value")
   const data = searchParams.get("data")
-
-  const sessionQuery = useSession(sessionId)
-  const maybeSession = sessionQuery.data?.inner
-
-  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)
-  const maybeWallet = walletQuery.data?.inner
 
   const context = useEthereumContext2(maybeSession?.wallets.at(0), maybeSession?.chain)
 
@@ -277,15 +279,16 @@ export function PersonalSignPage() {
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
-  const sessionId = Option.wrap(searchParams.get("sessionId")).unwrap()
+  const requestQuery = useAppRequest(id)
+  const maybeRequest = requestQuery.data?.inner
 
-  const message = Option.wrap(searchParams.get("message")).unwrap()
-
-  const sessionQuery = useSession(sessionId)
+  const sessionQuery = useSession(maybeRequest?.session)
   const maybeSession = sessionQuery.data?.inner
 
   const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)
   const maybeWallet = walletQuery.data?.inner
+
+  const message = Option.wrap(searchParams.get("message")).unwrap()
 
   const userMessage = useMemo(() => {
     return message.startsWith("0x")
@@ -386,15 +389,16 @@ export function TypedSignPage() {
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
-  const sessionId = Option.wrap(searchParams.get("sessionId")).unwrap()
+  const requestQuery = useAppRequest(id)
+  const maybeRequest = requestQuery.data?.inner
 
-  const data = Option.wrap(searchParams.get("data")).unwrap()
-
-  const sessionQuery = useSession(sessionId)
+  const sessionQuery = useSession(maybeRequest?.session)
   const maybeSession = sessionQuery.data?.inner
 
   const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)
   const maybeWallet = walletQuery.data?.inner
+
+  const data = Option.wrap(searchParams.get("data")).unwrap()
 
   const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {

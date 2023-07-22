@@ -2,6 +2,7 @@
 import { Button } from "@/libs/components/button"
 import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
+import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { RpcErr, RpcError } from "@/libs/rpc"
 import { qurl } from "@/libs/url/url"
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
@@ -20,27 +21,29 @@ export function RequestsPage() {
   const background = useBackground()
 
   const requestsQuery = useAppRequests()
-  const requestsData = requestsQuery.data?.inner
+  const maybeRequests = requestsQuery.data?.inner
 
-  const clean = useCallback(async () => {
+  const tryRejectAll = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (requestsData == null)
+      if (maybeRequests == null)
+        return Ok.void()
+      if (!confirm(`Do you want to reject all requests?`))
         return Ok.void()
 
-      for (const { id } of requestsData)
+      for (const { id } of maybeRequests)
         await background.tryRequest({
           method: "popup_data",
           params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
-        }).then(r => r.throw(t))
+        }).then(r => r.throw(t).throw(t))
 
       return Ok.void()
     }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
-  }, [background, requestsData])
+  }, [background, maybeRequests])
 
   const Body =
     <PageBody>
       <div className="flex flex-col gap-2">
-        {requestsQuery.data?.inner.map(request =>
+        {maybeRequests?.map(request =>
           <RequestRow
             key={request.id}
             request={request} />)}
@@ -50,7 +53,8 @@ export function RequestsPage() {
   const Header =
     <PageHeader title="Requests">
       <Button.Naked className="icon-xl hovered-or-clicked-or-focused:scale-105 transition"
-        onClick={clean}>
+        disabled={tryRejectAll.loading || !Boolean(maybeRequests?.length)}
+        onClick={tryRejectAll.run}>
         <Outline.TrashIcon className="icon-sm" />
       </Button.Naked>
     </PageHeader>
@@ -78,22 +82,19 @@ export function RequestRow(props: { request: AppRequest }) {
   if (maybeOriginData == null)
     return null
 
-  const requestData = maybeRequestData
-  const originData = maybeOriginData
-
   return <div role="button" className="p-md rounded-xl flex items-center gap-4"
     onClick={open}>
     <div className="shrink-0">
       <img className="s-10"
         alt="icon"
-        src={originData.icon} />
+        src={maybeOriginData.icon} />
     </div>
     <div className="grow">
       <div className="font-medium">
-        {originData.title}
+        {maybeOriginData.title}
       </div>
       <div className="text-contrast">
-        {originData.origin}
+        {maybeOriginData.origin}
       </div>
     </div>
   </div>

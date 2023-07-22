@@ -7,19 +7,38 @@ import { Session } from "@/mods/background/service_worker/entities/sessions/data
 import { useBackground } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
-import { Option } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
 import { useOrigin } from "../../origins/data"
 import { useSession } from "../data"
 import { useSessions } from "./data"
 
 export function SessionsPage() {
-  const sessions = useSessions()
+  const background = useBackground()
+
+  const sessionsQuery = useSessions()
+  const maybeSessions = sessionsQuery.data?.inner
+
+  const tryDisconnectAll = useAsyncUniqueCallback(async () => {
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      if (maybeSessions == null)
+        return Ok.void()
+      if (!confirm(`Do you want to disconnect all sessions?`))
+        return Ok.void()
+
+      for (const { id } of maybeSessions)
+        await background.tryRequest({
+          method: "brume_disconnect",
+          params: [id]
+        }).then(r => r.throw(t).throw(t))
+
+      return Ok.void()
+    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+  }, [background, maybeSessions])
 
   const Body =
     <PageBody>
       <div className="flex flex-col gap-2">
-        {sessions.data?.inner.map(session =>
+        {maybeSessions?.map(session =>
           <SessionRow
             key={session.id}
             session={session} />)}
@@ -27,7 +46,13 @@ export function SessionsPage() {
     </PageBody>
 
   const Header =
-    <PageHeader title="Sessions" />
+    <PageHeader title="Sessions">
+      <Button.Naked className="icon-xl hovered-or-clicked-or-focused:scale-105 transition"
+        disabled={tryDisconnectAll.loading || !Boolean(maybeSessions?.length)}
+        onClick={tryDisconnectAll.run}>
+        <Outline.TrashIcon className="icon-sm" />
+      </Button.Naked>
+    </PageHeader>
 
   return <Page>
     {Header}
@@ -46,14 +71,14 @@ export function SessionRow(props: { session: Session }) {
 
   const tryDisconnect = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
+      if (maybeSessionData == null)
+        return Ok.void()
       if (!confirm(`Do you want to disconnect this session?`))
         return Ok.void()
 
-      const sessionData = Option.wrap(maybeSessionData).ok().throw(t)
-
       await background.tryRequest({
         method: "brume_disconnect",
-        params: [sessionData.id]
+        params: [maybeSessionData.id]
       }).then(r => r.throw(t).throw(t))
 
       return Ok.void()
@@ -63,22 +88,19 @@ export function SessionRow(props: { session: Session }) {
   if (maybeOriginData == null)
     return null
 
-  const sessionData = maybeSessionData
-  const originData = maybeOriginData
-
   return <div role="button" className="p-md rounded-xl flex items-center gap-4"
     onClick={tryDisconnect.run}>
     <div className="shrink-0">
       <img className="s-10"
         alt="icon"
-        src={originData.icon} />
+        src={maybeOriginData.icon} />
     </div>
     <div className="grow">
       <div className="font-medium">
-        {originData.title}
+        {maybeOriginData.title}
       </div>
       <div className="text-contrast">
-        {originData.origin}
+        {maybeOriginData.origin}
       </div>
     </div>
     <Button.Naked>

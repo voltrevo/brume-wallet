@@ -47,7 +47,7 @@ export function Bottom() {
           onClick={goRequests}>
           <Button.Shrink className="">
             <div className="relative">
-              {requests && requests.length > 0 &&
+              {Boolean(requests?.length) &&
                 <div className="absolute top-0 -right-2 bg-purple-400 rounded-full s-2" />}
               <Outline.CheckIcon className="icon-md" />
             </div>
