@@ -98,12 +98,17 @@ export class Global {
   }>()
 
   #user?: UserSession
+  #path: string = "/"
 
+  /**
+   * All open scripts by origin
+   */
   readonly scripts = new Map<string, Set<Port>>()
 
+  /**
+   * Current open popup
+   */
   readonly popup = new Mutex<Slot<PopupData>>({})
-
-  #path: string = "/"
 
   constructor(
     readonly tors: Mutex<Pool<TorClientDuplex, Error>>,
@@ -317,12 +322,12 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
+      const originQuery = await this.make(getOrigin(origin.origin, storage))
+      await originQuery.mutate(Mutators.data(origin))
+
       const walletQuery = await this.make(getWallet(walletId, storage))
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
-
-      const originQuery = await this.make(getOrigin(origin.origin, storage))
-      await originQuery.mutate(Mutators.data(origin))
 
       const sessionData: SessionData = {
         id: origin.origin,
