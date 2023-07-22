@@ -351,17 +351,19 @@ export class Global {
         }
       }
 
+      await this.tryOpenOrFocusPopup("/", mouse).then(r => r.throw(t))
+
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+      const originQuery = await this.make(getOrigin(origin.origin, storage))
+      await originQuery.mutate(Mutators.data(origin))
+
       const [persistent, walletId, chainId] = await this.tryRequestPopup<[boolean, string, number]>({
         id: crypto.randomUUID(),
         origin: origin.origin,
         method: "eth_requestAccounts",
         params: {}
       }, mouse).then(r => r.throw(t).throw(t))
-
-      const { storage } = Option.wrap(this.#user).ok().throw(t)
-
-      const originQuery = await this.make(getOrigin(origin.origin, storage))
-      await originQuery.mutate(Mutators.data(origin))
 
       const walletQuery = await this.make(getWallet(walletId, storage))
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)

@@ -32,6 +32,16 @@ import { useCore } from "@hazae41/xswr";
 import { useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
+  return <main id="main" className="p-safe grow w-full flex flex-col">
+    <Overlay>
+      <UserProvider>
+        <Ready />
+      </UserProvider>
+    </Overlay>
+  </main>
+}
+
+export function Ready() {
   const background = useBackground()
 
   useEffect(() => {
@@ -40,14 +50,10 @@ export default function Popup() {
       .then(r => r.unwrap().ignore())
   }, [background])
 
-  return <main id="main" className="p-safe grow w-full flex flex-col">
-    <Overlay>
-      <UserProvider>
-        <Router />
-        <Bottom />
-      </UserProvider>
-    </Overlay>
-  </main>
+  return <>
+    <Router />
+    <Bottom />
+  </>
 }
 
 export function TransactPage() {
