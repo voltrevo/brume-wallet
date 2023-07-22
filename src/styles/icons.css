@@ -60,6 +60,14 @@
     @apply w-20 h-20;
   }
 
+  .s-1 {
+    @apply w-1 h-1;
+  }
+
+  .s-2 {
+    @apply w-2 h-2;
+  }
+
   .s-10 {
     @apply w-10 h-10;
   }
