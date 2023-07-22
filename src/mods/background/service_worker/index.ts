@@ -101,12 +101,17 @@ export class Global {
   #path: string = "/"
 
   /**
-   * All open scripts by origin
+   * Scripts by session
    */
   readonly scripts = new Map<string, Set<Port>>()
 
   /**
-   * Current open popup
+   * Session by script
+   */
+  readonly sessions = new Map<string, SessionData>()
+
+  /**
+   * Current popup
    */
   readonly popup = new Mutex<Slot<PopupData>>({})
 
@@ -295,25 +300,51 @@ export class Global {
     }
   }
 
-  async getEthereumSession(script: Port): Promise<Result<Optional<SessionData>, Error>> {
-    if (this.#user == null)
-      return new Ok(undefined)
-
-    const sessionQuery = await this.make(Session.get(script.name, this.#user.storage))
-
-    return new Ok(sessionQuery.current?.inner)
-  }
-
   async tryGetOrWaitEthereumSession(script: Port, mouse: Mouse): Promise<Result<SessionData, Error>> {
     return await Result.unthrow(async t => {
-      const session = await this.getEthereumSession(script).then(r => r.throw(t))
+      const currentSession = this.sessions.get(script.name)
 
-      if (session != null)
-        return new Ok(session)
+      if (currentSession != null)
+        return new Ok(currentSession)
 
-      const origin = await script.tryRequest<OriginData>({ method: "brume_origin" }).then(r => r.throw(t).throw(t))
+      const origin = await script.tryRequest<OriginData>({
+        method: "brume_origin"
+      }).then(r => r.throw(t).throw(t))
 
-      const [walletId, chainId] = await this.tryRequestPopup<[string, number]>({
+      if (this.#user != null) {
+        const { storage } = this.#user
+
+        const sessionQuery = await this.make(Session.get(origin.origin, storage))
+        const maybeSession = sessionQuery.data?.inner
+
+        if (maybeSession != null) {
+          const sessionId = maybeSession.id
+
+          const originQuery = await this.make(getOrigin(origin.origin, storage))
+          await originQuery.mutate(Mutators.data(origin))
+
+          this.sessions.set(script.name, maybeSession)
+
+          let scripts = this.scripts.get(sessionId)
+
+          if (scripts == null) {
+            scripts = new Set()
+            this.scripts.set(sessionId, scripts)
+          }
+
+          scripts.add(script)
+
+          script.events.on("close", () => {
+            scripts?.delete(script)
+            this.sessions.delete(script.name)
+            return new None()
+          })
+
+          return new Ok(maybeSession)
+        }
+      }
+
+      const [persistent, walletId, chainId] = await this.tryRequestPopup<[boolean, string, number]>({
         id: crypto.randomUUID(),
         origin: origin.origin,
         method: "eth_requestAccounts",
@@ -329,15 +360,38 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
+      const sessionId = persistent
+        ? origin.origin
+        : script.name
+
       const sessionData: SessionData = {
-        id: origin.origin,
+        id: sessionId,
         origin: origin.origin,
         wallets: [wallet],
         chain: chain
       }
 
-      const sessionQuery = await this.make(Session.get(script.name, storage))
-      await sessionQuery.mutate(Mutators.data(sessionData))
+      this.sessions.set(script.name, sessionData)
+
+      let scripts = this.scripts.get(sessionId)
+
+      if (scripts == null) {
+        scripts = new Set()
+        this.scripts.set(sessionId, scripts)
+      }
+
+      scripts.add(script)
+
+      script.events.on("close", () => {
+        scripts?.delete(script)
+        this.sessions.delete(script.name)
+        return new None()
+      })
+
+      if (persistent) {
+        const sessionQuery = await this.make(Session.get(origin.origin, storage))
+        await sessionQuery.mutate(Mutators.data(sessionData))
+      }
 
       return new Ok(sessionData)
     })
@@ -572,10 +626,10 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const sessionQuery = await this.make(Session.get(ethereum.port.name, storage))
+      const sessionQuery = await this.make(Session.get(session.id, storage))
       await sessionQuery.mutate(Mutators.mapExistingInnerData(d => ({ ...d, chain })))
 
-      for (const script of Option.wrap(this.scripts.get(ethereum.port.name)).unwrapOr([]))
+      for (const script of Option.wrap(this.scripts.get(session.id)).unwrapOr([]))
         await script.tryRequest({ method: "chainChanged", params: [chainId] }).then(r => r.ignore())
 
       return Ok.void()
@@ -702,7 +756,9 @@ export class Global {
     return await Result.unthrow(async t => {
       const [id] = (request as RpcParamfulRequestInit<[string]>).params
 
-      const sessionQuery = await this.make(Session.get(id, this.storage))
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+      const sessionQuery = await this.make(Session.get(id, storage))
       await sessionQuery.delete()
 
       for (const script of Option.wrap(this.scripts.get(id)).unwrapOr([]))
@@ -972,7 +1028,7 @@ if (IS_WEBSITE) {
 if (IS_EXTENSION) {
 
   const onContentScript = (port: chrome.runtime.Port) => {
-    const script = new ExtensionPort(port.name, port)
+    const script = new ExtensionPort(crypto.randomUUID(), port)
 
     script.events.on("request", async (request) => {
       const inited = await init
@@ -982,22 +1038,6 @@ if (IS_EXTENSION) {
 
       return await inited.get().tryRouteContentScript(script, request)
     })
-
-    init.then(inited => inited.inspectSync(global => {
-      let scripts = global.scripts.get(script.name)
-
-      if (scripts == null) {
-        scripts = new Set()
-        global.scripts.set(script.name, scripts)
-      }
-
-      script.events.on("close", () => {
-        scripts?.delete(script)
-        return new None()
-      })
-
-      scripts.add(script)
-    }))
   }
 
   const onForeground = (port: chrome.runtime.Port) => {

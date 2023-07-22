@@ -4,6 +4,7 @@ import { Errors } from "@/libs/errors/errors";
 import { Ethers } from "@/libs/ethers/ethers";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
+import { useInputChange } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { RpcErr, RpcError, RpcOk } from "@/libs/rpc";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
@@ -501,13 +502,19 @@ export function WalletAndChainSelectPage() {
 
   const creator = useBooleanHandle(false)
 
+  const [persistent, setPersistent] = useState(true)
+
+  const onPersistentChange = useInputChange(e => {
+    setPersistent(e.currentTarget.checked)
+  }, [])
+
   const [chain, setChain] = useState<number>(1)
 
   const onWalletClick = useAsyncUniqueCallback(async (wallet: Wallet) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "popup_data",
-        params: [new RpcOk(id, [wallet.uuid, chain])]
+        params: [new RpcOk(id, [persistent, wallet.uuid, chain])]
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = await AppRequests.get(storage).make(core)
@@ -519,7 +526,7 @@ export function WalletAndChainSelectPage() {
 
       return Ok.void()
     }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
-  }, [core, storage, background, id, chain])
+  }, [core, storage, background, id, chain, persistent])
 
   const Body =
     <PageBody>
@@ -549,6 +556,15 @@ export function WalletAndChainSelectPage() {
           </Button.Shrink>
         </Button.Bordered>
       </div>
+      <div className="h-4" />
+      <label>
+        <input type="checkbox"
+          checked={persistent}
+          onChange={onPersistentChange} />
+        <span className="px-1">
+          Keep me connected
+        </span>
+      </label>
       <div className="h-4" />
       <ClickableWalletGrid
         ok={onWalletClick.run}
