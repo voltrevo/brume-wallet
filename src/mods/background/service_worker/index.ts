@@ -626,8 +626,12 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
+      const updatedSession = { ...session, chain }
+
+      this.sessions.set(ethereum.port.name, updatedSession)
+
       const sessionQuery = await this.make(Session.get(session.id, storage))
-      await sessionQuery.mutate(Mutators.mapExistingInnerData(d => ({ ...d, chain })))
+      await sessionQuery.mutate(Mutators.replaceData(updatedSession))
 
       for (const script of Option.wrap(this.scripts.get(session.id)).unwrapOr([]))
         await script.tryRequest({ method: "chainChanged", params: [chainId] }).then(r => r.ignore())

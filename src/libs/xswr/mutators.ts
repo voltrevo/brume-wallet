@@ -19,8 +19,16 @@ export namespace Mutators {
     return set(new Data(data, times))
   }
 
+  export function replaceData<D, F>(data: D, times: TimesInit = {}): Mutator<D, F> {
+    return (state: State<D, F>) => Option.wrap(state.data).mapSync(() => new Data(data, times))
+  }
+
   export function error<D, F>(error: F, times: TimesInit = {}): Mutator<D, F> {
     return set(new Fail(error, times))
+  }
+
+  export function replaceError<D, F>(error: F, times: TimesInit = {}): Mutator<D, F> {
+    return (state: State<D, F>) => Option.wrap(state.error).mapSync(() => new Fail(error, times))
   }
 
   export function mapData<D, F>(piper: (data?: Data<D>) => Data<D>) {
