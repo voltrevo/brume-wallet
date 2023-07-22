@@ -247,15 +247,17 @@ export class Global {
       const requestQuery = await AppRequest.get(request.id).make(this.core)
       await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
 
-      const { id, method, params } = request
-      const url = qurl(`/${method}?id=${id}`, params)
+      try {
+        const { id, method, params } = request
+        const url = qurl(`/${method}?id=${id}`, params)
 
-      const popup = await this.tryOpenOrFocusPopup(url, mouse).then(r => r.throw(t))
-      const response = await this.tryWaitPopupData<T>(popup, request.id).then(r => r.throw(t))
+        const popup = await this.tryOpenOrFocusPopup(url, mouse).then(r => r.throw(t))
+        const response = await this.tryWaitPopupData<T>(popup, request.id).then(r => r.throw(t))
 
-      await requestQuery.delete()
-
-      return new Ok(response)
+        return new Ok(response)
+      } finally {
+        await requestQuery.delete()
+      }
     })
   }
 
