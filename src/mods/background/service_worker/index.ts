@@ -27,7 +27,7 @@ import { precacheAndRoute } from "workbox-precaching"
 import { EthereumBrume, EthereumBrumes, getEthereumBrumes } from "./entities/brumes/data"
 import { OriginData, getOrigin } from "./entities/origins/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
-import { Session, SessionData } from "./entities/sessions/data"
+import { PersistentSession, SessionData, TemporarySession } from "./entities/sessions/data"
 import { getUsers } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
 import { getWallets } from "./entities/wallets/all/data"
@@ -108,7 +108,7 @@ export class Global {
   /**
    * Session by script
    */
-  readonly sessions = new Map<string, SessionData>()
+  readonly sessions = new Map<string, string>()
 
   /**
    * Current popup
@@ -304,8 +304,12 @@ export class Global {
     return await Result.unthrow(async t => {
       const currentSession = this.sessions.get(script.name)
 
-      if (currentSession != null)
-        return new Ok(currentSession)
+      if (currentSession != null) {
+        const tempSessionQuery = await this.make(TemporarySession.get(currentSession))
+        const tempSessionData = Option.wrap(tempSessionQuery.data?.inner).ok().throw(t)
+
+        return new Ok(tempSessionData)
+      }
 
       const origin = await script.tryRequest<OriginData>({
         method: "brume_origin"
@@ -314,16 +318,19 @@ export class Global {
       if (this.#user != null) {
         const { storage } = this.#user
 
-        const sessionQuery = await this.make(Session.get(origin.origin, storage))
-        const maybeSession = sessionQuery.data?.inner
+        const persSessionQuery = await this.make(PersistentSession.get(origin.origin, storage))
+        const maybePersSession = persSessionQuery.data?.inner
 
-        if (maybeSession != null) {
-          const sessionId = maybeSession.id
+        if (maybePersSession != null) {
+          const sessionId = maybePersSession.id
 
           const originQuery = await this.make(getOrigin(origin.origin, storage))
           await originQuery.mutate(Mutators.data(origin))
 
-          this.sessions.set(script.name, maybeSession)
+          const tempSessionQuery = await this.make(TemporarySession.get(sessionId))
+          await tempSessionQuery.mutate(Mutators.data(maybePersSession))
+
+          this.sessions.set(script.name, sessionId)
 
           let scripts = this.scripts.get(sessionId)
 
@@ -334,13 +341,13 @@ export class Global {
 
           scripts.add(script)
 
-          script.events.on("close", () => {
+          script.events.on("close", async () => {
             scripts?.delete(script)
             this.sessions.delete(script.name)
             return new None()
           })
 
-          return new Ok(maybeSession)
+          return new Ok(maybePersSession)
         }
       }
 
@@ -360,38 +367,37 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
-      const sessionId = persistent
-        ? origin.origin
-        : script.name
-
       const sessionData: SessionData = {
-        id: sessionId,
+        id: crypto.randomUUID(),
         origin: origin.origin,
         wallets: [wallet],
         chain: chain
       }
 
-      this.sessions.set(script.name, sessionData)
+      if (persistent) {
+        const persSessionQuery = await this.make(PersistentSession.get(origin.origin, storage))
+        await persSessionQuery.mutate(Mutators.data(sessionData))
+      }
 
-      let scripts = this.scripts.get(sessionId)
+      const tempSessionQuery = await this.make(TemporarySession.get(sessionData.id))
+      await tempSessionQuery.mutate(Mutators.data(sessionData))
+
+      this.sessions.set(script.name, sessionData.id)
+
+      let scripts = this.scripts.get(sessionData.id)
 
       if (scripts == null) {
         scripts = new Set()
-        this.scripts.set(sessionId, scripts)
+        this.scripts.set(sessionData.id, scripts)
       }
 
       scripts.add(script)
 
-      script.events.on("close", () => {
+      script.events.on("close", async () => {
         scripts?.delete(script)
         this.sessions.delete(script.name)
         return new None()
       })
-
-      if (persistent) {
-        const sessionQuery = await this.make(Session.get(origin.origin, storage))
-        await sessionQuery.mutate(Mutators.data(sessionData))
-      }
 
       return new Ok(sessionData)
     })
@@ -628,10 +634,11 @@ export class Global {
 
       const updatedSession = { ...session, chain }
 
-      this.sessions.set(ethereum.port.name, updatedSession)
+      const tempSessionQuery = await this.make(TemporarySession.get(session.id))
+      await tempSessionQuery.mutate(Mutators.replaceData(updatedSession))
 
-      const sessionQuery = await this.make(Session.get(session.id, storage))
-      await sessionQuery.mutate(Mutators.replaceData(updatedSession))
+      const persSessionQuery = await this.make(PersistentSession.get(session.origin, storage))
+      await persSessionQuery.mutate(Mutators.replaceData(updatedSession))
 
       for (const script of Option.wrap(this.scripts.get(session.id)).unwrapOr([]))
         await script.tryRequest({ method: "chainChanged", params: [chainId] }).then(r => r.ignore())
@@ -762,11 +769,19 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const sessionQuery = await this.make(Session.get(id, storage))
-      await sessionQuery.delete()
+      const tempSessionQuery = await this.make(TemporarySession.get(id))
+      const tempSessionData = Option.wrap(tempSessionQuery.data?.inner).ok().throw(t)
+      await tempSessionQuery.delete()
 
-      for (const script of Option.wrap(this.scripts.get(id)).unwrapOr([]))
+      const persSessionQuery = await this.make(PersistentSession.get(tempSessionData.origin, storage))
+      await persSessionQuery.delete()
+
+      for (const script of Option.wrap(this.scripts.get(id)).unwrapOr([])) {
         await script.tryRequest({ method: "accountsChanged", params: [[]] }).then(r => r.ignore())
+        this.sessions.delete(script.name)
+      }
+
+      this.scripts.delete(id)
 
       return Ok.void()
     })

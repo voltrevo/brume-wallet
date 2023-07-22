@@ -9,7 +9,7 @@ import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Ok, Result } from "@hazae41/result"
 import { useOrigin } from "../../origins/data"
-import { useSession } from "../data"
+import { usePersistentSession } from "../data"
 import { useSessions } from "./data"
 
 export function SessionsPage() {
@@ -63,7 +63,7 @@ export function SessionsPage() {
 export function SessionRow(props: { session: Session }) {
   const background = useBackground()
 
-  const sessionQuery = useSession(props.session.id)
+  const sessionQuery = usePersistentSession(props.session.origin)
   const maybeSessionData = sessionQuery.data?.inner
 
   const originQuery = useOrigin(maybeSessionData?.origin)

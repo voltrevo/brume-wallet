@@ -1,7 +1,7 @@
 import { EthereumChain } from "@/libs/ethereum/chain"
 import { Sets } from "@/libs/sets/sets"
 import { Mutators } from "@/libs/xswr/mutators"
-import { Data, IDBStorage, IndexerMore, NormalizerMore, States, createQuerySchema } from "@hazae41/xswr"
+import { Data, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Wallet } from "../wallets/data"
 import { getSessions, getSessionsByWallet } from "./all/data"
 
@@ -10,8 +10,9 @@ export type Session =
   | SessionRef
 
 export interface SessionRef {
-  ref: true
-  id: string
+  readonly ref: true
+  readonly id: string
+  readonly origin: string
 }
 
 export interface SessionData {
@@ -21,7 +22,15 @@ export interface SessionData {
   wallets: [Wallet]
 }
 
-export namespace Session {
+export namespace TemporarySession {
+
+  export function get(id: string) {
+    return createQuerySchema<string, SessionData, never>({ key: `temporarySession/${id}` })
+  }
+
+}
+
+export namespace PersistentSession {
 
   export function get(id: string, storage: IDBStorage) {
     const indexer = async (states: States<SessionData, never>, more: IndexerMore) => {
@@ -31,9 +40,9 @@ export namespace Session {
       const previousSessionData = previous.real?.data
       const currentSessionData = current.real?.data
 
-      const sessionsQuery = await getSessions(storage).make(core)
+      const persSessionsQuery = await getSessions(storage).make(core)
 
-      await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
+      await persSessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
         if (previousSessionData != null)
           d = d.mapSync(p => p.filter(x => x.id !== previousSessionData.inner.id))
         if (currentSessionData != null)
@@ -70,16 +79,7 @@ export namespace Session {
       return
     }
 
-    return createQuerySchema<string, SessionData, never>({ key: `session/v3/${id}`, storage, indexer })
-  }
-
-  export async function normalize(session: Session, storage: IDBStorage, more: NormalizerMore): Promise<SessionRef> {
-    if ("ref" in session) return session
-
-    const schema = get(session.origin, storage)
-    await schema?.normalize(new Data(session), more)
-
-    return SessionRef.from(session)
+    return createQuerySchema<string, SessionData, never>({ key: `persistentSession/${id}`, storage, indexer })
   }
 
 }
@@ -87,7 +87,7 @@ export namespace Session {
 export namespace SessionRef {
 
   export function from(session: Session): SessionRef {
-    return { ref: true, id: session.id }
+    return { ref: true, id: session.id, origin: session.origin }
   }
 
 }
