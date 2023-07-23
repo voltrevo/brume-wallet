@@ -1,10 +1,14 @@
 import { Optional } from "@hazae41/option"
 import { Fetched, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
-import { User, getUserRef } from "../data"
+import { User } from "../data"
 
-export function getUsers(storage: IDBStorage) {
-  const normalizer = async (fetched: Optional<Fetched<User[], never>>, more: NormalizerMore) =>
-    fetched?.map(async users => await Promise.all(users.map(user => getUserRef(user, storage, more))))
+export namespace Users {
 
-  return createQuerySchema<string, User[], never>({ key: `users`, storage, normalizer })
+  export function query(storage: IDBStorage) {
+    const normalizer = async (fetched: Optional<Fetched<User[], never>>, more: NormalizerMore) =>
+      fetched?.map(async users => await Promise.all(users.map(user => User.normalize(user, storage, more))))
+
+    return createQuerySchema<string, User[], never>({ key: `users`, storage, normalizer })
+  }
+
 }

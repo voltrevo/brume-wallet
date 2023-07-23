@@ -32,6 +32,14 @@ export interface WalletRef {
   readonly uuid: string
 }
 
+export namespace WalletRef {
+
+  export function from(wallet: Wallet): WalletRef {
+    return { ref: true, uuid: wallet.uuid }
+  }
+
+}
+
 export type WalletData =
   | EthereumReadonlyWallet
   | EthereumPrivateKeyWallet
@@ -107,17 +115,21 @@ export interface BitcoinPrivateKeyWallet {
   readonly uncompressedAddress: string
 }
 
-export function getWallet(uuid: string, storage: IDBStorage) {
-  return createQuerySchema<string, WalletData, never>({ key: `wallet/${uuid}`, storage })
-}
+export namespace Wallet {
 
-export async function getWalletRef(wallet: Wallet, storage: IDBStorage, more: NormalizerMore): Promise<WalletRef> {
-  if ("ref" in wallet) return wallet
+  export function query(uuid: string, storage: IDBStorage) {
+    return createQuerySchema<string, WalletData, never>({ key: `wallet/${uuid}`, storage })
+  }
 
-  const schema = getWallet(wallet.uuid, storage)
-  await schema?.normalize(new Data(wallet), more)
+  export async function normalize(wallet: Wallet, storage: IDBStorage, more: NormalizerMore): Promise<WalletRef> {
+    if ("ref" in wallet) return wallet
 
-  return { ref: true, uuid: wallet.uuid }
+    const schema = query(wallet.uuid, storage)
+    await schema?.normalize(new Data(wallet), more)
+
+    return WalletRef.from(wallet)
+  }
+
 }
 
 export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {

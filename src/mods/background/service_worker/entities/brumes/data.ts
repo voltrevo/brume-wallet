@@ -26,8 +26,66 @@ export interface EthereumBrume {
   readonly sockets: EthereumChains<Optional<Pool<WebSocket, Error>>>
 }
 
-export function getEthereumBrumes(wallet: Wallet) {
-  return createQuerySchema<string, Mutex<Pool<EthereumBrume, Error>>, never>({ key: `brumes/${wallet.uuid}` })
+export namespace EthereumBrumes {
+
+  export function query(wallet: Wallet) {
+    return createQuerySchema<string, Mutex<Pool<EthereumBrume, Error>>, never>({ key: `brumes/${wallet.uuid}` })
+  }
+
+  export function createPool(chains: EthereumChains, circuits: Mutex<Pool<Circuit, Error>>, params: PoolParams) {
+    return new Mutex(new Pool<EthereumBrume, Error>(async (params) => {
+      return await Result.unthrow(async t => {
+        const { pool, index } = params
+
+        const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get())
+        const sockets = Objects.mapValuesSync(chains, chain => EthereumSocket.create(circuit, chain))
+        const client = new RpcClient()
+
+        const brume: EthereumBrume = { circuit, client, sockets }
+
+        const onCloseOrError = async (reason?: unknown) => {
+          pool.delete(index)
+          return new None()
+        }
+
+        brume.circuit.events.on("close", onCloseOrError, { passive: true })
+        brume.circuit.events.on("error", onCloseOrError, { passive: true })
+
+        const onClean = () => {
+          brume.circuit.events.off("close", onCloseOrError)
+          brume.circuit.events.off("error", onCloseOrError)
+        }
+
+        return new Ok(new Cleaner(brume, onClean))
+      })
+    }, params))
+  }
+
+  export function createSubpool(brumes: Mutex<Pool<EthereumBrume, Error>>, params: PoolParams) {
+    return new Mutex(new Pool<EthereumBrume, Error>(async (params) => {
+      return await Result.unthrow(async t => {
+        const { pool, index } = params
+
+        const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.get())
+
+        const onCloseOrError = async (reason?: unknown) => {
+          pool.delete(index)
+          return new None()
+        }
+
+        brume.circuit.events.on("close", onCloseOrError, { passive: true })
+        brume.circuit.events.on("error", onCloseOrError, { passive: true })
+
+        const onClean = () => {
+          brume.circuit.events.off("close", onCloseOrError)
+          brume.circuit.events.off("error", onCloseOrError)
+        }
+
+        return new Ok(new Cleaner(brume, onClean))
+      })
+    }, params))
+  }
+
 }
 
 export namespace EthereumSocket {
@@ -96,64 +154,6 @@ export namespace EthereumSocket {
         return new Ok(new Cleaner(socket, onClean))
       })
     }, params)
-  }
-
-}
-
-export namespace EthereumBrume {
-
-  export function createPool(chains: EthereumChains, circuits: Mutex<Pool<Circuit, Error>>, params: PoolParams) {
-    return new Mutex(new Pool<EthereumBrume, Error>(async (params) => {
-      return await Result.unthrow(async t => {
-        const { pool, index } = params
-
-        const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get())
-        const sockets = Objects.mapValuesSync(chains, chain => EthereumSocket.create(circuit, chain))
-        const client = new RpcClient()
-
-        const brume: EthereumBrume = { circuit, client, sockets }
-
-        const onCloseOrError = async (reason?: unknown) => {
-          pool.delete(index)
-          return new None()
-        }
-
-        brume.circuit.events.on("close", onCloseOrError, { passive: true })
-        brume.circuit.events.on("error", onCloseOrError, { passive: true })
-
-        const onClean = () => {
-          brume.circuit.events.off("close", onCloseOrError)
-          brume.circuit.events.off("error", onCloseOrError)
-        }
-
-        return new Ok(new Cleaner(brume, onClean))
-      })
-    }, params))
-  }
-
-  export function createSubpool(brumes: Mutex<Pool<EthereumBrume, Error>>, params: PoolParams) {
-    return new Mutex(new Pool<EthereumBrume, Error>(async (params) => {
-      return await Result.unthrow(async t => {
-        const { pool, index } = params
-
-        const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.get())
-
-        const onCloseOrError = async (reason?: unknown) => {
-          pool.delete(index)
-          return new None()
-        }
-
-        brume.circuit.events.on("close", onCloseOrError, { passive: true })
-        brume.circuit.events.on("error", onCloseOrError, { passive: true })
-
-        const onClean = () => {
-          brume.circuit.events.off("close", onCloseOrError)
-          brume.circuit.events.off("error", onCloseOrError)
-        }
-
-        return new Ok(new Cleaner(brume, onClean))
-      })
-    }, params))
   }
 
 }

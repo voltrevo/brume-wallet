@@ -35,6 +35,7 @@ export interface Pbkdf2ParamsBase64 {
 }
 
 export namespace Pbdkf2Params {
+
   export function stringify(params: Pbkdf2ParamsBytes): Pbkdf2ParamsBase64 {
     const { name, hash, iterations } = params
     const salt = Bytes.toBase64(params.salt)
@@ -46,4 +47,5 @@ export namespace Pbdkf2Params {
     const salt = Bytes.fromBase64(params.salt)
     return { name, hash, iterations, salt }
   }
+
 }

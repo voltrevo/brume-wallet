@@ -24,14 +24,14 @@ import { X25519 } from "@hazae41/x25519"
 import { Core, Data, IDBStorage, RawState, SimpleFetcherfulQueryInstance, State } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
-import { EthereumBrume, EthereumBrumes, getEthereumBrumes } from "./entities/brumes/data"
+import { EthereumBrume, EthereumBrumes } from "./entities/brumes/data"
 import { Origin, OriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { PersistentSession, SessionData, TemporarySession } from "./entities/sessions/data"
-import { getUsers } from "./entities/users/all/data"
-import { User, UserData, UserInit, UserSession, getCurrentUser, getUser, tryCreateUser } from "./entities/users/data"
-import { getWallets } from "./entities/wallets/all/data"
-import { EthereumContext, EthereumQueryKey, EthereumWalletData, Wallet, getEthereumBalance, getEthereumUnknown, getPairPrice, getWallet, tryEthereumFetch } from "./entities/wallets/data"
+import { Users } from "./entities/users/all/data"
+import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
+import { Wallets } from "./entities/wallets/all/data"
+import { EthereumContext, EthereumQueryKey, EthereumWalletData, Wallet, getEthereumBalance, getEthereumUnknown, getPairPrice, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -160,7 +160,7 @@ export class Global {
       if (password == null)
         return new Ok(undefined)
 
-      const userQuery = await getUser(uuid, this.storage).make(this.core)
+      const userQuery = await User.query(uuid, this.storage).make(this.core)
       const userData = Option.wrap(userQuery.current?.get()).ok().throw(t)
 
       const user: User = { ref: true, uuid: userData.uuid }
@@ -361,7 +361,7 @@ export class Global {
         params: {}
       }, mouse).then(r => r.throw(t).throw(t))
 
-      const walletQuery = await getWallet(walletId, storage).make(this.core)
+      const walletQuery = await Wallet.query(walletId, storage).make(this.core)
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
@@ -456,7 +456,7 @@ export class Global {
 
       const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<string, Error>>(async t => {
-          const walletQuery = await getWallet(wallet.uuid, storage).make(this.core)
+          const walletQuery = await Wallet.query(wallet.uuid, storage).make(this.core)
           const walletData = Option.wrap(walletQuery.data?.inner).ok().throw(t)
 
           return new Ok(walletData.address)
@@ -474,7 +474,7 @@ export class Global {
 
       const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<string, Error>>(async t => {
-          const walletQuery = await getWallet(wallet.uuid, storage).make(this.core)
+          const walletQuery = await Wallet.query(wallet.uuid, storage).make(this.core)
           const walletData = Option.wrap(walletQuery.data?.inner).ok().throw(t)
 
           return new Ok(walletData.address)
@@ -725,8 +725,8 @@ export class Global {
     return await Result.unthrow(async t => {
       const [init] = (request as RpcParamfulRequestInit<[UserInit]>).params
 
-      const usersQuery = await getUsers(this.storage).make(this.core)
-      const user = await tryCreateUser(init).then(r => r.throw(t))
+      const usersQuery = await Users.query(this.storage).make(this.core)
+      const user = await User.tryCreate(init).then(r => r.throw(t))
 
       const usersState = await usersQuery.mutate(Mutators.pushData<User, never>(new Data(user)))
       const users = Option.wrap(usersState.current?.get()).ok().throw(t)
@@ -755,7 +755,7 @@ export class Global {
       if (userSession == null)
         return new Ok(undefined)
 
-      const userQuery = await getUser(userSession.user.uuid, this.storage).make(this.core)
+      const userQuery = await User.query(userSession.user.uuid, this.storage).make(this.core)
 
       return new Ok(userQuery.current?.inner)
     })
@@ -823,7 +823,7 @@ export class Global {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const [wallet] = (request as RpcParamfulRequestInit<[EthereumWalletData]>).params
-      const walletsQuery = await getWallets(storage).make(this.core)
+      const walletsQuery = await Wallets.query(storage).make(this.core)
 
       const walletsState = await walletsQuery.mutate(Mutators.pushData<Wallet, never>(new Data(wallet)))
       const wallets = Option.wrap(walletsState.current?.get()).ok().throw(t)
@@ -833,12 +833,12 @@ export class Global {
   }
 
   async #getOrCreateEthereumBrumes(wallet: Wallet): Promise<EthereumBrumes> {
-    const brumesQuery = await getEthereumBrumes(wallet).make(this.core)
+    const brumesQuery = await EthereumBrumes.query(wallet).make(this.core)
 
     if (brumesQuery.current != null)
       return brumesQuery.current.inner
 
-    const brumes = EthereumBrume.createSubpool(this.brumes, { capacity: 3 })
+    const brumes = EthereumBrumes.createSubpool(this.brumes, { capacity: 3 })
     await brumesQuery.mutate(Mutators.data(brumes))
     return brumes
   }
@@ -919,7 +919,7 @@ export class Global {
 
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const walletQuery = await getWallet(walletId, storage).make(this.core)
+      const walletQuery = await Wallet.query(walletId, storage).make(this.core)
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
@@ -941,7 +941,7 @@ export class Global {
 
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const walletQuery = await getWallet(walletId, storage).make(this.core)
+      const walletQuery = await Wallet.query(walletId, storage).make(this.core)
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
@@ -995,7 +995,7 @@ async function tryInit() {
       }, { capacity: 3 })
 
       const circuits = Circuits.createPool(tors, { capacity: 9 })
-      const sessions = EthereumBrume.createPool(chains, circuits, { capacity: 9 })
+      const sessions = EthereumBrumes.createPool(chains, circuits, { capacity: 9 })
 
       const storage = IDBStorage.tryCreate({ name: "memory" }).unwrap()
       const global = new Global(tors, circuits, sessions, storage)

@@ -20,6 +20,14 @@ export interface UserRef {
   readonly uuid: string
 }
 
+export namespace UserRef {
+
+  export function from(user: User): UserRef {
+    return { ref: true, uuid: user.uuid }
+  }
+
+}
+
 export interface UserInit {
   readonly uuid: string,
   readonly name: string,
@@ -45,72 +53,76 @@ export interface UserData {
 }
 
 export interface UserSession {
-  user: User,
-  storage: IDBStorage
-  hasher: HmacEncoder
-  crypter: AesGcmCoder
+  readonly user: User,
+  readonly storage: IDBStorage
+  readonly hasher: HmacEncoder
+  readonly crypter: AesGcmCoder
 }
 
 export function getCurrentUser() {
   return createQuerySchema<string, User, never>({ key: `user` })
 }
 
-export function getUser(uuid: string, storage: IDBStorage) {
-  return createQuerySchema<string, UserData, never>({ key: `user/${uuid}`, storage })
-}
+export namespace User {
 
-export async function getUserRef(user: User, storage: IDBStorage, more: NormalizerMore) {
-  if ("ref" in user) return user
+  export function query(uuid: string, storage: IDBStorage) {
+    return createQuerySchema<string, UserData, never>({ key: `user/${uuid}`, storage })
+  }
 
-  const schema = getUser(user.uuid, storage)
-  await schema?.normalize(new Data(user), more)
+  export async function normalize(user: User, storage: IDBStorage, more: NormalizerMore) {
+    if ("ref" in user) return user
 
-  return { ref: true, uuid: user.uuid } as UserRef
-}
+    const schema = query(user.uuid, storage)
+    await schema?.normalize(new Data(user), more)
 
-export async function tryCreateUser(init: UserInit): Promise<Result<UserData, Error>> {
-  return await Result.unthrow(async t => {
-    const { uuid, name, color, emoji, password } = init
+    return UserRef.from(user)
+  }
 
-    const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits"])
+  export async function tryCreate(init: UserInit): Promise<Result<UserData, Error>> {
+    return await Result.unthrow(async t => {
+      const { uuid, name, color, emoji, password } = init
 
-    const keyParamsBase64: HmacPbkdf2ParamsBase64 = {
-      derivedKeyType: {
-        name: "HMAC",
-        hash: "SHA-256"
-      },
-      algorithm: Pbdkf2Params.stringify({
+      const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits"])
+
+      const keyParamsBase64: HmacPbkdf2ParamsBase64 = {
+        derivedKeyType: {
+          name: "HMAC",
+          hash: "SHA-256"
+        },
+        algorithm: Pbdkf2Params.stringify({
+          name: "PBKDF2",
+          hash: "SHA-256",
+          iterations: 1_000_000,
+          salt: Bytes.tryRandom(16).throw(t)
+        })
+      }
+
+      const valueParamsBase64: AesGcmPbkdf2ParamsBase64 = {
+        derivedKeyType: {
+          name: "AES-GCM",
+          length: 256
+        },
+        algorithm: Pbdkf2Params.stringify({
+          name: "PBKDF2",
+          hash: "SHA-256",
+          iterations: 1_000_000,
+          salt: Bytes.tryRandom(16).throw(t)
+        })
+      }
+
+      const passwordParamsBytes: Pbkdf2ParamsBytes = {
         name: "PBKDF2",
         hash: "SHA-256",
         iterations: 1_000_000,
         salt: Bytes.tryRandom(16).throw(t)
-      })
-    }
+      }
 
-    const valueParamsBase64: AesGcmPbkdf2ParamsBase64 = {
-      derivedKeyType: {
-        name: "AES-GCM",
-        length: 256
-      },
-      algorithm: Pbdkf2Params.stringify({
-        name: "PBKDF2",
-        hash: "SHA-256",
-        iterations: 1_000_000,
-        salt: Bytes.tryRandom(16).throw(t)
-      })
-    }
+      const passwordParamsBase64 = Pbdkf2Params.stringify(passwordParamsBytes)
+      const passwordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, 256))
+      const passwordHashBase64 = Bytes.toBase64(passwordHashBytes)
 
-    const passwordParamsBytes: Pbkdf2ParamsBytes = {
-      name: "PBKDF2",
-      hash: "SHA-256",
-      iterations: 1_000_000,
-      salt: Bytes.tryRandom(16).throw(t)
-    }
+      return new Ok({ uuid, name, color, emoji, keyParamsBase64, valueParamsBase64, passwordParamsBase64, passwordHashBase64 })
+    })
+  }
 
-    const passwordParamsBase64 = Pbdkf2Params.stringify(passwordParamsBytes)
-    const passwordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, 256))
-    const passwordHashBase64 = Bytes.toBase64(passwordHashBytes)
-
-    return new Ok({ uuid, name, color, emoji, keyParamsBase64, valueParamsBase64, passwordParamsBase64, passwordHashBase64 })
-  })
 }
