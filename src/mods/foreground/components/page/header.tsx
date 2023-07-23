@@ -1,8 +1,8 @@
-import { Button } from "@/libs/components/button";
 import { Outline } from "@/libs/icons/icons";
 import { OptionalBackProps } from "@/libs/react/props/back";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { TitleProps } from "@/libs/react/props/title";
+import { Button } from "@/libs/ui/button";
 
 export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps) {
   const { title, children, back } = props

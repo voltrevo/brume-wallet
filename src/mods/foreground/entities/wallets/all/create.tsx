@@ -1,8 +1,8 @@
-import { Button } from "@/libs/components/button";
-import { Dialog } from "@/libs/components/dialog/dialog";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
+import { Button } from "@/libs/ui/button";
+import { Dialog } from "@/libs/ui/dialog/dialog";
 import { useCallback, useState } from "react";
 import { PrivateKeyWalletCreatorDialog } from "./create/private";
 import { ReadonlyWalletCreatorDialog } from "./create/public";

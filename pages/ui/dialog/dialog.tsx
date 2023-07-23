@@ -1,4 +1,4 @@
-import { Dialog } from "@/libs/components/dialog/dialog"
+import { Dialog } from "@/libs/ui/dialog/dialog"
 
 export default function Page() {
   return <Dialog.Test />

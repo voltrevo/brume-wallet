@@ -1,18 +1,22 @@
 import { Outline } from "@/libs/icons/icons"
 import { ButtonProps } from "@/libs/react/props/html"
 import { Button } from "../button"
-import { Naked } from "./naked"
 
 export function Opposite(props: ButtonProps) {
   const { className, children, ...button } = props
 
-  return <Naked className={`text-opposite hovered-or-clicked-or-focused-or-selected:text-default border border-opposite bg-opposite hovered-or-clicked-or-focused-or-selected:bg-transparent transition ${className}`}
+  return <button className={`${Button.Naked.className} ${Button.Opposite.className} ${className}`}
     {...button}>
     {children}
-  </Naked>
+  </button>
 }
 
 export namespace Opposite {
+
+  export const className =
+    `text-opposite border border-opposite bg-opposite transition
+     hovered-or-clicked-or-focused-or-selected:bg-transparent
+     hovered-or-clicked-or-focused-or-selected:text-default`
 
   export function Test() {
     return <div className="p-1">

@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
-import { Button } from "@/libs/components/button"
 import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
+import { Button } from "@/libs/ui/button"
 import { Session } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackground } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"

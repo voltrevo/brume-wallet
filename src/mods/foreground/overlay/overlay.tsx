@@ -1,10 +1,10 @@
 import { browser, tryBrowser } from "@/libs/browser/browser";
-import { Button } from "@/libs/components/button";
 import { tryFetchAsJson } from "@/libs/fetch/fetch";
 import { Outline } from "@/libs/icons/icons";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { OkProps } from "@/libs/react/props/promise";
 import { Semver } from "@/libs/semver/semver";
+import { Button } from "@/libs/ui/button";
 import { Ok, Result } from "@hazae41/result";
 import { useCallback, useEffect, useState } from "react";
 import { useBackground } from "../background/context";

@@ -1,9 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
-import { Button } from "@/libs/components/button"
 import { Outline } from "@/libs/icons/icons"
 import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
+import { Button } from "@/libs/ui/button"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"

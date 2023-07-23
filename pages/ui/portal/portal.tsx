@@ -1,4 +1,4 @@
-import { Portal } from "@/libs/components/portal/portal"
+import { Portal } from "@/libs/ui/portal/portal"
 
 export default function Page() {
   return <Portal.Test />

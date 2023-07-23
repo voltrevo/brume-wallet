@@ -1,5 +1,5 @@
-import { Button } from "@/libs/components/button";
 import { Outline } from "@/libs/icons/icons";
+import { Button } from "@/libs/ui/button";
 import { useCallback } from "react";
 import { useBackground } from "../background/context";
 import { useAppRequests } from "../entities/requests/all/data";

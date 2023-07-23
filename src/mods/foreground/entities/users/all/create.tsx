@@ -1,13 +1,13 @@
 import { Colors } from "@/libs/colors/colors";
-import { Button } from "@/libs/components/button";
-import { Dialog } from "@/libs/components/dialog/dialog";
-import { Input } from "@/libs/components/input";
 import { Emojis } from "@/libs/emojis/emojis";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
+import { Button } from "@/libs/ui/button";
+import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Input } from "@/libs/ui/input";
 import { Mutators } from "@/libs/xswr/mutators";
 import { UserInit } from "@/mods/background/service_worker/entities/users/data";
 import { useBackground } from "@/mods/foreground/background/context";

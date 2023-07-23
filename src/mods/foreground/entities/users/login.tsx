@@ -1,9 +1,9 @@
-import { Button } from "@/libs/components/button";
-import { Input } from "@/libs/components/input";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { PromiseProps } from "@/libs/react/props/promise";
+import { Button } from "@/libs/ui/button";
+import { Input } from "@/libs/ui/input";
 import { useCallback, useRef, useState } from "react";
 import { useBackground } from "../../background/context";
 import { Page } from "../../components/page/page";

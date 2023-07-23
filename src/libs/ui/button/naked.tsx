@@ -5,13 +5,17 @@ import { Button } from "../button";
 export function Naked(props: ButtonProps) {
   const { className, children, ...button } = props
 
-  return <button className={`group disabled:opacity-50 rounded-full outline-none ${className}`}
+  return <button className={`${Naked.className} ${className}`}
     {...button}>
     {children}
   </button>
 }
 
 export namespace Naked {
+
+  export const className =
+    `group rounded-full outline-none
+     disabled:opacity-50`
 
   export function Test() {
     return <div className="p-1">

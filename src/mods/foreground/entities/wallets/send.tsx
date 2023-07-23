@@ -1,6 +1,3 @@
-import { Button } from "@/libs/components/button";
-import { Dialog } from "@/libs/components/dialog/dialog";
-import { Input } from "@/libs/components/input";
 import { Ethers } from "@/libs/ethers/ethers";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
@@ -9,6 +6,9 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { TitleProps } from "@/libs/react/props/title";
+import { Button } from "@/libs/ui/button";
+import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Input } from "@/libs/ui/input";
 import { Option } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
 import { ethers } from "ethers";

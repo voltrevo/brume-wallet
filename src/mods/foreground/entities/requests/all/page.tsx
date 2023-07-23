@@ -1,9 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
-import { Button } from "@/libs/components/button"
 import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { RpcErr, RpcError } from "@/libs/rpc"
+import { Button } from "@/libs/ui/button"
 import { qurl } from "@/libs/url/url"
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
 import { useBackground } from "@/mods/foreground/background/context"
