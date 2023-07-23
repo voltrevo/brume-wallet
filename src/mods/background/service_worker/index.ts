@@ -21,7 +21,7 @@ import { SuperEventTarget } from "@hazae41/plume"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
-import { Core, Data, IDBStorage, RawState, SimpleFetcherfulQueryInstance, State } from "@hazae41/xswr"
+import { Core, IDBStorage, RawState, SimpleFetcherfulQueryInstance, State } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { EthereumBrume, EthereumBrumes } from "./entities/brumes/data"
@@ -725,13 +725,15 @@ export class Global {
     return await Result.unthrow(async t => {
       const [init] = (request as RpcParamfulRequestInit<[UserInit]>).params
 
-      const usersQuery = await Users.schema(this.storage).make(this.core)
       const user = await User.tryCreate(init).then(r => r.throw(t))
 
-      const usersState = await usersQuery.mutate(Mutators.pushData<User, never>(new Data(user)))
-      const users = Option.wrap(usersState.current?.get()).ok().throw(t)
+      const userQuery = await User.schema(init.uuid, this.storage).make(this.core)
+      await userQuery.mutate(Mutators.data(user))
 
-      return new Ok(users)
+      const usersQuery = await Users.schema(this.storage).make(this.core)
+      const usersData = Option.wrap(usersQuery.data?.inner).ok().throw(t)
+
+      return new Ok(usersData)
     })
   }
 
@@ -820,15 +822,17 @@ export class Global {
 
   async brume_createWallet(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
     return await Result.unthrow(async t => {
+      const [wallet] = (request as RpcParamfulRequestInit<[EthereumWalletData]>).params
+
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const [wallet] = (request as RpcParamfulRequestInit<[EthereumWalletData]>).params
+      const walletQuery = await Wallet.schema(wallet.uuid, storage).make(this.core)
+      await walletQuery.mutate(Mutators.data(wallet))
+
       const walletsQuery = await Wallets.schema(storage).make(this.core)
+      const walletsData = Option.wrap(walletsQuery.data?.get()).ok().throw(t)
 
-      const walletsState = await walletsQuery.mutate(Mutators.pushData<Wallet, never>(new Data(wallet)))
-      const wallets = Option.wrap(walletsState.current?.get()).ok().throw(t)
-
-      return new Ok(wallets)
+      return new Ok(walletsData)
     })
   }
 

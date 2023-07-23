@@ -1,6 +1,8 @@
+import { Mutators } from "@/libs/xswr/mutators"
 import { Bytes } from "@hazae41/bytes"
 import { Ok, Result } from "@hazae41/result"
-import { AesGcmCoder, Data, HmacEncoder, IDBStorage, NormalizerMore, createQuerySchema } from "@hazae41/xswr"
+import { AesGcmCoder, Data, HmacEncoder, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
+import { Users } from "./all/data"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBase64, Pbkdf2ParamsBytes } from "./crypto"
 
 export type User =
@@ -74,16 +76,25 @@ export namespace User {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(uuid: string, storage: IDBStorage) {
-    return createQuerySchema<Key, UserData, never>({ key: key(uuid), storage })
-  }
+    const indexer = async (states: States<UserData, never>, more: IndexerMore) => {
+      const { current, previous = current } = states
+      const { core } = more
 
-  export async function normalize(user: User, storage: IDBStorage, more: NormalizerMore) {
-    if ("ref" in user) return user
+      const previousSessionData = previous.real?.data
+      const currentSessionData = current.real?.data
 
-    const schema = User.schema(user.uuid, storage)
-    await schema?.normalize(new Data(user), more)
+      const requestsQuery = await Users.schema(storage).make(core)
 
-    return UserRef.from(user)
+      await requestsQuery.mutate(Mutators.mapData((d = new Data([])) => {
+        if (previousSessionData != null)
+          d = d.mapSync(p => p.filter(x => x.uuid !== previousSessionData.inner.uuid))
+        if (currentSessionData != null)
+          d = d.mapSync(p => [...p, UserRef.from(currentSessionData.inner)])
+        return d
+      }))
+    }
+
+    return createQuerySchema<Key, UserData, never>({ key: key(uuid), storage, indexer })
   }
 
   export async function tryCreate(init: UserInit): Promise<Result<UserData, Error>> {

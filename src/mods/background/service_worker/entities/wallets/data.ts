@@ -9,11 +9,12 @@ import { Arrays } from "@hazae41/arrays"
 import { None, Option, Some } from "@hazae41/option"
 import { Cancel, Looped, Retry, tryLoop } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
-import { Data, FetchError, Fetched, FetcherMore, IDBStorage, IndexerMore, NormalizerMore, States, createQuerySchema } from "@hazae41/xswr"
+import { Data, FetchError, Fetched, FetcherMore, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
 import { EthereumBrumes } from "../brumes/data"
 import { SessionData } from "../sessions/data"
 import { User } from "../users/data"
+import { Wallets } from "./all/data"
 
 export type Wallet =
   | WalletRef
@@ -126,16 +127,25 @@ export namespace Wallet {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(uuid: string, storage: IDBStorage) {
-    return createQuerySchema<Key, WalletData, never>({ key: key(uuid), storage })
-  }
+    const indexer = async (states: States<WalletData, never>, more: IndexerMore) => {
+      const { current, previous = current } = states
+      const { core } = more
 
-  export async function normalize(wallet: Wallet, storage: IDBStorage, more: NormalizerMore): Promise<WalletRef> {
-    if ("ref" in wallet) return wallet
+      const previousSessionData = previous.real?.data
+      const currentSessionData = current.real?.data
 
-    const schema = Wallet.schema(wallet.uuid, storage)
-    await schema?.normalize(new Data(wallet), more)
+      const requestsQuery = await Wallets.schema(storage).make(core)
 
-    return WalletRef.from(wallet)
+      await requestsQuery.mutate(Mutators.mapData((d = new Data([])) => {
+        if (previousSessionData != null)
+          d = d.mapSync(p => p.filter(x => x.uuid !== previousSessionData.inner.uuid))
+        if (currentSessionData != null)
+          d = d.mapSync(p => [...p, WalletRef.from(currentSessionData.inner)])
+        return d
+      }))
+    }
+
+    return createQuerySchema<Key, WalletData, never>({ key: key(uuid), storage, indexer })
   }
 
 }
