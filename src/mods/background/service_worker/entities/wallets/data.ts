@@ -12,6 +12,7 @@ import { Ok, Result } from "@hazae41/result"
 import { Data, FetchError, Fetched, FetcherMore, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
 import { EthereumBrumes } from "../brumes/data"
+import { SeedRef } from "../seeds/data"
 import { SessionData } from "../sessions/data"
 import { User } from "../users/data"
 import { Wallets } from "./all/data"
@@ -42,18 +43,16 @@ export namespace WalletRef {
 }
 
 export type WalletData =
-  | EthereumReadonlyWallet
-  | EthereumPrivateKeyWallet
-  | EthereumAuthPrivateKeyWallet
+  | EthereumWalletData
 
 export type EthereumWalletData =
   | EthereumReadonlyWallet
-  | EthereumPrivateKeyWallet
-  | EthereumAuthPrivateKeyWallet
+  | EthereumSignableWalletData
 
 export type EthereumSignableWalletData =
   | EthereumPrivateKeyWallet
   | EthereumAuthPrivateKeyWallet
+  | EthereumSeededWallet
 
 export interface EthereumReadonlyWallet {
   readonly coin: "ethereum"
@@ -101,9 +100,9 @@ export interface EthereumAuthPrivateKeyWallet {
   }
 }
 
-export interface BitcoinPrivateKeyWallet {
-  readonly coin: "bitcoin"
-  readonly type: "privateKey"
+export interface EthereumSeededWallet {
+  readonly coin: "ethereum"
+  readonly type: "seeded"
 
   readonly uuid: string
   readonly name: string,
@@ -111,9 +110,10 @@ export interface BitcoinPrivateKeyWallet {
   readonly color: number,
   readonly emoji: string
 
-  readonly privateKey: string
-  readonly compressedAddress: string
-  readonly uncompressedAddress: string
+  readonly address: string
+
+  readonly seed: SeedRef
+  readonly path: string
 }
 
 export namespace Wallet {
@@ -131,18 +131,22 @@ export namespace Wallet {
       const { current, previous = current } = states
       const { core } = more
 
-      const previousSessionData = previous.real?.data
-      const currentSessionData = current.real?.data
+      const previousData = previous.real?.data
+      const currentData = current.real?.data
 
-      const requestsQuery = await Wallets.schema(storage).make(core)
+      const walletsQuery = await Wallets.schema(storage).make(core)
 
-      await requestsQuery.mutate(Mutators.mapData((d = new Data([])) => {
-        if (previousSessionData != null)
-          d = d.mapSync(p => p.filter(x => x.uuid !== previousSessionData.inner.uuid))
-        if (currentSessionData != null)
-          d = d.mapSync(p => [...p, WalletRef.from(currentSessionData.inner)])
+      await walletsQuery.mutate(Mutators.mapData((d = new Data([])) => {
+        if (previousData != null)
+          d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
+        if (currentData != null)
+          d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
         return d
       }))
+
+      if (currentData?.inner.type === "seeded") {
+        // TODO walletsBySeed
+      }
     }
 
     return createQuerySchema<Key, WalletData, never>({ key: key(uuid), storage, indexer })

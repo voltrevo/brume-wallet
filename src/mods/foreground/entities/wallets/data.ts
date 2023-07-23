@@ -6,7 +6,7 @@ import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { EthereumQueryKey, EthereumSignableWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Bytes } from "@hazae41/bytes"
 import { Optional } from "@hazae41/option"
-import { Ok, Result } from "@hazae41/result"
+import { Err, Ok, Result, Unimplemented } from "@hazae41/result"
 import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/xswr"
 import { ContractRunner, TransactionRequest } from "ethers"
 import { useEffect, useMemo } from "react"
@@ -41,6 +41,8 @@ export namespace Wallets {
     return await Result.unthrow(async t => {
       if (wallet.type === "privateKey")
         return new Ok(wallet.privateKey)
+      if (wallet.type === "seeded")
+        return new Err(new Unimplemented())
 
       const { idBase64, ivBase64 } = wallet.privateKey
 

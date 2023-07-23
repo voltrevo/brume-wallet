@@ -43,16 +43,16 @@ export namespace AppRequest {
       const { current, previous = current } = states
       const { core } = more
 
-      const previousSessionData = previous.real?.data
-      const currentSessionData = current.real?.data
+      const previousData = previous.real?.data
+      const currentData = current.real?.data
 
       const requestsQuery = await AppRequests.schema().make(core)
 
       await requestsQuery.mutate(Mutators.mapData((d = new Data([])) => {
-        if (previousSessionData != null)
-          d = d.mapSync(p => p.filter(x => x.id !== previousSessionData.inner.id))
-        if (currentSessionData != null)
-          d = d.mapSync(p => [...p, AppRequestRef.from(currentSessionData.inner)])
+        if (previousData != null)
+          d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
+        if (currentData != null)
+          d = d.mapSync(p => [...p, AppRequestRef.from(currentData.inner)])
         return d
       }))
     }

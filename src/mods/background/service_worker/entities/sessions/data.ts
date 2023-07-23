@@ -61,21 +61,21 @@ export namespace PersistentSession {
       const { current, previous = current } = states
       const { core } = more
 
-      const previousSessionData = previous.real?.data
-      const currentSessionData = current.real?.data
+      const previousData = previous.real?.data
+      const currentData = current.real?.data
 
       const persSessionsQuery = await Sessions.schema(storage).make(core)
 
       await persSessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
-        if (previousSessionData != null)
-          d = d.mapSync(p => p.filter(x => x.id !== previousSessionData.inner.id))
-        if (currentSessionData != null)
-          d = d.mapSync(p => [...p, SessionRef.from(currentSessionData.inner)])
+        if (previousData != null)
+          d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
+        if (currentData != null)
+          d = d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
         return d
       }))
 
-      const previousWallets = new Set(previousSessionData?.inner.wallets.map(x => x.uuid))
-      const currentWallets = new Set(currentSessionData?.inner.wallets.map(x => x.uuid))
+      const previousWallets = new Set(previousData?.inner.wallets.map(x => x.uuid))
+      const currentWallets = new Set(currentData?.inner.wallets.map(x => x.uuid))
 
       const removedWallets = Sets.minus(previousWallets, currentWallets)
       const addedWallets = Sets.minus(currentWallets, previousWallets)
@@ -84,8 +84,8 @@ export namespace PersistentSession {
         const walletSessionsQuery = await SessionsByWallet.schema(wallet, storage).make(core)
 
         await walletSessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
-          if (previousSessionData != null)
-            d = d.mapSync(p => p.filter(x => x.id !== previousSessionData.inner.id))
+          if (previousData != null)
+            d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
           return d
         }))
       }
@@ -94,8 +94,8 @@ export namespace PersistentSession {
         const walletSessionsQuery = await SessionsByWallet.schema(wallet, storage).make(core)
 
         await walletSessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
-          if (currentSessionData != null)
-            d = d.mapSync(p => [...p, SessionRef.from(currentSessionData.inner)])
+          if (currentData != null)
+            d = d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
           return d
         }))
       }
