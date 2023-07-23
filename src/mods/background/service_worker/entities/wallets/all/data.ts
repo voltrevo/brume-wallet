@@ -1,5 +1,5 @@
 import { IDBStorage, createQuerySchema } from "@hazae41/xswr";
-import { Wallet } from "../data";
+import { WalletRef } from "../data";
 
 export namespace Wallets {
 
@@ -10,7 +10,7 @@ export namespace Wallets {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(storage: IDBStorage) {
-    return createQuerySchema<Key, Wallet[], never>({ key, storage })
+    return createQuerySchema<Key, WalletRef[], never>({ key, storage })
   }
 
 }

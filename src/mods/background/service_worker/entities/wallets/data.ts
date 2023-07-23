@@ -12,6 +12,7 @@ import { Ok, Result } from "@hazae41/result"
 import { Data, FetchError, Fetched, FetcherMore, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
 import { EthereumBrumes } from "../brumes/data"
+import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
 import { SessionData } from "../sessions/data"
 import { User } from "../users/data"
@@ -145,7 +146,17 @@ export namespace Wallet {
       }))
 
       if (currentData?.inner.type === "seeded") {
-        // TODO walletsBySeed
+        const { seed } = currentData.inner
+
+        const walletsBySeedQuery = await WalletsBySeed.Background.schema(seed.uuid, storage).make(core)
+
+        await walletsBySeedQuery.mutate(Mutators.mapData((d = new Data([])) => {
+          if (previousData != null)
+            d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
+          if (currentData != null)
+            d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
+          return d
+        }))
       }
     }
 

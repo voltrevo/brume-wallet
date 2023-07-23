@@ -1,3 +1,5 @@
+import { UserStorage } from "@/mods/foreground/storage/user"
+import { Optional } from "@hazae41/option"
 import { IDBStorage, createQuerySchema } from "@hazae41/xswr"
 
 export type Seed =
@@ -53,10 +55,20 @@ export namespace Seed {
     return `seed/${uuid}`
   }
 
-  export type Schema = ReturnType<typeof schema>
+  export namespace Background {
 
-  export function schema(uuid: string, storage: IDBStorage) {
-    return createQuerySchema<Key, SeedData, never>({ key: key(uuid), storage })
+    export function schema(uuid: string, storage: IDBStorage) {
+      return createQuerySchema<Key, SeedData, never>({ key: key(uuid), storage })
+    }
+
+  }
+
+  export namespace Foreground {
+
+    export function schema(uuid: Optional<string>, storage: UserStorage) {
+      if (uuid) return createQuerySchema<Key, SeedData, never>({ key: key(uuid), storage })
+    }
+
   }
 
 }
