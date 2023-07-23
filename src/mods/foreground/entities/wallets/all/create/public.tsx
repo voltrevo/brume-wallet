@@ -77,7 +77,7 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps & UUIDProps) {
   const NameInput =
     <div className="flex items-stretch gap-2">
       <div className="shrink-0">
-        <WalletAvatar className="icon-5xl text-2xl"
+        <WalletAvatar className="s-5xl text-2xl"
           colorIndex={color}
           emoji={emoji} />
       </div>
@@ -93,12 +93,12 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps & UUIDProps) {
       rows={4} />
 
   const AddReadonlyButon =
-    <Button.Gradient className="w-full p-md"
+    <Button.Gradient className="w-full po-md"
       colorIndex={color}
       disabled={!name || !valid}
       onClick={tryAddReadonly.run}>
       <Button.Shrink>
-        <Outline.PlusIcon className="icon-sm" />
+        <Outline.PlusIcon className="s-sm" />
         Add
       </Button.Shrink>
     </Button.Gradient>

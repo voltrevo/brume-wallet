@@ -15,7 +15,7 @@ const MAIN_PACKAGE_URL = "https://raw.githubusercontent.com/brumewallet/wallet/m
 export function UpdateBanner(props: OkProps<unknown>) {
   const { ok } = props
 
-  return <div className="w-full text-white bg-green-500 p-sm">
+  return <div className="w-full text-white bg-green-500 po-sm">
     <div className="w-full max-w-[400px] m-auto flex flex-wrap gap-2 items-center text-sm">
       <div className="grow">
         {`An update is available`}
@@ -23,7 +23,7 @@ export function UpdateBanner(props: OkProps<unknown>) {
       <Button.Naked className="hovered-or-clicked-or-focused:scale-105 transition"
         onClick={ok}>
         <Button.Shrink>
-          <Outline.ArrowPathIcon className="icon-sm" />
+          <Outline.ArrowPathIcon className="s-sm" />
           Update
         </Button.Shrink>
       </Button.Naked>

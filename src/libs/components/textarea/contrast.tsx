@@ -5,7 +5,7 @@ import { Textarea } from "../textarea";
 export function Contrast(props: TextareaProps & RefProps<HTMLTextAreaElement>) {
   const { children, className, xref, ...input } = props
 
-  return <textarea className={`px-4 py-2 rounded-xl outline-none border border-transparent clicked-or-focused:border-contrast bg-low-contrast transition ${className}`}
+  return <textarea className={`px-4 py-2 rounded-xl outline-none border border-transparent clicked-or-focused:border-contrast bg-contrast transition ${className}`}
     ref={xref}
     {...input}>
     {children}

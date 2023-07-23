@@ -7,12 +7,12 @@ import { TitleProps } from "@/libs/react/props/title";
 export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps) {
   const { title, children, back } = props
 
-  return <div className="p-xmd flex items-center">
+  return <div className="p-4 flex items-center">
     {back && <div className="mr-2">
-      <Button.Naked className="icon-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={back}>
         <Button.Shrink>
-          <Outline.ChevronLeftIcon className="icon-sm" />
+          <Outline.ChevronLeftIcon className="s-sm" />
         </Button.Shrink>
       </Button.Naked>
     </div>}
@@ -27,7 +27,7 @@ export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps
 export function PageBody(props: ChildrenProps) {
   const { children } = props
 
-  return <div className="p-xmd flex flex-col grow">
+  return <div className="p-4 flex flex-col grow">
     {children}
   </div>
 }

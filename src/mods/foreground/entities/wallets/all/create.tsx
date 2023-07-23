@@ -42,14 +42,14 @@ export function WalletCreatorDialog(props: CloseProps) {
         <Button.Contrast className="grow p-4 rounded-xl"
           onClick={onWatchonlyClick}>
           <Button.Shrink className="flex flex-col">
-            <Outline.EyeIcon className="icon-md" />
+            <Outline.EyeIcon className="s-md" />
             <span>Watch-only</span>
           </Button.Shrink>
         </Button.Contrast>
         <Button.Contrast className="grow p-4 rounded-xl"
           onClick={onPrivateKeyClick}>
           <Button.Shrink className="flex flex-col">
-            <Outline.WalletIcon className="icon-md" />
+            <Outline.WalletIcon className="s-md" />
             <span>Private key</span>
           </Button.Shrink>
         </Button.Contrast>

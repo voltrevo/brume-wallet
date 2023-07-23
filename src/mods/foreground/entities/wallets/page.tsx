@@ -99,18 +99,18 @@ function WalletDataPage() {
       back={back} />
 
   const Card =
-    <div className="p-xmd flex justify-center">
+    <div className="p-4 flex justify-center">
       <div className="w-full max-w-sm">
         <WalletDataCard />
       </div>
     </div>
 
   const Apps =
-    <div className="p-xmd flex items-center justify-center flex-wrap gap-12">
+    <div className="p-4 flex items-center justify-center flex-wrap gap-12">
       <div className="flex flex-col items-center gap-2">
         <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}
           onClick={mainnetSendDialog.enable}>
-          <Outline.PaperAirplaneIcon className="icon-md" />
+          <Outline.PaperAirplaneIcon className="s-md" />
         </button>
         <div className="">
           {`Send`}
@@ -118,7 +118,7 @@ function WalletDataPage() {
       </div>
       <div className="flex flex-col items-center gap-2">
         <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}>
-          <Outline.QrCodeIcon className="icon-md" />
+          <Outline.QrCodeIcon className="s-md" />
         </button>
         <div className="">
           {`Receive`}
@@ -126,7 +126,7 @@ function WalletDataPage() {
       </div>
       <div className="flex flex-col items-center gap-2">
         <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}>
-          <Outline.ArrowsRightLeftIcon className="icon-md" />
+          <Outline.ArrowsRightLeftIcon className="s-md" />
         </button>
         <div className="">
           {`Swap`}
@@ -154,8 +154,8 @@ function WalletDataPage() {
     {Header}
     {Card}
     {Apps}
-    <div className="p-xmd flex flex-col gap-2">
-      <button className="w-full p-xmd flex flex-col rounded-xl bg-low-contrast"
+    <div className="p-4 flex flex-col gap-2">
+      <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
         onClick={mainnetSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
@@ -169,7 +169,7 @@ function WalletDataPage() {
           {`${mainnetBalanceDisplay} ETH`}
         </div>
       </button>
-      <button className="w-full p-xmd flex flex-col rounded-xl bg-low-contrast"
+      <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
         onClick={polygonSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
@@ -183,7 +183,7 @@ function WalletDataPage() {
           {`${polygonBalanceDisplay} MATIC`}
         </div>
       </button>
-      <button className="w-full p-xmd flex flex-col rounded-xl bg-low-contrast"
+      <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
         onClick={goerliSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">
@@ -197,7 +197,7 @@ function WalletDataPage() {
           {`${goerliBalanceDisplay} ETH`}
         </div>
       </button>
-      <button className="w-full p-xmd flex flex-col rounded-xl bg-low-contrast"
+      <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
         onClick={sepoliaSendDialog.enable}>
         <div className="w-full flex justify-between items-center">
           <div className="">

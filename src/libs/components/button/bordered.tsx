@@ -15,14 +15,14 @@ export namespace Bordered {
 
   export function Test() {
     return <div className="p-1">
-      <Button.Bordered className="p-md">
+      <Button.Bordered className="po-md">
         <Button.Shrink>
-          <Outline.GlobeAltIcon className="icon-sm" />
+          <Outline.GlobeAltIcon className="s-sm" />
           Hello world
         </Button.Shrink>
       </Button.Bordered>
       <div className="h-1" />
-      <Button.Bordered className="p-md">
+      <Button.Bordered className="po-md">
         <Button.Shrink>
           Hello world
         </Button.Shrink>

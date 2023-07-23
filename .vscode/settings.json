@@ -1,4 +1,7 @@
 {
   "javascript.preferences.quoteStyle": "double",
-  "typescript.preferences.quoteStyle": "double"
+  "typescript.preferences.quoteStyle": "double",
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
 }

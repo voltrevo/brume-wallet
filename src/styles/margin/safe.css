@@ -1,5 +1,7 @@
+/**
+ * Margin safe
+ **/
 @layer utilities {
-
   .ml-safe {
     margin-left: env(safe-area-inset-left);
   }
@@ -15,5 +17,16 @@
   .mt-safe {
     margin-bottom: env(safe-area-inset-top);
   }
-  
+
+  .my-safe {
+    @apply mt-safe mb-safe;
+  }
+
+  .mx-safe {
+    @apply ml-safe mr-safe;
+  }
+
+  .m-safe {
+    @apply mx-safe my-safe;
+  }
 }

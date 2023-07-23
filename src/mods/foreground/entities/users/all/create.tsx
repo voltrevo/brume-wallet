@@ -67,7 +67,7 @@ export function UserCreateDialog(props: CloseProps) {
   const NameInput =
     <div className="flex items-stretch gap-2">
       <div className="shrink-0">
-        <UserAvatar className="icon-5xl text-2xl"
+        <UserAvatar className="s-5xl text-2xl"
           colorIndex={color}
           name={name} />
       </div>
@@ -89,12 +89,12 @@ export function UserCreateDialog(props: CloseProps) {
       value={password2} onChange={onPassword2Change} />
 
   const DoneButton =
-    <Button.Gradient className="w-full p-md"
+    <Button.Gradient className="w-full po-md"
       colorIndex={color}
       disabled={!name || !password || !password2 || !isSamePassword}
       onClick={onClick.run}>
       <Button.Shrink>
-        <Outline.PlusIcon className="icon-sm" />
+        <Outline.PlusIcon className="s-sm" />
         Add
       </Button.Shrink>
     </Button.Gradient>

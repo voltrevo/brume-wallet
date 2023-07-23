@@ -5,7 +5,7 @@ import { Input } from "../input";
 export function Contrast(props: InputProps & RefProps<HTMLInputElement>) {
   const { children, className, xref, ...input } = props
 
-  return <input className={`px-4 py-2 rounded-full outline-none border border-transparent clicked-or-focused:border-contrast bg-low-contrast transition ${className}`}
+  return <input className={`px-4 py-2 rounded-full outline-none border border-transparent clicked-or-focused:border-contrast bg-contrast transition ${className}`}
     ref={xref}
     {...input}>
     {children}

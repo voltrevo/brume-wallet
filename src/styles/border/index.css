@@ -1,5 +1,4 @@
 @layer utilities {
-
   .border-default {
     @apply border-white;
     @apply dark:border-black;
@@ -10,14 +9,8 @@
     @apply dark:border-white;
   }
 
-  .border-low-contrast {
-    @apply border-black border-opacity-5;
-    @apply dark:border-white dark:border-opacity-5;
-  }
-
   .border-contrast {
     @apply border-black border-opacity-10;
     @apply dark:border-white dark:border-opacity-10;
   }
-  
 }

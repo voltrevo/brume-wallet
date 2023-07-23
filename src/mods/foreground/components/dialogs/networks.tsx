@@ -16,7 +16,7 @@
 //       Blockchain
 //     </OppositeTextButtonDeploy>
 //     {blockchains.current &&
-//       <div className="p-md w-full flex flex-col gap-4 overflow-auto">
+//       <div className="po-md w-full flex flex-col gap-4 overflow-auto">
 //         <TextButton>
 //           Ethereum
 //         </TextButton>
@@ -33,7 +33,7 @@
 //       Network
 //     </OppositeTextButtonDeploy>
 //     {networks.current &&
-//       <div className="p-md w-full flex flex-col gap-4 overflow-auto">
+//       <div className="po-md w-full flex flex-col gap-4 overflow-auto">
 //         <TextButton>
 //           Mainet
 //         </TextButton>
@@ -47,7 +47,7 @@
 //       RPC
 //     </OppositeTextButtonDeploy>
 //     {endpoints.current &&
-//       <div className="p-md w-full flex flex-col gap-4 overflow-auto">
+//       <div className="po-md w-full flex flex-col gap-4 overflow-auto">
 //         <TextButton>
 //           Infura
 //         </TextButton>

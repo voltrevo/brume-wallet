@@ -29,7 +29,7 @@ export function WalletDataCard() {
       <div className="w-2 grow" />
       <Button.White className={`text-${color}`}>
         <Button.Shrink>
-          <Outline.EllipsisHorizontalIcon className="icon-sm" />
+          <Outline.EllipsisHorizontalIcon className="s-sm" />
         </Button.Shrink>
       </Button.White>
     </div>
@@ -58,7 +58,7 @@ export function WalletDataCard() {
       </div>
     </div>
 
-  return <div className={`p-md w-full aspect-video rounded-xl flex flex-col text-white bg-gradient-to-br from-${color} to-${color2}`}>
+  return <div className={`po-md w-full aspect-video rounded-xl flex flex-col text-white bg-gradient-to-br from-${color} to-${color2}`}>
     {First}
     <div className="grow" />
     {Name}

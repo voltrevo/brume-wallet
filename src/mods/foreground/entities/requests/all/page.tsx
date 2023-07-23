@@ -52,10 +52,10 @@ export function RequestsPage() {
 
   const Header =
     <PageHeader title="Requests">
-      <Button.Naked className="icon-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         disabled={tryRejectAll.loading || !Boolean(maybeRequests?.length)}
         onClick={tryRejectAll.run}>
-        <Outline.TrashIcon className="icon-sm" />
+        <Outline.TrashIcon className="s-sm" />
       </Button.Naked>
     </PageHeader>
 
@@ -82,10 +82,10 @@ export function RequestRow(props: { request: AppRequest }) {
   if (maybeOriginData == null)
     return null
 
-  return <div role="button" className="p-md rounded-xl flex items-center gap-4"
+  return <div role="button" className="po-md rounded-xl flex items-center gap-4"
     onClick={open}>
     <div className="shrink-0">
-      <img className="s-10"
+      <img className="s-3xl"
         alt="icon"
         src={maybeOriginData.icon} />
     </div>

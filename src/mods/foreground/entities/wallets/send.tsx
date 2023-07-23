@@ -137,10 +137,10 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
     <ExternalDivisionLink className="w-full"
       href={`${context.chain.etherscan}/tx/${txHash}`}
       target="_blank" rel="noreferrer">
-      <Button.Gradient className="w-full p-md"
+      <Button.Gradient className="w-full po-md"
         colorIndex={wallet.color}>
         <Button.Shrink>
-          <Outline.ArrowTopRightOnSquareIcon className="icon-sm" />
+          <Outline.ArrowTopRightOnSquareIcon className="s-sm" />
           Etherscan
         </Button.Shrink>
       </Button.Gradient>
@@ -162,12 +162,12 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
   }, [trySend.loading, maybeNonce, maybeGasPrice, recipientInput, valueInput])
 
   const SendButton =
-    <Button.Gradient className="w-full p-md"
+    <Button.Gradient className="w-full po-md"
       colorIndex={wallet.color}
       disabled={disabled}
       onClick={trySend.run}>
       <Button.Shrink>
-        <Outline.PaperAirplaneIcon className="icon-sm" />
+        <Outline.PaperAirplaneIcon className="s-sm" />
         {trySend.loading
           ? "Loading..."
           : "Send"}

@@ -26,12 +26,12 @@ export function Bottom() {
 
   return <>
     <div className="h-16" />
-    <nav className="fixed bottom-0 left-0 w-full h-16 bg-paper flex items-center">
+    <nav className="fixed bottom-0 left-0 w-full h-16 bg-default flex items-center">
       <Button.Naked className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/" || path.pathname === "/wallets"}
         onClick={goWallets}>
         <Button.Shrink>
-          <Outline.WalletIcon className="icon-md" />
+          <Outline.WalletIcon className="s-md" />
         </Button.Shrink>
       </Button.Naked>
       {background.isExtension() && <>
@@ -39,7 +39,7 @@ export function Bottom() {
           aria-selected={path.pathname === "/sessions"}
           onClick={goSessions}>
           <Button.Shrink>
-            <Outline.GlobeAltIcon className="icon-md" />
+            <Outline.GlobeAltIcon className="s-md" />
           </Button.Shrink>
         </Button.Naked>
         <Button.Naked className="grow text-contrast aria-selected:text-default"
@@ -48,8 +48,8 @@ export function Bottom() {
           <Button.Shrink className="">
             <div className="relative">
               {Boolean(requests?.length) &&
-                <div className="absolute top-0 -right-2 bg-purple-400 rounded-full s-2" />}
-              <Outline.CheckIcon className="icon-md" />
+                <div className="absolute top-0 -right-2 bg-purple-400 rounded-full w-2 h-2" />}
+              <Outline.CheckIcon className="s-md" />
             </div>
           </Button.Shrink>
         </Button.Naked>

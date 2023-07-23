@@ -1,0 +1,32 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@import './padding/index.css';
+@import './margin/index.css';
+@import './animations/index.css';
+@import './background/index.css';
+@import './text/index.css';
+@import './size/index.css';
+@import './border/index.css';
+
+html {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+html {
+  @apply w-full flex flex-col;
+}
+
+body {
+  @apply grow w-full flex flex-col text-base text-default bg-default overflow-y-scroll;
+}
+
+#__next {
+  @apply grow w-full flex flex-col;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}

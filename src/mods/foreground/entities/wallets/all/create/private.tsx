@@ -194,7 +194,7 @@ export function PrivateKeyWalletCreatorDialog(props: CloseProps & UUIDProps) {
   const NameInput =
     <div className="flex items-stretch gap-2">
       <div className="shrink-0">
-        <WalletAvatar className="icon-5xl text-2xl"
+        <WalletAvatar className="s-5xl text-2xl"
           colorIndex={color}
           emoji={emoji} />
       </div>
@@ -215,33 +215,33 @@ export function PrivateKeyWalletCreatorDialog(props: CloseProps & UUIDProps) {
     </div>
 
   const AddUnauthButton =
-    <Button.Contrast className="w-full p-md"
+    <Button.Contrast className="w-full po-md"
       disabled={!name || !ethersWallet}
       onClick={tryAddUnauthenticated.run}>
       <Button.Shrink>
-        <Outline.PlusIcon className="icon-sm" />
+        <Outline.PlusIcon className="s-sm" />
         Add without authentication
       </Button.Shrink>
     </Button.Contrast>
 
   const AddAuthButton1 =
-    <Button.Gradient className="w-full p-md"
+    <Button.Gradient className="w-full po-md"
       colorIndex={color}
       disabled={!name || !ethersWallet}
       onClick={tryCreateAuthenticated.run}>
       <Button.Shrink>
-        <Outline.LockClosedIcon className="icon-sm" />
+        <Outline.LockClosedIcon className="s-sm" />
         Add with authentication
       </Button.Shrink>
     </Button.Gradient>
 
   const AddAuthButton2 =
-    <Button.Gradient className="w-full p-md"
+    <Button.Gradient className="w-full po-md"
       colorIndex={color}
       disabled={!name || !ethersWallet}
       onClick={tryAddAuthenticated.run}>
       <Button.Shrink>
-        <Outline.LockClosedIcon className="icon-sm" />
+        <Outline.LockClosedIcon className="s-sm" />
         Add with authentication (1/2)
       </Button.Shrink>
     </Button.Gradient>

@@ -15,14 +15,14 @@ export namespace White {
 
   export function Test() {
     return <div className="p-1">
-      <Button.White className="p-md">
+      <Button.White className="po-md">
         <Button.Shrink>
-          <Outline.GlobeAltIcon className="icon-sm" />
+          <Outline.GlobeAltIcon className="s-sm" />
           Hello world
         </Button.Shrink>
       </Button.White>
       <div className="h-1" />
-      <Button.White className="p-md">
+      <Button.White className="po-md">
         <Button.Shrink>
           Hello world
         </Button.Shrink>

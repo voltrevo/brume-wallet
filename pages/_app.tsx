@@ -9,7 +9,7 @@ import { Page } from "@/mods/foreground/components/page/page"
 import { PathProvider } from "@/mods/foreground/router/path"
 import { GlobalStorageProvider } from "@/mods/foreground/storage/global"
 import { UserStorageProvider } from "@/mods/foreground/storage/user"
-import '@/styles/globals.css'
+import "@/styles/index.css"
 import { CoreProvider } from "@hazae41/xswr"
 import type { AppProps } from 'next/app'
 import Head from "next/head"
@@ -46,12 +46,12 @@ export function Fallback(props: ErrorProps) {
         {Errors.toString(error)}
       </div>
     </PageBody>
-    <div className="p-xmd flex items-center flex-wrap-reverse gap-2">
-      <Button.Contrast className="p-md grow"
+    <div className="p-4 flex items-center flex-wrap-reverse gap-2">
+      <Button.Contrast className="po-md grow"
         onClick={reset.run}>
         Clear everything and reload the page
       </Button.Contrast>
-      <Button.Gradient className="p-md grow"
+      <Button.Gradient className="po-md grow"
         colorIndex={5}
         onClick={reload}>
         Reload the page

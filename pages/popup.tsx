@@ -160,7 +160,7 @@ export function TransactPage() {
   }, [onApprove.loading, gasPriceQuery.data, nonceQuery.data])
 
   return <Page>
-    <div className="p-xmd grow flex flex-col items-center justify-center">
+    <div className="p-4 grow flex flex-col items-center justify-center">
       <div className="text-center text-xl font-medium">
         Transaction
       </div>
@@ -168,34 +168,34 @@ export function TransactPage() {
         Do you want to approve this transaction?
       </div>
     </div>
-    <div className="w-full p-xmd grow flex flex-col">
-      <div className="w-full p-xmd border border-contrast rounded-xl whitespace-pre-wrap break-words">
+    <div className="w-full p-4 grow flex flex-col">
+      <div className="w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap break-words">
         To: {to}
       </div>
       {value &&
-        <div className="w-full p-xmd border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
+        <div className="w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
           Value: {BigInts.float(BigInts.parse(value), 18)}
         </div>}
       {data &&
-        <div className="grow w-full p-xmd border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
+        <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
           Data: {data}
         </div>}
     </div>
-    <div className="p-xmd w-full flex items-center gap-2">
-      <Button.Contrast className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
+    <div className="p-4 w-full flex items-center gap-2">
+      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
         <Button.Shrink>
-          <Outline.XMarkIcon className="icon-sm" />
+          <Outline.XMarkIcon className="s-sm" />
           No, reject it
         </Button.Shrink>
       </Button.Contrast>
-      <Button.Gradient className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onApprove.run}
         disabled={loading}
         colorIndex={5}>
         <Button.Shrink>
-          <Outline.CheckIcon className="icon-sm" />
+          <Outline.CheckIcon className="s-sm" />
           Yes, approve it
         </Button.Shrink>
       </Button.Gradient>
@@ -248,7 +248,7 @@ export function SwitchPage() {
   }, [core, storage, background, id])
 
   return <Page>
-    <div className="p-xmd grow flex flex-col items-center justify-center">
+    <div className="p-4 grow flex flex-col items-center justify-center">
       <div className="text-center text-xl font-medium">
         Switch chain
       </div>
@@ -256,21 +256,21 @@ export function SwitchPage() {
         Do you want to switch the Ethereum chain?
       </div>
     </div>
-    <div className="p-xmd w-full flex items-center gap-2">
-      <Button.Contrast className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
+    <div className="p-4 w-full flex items-center gap-2">
+      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
         <Button.Shrink>
-          <Outline.XMarkIcon className="icon-sm" />
+          <Outline.XMarkIcon className="s-sm" />
           No, reject it
         </Button.Shrink>
       </Button.Contrast>
-      <Button.Gradient className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onApprove.run}
         disabled={onApprove.loading}
         colorIndex={5}>
         <Button.Shrink>
-          <Outline.CheckIcon className="icon-sm" />
+          <Outline.CheckIcon className="s-sm" />
           Yes, approve it
         </Button.Shrink>
       </Button.Gradient>
@@ -353,7 +353,7 @@ export function PersonalSignPage() {
   }, [core, storage, background, id])
 
   return <Page>
-    <div className="p-xmd grow flex flex-col items-center justify-center">
+    <div className="p-4 grow flex flex-col items-center justify-center">
       <div className="text-center text-xl font-medium">
         Sign message
       </div>
@@ -361,26 +361,26 @@ export function PersonalSignPage() {
         Do you want to sign the following message?
       </div>
     </div>
-    <div className="w-full p-xmd grow">
-      <div className="h-full w-full p-xmd border border-contrast rounded-xl whitespace-pre-wrap break-words">
+    <div className="w-full p-4 grow">
+      <div className="h-full w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap break-words">
         {userMessage}
       </div>
     </div>
-    <div className="p-xmd w-full flex items-center gap-2">
-      <Button.Contrast className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
+    <div className="p-4 w-full flex items-center gap-2">
+      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
         <Button.Shrink>
-          <Outline.XMarkIcon className="icon-sm" />
+          <Outline.XMarkIcon className="s-sm" />
           No, reject it
         </Button.Shrink>
       </Button.Contrast>
-      <Button.Gradient className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onApprove.run}
         disabled={onApprove.loading}
         colorIndex={5}>
         <Button.Shrink>
-          <Outline.CheckIcon className="icon-sm" />
+          <Outline.CheckIcon className="s-sm" />
           Yes, approve it
         </Button.Shrink>
       </Button.Gradient>
@@ -461,7 +461,7 @@ export function TypedSignPage() {
   }, [core, storage, background, id])
 
   return <Page>
-    <div className="p-xmd grow flex flex-col items-center justify-center">
+    <div className="p-4 grow flex flex-col items-center justify-center">
       <div className="text-center text-xl font-medium">
         Sign message
       </div>
@@ -469,26 +469,26 @@ export function TypedSignPage() {
         Do you want to sign the following message?
       </div>
     </div>
-    <div className="w-full p-xmd grow">
-      <div className="h-full w-full p-xmd border border-contrast rounded-xl whitespace-pre-wrap break-words">
+    <div className="w-full p-4 grow">
+      <div className="h-full w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap break-words">
         {JSON.stringify(JSON.parse(data))}
       </div>
     </div>
-    <div className="p-xmd w-full flex items-center gap-2">
-      <Button.Contrast className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
+    <div className="p-4 w-full flex items-center gap-2">
+      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
         <Button.Shrink>
-          <Outline.XMarkIcon className="icon-sm" />
+          <Outline.XMarkIcon className="s-sm" />
           No, reject it
         </Button.Shrink>
       </Button.Contrast>
-      <Button.Gradient className="grow p-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onApprove.run}
         disabled={onApprove.loading}
         colorIndex={5}>
         <Button.Shrink>
-          <Outline.CheckIcon className="icon-sm" />
+          <Outline.CheckIcon className="s-sm" />
           Yes, approve it
         </Button.Shrink>
       </Button.Gradient>
@@ -537,27 +537,27 @@ export function WalletAndChainSelectPage() {
   const Body =
     <PageBody>
       <div className="flex flex-wrap items-center gap-1">
-        <Button.Bordered className="p-sm hovered-or-clicked-or-focused:scale-105 transition"
+        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === 1}
           onClick={() => setChain(1)}>
           <Button.Shrink>
-            <Outline.CubeIcon className="icon-xs" />
+            <Outline.CubeIcon className="s-xs" />
             Ethereum
           </Button.Shrink>
         </Button.Bordered>
-        <Button.Bordered className="p-sm hovered-or-clicked-or-focused:scale-105 transition"
+        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === 137}
           onClick={() => setChain(137)}>
           <Button.Shrink>
-            <Outline.CubeIcon className="icon-xs" />
+            <Outline.CubeIcon className="s-xs" />
             Polygon
           </Button.Shrink>
         </Button.Bordered>
-        <Button.Bordered className="p-sm hovered-or-clicked-or-focused:scale-105 transition"
+        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === 5}
           onClick={() => setChain(5)}>
           <Button.Shrink>
-            <Outline.CubeIcon className="icon-xs" />
+            <Outline.CubeIcon className="s-xs" />
             Goerli
           </Button.Shrink>
         </Button.Bordered>
@@ -580,9 +580,9 @@ export function WalletAndChainSelectPage() {
 
   const Header =
     <PageHeader title="Choose a wallet">
-      <Button.Naked className="icon-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={creator.enable}>
-        <Outline.PlusIcon className="icon-sm" />
+        <Outline.PlusIcon className="s-sm" />
       </Button.Naked>
     </PageHeader>
 
@@ -597,7 +597,7 @@ export function WalletAndChainSelectPage() {
 
 export function DonePage() {
   return <Page>
-    <div className="p-xmd grow flex flex-col items-center justify-center">
+    <div className="p-4 grow flex flex-col items-center justify-center">
       <div className="text-center text-xl font-medium">
         Done
       </div>

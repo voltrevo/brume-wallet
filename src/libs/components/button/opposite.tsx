@@ -16,14 +16,14 @@ export namespace Opposite {
 
   export function Test() {
     return <div className="p-1">
-      <Button.Opposite className="p-md">
+      <Button.Opposite className="po-md">
         <Button.Shrink>
-          <Outline.GlobeAltIcon className="icon-sm" />
+          <Outline.GlobeAltIcon className="s-sm" />
           Hello world
         </Button.Shrink>
       </Button.Opposite>
       <div className="h-1" />
-      <Button.Opposite className="p-md">
+      <Button.Opposite className="po-md">
         <Button.Shrink>
           Hello world
         </Button.Shrink>

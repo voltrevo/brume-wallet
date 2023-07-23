@@ -69,7 +69,7 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
     <div className="grow flex justify-center items-center">
       <div className="">
         <div className="flex flex-col items-center">
-          <UserAvatar className="icon-7xl text-2xl"
+          <UserAvatar className="s-7xl text-2xl"
             colorIndex={userQuery.data.inner.color}
             name={userQuery.data.inner.name} />
           <div className="h-1" />
@@ -89,17 +89,17 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
           onKeyDown={onKeyDown} />
         <div className="h-2" />
         <div className="flex items-center gap-2">
-          <Button.Contrast className="grow p-sm hovered-or-clicked-or-focused:scale-105 transition-transform"
+          <Button.Contrast className="grow po-sm hovered-or-clicked-or-focused:scale-105 transition-transform"
             onClick={err}>
             <Button.Shrink>
-              <Outline.ChevronLeftIcon className="icon-sm" />
+              <Outline.ChevronLeftIcon className="s-sm" />
               Cancel
             </Button.Shrink>
           </Button.Contrast>
-          <Button.Opposite className="grow p-sm hovered-or-clicked-or-focused:scale-105 transition-transform"
+          <Button.Opposite className="grow po-sm hovered-or-clicked-or-focused:scale-105 transition-transform"
             onClick={onLogin}>
             <Button.Shrink>
-              <Outline.LockOpenIcon className="icon-sm" />
+              <Outline.LockOpenIcon className="s-sm" />
               Unlock
             </Button.Shrink>
           </Button.Opposite>

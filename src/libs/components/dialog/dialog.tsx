@@ -25,7 +25,7 @@ export function Dialog(props: ChildrenProps & CloseProps) {
           <aside className="w-full mx-auto min-w-0 max-w-2xl rounded-2xl animate-slideup bg-default"
             onMouseDown={Events.keep}
             onKeyDown={onEscape}>
-            <div className="p-xmd">
+            <div className="p-4">
               {children}
             </div>
           </aside>
@@ -46,10 +46,10 @@ export namespace Dialog {
         {children}
       </div>
       <div className="grow" />
-      <Button.Naked className="icon-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={close}>
         <Button.Shrink>
-          <Outline.XMarkIcon className="icon-sm" />
+          <Outline.XMarkIcon className="s-sm" />
         </Button.Shrink>
       </Button.Naked>
     </h1>
@@ -67,13 +67,13 @@ export namespace Dialog {
           Hello world
           <div className="h-2" />
           <div className="flex items-center gap-2">
-            <Button.Naked className="w-full p-md"
+            <Button.Naked className="w-full po-md"
               onClick={open.disable}>
               <Button.Shrink>
                 Click me
               </Button.Shrink>
             </Button.Naked>
-            <Button.Opposite className="w-full p-md"
+            <Button.Opposite className="w-full po-md"
               onClick={open.disable}>
               <Button.Shrink>
                 Click me

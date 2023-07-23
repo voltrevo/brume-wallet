@@ -47,10 +47,10 @@ export function SessionsPage() {
 
   const Header =
     <PageHeader title="Sessions">
-      <Button.Naked className="icon-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         disabled={tryDisconnectAll.loading || !Boolean(maybeSessions?.length)}
         onClick={tryDisconnectAll.run}>
-        <Outline.TrashIcon className="icon-sm" />
+        <Outline.TrashIcon className="s-sm" />
       </Button.Naked>
     </PageHeader>
 
@@ -88,10 +88,10 @@ export function SessionRow(props: { session: Session }) {
   if (maybeOriginData == null)
     return null
 
-  return <div role="button" className="p-md rounded-xl flex items-center gap-4"
+  return <div role="button" className="po-md rounded-xl flex items-center gap-4"
     onClick={tryDisconnect.run}>
     <div className="shrink-0">
-      <img className="s-10"
+      <img className="s-3xl"
         alt="icon"
         src={maybeOriginData.icon} />
     </div>
@@ -105,7 +105,7 @@ export function SessionRow(props: { session: Session }) {
     </div>
     <Button.Naked>
       <Button.Shrink>
-        <Outline.EllipsisVerticalIcon className="icon-sm" />
+        <Outline.EllipsisVerticalIcon className="s-sm" />
       </Button.Shrink>
     </Button.Naked>
   </div>

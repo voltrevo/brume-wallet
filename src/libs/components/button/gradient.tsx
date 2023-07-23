@@ -19,15 +19,15 @@ export namespace Gradient {
 
   export function Test() {
     return <div className="p-1">
-      <Button.Gradient className="p-md"
+      <Button.Gradient className="po-md"
         colorIndex={5}>
         <Button.Shrink>
-          <Outline.GlobeAltIcon className="icon-sm" />
+          <Outline.GlobeAltIcon className="s-sm" />
           Hello world
         </Button.Shrink>
       </Button.Gradient>
       <div className="h-1" />
-      <Button.Gradient className="p-md"
+      <Button.Gradient className="po-md"
         colorIndex={5}>
         <Button.Shrink>
           Hello world
