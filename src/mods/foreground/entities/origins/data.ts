@@ -8,7 +8,7 @@ export function getOrigin(origin: Optional<string>, storage: UserStorage) {
   if (origin == null)
     return undefined
 
-  return createQuerySchema<string, OriginData, never>({ key: `origins/v1/${origin}`, storage })
+  return createQuerySchema<string, OriginData, never>({ key: `origins/${origin}`, storage })
 }
 
 export function useOrigin(origin: Optional<string>) {

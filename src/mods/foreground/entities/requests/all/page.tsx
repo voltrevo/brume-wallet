@@ -75,6 +75,7 @@ export function RequestRow(props: { request: AppRequest }) {
   const open = useCallback(async () => {
     if (maybeRequestData == null)
       return
+
     const { id, method, params } = maybeRequestData
     Path.go(qurl(`/${method}?id=${id}`, params))
   }, [maybeRequestData])
