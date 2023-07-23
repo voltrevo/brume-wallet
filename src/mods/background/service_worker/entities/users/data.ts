@@ -65,10 +65,16 @@ export function getCurrentUser() {
 
 export namespace User {
 
+  export type Key = ReturnType<typeof key>
+
+  export function key(uuid: string) {
+    return `user/${uuid}`
+  }
+
   export type Schema = ReturnType<typeof schema>
 
   export function schema(uuid: string, storage: IDBStorage) {
-    return createQuerySchema<string, UserData, never>({ key: `user/${uuid}`, storage })
+    return createQuerySchema<Key, UserData, never>({ key: key(uuid), storage })
   }
 
   export async function normalize(user: User, storage: IDBStorage, more: NormalizerMore) {

@@ -47,10 +47,16 @@ export interface LedgerSeedData {
 
 export namespace Seed {
 
+  export type Key = ReturnType<typeof key>
+
+  export function key(uuid: string) {
+    return `seed/${uuid}`
+  }
+
   export type Schema = ReturnType<typeof schema>
 
   export function schema(uuid: string, storage: IDBStorage) {
-    return createQuerySchema<string, SeedData, never>({ key: `seed/${uuid}`, storage })
+    return createQuerySchema<Key, SeedData, never>({ key: key(uuid), storage })
   }
 
 }

@@ -32,15 +32,27 @@ export interface SessionData {
 
 export namespace TemporarySession {
 
+  export type Key = ReturnType<typeof key>
+
+  export function key(id: string) {
+    return `temporarySession/${id}`
+  }
+
   export type Schema = ReturnType<typeof schema>
 
   export function schema(id: string) {
-    return createQuerySchema<string, SessionData, never>({ key: `temporarySession/${id}` })
+    return createQuerySchema<Key, SessionData, never>({ key: key(id) })
   }
 
 }
 
 export namespace PersistentSession {
+
+  export type Key = ReturnType<typeof key>
+
+  export function key(id: string) {
+    return `persistentSession/${id}`
+  }
 
   export type Schema = ReturnType<typeof schema>
 
@@ -91,7 +103,7 @@ export namespace PersistentSession {
       return
     }
 
-    return createQuerySchema<string, SessionData, never>({ key: `persistentSession/${id}`, storage, indexer })
+    return createQuerySchema<Key, SessionData, never>({ key: key(id), storage, indexer })
   }
 
 }

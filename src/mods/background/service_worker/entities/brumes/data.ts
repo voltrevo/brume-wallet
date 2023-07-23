@@ -28,10 +28,16 @@ export interface EthereumBrume {
 
 export namespace EthereumBrumes {
 
+  export type Key = ReturnType<typeof key>
+
+  export function key(wallet: Wallet) {
+    return `brumes/${wallet.uuid}`
+  }
+
   export type Schema = ReturnType<typeof schema>
 
   export function schema(wallet: Wallet) {
-    return createQuerySchema<string, Mutex<Pool<EthereumBrume, Error>>, never>({ key: `brumes/${wallet.uuid}` })
+    return createQuerySchema<Key, Mutex<Pool<EthereumBrume, Error>>, never>({ key: key(wallet) })
   }
 
   export function createPool(chains: EthereumChains, circuits: Mutex<Pool<Circuit, Error>>, params: PoolParams) {

@@ -4,13 +4,17 @@ import { User } from "../data"
 
 export namespace Users {
 
+  export type Key = typeof key
+
+  export const key = `users`
+
   export type Schema = ReturnType<typeof schema>
 
   export function schema(storage: IDBStorage) {
     const normalizer = async (fetched: Optional<Fetched<User[], never>>, more: NormalizerMore) =>
       fetched?.map(async users => await Promise.all(users.map(user => User.normalize(user, storage, more))))
 
-    return createQuerySchema<string, User[], never>({ key: `users`, storage, normalizer })
+    return createQuerySchema<Key, User[], never>({ key, storage, normalizer })
   }
 
 }

@@ -30,6 +30,12 @@ export interface AppRequestData {
 
 export namespace AppRequest {
 
+  export type Key = ReturnType<typeof key>
+
+  export function key(id: string) {
+    return `request/${id}`
+  }
+
   export type Schema = ReturnType<typeof schema>
 
   export function schema(id: string) {
@@ -51,7 +57,7 @@ export namespace AppRequest {
       }))
     }
 
-    return createQuerySchema<string, AppRequestData, never>({ key: `request/${id}`, indexer })
+    return createQuerySchema<Key, AppRequestData, never>({ key: key(id), indexer })
   }
 
 }

@@ -117,10 +117,16 @@ export interface BitcoinPrivateKeyWallet {
 
 export namespace Wallet {
 
+  export type Key = ReturnType<typeof key>
+
+  export function key(uuid: string) {
+    return `wallet/${uuid}`
+  }
+
   export type Schema = ReturnType<typeof schema>
 
   export function schema(uuid: string, storage: IDBStorage) {
-    return createQuerySchema<string, WalletData, never>({ key: `wallet/${uuid}`, storage })
+    return createQuerySchema<Key, WalletData, never>({ key: key(uuid), storage })
   }
 
   export async function normalize(wallet: Wallet, storage: IDBStorage, more: NormalizerMore): Promise<WalletRef> {
