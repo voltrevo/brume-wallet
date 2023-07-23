@@ -11,9 +11,9 @@ import { useCallback, useMemo } from "react";
 import { PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { Path } from "../../router/path";
+import { WalletDataCard } from "./card";
 import { WalletDataProvider, useWalletData } from "./context";
 import { useEthereumContext, usePairPrice, usePendingBalance, usePricedBalance } from "./data";
-import { WalletDataCard } from "./row";
 import { WalletDataSendDialog } from "./send";
 
 export function WalletPage(props: UUIDProps) {

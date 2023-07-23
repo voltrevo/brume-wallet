@@ -24,15 +24,25 @@ export type SeedData =
   | AuthMnemonicSeedData
 
 export interface MnemonicSeedData {
-  readonly uuid: string
   readonly type: "mnemonic"
+
+  readonly uuid: string
+  readonly name: string
+
+  readonly color: number
+  readonly emoji: string
 
   readonly mnemonic: string
 }
 
 export interface AuthMnemonicSeedData {
-  readonly uuid: string
   readonly type: "authMnemonic"
+
+  readonly uuid: string
+  readonly name: string
+
+  readonly color: number
+  readonly emoji: string
 
   readonly mnemonic: {
     readonly ivBase64: string,

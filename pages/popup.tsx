@@ -575,7 +575,7 @@ export function WalletAndChainSelectPage() {
       <ClickableWalletGrid
         ok={onWalletClick.run}
         create={creator.enable}
-        wallets={wallets.data?.inner} />
+        maybeWallets={wallets.data?.inner} />
     </PageBody>
 
   const Header =

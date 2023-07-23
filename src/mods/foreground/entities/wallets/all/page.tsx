@@ -9,15 +9,16 @@ import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path"
 import { useCallback } from "react"
+import { WalletDataCard } from "../card"
 import { WalletDataProvider, useWalletData } from "../context"
 import { useTotalPricedBalance } from "../data"
 import { useDisplayUsd } from "../page"
-import { WalletDataCard } from "../row"
 import { WalletCreatorDialog } from "./create"
 import { useWallets } from "./data"
 
 export function WalletsPage() {
-  const wallets = useWallets()
+  const walletsQuery = useWallets()
+  const maybeWallets = walletsQuery.data?.inner
 
   const creator = useBooleanHandle(false)
 
@@ -30,18 +31,17 @@ export function WalletsPage() {
 
   const Body =
     <PageBody>
-      <div className="mb-8">
-        <div className="text-lg font-medium">
-          Total balance
-        </div>
-        <div className="text-2xl font-bold">
-          {totalPricedBalanceDisplay}
-        </div>
+      <div className="text-lg font-medium">
+        Total balance
       </div>
+      <div className="text-2xl font-bold">
+        {totalPricedBalanceDisplay}
+      </div>
+      <div className="h-8" />
       <ClickableWalletGrid
         ok={onWalletClick}
         create={creator.enable}
-        wallets={wallets.data?.inner} />
+        maybeWallets={maybeWallets} />
     </PageBody>
 
   const Header =
@@ -63,11 +63,11 @@ export function WalletsPage() {
   </Page>
 }
 
-export function ClickableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] }) {
-  const { wallets, ok, create } = props
+export function ClickableWalletGrid(props: OkProps<Wallet> & CreateProps & { maybeWallets?: Wallet[] }) {
+  const { maybeWallets, ok, create } = props
 
   return <div className="grid grow place-content-start place-items-center gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
-    {wallets?.map(wallet =>
+    {maybeWallets?.map(wallet =>
       <WalletDataProvider
         key={wallet.uuid}
         uuid={wallet.uuid}>
