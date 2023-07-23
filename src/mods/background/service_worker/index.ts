@@ -301,7 +301,7 @@ export class Global {
       const currentSession = this.sessions.get(script.name)
 
       if (currentSession != null) {
-        const tempSessionQuery = await TemporarySession.query(currentSession).make(this.core)
+        const tempSessionQuery = await TemporarySession.schema(currentSession).make(this.core)
         const tempSessionData = Option.wrap(tempSessionQuery.data?.inner).ok().throw(t)
 
         return new Ok(tempSessionData)
@@ -323,7 +323,7 @@ export class Global {
           const originQuery = await Origin.schema(origin.origin, storage).make(this.core)
           await originQuery.mutate(Mutators.data(origin))
 
-          const tempSessionQuery = await TemporarySession.query(sessionId).make(this.core)
+          const tempSessionQuery = await TemporarySession.schema(sessionId).make(this.core)
           await tempSessionQuery.mutate(Mutators.data(maybePersSession))
 
           this.sessions.set(script.name, sessionId)
@@ -377,7 +377,7 @@ export class Global {
         await persSessionQuery.mutate(Mutators.data(sessionData))
       }
 
-      const tempSessionQuery = await TemporarySession.query(sessionData.id).make(this.core)
+      const tempSessionQuery = await TemporarySession.schema(sessionData.id).make(this.core)
       await tempSessionQuery.mutate(Mutators.data(sessionData))
 
       this.sessions.set(script.name, sessionData.id)
@@ -632,7 +632,7 @@ export class Global {
 
       const updatedSession = { ...session, chain }
 
-      const tempSessionQuery = await TemporarySession.query(session.id).make(this.core)
+      const tempSessionQuery = await TemporarySession.schema(session.id).make(this.core)
       await tempSessionQuery.mutate(Mutators.replaceData(updatedSession))
 
       const persSessionQuery = await PersistentSession.schema(session.origin, storage).make(this.core)
@@ -767,7 +767,7 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const tempSessionQuery = await TemporarySession.query(id).make(this.core)
+      const tempSessionQuery = await TemporarySession.schema(id).make(this.core)
       const tempSessionData = Option.wrap(tempSessionQuery.data?.inner).ok().throw(t)
       await tempSessionQuery.delete()
 

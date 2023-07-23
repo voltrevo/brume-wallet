@@ -32,13 +32,17 @@ export interface SessionData {
 
 export namespace TemporarySession {
 
-  export function query(id: string) {
+  export type Schema = ReturnType<typeof schema>
+
+  export function schema(id: string) {
     return createQuerySchema<string, SessionData, never>({ key: `temporarySession/${id}` })
   }
 
 }
 
 export namespace PersistentSession {
+
+  export type Schema = ReturnType<typeof schema>
 
   export function schema(id: string, storage: IDBStorage) {
     const indexer = async (states: States<SessionData, never>, more: IndexerMore) => {

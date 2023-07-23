@@ -30,6 +30,8 @@ export interface AppRequestData {
 
 export namespace AppRequest {
 
+  export type Schema = ReturnType<typeof schema>
+
   export function schema(id: string) {
     const indexer = async (states: States<AppRequestData, never>, more: IndexerMore) => {
       const { current, previous = current } = states
