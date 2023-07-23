@@ -4,6 +4,7 @@ import { ExtensionPort } from "@/libs/channel/channel"
 import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
+import { NonReadonly } from "@/libs/types/readonly"
 import { Cleaner } from "@hazae41/cleaner"
 import { None, Some } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
@@ -47,7 +48,7 @@ if (IS_FIREFOX || IS_SAFARI) {
 }
 
 async function tryGetOrigin() {
-  const origin: OriginData = {
+  const origin: NonReadonly<OriginData> = {
     origin: location.origin,
     title: document.title
   }

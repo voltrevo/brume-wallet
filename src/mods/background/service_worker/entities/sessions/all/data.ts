@@ -1,10 +1,18 @@
 import { IDBStorage, createQuerySchema } from "@hazae41/xswr"
-import { Session } from "../data"
+import { SessionRef } from "../data"
 
-export function getSessions(storage: IDBStorage) {
-  return createQuerySchema<string, Session[], never>({ key: `persistentSessions`, storage })
+export namespace Sessions {
+
+  export function query(storage: IDBStorage) {
+    return createQuerySchema<string, SessionRef[], never>({ key: `persistentSessions`, storage })
+  }
+
 }
 
-export function getSessionsByWallet(wallet: string, storage: IDBStorage) {
-  return createQuerySchema<string, Session[], never>({ key: `persistentSessionsByWallet/${wallet}`, storage })
+export namespace SessionsByWallet {
+
+  export function query(wallet: string, storage: IDBStorage) {
+    return createQuerySchema<string, SessionRef[], never>({ key: `persistentSessionsByWallet/${wallet}`, storage })
+  }
+
 }
