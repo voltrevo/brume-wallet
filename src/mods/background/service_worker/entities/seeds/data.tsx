@@ -47,7 +47,7 @@ export interface LedgerSeedData {
 
 export namespace Seed {
 
-  export function query(uuid: string, storage: IDBStorage) {
+  export function schema(uuid: string, storage: IDBStorage) {
     return createQuerySchema<string, SeedData, never>({ key: `seed/${uuid}`, storage })
   }
 

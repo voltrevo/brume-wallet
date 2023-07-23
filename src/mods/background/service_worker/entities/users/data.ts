@@ -65,14 +65,16 @@ export function getCurrentUser() {
 
 export namespace User {
 
-  export function query(uuid: string, storage: IDBStorage) {
+  export type Schema = ReturnType<typeof schema>
+
+  export function schema(uuid: string, storage: IDBStorage) {
     return createQuerySchema<string, UserData, never>({ key: `user/${uuid}`, storage })
   }
 
   export async function normalize(user: User, storage: IDBStorage, more: NormalizerMore) {
     if ("ref" in user) return user
 
-    const schema = query(user.uuid, storage)
+    const schema = User.schema(user.uuid, storage)
     await schema?.normalize(new Data(user), more)
 
     return UserRef.from(user)

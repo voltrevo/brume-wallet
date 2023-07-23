@@ -4,7 +4,7 @@ import { User } from "../data"
 
 export namespace Users {
 
-  export function query(storage: IDBStorage) {
+  export function schema(storage: IDBStorage) {
     const normalizer = async (fetched: Optional<Fetched<User[], never>>, more: NormalizerMore) =>
       fetched?.map(async users => await Promise.all(users.map(user => User.normalize(user, storage, more))))
 

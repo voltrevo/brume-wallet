@@ -160,7 +160,7 @@ export class Global {
       if (password == null)
         return new Ok(undefined)
 
-      const userQuery = await User.query(uuid, this.storage).make(this.core)
+      const userQuery = await User.schema(uuid, this.storage).make(this.core)
       const userData = Option.wrap(userQuery.current?.get()).ok().throw(t)
 
       const user: User = { ref: true, uuid: userData.uuid }
@@ -250,7 +250,7 @@ export class Global {
 
   async tryRequestPopup<T>(request: AppRequestData, mouse: Mouse): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
-      const requestQuery = await AppRequest.query(request.id).make(this.core)
+      const requestQuery = await AppRequest.schema(request.id).make(this.core)
       await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
 
       try {
@@ -314,13 +314,13 @@ export class Global {
       if (this.#user != null) {
         const { storage } = this.#user
 
-        const persSessionQuery = await PersistentSession.query(origin.origin, storage).make(this.core)
+        const persSessionQuery = await PersistentSession.schema(origin.origin, storage).make(this.core)
         const maybePersSession = persSessionQuery.data?.inner
 
         if (maybePersSession != null) {
           const sessionId = maybePersSession.id
 
-          const originQuery = await Origin.query(origin.origin, storage).make(this.core)
+          const originQuery = await Origin.schema(origin.origin, storage).make(this.core)
           await originQuery.mutate(Mutators.data(origin))
 
           const tempSessionQuery = await TemporarySession.query(sessionId).make(this.core)
@@ -351,7 +351,7 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const originQuery = await Origin.query(origin.origin, storage).make(this.core)
+      const originQuery = await Origin.schema(origin.origin, storage).make(this.core)
       await originQuery.mutate(Mutators.data(origin))
 
       const [persistent, walletId, chainId] = await this.tryRequestPopup<[boolean, string, number]>({
@@ -361,7 +361,7 @@ export class Global {
         params: {}
       }, mouse).then(r => r.throw(t).throw(t))
 
-      const walletQuery = await Wallet.query(walletId, storage).make(this.core)
+      const walletQuery = await Wallet.schema(walletId, storage).make(this.core)
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
@@ -373,7 +373,7 @@ export class Global {
       }
 
       if (persistent) {
-        const persSessionQuery = await PersistentSession.query(origin.origin, storage).make(this.core)
+        const persSessionQuery = await PersistentSession.schema(origin.origin, storage).make(this.core)
         await persSessionQuery.mutate(Mutators.data(sessionData))
       }
 
@@ -456,7 +456,7 @@ export class Global {
 
       const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<string, Error>>(async t => {
-          const walletQuery = await Wallet.query(wallet.uuid, storage).make(this.core)
+          const walletQuery = await Wallet.schema(wallet.uuid, storage).make(this.core)
           const walletData = Option.wrap(walletQuery.data?.inner).ok().throw(t)
 
           return new Ok(walletData.address)
@@ -474,7 +474,7 @@ export class Global {
 
       const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<string, Error>>(async t => {
-          const walletQuery = await Wallet.query(wallet.uuid, storage).make(this.core)
+          const walletQuery = await Wallet.schema(wallet.uuid, storage).make(this.core)
           const walletData = Option.wrap(walletQuery.data?.inner).ok().throw(t)
 
           return new Ok(walletData.address)
@@ -635,7 +635,7 @@ export class Global {
       const tempSessionQuery = await TemporarySession.query(session.id).make(this.core)
       await tempSessionQuery.mutate(Mutators.replaceData(updatedSession))
 
-      const persSessionQuery = await PersistentSession.query(session.origin, storage).make(this.core)
+      const persSessionQuery = await PersistentSession.schema(session.origin, storage).make(this.core)
       await persSessionQuery.mutate(Mutators.replaceData(updatedSession))
 
       for (const script of Option.wrap(this.scripts.get(session.id)).unwrapOr([]))
@@ -725,7 +725,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [init] = (request as RpcParamfulRequestInit<[UserInit]>).params
 
-      const usersQuery = await Users.query(this.storage).make(this.core)
+      const usersQuery = await Users.schema(this.storage).make(this.core)
       const user = await User.tryCreate(init).then(r => r.throw(t))
 
       const usersState = await usersQuery.mutate(Mutators.pushData<User, never>(new Data(user)))
@@ -755,7 +755,7 @@ export class Global {
       if (userSession == null)
         return new Ok(undefined)
 
-      const userQuery = await User.query(userSession.user.uuid, this.storage).make(this.core)
+      const userQuery = await User.schema(userSession.user.uuid, this.storage).make(this.core)
 
       return new Ok(userQuery.current?.inner)
     })
@@ -771,7 +771,7 @@ export class Global {
       const tempSessionData = Option.wrap(tempSessionQuery.data?.inner).ok().throw(t)
       await tempSessionQuery.delete()
 
-      const persSessionQuery = await PersistentSession.query(tempSessionData.origin, storage).make(this.core)
+      const persSessionQuery = await PersistentSession.schema(tempSessionData.origin, storage).make(this.core)
       await persSessionQuery.delete()
 
       for (const script of Option.wrap(this.scripts.get(id)).unwrapOr([])) {
@@ -823,7 +823,7 @@ export class Global {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const [wallet] = (request as RpcParamfulRequestInit<[EthereumWalletData]>).params
-      const walletsQuery = await Wallets.query(storage).make(this.core)
+      const walletsQuery = await Wallets.schema(storage).make(this.core)
 
       const walletsState = await walletsQuery.mutate(Mutators.pushData<Wallet, never>(new Data(wallet)))
       const wallets = Option.wrap(walletsState.current?.get()).ok().throw(t)
@@ -833,7 +833,7 @@ export class Global {
   }
 
   async #getOrCreateEthereumBrumes(wallet: Wallet): Promise<EthereumBrumes> {
-    const brumesQuery = await EthereumBrumes.query(wallet).make(this.core)
+    const brumesQuery = await EthereumBrumes.schema(wallet).make(this.core)
 
     if (brumesQuery.current != null)
       return brumesQuery.current.inner
@@ -919,7 +919,7 @@ export class Global {
 
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const walletQuery = await Wallet.query(walletId, storage).make(this.core)
+      const walletQuery = await Wallet.schema(walletId, storage).make(this.core)
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 
@@ -941,7 +941,7 @@ export class Global {
 
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const walletQuery = await Wallet.query(walletId, storage).make(this.core)
+      const walletQuery = await Wallet.schema(walletId, storage).make(this.core)
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
       const chain = Option.wrap(chains[chainId]).ok().throw(t)
 

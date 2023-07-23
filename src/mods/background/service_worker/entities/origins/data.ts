@@ -18,7 +18,7 @@ export interface OriginData {
 
 export namespace Origin {
 
-  export function query(origin: string, storage: IDBStorage) {
+  export function schema(origin: string, storage: IDBStorage) {
     return createQuerySchema<string, OriginData, never>({ key: `origins/v1/${origin}`, storage })
   }
 

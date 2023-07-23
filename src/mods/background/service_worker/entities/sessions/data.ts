@@ -40,7 +40,7 @@ export namespace TemporarySession {
 
 export namespace PersistentSession {
 
-  export function query(id: string, storage: IDBStorage) {
+  export function schema(id: string, storage: IDBStorage) {
     const indexer = async (states: States<SessionData, never>, more: IndexerMore) => {
       const { current, previous = current } = states
       const { core } = more
@@ -48,7 +48,7 @@ export namespace PersistentSession {
       const previousSessionData = previous.real?.data
       const currentSessionData = current.real?.data
 
-      const persSessionsQuery = await Sessions.query(storage).make(core)
+      const persSessionsQuery = await Sessions.schema(storage).make(core)
 
       await persSessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
         if (previousSessionData != null)
@@ -65,7 +65,7 @@ export namespace PersistentSession {
       const addedWallets = Sets.minus(currentWallets, previousWallets)
 
       for (const wallet of removedWallets) {
-        const walletSessionsQuery = await SessionsByWallet.query(wallet, storage).make(core)
+        const walletSessionsQuery = await SessionsByWallet.schema(wallet, storage).make(core)
 
         await walletSessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
           if (previousSessionData != null)
@@ -75,7 +75,7 @@ export namespace PersistentSession {
       }
 
       for (const wallet of addedWallets) {
-        const walletSessionsQuery = await SessionsByWallet.query(wallet, storage).make(core)
+        const walletSessionsQuery = await SessionsByWallet.schema(wallet, storage).make(core)
 
         await walletSessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
           if (currentSessionData != null)

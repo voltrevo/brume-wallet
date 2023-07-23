@@ -3,7 +3,7 @@ import { SessionRef } from "../data"
 
 export namespace Sessions {
 
-  export function query(storage: IDBStorage) {
+  export function schema(storage: IDBStorage) {
     return createQuerySchema<string, SessionRef[], never>({ key: `persistentSessions`, storage })
   }
 
@@ -11,7 +11,7 @@ export namespace Sessions {
 
 export namespace SessionsByWallet {
 
-  export function query(wallet: string, storage: IDBStorage) {
+  export function schema(wallet: string, storage: IDBStorage) {
     return createQuerySchema<string, SessionRef[], never>({ key: `persistentSessionsByWallet/${wallet}`, storage })
   }
 

@@ -3,7 +3,7 @@ import { AppRequest } from "../data";
 
 export namespace AppRequests {
 
-  export function query() {
+  export function schema() {
     return createQuerySchema<string, AppRequest[], never>({ key: `requests` })
   }
 

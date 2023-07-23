@@ -30,7 +30,7 @@ export interface AppRequestData {
 
 export namespace AppRequest {
 
-  export function query(id: string) {
+  export function schema(id: string) {
     const indexer = async (states: States<AppRequestData, never>, more: IndexerMore) => {
       const { current, previous = current } = states
       const { core } = more
@@ -38,7 +38,7 @@ export namespace AppRequest {
       const previousSessionData = previous.real?.data
       const currentSessionData = current.real?.data
 
-      const requestsQuery = await AppRequests.query().make(core)
+      const requestsQuery = await AppRequests.schema().make(core)
 
       await requestsQuery.mutate(Mutators.mapData((d = new Data([])) => {
         if (previousSessionData != null)

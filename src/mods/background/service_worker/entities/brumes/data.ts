@@ -28,7 +28,7 @@ export interface EthereumBrume {
 
 export namespace EthereumBrumes {
 
-  export function query(wallet: Wallet) {
+  export function schema(wallet: Wallet) {
     return createQuerySchema<string, Mutex<Pool<EthereumBrume, Error>>, never>({ key: `brumes/${wallet.uuid}` })
   }
 
