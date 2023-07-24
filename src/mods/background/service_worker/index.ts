@@ -380,6 +380,8 @@ export class Global {
       const tempSessionQuery = await TemporarySession.schema(sessionData.id).make(this.core)
       await tempSessionQuery.mutate(Mutators.data(sessionData))
 
+      console.warn("set", sessionData.id, sessionData)
+
       this.sessions.set(script.name, sessionData.id)
 
       let scripts = this.scripts.get(sessionData.id)
@@ -767,23 +769,23 @@ export class Global {
 
   async brume_disconnect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const [id] = (request as RpcParamfulRequestInit<[string]>).params
+      const [origin] = (request as RpcParamfulRequestInit<[string]>).params
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const tempSessionQuery = await TemporarySession.schema(id).make(this.core)
-      const tempSessionData = Option.wrap(tempSessionQuery.data?.inner).ok().throw(t)
-      await tempSessionQuery.delete()
-
-      const persSessionQuery = await PersistentSession.schema(tempSessionData.origin, storage).make(this.core)
+      const persSessionQuery = await PersistentSession.schema(origin, storage).make(this.core)
+      const persSessionData = Option.wrap(persSessionQuery.data?.inner).ok().throw(t)
       await persSessionQuery.delete()
 
-      for (const script of Option.wrap(this.scripts.get(id)).unwrapOr([])) {
+      const tempSessionQuery = await TemporarySession.schema(persSessionData.id).make(this.core)
+      await tempSessionQuery.delete()
+
+      for (const script of Option.wrap(this.scripts.get(persSessionData.id)).unwrapOr([])) {
         await script.tryRequest({ method: "accountsChanged", params: [[]] }).then(r => r.ignore())
         this.sessions.delete(script.name)
       }
 
-      this.scripts.delete(id)
+      this.scripts.delete(persSessionData.id)
 
       return Ok.void()
     })

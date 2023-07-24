@@ -78,7 +78,7 @@ export function SessionRow(props: { session: Session }) {
 
       await background.tryRequest({
         method: "brume_disconnect",
-        params: [maybeSessionData.id]
+        params: [maybeSessionData.origin]
       }).then(r => r.throw(t).throw(t))
 
       return Ok.void()
