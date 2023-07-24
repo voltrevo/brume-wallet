@@ -1,25 +1,32 @@
 import { Colors } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
+import { Ethereum } from "@/libs/ethereum/ethereum";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
-import { useInputChange, useTextAreaChange } from "@/libs/react/events";
+import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
-import { Textarea } from "@/libs/ui/textarea";
-import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
+import { SeedRef } from "@/mods/background/service_worker/entities/seeds/data";
+import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
+import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
-import { ethers } from "ethers";
-import { useMemo, useState } from "react";
+import { secp256k1 } from "@noble/curves/secp256k1";
+import { HDKey } from "@scure/bip32";
+import { mnemonicToSeed } from "@scure/bip39";
+import { useDeferredValue, useMemo, useState } from "react";
+import { SeedDatas } from "../../../seeds/all/data";
+import { useSeedData } from "../../../seeds/context";
 import { WalletAvatar } from "../../avatar";
 
-export function ReadonlyWalletCreatorDialog(props: CloseProps) {
+export function SeededWalletCreatorDialog(props: CloseProps) {
   const { close } = props
   const background = useBackground()
+  const seedData = useSeedData()
 
   const uuid = useMemo(() => {
     return crypto.randomUUID()
@@ -29,34 +36,49 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
   const color = Colors.mod(modhash)
   const emoji = Emojis.get(modhash)
 
-  const [name = "", setName] = useState<string>()
+  const [rawName = "", setRawName] = useState<string>()
+
+  const name = useDeferredValue(rawName)
 
   const onNameChange = useInputChange(e => {
-    setName(e.currentTarget.value)
+    setRawName(e.currentTarget.value)
   }, [])
 
-  const [input = "", setInput] = useState<string>()
+  const [rawPath = "", setRawPath] = useState<string>("m/44'/60'/0'/0/0")
 
-  const onInputChange = useTextAreaChange(e => {
-    setInput(e.currentTarget.value)
+  const path = useDeferredValue(rawPath)
+
+  const onInputChange = useInputChange(e => {
+    setRawPath(e.currentTarget.value)
   }, [])
 
   const canAdd = useMemo(() => {
-    if (!input.startsWith("0x"))
+    if (!name)
       return false
-    if (input.length !== 42)
+    if (!path)
       return false
     return true
-  }, [input])
+  }, [name, path])
 
-  const tryAddReadonly = useAsyncUniqueCallback(async () => {
+  const tryAdd = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       if (!name)
         return new Err(new Panic())
 
-      const address = ethers.getAddress(input)
+      const mnemonic = await SeedDatas.tryGetMnemonic(seedData, background).then(r => r.throw(t))
 
-      const wallet = { coin: "ethereum", type: "readonly", uuid, name, color, emoji, address }
+      const masterSeed = await mnemonicToSeed(mnemonic)
+
+      const root = HDKey.fromMasterSeed(masterSeed)
+      const child = root.derive(path)
+
+      const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
+      const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
+
+      const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
+      const seed = SeedRef.from(seedData)
+
+      const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name, color, emoji, address, seed, path }
 
       await background.tryRequest<Wallet[]>({
         method: "brume_createWallet",
@@ -67,7 +89,7 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, canAdd, input, uuid, color, emoji, background, close])
+  }, [name, path, seedData, path, uuid, color, emoji, background, close])
 
   const NameInput =
     <div className="flex items-stretch gap-2">
@@ -81,17 +103,17 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
         value={name} onChange={onNameChange} />
     </div>
 
-  const KeyInput =
-    <Textarea.Contrast className="w-full resize-none"
-      placeholder="Enter an address"
-      value={input} onChange={onInputChange}
-      rows={4} />
+  const PathInput =
+    <Input.Contrast className="w-full"
+      placeholder="m/44'/60'/0'/0/0"
+      value={path}
+      onChange={onInputChange} />
 
-  const AddReadonlyButon =
+  const AddButon =
     <Button.Gradient className="grow po-md"
       colorIndex={color}
       disabled={!name || !canAdd}
-      onClick={tryAddReadonly.run}>
+      onClick={tryAdd.run}>
       <Button.Shrink>
         <Outline.PlusIcon className="s-sm" />
         Add
@@ -105,10 +127,10 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
     <div className="h-2" />
     {NameInput}
     <div className="h-8" />
-    {KeyInput}
+    {PathInput}
     <div className="h-8" />
     <div className="flex items-center flex-wrap-reverse gap-2">
-      {AddReadonlyButon}
+      {AddButon}
     </div>
   </Dialog>
 }

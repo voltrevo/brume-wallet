@@ -14,7 +14,7 @@ import { Err, Ok, Result } from "@hazae41/result";
 import { ethers } from "ethers";
 import { useMemo, useState } from "react";
 import { useWalletData } from "./context";
-import { EthereumContextProps, Wallets, useGasPrice, useNonce, usePendingBalance } from "./data";
+import { EthereumContextProps, WalletDatas, useGasPrice, useNonce, usePendingBalance } from "./data";
 
 export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumContextProps) {
   const wallet = useWalletData()
@@ -77,7 +77,7 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
       if (wallet.type === "readonly")
         return new Err(new Error(`This wallet is readonly`))
 
-      const privateKey = await Wallets.tryGetPrivateKey(wallet, context.background).then(r => r.throw(t))
+      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, context.background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 

@@ -1,6 +1,7 @@
 import { DonePage, PersonalSignPage, SwitchPage, TransactPage, TypedSignPage, WalletAndChainSelectPage } from "pages/popup"
 import { RequestsPage } from "../entities/requests/all/page"
 import { SeedsPage } from "../entities/seeds/all/page"
+import { SeedPage } from "../entities/seeds/page"
 import { SessionsPage } from "../entities/sessions/all/page"
 import { WalletsPage } from "../entities/wallets/all/page"
 import { WalletPage } from "../entities/wallets/page"
@@ -31,6 +32,9 @@ export function Router() {
 
   if (matches = url.pathname.match(/^\/wallet\/([^\/]+)$/))
     return <WalletPage uuid={matches[1]} />
+
+  if (matches = url.pathname.match(/^\/seed\/([^\/]+)$/))
+    return <SeedPage uuid={matches[1]} />
 
   if (matches = url.pathname.match(/^\/eth_requestAccounts$/))
     return <WalletAndChainSelectPage />

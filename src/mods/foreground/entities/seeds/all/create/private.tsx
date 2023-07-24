@@ -17,7 +17,7 @@ import { useBackground } from "@/mods/foreground/background/context";
 import { Bytes } from "@hazae41/bytes";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { generateMnemonic, mnemonicToEntropy, validateMnemonic } from "@scure/bip39";
-import { wordlist } from '@scure/bip39/wordlists/english';
+import { wordlist } from "@scure/bip39/wordlists/english";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../../../wallets/avatar";
 

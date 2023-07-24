@@ -3,17 +3,21 @@ import { EthereumChain, PairInfo } from "@/libs/ethereum/chain"
 import { useObjectMemo } from "@/libs/react/memo"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
+import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
 import { EthereumQueryKey, EthereumSignableWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Bytes } from "@hazae41/bytes"
-import { Optional } from "@hazae41/option"
-import { Err, Ok, Result, Unimplemented } from "@hazae41/result"
+import { Option, Optional } from "@hazae41/option"
+import { Ok, Result } from "@hazae41/result"
 import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/xswr"
+import { HDKey } from "@scure/bip32"
+import { mnemonicToSeed } from "@scure/bip39"
 import { ContractRunner, TransactionRequest } from "ethers"
 import { useEffect, useMemo } from "react"
 import { Background } from "../../background/background"
 import { useBackground } from "../../background/context"
 import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorage } from "../../storage/user"
+import { SeedDatas } from "../seeds/all/data"
 import { useCurrentUserRef } from "../users/context"
 import { User } from "../users/data"
 
@@ -35,14 +39,31 @@ export function useWallet(uuid: Optional<string>) {
   return query
 }
 
-export namespace Wallets {
+export namespace WalletDatas {
 
-  export async function tryGetPrivateKey(wallet: EthereumSignableWalletData, background: Background): Promise<Result<string, Error>> {
+  export async function tryGetPrivateKey(wallet: EthereumSignableWalletData, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       if (wallet.type === "privateKey")
         return new Ok(wallet.privateKey)
-      if (wallet.type === "seeded")
-        return new Err(new Unimplemented())
+
+      if (wallet.type === "seeded") {
+        const storage = new UserStorage(core, background)
+        const seedQuery = await Seed.Foreground.schema(wallet.seed.uuid, storage)?.make(core)
+        const seedData = Option.wrap(seedQuery?.data?.inner).ok().throw(t)
+
+        const mnemonic = await SeedDatas
+          .tryGetMnemonic(seedData, background)
+          .then(r => r.throw(t))
+
+        const masterSeed = await mnemonicToSeed(mnemonic)
+
+        const root = HDKey.fromMasterSeed(masterSeed)
+        const child = root.derive(wallet.path)
+
+        const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
+
+        return new Ok(`0x${Bytes.toHex(privateKeyBytes)}`)
+      }
 
       const { idBase64, ivBase64 } = wallet.privateKey
 
@@ -50,14 +71,14 @@ export namespace Wallets {
       const cipher = await WebAuthnStorage.get(id).then(r => r.throw(t))
       const cipherBase64 = Bytes.toBase64(cipher)
 
-      const plainBase64 = await background.tryRequest<string>({
+      const privateKeyBase64 = await background.tryRequest<string>({
         method: "brume_decrypt",
         params: [ivBase64, cipherBase64]
       }).then(r => r.throw(t).throw(t))
 
-      const plain = Bytes.fromBase64(plainBase64)
+      const privateKeyBytes = Bytes.fromBase64(privateKeyBase64)
 
-      return new Ok(`0x${Bytes.toHex(plain)}`)
+      return new Ok(`0x${Bytes.toHex(privateKeyBytes)}`)
     })
   }
 

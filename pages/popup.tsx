@@ -18,7 +18,7 @@ import { UserProvider } from "@/mods/foreground/entities/users/context";
 import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
 import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
 import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
-import { Wallets, useEthereumContext2, useGasPrice, useNonce, useWallet } from "@/mods/foreground/entities/wallets/data";
+import { WalletDatas, useEthereumContext2, useGasPrice, useNonce, useWallet } from "@/mods/foreground/entities/wallets/data";
 import { UserRejectionError } from "@/mods/foreground/errors/errors";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
@@ -98,7 +98,7 @@ export function TransactPage() {
       if (wallet.type === "readonly")
         return new Err(new Error(`This wallet is readonly`))
 
-      const privateKey = await Wallets.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
+      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 
@@ -310,7 +310,7 @@ export function PersonalSignPage() {
       if (wallet.type === "readonly")
         return new Err(new Error(`This wallet is readonly`))
 
-      const privateKey = await Wallets.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
+      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 
@@ -416,7 +416,7 @@ export function TypedSignPage() {
       if (wallet.type === "readonly")
         return new Err(new Error(`This wallet is readonly`))
 
-      const privateKey = await Wallets.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
+      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 

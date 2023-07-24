@@ -1,4 +1,5 @@
 import { Bytes } from "@hazae41/bytes"
+import { ethers } from "ethers"
 import { Keccak256 } from "../hashes/keccak256"
 
 export namespace Address {
@@ -7,7 +8,9 @@ export namespace Address {
     const unprefixedPublicKey = uncompressedPublicKey.slice(1)
     const keccak256 = Keccak256.digest(unprefixedPublicKey)
 
-    return `0x${Bytes.toHex(keccak256.slice(-20))}`
+    const raw = `0x${Bytes.toHex(keccak256.slice(-20))}`
+
+    return ethers.getAddress(raw)
   }
 
   export function format(address: string) {

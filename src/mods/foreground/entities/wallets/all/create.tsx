@@ -3,8 +3,8 @@ import { CloseProps } from "@/libs/react/props/close";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { useCallback, useState } from "react";
-import { PrivateKeyWalletCreatorDialog } from "./create/private";
-import { ReadonlyWalletCreatorDialog } from "./create/public";
+import { ReadonlyWalletCreatorDialog } from "./create/readonly";
+import { StandaloneWalletCreatorDialog } from "./create/standalone";
 
 export function WalletCreatorDialog(props: CloseProps) {
   const { close } = props
@@ -24,7 +24,7 @@ export function WalletCreatorDialog(props: CloseProps) {
       <ReadonlyWalletCreatorDialog
         close={close} />}
     {type === "privateKey" &&
-      <PrivateKeyWalletCreatorDialog
+      <StandaloneWalletCreatorDialog
         close={close} />}
     {type == null && <>
       <Dialog.Title close={close}>

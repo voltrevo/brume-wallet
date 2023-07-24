@@ -8,7 +8,7 @@ import { UUIDProps } from "@/libs/react/props/uuid";
 import { Option, Optional } from "@hazae41/option";
 import { Result } from "@hazae41/result";
 import { useCallback, useMemo } from "react";
-import { PageHeader } from "../../components/page/header";
+import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { Path } from "../../router/path";
 import { WalletDataCard } from "./card";
@@ -89,14 +89,14 @@ function WalletDataPage() {
   const sepoliaBalanceUsdBigint = usePricedBalance(sepolia, wallet.address, "usd")
   const sepoliaBalanceUsdDisplay = useDisplayUsd(sepoliaBalanceUsdBigint.current)
 
-  const back = useCallback(() => {
-    Path.go("/")
+  const onBackClick = useCallback(() => {
+    Path.go("/wallets")
   }, [])
 
   const Header =
     <PageHeader
       title="Wallet"
-      back={back} />
+      back={onBackClick} />
 
   const Card =
     <div className="p-4 flex justify-center">
@@ -134,6 +134,68 @@ function WalletDataPage() {
       </div>
     </div>
 
+  const Body =
+    <PageBody>
+      <div className="flex flex-col gap-2">
+        <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
+          onClick={mainnetSendDialog.enable}>
+          <div className="w-full flex justify-between items-center">
+            <div className="">
+              Ethereum
+            </div>
+            <div className="">
+              {ethBalanceUsdDisplay}
+            </div>
+          </div>
+          <div className="text-contrast">
+            {`${mainnetBalanceDisplay} ETH`}
+          </div>
+        </button>
+        <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
+          onClick={polygonSendDialog.enable}>
+          <div className="w-full flex justify-between items-center">
+            <div className="">
+              Polygon
+            </div>
+            <div className="">
+              {maticBalanceUsdDisplay}
+            </div>
+          </div>
+          <div className="text-contrast">
+            {`${polygonBalanceDisplay} MATIC`}
+          </div>
+        </button>
+        <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
+          onClick={goerliSendDialog.enable}>
+          <div className="w-full flex justify-between items-center">
+            <div className="">
+              Goerli
+            </div>
+            <div className="">
+              {goerliBalanceUsdDisplay}
+            </div>
+          </div>
+          <div className="text-contrast">
+            {`${goerliBalanceDisplay} ETH`}
+          </div>
+        </button>
+        <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
+          onClick={sepoliaSendDialog.enable}>
+          <div className="w-full flex justify-between items-center">
+            <div className="">
+              Sepolia
+            </div>
+            <div className="">
+              {sepoliaBalanceUsdDisplay}
+            </div>
+          </div>
+          <div className="text-contrast">
+            {`${sepoliaBalanceDisplay} ETH`}
+          </div>
+        </button>
+      </div>
+    </PageBody>
+
   return <Page>
     {mainnetSendDialog.current && mainnet &&
       <WalletDataSendDialog title="(Ethereum)"
@@ -154,63 +216,6 @@ function WalletDataPage() {
     {Header}
     {Card}
     {Apps}
-    <div className="p-4 flex flex-col gap-2">
-      <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
-        onClick={mainnetSendDialog.enable}>
-        <div className="w-full flex justify-between items-center">
-          <div className="">
-            Ethereum
-          </div>
-          <div className="">
-            {ethBalanceUsdDisplay}
-          </div>
-        </div>
-        <div className="text-contrast">
-          {`${mainnetBalanceDisplay} ETH`}
-        </div>
-      </button>
-      <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
-        onClick={polygonSendDialog.enable}>
-        <div className="w-full flex justify-between items-center">
-          <div className="">
-            Polygon
-          </div>
-          <div className="">
-            {maticBalanceUsdDisplay}
-          </div>
-        </div>
-        <div className="text-contrast">
-          {`${polygonBalanceDisplay} MATIC`}
-        </div>
-      </button>
-      <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
-        onClick={goerliSendDialog.enable}>
-        <div className="w-full flex justify-between items-center">
-          <div className="">
-            Goerli
-          </div>
-          <div className="">
-            {goerliBalanceUsdDisplay}
-          </div>
-        </div>
-        <div className="text-contrast">
-          {`${goerliBalanceDisplay} ETH`}
-        </div>
-      </button>
-      <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
-        onClick={sepoliaSendDialog.enable}>
-        <div className="w-full flex justify-between items-center">
-          <div className="">
-            Sepolia
-          </div>
-          <div className="">
-            {sepoliaBalanceUsdDisplay}
-          </div>
-        </div>
-        <div className="text-contrast">
-          {`${sepoliaBalanceDisplay} ETH`}
-        </div>
-      </button>
-    </div>
+    {Body}
   </Page>
 }

@@ -21,7 +21,7 @@ import { secp256k1 } from "@noble/curves/secp256k1";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../../avatar";
 
-export function PrivateKeyWalletCreatorDialog(props: CloseProps) {
+export function StandaloneWalletCreatorDialog(props: CloseProps) {
   const { close } = props
   const background = useBackground()
 
@@ -197,7 +197,7 @@ export function PrivateKeyWalletCreatorDialog(props: CloseProps) {
       onClick={doGenerate.run}>
       <Button.Shrink>
         <Outline.KeyIcon className="s-sm" />
-        Generate a random key
+        Generate a private key
       </Button.Shrink>
     </Button.Contrast>
 
