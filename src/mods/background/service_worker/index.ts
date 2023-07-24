@@ -311,45 +311,42 @@ export class Global {
         method: "brume_origin"
       }).then(r => r.throw(t).throw(t))
 
-      if (this.#user != null) {
-        const { storage } = this.#user
-
-        const persSessionQuery = await PersistentSession.schema(origin.origin, storage).make(this.core)
-        const maybePersSession = persSessionQuery.data?.inner
-
-        if (maybePersSession != null) {
-          const sessionId = maybePersSession.id
-
-          const originQuery = await Origin.schema(origin.origin, storage).make(this.core)
-          await originQuery.mutate(Mutators.data(origin))
-
-          const tempSessionQuery = await TemporarySession.schema(sessionId).make(this.core)
-          await tempSessionQuery.mutate(Mutators.data(maybePersSession))
-
-          this.sessions.set(script.name, sessionId)
-
-          let scripts = this.scripts.get(sessionId)
-
-          if (scripts == null) {
-            scripts = new Set()
-            this.scripts.set(sessionId, scripts)
-          }
-
-          scripts.add(script)
-
-          script.events.on("close", async () => {
-            scripts?.delete(script)
-            this.sessions.delete(script.name)
-            return new None()
-          })
-
-          return new Ok(maybePersSession)
-        }
-      }
-
-      await this.tryOpenOrFocusPopup("/", mouse).then(r => r.throw(t))
+      if (this.#user == null)
+        await this.tryOpenOrFocusPopup("/", mouse).then(r => r.throw(t))
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+      const persSessionQuery = await PersistentSession.schema(origin.origin, storage).make(this.core)
+      const maybePersSession = persSessionQuery.data?.inner
+
+      if (maybePersSession != null) {
+        const sessionId = maybePersSession.id
+
+        const originQuery = await Origin.schema(origin.origin, storage).make(this.core)
+        await originQuery.mutate(Mutators.data(origin))
+
+        const tempSessionQuery = await TemporarySession.schema(sessionId).make(this.core)
+        await tempSessionQuery.mutate(Mutators.data(maybePersSession))
+
+        this.sessions.set(script.name, sessionId)
+
+        let scripts = this.scripts.get(sessionId)
+
+        if (scripts == null) {
+          scripts = new Set()
+          this.scripts.set(sessionId, scripts)
+        }
+
+        scripts.add(script)
+
+        script.events.on("close", async () => {
+          scripts?.delete(script)
+          this.sessions.delete(script.name)
+          return new None()
+        })
+
+        return new Ok(maybePersSession)
+      }
 
       const originQuery = await Origin.schema(origin.origin, storage).make(this.core)
       await originQuery.mutate(Mutators.data(origin))
@@ -372,13 +369,11 @@ export class Global {
         chain: chain
       }
 
-      if (persistent) {
-        const persSessionQuery = await PersistentSession.schema(origin.origin, storage).make(this.core)
-        await persSessionQuery.mutate(Mutators.data(sessionData))
-      }
-
       const tempSessionQuery = await TemporarySession.schema(sessionData.id).make(this.core)
       await tempSessionQuery.mutate(Mutators.data(sessionData))
+
+      if (persistent)
+        await persSessionQuery.mutate(Mutators.data(sessionData))
 
       this.sessions.set(script.name, sessionData.id)
 
