@@ -12,9 +12,9 @@ module.exports = {
   },
   plugins: [
     plugin(({ addVariant }) => {
-      addVariant("clicked-or-focused", ["&:active", "&:focus"])
-      addVariant("hovered-or-clicked-or-focused", ["&:active", "&:focus", "@media(hover: hover){&:hover}"])
-      addVariant("hovered-or-clicked-or-focused-or-selected", ["&:active", "&:focus", "@media(hover: hover){&:hover}", "&[aria-selected=true]"])
+      addVariant("clicked-or-focused", ["&:active", "&:focus-visible"])
+      addVariant("hovered-or-clicked-or-focused", ["&:active", "&:focus-visible", "@media(hover: hover){&:hover}"])
+      addVariant("hovered-or-clicked-or-focused-or-selected", ["&:active", "&:focus-visible", "@media(hover: hover){&:hover}", "&[aria-selected=true]"])
     })
   ],
   safelist: [

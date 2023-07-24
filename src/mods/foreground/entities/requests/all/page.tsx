@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
-import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
+import { Results } from "@/libs/results/results"
 import { RpcErr, RpcError } from "@/libs/rpc"
 import { Button } from "@/libs/ui/button"
 import { qurl } from "@/libs/url/url"
@@ -37,7 +37,7 @@ export function RequestsPage() {
         }).then(r => r.throw(t).throw(t))
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+    }).then(Results.alert)
   }, [background, maybeRequests])
 
   const Body =

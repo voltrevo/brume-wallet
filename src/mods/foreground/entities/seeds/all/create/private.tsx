@@ -1,6 +1,5 @@
 import { Colors } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
-import { Ethereum } from "@/libs/ethereum/ethereum";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -13,15 +12,16 @@ import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { Textarea } from "@/libs/ui/textarea";
 import { WebAuthnStorage, WebAuthnStorageError } from "@/libs/webauthn/webauthn";
-import { WalletData } from "@/mods/background/service_worker/entities/wallets/data";
+import { SeedData } from "@/mods/background/service_worker/entities/seeds/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { Bytes } from "@hazae41/bytes";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
-import { secp256k1 } from "@noble/curves/secp256k1";
+import { generateMnemonic, mnemonicToEntropy, validateMnemonic } from "@scure/bip39";
+import { wordlist } from '@scure/bip39/wordlists/english';
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { WalletAvatar } from "../../avatar";
+import { WalletAvatar } from "../../../wallets/avatar";
 
-export function PrivateKeyWalletCreatorDialog(props: CloseProps) {
+export function SeedCreatorDialog(props: CloseProps) {
   const { close } = props
   const background = useBackground()
 
@@ -49,33 +49,26 @@ export function PrivateKeyWalletCreatorDialog(props: CloseProps) {
     setRawInput(e.currentTarget.value)
   }, [])
 
-  const doGenerate = useAsyncUniqueCallback(async () => {
-    const bytes = secp256k1.utils.randomPrivateKey()
-    setRawInput(`0x${Bytes.toHex(bytes)}`)
+  const doGenerate12 = useAsyncUniqueCallback(async () => {
+    setRawInput(generateMnemonic(wordlist, 128))
+  }, [])
+
+  const doGenerate24 = useAsyncUniqueCallback(async () => {
+    setRawInput(generateMnemonic(wordlist, 256))
   }, [])
 
   const tryAddUnauthenticated = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       if (!name)
         return new Err(new Panic())
-      if (!input.startsWith("0x"))
+      if (!input)
         return new Err(new Panic())
 
-      const privateKeyBytes = Bytes.fromHexSafe(input.slice(2))
-
-      const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
-      // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
-
-      const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
-
-      // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
-      // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
-
-      const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, address, privateKey: input }
+      const seed: SeedData = { type: "mnemonic", uuid, name, color, emoji, mnemonic: input }
 
       await background.tryRequest<void>({
-        method: "brume_createWallet",
-        params: [wallet]
+        method: "brume_createSeed",
+        params: [seed]
       }).then(r => r.throw(t).throw(t))
 
       close()
@@ -84,22 +77,26 @@ export function PrivateKeyWalletCreatorDialog(props: CloseProps) {
     }).then(Results.alert)
   }, [name, input, uuid, color, emoji, background, close])
 
-  const triedEncryptedPrivateKey = useAsyncReplaceMemo(async () => {
+  const triedEncryptedPhrase = useAsyncReplaceMemo(async () => {
     return await Result.unthrow<Result<[string, string], Error>>(async t => {
       if (!name)
         return new Err(new Panic())
-      if (!input.startsWith("0x"))
+      if (!input)
         return new Err(new Panic())
 
-      const privateKeyBytes = Bytes.fromHexSafe(input.slice(2))
-      const privateKeyBase64 = Bytes.toBase64(privateKeyBytes)
+      try {
+        const entropyBytes = mnemonicToEntropy(input, wordlist)
+        const entropyBase64 = Bytes.toBase64(entropyBytes)
 
-      const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
-        method: "brume_encrypt",
-        params: [privateKeyBase64]
-      }).then(r => r.throw(t).throw(t))
+        const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
+          method: "brume_encrypt",
+          params: [entropyBase64]
+        }).then(r => r.throw(t).throw(t))
 
-      return new Ok([ivBase64, cipherBase64])
+        return new Ok([ivBase64, cipherBase64])
+      } catch (e: unknown) {
+        return new Err(new Panic())
+      }
     })
   }, [name, input, background])
 
@@ -113,12 +110,12 @@ export function PrivateKeyWalletCreatorDialog(props: CloseProps) {
     return await Result.unthrow<Result<void, Error>>(async t => {
       if (!name)
         return new Err(new Panic())
-      if (!input.startsWith("0x"))
+      if (!input)
         return new Err(new Panic())
-      if (triedEncryptedPrivateKey == null)
+      if (triedEncryptedPhrase == null)
         return new Err(new Panic())
 
-      const [_, cipherBase64] = triedEncryptedPrivateKey.throw(t)
+      const [_, cipherBase64] = triedEncryptedPhrase.throw(t)
       const cipher = Bytes.fromBase64(cipherBase64)
       const id = await WebAuthnStorage.create(name, cipher).then(r => r.throw(t))
 
@@ -126,30 +123,20 @@ export function PrivateKeyWalletCreatorDialog(props: CloseProps) {
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, input, triedEncryptedPrivateKey, uuid, color, emoji, background])
+  }, [name, input, triedEncryptedPhrase, uuid, color, emoji, background])
 
   const tryAddAuthenticated2 = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       if (!name)
         return new Err(new Panic())
-      if (!input.startsWith("0x"))
+      if (!input)
         return new Err(new Panic())
       if (id == null)
         return new Err(new Panic())
-      if (triedEncryptedPrivateKey == null)
+      if (triedEncryptedPhrase == null)
         return new Err(new Panic())
 
-      const privateKeyBytes = Bytes.fromHexSafe(input.slice(2))
-
-      const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
-      // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
-
-      const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
-
-      // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
-      // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
-
-      const [ivBase64, cipherBase64] = triedEncryptedPrivateKey.throw(t)
+      const [ivBase64, cipherBase64] = triedEncryptedPhrase.throw(t)
       const cipher = Bytes.fromBase64(cipherBase64)
       const cipher2 = await WebAuthnStorage.get(id).then(r => r.throw(t))
 
@@ -157,20 +144,20 @@ export function PrivateKeyWalletCreatorDialog(props: CloseProps) {
         return new Err(new WebAuthnStorageError())
 
       const idBase64 = Bytes.toBase64(id)
-      const privateKey = { ivBase64, idBase64 }
+      const mnemonic = { ivBase64, idBase64 }
 
-      const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name, color, emoji, address, privateKey }
+      const seed: SeedData = { type: "authMnemonic", uuid, name, color, emoji, mnemonic }
 
       await background.tryRequest<void>({
-        method: "brume_createWallet",
-        params: [wallet]
+        method: "brume_createSeed",
+        params: [seed]
       }).then(r => r.throw(t).throw(t))
 
       close()
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, input, id, triedEncryptedPrivateKey, uuid, color, emoji, background, close])
+  }, [name, input, id, triedEncryptedPhrase, uuid, color, emoji, background, close])
 
   const NameInput =
     <div className="flex items-stretch gap-2">
@@ -185,28 +172,36 @@ export function PrivateKeyWalletCreatorDialog(props: CloseProps) {
         onChange={onNameChange} />
     </div>
 
-  const KeyInput =
+  const PhraseInput =
     <Textarea.Contrast className="w-full resize-none"
-      placeholder="Enter your private key"
+      placeholder="Enter your seed phrase"
       value={input}
       onChange={onInputChange}
       rows={4} />
 
-  const GenerateButton =
+  const Generate12Button =
     <Button.Contrast className="flex-1 whitespace-nowrap po-md"
-      onClick={doGenerate.run}>
+      onClick={doGenerate12.run}>
       <Button.Shrink>
         <Outline.KeyIcon className="s-sm" />
-        Generate a random key
+        Generate 12 random words
       </Button.Shrink>
     </Button.Contrast>
+
+  const Generate24Button =
+    <Button.Gradient className="flex-1 whitespace-nowrap po-md"
+      colorIndex={color}
+      onClick={doGenerate24.run}>
+      <Button.Shrink>
+        <Outline.KeyIcon className="s-sm" />
+        Generate 24 random words
+      </Button.Shrink>
+    </Button.Gradient>
 
   const canAdd = useMemo(() => {
     if (!name)
       return false
-    if (!input.startsWith("0x"))
-      return false
-    if (!secp256k1.utils.isValidPrivateKey(input.slice(2)))
+    if (!validateMnemonic(input, wordlist))
       return false
     return true
   }, [name, input])
@@ -245,14 +240,15 @@ export function PrivateKeyWalletCreatorDialog(props: CloseProps) {
 
   return <Dialog close={close}>
     <Dialog.Title close={close}>
-      New wallet
+      New seed
     </Dialog.Title>
     <div className="h-2" />
     {NameInput}
     <div className="h-8" />
-    {KeyInput}
+    {PhraseInput}
     <div className="flex items-center flex-wrap-reverse gap-2">
-      {GenerateButton}
+      {Generate12Button}
+      {Generate24Button}
     </div>
     <div className="h-8" />
     <div className="flex items-center flex-wrap-reverse gap-2">

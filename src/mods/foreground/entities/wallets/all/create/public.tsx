@@ -1,30 +1,29 @@
 import { Colors } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
-import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
-import { UUIDProps } from "@/libs/react/props/uuid";
+import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { Textarea } from "@/libs/ui/textarea";
-import { Mutators } from "@/libs/xswr/mutators";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { ethers } from "ethers";
 import { useMemo, useState } from "react";
 import { WalletAvatar } from "../../avatar";
-import { useWallets } from "../data";
 
-export function ReadonlyWalletCreatorDialog(props: CloseProps & UUIDProps) {
-  const { close, uuid } = props
-
+export function ReadonlyWalletCreatorDialog(props: CloseProps) {
+  const { close } = props
   const background = useBackground()
-  const wallets = useWallets()
+
+  const uuid = useMemo(() => {
+    return crypto.randomUUID()
+  }, [])
 
   const modhash = useModhash(uuid)
   const color = Colors.mod(modhash)
@@ -42,15 +41,13 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps & UUIDProps) {
     setInput(e.currentTarget.value)
   }, [])
 
-  const valid = useMemo(() => {
+  const canAdd = useMemo(() => {
     if (!input.startsWith("0x"))
       return false
     if (input.length !== 42)
       return false
     return true
   }, [input])
-
-  const [error, setError] = useState<Error>()
 
   const tryAddReadonly = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -61,18 +58,16 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps & UUIDProps) {
 
       const wallet = { coin: "ethereum", type: "readonly", uuid, name, color, emoji, address }
 
-      const walletsData = await background.tryRequest<Wallet[]>({
+      await background.tryRequest<Wallet[]>({
         method: "brume_createWallet",
         params: [wallet]
       }).then(r => r.throw(t).throw(t))
 
-      wallets.mutate(Mutators.data(walletsData))
-
       close()
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(setError))
-  }, [name, valid, input, uuid, color, emoji, background, wallets.mutate, close])
+    }).then(Results.alert)
+  }, [name, canAdd, input, uuid, color, emoji, background, close])
 
   const NameInput =
     <div className="flex items-stretch gap-2">
@@ -93,9 +88,9 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps & UUIDProps) {
       rows={4} />
 
   const AddReadonlyButon =
-    <Button.Gradient className="w-full po-md"
+    <Button.Gradient className="grow po-md"
       colorIndex={color}
-      disabled={!name || !valid}
+      disabled={!name || !canAdd}
       onClick={tryAddReadonly.run}>
       <Button.Shrink>
         <Outline.PlusIcon className="s-sm" />
@@ -105,16 +100,13 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps & UUIDProps) {
 
   return <Dialog close={close}>
     <Dialog.Title close={close}>
-      New watch-only wallet
+      New wallet
     </Dialog.Title>
     <div className="h-2" />
     {NameInput}
-    <div className="h-4" />
+    <div className="h-8" />
     {KeyInput}
-    {error && <div className="mt-2 text-red-400">
-      An error occured: {Errors.toString(error)}
-    </div>}
-    <div className="h-4" />
+    <div className="h-8" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       {AddReadonlyButon}
     </div>

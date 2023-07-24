@@ -27,11 +27,11 @@ import { precacheAndRoute } from "workbox-precaching"
 import { EthereumBrume, EthereumBrumes } from "./entities/brumes/data"
 import { Origin, OriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
+import { Seed, SeedData } from "./entities/seeds/data"
 import { PersistentSession, SessionData, TemporarySession } from "./entities/sessions/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
-import { Wallets } from "./entities/wallets/all/data"
-import { EthereumContext, EthereumQueryKey, EthereumWalletData, Wallet, getEthereumBalance, getEthereumUnknown, getPairPrice, tryEthereumFetch } from "./entities/wallets/data"
+import { EthereumContext, EthereumQueryKey, Wallet, WalletData, getEthereumBalance, getEthereumUnknown, getPairPrice, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -656,6 +656,8 @@ export class Global {
       return new Some(await this.brume_createUser(foreground, request))
     // if (request.method === "brume_removeUser")
     //   return new Some(await this.brume_removeUser(foreground, request))
+    if (request.method === "brume_createSeed")
+      return new Some(await this.brume_createSeed(foreground, request))
     if (request.method === "brume_createWallet")
       return new Some(await this.brume_createWallet(foreground, request))
     // if (request.method === "brume_removeWallet")
@@ -820,19 +822,29 @@ export class Global {
     })
   }
 
-  async brume_createWallet(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Wallet[], Error>> {
+  async brume_createSeed(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const [wallet] = (request as RpcParamfulRequestInit<[EthereumWalletData]>).params
+      const [seed] = (request as RpcParamfulRequestInit<[SeedData]>).params
+
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+      const seedQuery = await Seed.Background.schema(seed.uuid, storage).make(this.core)
+      await seedQuery.mutate(Mutators.data(seed))
+
+      return Ok.void()
+    })
+  }
+
+  async brume_createWallet(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+    return await Result.unthrow(async t => {
+      const [wallet] = (request as RpcParamfulRequestInit<[WalletData]>).params
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const walletQuery = await Wallet.schema(wallet.uuid, storage).make(this.core)
       await walletQuery.mutate(Mutators.data(wallet))
 
-      const walletsQuery = await Wallets.schema(storage).make(this.core)
-      const walletsData = Option.wrap(walletsQuery.data?.get()).ok().throw(t)
-
-      return new Ok(walletsData)
+      return Ok.void()
     })
   }
 

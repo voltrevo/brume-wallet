@@ -1,4 +1,5 @@
 import { Outline } from "@/libs/icons/icons"
+import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
 import { Button } from "@/libs/ui/button"
@@ -9,11 +10,14 @@ import { Path } from "@/mods/foreground/router/path"
 import { useCallback } from "react"
 import { SeedDataCard } from "../card"
 import { SeedDataProvider, useSeedData } from "../context"
+import { SeedCreatorDialog } from "./create/private"
 import { useSeeds } from "./data"
 
 export function SeedsPage() {
   const seedsQuery = useSeeds()
   const maybeSeeds = seedsQuery.data?.inner
+
+  const creator = useBooleanHandle(false)
 
   const onSeedClick = useCallback((seed: Seed) => {
     Path.go(`/seed/${seed.uuid}`)
@@ -23,18 +27,22 @@ export function SeedsPage() {
     <PageBody>
       <ClickableSeedGrid
         ok={onSeedClick}
-        create={() => { }}
+        create={creator.enable}
         maybeSeeds={maybeSeeds} />
     </PageBody>
 
   const Header =
     <PageHeader title="Seeds">
-      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition">
+      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+        onClick={creator.enable}>
         <Outline.PlusIcon className="s-sm" />
       </Button.Naked>
     </PageHeader>
 
   return <Page>
+    {creator.current &&
+      <SeedCreatorDialog
+        close={creator.disable} />}
     {Header}
     {Body}
   </Page>

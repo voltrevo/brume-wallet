@@ -1,5 +1,4 @@
 import { Outline } from "@/libs/icons/icons";
-import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { CloseProps } from "@/libs/react/props/close";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
@@ -20,18 +19,12 @@ export function WalletCreatorDialog(props: CloseProps) {
     setType("privateKey")
   }, [])
 
-  const uuid = useAsyncReplaceMemo(async () => {
-    return crypto.randomUUID()
-  }, [])
-
   return <Dialog close={close}>
-    {type === "readonly" && uuid &&
+    {type === "readonly" &&
       <ReadonlyWalletCreatorDialog
-        uuid={uuid}
         close={close} />}
-    {type === "privateKey" && uuid &&
+    {type === "privateKey" &&
       <PrivateKeyWalletCreatorDialog
-        uuid={uuid}
         close={close} />}
     {type == null && <>
       <Dialog.Title close={close}>

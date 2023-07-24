@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
-import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
+import { Results } from "@/libs/results/results"
 import { Button } from "@/libs/ui/button"
 import { Session } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackground } from "@/mods/foreground/background/context"
@@ -32,7 +32,7 @@ export function SessionsPage() {
         }).then(r => r.throw(t).throw(t))
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+    }).then(Results.alert)
   }, [background, maybeSessions])
 
   const Body =
@@ -82,7 +82,7 @@ export function SessionRow(props: { session: Session }) {
       }).then(r => r.throw(t).throw(t))
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+    }).then(Results.alert)
   }, [background, maybeSessionData])
 
   if (maybeOriginData == null)

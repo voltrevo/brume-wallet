@@ -1,10 +1,10 @@
 import { BigInts } from "@/libs/bigints/bigints";
-import { Errors } from "@/libs/errors/errors";
 import { Ethers } from "@/libs/ethers/ethers";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
+import { Results } from "@/libs/results/results";
 import { RpcErr, RpcError, RpcOk } from "@/libs/rpc";
 import { Button } from "@/libs/ui/button";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
@@ -128,7 +128,7 @@ export function TransactPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+    }).then(Results.alert)
   }, [core, storage, background, id, maybeWallet, maybeSession, maybeGasPrice, maybeNonce])
 
   const onReject = useAsyncUniqueCallback(async () => {
@@ -146,7 +146,7 @@ export function TransactPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+    }).then(Results.alert)
   }, [core, storage, background, id])
 
   const loading = useMemo(() => {
@@ -226,7 +226,7 @@ export function SwitchPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+    }).then(Results.alert)
   }, [core, storage, background, id])
 
   const onReject = useAsyncUniqueCallback(async () => {
@@ -244,7 +244,7 @@ export function SwitchPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+    }).then(Results.alert)
   }, [core, storage, background, id])
 
   return <Page>
@@ -331,7 +331,7 @@ export function PersonalSignPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+    }).then(Results.alert)
   }, [core, storage, background, id, maybeWallet, userMessage])
 
   const onReject = useAsyncUniqueCallback(async () => {
@@ -349,7 +349,7 @@ export function PersonalSignPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+    }).then(Results.alert)
   }, [core, storage, background, id])
 
   return <Page>
@@ -439,7 +439,7 @@ export function TypedSignPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+    }).then(Results.alert)
   }, [core, storage, background, id, maybeWallet, data])
 
   const onReject = useAsyncUniqueCallback(async () => {
@@ -457,7 +457,7 @@ export function TypedSignPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+    }).then(Results.alert)
   }, [core, storage, background, id])
 
   return <Page>
@@ -531,7 +531,7 @@ export function WalletAndChainSelectPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(e => alert(Errors.toString(e))))
+    }).then(Results.alert)
   }, [core, storage, background, id, chain, persistent])
 
   const Body =
