@@ -160,6 +160,8 @@ Your storage is hashed and encrypted using strong cryptography algorithms and pa
 - All storage keys are hashed using HMAC-SHA256, it is impossible to retrieve the original key
 - All storage values are encrypted using AES-256-GCM, each with a different ciphertext/IV
 
+### Authenticated storage
+
 Some critical entities like private keys and seed phrases are stored in WebAuthn and require authentication (FaceID/TouchID)
 
 - They are encrypted before being stored in WebAuthn storage
