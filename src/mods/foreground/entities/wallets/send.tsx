@@ -11,12 +11,14 @@ import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { Option } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
+import { useCore } from "@hazae41/xswr";
 import { ethers } from "ethers";
 import { useMemo, useState } from "react";
 import { useWalletData } from "./context";
 import { EthereumContextProps, WalletDatas, useGasPrice, useNonce, usePendingBalance } from "./data";
 
 export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumContextProps) {
+  const core = useCore().unwrap()
   const wallet = useWalletData()
   const { title, context, close } = props
 
@@ -77,7 +79,7 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
       if (wallet.type === "readonly")
         return new Err(new Error(`This wallet is readonly`))
 
-      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, context.background).then(r => r.throw(t))
+      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, core, context.background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 
@@ -124,7 +126,7 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
 
       return Ok.void()
     }).then(r => r.inspectErrSync(setError).ignore())
-  }, [context, wallet, maybeNonce, maybeGasPrice, recipientInput, valueInput])
+  }, [core, context, wallet, maybeNonce, maybeGasPrice, recipientInput, valueInput])
 
   const TxHashDisplay = <>
     <div className="">

@@ -98,7 +98,7 @@ export function TransactPage() {
       if (wallet.type === "readonly")
         return new Err(new Error(`This wallet is readonly`))
 
-      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
+      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, core, background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 
@@ -310,7 +310,7 @@ export function PersonalSignPage() {
       if (wallet.type === "readonly")
         return new Err(new Error(`This wallet is readonly`))
 
-      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
+      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, core, background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 
@@ -416,7 +416,7 @@ export function TypedSignPage() {
       if (wallet.type === "readonly")
         return new Err(new Error(`This wallet is readonly`))
 
-      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, background).then(r => r.throw(t))
+      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, core, background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 
