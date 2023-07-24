@@ -380,8 +380,6 @@ export class Global {
       const tempSessionQuery = await TemporarySession.schema(sessionData.id).make(this.core)
       await tempSessionQuery.mutate(Mutators.data(sessionData))
 
-      console.warn("set", sessionData.id, sessionData)
-
       this.sessions.set(script.name, sessionData.id)
 
       let scripts = this.scripts.get(sessionData.id)
