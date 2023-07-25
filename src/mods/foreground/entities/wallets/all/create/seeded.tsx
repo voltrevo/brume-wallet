@@ -1,6 +1,6 @@
 import { Colors } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
-import { Ethereum } from "@/libs/ethereum/ethereum";
+import { Ethereum } from "@/libs/ethereum";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Fixed, FixedInit } from "@/libs/bigints/bigints";
 import { Gradients } from "@/libs/colors/colors";
-import { chains, pairsByAddress, pairsByName } from "@/libs/ethereum/chain";
+import { chains, pairsByAddress, pairsByName } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";

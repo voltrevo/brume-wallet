@@ -1,7 +1,7 @@
 import { FixedInit } from "@/libs/bigints/bigints"
 import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
-import { chains, pairsByAddress } from "@/libs/ethereum/chain"
+import { chains, pairsByAddress } from "@/libs/ethereum/mods/chain"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcParamfulRequestInit, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"

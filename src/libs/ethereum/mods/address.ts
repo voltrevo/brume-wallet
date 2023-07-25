@@ -1,6 +1,6 @@
 import { Bytes } from "@hazae41/bytes"
 import { ethers } from "ethers"
-import { Keccak256 } from "../hashes/keccak256"
+import { Keccak256 } from "../../hashes/keccak256"
 
 export namespace Address {
 

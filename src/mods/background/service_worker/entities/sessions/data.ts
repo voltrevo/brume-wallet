@@ -1,4 +1,4 @@
-import { EthereumChain } from "@/libs/ethereum/chain"
+import { EthereumChain } from "@/libs/ethereum/mods/chain"
 import { Sets } from "@/libs/sets/sets"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Data, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"

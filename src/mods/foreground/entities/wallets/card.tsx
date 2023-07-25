@@ -1,6 +1,6 @@
 import { Gradients } from "@/libs/colors/colors"
 import { useCopy } from "@/libs/copy/copy"
-import { Ethereum } from "@/libs/ethereum/ethereum"
+import { Ethereum } from "@/libs/ethereum"
 import { Outline } from "@/libs/icons/icons"
 import { useMouseCancel } from "@/libs/react/events"
 import { Button } from "@/libs/ui/button"

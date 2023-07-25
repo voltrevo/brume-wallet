@@ -1,8 +1,11 @@
 import { Errors } from "@/libs/errors/errors";
+import { Signature } from "@/libs/ethereum/mods/signature";
 import { Ledger } from "@/libs/ledger";
 import { LedgerDevice } from "@/libs/ledger/mods/usb";
 import { Results } from "@/libs/results/results";
 import { Empty, Opaque } from "@hazae41/binary";
+import { Bytes } from "@hazae41/bytes";
+import { Cursor } from "@hazae41/cursor";
 import { Ok, Result } from "@hazae41/result";
 import { verifyMessage } from "ethers";
 import { useCallback, useState } from "react";
@@ -53,7 +56,7 @@ export default function Page() {
 
       const message = Buffer.from("hello world", "utf8")
 
-      let response: Buffer | undefined = undefined
+      let response: Bytes | undefined = undefined
 
       for (let offset = 0; offset !== message.length;) {
         console.log("not done")
@@ -81,27 +84,24 @@ export default function Page() {
         }
 
         const request = { cla: 0xe0, ins: 0x08, p1: offset === 0 ? 0x00 : 0x80, p2: 0x00, fragment: new Opaque(buffer) }
-        response = Buffer.from(await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes))
+        response = await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes)
 
         offset += chunkSize;
       }
 
-      if (response) {
-        const v = response[0];
-        const r = response.slice(1, 1 + 32).toString("hex");
-        const s = response.slice(1 + 32, 1 + 32 + 32).toString("hex");
-        const result = { v, r, s }
+      if (response == null)
+        return Ok.void()
 
-        {
-          let v = (result['v'] - 27).toString(16);
-          if (v.length < 2)
-            v = "0" + v;
-          const signature = "0x" + result['r'] + result['s'] + v
-          console.log(signature);
-          const address = verifyMessage(message, signature)
-          console.log(address)
-        }
-      }
+      const cursor = new Cursor(response)
+      const v = cursor.tryReadUint8().throw(t)
+      const r = cursor.tryRead(32).throw(t)
+      const s = cursor.tryRead(32).throw(t)
+
+      const signature = Signature.from({ v, r, s })
+      console.log(signature);
+
+      const address = verifyMessage(message, signature)
+      console.log(address)
 
       return Ok.void()
     }).then(Results.alert)

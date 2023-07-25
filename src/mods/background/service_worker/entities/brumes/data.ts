@@ -1,4 +1,4 @@
-import { EthereumChain, EthereumChains } from "@/libs/ethereum/chain"
+import { EthereumChain, EthereumChains } from "@/libs/ethereum/mods/chain"
 import { Objects } from "@/libs/objects/objects"
 import { RpcClient } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"

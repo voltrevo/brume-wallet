@@ -1,5 +1,5 @@
 import { BigInts, Fixed, FixedInit } from "@/libs/bigints/bigints"
-import { EthereumChain, PairInfo } from "@/libs/ethereum/chain"
+import { EthereumChain, PairInfo } from "@/libs/ethereum/mods/chain"
 import { useObjectMemo } from "@/libs/react/memo"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
