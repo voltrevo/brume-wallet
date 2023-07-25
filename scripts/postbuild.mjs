@@ -3,7 +3,7 @@ import workbox from "workbox-build";
 import { walkSync } from "./libs/walkSync.mjs";
 
 {
-  rmSync("./out/components", { force: true, recursive: true })
+  rmSync("./out/test", { force: true, recursive: true })
 }
 
 /**
