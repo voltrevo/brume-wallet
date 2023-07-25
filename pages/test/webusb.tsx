@@ -22,9 +22,10 @@ export default function Page() {
   }, [])
 
   const getAppConfiguration = useCallback(async () => {
-    if (!device) return
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      if (!device)
+        return Ok.void()
 
-    try {
       const request = { cla: 0xe0, ins: 0x06, p1: 0x00, p2: 0x00, fragment: new Empty() }
       const response = await device.tryRequest(request).then(r => r.unwrap().unwrap().bytes)
 
@@ -35,15 +36,16 @@ export default function Page() {
         starkv2Supported: response[0] & 0x08,
         version: "" + response[1] + "." + response[2] + "." + response[3],
       })
-    } catch (e: unknown) {
-      console.error(Errors.toJSON(e))
-    }
+
+      return Ok.void()
+    }).then(Results.alert)
   }, [device])
 
   const signPersonalMessage = useCallback(async () => {
-    if (!device) return
-
     return await Result.unthrow<Result<void, Error>>(async t => {
+      if (!device)
+        return Ok.void()
+
       const path = "44'/60'/0'/0/0"
       const paths = new Array<number>()
 
@@ -59,7 +61,6 @@ export default function Page() {
       let response: Bytes | undefined = undefined
 
       for (let offset = 0; offset !== message.length;) {
-        console.log("not done")
         const maxChunkSize = offset === 0
           ? 150 - 1 - paths.length * 4 - 4
           : 150;
