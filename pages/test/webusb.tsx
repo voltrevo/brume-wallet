@@ -20,8 +20,15 @@ export default function Page() {
 
     try {
       const request = { cla: 0xe0, ins: 0x06, p1: 0x00, p2: 0x00, fragment: new Empty() }
-      const response = await device.tryRequest(request).then(r => r.unwrap())
-      console.log(response)
+      const response = await device.tryRequest(request).then(r => r.unwrap().unwrap().bytes)
+
+      console.log({
+        arbitraryDataEnabled: response[0] & 0x01,
+        erc20ProvisioningNecessary: response[0] & 0x02,
+        starkEnabled: response[0] & 0x04,
+        starkv2Supported: response[0] & 0x08,
+        version: "" + response[1] + "." + response[2] + "." + response[3],
+      })
     } catch (e: unknown) {
       console.error(Errors.toJSON(e))
     }
