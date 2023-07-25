@@ -93,11 +93,13 @@ export class HIDFrame<T extends Writable.Infer<T>> {
 
     let frame = await generator.next()
 
-    for (; !frame.done && cursor.inner.remaining; frame = await generator.next()) {
+    for (; !frame.done; frame = await generator.next()) {
       const write = cursor.inner.tryWrite(frame.value.fragment.bytes.slice(0, cursor.inner.remaining))
 
       if (write.isErr())
         return write
+      if (!cursor.inner.remaining)
+        break
       continue
     }
 

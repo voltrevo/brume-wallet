@@ -1,7 +1,10 @@
 import { Errors } from "@/libs/errors/errors";
 import { Ledger } from "@/libs/ledger";
 import { LedgerDevice } from "@/libs/ledger/mods/usb";
-import { Empty } from "@hazae41/binary";
+import { Results } from "@/libs/results/results";
+import { Empty, Opaque } from "@hazae41/binary";
+import { Ok, Result } from "@hazae41/result";
+import { verifyMessage } from "ethers";
 import { useCallback, useState } from "react";
 
 export default function Page() {
@@ -15,7 +18,7 @@ export default function Page() {
     }
   }, [])
 
-  const test = useCallback(async () => {
+  const getAppConfiguration = useCallback(async () => {
     if (!device) return
 
     try {
@@ -34,12 +37,85 @@ export default function Page() {
     }
   }, [device])
 
+  const signPersonalMessage = useCallback(async () => {
+    if (!device) return
+
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      const path = "44'/60'/0'/0/0"
+      const paths = new Array<number>()
+
+      for (const comp of path.split("/")) {
+        const value = comp.endsWith("'")
+          ? parseInt(comp, 10) + 0x80000000
+          : parseInt(comp, 10)
+        paths.push(value)
+      }
+
+      const message = Buffer.from("hello world", "utf8")
+
+      let response: Buffer | undefined = undefined
+
+      for (let offset = 0; offset !== message.length;) {
+        console.log("not done")
+        const maxChunkSize = offset === 0
+          ? 150 - 1 - paths.length * 4 - 4
+          : 150;
+
+        const chunkSize = offset + maxChunkSize > message.length
+          ? message.length - offset
+          : maxChunkSize;
+
+        const buffer = Buffer.alloc(offset === 0
+          ? 1 + paths.length * 4 + 4 + chunkSize
+          : chunkSize)
+
+        if (offset === 0) {
+          buffer[0] = paths.length;
+          paths.forEach((element, index) => {
+            buffer.writeUInt32BE(element, 1 + 4 * index);
+          });
+          buffer.writeUInt32BE(message.length, 1 + 4 * paths.length);
+          message.copy(buffer, 1 + 4 * paths.length + 4, offset, offset + chunkSize);
+        } else {
+          message.copy(buffer, 0, offset, offset + chunkSize);
+        }
+
+        const request = { cla: 0xe0, ins: 0x08, p1: offset === 0 ? 0x00 : 0x80, p2: 0x00, fragment: new Opaque(buffer) }
+        response = Buffer.from(await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes))
+
+        offset += chunkSize;
+      }
+
+      if (response) {
+        const v = response[0];
+        const r = response.slice(1, 1 + 32).toString("hex");
+        const s = response.slice(1 + 32, 1 + 32 + 32).toString("hex");
+        const result = { v, r, s }
+
+        {
+          let v = (result['v'] - 27).toString(16);
+          if (v.length < 2)
+            v = "0" + v;
+          const signature = "0x" + result['r'] + result['s'] + v
+          console.log(signature);
+          const address = verifyMessage(message, signature)
+          console.log(address)
+        }
+      }
+
+      return Ok.void()
+    }).then(Results.alert)
+  }, [device])
+
   return <>
     <button onClick={connect}>
       connect
     </button>
-    <button onClick={test}>
-      test
+    <button onClick={getAppConfiguration}>
+      getAppConfiguration
+    </button>
+    <button onClick={signPersonalMessage}>
+      signPersonalMessage
     </button>
   </>
 }
