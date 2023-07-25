@@ -87,7 +87,6 @@ export class HIDFrame<T extends Writable.Infer<T>> {
 
     if (write.isErr())
       return write
-
     if (!cursor.inner.remaining)
       return new Ok(cursor.inner.bytes)
 

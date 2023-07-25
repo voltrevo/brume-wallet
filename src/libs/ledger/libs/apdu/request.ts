@@ -1,7 +1,17 @@
 import { Writable } from "@hazae41/binary"
 import { Cursor, CursorWriteError } from "@hazae41/cursor"
 import { Err, Ok, Result } from "@hazae41/result"
-import { ApduDataOverflowError } from "../../mods/usb"
+
+export class ApduDataOverflowError extends Error {
+  readonly #class = ApduDataOverflowError
+  readonly name = this.#class.name
+
+  constructor(
+    readonly length: number
+  ) {
+    super(`Data overflow (${length} > 255)`)
+  }
+}
 
 export interface ApduRequestInit<T extends Writable.Infer<T>> {
   readonly cla: number

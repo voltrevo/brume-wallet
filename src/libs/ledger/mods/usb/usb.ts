@@ -146,17 +146,6 @@ export async function tryConnect(): Promise<Result<LedgerDevice, Error>> {
   })
 }
 
-export class ApduDataOverflowError extends Error {
-  readonly #class = ApduDataOverflowError
-  readonly name = this.#class.name
-
-  constructor(
-    readonly length: number
-  ) {
-    super(`APDU data overflow (${length} > 255)`)
-  }
-}
-
 export class LedgerDevice {
   readonly channel = Math.floor(Math.random() * 0xffff)
 
@@ -202,8 +191,6 @@ export class LedgerDevice {
     return await Result.unthrow(async t => {
       const container = HIDContainer.tryNew(fragment).throw(t)
       const bytes = Writable.tryWriteToBytes(container).throw(t)
-
-      console.log(bytes)
 
       const frames = HIDFrame.trySplit(this.channel, bytes)
 
