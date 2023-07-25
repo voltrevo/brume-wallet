@@ -198,9 +198,8 @@ export class LedgerDevice {
 
       for (; !frame.done; frame = frames.next())
         await this.#tryTransferOut(frame.value).then(r => r.throw(t))
-      frame.value.throw(t)
 
-      return Ok.void()
+      return frame.value
     })
   }
 
@@ -210,8 +209,7 @@ export class LedgerDevice {
 
       if (frame.isErr())
         return frame
-      else
-        yield frame.get()
+      yield frame.get()
     }
   }
 
