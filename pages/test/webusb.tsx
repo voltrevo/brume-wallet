@@ -56,38 +56,40 @@ export default function Page() {
         paths.push(value)
       }
 
-      const message = Buffer.from("hello world", "utf8")
+      const message = Bytes.tryRandom(1024).throw(t)
+      const reader = new Cursor(message)
 
       let response: Bytes | undefined = undefined
 
-      for (let offset = 0; offset !== message.length;) {
-        const maxChunkSize = offset === 0
-          ? 150 - 1 - paths.length * 4 - 4
-          : 150;
+      {
+        const full = Math.min(150, reader.remaining)
+        const head = 1 + (paths.length * 4) + 4
+        const body = full - head
 
-        const chunkSize = offset + maxChunkSize > message.length
-          ? message.length - offset
-          : maxChunkSize;
+        const chunk = reader.tryRead(body).throw(t)
 
-        const buffer = Buffer.alloc(offset === 0
-          ? 1 + paths.length * 4 + 4 + chunkSize
-          : chunkSize)
+        const writer = Cursor.tryAllocUnsafe(full).throw(t)
+        writer.tryWriteUint8(paths.length).throw(t)
 
-        if (offset === 0) {
-          buffer[0] = paths.length;
-          paths.forEach((element, index) => {
-            buffer.writeUInt32BE(element, 1 + 4 * index);
-          });
-          buffer.writeUInt32BE(message.length, 1 + 4 * paths.length);
-          message.copy(buffer, 1 + 4 * paths.length + 4, offset, offset + chunkSize);
-        } else {
-          message.copy(buffer, 0, offset, offset + chunkSize);
-        }
+        for (const path of paths)
+          writer.tryWriteUint32(path).throw(t)
 
-        const request = { cla: 0xe0, ins: 0x08, p1: offset === 0 ? 0x00 : 0x80, p2: 0x00, fragment: new Opaque(buffer) }
+        writer.tryWriteUint32(message.length).throw(t)
+        writer.tryWrite(chunk).throw(t)
+
+        const request = { cla: 0xe0, ins: 0x08, p1: 0x00, p2: 0x00, fragment: new Opaque(writer.bytes) }
         response = await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes)
+      }
 
-        offset += chunkSize;
+      while (reader.remaining) {
+        const full = Math.min(150, reader.remaining)
+        const chunk = reader.tryRead(full).throw(t)
+
+        const writer = Cursor.tryAllocUnsafe(full).throw(t)
+        writer.tryWrite(chunk).throw(t)
+
+        const request = { cla: 0xe0, ins: 0x08, p1: 0x80, p2: 0x00, fragment: new Opaque(writer.bytes) }
+        response = await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes)
       }
 
       if (response == null)
