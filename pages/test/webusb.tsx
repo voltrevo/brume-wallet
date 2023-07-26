@@ -59,7 +59,7 @@ export default function Page() {
       const message = Bytes.tryRandom(1024).throw(t)
       const reader = new Cursor(message)
 
-      let response: Bytes | undefined = undefined
+      let response: Bytes
 
       {
         const full = Math.min(150, reader.remaining)
@@ -87,9 +87,6 @@ export default function Page() {
         const request = { cla: 0xe0, ins: 0x08, p1: 0x80, p2: 0x00, fragment: new Opaque(chunk) }
         response = await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes)
       }
-
-      if (response == null)
-        return Ok.void()
 
       const cursor = new Cursor(response)
       const v = cursor.tryReadUint8().throw(t)
