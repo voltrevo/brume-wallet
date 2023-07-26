@@ -49,10 +49,10 @@ export default function Page() {
       const path = "44'/60'/0'/0/0"
       const paths = new Array<number>()
 
-      for (const comp of path.split("/")) {
-        const value = comp.endsWith("'")
-          ? parseInt(comp, 10) + 0x80000000
-          : parseInt(comp, 10)
+      for (const subpath of path.split("/")) {
+        const value = subpath.endsWith("'")
+          ? parseInt(subpath, 10) + 0x80_00_00_00
+          : parseInt(subpath, 10)
         paths.push(value)
       }
 
