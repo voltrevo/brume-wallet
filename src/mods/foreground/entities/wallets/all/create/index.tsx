@@ -3,8 +3,8 @@ import { CloseProps } from "@/libs/react/props/close";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { useCallback, useState } from "react";
-import { ReadonlyWalletCreatorDialog } from "./create/readonly";
-import { StandaloneWalletCreatorDialog } from "./create/standalone";
+import { ReadonlyWalletCreatorDialog } from "./readonly";
+import { StandaloneWalletCreatorDialog } from "./standalone";
 
 export function WalletCreatorDialog(props: CloseProps) {
   const { close } = props
@@ -32,14 +32,14 @@ export function WalletCreatorDialog(props: CloseProps) {
       </Dialog.Title>
       <div className="h-2" />
       <div className="w-full flex items-center gap-2">
-        <Button.Contrast className="grow p-4 rounded-xl"
+        <Button.Contrast className="flex-1 whitespace-nowrap p-4 rounded-xl"
           onClick={onWatchonlyClick}>
           <Button.Shrink className="flex flex-col">
             <Outline.EyeIcon className="s-md" />
             <span>Watch-only</span>
           </Button.Shrink>
         </Button.Contrast>
-        <Button.Contrast className="grow p-4 rounded-xl"
+        <Button.Contrast className="flex-1 whitespace-nowrap p-4 rounded-xl"
           onClick={onPrivateKeyClick}>
           <Button.Shrink className="flex flex-col">
             <Outline.WalletIcon className="s-md" />

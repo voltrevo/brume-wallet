@@ -3,7 +3,7 @@ import { Empty, Opaque, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
 import { Cursor } from "@hazae41/cursor";
 import { Ok, Result } from "@hazae41/result";
-import { Paths } from "../binary/paths";
+import { Paths } from "../common/binary/paths";
 import { LedgerDevice } from "../usb";
 
 export interface AppConfigResult {

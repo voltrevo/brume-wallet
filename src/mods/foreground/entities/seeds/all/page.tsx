@@ -10,7 +10,7 @@ import { Path } from "@/mods/foreground/router/path"
 import { useCallback } from "react"
 import { SeedDataCard } from "../card"
 import { SeedDataProvider, useSeedData } from "../context"
-import { SeedCreatorDialog } from "./create/private"
+import { SeedCreatorDialog } from "./create"
 import { useSeeds } from "./data"
 
 export function SeedsPage() {

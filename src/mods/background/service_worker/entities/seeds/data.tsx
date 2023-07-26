@@ -24,6 +24,7 @@ export namespace SeedRef {
 export type SeedData =
   | MnemonicSeedData
   | AuthMnemonicSeedData
+  | LedgerSeedData
 
 export interface MnemonicSeedData {
   readonly type: "mnemonic"
@@ -53,10 +54,18 @@ export interface AuthMnemonicSeedData {
 }
 
 export interface LedgerSeedData {
-  readonly uuid: string
   readonly type: "ledger"
 
-  readonly todo: unknown
+  readonly uuid: string
+  readonly name: string
+
+  readonly color: number
+  readonly emoji: string
+
+  /**
+   * 44'/60'/0'/0/0 address in order to identify the seed
+   */
+  readonly address: string
 }
 
 export namespace Seed {

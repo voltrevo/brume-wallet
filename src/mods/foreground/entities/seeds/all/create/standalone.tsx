@@ -21,7 +21,7 @@ import { wordlist } from "@scure/bip39/wordlists/english";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../../../wallets/avatar";
 
-export function SeedCreatorDialog(props: CloseProps) {
+export function StandaloneSeedCreatorDialog(props: CloseProps) {
   const { close } = props
   const background = useBackground()
 
