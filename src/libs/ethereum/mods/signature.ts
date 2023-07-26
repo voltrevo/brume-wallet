@@ -2,8 +2,8 @@ import { Bytes } from "@hazae41/bytes"
 
 export interface SignatureInit {
   readonly v: number
-  readonly r: Uint8Array
-  readonly s: Uint8Array
+  readonly r: Bytes<32>
+  readonly s: Bytes<32>
 }
 
 export namespace Signature {
