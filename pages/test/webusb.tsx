@@ -64,9 +64,8 @@ export default function Page() {
       {
         const full = Math.min(150, reader.remaining)
         const head = 1 + (paths.length * 4) + 4
-        const body = full - head
 
-        const chunk = reader.tryRead(body).throw(t)
+        const chunk = reader.tryRead(full - head).throw(t)
 
         const writer = Cursor.tryAllocUnsafe(full).throw(t)
         writer.tryWriteUint8(paths.length).throw(t)
@@ -85,10 +84,7 @@ export default function Page() {
         const full = Math.min(150, reader.remaining)
         const chunk = reader.tryRead(full).throw(t)
 
-        const writer = Cursor.tryAllocUnsafe(full).throw(t)
-        writer.tryWrite(chunk).throw(t)
-
-        const request = { cla: 0xe0, ins: 0x08, p1: 0x80, p2: 0x00, fragment: new Opaque(writer.bytes) }
+        const request = { cla: 0xe0, ins: 0x08, p1: 0x80, p2: 0x00, fragment: new Opaque(chunk) }
         response = await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes)
       }
 
