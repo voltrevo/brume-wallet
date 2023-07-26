@@ -3,7 +3,6 @@ import { Signature } from "@/libs/ethereum/mods/signature";
 import { Ledger } from "@/libs/ledger";
 import { LedgerDevice } from "@/libs/ledger/mods/usb";
 import { Results } from "@/libs/results/results";
-import { Empty } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
 import { Ok, Result } from "@hazae41/result";
 import { verifyMessage } from "ethers";
@@ -25,16 +24,11 @@ export default function Page() {
       if (!device)
         return Ok.void()
 
-      const request = { cla: 0xe0, ins: 0x06, p1: 0x00, p2: 0x00, fragment: new Empty() }
-      const response = await device.tryRequest(request).then(r => r.unwrap().unwrap().bytes)
+      const config = await Ledger.Ethereum
+        .tryGetAppConfig(device)
+        .then(r => r.throw(t))
 
-      console.log({
-        arbitraryDataEnabled: response[0] & 0x01,
-        erc20ProvisioningNecessary: response[0] & 0x02,
-        starkEnabled: response[0] & 0x04,
-        starkv2Supported: response[0] & 0x08,
-        version: "" + response[1] + "." + response[2] + "." + response[3],
-      })
+      console.log(config)
 
       return Ok.void()
     }).then(Results.alert)

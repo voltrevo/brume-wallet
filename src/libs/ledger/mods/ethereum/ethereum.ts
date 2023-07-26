@@ -1,10 +1,35 @@
 import { SignatureInit } from "@/libs/ethereum/mods/signature";
-import { Opaque, Writable } from "@hazae41/binary";
+import { Empty, Opaque, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
 import { Cursor } from "@hazae41/cursor";
 import { Ok, Result } from "@hazae41/result";
 import { Paths } from "../binary/paths";
 import { LedgerDevice } from "../usb";
+
+export interface AppConfigResult {
+  readonly arbitraryDataEnabled: boolean,
+  readonly erc20ProvisioningNecessary: boolean,
+  readonly starkEnabled: boolean,
+  readonly starkv2Supported: boolean,
+
+  readonly version: string
+}
+
+export async function tryGetAppConfig(device: LedgerDevice): Promise<Result<AppConfigResult, Error>> {
+  return await Result.unthrow(async t => {
+    const request = { cla: 0xe0, ins: 0x06, p1: 0x00, p2: 0x00, fragment: new Empty() }
+    const response = await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes)
+
+    const arbitraryDataEnabled = Boolean(response[0] & 0x01)
+    const erc20ProvisioningNecessary = Boolean(response[0] & 0x02)
+    const starkEnabled = Boolean(response[0] & 0x04)
+    const starkv2Supported = Boolean(response[0] & 0x08)
+
+    const version = `${response[1]}.${response[2]}.${response[3]}`
+
+    return new Ok({ arbitraryDataEnabled, erc20ProvisioningNecessary, starkEnabled, starkv2Supported, version })
+  })
+}
 
 export interface GetAddressResult {
   /**
