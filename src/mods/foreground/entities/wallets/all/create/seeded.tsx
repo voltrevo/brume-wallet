@@ -2,6 +2,7 @@ import { Colors } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
 import { Ethereum } from "@/libs/ethereum";
 import { Outline } from "@/libs/icons/icons";
+import { Ledger } from "@/libs/ledger";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
@@ -15,6 +16,7 @@ import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wa
 import { useBackground } from "@/mods/foreground/background/context";
 import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
+import { useCore } from "@hazae41/xswr";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { HDKey } from "@scure/bip32";
 import { mnemonicToSeed } from "@scure/bip39";
@@ -25,6 +27,7 @@ import { WalletAvatar } from "../../avatar";
 
 export function SeededWalletCreatorDialog(props: CloseProps) {
   const { close } = props
+  const core = useCore().unwrap()
   const background = useBackground()
   const seedData = useSeedData()
 
@@ -65,31 +68,45 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
       if (!name)
         return new Err(new Panic())
 
-      const mnemonic = await SeedDatas.tryGetMnemonic(seedData, background).then(r => r.throw(t))
+      if (seedData.type === "ledger") {
+        const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
+        const { address } = await Ledger.Ethereum.tryGetAddress(device, path.slice(2)).then(r => r.throw(t))
 
-      const masterSeed = await mnemonicToSeed(mnemonic)
+        const seed = SeedRef.from(seedData)
 
-      const root = HDKey.fromMasterSeed(masterSeed)
-      const child = root.derive(path)
+        const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name, color, emoji, address, seed, path }
 
-      const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
-      const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
+        await background.tryRequest<Wallet[]>({
+          method: "brume_createWallet",
+          params: [wallet]
+        }).then(r => r.throw(t).throw(t))
+      } else {
+        const mnemonic = await SeedDatas.tryGetMnemonic(seedData, core, background).then(r => r.throw(t))
 
-      const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
-      const seed = SeedRef.from(seedData)
+        const masterSeed = await mnemonicToSeed(mnemonic)
 
-      const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name, color, emoji, address, seed, path }
+        const root = HDKey.fromMasterSeed(masterSeed)
+        const child = root.derive(path)
 
-      await background.tryRequest<Wallet[]>({
-        method: "brume_createWallet",
-        params: [wallet]
-      }).then(r => r.throw(t).throw(t))
+        const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
+        const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
+
+        const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
+        const seed = SeedRef.from(seedData)
+
+        const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name, color, emoji, address, seed, path }
+
+        await background.tryRequest<Wallet[]>({
+          method: "brume_createWallet",
+          params: [wallet]
+        }).then(r => r.throw(t).throw(t))
+      }
 
       close()
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, path, seedData, path, uuid, color, emoji, background, close])
+  }, [name, path, seedData, path, uuid, color, emoji, core, background, close])
 
   const NameInput =
     <div className="flex items-stretch gap-2">

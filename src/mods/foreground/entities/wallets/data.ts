@@ -1,16 +1,15 @@
 import { BigInts, Fixed, FixedInit } from "@/libs/bigints/bigints"
 import { EthereumChain, PairInfo } from "@/libs/ethereum/mods/chain"
+import { Ethers } from "@/libs/ethers/ethers"
 import { useObjectMemo } from "@/libs/react/memo"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
-import { EthereumQueryKey, EthereumSignableWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
+import { EthereumAuthPrivateKeyWallet, EthereumPrivateKeyWalletData, EthereumQueryKey, EthereumSeededWallet, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Bytes } from "@hazae41/bytes"
 import { Option, Optional } from "@hazae41/option"
-import { Ok, Result } from "@hazae41/result"
+import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/xswr"
-import { HDKey } from "@scure/bip32"
-import { mnemonicToSeed } from "@scure/bip39"
 import { ContractRunner, TransactionRequest } from "ethers"
 import { useEffect, useMemo } from "react"
 import { Background } from "../../background/background"
@@ -39,32 +38,63 @@ export function useWallet(uuid: Optional<string>) {
   return query
 }
 
+export async function trySignPrivateKey(privateKey: string, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  return await Result.unthrow(async t => {
+    const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
+
+    const signature = await Result.catchAndWrap(async () => {
+      return await ewallet.signMessage(message)
+    }).then(r => r.throw(t))
+
+    return new Ok(signature)
+  })
+}
+
 export namespace WalletDatas {
 
-  export async function tryGetPrivateKey(wallet: EthereumSignableWalletData, core: Core, background: Background): Promise<Result<string, Error>> {
+  export async function trySignPrivateKeyWallet(wallet: EthereumPrivateKeyWalletData, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      if (wallet.type === "privateKey")
-        return new Ok(wallet.privateKey)
+      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, core, background).then(r => r.throw(t))
+      const signature = await trySignPrivateKey(privateKey, message, core, background).then(r => r.throw(t))
 
-      if (wallet.type === "seeded") {
-        const storage = new UserStorage(core, background)
-        const seedQuery = await Seed.Foreground.schema(wallet.seed.uuid, storage)?.make(core)
-        const seedData = Option.wrap(seedQuery?.data?.inner).ok().throw(t)
+      return new Ok(signature)
+    })
+  }
 
-        const mnemonic = await SeedDatas
-          .tryGetMnemonic(seedData, background)
-          .then(r => r.throw(t))
+  export async function trySignSeededWallet(wallet: EthereumSeededWallet, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const storage = new UserStorage(core, background)
+      const seedQuery = await Seed.Foreground.schema(wallet.seed.uuid, storage)?.make(core)
+      const seed = Option.wrap(seedQuery?.data?.inner).ok().throw(t)
 
-        const masterSeed = await mnemonicToSeed(mnemonic)
+      const signature = await SeedDatas.trySignSeed(seed, wallet.path, message, core, background).then(r => r.throw(t))
 
-        const root = HDKey.fromMasterSeed(masterSeed)
-        const child = root.derive(wallet.path)
+      return new Ok(signature)
+    })
+  }
 
-        const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
+  export async function trySign(wallet: EthereumWalletData, message: string, core: Core, background: Background) {
+    if (wallet.type === "privateKey")
+      return trySignPrivateKeyWallet(wallet, message, core, background)
+    if (wallet.type === "authPrivateKey")
+      return trySignPrivateKeyWallet(wallet, message, core, background)
+    if (wallet.type === "seeded")
+      return trySignSeededWallet(wallet, message, core, background)
+    return new Err(new Panic(`Invalid wallet type`))
+  }
 
-        return new Ok(`0x${Bytes.toHex(privateKeyBytes)}`)
-      }
+  export async function tryGetSeededPrivateKey(wallet: EthereumSeededWallet, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const storage = new UserStorage(core, background)
+      const seedQuery = await Seed.Foreground.schema(wallet.seed.uuid, storage)?.make(core)
+      const seed = Option.wrap(seedQuery?.data?.inner).ok().throw(t)
 
+      return SeedDatas.tryGetSeedPrivateKey(seed, wallet.path, core, background)
+    })
+  }
+
+  export async function tryGetAuthPrivateKey(wallet: EthereumAuthPrivateKeyWallet, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
       const { idBase64, ivBase64 } = wallet.privateKey
 
       const id = Bytes.fromBase64(idBase64)
@@ -80,6 +110,16 @@ export namespace WalletDatas {
 
       return new Ok(`0x${Bytes.toHex(privateKeyBytes)}`)
     })
+  }
+
+  export async function tryGetPrivateKey(wallet: WalletData, core: Core, background: Background): Promise<Result<string, Error>> {
+    if (wallet.type === "privateKey")
+      return new Ok(wallet.privateKey)
+    if (wallet.type === "authPrivateKey")
+      return tryGetAuthPrivateKey(wallet, core, background)
+    if (wallet.type === "seeded")
+      return tryGetSeededPrivateKey(wallet, core, background)
+    return new Err(new Panic(`Invalid wallet type`))
   }
 
 }

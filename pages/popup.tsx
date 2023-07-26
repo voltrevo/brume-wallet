@@ -307,16 +307,7 @@ export function PersonalSignPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const wallet = Option.wrap(maybeWallet).ok().throw(t)
 
-      if (wallet.type === "readonly")
-        return new Err(new Error(`This wallet is readonly`))
-
-      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, core, background).then(r => r.throw(t))
-
-      const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
-
-      const signature = await Result.catchAndWrap(async () => {
-        return await ewallet.signMessage(userMessage)
-      }).then(r => r.throw(t))
+      const signature = await WalletDatas.trySign(wallet, userMessage, core, background).then(r => r.throw(t))
 
       await background.tryRequest({
         method: "popup_data",

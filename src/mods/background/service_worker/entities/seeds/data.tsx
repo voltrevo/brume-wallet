@@ -23,10 +23,13 @@ export namespace SeedRef {
 
 export type SeedData =
   | MnemonicSeedData
-  | AuthMnemonicSeedData
   | LedgerSeedData
 
-export interface MnemonicSeedData {
+export type MnemonicSeedData =
+  | UnauthMnemonicSeedData
+  | AuthMnemonicSeedData
+
+export interface UnauthMnemonicSeedData {
   readonly type: "mnemonic"
 
   readonly uuid: string
