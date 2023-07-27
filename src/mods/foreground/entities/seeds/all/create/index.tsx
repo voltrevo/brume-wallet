@@ -19,7 +19,7 @@ export function SeedCreatorDialog(props: CloseProps) {
 
   const onLedgerClick = useCallback(async () => {
     return Result.unthrow<Result<void, Error>>(async t => {
-      if (location.pathname !== "/index.html") {
+      if (location.pathname !== "/" && location.pathname !== "/index.html") {
         await background.tryRequest({
           method: "brume_open",
           params: [path.pathname]
