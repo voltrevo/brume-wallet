@@ -1,7 +1,7 @@
 import { Errors } from "@/libs/errors/errors";
 import { Signature } from "@/libs/ethereum/mods/signature";
 import { Ledger } from "@/libs/ledger";
-import { LedgerDevice } from "@/libs/ledger/mods/usb";
+import { LedgerUSBDevice } from "@/libs/ledger/mods/usb";
 import { Results } from "@/libs/results/results";
 import { Bytes } from "@hazae41/bytes";
 import { Ok, Result } from "@hazae41/result";
@@ -9,7 +9,7 @@ import { verifyMessage } from "ethers";
 import { useCallback, useState } from "react";
 
 export default function Page() {
-  const [device, setDevice] = useState<LedgerDevice>()
+  const [device, setDevice] = useState<LedgerUSBDevice>()
 
   const connect = useCallback(async () => {
     try {

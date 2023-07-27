@@ -113,11 +113,28 @@ export class DeviceTransferInError extends Error {
   }
 }
 
-export async function tryConnect(): Promise<Result<LedgerDevice, Error>> {
+export async function tryRequest(): Promise<Result<USBDevice, Error>> {
   return await Result.unthrow(async t => {
-    const device = await Result.catchAndWrap(async () => {
+    const devices = await Result.catchAndWrap(async () => {
+      return await navigator.usb.getDevices()
+    }).then(r => r.mapErrSync(DeviceNotFoundError.from).throw(t))
+
+    const device = devices.find(x => x.vendorId === VENDOR_ID)
+
+    if (device != null)
+      return new Ok(device)
+
+    const device2 = await Result.catchAndWrap(async () => {
       return await navigator.usb.requestDevice({ filters: [{ vendorId: VENDOR_ID }] })
     }).then(r => r.mapErrSync(DeviceNotFoundError.from).throw(t))
+
+    return new Ok(device2)
+  })
+}
+
+export async function tryConnect(): Promise<Result<LedgerUSBDevice, Error>> {
+  return await Result.unthrow(async t => {
+    const device = await tryRequest().then(r => r.throw(t))
 
     await Result.catchAndWrap(async () => {
       return await device.open()
@@ -142,12 +159,12 @@ export async function tryConnect(): Promise<Result<LedgerDevice, Error>> {
       return await device.claimInterface(iface.interfaceNumber)
     }).then(r => r.mapErrSync(DeviceInterfaceClaimError.from).throw(t))
 
-    return new Ok(new LedgerDevice(device, iface))
+    return new Ok(new LedgerUSBDevice(device, iface))
   })
 }
 
-export class LedgerDevice {
-  readonly channel = Math.floor(Math.random() * 0xffff)
+export class LedgerUSBDevice {
+  readonly #channel = Math.floor(Math.random() * 0xffff)
 
   constructor(
     readonly device: USBDevice,
@@ -192,7 +209,7 @@ export class LedgerDevice {
       const container = HIDContainer.tryNew(fragment).throw(t)
       const bytes = Writable.tryWriteToBytes(container).throw(t)
 
-      const frames = HIDFrame.trySplit(this.channel, bytes)
+      const frames = HIDFrame.trySplit(this.#channel, bytes)
 
       let frame = frames.next()
 
@@ -218,7 +235,7 @@ export class LedgerDevice {
       const request = ApduRequest.tryFrom(init).throw(t)
       await this.#trySend(request).then(r => r.throw(t))
 
-      const bytes = await HIDFrame.tryUnsplit(this.channel, this.#tryReceive()).then(r => r.throw(t))
+      const bytes = await HIDFrame.tryUnsplit(this.#channel, this.#tryReceive()).then(r => r.throw(t))
       const response = Readable.tryReadFromBytes(ApduResponse, bytes).throw(t)
 
       return new Ok(response)

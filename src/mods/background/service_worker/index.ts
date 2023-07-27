@@ -671,6 +671,8 @@ export class Global {
       return new Some(await this.brume_eth_index(foreground, request))
     if (request.method === "brume_log")
       return new Some(await this.brume_log(request))
+    if (request.method === "brume_open")
+      return new Some(await this.brume_open(foreground, request))
     if (request.method === "brume_encrypt")
       return new Some(await this.brume_encrypt(foreground, request))
     if (request.method === "brume_decrypt")
@@ -779,6 +781,18 @@ export class Global {
       }
 
       this.scripts.delete(persSessionData.id)
+
+      return Ok.void()
+    })
+  }
+
+  async brume_open(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+    return await Result.unthrow(async t => {
+      const [pathname] = (request as RpcParamfulRequestPreinit<[string]>).params
+
+      await tryBrowser(async () => {
+        return await browser.tabs.create({ url: `index.html#${pathname}` })
+      }).then(r => r.throw(t))
 
       return Ok.void()
     })

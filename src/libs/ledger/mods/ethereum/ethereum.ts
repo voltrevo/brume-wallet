@@ -4,7 +4,7 @@ import { Bytes } from "@hazae41/bytes";
 import { Cursor } from "@hazae41/cursor";
 import { Ok, Result } from "@hazae41/result";
 import { Paths } from "../common/binary/paths";
-import { LedgerDevice } from "../usb";
+import { LedgerUSBDevice } from "../usb";
 
 export interface AppConfigResult {
   readonly arbitraryDataEnabled: boolean,
@@ -15,7 +15,7 @@ export interface AppConfigResult {
   readonly version: string
 }
 
-export async function tryGetAppConfig(device: LedgerDevice): Promise<Result<AppConfigResult, Error>> {
+export async function tryGetAppConfig(device: LedgerUSBDevice): Promise<Result<AppConfigResult, Error>> {
   return await Result.unthrow(async t => {
     const request = { cla: 0xe0, ins: 0x06, p1: 0x00, p2: 0x00, fragment: new Empty() }
     const response = await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes)
@@ -51,7 +51,7 @@ export interface GetAddressResult {
  * @param path 
  * @returns 
  */
-export async function tryGetAddress(device: LedgerDevice, path: string): Promise<Result<GetAddressResult, Error>> {
+export async function tryGetAddress(device: LedgerUSBDevice, path: string): Promise<Result<GetAddressResult, Error>> {
   return await Result.unthrow(async t => {
     const paths = Paths.from(path)
 
@@ -80,7 +80,7 @@ export async function tryGetAddress(device: LedgerDevice, path: string): Promise
  * @param path 
  * @returns 
  */
-export async function tryVerifyAndGetAddress(device: LedgerDevice, path: string): Promise<Result<GetAddressResult, Error>> {
+export async function tryVerifyAndGetAddress(device: LedgerUSBDevice, path: string): Promise<Result<GetAddressResult, Error>> {
   return await Result.unthrow(async t => {
     const paths = Paths.from(path)
 
@@ -103,7 +103,7 @@ export async function tryVerifyAndGetAddress(device: LedgerDevice, path: string)
   })
 }
 
-export async function trySignPersonalMessage(device: LedgerDevice, path: string, message: Uint8Array): Promise<Result<SignatureInit, Error>> {
+export async function trySignPersonalMessage(device: LedgerUSBDevice, path: string, message: Uint8Array): Promise<Result<SignatureInit, Error>> {
   return await Result.unthrow(async t => {
     const paths = Paths.from(path)
 
