@@ -102,9 +102,7 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
       }).throw(t)
 
       const instance = await EthereumWalletInstance.tryFrom(wallet, core, context.background).then(r => r.throw(t))
-      const signature = await instance.trySignTransaction(tx, core, context.background).then(r => r.throw(t))
-
-      tx.signature = signature
+      tx.signature = await instance.trySignTransaction(tx, core, context.background).then(r => r.throw(t))
 
       const txHash = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",
