@@ -21,7 +21,7 @@ import { secp256k1 } from "@noble/curves/secp256k1";
 import { HDKey } from "@scure/bip32";
 import { mnemonicToSeed } from "@scure/bip39";
 import { useDeferredValue, useMemo, useState } from "react";
-import { SeedDatas } from "../../../seeds/all/data";
+import { SeedInstance } from "../../../seeds/all/data";
 import { useSeedData } from "../../../seeds/context";
 import { WalletAvatar } from "../../avatar";
 
@@ -81,7 +81,8 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
           params: [wallet]
         }).then(r => r.throw(t).throw(t))
       } else {
-        const mnemonic = await SeedDatas.tryGetMnemonic(seedData, core, background).then(r => r.throw(t))
+        const instance = await SeedInstance.tryFrom(seedData, core, background).then(r => r.throw(t))
+        const mnemonic = await instance.tryGetMnemonic(core, background).then(r => r.throw(t))
 
         const masterSeed = await mnemonicToSeed(mnemonic)
 

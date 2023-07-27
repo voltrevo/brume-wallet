@@ -18,7 +18,7 @@ import { UserProvider } from "@/mods/foreground/entities/users/context";
 import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
 import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
 import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
-import { WalletDatas, useEthereumContext2, useGasPrice, useNonce, useWallet } from "@/mods/foreground/entities/wallets/data";
+import { EthereumWalletInstance, useEthereumContext2, useGasPrice, useNonce, useWallet } from "@/mods/foreground/entities/wallets/data";
 import { UserRejectionError } from "@/mods/foreground/errors/errors";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
@@ -27,8 +27,9 @@ import { Router } from "@/mods/foreground/router/router";
 import { useUserStorage } from "@/mods/foreground/storage/user";
 import { Bytes } from "@hazae41/bytes";
 import { Option } from "@hazae41/option";
-import { Err, Ok, Result } from "@hazae41/result";
+import { Ok, Result } from "@hazae41/result";
 import { useCore } from "@hazae41/xswr";
+import { Transaction } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
@@ -95,15 +96,8 @@ export function TransactPage() {
       const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
       const nonce = Option.wrap(maybeNonce).ok().throw(t)
 
-      if (wallet.type === "readonly")
-        return new Err(new Error(`This wallet is readonly`))
-
-      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, core, background).then(r => r.throw(t))
-
-      const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
-
-      const signature = await Result.catchAndWrap(async () => {
-        return await ewallet.signTransaction({
+      const transaction = Result.catchAndWrapSync(() => {
+        return Transaction.from({
           data: data,
           to: to,
           from: from,
@@ -113,11 +107,14 @@ export function TransactPage() {
           nonce: Number(nonce),
           value: value
         })
-      }).then(r => r.throw(t))
+      }).throw(t)
+
+      const instance = await EthereumWalletInstance.tryFrom(wallet, core, background).then(r => r.throw(t))
+      transaction.signature = await instance.trySignTransaction(transaction.unsignedHash, core, background).then(r => r.throw(t))
 
       await background.tryRequest({
         method: "popup_data",
-        params: [new RpcOk(id, signature)]
+        params: [new RpcOk(id, transaction.serialized)]
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = await AppRequests.get(storage).make(core)
@@ -307,7 +304,8 @@ export function PersonalSignPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const wallet = Option.wrap(maybeWallet).ok().throw(t)
 
-      const signature = await WalletDatas.trySign(wallet, userMessage, core, background).then(r => r.throw(t))
+      const instance = await EthereumWalletInstance.tryFrom(wallet, core, background).then(r => r.throw(t))
+      const signature = await instance.tryPersonalSign(userMessage, core, background).then(r => r.throw(t))
 
       await background.tryRequest({
         method: "popup_data",
@@ -404,10 +402,8 @@ export function TypedSignPage() {
 
       const { domain, types, message } = JSON.parse(data)
 
-      if (wallet.type === "readonly")
-        return new Err(new Error(`This wallet is readonly`))
-
-      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, core, background).then(r => r.throw(t))
+      const instance = await EthereumWalletInstance.tryFrom(wallet, core, background).then(r => r.throw(t))
+      const privateKey = await instance.tryGetPrivateKey(core, background).then(r => r.throw(t))
 
       const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
 

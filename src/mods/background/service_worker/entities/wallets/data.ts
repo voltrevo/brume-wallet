@@ -47,18 +47,18 @@ export type WalletData =
   | EthereumWalletData
 
 export type EthereumWalletData =
-  | EthereumReadonlyWallet
+  | EthereumReadonlyWalletData
   | EthereumSignableWalletData
 
 export type EthereumSignableWalletData =
   | EthereumPrivateKeyWalletData
-  | EthereumSeededWallet
+  | EthereumSeededWalletData
 
 export type EthereumPrivateKeyWalletData =
-  | EthereumUnauthPrivateKeyWallet
-  | EthereumAuthPrivateKeyWallet
+  | EthereumUnauthPrivateKeyWalletData
+  | EthereumAuthPrivateKeyWalletData
 
-export interface EthereumReadonlyWallet {
+export interface EthereumReadonlyWalletData {
   readonly coin: "ethereum"
   readonly type: "readonly"
 
@@ -71,7 +71,7 @@ export interface EthereumReadonlyWallet {
   readonly address: string
 }
 
-export interface EthereumUnauthPrivateKeyWallet {
+export interface EthereumUnauthPrivateKeyWalletData {
   readonly coin: "ethereum"
   readonly type: "privateKey"
 
@@ -86,7 +86,7 @@ export interface EthereumUnauthPrivateKeyWallet {
   readonly privateKey: string
 }
 
-export interface EthereumAuthPrivateKeyWallet {
+export interface EthereumAuthPrivateKeyWalletData {
   readonly coin: "ethereum"
   readonly type: "authPrivateKey"
 
@@ -104,7 +104,7 @@ export interface EthereumAuthPrivateKeyWallet {
   }
 }
 
-export interface EthereumSeededWallet {
+export interface EthereumSeededWalletData {
   readonly coin: "ethereum"
   readonly type: "seeded"
 

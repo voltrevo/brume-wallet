@@ -5,18 +5,18 @@ import { useObjectMemo } from "@/libs/react/memo"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
-import { EthereumAuthPrivateKeyWallet, EthereumPrivateKeyWalletData, EthereumQueryKey, EthereumSeededWallet, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
+import { EthereumAuthPrivateKeyWalletData, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Bytes } from "@hazae41/bytes"
 import { Option, Optional } from "@hazae41/option"
-import { Err, Ok, Panic, Result } from "@hazae41/result"
+import { Ok, Panic, Result } from "@hazae41/result"
 import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/xswr"
-import { ContractRunner, TransactionRequest } from "ethers"
+import { ContractRunner, TransactionRequest, ethers } from "ethers"
 import { useEffect, useMemo } from "react"
 import { Background } from "../../background/background"
 import { useBackground } from "../../background/context"
 import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorage } from "../../storage/user"
-import { SeedDatas } from "../seeds/all/data"
+import { SeedInstance } from "../seeds/all/data"
 import { useCurrentUserRef } from "../users/context"
 import { User } from "../users/data"
 
@@ -50,52 +50,108 @@ export async function trySignPrivateKey(privateKey: string, message: string, cor
   })
 }
 
-export namespace WalletDatas {
+export type EthereumWalletInstance =
+  | EthereumUnauthPrivateKeyWalletInstance
+  | EthereumAuthPrivateKeyWalletInstance
+  | EthereumSeededWalletInstance
 
-  export async function trySignPrivateKeyWallet(wallet: EthereumPrivateKeyWalletData, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+export namespace EthereumWalletInstance {
+
+  export async function tryFrom(wallet: EthereumWalletData, core: Core, background: Background) {
+    if (wallet.type === "privateKey")
+      return await EthereumUnauthPrivateKeyWalletInstance.tryNew(wallet, core, background)
+    if (wallet.type === "authPrivateKey")
+      return await EthereumAuthPrivateKeyWalletInstance.tryNew(wallet, core, background)
+    if (wallet.type === "seeded")
+      return await EthereumSeededWalletInstance.tryNew(wallet, core, background)
+    throw new Panic()
+  }
+
+}
+
+export class EthereumSeededWalletInstance {
+
+  constructor(
+    readonly data: EthereumSeededWalletData,
+    readonly seed: SeedInstance,
+  ) { }
+
+  static async tryNew(data: EthereumSeededWalletData, core: Core, background: Background): Promise<Result<EthereumSeededWalletInstance, Error>> {
     return await Result.unthrow(async t => {
-      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, core, background).then(r => r.throw(t))
+      const storage = new UserStorage(core, background)
+      const seedQuery = await Seed.Foreground.schema(data.seed.uuid, storage)?.make(core)
+      const seedData = Option.wrap(seedQuery?.data?.inner).ok().throw(t)
+
+      const seed = await SeedInstance.tryFrom(seedData, core, background).then(r => r.throw(t))
+
+      return new Ok(new EthereumSeededWalletInstance(data, seed))
+    })
+  }
+
+  async tryGetPrivateKey(core: Core, background: Background): Promise<Result<string, Error>> {
+    return await this.seed.tryGetPrivateKey(this.data.path, core, background)
+  }
+
+  async tryPersonalSign(message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await this.seed.tryPersonalSign(this.data.path, message, core, background)
+  }
+
+  async trySignTransaction(transaction: string, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await this.seed.trySignTransaction(this.data.path, transaction, core, background)
+  }
+
+}
+
+export class EthereumUnauthPrivateKeyWalletInstance {
+
+  constructor(
+    readonly data: EthereumUnauthPrivateKeyWalletData
+  ) { }
+
+  static async tryNew(data: EthereumUnauthPrivateKeyWalletData, core: Core, background: Background): Promise<Result<EthereumUnauthPrivateKeyWalletInstance, Error>> {
+    return new Ok(new EthereumUnauthPrivateKeyWalletInstance(data))
+  }
+
+  async tryGetPrivateKey(core: Core, background: Background): Promise<Result<string, Error>> {
+    return new Ok(this.data.privateKey)
+  }
+
+  async tryPersonalSign(message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
       const signature = await trySignPrivateKey(privateKey, message, core, background).then(r => r.throw(t))
 
       return new Ok(signature)
     })
   }
 
-  export async function trySignSeededWallet(wallet: EthereumSeededWallet, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(transaction: string, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const storage = new UserStorage(core, background)
-      const seedQuery = await Seed.Foreground.schema(wallet.seed.uuid, storage)?.make(core)
-      const seed = Option.wrap(seedQuery?.data?.inner).ok().throw(t)
+      const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
 
-      const signature = await SeedDatas.trySignSeed(seed, wallet.path, message, core, background).then(r => r.throw(t))
+      const signature = Result.catchAndWrapSync(() => {
+        return new ethers.Wallet(privateKey).signingKey.sign(transaction).serialized
+      }).throw(t)
 
       return new Ok(signature)
     })
   }
 
-  export async function trySign(wallet: EthereumWalletData, message: string, core: Core, background: Background) {
-    if (wallet.type === "privateKey")
-      return trySignPrivateKeyWallet(wallet, message, core, background)
-    if (wallet.type === "authPrivateKey")
-      return trySignPrivateKeyWallet(wallet, message, core, background)
-    if (wallet.type === "seeded")
-      return trySignSeededWallet(wallet, message, core, background)
-    return new Err(new Panic(`Invalid wallet type`))
+}
+
+export class EthereumAuthPrivateKeyWalletInstance {
+
+  constructor(
+    readonly data: EthereumAuthPrivateKeyWalletData
+  ) { }
+
+  static async tryNew(data: EthereumAuthPrivateKeyWalletData, core: Core, background: Background): Promise<Result<EthereumAuthPrivateKeyWalletInstance, Error>> {
+    return new Ok(new EthereumAuthPrivateKeyWalletInstance(data))
   }
 
-  export async function tryGetSeededPrivateKey(wallet: EthereumSeededWallet, core: Core, background: Background): Promise<Result<string, Error>> {
+  async tryGetPrivateKey(core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const storage = new UserStorage(core, background)
-      const seedQuery = await Seed.Foreground.schema(wallet.seed.uuid, storage)?.make(core)
-      const seed = Option.wrap(seedQuery?.data?.inner).ok().throw(t)
-
-      return SeedDatas.tryGetSeedPrivateKey(seed, wallet.path, core, background)
-    })
-  }
-
-  export async function tryGetAuthPrivateKey(wallet: EthereumAuthPrivateKeyWallet, core: Core, background: Background): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const { idBase64, ivBase64 } = wallet.privateKey
+      const { idBase64, ivBase64 } = this.data.privateKey
 
       const id = Bytes.fromBase64(idBase64)
       const cipher = await WebAuthnStorage.get(id).then(r => r.throw(t))
@@ -112,14 +168,25 @@ export namespace WalletDatas {
     })
   }
 
-  export async function tryGetPrivateKey(wallet: WalletData, core: Core, background: Background): Promise<Result<string, Error>> {
-    if (wallet.type === "privateKey")
-      return new Ok(wallet.privateKey)
-    if (wallet.type === "authPrivateKey")
-      return tryGetAuthPrivateKey(wallet, core, background)
-    if (wallet.type === "seeded")
-      return tryGetSeededPrivateKey(wallet, core, background)
-    return new Err(new Panic(`Invalid wallet type`))
+  async tryPersonalSign(message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
+      const signature = await trySignPrivateKey(privateKey, message, core, background).then(r => r.throw(t))
+
+      return new Ok(signature)
+    })
+  }
+
+  async trySignTransaction(transaction: string, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
+
+      const signature = Result.catchAndWrapSync(() => {
+        return new ethers.Wallet(privateKey).signingKey.sign(transaction).serialized
+      }).throw(t)
+
+      return new Ok(signature)
+    })
   }
 
 }

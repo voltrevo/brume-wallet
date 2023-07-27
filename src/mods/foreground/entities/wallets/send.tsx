@@ -1,4 +1,3 @@
-import { Ethers } from "@/libs/ethers/ethers";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
@@ -10,12 +9,12 @@ import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { Option } from "@hazae41/option";
-import { Err, Ok, Result } from "@hazae41/result";
+import { Ok, Result } from "@hazae41/result";
 import { useCore } from "@hazae41/xswr";
-import { ethers } from "ethers";
+import { Transaction, ethers } from "ethers";
 import { useMemo, useState } from "react";
 import { useWalletData } from "./context";
-import { EthereumContextProps, WalletDatas, useGasPrice, useNonce, usePendingBalance } from "./data";
+import { EthereumContextProps, EthereumWalletInstance, useGasPrice, useNonce, usePendingBalance } from "./data";
 
 export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumContextProps) {
   const core = useCore().unwrap()
@@ -76,13 +75,6 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
       const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
       const nonce = Option.wrap(maybeNonce).ok().throw(t)
 
-      if (wallet.type === "readonly")
-        return new Err(new Error(`This wallet is readonly`))
-
-      const privateKey = await WalletDatas.tryGetPrivateKey(wallet, core, context.background).then(r => r.throw(t))
-
-      const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
-
       const gas = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",
         params: [context.wallet.uuid, context.chain.chainId, {
@@ -98,8 +90,8 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
         }]
       }).then(r => r.throw(t).throw(t))
 
-      const signature = await Result.catchAndWrap(async () => {
-        return await ewallet.signTransaction({
+      const transaction = Result.catchAndWrapSync(() => {
+        return Transaction.from({
           to: ethers.getAddress(recipientInput),
           from: wallet.address,
           gasLimit: gas,
@@ -108,13 +100,16 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
           nonce: Number(nonce),
           value: ethers.parseUnits(valueInput, 18)
         })
-      }).then(r => r.throw(t))
+      }).throw(t)
+
+      const instance = await EthereumWalletInstance.tryFrom(wallet, core, context.background).then(r => r.throw(t))
+      transaction.signature = await instance.trySignTransaction(transaction.unsignedHash, core, context.background).then(r => r.throw(t))
 
       const txHash = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",
         params: [context.wallet.uuid, context.chain.chainId, {
           method: "eth_sendRawTransaction",
-          params: [signature]
+          params: [transaction.serialized]
         }]
       }).then(r => r.throw(t).throw(t))
 
