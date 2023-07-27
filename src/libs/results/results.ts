@@ -4,6 +4,7 @@ import { Errors } from "../errors/errors";
 export namespace Results {
 
   export function alert<T extends Result<unknown, Error>>(result: T): T {
+    result.inspectErrSync(e => console.error(Errors.toString(e)))
     result.inspectErrSync(e => globalThis.alert(Errors.toString(e)))
     return result
   }

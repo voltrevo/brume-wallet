@@ -5,6 +5,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
 import { TitleProps } from "@/libs/react/props/title";
+import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
@@ -67,7 +68,6 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
       onChange={onValueInputChange} />
   </>
 
-  const [error, setError] = useState<Error>()
   const [txHash, setTxHash] = useState<string>()
 
   const trySend = useAsyncUniqueCallback(async () => {
@@ -90,10 +90,9 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
         }]
       }).then(r => r.throw(t).throw(t))
 
-      const transaction = Result.catchAndWrapSync(() => {
+      const tx = Result.catchAndWrapSync(() => {
         return Transaction.from({
           to: ethers.getAddress(recipientInput),
-          from: wallet.address,
           gasLimit: gas,
           chainId: context.chain.chainId,
           gasPrice: gasPrice,
@@ -103,24 +102,25 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
       }).throw(t)
 
       const instance = await EthereumWalletInstance.tryFrom(wallet, core, context.background).then(r => r.throw(t))
-      transaction.signature = await instance.trySignTransaction(transaction.unsignedHash, core, context.background).then(r => r.throw(t))
+      const signature = await instance.trySignTransaction(tx, core, context.background).then(r => r.throw(t))
+
+      tx.signature = signature
 
       const txHash = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",
         params: [context.wallet.uuid, context.chain.chainId, {
           method: "eth_sendRawTransaction",
-          params: [transaction.serialized]
+          params: [tx.serialized]
         }]
       }).then(r => r.throw(t).throw(t))
 
       setTxHash(txHash)
-      setError(undefined)
 
       balanceQuery.refetch()
       nonceQuery.refetch()
 
       return Ok.void()
-    }).then(r => r.inspectErrSync(setError).ignore())
+    }).then(Results.alert)
   }, [core, context, wallet, maybeNonce, maybeGasPrice, recipientInput, valueInput])
 
   const TxHashDisplay = <>
@@ -180,12 +180,6 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
     <div className="h-2" />
     {ValueInput}
     <div className="h-4" />
-    {error && <>
-      <div className="text-red-500">
-        {error.message}
-      </div>
-      <div className="h-2" />
-    </>}
     {txHash ? <>
       {TxHashDisplay}
     </> : <>

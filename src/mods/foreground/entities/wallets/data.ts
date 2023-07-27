@@ -10,7 +10,7 @@ import { Bytes } from "@hazae41/bytes"
 import { Option, Optional } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
 import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/xswr"
-import { ContractRunner, TransactionRequest, ethers } from "ethers"
+import { ContractRunner, Transaction, TransactionRequest, ethers } from "ethers"
 import { useEffect, useMemo } from "react"
 import { Background } from "../../background/background"
 import { useBackground } from "../../background/context"
@@ -96,7 +96,7 @@ export class EthereumSeededWalletInstance {
     return await this.seed.tryPersonalSign(this.data.path, message, core, background)
   }
 
-  async trySignTransaction(transaction: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(transaction: Transaction, core: Core, background: Background): Promise<Result<string, Error>> {
     return await this.seed.trySignTransaction(this.data.path, transaction, core, background)
   }
 
@@ -125,12 +125,12 @@ export class EthereumUnauthPrivateKeyWalletInstance {
     })
   }
 
-  async trySignTransaction(transaction: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(transaction: Transaction, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
 
       const signature = Result.catchAndWrapSync(() => {
-        return new ethers.Wallet(privateKey).signingKey.sign(transaction).serialized
+        return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
       }).throw(t)
 
       return new Ok(signature)
@@ -177,12 +177,12 @@ export class EthereumAuthPrivateKeyWalletInstance {
     })
   }
 
-  async trySignTransaction(transaction: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(transaction: Transaction, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
 
       const signature = Result.catchAndWrapSync(() => {
-        return new ethers.Wallet(privateKey).signingKey.sign(transaction).serialized
+        return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
       }).throw(t)
 
       return new Ok(signature)

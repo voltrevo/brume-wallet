@@ -96,11 +96,10 @@ export function TransactPage() {
       const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
       const nonce = Option.wrap(maybeNonce).ok().throw(t)
 
-      const transaction = Result.catchAndWrapSync(() => {
+      const tx = Result.catchAndWrapSync(() => {
         return Transaction.from({
           data: data,
           to: to,
-          from: from,
           gasLimit: gas,
           chainId: session.chain.chainId,
           gasPrice: gasPrice,
@@ -110,11 +109,11 @@ export function TransactPage() {
       }).throw(t)
 
       const instance = await EthereumWalletInstance.tryFrom(wallet, core, background).then(r => r.throw(t))
-      transaction.signature = await instance.trySignTransaction(transaction.unsignedHash, core, background).then(r => r.throw(t))
+      tx.signature = await instance.trySignTransaction(tx, core, background).then(r => r.throw(t))
 
       await background.tryRequest({
         method: "popup_data",
-        params: [new RpcOk(id, transaction.serialized)]
+        params: [new RpcOk(id, tx.serialized)]
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = await AppRequests.get(storage).make(core)

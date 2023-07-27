@@ -6,12 +6,20 @@ export interface SignatureInit {
   readonly s: Bytes<32>
 }
 
+namespace Hex {
+
+  export function pad(text: string) {
+    return text.padStart(text.length + (text.length % 2), "0")
+  }
+
+}
+
 export namespace Signature {
 
   export function from(init: SignatureInit) {
     const { v, r, s } = init
 
-    const hv = (v - 27).toString(16).padStart(2, "0")
+    const hv = Hex.pad(v.toString(16))
     const hr = Bytes.toHex(r)
     const hs = Bytes.toHex(s)
 

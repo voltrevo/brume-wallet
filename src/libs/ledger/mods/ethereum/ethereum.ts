@@ -3,6 +3,7 @@ import { Empty, Opaque, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
 import { Cursor } from "@hazae41/cursor";
 import { Ok, Result } from "@hazae41/result";
+import { Transaction } from "ethers";
 import { Paths } from "../common/binary/paths";
 import { LedgerUSBDevice } from "../usb";
 
@@ -135,9 +136,62 @@ export async function trySignPersonalMessage(device: LedgerUSBDevice, path: stri
     }
 
     const cursor = new Cursor(response)
-    const v = cursor.tryReadUint8().throw(t)
+    const v = cursor.tryReadUint8().throw(t) - 27
     const r = cursor.tryRead(32).throw(t)
     const s = cursor.tryRead(32).throw(t)
+
+    return new Ok({ v, r, s })
+  })
+}
+
+export async function trySignTransaction(device: LedgerUSBDevice, path: string, transaction: Transaction): Promise<Result<SignatureInit, Error>> {
+  return await Result.unthrow(async t => {
+    const paths = Paths.from(path)
+
+    const unsigned = transaction.unsignedSerialized.slice(2)
+    const chainId = Number(transaction.chainId)
+
+    const reader = new Cursor(Bytes.fromHexSafe(unsigned))
+
+    let response: Bytes
+
+    {
+      const head = paths.trySize().get()
+      const body = Math.min(150 - head, reader.remaining)
+
+      const chunk = reader.tryRead(body).throw(t)
+
+      const writer = Cursor.tryAllocUnsafe(head + body).throw(t)
+      paths.tryWrite(writer).throw(t)
+      writer.tryWrite(chunk).throw(t)
+
+      const request = { cla: 0xe0, ins: 0x04, p1: 0x00, p2: 0x00, fragment: new Opaque(writer.bytes) }
+      response = await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes)
+    }
+
+    while (reader.remaining) {
+      const full = Math.min(150, reader.remaining)
+      const chunk = reader.tryRead(full).throw(t)
+
+      const request = { cla: 0xe0, ins: 0x04, p1: 0x80, p2: 0x00, fragment: new Opaque(chunk) }
+      response = await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes)
+    }
+
+    const cursor = new Cursor(response)
+    const v0 = cursor.tryReadUint8().throw(t)
+    const r = cursor.tryRead(32).throw(t)
+    const s = cursor.tryRead(32).throw(t)
+
+    let v = v0
+
+    // if ((((chainId * 2) + 35) + 1) > 255) {
+    //   const parity = Math.abs(v0 - (((chainId * 2) + 35) % 256))
+
+    //   if (transaction.type == null)
+    //     v = ((chainId * 2) + 35) + parity
+    //   else
+    //     v = (parity % 2) == 1 ? 0 : 1;
+    // }
 
     return new Ok({ v, r, s })
   })

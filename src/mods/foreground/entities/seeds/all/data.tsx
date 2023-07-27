@@ -13,7 +13,7 @@ import { Core, useQuery } from "@hazae41/xswr"
 import { HDKey } from "@scure/bip32"
 import { entropyToMnemonic, mnemonicToSeed } from "@scure/bip39"
 import { wordlist } from "@scure/bip39/wordlists/english"
-import { ethers } from "ethers"
+import { Transaction, ethers } from "ethers"
 import { trySignPrivateKey } from "../../wallets/data"
 
 export function useSeeds() {
@@ -82,12 +82,12 @@ export class UnauthMnemonicSeedInstance {
     })
   }
 
-  async trySignTransaction(path: string, transaction: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(path: string, transaction: Transaction, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
 
       const signature = Result.catchAndWrapSync(() => {
-        return new ethers.Wallet(privateKey).signingKey.sign(transaction).serialized
+        return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
       }).throw(t)
 
       return new Ok(signature)
@@ -144,12 +144,12 @@ export class AuthMnemonicSeedInstance {
     })
   }
 
-  async trySignTransaction(path: string, transaction: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(path: string, transaction: Transaction, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
 
       const signature = Result.catchAndWrapSync(() => {
-        return new ethers.Wallet(privateKey).signingKey.sign(transaction).serialized
+        return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
       }).throw(t)
 
       return new Ok(signature)
@@ -181,15 +181,12 @@ export class LedgerSeedInstance {
     })
   }
 
-  async trySignTransaction(path: string, transaction: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(path: string, transaction: Transaction, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
+      const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
+      const signature = await Ledger.Ethereum.trySignTransaction(device, path.slice(2), transaction).then(r => r.throw(t))
 
-      const signature = Result.catchAndWrapSync(() => {
-        return new ethers.Wallet(privateKey).signingKey.sign(transaction).serialized
-      }).throw(t)
-
-      return new Ok(signature)
+      return new Ok(Signature.from(signature))
     })
   }
 
