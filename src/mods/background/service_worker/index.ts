@@ -980,7 +980,7 @@ export class Global {
         const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Retry.new).throw(t).result.get())
 
         const body = JSON.stringify({ method: "eth_getBalance", tor: true })
-        await circuit.tryFetch("http://proxy.brume.money", { method: "POST", body }).then(r => r.mapErrSync(Cancel.new).throw(t))
+        await circuit.tryFetch("https://proxy.brume.money", { method: "POST", body }).then(r => r.mapErrSync(Cancel.new).throw(t))
         await circuit.destroy()
 
         return Ok.void()
