@@ -198,7 +198,7 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
 
       /**
        * Make sure that the chunk doesn't end right on the VRS marker (EIP-155)
-       * If it goes further than the VRS offset, then send the (few) remaining bytes
+       * If it goes further than the VRS offset, then send the (few) remaining bytes too
        */
       if (vrsOffset > 0 && reader.offset + body >= vrsOffset)
         body = reader.remaining
@@ -218,7 +218,7 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
 
       /**
        * Make sure that the chunk doesn't end right on the VRS marker (EIP-155)
-       * If it goes further than the VRS offset, then send the (few) remaining bytes
+       * If it goes further than the VRS offset, then send the (few) remaining bytes too
        */
       if (vrsOffset > 0 && reader.offset + body >= vrsOffset)
         body = reader.remaining
