@@ -39,7 +39,7 @@ export function WebsiteBackgroundProvider(props: ChildrenProps) {
   }, [])
 
   useEffect(() => {
-    background.tryRequest({ method: "brume_log" }).then(r => r.ignore())
+    background.tryRequest({ method: "brume_log" }).then(r => r.inspectErrSync(console.warn).ignore())
   }, [background])
 
   return <BackgroundContext.Provider value={background}>
@@ -55,7 +55,7 @@ export function ExtensionBackgroundProvider(props: ChildrenProps) {
   }, [])
 
   useEffect(() => {
-    background.tryRequest({ method: "brume_log" }).then(r => r.ignore())
+    background.tryRequest({ method: "brume_log" }).then(r => r.inspectErrSync(console.warn).ignore())
   }, [background])
 
   return <BackgroundContext.Provider value={background}>
