@@ -1,4 +1,5 @@
 import { SignatureInit } from "@/libs/ethereum/mods/signature";
+import { decode, encode } from "@ethersproject/rlp";
 import { Empty, Opaque, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
 import { Cursor } from "@hazae41/cursor";
@@ -128,8 +129,8 @@ export async function trySignPersonalMessage(device: LedgerUSBDevice, path: stri
     }
 
     while (reader.remaining) {
-      const full = Math.min(150, reader.remaining)
-      const chunk = reader.tryRead(full).throw(t)
+      const body = Math.min(150, reader.remaining)
+      const chunk = reader.tryRead(body).throw(t)
 
       const request = { cla: 0xe0, ins: 0x08, p1: 0x80, p2: 0x00, fragment: new Opaque(chunk) }
       response = await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes)
@@ -144,6 +145,41 @@ export async function trySignPersonalMessage(device: LedgerUSBDevice, path: stri
   })
 }
 
+/**
+ * Took from Ledger
+ * @param rawTx 
+ * @returns 
+ */
+export const decodeTxInfo = (rawTx: Buffer) => {
+  const txType = [1, 2].includes(rawTx[0]) ? rawTx[0] : null;
+  const rlpData = txType === null ? rawTx : rawTx.slice(1);
+  const rlpTx = decode(rlpData).map((hex: any) => Buffer.from(hex.slice(2), "hex"));
+
+  let vrsOffset = 0;
+
+  if (txType === null && rlpTx.length > 6) {
+    const rlpVrs = Buffer.from(encode(rlpTx.slice(-3)).slice(2), "hex");
+
+    vrsOffset = rawTx.length - (rlpVrs.length - 1);
+
+    // First byte > 0xf7 means the length of the list length doesn't fit in a single byte.
+    if (rlpVrs[0] > 0xf7) {
+      // Increment vrsOffset to account for that extra byte.
+      vrsOffset++;
+
+      // Compute size of the list length.
+      const sizeOfListLen = rlpVrs[0] - 0xf7;
+
+      // Increase rlpOffset by the size of the list length.
+      vrsOffset += sizeOfListLen - 1;
+    }
+  }
+
+  return {
+    vrsOffset,
+  };
+};
+
 export async function trySignTransaction(device: LedgerUSBDevice, path: string, transaction: Transaction): Promise<Result<SignatureInit, Error>> {
   return await Result.unthrow(async t => {
     const paths = Paths.from(path)
@@ -151,15 +187,22 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
     const unsigned = transaction.unsignedSerialized.slice(2)
     const reader = new Cursor(Bytes.fromHexSafe(unsigned))
 
+    const { vrsOffset } = decodeTxInfo(reader.buffer)
+
     let response: Bytes
 
     {
       const head = paths.trySize().get()
-      const body = Math.min(150 - head, reader.remaining)
+
+      let body = Math.min(150 - head, reader.remaining)
+
+      /**
+       * Make sure that the chunk doesn't end right on the EIP-155 marker if set
+       */
+      if (vrsOffset > 0 && reader.offset + body >= vrsOffset)
+        body = reader.remaining
 
       const chunk = reader.tryRead(body).throw(t)
-
-      // TODO Make sure that the chunk doesn't end right on the EIP 155 marker if set
 
       const writer = Cursor.tryAllocUnsafe(head + body).throw(t)
       paths.tryWrite(writer).throw(t)
@@ -170,8 +213,15 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
     }
 
     while (reader.remaining) {
-      const full = Math.min(150, reader.remaining)
-      const chunk = reader.tryRead(full).throw(t)
+      let body = Math.min(150, reader.remaining)
+
+      /**
+       * Make sure that the chunk doesn't end right on the EIP-155 marker if set
+       */
+      if (vrsOffset > 0 && reader.offset + body >= vrsOffset)
+        body = reader.remaining
+
+      const chunk = reader.tryRead(body).throw(t)
 
       const request = { cla: 0xe0, ins: 0x04, p1: 0x80, p2: 0x00, fragment: new Opaque(chunk) }
       response = await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes)
