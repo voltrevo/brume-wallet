@@ -149,8 +149,6 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
     const paths = Paths.from(path)
 
     const unsigned = transaction.unsignedSerialized.slice(2)
-    const chainId = Number(transaction.chainId)
-
     const reader = new Cursor(Bytes.fromHexSafe(unsigned))
 
     let response: Bytes
@@ -160,6 +158,8 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
       const body = Math.min(150 - head, reader.remaining)
 
       const chunk = reader.tryRead(body).throw(t)
+
+      // TODO Make sure that the chunk doesn't end right on the EIP 155 marker if set
 
       const writer = Cursor.tryAllocUnsafe(head + body).throw(t)
       paths.tryWrite(writer).throw(t)
@@ -178,11 +178,9 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
     }
 
     const cursor = new Cursor(response)
-    const v0 = cursor.tryReadUint8().throw(t)
+    const v = cursor.tryReadUint8().throw(t)
     const r = cursor.tryRead(32).throw(t)
     const s = cursor.tryRead(32).throw(t)
-
-    let v = v0
 
     // if ((((chainId * 2) + 35) + 1) > 255) {
     //   const parity = Math.abs(v0 - (((chainId * 2) + 35) % 256))
