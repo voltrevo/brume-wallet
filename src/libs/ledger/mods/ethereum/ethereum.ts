@@ -197,7 +197,8 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
       let body = Math.min(150 - head, reader.remaining)
 
       /**
-       * Make sure that the chunk doesn't end right on the EIP-155 marker if set
+       * Make sure that the chunk doesn't end right on the VRS marker (EIP-155)
+       * If it goes further than the VRS offset, then send the (few) remaining bytes
        */
       if (vrsOffset > 0 && reader.offset + body >= vrsOffset)
         body = reader.remaining
@@ -216,7 +217,8 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
       let body = Math.min(150, reader.remaining)
 
       /**
-       * Make sure that the chunk doesn't end right on the EIP-155 marker if set
+       * Make sure that the chunk doesn't end right on the VRS marker (EIP-155)
+       * If it goes further than the VRS offset, then send the (few) remaining bytes
        */
       if (vrsOffset > 0 && reader.offset + body >= vrsOffset)
         body = reader.remaining
