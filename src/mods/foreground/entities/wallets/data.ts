@@ -1,6 +1,5 @@
 import { BigInts, Fixed, FixedInit } from "@/libs/bigints/bigints"
 import { EthereumChain, PairInfo } from "@/libs/ethereum/mods/chain"
-import { Ethers } from "@/libs/ethers/ethers"
 import { useObjectMemo } from "@/libs/react/memo"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
@@ -10,7 +9,7 @@ import { Bytes } from "@hazae41/bytes"
 import { Option, Optional } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
 import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/xswr"
-import { ContractRunner, Transaction, TransactionRequest, ethers } from "ethers"
+import { Transaction, ethers } from "ethers"
 import { useEffect, useMemo } from "react"
 import { Background } from "../../background/background"
 import { useBackground } from "../../background/context"
@@ -40,10 +39,8 @@ export function useWallet(uuid: Optional<string>) {
 
 export async function trySignPrivateKey(privateKey: string, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
   return await Result.unthrow(async t => {
-    const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
-
     const signature = await Result.catchAndWrap(async () => {
-      return await ewallet.signMessage(message)
+      return await new ethers.Wallet(privateKey).signMessage(message)
     }).then(r => r.throw(t))
 
     return new Ok(signature)
@@ -400,25 +397,6 @@ export function useGasPrice(ethereum: Optional<EthereumContext>) {
   useSubscribe(query, storage)
   useError(query, console.error)
   return query
-}
-
-export class BrumeProvider implements ContractRunner {
-  provider = null
-
-  constructor(
-    readonly ethereum: EthereumContext
-  ) { }
-
-  async call(tx: TransactionRequest) {
-    return await tryFetch<string>({
-      method: "eth_call",
-      params: [{
-        to: tx.to,
-        data: tx.data
-      }, "pending"]
-    }, this.ethereum).then(r => r.unwrap().unwrap())
-  }
-
 }
 
 export function getPairPrice(context: EthereumContext, pair: PairInfo, storage: UserStorage) {

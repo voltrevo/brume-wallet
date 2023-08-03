@@ -1,5 +1,4 @@
 import { BigInts } from "@/libs/bigints/bigints";
-import { Ethers } from "@/libs/ethers/ethers";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
@@ -29,7 +28,7 @@ import { Bytes } from "@hazae41/bytes";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { useCore } from "@hazae41/xswr";
-import { Transaction } from "ethers";
+import { Transaction, ethers } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
@@ -404,12 +403,10 @@ export function TypedSignPage() {
       const instance = await EthereumWalletInstance.tryFrom(wallet, core, background).then(r => r.throw(t))
       const privateKey = await instance.tryGetPrivateKey(core, background).then(r => r.throw(t))
 
-      const ewallet = Ethers.Wallet.tryFrom(privateKey).throw(t)
-
       const signature = await Result.catchAndWrap(async () => {
         delete types["EIP712Domain"]
 
-        return await ewallet.signTypedData(domain, types, message)
+        return await new ethers.Wallet(privateKey).signTypedData(domain, types, message)
       }).then(r => r.throw(t))
 
       await background.tryRequest({

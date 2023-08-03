@@ -9,15 +9,6 @@ export namespace BigInts {
       .toUnsafeFloat()
   }
 
-  export function tryFloat(x?: bigint, d = 18) {
-    if (x == null) return
-
-    return FixedNumber
-      .fromValue(x, d)
-      .round(3)
-      .toUnsafeFloat()
-  }
-
   export function stringify(value: bigint) {
     return `0x${value.toString(16)}`
   }
