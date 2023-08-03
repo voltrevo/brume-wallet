@@ -146,39 +146,38 @@ export async function trySignPersonalMessage(device: LedgerUSBDevice, path: stri
 }
 
 /**
- * Took from Ledger
- * @param rawTx 
+ * Get the unprotected part of a legacy replay-protected transaction
+ * @param bytes 
  * @returns 
  */
-export const decodeTxInfo = (rawTx: Buffer) => {
-  const txType = [1, 2].includes(rawTx[0]) ? rawTx[0] : null;
-  const rlpData = txType === null ? rawTx : rawTx.slice(1);
-  const rlpTx = decode(rlpData).map((hex: any) => Buffer.from(hex.slice(2), "hex"));
+export function getLegacyUnprotected(bytes: Uint8Array) {
+  /**
+   * This is not a legacy transaction (EIP-2718)
+   */
+  if (bytes[0] < 0x80)
+    return undefined
 
-  let vrsOffset = 0;
+  /**
+   * Decode the bytes as RLP
+   */
+  const rlp = decode(bytes) as string[]
 
-  if (txType === null && rlpTx.length > 6) {
-    const rlpVrs = Buffer.from(encode(rlpTx.slice(-3)).slice(2), "hex");
+  /**
+   * This is not a replay-protected transaction (EIP-155)
+   */
+  if (rlp.length !== 9)
+    return undefined
 
-    vrsOffset = rawTx.length - (rlpVrs.length - 1);
+  /**
+   * Take only the first 6 parameters instead of the 9
+   */
+  const [nonce, gasprice, startgas, to, value, data] = rlp
 
-    // First byte > 0xf7 means the length of the list length doesn't fit in a single byte.
-    if (rlpVrs[0] > 0xf7) {
-      // Increment vrsOffset to account for that extra byte.
-      vrsOffset++;
-
-      // Compute size of the list length.
-      const sizeOfListLen = rlpVrs[0] - 0xf7;
-
-      // Increase rlpOffset by the size of the list length.
-      vrsOffset += sizeOfListLen - 1;
-    }
-  }
-
-  return {
-    vrsOffset,
-  };
-};
+  /**
+   * Encode them as RLP
+   */
+  return Bytes.fromHexSafe(encode([nonce, gasprice, startgas, to, value, data]).slice(2))
+}
 
 export async function trySignTransaction(device: LedgerUSBDevice, path: string, transaction: Transaction): Promise<Result<SignatureInit, Error>> {
   return await Result.unthrow(async t => {
@@ -187,7 +186,7 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
     const unsigned = transaction.unsignedSerialized.slice(2)
     const reader = new Cursor(Bytes.fromHexSafe(unsigned))
 
-    const { vrsOffset } = decodeTxInfo(reader.buffer)
+    const unprotected = getLegacyUnprotected(reader.bytes)
 
     let response: Bytes
 
@@ -197,10 +196,10 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
       let body = Math.min(150 - head, reader.remaining)
 
       /**
-       * Make sure that the chunk doesn't end right on the VRS marker (EIP-155)
-       * If it goes further than the VRS offset, then send the (few) remaining bytes too
+       * Make sure that the chunk doesn't end right on the replay protection marker (EIP-155)
+       * If it goes further than the unprotected part, then send the (few) remaining bytes of the protection
        */
-      if (vrsOffset > 0 && reader.offset + body >= vrsOffset)
+      if (unprotected != null && reader.offset + body >= unprotected.length)
         body = reader.remaining
 
       const chunk = reader.tryRead(body).throw(t)
@@ -217,10 +216,10 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
       let body = Math.min(150, reader.remaining)
 
       /**
-       * Make sure that the chunk doesn't end right on the VRS marker (EIP-155)
-       * If it goes further than the VRS offset, then send the (few) remaining bytes too
+       * Make sure that the chunk doesn't end right on the replay protection marker (EIP-155)
+       * If it goes further than the unprotected part, then send the (few) remaining bytes of the protection
        */
-      if (vrsOffset > 0 && reader.offset + body >= vrsOffset)
+      if (unprotected != null && reader.offset + body >= unprotected.length)
         body = reader.remaining
 
       const chunk = reader.tryRead(body).throw(t)
