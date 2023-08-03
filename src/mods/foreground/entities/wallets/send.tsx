@@ -1,6 +1,5 @@
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
-import { getLegacyUnprotected } from "@/libs/ledger/mods/ethereum";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
@@ -10,9 +9,8 @@ import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
-import { Bytes } from "@hazae41/bytes";
 import { Option } from "@hazae41/option";
-import { Err, Ok, Result } from "@hazae41/result";
+import { Ok, Result } from "@hazae41/result";
 import { useCore } from "@hazae41/xswr";
 import { Transaction, ethers } from "ethers";
 import { useMemo, useState } from "react";
@@ -102,16 +100,6 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
           value: ethers.parseUnits(valueInput, 18)
         })
       }).throw(t)
-
-      tx.type = 0
-
-      const unsigned = tx.unsignedSerialized.slice(2)
-      const bytes = Bytes.fromHexSafe(unsigned)
-      const vrsOffset = getLegacyUnprotected(bytes)
-
-      console.log("vrsOffset", vrsOffset)
-
-      return new Err(new Error(`lol`))
 
       const instance = await EthereumWalletInstance.tryFrom(wallet, core, context.background).then(r => r.throw(t))
       tx.signature = await instance.trySignTransaction(tx, core, context.background).then(r => r.throw(t))
