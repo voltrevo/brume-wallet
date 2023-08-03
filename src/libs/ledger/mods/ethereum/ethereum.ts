@@ -1,9 +1,9 @@
 import { SignatureInit } from "@/libs/ethereum/mods/signature";
-import { decode, encode } from "@ethersproject/rlp";
 import { Empty, Opaque, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
+import { Rlp } from "@hazae41/cubane";
 import { Cursor } from "@hazae41/cursor";
-import { Ok, Result } from "@hazae41/result";
+import { Err, Ok, Result } from "@hazae41/result";
 import { Transaction } from "ethers";
 import { Paths } from "../common/binary/paths";
 import { LedgerUSBDevice } from "../usb";
@@ -150,43 +150,49 @@ export async function trySignPersonalMessage(device: LedgerUSBDevice, path: stri
  * @param bytes 
  * @returns 
  */
-export function maybeGetLegacyUnprotected(bytes: Uint8Array) {
+export function tryReadLegacyUnprotected(bytes: Uint8Array) {
   /**
    * This is not a legacy transaction (EIP-2718)
    */
   if (bytes[0] < 0x80)
-    return undefined
+    return new Ok(undefined)
 
   /**
    * Decode the bytes as RLP
    */
-  const rlp = decode(bytes) as string[]
+  const rlp = Rlp.tryReadFromBytes(bytes)
+
+  if (rlp.isErr())
+    return rlp
+
+  if (!Array.isArray(rlp.inner))
+    return new Err(new Error(`Wrong RLP type for transaction`))
 
   /**
    * This is not a replay-protected transaction (EIP-155)
    */
-  if (rlp.length !== 9)
-    return undefined
+  if (rlp.inner.length !== 9)
+    return new Ok(undefined)
 
   /**
    * Take only the first 6 parameters instead of the 9
    */
-  const [nonce, gasprice, startgas, to, value, data] = rlp
+  const [nonce, gasprice, startgas, to, value, data] = rlp.inner
 
   /**
    * Encode them as RLP
    */
-  return Bytes.fromHexSafe(encode([nonce, gasprice, startgas, to, value, data]).slice(2))
+  return Rlp.tryWriteToBytes([nonce, gasprice, startgas, to, value, data])
 }
 
 export async function trySignTransaction(device: LedgerUSBDevice, path: string, transaction: Transaction): Promise<Result<SignatureInit, Error>> {
   return await Result.unthrow(async t => {
     const paths = Paths.from(path)
 
-    const unsigned = transaction.unsignedSerialized.slice(2)
-    const reader = new Cursor(Bytes.fromHexSafe(unsigned))
+    const bytes = Bytes.fromHexSafe(transaction.unsignedSerialized.slice(2))
+    const reader = new Cursor(bytes)
 
-    const unprotected = maybeGetLegacyUnprotected(reader.bytes)
+    const unprotected = tryReadLegacyUnprotected(bytes).throw(t)
 
     let response: Bytes
 
