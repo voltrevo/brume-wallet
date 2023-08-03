@@ -150,7 +150,7 @@ export async function trySignPersonalMessage(device: LedgerUSBDevice, path: stri
  * @param bytes 
  * @returns 
  */
-export function getLegacyUnprotected(bytes: Uint8Array) {
+export function maybeGetLegacyUnprotected(bytes: Uint8Array) {
   /**
    * This is not a legacy transaction (EIP-2718)
    */
@@ -186,7 +186,7 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
     const unsigned = transaction.unsignedSerialized.slice(2)
     const reader = new Cursor(Bytes.fromHexSafe(unsigned))
 
-    const unprotected = getLegacyUnprotected(reader.bytes)
+    const unprotected = maybeGetLegacyUnprotected(reader.bytes)
 
     let response: Bytes
 
