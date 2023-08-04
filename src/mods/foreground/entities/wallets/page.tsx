@@ -93,12 +93,14 @@ function WalletDataPage() {
   const wallet = useWalletData()
 
   const mainnet = useEthereumContext(wallet, chains[1])
+  const binance = useEthereumContext(wallet, chains[56])
   const mainnetSendDialog = useBooleanHandle(false)
 
   const [color, color2] = Gradients.get(wallet.color)
 
   const wethUsdPriceQuery = usePairPrice(mainnet, pairsByAddress[pairsByName.WETH_USDT])
   const maticWethPriceQuery = usePairPrice(mainnet, pairsByAddress[pairsByName.MATIC_WETH])
+  const busdtWbnbPriceQuery = usePairPrice(binance, pairsByAddress[pairsByName.BUSDT_WBNB])
 
   const onBackClick = useCallback(() => {
     Path.go("/wallets")
@@ -157,6 +159,9 @@ function WalletDataPage() {
         <TokenRow
           chain={chains[10]}
           prices={[wethUsdPriceQuery.data]} />
+        <TokenRow
+          chain={chains[56]}
+          prices={[busdtWbnbPriceQuery.data]} />
         <TokenRow
           chain={chains[137]}
           prices={[wethUsdPriceQuery.data, maticWethPriceQuery.data]} />

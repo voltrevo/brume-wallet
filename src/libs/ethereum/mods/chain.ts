@@ -6,7 +6,7 @@ export interface EthereumChain {
   readonly chainId: number,
   readonly urls: readonly string[],
   readonly etherscan: string
-  readonly token: TokenInfo
+  readonly token: NativeTokenInfo
 }
 
 export const chains: EthereumChains = {
@@ -46,6 +46,19 @@ export const chains: EthereumChains = {
       symbol: "ETH",
       decimals: 18,
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
+    }
+  },
+  56: {
+    name: "Binance",
+    chainId: 56,
+    urls: ["https://endpoints.omniatech.io/v1/bsc/mainnet/public"],
+    etherscan: "https://bnbscan.com",
+    token: {
+      name: "BNB",
+      chainId: 56,
+      symbol: "BNB",
+      decimals: 18,
+      pairs: ["0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae"]
     }
   },
   137: {
@@ -146,6 +159,22 @@ export const tokensByAddress: Record<string, ContractTokenInfo> = {
     decimals: 18,
     address: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
     pairs: ["0x819f3450dA6f110BA6Ea52195B3beaFa246062dE", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"],
+  },
+  "0x55d398326f99059fF775485246999027B3197955": {
+    name: "Binance USDT",
+    chainId: 56,
+    symbol: "BUSDT",
+    decimals: 18,
+    address: "0x55d398326f99059fF775485246999027B3197955",
+    pairs: [],
+  },
+  "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c": {
+    name: "Wrapped BNB",
+    chainId: 56,
+    symbol: "WBNB",
+    decimals: 18,
+    address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    pairs: ["0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae"],
   }
 } as const
 
@@ -155,6 +184,7 @@ export interface PairInfo {
   readonly address: string,
   readonly token0: string,
   readonly token1: string,
+  readonly reversed?: boolean
 }
 
 export const pairsByAddress: Record<string, PairInfo> = {
@@ -171,10 +201,19 @@ export const pairsByAddress: Record<string, PairInfo> = {
     address: "0x819f3450dA6f110BA6Ea52195B3beaFa246062dE",
     token0: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
     token1: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+  },
+  "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae": {
+    chainId: 56,
+    name: "BUSDT_WBNB",
+    address: "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae",
+    token0: "0x55d398326f99059fF775485246999027B3197955",
+    token1: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    reversed: true
   }
 } as const
 
 export const pairsByName = {
   WETH_USDT: "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
-  MATIC_WETH: "0x819f3450dA6f110BA6Ea52195B3beaFa246062dE"
+  MATIC_WETH: "0x819f3450dA6f110BA6Ea52195B3beaFa246062dE",
+  BUSDT_WBNB: "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae"
 } as const

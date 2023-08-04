@@ -208,11 +208,11 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, request: Rp
               .then(r => r.mapErrSync(Retry.new).throw(t))
             return new Ok(response)
           }
-        }).then(r => r.inspectErrSync(console.warn))
+        })
       }, { base: 1, max: conns.capacity }).then(r => r.mapErrSync(Retry.new).throw(t))
 
       return new Ok(Fetched.rewrap(response))
-    }).then(r => r.inspectErrSync(console.warn))
+    })
   }, { base: 1, max: ethereum.brumes.inner.capacity }).then(r => r.mapErrSync(FetchError.from))
 }
 
@@ -391,5 +391,7 @@ export function computePairPrice(pair: PairInfo, reserves: [bigint, bigint]) {
   const quantity0 = new Fixed(reserve0, decimals0)
   const quantity1 = new Fixed(reserve1, decimals1)
 
+  if (pair.reversed)
+    return quantity0.div(quantity1)
   return quantity1.div(quantity0)
 }
