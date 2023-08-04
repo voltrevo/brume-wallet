@@ -1,12 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 import { Fixed, FixedInit } from "@/libs/bigints/bigints";
 import { Gradients } from "@/libs/colors/colors";
-import { chains, pairsByAddress, pairsByName } from "@/libs/ethereum/mods/chain";
+import { EthereumChain, chains, pairsByAddress, pairsByName } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Option, Optional } from "@hazae41/option";
 import { Result } from "@hazae41/result";
+import { Data } from "@hazae41/xswr";
 import { useCallback, useMemo } from "react";
 import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
@@ -48,46 +49,56 @@ export function useCompactDisplayUsd(option: Optional<Result<FixedInit, Error>>)
   }, [option])
 }
 
+function TokenRow(props: {
+  chain: EthereumChain,
+  prices: Optional<Data<FixedInit>>[]
+}) {
+  const { chain, prices } = props
+  const wallet = useWalletData()
+
+  const context = useEthereumContext(wallet, chain)
+
+  const balanceQuery = usePendingBalance(wallet.address, context, ...prices)
+  const balanceDisplay = useDisplay(balanceQuery.current)
+
+  const sendDialog = useBooleanHandle(false)
+
+  const balanceUsdFixed = usePricedBalance(context, wallet.address, "usd")
+  const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
+
+  return <>
+    {sendDialog.current && context &&
+      <WalletDataSendDialog
+        title={`${chain.token.symbol} on ${chain.name}`}
+        context={context}
+        close={sendDialog.disable} />}
+    <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
+      onClick={sendDialog.enable}>
+      <div className="w-full flex justify-between items-center">
+        <div className="">
+          {chain.name}
+        </div>
+        <div className="">
+          {balanceUsdDisplay}
+        </div>
+      </div>
+      <div className="text-contrast">
+        {`${balanceDisplay} ${chain.token.symbol}`}
+      </div>
+    </button>
+  </>
+}
+
 function WalletDataPage() {
   const wallet = useWalletData()
 
   const mainnet = useEthereumContext(wallet, chains[1])
-  const polygon = useEthereumContext(wallet, chains[137])
-  const goerli = useEthereumContext(wallet, chains[5])
-  const sepolia = useEthereumContext(wallet, chains[11155111])
+  const mainnetSendDialog = useBooleanHandle(false)
 
   const [color, color2] = Gradients.get(wallet.color)
 
   const wethUsdPriceQuery = usePairPrice(mainnet, pairsByAddress[pairsByName.WETH_USDT])
   const maticWethPriceQuery = usePairPrice(mainnet, pairsByAddress[pairsByName.MATIC_WETH])
-
-  const mainnetBalanceQuery = usePendingBalance(wallet.address, mainnet, wethUsdPriceQuery.data)
-  const mainnetBalanceDisplay = useDisplay(mainnetBalanceQuery.current)
-  const mainnetSendDialog = useBooleanHandle(false)
-
-  const ethBalanceUsdBigint = usePricedBalance(mainnet, wallet.address, "usd")
-  const ethBalanceUsdDisplay = useDisplayUsd(ethBalanceUsdBigint.current)
-
-  const polygonBalanceQuery = usePendingBalance(wallet.address, polygon, wethUsdPriceQuery.data, maticWethPriceQuery.data)
-  const polygonBalanceDisplay = useDisplay(polygonBalanceQuery.current)
-  const polygonSendDialog = useBooleanHandle(false)
-
-  const maticBalanceUsdBigint = usePricedBalance(polygon, wallet.address, "usd")
-  const maticBalanceUsdDisplay = useDisplayUsd(maticBalanceUsdBigint.current)
-
-  const goerliBalance = usePendingBalance(wallet.address, goerli)
-  const goerliBalanceDisplay = useDisplay(goerliBalance.current)
-  const goerliSendDialog = useBooleanHandle(false)
-
-  const goerliBalanceUsdBigint = usePricedBalance(goerli, wallet.address, "usd")
-  const goerliBalanceUsdDisplay = useDisplayUsd(goerliBalanceUsdBigint.current)
-
-  const sepoliaBalance = usePendingBalance(wallet.address, sepolia)
-  const sepoliaBalanceDisplay = useDisplay(sepoliaBalance.current)
-  const sepoliaSendDialog = useBooleanHandle(false)
-
-  const sepoliaBalanceUsdBigint = usePricedBalance(sepolia, wallet.address, "usd")
-  const sepoliaBalanceUsdDisplay = useDisplayUsd(sepoliaBalanceUsdBigint.current)
 
   const onBackClick = useCallback(() => {
     Path.go("/wallets")
@@ -137,82 +148,35 @@ function WalletDataPage() {
   const Body =
     <PageBody>
       <div className="flex flex-col gap-2">
-        <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
-          onClick={mainnetSendDialog.enable}>
-          <div className="w-full flex justify-between items-center">
-            <div className="">
-              Ethereum
-            </div>
-            <div className="">
-              {ethBalanceUsdDisplay}
-            </div>
-          </div>
-          <div className="text-contrast">
-            {`${mainnetBalanceDisplay} ETH`}
-          </div>
-        </button>
-        <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
-          onClick={polygonSendDialog.enable}>
-          <div className="w-full flex justify-between items-center">
-            <div className="">
-              Polygon
-            </div>
-            <div className="">
-              {maticBalanceUsdDisplay}
-            </div>
-          </div>
-          <div className="text-contrast">
-            {`${polygonBalanceDisplay} MATIC`}
-          </div>
-        </button>
-        <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
-          onClick={goerliSendDialog.enable}>
-          <div className="w-full flex justify-between items-center">
-            <div className="">
-              Goerli
-            </div>
-            <div className="">
-              {goerliBalanceUsdDisplay}
-            </div>
-          </div>
-          <div className="text-contrast">
-            {`${goerliBalanceDisplay} ETH`}
-          </div>
-        </button>
-        <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
-          onClick={sepoliaSendDialog.enable}>
-          <div className="w-full flex justify-between items-center">
-            <div className="">
-              Sepolia
-            </div>
-            <div className="">
-              {sepoliaBalanceUsdDisplay}
-            </div>
-          </div>
-          <div className="text-contrast">
-            {`${sepoliaBalanceDisplay} ETH`}
-          </div>
-        </button>
+        <TokenRow
+          chain={chains[1]}
+          prices={[wethUsdPriceQuery.data]} />
+        <TokenRow
+          chain={chains[5]}
+          prices={[]} />
+        <TokenRow
+          chain={chains[10]}
+          prices={[wethUsdPriceQuery.data]} />
+        <TokenRow
+          chain={chains[137]}
+          prices={[wethUsdPriceQuery.data, maticWethPriceQuery.data]} />
+        <TokenRow
+          chain={chains[42161]}
+          prices={[wethUsdPriceQuery.data]} />
+        <TokenRow
+          chain={chains[43114]}
+          prices={[wethUsdPriceQuery.data]} />
+        <TokenRow
+          chain={chains[11155111]}
+          prices={[]} />
       </div>
     </PageBody>
 
   return <Page>
     {mainnetSendDialog.current && mainnet &&
-      <WalletDataSendDialog title="(Ethereum)"
+      <WalletDataSendDialog title="ETH on Ethereum"
         context={mainnet}
         close={mainnetSendDialog.disable} />}
-    {polygonSendDialog.current && polygon &&
-      <WalletDataSendDialog title="(Polygon)"
-        context={polygon}
-        close={polygonSendDialog.disable} />}
-    {goerliSendDialog.current && goerli &&
-      <WalletDataSendDialog title="(Goerli)"
-        context={goerli}
-        close={goerliSendDialog.disable} />}
-    {sepoliaSendDialog.current && sepolia &&
-      <WalletDataSendDialog title="(Sepolia)"
-        context={sepolia}
-        close={sepoliaSendDialog.disable} />}
     {Header}
     {Card}
     {Apps}

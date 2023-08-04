@@ -13,6 +13,8 @@ export namespace Circuits {
         const tor = await tors.inner.tryGet(index % tors.inner.capacity).then(r => r.throw(t))
         const circuit = await tor.tryCreateAndExtendLoop(signal).then(r => r.throw(t))
 
+        console.log("created circuit", circuit.id)
+
         return new Ok(createPooledCircuit(circuit, params))
       })
     }, params))

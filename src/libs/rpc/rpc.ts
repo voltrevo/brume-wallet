@@ -1,7 +1,7 @@
+import { Circuit, CircuitOpenParams } from "@hazae41/echalote"
 import { Future } from "@hazae41/future"
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
-import { Err, Ok, Panic, Result } from "@hazae41/result"
-import { RpcErr, RpcError } from "./err"
+import { Err, Ok, Result } from "@hazae41/result"
 import { RpcRequest, RpcRequestInit, RpcRequestPreinit } from "./request"
 import { RpcResponse } from "./response"
 
@@ -19,11 +19,11 @@ export class RpcClient {
     return { jsonrpc: "2.0", id, method, params } as RpcRequestInit<T>
   }
 
-  async fetch<T>(input: RequestInfo | URL, init: RpcRequestPreinit<unknown> & RequestInit) {
+  async tryFetchWithCircuit<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestPreinit<unknown> & { circuit: Circuit } & CircuitOpenParams) {
     const { method, params, ...rest } = init
-
     const request = this.create({ method, params })
-    return Rpc.fetch<T>(input, { ...rest, ...request })
+
+    return Rpc.tryFetchWithCircuit<T>(input, { ...rest, ...request })
   }
 
   async tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestPreinit<unknown>, signal: AbortSignal) {
@@ -34,8 +34,8 @@ export class RpcClient {
 
 export namespace Rpc {
 
-  export async function fetch<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit<unknown>) {
-    const { id, method, params, ...rest } = init
+  export async function tryFetchWithCircuit<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit<unknown> & { circuit: Circuit } & CircuitOpenParams): Promise<Result<RpcResponse<T>, Error>> {
+    const { id, method, params, circuit, ...rest } = init
 
     const headers = new Headers(rest.headers)
     headers.set("Content-Type", "application/json")
@@ -43,19 +43,20 @@ export namespace Rpc {
     const request = new RpcRequest(id, method, params)
     const body = JSON.stringify(request)
 
-    const res = await globalThis.fetch(input, { ...init, headers, body })
+    const res = await circuit.tryFetch(input, { ...rest, method: "POST", headers, body })
 
-    if (!res.ok) {
-      const error = new RpcError(await res.text())
-      return new RpcErr(request.id, error)
-    }
+    if (!res.isOk())
+      return res
 
-    const response = RpcResponse.from<T>(await res.json())
+    if (!res.inner.ok)
+      return new Err(new Error(await res.inner.text()))
+
+    const response = RpcResponse.from<T>(await res.inner.json())
 
     if (response.id !== request.id)
-      return new Err(new Panic(`Invalid response ID`))
+      console.warn(`Invalid response ID`, response.id, "expected", request.id)
 
-    return response
+    return new Ok(response)
   }
 
   export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit<unknown>, signal: AbortSignal) {
