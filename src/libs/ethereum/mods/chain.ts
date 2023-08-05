@@ -129,6 +129,18 @@ export const chainByChainId: EthereumChains = {
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
     }
   },
+  42220: {
+    name: "Celo",
+    chainId: 42220,
+    urls: ["wss://forno.celo.org/ws"],
+    etherscan: "https://celoscan.io",
+    token: {
+      name: "CELO",
+      chainId: 42220,
+      symbol: "CELO",
+      decimals: 18,
+    }
+  },
   43114: {
     name: "Avalanche",
     chainId: 43114,
@@ -180,6 +192,7 @@ export const chainIdByName = {
   BASE: 8453,
   ARBITRUM: 42161,
   AVALANCHE: 43114,
+  CELO: 42220,
   LINEA: 59144,
   SEPOLIA: 11155111
 } as const

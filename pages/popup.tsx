@@ -1,4 +1,5 @@
 import { BigInts } from "@/libs/bigints/bigints";
+import { chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
@@ -516,27 +517,67 @@ export function WalletAndChainSelectPage() {
     <PageBody>
       <div className="flex flex-wrap items-center gap-1">
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === 1}
-          onClick={() => setChain(1)}>
+          aria-selected={chain === chainByChainId[chainIdByName.ETHEREUM].chainId}
+          onClick={() => setChain(chainByChainId[chainIdByName.ETHEREUM].chainId)}>
           <Button.Shrink>
             <Outline.CubeIcon className="s-xs" />
-            Ethereum
+            {chainByChainId[chainIdByName.ETHEREUM].name}
           </Button.Shrink>
         </Button.Bordered>
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === 137}
-          onClick={() => setChain(137)}>
+          aria-selected={chain === chainByChainId[chainIdByName.GNOSIS].chainId}
+          onClick={() => setChain(chainByChainId[chainIdByName.GNOSIS].chainId)}>
           <Button.Shrink>
             <Outline.CubeIcon className="s-xs" />
-            Polygon
+            {chainByChainId[chainIdByName.GNOSIS].name}
           </Button.Shrink>
         </Button.Bordered>
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === 5}
-          onClick={() => setChain(5)}>
+          aria-selected={chain === chainByChainId[chainIdByName.POLYGON].chainId}
+          onClick={() => setChain(chainByChainId[chainIdByName.POLYGON].chainId)}>
           <Button.Shrink>
             <Outline.CubeIcon className="s-xs" />
-            Goerli
+            {chainByChainId[chainIdByName.POLYGON].name}
+          </Button.Shrink>
+        </Button.Bordered>
+        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
+          aria-selected={chain === chainByChainId[chainIdByName.BINANCE].chainId}
+          onClick={() => setChain(chainByChainId[chainIdByName.BINANCE].chainId)}>
+          <Button.Shrink>
+            <Outline.CubeIcon className="s-xs" />
+            {chainByChainId[chainIdByName.BINANCE].name}
+          </Button.Shrink>
+        </Button.Bordered>
+        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
+          aria-selected={chain === chainByChainId[chainIdByName.ARBITRUM].chainId}
+          onClick={() => setChain(chainByChainId[chainIdByName.ARBITRUM].chainId)}>
+          <Button.Shrink>
+            <Outline.CubeIcon className="s-xs" />
+            {chainByChainId[chainIdByName.ARBITRUM].name}
+          </Button.Shrink>
+        </Button.Bordered>
+        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
+          aria-selected={chain === chainByChainId[chainIdByName.AVALANCHE].chainId}
+          onClick={() => setChain(chainByChainId[chainIdByName.AVALANCHE].chainId)}>
+          <Button.Shrink>
+            <Outline.CubeIcon className="s-xs" />
+            {chainByChainId[chainIdByName.AVALANCHE].name}
+          </Button.Shrink>
+        </Button.Bordered>
+        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
+          aria-selected={chain === chainByChainId[chainIdByName.CELO].chainId}
+          onClick={() => setChain(chainByChainId[chainIdByName.CELO].chainId)}>
+          <Button.Shrink>
+            <Outline.CubeIcon className="s-xs" />
+            {chainByChainId[chainIdByName.CELO].name}
+          </Button.Shrink>
+        </Button.Bordered>
+        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
+          aria-selected={chain === chainByChainId[chainIdByName.LINEA].chainId}
+          onClick={() => setChain(chainByChainId[chainIdByName.LINEA].chainId)}>
+          <Button.Shrink>
+            <Outline.CubeIcon className="s-xs" />
+            {chainByChainId[chainIdByName.LINEA].name}
           </Button.Shrink>
         </Button.Bordered>
       </div>
