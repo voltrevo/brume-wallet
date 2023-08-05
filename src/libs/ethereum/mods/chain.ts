@@ -100,6 +100,22 @@ export const chainByChainId: EthereumChains = {
       pairs: ["0x819f3450dA6f110BA6Ea52195B3beaFa246062dE", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
     }
   },
+  /**
+   * Doesn't work with TLS
+   */
+  // 8453: {
+  //   name: "Base",
+  //   chainId: 8453,
+  //   urls: ["https://base.blockpi.network/v1/rpc/public"],
+  //   etherscan: "https://basescan.org",
+  //   token: {
+  //     name: "ETH",
+  //     chainId: 8453,
+  //     symbol: "ETH",
+  //     decimals: 18,
+  //     pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
+  //   }
+  // },
   42161: {
     name: "Arbitrum",
     chainId: 42161,
@@ -161,6 +177,7 @@ export const chainIdByName = {
   CLASSIC: 61,
   GNOSIS: 100,
   POLYGON: 137,
+  BASE: 8453,
   ARBITRUM: 42161,
   AVALANCHE: 43114,
   LINEA: 59144,
