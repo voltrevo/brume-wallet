@@ -6,6 +6,7 @@ import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
 import { EthereumAuthPrivateKeyWalletData, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Bytes } from "@hazae41/bytes"
+import { Typed } from "@hazae41/cubane"
 import { Option, Optional } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
 import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/xswr"
@@ -35,16 +36,6 @@ export function useWallet(uuid: Optional<string>) {
   const query = useQuery(getWallet, [uuid, storage])
   useSubscribe(query as any, storage)
   return query
-}
-
-export async function trySignPrivateKey(privateKey: string, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
-  return await Result.unthrow(async t => {
-    const signature = await Result.catchAndWrap(async () => {
-      return await new ethers.Wallet(privateKey).signMessage(message)
-    }).then(r => r.throw(t))
-
-    return new Ok(signature)
-  })
 }
 
 export type EthereumWalletInstance =
@@ -89,12 +80,16 @@ export class EthereumSeededWalletInstance {
     return await this.seed.tryGetPrivateKey(this.data.path, core, background)
   }
 
-  async tryPersonalSign(message: string, core: Core, background: Background): Promise<Result<string, Error>> {
-    return await this.seed.tryPersonalSign(this.data.path, message, core, background)
+  async trySignPersonalMessage(message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await this.seed.trySignPersonalMessage(this.data.path, message, core, background)
   }
 
   async trySignTransaction(transaction: Transaction, core: Core, background: Background): Promise<Result<string, Error>> {
     return await this.seed.trySignTransaction(this.data.path, transaction, core, background)
+  }
+
+  async trySignEIP712HashedMessage(data: Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await this.seed.trySignEIP712HashedMessage(this.data.path, data, core, background)
   }
 
 }
@@ -113,10 +108,13 @@ export class EthereumUnauthPrivateKeyWalletInstance {
     return new Ok(this.data.privateKey)
   }
 
-  async tryPersonalSign(message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignPersonalMessage(message: string, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
-      const signature = await trySignPrivateKey(privateKey, message, core, background).then(r => r.throw(t))
+
+      const signature = await Result.catchAndWrap(async () => {
+        return await new ethers.Wallet(privateKey).signMessage(message)
+      }).then(r => r.throw(t))
 
       return new Ok(signature)
     })
@@ -129,6 +127,20 @@ export class EthereumUnauthPrivateKeyWalletInstance {
       const signature = Result.catchAndWrapSync(() => {
         return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
       }).throw(t)
+
+      return new Ok(signature)
+    })
+  }
+
+  async trySignEIP712HashedMessage(data: Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
+
+      delete (data.types as any)["EIP712Domain"]
+
+      const signature = await Result.catchAndWrap(async () => {
+        return await new ethers.Wallet(privateKey).signTypedData(data.domain, data.types, data.message)
+      }).then(r => r.throw(t))
 
       return new Ok(signature)
     })
@@ -165,10 +177,13 @@ export class EthereumAuthPrivateKeyWalletInstance {
     })
   }
 
-  async tryPersonalSign(message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignPersonalMessage(message: string, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
-      const signature = await trySignPrivateKey(privateKey, message, core, background).then(r => r.throw(t))
+
+      const signature = await Result.catchAndWrap(async () => {
+        return await new ethers.Wallet(privateKey).signMessage(message)
+      }).then(r => r.throw(t))
 
       return new Ok(signature)
     })
@@ -181,6 +196,20 @@ export class EthereumAuthPrivateKeyWalletInstance {
       const signature = Result.catchAndWrapSync(() => {
         return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
       }).throw(t)
+
+      return new Ok(signature)
+    })
+  }
+
+  async trySignEIP712HashedMessage(data: Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
+
+      delete (data.types as any)["EIP712Domain"]
+
+      const signature = await Result.catchAndWrap(async () => {
+        return await new ethers.Wallet(privateKey).signTypedData(data.domain, data.types, data.message)
+      }).then(r => r.throw(t))
 
       return new Ok(signature)
     })

@@ -251,3 +251,24 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
     return new Ok({ v, r, s })
   })
 }
+
+export async function trySignEIP712HashedMessage(device: LedgerUSBDevice, path: string, domain: Bytes<32>, message: Bytes<32>): Promise<Result<SignatureInit, Error>> {
+  return await Result.unthrow(async t => {
+    const paths = Paths.from(path)
+
+    const writer = Cursor.tryAllocUnsafe(paths.trySize().get() + 32 + 32).throw(t)
+    paths.tryWrite(writer).throw(t)
+    writer.tryWrite(domain).throw(t)
+    writer.tryWrite(message).throw(t)
+
+    const request = { cla: 0xe0, ins: 0x0c, p1: 0x00, p2: 0x00, fragment: new Opaque(writer.bytes) }
+    const response = await device.tryRequest(request).then(r => r.throw(t).throw(t).bytes)
+
+    const reader = new Cursor(response)
+    const v = reader.tryReadUint8().throw(t) - 27
+    const r = reader.tryRead(32).throw(t)
+    const s = reader.tryRead(32).throw(t)
+
+    return new Ok({ v, r, s })
+  })
+}

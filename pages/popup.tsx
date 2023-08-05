@@ -25,10 +25,11 @@ import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
 import { useUserStorage } from "@/mods/foreground/storage/user";
 import { Bytes } from "@hazae41/bytes";
+import { Typed } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { useCore } from "@hazae41/xswr";
-import { Transaction, ethers } from "ethers";
+import { Transaction } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
@@ -303,7 +304,7 @@ export function PersonalSignPage() {
       const wallet = Option.wrap(maybeWallet).ok().throw(t)
 
       const instance = await EthereumWalletInstance.tryFrom(wallet, core, background).then(r => r.throw(t))
-      const signature = await instance.tryPersonalSign(userMessage, core, background).then(r => r.throw(t))
+      const signature = await instance.trySignPersonalMessage(userMessage, core, background).then(r => r.throw(t))
 
       await background.tryRequest({
         method: "popup_data",
@@ -398,16 +399,10 @@ export function TypedSignPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const wallet = Option.wrap(maybeWallet).ok().throw(t)
 
-      const { domain, types, message } = JSON.parse(data)
+      const typed = JSON.parse(data) as Typed.TypedData
 
       const instance = await EthereumWalletInstance.tryFrom(wallet, core, background).then(r => r.throw(t))
-      const privateKey = await instance.tryGetPrivateKey(core, background).then(r => r.throw(t))
-
-      const signature = await Result.catchAndWrap(async () => {
-        delete types["EIP712Domain"]
-
-        return await new ethers.Wallet(privateKey).signTypedData(domain, types, message)
-      }).then(r => r.throw(t))
+      const signature = await instance.trySignEIP712HashedMessage(typed, core, background).then(r => r.throw(t))
 
       await background.tryRequest({
         method: "popup_data",

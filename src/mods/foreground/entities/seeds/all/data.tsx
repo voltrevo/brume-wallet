@@ -7,6 +7,7 @@ import { Background } from "@/mods/foreground/background/background"
 import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { useUserStorage } from "@/mods/foreground/storage/user"
 import { Bytes } from "@hazae41/bytes"
+import { Typed } from "@hazae41/cubane"
 import { Option, Optional } from "@hazae41/option"
 import { Err, Ok, Panic, Result, Unimplemented } from "@hazae41/result"
 import { Core, useQuery } from "@hazae41/xswr"
@@ -14,7 +15,6 @@ import { HDKey } from "@scure/bip32"
 import { entropyToMnemonic, mnemonicToSeed } from "@scure/bip39"
 import { wordlist } from "@scure/bip39/wordlists/english"
 import { Transaction, ethers } from "ethers"
-import { trySignPrivateKey } from "../../wallets/data"
 
 export function useSeeds() {
   const storage = useUserStorage().unwrap()
@@ -73,10 +73,13 @@ export class UnauthMnemonicSeedInstance {
     })
   }
 
-  async tryPersonalSign(path: string, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignPersonalMessage(path: string, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
-      const signature = await trySignPrivateKey(privateKey, message, core, background).then(r => r.throw(t))
+
+      const signature = await Result.catchAndWrap(async () => {
+        return await new ethers.Wallet(privateKey).signMessage(message)
+      }).then(r => r.throw(t))
 
       return new Ok(signature)
     })
@@ -89,6 +92,20 @@ export class UnauthMnemonicSeedInstance {
       const signature = Result.catchAndWrapSync(() => {
         return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
       }).throw(t)
+
+      return new Ok(signature)
+    })
+  }
+
+  async trySignEIP712HashedMessage(path: string, data: Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
+
+      delete (data.types as any)["EIP712Domain"]
+
+      const signature = await Result.catchAndWrap(async () => {
+        return await new ethers.Wallet(privateKey).signTypedData(data.domain, data.types, data.message)
+      }).then(r => r.throw(t))
 
       return new Ok(signature)
     })
@@ -135,10 +152,13 @@ export class AuthMnemonicSeedInstance {
     })
   }
 
-  async tryPersonalSign(path: string, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignPersonalMessage(path: string, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
-      const signature = await trySignPrivateKey(privateKey, message, core, background).then(r => r.throw(t))
+
+      const signature = await Result.catchAndWrap(async () => {
+        return await new ethers.Wallet(privateKey).signMessage(message)
+      }).then(r => r.throw(t))
 
       return new Ok(signature)
     })
@@ -151,6 +171,20 @@ export class AuthMnemonicSeedInstance {
       const signature = Result.catchAndWrapSync(() => {
         return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
       }).throw(t)
+
+      return new Ok(signature)
+    })
+  }
+
+  async trySignEIP712HashedMessage(path: string, data: Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
+
+      delete (data.types as any)["EIP712Domain"]
+
+      const signature = await Result.catchAndWrap(async () => {
+        return await new ethers.Wallet(privateKey).signTypedData(data.domain, data.types, data.message)
+      }).then(r => r.throw(t))
 
       return new Ok(signature)
     })
@@ -172,7 +206,7 @@ export class LedgerSeedInstance {
     return new Err(new Unimplemented())
   }
 
-  async tryPersonalSign(path: string, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignPersonalMessage(path: string, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
       const signature = await Ledger.Ethereum.trySignPersonalMessage(device, path.slice(2), Bytes.fromUtf8(message)).then(r => r.throw(t))
@@ -185,6 +219,30 @@ export class LedgerSeedInstance {
     return await Result.unthrow(async t => {
       const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
       const signature = await Ledger.Ethereum.trySignTransaction(device, path.slice(2), transaction).then(r => r.throw(t))
+
+      return new Ok(Signature.from(signature))
+    })
+  }
+
+  async trySignEIP712HashedMessage(path: string, data: Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
+
+      delete (data.types as any)["EIP712Domain"]
+
+      const encoder = Result.catchAndWrapSync(() => {
+        return new ethers.TypedDataEncoder(data.types)
+      }).throw(t)
+
+      const domain = Result.catchAndWrapSync(() => {
+        return Bytes.fromHex(ethers.TypedDataEncoder.hashDomain(data.domain).slice(2))
+      }).throw(t) as Bytes<32>
+
+      const message = Result.catchAndWrapSync(() => {
+        return Bytes.fromHex(encoder.hashStruct(data.primaryType, data.message).slice(2))
+      }).throw(t) as Bytes<32>
+
+      const signature = await Ledger.Ethereum.trySignEIP712HashedMessage(device, path.slice(2), domain, message).then(r => r.throw(t))
 
       return new Ok(Signature.from(signature))
     })
