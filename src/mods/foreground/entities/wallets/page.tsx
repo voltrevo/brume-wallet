@@ -12,10 +12,11 @@ import { useCallback, useMemo } from "react";
 import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { Path } from "../../router/path";
+import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
+import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { WalletDataCard } from "./card";
 import { WalletDataProvider, useWalletData } from "./context";
 import { useBalance, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
-import { WalletDataSendDialog } from "./send";
 
 export function WalletPage(props: UUIDProps) {
   const { uuid } = props
@@ -68,7 +69,7 @@ function NativeTokenRow(props: {
 
   return <>
     {sendDialog.current && context &&
-      <WalletDataSendDialog
+      <WalletDataSendNativeTokenDialog
         title={`${chain.token.name} on ${chain.name}`}
         context={context}
         close={sendDialog.disable} />}
@@ -108,6 +109,12 @@ function ContractTokenRow(props: {
   const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
 
   return <>
+    {sendDialog.current && context &&
+      <WalletDataSendContractTokenDialog
+        title={`${token.name} on ${chain.name}`}
+        context={context}
+        token={token}
+        close={sendDialog.disable} />}
     <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
       onClick={sendDialog.enable}>
       <div className="w-full flex justify-between items-center">
@@ -195,6 +202,9 @@ function WalletDataPage() {
           chain={chainByChainId[chainIdByName.ETHEREUM]}
           prices={[wethUsdtPriceQuery.data]} />
         <ContractTokenRow
+          token={tokenByAddress[tokenById.WETH_ON_ETHEREUM]}
+          prices={[wethUsdtPriceQuery.data]} />
+        <ContractTokenRow
           token={tokenByAddress[tokenById.WBTC_ON_ETHEREUM]}
           prices={[wbtcWethPriceQuery.data, wethUsdtPriceQuery.data]} />
         <ContractTokenRow
@@ -202,6 +212,9 @@ function WalletDataPage() {
           prices={[]} />
         <ContractTokenRow
           token={tokenByAddress[tokenById.USDT_ON_ETHEREUM]}
+          prices={[]} />
+        <ContractTokenRow
+          token={tokenByAddress[tokenById.USDC_ON_ETHEREUM]}
           prices={[]} />
         <ContractTokenRow
           token={tokenByAddress[tokenById.MATIC_ON_ETHEREUM]}
@@ -299,7 +312,7 @@ function WalletDataPage() {
 
   return <Page>
     {mainnetSendDialog.current && mainnet &&
-      <WalletDataSendDialog title="ETH on Ethereum"
+      <WalletDataSendNativeTokenDialog title="ETH on Ethereum"
         context={mainnet}
         close={mainnetSendDialog.disable} />}
     {Header}

@@ -14,10 +14,10 @@ import { Ok, Result } from "@hazae41/result";
 import { useCore } from "@hazae41/xswr";
 import { Transaction, ethers } from "ethers";
 import { useMemo, useState } from "react";
-import { useWalletData } from "./context";
-import { EthereumContextProps, EthereumWalletInstance, useBalance, useGasPrice, useNonce } from "./data";
+import { useWalletData } from "../../context";
+import { EthereumContextProps, EthereumWalletInstance, useBalance, useGasPrice, useNonce } from "../../data";
 
-export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumContextProps) {
+export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps & EthereumContextProps) {
   const core = useCore().unwrap()
   const wallet = useWalletData()
   const { title, context, close } = props
@@ -59,7 +59,7 @@ export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumCo
 
   const ValueInput = <>
     <div className="">
-      Value (ETH)
+      Value ({context.chain.token.symbol})
     </div>
     <div className="h-2" />
     <Input.Contrast className="w-full"
