@@ -175,8 +175,6 @@ export class LedgerUSBDevice {
     return await Result.unthrow(async t => {
       const bytes = Writable.tryWriteToBytes(frame).throw(t)
 
-      console.log("->", bytes)
-
       await Result.catchAndWrap(async () => {
         await this.device.transferOut(3, bytes)
       }).then(r => r.mapErrSync(DeviceTransferOutError.from).throw(t))
@@ -195,8 +193,6 @@ export class LedgerUSBDevice {
         return new Err(new DeviceTransferInError())
 
       const bytes = Bytes.fromView(result.data)
-
-      console.log("<-", bytes)
 
       const frame = Readable.tryReadFromBytes(HIDFrame, bytes).throw(t)
 

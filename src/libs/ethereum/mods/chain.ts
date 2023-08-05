@@ -38,7 +38,7 @@ export const chainByChainId: EthereumChains = {
   10: {
     name: "Optimism",
     chainId: 10,
-    urls: ["https://endpoints.omniatech.io/v1/op/mainnet/public"],
+    urls: ["https://optimism.api.onfinality.io/public"],
     etherscan: "https://optimistic.etherscan.io",
     token: {
       name: "ETH",
@@ -51,7 +51,7 @@ export const chainByChainId: EthereumChains = {
   56: {
     name: "Binance",
     chainId: 56,
-    urls: ["https://endpoints.omniatech.io/v1/bsc/mainnet/public"],
+    urls: ["https://bnb.api.onfinality.io/public"],
     etherscan: "https://bnbscan.com",
     token: {
       name: "BNB",
@@ -59,6 +59,31 @@ export const chainByChainId: EthereumChains = {
       symbol: "BNB",
       decimals: 18,
       pairs: ["0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae"]
+    }
+  },
+  61: {
+    name: "Ethereum Classic",
+    chainId: 61,
+    urls: ["https://etc.rivet.link"],
+    etherscan: "https://blockscout.com/etc/mainnet/",
+    token: {
+      name: "ETC",
+      chainId: 61,
+      symbol: "ETC",
+      decimals: 18,
+    }
+  },
+  100: {
+    name: "Gnosis",
+    chainId: 100,
+    urls: ["https://gnosis.api.onfinality.io/public"],
+    etherscan: "https://gnosisscan.io",
+    token: {
+      name: "xDAI",
+      chainId: 100,
+      symbol: "xDAI",
+      decimals: 18,
+      pairs: []
     }
   },
   137: {
@@ -77,7 +102,7 @@ export const chainByChainId: EthereumChains = {
   42161: {
     name: "Arbitrum",
     chainId: 42161,
-    urls: ["https://endpoints.omniatech.io/v1/arbitrum/one/public"],
+    urls: ["https://arbitrum.api.onfinality.io/public"],
     etherscan: "https://arbiscan.io",
     token: {
       name: "ETH",
@@ -90,7 +115,7 @@ export const chainByChainId: EthereumChains = {
   43114: {
     name: "Avalanche",
     chainId: 43114,
-    urls: ["https://endpoints.omniatech.io/v1/avax/mainnet/public"],
+    urls: ["https://avalanche.api.onfinality.io/public/ext/bc/C/rpc"],
     etherscan: "https://snowtrace.io",
     token: {
       name: "ETH",
@@ -119,6 +144,8 @@ export const chainIdByName = {
   GOERLI: 5,
   OPTIMISM: 10,
   BINANCE: 56,
+  CLASSIC: 61,
+  GNOSIS: 100,
   POLYGON: 137,
   ARBITRUM: 42161,
   AVALANCHE: 43114,

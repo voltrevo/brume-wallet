@@ -309,7 +309,10 @@ export function getPricedBalance(ethereum: EthereumContext, account: string, coi
 
 export function getBalance(ethereum: EthereumContext, account: string, block: string, storage: IDBStorage) {
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryEthereumFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals))))
+    await tryEthereumFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals)))).then(r => {
+      console.log(ethereum.chain.chainId, r)
+      return r
+    })
 
   const indexer = async (states: States<FixedInit, Error>, more: IndexerMore) => {
     if (block !== "pending")
@@ -439,10 +442,8 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
       const balance = await contract.balanceOf(account)
       const fixed = new Fixed(balance, token.decimals)
 
-      console.warn("!!!!", fixed)
       return new Ok(new Data(fixed))
     } catch (e: unknown) {
-      console.warn("!!!!", e)
       return new Err(FetchError.from(e))
     }
   }

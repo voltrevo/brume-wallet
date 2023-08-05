@@ -225,6 +225,16 @@ function WalletDataPage() {
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">
+        {chainByChainId[chainIdByName.GNOSIS].name}
+      </div>
+      <div className="h-4" />
+      <div className="flex flex-col gap-2">
+        <NativeTokenRow
+          chain={chainByChainId[chainIdByName.GNOSIS]}
+          prices={[]} />
+      </div>
+      <div className="h-4" />
+      <div className="text-xl font-medium">
         {chainByChainId[chainIdByName.OPTIMISM].name}
       </div>
       <div className="h-4" />
@@ -287,6 +297,16 @@ function WalletDataPage() {
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.AVALANCHE]}
           prices={[wethUsdtPriceQuery.data]} />
+      </div>
+      <div className="h-4" />
+      <div className="text-xl font-medium">
+        {chainByChainId[chainIdByName.CLASSIC].name}
+      </div>
+      <div className="h-4" />
+      <div className="flex flex-col gap-2">
+        <NativeTokenRow
+          chain={chainByChainId[chainIdByName.CLASSIC]}
+          prices={[]} />
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">
