@@ -1,7 +1,7 @@
 import { FixedInit } from "@/libs/bigints/bigints"
 import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
-import { chains, pairsByAddress } from "@/libs/ethereum/mods/chain"
+import { chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcParamfulRequestInit, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"
@@ -31,7 +31,7 @@ import { Seed, SeedData } from "./entities/seeds/data"
 import { PersistentSession, SessionData, TemporarySession } from "./entities/sessions/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
-import { EthereumContext, EthereumQueryKey, Wallet, WalletData, getEthereumBalance, getEthereumUnknown, getPairPrice, tryEthereumFetch } from "./entities/wallets/data"
+import { EthereumContext, EthereumQueryKey, Wallet, WalletData, getBalance, getEthereumUnknown, getPairPrice, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -360,7 +360,7 @@ export class Global {
 
       const walletQuery = await Wallet.schema(walletId, storage).make(this.core)
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
-      const chain = Option.wrap(chains[chainId]).ok().throw(t)
+      const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
       const sessionData: SessionData = {
         id: crypto.randomUUID(),
@@ -484,7 +484,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [address, block] = (request as RpcParamfulRequestPreinit<[string, string]>).params
 
-      const query = await getEthereumBalance(ethereum, address, block, storage).make(this.core)
+      const query = await getBalance(ethereum, address, block, storage).make(this.core)
 
       return new Ok(query)
     })
@@ -496,7 +496,7 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const query = await getEthereumBalance(ethereum, address, block, storage).make(this.core)
+      const query = await getBalance(ethereum, address, block, storage).make(this.core)
 
       const result = await query.fetch().then(r => r.ignore())
 
@@ -510,35 +510,25 @@ export class Global {
     })
   }
 
-  async makeEthereumPairPrice(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<string, FixedInit, Error>, Error>> {
+  async makeEthereumPairPrice(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
     return await Result.unthrow(async t => {
       const [address] = (request as RpcParamfulRequestPreinit<[string]>).params
 
-      const pair = Option.wrap(pairsByAddress[address]).ok().throw(t)
+      const pair = Option.wrap(pairByAddress[address]).ok().throw(t)
       const query = await getPairPrice(ethereum, pair, storage).make(this.core)
 
       return new Ok(query)
     })
   }
 
-  async eth_getPairPrice(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async makeEthereumTokenBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
     return await Result.unthrow(async t => {
-      const [address] = (request as RpcParamfulRequestPreinit<[string]>).params
+      const [account, address, block] = (request as RpcParamfulRequestPreinit<[string, string, string]>).params
 
-      const { storage } = Option.wrap(this.#user).ok().throw(t)
+      const token = Option.wrap(tokenByAddress[address]).ok().throw(t)
+      const query = await getTokenBalance(ethereum, account, token, block, storage).make(this.core)
 
-      const pair = Option.wrap(pairsByAddress[address]).ok().throw(t)
-      const query = await getPairPrice(ethereum, pair, storage).make(this.core)
-
-      const result = await query.fetch().then(r => r.ignore())
-
-      result.inspectSync(r => r.throw(t))
-
-      const stored = this.core.raw.get(query.cacheKey)?.inner
-      const unstored = await this.core.unstore<any, unknown, any>(stored, { key: query.cacheKey })
-      const fetched = Option.wrap(unstored.current).ok().throw(t)
-
-      return fetched
+      return new Ok(query)
     })
   }
 
@@ -613,7 +603,7 @@ export class Global {
 
       const session = Option.wrap(ethereum.session).ok().throw(t)
 
-      const chain = Option.wrap(chains[parseInt(chainId, 16)]).ok().throw(t)
+      const chain = Option.wrap(chainByChainId[parseInt(chainId, 16)]).ok().throw(t)
 
       await this.tryRequestPopup<void>({
         id: crypto.randomUUID(),
@@ -933,6 +923,8 @@ export class Global {
   async routeAndMakeEthereum(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<any, FixedInit, Error>, Error>> {
     if (request.method === "eth_getBalance")
       return await this.makeEthereumBalance(ethereum, request, storage)
+    if (request.method === "eth_getTokenBalance")
+      return await this.makeEthereumTokenBalance(ethereum, request, storage)
     if (request.method === "eth_getPairPrice")
       return await this.makeEthereumPairPrice(ethereum, request, storage)
     return await this.makeEthereumUnknown(ethereum, request, storage)
@@ -946,7 +938,7 @@ export class Global {
 
       const walletQuery = await Wallet.schema(walletId, storage).make(this.core)
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
-      const chain = Option.wrap(chains[chainId]).ok().throw(t)
+      const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
@@ -968,7 +960,7 @@ export class Global {
 
       const walletQuery = await Wallet.schema(walletId, storage).make(this.core)
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
-      const chain = Option.wrap(chains[chainId]).ok().throw(t)
+      const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
       const brumes = await this.#getOrCreateEthereumBrumes(wallet)
 
@@ -1020,7 +1012,7 @@ async function tryInit() {
       }, { capacity: 3 })
 
       const circuits = Circuits.createPool(tors, { capacity: 9 })
-      const sessions = EthereumBrumes.createPool(chains, circuits, { capacity: 9 })
+      const sessions = EthereumBrumes.createPool(chainByChainId, circuits, { capacity: 9 })
 
       const storage = IDBStorage.tryCreate({ name: "memory" }).unwrap()
       const global = new Global(tors, circuits, sessions, storage)

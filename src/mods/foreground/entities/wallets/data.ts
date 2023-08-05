@@ -1,5 +1,5 @@
 import { BigInts, Fixed, FixedInit } from "@/libs/bigints/bigints"
-import { EthereumChain, PairInfo } from "@/libs/ethereum/mods/chain"
+import { ContractTokenInfo, EthereumChain, PairInfo } from "@/libs/ethereum/mods/chain"
 import { useObjectMemo } from "@/libs/react/memo"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
@@ -318,8 +318,15 @@ export function useTotalWalletPricedBalance(address: string, coin: "usd") {
   return query
 }
 
-export function getPricedBalance(context: EthereumContext, address: string, coin: "usd", storage: UserStorage) {
-  return createQuerySchema<string, FixedInit, Error>({ key: `pricedBalance/${address}/${context.chain.chainId}/${coin}`, storage })
+export function getPricedBalance(context: EthereumContext, account: string, coin: "usd", storage: UserStorage) {
+  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+    key: {
+      chainId: context.chain.chainId,
+      method: "eth_getPricedBalance",
+      params: [account, coin]
+    },
+    storage
+  })
 }
 
 export function usePricedBalance(context: EthereumContext, address: string, coin: "usd") {
@@ -333,7 +340,7 @@ export function usePricedBalance(context: EthereumContext, address: string, coin
   return query
 }
 
-export function getPendingBalance(address: string, context: EthereumContext, storage: UserStorage) {
+export function getBalance(address: string, context: EthereumContext, storage: UserStorage) {
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     await tryFetch<FixedInit>(request, context)
 
@@ -349,9 +356,65 @@ export function getPendingBalance(address: string, context: EthereumContext, sto
   })
 }
 
-export function usePendingBalance(address: string, context: EthereumContext, ...prices: Optional<Data<FixedInit>>[]) {
+export function useBalance(address: string, context: EthereumContext, ...prices: Optional<Data<FixedInit>>[]) {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(getPendingBalance, [address, context, storage])
+  const query = useQuery(getBalance, [address, context, storage])
+  useFetch(query)
+  useVisible(query)
+  useSubscribe(query, storage)
+  useError(query, console.error)
+  useFallback(query, () => new Data(new Fixed(0n, 0)))
+
+  useEffect(() => {
+    tryIndex(query.key, context)
+      .then(r => r.ignore())
+      .catch(console.error)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...prices])
+
+  return query
+}
+
+export function getTokenPricedBalance(context: EthereumContext, account: string, token: ContractTokenInfo, coin: "usd", storage: UserStorage) {
+  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+    key: {
+      chainId: context.chain.chainId,
+      method: "eth_getTokenPricedBalance",
+      params: [account, token.address, coin]
+    },
+    storage
+  })
+}
+
+export function useTokenPricedBalance(context: EthereumContext, address: string, token: ContractTokenInfo, coin: "usd") {
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getTokenPricedBalance, [context, address, token, coin, storage])
+  useFetch(query)
+  useVisible(query)
+  useSubscribe(query, storage)
+  useError(query, console.error)
+  useFallback(query, () => new Data(new Fixed(0n, 0)))
+  return query
+}
+
+export function getTokenBalance(address: string, token: ContractTokenInfo, context: EthereumContext, storage: UserStorage) {
+  const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
+    await tryFetch<FixedInit>(request, context)
+
+  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+    key: {
+      chainId: context.chain.chainId,
+      method: "eth_getTokenBalance",
+      params: [address, token.address, "pending"]
+    },
+    fetcher,
+    storage
+  })
+}
+
+export function useTokenBalance(address: string, token: ContractTokenInfo, context: EthereumContext, ...prices: Optional<Data<FixedInit>>[]) {
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getTokenBalance, [address, token, context, storage])
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
@@ -434,6 +497,7 @@ export function getPairPrice(context: EthereumContext, pair: PairInfo, storage: 
 
   return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
     key: {
+      chainId: context.chain.chainId,
       method: "eth_getPairPrice",
       params: [pair.address]
     },

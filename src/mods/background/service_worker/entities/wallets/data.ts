@@ -1,13 +1,14 @@
+import Erc20Abi from "@/assets/Erc20.json"
 import PairAbi from "@/assets/Pair.json"
 import { Fixed, FixedInit } from "@/libs/bigints/bigints"
 import { Port } from "@/libs/channel/channel"
-import { EthereumChain, PairInfo, chains, pairsByAddress, tokensByAddress } from "@/libs/ethereum/mods/chain"
+import { ContractTokenInfo, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
 import { None, Option, Some } from "@hazae41/option"
 import { Cancel, Looped, Retry, tryLoop } from "@hazae41/piscine"
-import { Ok, Result } from "@hazae41/result"
+import { Err, Ok, Result } from "@hazae41/result"
 import { Data, FetchError, Fetched, FetcherMore, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
 import { EthereumBrumes } from "../brumes/data"
@@ -16,6 +17,7 @@ import { SeedRef } from "../seeds/data"
 import { SessionData } from "../sessions/data"
 import { User } from "../users/data"
 import { Wallets } from "./all/data"
+
 
 export type Wallet =
   | WalletRef
@@ -169,7 +171,7 @@ export namespace Wallet {
 
 export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
   version?: number
-  chainId?: number
+  chainId: number
 }
 
 export interface EthereumContext {
@@ -254,53 +256,58 @@ export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: 
   })
 }
 
-export function getTotalWalletPricedBalance(user: User, address: string, coin: "usd", storage: IDBStorage) {
+export function getTotalWalletPricedBalance(user: User, account: string, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<FixedInit, Error>, more: IndexerMore) => {
     const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
     const indexQuery = await getTotalPricedBalanceByWallet(user, coin, storage).make(more.core)
-    await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [address]: value }), new Data({})))
+    await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [account]: value }), new Data({})))
   }
 
   return createQuerySchema<string, FixedInit, Error>({
-    key: `totalWalletPricedBalance/${address}/${coin}`,
+    key: `totalWalletPricedBalance/${account}/${coin}`,
     indexer,
     storage
   })
 }
 
-export function getPricedBalanceByToken(user: User, address: string, coin: "usd", storage: IDBStorage) {
+export function getPricedBalanceByToken(user: User, account: string, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<Record<string, FixedInit>, Error>, more: IndexerMore) => {
     const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
     const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-    const totalBalance = await getTotalWalletPricedBalance(user, address, coin, storage).make(more.core)
+    const totalBalance = await getTotalWalletPricedBalance(user, account, coin, storage).make(more.core)
     await totalBalance.mutate(Mutators.data<FixedInit, Error>(total))
   }
 
   return createQuerySchema<string, Record<string, FixedInit>, Error>({
-    key: `pricedBalanceByToken/${address}/${coin}`,
+    key: `pricedBalanceByToken/${account}/${coin}`,
     indexer,
     storage
   })
 }
 
-export function getPricedEthereumBalance(ethereum: EthereumContext, address: string, coin: "usd", storage: IDBStorage) {
+export function getPricedBalance(ethereum: EthereumContext, account: string, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<FixedInit, Error>, more: IndexerMore) => {
+    const key = `${ethereum.chain.chainId}`
     const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-    const indexQuery = await getPricedBalanceByToken(ethereum.user, address, coin, storage).make(more.core)
-    await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [ethereum.chain.chainId]: value }), new Data({})))
+    const indexQuery = await getPricedBalanceByToken(ethereum.user, account, coin, storage).make(more.core)
+    await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
   }
 
-  return createQuerySchema<string, FixedInit, Error>({
-    key: `pricedBalance/${address}/${ethereum.chain.chainId}/${coin}`,
+  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+    key: {
+      chainId: ethereum.chain.chainId,
+      method: "eth_getPricedBalance",
+      params: [account, coin]
+    },
     indexer,
     storage
   })
 }
 
-export function getEthereumBalance(ethereum: EthereumContext, address: string, block: string, storage: IDBStorage) {
+export function getBalance(ethereum: EthereumContext, account: string, block: string, storage: IDBStorage) {
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
     await tryEthereumFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals))))
 
@@ -315,8 +322,8 @@ export function getEthereumBalance(ethereum: EthereumContext, address: string, b
       let pricedBalance: Fixed = Fixed.from(balance)
 
       for (const pairAddress of ethereum.chain.token.pairs) {
-        const pair = pairsByAddress[pairAddress]
-        const chain = chains[pair.chainId]
+        const pair = pairByAddress[pairAddress]
+        const chain = chainByChainId[pair.chainId]
 
         const price = await getPairPrice({ ...ethereum, chain }, pair, storage).make(more.core)
 
@@ -329,7 +336,7 @@ export function getEthereumBalance(ethereum: EthereumContext, address: string, b
       return new Some(pricedBalance)
     }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
-    const pricedBalanceQuery = await getPricedEthereumBalance(ethereum, address, "usd", storage).make(more.core)
+    const pricedBalanceQuery = await getPricedBalance(ethereum, account, "usd", storage).make(more.core)
     await pricedBalanceQuery.mutate(Mutators.set(new Data(pricedBalance)))
   }
 
@@ -338,7 +345,7 @@ export function getEthereumBalance(ethereum: EthereumContext, address: string, b
       version: 2,
       chainId: ethereum.chain.chainId,
       method: "eth_getBalance",
-      params: [address, block]
+      params: [account, block]
     },
     fetcher,
     indexer,
@@ -367,24 +374,32 @@ export class BrumeProvider implements ContractRunner {
 
 export function getPairPrice(ethereum: EthereumContext, pair: PairInfo, storage: IDBStorage) {
   const fetcher = async () => {
-    const provider = new BrumeProvider(ethereum)
-    const contract = new Contract(pair.address, PairAbi, provider)
-    const reserves = await contract.getReserves()
-    const price = computePairPrice(pair, reserves)
+    try {
+      const provider = new BrumeProvider(ethereum)
+      const contract = new Contract(pair.address, PairAbi, provider)
+      const reserves = await contract.getReserves()
+      const price = computePairPrice(pair, reserves)
 
-    return new Ok(new Data(price))
+      return new Ok(new Data(price))
+    } catch (e: unknown) {
+      return new Err(FetchError.from(e))
+    }
   }
 
-  return createQuerySchema<string, FixedInit, Error>({
-    key: `pairs/${pair.address}/price`,
+  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+    key: {
+      chainId: ethereum.chain.chainId,
+      method: "eth_getPairPrice",
+      params: [pair.address]
+    },
     fetcher,
     storage
   })
 }
 
 export function computePairPrice(pair: PairInfo, reserves: [bigint, bigint]) {
-  const decimals0 = tokensByAddress[pair.token0].decimals
-  const decimals1 = tokensByAddress[pair.token1].decimals
+  const decimals0 = tokenByAddress[pair.token0].decimals
+  const decimals1 = tokenByAddress[pair.token1].decimals
 
   const [reserve0, reserve1] = reserves
 
@@ -394,4 +409,81 @@ export function computePairPrice(pair: PairInfo, reserves: [bigint, bigint]) {
   if (pair.reversed)
     return quantity0.div(quantity1)
   return quantity1.div(quantity0)
+}
+
+export function getTokenPricedBalance(ethereum: EthereumContext, account: string, token: ContractTokenInfo, coin: "usd", storage: IDBStorage) {
+  const indexer = async (states: States<FixedInit, Error>, more: IndexerMore) => {
+    const key = `${ethereum.chain.chainId}/${token.address}`
+    const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
+
+    const indexQuery = await getPricedBalanceByToken(ethereum.user, account, coin, storage).make(more.core)
+    await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
+  }
+
+  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+    key: {
+      chainId: ethereum.chain.chainId,
+      method: "eth_getTokenPricedBalance",
+      params: [account, token.address, coin]
+    },
+    indexer,
+    storage
+  })
+}
+
+export function getTokenBalance(ethereum: EthereumContext, account: string, token: ContractTokenInfo, block: string, storage: IDBStorage) {
+  const fetcher = async () => {
+    try {
+      const provider = new BrumeProvider(ethereum)
+      const contract = new Contract(token.address, Erc20Abi, provider)
+      const balance = await contract.balanceOf(account)
+      const fixed = new Fixed(balance, token.decimals)
+
+      console.warn("!!!!", fixed)
+      return new Ok(new Data(fixed))
+    } catch (e: unknown) {
+      console.warn("!!!!", e)
+      return new Err(FetchError.from(e))
+    }
+  }
+
+  const indexer = async (states: States<FixedInit, Error>, more: IndexerMore) => {
+    if (block !== "pending")
+      return
+
+    const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
+      if (token.pairs == null)
+        return new None()
+
+      let pricedBalance: Fixed = Fixed.from(balance)
+
+      for (const pairAddress of token.pairs) {
+        const pair = pairByAddress[pairAddress]
+        const chain = chainByChainId[pair.chainId]
+
+        const price = await getPairPrice({ ...ethereum, chain }, pair, storage).make(more.core)
+
+        if (price.data == null)
+          return new None()
+
+        pricedBalance = pricedBalance.mul(Fixed.from(price.data.inner))
+      }
+
+      return new Some(pricedBalance)
+    }).then(o => o.unwrapOr(new Fixed(0n, 0)))
+
+    const pricedBalanceQuery = await getTokenPricedBalance(ethereum, account, token, "usd", storage).make(more.core)
+    await pricedBalanceQuery.mutate(Mutators.set(new Data(pricedBalance)))
+  }
+
+  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+    key: {
+      chainId: ethereum.chain.chainId,
+      method: "eth_getTokenBalance",
+      params: [account, token.address, block]
+    },
+    fetcher,
+    indexer,
+    storage
+  })
 }

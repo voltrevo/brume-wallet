@@ -15,14 +15,14 @@ import { useCore } from "@hazae41/xswr";
 import { Transaction, ethers } from "ethers";
 import { useMemo, useState } from "react";
 import { useWalletData } from "./context";
-import { EthereumContextProps, EthereumWalletInstance, useGasPrice, useNonce, usePendingBalance } from "./data";
+import { EthereumContextProps, EthereumWalletInstance, useBalance, useGasPrice, useNonce } from "./data";
 
 export function WalletDataSendDialog(props: TitleProps & CloseProps & EthereumContextProps) {
   const core = useCore().unwrap()
   const wallet = useWalletData()
   const { title, context, close } = props
 
-  const balanceQuery = usePendingBalance(wallet.address, context)
+  const balanceQuery = useBalance(wallet.address, context)
   const maybeBalance = balanceQuery.data?.inner
 
   const nonceQuery = useNonce(wallet.address, context)

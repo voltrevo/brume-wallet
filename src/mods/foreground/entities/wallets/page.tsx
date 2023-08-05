@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Fixed, FixedInit } from "@/libs/bigints/bigints";
 import { Gradients } from "@/libs/colors/colors";
-import { EthereumChain, chains, pairsByAddress, pairsByName } from "@/libs/ethereum/mods/chain";
+import { ContractTokenInfo, EthereumChain, chainByChainId, chainIdByName, pairByAddress, pairByName, tokenByAddress, tokenById } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";
@@ -14,7 +14,7 @@ import { Page } from "../../components/page/page";
 import { Path } from "../../router/path";
 import { WalletDataCard } from "./card";
 import { WalletDataProvider, useWalletData } from "./context";
-import { useEthereumContext, usePairPrice, usePendingBalance, usePricedBalance } from "./data";
+import { useBalance, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
 import { WalletDataSendDialog } from "./send";
 
 export function WalletPage(props: UUIDProps) {
@@ -49,7 +49,7 @@ export function useCompactDisplayUsd(option: Optional<Result<FixedInit, Error>>)
   }, [option])
 }
 
-function TokenRow(props: {
+function NativeTokenRow(props: {
   chain: EthereumChain,
   prices: Optional<Data<FixedInit>>[]
 }) {
@@ -58,7 +58,7 @@ function TokenRow(props: {
 
   const context = useEthereumContext(wallet, chain)
 
-  const balanceQuery = usePendingBalance(wallet.address, context, ...prices)
+  const balanceQuery = useBalance(wallet.address, context, ...prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
 
   const sendDialog = useBooleanHandle(false)
@@ -69,14 +69,14 @@ function TokenRow(props: {
   return <>
     {sendDialog.current && context &&
       <WalletDataSendDialog
-        title={`${chain.token.symbol} on ${chain.name}`}
+        title={`${chain.token.name} on ${chain.name}`}
         context={context}
         close={sendDialog.disable} />}
     <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
       onClick={sendDialog.enable}>
       <div className="w-full flex justify-between items-center">
         <div className="">
-          {chain.name}
+          {chain.token.name}
         </div>
         <div className="">
           {balanceUsdDisplay}
@@ -89,18 +89,55 @@ function TokenRow(props: {
   </>
 }
 
+function ContractTokenRow(props: {
+  token: ContractTokenInfo,
+  prices: Optional<Data<FixedInit>>[]
+}) {
+  const { token, prices } = props
+  const chain = chainByChainId[token.chainId]
+  const wallet = useWalletData()
+
+  const context = useEthereumContext(wallet, chain)
+
+  const balanceQuery = useTokenBalance(wallet.address, token, context, ...prices)
+  const balanceDisplay = useDisplay(balanceQuery.current)
+
+  const sendDialog = useBooleanHandle(false)
+
+  const balanceUsdFixed = useTokenPricedBalance(context, wallet.address, token, "usd")
+  const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
+
+  return <>
+    <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
+      onClick={sendDialog.enable}>
+      <div className="w-full flex justify-between items-center">
+        <div className="">
+          {token.name}
+        </div>
+        <div className="">
+          {balanceUsdDisplay}
+        </div>
+      </div>
+      <div className="text-contrast">
+        {`${balanceDisplay} ${token.symbol}`}
+      </div>
+    </button>
+  </>
+}
+
 function WalletDataPage() {
   const wallet = useWalletData()
 
-  const mainnet = useEthereumContext(wallet, chains[1])
-  const binance = useEthereumContext(wallet, chains[56])
+  const mainnet = useEthereumContext(wallet, chainByChainId[1])
+  const binance = useEthereumContext(wallet, chainByChainId[56])
   const mainnetSendDialog = useBooleanHandle(false)
 
   const [color, color2] = Gradients.get(wallet.color)
 
-  const wethUsdPriceQuery = usePairPrice(mainnet, pairsByAddress[pairsByName.WETH_USDT])
-  const maticWethPriceQuery = usePairPrice(mainnet, pairsByAddress[pairsByName.MATIC_WETH])
-  const busdtWbnbPriceQuery = usePairPrice(binance, pairsByAddress[pairsByName.BUSDT_WBNB])
+  const wethUsdtPriceQuery = usePairPrice(mainnet, pairByAddress[pairByName.WETH_USDT])
+  const maticWethPriceQuery = usePairPrice(mainnet, pairByAddress[pairByName.MATIC_WETH])
+  const busdtWbnbPriceQuery = usePairPrice(binance, pairByAddress[pairByName.BUSDT_WBNB])
+  const wbtcWethPriceQuery = usePairPrice(mainnet, pairByAddress[pairByName.WBTC_WETH])
 
   const onBackClick = useCallback(() => {
     Path.go("/wallets")
@@ -149,30 +186,113 @@ function WalletDataPage() {
 
   const Body =
     <PageBody>
+      <div className="text-xl font-medium">
+        {chainByChainId[chainIdByName.ETHEREUM].name}
+      </div>
+      <div className="h-4" />
       <div className="flex flex-col gap-2">
-        <TokenRow
-          chain={chains[1]}
-          prices={[wethUsdPriceQuery.data]} />
-        <TokenRow
-          chain={chains[5]}
+        <NativeTokenRow
+          chain={chainByChainId[chainIdByName.ETHEREUM]}
+          prices={[wethUsdtPriceQuery.data]} />
+        <ContractTokenRow
+          token={tokenByAddress[tokenById.WBTC_ON_ETHEREUM]}
+          prices={[wbtcWethPriceQuery.data, wethUsdtPriceQuery.data]} />
+        <ContractTokenRow
+          token={tokenByAddress[tokenById.DAI_ON_ETHEREUM]}
           prices={[]} />
-        <TokenRow
-          chain={chains[10]}
-          prices={[wethUsdPriceQuery.data]} />
-        <TokenRow
-          chain={chains[56]}
+        <ContractTokenRow
+          token={tokenByAddress[tokenById.USDT_ON_ETHEREUM]}
+          prices={[]} />
+        <ContractTokenRow
+          token={tokenByAddress[tokenById.MATIC_ON_ETHEREUM]}
+          prices={[maticWethPriceQuery.data, wethUsdtPriceQuery.data]} />
+        <ContractTokenRow
+          token={tokenByAddress[tokenById.STETH_ON_ETHEREUM]}
+          prices={[wethUsdtPriceQuery.data]} />
+      </div>
+      <div className="h-4" />
+      <div className="text-xl font-medium">
+        {chainByChainId[chainIdByName.OPTIMISM].name}
+      </div>
+      <div className="h-4" />
+      <div className="flex flex-col gap-2">
+        <NativeTokenRow
+          chain={chainByChainId[10]}
+          prices={[wethUsdtPriceQuery.data]} />
+        <ContractTokenRow
+          token={tokenByAddress[tokenById.WBTC_ON_OPTIMISM]}
+          prices={[wbtcWethPriceQuery.data, wethUsdtPriceQuery.data]} />
+        <ContractTokenRow
+          token={tokenByAddress[tokenById.DAI_ON_OPTIMISM]}
+          prices={[]} />
+        <ContractTokenRow
+          token={tokenByAddress[tokenById.USDT_ON_OPTIMISM]}
+          prices={[]} />
+        <ContractTokenRow
+          token={tokenByAddress[tokenById.USDC_ON_OPTIMISM]}
+          prices={[]} />
+      </div>
+      <div className="h-4" />
+      <div className="text-xl font-medium">
+        {chainByChainId[chainIdByName.BINANCE].name}
+      </div>
+      <div className="h-4" />
+      <div className="flex flex-col gap-2">
+        <NativeTokenRow
+          chain={chainByChainId[chainIdByName.BINANCE]}
           prices={[busdtWbnbPriceQuery.data]} />
-        <TokenRow
-          chain={chains[137]}
-          prices={[wethUsdPriceQuery.data, maticWethPriceQuery.data]} />
-        <TokenRow
-          chain={chains[42161]}
-          prices={[wethUsdPriceQuery.data]} />
-        <TokenRow
-          chain={chains[43114]}
-          prices={[wethUsdPriceQuery.data]} />
-        <TokenRow
-          chain={chains[11155111]}
+        <ContractTokenRow
+          token={tokenByAddress[tokenById.BUSDT_ON_BINANCE]}
+          prices={[]} />
+      </div>
+      <div className="h-4" />
+      <div className="text-xl font-medium">
+        {chainByChainId[chainIdByName.POLYGON].name}
+      </div>
+      <div className="h-4" />
+      <div className="flex flex-col gap-2">
+        <NativeTokenRow
+          chain={chainByChainId[chainIdByName.POLYGON]}
+          prices={[wethUsdtPriceQuery.data, maticWethPriceQuery.data]} />
+      </div>
+      <div className="h-4" />
+      <div className="text-xl font-medium">
+        {chainByChainId[chainIdByName.ARBITRUM].name}
+      </div>
+      <div className="h-4" />
+      <div className="flex flex-col gap-2">
+        <NativeTokenRow
+          chain={chainByChainId[chainIdByName.ARBITRUM]}
+          prices={[wethUsdtPriceQuery.data]} />
+      </div>
+      <div className="h-4" />
+      <div className="text-xl font-medium">
+        {chainByChainId[chainIdByName.AVALANCHE].name}
+      </div>
+      <div className="h-4" />
+      <div className="flex flex-col gap-2">
+        <NativeTokenRow
+          chain={chainByChainId[chainIdByName.AVALANCHE]}
+          prices={[wethUsdtPriceQuery.data]} />
+      </div>
+      <div className="h-4" />
+      <div className="text-xl font-medium">
+        {chainByChainId[chainIdByName.GOERLI].name}
+      </div>
+      <div className="h-4" />
+      <div className="flex flex-col gap-2">
+        <NativeTokenRow
+          chain={chainByChainId[chainIdByName.GOERLI]}
+          prices={[]} />
+      </div>
+      <div className="h-4" />
+      <div className="text-xl font-medium">
+        {chainByChainId[chainIdByName.SEPOLIA].name}
+      </div>
+      <div className="h-4" />
+      <div className="flex flex-col gap-2">
+        <NativeTokenRow
+          chain={chainByChainId[chainIdByName.SEPOLIA]}
           prices={[]} />
       </div>
     </PageBody>
