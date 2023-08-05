@@ -24,7 +24,7 @@ export const chainByChainId: EthereumChains = {
     }
   },
   5: {
-    name: "Goerli",
+    name: "Goerli (testnet)",
     chainId: 5,
     urls: ["wss://goerli.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8"],
     etherscan: "https://goerli.etherscan.io",
@@ -101,7 +101,7 @@ export const chainByChainId: EthereumChains = {
     }
   },
   11155111: {
-    name: "Sepolia",
+    name: "Sepolia (testnet)",
     chainId: 11155111,
     urls: ["wss://sepolia.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8"],
     etherscan: "https://sepolia.etherscan.io",
