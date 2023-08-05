@@ -415,8 +415,8 @@ export const pairByAddress: Record<string, PairInfo> = {
     chainId: 42220,
     name: "CELO_MCUSD",
     address: "0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422",
-    token0: "0x471ece3750da237f93b8e339c536989b8978a438",
-    token1: "0x64defa3544c695db8c535d289d843a189aa26b98"
+    token0: "0x471EcE3750Da237f93B8E339c536989b8978a438",
+    token1: "0x64dEFa3544c695db8c535D289d843a189aa26b98"
   }
 } as const
 
