@@ -100,22 +100,6 @@ export const chainByChainId: EthereumChains = {
       pairs: ["0x819f3450dA6f110BA6Ea52195B3beaFa246062dE", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
     }
   },
-  /**
-   * Doesn't work with TLS
-   */
-  // 8453: {
-  //   name: "Base",
-  //   chainId: 8453,
-  //   urls: ["https://base.blockpi.network/v1/rpc/public"],
-  //   etherscan: "https://basescan.org",
-  //   token: {
-  //     name: "ETH",
-  //     chainId: 8453,
-  //     symbol: "ETH",
-  //     decimals: 18,
-  //     pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
-  //   }
-  // },
   42161: {
     name: "Arbitrum",
     chainId: 42161,
@@ -139,6 +123,7 @@ export const chainByChainId: EthereumChains = {
       chainId: 42220,
       symbol: "CELO",
       decimals: 18,
+      pairs: ["0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422"]
     }
   },
   43114: {
@@ -339,6 +324,22 @@ export const tokenByAddress: Record<string, ContractTokenInfo> = {
     address: "0x3d6545b08693dae087e957cb1180ee38b9e3c25e",
     pairs: ["0xdb8721b7a04c3e592264bf58558526b16b15e757"]
   },
+  "0x471EcE3750Da237f93B8E339c536989b8978a438": {
+    name: "CELO",
+    chainId: 42220,
+    symbol: "CELO",
+    decimals: 18,
+    address: "0x471EcE3750Da237f93B8E339c536989b8978a438",
+    pairs: ["0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422"]
+  },
+  "0x64dEFa3544c695db8c535D289d843a189aa26b98": {
+    name: "mCUSD",
+    chainId: 42220,
+    symbol: "mCUSD",
+    decimals: 18,
+    address: "0x64dEFa3544c695db8c535D289d843a189aa26b98",
+    pairs: []
+  }
 } as const
 
 export const tokenById = {
@@ -358,7 +359,10 @@ export const tokenById = {
   USDT_ON_OPTIMISM: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
   USDC_ON_OPTIMISM: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
   DAI_ON_OPTIMISM: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-  WBTC_ON_OPTIMISM: "0x68f180fcCe6836688e9084f035309E29Bf0A2095"
+  WBTC_ON_OPTIMISM: "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+
+  CELO_ON_CELO: "0x471EcE3750Da237f93B8E339c536989b8978a438",
+  MSUSD_ON_CELO: "0x64dEFa3544c695db8c535D289d843a189aa26b98"
 } as const
 
 export interface PairInfo {
@@ -406,6 +410,13 @@ export const pairByAddress: Record<string, PairInfo> = {
     address: "0xdb8721b7a04c3e592264bf58558526b16b15e757",
     token0: "0x3d6545b08693dae087e957cb1180ee38b9e3c25e",
     token1: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
+  },
+  "0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422": {
+    chainId: 42220,
+    name: "CELO_MCUSD",
+    address: "0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422",
+    token0: "0x471ece3750da237f93b8e339c536989b8978a438",
+    token1: "0x64defa3544c695db8c535d289d843a189aa26b98"
   }
 } as const
 
@@ -414,5 +425,6 @@ export const pairByName = {
   WBTC_WETH: "0xbb2b8038a1640196fbe3e38816f3e67cba72d940",
   MATIC_WETH: "0x819f3450dA6f110BA6Ea52195B3beaFa246062dE",
   BUSDT_WBNB: "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae",
-  ETC_BUSD: "0xdb8721b7a04c3e592264bf58558526b16b15e757"
+  ETC_BUSD: "0xdb8721b7a04c3e592264bf58558526b16b15e757",
+  CELO_MCUSD: "0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422"
 } as const

@@ -135,8 +135,10 @@ function ContractTokenRow(props: {
 function WalletDataPage() {
   const wallet = useWalletData()
 
-  const mainnet = useEthereumContext(wallet, chainByChainId[1])
-  const binance = useEthereumContext(wallet, chainByChainId[56])
+  const mainnet = useEthereumContext(wallet, chainByChainId[chainIdByName.ETHEREUM])
+  const binance = useEthereumContext(wallet, chainByChainId[chainIdByName.BINANCE])
+  const celo = useEthereumContext(wallet, chainByChainId[chainIdByName.CELO])
+
   const mainnetSendDialog = useBooleanHandle(false)
 
   const [color, color2] = Gradients.get(wallet.color)
@@ -146,6 +148,7 @@ function WalletDataPage() {
   const busdtWbnbPriceQuery = usePairPrice(binance, pairByAddress[pairByName.BUSDT_WBNB])
   const wbtcWethPriceQuery = usePairPrice(mainnet, pairByAddress[pairByName.WBTC_WETH])
   const etcBusdPriceQuery = usePairPrice(binance, pairByAddress[pairByName.ETC_BUSD])
+  const celoMcusdPriceQuery = usePairPrice(celo, pairByAddress[pairByName.CELO_MCUSD])
 
   const onBackClick = useCallback(() => {
     Path.go("/wallets")
@@ -307,7 +310,7 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.CELO]}
-          prices={[wethUsdtPriceQuery.data]} />
+          prices={[celoMcusdPriceQuery.data]} />
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">
