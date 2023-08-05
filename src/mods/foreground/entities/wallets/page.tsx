@@ -145,6 +145,7 @@ function WalletDataPage() {
   const maticWethPriceQuery = usePairPrice(mainnet, pairByAddress[pairByName.MATIC_WETH])
   const busdtWbnbPriceQuery = usePairPrice(binance, pairByAddress[pairByName.BUSDT_WBNB])
   const wbtcWethPriceQuery = usePairPrice(mainnet, pairByAddress[pairByName.WBTC_WETH])
+  const etcBusdPriceQuery = usePairPrice(binance, pairByAddress[pairByName.ETC_BUSD])
 
   const onBackClick = useCallback(() => {
     Path.go("/wallets")
@@ -306,7 +307,7 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.CLASSIC]}
-          prices={[]} />
+          prices={[etcBusdPriceQuery.data]} />
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">

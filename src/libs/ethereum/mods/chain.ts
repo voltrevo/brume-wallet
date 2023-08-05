@@ -71,6 +71,7 @@ export const chainByChainId: EthereumChains = {
       chainId: 61,
       symbol: "ETC",
       decimals: 18,
+      pairs: ["0xdb8721b7a04c3e592264bf58558526b16b15e757"]
     }
   },
   100: {
@@ -230,22 +231,6 @@ export const tokenByAddress: Record<string, ContractTokenInfo> = {
     address: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
     pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
   },
-  "0x55d398326f99059fF775485246999027B3197955": {
-    name: "Tether USD",
-    chainId: 56,
-    symbol: "BUSDT",
-    decimals: 18,
-    address: "0x55d398326f99059fF775485246999027B3197955",
-    pairs: [],
-  },
-  "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c": {
-    name: "Wrapped BNB",
-    chainId: 56,
-    symbol: "WBNB",
-    decimals: 18,
-    address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
-    pairs: ["0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae"],
-  },
   "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58": {
     name: "Tether USD",
     chainId: 10,
@@ -277,7 +262,39 @@ export const tokenByAddress: Record<string, ContractTokenInfo> = {
     decimals: 8,
     address: "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
     pairs: ["0xbb2b8038a1640196fbe3e38816f3e67cba72d940", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
-  }
+  },
+  "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c": {
+    name: "Wrapped BNB",
+    chainId: 56,
+    symbol: "WBNB",
+    decimals: 18,
+    address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    pairs: ["0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae"],
+  },
+  "0x55d398326f99059fF775485246999027B3197955": {
+    name: "Tether USD",
+    chainId: 56,
+    symbol: "BUSDT",
+    decimals: 18,
+    address: "0x55d398326f99059fF775485246999027B3197955",
+    pairs: [],
+  },
+  "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56": {
+    name: "BUSD",
+    chainId: 56,
+    symbol: "BUSD",
+    decimals: 18,
+    address: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
+    pairs: []
+  },
+  "0x3d6545b08693dae087e957cb1180ee38b9e3c25e": {
+    name: "ETC",
+    chainId: 56,
+    symbol: "ETC",
+    decimals: 18,
+    address: "0x3d6545b08693dae087e957cb1180ee38b9e3c25e",
+    pairs: ["0xdb8721b7a04c3e592264bf58558526b16b15e757"]
+  },
 } as const
 
 export const tokenById = {
@@ -291,6 +308,8 @@ export const tokenById = {
 
   WBNB_ON_BINANCE: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
   BUSDT_ON_BINANCE: "0x55d398326f99059fF775485246999027B3197955",
+  BUSD_ON_BINANCE: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
+  ETC_ON_BINANCE: "0x3d6545b08693dae087e957cb1180ee38b9e3c25e",
 
   USDT_ON_OPTIMISM: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
   USDC_ON_OPTIMISM: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
@@ -336,6 +355,13 @@ export const pairByAddress: Record<string, PairInfo> = {
     token0: tokenById.BUSDT_ON_BINANCE,
     token1: tokenById.WBNB_ON_BINANCE,
     reversed: true
+  },
+  "0xdb8721b7a04c3e592264bf58558526b16b15e757": {
+    chainId: 56,
+    name: "ETC_BUSD",
+    address: "0xdb8721b7a04c3e592264bf58558526b16b15e757",
+    token0: "0x3d6545b08693dae087e957cb1180ee38b9e3c25e",
+    token1: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
   }
 } as const
 
@@ -344,4 +370,5 @@ export const pairByName = {
   WBTC_WETH: "0xbb2b8038a1640196fbe3e38816f3e67cba72d940",
   MATIC_WETH: "0x819f3450dA6f110BA6Ea52195B3beaFa246062dE",
   BUSDT_WBNB: "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae",
+  ETC_BUSD: "0xdb8721b7a04c3e592264bf58558526b16b15e757"
 } as const
