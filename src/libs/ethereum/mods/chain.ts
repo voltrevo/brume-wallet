@@ -126,6 +126,19 @@ export const chainByChainId: EthereumChains = {
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
     }
   },
+  59144: {
+    name: "Linea",
+    chainId: 59144,
+    urls: ["https://rpc.linea.build"],
+    etherscan: "https://lineascan.build",
+    token: {
+      name: "ETH",
+      chainId: 59144,
+      symbol: "ETH",
+      decimals: 18,
+      pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
+    }
+  },
   11155111: {
     name: "Sepolia (testnet)",
     chainId: 11155111,
@@ -150,6 +163,7 @@ export const chainIdByName = {
   POLYGON: 137,
   ARBITRUM: 42161,
   AVALANCHE: 43114,
+  LINEA: 59144,
   SEPOLIA: 11155111
 } as const
 

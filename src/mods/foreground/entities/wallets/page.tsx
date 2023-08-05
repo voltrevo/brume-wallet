@@ -277,7 +277,7 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.POLYGON]}
-          prices={[wethUsdtPriceQuery.data, maticWethPriceQuery.data]} />
+          prices={[maticWethPriceQuery.data, wethUsdtPriceQuery.data]} />
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">
@@ -297,6 +297,16 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.AVALANCHE]}
+          prices={[wethUsdtPriceQuery.data]} />
+      </div>
+      <div className="h-4" />
+      <div className="text-xl font-medium">
+        {chainByChainId[chainIdByName.LINEA].name}
+      </div>
+      <div className="h-4" />
+      <div className="flex flex-col gap-2">
+        <NativeTokenRow
+          chain={chainByChainId[chainIdByName.LINEA]}
           prices={[wethUsdtPriceQuery.data]} />
       </div>
       <div className="h-4" />
