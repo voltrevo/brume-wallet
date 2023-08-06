@@ -12,6 +12,7 @@ import { useCallback, useMemo } from "react";
 import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { Path } from "../../router/path";
+import { WalletDataReceiveDialog } from "./actions/receive/receive";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { WalletDataCard } from "./card";
@@ -139,7 +140,8 @@ function WalletDataPage() {
   const binance = useEthereumContext(wallet, chainByChainId[chainIdByName.BINANCE])
   const celo = useEthereumContext(wallet, chainByChainId[chainIdByName.CELO])
 
-  const mainnetSendDialog = useBooleanHandle(false)
+  const sendDialog = useBooleanHandle(false)
+  const receiveDialog = useBooleanHandle(false)
 
   const [color, color2] = Gradients.get(wallet.color)
 
@@ -170,7 +172,7 @@ function WalletDataPage() {
     <div className="p-4 flex items-center justify-center flex-wrap gap-12">
       <div className="flex flex-col items-center gap-2">
         <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}
-          onClick={mainnetSendDialog.enable}>
+          onClick={sendDialog.enable}>
           <Outline.PaperAirplaneIcon className="s-md" />
         </button>
         <div className="">
@@ -178,7 +180,8 @@ function WalletDataPage() {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}>
+        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}
+          onClick={receiveDialog.enable}>
           <Outline.QrCodeIcon className="s-md" />
         </button>
         <div className="">
@@ -186,7 +189,8 @@ function WalletDataPage() {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}>
+        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}
+          onClick={() => alert("This feature is not implemented yet")}>
           <Outline.ArrowsRightLeftIcon className="s-md" />
         </button>
         <div className="">
@@ -355,10 +359,13 @@ function WalletDataPage() {
     </PageBody>
 
   return <Page>
-    {mainnetSendDialog.current && mainnet &&
+    {sendDialog.current && mainnet &&
       <WalletDataSendNativeTokenDialog title="ETH on Ethereum"
         context={mainnet}
-        close={mainnetSendDialog.disable} />}
+        close={sendDialog.disable} />}
+    {receiveDialog.current &&
+      <WalletDataReceiveDialog
+        close={receiveDialog.disable} />}
     {Header}
     {Card}
     {Apps}

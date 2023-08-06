@@ -1,18 +1,56 @@
-import { ChangeEvent, DependencyList, KeyboardEvent, MouseEvent, SyntheticEvent, useCallback } from "react"
+import { ChangeEvent, ClipboardEvent, DependencyList, KeyboardEvent, MouseEvent, SyntheticEvent, useCallback } from "react"
 
 export namespace Events {
 
-  export function keep(e: SyntheticEvent<unknown>) {
+  export function keep(e: SyntheticEvent<HTMLElement>) {
     e.stopPropagation()
   }
 
-  export function noop(e: SyntheticEvent<unknown>) {
+  export function noop(e: SyntheticEvent<HTMLElement>) {
     e.preventDefault()
   }
 
-  export function cancel(e: SyntheticEvent<unknown>) {
+  export function cancel(e: SyntheticEvent<HTMLElement>) {
     e.preventDefault()
     e.stopPropagation()
+  }
+
+  export namespace Mouse {
+
+    export function select(e: MouseEvent<HTMLElement>) {
+      const range = document.createRange()
+      range.selectNodeContents(e.currentTarget)
+
+      const selection = window.getSelection()
+
+      if (selection == null)
+        return
+
+      selection.removeAllRanges()
+      selection.addRange(range)
+    }
+  }
+
+  export namespace Keyboard {
+
+    export function noop(e: KeyboardEvent<HTMLElement>) {
+      if (e.metaKey) return
+      e.preventDefault()
+    }
+
+  }
+
+  export namespace Clipboard {
+
+    export function reset(e: ClipboardEvent<HTMLElement>) {
+      const target = e.currentTarget
+      const content = target.textContent
+
+      setTimeout(() => {
+        target.textContent = content
+      }, 0)
+    }
+
   }
 
 }
