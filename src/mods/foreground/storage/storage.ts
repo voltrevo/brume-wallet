@@ -12,6 +12,6 @@ export function useSubscribe<K, D, F>(query: Query<K, D, F>, storage: Subscribab
   useEffect(() => {
     if (cacheKey == null)
       return
-    storage.trySubscribe(cacheKey).then(r => r.ignore())
+    storage.trySubscribe(cacheKey).then(r => r.inspectErrSync(console.warn))
   }, [cacheKey, storage])
 }

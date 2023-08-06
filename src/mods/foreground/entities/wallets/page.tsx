@@ -7,7 +7,6 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Option, Optional } from "@hazae41/option";
 import { Result } from "@hazae41/result";
-import { Data } from "@hazae41/xswr";
 import { useCallback, useMemo } from "react";
 import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
@@ -53,14 +52,14 @@ export function useCompactDisplayUsd(option: Optional<Result<FixedInit, Error>>)
 
 function NativeTokenRow(props: {
   chain: EthereumChain,
-  prices: Optional<Data<FixedInit>>[]
+  prices: Optional<FixedInit>[]
 }) {
   const { chain, prices } = props
   const wallet = useWalletData()
 
   const context = useEthereumContext(wallet, chain)
 
-  const balanceQuery = useBalance(wallet.address, context, ...prices)
+  const balanceQuery = useBalance(wallet.address, context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
 
   const sendDialog = useBooleanHandle(false)
@@ -93,7 +92,7 @@ function NativeTokenRow(props: {
 
 function ContractTokenRow(props: {
   token: ContractTokenInfo,
-  prices: Optional<Data<FixedInit>>[]
+  prices: Optional<FixedInit>[]
 }) {
   const { token, prices } = props
   const chain = chainByChainId[token.chainId]
@@ -101,7 +100,7 @@ function ContractTokenRow(props: {
 
   const context = useEthereumContext(wallet, chain)
 
-  const balanceQuery = useTokenBalance(wallet.address, token, context, ...prices)
+  const balanceQuery = useTokenBalance(wallet.address, token, context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
 
   const sendDialog = useBooleanHandle(false)
@@ -208,13 +207,13 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.ETHEREUM]}
-          prices={[wethUsdtPriceQuery.data]} />
+          prices={[wethUsdtPriceQuery.data?.inner]} />
         <ContractTokenRow
           token={tokenByAddress[tokenById.WETH_ON_ETHEREUM]}
-          prices={[wethUsdtPriceQuery.data]} />
+          prices={[wethUsdtPriceQuery.data?.inner]} />
         <ContractTokenRow
           token={tokenByAddress[tokenById.WBTC_ON_ETHEREUM]}
-          prices={[wbtcWethPriceQuery.data, wethUsdtPriceQuery.data]} />
+          prices={[wbtcWethPriceQuery.data?.inner, wethUsdtPriceQuery.data?.inner]} />
         <ContractTokenRow
           token={tokenByAddress[tokenById.DAI_ON_ETHEREUM]}
           prices={[]} />
@@ -226,10 +225,10 @@ function WalletDataPage() {
           prices={[]} />
         <ContractTokenRow
           token={tokenByAddress[tokenById.MATIC_ON_ETHEREUM]}
-          prices={[maticWethPriceQuery.data, wethUsdtPriceQuery.data]} />
+          prices={[maticWethPriceQuery.data?.inner, wethUsdtPriceQuery.data?.inner]} />
         <ContractTokenRow
           token={tokenByAddress[tokenById.STETH_ON_ETHEREUM]}
-          prices={[wethUsdtPriceQuery.data]} />
+          prices={[wethUsdtPriceQuery.data?.inner]} />
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">
@@ -249,10 +248,10 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[10]}
-          prices={[wethUsdtPriceQuery.data]} />
+          prices={[wethUsdtPriceQuery.data?.inner]} />
         <ContractTokenRow
           token={tokenByAddress[tokenById.WBTC_ON_OPTIMISM]}
-          prices={[wbtcWethPriceQuery.data, wethUsdtPriceQuery.data]} />
+          prices={[wbtcWethPriceQuery.data?.inner, wethUsdtPriceQuery.data?.inner]} />
         <ContractTokenRow
           token={tokenByAddress[tokenById.DAI_ON_OPTIMISM]}
           prices={[]} />
@@ -271,7 +270,7 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.BINANCE]}
-          prices={[busdtWbnbPriceQuery.data]} />
+          prices={[busdtWbnbPriceQuery.data?.inner]} />
         <ContractTokenRow
           token={tokenByAddress[tokenById.BUSDT_ON_BINANCE]}
           prices={[]} />
@@ -284,7 +283,7 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.POLYGON]}
-          prices={[maticWethPriceQuery.data, wethUsdtPriceQuery.data]} />
+          prices={[maticWethPriceQuery.data?.inner, wethUsdtPriceQuery.data?.inner]} />
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">
@@ -294,7 +293,7 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.ARBITRUM]}
-          prices={[wethUsdtPriceQuery.data]} />
+          prices={[wethUsdtPriceQuery.data?.inner]} />
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">
@@ -304,7 +303,7 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.AVALANCHE]}
-          prices={[wethUsdtPriceQuery.data]} />
+          prices={[wethUsdtPriceQuery.data?.inner]} />
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">
@@ -314,7 +313,7 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.CELO]}
-          prices={[celoMcusdPriceQuery.data]} />
+          prices={[celoMcusdPriceQuery.data?.inner]} />
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">
@@ -324,7 +323,7 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.LINEA]}
-          prices={[wethUsdtPriceQuery.data]} />
+          prices={[wethUsdtPriceQuery.data?.inner]} />
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">
@@ -334,7 +333,7 @@ function WalletDataPage() {
       <div className="flex flex-col gap-2">
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.CLASSIC]}
-          prices={[etcBusdPriceQuery.data]} />
+          prices={[etcBusdPriceQuery.data?.inner]} />
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">

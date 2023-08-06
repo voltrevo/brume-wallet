@@ -1,5 +1,6 @@
 import { BigInts, Fixed, FixedInit } from "@/libs/bigints/bigints"
 import { ContractTokenInfo, EthereumChain, PairInfo } from "@/libs/ethereum/mods/chain"
+import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { useObjectMemo } from "@/libs/react/memo"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
@@ -11,7 +12,7 @@ import { Option, Optional } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
 import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/xswr"
 import { Transaction, ethers } from "ethers"
-import { useEffect, useMemo } from "react"
+import { useMemo } from "react"
 import { Background } from "../../background/background"
 import { useBackground } from "../../background/context"
 import { useSubscribe } from "../../storage/storage"
@@ -356,7 +357,7 @@ export function getBalance(address: string, context: EthereumContext, storage: U
   })
 }
 
-export function useBalance(address: string, context: EthereumContext, ...prices: Optional<Data<FixedInit>>[]) {
+export function useBalance(address: string, context: EthereumContext, prices: Optional<FixedInit>[]) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getBalance, [address, context, storage])
   useFetch(query)
@@ -365,12 +366,12 @@ export function useBalance(address: string, context: EthereumContext, ...prices:
   useError(query, console.error)
   useFallback(query, () => new Data(new Fixed(0n, 0)))
 
-  useEffect(() => {
+  useEffectButNotFirstTime(() => {
     tryIndex(query.key, context)
       .then(r => r.ignore())
       .catch(console.error)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...prices])
+  }, prices)
 
   return query
 }
@@ -412,7 +413,7 @@ export function getTokenBalance(address: string, token: ContractTokenInfo, conte
   })
 }
 
-export function useTokenBalance(address: string, token: ContractTokenInfo, context: EthereumContext, ...prices: Optional<Data<FixedInit>>[]) {
+export function useTokenBalance(address: string, token: ContractTokenInfo, context: EthereumContext, prices: Optional<FixedInit>[]) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getTokenBalance, [address, token, context, storage])
   useFetch(query)
@@ -421,12 +422,12 @@ export function useTokenBalance(address: string, token: ContractTokenInfo, conte
   useError(query, console.error)
   useFallback(query, () => new Data(new Fixed(0n, 0)))
 
-  useEffect(() => {
+  useEffectButNotFirstTime(() => {
     tryIndex(query.key, context)
       .then(r => r.ignore())
       .catch(console.error)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...prices])
+  }, prices)
 
   return query
 }

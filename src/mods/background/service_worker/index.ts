@@ -1048,6 +1048,8 @@ if (IS_WEBSITE) {
     raw.start()
 
     await channel.tryRequest({ method: "brume_hello" }).then(r => r.ignore())
+
+    channel.runPingLoop()
   }
 
   self.addEventListener("message", (event) => {
