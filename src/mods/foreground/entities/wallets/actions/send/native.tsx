@@ -22,7 +22,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
   const wallet = useWalletData()
   const { title, context, close } = props
 
-  const balanceQuery = useBalance(wallet.address, context)
+  const balanceQuery = useBalance(wallet.address, context, [])
   const maybeBalance = balanceQuery.data?.inner
 
   const nonceQuery = useNonce(wallet.address, context)

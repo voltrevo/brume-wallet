@@ -24,7 +24,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
   const wallet = useWalletData()
   const { title, context, token, close } = props
 
-  const balanceQuery = useTokenBalance(wallet.address, token, context)
+  const balanceQuery = useTokenBalance(wallet.address, token, context, [])
   const maybeBalance = balanceQuery.data?.inner
 
   const nonceQuery = useNonce(wallet.address, context)
