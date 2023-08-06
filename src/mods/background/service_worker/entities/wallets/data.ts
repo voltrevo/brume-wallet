@@ -11,7 +11,7 @@ import { Cancel, Looped, Retry, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Result } from "@hazae41/result"
 import { Data, FetchError, Fetched, FetcherMore, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
-import { EthereumBrumes } from "../brumes/data"
+import { Connection, EthereumBrume, EthereumBrumes } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
 import { SessionData } from "../sessions/data"
@@ -189,16 +189,39 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, request: Rp
 
   // console.log(`Fetching ${request.method}`)
 
+  const allTriedBrumes = new Set<EthereumBrume>()
+
   const result = await tryLoop(async () => {
     return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
-      const brume = await brumes.tryGetCryptoRandom().then(r => r.mapErrSync(Retry.new).throw(t).result.get())
+      let brume: EthereumBrume
+
+      while (true) {
+        brume = await brumes.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get())
+
+        if (allTriedBrumes.has(brume))
+          continue
+        allTriedBrumes.add(brume)
+        break
+      }
+
       const conns = Option.wrap(brume.conns[ethereum.chain.chainId]).ok().mapErrSync(Cancel.new).throw(t)
 
       // console.log(`Fetching ${request.method} using ${brume.circuit.id}`)
 
+      const allTriedConns = new Set<Connection>()
+
       const result = await tryLoop(async (i) => {
         return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
-          const conn = await conns.tryGetCryptoRandom().then(r => r.mapErrSync(Retry.new).throw(t).result.get())
+          let conn: Connection
+
+          while (true) {
+            conn = await conns.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get())
+
+            if (allTriedConns.has(conn))
+              continue
+            allTriedConns.add(conn)
+            break
+          }
 
           if (conn instanceof URL) {
             console.log(`Fetching ${request.method} from ${conn.href} using ${brume.circuit.id}`)
