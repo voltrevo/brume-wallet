@@ -116,7 +116,7 @@ export const chainByChainId: EthereumChains = {
   42220: {
     name: "Celo",
     chainId: 42220,
-    urls: ["wss://forno.celo.org/ws"],
+    urls: ["https://celo.api.onfinality.io/public"],
     etherscan: "https://celoscan.io",
     token: {
       name: "CELO",

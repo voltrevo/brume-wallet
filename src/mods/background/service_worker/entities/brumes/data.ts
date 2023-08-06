@@ -131,8 +131,12 @@ export namespace EthereumConnection {
       return new Err(new Panic(`Unknown protocol ${url.protocol}`))
     })
 
+    if (result.isErr())
+      console.warn(`Could not create ${url.href} using ${circuit.id}`)
+
     if (circuit.destroyed)
       return result.mapErrSync(Cancel.new)
+
     return result.mapErrSync(Retry.new)
   }
 

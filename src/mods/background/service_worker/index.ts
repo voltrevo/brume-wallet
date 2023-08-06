@@ -1009,7 +1009,7 @@ async function tryInit() {
 
       const tors = createTorPool(async () => {
         return await tryCreateTor({ fallbacks, ed25519, x25519, sha1 })
-      }, { capacity: 3 })
+      }, { capacity: 9 })
 
       const circuits = Circuits.createPool(tors, { capacity: 9 })
       const sessions = EthereumBrumes.createPool(chainByChainId, circuits, { capacity: 9 })

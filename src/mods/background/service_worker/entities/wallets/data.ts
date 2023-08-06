@@ -185,37 +185,56 @@ export interface EthereumContext {
 
 export async function tryEthereumFetch<T>(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
   const { signal = AbortSignals.timeout(30_000) } = more
+  const brumes = ethereum.brumes.inner
 
-  return await tryLoop(async () => {
+  // console.log(`Fetching ${request.method}`)
+
+  const result = await tryLoop(async () => {
     return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
-      const brume = await ethereum.brumes.inner.tryGetCryptoRandom().then(r => r.mapErrSync(Retry.new).throw(t).result.get())
+      const brume = await brumes.tryGetCryptoRandom().then(r => r.mapErrSync(Retry.new).throw(t).result.get())
       const conns = Option.wrap(brume.conns[ethereum.chain.chainId]).ok().mapErrSync(Cancel.new).throw(t)
 
-      console.log(`Fetching ${request.method} with`, brume.circuit.id)
+      // console.log(`Fetching ${request.method} using ${brume.circuit.id}`)
 
-      const response = await tryLoop(async (i) => {
+      const result = await tryLoop(async (i) => {
         return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
           const conn = await conns.tryGetCryptoRandom().then(r => r.mapErrSync(Retry.new).throw(t).result.get())
 
           if (conn instanceof URL) {
-            const response = await brume.client
-              .tryFetchWithCircuit<T>(conn, { ...request, circuit: brume.circuit })
-              .then(r => r.mapErrSync(Retry.new).throw(t))
-            return new Ok(response)
-          }
+            console.log(`Fetching ${request.method} from ${conn.href} using ${brume.circuit.id}`)
 
-          else {
-            const response = await brume.client
-              .tryFetchWithSocket<T>(conn, request, signal)
-              .then(r => r.mapErrSync(Retry.new).throw(t))
-            return new Ok(response)
+            const result = await brume.client.tryFetchWithCircuit<T>(conn, { ...request, circuit: brume.circuit })
+
+            if (result.isErr())
+              console.warn(`Could not fetch ${request.method} from ${conn.href} using ${brume.circuit.id}`)
+
+            return result.mapErrSync(Retry.new)
+          } else {
+            console.log(`Fetching ${request.method} from ${conn.url} using ${brume.circuit.id}`)
+
+            const result = await brume.client.tryFetchWithSocket<T>(conn, request, signal)
+
+            if (result.isErr())
+              console.warn(`Could not fetch ${request.method} from ${conn.url} using ${brume.circuit.id}`)
+
+            return result.mapErrSync(Retry.new)
           }
         })
-      }, { base: 1, max: conns.capacity }).then(r => r.mapErrSync(Retry.new).throw(t))
+      }, { base: 1, max: conns.capacity })
 
-      return new Ok(Fetched.rewrap(response))
+      if (result.isErr())
+        console.warn(`Could not fetch ${request.method} using ${brume.circuit.id}`)
+
+      return result
+        .mapSync(x => Fetched.rewrap(x))
+        .mapErrSync(Retry.new)
     })
-  }, { base: 1, max: ethereum.brumes.inner.capacity }).then(r => r.mapErrSync(FetchError.from))
+  }, { base: 1, max: brumes.capacity })
+
+  if (result.isErr())
+    console.warn(`Could not fetch ${request.method}`)
+
+  return result.mapErrSync(FetchError.from)
 }
 
 export function getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
