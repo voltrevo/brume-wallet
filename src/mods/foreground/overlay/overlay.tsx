@@ -34,7 +34,7 @@ export function UpdateBanner(props: OkProps<unknown>) {
 export function Overlay(props: ChildrenProps) {
   const { children } = props
 
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   if (background.isExtension())
     return <ExtensionOverlay>
@@ -73,7 +73,7 @@ async function tryCheckWebsiteUpdate(): Promise<Result<boolean, Error>> {
 export function WebsiteOverlay(props: ChildrenProps) {
   const { children } = props
 
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const [updating, setUpdating] = useState<ServiceWorker>()
 

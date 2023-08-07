@@ -44,7 +44,7 @@ export default function Popup() {
 }
 
 export function Ready() {
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   useEffect(() => {
     background
@@ -62,7 +62,7 @@ export function TransactPage() {
   const { searchParams } = usePath()
   const core = useCore().unwrap()
   const storage = useUserStorage().unwrap()
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
@@ -204,7 +204,7 @@ export function SwitchPage() {
   const { searchParams } = usePath()
   const core = useCore().unwrap()
   const storage = useUserStorage().unwrap()
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
@@ -279,7 +279,7 @@ export function PersonalSignPage() {
   const { searchParams } = usePath()
   const core = useCore().unwrap()
   const storage = useUserStorage().unwrap()
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
@@ -381,7 +381,7 @@ export function TypedSignPage() {
   const { searchParams } = usePath()
   const core = useCore().unwrap()
   const storage = useUserStorage().unwrap()
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
@@ -479,7 +479,7 @@ export function WalletAndChainSelectPage() {
   const { searchParams } = usePath()
   const core = useCore().unwrap()
   const storage = useUserStorage().unwrap()
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 

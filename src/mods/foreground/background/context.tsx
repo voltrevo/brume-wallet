@@ -1,12 +1,14 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useConstant } from "@/libs/react/ref";
+import { Option } from "@hazae41/option";
+import { createContext, useContext, useEffect, useState } from "react";
 import { Background, ExtensionBackground, WebsiteBackground } from "./background";
 
 export const BackgroundContext =
   createContext<Background | undefined>(undefined)
 
 export function useBackground() {
-  return useContext(BackgroundContext)!
+  return Option.wrap(useContext(BackgroundContext))
 }
 
 export function BackgroundProvider(props: ChildrenProps) {
@@ -34,9 +36,7 @@ export function BackgroundProvider(props: ChildrenProps) {
 export function WebsiteBackgroundProvider(props: ChildrenProps) {
   const { children } = props
 
-  const background = useMemo(() => {
-    return new WebsiteBackground()
-  }, [])
+  const background = useConstant(() => new WebsiteBackground())
 
   useEffect(() => {
     background.tryRequest({ method: "brume_log" }).then(r => r.inspectErrSync(console.warn).ignore())
@@ -50,9 +50,7 @@ export function WebsiteBackgroundProvider(props: ChildrenProps) {
 export function ExtensionBackgroundProvider(props: ChildrenProps) {
   const { children } = props
 
-  const background = useMemo(() => {
-    return new ExtensionBackground()
-  }, [])
+  const background = useConstant(() => new ExtensionBackground())
 
   useEffect(() => {
     background.tryRequest({ method: "brume_log" }).then(r => r.inspectErrSync(console.warn).ignore())

@@ -13,7 +13,7 @@ import { User, UserProps, useUser } from "./data";
 export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
   const { user, ok, err } = props
 
-  const background = useBackground()
+  const background = useBackground().unwrap()
   const userQuery = useUser(user.uuid)
 
   const [password = "", setPassword] = useState<string>()

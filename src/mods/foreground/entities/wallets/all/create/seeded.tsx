@@ -7,6 +7,7 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
+import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
@@ -28,12 +29,10 @@ import { WalletAvatar } from "../../avatar";
 export function SeededWalletCreatorDialog(props: CloseProps) {
   const { close } = props
   const core = useCore().unwrap()
-  const background = useBackground()
+  const background = useBackground().unwrap()
   const seedData = useSeedData()
 
-  const uuid = useMemo(() => {
-    return crypto.randomUUID()
-  }, [])
+  const uuid = useConstant(() => crypto.randomUUID())
 
   const modhash = useModhash(uuid)
   const color = Colors.mod(modhash)

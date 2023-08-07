@@ -18,7 +18,7 @@ export function useUserStorage() {
 export function UserStorageProvider(props: ChildrenProps) {
   const { children } = props
   const core = useCore().unwrap()
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const storage = useRef<UserStorage>()
 

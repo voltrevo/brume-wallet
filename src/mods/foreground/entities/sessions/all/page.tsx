@@ -13,7 +13,7 @@ import { usePersistentSession } from "../data"
 import { useSessions } from "./data"
 
 export function SessionsPage() {
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const sessionsQuery = useSessions()
   const maybeSessions = sessionsQuery.data?.inner
@@ -61,7 +61,7 @@ export function SessionsPage() {
 }
 
 export function SessionRow(props: { session: Session }) {
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const sessionQuery = usePersistentSession(props.session.origin)
   const maybeSessionData = sessionQuery.data?.inner

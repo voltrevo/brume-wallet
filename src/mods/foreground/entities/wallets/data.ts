@@ -239,14 +239,14 @@ export interface EthereumContextProps {
 export function useGeneralContext() {
   const core = useCore().unwrap()
   const user = useCurrentUserRef()
-  const background = useBackground()
+  const background = useBackground().unwrap()
   return useObjectMemo({ core, user, background })
 }
 
 export function useEthereumContext2(wallet: Optional<Wallet>, chain: Optional<EthereumChain>) {
   const core = useCore().unwrap()
   const user = useCurrentUserRef()
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   return useMemo(() => {
     if (wallet == null)
@@ -260,7 +260,7 @@ export function useEthereumContext2(wallet: Optional<Wallet>, chain: Optional<Et
 export function useEthereumContext(wallet: Wallet, chain: EthereumChain): EthereumContext {
   const core = useCore().unwrap()
   const user = useCurrentUserRef()
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   return useObjectMemo({ core, user, background, wallet, chain })
 }

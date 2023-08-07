@@ -18,7 +18,7 @@ export function useGlobalStorage() {
 export function GlobalStorageProvider(props: ChildrenProps) {
   const { children } = props
   const core = useCore().unwrap()
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const storage = useRef<GlobalStorage>()
 

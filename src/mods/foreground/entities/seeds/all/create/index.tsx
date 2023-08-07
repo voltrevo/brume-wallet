@@ -13,7 +13,7 @@ import { StandaloneSeedCreatorDialog } from "./standalone";
 export function SeedCreatorDialog(props: CloseProps) {
   const { close } = props
   const path = usePath()
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const [type, setType] = useState<"mnemonic" | "ledger">()
 

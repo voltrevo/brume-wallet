@@ -18,7 +18,7 @@ import { useAppRequest } from "../data"
 import { useAppRequests } from "./data"
 
 export function RequestsPage() {
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const requestsQuery = useAppRequests()
   const maybeRequests = requestsQuery.data?.inner

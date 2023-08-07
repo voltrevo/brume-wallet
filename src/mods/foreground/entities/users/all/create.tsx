@@ -5,6 +5,7 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { CloseProps } from "@/libs/react/props/close";
+import { useConstant } from "@/libs/react/ref";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
@@ -18,13 +19,11 @@ import { UserAvatar } from "./page";
 
 export function UserCreateDialog(props: CloseProps) {
   const { close } = props
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const users = useUsers()
 
-  const uuid = useMemo(() => {
-    return crypto.randomUUID()
-  }, [])
+  const uuid = useConstant(() => crypto.randomUUID())
 
   const modhash = useModhash(uuid)
   const color = Colors.mod(modhash)

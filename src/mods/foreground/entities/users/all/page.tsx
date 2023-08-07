@@ -17,6 +17,7 @@ export function UsersPage(props: OkProps<User>) {
   const { ok } = props
 
   const [user, setUser] = useState<User>()
+
   const clear = useCallback(() => setUser(undefined), [])
 
   const users = useUsers()
@@ -47,7 +48,7 @@ export function UsersPage(props: OkProps<User>) {
 function UserOkButton(props: UserProps & OkProps<User>) {
   const { ok } = props
 
-  const background = useBackground()
+  const background = useBackground().unwrap()
   const user = useUser(props.user.uuid)
 
   const onClick = useCallback(() => {

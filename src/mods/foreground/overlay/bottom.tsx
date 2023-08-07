@@ -7,7 +7,7 @@ import { Path, usePath } from "../router/path";
 
 export function Bottom() {
   const path = usePath()
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   const onWalletsClick = useCallback(() => {
     Path.go("/wallets")

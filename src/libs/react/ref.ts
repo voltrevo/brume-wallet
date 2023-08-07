@@ -2,6 +2,15 @@ import { Mutex } from "@hazae41/mutex"
 import { RefObject, SetStateAction, useCallback, useRef, useState } from "react"
 import { Setter, useImmutableState } from "./state"
 
+export function useConstant<T>(factory: () => T) {
+  const ref = useRef<T>()
+
+  if (ref.current == null)
+    ref.current = factory()
+
+  return ref.current
+}
+
 export type MutexRef<T> = Mutex<{ current: T }>
 
 export function useMutexRef<T>(current: T) {

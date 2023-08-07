@@ -6,7 +6,7 @@ import { Router } from "@/mods/foreground/router/router";
 import { useEffect } from "react";
 
 export default function Action() {
-  const background = useBackground()
+  const background = useBackground().unwrap()
 
   useEffect(() => {
     background
