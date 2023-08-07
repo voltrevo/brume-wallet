@@ -15,7 +15,7 @@ import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wa
 import { useBackground } from "@/mods/foreground/background/context";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { ethers } from "ethers";
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { WalletAvatar } from "../../avatar";
 
 export function ReadonlyWalletCreatorDialog(props: CloseProps) {
@@ -28,36 +28,40 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
   const color = Colors.mod(modhash)
   const emoji = Emojis.get(modhash)
 
-  const [name = "", setName] = useState<string>()
+  const [rawNameInput = "", setRawNameInput] = useState<string>()
 
-  const onNameChange = useInputChange(e => {
-    setName(e.currentTarget.value)
+  const defNameInput = useDeferredValue(rawNameInput)
+
+  const onNameInputChange = useInputChange(e => {
+    setRawNameInput(e.currentTarget.value)
   }, [])
 
-  const [input = "", setInput] = useState<string>()
+  const [rawAddressInput = "", setRawAddressInput] = useState<string>()
 
-  const onInputChange = useTextAreaChange(e => {
-    setInput(e.currentTarget.value)
+  const defAddressInput = useDeferredValue(rawAddressInput)
+
+  const onAddressInputChange = useTextAreaChange(e => {
+    setRawAddressInput(e.currentTarget.value)
   }, [])
 
   const canAdd = useMemo(() => {
-    if (!name)
+    if (!defNameInput)
       return false
-    if (!input.startsWith("0x"))
+    if (!defAddressInput.startsWith("0x"))
       return false
-    if (input.length !== 42)
+    if (defAddressInput.length !== 42)
       return false
     return true
-  }, [name, input])
+  }, [defNameInput, defAddressInput])
 
   const tryAdd = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!name)
+      if (!defNameInput)
         return new Err(new Panic())
 
-      const address = ethers.getAddress(input)
+      const address = ethers.getAddress(defAddressInput)
 
-      const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name, color, emoji, address }
+      const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: defNameInput, color, emoji, address }
 
       await background.tryRequest<Wallet[]>({
         method: "brume_createWallet",
@@ -68,7 +72,7 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, input, uuid, color, emoji, background, close])
+  }, [defNameInput, defAddressInput, uuid, color, emoji, background, close])
 
   const NameInput =
     <div className="flex items-stretch gap-2">
@@ -79,19 +83,21 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
       </div>
       <Input.Contrast className="w-full"
         placeholder="Enter a name"
-        value={name} onChange={onNameChange} />
+        value={rawNameInput}
+        onChange={onNameInputChange} />
     </div>
 
-  const KeyInput =
+  const AddressInput =
     <Textarea.Contrast className="w-full resize-none"
       placeholder="Enter an address"
-      value={input} onChange={onInputChange}
+      value={rawAddressInput}
+      onChange={onAddressInputChange}
       rows={4} />
 
   const AddButon =
     <Button.Gradient className="grow po-md"
       colorIndex={color}
-      disabled={!name || !canAdd}
+      disabled={!defNameInput || !canAdd}
       onClick={tryAdd.run}>
       <Button.Shrink>
         <Outline.PlusIcon className="s-sm" />
@@ -106,7 +112,7 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
     <div className="h-2" />
     {NameInput}
     <div className="h-8" />
-    {KeyInput}
+    {AddressInput}
     <div className="h-8" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       {AddButon}

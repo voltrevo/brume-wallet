@@ -4,7 +4,7 @@ import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { PromiseProps } from "@/libs/react/props/promise";
 import { Button } from "@/libs/ui/button";
 import { Input } from "@/libs/ui/input";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useRef, useState } from "react";
 import { useBackground } from "../../background/context";
 import { Page } from "../../components/page/page";
 import { UserAvatar } from "./all/page";
@@ -16,11 +16,14 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
   const background = useBackground().unwrap()
   const userQuery = useUser(user.uuid)
 
-  const [password = "", setPassword] = useState<string>()
   const passwordInputRef = useRef<HTMLInputElement>(null)
 
-  const onPasswordChange = useInputChange(e => {
-    setPassword(e.currentTarget.value)
+  const [rawPasswordInput = "", setRawPasswordInput] = useState<string>()
+
+  const defPasswordInput = useDeferredValue(rawPasswordInput)
+
+  const onPasswordInputChange = useInputChange(e => {
+    setRawPasswordInput(e.currentTarget.value)
   }, [])
 
   const [invalid, setInvalid] = useState(false)
@@ -28,12 +31,12 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
   const login = useAsyncUniqueCallback(async () => {
     if (userQuery.data == null)
       return
-    if (password?.length < 3)
+    if (defPasswordInput?.length < 3)
       return
 
     const response = await background.tryRequest({
       method: "brume_login",
-      params: [userQuery.data.inner.uuid, password]
+      params: [userQuery.data.inner.uuid, defPasswordInput]
     }).then(r => r.unwrap())
 
     if (response.isErr()) {
@@ -48,10 +51,10 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
     }
 
     sessionStorage.setItem("uuid", userQuery.data.inner.uuid)
-    sessionStorage.setItem("password", password)
+    sessionStorage.setItem("password", defPasswordInput)
 
     ok(userQuery.data.inner)
-  }, [password, userQuery.data?.inner.uuid, background])
+  }, [defPasswordInput, userQuery.data?.inner.uuid, background])
 
   const onKeyDown = useKeyboardEnter<HTMLInputElement>(e => {
     login.run()
@@ -81,8 +84,8 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
         <Input.Contrast className="data-[invalid=true]:border-red-500 data-[invalid=true]:text-red-500"
           xref={passwordInputRef}
           type="password" autoFocus
-          value={password}
-          onChange={onPasswordChange}
+          value={rawPasswordInput}
+          onChange={onPasswordInputChange}
           disabled={login.loading}
           data-invalid={invalid}
           placeholder="Password"

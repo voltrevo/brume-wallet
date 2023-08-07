@@ -32,35 +32,35 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
   const color = Colors.mod(modhash)
   const emoji = Emojis.get(modhash)
 
-  const [rawName = "", setRawName] = useState<string>()
+  const [rawNameInput = "", setRawNameInput] = useState<string>()
 
-  const name = useDeferredValue(rawName)
+  const defNameInput = useDeferredValue(rawNameInput)
 
-  const onNameChange = useInputChange(e => {
-    setRawName(e.currentTarget.value)
+  const onNameInputChange = useInputChange(e => {
+    setRawNameInput(e.currentTarget.value)
   }, [])
 
-  const [rawInput = "", setRawInput] = useState<string>()
+  const [rawKeyInput = "", setRawKeyInput] = useState<string>()
 
-  const input = useDeferredValue(rawInput)
+  const defKeyInput = useDeferredValue(rawKeyInput)
 
-  const onInputChange = useTextAreaChange(e => {
-    setRawInput(e.currentTarget.value)
+  const onKeyInputChange = useTextAreaChange(e => {
+    setRawKeyInput(e.currentTarget.value)
   }, [])
 
   const doGenerate = useAsyncUniqueCallback(async () => {
     const bytes = secp256k1.utils.randomPrivateKey()
-    setRawInput(`0x${Bytes.toHex(bytes)}`)
+    setRawKeyInput(`0x${Bytes.toHex(bytes)}`)
   }, [])
 
   const tryAddUnauthenticated = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!name)
+      if (!defNameInput)
         return new Err(new Panic())
-      if (!input.startsWith("0x"))
+      if (!defKeyInput.startsWith("0x"))
         return new Err(new Panic())
 
-      const privateKeyBytes = Bytes.fromHexSafe(input.slice(2))
+      const privateKeyBytes = Bytes.fromHexSafe(defKeyInput.slice(2))
 
       const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
       // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
@@ -70,7 +70,7 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
       // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
 
-      const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name, color, emoji, address, privateKey: input }
+      const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: defNameInput, color, emoji, address, privateKey: defKeyInput }
 
       await background.tryRequest<void>({
         method: "brume_createWallet",
@@ -81,16 +81,16 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, input, uuid, color, emoji, background, close])
+  }, [defNameInput, defKeyInput, uuid, color, emoji, background, close])
 
   const triedEncryptedPrivateKey = useAsyncReplaceMemo(async () => {
     return await Result.unthrow<Result<[string, string], Error>>(async t => {
-      if (!name)
+      if (!defNameInput)
         return new Err(new Panic())
-      if (!input.startsWith("0x"))
+      if (!defKeyInput.startsWith("0x"))
         return new Err(new Panic())
 
-      const privateKeyBytes = Bytes.fromHexSafe(input.slice(2))
+      const privateKeyBytes = Bytes.fromHexSafe(defKeyInput.slice(2))
       const privateKeyBase64 = Bytes.toBase64(privateKeyBytes)
 
       const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
@@ -100,45 +100,45 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
 
       return new Ok([ivBase64, cipherBase64])
     })
-  }, [name, input, background])
+  }, [defNameInput, defKeyInput, background])
 
   const [id, setId] = useState<Uint8Array>()
 
   useEffect(() => {
     setId(undefined)
-  }, [input])
+  }, [defKeyInput])
 
   const tryAddAuthenticated1 = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!name)
+      if (!defNameInput)
         return new Err(new Panic())
-      if (!input.startsWith("0x"))
+      if (!defKeyInput.startsWith("0x"))
         return new Err(new Panic())
       if (triedEncryptedPrivateKey == null)
         return new Err(new Panic())
 
       const [_, cipherBase64] = triedEncryptedPrivateKey.throw(t)
       const cipher = Bytes.fromBase64(cipherBase64)
-      const id = await WebAuthnStorage.create(name, cipher).then(r => r.throw(t))
+      const id = await WebAuthnStorage.create(defNameInput, cipher).then(r => r.throw(t))
 
       setId(id)
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, input, triedEncryptedPrivateKey, uuid, color, emoji, background])
+  }, [defNameInput, defKeyInput, triedEncryptedPrivateKey, uuid, color, emoji, background])
 
   const tryAddAuthenticated2 = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!name)
+      if (!defNameInput)
         return new Err(new Panic())
-      if (!input.startsWith("0x"))
+      if (!defKeyInput.startsWith("0x"))
         return new Err(new Panic())
       if (id == null)
         return new Err(new Panic())
       if (triedEncryptedPrivateKey == null)
         return new Err(new Panic())
 
-      const privateKeyBytes = Bytes.fromHexSafe(input.slice(2))
+      const privateKeyBytes = Bytes.fromHexSafe(defKeyInput.slice(2))
 
       const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
       // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
@@ -158,7 +158,7 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       const idBase64 = Bytes.toBase64(id)
       const privateKey = { ivBase64, idBase64 }
 
-      const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name, color, emoji, address, privateKey }
+      const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: defNameInput, color, emoji, address, privateKey }
 
       await background.tryRequest<void>({
         method: "brume_createWallet",
@@ -169,7 +169,7 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, input, id, triedEncryptedPrivateKey, uuid, color, emoji, background, close])
+  }, [defNameInput, defKeyInput, id, triedEncryptedPrivateKey, uuid, color, emoji, background, close])
 
   const NameInput =
     <div className="flex items-stretch gap-2">
@@ -180,15 +180,15 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       </div>
       <Input.Contrast className="w-full"
         placeholder="Enter a name"
-        value={name}
-        onChange={onNameChange} />
+        value={rawNameInput}
+        onChange={onNameInputChange} />
     </div>
 
   const KeyInput =
     <Textarea.Contrast className="w-full resize-none"
       placeholder="Enter your private key"
-      value={input}
-      onChange={onInputChange}
+      value={rawKeyInput}
+      onChange={onKeyInputChange}
       rows={4} />
 
   const GenerateButton =
@@ -201,14 +201,14 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
     </Button.Contrast>
 
   const canAdd = useMemo(() => {
-    if (!name)
+    if (!defNameInput)
       return false
-    if (!input.startsWith("0x"))
+    if (!defKeyInput.startsWith("0x"))
       return false
-    if (!secp256k1.utils.isValidPrivateKey(input.slice(2)))
+    if (!secp256k1.utils.isValidPrivateKey(defKeyInput.slice(2)))
       return false
     return true
-  }, [name, input])
+  }, [defNameInput, defKeyInput])
 
   const AddUnauthButton =
     <Button.Contrast className="flex-1 whitespace-nowrap po-md"

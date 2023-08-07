@@ -32,38 +32,38 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
   const color = Colors.mod(modhash)
   const emoji = Emojis.get(modhash)
 
-  const [rawName = "", setRawName] = useState<string>()
+  const [rawNameInput = "", setRawNameInput] = useState<string>()
 
-  const name = useDeferredValue(rawName)
+  const defNameInput = useDeferredValue(rawNameInput)
 
-  const onNameChange = useInputChange(e => {
-    setRawName(e.currentTarget.value)
+  const onNameInputChange = useInputChange(e => {
+    setRawNameInput(e.currentTarget.value)
   }, [])
 
-  const [rawInput = "", setRawInput] = useState<string>()
+  const [rawPhraseInput = "", setRawPhraseInput] = useState<string>()
 
-  const input = useDeferredValue(rawInput)
+  const defPhraseInput = useDeferredValue(rawPhraseInput)
 
   const onInputChange = useTextAreaChange(e => {
-    setRawInput(e.currentTarget.value)
+    setRawPhraseInput(e.currentTarget.value)
   }, [])
 
   const doGenerate12 = useAsyncUniqueCallback(async () => {
-    setRawInput(generateMnemonic(wordlist, 128))
+    setRawPhraseInput(generateMnemonic(wordlist, 128))
   }, [])
 
   const doGenerate24 = useAsyncUniqueCallback(async () => {
-    setRawInput(generateMnemonic(wordlist, 256))
+    setRawPhraseInput(generateMnemonic(wordlist, 256))
   }, [])
 
   const tryAddUnauthenticated = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!name)
+      if (!defNameInput)
         return new Err(new Panic())
-      if (!input)
+      if (!defPhraseInput)
         return new Err(new Panic())
 
-      const seed: SeedData = { type: "mnemonic", uuid, name, color, emoji, mnemonic: input }
+      const seed: SeedData = { type: "mnemonic", uuid, name: defNameInput, color, emoji, mnemonic: defPhraseInput }
 
       await background.tryRequest<void>({
         method: "brume_createSeed",
@@ -74,17 +74,17 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, input, uuid, color, emoji, background, close])
+  }, [defNameInput, defPhraseInput, uuid, color, emoji, background, close])
 
   const triedEncryptedPhrase = useAsyncReplaceMemo(async () => {
     return await Result.unthrow<Result<[string, string], Error>>(async t => {
-      if (!name)
+      if (!defNameInput)
         return new Err(new Panic())
-      if (!input)
+      if (!defPhraseInput)
         return new Err(new Panic())
 
       try {
-        const entropyBytes = mnemonicToEntropy(input, wordlist)
+        const entropyBytes = mnemonicToEntropy(defPhraseInput, wordlist)
         const entropyBase64 = Bytes.toBase64(entropyBytes)
 
         const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
@@ -97,38 +97,38 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
         return new Err(new Panic())
       }
     })
-  }, [name, input, background])
+  }, [defNameInput, defPhraseInput, background])
 
   const [id, setId] = useState<Uint8Array>()
 
   useEffect(() => {
     setId(undefined)
-  }, [input])
+  }, [defPhraseInput])
 
   const tryAddAuthenticated1 = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!name)
+      if (!defNameInput)
         return new Err(new Panic())
-      if (!input)
+      if (!defPhraseInput)
         return new Err(new Panic())
       if (triedEncryptedPhrase == null)
         return new Err(new Panic())
 
       const [_, cipherBase64] = triedEncryptedPhrase.throw(t)
       const cipher = Bytes.fromBase64(cipherBase64)
-      const id = await WebAuthnStorage.create(name, cipher).then(r => r.throw(t))
+      const id = await WebAuthnStorage.create(defNameInput, cipher).then(r => r.throw(t))
 
       setId(id)
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, input, triedEncryptedPhrase, uuid, color, emoji, background])
+  }, [defNameInput, defPhraseInput, triedEncryptedPhrase, uuid, color, emoji, background])
 
   const tryAddAuthenticated2 = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!name)
+      if (!defNameInput)
         return new Err(new Panic())
-      if (!input)
+      if (!defPhraseInput)
         return new Err(new Panic())
       if (id == null)
         return new Err(new Panic())
@@ -145,7 +145,7 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
       const idBase64 = Bytes.toBase64(id)
       const mnemonic = { ivBase64, idBase64 }
 
-      const seed: SeedData = { type: "authMnemonic", uuid, name, color, emoji, mnemonic }
+      const seed: SeedData = { type: "authMnemonic", uuid, name: defNameInput, color, emoji, mnemonic }
 
       await background.tryRequest<void>({
         method: "brume_createSeed",
@@ -156,7 +156,7 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, input, id, triedEncryptedPhrase, uuid, color, emoji, background, close])
+  }, [defNameInput, defPhraseInput, id, triedEncryptedPhrase, uuid, color, emoji, background, close])
 
   const NameInput =
     <div className="flex items-stretch gap-2">
@@ -167,14 +167,14 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
       </div>
       <Input.Contrast className="w-full"
         placeholder="Enter a name"
-        value={name}
-        onChange={onNameChange} />
+        value={rawNameInput}
+        onChange={onNameInputChange} />
     </div>
 
   const PhraseInput =
     <Textarea.Contrast className="w-full resize-none"
       placeholder="Enter your seed phrase"
-      value={input}
+      value={rawPhraseInput}
       onChange={onInputChange}
       rows={4} />
 
@@ -198,12 +198,12 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
     </Button.Gradient>
 
   const canAdd = useMemo(() => {
-    if (!name)
+    if (!defNameInput)
       return false
-    if (!validateMnemonic(input, wordlist))
+    if (!validateMnemonic(defPhraseInput, wordlist))
       return false
     return true
-  }, [name, input])
+  }, [defNameInput, defPhraseInput])
 
   const AddUnauthButton =
     <Button.Contrast className="flex-1 whitespace-nowrap po-md"

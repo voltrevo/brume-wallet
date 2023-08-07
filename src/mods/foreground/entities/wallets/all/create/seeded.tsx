@@ -38,42 +38,42 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
   const color = Colors.mod(modhash)
   const emoji = Emojis.get(modhash)
 
-  const [rawName = "", setRawName] = useState<string>()
+  const [rawNameInput = "", setRawNameInput] = useState<string>()
 
-  const name = useDeferredValue(rawName)
+  const defNameInput = useDeferredValue(rawNameInput)
 
-  const onNameChange = useInputChange(e => {
-    setRawName(e.currentTarget.value)
+  const onNameInputChange = useInputChange(e => {
+    setRawNameInput(e.currentTarget.value)
   }, [])
 
-  const [rawPath = "", setRawPath] = useState<string>("m/44'/60'/0'/0/0")
+  const [rawPathInput = "", setRawPathInput] = useState<string>("m/44'/60'/0'/0/0")
 
-  const path = useDeferredValue(rawPath)
+  const defPathInput = useDeferredValue(rawPathInput)
 
-  const onInputChange = useInputChange(e => {
-    setRawPath(e.currentTarget.value)
+  const onPathInputChange = useInputChange(e => {
+    setRawPathInput(e.currentTarget.value)
   }, [])
 
   const canAdd = useMemo(() => {
-    if (!name)
+    if (!defNameInput)
       return false
-    if (!path)
+    if (!defPathInput)
       return false
     return true
-  }, [name, path])
+  }, [defNameInput, defPathInput])
 
   const tryAdd = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!name)
+      if (!defNameInput)
         return new Err(new Panic())
 
       if (seedData.type === "ledger") {
         const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
-        const { address } = await Ledger.Ethereum.tryGetAddress(device, path.slice(2)).then(r => r.throw(t))
+        const { address } = await Ledger.Ethereum.tryGetAddress(device, defPathInput.slice(2)).then(r => r.throw(t))
 
         const seed = SeedRef.from(seedData)
 
-        const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name, color, emoji, address, seed, path }
+        const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: defNameInput, color, emoji, address, seed, path: defPathInput }
 
         await background.tryRequest<Wallet[]>({
           method: "brume_createWallet",
@@ -86,7 +86,7 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
         const masterSeed = await mnemonicToSeed(mnemonic)
 
         const root = HDKey.fromMasterSeed(masterSeed)
-        const child = root.derive(path)
+        const child = root.derive(defPathInput)
 
         const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
         const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
@@ -94,7 +94,7 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
         const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
         const seed = SeedRef.from(seedData)
 
-        const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name, color, emoji, address, seed, path }
+        const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: defNameInput, color, emoji, address, seed, path: defPathInput }
 
         await background.tryRequest<Wallet[]>({
           method: "brume_createWallet",
@@ -106,7 +106,7 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, path, seedData, path, uuid, color, emoji, core, background, close])
+  }, [defNameInput, defPathInput, seedData, defPathInput, uuid, color, emoji, core, background, close])
 
   const NameInput =
     <div className="flex items-stretch gap-2">
@@ -117,19 +117,20 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
       </div>
       <Input.Contrast className="w-full"
         placeholder="Enter a name"
-        value={name} onChange={onNameChange} />
+        value={rawNameInput}
+        onChange={onNameInputChange} />
     </div>
 
   const PathInput =
     <Input.Contrast className="w-full"
       placeholder="m/44'/60'/0'/0/0"
-      value={path}
-      onChange={onInputChange} />
+      value={rawPathInput}
+      onChange={onPathInputChange} />
 
   const AddButon =
     <Button.Gradient className="grow po-md"
       colorIndex={color}
-      disabled={!name || !canAdd}
+      disabled={!defNameInput || !canAdd}
       onClick={tryAdd.run}>
       <Button.Shrink>
         <Outline.PlusIcon className="s-sm" />

@@ -15,7 +15,7 @@ import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { useCore } from "@hazae41/xswr";
 import { Transaction, ethers } from "ethers";
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useWalletData } from "../../context";
 import { EthereumContextProps, EthereumWalletInstance, useGasPrice, useNonce, useTokenBalance } from "../../data";
 
@@ -33,10 +33,12 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
   const gasPriceQuery = useGasPrice(context)
   const maybeGasPrice = gasPriceQuery.data?.inner
 
-  const [recipientInput = "", setRecipientInput] = useState<string>()
+  const [rawRecipientInput = "", setRawRecipientInput] = useState<string>()
+
+  const defRecipientInput = useDeferredValue(rawRecipientInput)
 
   const onRecipientInputChange = useInputChange(e => {
-    setRecipientInput(e.currentTarget.value)
+    setRawRecipientInput(e.currentTarget.value)
   }, [])
 
   const RecipientInput = <>
@@ -45,18 +47,20 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
     </div>
     <div className="h-2" />
     <Input.Contrast className="w-full"
-      value={recipientInput}
+      value={rawRecipientInput}
       placeholder="0x..."
       onChange={onRecipientInputChange} />
   </>
 
-  const [valueInput = "", setValueInput] = useState<string>()
+  const [rawValueInput = "", setRawValueInput] = useState<string>()
+
+  const defValueInput = useDeferredValue(rawValueInput)
 
   const onValueInputChange = useInputChange(e => {
     const value = e.currentTarget.value
       .replaceAll(/[^\d.,]/g, "")
       .replaceAll(",", ".")
-    setValueInput(value)
+    setRawValueInput(value)
   }, [])
 
   const ValueInput = <>
@@ -65,23 +69,18 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
     </div>
     <div className="h-2" />
     <Input.Contrast className="w-full"
-      value={valueInput}
+      value={rawValueInput}
       placeholder="1.0"
       onChange={onValueInputChange} />
   </>
 
-  const [nonceInput = "", setNonceInput] = useState<string>()
+  const [rawNonceInput = "", setRawNonceInput] = useState<string>()
+
+  const defNonceInput = useDeferredValue(rawNonceInput)
 
   const onNonceInputChange = useInputChange(e => {
-    setNonceInput(e.currentTarget.value)
+    setRawNonceInput(e.currentTarget.value)
   }, [])
-
-  useEffect(() => {
-    if (maybeNonce == null)
-      return
-    setNonceInput(maybeNonce.toString())
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maybeNonce])
 
   const NonceInput = <>
     <div className="">
@@ -89,7 +88,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
     </div>
     <div className="h-2" />
     <Input.Contrast className="w-full"
-      value={nonceInput}
+      value={rawNonceInput}
       onChange={onNonceInputChange} />
   </>
 
@@ -100,7 +99,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
       const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
 
       const signature = Cubane.Abi.FunctionSignature.tryParse("transfer(address,uint256)").throw(t)
-      const data = Cubane.Abi.tryEncode(signature, ethers.getAddress(recipientInput), ethers.parseUnits(valueInput, 18)).unwrap()
+      const data = Cubane.Abi.tryEncode(signature, ethers.getAddress(defRecipientInput), ethers.parseUnits(defValueInput, 18)).unwrap()
 
       const gas = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",
@@ -111,7 +110,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
             from: wallet.address,
             to: token.address,
             gasPrice: Radix.toHex(gasPrice),
-            nonce: Radix.toHex(Number(nonceInput)),
+            nonce: Radix.toHex(Number(defNonceInput)),
             data: data
           }, "latest"]
         }]
@@ -123,7 +122,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
           gasLimit: gas,
           chainId: context.chain.chainId,
           gasPrice: gasPrice,
-          nonce: Number(nonceInput),
+          nonce: Number(defNonceInput),
           data: data
         })
       }).throw(t)
@@ -146,7 +145,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
 
       return Ok.void()
     }).then(Results.alert)
-  }, [core, context, wallet, maybeGasPrice, recipientInput, valueInput, nonceInput])
+  }, [core, context, wallet, maybeGasPrice, defRecipientInput, defValueInput, defNonceInput])
 
   const TxHashDisplay = <>
     <div className="">
@@ -174,14 +173,14 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
       return true
     if (maybeGasPrice == null)
       return true
-    if (!nonceInput)
+    if (!defNonceInput)
       return true
-    if (!recipientInput)
+    if (!defRecipientInput)
       return true
-    if (!valueInput)
+    if (!defValueInput)
       return true
     return false
-  }, [trySend.loading, maybeGasPrice, recipientInput, valueInput, nonceInput])
+  }, [trySend.loading, maybeGasPrice, defRecipientInput, defValueInput, defNonceInput])
 
   const SendButton =
     <Button.Gradient className="w-full po-md"

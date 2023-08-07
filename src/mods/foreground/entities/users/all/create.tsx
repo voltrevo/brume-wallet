@@ -12,7 +12,7 @@ import { Input } from "@/libs/ui/input";
 import { Mutators } from "@/libs/xswr/mutators";
 import { UserInit } from "@/mods/background/service_worker/entities/users/data";
 import { useBackground } from "@/mods/foreground/background/context";
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { User } from "../data";
 import { useUsers } from "./data";
 import { UserAvatar } from "./page";
@@ -29,30 +29,36 @@ export function UserCreateDialog(props: CloseProps) {
   const color = Colors.mod(modhash)
   const emoji = Emojis.get(modhash)
 
-  const [name = "", setName] = useState<string>()
+  const [rawNameInput = "", setRawNameInput] = useState<string>()
 
-  const onNameChange = useInputChange(e => {
-    setName(e.currentTarget.value)
+  const defNameInput = useDeferredValue(rawNameInput)
+
+  const onNameInputChange = useInputChange(e => {
+    setRawNameInput(e.currentTarget.value)
   }, [])
 
-  const [password = "", setPassword] = useState<string>()
+  const [rawPasswordInput = "", setRawPasswordInput] = useState<string>()
 
-  const onPasswordChange = useInputChange(e => {
-    setPassword(e.currentTarget.value)
+  const defPasswordInput = useDeferredValue(rawPasswordInput)
+
+  const onPasswordInputChange = useInputChange(e => {
+    setRawPasswordInput(e.currentTarget.value)
   }, [])
 
-  const [password2 = "", setPassword2] = useState<string>()
+  const [rawConfirmPasswordInput = "", setRawConfirmPasswordInput] = useState<string>()
 
-  const onPassword2Change = useInputChange(e => {
-    setPassword2(e.currentTarget.value)
+  const defConfirmPasswordInput = useDeferredValue(rawConfirmPasswordInput)
+
+  const onConfirmPasswordInputChange = useInputChange(e => {
+    setRawConfirmPasswordInput(e.currentTarget.value)
   }, [])
 
   const isSamePassword = useMemo(() => {
-    return password === password2
-  }, [password, password2])
+    return defPasswordInput === defConfirmPasswordInput
+  }, [defPasswordInput, defConfirmPasswordInput])
 
   const onClick = useAsyncUniqueCallback(async () => {
-    const user: UserInit = { uuid, name, color, emoji, password }
+    const user: UserInit = { uuid, name: defNameInput, color, emoji, password: defPasswordInput }
 
     const usersData = await background
       .tryRequest<User[]>({ method: "brume_createUser", params: [user] })
@@ -61,36 +67,39 @@ export function UserCreateDialog(props: CloseProps) {
     users.mutate(Mutators.data(usersData))
 
     close()
-  }, [uuid, name, color, emoji, password, background, users.mutate, close])
+  }, [uuid, defNameInput, color, emoji, defPasswordInput, background, users.mutate, close])
 
   const NameInput =
     <div className="flex items-stretch gap-2">
       <div className="shrink-0">
         <UserAvatar className="s-5xl text-2xl"
           colorIndex={color}
-          name={name} />
+          name={defNameInput} />
       </div>
       <Input.Contrast className="w-full"
         placeholder="Enter a name"
-        value={name} onChange={onNameChange} />
+        value={rawNameInput}
+        onChange={onNameInputChange} />
     </div>
 
   const PasswordInput =
     <Input.Contrast className="w-full"
       type="password"
       placeholder="Enter a password"
-      value={password} onChange={onPasswordChange} />
+      value={rawPasswordInput}
+      onChange={onPasswordInputChange} />
 
   const PasswordInput2 =
     <Input.Contrast className="w-full"
       type="password"
       placeholder="Confirm the password"
-      value={password2} onChange={onPassword2Change} />
+      value={rawConfirmPasswordInput}
+      onChange={onConfirmPasswordInputChange} />
 
   const DoneButton =
     <Button.Gradient className="w-full po-md"
       colorIndex={color}
-      disabled={!name || !password || !password2 || !isSamePassword}
+      disabled={!defNameInput || !defPasswordInput || !defConfirmPasswordInput || !isSamePassword}
       onClick={onClick.run}>
       <Button.Shrink>
         <Outline.PlusIcon className="s-sm" />

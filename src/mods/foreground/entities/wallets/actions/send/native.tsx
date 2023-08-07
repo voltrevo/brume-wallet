@@ -13,7 +13,7 @@ import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { useCore } from "@hazae41/xswr";
 import { Transaction, ethers } from "ethers";
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useWalletData } from "../../context";
 import { EthereumContextProps, EthereumWalletInstance, useBalance, useGasPrice, useNonce } from "../../data";
 
@@ -31,10 +31,12 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
   const gasPriceQuery = useGasPrice(context)
   const maybeGasPrice = gasPriceQuery.data?.inner
 
-  const [recipientInput = "", setRecipientInput] = useState<string>()
+  const [rawRecipientInput = "", setRawRecipientInput] = useState<string>()
+
+  const defRecipientInput = useDeferredValue(rawRecipientInput)
 
   const onRecipientInputChange = useInputChange(e => {
-    setRecipientInput(e.currentTarget.value)
+    setRawRecipientInput(e.currentTarget.value)
   }, [])
 
   const RecipientInput = <>
@@ -43,18 +45,20 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
     </div>
     <div className="h-2" />
     <Input.Contrast className="w-full"
-      value={recipientInput}
+      value={rawRecipientInput}
       placeholder="0x..."
       onChange={onRecipientInputChange} />
   </>
 
-  const [valueInput = "", setValueInput] = useState<string>()
+  const [rawValueInput = "", setRawValueInput] = useState<string>()
+
+  const defValueInput = useDeferredValue(rawValueInput)
 
   const onValueInputChange = useInputChange(e => {
     const value = e.currentTarget.value
       .replaceAll(/[^\d.,]/g, "")
       .replaceAll(",", ".")
-    setValueInput(value)
+    setRawValueInput(value)
   }, [])
 
   const ValueInput = <>
@@ -63,7 +67,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
     </div>
     <div className="h-2" />
     <Input.Contrast className="w-full"
-      value={valueInput}
+      value={rawValueInput}
       placeholder="1.0"
       onChange={onValueInputChange} />
   </>
@@ -82,9 +86,9 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
           params: [{
             chainId: Radix.toHex(context.chain.chainId),
             from: wallet.address,
-            to: ethers.getAddress(recipientInput),
+            to: ethers.getAddress(defRecipientInput),
             gasPrice: Radix.toHex(gasPrice),
-            value: Radix.toHex(ethers.parseUnits(valueInput, 18)),
+            value: Radix.toHex(ethers.parseUnits(defValueInput, 18)),
             nonce: Radix.toHex(nonce)
           }, "latest"]
         }]
@@ -92,12 +96,12 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
 
       const tx = Result.catchAndWrapSync(() => {
         return Transaction.from({
-          to: ethers.getAddress(recipientInput),
+          to: ethers.getAddress(defRecipientInput),
           gasLimit: gas,
           chainId: context.chain.chainId,
           gasPrice: gasPrice,
           nonce: Number(nonce),
-          value: ethers.parseUnits(valueInput, 18)
+          value: ethers.parseUnits(defValueInput, 18)
         })
       }).throw(t)
 
@@ -119,7 +123,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
 
       return Ok.void()
     }).then(Results.alert)
-  }, [core, context, wallet, maybeNonce, maybeGasPrice, recipientInput, valueInput])
+  }, [core, context, wallet, maybeNonce, maybeGasPrice, defRecipientInput, defValueInput])
 
   const TxHashDisplay = <>
     <div className="">
@@ -149,12 +153,12 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
       return true
     if (maybeGasPrice == null)
       return true
-    if (!recipientInput)
+    if (!defRecipientInput)
       return true
-    if (!valueInput)
+    if (!defValueInput)
       return true
     return false
-  }, [trySend.loading, maybeNonce, maybeGasPrice, recipientInput, valueInput])
+  }, [trySend.loading, maybeNonce, maybeGasPrice, defRecipientInput, defValueInput])
 
   const SendButton =
     <Button.Gradient className="w-full po-md"

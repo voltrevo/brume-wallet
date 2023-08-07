@@ -27,24 +27,24 @@ export function LedgerSeedCreatorDialog(props: CloseProps) {
   const color = Colors.mod(modhash)
   const emoji = Emojis.get(modhash)
 
-  const [rawName = "", setRawName] = useState<string>()
+  const [rawNameInput = "", setRawNameInput] = useState<string>()
 
-  const name = useDeferredValue(rawName)
+  const defNameInput = useDeferredValue(rawNameInput)
 
-  const onNameChange = useInputChange(e => {
-    setRawName(e.currentTarget.value)
+  const onNameInputChange = useInputChange(e => {
+    setRawNameInput(e.currentTarget.value)
   }, [])
 
   const tryAdd = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!name)
+      if (!defNameInput)
         return new Err(new Panic())
 
       const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
 
       const { address } = await Ledger.Ethereum.tryGetAddress(device, "44'/60'/0'/0/0").then(r => r.throw(t))
 
-      const seed: SeedData = { type: "ledger", uuid, name, color, emoji, address }
+      const seed: SeedData = { type: "ledger", uuid, name: defNameInput, color, emoji, address }
 
       await background.tryRequest<void>({
         method: "brume_createSeed",
@@ -55,7 +55,7 @@ export function LedgerSeedCreatorDialog(props: CloseProps) {
 
       return Ok.void()
     }).then(Results.alert)
-  }, [name, uuid, color, emoji, background, close])
+  }, [defNameInput, uuid, color, emoji, background, close])
 
   const NameInput =
     <div className="flex items-stretch gap-2">
@@ -66,15 +66,15 @@ export function LedgerSeedCreatorDialog(props: CloseProps) {
       </div>
       <Input.Contrast className="w-full"
         placeholder="Enter a name"
-        value={name}
-        onChange={onNameChange} />
+        value={rawNameInput}
+        onChange={onNameInputChange} />
     </div>
 
   const canAdd = useMemo(() => {
-    if (!name)
+    if (!defNameInput)
       return false
     return true
-  }, [name])
+  }, [defNameInput])
 
   const AddButton =
     <Button.Gradient className="flex-1 whitespace-nowrap po-md"
