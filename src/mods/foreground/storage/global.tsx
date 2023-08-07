@@ -4,7 +4,7 @@ import { Mutex } from "@hazae41/mutex";
 import { None, Option, Optional, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Core, RawState, Storage, useCore } from "@hazae41/xswr";
-import { createContext, useContext, useRef } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { Background } from "../background/background";
 import { useBackground } from "../background/context";
 
@@ -20,12 +20,11 @@ export function GlobalStorageProvider(props: ChildrenProps) {
   const core = useCore().unwrap()
   const background = useBackground().unwrap()
 
-  const storage = useRef<GlobalStorage>()
+  const storage = useMemo(() => {
+    return new GlobalStorage(core, background)
+  }, [core, background])
 
-  if (storage.current == null)
-    storage.current = new GlobalStorage(core, background)
-
-  return <GlobalStorageContext.Provider value={storage.current}>
+  return <GlobalStorageContext.Provider value={storage}>
     {children}
   </GlobalStorageContext.Provider>
 }

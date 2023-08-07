@@ -4,7 +4,7 @@ import { Mutex } from "@hazae41/mutex";
 import { None, Option, Optional, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Core, RawState, Storage, useCore } from "@hazae41/xswr";
-import { createContext, useContext, useRef } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { Background } from "../background/background";
 import { useBackground } from "../background/context";
 
@@ -20,12 +20,11 @@ export function UserStorageProvider(props: ChildrenProps) {
   const core = useCore().unwrap()
   const background = useBackground().unwrap()
 
-  const storage = useRef<UserStorage>()
+  const storage = useMemo(() => {
+    return new UserStorage(core, background)
+  }, [core, background])
 
-  if (storage.current == null)
-    storage.current = new UserStorage(core, background)
-
-  return <UserStorageContext.Provider value={storage.current}>
+  return <UserStorageContext.Provider value={storage}>
     {children}
   </UserStorageContext.Provider>
 }
