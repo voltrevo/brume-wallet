@@ -1,4 +1,4 @@
-import { ChangeEvent, ClipboardEvent, DependencyList, KeyboardEvent, MouseEvent, SyntheticEvent, useCallback } from "react"
+import { ChangeEvent, ClipboardEvent, DependencyList, KeyboardEvent, MouseEvent, SyntheticEvent, TouchEvent, useCallback } from "react"
 
 export namespace Events {
 
@@ -73,6 +73,14 @@ export function useTextAreaChange<R>(
 
 export function useMouse<T = HTMLElement>(
   callback: (e: MouseEvent<T>) => void,
+  deps: DependencyList = [callback]
+) {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useCallback(callback, deps)
+}
+
+export function useTouch<T = HTMLElement>(
+  callback: (e: TouchEvent<T>) => void,
   deps: DependencyList = [callback]
 ) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
