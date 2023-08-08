@@ -580,6 +580,14 @@ export function WalletAndChainSelectPage() {
             {chainByChainId[chainIdByName.LINEA].name}
           </Button.Shrink>
         </Button.Bordered>
+        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
+          aria-selected={chain === chainByChainId[chainIdByName.BASE].chainId}
+          onClick={() => setChain(chainByChainId[chainIdByName.BASE].chainId)}>
+          <Button.Shrink>
+            <Outline.CubeIcon className="s-xs" />
+            {chainByChainId[chainIdByName.BASE].name}
+          </Button.Shrink>
+        </Button.Bordered>
       </div>
       <div className="h-4" />
       <label>

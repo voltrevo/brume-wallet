@@ -327,6 +327,16 @@ function WalletDataPage() {
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">
+        {chainByChainId[chainIdByName.BASE].name}
+      </div>
+      <div className="h-4" />
+      <div className="flex flex-col gap-2">
+        <NativeTokenRow
+          chain={chainByChainId[chainIdByName.BASE]}
+          prices={[wethUsdtPriceQuery.data?.inner]} />
+      </div>
+      <div className="h-4" />
+      <div className="text-xl font-medium">
         {chainByChainId[chainIdByName.CLASSIC].name}
       </div>
       <div className="h-4" />

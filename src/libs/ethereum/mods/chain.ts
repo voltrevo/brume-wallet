@@ -1,3 +1,4 @@
+
 export type EthereumChains<T = EthereumChain> =
   Record<number, T>
 
@@ -98,6 +99,19 @@ export const chainByChainId: EthereumChains = {
       symbol: "MATIC",
       decimals: 18,
       pairs: ["0x819f3450dA6f110BA6Ea52195B3beaFa246062dE", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
+    }
+  },
+  8453: {
+    name: "Base",
+    chainId: 8453,
+    urls: ["https://1rpc.io/base"],
+    etherscan: "https://basescan.org",
+    token: {
+      name: "ETH",
+      chainId: 8453,
+      symbol: "ETH",
+      decimals: 18,
+      pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
     }
   },
   42161: {

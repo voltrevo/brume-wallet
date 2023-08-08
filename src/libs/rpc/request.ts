@@ -1,4 +1,4 @@
-export type RpcId = number | string
+export type RpcId = number | string | null
 
 export type RpcRequestPreinit<T = unknown> =
   | RpcParamlessRequestPreinit
@@ -51,6 +51,11 @@ export class RpcRequest<T> {
   static from<T>(init: RpcRequestInit<T>) {
     const { id, method, params } = init
     return new RpcRequest(id, method, params)
+  }
+
+  toJSON() {
+    const { jsonrpc, id, method, params } = this
+    return JSON.stringify({ jsonrpc, id, method, params })
   }
 
 }

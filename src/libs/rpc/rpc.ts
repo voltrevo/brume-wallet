@@ -1,3 +1,4 @@
+import { Bytes } from "@hazae41/bytes"
 import { Circuit, CircuitOpenParams } from "@hazae41/echalote"
 import { Future } from "@hazae41/future"
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
@@ -37,11 +38,12 @@ export namespace Rpc {
   export async function tryFetchWithCircuit<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit<unknown> & { circuit: Circuit } & CircuitOpenParams): Promise<Result<RpcResponse<T>, Error>> {
     const { id, method, params, circuit, ...rest } = init
 
+    const request = new RpcRequest(id, method, params)
+    const body = Bytes.fromUtf8(request.toJSON())
+
     const headers = new Headers(rest.headers)
     headers.set("Content-Type", "application/json")
-
-    const request = new RpcRequest(id, method, params)
-    const body = JSON.stringify(request)
+    headers.set("Content-Length", `${body.length}`)
 
     const res = await circuit.tryFetch(input, { ...rest, method: "POST", headers, body })
 
@@ -62,7 +64,7 @@ export namespace Rpc {
   export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit<unknown>, signal: AbortSignal) {
     const { id, method, params = [] } = request
 
-    socket.send(JSON.stringify(new RpcRequest(id, method, params)))
+    socket.send(new RpcRequest(id, method, params).toJSON())
 
     const future = new Future<Result<RpcResponse<T>, ClosedError | ErroredError | AbortedError>>()
 
