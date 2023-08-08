@@ -985,8 +985,8 @@ export class Global {
       return await Result.unthrow<Result<void, Looped<Error>>>(async t => {
         const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Retry.new).throw(t).result.get())
 
-        const body = JSON.stringify({ method: "eth_getBalance", tor: true })
-        await circuit.tryFetch("http://proxy.brume.money", { method: "POST", body }).then(r => r.mapErrSync(Cancel.new).throw(t))
+        const body = JSON.stringify({ tor: true })
+        await circuit.tryFetch("https://proxy.brume.money", { method: "POST", body }).then(r => r.inspectErrSync(() => console.warn(`Could not fetch logs`)).mapErrSync(Cancel.new).throw(t))
         await circuit.destroy()
 
         return Ok.void()
