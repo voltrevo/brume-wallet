@@ -101,6 +101,19 @@ export const chainByChainId: EthereumChains = {
       pairs: ["0x819f3450dA6f110BA6Ea52195B3beaFa246062dE", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
     }
   },
+  324: {
+    name: "zkSync",
+    chainId: 324,
+    urls: ["https://mainnet.era.zksync.io"],
+    etherscan: "https://explorer.zksync.io/",
+    token: {
+      name: "ETH",
+      chainId: 324,
+      symbol: "ETH",
+      decimals: 18,
+      pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
+    }
+  },
   8453: {
     name: "Base",
     chainId: 8453,
@@ -188,6 +201,7 @@ export const chainIdByName = {
   CLASSIC: 61,
   GNOSIS: 100,
   POLYGON: 137,
+  ZKSYNC: 324,
   BASE: 8453,
   ARBITRUM: 42161,
   AVALANCHE: 43114,

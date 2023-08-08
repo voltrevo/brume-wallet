@@ -557,6 +557,14 @@ export function WalletAndChainSelectPage() {
           </Button.Shrink>
         </Button.Bordered>
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
+          aria-selected={chain === chainByChainId[chainIdByName.ZKSYNC].chainId}
+          onClick={() => setChain(chainByChainId[chainIdByName.ZKSYNC].chainId)}>
+          <Button.Shrink>
+            <Outline.CubeIcon className="s-xs" />
+            {chainByChainId[chainIdByName.ZKSYNC].name}
+          </Button.Shrink>
+        </Button.Bordered>
+        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === chainByChainId[chainIdByName.AVALANCHE].chainId}
           onClick={() => setChain(chainByChainId[chainIdByName.AVALANCHE].chainId)}>
           <Button.Shrink>
