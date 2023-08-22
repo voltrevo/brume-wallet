@@ -999,10 +999,11 @@ export class Global {
 async function tryInit() {
   return await Result.recatch(async () => {
     return await Result.unthrow<Result<Global, Error>>(async t => {
+      Berith.initSyncBundledOnce()
+      Morax.initSyncBundledOnce()
+
       const ed25519 = await Ed25519.fromSafeOrBerith(Berith)
       const x25519 = await X25519.fromSafeOrBerith(Berith)
-
-      await Morax.initBundledOnce()
       const sha1 = Sha1.fromMorax(Morax)
 
       const fallbacks = await tryFetch<Fallback[]>(FALLBACKS_URL).then(r => r.throw(t))
