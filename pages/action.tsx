@@ -9,12 +9,23 @@ export default function Action() {
   const background = useBackground().unwrap()
 
   useEffect(() => {
+    /**
+     * Chromium
+     */
+    document.documentElement.className = "h-[600px] w-[400px] [scrollbar-gutter:stable]"
+    /**
+     * Firefox
+     */
+    document.body.className = "h-[600px] w-[400px]"
+  }, [])
+
+  useEffect(() => {
     background
       .tryRequest<string>({ method: "brume_getPath" })
       .then(r => r.unwrap().unwrap())
-      .then(r => location.hash = r)
+      .then(p => location.hash = p)
 
-    const onHashChange = () => background.tryRequest({
+    const onHashChange = () => background.tryRequest<void>({
       method: "brume_setPath",
       params: [location.hash]
     }).then(r => r.unwrap().unwrap())
@@ -23,7 +34,7 @@ export default function Action() {
     return () => removeEventListener("hashchange", onHashChange)
   }, [background])
 
-  return <main id="main" className="h-[600px] w-[400px] overflow-y-scroll flex flex-col">
+  return <main id="main" className="grow w-full flex flex-col">
     <Overlay>
       <UserProvider>
         <Router />

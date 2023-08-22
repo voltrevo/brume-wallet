@@ -1,4 +1,4 @@
-import { EthereumChain, EthereumChains } from "@/libs/ethereum/mods/chain"
+import { EthereumChains } from "@/libs/ethereum/mods/chain"
 import { Objects } from "@/libs/objects/objects"
 import { RpcClient } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
@@ -20,12 +20,50 @@ import { Wallet } from "../wallets/data"
 export type EthereumBrumes =
   Mutex<Pool<EthereumBrume, Error>>
 
-export type Connection = WebSocket | URL
-
 export interface EthereumBrume {
   readonly circuit: Circuit,
+  readonly chains: EthereumChains<Optional<Pool<RpcConnection, Error>>>
+}
+
+export type Connection =
+  | WebSocketConnection
+  | UrlConnection
+
+export interface RpcConnection {
   readonly client: RpcClient
-  readonly conns: EthereumChains<Optional<Pool<Connection, Error>>>
+  readonly connection: Connection
+}
+
+export class WebSocketConnection {
+
+  constructor(
+    readonly socket: WebSocket
+  ) { }
+
+  isWebSocket(): this is WebSocketConnection {
+    return true
+  }
+
+  isURL(): false {
+    return false
+  }
+
+}
+
+export class UrlConnection {
+
+  constructor(
+    readonly url: URL
+  ) { }
+
+  isWebSocket(): false {
+    return false
+  }
+
+  isURL(): this is UrlConnection {
+    return true
+  }
+
 }
 
 export namespace EthereumBrumes {
@@ -48,10 +86,9 @@ export namespace EthereumBrumes {
         const { pool, index } = params
 
         const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get())
-        const sockets = Objects.mapValuesSync(chains, chain => EthereumConnection.createPool(circuit, chain))
-        const client = new RpcClient()
+        const ethereum = Objects.mapValuesSync(chains, chain => Connection.createRpcPool(circuit, chain.urls))
 
-        const brume: EthereumBrume = { circuit, client, conns: sockets }
+        const brume: EthereumBrume = { circuit, chains: ethereum }
 
         const onCloseOrError = async (reason?: unknown) => {
           pool.delete(index)
@@ -98,16 +135,16 @@ export namespace EthereumBrumes {
 
 }
 
-export namespace EthereumConnection {
+export namespace Connection {
 
   export async function tryCreate(circuit: Circuit, url: URL, signal?: AbortSignal): Promise<Result<Connection, Looped<Error>>> {
     const result = await Result.unthrow<Result<Connection, BinaryError | ErroredError | ClosedError | AbortedError | ControllerError | Panic>>(async t => {
       const signal2 = AbortSignals.timeout(15_000, signal)
 
       if (url.protocol === "http:")
-        return new Ok(url)
+        return new Ok(new UrlConnection(url))
       if (url.protocol === "https:")
-        return new Ok(url)
+        return new Ok(new UrlConnection(url))
 
       if (url.protocol === "wss:") {
         const tcp = await circuit.tryOpen(url.hostname, 443).then(r => r.throw(t))
@@ -116,7 +153,7 @@ export namespace EthereumConnection {
 
         await Sockets.tryWaitOpen(socket, signal2).then(r => r.throw(t))
 
-        return new Ok(socket)
+        return new Ok(new WebSocketConnection(socket))
       }
 
       if (url.protocol === "ws:") {
@@ -125,7 +162,7 @@ export namespace EthereumConnection {
 
         await Sockets.tryWaitOpen(socket, signal2).then(r => r.throw(t))
 
-        return new Ok(socket)
+        return new Ok(new WebSocketConnection(socket))
       }
 
       return new Err(new Panic(`Unknown protocol ${url.protocol}`))
@@ -140,35 +177,67 @@ export namespace EthereumConnection {
     return result.mapErrSync(Retry.new)
   }
 
-  export function createPool(circuit: Circuit, chain: EthereumChain) {
+  export function createPool(circuit: Circuit, urls: readonly string[]) {
     return new Pool<Connection, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index, signal } = params
 
-        const url = new URL(chain.urls[index])
+        const url = new URL(urls[index])
 
         const connection = await tryLoop(async () => {
           return tryCreate(circuit, url, signal)
         }, { signal }).then(r => r.throw(t))
 
-        if (connection instanceof URL)
+        if (connection.isURL())
           return new Ok(new Cleaner(connection, () => { }))
 
         const onCloseOrError = () => {
           pool.delete(index)
         }
 
-        connection.addEventListener("close", onCloseOrError, { passive: true })
-        connection.addEventListener("error", onCloseOrError, { passive: true })
+        connection.socket.addEventListener("close", onCloseOrError, { passive: true })
+        connection.socket.addEventListener("error", onCloseOrError, { passive: true })
 
         const onClean = () => {
-          connection.removeEventListener("close", onCloseOrError)
-          connection.removeEventListener("error", onCloseOrError)
+          connection.socket.removeEventListener("close", onCloseOrError)
+          connection.socket.removeEventListener("error", onCloseOrError)
         }
 
         return new Ok(new Cleaner(connection, onClean))
       })
-    }, { capacity: chain.urls.length })
+    }, { capacity: urls.length })
+  }
+
+  export function createRpcPool(circuit: Circuit, urls: readonly string[]) {
+    return new Pool<RpcConnection, Error>(async (params) => {
+      return await Result.unthrow(async t => {
+        const { pool, index, signal } = params
+
+        const url = new URL(urls[index])
+        const client = new RpcClient()
+
+        const connection = await tryLoop(async () => {
+          return tryCreate(circuit, url, signal)
+        }, { signal }).then(r => r.throw(t))
+
+        if (connection.isURL())
+          return new Ok(new Cleaner({ client, connection }, () => { }))
+
+        const onCloseOrError = () => {
+          pool.delete(index)
+        }
+
+        connection.socket.addEventListener("close", onCloseOrError, { passive: true })
+        connection.socket.addEventListener("error", onCloseOrError, { passive: true })
+
+        const onClean = () => {
+          connection.socket.removeEventListener("close", onCloseOrError)
+          connection.socket.removeEventListener("error", onCloseOrError)
+        }
+
+        return new Ok(new Cleaner({ client, connection }, onClean))
+      })
+    }, { capacity: urls.length })
   }
 
 }
