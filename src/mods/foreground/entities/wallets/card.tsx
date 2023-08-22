@@ -14,6 +14,8 @@ export function WalletDataCard() {
 
   const [color, color2] = Gradients.get(wallet.color)
 
+  const onClickEllipsis = useMouseCancel(() => alert("This feature is not implemented yet"), [])
+
   const copyEthereumAddress = useCopy(wallet.address)
   const onClickCopyEthereumAddress = useMouseCancel(copyEthereumAddress.run)
 
@@ -27,7 +29,8 @@ export function WalletDataCard() {
           emoji={wallet.emoji} />
       </div>
       <div className="w-2 grow" />
-      <Button.White className={`text-${color}`}>
+      <Button.White className={`text-${color}`}
+        onClick={onClickEllipsis}>
         <Button.Shrink>
           <Outline.EllipsisHorizontalIcon className="s-sm" />
         </Button.Shrink>

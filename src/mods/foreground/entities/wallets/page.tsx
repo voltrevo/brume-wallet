@@ -73,7 +73,7 @@ function NativeTokenRow(props: {
         title={`${chain.token.name} on ${chain.name}`}
         context={context}
         close={sendDialog.disable} />}
-    <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
+    <button className="w-full p-4 rounded-xl bg-contrast"
       onClick={sendDialog.enable}>
       <div className="w-full flex justify-between items-center">
         <div className="">
@@ -83,7 +83,7 @@ function NativeTokenRow(props: {
           {balanceUsdDisplay}
         </div>
       </div>
-      <div className="text-contrast">
+      <div className="text-left text-contrast">
         {`${balanceDisplay} ${chain.token.symbol}`}
       </div>
     </button>
@@ -115,7 +115,7 @@ function ContractTokenRow(props: {
         context={context}
         token={token}
         close={sendDialog.disable} />}
-    <button className="w-full p-4 flex flex-col rounded-xl bg-contrast"
+    <button className="w-full p-4 rounded-xl bg-contrast"
       onClick={sendDialog.enable}>
       <div className="w-full flex justify-between items-center">
         <div className="">
@@ -125,7 +125,7 @@ function ContractTokenRow(props: {
           {balanceUsdDisplay}
         </div>
       </div>
-      <div className="text-contrast">
+      <div className="text-left text-contrast">
         {`${balanceDisplay} ${token.symbol}`}
       </div>
     </button>
