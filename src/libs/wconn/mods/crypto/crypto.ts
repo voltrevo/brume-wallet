@@ -17,7 +17,7 @@ export class CryptoError extends Error {
 export class Plaintext<T extends Writable.Infer<T>> {
 
   constructor(
-    readonly fragment: T,
+    readonly fragment: T
   ) { }
 
   tryEncrypt(key: Bytes, iv: Bytes<16>): Result<Ciphertext, CryptoError | BinaryWriteError | Writable.WriteError<T> | Writable.SizeError<T>> {
