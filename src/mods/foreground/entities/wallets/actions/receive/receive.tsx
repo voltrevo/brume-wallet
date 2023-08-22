@@ -29,6 +29,7 @@ export function WalletDataReceiveDialog(props: CloseProps) {
     <div className="text-center cursor-pointer break-all outline-none"
       contentEditable
       suppressContentEditableWarning
+      spellCheck={false}
       onPaste={Events.noop}
       onCut={Events.Clipboard.reset}
       onKeyDown={Events.Keyboard.noop}
