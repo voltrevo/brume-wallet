@@ -14,7 +14,8 @@ export default function Page() {
     const symKey = searchParams.get("symKey")
 
     const auth = "" // TODO
-    const socket = new WebSocket(`${relay}/?auth=${auth}`)
+    const projectId = "" // TODO
+    const socket = new WebSocket(`${relay}/?auth=${auth}&projectId=${projectId}`)
   }, [url])
 
   return <>
