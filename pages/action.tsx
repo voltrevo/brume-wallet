@@ -12,7 +12,7 @@ export default function Action() {
     /**
      * Chromium
      */
-    document.documentElement.className = "h-[600px] w-[400px] [scrollbar-gutter:stable]"
+    document.documentElement.className = "h-[600px] w-[400px]"
     /**
      * Firefox
      */
