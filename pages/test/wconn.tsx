@@ -1,37 +1,34 @@
+import { SafeJson } from "@/libs/wconn/libs/json/json";
 import { Berith } from "@hazae41/berith";
 import { Bytes } from "@hazae41/bytes";
-import { Ed25519 } from "@hazae41/ed25519";
-import { base58 } from "@scure/base";
+import { base58, base64url } from "@scure/base";
 import { useCallback, useState } from "react";
-
-export namespace ISS {
-
-  export function encode(bytes: Uint8Array) {
-    const multicodec = "z" + "K36" + base58.encode(bytes) // base58.prefix + base58.encode(0xed01 + bytes)
-
-    return `did:key:${multicodec}`
-  }
-
-}
 
 export namespace JWT {
 
-  export function prepare(bytes: Uint8Array) {
+  export function sign(keypair: Berith.Ed25519Keypair, audience: string) {
     const alg = "EdDSA"
     const typ = "JWT"
 
-    const header = { alg, typ }
+    const preheader = { alg, typ }
 
-    const iss = ISS.encode(bytes)
+    const iss = `did:key:z${base58.encode(Bytes.concat([Bytes.fromHex("ed01"), keypair.public().to_bytes()]))}`
     const sub = Bytes.toHex(Bytes.tryRandom(32).unwrap())
-    const aud = "wss://relay.walletconnect.org"
+    const aud = audience
     const iat = Math.floor(Date.now() / 1000)
     const ttl = 24 * 60 * 60 // one day in seconds
     const exp = iat + ttl
 
-    const payload = { iss, sub, aud, iat, exp }
+    const prepayload = { iss, sub, aud, iat, exp }
 
-    return { header, payload }
+    const header = base64url.encode(Bytes.fromUtf8(SafeJson.stringify(preheader))).replaceAll("=", "")
+    const payload = base64url.encode(Bytes.fromUtf8(SafeJson.stringify(prepayload))).replaceAll("=", "")
+
+    const presignature = Bytes.fromUtf8(`${header}.${payload}`)
+
+    const signature = base64url.encode(keypair.sign(presignature).to_bytes()).replaceAll("=", "")
+
+    return `${header}.${payload}.${signature}`
   }
 
 }
@@ -44,8 +41,6 @@ export default function Page() {
 
     Berith.initSyncBundledOnce()
 
-    const ed25519 = await Ed25519.fromSafeOrBerith(Berith)
-
     const relay = "wss://relay.walletconnect.org"
 
     const { protocol, pathname, searchParams } = new URL(url)
@@ -53,14 +48,14 @@ export default function Page() {
     const relayProtocol = searchParams.get("relayProtocol")
     const symKey = searchParams.get("symKey")
 
-    const seed = Bytes.tryRandom(32).unwrap()
-    const key = Berith.Ed25519Keypair.from_bytes(seed)
+    const key = new Berith.Ed25519Keypair()
 
-    const tbs = JWT.prepare(key.public().to_bytes())
+    const auth = JWT.sign(key, "wss://relay.walletconnect.org")
+    const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
 
-    const auth = "" // TODO
-    const projectId = "" // TODO
     const socket = new WebSocket(`${relay}/?auth=${auth}&projectId=${projectId}`)
+
+    setTimeout(() => socket.send("hello"), 1000)
   }, [url])
 
   return <>
