@@ -57,7 +57,7 @@ export class RpcRequest<T> {
 
   toJSON() {
     const { jsonrpc, id, method, params } = this
-    return JSON.stringify({ jsonrpc, id, method, params })
+    return { jsonrpc, id, method, params }
   }
 
 }

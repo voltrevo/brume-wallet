@@ -1,4 +1,5 @@
 import { RpcRequest, RpcRequestPreinit, RpcResponse } from "@/libs/rpc";
+import { Sockets } from "@/libs/sockets/sockets";
 import { SafeJson } from "@/libs/wconn/libs/json/json";
 import { Berith } from "@hazae41/berith";
 import { Bytes } from "@hazae41/bytes";
@@ -90,20 +91,20 @@ export namespace SafeRpc {
 
 }
 
-export namespace PubSub {
+export namespace Iridium {
 
-  export function publish() {
+  export function tryPublish() {
 
   }
 
-  export function subscribe(socket: WebSocket, topic: string) {
-    SafeRpc.tryRequest<string>(socket, {
+  export function trySubscribe(socket: WebSocket, topic: string) {
+    return SafeRpc.tryRequest<string>(socket, {
       method: "irn_subscribe",
-      params: [topic]
+      params: { topic }
     }, AbortSignal.timeout(5000))
   }
 
-  export function unsubscribe() {
+  export function tryUnsubscribe() {
 
   }
 
@@ -130,8 +131,11 @@ export default function Page() {
     const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
 
     const socket = new WebSocket(`${relay}/?auth=${auth}&projectId=${projectId}`)
+    await Sockets.tryWaitOpen(socket, AbortSignal.timeout(5000)).then(r => r.unwrap())
 
-    setTimeout(() => socket.send("hello"), 1000)
+    const subscription = await Iridium.trySubscribe(socket, topic).then(r => r.unwrap().unwrap())
+
+    console.log(subscription)
   }, [url])
 
   return <>

@@ -22,7 +22,7 @@ export namespace TorRpc {
     const { id, method, params, circuit, ...rest } = init
 
     const request = new RpcRequest(id, method, params)
-    const body = Bytes.fromUtf8(request.toJSON())
+    const body = Bytes.fromUtf8(JSON.stringify(request))
 
     const headers = new Headers(rest.headers)
     headers.set("Content-Type", "application/json")
@@ -47,7 +47,7 @@ export namespace TorRpc {
   export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit<unknown>, signal: AbortSignal) {
     const { id, method, params = [] } = request
 
-    socket.send(new RpcRequest(id, method, params).toJSON())
+    socket.send(JSON.stringify(new RpcRequest(id, method, params)))
 
     const future = new Future<Result<RpcResponse<T>, ClosedError | ErroredError | AbortedError>>()
 
