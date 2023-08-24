@@ -35,7 +35,7 @@ class Provider {
   }
 
   async tryRequest(init: RpcRequestPreinit<unknown>) {
-    const request = this.client.create(init)
+    const request = this.client.prepare(init)
 
     const future = new Future<RpcResponse<unknown>>()
 

@@ -1,6 +1,10 @@
+import { RpcRequest, RpcRequestPreinit, RpcResponse } from "@/libs/rpc";
 import { SafeJson } from "@/libs/wconn/libs/json/json";
 import { Berith } from "@hazae41/berith";
 import { Bytes } from "@hazae41/bytes";
+import { Future } from "@hazae41/future";
+import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume";
+import { Err, Ok, Result } from "@hazae41/result";
 import { base58, base64url } from "@scure/base";
 import { useCallback, useState } from "react";
 
@@ -29,6 +33,78 @@ export namespace JWT {
     const signature = base64url.encode(keypair.sign(presignature).to_bytes()).replaceAll("=", "")
 
     return `${header}.${payload}.${signature}`
+  }
+
+}
+
+export namespace SafeRpc {
+
+  export function prepare<T>(init: RpcRequestPreinit<T>): RpcRequest<T> {
+    const id = Date.now() + Math.floor(Math.random() * 1000)
+    return new RpcRequest(id, init.method, init.params)
+  }
+
+  export async function tryRequest<T>(socket: WebSocket, init: RpcRequestPreinit<unknown>, signal: AbortSignal) {
+    const request = prepare(init)
+
+    socket.send(SafeJson.stringify(request))
+
+    const future = new Future<Result<RpcResponse<T>, ClosedError | ErroredError | AbortedError>>()
+
+    const onMessage = async (event: Event) => {
+      const msgEvent = event as MessageEvent<string>
+      const response = RpcResponse.from<T>(JSON.parse(msgEvent.data))
+
+      if (response.id !== request.id)
+        return
+      future.resolve(new Ok(response))
+    }
+
+    const onError = (e: unknown) => {
+      future.resolve(new Err(ErroredError.from(e)))
+    }
+
+    const onClose = (e: unknown) => {
+      future.resolve(new Err(ClosedError.from(e)))
+    }
+
+    const onAbort = () => {
+      future.resolve(new Err(AbortedError.from(signal.reason)))
+    }
+
+    try {
+      socket.addEventListener("message", onMessage, { passive: true })
+      socket.addEventListener("close", onClose, { passive: true })
+      socket.addEventListener("error", onError, { passive: true })
+      signal.addEventListener("abort", onAbort, { passive: true })
+
+      return await future.promise
+    } finally {
+      socket.removeEventListener("message", onMessage)
+      socket.removeEventListener("close", onClose)
+      socket.removeEventListener("error", onError)
+      signal.removeEventListener("abort", onAbort)
+    }
+
+  }
+
+}
+
+export namespace PubSub {
+
+  export function publish() {
+
+  }
+
+  export function subscribe(socket: WebSocket, topic: string) {
+    SafeRpc.tryRequest<string>(socket, {
+      method: "irn_subscribe",
+      params: [topic]
+    }, AbortSignal.timeout(5000))
+  }
+
+  export function unsubscribe() {
+
   }
 
 }

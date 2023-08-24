@@ -3,7 +3,7 @@ import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Mouse } from "@/libs/mouse/mouse"
-import { RpcParamfulRequestInit, RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
+import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { qurl } from "@/libs/url/url"
@@ -404,7 +404,7 @@ export class Global {
 
   async brume_run(script: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
-      const [subrequest, mouse] = (request as RpcParamfulRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
+      const [subrequest, mouse] = (request as RpcRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
 
       const session = await this.tryGetOrWaitEthereumSession(script, mouse).then(r => r.throw(t))
 
@@ -482,7 +482,7 @@ export class Global {
 
   async makeEthereumBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
     return await Result.unthrow(async t => {
-      const [address, block] = (request as RpcParamfulRequestPreinit<[string, string]>).params
+      const [address, block] = (request as RpcRequestPreinit<[string, string]>).params
 
       const query = await getBalance(ethereum, address, block, storage).make(this.core)
 
@@ -492,7 +492,7 @@ export class Global {
 
   async eth_getBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
-      const [address, block] = (request as RpcParamfulRequestPreinit<[string, string]>).params
+      const [address, block] = (request as RpcRequestPreinit<[string, string]>).params
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
@@ -512,7 +512,7 @@ export class Global {
 
   async makeEthereumPairPrice(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
     return await Result.unthrow(async t => {
-      const [address] = (request as RpcParamfulRequestPreinit<[string]>).params
+      const [address] = (request as RpcRequestPreinit<[string]>).params
 
       const pair = Option.wrap(pairByAddress[address]).ok().throw(t)
       const query = await getPairPrice(ethereum, pair, storage).make(this.core)
@@ -523,7 +523,7 @@ export class Global {
 
   async makeEthereumTokenBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
     return await Result.unthrow(async t => {
-      const [account, address, block] = (request as RpcParamfulRequestPreinit<[string, string, string]>).params
+      const [account, address, block] = (request as RpcRequestPreinit<[string, string, string]>).params
 
       const token = Option.wrap(tokenByAddress[address]).ok().throw(t)
       const query = await getTokenBalance(ethereum, account, token, block, storage).make(this.core)
@@ -534,7 +534,7 @@ export class Global {
 
   async eth_sendTransaction(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const [{ from, to, gas, value, data }] = (request as RpcParamfulRequestInit<[{
+      const [{ from, to, gas, value, data }] = (request as RpcRequestPreinit<[{
         from: string,
         to: string,
         gas: string,
@@ -563,7 +563,7 @@ export class Global {
 
   async personal_sign(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const [message, address] = (request as RpcParamfulRequestInit<[string, string]>).params
+      const [message, address] = (request as RpcRequestPreinit<[string, string]>).params
 
       const session = Option.wrap(ethereum.session).ok().throw(t)
 
@@ -581,7 +581,7 @@ export class Global {
 
   async eth_signTypedData_v4(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const [address, data] = (request as RpcParamfulRequestInit<[string, string]>).params
+      const [address, data] = (request as RpcRequestPreinit<[string, string]>).params
 
       const session = Option.wrap(ethereum.session).ok().throw(t)
 
@@ -599,7 +599,7 @@ export class Global {
 
   async wallet_switchEthereumChain(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const [{ chainId }] = (request as RpcParamfulRequestInit<[{ chainId: string }]>).params
+      const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
 
       const session = Option.wrap(ethereum.session).ok().throw(t)
 
@@ -679,7 +679,7 @@ export class Global {
   }
 
   async brume_setPath(request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    const [path] = (request as RpcParamfulRequestInit<[string]>).params
+    const [path] = (request as RpcRequestPreinit<[string]>).params
 
     this.#path = path
 
@@ -699,7 +699,7 @@ export class Global {
 
   async popup_data(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
-      const [response] = (request as RpcParamfulRequestPreinit<[RpcResponseInit<unknown>]>).params
+      const [response] = (request as RpcRequestPreinit<[RpcResponseInit<unknown>]>).params
 
       const returned = await this.events.emit("popup_data", [response])
 
@@ -712,7 +712,7 @@ export class Global {
 
   async brume_createUser(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<User[], Error>> {
     return await Result.unthrow(async t => {
-      const [init] = (request as RpcParamfulRequestInit<[UserInit]>).params
+      const [init] = (request as RpcRequestPreinit<[UserInit]>).params
 
       const user = await User.tryCreate(init).then(r => r.throw(t))
 
@@ -728,7 +728,7 @@ export class Global {
 
   async brume_login(request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const [uuid, password] = (request as RpcParamfulRequestInit<[string, string]>).params
+      const [uuid, password] = (request as RpcRequestPreinit<[string, string]>).params
 
       await this.trySetCurrentUser(uuid, password).then(r => r.throw(t))
 
@@ -754,7 +754,7 @@ export class Global {
 
   async brume_disconnect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const [origin] = (request as RpcParamfulRequestInit<[string]>).params
+      const [origin] = (request as RpcRequestPreinit<[string]>).params
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
@@ -778,7 +778,7 @@ export class Global {
 
   async brume_open(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const [pathname] = (request as RpcParamfulRequestPreinit<[string]>).params
+      const [pathname] = (request as RpcRequestPreinit<[string]>).params
 
       await tryBrowser(async () => {
         return await browser.tabs.create({ url: `index.html#${pathname}` })
@@ -790,7 +790,7 @@ export class Global {
 
   async brume_encrypt(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<[string, string], Error>> {
     return await Result.unthrow(async t => {
-      const [plainBase64] = (request as RpcParamfulRequestInit<[string]>).params
+      const [plainBase64] = (request as RpcRequestPreinit<[string]>).params
 
       const { crypter } = Option.wrap(this.#user).ok().throw(t)
 
@@ -807,7 +807,7 @@ export class Global {
 
   async brume_decrypt(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const [ivBase64, cipherBase64] = (request as RpcParamfulRequestInit<[string, string]>).params
+      const [ivBase64, cipherBase64] = (request as RpcRequestPreinit<[string, string]>).params
 
       const { crypter } = Option.wrap(this.#user).ok().throw(t)
 
@@ -823,7 +823,7 @@ export class Global {
 
   async brume_createSeed(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const [seed] = (request as RpcParamfulRequestInit<[SeedData]>).params
+      const [seed] = (request as RpcRequestPreinit<[SeedData]>).params
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
@@ -836,7 +836,7 @@ export class Global {
 
   async brume_createWallet(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const [wallet] = (request as RpcParamfulRequestInit<[WalletData]>).params
+      const [wallet] = (request as RpcRequestPreinit<[WalletData]>).params
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
@@ -860,7 +860,7 @@ export class Global {
 
   async brume_get_global(request: RpcRequestPreinit<unknown>): Promise<Result<Optional<RawState>, Error>> {
     return await Result.unthrow(async t => {
-      const [cacheKey] = (request as RpcParamfulRequestInit<[string]>).params
+      const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
       const cached = this.core.raw.get(cacheKey)
 
@@ -876,7 +876,7 @@ export class Global {
 
   async brume_get_user(request: RpcRequestPreinit<unknown>): Promise<Result<Optional<RawState>, Error>> {
     return await Result.unthrow(async t => {
-      const [cacheKey] = (request as RpcParamfulRequestInit<[string]>).params
+      const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
@@ -894,7 +894,7 @@ export class Global {
 
   async brume_subscribe(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const [cacheKey] = (request as RpcParamfulRequestInit<[string]>).params
+      const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
       const onState = async (event: CustomEvent<State<any, any>>) => {
         const stored = await this.core.store(event.detail, { key: cacheKey })
@@ -932,7 +932,7 @@ export class Global {
 
   async brume_eth_index(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
-      const [walletId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
+      const [walletId, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, RpcRequestPreinit<unknown>]>).params
 
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
@@ -954,7 +954,7 @@ export class Global {
 
   async brume_eth_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
-      const [walletId, chainId, subrequest] = (request as RpcParamfulRequestInit<[string, number, RpcRequestPreinit<unknown>]>).params
+      const [walletId, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, RpcRequestPreinit<unknown>]>).params
 
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 

@@ -3,7 +3,7 @@ import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort } from "@/libs/channel/channel"
 import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch"
 import { Mouse } from "@/libs/mouse/mouse"
-import { RpcParamfulRequestPreinit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
+import { RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { NonReadonly } from "@/libs/types/readonly"
 import { Cleaner } from "@hazae41/cleaner"
 import { None, Some } from "@hazae41/option"
@@ -139,7 +139,7 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
     window.addEventListener("ethereum#request", onScriptRequest, { passive: true })
 
     const onAccountsChanged = async (request: RpcRequestPreinit<unknown>) => {
-      const [accounts] = (request as RpcParamfulRequestPreinit<[string[]]>).params
+      const [accounts] = (request as RpcRequestPreinit<[string[]]>).params
 
       const detail = JSON.stringify(accounts)
       const output = new CustomEvent("ethereum#accountsChanged", { detail })
@@ -148,7 +148,7 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
     }
 
     const onChainChanged = async (request: RpcRequestPreinit<unknown>) => {
-      const [chainId] = (request as RpcParamfulRequestPreinit<[string]>).params
+      const [chainId] = (request as RpcRequestPreinit<[string]>).params
 
       const detail = JSON.stringify(chainId)
       const output = new CustomEvent("ethereum#chainChanged", { detail })

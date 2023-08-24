@@ -3,7 +3,7 @@ import PairAbi from "@/assets/Pair.json"
 import { Fixed, FixedInit } from "@/libs/bigints/bigints"
 import { Port } from "@/libs/channel/channel"
 import { ContractTokenInfo, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
-import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
+import { RpcRequestPreinit, RpcResponse, TorRpc } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
 import { None, Option, Some } from "@hazae41/option"
@@ -183,7 +183,7 @@ export interface EthereumContext {
   session?: SessionData
 }
 
-export async function tryEthereumFetch<T>(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
+export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
   const { signal = AbortSignals.timeout(30_000) } = more
   const brumes = ethereum.brumes.inner
 
@@ -224,25 +224,26 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, request: Rp
           }
 
           const { client, connection } = conn
+          const request = client.prepare(init)
 
           if (connection.isURL()) {
-            console.log(`Fetching ${request.method} from ${connection.url.href} using ${brume.circuit.id}`)
+            console.log(`Fetching ${init.method} from ${connection.url.href} using ${brume.circuit.id}`)
 
-            const result = await client.tryFetchWithCircuit<T>(connection.url, { ...request, circuit: brume.circuit })
+            const result = await TorRpc.tryFetchWithCircuit<T>(connection.url, { ...request, circuit: brume.circuit })
 
             if (result.isErr())
-              console.warn(`Could not fetch ${request.method} from ${connection.url.href} using ${brume.circuit.id}`)
+              console.warn(`Could not fetch ${init.method} from ${connection.url.href} using ${brume.circuit.id}`)
 
             return result.mapErrSync(Retry.new)
           }
 
           if (connection.isWebSocket()) {
-            console.log(`Fetching ${request.method} from ${connection.socket.url} using ${brume.circuit.id}`)
+            console.log(`Fetching ${init.method} from ${connection.socket.url} using ${brume.circuit.id}`)
 
-            const result = await client.tryFetchWithSocket<T>(connection.socket, request, signal)
+            const result = await TorRpc.tryFetchWithSocket<T>(connection.socket, request, signal)
 
             if (result.isErr())
-              console.warn(`Could not fetch ${request.method} from ${connection.socket.url} using ${brume.circuit.id}`)
+              console.warn(`Could not fetch ${init.method} from ${connection.socket.url} using ${brume.circuit.id}`)
 
             return result.mapErrSync(Retry.new)
           }
@@ -253,7 +254,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, request: Rp
       }, { base: 1, max: conns.capacity })
 
       if (result.isErr())
-        console.warn(`Could not fetch ${request.method} using ${brume.circuit.id}`)
+        console.warn(`Could not fetch ${init.method} using ${brume.circuit.id}`)
 
       return result
         .mapSync(x => Fetched.rewrap(x))
@@ -262,7 +263,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, request: Rp
   }, { base: 1, max: brumes.capacity })
 
   if (result.isErr())
-    console.warn(`Could not fetch ${request.method}`)
+    console.warn(`Could not fetch ${init.method}`)
 
   return result.mapErrSync(FetchError.from)
 }

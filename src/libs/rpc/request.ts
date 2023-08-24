@@ -1,22 +1,24 @@
 export type RpcId = number | string | null
 
 export type RpcRequestPreinit<T = unknown> =
-  | RpcParamlessRequestPreinit
-  | RpcParamfulRequestPreinit<T>
+  undefined extends T
+  ? RpcParamlessRequestPreinit<T>
+  : RpcParamfulRequestPreinit<T>
 
 export interface RpcParamfulRequestPreinit<T = unknown> {
   readonly method: string,
   readonly params: NonNullable<T>
 }
 
-export interface RpcParamlessRequestPreinit {
+export interface RpcParamlessRequestPreinit<T = unknown> {
   readonly method: string
-  readonly params?: undefined
+  readonly params?: T
 }
 
 export type RpcRequestInit<T = unknown> =
-  | RpcParamlessRequestInit
-  | RpcParamfulRequestInit<T>
+  undefined extends T
+  ? RpcParamlessRequestInit<T>
+  : RpcParamfulRequestInit<T>
 
 export interface RpcParamfulRequestInit<T = unknown> {
   readonly id: RpcId
@@ -24,10 +26,10 @@ export interface RpcParamfulRequestInit<T = unknown> {
   readonly params: NonNullable<T>
 }
 
-export interface RpcParamlessRequestInit {
+export interface RpcParamlessRequestInit<T = unknown> {
   readonly id: RpcId
   readonly method: string
-  readonly params?: undefined
+  readonly params?: T
 }
 
 export namespace RpcRequestInit {

@@ -1,5 +1,5 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { RpcParamfulRequestInit } from "@/libs/rpc";
+import { RpcRequestPreinit } from "@/libs/rpc";
 import { Mutex } from "@hazae41/mutex";
 import { None, Option, Optional, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
@@ -61,7 +61,7 @@ export class UserStorage implements Storage {
           if (request.method !== "brume_update")
             return new None()
 
-          const [cacheKey2, stored] = (request as RpcParamfulRequestInit<[string, Optional<RawState>]>).params
+          const [cacheKey2, stored] = (request as RpcRequestPreinit<[string, Optional<RawState>]>).params
 
           if (cacheKey2 !== cacheKey)
             return new None()

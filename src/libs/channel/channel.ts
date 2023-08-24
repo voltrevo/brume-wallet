@@ -88,7 +88,7 @@ export class WebsitePort {
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    const request = this.client.create(init)
+    const request = this.client.prepare(init)
 
     this.port.postMessage(JSON.stringify(request))
 
@@ -103,7 +103,7 @@ export class WebsitePort {
   }
 
   async tryRequestOrSignal<T>(init: RpcRequestPreinit<unknown>, signal: AbortSignal): Promise<Result<RpcResponse<T>, Error>> {
-    const request = this.client.create(init)
+    const request = this.client.prepare(init)
 
     this.port.postMessage(JSON.stringify(request))
 
@@ -192,7 +192,7 @@ export class ExtensionPort {
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
-      const request = this.client.create(init)
+      const request = this.client.prepare(init)
 
       tryBrowserSync(() => {
         this.port.postMessage(JSON.stringify(request))

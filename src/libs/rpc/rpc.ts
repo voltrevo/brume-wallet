@@ -10,30 +10,13 @@ export class RpcClient {
 
   id = 0
 
-  constructor() { }
-
-  create<T>(init: RpcRequestPreinit<T>): RpcRequestInit<T> {
-    const { method, params } = init
-
-    const id = this.id++
-
-    return { jsonrpc: "2.0", id, method, params } as RpcRequestInit<T>
-  }
-
-  async tryFetchWithCircuit<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestPreinit<unknown> & { circuit: Circuit } & CircuitOpenParams) {
-    const { method, params, ...rest } = init
-    const request = this.create({ method, params })
-
-    return Rpc.tryFetchWithCircuit<T>(input, { ...rest, ...request })
-  }
-
-  async tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestPreinit<unknown>, signal: AbortSignal) {
-    return await Rpc.tryFetchWithSocket<T>(socket, this.create(request), signal)
+  prepare<T>(init: RpcRequestPreinit<T>): RpcRequest<T> {
+    return new RpcRequest(this.id++, init.method, init.params)
   }
 
 }
 
-export namespace Rpc {
+export namespace TorRpc {
 
   export async function tryFetchWithCircuit<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit<unknown> & { circuit: Circuit } & CircuitOpenParams): Promise<Result<RpcResponse<T>, Error>> {
     const { id, method, params, circuit, ...rest } = init
@@ -78,19 +61,15 @@ export namespace Rpc {
     }
 
     const onError = (e: unknown) => {
-      const result = new Err(ErroredError.from(e))
-      future.resolve(result)
+      future.resolve(new Err(ErroredError.from(e)))
     }
 
     const onClose = (e: unknown) => {
-      const result = new Err(ClosedError.from(e))
-      future.resolve(result)
+      future.resolve(new Err(ClosedError.from(e)))
     }
 
     const onAbort = () => {
-      socket.close()
-      const result = new Err(AbortedError.from(signal.reason))
-      future.resolve(result)
+      future.resolve(new Err(AbortedError.from(signal.reason)))
     }
 
     try {
