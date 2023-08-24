@@ -10,7 +10,6 @@ import { None, Option, Some } from "@hazae41/option";
 import { AbortedError, ClosedError, ErroredError, SuperEventTarget } from "@hazae41/plume";
 import { Err, Ok, Result } from "@hazae41/result";
 import { base58, base64url } from "@scure/base";
-import { ChaCha20Poly1305 } from "@stablelib/chacha20poly1305";
 import { useCallback, useState } from "react";
 
 export namespace JWT {
@@ -168,7 +167,7 @@ export class CryptoClient {
 
   constructor(
     readonly topic: string,
-    readonly key: ChaCha20Poly1305,
+    readonly key: Bytes<32>,
     readonly irn: IrnClient
   ) {
     irn.events.on("request", this.onIrnRequest.bind(this))
@@ -234,8 +233,8 @@ export default function Page() {
     const [topic, version] = pathname.split("@")
     const relayProtocol = Option.unwrap(searchParams.get("relay-protocol"))
     const symKeyHex = Option.unwrap(searchParams.get("symKey"))
-    const symKeyBytes = Bytes.fromHexSafe(symKeyHex)
-    const symKey = new ChaCha20Poly1305(symKeyBytes)
+    const symKey = Bytes.fromHexSafe(symKeyHex)
+    const symKey32 = Bytes.tryCast(symKey, 32).unwrap()
 
     const key = new Berith.Ed25519Keypair()
 
@@ -249,7 +248,7 @@ export default function Page() {
 
     await irn.trySubscribe(topic).then(r => r.unwrap())
 
-    const crypto = new CryptoClient(topic, symKey, irn)
+    const crypto = new CryptoClient(topic, symKey32, irn)
 
     await crypto.events.wait("request", (future: Future<void>, request) => {
       if (request.method !== "wc_sessionPropose")

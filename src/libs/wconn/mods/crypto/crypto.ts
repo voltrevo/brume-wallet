@@ -1,10 +1,8 @@
 import { BinaryReadError, BinaryWriteError, Opaque, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
 import { Cursor } from "@hazae41/cursor";
-import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { chacha20poly1305 } from '@noble/ciphers/chacha';
-import { ChaCha20Poly1305 } from "@stablelib/chacha20poly1305";
 
 export class CryptoError extends Error {
   readonly #class = CryptoError
@@ -43,10 +41,10 @@ export class Ciphertext {
     readonly inner: Bytes,
   ) { }
 
-  tryDecrypt(key: ChaCha20Poly1305): Result<Plaintext<Opaque>, CryptoError> {
+  tryDecrypt(key: Bytes<32>): Result<Plaintext<Opaque>, CryptoError> {
     return Result.unthrowSync(t => {
       const plain = Result.catchAndWrapSync(() => {
-        return Option.unwrap(key.open(this.iv, this.inner))
+        return chacha20poly1305(key.slice(), this.iv.slice()).decrypt(this.inner)
       }).mapErrSync(CryptoError.from).throw(t)
 
       return new Ok(new Plaintext(new Opaque(plain)))
