@@ -1,8 +1,10 @@
 import { BinaryReadError, BinaryWriteError, Opaque, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
 import { Cursor } from "@hazae41/cursor";
+import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { chacha20poly1305 } from '@noble/ciphers/chacha';
+import { ChaCha20Poly1305 } from "@stablelib/chacha20poly1305";
 
 export class CryptoError extends Error {
   readonly #class = CryptoError
@@ -20,7 +22,7 @@ export class Plaintext<T extends Writable.Infer<T>> {
     readonly fragment: T
   ) { }
 
-  tryEncrypt(key: Bytes, iv: Bytes<16>): Result<Ciphertext, CryptoError | BinaryWriteError | Writable.WriteError<T> | Writable.SizeError<T>> {
+  tryEncrypt(key: Bytes, iv: Bytes<12>): Result<Ciphertext, CryptoError | BinaryWriteError | Writable.WriteError<T> | Writable.SizeError<T>> {
     return Result.unthrowSync(t => {
       const plain = Writable.tryWriteToBytes(this.fragment).throw(t)
 
@@ -37,14 +39,14 @@ export class Plaintext<T extends Writable.Infer<T>> {
 export class Ciphertext {
 
   constructor(
-    readonly iv: Bytes<16>,
+    readonly iv: Bytes<12>,
     readonly inner: Bytes,
   ) { }
 
-  tryDecrypt(key: Bytes): Result<Plaintext<Opaque>, CryptoError> {
+  tryDecrypt(key: ChaCha20Poly1305): Result<Plaintext<Opaque>, CryptoError> {
     return Result.unthrowSync(t => {
       const plain = Result.catchAndWrapSync(() => {
-        return chacha20poly1305(key, this.iv).decrypt(this.inner)
+        return Option.unwrap(key.open(this.iv, this.inner))
       }).mapErrSync(CryptoError.from).throw(t)
 
       return new Ok(new Plaintext(new Opaque(plain)))
@@ -66,7 +68,7 @@ export class Ciphertext {
 
   static tryRead(cursor: Cursor): Result<Ciphertext, BinaryReadError> {
     return Result.unthrowSync(t => {
-      const iv = cursor.tryRead(16).throw(t)
+      const iv = cursor.tryRead(12).throw(t)
       const inner = cursor.tryRead(cursor.remaining).throw(t)
 
       return new Ok(new Ciphertext(iv, inner))
@@ -134,7 +136,7 @@ export class EnvelopeTypeZero<T extends Writable.Infer<T>> {
     return Result.unthrowSync(t => {
       const type = cursor.tryReadUint8().throw(t)
 
-      if (type !== EnvelopeTypeOne.type)
+      if (type !== EnvelopeTypeZero.type)
         throw new Panic(`Invalid type-0 type ${type}`)
 
       const bytes = cursor.tryRead(cursor.remaining).throw(t)
