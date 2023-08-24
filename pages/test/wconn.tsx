@@ -167,42 +167,50 @@ export class CryptoClient {
   }>()
 
   constructor(
+    readonly topic: string,
     readonly key: ChaCha20Poly1305,
     readonly irn: IrnClient
   ) {
-    irn.events.on("request", this.onRequest.bind(this))
+    irn.events.on("request", this.onIrnRequest.bind(this))
   }
 
-  async onRequest(request: RpcRequestPreinit<unknown>) {
+  async onIrnRequest(request: RpcRequestPreinit<unknown>) {
     if (request.method === "irn_subscription")
-      return new Some(await this.onIrnSubscription(request))
+      return await this.onIrnSubscription(request)
     return new None()
   }
 
-  async onIrnSubscription(request: RpcRequestPreinit<unknown>): Promise<Result<true, Error>> {
-    return Result.unthrow(async t => {
-      const { data } = (request as RpcRequestPreinit<IrnSubscriptionPayload>).params
+  async onIrnSubscription(request: RpcRequestPreinit<unknown>) {
+    const { data } = (request as RpcRequestPreinit<IrnSubscriptionPayload>).params
 
-      const message = Bytes.fromBase64(data.message)
-      const envelope = Readable.tryReadFromBytes(Envelope, message).throw(t)
+    if (data.topic !== this.topic)
+      return new None()
+
+    return new Some(await this.onMessage(data.message))
+  }
+
+  async onMessage(message: string): Promise<Result<true, Error>> {
+    return Result.unthrow(async t => {
+      const bytes = Bytes.fromBase64(message)
+      const envelope = Readable.tryReadFromBytes(Envelope, bytes).throw(t)
       const cipher = envelope.fragment.tryReadInto(Ciphertext).throw(t)
       const plain = cipher.tryDecrypt(this.key).unwrap()
       const plaintext = Bytes.toUtf8(plain.fragment.bytes)
 
       const subrequest = SafeJson.parse(plaintext) as RpcRequestInit<unknown>
-      this.onSubrequest(subrequest).catch(console.warn)
+      this.onRequest(subrequest).catch(console.warn)
 
       return new Ok(true)
     })
   }
 
-  async onSubrequest(request: RpcRequestInit<unknown>) {
-    const result = await this.tryRouteSubrequest(request)
+  async onRequest(request: RpcRequestInit<unknown>) {
+    const result = await this.tryRouteRequest(request)
     const response = RpcResponse.rewrap(request.id, result)
     // TODO publish
   }
 
-  async tryRouteSubrequest(request: RpcRequestPreinit<unknown>) {
+  async tryRouteRequest(request: RpcRequestPreinit<unknown>) {
     const returned = await this.events.emit("request", [request])
 
     if (returned.isSome())
@@ -241,7 +249,7 @@ export default function Page() {
 
     await irn.trySubscribe(topic).then(r => r.unwrap())
 
-    const crypto = new CryptoClient(symKey, irn)
+    const crypto = new CryptoClient(topic, symKey, irn)
 
     await crypto.events.wait("request", (future: Future<void>, request) => {
       if (request.method !== "wc_sessionPropose")
