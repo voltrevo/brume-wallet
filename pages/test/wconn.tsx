@@ -116,26 +116,26 @@ export class IrnClient {
   constructor(
     readonly socket: WebSocket
   ) {
-    socket.addEventListener("message", this.onMessage.bind(this))
+    socket.addEventListener("message", this.#onMessage.bind(this))
   }
 
-  onMessage(event: MessageEvent<unknown>) {
+  #onMessage(event: MessageEvent<unknown>) {
     if (typeof event.data !== "string")
       return
     const json = JSON.parse(event.data) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
 
     if ("method" in json)
-      return this.onRequest(json)
+      return this.#onRequest(json)
     return
   }
 
-  async onRequest(request: RpcRequestInit<unknown>) {
-    const result = await this.tryRouteRequest(request)
+  async #onRequest(request: RpcRequestInit<unknown>) {
+    const result = await this.#tryRouteRequest(request)
     const response = RpcResponse.rewrap(request.id, result)
     this.socket.send(SafeJson.stringify(response))
   }
 
-  async tryRouteRequest(request: RpcRequestPreinit<unknown>) {
+  async #tryRouteRequest(request: RpcRequestPreinit<unknown>) {
     const returned = await this.events.emit("request", [request])
 
     if (returned.isSome())
@@ -170,25 +170,25 @@ export class CryptoClient {
     readonly key: Bytes<32>,
     readonly irn: IrnClient
   ) {
-    irn.events.on("request", this.onIrnRequest.bind(this))
+    irn.events.on("request", this.#onIrnRequest.bind(this))
   }
 
-  async onIrnRequest(request: RpcRequestPreinit<unknown>) {
+  async #onIrnRequest(request: RpcRequestPreinit<unknown>) {
     if (request.method === "irn_subscription")
-      return await this.onIrnSubscription(request)
+      return await this.#onIrnSubscription(request)
     return new None()
   }
 
-  async onIrnSubscription(request: RpcRequestPreinit<unknown>) {
+  async #onIrnSubscription(request: RpcRequestPreinit<unknown>) {
     const { data } = (request as RpcRequestPreinit<IrnSubscriptionPayload>).params
 
     if (data.topic !== this.topic)
       return new None()
 
-    return new Some(await this.onMessage(data.message))
+    return new Some(await this.#onMessage(data.message))
   }
 
-  async onMessage(message: string): Promise<Result<true, Error>> {
+  async #onMessage(message: string): Promise<Result<true, Error>> {
     return Result.unthrow(async t => {
       const bytes = Bytes.fromBase64(message)
       const envelope = Readable.tryReadFromBytes(Envelope, bytes).throw(t)
@@ -197,19 +197,19 @@ export class CryptoClient {
       const plaintext = Bytes.toUtf8(plain.fragment.bytes)
 
       const subrequest = SafeJson.parse(plaintext) as RpcRequestInit<unknown>
-      this.onRequest(subrequest).catch(console.warn)
+      this.#onRequest(subrequest).catch(console.warn)
 
       return new Ok(true)
     })
   }
 
-  async onRequest(request: RpcRequestInit<unknown>) {
-    const result = await this.tryRouteRequest(request)
+  async #onRequest(request: RpcRequestInit<unknown>) {
+    const result = await this.#tryRouteRequest(request)
     const response = RpcResponse.rewrap(request.id, result)
     // TODO publish
   }
 
-  async tryRouteRequest(request: RpcRequestPreinit<unknown>) {
+  async #tryRouteRequest(request: RpcRequestPreinit<unknown>) {
     const returned = await this.events.emit("request", [request])
 
     if (returned.isSome())
