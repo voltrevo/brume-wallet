@@ -51,9 +51,10 @@ export namespace TorRpc {
 
     const future = new Future<Result<RpcResponse<T>, ClosedError | ErroredError | AbortedError>>()
 
-    const onMessage = async (event: Event) => {
-      const msgEvent = event as MessageEvent<string>
-      const response = RpcResponse.from<T>(JSON.parse(msgEvent.data))
+    const onMessage = async (event: MessageEvent<unknown>) => {
+      if (typeof event.data !== "string")
+        return
+      const response = RpcResponse.from<T>(JSON.parse(event.data))
 
       if (response.id !== request.id)
         return
