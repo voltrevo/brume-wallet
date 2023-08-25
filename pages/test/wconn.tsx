@@ -219,6 +219,29 @@ export class CryptoClient {
   }
 }
 
+export interface WcSessionProposeParams {
+  readonly proposer: {
+    /**
+     * base16
+     */
+    readonly publicKey: string
+
+    readonly metadata: {
+      readonly name: string
+      readonly description: string
+      readonly url: string
+      readonly icons: string[]
+    }
+  }
+
+  readonly relays: {
+    readonly protocol: string
+  }[]
+
+  readonly requiredNamespaces: unknown
+  readonly optionalNamespaces: unknown
+}
+
 export default function Page() {
   const [url = "", setUrl] = useState<string>()
 
@@ -247,17 +270,31 @@ export default function Page() {
     const irn = new IrnClient(socket)
 
     await irn.trySubscribe(topic).then(r => r.unwrap())
+    const client = new CryptoClient(topic, symKey32, irn)
 
-    const crypto = new CryptoClient(topic, symKey32, irn)
+    {
+      const self = new Berith.X25519StaticSecret()
 
-    await crypto.events.wait("request", (future: Future<void>, request) => {
-      if (request.method !== "wc_sessionPropose")
-        return new None()
-      console.log(request)
-      future.resolve()
-      return new Some(Ok.void())
-    }).inner
+      const proposal = await client.events.wait("request", async (future: Future<RpcRequestPreinit<WcSessionProposeParams>>, request) => {
+        if (request.method !== "wc_sessionPropose")
+          return new None()
+        future.resolve(request as RpcRequestPreinit<WcSessionProposeParams>)
 
+        const relay = { protocol: "irn" }
+        const responderPublicKey = Bytes.toHex(self.to_public().to_bytes())
+        return new Some(new Ok({ relay, responderPublicKey }))
+      }).inner
+
+      const peer = Berith.X25519PublicKey.from_bytes(Bytes.fromHexSafe(proposal.params.proposer.publicKey))
+      const key = Bytes.tryCast(self.diffie_hellman(peer).to_bytes(), 32).unwrap()
+      const topic = Bytes.toHex(new Uint8Array(await crypto.subtle.digest("SHA-256", key)))
+
+      console.log(topic)
+
+      const client2 = new CryptoClient(topic, key, irn)
+
+      console.log(proposal.params.proposer.publicKey)
+    }
 
   }, [url])
 
