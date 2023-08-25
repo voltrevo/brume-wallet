@@ -51,8 +51,8 @@ export class Ciphertext {
     })
   }
 
-  trySize() {
-    return this.iv.length + this.inner.length
+  trySize(): Result<number, never> {
+    return new Ok(this.iv.length + this.inner.length)
   }
 
   tryWrite(cursor: Cursor): Result<void, BinaryWriteError> {

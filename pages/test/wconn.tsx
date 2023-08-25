@@ -1,9 +1,9 @@
 import { RpcRequest, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc";
 import { Sockets } from "@/libs/sockets/sockets";
 import { SafeJson } from "@/libs/wconn/libs/json/json";
-import { Ciphertext, Envelope } from "@/libs/wconn/mods/crypto/crypto";
+import { Ciphertext, Envelope, EnvelopeTypeZero, Plaintext } from "@/libs/wconn/mods/crypto/crypto";
 import { Berith } from "@hazae41/berith";
-import { Readable } from "@hazae41/binary";
+import { Opaque, Readable, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
 import { Future } from "@hazae41/future";
 import { None, Option, Some } from "@hazae41/option";
@@ -11,6 +11,111 @@ import { AbortedError, ClosedError, ErroredError, SuperEventTarget } from "@haza
 import { Err, Ok, Result } from "@hazae41/result";
 import { base58, base64url } from "@scure/base";
 import { useCallback, useState } from "react";
+
+interface RpcOpts {
+  readonly prompt: boolean
+  readonly ttl: number
+  readonly tag: number
+}
+
+export const ENGINE_RPC_OPTS: Record<string, { req: RpcOpts, res: RpcOpts }> = {
+  wc_sessionPropose: {
+    req: {
+      ttl: 5 * 60,
+      prompt: true,
+      tag: 1100,
+    },
+    res: {
+      ttl: 5 * 60,
+      prompt: false,
+      tag: 1101,
+    },
+  },
+  wc_sessionSettle: {
+    req: {
+      ttl: 5 * 60,
+      prompt: false,
+      tag: 1102,
+    },
+    res: {
+      ttl: 5 * 60,
+      prompt: false,
+      tag: 1103,
+    },
+  },
+  wc_sessionUpdate: {
+    req: {
+      ttl: 24 * 60 * 60,
+      prompt: false,
+      tag: 1104,
+    },
+    res: {
+      ttl: 24 * 60 * 60,
+      prompt: false,
+      tag: 1105,
+    },
+  },
+  wc_sessionExtend: {
+    req: {
+      ttl: 24 * 60 * 60,
+      prompt: false,
+      tag: 1106,
+    },
+    res: {
+      ttl: 24 * 60 * 60,
+      prompt: false,
+      tag: 1107,
+    },
+  },
+  wc_sessionRequest: {
+    req: {
+      ttl: 5 * 60,
+      prompt: true,
+      tag: 1108,
+    },
+    res: {
+      ttl: 5 * 60,
+      prompt: false,
+      tag: 1109,
+    },
+  },
+  wc_sessionEvent: {
+    req: {
+      ttl: 5 * 60,
+      prompt: true,
+      tag: 1110,
+    },
+    res: {
+      ttl: 5 * 60,
+      prompt: false,
+      tag: 1111,
+    },
+  },
+  wc_sessionDelete: {
+    req: {
+      ttl: 24 * 60 * 60,
+      prompt: false,
+      tag: 1112,
+    },
+    res: {
+      ttl: 24 * 60 * 60,
+      prompt: false,
+      tag: 1113,
+    },
+  },
+  wc_sessionPing: {
+    req: {
+      ttl: 30,
+      prompt: false,
+      tag: 1114,
+    },
+    res: {
+      ttl: 30,
+      prompt: false,
+      tag: 1115,
+    },
+  },
+} as const
 
 export namespace JWT {
 
@@ -105,6 +210,14 @@ export interface IrnSubscriptionPayload {
   }
 }
 
+export interface IrnPublishPayload {
+  readonly topic: string
+  readonly message: string
+  readonly prompt: boolean
+  readonly tag: number
+  readonly ttl: number
+}
+
 export class IrnClient {
 
   readonly topicBySubscription = new Map<string, string>()
@@ -157,6 +270,17 @@ export class IrnClient {
     })
   }
 
+  async tryPublish(payload: IrnPublishPayload): Promise<Result<void, Error>> {
+    return await Result.unthrow(async t => {
+      const result = await SafeRpc.tryRequest<boolean>(this.socket, {
+        method: "irn_publish",
+        params: payload
+      }, AbortSignal.timeout(5000)).then(r => r.throw(t).throw(t))
+
+      return Result.assert(result).setErr(new Error(`Got false`))
+    })
+  }
+
 }
 
 export class CryptoClient {
@@ -197,7 +321,7 @@ export class CryptoClient {
       const plaintext = Bytes.toUtf8(plain.fragment.bytes)
 
       const subrequest = SafeJson.parse(plaintext) as RpcRequestInit<unknown>
-      this.#onRequest(subrequest).catch(console.warn)
+      this.#onRequest(subrequest).catch(console.error)
 
       return new Ok(true)
     })
@@ -205,8 +329,19 @@ export class CryptoClient {
 
   async #onRequest(request: RpcRequestInit<unknown>) {
     const result = await this.#tryRouteRequest(request)
-    const response = RpcResponse.rewrap(request.id, result)
-    // TODO publish
+    const subresponse = RpcResponse.rewrap(request.id, result)
+
+    const plaintext = SafeJson.stringify(subresponse)
+    const plain = new Plaintext(new Opaque(Bytes.fromUtf8(plaintext)))
+    const iv = Bytes.tryRandom(12).unwrap() // TODO maybe use a counter
+    const cipher = plain.tryEncrypt(this.key, iv).unwrap()
+    const envelope = new EnvelopeTypeZero(cipher)
+    const bytes = Writable.tryWriteToBytes(envelope).unwrap()
+    const message = Bytes.toBase64(bytes)
+
+    const { topic } = this
+    const { prompt, tag, ttl } = ENGINE_RPC_OPTS[request.method].res
+    await this.irn.tryPublish({ topic, message, prompt, tag, ttl }).then(r => r.unwrap())
   }
 
   async #tryRouteRequest(request: RpcRequestPreinit<unknown>) {
