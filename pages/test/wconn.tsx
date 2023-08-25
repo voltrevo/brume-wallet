@@ -421,14 +421,15 @@ export default function Page() {
       }).inner
 
       const peer = Berith.X25519PublicKey.from_bytes(Bytes.fromHexSafe(proposal.params.proposer.publicKey))
-      const key = Bytes.tryCast(self.diffie_hellman(peer).to_bytes(), 32).unwrap()
+      const shared = Bytes.tryCast(self.diffie_hellman(peer).to_bytes(), 32).unwrap()
+
+      const hdfk_key = await crypto.subtle.importKey("raw", shared, "HKDF", false, ["deriveBits"])
+      const hkdf_params = { name: "HKDF", hash: "SHA-256", info: new Uint8Array(), salt: new Uint8Array() }
+      const key = new Uint8Array(await crypto.subtle.deriveBits(hkdf_params, hdfk_key, 8 * 32)) as Bytes<32>
+
       const topic = Bytes.toHex(new Uint8Array(await crypto.subtle.digest("SHA-256", key)))
 
-      console.log(topic)
-
       const client2 = new CryptoClient(topic, key, irn)
-
-      console.log(proposal.params.proposer.publicKey)
     }
 
   }, [url])
