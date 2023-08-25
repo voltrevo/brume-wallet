@@ -339,6 +339,7 @@ export class CryptoClient {
       console.log("->", request)
       const result = await this.#tryRouteRequest(request)
       const response = RpcResponse.rewrap(request.id, result)
+      console.log("<-", response)
 
       const { topic } = this
       const message = this.#tryEncrypt(response).throw(t)
@@ -383,6 +384,7 @@ export class CryptoClient {
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     return Result.unthrow(async t => {
       const request = SafeRpc.prepare(init)
+      console.log("<-", request)
 
       const { topic } = this
       const message = this.#tryEncrypt(request).throw(t)
@@ -538,6 +540,16 @@ export default function Page() {
           .then(r => r.throw(t).throw(t))
           .then(Result.assert)
           .then(r => r.setErr(new Error(`false`)).throw(t))
+
+        client2.events.on("request", (suprequest) => {
+          if (suprequest.method !== "wc_sessionRequest")
+            return new None()
+          const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
+
+          if (request.method === "eth_sendTransaction")
+            return new Some(new Ok("0x9b503ce6b898f4eb41aae3b5eeb3bd47c727ce2b01090b8432dcf43ce8ac0cec"))
+          return new None()
+        })
 
         return Ok.void()
       }
