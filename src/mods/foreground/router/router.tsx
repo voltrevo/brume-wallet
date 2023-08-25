@@ -1,4 +1,5 @@
 import { DonePage, PersonalSignPage, SwitchPage, TransactPage, TypedSignPage, WalletAndChainSelectPage } from "pages/popup"
+import { CameraPage } from "../camera/page"
 import { RequestsPage } from "../entities/requests/all/page"
 import { SeedsPage } from "../entities/seeds/all/page"
 import { SeedPage } from "../entities/seeds/page"
@@ -35,6 +36,9 @@ export function Router() {
 
   if (matches = url.pathname.match(/^\/seed\/([^\/]+)$/))
     return <SeedPage uuid={matches[1]} />
+
+  if (matches = url.pathname.match(/^\/camera$/))
+    return <CameraPage />
 
   if (matches = url.pathname.match(/^\/eth_requestAccounts$/))
     return <WalletAndChainSelectPage />
