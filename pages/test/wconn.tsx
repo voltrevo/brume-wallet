@@ -119,29 +119,31 @@ export const ENGINE_RPC_OPTS: Record<string, { req: RpcOpts, res: RpcOpts }> = {
 
 export namespace JWT {
 
-  export function sign(keypair: Berith.Ed25519Keypair, audience: string) {
-    const alg = "EdDSA"
-    const typ = "JWT"
+  export function trySign(keypair: Berith.Ed25519Keypair, audience: string): Result<string, Error> {
+    return Result.unthrowSync(t => {
+      const alg = "EdDSA"
+      const typ = "JWT"
 
-    const preheader = { alg, typ }
+      const preheader = { alg, typ }
 
-    const iss = `did:key:z${base58.encode(Bytes.concat([Bytes.fromHex("ed01"), keypair.public().to_bytes()]))}`
-    const sub = Bytes.toHex(Bytes.tryRandom(32).unwrap())
-    const aud = audience
-    const iat = Math.floor(Date.now() / 1000)
-    const ttl = 24 * 60 * 60 // one day in seconds
-    const exp = iat + ttl
+      const iss = `did:key:z${base58.encode(Bytes.concat([Bytes.fromHex("ed01"), keypair.public().to_bytes()]))}`
+      const sub = Bytes.toHex(Bytes.tryRandom(32).throw(t))
+      const aud = audience
+      const iat = Math.floor(Date.now() / 1000)
+      const ttl = 24 * 60 * 60 // one day in seconds
+      const exp = iat + ttl
 
-    const prepayload = { iss, sub, aud, iat, exp }
+      const prepayload = { iss, sub, aud, iat, exp }
 
-    const header = base64url.encode(Bytes.fromUtf8(SafeJson.stringify(preheader))).replaceAll("=", "")
-    const payload = base64url.encode(Bytes.fromUtf8(SafeJson.stringify(prepayload))).replaceAll("=", "")
+      const header = base64url.encode(Bytes.fromUtf8(SafeJson.stringify(preheader))).replaceAll("=", "")
+      const payload = base64url.encode(Bytes.fromUtf8(SafeJson.stringify(prepayload))).replaceAll("=", "")
 
-    const presignature = Bytes.fromUtf8(`${header}.${payload}`)
+      const presignature = Bytes.fromUtf8(`${header}.${payload}`)
 
-    const signature = base64url.encode(keypair.sign(presignature).to_bytes()).replaceAll("=", "")
+      const signature = base64url.encode(keypair.sign(presignature).to_bytes()).replaceAll("=", "")
 
-    return `${header}.${payload}.${signature}`
+      return new Ok(`${header}.${payload}.${signature}`)
+    })
   }
 
 }
@@ -287,6 +289,7 @@ export class CryptoClient {
 
   readonly events = new SuperEventTarget<{
     request: (request: RpcRequestPreinit<unknown>) => Result<unknown, Error>
+    response: (response: RpcResponseInit<unknown>) => void
   }>()
 
   constructor(
@@ -320,28 +323,28 @@ export class CryptoClient {
       const plain = cipher.tryDecrypt(this.key).unwrap()
       const plaintext = Bytes.toUtf8(plain.fragment.bytes)
 
-      const subrequest = SafeJson.parse(plaintext) as RpcRequestInit<unknown>
-      this.#onRequest(subrequest).catch(console.error)
+      const data = SafeJson.parse(plaintext) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
+
+      if ("method" in data)
+        this.#onRequest(data).then(r => r.unwrap()).catch(console.error)
+      else
+        this.#onResponse(data).then(r => r.unwrap()).catch(console.error)
 
       return new Ok(true)
     })
   }
 
-  async #onRequest(request: RpcRequestInit<unknown>) {
-    const result = await this.#tryRouteRequest(request)
-    const subresponse = RpcResponse.rewrap(request.id, result)
+  async #onRequest(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
+    return Result.unthrow(async t => {
+      console.log("->", request)
+      const result = await this.#tryRouteRequest(request)
+      const response = RpcResponse.rewrap(request.id, result)
 
-    const plaintext = SafeJson.stringify(subresponse)
-    const plain = new Plaintext(new Opaque(Bytes.fromUtf8(plaintext)))
-    const iv = Bytes.tryRandom(12).unwrap() // TODO maybe use a counter
-    const cipher = plain.tryEncrypt(this.key, iv).unwrap()
-    const envelope = new EnvelopeTypeZero(cipher)
-    const bytes = Writable.tryWriteToBytes(envelope).unwrap()
-    const message = Bytes.toBase64(bytes)
-
-    const { topic } = this
-    const { prompt, tag, ttl } = ENGINE_RPC_OPTS[request.method].res
-    await this.irn.tryPublish({ topic, message, prompt, tag, ttl }).then(r => r.unwrap())
+      const { topic } = this
+      const message = this.#tryEncrypt(response).throw(t)
+      const { prompt, tag, ttl } = ENGINE_RPC_OPTS[request.method].res
+      return await this.irn.tryPublish({ topic, message, prompt, tag, ttl })
+    })
   }
 
   async #tryRouteRequest(request: RpcRequestPreinit<unknown>) {
@@ -352,6 +355,60 @@ export class CryptoClient {
 
     return new Err(new Error(`Unhandled`))
   }
+
+  async #onResponse(response: RpcResponseInit<unknown>) {
+    console.log("->", response)
+    const returned = await this.events.emit("response", [response])
+
+    if (returned.isSome())
+      return Ok.void()
+
+    return new Err(new Error(`Unhandled`))
+  }
+
+  #tryEncrypt(data: unknown): Result<string, Error> {
+    return Result.unthrowSync(t => {
+      const plaintext = SafeJson.stringify(data)
+      const plain = new Plaintext(new Opaque(Bytes.fromUtf8(plaintext)))
+      const iv = Bytes.tryRandom(12).throw(t) // TODO maybe use a counter
+      const cipher = plain.tryEncrypt(this.key, iv).throw(t)
+      const envelope = new EnvelopeTypeZero(cipher)
+      const bytes = Writable.tryWriteToBytes(envelope).throw(t)
+      const message = Bytes.toBase64(bytes)
+
+      return new Ok(message)
+    })
+  }
+
+  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
+    return Result.unthrow(async t => {
+      const request = SafeRpc.prepare(init)
+
+      const { topic } = this
+      const message = this.#tryEncrypt(request).unwrap()
+      const { prompt, tag, ttl } = ENGINE_RPC_OPTS[init.method].req
+      await this.irn.tryPublish({ topic, message, prompt, tag, ttl }).then(r => r.throw(t))
+
+      const future = new Future<Result<RpcResponse<T>, Error>>()
+
+      const onResponse = (init: RpcResponseInit<any>) => {
+        if (init.id !== request.id)
+          return new None()
+        const response = RpcResponse.from<T>(init)
+        future.resolve(new Ok(response))
+        return new Some(undefined)
+      }
+
+      try {
+        this.events.on("response", onResponse, { passive: true })
+
+        return await future.promise
+      } finally {
+        this.events.off("response", onResponse)
+      }
+    })
+  }
+
 }
 
 export interface WcSessionProposeParams {
@@ -373,8 +430,8 @@ export interface WcSessionProposeParams {
     readonly protocol: string
   }[]
 
-  readonly requiredNamespaces: unknown
-  readonly optionalNamespaces: unknown
+  readonly requiredNamespaces: any
+  readonly optionalNamespaces: any
 }
 
 export default function Page() {
@@ -388,7 +445,7 @@ export default function Page() {
     const relay = "wss://relay.walletconnect.org"
 
     const { protocol, pathname, searchParams } = new URL(url)
-    const [topic, version] = pathname.split("@")
+    const [pairingTopic, version] = pathname.split("@")
     const relayProtocol = Option.unwrap(searchParams.get("relay-protocol"))
     const symKeyHex = Option.unwrap(searchParams.get("symKey"))
     const symKey = Bytes.fromHexSafe(symKeyHex)
@@ -396,7 +453,7 @@ export default function Page() {
 
     const key = new Berith.Ed25519Keypair()
 
-    const auth = JWT.sign(key, "wss://relay.walletconnect.org")
+    const auth = JWT.trySign(key, "wss://relay.walletconnect.org").unwrap()
     const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
 
     const socket = new WebSocket(`${relay}/?auth=${auth}&projectId=${projectId}`)
@@ -404,10 +461,11 @@ export default function Page() {
 
     const irn = new IrnClient(socket)
 
-    await irn.trySubscribe(topic).then(r => r.unwrap())
-    const client = new CryptoClient(topic, symKey32, irn)
+    await irn.trySubscribe(pairingTopic).then(r => r.unwrap())
+    const client = new CryptoClient(pairingTopic, symKey32, irn)
 
     {
+      const relay = { protocol: "irn" }
       const self = new Berith.X25519StaticSecret()
 
       const proposal = await client.events.wait("request", async (future: Future<RpcRequestPreinit<WcSessionProposeParams>>, request) => {
@@ -415,7 +473,6 @@ export default function Page() {
           return new None()
         future.resolve(request as RpcRequestPreinit<WcSessionProposeParams>)
 
-        const relay = { protocol: "irn" }
         const responderPublicKey = Bytes.toHex(self.to_public().to_bytes())
         return new Some(new Ok({ relay, responderPublicKey }))
       }).inner
@@ -427,9 +484,34 @@ export default function Page() {
       const hkdf_params = { name: "HKDF", hash: "SHA-256", info: new Uint8Array(), salt: new Uint8Array() }
       const key = new Uint8Array(await crypto.subtle.deriveBits(hkdf_params, hdfk_key, 8 * 32)) as Bytes<32>
 
-      const topic = Bytes.toHex(new Uint8Array(await crypto.subtle.digest("SHA-256", key)))
+      const sessionTopic = Bytes.toHex(new Uint8Array(await crypto.subtle.digest("SHA-256", key)))
 
-      const client2 = new CryptoClient(topic, key, irn)
+      await irn.trySubscribe(sessionTopic).then(r => r.unwrap())
+      const client2 = new CryptoClient(sessionTopic, key, irn)
+
+      const { requiredNamespaces, optionalNamespaces } = proposal.params
+
+      const namespaces = {
+        eip155: {
+          chains: ["eip155:1"],
+          methods: ["eth_sendTransaction", "personal_sign", "eth_signTypedData", "eth_signTypedData_v4"],
+          events: ["chainChanged", "accountsChanged"],
+          accounts: ["eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb"]
+        }
+      }
+
+      const publicKey = Bytes.toHex(self.to_public().to_bytes())
+      const metadata = { name: "Brume", description: "Brume", url: location.origin, icons: [] }
+      const controller = { publicKey, metadata }
+      const expiry = Math.floor((Date.now() + (7 * 24 * 60 * 60)) / 1000)
+      const params = { relay, namespaces, requiredNamespaces, optionalNamespaces, pairingTopic, controller, expiry }
+
+      const response = await client2.tryRequest<boolean>({ method: "wc_sessionSettle", params })
+        .then(r => r.unwrap().unwrap())
+        .then(Result.assert)
+        .then(r => r.unwrap())
+
+      console.log(response)
     }
 
   }, [url])
