@@ -7,7 +7,7 @@ import { None, Option, Some } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
 import { CryptoClient } from "../crypto/client";
 import { IrnClient } from "../irn/irn";
-import { JWT } from "../jwt/jwt";
+import { Jwt } from "../jwt/jwt";
 
 export interface WcSessionProposeParams {
   readonly proposer: {
@@ -69,7 +69,7 @@ export namespace Wc {
 
       const key = new Berith.Ed25519Keypair()
 
-      const auth = JWT.trySign(key, "wss://relay.walletconnect.org").throw(t)
+      const auth = Jwt.trySign(key, "wss://relay.walletconnect.org").throw(t)
       const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
 
       const socket = new WebSocket(`${relay}/?auth=${auth}&projectId=${projectId}`)

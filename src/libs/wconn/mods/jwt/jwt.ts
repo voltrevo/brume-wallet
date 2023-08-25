@@ -4,7 +4,7 @@ import { Ok, Result } from "@hazae41/result"
 import { base58, base64url } from "@scure/base"
 import { SafeJson } from "../json/json"
 
-export namespace JWT {
+export namespace Jwt {
 
   export function trySign(keypair: Berith.Ed25519Keypair, audience: string): Result<string, Error> {
     return Result.unthrowSync(t => {
