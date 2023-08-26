@@ -23,11 +23,27 @@ export namespace SessionRef {
 
 }
 
-export interface SessionData {
-  id: string,
-  origin: string
-  chain: EthereumChain
-  wallets: [Wallet]
+export type SessionData =
+  | ExSessionData
+  | WcSessionData
+
+export interface ExSessionData {
+  readonly id: string,
+  readonly type?: "ex"
+  readonly origin: string
+  readonly chain: EthereumChain
+  readonly wallets: [Wallet]
+}
+
+export interface WcSessionData {
+  readonly id: string,
+  readonly type: "wc"
+  readonly origin: string
+  readonly relay: string
+  readonly topic: string
+  readonly chain: EthereumChain
+  readonly wallets: [Wallet]
+  readonly symKeyBase64: string
 }
 
 export namespace TemporarySession {

@@ -148,7 +148,7 @@ export namespace Connection {
 
       if (url.protocol === "wss:") {
         const tcp = await circuit.tryOpen(url.hostname, 443).then(r => r.throw(t))
-        const tls = new TlsClientDuplex(tcp, { ciphers: [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384] })
+        const tls = new TlsClientDuplex(tcp, { ciphers: [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384], host_name: url.hostname })
         const socket = new Fleche.WebSocket(url, undefined, { subduplex: tls })
 
         await Sockets.tryWaitOpen(socket, signal2).then(r => r.throw(t))

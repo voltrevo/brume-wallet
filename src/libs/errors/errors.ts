@@ -10,4 +10,13 @@ export namespace Errors {
     return JSON.stringify(toJSON(error))
   }
 
+  export function log(error: unknown) {
+    console.error(toString(error))
+  }
+
+  export function logAndAlert(error: unknown) {
+    console.error(toString(error))
+    alert(toString(error))
+  }
+
 }

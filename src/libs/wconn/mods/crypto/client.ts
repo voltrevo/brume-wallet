@@ -1,3 +1,4 @@
+import { Errors } from "@/libs/errors/errors";
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc";
 import { Ciphertext, Envelope, EnvelopeTypeZero, Plaintext } from "@/libs/wconn/mods/crypto/crypto";
 import { SafeJson } from "@/libs/wconn/mods/json/json";
@@ -156,9 +157,9 @@ export class CryptoClient {
       const data = SafeJson.parse(plaintext) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
 
       if ("method" in data)
-        this.#onRequest(data).then(r => r.unwrap()).catch(console.error)
+        this.#onRequest(data).then(r => r.unwrap()).catch(Errors.log)
       else
-        this.#onResponse(data).then(r => r.unwrap()).catch(console.error)
+        this.#onResponse(data).then(r => r.unwrap()).catch(Errors.log)
 
       return new Ok(true)
     })
@@ -166,10 +167,10 @@ export class CryptoClient {
 
   async #onRequest(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
-      console.log("->", request)
+      console.log("relay request", "->", request)
       const result = await this.#tryRouteRequest(request)
       const response = RpcResponse.rewrap(request.id, result)
-      console.log("<-", response)
+      console.log("relay", "<-", response)
 
       const { topic } = this
       const message = this.#tryEncrypt(response).throw(t)
@@ -188,7 +189,7 @@ export class CryptoClient {
   }
 
   async #onResponse(response: RpcResponseInit<unknown>) {
-    console.log("->", response)
+    console.log("relay response", "->", response)
     const returned = await this.events.emit("response", [response])
 
     if (returned.isSome())
@@ -214,17 +215,17 @@ export class CryptoClient {
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     return Result.unthrow(async t => {
       const request = SafeRpc.prepare(init)
-      console.log("<-", request)
+      console.log("relay", "<-", request)
 
       const { topic } = this
       const message = this.#tryEncrypt(request).throw(t)
       const { prompt, tag, ttl } = ENGINE_RPC_OPTS[init.method].req
-      await this.irn.tryPublish({ topic, message, prompt, tag, ttl }).then(r => r.throw(t))
 
       const future = new Future<Result<RpcResponse<T>, Error>>()
       const signal = AbortSignal.timeout(ttl * 1000)
 
       const onResponse = (init: RpcResponseInit<any>) => {
+        console.log("init", init)
         if (init.id !== request.id)
           return new None()
         const response = RpcResponse.from<T>(init)
@@ -239,6 +240,8 @@ export class CryptoClient {
       try {
         this.events.on("response", onResponse, { passive: true })
         signal.addEventListener("abort", onAbort, { passive: true })
+
+        await this.irn.tryPublish({ topic, message, prompt, tag, ttl }).then(r => r.throw(t))
 
         return await future.promise
       } finally {

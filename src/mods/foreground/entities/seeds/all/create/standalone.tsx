@@ -73,7 +73,7 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
       close()
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [defNameInput, defPhraseInput, uuid, color, emoji, background, close])
 
   const triedEncryptedPhrase = useAsyncReplaceMemo(async () => {
@@ -121,7 +121,7 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
       setId(id)
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [defNameInput, defPhraseInput, triedEncryptedPhrase, uuid, color, emoji, background])
 
   const tryAddAuthenticated2 = useAsyncUniqueCallback(async () => {
@@ -155,7 +155,7 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
       close()
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [defNameInput, defPhraseInput, id, triedEncryptedPhrase, uuid, color, emoji, background, close])
 
   const NameInput =

@@ -30,7 +30,7 @@ export function SeedCreatorDialog(props: CloseProps) {
 
       setType("ledger")
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [path, background])
 
   const onMnemonicClick = useCallback(() => {

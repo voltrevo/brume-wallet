@@ -37,7 +37,7 @@ export function RequestsPage() {
         }).then(r => r.throw(t).throw(t))
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [background, maybeRequests])
 
   const Body =

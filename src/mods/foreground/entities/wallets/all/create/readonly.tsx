@@ -71,7 +71,7 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
       close()
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [defNameInput, defAddressInput, uuid, color, emoji, background, close])
 
   const NameInput =

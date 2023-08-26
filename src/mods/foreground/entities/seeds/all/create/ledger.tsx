@@ -54,7 +54,7 @@ export function LedgerSeedCreatorDialog(props: CloseProps) {
       close()
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [defNameInput, uuid, color, emoji, background, close])
 
   const NameInput =

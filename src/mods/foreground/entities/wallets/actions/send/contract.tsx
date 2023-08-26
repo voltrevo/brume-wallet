@@ -144,7 +144,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
       nonceQuery.refetch()
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [core, context, wallet, maybeGasPrice, defRecipientInput, defValueInput, defNonceInput])
 
   const TxHashDisplay = <>

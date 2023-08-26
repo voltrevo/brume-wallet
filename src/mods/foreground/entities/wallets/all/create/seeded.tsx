@@ -105,7 +105,7 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
       close()
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [defNameInput, defPathInput, seedData, defPathInput, uuid, color, emoji, core, background, close])
 
   const NameInput =

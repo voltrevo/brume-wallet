@@ -32,7 +32,7 @@ export function SessionsPage() {
         }).then(r => r.throw(t).throw(t))
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [background, maybeSessions])
 
   const Body =
@@ -82,7 +82,7 @@ export function SessionRow(props: { session: Session }) {
       }).then(r => r.throw(t).throw(t))
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [background, maybeSessionData])
 
   if (maybeOriginData == null)

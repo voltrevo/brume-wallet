@@ -4,14 +4,20 @@ import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
+import { Sockets } from "@/libs/sockets/sockets"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { qurl } from "@/libs/url/url"
+import { IrnClient } from "@/libs/wconn/mods/irn/irn"
+import { Jwt } from "@/libs/wconn/mods/jwt/jwt"
+import { Wc, WcMetadata, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Berith } from "@hazae41/berith"
 import { Bytes } from "@hazae41/bytes"
+import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Circuit, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
+import { Fleche } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
 import { Morax } from "@hazae41/morax"
 import { Mutex } from "@hazae41/mutex"
@@ -28,7 +34,7 @@ import { EthereumBrume, EthereumBrumes } from "./entities/brumes/data"
 import { Origin, OriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
-import { PersistentSession, SessionData, TemporarySession } from "./entities/sessions/data"
+import { ExSessionData, PersistentSession, SessionData, TemporarySession } from "./entities/sessions/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
 import { EthereumContext, EthereumQueryKey, Wallet, WalletData, getBalance, getEthereumUnknown, getPairPrice, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
@@ -296,7 +302,7 @@ export class Global {
     }
   }
 
-  async tryGetOrWaitEthereumSession(script: Port, mouse: Mouse): Promise<Result<SessionData, Error>> {
+  async tryGetOrWaitExtensionSession(script: Port, mouse: Mouse): Promise<Result<SessionData, Error>> {
     return await Result.unthrow(async t => {
       const currentSession = this.sessions.get(script.name)
 
@@ -362,7 +368,7 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
-      const sessionData: SessionData = {
+      const sessionData: ExSessionData = {
         id: crypto.randomUUID(),
         origin: origin.origin,
         wallets: [wallet],
@@ -370,10 +376,10 @@ export class Global {
       }
 
       const tempSessionQuery = await TemporarySession.schema(sessionData.id).make(this.core)
-      await tempSessionQuery.mutate(Mutators.data(sessionData))
+      await tempSessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
       if (persistent)
-        await persSessionQuery.mutate(Mutators.data(sessionData))
+        await persSessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
       this.sessions.set(script.name, sessionData.id)
 
@@ -406,7 +412,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [subrequest, mouse] = (request as RpcRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
 
-      const session = await this.tryGetOrWaitEthereumSession(script, mouse).then(r => r.throw(t))
+      const session = await this.tryGetOrWaitExtensionSession(script, mouse).then(r => r.throw(t))
 
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
@@ -667,6 +673,8 @@ export class Global {
       return new Some(await this.brume_encrypt(foreground, request))
     if (request.method === "brume_decrypt")
       return new Some(await this.brume_decrypt(foreground, request))
+    if (request.method === "brume_wc_connect")
+      return new Some(await this.brume_wc_connect(foreground, request))
     if (request.method === "popup_hello")
       return new Some(await this.popup_hello(foreground, request))
     if (request.method === "popup_data")
@@ -991,6 +999,44 @@ export class Global {
 
         return Ok.void()
       })
+    })
+  }
+
+  async brume_wc_connect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<WcMetadata, Error>> {
+    return await Result.unthrow(async t => {
+      const [uri] = (request as RpcRequestPreinit<[string]>).params
+
+      const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.throw(t).result.get())
+
+      Berith.initSyncBundledOnce()
+
+      const relay = Wc.RELAY
+      const key = new Berith.Ed25519Keypair()
+      const auth = Jwt.trySign(key, relay).throw(t)
+      const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
+
+      const url = new URL(`${relay}/?auth=${auth}&projectId=${projectId}`)
+
+      const tcp = await circuit.tryOpen(url.hostname, 443).then(r => r.throw(t))
+      const tls = new TlsClientDuplex(tcp, { ciphers: [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384], host_name: url.hostname })
+      const socket = new Fleche.WebSocket(url, undefined, { subduplex: tls })
+      await Sockets.tryWaitOpen(socket, AbortSignal.timeout(15_000)).then(r => r.throw(t))
+
+      const irn = new IrnClient(socket)
+      const params = await Wc.tryParse(uri).then(r => r.throw(t))
+      const session = await Wc.tryPair(irn, params).then(r => r.throw(t))
+
+      session.client.events.on("request", (suprequest) => {
+        if (suprequest.method !== "wc_sessionRequest")
+          return new None()
+        const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
+
+        if (request.method === "eth_sendTransaction")
+          return new Some(new Ok("0x9b503ce6b898f4eb41aae3b5eeb3bd47c727ce2b01090b8432dcf43ce8ac0cec"))
+        return new None()
+      })
+
+      return new Ok(session.metadata)
     })
   }
 

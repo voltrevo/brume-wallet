@@ -125,7 +125,7 @@ export function TransactPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [core, storage, background, id, maybeWallet, maybeSession, maybeGasPrice, maybeNonce])
 
   const onReject = useAsyncUniqueCallback(async () => {
@@ -143,7 +143,7 @@ export function TransactPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [core, storage, background, id])
 
   const loading = useMemo(() => {
@@ -223,7 +223,7 @@ export function SwitchPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [core, storage, background, id])
 
   const onReject = useAsyncUniqueCallback(async () => {
@@ -241,7 +241,7 @@ export function SwitchPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [core, storage, background, id])
 
   return <Page>
@@ -320,7 +320,7 @@ export function PersonalSignPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [core, storage, background, id, maybeWallet, userMessage])
 
   const onReject = useAsyncUniqueCallback(async () => {
@@ -338,7 +338,7 @@ export function PersonalSignPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [core, storage, background, id])
 
   return <Page>
@@ -418,7 +418,7 @@ export function TypedSignPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [core, storage, background, id, maybeWallet, data])
 
   const onReject = useAsyncUniqueCallback(async () => {
@@ -436,7 +436,7 @@ export function TypedSignPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [core, storage, background, id])
 
   return <Page>
@@ -510,7 +510,7 @@ export function WalletAndChainSelectPage() {
         Path.go("/done")
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [core, storage, background, id, chain, persistent])
 
   const Body =

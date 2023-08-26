@@ -1,4 +1,3 @@
-import { Wc } from "@/libs/wconn/mods/wc/wc";
 import { Ok, Result } from "@hazae41/result";
 import { useCallback, useState } from "react";
 
@@ -9,7 +8,7 @@ export default function Page() {
     if (!url) return
 
     return Result.unthrow<Result<void, Error>>(async t => {
-      Wc.tryConnect(url).then(r => r.throw)
+      // Wc.tryPair(url).then(r => r.throw)
 
       return Ok.void()
     })

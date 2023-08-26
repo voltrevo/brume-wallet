@@ -80,7 +80,7 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       close()
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [defNameInput, defKeyInput, uuid, color, emoji, background, close])
 
   const triedEncryptedPrivateKey = useAsyncReplaceMemo(async () => {
@@ -124,7 +124,7 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       setId(id)
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [defNameInput, defKeyInput, triedEncryptedPrivateKey, uuid, color, emoji, background])
 
   const tryAddAuthenticated2 = useAsyncUniqueCallback(async () => {
@@ -168,7 +168,7 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       close()
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [defNameInput, defKeyInput, id, triedEncryptedPrivateKey, uuid, color, emoji, background, close])
 
   const NameInput =

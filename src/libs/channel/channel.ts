@@ -58,7 +58,7 @@ export class WebsitePort {
     if (returned.isSome())
       return returned.inner
 
-    return new Err(new Error(`Unhandled JSON-RPC request ${request}`))
+    return new Err(new Error(`Unhandled JSON-RPC request ${JSON.stringify(request)}`))
   }
 
   async onRequest(request: RpcRequestInit<unknown>) {
@@ -76,7 +76,7 @@ export class WebsitePort {
     if (returned.isSome())
       return returned.inner
 
-    return new Err(new Error(`Unhandled JSON-RPC response ${response}`))
+    return new Err(new Error(`Unhandled JSON-RPC response ${JSON.stringify(response)}`))
   }
 
   async onMessage(message: MessageEvent<string>) {
@@ -155,7 +155,7 @@ export class ExtensionPort {
     if (returned.isSome())
       return returned.inner
 
-    return new Err(new Error(`Unhandled JSON-RPC request ${request}`))
+    return new Err(new Error(`Unhandled JSON-RPC request ${JSON.stringify(request)}`))
   }
 
   async onRequest(request: RpcRequestInit<unknown>) {
@@ -175,7 +175,7 @@ export class ExtensionPort {
     if (returned.isSome())
       return returned.inner
 
-    return new Err(new Error(`Unhandled JSON-RPC response ${response}`))
+    return new Err(new Error(`Unhandled JSON-RPC response ${JSON.stringify(response)}`))
   }
 
   async onMessage(message: string) {
@@ -201,7 +201,6 @@ export class ExtensionPort {
       return Plume.tryWaitOrCloseOrError(this.events, "response", (future: Future<Ok<RpcResponse<T>>>, init: RpcResponseInit<any>) => {
         if (init.id !== request.id)
           return new None()
-
         const response = RpcResponse.from<T>(init)
         future.resolve(new Ok(response))
         return new Some(undefined)

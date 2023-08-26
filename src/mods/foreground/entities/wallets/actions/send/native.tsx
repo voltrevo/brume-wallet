@@ -122,7 +122,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
       nonceQuery.refetch()
 
       return Ok.void()
-    }).then(Results.alert)
+    }).then(Results.logAndAlert)
   }, [core, context, wallet, maybeNonce, maybeGasPrice, defRecipientInput, defValueInput])
 
   const TxHashDisplay = <>
