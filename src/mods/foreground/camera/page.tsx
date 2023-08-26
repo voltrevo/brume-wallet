@@ -82,9 +82,9 @@ export function CameraPage() {
   }, [])
 
   useEffect(() => {
-    const video = {
-      width: { min: 1080 },
-      height: { min: 1080 },
+    const video: MediaTrackConstraints = {
+      width: { ideal: 1080 },
+      height: { ideal: 1080 },
       facingMode: { exact: "environment" }
     }
 
