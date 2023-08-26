@@ -1005,25 +1005,32 @@ export class Global {
   async brume_wc_connect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<WcMetadata, Error>> {
     return await Result.unthrow(async t => {
       const [uri] = (request as RpcRequestPreinit<[string]>).params
+      const params = await Wc.tryParse(uri).then(r => r.throw(t))
 
-      const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.throw(t).result.get())
+      const socket = await tryLoop(() => {
+        return Result.unthrow<Result<WebSocket, Looped<Error>>>(async t => {
+          const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Retry.new).throw(t).result.get())
 
-      Berith.initSyncBundledOnce()
+          Berith.initSyncBundledOnce()
 
-      const relay = Wc.RELAY
-      const key = new Berith.Ed25519Keypair()
-      const auth = Jwt.trySign(key, relay).throw(t)
-      const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
+          const relay = Wc.RELAY
+          const key = new Berith.Ed25519Keypair()
+          const auth = Jwt.trySign(key, relay).mapErrSync(Cancel.new).throw(t)
+          const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
 
-      const url = new URL(`${relay}/?auth=${auth}&projectId=${projectId}`)
+          const url = new URL(`${relay}/?auth=${auth}&projectId=${projectId}`)
 
-      const tcp = await circuit.tryOpen(url.hostname, 443).then(r => r.throw(t))
-      const tls = new TlsClientDuplex(tcp, { ciphers: [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384], host_name: url.hostname })
-      const socket = new Fleche.WebSocket(url, undefined, { subduplex: tls })
-      await Sockets.tryWaitOpen(socket, AbortSignal.timeout(15_000)).then(r => r.throw(t))
+          const tcp = await circuit.tryOpen(url.hostname, 443).then(r => r.mapErrSync(Retry.new).throw(t))
+          const tls = new TlsClientDuplex(tcp, { ciphers: [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384], host_name: url.hostname })
+          const socket = new Fleche.WebSocket(url, undefined, { subduplex: tls })
+          await Sockets.tryWaitOpen(socket, AbortSignal.timeout(15_000)).then(r => r.mapErrSync(Retry.new).throw(t))
+
+          return new Ok(socket)
+        })
+      }).then(r => r.throw(t))
 
       const irn = new IrnClient(socket)
-      const params = await Wc.tryParse(uri).then(r => r.throw(t))
+
       const session = await Wc.tryPair(irn, params).then(r => r.throw(t))
 
       session.client.events.on("request", (suprequest) => {
