@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { Errors } from "@/libs/errors/errors"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events"
@@ -19,29 +20,48 @@ export function CameraPage() {
   }, [])
 
   const video = useRef<HTMLVideoElement>(null)
+  const sight = useRef<HTMLImageElement>(null)
   const [text, setText] = useState<string>()
 
   const onStream = useCallback((stream: MediaStream) => {
     if (!video.current) return
+    if (!sight.current) return
 
     video.current.addEventListener("canplay", () => {
       if (!video.current) return
+      if (!sight.current) return
+
+      const yratio = video.current.videoHeight / video.current.clientHeight
+      const xratio = video.current.videoWidth / video.current.clientWidth
+
+      const ratio = Math.min(yratio, xratio)
+
+      const cw = video.current.clientWidth * ratio
+      const ch = video.current.clientHeight * ratio
+      const cx = (video.current.videoWidth / 2) - (cw / 2)
+      const cy = (video.current.videoHeight / 2) - (ch / 2)
+
+      const sx = cx + (sight.current.offsetLeft * ratio)
+      const sy = cy + (sight.current.offsetTop * ratio)
+      const sw = sight.current.offsetWidth * ratio
+      const sh = sight.current.offsetHeight * ratio
 
       const canvas = document.createElement("canvas")
-      canvas.width = video.current.videoWidth
-      canvas.height = video.current.videoHeight
+      canvas.width = sw
+      canvas.height = sh
 
-      const context = canvas.getContext("2d")
+      const canvasCtx = canvas.getContext("2d")
 
-      if (!context) return
+      if (!canvasCtx) return
 
       function loop() {
         if (!mounted.current) return
         if (!video.current) return
-        if (!context) return
+        if (!sight.current) return
+        if (!canvasCtx) return
 
-        context.drawImage(video.current, 0, 0, canvas.width, canvas.height)
-        const image = context.getImageData(0, 0, canvas.width, canvas.height)
+        canvasCtx.drawImage(video.current, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
+        const image = canvasCtx.getImageData(0, 0, sw, sh)
 
         let result: DecoderResult | null = null
 
@@ -51,10 +71,10 @@ export function CameraPage() {
 
         if (result != null)
           setText(result.data)
-        setTimeout(loop, 100)
+        setTimeout(loop, 1000)
       }
 
-      setTimeout(loop, 100)
+      setTimeout(loop, 1000)
     })
 
     video.current.srcObject = stream
@@ -106,12 +126,25 @@ export function CameraPage() {
   }, [textInput])
 
   return <>
-    <video className="grow w-full object-cover"
-      ref={video}
-      playsInline
-      muted />
+    <div className="grow relative flex flex-col">
+      <div className="absolute w-full h-full flex flex-col items-center justify-center">
+        <img className="h-16 w-16"
+          src="/assets/wc.svg"
+          alt="WalletConnect" />
+      </div>
+      <div className="absolute w-full h-full flex flex-col items-center justify-center">
+        <img className="h-64 w-64"
+          ref={sight}
+          src="/assets/sight.svg"
+          alt="sight" />
+      </div>
+      <video className="grow w-full object-cover"
+        ref={video}
+        playsInline
+        muted />
+    </div>
     <input className="po-md w-full outline-none"
-      placeholder="WalletConnect"
+      placeholder="Scan or paste the WalletConnect URL here"
       value={rawTextInput}
       onChange={onTextInputChange}
       onKeyDown={onTextInputEnter} />
