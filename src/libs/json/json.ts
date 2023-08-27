@@ -1,6 +1,4 @@
 
-export type Class<T> = new (...params: any[]) => T
-
 export interface Guardable<I, O> {
   is(value: I): value is I & O
 }
@@ -15,10 +13,10 @@ export namespace Guardable {
 
 }
 
-export class Guard<I, O> {
+export class Guard<T extends Guardable.Infer<T>> {
 
   constructor(
-    readonly inner: Guardable<I, O>
+    readonly inner: T
   ) { }
 
   /**
@@ -27,6 +25,8 @@ export class Guard<I, O> {
    * @returns 
    */
   static from<T extends Guardable.Infer<T>>(guardable: T) {
+    // if (guardable instanceof Guard)
+    // return guardable as Guard<Guardable>
     return new Guard(guardable)
   }
 
@@ -35,7 +35,7 @@ export class Guard<I, O> {
    * @param value 
    * @returns 
    */
-  is(value: I): value is I & O {
+  is(value: Guardable.Input<T>): value is Guardable.Input<T> & Guardable.Output<T> {
     return this.inner.is(value)
   }
 
@@ -44,8 +44,8 @@ export class Guard<I, O> {
    * @param other 
    * @returns 
    */
-  inter<T>(other: Guardable<I, T>) {
-    return new Guard(new InterGuard<I, O, T>(this, other))
+  inter<X>(other: Guardable<Guardable.Input<T>, X>) {
+    return Guard.from(new InterGuard<Guardable.Input<T>, Guardable.Output<T>, X>(this, other))
   }
 
   /**
@@ -53,8 +53,8 @@ export class Guard<I, O> {
    * @param other String.union(Boolean) -> string | boolean
    * @returns 
    */
-  union<T>(other: Guardable<I, T>) {
-    return new Guard(new UnionGuard<I, O, T>(this, other))
+  union<X>(other: Guardable<Guardable.Input<T>, X>) {
+    return Guard.from(new UnionGuard<Guardable.Input<T>, Guardable.Output<T>, X>(this, other))
   }
 
   /**
@@ -64,18 +64,121 @@ export class Guard<I, O> {
    * @param other 
    * @returns 
    */
-  then<T>(other: Guardable<O, T>) {
-    return new Guard(new ThenGuard<I, O, T>(this, other))
+  then<X extends Guardable.Infer<X>>(other: X) {
+    return Guard.from(new ThenGuard<Guardable.Input<T>, Guardable.Output<T>, Guardable.Output<X>>(this, other as any))
+  }
+
+  static boolean() {
+    return Guard.from(BooleanGuard)
+  }
+
+  static string() {
+    return Guard.from(StringGuard)
+  }
+
+  // static object<T extends { [property in PropertyKey]: Guardable<unknown, unknown> }>(schema: T): Guard<unknown, { [P in keyof T]: Guardable.Output<T[P]> }> {
+  //   let guard = Guard.from(ObjectGuard)
+
+  //   for (const [property, subguard] of Object.entries(schema))
+  //     guard = guard.then(new HasPropertyGuard(property)).then(new PropertyGuard(property, subguard))
+
+  //   return guard as Guard<any, any>
+  // }
+
+  static array() {
+
   }
 
 }
+
+export namespace Unguard {
+
+  export function is<T>(value: T): value is T {
+    return true
+  }
+
+}
+
+export namespace ObjectGuard {
+
+  export function is(value: unknown): value is object {
+    return typeof value === "object"
+  }
+
+}
+
+export namespace BooleanGuard {
+
+  export function is(value: unknown): value is boolean {
+    return typeof value === "boolean"
+  }
+
+}
+
+export class MinLengthGuard<T extends { length: number }> {
+
+  constructor(
+    readonly length: number
+  ) { }
+
+  is(value: T): value is T {
+    return value.length > this.length
+  }
+
+}
+
+export class MaxLengthGuard<T extends { length: number }> {
+
+  constructor(
+    readonly length: number
+  ) { }
+
+  is(value: T): value is T {
+    return value.length < this.length
+  }
+
+}
+
+export class StringGuard<O extends string> {
+
+  constructor(
+    readonly subguard: Guardable<unknown, O>
+  ) {
+
+  }
+
+  static is(value: unknown): value is string {
+    return typeof value === "string"
+  }
+
+  is(value: unknown): value is O {
+    return this.subguard.is(value)
+  }
+
+  min(length: number) {
+    return Guard.from(this.subguard).then(new MinLengthGuard<O>(length))
+  }
+
+}
+
+export class ZeroHexStringGuard<T extends string> {
+
+  is(value: T): value is T & `0x${string}` {
+    return value.startsWith("0x")
+  }
+
+}
+
+new StringGuard(Guard.from(new StringGuard(StringGuard)).then(new ZeroHexStringGuard())).min(123)
+
+
 
 /**
  * Guards that any value is an array
  */
 export namespace ArrayGuard {
 
-  export function is(value: unknown): value is any[] {
+  export function is(value: unknown): value is unknown[] {
     return Array.isArray(value)
   }
 
@@ -87,32 +190,39 @@ export namespace ArrayGuard {
 export class ElementsGuard<T extends Guardable.Infer<T>> {
 
   constructor(
-    readonly guardable: T
+    readonly subguard: T
   ) { }
 
   is(value: Guardable.Input<T>[]): value is any[] & Guardable.Output<T>[] {
-    return value.every(x => this.guardable.is(x))
+    return value.every(x => this.subguard.is(x))
   }
 
 }
 
-export class HasPropertyGuard<I, P> {
+export class HasPropertyGuard<P extends PropertyKey> {
 
   constructor(
     readonly property: P
   ) { }
 
-  is(value: unknown) {
-
+  is(value: object): value is { [property in P]: unknown } {
+    return this.property in value
   }
+
 }
 
-// export class TupleGuard<I extends any[], O extends readonly any[]> extends Guard<I, O> {
+export class PropertyGuard<P extends PropertyKey, O> {
 
-//   constructor(
-//     readonly tuple: readonly Guardable<I[]>[]
-//   ) { }
-// }
+  constructor(
+    readonly property: P,
+    readonly subguard: Guardable<unknown, O>
+  ) { }
+
+  is(value: { [property in P]: unknown }): value is { [property in P]: O } {
+    return this.subguard.is(value[this.property])
+  }
+
+}
 
 export class ThenGuard<I, X, O> implements Guardable<I, O> {
 
@@ -153,43 +263,25 @@ export class UnionGuard<I, A, B> implements Guardable<I, A | B> {
 
 }
 
-export namespace BooleanGuard {
-
-  export function is(value: unknown): value is boolean {
-    return typeof value === "boolean"
-  }
-
-}
-
-export namespace StringGuard {
-
-  export function is(value: unknown): value is string {
-    return typeof value === "string"
-  }
-
-}
-
-export namespace ZeroHexStringGuard {
-
-  export function is(value: string): value is `0x${string}` {
-    return value.startsWith("0x")
-  }
-
-}
-
-export namespace Unguard {
-
-  export function is<T>(value: T): value is T {
-    return true
-  }
-
-}
-
 function test(x: unknown) {
-  if (Guard.from(StringGuard).then(ZeroHexStringGuard).is(x))
-    x
-  if (Guard.from(ArrayGuard).then(new ElementsGuard(StringGuard)).is(x))
-    x
+  {
+    if (Guard.object({}).is(x))
+      x
+  }
+  {
+    if (Guard.from(ObjectGuard).then(new HasPropertyGuard("hello")).then(new PropertyGuard("hello", StringGuard)).is(x))
+      x.hello
+  }
+  {
+    if (Guard.from(StringGuard).then(ZeroHexStringGuard).is(x))
+      x
+  }
+  {
+    if (Guard.from(ArrayGuard).is(x))
+      if (Guard.from(new ElementsGuard(StringGuard)).is(x))
+        // if (Guard.from(ArrayGuard).then(new ElementsGuard(StringGuard)).is(x))
+        x
+  }
 }
 
 // export class Json<T> {
