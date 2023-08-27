@@ -1,16 +1,20 @@
 import { Err, Ok, Result } from "@hazae41/result"
 
 export interface Guardable<I, O> {
-  is(value: I): value is I & O
+  is: (value: I) => value is I & O
 }
 
 export namespace Guardable {
 
-  export type Infer<T extends Guardable<unknown, unknown>, I = unknown, O = unknown> = Guardable<Input<T> & I, Output<T> & O>
+  export interface Bivariant<I, O> {
+    is(value: I): value is I & O
+  }
 
-  export type Input<T> = T extends Guardable<infer I, unknown> ? I : never
+  export type Infer<T extends Bivariant<unknown, unknown>> = Guardable<Input<T>, Output<T>>
 
-  export type Output<T> = T extends Guardable<unknown, infer O> ? O : never
+  export type Input<T> = T extends Bivariant<infer I, unknown> ? I : never
+
+  export type Output<T> = T extends Bivariant<unknown, infer O> ? O : never
 
 }
 
@@ -99,12 +103,12 @@ export class Guard<I, O> {
   }
 
   static object<T extends { [property in PropertyKey]: Guardable<unknown, unknown> }>(schema: T): Guard<unknown, { [P in keyof T]: Guardable.Output<T[P]> }> {
-    let guard = Guard.from(ObjectGuard)
+    let guard: Guard<any, any> = Guard.from(ObjectGuard)
 
     for (const [property, subguard] of Object.entries(schema))
       guard = guard.then(new HasPropertyGuard(property)).then(new PropertyGuard(property, subguard))
 
-    return guard as Guard<any, any>
+    return guard
   }
 
   static array() {
@@ -289,7 +293,7 @@ function test(x: unknown) {
 }
 
 const hex = Guard.from(StringGuard)
-  .inter(ZeroHexStringGuard)
+  .then(ZeroHexStringGuard)
   .then(new MinLengthGuard(16))
   .then(new MaxLengthGuard(256))
   .tryAs(`0xdeadbeef4c6f72656d20697073756d20646f6c6f722073`)
@@ -297,41 +301,10 @@ const hex = Guard.from(StringGuard)
 
 
 const obj = Guard.from(ObjectGuard)
-  .inter(new HasPropertyGuard("hello"))
-  .inter(new HasPropertyGuard("world"))
-  .tryAs({})
-
-/**
- * Generic interface
- */
-interface Runnable<A> {
-  run(a: A): void
-}
-
-/**
- * Runnable<string> that should only accept strings
- */
-class StringRunnable {
-  run(a: string) { }
-}
-
-/**
- * Holds a value and use it with a runnable **of the same type**
- */
-class Runner<A> {
-  constructor(
-    readonly value: A
-  ) { }
-
-  run(runnable: Runnable<A>) {
-    runnable.run(this.value)
-  }
-}
-
-/**
- * StringRunnable is accepted while it should not
- */
-new Runner<unknown>(123 as unknown).run(new StringRunnable())
+  .then(Guard
+    .from(new HasPropertyGuard("hello"))
+    .inter(new HasPropertyGuard("world"))
+  ).tryAs({})
 
 // export class Json<T> {
 
