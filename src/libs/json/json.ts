@@ -158,7 +158,7 @@ export class StringGuard<I, O extends string> {
   }
 
   min(length: number) {
-    return StringGuard.from(Guard.from(this.subguard).then<O>(new MinLengthGuard(length)))
+    return Guard.from(this.subguard).then<O>(new MinLengthGuard(length))
   }
 
 }
