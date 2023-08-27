@@ -5,7 +5,7 @@ export interface Guardable<I, O> {
 
 export namespace Guardable {
 
-  export type Infer<T extends Guardable<unknown, unknown>> = Guardable<Input<T>, Output<T>>
+  export type Infer<T extends Guardable<unknown, unknown>, I = unknown, O = unknown> = Guardable<Input<T> & I, Output<T> & O>
 
   export type Input<T> = T extends Guardable<infer I, unknown> ? I : never
 
@@ -13,10 +13,10 @@ export namespace Guardable {
 
 }
 
-export class Guard<T extends Guardable.Infer<T>> {
+export class Guard<I, O> {
 
   constructor(
-    readonly inner: T
+    readonly inner: Guardable<I, O>
   ) { }
 
   /**
@@ -35,7 +35,7 @@ export class Guard<T extends Guardable.Infer<T>> {
    * @param value 
    * @returns 
    */
-  is(value: Guardable.Input<T>): value is Guardable.Input<T> & Guardable.Output<T> {
+  is(value: I): value is I & O {
     return this.inner.is(value)
   }
 
@@ -44,8 +44,8 @@ export class Guard<T extends Guardable.Infer<T>> {
    * @param other 
    * @returns 
    */
-  inter<X>(other: Guardable<Guardable.Input<T>, X>) {
-    return Guard.from(new InterGuard<Guardable.Input<T>, Guardable.Output<T>, X>(this, other))
+  inter<X>(other: Guardable<I, X>) {
+    return Guard.from(new InterGuard<I, O, X>(this, other))
   }
 
   /**
@@ -53,8 +53,8 @@ export class Guard<T extends Guardable.Infer<T>> {
    * @param other String.union(Boolean) -> string | boolean
    * @returns 
    */
-  union<X>(other: Guardable<Guardable.Input<T>, X>) {
-    return Guard.from(new UnionGuard<Guardable.Input<T>, Guardable.Output<T>, X>(this, other))
+  union<X>(other: Guardable<I, X>) {
+    return Guard.from(new UnionGuard<I, O, X>(this, other))
   }
 
   /**
@@ -64,8 +64,8 @@ export class Guard<T extends Guardable.Infer<T>> {
    * @param other 
    * @returns 
    */
-  then<X extends Guardable.Infer<X>>(other: X) {
-    return Guard.from(new ThenGuard<Guardable.Input<T>, Guardable.Output<T>, Guardable.Output<X>>(this, other as any))
+  then<X>(other: Guardable<O, X>) {
+    return Guard.from(new ThenGuard<I, O, X>(this, other))
   }
 
   static boolean() {
@@ -139,24 +139,26 @@ export class MaxLengthGuard<T extends { length: number }> {
 
 }
 
-export class StringGuard<O extends string> {
+export class StringGuard<I, O extends string> {
 
   constructor(
-    readonly subguard: Guardable<unknown, O>
-  ) {
+    readonly subguard: Guardable<I, O>
+  ) { }
 
+  static from<T extends Guardable.Infer<T, unknown, string>>(guardable: T) {
+    return new StringGuard(guardable)
   }
 
   static is(value: unknown): value is string {
     return typeof value === "string"
   }
 
-  is(value: unknown): value is O {
+  is(value: I): value is I & O {
     return this.subguard.is(value)
   }
 
   min(length: number) {
-    return Guard.from(this.subguard).then(new MinLengthGuard<O>(length))
+    return StringGuard.from(Guard.from(this.subguard).then<O>(new MinLengthGuard(length)))
   }
 
 }
@@ -169,7 +171,8 @@ export class ZeroHexStringGuard<T extends string> {
 
 }
 
-new StringGuard(Guard.from(new StringGuard(StringGuard)).then(new ZeroHexStringGuard())).min(123)
+const x = Guard.from(StringGuard).then(new ZeroHexStringGuard())
+StringGuard.from(x).min(123)
 
 
 
