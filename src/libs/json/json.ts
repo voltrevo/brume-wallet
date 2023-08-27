@@ -13,22 +13,11 @@ export namespace Guardable {
 
 }
 
-export class Guard<I, O> {
+export class BaseGuard<I, O> {
 
   constructor(
     readonly inner: Guardable<I, O>
   ) { }
-
-  /**
-   * Create a new Guard from a Guardable
-   * @param guardable 
-   * @returns 
-   */
-  static from<T extends Guardable.Infer<T>>(guardable: T) {
-    // if (guardable instanceof Guard)
-    // return guardable as Guard<Guardable>
-    return new Guard(guardable)
-  }
 
   /**
    * Guard value
@@ -68,6 +57,10 @@ export class Guard<I, O> {
     return Guard.from(new ThenGuard<I, O, X>(this, other))
   }
 
+}
+
+export class Guard<I, O> {
+
   static boolean() {
     return Guard.from(BooleanGuard)
   }
@@ -89,6 +82,19 @@ export class Guard<I, O> {
 
   }
 
+}
+
+export namespace Guard {
+  /** 
+   * Create a new Guard from a Guardable
+   * @param guardable 
+   * @returns 
+   */
+  export function from<T extends Guardable.Infer<T>>(guardable: T) {
+    // if (guardable instanceof Guard)
+    // return guardable as Guard<Guardable>
+    return new BaseGuard(guardable)
+  }
 }
 
 export namespace Unguard {
@@ -139,11 +145,13 @@ export class MaxLengthGuard<T extends { length: number }> {
 
 }
 
-export class StringGuard<I, O extends string> {
+export class StringGuard<I, O extends string> extends BaseGuard<I, O> {
 
   constructor(
-    readonly subguard: Guardable<I, O>
-  ) { }
+    readonly inner: Guardable<I, O>
+  ) {
+    super(inner)
+  }
 
   static from<T extends Guardable.Infer<T, unknown, string>>(guardable: T) {
     return new StringGuard(guardable)
@@ -154,11 +162,11 @@ export class StringGuard<I, O extends string> {
   }
 
   is(value: I): value is I & O {
-    return this.subguard.is(value)
+    return this.inner.is(value)
   }
 
   min(length: number) {
-    return Guard.from(this.subguard).then<O>(new MinLengthGuard(length))
+    return Guard.from(this.inner).then<O>(new MinLengthGuard(length))
   }
 
 }
