@@ -1,3 +1,4 @@
+import { Err, Ok, Result } from "@hazae41/result"
 
 export interface Guardable<I, O> {
   is(value: I): value is I & O
@@ -13,11 +14,22 @@ export namespace Guardable {
 
 }
 
-export class BaseGuard<I, O> {
+export class Guard<I, O> {
 
   constructor(
     readonly inner: Guardable<I, O>
   ) { }
+
+  /** 
+   * Create a new Guard from a Guardable
+   * @param guardable 
+   * @returns 
+   */
+  static from<T extends Guardable.Infer<T>>(guardable: T) {
+    // if (guardable instanceof Guard)
+    // return guardable as Guard<Guardable>
+    return new Guard<Guardable.Input<T>, Guardable.Output<T>>(guardable)
+  }
 
   /**
    * Guard value
@@ -29,37 +41,46 @@ export class BaseGuard<I, O> {
   }
 
   /**
+   * Try to cast value
+   * @param value 
+   * @returns 
+   */
+  tryAs(value: I): Result<I & O, Error> {
+    if (this.is(value))
+      return new Ok(value)
+    return new Err(new Error())
+  }
+
+  /**
    * Unconditional intersection (A & B)
+   * @example Guard.from(new HasPropertyGuard("name")).inter(new HasPropertyGuard("age")) -> { name: unknown } & { age: unknown } -> { name: unknown, age: unknown }
    * @param other 
    * @returns 
    */
-  inter<X>(other: Guardable<I, X>) {
-    return Guard.from(new InterGuard<I, O, X>(this, other))
+  inter<X>(other: Guardable<I, I & X>) {
+    return new Guard<I, O & X>(new InterGuard<I, O, X>(this, other))
   }
 
   /**
    * Unconditional union (A | B)
-   * @param other String.union(Boolean) -> string | boolean
+   * @param other Guard.from(StringGuard).union(BooleanGuard) -> string | boolean
    * @returns 
    */
-  union<X>(other: Guardable<I, X>) {
-    return Guard.from(new UnionGuard<I, O, X>(this, other))
+  union<X>(other: Guardable<I, I & X>) {
+    return new Guard<I, O | X>(new UnionGuard<I, O, X>(this, other))
   }
 
   /**
-   * Conditional union (A & B knowing A)
-   * @example String.then(ZeroHexString) -> `0x${string}`
-   * @example String.then(EmailString) -> `${string}@${string}.${string}`
+   * Conditional intersection (A & B knowing A), used when `other` has O in input
+   * @example Guard.from(StringGuard).then(ZeroHexStringGuard) -> `0x${string}`
+   * @example Guard.from(StringGuard).then(EmailStringGuard) -> `${string}@${string}.${string}`
+   * @example Guard.from(StringGuard).then(new MinLengthGuard(123)) -> string
    * @param other 
    * @returns 
    */
-  then<X>(other: Guardable<O, X>) {
-    return Guard.from(new ThenGuard<I, O, X>(this, other))
+  then<X>(other: Guardable<O, O & X>) {
+    return new Guard<I, O & X>(new ThenGuard<I, O, O & X>(this, other))
   }
-
-}
-
-export class Guard<I, O> {
 
   static boolean() {
     return Guard.from(BooleanGuard)
@@ -69,32 +90,27 @@ export class Guard<I, O> {
     return Guard.from(StringGuard)
   }
 
-  // static object<T extends { [property in PropertyKey]: Guardable<unknown, unknown> }>(schema: T): Guard<unknown, { [P in keyof T]: Guardable.Output<T[P]> }> {
-  //   let guard = Guard.from(ObjectGuard)
+  static min(length: number) {
+    return Guard.from(new MinLengthGuard(length))
+  }
 
-  //   for (const [property, subguard] of Object.entries(schema))
-  //     guard = guard.then(new HasPropertyGuard(property)).then(new PropertyGuard(property, subguard))
+  static max(length: number) {
+    return Guard.from(new MaxLengthGuard(length))
+  }
 
-  //   return guard as Guard<any, any>
-  // }
+  static object<T extends { [property in PropertyKey]: Guardable<unknown, unknown> }>(schema: T): Guard<unknown, { [P in keyof T]: Guardable.Output<T[P]> }> {
+    let guard = Guard.from(ObjectGuard)
+
+    for (const [property, subguard] of Object.entries(schema))
+      guard = guard.then(new HasPropertyGuard(property)).then(new PropertyGuard(property, subguard))
+
+    return guard as Guard<any, any>
+  }
 
   static array() {
 
   }
 
-}
-
-export namespace Guard {
-  /** 
-   * Create a new Guard from a Guardable
-   * @param guardable 
-   * @returns 
-   */
-  export function from<T extends Guardable.Infer<T>>(guardable: T) {
-    // if (guardable instanceof Guard)
-    // return guardable as Guard<Guardable>
-    return new BaseGuard(guardable)
-  }
 }
 
 export namespace Unguard {
@@ -145,44 +161,21 @@ export class MaxLengthGuard<T extends { length: number }> {
 
 }
 
-export class StringGuard<I, O extends string> extends BaseGuard<I, O> {
+export namespace StringGuard {
 
-  constructor(
-    readonly inner: Guardable<I, O>
-  ) {
-    super(inner)
-  }
-
-  static from<T extends Guardable.Infer<T, unknown, string>>(guardable: T) {
-    return new StringGuard(guardable)
-  }
-
-  static is(value: unknown): value is string {
+  export function is(value: unknown): value is string {
     return typeof value === "string"
-  }
-
-  is(value: I): value is I & O {
-    return this.inner.is(value)
-  }
-
-  min(length: number) {
-    return Guard.from(this.inner).then<O>(new MinLengthGuard(length))
   }
 
 }
 
-export class ZeroHexStringGuard<T extends string> {
+export namespace ZeroHexStringGuard {
 
-  is(value: T): value is T & `0x${string}` {
+  export function is(value: string): value is `0x${string}` {
     return value.startsWith("0x")
   }
 
 }
-
-const x = Guard.from(StringGuard).then(new ZeroHexStringGuard())
-StringGuard.from(x).min(123)
-
-
 
 /**
  * Guards that any value is an array
@@ -216,7 +209,7 @@ export class HasPropertyGuard<P extends PropertyKey> {
     readonly property: P
   ) { }
 
-  is(value: object): value is { [property in P]: unknown } {
+  is(value: object): value is object & { [property in P]: unknown } {
     return this.property in value
   }
 
@@ -294,6 +287,51 @@ function test(x: unknown) {
         x
   }
 }
+
+const hex = Guard.from(StringGuard)
+  .inter(ZeroHexStringGuard)
+  .then(new MinLengthGuard(16))
+  .then(new MaxLengthGuard(256))
+  .tryAs(`0xdeadbeef4c6f72656d20697073756d20646f6c6f722073`)
+  .unwrap()
+
+
+const obj = Guard.from(ObjectGuard)
+  .inter(new HasPropertyGuard("hello"))
+  .inter(new HasPropertyGuard("world"))
+  .tryAs({})
+
+/**
+ * Generic interface
+ */
+interface Runnable<A> {
+  run(a: A): void
+}
+
+/**
+ * Runnable<string> that should only accept strings
+ */
+class StringRunnable {
+  run(a: string) { }
+}
+
+/**
+ * Holds a value and use it with a runnable **of the same type**
+ */
+class Runner<A> {
+  constructor(
+    readonly value: A
+  ) { }
+
+  run(runnable: Runnable<A>) {
+    runnable.run(this.value)
+  }
+}
+
+/**
+ * StringRunnable is accepted while it should not
+ */
+new Runner<unknown>(123 as unknown).run(new StringRunnable())
 
 // export class Json<T> {
 
