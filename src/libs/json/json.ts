@@ -30,8 +30,8 @@ export class Guard<I, O> {
    * @returns 
    */
   static from<T extends Guardable.Infer<T>>(guardable: T) {
-    // if (guardable instanceof Guard)
-    // return guardable as Guard<Guardable>
+    if (guardable instanceof Guard)
+      return guardable as Guard<Guardable.Input<T>, Guardable.Output<T>>
     return new Guard<Guardable.Input<T>, Guardable.Output<T>>(guardable)
   }
 
@@ -94,25 +94,84 @@ export class Guard<I, O> {
     return Guard.from(StringGuard)
   }
 
-  static min(length: number) {
-    return Guard.from(new MinLengthGuard(length))
+  static min<T extends { length: number }>(length: number) {
+    return Guard.from(new MinLengthGuard<T>(length))
   }
 
-  static max(length: number) {
-    return Guard.from(new MaxLengthGuard(length))
+  static max<T extends { length: number }>(length: number) {
+    return Guard.from(new MaxLengthGuard<T>(length))
   }
 
-  static object<T extends { [property in PropertyKey]: Guardable<unknown, unknown> }>(schema: T): Guard<unknown, { [P in keyof T]: Guardable.Output<T[P]> }> {
-    let guard: Guard<any, any> = Guard.from(ObjectGuard)
-
-    for (const [property, subguard] of Object.entries(schema))
-      guard = guard.then(new HasPropertyGuard(property)).then(new PropertyGuard(property, subguard))
-
-    return guard
+  static len<T extends { length: number }, N extends number>(length: N) {
+    return Guard.from(new LengthGuard<T, N>(length))
   }
 
-  static array() {
+}
 
+export namespace Schema {
+
+  export function boolean() {
+    return new PropertySchema(BooleanGuard, { required: true })
+  }
+
+  export function string() {
+    return new PropertySchema(StringGuard, { required: true })
+  }
+
+}
+
+export class ObjectShema<T extends { [property in PropertyKey]: PropertySchema<unknown> }> {
+
+  constructor(
+    readonly inner: T
+  ) { }
+
+  is(value: unknown): value is { [P in keyof T]: Guardable.Output<T[P]> } {
+    if (!ObjectGuard.is(value))
+      return false
+
+    for (const [key, property] of Object.entries(this.inner)) {
+      if (new HasPropertyGuard(key).is(value)) {
+        if (!property.is(value[key]))
+          return false
+        continue
+      }
+
+      if (property.options.required)
+        return false
+      continue
+    }
+
+    return true
+  }
+
+  property<P extends PropertyKey>(key: P, setter: (property: PropertySchema<T[P]>) => PropertySchema<T[P]>) {
+
+  }
+
+}
+
+export interface PropertySchemaOptions {
+  readonly required: boolean
+}
+
+export class PropertySchema<T> {
+
+  constructor(
+    readonly subguard: Guardable<unknown, T>,
+    readonly options: PropertySchemaOptions
+  ) { }
+
+  is(value: unknown): value is T {
+    return this.subguard.is(value)
+  }
+
+  set(setter: (options: PropertySchemaOptions) => PropertySchemaOptions) {
+    return new PropertySchema(this.subguard, setter(this.options))
+  }
+
+  required(required: boolean) {
+    return this.set(options => ({ ...options, required }))
   }
 
 }
@@ -137,6 +196,18 @@ export namespace BooleanGuard {
 
   export function is(value: unknown): value is boolean {
     return typeof value === "boolean"
+  }
+
+}
+
+export class LengthGuard<T extends { length: number }, N extends number> {
+
+  constructor(
+    readonly length: N
+  ) { }
+
+  is(value: T): value is T & { length: N } {
+    return value.length === this.length
   }
 
 }
@@ -273,10 +344,6 @@ export class UnionGuard<I, A, B> implements Guardable<I, A | B> {
 
 function test(x: unknown) {
   {
-    if (Guard.object({}).is(x))
-      x
-  }
-  {
     if (Guard.from(ObjectGuard).then(new HasPropertyGuard("hello")).then(new PropertyGuard("hello", StringGuard)).is(x))
       x.hello
   }
@@ -294,8 +361,7 @@ function test(x: unknown) {
 
 const hex = Guard.from(StringGuard)
   .then(ZeroHexStringGuard)
-  .then(new MinLengthGuard(16))
-  .then(new MaxLengthGuard(256))
+  .then(Guard.len(130))
   .tryAs(`0xdeadbeef4c6f72656d20697073756d20646f6c6f722073`)
   .unwrap()
 
