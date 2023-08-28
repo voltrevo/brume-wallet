@@ -16,6 +16,9 @@ export namespace Guard {
 
   export type Output<T> = T extends Bivariant<unknown, infer O> ? O : never
 
+  export function infer<T extends Guard.Infer<T>>(guard: T) {
+    return guard as Bivariant<Input<T>, Output<T>>
+  }
 
   /**
    * Try to cast value
@@ -34,8 +37,8 @@ export namespace Guard {
    * @param other 
    * @returns 
    */
-  export function inter<I, A, B>(left: Guard<I, A>, right: Guard<I, B>) {
-    return new InterGuard<I, A, B>(left, right)
+  export function inter<T extends Guard.Infer<T>, X>(left: T, right: Guard<Guard.Input<T>, X>) {
+    return new InterGuard(left, right)
   }
 
   /**
@@ -361,12 +364,14 @@ const hex = GuardedProperty.from(StringGuard)
   .tryAs(`0xdeadbeef4c6f72656d20697073756d20646f6c6f722073`)
   .unwrap()
 
+const obj = Property.object({}).then(Guard.inter(
+  new HasPropertyGuard("hello"),
+  new HasPropertyGuard("world"))
+).tryAs({})
 
-const obj = GuardedProperty.from(ObjectGuard)
-  .then(GuardedProperty
-    .from(new HasPropertyGuard("hello"))
-    .inter(new HasPropertyGuard("world"))
-  ).tryAs({})
+Property
+  .object({ hello: Property.string() })
+  .inter(Property.object({ world: Property.string() }))
 
 Property
   .string()
