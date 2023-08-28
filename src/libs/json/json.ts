@@ -319,12 +319,12 @@ export class PropertyGuard<P extends PropertyKey, O> {
 export class ThenGuard<I, X, O> implements Guard<I, O> {
 
   constructor(
-    readonly a: Guard<I, X>,
-    readonly b: Guard<X, O>
+    readonly left: Guard<I, X>,
+    readonly right: Guard<X, O>
   ) { }
 
   is(value: I): value is I & O {
-    return this.a.is(value) && this.b.is(value)
+    return this.left.is(value) && this.right.is(value)
   }
 
 }
@@ -332,12 +332,12 @@ export class ThenGuard<I, X, O> implements Guard<I, O> {
 export class InterGuard<I, A, B> implements Guard<I, A & B> {
 
   constructor(
-    readonly a: Guard<I, A>,
-    readonly b: Guard<I, B>
+    readonly left: Guard<I, A>,
+    readonly right: Guard<I, B>
   ) { }
 
   is(value: I): value is I & (A & B) {
-    return this.a.is(value) && this.b.is(value)
+    return this.left.is(value) && this.right.is(value)
   }
 
 }
@@ -345,12 +345,12 @@ export class InterGuard<I, A, B> implements Guard<I, A & B> {
 export class UnionGuard<I, A, B> implements Guard<I, A | B> {
 
   constructor(
-    readonly a: Guard<I, A>,
-    readonly b: Guard<I, B>
+    readonly left: Guard<I, A>,
+    readonly right: Guard<I, B>
   ) { }
 
   is(value: I): value is I & (A | B) {
-    return this.a.is(value) || this.b.is(value)
+    return this.left.is(value) || this.right.is(value)
   }
 
 }
