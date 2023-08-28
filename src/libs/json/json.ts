@@ -107,8 +107,8 @@ export class GuardedProperty<I, O> extends Property<I, O> {
     super()
   }
 
-  static from<T extends Guard.Infer<T>>(guard: T) {
-    return new GuardedProperty(guard)
+  static from<T extends Guard.Infer<T>>(guard: T, options?: PropertyOptions) {
+    return new GuardedProperty(guard, options)
   }
 
   is(value: I): value is I & O {
@@ -122,11 +122,11 @@ export class GuardedProperty<I, O> extends Property<I, O> {
   }
 
   inter<X>(other: Guard<I, I & X>) {
-    return new GuardedProperty<I, O & X>(Guard.inter<I, O, I & X>(this, other), this.options)
+    return GuardedProperty.from(Guard.inter<I, O, I & X>(this, other), this.options)
   }
 
   then<X>(other: Guard<O, O & X>) {
-    return new GuardedProperty<I, O & X>(Guard.then<I, O, O & X>(this, other), this.options)
+    return GuardedProperty.from(Guard.then<I, O, O & X>(this, other), this.options)
   }
 
   required(required: boolean) {
@@ -168,11 +168,11 @@ export class ObjectProperty<I, T extends { [property in PropertyKey]: Property<u
   }
 
   inter<X>(other: Guard<I, I & X>) {
-    return new GuardedProperty<I, O & X>(Guard.inter<I, O, I & X>(this, other), this.options)
+    return GuardedProperty.from(Guard.inter<I, O, I & X>(this, other), this.options)
   }
 
   then<X>(other: Guard<O, O & X>) {
-    return new GuardedProperty<I, O & X>(Guard.then<I, O, O & X>(this, other), this.options)
+    return GuardedProperty.from(Guard.then<I, O, O & X>(this, other), this.options)
   }
 
   required(required: boolean) {
