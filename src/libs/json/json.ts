@@ -383,31 +383,23 @@ const object = Property.object({
   message: Property.string().then(ZeroHexStringGuard).then(Guard.min(2)).required(true)
 }).tryAs({ message: "Oxdeadbeef" }).unwrap()
 
-// export class Json<T> {
+export class Json<T> {
 
-//   /**
-//    * Abstraction containing a schema and a text
-//    * @param schema 
-//    * @param inner 
-//    */
-//   constructor(
-//     readonly schema: Guard<T>,
-//     readonly inner: string
-//   ) { }
+  /**
+   * Abstraction containing a schema and a text
+   * @param schema 
+   * @param inner 
+   */
+  constructor(
+    readonly inner: string
+  ) { }
 
-//   from(schema: Guard<T>, value: T) {
+  tryParse(guard: Guard<unknown, T>) {
+    return Guard.tryAs(guard, JSON.parse(this.inner))
+  }
 
-//   }
+}
 
-//   tryParse() {
-//     return this.schema.tryParse(JSON.parse(this.inner))
-//   }
-
-// }
-
-// const zbool = new Schema(z.boolean())
-// const json = new Json<boolean>(, "true")
-
-// function test(json: Json<string>) {
-//   const value = json.tryParse()
-// }
+function test(json: Json<string>) {
+  const value = json.tryParse(Property.string())
+}
