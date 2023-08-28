@@ -122,11 +122,11 @@ export class GuardedProperty<I, O> extends Property<I, O> {
   }
 
   inter<X>(other: Guard<I, I & X>) {
-    return GuardedProperty.from(Guard.inter<I, O, I & X>(this, other), this.options)
+    return GuardedProperty.from(new InterGuard<I, O, I & X>(this, other), this.options)
   }
 
   then<X>(other: Guard<O, O & X>) {
-    return GuardedProperty.from(Guard.then<I, O, O & X>(this, other), this.options)
+    return GuardedProperty.from(new ThenGuard<I, O, O & X>(this, other), this.options)
   }
 
   required(required: boolean) {
@@ -168,11 +168,11 @@ export class ObjectProperty<I, T extends { [property in PropertyKey]: Property<u
   }
 
   inter<X>(other: Guard<I, I & X>) {
-    return GuardedProperty.from(Guard.inter<I, O, I & X>(this, other), this.options)
+    return GuardedProperty.from(new InterGuard<I, O, I & X>(this, other), this.options)
   }
 
   then<X>(other: Guard<O, O & X>) {
-    return GuardedProperty.from(Guard.then<I, O, O & X>(this, other), this.options)
+    return GuardedProperty.from(new ThenGuard<I, O, O & X>(this, other), this.options)
   }
 
   required(required: boolean) {
@@ -372,13 +372,11 @@ Property
   .string()
   .then(ZeroHexStringGuard)
   .required(true)
-  .is("")
+  .is("0xdeadbeef")
 
-const schema = Property.object({
-  message: Property.string().then(ZeroHexStringGuard).then(Guard.min(123))
-})
-
-Guard.tryAs(schema, { message: "0xdeadbeef" }).unwrap()
+const object = Property.object({
+  message: Property.string().then(ZeroHexStringGuard).then(Guard.min(2)).required(true)
+}).tryAs({ message: "Oxdeadbeef" }).unwrap()
 
 // export class Json<T> {
 
