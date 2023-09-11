@@ -1,7 +1,7 @@
+import { Base58 } from "@hazae41/base58"
 import { Bytes } from "@hazae41/bytes"
 import { Cursor } from "@hazae41/cursor"
-import { Ok, Result } from "@hazae41/result"
-import { Base58 } from "../bases/base58"
+import { Result } from "@hazae41/result"
 import { Ripemd160 } from "../hashes/ripemd160"
 import { Sha256 } from "../hashes/sha256"
 
@@ -22,7 +22,7 @@ export namespace Address {
 
       cursor.tryWrite(checksum).throw(t)
 
-      return new Ok(Base58.stringify(cursor.bytes))
+      return Base58.get().tryEncode(cursor.bytes)
     })
   }
 

@@ -14,7 +14,11 @@ import { IrnClient } from "@/libs/wconn/mods/irn/irn"
 import { Jwt } from "@/libs/wconn/mods/jwt/jwt"
 import { Wc, WcMetadata, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
+import { Alocer } from "@hazae41/alocer"
+import { Base16 } from "@hazae41/base16"
+import { Base58 } from "@hazae41/base58"
 import { Base64 } from "@hazae41/base64"
+import { Base64Url } from "@hazae41/base64url"
 import { Berith } from "@hazae41/berith"
 import { Bytes } from "@hazae41/bytes"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
@@ -23,6 +27,7 @@ import { Circuit, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
+import { Keccak256 } from "@hazae41/keccak256"
 import { Morax } from "@hazae41/morax"
 import { Mutex } from "@hazae41/mutex"
 import { None, Option, Optional, Some } from "@hazae41/option"
@@ -1055,19 +1060,34 @@ export class Global {
 
 }
 
+async function initBerith() {
+  await Berith.initBundledOnce()
+  Ed25519.set(await Ed25519.fromNativeOrBerith(Berith))
+  X25519.set(await X25519.fromSafeOrBerith(Berith))
+}
+
+async function initMorax() {
+  await Morax.initBundledOnce()
+  Keccak256.set(Keccak256.fromMorax(Morax))
+  Sha1.set(Sha1.fromMorax(Morax))
+}
+
+async function initAlocer() {
+  await Alocer.initBundledOnce()
+  Base16.set(Base16.fromBufferOrAlocer(Alocer))
+  Base64.set(Base64.fromBufferOrAlocer(Alocer))
+  Base64Url.set(Base64Url.fromBufferOrAlocer(Alocer))
+  Base58.set(Base58.fromAlocer(Alocer))
+}
+
 async function tryInit() {
   return await Result.runAndDoubleWrap(async () => {
     return await Result.unthrow<Result<Global, Error>>(async t => {
-      await Berith.initBundledOnce()
-      await Morax.initBundledOnce()
+      await Promise.all([initBerith(), initMorax(), initAlocer()])
 
-
-      const ed25519 = await Ed25519.fromNativeOrBerith(Berith)
-      const x25519 = await X25519.fromSafeOrBerith(Berith)
-      const sha1 = Sha1.fromMorax(Morax)
-
-      Ed25519.set(ed25519)
-      X25519.set(x25519)
+      const ed25519 = Ed25519.get()
+      const x25519 = X25519.get()
+      const sha1 = Sha1.get()
 
       const fallbacks = await tryFetch<Fallback[]>(FALLBACKS_URL).then(r => r.throw(t))
 

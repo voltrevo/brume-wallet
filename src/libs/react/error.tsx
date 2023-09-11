@@ -45,7 +45,7 @@ export function PromiseCatcher(props: ChildrenProps) {
   }, [])
 
   if (event != null)
-    throw event
+    throw event.reason
 
   return <>{children}</>
 }
