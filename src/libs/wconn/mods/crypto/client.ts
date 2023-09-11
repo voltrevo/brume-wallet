@@ -149,10 +149,9 @@ export class CryptoClient {
 
   async #onMessage(message: string): Promise<Result<true, Error>> {
     return Result.unthrow(async t => {
-      // TODO slice
-      const bytes = Base64.get().tryDecode(message).throw(t).copyAndDispose()
+      using slice = Base64.get().tryDecode(message).throw(t)
 
-      const envelope = Readable.tryReadFromBytes(Envelope, bytes).throw(t)
+      const envelope = Readable.tryReadFromBytes(Envelope, slice.bytes).throw(t)
       const cipher = envelope.fragment.tryReadInto(Ciphertext).throw(t)
       const plain = cipher.tryDecrypt(this.key).throw(t)
       const plaintext = Bytes.toUtf8(plain.fragment.bytes)

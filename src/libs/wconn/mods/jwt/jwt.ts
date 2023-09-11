@@ -34,10 +34,9 @@ export namespace Jwt {
       const presignature = Bytes.fromUtf8(`${header}.${payload}`)
 
       const signatureRef = await Promise.resolve(privateKey.trySign(presignature)).then(r => r.throw(t))
-      // TODO slice
-      const signatureBytes = await Promise.resolve(signatureRef.tryExport()).then(r => r.throw(t).copyAndDispose())
+      using signatureSlice = await Promise.resolve(signatureRef.tryExport()).then(r => r.throw(t))
 
-      const signature = base64url.encode(signatureBytes).replaceAll("=", "")
+      const signature = base64url.encode(signatureSlice.bytes).replaceAll("=", "")
 
       return new Ok(`${header}.${payload}.${signature}`)
     })

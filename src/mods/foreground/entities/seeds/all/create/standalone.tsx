@@ -138,11 +138,10 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
 
       const [ivBase64, cipherBase64] = triedEncryptedPhrase.throw(t)
 
-      // TODO slice
-      const cipherBytes = Base64.get().tryDecode(cipherBase64).throw(t).copyAndDispose()
+      using cipherSlice = Base64.get().tryDecode(cipherBase64).throw(t)
       const cipherBytes2 = await WebAuthnStorage.get(id).then(r => r.throw(t))
 
-      if (!Bytes.equals(cipherBytes, cipherBytes2))
+      if (!Bytes.equals(cipherSlice.bytes, cipherBytes2))
         return new Err(new WebAuthnStorageError())
 
       const idBase64 = Base64.get().tryEncode(id).throw(t)

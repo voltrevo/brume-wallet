@@ -16,17 +16,16 @@ export async function tryCreateUserStorage(user: UserData, password: string): Pr
     const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"])
 
     const passwordHashBase64 = user.passwordHashBase64
-    // TODO slice
-    const passwordHashBytes = Base64.get().tryDecode(passwordHashBase64).throw(t).copyAndDispose()
+    using passwordHashSlice = Base64.get().tryDecode(passwordHashBase64).throw(t)
 
     const passwordParamsBase64 = user.passwordParamsBase64
     const passwordParamsBytes = Pbdkf2Params.parse(passwordParamsBase64)
 
-    const passwordHashLength = passwordHashBytes.length * 8
+    const passwordHashLength = passwordHashSlice.bytes.length * 8
 
     const currentPasswordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, passwordHashLength))
 
-    if (!Bytes.equals(currentPasswordHashBytes, passwordHashBytes))
+    if (!Bytes.equals(currentPasswordHashBytes, passwordHashSlice.bytes))
       return new Err(new Error(`Invalid password`))
 
     const keyParamsBytes = Pbdkf2Params.parse(user.keyParamsBase64.algorithm)
