@@ -1,3 +1,5 @@
+import "@hazae41/symbol-dispose-polyfill"
+
 import { FixedInit } from "@/libs/bigints/bigints"
 import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
@@ -12,9 +14,11 @@ import { IrnClient } from "@/libs/wconn/mods/irn/irn"
 import { Jwt } from "@/libs/wconn/mods/jwt/jwt"
 import { Wc, WcMetadata, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
+import { Base64 } from "@hazae41/base64"
 import { Berith } from "@hazae41/berith"
 import { Bytes } from "@hazae41/bytes"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
+import { Disposer } from "@hazae41/cleaner"
 import { Circuit, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
@@ -30,7 +34,7 @@ import { X25519 } from "@hazae41/x25519"
 import { Core, IDBStorage, RawState, SimpleFetcherfulQueryInstance, State } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
-import { EthereumBrume, EthereumBrumes } from "./entities/brumes/data"
+import { EthBrume, EthBrumes } from "./entities/brumes/data"
 import { Origin, OriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
@@ -106,6 +110,9 @@ export class Global {
   #user?: UserSession
   #path: string = "/"
 
+  readonly circuits: Mutex<Pool<Disposer<Circuit>, Error>>
+  readonly brumes: Mutex<Pool<Disposer<EthBrume>, Error>>
+
   /**
    * Scripts by session
    */
@@ -122,11 +129,12 @@ export class Global {
   readonly popup = new Mutex<Slot<PopupData>>({})
 
   constructor(
-    readonly tors: Mutex<Pool<TorClientDuplex, Error>>,
-    readonly circuits: Mutex<Pool<Circuit, Error>>,
-    readonly brumes: Mutex<Pool<EthereumBrume, Error>>,
+    readonly tors: Mutex<Pool<Disposer<TorClientDuplex>, Error>>,
     readonly storage: IDBStorage
-  ) { }
+  ) {
+    this.circuits = Circuits.createPool(this.tors, { capacity: 9 })
+    this.brumes = EthBrumes.createPool(chainByChainId, this.circuits, { capacity: 9 })
+  }
 
   async tryGetStoredPassword(): Promise<Result<PasswordData, Error>> {
     if (IS_FIREFOX_EXTENSION) {
@@ -419,7 +427,7 @@ export class Global {
       const { wallets, chain } = session
 
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
-      const brumes = await this.#getOrCreateEthereumBrumes(wallet)
+      const brumes = await this.#getOrCreateEthBrumes(wallet)
 
       const ethereum: EthereumContext = { user, port: script, session, wallet, chain, brumes }
 
@@ -802,12 +810,12 @@ export class Global {
 
       const { crypter } = Option.wrap(this.#user).ok().throw(t)
 
-      const plain = Bytes.fromBase64(plainBase64)
+      const plain = Base64.get().tryDecode(plainBase64).throw(t).copyAndDispose()
       const iv = Bytes.tryRandom(16).throw(t)
       const cipher = await crypter.encrypt(plain, iv)
 
-      const ivBase64 = Bytes.toBase64(iv)
-      const cipherBase64 = Bytes.toBase64(cipher)
+      const ivBase64 = Base64.get().tryEncode(iv).throw(t)
+      const cipherBase64 = Base64.get().tryEncode(cipher).throw(t)
 
       return new Ok([ivBase64, cipherBase64])
     })
@@ -819,11 +827,11 @@ export class Global {
 
       const { crypter } = Option.wrap(this.#user).ok().throw(t)
 
-      const iv = Bytes.fromBase64(ivBase64)
-      const cipher = Bytes.fromBase64(cipherBase64)
+      const iv = Base64.get().tryDecode(ivBase64).throw(t).copyAndDispose()
+      const cipher = Base64.get().tryDecode(cipherBase64).throw(t).copyAndDispose()
       const plain = await crypter.decrypt(cipher, iv)
 
-      const plainBase64 = Bytes.toBase64(plain)
+      const plainBase64 = Base64.get().tryEncode(plain).throw(t)
 
       return new Ok(plainBase64)
     })
@@ -855,13 +863,13 @@ export class Global {
     })
   }
 
-  async #getOrCreateEthereumBrumes(wallet: Wallet): Promise<EthereumBrumes> {
-    const brumesQuery = await EthereumBrumes.schema(wallet).make(this.core)
+  async #getOrCreateEthBrumes(wallet: Wallet): Promise<EthBrumes> {
+    const brumesQuery = await EthBrumes.schema(wallet).make(this.core)
 
     if (brumesQuery.current != null)
       return brumesQuery.current.inner
 
-    const brumes = EthereumBrumes.createSubpool(this.brumes, { capacity: 3 })
+    const brumes = EthBrumes.createSubpool(this.brumes, { capacity: 3 })
     await brumesQuery.mutate(Mutators.data(brumes))
     return brumes
   }
@@ -948,7 +956,7 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
-      const brumes = await this.#getOrCreateEthereumBrumes(wallet)
+      const brumes = await this.#getOrCreateEthBrumes(wallet)
 
       const ethereum = { user, port: foreground, wallet, chain, brumes }
 
@@ -970,7 +978,7 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
-      const brumes = await this.#getOrCreateEthereumBrumes(wallet)
+      const brumes = await this.#getOrCreateEthBrumes(wallet)
 
       const ethereum = { user, port: foreground, wallet, chain, brumes }
 
@@ -991,7 +999,7 @@ export class Global {
   async brume_log(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
     return await tryLoop(async (i) => {
       return await Result.unthrow<Result<void, Looped<Error>>>(async t => {
-        const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Retry.new).throw(t).result.get())
+        const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Retry.new).throw(t).result.get().inner)
 
         const body = JSON.stringify({ tor: true })
         await circuit.tryFetch("https://proxy.brume.money", { method: "POST", body }).then(r => r.inspectErrSync(() => console.warn(`Could not fetch logs`)).mapErrSync(Cancel.new).throw(t))
@@ -1009,13 +1017,11 @@ export class Global {
 
       const socket = await tryLoop(() => {
         return Result.unthrow<Result<WebSocket, Looped<Error>>>(async t => {
-          const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Retry.new).throw(t).result.get())
-
-          Berith.initSyncBundledOnce()
+          const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Retry.new).throw(t).result.get().inner)
 
           const relay = Wc.RELAY
-          const key = new Berith.Ed25519Keypair()
-          const auth = Jwt.trySign(key, relay).mapErrSync(Cancel.new).throw(t)
+          const key = await Promise.resolve(Ed25519.get().PrivateKey.tryRandom()).then(r => r.mapErrSync(Cancel.new).throw(t))
+          const auth = await Jwt.trySign(key, relay).then(r => r.mapErrSync(Cancel.new).throw(t))
           const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
 
           const url = new URL(`${relay}/?auth=${auth}&projectId=${projectId}`)
@@ -1050,14 +1056,18 @@ export class Global {
 }
 
 async function tryInit() {
-  return await Result.recatch(async () => {
+  return await Result.runAndDoubleWrap(async () => {
     return await Result.unthrow<Result<Global, Error>>(async t => {
-      Berith.initSyncBundledOnce()
-      Morax.initSyncBundledOnce()
+      await Berith.initBundledOnce()
+      await Morax.initBundledOnce()
 
-      const ed25519 = await Ed25519.fromSafeOrBerith(Berith)
+
+      const ed25519 = await Ed25519.fromNativeOrBerith(Berith)
       const x25519 = await X25519.fromSafeOrBerith(Berith)
       const sha1 = Sha1.fromMorax(Morax)
+
+      Ed25519.set(ed25519)
+      X25519.set(x25519)
 
       const fallbacks = await tryFetch<Fallback[]>(FALLBACKS_URL).then(r => r.throw(t))
 
@@ -1065,17 +1075,14 @@ async function tryInit() {
         return await tryCreateTor({ fallbacks, ed25519, x25519, sha1 })
       }, { capacity: 9 })
 
-      const circuits = Circuits.createPool(tors, { capacity: 9 })
-      const sessions = EthereumBrumes.createPool(chainByChainId, circuits, { capacity: 9 })
-
       const storage = IDBStorage.tryCreate({ name: "memory" }).unwrap()
-      const global = new Global(tors, circuits, sessions, storage)
+      const global = new Global(tors, storage)
 
       await global.tryInit().then(r => r.throw(t))
 
       return new Ok(global)
     })
-  })
+  }).then(r => r.flatten())
 }
 
 const init = tryInit()

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2022",
     "baseUrl": ".",
     "lib": [
       "dom",
@@ -24,12 +24,12 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noEmit": true,
-    "module": "NodeNext",
+    "module": "esnext",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "incremental": true,
-    "jsx": "preserve",
+    "jsx": "preserve"
   },
   "include": [
     "./pages/**/*",

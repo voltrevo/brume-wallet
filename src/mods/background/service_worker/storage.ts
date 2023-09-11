@@ -1,3 +1,4 @@
+import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
 import { Err, Ok, Result } from "@hazae41/result"
 import { AesGcmCoder, AsyncPipeBicoder, HmacEncoder, IDBStorage } from "@hazae41/xswr"
@@ -15,14 +16,17 @@ export async function tryCreateUserStorage(user: UserData, password: string): Pr
     const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"])
 
     const passwordHashBase64 = user.passwordHashBase64
+    // TODO slice
+    const passwordHashBytes = Base64.get().tryDecode(passwordHashBase64).throw(t).copyAndDispose()
+
     const passwordParamsBase64 = user.passwordParamsBase64
     const passwordParamsBytes = Pbdkf2Params.parse(passwordParamsBase64)
-    const passwordHashLength = Bytes.fromBase64(passwordHashBase64).length * 8
+
+    const passwordHashLength = passwordHashBytes.length * 8
 
     const currentPasswordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, passwordHashLength))
-    const currentPasswordHashBase64 = Bytes.toBase64(currentPasswordHashBytes)
 
-    if (currentPasswordHashBase64 !== passwordHashBase64)
+    if (!Bytes.equals(currentPasswordHashBytes, passwordHashBytes))
       return new Err(new Error(`Invalid password`))
 
     const keyParamsBytes = Pbdkf2Params.parse(user.keyParamsBase64.algorithm)

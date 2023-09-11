@@ -3,26 +3,34 @@ import { Objects } from "@/libs/objects/objects"
 import { RpcClient } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Sockets } from "@/libs/sockets/sockets"
-import { BinaryError } from "@hazae41/binary"
+import { Jwt } from "@/libs/wconn/mods/jwt/jwt"
+import { Wc } from "@/libs/wconn/mods/wc/wc"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
-import { ControllerError } from "@hazae41/cascade"
-import { Cleaner } from "@hazae41/cleaner"
+import { Disposer } from "@hazae41/cleaner"
 import { Circuit } from "@hazae41/echalote"
+import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { Mutex } from "@hazae41/mutex"
 import { None, Optional } from "@hazae41/option"
 import { Cancel, Looped, Pool, PoolParams, Retry, tryLoop } from "@hazae41/piscine"
-import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { createQuerySchema } from "@hazae41/xswr"
 import { Wallet } from "../wallets/data"
 
-export type EthereumBrumes =
-  Mutex<Pool<EthereumBrume, Error>>
+export type WcBrumes =
+  Mutex<Pool<Disposer<WcBrume>, Error>>
 
-export interface EthereumBrume {
+export interface WcBrume {
+  readonly circuit: Circuit
+  readonly sockets: Pool<Disposer<WebSocketConnection>, Error>
+}
+
+export type EthBrumes =
+  Mutex<Pool<Disposer<EthBrume>, Error>>
+
+export interface EthBrume {
   readonly circuit: Circuit,
-  readonly chains: EthereumChains<Optional<Pool<RpcConnection, Error>>>
+  readonly chains: EthereumChains<Optional<Pool<Disposer<RpcConnection>, Error>>>
 }
 
 export type Connection =
@@ -66,7 +74,49 @@ export class UrlConnection {
 
 }
 
-export namespace EthereumBrumes {
+export namespace WcBrumes {
+
+  export async function tryCreate(circuit: Circuit): Promise<Result<WcBrume, Error>> {
+    return await Result.unthrow(async t => {
+      const relay = Wc.RELAY
+      const key = await Promise.resolve(Ed25519.get().PrivateKey.tryRandom()).then(r => r.throw(t))
+      const auth = await Jwt.trySign(key, relay).then(r => r.throw(t))
+      const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
+      const url = `${relay}/?auth=${auth}&projectId=${projectId}`
+      const sockets = WebSocketConnection.createPool(circuit, [url])
+
+      return new Ok({ circuit, sockets })
+    })
+  }
+
+  export async function createPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
+    return new Mutex(new Pool<Disposer<WcBrume>, Error>(async (params) => {
+      return await Result.unthrow(async t => {
+        const { pool, index } = params
+
+        const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get().inner)
+        const brume = await tryCreate(circuit).then(r => r.throw(t))
+
+        const onCloseOrError = async (reason?: unknown) => {
+          pool.restart(index)
+          return new None()
+        }
+
+        circuit.events.on("close", onCloseOrError, { passive: true })
+        circuit.events.on("error", onCloseOrError, { passive: true })
+
+        const onClean = () => {
+          circuit.events.off("close", onCloseOrError)
+          circuit.events.off("error", onCloseOrError)
+        }
+
+        return new Ok(new Disposer(brume, onClean))
+      })
+    }, params))
+  }
+}
+
+export namespace EthBrumes {
 
   export type Key = ReturnType<typeof key>
 
@@ -77,46 +127,46 @@ export namespace EthereumBrumes {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(wallet: Wallet) {
-    return createQuerySchema<Key, Mutex<Pool<EthereumBrume, Error>>, never>({ key: key(wallet) })
+    return createQuerySchema<Key, Mutex<Pool<Disposer<EthBrume>, Error>>, never>({ key: key(wallet) })
   }
 
-  export function createPool(chains: EthereumChains, circuits: Mutex<Pool<Circuit, Error>>, params: PoolParams) {
-    return new Mutex(new Pool<EthereumBrume, Error>(async (params) => {
+  export function createPool(chains: EthereumChains, circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
+    return new Mutex(new Pool<Disposer<EthBrume>, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index } = params
 
-        const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get())
-        const ethereum = Objects.mapValuesSync(chains, chain => Connection.createRpcPool(circuit, chain.urls))
+        const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get().inner)
+        const chains2 = Objects.mapValuesSync(chains, chain => RpcConnection.createPool(circuit, chain.urls))
 
-        const brume: EthereumBrume = { circuit, chains: ethereum }
+        const brume: EthBrume = { circuit, chains: chains2 }
 
         const onCloseOrError = async (reason?: unknown) => {
-          pool.delete(index)
+          pool.restart(index)
           return new None()
         }
 
-        brume.circuit.events.on("close", onCloseOrError, { passive: true })
-        brume.circuit.events.on("error", onCloseOrError, { passive: true })
+        circuit.events.on("close", onCloseOrError, { passive: true })
+        circuit.events.on("error", onCloseOrError, { passive: true })
 
         const onClean = () => {
-          brume.circuit.events.off("close", onCloseOrError)
-          brume.circuit.events.off("error", onCloseOrError)
+          circuit.events.off("close", onCloseOrError)
+          circuit.events.off("error", onCloseOrError)
         }
 
-        return new Ok(new Cleaner(brume, onClean))
+        return new Ok(new Disposer(brume, onClean))
       })
     }, params))
   }
 
-  export function createSubpool(brumes: Mutex<Pool<EthereumBrume, Error>>, params: PoolParams) {
-    return new Mutex(new Pool<EthereumBrume, Error>(async (params) => {
+  export function createSubpool(brumes: Mutex<Pool<Disposer<EthBrume>, Error>>, params: PoolParams) {
+    return new Mutex(new Pool<Disposer<EthBrume>, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index } = params
 
-        const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.get())
+        const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.get().inner)
 
         const onCloseOrError = async (reason?: unknown) => {
-          pool.delete(index)
+          pool.restart(index)
           return new None()
         }
 
@@ -128,23 +178,18 @@ export namespace EthereumBrumes {
           brume.circuit.events.off("error", onCloseOrError)
         }
 
-        return new Ok(new Cleaner(brume, onClean))
+        return new Ok(new Disposer(brume, onClean))
       })
     }, params))
   }
 
 }
 
-export namespace Connection {
+export namespace WebSocketConnection {
 
-  export async function tryCreate(circuit: Circuit, url: URL, signal?: AbortSignal): Promise<Result<Connection, Looped<Error>>> {
-    const result = await Result.unthrow<Result<Connection, BinaryError | ErroredError | ClosedError | AbortedError | ControllerError | Panic>>(async t => {
+  export async function tryCreate(circuit: Circuit, url: URL, signal?: AbortSignal): Promise<Result<WebSocketConnection, Error>> {
+    return await Result.unthrow(async t => {
       const signal2 = AbortSignals.timeout(15_000, signal)
-
-      if (url.protocol === "http:")
-        return new Ok(new UrlConnection(url))
-      if (url.protocol === "https:")
-        return new Ok(new UrlConnection(url))
 
       if (url.protocol === "wss:") {
         const tcp = await circuit.tryOpen(url.hostname, 443).then(r => r.throw(t))
@@ -167,6 +212,10 @@ export namespace Connection {
 
       return new Err(new Panic(`Unknown protocol ${url.protocol}`))
     })
+  }
+
+  export async function tryCreateLooped(circuit: Circuit, url: URL, signal?: AbortSignal): Promise<Result<WebSocketConnection, Looped<Error>>> {
+    const result = await tryCreate(circuit, url, signal)
 
     if (result.isErr())
       console.warn(`Could not create ${url.href} using ${circuit.id}`)
@@ -178,21 +227,18 @@ export namespace Connection {
   }
 
   export function createPool(circuit: Circuit, urls: readonly string[]) {
-    return new Pool<Connection, Error>(async (params) => {
+    return new Pool<Disposer<WebSocketConnection>, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index, signal } = params
 
         const url = new URL(urls[index])
 
         const connection = await tryLoop(async () => {
-          return tryCreate(circuit, url, signal)
+          return WebSocketConnection.tryCreateLooped(circuit, url, signal)
         }, { signal }).then(r => r.throw(t))
 
-        if (connection.isURL())
-          return new Ok(new Cleaner(connection, () => { }))
-
         const onCloseOrError = () => {
-          pool.delete(index)
+          pool.restart(index)
         }
 
         connection.socket.addEventListener("close", onCloseOrError, { passive: true })
@@ -203,28 +249,39 @@ export namespace Connection {
           connection.socket.removeEventListener("error", onCloseOrError)
         }
 
-        return new Ok(new Cleaner(connection, onClean))
+        return new Ok(new Disposer(connection, onClean))
       })
     }, { capacity: urls.length })
   }
 
-  export function createRpcPool(circuit: Circuit, urls: readonly string[]) {
-    return new Pool<RpcConnection, Error>(async (params) => {
+}
+
+export namespace RpcConnection {
+
+  export function from(connection: Connection) {
+    const client = new RpcClient()
+    return { connection, client }
+  }
+
+  export function createPool(circuit: Circuit, urls: readonly string[]) {
+    return new Pool<Disposer<RpcConnection>, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index, signal } = params
 
         const url = new URL(urls[index])
         const client = new RpcClient()
 
+        if (url.protocol === "http:")
+          return new Ok(new Disposer(RpcConnection.from(new UrlConnection(url)), () => { }))
+        if (url.protocol === "https:")
+          return new Ok(new Disposer(RpcConnection.from(new UrlConnection(url)), () => { }))
+
         const connection = await tryLoop(async () => {
-          return tryCreate(circuit, url, signal)
+          return WebSocketConnection.tryCreateLooped(circuit, url, signal)
         }, { signal }).then(r => r.throw(t))
 
-        if (connection.isURL())
-          return new Ok(new Cleaner({ client, connection }, () => { }))
-
         const onCloseOrError = () => {
-          pool.delete(index)
+          pool.restart(index)
         }
 
         connection.socket.addEventListener("close", onCloseOrError, { passive: true })
@@ -235,7 +292,7 @@ export namespace Connection {
           connection.socket.removeEventListener("error", onCloseOrError)
         }
 
-        return new Ok(new Cleaner({ client, connection }, onClean))
+        return new Ok(new Disposer({ client, connection }, onClean))
       })
     }, { capacity: urls.length })
   }

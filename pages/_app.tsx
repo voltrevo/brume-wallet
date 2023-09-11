@@ -1,3 +1,7 @@
+import "@hazae41/symbol-dispose-polyfill"
+
+import "@/styles/index.css"
+
 import { Errors } from "@/libs/errors/errors"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { Catcher, PromiseCatcher } from "@/libs/react/error"
@@ -9,7 +13,6 @@ import { Page } from "@/mods/foreground/components/page/page"
 import { PathProvider } from "@/mods/foreground/router/path"
 import { GlobalStorageProvider } from "@/mods/foreground/storage/global"
 import { UserStorageProvider } from "@/mods/foreground/storage/user"
-import "@/styles/index.css"
 import { CoreProvider } from "@hazae41/xswr"
 import type { AppProps } from 'next/app'
 import Head from "next/head"

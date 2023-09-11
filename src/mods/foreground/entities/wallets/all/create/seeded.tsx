@@ -91,7 +91,7 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
         const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
         const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
 
-        const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
+        const address = Ethereum.Address.tryFrom(uncompressedPublicKeyBytes).throw(t)
         const seed = SeedRef.from(seedData)
 
         const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: defNameInput, color, emoji, address, seed, path: defPathInput }

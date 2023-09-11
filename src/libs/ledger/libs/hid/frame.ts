@@ -1,4 +1,5 @@
 import { Opaque, Readable, Writable } from "@hazae41/binary"
+import { Bytes } from "@hazae41/bytes"
 import { Cursor, CursorReadError, CursorWriteError } from "@hazae41/cursor"
 import { Err, Ok, Result } from "@hazae41/result"
 
@@ -78,27 +79,29 @@ export class HIDFrame<T extends Writable.Infer<T>> {
     if (frames.isErr())
       return frames
 
-    const cursor = Cursor.tryAllocUnsafe(frames.inner.length)
+    const bytes = Bytes.tryAllocUnsafe(frames.inner.length)
 
-    if (cursor.isErr())
-      return cursor
+    if (bytes.isErr())
+      return bytes
 
-    const write = cursor.inner.tryWrite(frames.inner.fragment.bytes.slice(0, cursor.inner.remaining))
+    const cursor = new Cursor(bytes.inner)
+
+    const write = cursor.tryWrite(frames.inner.fragment.bytes.slice(0, cursor.remaining))
 
     if (write.isErr())
       return write
-    if (!cursor.inner.remaining)
-      return new Ok(cursor.inner.bytes)
+    if (!cursor.remaining)
+      return new Ok(cursor.bytes)
 
     let frame = await generator.next()
 
     for (; !frame.done; frame = await generator.next()) {
-      const write = cursor.inner.tryWrite(frame.value.fragment.bytes.slice(0, cursor.inner.remaining))
+      const write = cursor.tryWrite(frame.value.fragment.bytes.slice(0, cursor.remaining))
 
       if (write.isErr())
         return write
-      if (!cursor.inner.remaining)
-        return new Ok(cursor.inner.bytes)
+      if (!cursor.remaining)
+        return new Ok(cursor.bytes)
       continue
     }
 

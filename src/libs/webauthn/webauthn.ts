@@ -49,7 +49,7 @@ export namespace WebAuthnStorage {
         }
       }
 
-      const credential = await Result.catchAndWrap(async () => {
+      const credential = await Result.runAndWrap(async () => {
         return await navigator.credentials.create(options) as any
       }).then(r => r.mapErrSync(WebAuthnStorageError.from).throw(t))
 
@@ -69,7 +69,7 @@ export namespace WebAuthnStorage {
         }
       }
 
-      const credential = await Result.catchAndWrap(async () => {
+      const credential = await Result.runAndWrap(async () => {
         return await navigator.credentials.get(options) as any
       }).then(r => r.mapErrSync(WebAuthnStorageError.from).throw(t))
 

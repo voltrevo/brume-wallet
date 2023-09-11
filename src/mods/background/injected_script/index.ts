@@ -1,3 +1,5 @@
+import "@hazae41/symbol-dispose-polyfill"
+
 import { RpcClient, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Future } from "@hazae41/future"
 

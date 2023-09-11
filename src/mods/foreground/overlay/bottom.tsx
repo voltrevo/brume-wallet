@@ -70,7 +70,7 @@ export function Bottom() {
             </Button.Shrink>
           </Button.Naked>
         </>}
-        {background.isWebsite() && <>
+        {background.isWebsite() && false && <>
           <Button.Naked className="grow text-contrast aria-selected:text-default"
             aria-selected={path.pathname === "/camera"}
             onClick={onCameraClick}>

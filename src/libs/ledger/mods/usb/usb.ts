@@ -115,7 +115,7 @@ export class DeviceTransferInError extends Error {
 
 export async function tryRequest(): Promise<Result<USBDevice, Error>> {
   return await Result.unthrow(async t => {
-    const devices = await Result.catchAndWrap(async () => {
+    const devices = await Result.runAndWrap(async () => {
       return await navigator.usb.getDevices()
     }).then(r => r.mapErrSync(DeviceNotFoundError.from).throw(t))
 
@@ -124,7 +124,7 @@ export async function tryRequest(): Promise<Result<USBDevice, Error>> {
     if (device != null)
       return new Ok(device)
 
-    const device2 = await Result.catchAndWrap(async () => {
+    const device2 = await Result.runAndWrap(async () => {
       return await navigator.usb.requestDevice({ filters: [{ vendorId: VENDOR_ID }] })
     }).then(r => r.mapErrSync(DeviceNotFoundError.from).throw(t))
 
@@ -136,16 +136,16 @@ export async function tryConnect(): Promise<Result<LedgerUSBDevice, Error>> {
   return await Result.unthrow(async t => {
     const device = await tryRequest().then(r => r.throw(t))
 
-    await Result.catchAndWrap(async () => {
+    await Result.runAndWrap(async () => {
       return await device.open()
     }).then(r => r.mapErrSync(DeviceOpenError.from).throw(t))
 
     if (device.configuration == null)
-      await Result.catchAndWrap(async () => {
+      await Result.runAndWrap(async () => {
         return await device.selectConfiguration(1)
       }).then(r => r.mapErrSync(DeviceConfigError.from).throw(t))
 
-    await Result.catchAndWrap(async () => {
+    await Result.runAndWrap(async () => {
       return await device.reset()
     }).then(r => r.mapErrSync(DeviceResetError.from).inspectErrSync(console.warn))
 
@@ -155,7 +155,7 @@ export async function tryConnect(): Promise<Result<LedgerUSBDevice, Error>> {
     if (iface == null)
       return new Err(new DeviceInterfaceNotFoundError())
 
-    await Result.catchAndWrap(async () => {
+    await Result.runAndWrap(async () => {
       return await device.claimInterface(iface.interfaceNumber)
     }).then(r => r.mapErrSync(DeviceInterfaceClaimError.from).throw(t))
 
@@ -175,7 +175,7 @@ export class LedgerUSBDevice {
     return await Result.unthrow(async t => {
       const bytes = Writable.tryWriteToBytes(frame).throw(t)
 
-      await Result.catchAndWrap(async () => {
+      await Result.runAndWrap(async () => {
         await this.device.transferOut(3, bytes)
       }).then(r => r.mapErrSync(DeviceTransferOutError.from).throw(t))
 
@@ -185,7 +185,7 @@ export class LedgerUSBDevice {
 
   async #tryTransferIn(length: number): Promise<Result<HIDFrame<Opaque>, Error>> {
     return await Result.unthrow(async t => {
-      const result = await Result.catchAndWrap(async () => {
+      const result = await Result.runAndWrap(async () => {
         return await this.device.transferIn(3, length)
       }).then(r => r.mapErrSync(DeviceTransferInError.from).throw(t))
 

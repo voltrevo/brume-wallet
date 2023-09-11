@@ -1,4 +1,4 @@
-import { Bytes } from "@hazae41/bytes"
+import { Base64 } from "@hazae41/base64"
 
 export interface HmacPbkdf2ParamsBase64 {
   algorithm: Pbkdf2ParamsBase64
@@ -38,13 +38,15 @@ export namespace Pbdkf2Params {
 
   export function stringify(params: Pbkdf2ParamsBytes): Pbkdf2ParamsBase64 {
     const { name, hash, iterations } = params
-    const salt = Bytes.toBase64(params.salt)
+    // TODO resultify
+    const salt = Base64.get().tryEncode(params.salt).unwrap()
     return { name, hash, iterations, salt }
   }
 
   export function parse(params: Pbkdf2ParamsBase64): Pbkdf2ParamsBytes {
     const { name, hash, iterations } = params
-    const salt = Bytes.fromBase64(params.salt)
+    // TODO resultify
+    const salt = Base64.get().tryDecode(params.salt).unwrap().copyAndDispose()
     return { name, hash, iterations, salt }
   }
 

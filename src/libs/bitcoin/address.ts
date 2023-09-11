@@ -1,3 +1,4 @@
+import { Bytes } from "@hazae41/bytes"
 import { Cursor } from "@hazae41/cursor"
 import { Ok, Result } from "@hazae41/result"
 import { Base58 } from "../bases/base58"
@@ -6,12 +7,12 @@ import { Sha256 } from "../hashes/sha256"
 
 export namespace Address {
 
-  export async function tryFrom(maybeCompressedPublicKey: Uint8Array): Promise<Result<string, unknown>> {
+  export async function tryFrom(maybeCompressedPublicKey: Uint8Array): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const sha256 = await Sha256.digest(maybeCompressedPublicKey)
       const ripemd160 = Ripemd160.digest(sha256)
 
-      const cursor = Cursor.allocUnsafe(1 + ripemd160.length + 4)
+      const cursor = new Cursor(Bytes.tryAllocUnsafe(1 + ripemd160.length + 4).throw(t))
       cursor.tryWriteUint8(0).throw(t)
       cursor.tryWrite(ripemd160).throw(t)
 

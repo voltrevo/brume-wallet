@@ -1,11 +1,13 @@
-import { Blobs } from "@/libs/blob/blob"
+import "@hazae41/symbol-dispose-polyfill"
+
+import { Blobs } from "@/libs/blobs/blobs"
 import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort } from "@/libs/channel/channel"
 import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { NonReadonly } from "@/libs/types/readonly"
-import { Cleaner } from "@hazae41/cleaner"
+import { Disposer } from "@hazae41/cleaner"
 import { None, Some } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
@@ -67,7 +69,7 @@ async function tryGetOrigin() {
       if (blob.isErr())
         continue
 
-      const data = await Blobs.toData(blob.inner)
+      const data = await Blobs.tryReadAsDataURL(blob.inner)
 
       if (data.isErr())
         continue
@@ -99,7 +101,7 @@ async function tryGetOrigin() {
       if (blob.isErr())
         return
 
-      const data = await Blobs.toData(blob.inner)
+      const data = await Blobs.tryReadAsDataURL(blob.inner)
 
       if (data.isErr())
         return
@@ -111,7 +113,7 @@ async function tryGetOrigin() {
   return new Ok(origin)
 }
 
-new Pool<chrome.runtime.Port, Error>(async (params) => {
+new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
   return Result.unthrow(async t => {
     const { index, pool } = params
 
@@ -172,7 +174,7 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
       const output = new CustomEvent("ethereum#disconnect", {})
       window.dispatchEvent(output)
 
-      pool.delete(index)
+      pool.restart(index)
       return new None()
     }
 
@@ -188,6 +190,6 @@ new Pool<chrome.runtime.Port, Error>(async (params) => {
       raw.disconnect()
     }
 
-    return new Ok(new Cleaner(raw, onClean))
+    return new Ok(new Disposer(raw, onClean))
   })
 }, { capacity: 1 })

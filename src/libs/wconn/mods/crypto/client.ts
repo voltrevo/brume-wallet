@@ -2,6 +2,7 @@ import { Errors } from "@/libs/errors/errors";
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc";
 import { Ciphertext, Envelope, EnvelopeTypeZero, Plaintext } from "@/libs/wconn/mods/crypto/crypto";
 import { SafeJson } from "@/libs/wconn/mods/json/json";
+import { Base64 } from "@hazae41/base64";
 import { Opaque, Readable, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
 import { Future } from "@hazae41/future";
@@ -148,7 +149,9 @@ export class CryptoClient {
 
   async #onMessage(message: string): Promise<Result<true, Error>> {
     return Result.unthrow(async t => {
-      const bytes = Bytes.fromBase64(message)
+      // TODO slice
+      const bytes = Base64.get().tryDecode(message).throw(t).copyAndDispose()
+
       const envelope = Readable.tryReadFromBytes(Envelope, bytes).throw(t)
       const cipher = envelope.fragment.tryReadInto(Ciphertext).throw(t)
       const plain = cipher.tryDecrypt(this.key).throw(t)
@@ -206,7 +209,7 @@ export class CryptoClient {
       const cipher = plain.tryEncrypt(this.key, iv).throw(t)
       const envelope = new EnvelopeTypeZero(cipher)
       const bytes = Writable.tryWriteToBytes(envelope).throw(t)
-      const message = Bytes.toBase64(bytes)
+      const message = Base64.get().tryEncode(bytes).throw(t)
 
       return new Ok(message)
     })

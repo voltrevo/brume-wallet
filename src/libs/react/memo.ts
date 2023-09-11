@@ -34,7 +34,7 @@ export function useAsyncReplaceMemo<T>(factory: () => Promise<T>, deps: Dependen
     aborterRef.current?.abort()
     aborterRef.current = aborter
 
-    const result = await Result.catchAndWrap(factory)
+    const result = await Result.runAndWrap(factory)
 
     if (aborterRef.current !== aborter)
       return

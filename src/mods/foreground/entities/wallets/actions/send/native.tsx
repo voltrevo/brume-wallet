@@ -94,7 +94,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
         }]
       }).then(r => r.throw(t).throw(t))
 
-      const tx = Result.catchAndWrapSync(() => {
+      const tx = Result.runAndDoubleWrapSync(() => {
         return Transaction.from({
           to: ethers.getAddress(defRecipientInput),
           gasLimit: gas,

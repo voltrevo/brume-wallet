@@ -11,7 +11,7 @@ import { Cancel, Looped, Retry, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { Data, FetchError, Fetched, FetcherMore, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
-import { EthereumBrume, EthereumBrumes, RpcConnection } from "../brumes/data"
+import { EthBrume, EthBrumes, RpcConnection } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
 import { SessionData } from "../sessions/data"
@@ -179,7 +179,7 @@ export interface EthereumContext {
   port: Port
   wallet: Wallet
   chain: EthereumChain
-  brumes: EthereumBrumes
+  brumes: EthBrumes
   session?: SessionData
 }
 
@@ -189,14 +189,14 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
 
   // console.log(`Fetching ${request.method}`)
 
-  const allTriedBrumes = new Set<EthereumBrume>()
+  const allTriedBrumes = new Set<EthBrume>()
 
   const result = await tryLoop(async () => {
     return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
-      let brume: EthereumBrume
+      let brume: EthBrume
 
       while (true) {
-        brume = await brumes.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get())
+        brume = await brumes.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
 
         if (allTriedBrumes.has(brume))
           continue
@@ -215,7 +215,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
           let conn: RpcConnection
 
           while (true) {
-            conn = await conns.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get())
+            conn = await conns.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
 
             if (allTriedConns.has(conn))
               continue

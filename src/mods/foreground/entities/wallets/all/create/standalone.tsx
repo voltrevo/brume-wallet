@@ -16,6 +16,8 @@ import { Textarea } from "@/libs/ui/textarea";
 import { WebAuthnStorage, WebAuthnStorageError } from "@/libs/webauthn/webauthn";
 import { WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
+import { Base16 } from "@hazae41/base16";
+import { Base64 } from "@hazae41/base64";
 import { Bytes } from "@hazae41/bytes";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
@@ -50,7 +52,7 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
 
   const doGenerate = useAsyncUniqueCallback(async () => {
     const bytes = secp256k1.utils.randomPrivateKey()
-    setRawKeyInput(`0x${Bytes.toHex(bytes)}`)
+    setRawKeyInput(`0x${Base16.get().tryEncode(bytes).unwrap()}`)
   }, [])
 
   const tryAddUnauthenticated = useAsyncUniqueCallback(async () => {
@@ -60,12 +62,12 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       if (!defKeyInput.startsWith("0x"))
         return new Err(new Panic())
 
-      const privateKeyBytes = Bytes.fromHexSafe(defKeyInput.slice(2))
+      const privateKeyBytes = Base16.get().tryPadStartAndDecode(defKeyInput.slice(2)).throw(t).copyAndDispose()
 
       const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
       // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
 
-      const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
+      const address = Ethereum.Address.tryFrom(uncompressedPublicKeyBytes).throw(t)
 
       // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
       // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
@@ -90,8 +92,8 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       if (!defKeyInput.startsWith("0x"))
         return new Err(new Panic())
 
-      const privateKeyBytes = Bytes.fromHexSafe(defKeyInput.slice(2))
-      const privateKeyBase64 = Bytes.toBase64(privateKeyBytes)
+      const privateKeyBytes = Base16.get().tryPadStartAndDecode(defKeyInput.slice(2)).throw(t).copyAndDispose()
+      const privateKeyBase64 = Base64.get().tryEncode(privateKeyBytes).throw(t)
 
       const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
         method: "brume_encrypt",
@@ -118,7 +120,7 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
         return new Err(new Panic())
 
       const [_, cipherBase64] = triedEncryptedPrivateKey.throw(t)
-      const cipher = Bytes.fromBase64(cipherBase64)
+      const cipher = Base64.get().tryDecode(cipherBase64).throw(t).copyAndDispose()
       const id = await WebAuthnStorage.create(defNameInput, cipher).then(r => r.throw(t))
 
       setId(id)
@@ -138,24 +140,24 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       if (triedEncryptedPrivateKey == null)
         return new Err(new Panic())
 
-      const privateKeyBytes = Bytes.fromHexSafe(defKeyInput.slice(2))
+      const privateKeyBytes = Base16.get().tryPadStartAndDecode(defKeyInput.slice(2)).throw(t).copyAndDispose()
 
       const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
       // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
 
-      const address = Ethereum.Address.from(uncompressedPublicKeyBytes)
+      const address = Ethereum.Address.tryFrom(uncompressedPublicKeyBytes).throw(t)
 
       // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
       // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
 
       const [ivBase64, cipherBase64] = triedEncryptedPrivateKey.throw(t)
-      const cipher = Bytes.fromBase64(cipherBase64)
+      const cipher = Base64.get().tryDecode(cipherBase64).throw(t).copyAndDispose()
       const cipher2 = await WebAuthnStorage.get(id).then(r => r.throw(t))
 
       if (!Bytes.equals(cipher, cipher2))
         return new Err(new WebAuthnStorageError())
 
-      const idBase64 = Bytes.toBase64(id)
+      const idBase64 = Base64.get().tryEncode(id).throw(t)
       const privateKey = { ivBase64, idBase64 }
 
       const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: defNameInput, color, emoji, address, privateKey }

@@ -6,8 +6,9 @@ import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
 import { EthereumAuthPrivateKeyWalletData, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
-import { Bytes } from "@hazae41/bytes"
-import { Typed } from "@hazae41/cubane"
+import { Base16 } from "@hazae41/base16"
+import { Base64 } from "@hazae41/base64"
+import { Abi } from "@hazae41/cubane"
 import { Option, Optional } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
 import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/xswr"
@@ -89,7 +90,7 @@ export class EthereumSeededWalletInstance {
     return await this.seed.trySignTransaction(this.data.path, transaction, core, background)
   }
 
-  async trySignEIP712HashedMessage(data: Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignEIP712HashedMessage(data: Abi.Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
     return await this.seed.trySignEIP712HashedMessage(this.data.path, data, core, background)
   }
 
@@ -113,7 +114,7 @@ export class EthereumUnauthPrivateKeyWalletInstance {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
 
-      const signature = await Result.catchAndWrap(async () => {
+      const signature = await Result.runAndDoubleWrap(async () => {
         return await new ethers.Wallet(privateKey).signMessage(message)
       }).then(r => r.throw(t))
 
@@ -125,7 +126,7 @@ export class EthereumUnauthPrivateKeyWalletInstance {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
 
-      const signature = Result.catchAndWrapSync(() => {
+      const signature = Result.runAndDoubleWrapSync(() => {
         return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
       }).throw(t)
 
@@ -133,13 +134,13 @@ export class EthereumUnauthPrivateKeyWalletInstance {
     })
   }
 
-  async trySignEIP712HashedMessage(data: Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignEIP712HashedMessage(data: Abi.Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
 
       delete (data.types as any)["EIP712Domain"]
 
-      const signature = await Result.catchAndWrap(async () => {
+      const signature = await Result.runAndDoubleWrap(async () => {
         return await new ethers.Wallet(privateKey).signTypedData(data.domain, data.types, data.message)
       }).then(r => r.throw(t))
 
@@ -163,18 +164,18 @@ export class EthereumAuthPrivateKeyWalletInstance {
     return await Result.unthrow(async t => {
       const { idBase64, ivBase64 } = this.data.privateKey
 
-      const id = Bytes.fromBase64(idBase64)
+      const id = Base64.get().tryDecode(idBase64).throw(t).copyAndDispose()
       const cipher = await WebAuthnStorage.get(id).then(r => r.throw(t))
-      const cipherBase64 = Bytes.toBase64(cipher)
+      const cipherBase64 = Base64.get().tryEncode(cipher).throw(t)
 
       const privateKeyBase64 = await background.tryRequest<string>({
         method: "brume_decrypt",
         params: [ivBase64, cipherBase64]
       }).then(r => r.throw(t).throw(t))
 
-      const privateKeyBytes = Bytes.fromBase64(privateKeyBase64)
+      const privateKeyBytes = Base64.get().tryDecode(privateKeyBase64).throw(t).copyAndDispose()
 
-      return new Ok(`0x${Bytes.toHex(privateKeyBytes)}`)
+      return new Ok(`0x${Base16.get().tryEncode(privateKeyBytes).throw(t)}`)
     })
   }
 
@@ -182,7 +183,7 @@ export class EthereumAuthPrivateKeyWalletInstance {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
 
-      const signature = await Result.catchAndWrap(async () => {
+      const signature = await Result.runAndDoubleWrap(async () => {
         return await new ethers.Wallet(privateKey).signMessage(message)
       }).then(r => r.throw(t))
 
@@ -194,7 +195,7 @@ export class EthereumAuthPrivateKeyWalletInstance {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
 
-      const signature = Result.catchAndWrapSync(() => {
+      const signature = Result.runAndDoubleWrapSync(() => {
         return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
       }).throw(t)
 
@@ -202,13 +203,13 @@ export class EthereumAuthPrivateKeyWalletInstance {
     })
   }
 
-  async trySignEIP712HashedMessage(data: Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignEIP712HashedMessage(data: Abi.Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(core, background).then(r => r.throw(t))
 
       delete (data.types as any)["EIP712Domain"]
 
-      const signature = await Result.catchAndWrap(async () => {
+      const signature = await Result.runAndDoubleWrap(async () => {
         return await new ethers.Wallet(privateKey).signTypedData(data.domain, data.types, data.message)
       }).then(r => r.throw(t))
 

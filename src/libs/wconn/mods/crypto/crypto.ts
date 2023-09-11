@@ -24,7 +24,7 @@ export class Plaintext<T extends Writable.Infer<T>> {
     return Result.unthrowSync(t => {
       const plain = Writable.tryWriteToBytes(this.fragment).throw(t)
 
-      const cipher = Result.catchAndWrapSync(() => {
+      const cipher = Result.runAndWrapSync(() => {
         return chacha20poly1305(key, iv).encrypt(plain)
       }).mapErrSync(CryptoError.from).throw(t)
 
@@ -43,7 +43,7 @@ export class Ciphertext {
 
   tryDecrypt(key: Bytes<32>): Result<Plaintext<Opaque>, CryptoError> {
     return Result.unthrowSync(t => {
-      const plain = Result.catchAndWrapSync(() => {
+      const plain = Result.runAndWrapSync(() => {
         return chacha20poly1305(key.slice(), this.iv.slice()).decrypt(this.inner)
       }).mapErrSync(CryptoError.from).throw(t)
 

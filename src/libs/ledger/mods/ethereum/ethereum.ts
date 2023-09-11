@@ -1,4 +1,5 @@
 import { SignatureInit } from "@/libs/ethereum/mods/signature";
+import { Base16 } from "@hazae41/base16";
 import { Empty, Opaque, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
 import { Rlp } from "@hazae41/cubane";
@@ -119,7 +120,7 @@ export async function trySignPersonalMessage(device: LedgerUSBDevice, path: stri
 
       const chunk = reader.tryRead(body).throw(t)
 
-      const writer = Cursor.tryAllocUnsafe(head + body).throw(t)
+      const writer = new Cursor(Bytes.tryAllocUnsafe(head + body).throw(t))
       paths.tryWrite(writer).throw(t)
       writer.tryWriteUint32(message.length).throw(t)
       writer.tryWrite(chunk).throw(t)
@@ -189,7 +190,9 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
   return await Result.unthrow(async t => {
     const paths = Paths.from(path)
 
-    const bytes = Bytes.fromHexSafe(transaction.unsignedSerialized.slice(2))
+    // TODO slice
+    const bytes = Base16.get().tryPadStartAndDecode(transaction.unsignedSerialized.slice(2)).throw(t).copyAndDispose()
+
     const reader = new Cursor(bytes)
 
     const unprotected = tryReadLegacyUnprotected(bytes).throw(t)
@@ -210,7 +213,7 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
 
       const chunk = reader.tryRead(body).throw(t)
 
-      const writer = Cursor.tryAllocUnsafe(head + body).throw(t)
+      const writer = new Cursor(Bytes.tryAllocUnsafe(head + body).throw(t))
       paths.tryWrite(writer).throw(t)
       writer.tryWrite(chunk).throw(t)
 
@@ -256,7 +259,7 @@ export async function trySignEIP712HashedMessage(device: LedgerUSBDevice, path: 
   return await Result.unthrow(async t => {
     const paths = Paths.from(path)
 
-    const writer = Cursor.tryAllocUnsafe(paths.trySize().get() + 32 + 32).throw(t)
+    const writer = new Cursor(Bytes.tryAllocUnsafe(paths.trySize().get() + 32 + 32).throw(t))
     paths.tryWrite(writer).throw(t)
     writer.tryWrite(domain).throw(t)
     writer.tryWrite(message).throw(t)

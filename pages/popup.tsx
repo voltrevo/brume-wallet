@@ -25,8 +25,9 @@ import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePath } from "@/mods/foreground/router/path";
 import { Router } from "@/mods/foreground/router/router";
 import { useUserStorage } from "@/mods/foreground/storage/user";
+import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { Typed } from "@hazae41/cubane";
+import { Abi } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { useCore } from "@hazae41/xswr";
@@ -97,7 +98,7 @@ export function TransactPage() {
       const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
       const nonce = Option.wrap(maybeNonce).ok().throw(t)
 
-      const tx = Result.catchAndWrapSync(() => {
+      const tx = Result.runAndDoubleWrapSync(() => {
         return Transaction.from({
           data: data,
           to: to,
@@ -296,7 +297,7 @@ export function PersonalSignPage() {
 
   const userMessage = useMemo(() => {
     return message.startsWith("0x")
-      ? Bytes.toUtf8(Bytes.fromHexSafe(message.slice(2)))
+      ? Bytes.toUtf8(Base16.get().tryPadStartAndDecode(message.slice(2)).unwrap().copyAndDispose())
       : message
   }, [message])
 
@@ -400,7 +401,7 @@ export function TypedSignPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const wallet = Option.wrap(maybeWallet).ok().throw(t)
 
-      const typed = JSON.parse(data) as Typed.TypedData
+      const typed = JSON.parse(data) as Abi.Typed.TypedData
 
       const instance = await EthereumWalletInstance.tryFrom(wallet, core, background).then(r => r.throw(t))
       const signature = await instance.trySignEIP712HashedMessage(typed, core, background).then(r => r.throw(t))

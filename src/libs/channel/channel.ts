@@ -1,4 +1,3 @@
-import { Cleanup } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
 import { None, Some } from "@hazae41/option"
 import { CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
@@ -19,7 +18,7 @@ export class WebsitePort {
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
-  readonly clean: Cleanup
+  readonly clean: () => void
 
   constructor(
     readonly name: string,
@@ -32,6 +31,10 @@ export class WebsitePort {
     this.clean = () => {
       this.port.removeEventListener("message", onMessage)
     }
+  }
+
+  [Symbol.dispose]() {
+    this.clean()
   }
 
   async runPingLoop() {
@@ -128,7 +131,7 @@ export class ExtensionPort {
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
-  readonly clean: Cleanup
+  readonly clean: () => void
 
   constructor(
     readonly name: string,
@@ -144,6 +147,10 @@ export class ExtensionPort {
       this.port.onMessage.removeListener(onMessage)
       this.port.onDisconnect.removeListener(onDisconnect)
     }
+  }
+
+  [Symbol.dispose]() {
+    this.clean()
   }
 
   async tryRouteRequest(request: RpcRequestInit<unknown>) {

@@ -1,7 +1,7 @@
 import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
-import { Cleaner } from "@hazae41/cleaner"
+import { Disposer } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
 import { None, Some } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
@@ -49,7 +49,7 @@ export class WebsiteBackground {
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     return await tryLoop(async () => {
       return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
-        const port = await this.ports.tryGet(0).then(r => r.mapErrSync(Cancel.new).throw(t))
+        const port = await this.ports.tryGet(0).then(r => r.mapErrSync(Cancel.new).throw(t).inner)
         const response = await port.tryRequest<T>(init).then(r => r.mapErrSync(Retry.new).throw(t))
 
         return new Ok(response)
@@ -59,13 +59,13 @@ export class WebsiteBackground {
 
 }
 
-export function createWebsitePortPool(background: WebsiteBackground): Pool<Port, Error> {
-  return new Pool<Port, Error>(async (params) => {
+export function createWebsitePortPool(background: WebsiteBackground): Pool<Disposer<Port>, Error> {
+  return new Pool<Disposer<Port>, Error>(async (params) => {
     return await Result.unthrow(async t => {
       const { pool, index } = params
 
       const registration = await Result
-        .catchAndWrap(() => navigator.serviceWorker.ready)
+        .runAndDoubleWrap(() => navigator.serviceWorker.ready)
         .then(r => r.throw(t))
 
       const channel = new MessageChannel()
@@ -109,7 +109,7 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Port,
       port.events.on("response", onResponse, { passive: true })
 
       const onClose = () => {
-        pool.delete(index)
+        pool.restart(index)
         return new None()
       }
 
@@ -124,7 +124,7 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Port,
         channel.port2.close()
       }
 
-      return new Ok(new Cleaner(port, onClean))
+      return new Ok(new Disposer(port, onClean))
     })
   }, { capacity: 1 })
 }
@@ -156,7 +156,7 @@ export class ExtensionBackground {
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     return await tryLoop(async () => {
       return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
-        const port = await this.ports.tryGet(0).then(r => r.mapErrSync(Cancel.new).throw(t))
+        const port = await this.ports.tryGet(0).then(r => r.mapErrSync(Cancel.new).throw(t).inner)
         const response = await port.tryRequest<T>(init).then(r => r.mapErrSync(Retry.new).throw(t))
 
         return new Ok(response)
@@ -166,8 +166,8 @@ export class ExtensionBackground {
 
 }
 
-export function createExtensionChannelPool(background: ExtensionBackground): Pool<Port, Error> {
-  return new Pool<Port, Error>(async (params) => {
+export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<Port>, Error> {
+  return new Pool<Disposer<Port>, Error>(async (params) => {
     return await Result.unthrow(async t => {
       const { index, pool } = params
 
@@ -191,7 +191,7 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
       port.events.on("response", onResponse, { passive: true })
 
       const onClose = () => {
-        pool.delete(index)
+        pool.restart(index)
         return new None()
       }
 
@@ -205,7 +205,7 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
         raw.disconnect()
       }
 
-      return new Ok(new Cleaner(port, onClean))
+      return new Ok(new Disposer(port, onClean))
     })
   }, { capacity: 1 })
 }

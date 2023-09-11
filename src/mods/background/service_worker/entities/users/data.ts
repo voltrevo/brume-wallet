@@ -1,4 +1,5 @@
 import { Mutators } from "@/libs/xswr/mutators"
+import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
 import { Ok, Result } from "@hazae41/result"
 import { AesGcmCoder, Data, HmacEncoder, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
@@ -138,7 +139,7 @@ export namespace User {
 
       const passwordParamsBase64 = Pbdkf2Params.stringify(passwordParamsBytes)
       const passwordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, 256))
-      const passwordHashBase64 = Bytes.toBase64(passwordHashBytes)
+      const passwordHashBase64 = Base64.get().tryEncode(passwordHashBytes).throw(t)
 
       return new Ok({ uuid, name, color, emoji, keyParamsBase64, valueParamsBase64, passwordParamsBase64, passwordHashBase64 })
     })
