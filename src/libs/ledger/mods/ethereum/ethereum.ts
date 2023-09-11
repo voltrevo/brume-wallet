@@ -190,12 +190,11 @@ export async function trySignTransaction(device: LedgerUSBDevice, path: string, 
   return await Result.unthrow(async t => {
     const paths = Paths.from(path)
 
-    // TODO slice
-    const bytes = Base16.get().tryPadStartAndDecode(transaction.unsignedSerialized.slice(2)).throw(t).copyAndDispose()
+    using slice = Base16.get().tryPadStartAndDecode(transaction.unsignedSerialized.slice(2)).throw(t)
 
-    const reader = new Cursor(bytes)
+    const reader = new Cursor(slice.bytes)
 
-    const unprotected = tryReadLegacyUnprotected(bytes).throw(t)
+    const unprotected = tryReadLegacyUnprotected(slice.bytes).throw(t)
 
     let response: Bytes
 

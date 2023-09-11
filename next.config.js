@@ -20,6 +20,12 @@ const nextConfig = {
     return "brume"
   },
   webpack(config, options) {
+    config.module.rules.push({
+      test: /\.tsx?$/,
+      use: "ts-loader",
+      exclude: /node_modules/,
+    });
+
     if (options.isServer) return config
 
     rmSync("./.webpack", { force: true, recursive: true })

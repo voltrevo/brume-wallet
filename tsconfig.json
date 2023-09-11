@@ -23,7 +23,7 @@
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "noEmit": true,
+    "noEmit": false,
     "module": "esnext",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
