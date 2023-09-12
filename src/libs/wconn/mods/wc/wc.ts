@@ -1,3 +1,4 @@
+import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { RpcRequestPreinit } from "@/libs/rpc";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
@@ -62,9 +63,9 @@ export namespace Wc {
 
   export const RELAY = "wss://relay.walletconnect.org"
 
-  export function tryParse(url: string): Promise<Result<WcParams, Error>> {
+  export function tryParse(url: URL): Promise<Result<WcParams, Error>> {
     return Result.unthrow(async t => {
-      const { protocol, pathname, searchParams } = new URL(url)
+      const { protocol, pathname, searchParams } = url
 
       if (protocol !== "wc:")
         return new Err(new Error(`Invalid protocol`))
@@ -87,7 +88,7 @@ export namespace Wc {
     })
   }
 
-  export async function tryPair(irn: IrnClient, params: WcParams): Promise<Result<WcSession, Error>> {
+  export async function tryPair(irn: IrnClient, params: WcParams, address: string): Promise<Result<WcSession, Error>> {
     return await Result.unthrow(async t => {
       const { pairingTopic, symKey } = params
 
@@ -115,7 +116,7 @@ export namespace Wc {
       const peerPublic = await X25519.get().PublicKey.tryImport(peerPublicSlice.bytes).then(r => r.throw(t))
 
       const sharedRef = await selfPrivate.tryCompute(peerPublic).then(r => r.throw(t))
-      using sharedSlice = await sharedRef.tryExport().throw(t)
+      using sharedSlice = sharedRef.tryExport().throw(t)
 
       const hdfk_key = await crypto.subtle.importKey("raw", sharedSlice.bytes, "HKDF", false, ["deriveBits"])
       const hkdf_params = { name: "HKDF", hash: "SHA-256", info: new Uint8Array(), salt: new Uint8Array() }
@@ -132,10 +133,10 @@ export namespace Wc {
 
         const namespaces = {
           eip155: {
-            chains: ["eip155:1"],
+            chains: Object.values(chainByChainId).map(chain => `eip155:${chain.chainId}`),
             methods: ["eth_sendTransaction", "personal_sign", "eth_signTypedData", "eth_signTypedData_v4"],
             events: ["chainChanged", "accountsChanged"],
-            accounts: ["eip155:1:0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"]
+            accounts: Object.values(chainByChainId).map(chain => `eip155:${chain.chainId}:${address}`)
           }
         }
 
@@ -147,7 +148,7 @@ export namespace Wc {
         await session.tryRequest<boolean>({ method: "wc_sessionSettle", params })
           .then(r => r.throw(t).throw(t))
           .then(Result.assert)
-          .then(r => r.setErr(new Error(`false`)).throw(t))
+          .then(r => r.throw(t))
 
         return new Ok(new WcSession(session, proposer.metadata))
       }

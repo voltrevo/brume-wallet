@@ -1,16 +1,26 @@
 /* eslint-disable @next/next/no-img-element */
 import { Errors } from "@/libs/errors/errors"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
-import { useInputChange, useKeyboardEnter } from "@/libs/react/events"
+import { UUIDProps } from "@/libs/react/props/uuid"
 import { Results } from "@/libs/results/results"
 import { WcMetadata } from "@/libs/wconn/mods/wc/wc"
 import { Ok, Result } from "@hazae41/result"
 import { Decoder } from "@nuintun/qrcode"
 import { DecoderResult } from "@nuintun/qrcode/types/qrcode/decoder/Reader"
-import { useCallback, useDeferredValue, useEffect, useRef, useState } from "react"
-import { useBackground } from "../background/context"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { useBackground } from "../../../background/context"
+import { WalletDataProvider, useWalletData } from "../context"
 
-export function CameraPage() {
+export function WalletCameraPage(props: UUIDProps) {
+  const { uuid } = props
+
+  return <WalletDataProvider uuid={uuid}>
+    <WalletDataCameraPage />
+  </WalletDataProvider>
+}
+
+export function WalletDataCameraPage() {
+  const wallet = useWalletData()
   const background = useBackground().unwrap()
 
   const mounted = useRef<boolean>(true)
@@ -99,31 +109,19 @@ export function CameraPage() {
 
       const metadata = await background.tryRequest<WcMetadata>({
         method: "brume_wc_connect",
-        params: [uri]
+        params: [uri, wallet.address]
       }).then(r => r.throw(t).throw(t))
 
       alert(`Connected to ${metadata.name}`)
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [background])
+  }, [background, wallet])
 
   useEffect(() => {
     if (text) tryConnect.run(text)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text])
-
-  const [rawTextInput = "", setRawTextInput] = useState<string>()
-
-  const onTextInputChange = useInputChange(e => {
-    setRawTextInput(e.currentTarget.value)
-  }, [])
-
-  const textInput = useDeferredValue(rawTextInput)
-
-  const onTextInputEnter = useKeyboardEnter(e => {
-    setText(textInput)
-  }, [textInput])
 
   return <>
     <div className="grow relative flex flex-col">
@@ -143,10 +141,5 @@ export function CameraPage() {
         playsInline
         muted />
     </div>
-    <input className="po-md w-full outline-none"
-      placeholder="Scan or paste the WalletConnect URL here"
-      value={rawTextInput}
-      onChange={onTextInputChange}
-      onKeyDown={onTextInputEnter} />
   </>
 }

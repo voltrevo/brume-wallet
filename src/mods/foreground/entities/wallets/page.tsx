@@ -1,13 +1,19 @@
 /* eslint-disable @next/next/no-img-element */
 import { Fixed, FixedInit } from "@/libs/bigints/bigints";
 import { Gradients } from "@/libs/colors/colors";
+import { UiError } from "@/libs/errors/errors";
 import { ContractTokenInfo, EthereumChain, chainByChainId, chainIdByName, pairByAddress, pairByName, tokenByAddress, tokenById } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";
+import { Results } from "@/libs/results/results";
+import { Button } from "@/libs/ui/button";
+import { Url } from "@/libs/url/url";
+import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { Option, Optional } from "@hazae41/option";
-import { Result } from "@hazae41/result";
+import { Ok, Result } from "@hazae41/result";
 import { useCallback, useMemo } from "react";
+import { useBackground } from "../../background/context";
 import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { Path } from "../../router/path";
@@ -134,6 +140,7 @@ function ContractTokenRow(props: {
 
 function WalletDataPage() {
   const wallet = useWalletData()
+  const background = useBackground().unwrap()
 
   const mainnet = useEthereumContext(wallet, chainByChainId[chainIdByName.ETHEREUM])
   const binance = useEthereumContext(wallet, chainByChainId[chainIdByName.BINANCE])
@@ -155,10 +162,43 @@ function WalletDataPage() {
     Path.go("/wallets")
   }, [])
 
+  const onCameraClick = useCallback(() => {
+    Path.go(`/wallet/${wallet.uuid}/camera`)
+  }, [wallet])
+
+  const onLinkClick = useCallback(async () => {
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      const clipboard = await navigator.clipboard.readText()
+
+      const url = Url.tryParse(clipboard).setErr(new UiError("You must copy a WalletConnect link")).throw(t)
+      await Wc.tryParse(url).then(r => r.setErr(new UiError("You must copy a WalletConnect link")).throw(t))
+
+      alert(`Connecting...`)
+
+      const metadata = await background.tryRequest<WcMetadata>({
+        method: "brume_wc_connect",
+        params: [clipboard, wallet.address]
+      }).then(r => r.throw(t).throw(t))
+
+      alert(`Connected to ${metadata.name}`)
+
+      return Ok.void()
+    }).then(Results.logAndAlert)
+  }, [wallet, background])
+
   const Header =
     <PageHeader
       title="Wallet"
-      back={onBackClick} />
+      back={onBackClick}>
+      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+        onClick={onCameraClick}>
+        <Outline.QrCodeIcon className="s-sm" />
+      </Button.Naked>
+      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+        onClick={onLinkClick}>
+        <Outline.LinkIcon className="s-sm" />
+      </Button.Naked>
+    </PageHeader>
 
   const Card =
     <div className="p-4 flex justify-center">

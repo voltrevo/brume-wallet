@@ -21,10 +21,6 @@ export function Bottom() {
     Path.go("/sessions")
   }, [])
 
-  const onCameraClick = useCallback(() => {
-    Path.go("/camera")
-  }, [])
-
   const requestsQuery = useAppRequests()
   const requests = requestsQuery.data?.inner
 
@@ -67,15 +63,6 @@ export function Bottom() {
                   <div className="absolute top-0 -right-2 bg-purple-400 rounded-full w-2 h-2" />}
                 <Outline.CheckIcon className="s-md" />
               </div>
-            </Button.Shrink>
-          </Button.Naked>
-        </>}
-        {background.isWebsite() && false && <>
-          <Button.Naked className="grow text-contrast aria-selected:text-default"
-            aria-selected={path.pathname === "/camera"}
-            onClick={onCameraClick}>
-            <Button.Shrink>
-              <Outline.QrCodeIcon className="s-md" />
             </Button.Shrink>
           </Button.Naked>
         </>}

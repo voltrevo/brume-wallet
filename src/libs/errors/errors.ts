@@ -1,3 +1,8 @@
+export class UiError extends Error {
+  readonly #class = UiError
+  readonly name = this.#class.name
+}
+
 export namespace Errors {
 
   export function toJSON(error: unknown): unknown {
@@ -14,9 +19,15 @@ export namespace Errors {
     console.error(toString(error))
   }
 
+  export function alert(error: unknown) {
+    if (error instanceof UiError)
+      return globalThis.alert(error.message)
+    return globalThis.alert(toString(error))
+  }
+
   export function logAndAlert(error: unknown) {
-    console.error(toString(error))
-    alert(toString(error))
+    log(error)
+    alert(error)
   }
 
 }

@@ -81,7 +81,7 @@ export class IrnClient {
         params: payload
       }, AbortSignal.timeout(5000)).then(r => r.throw(t).throw(t))
 
-      return Result.assert(result).setErr(new Error(`Got false`))
+      return Result.assert(result)
     })
   }
 

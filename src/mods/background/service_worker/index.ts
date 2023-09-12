@@ -9,7 +9,7 @@ import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from 
 import { Sockets } from "@/libs/sockets/sockets"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
-import { qurl } from "@/libs/url/url"
+import { Url, qurl } from "@/libs/url/url"
 import { IrnClient } from "@/libs/wconn/mods/irn/irn"
 import { Jwt } from "@/libs/wconn/mods/jwt/jwt"
 import { Wc, WcMetadata, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
@@ -1016,8 +1016,10 @@ export class Global {
 
   async brume_wc_connect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<WcMetadata, Error>> {
     return await Result.unthrow(async t => {
-      const [uri] = (request as RpcRequestPreinit<[string]>).params
-      const params = await Wc.tryParse(uri).then(r => r.throw(t))
+      const [maybeUrl, address] = (request as RpcRequestPreinit<[string, string]>).params
+
+      const url = Url.tryParse(maybeUrl).throw(t)
+      const params = await Wc.tryParse(url).then(r => r.throw(t))
 
       const socket = await tryLoop(() => {
         return Result.unthrow<Result<WebSocket, Looped<Error>>>(async t => {
@@ -1041,7 +1043,7 @@ export class Global {
 
       const irn = new IrnClient(socket)
 
-      const session = await Wc.tryPair(irn, params).then(r => r.throw(t))
+      const session = await Wc.tryPair(irn, params, address).then(r => r.throw(t))
 
       session.client.events.on("request", (suprequest) => {
         if (suprequest.method !== "wc_sessionRequest")
