@@ -15,15 +15,14 @@ import { Page } from "@/mods/foreground/components/page/page"
 import { PathProvider } from "@/mods/foreground/router/path"
 import { GlobalStorageProvider } from "@/mods/foreground/storage/global"
 import { UserStorageProvider } from "@/mods/foreground/storage/user"
-import { Alocer } from "@hazae41/alocer"
 import { Base16 } from "@hazae41/base16"
 import { Base58 } from "@hazae41/base58"
 import { Base64 } from "@hazae41/base64"
 import { Base64Url } from "@hazae41/base64url"
-import { Berith } from "@hazae41/berith"
+import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Keccak256 } from "@hazae41/keccak256"
-import { Morax } from "@hazae41/morax"
+import { Ripemd160 } from "@hazae41/ripemd160"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
 import { CoreProvider } from "@hazae41/xswr"
@@ -77,23 +76,25 @@ export function Fallback(props: ErrorProps) {
 }
 
 async function initBerith() {
-  await Berith.initBundledOnce()
-  Ed25519.set(await Ed25519.fromNativeOrBerith(Berith))
-  X25519.set(await X25519.fromSafeOrBerith(Berith))
+  Ed25519.set(await Ed25519.fromSafeOrBerith())
+  X25519.set(await X25519.fromSafeOrBerith())
 }
 
 async function initMorax() {
-  await Morax.initBundledOnce()
-  Keccak256.set(Keccak256.fromMorax(Morax))
-  Sha1.set(Sha1.fromMorax(Morax))
+  Keccak256.set(await Keccak256.fromMorax())
+  Sha1.set(await Sha1.fromMorax())
+  Ripemd160.set(await Ripemd160.fromMorax())
 }
 
 async function initAlocer() {
-  await Alocer.initBundledOnce()
-  Base16.set(Base16.fromBufferOrAlocer(Alocer))
-  Base64.set(Base64.fromBufferOrAlocer(Alocer))
-  Base64Url.set(Base64Url.fromBufferOrAlocer(Alocer))
-  Base58.set(Base58.fromAlocer(Alocer))
+  Base16.set(await Base16.fromBufferOrAlocer())
+  Base64.set(await Base64.fromBufferOrAlocer())
+  Base64Url.set(await Base64Url.fromBufferOrAlocer())
+  Base58.set(await Base58.fromAlocer())
+}
+
+async function initZepar() {
+  ChaCha20Poly1305.set(await ChaCha20Poly1305.fromZepar())
 }
 
 export function Initializer(props: ChildrenProps) {
@@ -101,6 +102,7 @@ export function Initializer(props: ChildrenProps) {
     initBerith()
     initMorax()
     initAlocer()
+    initZepar()
   }, [])
 
   return <>{props.children}</>

@@ -16,7 +16,7 @@ export async function tryCreateUserStorage(user: UserData, password: string): Pr
     const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"])
 
     const passwordHashBase64 = user.passwordHashBase64
-    using passwordHashSlice = Base64.get().tryDecode(passwordHashBase64).throw(t)
+    using passwordHashSlice = Base64.get().tryDecodePadded(passwordHashBase64).throw(t)
 
     const passwordParamsBase64 = user.passwordParamsBase64
     const passwordParamsBytes = Pbdkf2Params.parse(passwordParamsBase64)

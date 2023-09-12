@@ -79,7 +79,7 @@ export namespace WcBrumes {
   export async function tryCreate(circuit: Circuit): Promise<Result<WcBrume, Error>> {
     return await Result.unthrow(async t => {
       const relay = Wc.RELAY
-      const key = await Promise.resolve(Ed25519.get().PrivateKey.tryRandom()).then(r => r.throw(t))
+      const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
       const auth = await Jwt.trySign(key, relay).then(r => r.throw(t))
       const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
       const url = `${relay}/?auth=${auth}&projectId=${projectId}`

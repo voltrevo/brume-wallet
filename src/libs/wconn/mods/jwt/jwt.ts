@@ -17,8 +17,8 @@ export namespace Jwt {
 
       const prefix = new Uint8Array([0xed, 0x01])
 
-      const publicKey = await Promise.resolve(privateKey.tryGetPublicKey()).then(r => r.throw(t))
-      const publicKeyBytes = await Promise.resolve(publicKey.tryExport()).then(r => r.throw(t).copyAndDispose())
+      const publicKey = privateKey.tryGetPublicKey().throw(t)
+      const publicKeyBytes = await publicKey.tryExport().then(r => r.throw(t).copyAndDispose())
 
       const iss = `did:key:z${Base58.get().tryEncode(Bytes.concat([prefix, publicKeyBytes])).throw(t)}`
       const sub = Base16.get().tryEncode(Bytes.tryRandom(32).throw(t)).throw(t)
@@ -29,15 +29,15 @@ export namespace Jwt {
 
       const prepayload = { iss, sub, aud, iat, exp }
 
-      const header = Base64Url.get().tryEncode(Bytes.fromUtf8(SafeJson.stringify(preheader))).throw(t)
-      const payload = Base64Url.get().tryEncode(Bytes.fromUtf8(SafeJson.stringify(prepayload))).throw(t)
+      const header = Base64Url.get().tryEncodeUnpadded(Bytes.fromUtf8(SafeJson.stringify(preheader))).throw(t)
+      const payload = Base64Url.get().tryEncodeUnpadded(Bytes.fromUtf8(SafeJson.stringify(prepayload))).throw(t)
 
       const presignature = Bytes.fromUtf8(`${header}.${payload}`)
 
-      const signatureRef = await Promise.resolve(privateKey.trySign(presignature)).then(r => r.throw(t))
-      using signatureSlice = await Promise.resolve(signatureRef.tryExport()).then(r => r.throw(t))
+      const signatureRef = await privateKey.trySign(presignature).then(r => r.throw(t))
+      using signatureSlice = signatureRef.tryExport().throw(t)
 
-      const signature = Base64Url.get().tryEncode(signatureSlice.bytes).throw(t)
+      const signature = Base64Url.get().tryEncodeUnpadded(signatureSlice.bytes).throw(t)
 
       return new Ok(`${header}.${payload}.${signature}`)
     })

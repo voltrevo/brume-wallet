@@ -5,6 +5,7 @@ import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { Base64 } from "@hazae41/base64";
 import { Opaque, Readable, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
+import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Future } from "@hazae41/future";
 import { None, Some } from "@hazae41/option";
 import { SuperEventTarget } from "@hazae41/plume";
@@ -126,7 +127,7 @@ export class CryptoClient {
 
   constructor(
     readonly topic: string,
-    readonly key: Bytes<32>,
+    readonly key: ChaCha20Poly1305.Cipher,
     readonly irn: IrnClient
   ) {
     irn.events.on("request", this.#onIrnRequest.bind(this))
@@ -149,7 +150,7 @@ export class CryptoClient {
 
   async #onMessage(message: string): Promise<Result<true, Error>> {
     return Result.unthrow(async t => {
-      using slice = Base64.get().tryDecode(message).throw(t)
+      using slice = Base64.get().tryDecodePadded(message).throw(t)
 
       const envelope = Readable.tryReadFromBytes(Envelope, slice.bytes).throw(t)
       const cipher = envelope.fragment.tryReadInto(Ciphertext).throw(t)
@@ -208,7 +209,7 @@ export class CryptoClient {
       const cipher = plain.tryEncrypt(this.key, iv).throw(t)
       const envelope = new EnvelopeTypeZero(cipher)
       const bytes = Writable.tryWriteToBytes(envelope).throw(t)
-      const message = Base64.get().tryEncode(bytes).throw(t)
+      const message = Base64.get().tryEncodePadded(bytes).throw(t)
 
       return new Ok(message)
     })

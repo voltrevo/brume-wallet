@@ -1,6 +1,7 @@
 import { RpcRequestPreinit } from "@/libs/rpc";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
+import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Future } from "@hazae41/future";
 import { None, Option, Some } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
@@ -90,16 +91,18 @@ export namespace Wc {
     return await Result.unthrow(async t => {
       const { pairingTopic, symKey } = params
 
-      await irn.trySubscribe(pairingTopic).then(r => r.throw(t))
-      const pairing = new CryptoClient(pairingTopic, symKey, irn)
+      const pairingCipher = ChaCha20Poly1305.get().Cipher.tryImport(symKey).throw(t)
+      const pairing = new CryptoClient(pairingTopic, pairingCipher, irn)
 
       const relay = { protocol: "irn" }
 
-      const selfPrivate = await Promise.resolve(X25519.get().PrivateKey.tryRandom()).then(r => r.throw(t))
-      const selfPublic = await Promise.resolve(selfPrivate.tryGetPublicKey()).then(r => r.throw(t))
+      const selfPrivate = await X25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
+      const selfPublic = selfPrivate.tryGetPublicKey().throw(t)
 
-      using selfPublicSlice = await Promise.resolve(selfPublic.tryExport()).then(r => r.throw(t))
+      using selfPublicSlice = await selfPublic.tryExport().then(r => r.throw(t))
       const selfPublicHex = Base16.get().tryEncode(selfPublicSlice.bytes).throw(t)
+
+      await irn.trySubscribe(pairingTopic).then(r => r.throw(t))
 
       const proposal = await pairing.events.wait("request", async (future: Future<RpcRequestPreinit<WcSessionProposeParams>>, request) => {
         if (request.method !== "wc_sessionPropose")
@@ -109,19 +112,20 @@ export namespace Wc {
       }).inner
 
       using peerPublicSlice = Base16.get().tryPadStartAndDecode(proposal.params.proposer.publicKey).throw(t)
-      const peerPublic = await Promise.resolve(X25519.get().PublicKey.tryImport(peerPublicSlice.bytes)).then(r => r.throw(t))
+      const peerPublic = await X25519.get().PublicKey.tryImport(peerPublicSlice.bytes).then(r => r.throw(t))
 
-      const sharedRef = await Promise.resolve(selfPrivate.tryCompute(peerPublic)).then(r => r.throw(t))
-      using sharedSlice = await Promise.resolve(sharedRef.tryExport()).then(r => r.throw(t))
+      const sharedRef = await selfPrivate.tryCompute(peerPublic).then(r => r.throw(t))
+      using sharedSlice = await sharedRef.tryExport().throw(t)
 
       const hdfk_key = await crypto.subtle.importKey("raw", sharedSlice.bytes, "HKDF", false, ["deriveBits"])
       const hkdf_params = { name: "HKDF", hash: "SHA-256", info: new Uint8Array(), salt: new Uint8Array() }
-      const key = new Uint8Array(await crypto.subtle.deriveBits(hkdf_params, hdfk_key, 8 * 32)) as Bytes<32>
 
-      const sessionTopic = Base16.get().tryEncode(new Uint8Array(await crypto.subtle.digest("SHA-256", key))).throw(t)
+      const sessionKey = new Uint8Array(await crypto.subtle.deriveBits(hkdf_params, hdfk_key, 8 * 32)) as Bytes<32>
+      const sessionCipher = ChaCha20Poly1305.get().Cipher.tryImport(sessionKey).throw(t)
+      const sessionTopic = Base16.get().tryEncode(new Uint8Array(await crypto.subtle.digest("SHA-256", sessionKey))).throw(t)
+      const session = new CryptoClient(sessionTopic, sessionCipher, irn)
 
       await irn.trySubscribe(sessionTopic).then(r => r.throw(t))
-      const session = new CryptoClient(sessionTopic, key, irn)
 
       {
         const { proposer, requiredNamespaces, optionalNamespaces } = proposal.params

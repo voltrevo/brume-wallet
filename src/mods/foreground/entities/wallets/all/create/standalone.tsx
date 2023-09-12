@@ -93,7 +93,7 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
         return new Err(new Panic())
 
       const privateKeyBytes = Base16.get().tryPadStartAndDecode(defKeyInput.slice(2)).throw(t).copyAndDispose()
-      const privateKeyBase64 = Base64.get().tryEncode(privateKeyBytes).throw(t)
+      const privateKeyBase64 = Base64.get().tryEncodePadded(privateKeyBytes).throw(t)
 
       const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
         method: "brume_encrypt",
@@ -120,7 +120,7 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
         return new Err(new Panic())
 
       const [_, cipherBase64] = triedEncryptedPrivateKey.throw(t)
-      const cipher = Base64.get().tryDecode(cipherBase64).throw(t).copyAndDispose()
+      const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
       const id = await WebAuthnStorage.create(defNameInput, cipher).then(r => r.throw(t))
 
       setId(id)
@@ -151,13 +151,13 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
 
       const [ivBase64, cipherBase64] = triedEncryptedPrivateKey.throw(t)
-      const cipher = Base64.get().tryDecode(cipherBase64).throw(t).copyAndDispose()
+      const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
       const cipher2 = await WebAuthnStorage.get(id).then(r => r.throw(t))
 
       if (!Bytes.equals(cipher, cipher2))
         return new Err(new WebAuthnStorageError())
 
-      const idBase64 = Base64.get().tryEncode(id).throw(t)
+      const idBase64 = Base64.get().tryEncodePadded(id).throw(t)
       const privateKey = { ivBase64, idBase64 }
 
       const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: defNameInput, color, emoji, address, privateKey }

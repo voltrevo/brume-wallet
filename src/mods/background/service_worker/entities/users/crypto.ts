@@ -39,14 +39,14 @@ export namespace Pbdkf2Params {
   export function stringify(params: Pbkdf2ParamsBytes): Pbkdf2ParamsBase64 {
     const { name, hash, iterations } = params
     // TODO resultify
-    const salt = Base64.get().tryEncode(params.salt).unwrap()
+    const salt = Base64.get().tryEncodePadded(params.salt).unwrap()
     return { name, hash, iterations, salt }
   }
 
   export function parse(params: Pbkdf2ParamsBase64): Pbkdf2ParamsBytes {
     const { name, hash, iterations } = params
     // TODO resultify
-    const salt = Base64.get().tryDecode(params.salt).unwrap().copyAndDispose()
+    const salt = Base64.get().tryDecodePadded(params.salt).unwrap().copyAndDispose()
     return { name, hash, iterations, salt }
   }
 

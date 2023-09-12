@@ -14,26 +14,25 @@ import { IrnClient } from "@/libs/wconn/mods/irn/irn"
 import { Jwt } from "@/libs/wconn/mods/jwt/jwt"
 import { Wc, WcMetadata, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
-import { Alocer } from "@hazae41/alocer"
 import { Base16 } from "@hazae41/base16"
 import { Base58 } from "@hazae41/base58"
 import { Base64 } from "@hazae41/base64"
 import { Base64Url } from "@hazae41/base64url"
-import { Berith } from "@hazae41/berith"
 import { Bytes } from "@hazae41/bytes"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
+import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305"
 import { Disposer } from "@hazae41/cleaner"
 import { Circuit, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
 import { Keccak256 } from "@hazae41/keccak256"
-import { Morax } from "@hazae41/morax"
 import { Mutex } from "@hazae41/mutex"
 import { None, Option, Optional, Some } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { SuperEventTarget } from "@hazae41/plume"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
+import { Ripemd160 } from "@hazae41/ripemd160"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
 import { Core, IDBStorage, RawState, SimpleFetcherfulQueryInstance, State } from "@hazae41/xswr"
@@ -815,12 +814,12 @@ export class Global {
 
       const { crypter } = Option.wrap(this.#user).ok().throw(t)
 
-      const plain = Base64.get().tryDecode(plainBase64).throw(t).copyAndDispose()
+      const plain = Base64.get().tryDecodePadded(plainBase64).throw(t).copyAndDispose()
       const iv = Bytes.tryRandom(16).throw(t)
       const cipher = await crypter.encrypt(plain, iv)
 
-      const ivBase64 = Base64.get().tryEncode(iv).throw(t)
-      const cipherBase64 = Base64.get().tryEncode(cipher).throw(t)
+      const ivBase64 = Base64.get().tryEncodePadded(iv).throw(t)
+      const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
 
       return new Ok([ivBase64, cipherBase64])
     })
@@ -832,11 +831,11 @@ export class Global {
 
       const { crypter } = Option.wrap(this.#user).ok().throw(t)
 
-      const iv = Base64.get().tryDecode(ivBase64).throw(t).copyAndDispose()
-      const cipher = Base64.get().tryDecode(cipherBase64).throw(t).copyAndDispose()
+      const iv = Base64.get().tryDecodePadded(ivBase64).throw(t).copyAndDispose()
+      const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
       const plain = await crypter.decrypt(cipher, iv)
 
-      const plainBase64 = Base64.get().tryEncode(plain).throw(t)
+      const plainBase64 = Base64.get().tryEncodePadded(plain).throw(t)
 
       return new Ok(plainBase64)
     })
@@ -1025,7 +1024,7 @@ export class Global {
           const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Retry.new).throw(t).result.get().inner)
 
           const relay = Wc.RELAY
-          const key = await Promise.resolve(Ed25519.get().PrivateKey.tryRandom()).then(r => r.mapErrSync(Cancel.new).throw(t))
+          const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.mapErrSync(Cancel.new).throw(t))
           const auth = await Jwt.trySign(key, relay).then(r => r.mapErrSync(Cancel.new).throw(t))
           const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
 
@@ -1061,29 +1060,31 @@ export class Global {
 }
 
 async function initBerith() {
-  await Berith.initBundledOnce()
-  Ed25519.set(await Ed25519.fromNativeOrBerith(Berith))
-  X25519.set(await X25519.fromSafeOrBerith(Berith))
+  Ed25519.set(await Ed25519.fromSafeOrBerith())
+  X25519.set(await X25519.fromSafeOrBerith())
 }
 
 async function initMorax() {
-  await Morax.initBundledOnce()
-  Keccak256.set(Keccak256.fromMorax(Morax))
-  Sha1.set(Sha1.fromMorax(Morax))
+  Keccak256.set(await Keccak256.fromMorax())
+  Sha1.set(await Sha1.fromMorax())
+  Ripemd160.set(await Ripemd160.fromMorax())
 }
 
 async function initAlocer() {
-  await Alocer.initBundledOnce()
-  Base16.set(Base16.fromBufferOrAlocer(Alocer))
-  Base64.set(Base64.fromBufferOrAlocer(Alocer))
-  Base64Url.set(Base64Url.fromBufferOrAlocer(Alocer))
-  Base58.set(Base58.fromAlocer(Alocer))
+  Base16.set(await Base16.fromBufferOrAlocer())
+  Base64.set(await Base64.fromBufferOrAlocer())
+  Base64Url.set(await Base64Url.fromBufferOrAlocer())
+  Base58.set(await Base58.fromAlocer())
+}
+
+async function initZepar() {
+  ChaCha20Poly1305.set(await ChaCha20Poly1305.fromZepar())
 }
 
 async function tryInit() {
   return await Result.runAndDoubleWrap(async () => {
     return await Result.unthrow<Result<Global, Error>>(async t => {
-      await Promise.all([initBerith(), initMorax(), initAlocer()])
+      await Promise.all([initBerith(), initMorax(), initAlocer(), initZepar()])
 
       const ed25519 = Ed25519.get()
       const x25519 = X25519.get()

@@ -1,8 +1,8 @@
 import { BinaryReadError, BinaryWriteError, Opaque, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
+import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Cursor } from "@hazae41/cursor";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
-import { chacha20poly1305 } from '@noble/ciphers/chacha';
 
 export class CryptoError extends Error {
   readonly #class = CryptoError
@@ -20,13 +20,10 @@ export class Plaintext<T extends Writable.Infer<T>> {
     readonly fragment: T
   ) { }
 
-  tryEncrypt(key: Bytes, iv: Bytes<12>): Result<Ciphertext, CryptoError | BinaryWriteError | Writable.WriteError<T> | Writable.SizeError<T>> {
+  tryEncrypt(key: ChaCha20Poly1305.Cipher, iv: Bytes<12>): Result<Ciphertext, ChaCha20Poly1305.EncryptError | BinaryWriteError | Writable.WriteError<T> | Writable.SizeError<T>> {
     return Result.unthrowSync(t => {
       const plain = Writable.tryWriteToBytes(this.fragment).throw(t)
-
-      const cipher = Result.runAndWrapSync(() => {
-        return chacha20poly1305(key, iv).encrypt(plain)
-      }).mapErrSync(CryptoError.from).throw(t)
+      const cipher = key.tryEncrypt(plain, iv).throw(t).copyAndDispose()
 
       return new Ok(new Ciphertext(iv, cipher))
     })
@@ -41,11 +38,9 @@ export class Ciphertext {
     readonly inner: Bytes,
   ) { }
 
-  tryDecrypt(key: Bytes<32>): Result<Plaintext<Opaque>, CryptoError> {
+  tryDecrypt(key: ChaCha20Poly1305.Cipher): Result<Plaintext<Opaque>, ChaCha20Poly1305.DecryptError> {
     return Result.unthrowSync(t => {
-      const plain = Result.runAndWrapSync(() => {
-        return chacha20poly1305(key.slice(), this.iv.slice()).decrypt(this.inner)
-      }).mapErrSync(CryptoError.from).throw(t)
+      const plain = key.tryDecrypt(this.inner, this.iv).throw(t).copyAndDispose()
 
       return new Ok(new Plaintext(new Opaque(plain)))
     })

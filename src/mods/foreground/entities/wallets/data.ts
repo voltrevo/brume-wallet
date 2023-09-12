@@ -164,16 +164,16 @@ export class EthereumAuthPrivateKeyWalletInstance {
     return await Result.unthrow(async t => {
       const { idBase64, ivBase64 } = this.data.privateKey
 
-      const id = Base64.get().tryDecode(idBase64).throw(t).copyAndDispose()
+      const id = Base64.get().tryDecodePadded(idBase64).throw(t).copyAndDispose()
       const cipher = await WebAuthnStorage.get(id).then(r => r.throw(t))
-      const cipherBase64 = Base64.get().tryEncode(cipher).throw(t)
+      const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
 
       const privateKeyBase64 = await background.tryRequest<string>({
         method: "brume_decrypt",
         params: [ivBase64, cipherBase64]
       }).then(r => r.throw(t).throw(t))
 
-      const privateKeyBytes = Base64.get().tryDecode(privateKeyBase64).throw(t).copyAndDispose()
+      const privateKeyBytes = Base64.get().tryDecodePadded(privateKeyBase64).throw(t).copyAndDispose()
 
       return new Ok(`0x${Base16.get().tryEncode(privateKeyBytes).throw(t)}`)
     })

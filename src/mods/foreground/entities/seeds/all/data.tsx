@@ -125,16 +125,16 @@ export class AuthMnemonicSeedInstance {
     return await Result.unthrow(async t => {
       const { idBase64, ivBase64 } = this.data.mnemonic
 
-      const id = Base64.get().tryDecode(idBase64).throw(t).copyAndDispose()
+      const id = Base64.get().tryDecodePadded(idBase64).throw(t).copyAndDispose()
       const cipher = await WebAuthnStorage.get(id).then(r => r.throw(t))
-      const cipherBase64 = Base64.get().tryEncode(cipher).throw(t)
+      const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
 
       const entropyBase64 = await background.tryRequest<string>({
         method: "brume_decrypt",
         params: [ivBase64, cipherBase64]
       }).then(r => r.throw(t).throw(t))
 
-      const entropy = Base64.get().tryDecode(entropyBase64).throw(t).copyAndDispose()
+      const entropy = Base64.get().tryDecodePadded(entropyBase64).throw(t).copyAndDispose()
 
       return new Ok(entropyToMnemonic(entropy, wordlist))
     })

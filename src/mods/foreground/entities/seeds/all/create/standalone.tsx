@@ -86,7 +86,7 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
 
       try {
         const entropyBytes = mnemonicToEntropy(defPhraseInput, wordlist)
-        const entropyBase64 = Base64.get().tryEncode(entropyBytes).throw(t)
+        const entropyBase64 = Base64.get().tryEncodePadded(entropyBytes).throw(t)
 
         const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
           method: "brume_encrypt",
@@ -116,7 +116,7 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
         return new Err(new Panic())
 
       const [_, cipherBase64] = triedEncryptedPhrase.throw(t)
-      const cipher = Base64.get().tryDecode(cipherBase64).throw(t).copyAndDispose()
+      const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
       const id = await WebAuthnStorage.create(defNameInput, cipher).then(r => r.throw(t))
 
       setId(id)
@@ -138,13 +138,13 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
 
       const [ivBase64, cipherBase64] = triedEncryptedPhrase.throw(t)
 
-      using cipherSlice = Base64.get().tryDecode(cipherBase64).throw(t)
+      using cipherSlice = Base64.get().tryDecodePadded(cipherBase64).throw(t)
       const cipherBytes2 = await WebAuthnStorage.get(id).then(r => r.throw(t))
 
       if (!Bytes.equals(cipherSlice.bytes, cipherBytes2))
         return new Err(new WebAuthnStorageError())
 
-      const idBase64 = Base64.get().tryEncode(id).throw(t)
+      const idBase64 = Base64.get().tryEncodePadded(id).throw(t)
       const mnemonic = { ivBase64, idBase64 }
 
       const seed: SeedData = { type: "authMnemonic", uuid, name: defNameInput, color, emoji, mnemonic }
