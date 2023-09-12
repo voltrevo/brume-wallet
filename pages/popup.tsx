@@ -618,7 +618,9 @@ export function WalletAndChainSelectPage() {
     <PageHeader title="Choose a wallet">
       <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={creator.enable}>
-        <Outline.PlusIcon className="s-sm" />
+        <Button.Shrink>
+          <Outline.PlusIcon className="s-sm" />
+        </Button.Shrink>
       </Button.Naked>
     </PageHeader>
 

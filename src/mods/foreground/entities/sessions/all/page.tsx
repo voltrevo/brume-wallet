@@ -50,7 +50,9 @@ export function SessionsPage() {
       <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         disabled={tryDisconnectAll.loading || !Boolean(maybeSessions?.length)}
         onClick={tryDisconnectAll.run}>
-        <Outline.TrashIcon className="s-sm" />
+        <Button.Shrink>
+          <Outline.TrashIcon className="s-sm" />
+        </Button.Shrink>
       </Button.Naked>
     </PageHeader>
 

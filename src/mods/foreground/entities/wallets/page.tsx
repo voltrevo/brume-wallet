@@ -190,14 +190,20 @@ function WalletDataPage() {
     <PageHeader
       title="Wallet"
       back={onBackClick}>
-      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
-        onClick={onCameraClick}>
-        <Outline.QrCodeIcon className="s-sm" />
-      </Button.Naked>
-      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
-        onClick={onLinkClick}>
-        <Outline.LinkIcon className="s-sm" />
-      </Button.Naked>
+      <div className="flex gap-2">
+        <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+          onClick={onCameraClick}>
+          <Button.Shrink>
+            <Outline.QrCodeIcon className="s-sm" />
+          </Button.Shrink>
+        </Button.Naked>
+        <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+          onClick={onLinkClick}>
+          <Button.Shrink>
+            <Outline.LinkIcon className="s-sm" />
+          </Button.Shrink>
+        </Button.Naked>
+      </div>
     </PageHeader>
 
   const Card =

@@ -55,7 +55,9 @@ export function RequestsPage() {
       <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         disabled={tryRejectAll.loading || !Boolean(maybeRequests?.length)}
         onClick={tryRejectAll.run}>
-        <Outline.TrashIcon className="s-sm" />
+        <Button.Shrink>
+          <Outline.TrashIcon className="s-sm" />
+        </Button.Shrink>
       </Button.Naked>
     </PageHeader>
 
