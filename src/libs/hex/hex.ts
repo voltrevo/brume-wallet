@@ -4,7 +4,7 @@ export interface Radixable {
 
 export namespace Radix {
 
-  export function toHex(x: Radixable) {
+  export function toZeroHex(x: Radixable) {
     return `0x${x.toString(16)}`
   }
 

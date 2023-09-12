@@ -84,12 +84,12 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
         params: [context.wallet.uuid, context.chain.chainId, {
           method: "eth_estimateGas",
           params: [{
-            chainId: Radix.toHex(context.chain.chainId),
+            chainId: Radix.toZeroHex(context.chain.chainId),
             from: wallet.address,
             to: ethers.getAddress(defRecipientInput),
-            gasPrice: Radix.toHex(gasPrice),
-            value: Radix.toHex(ethers.parseUnits(defValueInput, 18)),
-            nonce: Radix.toHex(nonce)
+            gasPrice: Radix.toZeroHex(gasPrice),
+            value: Radix.toZeroHex(ethers.parseUnits(defValueInput, 18)),
+            nonce: Radix.toZeroHex(nonce)
           }, "latest"]
         }]
       }).then(r => r.throw(t).throw(t))

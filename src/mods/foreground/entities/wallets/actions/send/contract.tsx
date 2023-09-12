@@ -106,11 +106,11 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
         params: [context.wallet.uuid, context.chain.chainId, {
           method: "eth_estimateGas",
           params: [{
-            chainId: Radix.toHex(context.chain.chainId),
+            chainId: Radix.toZeroHex(context.chain.chainId),
             from: wallet.address,
             to: token.address,
-            gasPrice: Radix.toHex(gasPrice),
-            nonce: Radix.toHex(Number(defNonceInput)),
+            gasPrice: Radix.toZeroHex(gasPrice),
+            nonce: Radix.toZeroHex(Number(defNonceInput)),
             data: data
           }, "latest"]
         }]
