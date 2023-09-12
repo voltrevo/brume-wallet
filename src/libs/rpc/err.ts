@@ -17,11 +17,6 @@ export class RpcError extends Error {
     return new RpcError(error.message)
   }
 
-  toJSON() {
-    const { message } = this
-    return { message }
-  }
-
 }
 
 export class RpcErr extends Err<RpcError> {

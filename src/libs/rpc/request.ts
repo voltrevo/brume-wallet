@@ -32,15 +32,6 @@ export interface RpcParamlessRequestInit<T = unknown> {
   readonly params?: T
 }
 
-export namespace RpcRequestInit {
-
-  export function clone<P, T extends RpcRequestInit<P>>(init: T): T {
-    const { id, method, params } = init
-    return { id, method, params } as T
-  }
-
-}
-
 export class RpcRequest<T> {
   readonly jsonrpc = "2.0" as const
 

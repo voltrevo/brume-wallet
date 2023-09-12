@@ -9,15 +9,6 @@ export interface RpcOkInit<T = unknown> {
 
 export namespace RpcOkInit {
 
-  export function clone<T>(init: RpcOkInit<T>) {
-    const { jsonrpc, id, result } = init
-    return { jsonrpc, id, result }
-  }
-
-}
-
-export namespace RpcOkInit {
-
   export function from<T>(response: RpcOk<T>): RpcOkInit<T> {
     const { jsonrpc, id, result } = response
     return { jsonrpc, id, result }
