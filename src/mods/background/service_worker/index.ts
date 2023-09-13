@@ -589,7 +589,7 @@ export class Global {
     })
   }
 
-  async eth_sendTransaction(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
+  async eth_sendTransaction(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [{ from, to, gas, value, data }] = (request as RpcRequestPreinit<[{
         from: string,
@@ -600,11 +600,12 @@ export class Global {
       }]>).params
 
       const session = Option.wrap(ethereum.session).ok().throw(t)
+      const chainId = ethereum.chain.chainId.toString()
 
       const signature = await this.tryRequest<string>({
         id: crypto.randomUUID(),
         method: "eth_sendTransaction",
-        params: { from, to, gas, value, data },
+        params: { from, to, gas, value, data, chainId },
         origin: session.origin,
         session: session.id
       }, mouse).then(r => r.throw(t).throw(t))
@@ -636,7 +637,7 @@ export class Global {
     })
   }
 
-  async eth_signTypedData_v4(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
+  async eth_signTypedData_v4(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcRequestPreinit<[string, string]>).params
 
@@ -1126,8 +1127,12 @@ export class Global {
 
         const ethereum: EthereumContext = { user, wallet, chain, brumes, session: sessionData }
 
+        if (request.method === "eth_sendTransaction")
+          return new Some(await this.eth_sendTransaction(ethereum, request))
         if (request.method === "personal_sign")
           return new Some(await this.personal_sign(ethereum, request))
+        if (request.method === "eth_signTypedData_v4")
+          return new Some(await this.eth_signTypedData_v4(ethereum, request))
         return new None()
       })
 

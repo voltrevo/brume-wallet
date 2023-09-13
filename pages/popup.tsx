@@ -80,10 +80,13 @@ export function TransactPage() {
   const to = Option.wrap(searchParams.get("to")).unwrap()
   const gas = Option.wrap(searchParams.get("gas")).unwrap()
 
+  const chainId = Option.wrap(searchParams.get("chainId")).mapSync(Number).unwrap()
+  const chain = Option.wrap(chainByChainId[chainId]).unwrap()
+
   const value = searchParams.get("value")
   const data = searchParams.get("data")
 
-  const context = useEthereumContext2(maybeSession?.wallets.at(0), maybeSession?.chain)
+  const context = useEthereumContext2(maybeSession?.wallets.at(0), chain)
 
   const gasPriceQuery = useGasPrice(context)
   const maybeGasPrice = gasPriceQuery.data?.inner
@@ -93,7 +96,6 @@ export function TransactPage() {
 
   const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      const session = Option.wrap(maybeSession).ok().throw(t)
       const wallet = Option.wrap(maybeWallet).ok().throw(t)
       const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
       const nonce = Option.wrap(maybeNonce).ok().throw(t)
@@ -103,7 +105,7 @@ export function TransactPage() {
           data: data,
           to: to,
           gasLimit: gas,
-          chainId: session.chain.chainId,
+          chainId: chain.chainId,
           gasPrice: gasPrice,
           nonce: Number(nonce),
           value: value
@@ -127,7 +129,7 @@ export function TransactPage() {
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, storage, background, id, maybeWallet, maybeSession, maybeGasPrice, maybeNonce])
+  }, [core, storage, background, id, maybeWallet, maybeGasPrice, maybeNonce, chain])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
