@@ -6,12 +6,10 @@ import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
-import { Sockets } from "@/libs/sockets/sockets"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { Url, qurl } from "@/libs/url/url"
 import { IrnClient } from "@/libs/wconn/mods/irn/irn"
-import { Jwt } from "@/libs/wconn/mods/jwt/jwt"
 import { Wc, WcMetadata, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Base16 } from "@hazae41/base16"
@@ -19,12 +17,10 @@ import { Base58 } from "@hazae41/base58"
 import { Base64 } from "@hazae41/base64"
 import { Base64Url } from "@hazae41/base64url"
 import { Bytes } from "@hazae41/bytes"
-import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305"
 import { Disposer } from "@hazae41/cleaner"
 import { Circuit, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
-import { Fleche } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
 import { Keccak256 } from "@hazae41/keccak256"
 import { Mutex } from "@hazae41/mutex"
@@ -38,7 +34,7 @@ import { X25519 } from "@hazae41/x25519"
 import { Core, IDBStorage, RawState, SimpleFetcherfulQueryInstance, State } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
-import { EthBrume, EthBrumes } from "./entities/brumes/data"
+import { EthBrume, EthBrumes, WcBrume, WcBrumes } from "./entities/brumes/data"
 import { Origin, OriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
@@ -115,7 +111,9 @@ export class Global {
   #path: string = "/"
 
   readonly circuits: Mutex<Pool<Disposer<Circuit>, Error>>
-  readonly brumes: Mutex<Pool<Disposer<EthBrume>, Error>>
+
+  readonly walletconnect: Mutex<Pool<Disposer<WcBrume>, Error>>
+  readonly ethereum: Mutex<Pool<Disposer<EthBrume>, Error>>
 
   /**
    * Scripts by session
@@ -137,7 +135,8 @@ export class Global {
     readonly storage: IDBStorage
   ) {
     this.circuits = Circuits.createPool(this.tors, { capacity: 9 })
-    this.brumes = EthBrumes.createPool(chainByChainId, this.circuits, { capacity: 9 })
+    this.ethereum = EthBrumes.createPool(chainByChainId, this.circuits, { capacity: 9 })
+    this.walletconnect = WcBrumes.createPool(this.circuits, { capacity: 3 })
   }
 
   async tryGetStoredPassword(): Promise<Result<PasswordData, Error>> {
@@ -873,7 +872,7 @@ export class Global {
     if (brumesQuery.current != null)
       return brumesQuery.current.inner
 
-    const brumes = EthBrumes.createSubpool(this.brumes, { capacity: 3 })
+    const brumes = EthBrumes.createSubpool(this.ethereum, { capacity: 3 })
     await brumesQuery.mutate(Mutators.data(brumes))
     return brumes
   }
@@ -1021,25 +1020,8 @@ export class Global {
       const url = Url.tryParse(maybeUrl).throw(t)
       const params = await Wc.tryParse(url).then(r => r.throw(t))
 
-      const socket = await tryLoop(() => {
-        return Result.unthrow<Result<WebSocket, Looped<Error>>>(async t => {
-          const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Retry.new).throw(t).result.get().inner)
-
-          const relay = Wc.RELAY
-          const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.mapErrSync(Cancel.new).throw(t))
-          const auth = await Jwt.trySign(key, relay).then(r => r.mapErrSync(Cancel.new).throw(t))
-          const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
-
-          const url = new URL(`${relay}/?auth=${auth}&projectId=${projectId}`)
-
-          const tcp = await circuit.tryOpen(url.hostname, 443).then(r => r.mapErrSync(Retry.new).throw(t))
-          const tls = new TlsClientDuplex(tcp, { ciphers: [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384], host_name: url.hostname })
-          const socket = new Fleche.WebSocket(url, undefined, { subduplex: tls })
-          await Sockets.tryWaitOpen(socket, AbortSignal.timeout(15_000)).then(r => r.mapErrSync(Retry.new).throw(t))
-
-          return new Ok(socket)
-        })
-      }).then(r => r.throw(t))
+      const brume = await Pool.takeCryptoRandom(this.walletconnect).then(r => r.throw(t).result.get().inner)
+      const socket = await brume.sockets.tryGet(0).then(r => r.throw(t).inner.socket)
 
       const irn = new IrnClient(socket)
 

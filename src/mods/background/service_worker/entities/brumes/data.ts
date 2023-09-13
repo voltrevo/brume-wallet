@@ -89,12 +89,13 @@ export namespace WcBrumes {
     })
   }
 
-  export async function createPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
+  export function createPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
     return new Mutex(new Pool<Disposer<WcBrume>, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index } = params
 
         const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get().inner)
+
         const brume = await tryCreate(circuit).then(r => r.throw(t))
 
         const onCloseOrError = async (reason?: unknown) => {
@@ -136,9 +137,9 @@ export namespace EthBrumes {
         const { pool, index } = params
 
         const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get().inner)
-        const chains2 = Objects.mapValuesSync(chains, chain => RpcConnection.createPool(circuit, chain.urls))
+        const conns = Objects.mapValuesSync(chains, chain => RpcConnection.createPool(circuit, chain.urls))
 
-        const brume: EthBrume = { circuit, chains: chains2 }
+        const brume: EthBrume = { circuit, chains: conns }
 
         const onCloseOrError = async (reason?: unknown) => {
           pool.restart(index)
