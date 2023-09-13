@@ -93,7 +93,7 @@ export namespace Wc {
       const { pairingTopic, symKey } = params
 
       const pairingCipher = ChaCha20Poly1305.get().Cipher.tryImport(symKey).throw(t)
-      const pairing = new CryptoClient(pairingTopic, pairingCipher, irn)
+      const pairing = new CryptoClient(pairingTopic, symKey, pairingCipher, irn)
 
       const relay = { protocol: "irn" }
 
@@ -124,7 +124,7 @@ export namespace Wc {
       const sessionKey = new Uint8Array(await crypto.subtle.deriveBits(hkdf_params, hdfk_key, 8 * 32)) as Bytes<32>
       const sessionCipher = ChaCha20Poly1305.get().Cipher.tryImport(sessionKey).throw(t)
       const sessionTopic = Base16.get().tryEncode(new Uint8Array(await crypto.subtle.digest("SHA-256", sessionKey))).throw(t)
-      const session = new CryptoClient(sessionTopic, sessionCipher, irn)
+      const session = new CryptoClient(sessionTopic, sessionKey, sessionCipher, irn)
 
       await irn.trySubscribe(sessionTopic).then(r => r.throw(t))
 

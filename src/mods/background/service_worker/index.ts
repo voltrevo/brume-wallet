@@ -38,10 +38,10 @@ import { EthBrume, EthBrumes, WcBrume, WcBrumes } from "./entities/brumes/data"
 import { Origin, OriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
-import { ExSessionData, PersistentSession, SessionData, TemporarySession } from "./entities/sessions/data"
+import { ExSessionData, PersistentSession, SessionData, TemporarySession, WcSessionData } from "./entities/sessions/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
-import { EthereumContext, EthereumQueryKey, Wallet, WalletData, getBalance, getEthereumUnknown, getPairPrice, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
+import { EthereumContext, EthereumQueryKey, Wallet, WalletData, WalletRef, getBalance, getEthereumUnknown, getPairPrice, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -104,26 +104,25 @@ export class Global {
 
   readonly events = new SuperEventTarget<{
     "popup_hello": (foreground: Port) => Result<void, Error>
-    "popup_data": (response: RpcResponseInit<unknown>) => Result<void, Error>
+    "response": (response: RpcResponseInit<unknown>) => Result<void, Error>
   }>()
 
   #user?: UserSession
   #path: string = "/"
 
   readonly circuits: Mutex<Pool<Disposer<Circuit>, Error>>
-
   readonly walletconnect: Mutex<Pool<Disposer<WcBrume>, Error>>
   readonly ethereum: Mutex<Pool<Disposer<EthBrume>, Error>>
 
   /**
    * Scripts by session
    */
-  readonly scripts = new Map<string, Set<Port>>()
+  readonly scriptsBySession = new Map<string, Set<Port>>()
 
   /**
    * Session by script
    */
-  readonly sessions = new Map<string, string>()
+  readonly sessionByScript = new Map<string, string>()
 
   /**
    * Current popup
@@ -265,6 +264,25 @@ export class Global {
     })
   }
 
+  async tryRequest<T>(request: AppRequestData, mouse?: Mouse): Promise<Result<RpcResponse<T>, Error>> {
+    if (mouse != null)
+      return await this.tryRequestPopup(request, mouse)
+    return await this.tryRequestNoPopup(request)
+  }
+
+  async tryRequestNoPopup<T>(request: AppRequestData): Promise<Result<RpcResponse<T>, Error>> {
+    return await Result.unthrow(async t => {
+      const requestQuery = await AppRequest.schema(request.id).make(this.core)
+      await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
+
+      try {
+        return await this.tryWaitResponse(request.id)
+      } finally {
+        await requestQuery.delete()
+      }
+    })
+  }
+
   async tryRequestPopup<T>(request: AppRequestData, mouse: Mouse): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
       const requestQuery = await AppRequest.schema(request.id).make(this.core)
@@ -275,7 +293,7 @@ export class Global {
         const url = qurl(`/${method}?id=${id}`, params)
 
         const popup = await this.tryOpenOrFocusPopup(url, mouse).then(r => r.throw(t))
-        const response = await this.tryWaitPopupData<T>(popup, request.id).then(r => r.throw(t))
+        const response = await this.tryWaitPopupResponse<T>(request.id, popup).then(r => r.throw(t))
 
         return new Ok(response)
       } finally {
@@ -284,10 +302,31 @@ export class Global {
     })
   }
 
-  async tryWaitPopupData<T>(popup: PopupData, id: string) {
+  async tryWaitResponse<T>(id: string) {
     const future = new Future<Result<RpcResponse<T>, Error>>()
 
-    const onData = (init: RpcResponseInit<any>) => {
+    const onResponse = (init: RpcResponseInit<any>) => {
+      if (init.id !== id)
+        return new None()
+
+      const response = RpcResponse.from<T>(init)
+      future.resolve(new Ok(response))
+      return new Some(Ok.void())
+    }
+
+    try {
+      this.events.on("response", onResponse, { passive: true })
+
+      return await future.promise
+    } finally {
+      this.events.off("response", onResponse)
+    }
+  }
+
+  async tryWaitPopupResponse<T>(id: string, popup: PopupData) {
+    const future = new Future<Result<RpcResponse<T>, Error>>()
+
+    const onResponse = (init: RpcResponseInit<any>) => {
       if (init.id !== id)
         return new None()
 
@@ -303,19 +342,19 @@ export class Global {
     }
 
     try {
-      this.events.on("popup_data", onData, { passive: true })
+      this.events.on("response", onResponse, { passive: true })
       browser.windows.onRemoved.addListener(onRemoved)
 
       return await future.promise
     } finally {
-      this.events.off("popup_data", onData)
+      this.events.off("response", onResponse)
       browser.windows.onRemoved.removeListener(onRemoved)
     }
   }
 
   async tryGetOrWaitExtensionSession(script: Port, mouse: Mouse): Promise<Result<SessionData, Error>> {
     return await Result.unthrow(async t => {
-      const currentSession = this.sessions.get(script.name)
+      const currentSession = this.sessionByScript.get(script.name)
 
       if (currentSession != null) {
         const tempSessionQuery = await TemporarySession.schema(currentSession).make(this.core)
@@ -324,7 +363,7 @@ export class Global {
         return new Ok(tempSessionData)
       }
 
-      const origin = await script.tryRequest<OriginData>({
+      const originData = await script.tryRequest<OriginData>({
         method: "brume_origin"
       }).then(r => r.throw(t).throw(t))
 
@@ -333,44 +372,44 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const persSessionQuery = await PersistentSession.schema(origin.origin, storage).make(this.core)
+      const persSessionQuery = await PersistentSession.schema(originData.origin, storage).make(this.core)
       const maybePersSession = persSessionQuery.data?.inner
 
       if (maybePersSession != null) {
         const sessionId = maybePersSession.id
 
-        const originQuery = await Origin.schema(origin.origin, storage).make(this.core)
-        await originQuery.mutate(Mutators.data(origin))
+        const originQuery = await Origin.schema(originData.origin, storage).make(this.core)
+        await originQuery.mutate(Mutators.data(originData))
 
         const tempSessionQuery = await TemporarySession.schema(sessionId).make(this.core)
         await tempSessionQuery.mutate(Mutators.data(maybePersSession))
 
-        this.sessions.set(script.name, sessionId)
+        this.sessionByScript.set(script.name, sessionId)
 
-        let scripts = this.scripts.get(sessionId)
+        let scripts = this.scriptsBySession.get(sessionId)
 
         if (scripts == null) {
           scripts = new Set()
-          this.scripts.set(sessionId, scripts)
+          this.scriptsBySession.set(sessionId, scripts)
         }
 
         scripts.add(script)
 
         script.events.on("close", async () => {
           scripts?.delete(script)
-          this.sessions.delete(script.name)
+          this.sessionByScript.delete(script.name)
           return new None()
         })
 
         return new Ok(maybePersSession)
       }
 
-      const originQuery = await Origin.schema(origin.origin, storage).make(this.core)
-      await originQuery.mutate(Mutators.data(origin))
+      const originQuery = await Origin.schema(originData.origin, storage).make(this.core)
+      await originQuery.mutate(Mutators.data(originData))
 
-      const [persistent, walletId, chainId] = await this.tryRequestPopup<[boolean, string, number]>({
+      const [persistent, walletId, chainId] = await this.tryRequest<[boolean, string, number]>({
         id: crypto.randomUUID(),
-        origin: origin.origin,
+        origin: originData.origin,
         method: "eth_requestAccounts",
         params: {}
       }, mouse).then(r => r.throw(t).throw(t))
@@ -381,8 +420,8 @@ export class Global {
 
       const sessionData: ExSessionData = {
         id: crypto.randomUUID(),
-        origin: origin.origin,
-        wallets: [wallet],
+        origin: originData.origin,
+        wallets: [WalletRef.from(wallet)],
         chain: chain
       }
 
@@ -392,20 +431,20 @@ export class Global {
       if (persistent)
         await persSessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
-      this.sessions.set(script.name, sessionData.id)
+      this.sessionByScript.set(script.name, sessionData.id)
 
-      let scripts = this.scripts.get(sessionData.id)
+      let scripts = this.scriptsBySession.get(sessionData.id)
 
       if (scripts == null) {
         scripts = new Set()
-        this.scripts.set(sessionData.id, scripts)
+        this.scriptsBySession.set(sessionData.id, scripts)
       }
 
       scripts.add(script)
 
       script.events.on("close", async () => {
         scripts?.delete(script)
-        this.sessions.delete(script.name)
+        this.sessionByScript.delete(script.name)
         return new None()
       })
 
@@ -432,7 +471,7 @@ export class Global {
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
       const brumes = await this.#getOrCreateEthBrumes(wallet)
 
-      const ethereum: EthereumContext = { user, port: script, session, wallet, chain, brumes }
+      const ethereum: EthereumContext = { user, session, wallet, chain, brumes }
 
       if (subrequest.method === "eth_requestAccounts")
         return await this.eth_requestAccounts(ethereum, subrequest)
@@ -561,7 +600,7 @@ export class Global {
 
       const session = Option.wrap(ethereum.session).ok().throw(t)
 
-      const signature = await this.tryRequestPopup<string>({
+      const signature = await this.tryRequest<string>({
         id: crypto.randomUUID(),
         method: "eth_sendTransaction",
         params: { from, to, gas, value, data },
@@ -578,13 +617,13 @@ export class Global {
     })
   }
 
-  async personal_sign(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<string, Error>> {
+  async personal_sign(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [message, address] = (request as RpcRequestPreinit<[string, string]>).params
 
       const session = Option.wrap(ethereum.session).ok().throw(t)
 
-      const signature = await this.tryRequestPopup<string>({
+      const signature = await this.tryRequest<string>({
         id: crypto.randomUUID(),
         method: "personal_sign",
         params: { message, address },
@@ -602,7 +641,7 @@ export class Global {
 
       const session = Option.wrap(ethereum.session).ok().throw(t)
 
-      const signature = await this.tryRequestPopup<string>({
+      const signature = await this.tryRequest<string>({
         id: crypto.randomUUID(),
         method: "eth_signTypedData_v4",
         params: { data, address },
@@ -622,7 +661,7 @@ export class Global {
 
       const chain = Option.wrap(chainByChainId[parseInt(chainId, 16)]).ok().throw(t)
 
-      await this.tryRequestPopup<void>({
+      await this.tryRequest<void>({
         id: crypto.randomUUID(),
         method: "wallet_switchEthereumChain",
         params: { chainId },
@@ -640,7 +679,7 @@ export class Global {
       const persSessionQuery = await PersistentSession.schema(session.origin, storage).make(this.core)
       await persSessionQuery.mutate(Mutators.replaceData(updatedSession))
 
-      for (const script of Option.wrap(this.scripts.get(session.id)).unwrapOr([]))
+      for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([]))
         await script.tryRequest({ method: "chainChanged", params: [chainId] }).then(r => r.ignore())
 
       return Ok.void()
@@ -688,8 +727,8 @@ export class Global {
       return new Some(await this.brume_wc_connect(foreground, request))
     if (request.method === "popup_hello")
       return new Some(await this.popup_hello(foreground, request))
-    if (request.method === "popup_data")
-      return new Some(await this.popup_data(foreground, request))
+    if (request.method === "brume_respond")
+      return new Some(await this.brume_respond(foreground, request))
     return new None()
   }
 
@@ -716,11 +755,11 @@ export class Global {
     })
   }
 
-  async popup_data(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_respond(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
       const [response] = (request as RpcRequestPreinit<[RpcResponseInit<unknown>]>).params
 
-      const returned = await this.events.emit("popup_data", [response])
+      const returned = await this.events.emit("response", [response])
 
       if (returned.isSome() && returned.inner.isErr())
         return returned.inner
@@ -784,12 +823,12 @@ export class Global {
       const tempSessionQuery = await TemporarySession.schema(persSessionData.id).make(this.core)
       await tempSessionQuery.delete()
 
-      for (const script of Option.wrap(this.scripts.get(persSessionData.id)).unwrapOr([])) {
+      for (const script of Option.wrap(this.scriptsBySession.get(persSessionData.id)).unwrapOr([])) {
         await script.tryRequest({ method: "accountsChanged", params: [[]] }).then(r => r.ignore())
-        this.sessions.delete(script.name)
+        this.sessionByScript.delete(script.name)
       }
 
-      this.scripts.delete(persSessionData.id)
+      this.scriptsBySession.delete(persSessionData.id)
 
       return Ok.void()
     })
@@ -916,6 +955,7 @@ export class Global {
       const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
       const onState = async (event: CustomEvent<State<any, any>>) => {
+        console.log("updated", cacheKey)
         const stored = await this.core.store(event.detail, { key: cacheKey })
 
         await foreground.tryRequest({
@@ -924,9 +964,11 @@ export class Global {
         }).then(r => r.ignore())
       }
 
+      console.log("subscribe", cacheKey)
       this.core.onState.addListener(cacheKey, onState)
 
       foreground.events.on("close", () => {
+        console.log("unsubscribe", cacheKey)
         this.core.onState.removeListener(cacheKey, onState)
         return new None()
       })
@@ -1015,25 +1057,68 @@ export class Global {
 
   async brume_wc_connect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<WcMetadata, Error>> {
     return await Result.unthrow(async t => {
-      const [maybeUrl, address] = (request as RpcRequestPreinit<[string, string]>).params
+      const [rawWcUrl, walletId] = (request as RpcRequestPreinit<[string, string]>).params
 
-      const url = Url.tryParse(maybeUrl).throw(t)
-      const params = await Wc.tryParse(url).then(r => r.throw(t))
+      const { user, storage } = Option.wrap(this.#user).ok().throw(t)
+
+      const walletQuery = await Wallet.schema(walletId, storage).make(this.core)
+      const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
+      const chain = Option.wrap(chainByChainId[1]).ok().throw(t)
+
+      const wcUrl = Url.tryParse(rawWcUrl).throw(t)
+      const params = await Wc.tryParse(wcUrl).then(r => r.throw(t))
 
       const brume = await Pool.takeCryptoRandom(this.walletconnect).then(r => r.throw(t).result.get().inner)
       const socket = await brume.sockets.tryGet(0).then(r => r.throw(t).inner.socket)
 
       const irn = new IrnClient(socket)
 
-      const session = await Wc.tryPair(irn, params, address).then(r => r.throw(t))
+      const session = await Wc.tryPair(irn, params, wallet.address).then(r => r.throw(t))
 
-      session.client.events.on("request", (suprequest) => {
+      const peerUrl = Url.tryParse(session.metadata.url).throw(t)
+
+      /**
+       * Avoid spoofed origin
+       */
+      peerUrl.protocol = "wc:"
+
+      const originData: OriginData = {
+        origin: peerUrl.origin,
+        title: session.metadata.name,
+        description: session.metadata.description
+      }
+
+      const originQuery = await Origin.schema(originData.origin, storage).make(this.core)
+      await originQuery.mutate(Mutators.data(originData))
+
+      const keyBase64 = Base64.get().tryEncodePadded(session.client.key).throw(t)
+
+      const sessionData: WcSessionData = {
+        type: "wc",
+        id: crypto.randomUUID(),
+        origin: originData.origin,
+        wallets: [WalletRef.from(wallet)],
+        chain: chain,
+        relay: Wc.RELAY,
+        topic: session.client.topic,
+        keyBase64: keyBase64
+      }
+
+      const tempSessionQuery = await TemporarySession.schema(sessionData.id).make(this.core)
+      await tempSessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
+
+      const brumes = await this.#getOrCreateEthBrumes(wallet)
+
+      session.client.events.on("request", async (suprequest) => {
         if (suprequest.method !== "wc_sessionRequest")
           return new None()
         const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
+        const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
 
-        if (request.method === "eth_sendTransaction")
-          return new Some(new Ok("0x9b503ce6b898f4eb41aae3b5eeb3bd47c727ce2b01090b8432dcf43ce8ac0cec"))
+        const ethereum: EthereumContext = { user, wallet, chain, brumes, session: sessionData }
+
+        if (request.method === "personal_sign")
+          return new Some(await this.personal_sign(ethereum, request))
         return new None()
       })
 
@@ -1100,22 +1185,33 @@ if (IS_WEBSITE) {
   const onHelloWorld = async (event: ExtendableMessageEvent) => {
     const raw = event.ports[0]
 
-    const channel = new WebsitePort("foreground", raw)
+    const port = new WebsitePort("foreground", raw)
 
-    channel.events.on("request", async (request) => {
+    const onRequest = async (request: RpcRequestInit<unknown>) => {
       const inited = await init
 
       if (inited.isErr())
         return new Some(inited)
 
-      return await inited.get().tryRouteForeground(channel, request)
-    })
+      return await inited.get().tryRouteForeground(port, request)
+    }
+
+    port.events.on("request", onRequest, { passive: true })
+
+    const onClose = () => {
+      port.events.off("request", onRequest)
+      port.clean()
+      port.port.close()
+      return new None()
+    }
+
+    port.events.on("close", onClose, { passive: true })
 
     raw.start()
 
-    await channel.tryRequest({ method: "brume_hello" }).then(r => r.ignore())
+    await port.tryRequest({ method: "brume_hello" }).then(r => r.ignore())
 
-    channel.runPingLoop()
+    port.runPingLoop()
   }
 
   self.addEventListener("message", (event) => {

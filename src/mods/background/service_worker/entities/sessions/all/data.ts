@@ -1,7 +1,7 @@
 import { IDBStorage, createQuerySchema } from "@hazae41/xswr"
 import { SessionRef } from "../data"
 
-export namespace Sessions {
+export namespace PersistentSessions {
 
   export type Key = typeof key
 
@@ -15,7 +15,7 @@ export namespace Sessions {
 
 }
 
-export namespace SessionsByWallet {
+export namespace PersistentSessionsByWallet {
 
   export type Key = ReturnType<typeof key>
 

@@ -127,7 +127,8 @@ export class CryptoClient {
 
   constructor(
     readonly topic: string,
-    readonly key: ChaCha20Poly1305.Cipher,
+    readonly key: Bytes<32>,
+    readonly cipher: ChaCha20Poly1305.Cipher,
     readonly irn: IrnClient
   ) {
     irn.events.on("request", this.#onIrnRequest.bind(this))
@@ -154,7 +155,7 @@ export class CryptoClient {
 
       const envelope = Readable.tryReadFromBytes(Envelope, slice.bytes).throw(t)
       const cipher = envelope.fragment.tryReadInto(Ciphertext).throw(t)
-      const plain = cipher.tryDecrypt(this.key).throw(t)
+      const plain = cipher.tryDecrypt(this.cipher).throw(t)
       const plaintext = Bytes.toUtf8(plain.fragment.bytes)
 
       const data = SafeJson.parse(plaintext) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
@@ -206,7 +207,7 @@ export class CryptoClient {
       const plaintext = SafeJson.stringify(data)
       const plain = new Plaintext(new Opaque(Bytes.fromUtf8(plaintext)))
       const iv = Bytes.tryRandom(12).throw(t) // TODO maybe use a counter
-      const cipher = plain.tryEncrypt(this.key, iv).throw(t)
+      const cipher = plain.tryEncrypt(this.cipher, iv).throw(t)
       const envelope = new EnvelopeTypeZero(cipher)
       const bytes = Writable.tryWriteToBytes(envelope).throw(t)
       const message = Base64.get().tryEncodePadded(bytes).throw(t)

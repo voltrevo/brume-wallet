@@ -114,7 +114,7 @@ export function TransactPage() {
       tx.signature = await instance.trySignTransaction(tx, core, background).then(r => r.throw(t))
 
       await background.tryRequest({
-        method: "popup_data",
+        method: "brume_respond",
         params: [new RpcOk(id, tx.serialized)]
       }).then(r => r.throw(t).throw(t))
 
@@ -132,7 +132,7 @@ export function TransactPage() {
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
-        method: "popup_data",
+        method: "brume_respond",
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
@@ -212,7 +212,7 @@ export function SwitchPage() {
   const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
-        method: "popup_data",
+        method: "brume_respond",
         params: [new RpcOk(id, undefined)]
       }).then(r => r.throw(t).throw(t))
 
@@ -230,7 +230,7 @@ export function SwitchPage() {
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
-        method: "popup_data",
+        method: "brume_respond",
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
@@ -309,7 +309,7 @@ export function PersonalSignPage() {
       const signature = await instance.trySignPersonalMessage(userMessage, core, background).then(r => r.throw(t))
 
       await background.tryRequest({
-        method: "popup_data",
+        method: "brume_respond",
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
@@ -327,7 +327,7 @@ export function PersonalSignPage() {
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
-        method: "popup_data",
+        method: "brume_respond",
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
@@ -407,7 +407,7 @@ export function TypedSignPage() {
       const signature = await instance.trySignEIP712HashedMessage(typed, core, background).then(r => r.throw(t))
 
       await background.tryRequest({
-        method: "popup_data",
+        method: "brume_respond",
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
@@ -425,7 +425,7 @@ export function TypedSignPage() {
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
-        method: "popup_data",
+        method: "brume_respond",
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
@@ -499,7 +499,7 @@ export function WalletAndChainSelectPage() {
   const onWalletClick = useAsyncUniqueCallback(async (wallet: Wallet) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
-        method: "popup_data",
+        method: "brume_respond",
         params: [new RpcOk(id, [persistent, wallet.uuid, chain])]
       }).then(r => r.throw(t).throw(t))
 

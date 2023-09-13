@@ -3,7 +3,7 @@ import { Sets } from "@/libs/sets/sets"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Data, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Wallet } from "../wallets/data"
-import { Sessions, SessionsByWallet } from "./all/data"
+import { PersistentSessions, PersistentSessionsByWallet } from "./all/data"
 
 export type Session =
   | SessionData
@@ -41,9 +41,9 @@ export interface WcSessionData {
   readonly origin: string
   readonly relay: string
   readonly topic: string
+  readonly keyBase64: string
   readonly chain: EthereumChain
   readonly wallets: [Wallet]
-  readonly symKeyBase64: string
 }
 
 export namespace TemporarySession {
@@ -66,13 +66,13 @@ export namespace PersistentSession {
 
   export type Key = ReturnType<typeof key>
 
-  export function key(id: string) {
-    return `persistentSession/${id}`
+  export function key(origin: string) {
+    return `persistentSession/${origin}`
   }
 
   export type Schema = ReturnType<typeof schema>
 
-  export function schema(id: string, storage: IDBStorage) {
+  export function schema(origin: string, storage: IDBStorage) {
     const indexer = async (states: States<SessionData, never>, more: IndexerMore) => {
       const { current, previous = current } = states
       const { core } = more
@@ -80,7 +80,7 @@ export namespace PersistentSession {
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
-      const persSessionsQuery = await Sessions.schema(storage).make(core)
+      const persSessionsQuery = await PersistentSessions.schema(storage).make(core)
 
       await persSessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData != null)
@@ -97,7 +97,7 @@ export namespace PersistentSession {
       const addedWallets = Sets.minus(currentWallets, previousWallets)
 
       for (const wallet of removedWallets) {
-        const walletSessionsQuery = await SessionsByWallet.schema(wallet, storage).make(core)
+        const walletSessionsQuery = await PersistentSessionsByWallet.schema(wallet, storage).make(core)
 
         await walletSessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
           if (previousData != null)
@@ -107,7 +107,7 @@ export namespace PersistentSession {
       }
 
       for (const wallet of addedWallets) {
-        const walletSessionsQuery = await SessionsByWallet.schema(wallet, storage).make(core)
+        const walletSessionsQuery = await PersistentSessionsByWallet.schema(wallet, storage).make(core)
 
         await walletSessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
           if (currentData != null)
@@ -119,7 +119,7 @@ export namespace PersistentSession {
       return
     }
 
-    return createQuerySchema<Key, SessionData, never>({ key: key(id), storage, indexer })
+    return createQuerySchema<Key, SessionData, never>({ key: key(origin), storage, indexer })
   }
 
 }

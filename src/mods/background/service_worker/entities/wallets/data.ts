@@ -1,7 +1,6 @@
 import Erc20Abi from "@/assets/Erc20.json"
 import PairAbi from "@/assets/Pair.json"
 import { Fixed, FixedInit } from "@/libs/bigints/bigints"
-import { Port } from "@/libs/channel/channel"
 import { ContractTokenInfo, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { RpcRequestPreinit, RpcResponse, TorRpc } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
@@ -176,7 +175,6 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
 
 export interface EthereumContext {
   user: User,
-  port: Port
   wallet: Wallet
   chain: EthereumChain
   brumes: EthBrumes

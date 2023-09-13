@@ -109,7 +109,7 @@ export function WalletDataCameraPage() {
 
       const metadata = await background.tryRequest<WcMetadata>({
         method: "brume_wc_connect",
-        params: [uri, wallet.address]
+        params: [uri, wallet.uuid]
       }).then(r => r.throw(t).throw(t))
 
       alert(`Connected to ${metadata.name}`)

@@ -44,6 +44,7 @@ export class WebsitePort {
       }, AbortSignal.timeout(1000))
 
       if (result.isErr()) {
+        console.error(result)
         await this.events.emit("close", [undefined])
         return
       }
@@ -65,10 +66,14 @@ export class WebsitePort {
   }
 
   async onRequest(request: RpcRequestInit<unknown>) {
-    console.debug(this.name, "->", request)
+    if (request.method !== "brume_ping")
+      console.log(this.name, "->", request)
+
     const result = await this.tryRouteRequest(request)
     const response = RpcResponse.rewrap(request.id, result)
-    console.debug(this.name, "<-", response)
+
+    if (request.method !== "brume_ping")
+      console.log(this.name, "<-", response)
 
     this.port.postMessage(JSON.stringify(response))
   }
@@ -166,10 +171,14 @@ export class ExtensionPort {
   }
 
   async onRequest(request: RpcRequestInit<unknown>) {
-    console.debug(this.name, "->", request)
+    if (request.method !== "brume_ping")
+      console.log(this.name, "->", request)
+
     const result = await this.tryRouteRequest(request)
     const response = RpcResponse.rewrap(request.id, result)
-    console.debug(this.name, "<-", response)
+
+    if (request.method !== "brume_ping")
+      console.log(this.name, "<-", response)
 
     tryBrowserSync(() => {
       this.port.postMessage(JSON.stringify(response))

@@ -32,7 +32,7 @@ export function RequestsPage() {
 
       for (const { id } of maybeRequests)
         await background.tryRequest({
-          method: "popup_data",
+          method: "brume_respond",
           params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
         }).then(r => r.throw(t).throw(t))
 

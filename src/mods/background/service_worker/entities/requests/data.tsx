@@ -49,10 +49,12 @@ export namespace AppRequest {
       const requestsQuery = await AppRequests.schema().make(core)
 
       await requestsQuery.mutate(Mutators.mapData((d = new Data([])) => {
+        console.log("d", d)
         if (previousData != null)
           d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
         if (currentData != null)
           d = d.mapSync(p => [...p, AppRequestRef.from(currentData.inner)])
+        console.log("d2", d)
         return d
       }))
     }

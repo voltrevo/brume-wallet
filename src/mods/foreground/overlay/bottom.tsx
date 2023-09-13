@@ -46,26 +46,24 @@ export function Bottom() {
             <Outline.SparklesIcon className="s-md" />
           </Button.Shrink>
         </Button.Naked>
-        {background.isExtension() && <>
-          <Button.Naked className="grow text-contrast aria-selected:text-default"
-            aria-selected={path.pathname === "/sessions"}
-            onClick={onSessionsClick}>
-            <Button.Shrink>
-              <Outline.GlobeAltIcon className="s-md" />
-            </Button.Shrink>
-          </Button.Naked>
-          <Button.Naked className="grow text-contrast aria-selected:text-default"
-            aria-selected={path.pathname === "/requests"}
-            onClick={onRequestsClick}>
-            <Button.Shrink className="">
-              <div className="relative">
-                {Boolean(requests?.length) &&
-                  <div className="absolute top-0 -right-2 bg-purple-400 rounded-full w-2 h-2" />}
-                <Outline.CheckIcon className="s-md" />
-              </div>
-            </Button.Shrink>
-          </Button.Naked>
-        </>}
+        <Button.Naked className="grow text-contrast aria-selected:text-default"
+          aria-selected={path.pathname === "/sessions"}
+          onClick={onSessionsClick}>
+          <Button.Shrink>
+            <Outline.GlobeAltIcon className="s-md" />
+          </Button.Shrink>
+        </Button.Naked>
+        <Button.Naked className="grow text-contrast aria-selected:text-default"
+          aria-selected={path.pathname === "/requests"}
+          onClick={onRequestsClick}>
+          <Button.Shrink className="">
+            <div className="relative">
+              {Boolean(requests?.length) &&
+                <div className="absolute top-0 -right-2 bg-purple-400 rounded-full w-2 h-2" />}
+              <Outline.CheckIcon className="s-md" />
+            </div>
+          </Button.Shrink>
+        </Button.Naked>
       </div>
     </nav>
   </>

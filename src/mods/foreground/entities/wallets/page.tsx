@@ -177,7 +177,7 @@ function WalletDataPage() {
 
       const metadata = await background.tryRequest<WcMetadata>({
         method: "brume_wc_connect",
-        params: [clipboard, wallet.address]
+        params: [clipboard, wallet.uuid]
       }).then(r => r.throw(t).throw(t))
 
       alert(`Connected to ${metadata.name}`)
