@@ -5,6 +5,7 @@ import { Blobs } from "@/libs/blobs/blobs"
 import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
+import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"
@@ -957,7 +958,6 @@ export class Global {
       const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
       const onState = async (event: CustomEvent<State<any, any>>) => {
-        console.log("updated", cacheKey)
         const stored = await this.core.store(event.detail, { key: cacheKey })
 
         await foreground.tryRequest({
@@ -966,11 +966,9 @@ export class Global {
         }).then(r => r.ignore())
       }
 
-      console.log("subscribe", cacheKey)
       this.core.onState.addListener(cacheKey, onState)
 
       foreground.events.on("close", () => {
-        console.log("unsubscribe", cacheKey)
         this.core.onState.removeListener(cacheKey, onState)
         return new None()
       })
@@ -1090,11 +1088,13 @@ export class Global {
         return Result.unthrow<Result<void, Looped<Error>>>(async t => {
           const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
 
-          const iconUrl = Option.wrap(session.metadata.icons[i]).ok().mapErrSync(Cancel.new).throw(t)
+          const iconUrl = Option.wrap(session.metadata.icons[i]).ok().mapErrSync(Retry.new).throw(t)
           const iconRes = await circuit.tryFetch(iconUrl).then(r => r.mapErrSync(Retry.new).throw(t))
           const iconBlob = await Result.runAndDoubleWrap(() => iconRes.blob()).then(r => r.mapErrSync(Retry.new).throw(t))
-          const iconData = await Blobs.tryReadAsDataURL(iconBlob).then(r => r.mapErrSync(Cancel.new).throw(t))
 
+          Result.assert(Mime.isImage(iconBlob.type)).mapErrSync(Retry.new).throw(t)
+
+          const iconData = await Blobs.tryReadAsDataURL(iconBlob).then(r => r.mapErrSync(Retry.new).throw(t))
           await originQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icon: iconData }))))
 
           return Ok.void()

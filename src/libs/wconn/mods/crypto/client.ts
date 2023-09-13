@@ -229,7 +229,6 @@ export class CryptoClient {
       const signal = AbortSignal.timeout(ttl * 1000)
 
       const onResponse = (init: RpcResponseInit<any>) => {
-        console.log("init", init)
         if (init.id !== request.id)
           return new None()
         const response = RpcResponse.from<T>(init)
