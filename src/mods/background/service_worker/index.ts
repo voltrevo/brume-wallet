@@ -1,6 +1,7 @@
 import "@hazae41/symbol-dispose-polyfill"
 
 import { FixedInit } from "@/libs/bigints/bigints"
+import { Blobs } from "@/libs/blobs/blobs"
 import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
@@ -1075,21 +1076,29 @@ export class Global {
 
       const session = await Wc.tryPair(irn, params, wallet.address).then(r => r.throw(t))
 
-      const peerUrl = Url.tryParse(session.metadata.url).throw(t)
-
-      /**
-       * Avoid spoofed origin
-       */
-      peerUrl.protocol = "wc:"
-
       const originData: OriginData = {
-        origin: peerUrl.origin,
+        origin: `wc://${crypto.randomUUID()}`,
         title: session.metadata.name,
-        description: session.metadata.description
+        description: session.metadata.description,
       }
 
       const originQuery = await Origin.schema(originData.origin, storage).make(this.core)
       await originQuery.mutate(Mutators.data(originData))
+
+      tryLoop(i => {
+        return Result.unthrow<Result<void, Looped<Error>>>(async t => {
+          const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
+
+          const iconUrl = Option.wrap(session.metadata.icons[i]).ok().mapErrSync(Cancel.new).throw(t)
+          const iconRes = await circuit.tryFetch(iconUrl).then(r => r.mapErrSync(Retry.new).throw(t))
+          const iconBlob = await Result.runAndDoubleWrap(() => iconRes.blob()).then(r => r.mapErrSync(Retry.new).throw(t))
+          const iconData = await Blobs.tryReadAsDataURL(iconBlob).then(r => r.mapErrSync(Cancel.new).throw(t))
+
+          await originQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icon: iconData }))))
+
+          return Ok.void()
+        })
+      }, { max: session.metadata.icons.length })
 
       const keyBase64 = Base64.get().tryEncodePadded(session.client.key).throw(t)
 
