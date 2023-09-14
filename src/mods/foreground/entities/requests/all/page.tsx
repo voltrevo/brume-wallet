@@ -4,6 +4,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { Results } from "@/libs/results/results"
 import { RpcErr, RpcError } from "@/libs/rpc"
 import { Button } from "@/libs/ui/button"
+import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
 import { qurl } from "@/libs/url/url"
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
 import { useBackground } from "@/mods/foreground/background/context"
@@ -88,9 +89,11 @@ export function RequestRow(props: { request: AppRequest }) {
   return <div role="button" className="po-md rounded-xl flex items-center gap-4"
     onClick={open}>
     <div className="shrink-0">
-      <img className="s-3xl"
+      <ImageWithFallback className="s-3xl"
         alt="icon"
-        src={maybeOriginData.icon} />
+        src={maybeOriginData.icon}>
+        <Outline.CubeTransparentIcon className="s-3xl" />
+      </ImageWithFallback>
     </div>
     <div className="grow">
       <div className="font-medium">

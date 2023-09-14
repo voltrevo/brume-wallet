@@ -3,6 +3,7 @@ import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { Results } from "@/libs/results/results"
 import { Button } from "@/libs/ui/button"
+import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
 import { Session } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackground } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
@@ -93,9 +94,11 @@ export function SessionRow(props: { session: Session }) {
   return <div role="button" className="po-md rounded-xl flex items-center gap-4"
     onClick={tryDisconnect.run}>
     <div className="shrink-0">
-      <img className="s-3xl"
+      <ImageWithFallback className="s-3xl"
         alt="icon"
-        src={maybeOriginData.icon} />
+        src={maybeOriginData.icon}>
+        <Outline.CubeTransparentIcon className="s-3xl" />
+      </ImageWithFallback>
     </div>
     <div className="grow">
       <div className="font-medium">
