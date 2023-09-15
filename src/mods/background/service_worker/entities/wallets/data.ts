@@ -356,11 +356,12 @@ export function getPricedBalance(ethereum: EthereumContext, account: string, coi
 }
 
 export function getBalance(ethereum: EthereumContext, account: string, block: string, storage: IDBStorage) {
-  const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryEthereumFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals)))).then(r => {
-      console.log(ethereum.chain.chainId, r)
+  const fetcher = async (request: RpcRequestPreinit<unknown>) => {
+    return await tryEthereumFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals)))).then(r => {
+      console.log("<-", ethereum.chain.chainId, r)
       return r
     })
+  }
 
   const indexer = async (states: States<FixedInit, Error>, more: IndexerMore) => {
     if (block !== "pending")
