@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Fixed, FixedInit } from "@/libs/bigints/bigints";
 import { Gradients } from "@/libs/colors/colors";
-import { UiError } from "@/libs/errors/errors";
+import { UIError } from "@/libs/errors/errors";
 import { ContractTokenInfo, EthereumChain, chainByChainId, chainIdByName, pairByAddress, pairByName, tokenByAddress, tokenById } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
@@ -170,8 +170,8 @@ function WalletDataPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const clipboard = await navigator.clipboard.readText()
 
-      const url = Url.tryParse(clipboard).setErr(new UiError("You must copy a WalletConnect link")).throw(t)
-      await Wc.tryParse(url).then(r => r.setErr(new UiError("You must copy a WalletConnect link")).throw(t))
+      const url = Url.tryParse(clipboard).setErr(new UIError("You must copy a WalletConnect link")).throw(t)
+      await Wc.tryParse(url).then(r => r.setErr(new UIError("You must copy a WalletConnect link")).throw(t))
 
       alert(`Connecting...`)
 

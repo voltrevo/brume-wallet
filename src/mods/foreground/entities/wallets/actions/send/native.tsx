@@ -1,3 +1,5 @@
+import { BigInts } from "@/libs/bigints/bigints";
+import { UIError } from "@/libs/errors/errors";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
@@ -72,12 +74,39 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
       onChange={onValueInputChange} />
   </>
 
+  const [rawNonceInput = "", setRawNonceInput] = useState<string>()
+
+  const defNonceInput = useDeferredValue(rawNonceInput)
+
+  const onNonceInputChange = useInputChange(e => {
+    setRawNonceInput(e.currentTarget.value)
+  }, [])
+
+  const maybeFinalNonce = useMemo(() => {
+    return BigInts.tryParseInput(defNonceInput).ok().unwrapOr(maybeNonce)
+  }, [defNonceInput, maybeNonce])
+
+  const NonceInput = <>
+    <div className="">
+      Custom nonce
+    </div>
+    <div className="h-2" />
+    <Input.Contrast className="w-full"
+      value={rawNonceInput}
+      onChange={onNonceInputChange} />
+  </>
+
   const [txHash, setTxHash] = useState<string>()
 
   const trySend = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
-      const nonce = Option.wrap(maybeNonce).ok().throw(t)
+      const gasPrice = Option.wrap(maybeGasPrice).okOrElseSync(() => {
+        return new UIError(`Could not fetch gas price`)
+      }).throw(t)
+
+      const nonce = Option.wrap(maybeFinalNonce).okOrElseSync(() => {
+        return new UIError(`Could not fetch or parse nonce`)
+      }).throw(t)
 
       const gas = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",
@@ -123,7 +152,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, context, wallet, maybeNonce, maybeGasPrice, defRecipientInput, defValueInput])
+  }, [core, context, wallet, maybeGasPrice, maybeFinalNonce, defRecipientInput, defValueInput])
 
   const TxHashDisplay = <>
     <div className="">
@@ -146,30 +175,24 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
     </ExternalDivisionLink>
   </>
 
-  const disabled = useMemo(() => {
+  const sendDisabled = useMemo(() => {
     if (trySend.loading)
-      return true
-    if (maybeNonce == null)
-      return true
-    if (maybeGasPrice == null)
-      return true
+      return "Loading..."
     if (!defRecipientInput)
-      return true
+      return "Please enter a recipient"
     if (!defValueInput)
-      return true
-    return false
-  }, [trySend.loading, maybeNonce, maybeGasPrice, defRecipientInput, defValueInput])
+      return "Please enter an amount"
+    return undefined
+  }, [trySend.loading, defRecipientInput, defValueInput])
 
   const SendButton =
     <Button.Gradient className="w-full po-md"
       colorIndex={wallet.color}
-      disabled={disabled}
+      disabled={Boolean(sendDisabled)}
       onClick={trySend.run}>
       <Button.Shrink>
         <Outline.PaperAirplaneIcon className="s-sm" />
-        {trySend.loading
-          ? "Loading..."
-          : "Send"}
+        {sendDisabled || "Send"}
       </Button.Shrink>
     </Button.Gradient>
 
@@ -181,6 +204,8 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
     {RecipientInput}
     <div className="h-2" />
     {ValueInput}
+    <div className="h-4" />
+    {NonceInput}
     <div className="h-4" />
     {txHash ? <>
       {TxHashDisplay}

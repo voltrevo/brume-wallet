@@ -1,3 +1,5 @@
+import { BigInts } from "@/libs/bigints/bigints";
+import { UIError } from "@/libs/errors/errors";
 import { ContractTokenInfo } from "@/libs/ethereum/mods/chain";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
@@ -82,9 +84,13 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
     setRawNonceInput(e.currentTarget.value)
   }, [])
 
+  const maybeFinalNonce = useMemo(() => {
+    return BigInts.tryParseInput(defNonceInput).ok().unwrapOr(maybeNonce)
+  }, [defNonceInput, maybeNonce])
+
   const NonceInput = <>
     <div className="">
-      Advanced: Nonce
+      Custom nonce
     </div>
     <div className="h-2" />
     <Input.Contrast className="w-full"
@@ -96,10 +102,16 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
 
   const trySend = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
+      const gasPrice = Option.wrap(maybeGasPrice).okOrElseSync(() => {
+        return new UIError(`Could not fetch gas price`)
+      }).throw(t)
+
+      const nonce = Option.wrap(maybeFinalNonce).okOrElseSync(() => {
+        return new UIError(`Could not fetch or parse nonce`)
+      }).throw(t)
 
       const signature = Cubane.Abi.FunctionSignature.tryParse("transfer(address,uint256)").throw(t)
-      const data = Cubane.Abi.tryEncode(signature, ethers.getAddress(defRecipientInput), ethers.parseUnits(defValueInput, 18)).unwrap()
+      const data = Cubane.Abi.tryEncode(signature, ethers.getAddress(defRecipientInput), ethers.parseUnits(defValueInput, 18)).throw(t)
 
       const gas = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",
@@ -110,7 +122,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
             from: wallet.address,
             to: token.address,
             gasPrice: Radix.toZeroHex(gasPrice),
-            nonce: Radix.toZeroHex(Number(defNonceInput)),
+            nonce: Radix.toZeroHex(nonce),
             data: data
           }, "latest"]
         }]
@@ -122,7 +134,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
           gasLimit: gas,
           chainId: context.chain.chainId,
           gasPrice: gasPrice,
-          nonce: Number(defNonceInput),
+          nonce: Number(nonce),
           data: data
         })
       }).throw(t)
@@ -145,7 +157,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, context, wallet, maybeGasPrice, defRecipientInput, defValueInput, defNonceInput])
+  }, [core, context, wallet, maybeGasPrice, maybeFinalNonce, defRecipientInput, defValueInput])
 
   const TxHashDisplay = <>
     <div className="">
@@ -168,30 +180,24 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
     </ExternalDivisionLink>
   </>
 
-  const disabled = useMemo(() => {
+  const sendDisabled = useMemo(() => {
     if (trySend.loading)
-      return true
-    if (maybeGasPrice == null)
-      return true
-    if (!defNonceInput)
-      return true
+      return "Loading..."
     if (!defRecipientInput)
-      return true
+      return "Please enter a recipient"
     if (!defValueInput)
-      return true
-    return false
-  }, [trySend.loading, maybeGasPrice, defRecipientInput, defValueInput, defNonceInput])
+      return "Please enter an amount"
+    return undefined
+  }, [trySend.loading, defRecipientInput, defValueInput])
 
   const SendButton =
     <Button.Gradient className="w-full po-md"
       colorIndex={wallet.color}
-      disabled={disabled}
+      disabled={Boolean(sendDisabled)}
       onClick={trySend.run}>
       <Button.Shrink>
         <Outline.PaperAirplaneIcon className="s-sm" />
-        {trySend.loading
-          ? "Loading..."
-          : "Send"}
+        {sendDisabled || "Send"}
       </Button.Shrink>
     </Button.Gradient>
 
@@ -203,6 +209,8 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
     {RecipientInput}
     <div className="h-2" />
     {ValueInput}
+    <div className="h-4" />
+    {NonceInput}
     <div className="h-4" />
     {txHash ? <>
       {TxHashDisplay}

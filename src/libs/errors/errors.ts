@@ -1,5 +1,5 @@
-export class UiError extends Error {
-  readonly #class = UiError
+export class UIError extends Error {
+  readonly #class = UIError
   readonly name = this.#class.name
 }
 
@@ -20,7 +20,7 @@ export namespace Errors {
   }
 
   export function alert(error: unknown) {
-    if (error instanceof UiError)
+    if (error instanceof UIError)
       return globalThis.alert(error.message)
     return globalThis.alert(toString(error))
   }

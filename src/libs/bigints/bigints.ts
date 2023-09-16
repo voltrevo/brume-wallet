@@ -1,12 +1,36 @@
+import { Err, Ok } from "@hazae41/result"
 import { FixedNumber } from "ethers"
 
 export namespace BigInts {
+
+  export class ParseError extends Error {
+    readonly #class = ParseError
+    readonly name = this.#class.name
+
+    constructor(options?: ErrorOptions) {
+      super(`Could not parse`, options)
+    }
+
+    static from(cause: unknown) {
+      return new ParseError({ cause })
+    }
+  }
 
   export function float(x: bigint, d = 180) {
     return FixedNumber
       .fromValue(x, d)
       .round(3)
       .toUnsafeFloat()
+  }
+
+  export function tryParseInput(text: string) {
+    try {
+      if (!text.trim().length)
+        return new Err(new ParseError())
+      return new Ok(BigInt(text))
+    } catch (e: unknown) {
+      return new Err(ParseError.from(e))
+    }
   }
 
   export function stringify(value: bigint) {
