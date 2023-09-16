@@ -17,6 +17,14 @@ export class RpcError extends Error {
     return new RpcError(error.message)
   }
 
+  /**
+   * Used by JSON.stringify
+   */
+  toJSON() {
+    const { message } = this
+    return { message }
+  }
+
 }
 
 export class RpcErr extends Err<RpcError> {

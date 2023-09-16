@@ -39,9 +39,7 @@ export class WebsitePort {
 
   async runPingLoop() {
     while (true) {
-      const result = await this.tryRequestOrSignal({
-        method: "brume_ping"
-      }, AbortSignal.timeout(1000))
+      const result = await this.tryPingOrSignal(AbortSignal.timeout(1000))
 
       if (result.isErr()) {
         console.error(result)
@@ -66,19 +64,22 @@ export class WebsitePort {
   }
 
   async onRequest(request: RpcRequestInit<unknown>) {
-    if (request.method !== "brume_ping")
+    if (request.id !== "ping")
       console.debug(this.name, "->", request)
 
     const result = await this.tryRouteRequest(request)
     const response = RpcResponse.rewrap(request.id, result)
 
-    if (request.method !== "brume_ping")
+    if (request.id !== "ping")
       console.debug(this.name, "<-", response)
 
     this.port.postMessage(JSON.stringify(response))
   }
 
   async onResponse(response: RpcResponseInit<unknown>) {
+    if (response.id !== "ping")
+      console.debug(this.name, "<-", response)
+
     const returned = await this.events.emit("response", [response])
 
     if (returned.isSome())
@@ -110,8 +111,8 @@ export class WebsitePort {
     })
   }
 
-  async tryRequestOrSignal<T>(init: RpcRequestPreinit<unknown>, signal: AbortSignal): Promise<Result<RpcResponse<T>, Error>> {
-    const request = this.client.prepare(init)
+  async tryPingOrSignal<T>(signal: AbortSignal): Promise<Result<RpcResponse<T>, Error>> {
+    const request = { id: "ping", method: "brume_ping " }
 
     this.port.postMessage(JSON.stringify(request))
 
@@ -171,13 +172,13 @@ export class ExtensionPort {
   }
 
   async onRequest(request: RpcRequestInit<unknown>) {
-    if (request.method !== "brume_ping")
+    if (request.id !== "ping")
       console.debug(this.name, "->", request)
 
     const result = await this.tryRouteRequest(request)
     const response = RpcResponse.rewrap(request.id, result)
 
-    if (request.method !== "brume_ping")
+    if (request.id !== "ping")
       console.debug(this.name, "<-", response)
 
     tryBrowserSync(() => {
@@ -186,6 +187,9 @@ export class ExtensionPort {
   }
 
   async onResponse(response: RpcResponseInit<unknown>) {
+    if (response.id !== "ping")
+      console.debug(this.name, "<-", response)
+
     const returned = await this.events.emit("response", [response])
 
     if (returned.isSome())
