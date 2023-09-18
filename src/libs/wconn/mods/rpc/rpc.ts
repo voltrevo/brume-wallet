@@ -21,7 +21,7 @@ export namespace SafeRpc {
     const onMessage = async (event: MessageEvent<unknown>) => {
       if (typeof event.data !== "string")
         return
-      const response = RpcResponse.from<T>(JSON.parse(event.data))
+      const response = RpcResponse.from<T>(SafeJson.parse(event.data))
 
       if (response.id !== request.id)
         return
