@@ -8,38 +8,61 @@ import { Session } from "@/mods/background/service_worker/entities/sessions/data
 import { useBackground } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
+import { Option } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
+import { useMemo } from "react"
 import { useOrigin } from "../../origins/data"
-import { usePersistentSession } from "../data"
-import { useSessions } from "./data"
+import { useSession } from "../data"
+import { usePersistentSessions, useTemporarySessions } from "./data"
 
 export function SessionsPage() {
   const background = useBackground().unwrap()
 
-  const sessionsQuery = useSessions()
-  const maybeSessions = sessionsQuery.data?.inner
+  const tempSessionsQuery = useTemporarySessions()
+  const maybeTempSessions = tempSessionsQuery.data?.inner
+
+  console.log("maybeTempSessions", maybeTempSessions)
+
+  const persSessionsQuery = usePersistentSessions()
+  const maybePersSessions = persSessionsQuery.data?.inner
+
+  console.log("maybePersSessions", maybePersSessions)
+
+  const length = useMemo(() => {
+    const temp = maybeTempSessions?.length || 0
+    const pers = maybePersSessions?.length || 0
+    return temp + pers
+  }, [maybeTempSessions, maybePersSessions])
 
   const tryDisconnectAll = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (maybeSessions == null)
-        return Ok.void()
       if (!confirm(`Do you want to disconnect all sessions?`))
         return Ok.void()
 
-      for (const { id } of maybeSessions)
+      for (const session of Option.wrap(maybeTempSessions).unwrapOr([]))
         await background.tryRequest({
           method: "brume_disconnect",
-          params: [id]
+          params: [session.id]
+        }).then(r => r.throw(t).throw(t))
+
+      for (const session of Option.wrap(maybePersSessions).unwrapOr([]))
+        await background.tryRequest({
+          method: "brume_disconnect",
+          params: [session.id]
         }).then(r => r.throw(t).throw(t))
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [background, maybeSessions])
+  }, [background, maybePersSessions])
 
   const Body =
     <PageBody>
       <div className="flex flex-col gap-2">
-        {maybeSessions?.map(session =>
+        {maybeTempSessions?.map(session =>
+          <SessionRow
+            key={session.id}
+            session={session} />)}
+        {maybePersSessions?.map(session =>
           <SessionRow
             key={session.id}
             session={session} />)}
@@ -49,7 +72,7 @@ export function SessionsPage() {
   const Header =
     <PageHeader title="Sessions">
       <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
-        disabled={tryDisconnectAll.loading || !Boolean(maybeSessions?.length)}
+        disabled={tryDisconnectAll.loading || !length}
         onClick={tryDisconnectAll.run}>
         <Button.Shrink>
           <Outline.TrashIcon className="s-sm" />
@@ -66,11 +89,15 @@ export function SessionsPage() {
 export function SessionRow(props: { session: Session }) {
   const background = useBackground().unwrap()
 
-  const sessionQuery = usePersistentSession(props.session.origin)
+  const sessionQuery = useSession(props.session.id)
   const maybeSessionData = sessionQuery.data?.inner
+
+  console.log("sessionQuery", sessionQuery)
 
   const originQuery = useOrigin(maybeSessionData?.origin)
   const maybeOriginData = originQuery.data?.inner
+
+  console.log("originQuery", originQuery)
 
   const tryDisconnect = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -81,7 +108,7 @@ export function SessionRow(props: { session: Session }) {
 
       await background.tryRequest({
         method: "brume_disconnect",
-        params: [maybeSessionData.origin]
+        params: [maybeSessionData.id]
       }).then(r => r.throw(t).throw(t))
 
       return Ok.void()

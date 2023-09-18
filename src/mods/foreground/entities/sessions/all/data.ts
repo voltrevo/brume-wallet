@@ -3,24 +3,24 @@ import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { UserStorage, useUserStorage } from "@/mods/foreground/storage/user"
 import { createQuerySchema, useQuery } from "@hazae41/xswr"
 
-export function getSessions(storage: UserStorage) {
-  return createQuerySchema<string, Session[], never>({ key: `persistentSessions`, storage })
+export function getPersistentSessions(storage: UserStorage) {
+  return createQuerySchema<string, Session[], never>({ key: `persistentSessions/v2`, storage })
 }
 
-export function useSessions() {
+export function usePersistentSessions() {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(getSessions, [storage])
+  const query = useQuery(getPersistentSessions, [storage])
   useSubscribe(query, storage)
   return query
 }
 
-export function getSessionsByWallet(wallet: string, storage: UserStorage) {
-  return createQuerySchema<string, Session[], never>({ key: `persistentSessionsByWallet/${wallet}`, storage })
+export function getTemporarySessions(storage: UserStorage) {
+  return createQuerySchema<string, Session[], never>({ key: `temporarySessions/v2`, storage })
 }
 
-export function useSessionsByWallet(wallet: string) {
+export function useTemporarySessions() {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(getSessionsByWallet, [wallet, storage])
+  const query = useQuery(getTemporarySessions, [storage])
   useSubscribe(query, storage)
   return query
 }

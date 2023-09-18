@@ -13,7 +13,9 @@ export function ImageWithFallback(props: ImageProps & ChildrenProps) {
     return onError?.(event)
   }, [onError])
 
-  if (src == null || error != null)
+  if (error)
+    return <>{children}</>
+  if (src == null)
     return <>{children}</>
 
   // eslint-disable-next-line jsx-a11y/alt-text, @next/next/no-img-element

@@ -191,18 +191,20 @@ function WalletDataPage() {
       title="Wallet"
       back={onBackClick}>
       <div className="flex gap-2">
-        <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
-          onClick={onCameraClick}>
-          <Button.Shrink>
-            <Outline.QrCodeIcon className="s-sm" />
-          </Button.Shrink>
-        </Button.Naked>
-        <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
-          onClick={onLinkClick}>
-          <Button.Shrink>
-            <Outline.LinkIcon className="s-sm" />
-          </Button.Shrink>
-        </Button.Naked>
+        {background.isWebsite() && <>
+          <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+            onClick={onCameraClick}>
+            <Button.Shrink>
+              <Outline.QrCodeIcon className="s-sm" />
+            </Button.Shrink>
+          </Button.Naked>
+          <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+            onClick={onLinkClick}>
+            <Button.Shrink>
+              <Outline.LinkIcon className="s-sm" />
+            </Button.Shrink>
+          </Button.Naked>
+        </>}
       </div>
     </PageHeader>
 

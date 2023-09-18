@@ -13,7 +13,7 @@ import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
 import { AppRequests } from "@/mods/foreground/entities/requests/all/data";
 import { useAppRequest } from "@/mods/foreground/entities/requests/data";
-import { useTemporarySession } from "@/mods/foreground/entities/sessions/data";
+import { useSession } from "@/mods/foreground/entities/sessions/data";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
 import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
 import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
@@ -70,7 +70,7 @@ export function TransactPage() {
   const requestQuery = useAppRequest(id)
   const maybeRequest = requestQuery.data?.inner
 
-  const sessionQuery = useTemporarySession(maybeRequest?.session)
+  const sessionQuery = useSession(maybeRequest?.session)
   const maybeSession = sessionQuery.data?.inner
 
   const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)
@@ -289,7 +289,7 @@ export function PersonalSignPage() {
   const requestQuery = useAppRequest(id)
   const maybeRequest = requestQuery.data?.inner
 
-  const sessionQuery = useTemporarySession(maybeRequest?.session)
+  const sessionQuery = useSession(maybeRequest?.session)
   const maybeSession = sessionQuery.data?.inner
 
   const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)
@@ -391,7 +391,7 @@ export function TypedSignPage() {
   const requestQuery = useAppRequest(id)
   const maybeRequest = requestQuery.data?.inner
 
-  const sessionQuery = useTemporarySession(maybeRequest?.session)
+  const sessionQuery = useSession(maybeRequest?.session)
   const maybeSession = sessionQuery.data?.inner
 
   const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)

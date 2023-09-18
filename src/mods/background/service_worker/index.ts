@@ -40,7 +40,7 @@ import { EthBrume, EthBrumes, WcBrume, WcBrumes } from "./entities/brumes/data"
 import { Origin, OriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
-import { ExSessionData, PersistentSession, SessionData, TemporarySession, WcSessionData } from "./entities/sessions/data"
+import { ExSessionData, Session, SessionByOrigin, SessionData, WcSessionData } from "./entities/sessions/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
 import { EthereumContext, EthereumQueryKey, Wallet, WalletData, WalletRef, getBalance, getEthereumUnknown, getPairPrice, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
@@ -125,6 +125,11 @@ export class Global {
    * Session by script
    */
   readonly sessionByScript = new Map<string, string>()
+
+  /**
+   * Socket by WalletConnect session
+   */
+  readonly socketBySession = new Map<string, WebSocket>()
 
   /**
    * Current popup
@@ -359,10 +364,12 @@ export class Global {
       const currentSession = this.sessionByScript.get(script.name)
 
       if (currentSession != null) {
-        const tempSessionQuery = await TemporarySession.schema(currentSession).make(this.core)
-        const tempSessionData = Option.wrap(tempSessionQuery.data?.inner).ok().throw(t)
+        const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-        return new Ok(tempSessionData)
+        const sessionQuery = await Session.schema(currentSession, storage).make(this.core)
+        const sessionData = Option.wrap(sessionQuery.data?.inner).ok().throw(t)
+
+        return new Ok(sessionData)
       }
 
       const originData = await script.tryRequest<OriginData>({
@@ -374,17 +381,16 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const persSessionQuery = await PersistentSession.schema(originData.origin, storage).make(this.core)
-      const maybePersSession = persSessionQuery.data?.inner
+      const sessionByOriginQuery = await SessionByOrigin.schema(originData.origin, storage).make(this.core)
 
-      if (maybePersSession != null) {
-        const sessionId = maybePersSession.id
+      if (sessionByOriginQuery.data != null) {
+        const sessionId = sessionByOriginQuery.data.inner.id
 
         const originQuery = await Origin.schema(originData.origin, storage).make(this.core)
         await originQuery.mutate(Mutators.data(originData))
 
-        const tempSessionQuery = await TemporarySession.schema(sessionId).make(this.core)
-        await tempSessionQuery.mutate(Mutators.data(maybePersSession))
+        const sessionQuery = await Session.schema(sessionId, storage).make(this.core)
+        const sessionData = Option.wrap(sessionQuery.data?.inner).ok().throw(t)
 
         this.sessionByScript.set(script.name, sessionId)
 
@@ -403,7 +409,7 @@ export class Global {
           return new None()
         })
 
-        return new Ok(maybePersSession)
+        return new Ok(sessionData)
       }
 
       const originQuery = await Origin.schema(originData.origin, storage).make(this.core)
@@ -421,17 +427,16 @@ export class Global {
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
       const sessionData: ExSessionData = {
+        type: "ex",
         id: crypto.randomUUID(),
         origin: originData.origin,
+        persist: persistent,
         wallets: [WalletRef.from(wallet)],
         chain: chain
       }
 
-      const tempSessionQuery = await TemporarySession.schema(sessionData.id).make(this.core)
-      await tempSessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
-
-      if (persistent)
-        await persSessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
+      const sessionQuery = await Session.schema(sessionData.id, storage).make(this.core)
+      await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
       this.sessionByScript.set(script.name, sessionData.id)
 
@@ -676,11 +681,8 @@ export class Global {
 
       const updatedSession = { ...session, chain }
 
-      const tempSessionQuery = await TemporarySession.schema(session.id).make(this.core)
-      await tempSessionQuery.mutate(Mutators.replaceData(updatedSession))
-
-      const persSessionQuery = await PersistentSession.schema(session.origin, storage).make(this.core)
-      await persSessionQuery.mutate(Mutators.replaceData(updatedSession))
+      const sessionQuery = await Session.schema(session.id, storage).make(this.core)
+      await sessionQuery.mutate(Mutators.replaceData(updatedSession))
 
       for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([]))
         await script.tryRequest({ method: "chainChanged", params: [chainId] }).then(r => r.ignore())
@@ -815,23 +817,22 @@ export class Global {
 
   async brume_disconnect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const [origin] = (request as RpcRequestPreinit<[string]>).params
+      const [id] = (request as RpcRequestPreinit<[string]>).params
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const persSessionQuery = await PersistentSession.schema(origin, storage).make(this.core)
-      const persSessionData = Option.wrap(persSessionQuery.data?.inner).ok().throw(t)
-      await persSessionQuery.delete()
+      const sessionQuery = await Session.schema(id, storage).make(this.core)
+      await sessionQuery.delete()
 
-      const tempSessionQuery = await TemporarySession.schema(persSessionData.id).make(this.core)
-      await tempSessionQuery.delete()
+      this.socketBySession.get(id)?.close()
+      this.socketBySession.delete(id)
 
-      for (const script of Option.wrap(this.scriptsBySession.get(persSessionData.id)).unwrapOr([])) {
+      for (const script of Option.wrap(this.scriptsBySession.get(id)).unwrapOr([])) {
         await script.tryRequest({ method: "accountsChanged", params: [[]] }).then(r => r.ignore())
         this.sessionByScript.delete(script.name)
       }
 
-      this.scriptsBySession.delete(persSessionData.id)
+      this.scriptsBySession.delete(id)
 
       return Ok.void()
     })
@@ -1107,6 +1108,7 @@ export class Global {
         type: "wc",
         id: crypto.randomUUID(),
         origin: originData.origin,
+        persist: false,
         wallets: [WalletRef.from(wallet)],
         chain: chain,
         relay: Wc.RELAY,
@@ -1114,8 +1116,10 @@ export class Global {
         keyBase64: keyBase64
       }
 
-      const tempSessionQuery = await TemporarySession.schema(sessionData.id).make(this.core)
-      await tempSessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
+      const sessionQuery = await Session.schema(sessionData.id, storage).make(this.core)
+      await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
+
+      this.socketBySession.set(sessionData.id, socket)
 
       const brumes = await this.#getOrCreateEthBrumes(wallet)
 
@@ -1134,6 +1138,10 @@ export class Global {
         if (request.method === "eth_signTypedData_v4")
           return new Some(await this.eth_signTypedData_v4(ethereum, request))
         return new None()
+      })
+
+      socket.addEventListener("close", async () => {
+        await sessionQuery.delete()
       })
 
       return new Ok(session.metadata)
