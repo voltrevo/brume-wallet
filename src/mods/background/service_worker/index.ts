@@ -11,7 +11,7 @@ import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from 
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { Url, qurl } from "@/libs/url/url"
-import { IrnClient } from "@/libs/wconn/mods/irn/irn"
+import { IrnBrumes } from "@/libs/wconn/mods/irn/irn"
 import { Wc, WcMetadata, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Base16 } from "@hazae41/base16"
@@ -1069,10 +1069,7 @@ export class Global {
       const wcUrl = Url.tryParse(rawWcUrl).throw(t)
       const params = await Wc.tryParse(wcUrl).then(r => r.throw(t))
 
-      const brume = await Pool.takeCryptoRandom(this.walletconnect).then(r => r.throw(t).result.get().inner)
-      const socket = await brume.sockets.tryGet(0).then(r => r.throw(t).inner.socket)
-
-      const irn = new IrnClient(socket)
+      const irn = new IrnBrumes(this.walletconnect)
 
       const session = await Wc.tryPair(irn, params, wallet.address).then(r => r.throw(t))
 
@@ -1119,8 +1116,6 @@ export class Global {
       const sessionQuery = await Session.schema(sessionData.id, storage).make(this.core)
       await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
-      this.socketBySession.set(sessionData.id, socket)
-
       const brumes = await this.#getOrCreateEthBrumes(wallet)
 
       session.client.events.on("request", async (suprequest) => {
@@ -1138,10 +1133,6 @@ export class Global {
         if (request.method === "eth_signTypedData_v4")
           return new Some(await this.eth_signTypedData_v4(ethereum, request))
         return new None()
-      })
-
-      socket.addEventListener("close", async () => {
-        await sessionQuery.delete()
       })
 
       return new Ok(session.metadata)

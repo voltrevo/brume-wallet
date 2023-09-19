@@ -10,7 +10,7 @@ import { Future } from "@hazae41/future";
 import { None, Some } from "@hazae41/option";
 import { SuperEventTarget } from "@hazae41/plume";
 import { Err, Ok, Result } from "@hazae41/result";
-import { IrnClient, IrnSubscriptionPayload } from "../irn/irn";
+import { IrnBrumes, IrnSubscriptionPayload } from "../irn/irn";
 import { SafeRpc } from "../rpc/rpc";
 
 export interface RpcOpts {
@@ -129,7 +129,7 @@ export class CryptoClient {
     readonly topic: string,
     readonly key: Bytes<32>,
     readonly cipher: ChaCha20Poly1305.Cipher,
-    readonly irn: IrnClient
+    readonly irn: IrnBrumes
   ) {
     irn.events.on("request", this.#onIrnRequest.bind(this))
   }
