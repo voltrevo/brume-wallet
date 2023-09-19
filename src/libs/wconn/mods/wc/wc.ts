@@ -2,7 +2,6 @@ import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { RpcRequestPreinit } from "@/libs/rpc";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Future } from "@hazae41/future";
 import { None, Option, Some } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
@@ -105,8 +104,7 @@ export namespace Wc {
     return await Result.unthrow(async t => {
       const { pairingTopic, symKey } = params
 
-      const pairingCipher = ChaCha20Poly1305.get().Cipher.tryImport(symKey).throw(t)
-      const pairing = new CryptoClient(pairingTopic, symKey, pairingCipher, irn)
+      const pairing = CryptoClient.tryNew(pairingTopic, symKey, irn).throw(t)
 
       const relay = { protocol: "irn" }
 
@@ -135,9 +133,8 @@ export namespace Wc {
       const hkdf_params = { name: "HKDF", hash: "SHA-256", info: new Uint8Array(), salt: new Uint8Array() }
 
       const sessionKey = new Uint8Array(await crypto.subtle.deriveBits(hkdf_params, hdfk_key, 8 * 32)) as Bytes<32>
-      const sessionCipher = ChaCha20Poly1305.get().Cipher.tryImport(sessionKey).throw(t)
       const sessionTopic = Base16.get().tryEncode(new Uint8Array(await crypto.subtle.digest("SHA-256", sessionKey))).throw(t)
-      const session = new CryptoClient(sessionTopic, sessionKey, sessionCipher, irn)
+      const session = CryptoClient.tryNew(sessionTopic, sessionKey, irn).throw(t)
 
       await irn.trySubscribe(sessionTopic).then(r => r.throw(t))
 

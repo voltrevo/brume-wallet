@@ -125,13 +125,22 @@ export class CryptoClient {
     response: (response: RpcResponseInit<unknown>) => void
   }>()
 
-  constructor(
+  private constructor(
     readonly topic: string,
     readonly key: Bytes<32>,
+    readonly irn: IrnBrumes,
     readonly cipher: ChaCha20Poly1305.Cipher,
-    readonly irn: IrnBrumes
   ) {
     irn.events.on("request", this.#onIrnRequest.bind(this))
+  }
+
+  static tryNew(topic: string, key: Bytes<32>, irn: IrnBrumes): Result<CryptoClient, Error> {
+    return Result.unthrowSync(t => {
+      const cipher = ChaCha20Poly1305.get().Cipher.tryImport(key).throw(t)
+      const client = new CryptoClient(topic, key, irn, cipher)
+
+      return new Ok(client)
+    })
   }
 
   async #onIrnRequest(request: RpcRequestPreinit<unknown>) {
