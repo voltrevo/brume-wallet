@@ -49,8 +49,17 @@ export class WcSession {
     readonly metadata: WcMetadata
   ) { }
 
-  async tryClose(reason: unknown) {
-    return await this.client.irn.tryClose(reason)
+  async tryClose(reason: unknown): Promise<Result<void, Error>> {
+    return await Result.unthrow(async t => {
+      await this.client.tryRequest({
+        method: "wc_sessionDelete",
+        params: { code: 6000, message: "User disconnected." }
+      }).then(r => r.throw(t))
+
+      await this.client.irn.tryClose(reason).then(r => r.throw(t))
+
+      return Ok.void()
+    })
   }
 
 }
