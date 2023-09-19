@@ -31,11 +31,13 @@ export class IrnBrumes {
 
   readonly topics = new Set<string>()
 
-  readonly events = new SuperEventTarget<{
+  readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
     request: (request: RpcRequestPreinit<unknown>) => Result<unknown, Error>
   }>()
 
   readonly pool: Mutex<Pool<Disposer<IrnSockets>, Error>>
+
+  #closed?: { reason: unknown }
 
   constructor(
     readonly brumes: Mutex<Pool<Disposer<WcBrume>, Error>>
@@ -43,9 +45,16 @@ export class IrnBrumes {
     this.pool = new Mutex(this.#pool())
   }
 
+  get closed() {
+    return this.#closed
+  }
+
   #pool() {
     return new Pool<Disposer<IrnSockets>, Error>(async ({ index, pool }) => {
       return await Result.unthrow(async t => {
+        if (this.#closed)
+          return new Err(new Error("Closed", { cause: this.#closed.reason }))
+
         const sockets = await Pool.takeCryptoRandom(this.brumes).then(r => r.throw(t).result.inner.inner.sockets)
         const irn = new IrnSockets(new Mutex(sockets))
 
@@ -95,6 +104,21 @@ export class IrnBrumes {
     })
   }
 
+  async tryClose(reason: unknown): Promise<Result<void, Error>> {
+    return Result.unthrow(async t => {
+      this.#closed = { reason }
+
+      await this.events.emit("close", [reason])
+
+      const irn = await this.pool.inner.tryGet(0).then(r => r.ok().mapSync(x => x.inner))
+
+      if (irn.isNone())
+        return Ok.void()
+      await irn.inner.tryClose(reason).then(r => r.throw(t))
+      return Ok.void()
+    })
+  }
+
 }
 
 export class IrnSockets {
@@ -107,12 +131,18 @@ export class IrnSockets {
 
   readonly pool: Mutex<Pool<Disposer<IrnClient>, Error>>
 
+  #closed?: { reason: unknown }
+
   constructor(
     readonly sockets: Mutex<Pool<Disposer<WebSocketConnection>, Error>>
   ) {
     this.pool = new Mutex(this.#pool())
 
     this.pool.inner.events.on("created", this.#onCreated.bind(this))
+  }
+
+  get closed() {
+    return this.#closed
   }
 
   async #onCreated(entry: PoolEntry<Disposer<IrnClient>, Error>) {
@@ -124,6 +154,9 @@ export class IrnSockets {
   #pool() {
     return new Pool<Disposer<IrnClient>, Error>(async ({ index, pool }) => {
       return await Result.unthrow(async t => {
+        if (this.#closed)
+          return new Err(new Error("Closed", { cause: this.#closed.reason }))
+
         const socket = await Pool.takeCryptoRandom(this.sockets).then(r => r.throw(t).result.inner.inner.socket)
         const irn = new IrnClient(socket)
 
@@ -173,6 +206,21 @@ export class IrnSockets {
     })
   }
 
+  async tryClose(reason: unknown): Promise<Result<void, Error>> {
+    return Result.unthrow(async t => {
+      this.#closed = { reason }
+
+      await this.events.emit("close", [reason])
+
+      const irn = await this.pool.inner.tryGet(0).then(r => r.ok().mapSync(x => x.inner))
+
+      if (irn.isNone())
+        return Ok.void()
+      await irn.inner.tryClose(reason).then(r => r.throw(t))
+      return Ok.void()
+    })
+  }
+
 }
 
 export class IrnClient {
@@ -183,12 +231,18 @@ export class IrnClient {
     request: (request: RpcRequestPreinit<unknown>) => Result<unknown, Error>
   }>()
 
+  #closed?: { reason: unknown }
+
   constructor(
     readonly socket: WebSocket
   ) {
     socket.addEventListener("message", this.#onMessage.bind(this), { passive: true })
     socket.addEventListener("close", this.#onClose.bind(this), { passive: true })
     socket.addEventListener("error", this.#onError.bind(this), { passive: true })
+  }
+
+  get closed() {
+    return this.#closed
   }
 
   async #onClose(event: CloseEvent) {
@@ -245,6 +299,15 @@ export class IrnClient {
       }, AbortSignal.timeout(5000)).then(r => r.throw(t).throw(t))
 
       return Result.assert(result)
+    })
+  }
+
+  async tryClose(reason: unknown): Promise<Result<void, Error>> {
+    return Result.unthrow(async t => {
+      this.#closed = { reason }
+      await this.events.emit("close", [reason])
+      this.socket.close()
+      return Ok.void()
     })
   }
 

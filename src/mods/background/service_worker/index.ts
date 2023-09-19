@@ -12,7 +12,7 @@ import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { Url, qurl } from "@/libs/url/url"
 import { IrnBrumes } from "@/libs/wconn/mods/irn/irn"
-import { Wc, WcMetadata, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
+import { Wc, WcMetadata, WcSession, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Base16 } from "@hazae41/base16"
 import { Base58 } from "@hazae41/base58"
@@ -127,9 +127,9 @@ export class Global {
   readonly sessionByScript = new Map<string, string>()
 
   /**
-   * Socket by WalletConnect session
+   * WalletConnect session by session
    */
-  readonly socketBySession = new Map<string, WebSocket>()
+  readonly wcBySession = new Map<string, WcSession>()
 
   /**
    * Current popup
@@ -824,8 +824,12 @@ export class Global {
       const sessionQuery = await Session.schema(id, storage).make(this.core)
       await sessionQuery.delete()
 
-      this.socketBySession.get(id)?.close()
-      this.socketBySession.delete(id)
+      const wc = this.wcBySession.get(id)
+
+      if (wc != null) {
+        await wc.tryClose(undefined).then(r => r.throw(t))
+        this.wcBySession.delete(id)
+      }
 
       for (const script of Option.wrap(this.scriptsBySession.get(id)).unwrapOr([])) {
         await script.tryRequest({ method: "accountsChanged", params: [[]] }).then(r => r.ignore())
@@ -1097,7 +1101,7 @@ export class Global {
 
           return Ok.void()
         })
-      }, { max: session.metadata.icons.length })
+      }, { max: session.metadata.icons.length }).catch(console.warn)
 
       const keyBase64 = Base64.get().tryEncodePadded(session.client.key).throw(t)
 
@@ -1118,7 +1122,7 @@ export class Global {
 
       const brumes = await this.#getOrCreateEthBrumes(wallet)
 
-      session.client.events.on("request", async (suprequest) => {
+      const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")
           return new None()
         const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
@@ -1133,7 +1137,20 @@ export class Global {
         if (request.method === "eth_signTypedData_v4")
           return new Some(await this.eth_signTypedData_v4(ethereum, request))
         return new None()
-      })
+      }
+
+      const onCloseOrError = async () => {
+        session.client.events.off("request", onRequest)
+        session.client.irn.events.off("close", onCloseOrError)
+        session.client.irn.events.off("error", onCloseOrError)
+        return new None()
+      }
+
+      session.client.events.on("request", onRequest, { passive: true })
+      session.client.irn.events.on("close", onCloseOrError, { passive: true })
+      session.client.irn.events.on("error", onCloseOrError, { passive: true })
+
+      this.wcBySession.set(sessionData.id, session)
 
       return new Ok(session.metadata)
     })

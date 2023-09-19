@@ -49,6 +49,10 @@ export class WcSession {
     readonly metadata: WcMetadata
   ) { }
 
+  async tryClose(reason: unknown) {
+    return await this.client.irn.tryClose(reason)
+  }
+
 }
 
 export interface WcParams {
