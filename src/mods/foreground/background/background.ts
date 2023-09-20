@@ -65,8 +65,6 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
     return await Result.unthrow(async t => {
       const { pool, index } = params
 
-      const registration = await navigator.serviceWorker.ready
-
       const channel = new MessageChannel()
 
       const port = new WebsitePort("background", channel.port1)
@@ -76,18 +74,20 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
 
       console.log("sw starting")
 
-      const interval = setInterval(() => {
-        try {
-          const gt = globalThis as any
-          gt.registration.active?.postMessage("HELLO_WORLD", [channel.port2])
-        } catch (e: unknown) { }
-      }, 1000)
+      const gt = globalThis as any
+
+      while (true) {
+        if (gt.registration?.active != null)
+          break
+        await new Promise(ok => setTimeout(ok, 100))
+      }
+
+      gt.registration.active.postMessage("HELLO_WORLD", [channel.port2])
 
       await Plume.tryWaitOrSignal(port.events, "request", async (future: Future<Ok<void>>, init: RpcRequestInit<any>) => {
         if (init.method !== "brume_hello")
           return new None()
 
-        clearInterval(interval)
         future.resolve(Ok.void())
         return new Some(Ok.void())
       }, AbortSignal.timeout(60_000)).then(r => r.throw(t))
@@ -114,7 +114,7 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
 
       const onClose = async () => {
         console.log("sw lost")
-        await registration.unregister().catch(() => { })
+        await gt.registration.unregister().catch(() => { })
         await registerServiceWorker({}).catch(() => { })
         pool.restart(index)
         return new None()
