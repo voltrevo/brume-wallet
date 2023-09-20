@@ -120,6 +120,8 @@ export class Global {
   readonly walletconnect: Mutex<Pool<Disposer<WcBrume>, Error>>
   readonly ethereum: Mutex<Pool<Disposer<EthBrume>, Error>>
 
+  readonly brumesByWallet = new Map<string, EthBrumes>()
+
   /**
    * Scripts by session
    */
@@ -144,9 +146,9 @@ export class Global {
     readonly tors: Mutex<Pool<Disposer<TorClientDuplex>, Error>>,
     readonly storage: IDBStorage
   ) {
-    this.circuits = Circuits.createPool(this.tors, { capacity: 9 })
-    this.ethereum = EthBrumes.createPool(chainByChainId, this.circuits, { capacity: 9 })
-    this.walletconnect = WcBrumes.createPool(this.circuits, { capacity: 3 })
+    this.circuits = new Mutex(Circuits.createPool(this.tors.inner, { capacity: 9 }))
+    this.ethereum = new Mutex(EthBrumes.createPool(chainByChainId, this.circuits, { capacity: 9 }))
+    this.walletconnect = new Mutex(WcBrumes.createPool(this.circuits, { capacity: 3 }))
   }
 
   async tryGetStoredPassword(): Promise<Result<PasswordData, Error>> {
@@ -920,13 +922,13 @@ export class Global {
   }
 
   async #getOrCreateEthBrumes(wallet: Wallet): Promise<EthBrumes> {
-    const brumesQuery = await EthBrumes.schema(wallet).make(this.core)
+    let brumes = this.brumesByWallet.get(wallet.uuid)
 
-    if (brumesQuery.current != null)
-      return brumesQuery.current.inner
+    if (brumes == null) {
+      brumes = EthBrumes.createSubpool(this.ethereum, { capacity: 1 })
+      this.brumesByWallet.set(wallet.uuid, brumes)
+    }
 
-    const brumes = EthBrumes.createSubpool(this.ethereum, { capacity: 3 })
-    await brumesQuery.mutate(Mutators.data(brumes))
     return brumes
   }
 

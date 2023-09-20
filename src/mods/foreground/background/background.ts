@@ -6,7 +6,8 @@ import { Future } from "@hazae41/future"
 import { None, Some } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Plume, SuperEventTarget } from "@hazae41/plume"
-import { Ok, Panic, Result } from "@hazae41/result"
+import { Ok, Result } from "@hazae41/result"
+import { registerServiceWorker } from "../service_worker/service_worker"
 
 export type Background =
   | WebsiteBackground
@@ -64,9 +65,7 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
     return await Result.unthrow(async t => {
       const { pool, index } = params
 
-      const registration = await Result
-        .runAndDoubleWrap(() => navigator.serviceWorker.ready)
-        .then(r => r.throw(t))
+      const registration = await navigator.serviceWorker.ready
 
       const channel = new MessageChannel()
 
@@ -75,18 +74,23 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
       channel.port1.start()
       channel.port2.start()
 
-      if (registration.active == null)
-        throw new Panic(`registration.active is null`)
+      console.log("sw starting")
 
-      registration.active.postMessage("HELLO_WORLD", [channel.port2])
+      const interval = setInterval(() => {
+        try {
+          const gt = globalThis as any
+          gt.registration.active?.postMessage("HELLO_WORLD", [channel.port2])
+        } catch (e: unknown) { }
+      }, 1000)
 
       await Plume.tryWaitOrSignal(port.events, "request", async (future: Future<Ok<void>>, init: RpcRequestInit<any>) => {
         if (init.method !== "brume_hello")
           return new None()
 
+        clearInterval(interval)
         future.resolve(Ok.void())
         return new Some(Ok.void())
-      }, AbortSignal.timeout(1000)).then(r => r.throw(t))
+      }, AbortSignal.timeout(60_000)).then(r => r.throw(t))
 
       port.runPingLoop()
 
@@ -108,7 +112,10 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
       port.events.on("request", onRequest, { passive: true })
       port.events.on("response", onResponse, { passive: true })
 
-      const onClose = () => {
+      const onClose = async () => {
+        console.log("sw lost")
+        await registration.unregister().catch(() => { })
+        await registerServiceWorker({}).catch(() => { })
         pool.restart(index)
         return new None()
       }
@@ -123,6 +130,8 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
         channel.port1.close()
         channel.port2.close()
       }
+
+      console.log("sw got")
 
       return new Ok(new Disposer(port, onClean))
     })

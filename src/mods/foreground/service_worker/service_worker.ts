@@ -6,6 +6,9 @@ export interface ServiceWorkerParams {
 export async function registerServiceWorker(params: ServiceWorkerParams) {
   const registration = await navigator.serviceWorker.register("/service_worker.js")
 
+  const gt = globalThis as any
+  gt.registration = registration
+
   if (registration.waiting != null)
     params.onUpdating?.(registration.waiting)
 

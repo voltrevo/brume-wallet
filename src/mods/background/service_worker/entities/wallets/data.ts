@@ -2,11 +2,12 @@ import Erc20Abi from "@/assets/Erc20.json"
 import PairAbi from "@/assets/Pair.json"
 import { Fixed, FixedInit } from "@/libs/bigints/bigints"
 import { ContractTokenInfo, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
-import { RpcRequestPreinit, RpcResponse, TorRpc } from "@/libs/rpc"
+import { RpcRequestPreinit, TorRpc } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
+import { Disposer } from "@hazae41/cleaner"
 import { None, Option, Some } from "@hazae41/option"
-import { Cancel, Looped, Retry, tryLoop } from "@hazae41/piscine"
+import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { Data, FetchError, Fetched, FetcherMore, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
@@ -183,13 +184,11 @@ export interface EthereumContext {
 
 export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
   const { signal = AbortSignals.timeout(30_000) } = more
-  const brumes = ethereum.brumes.inner
-
-  // console.log(`Fetching ${request.method}`)
+  const { brumes } = ethereum
 
   const allTriedBrumes = new Set<EthBrume>()
 
-  const result = await tryLoop(async () => {
+  return await tryLoop(async () => {
     return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
       let brume: EthBrume
 
@@ -202,68 +201,73 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
         break
       }
 
-      const conns = Option.wrap(brume.chains[ethereum.chain.chainId]).ok().mapErrSync(Cancel.new).throw(t)
+      const circuits = Option.wrap(brume[ethereum.chain.chainId]).ok().mapErrSync(Cancel.new).throw(t)
 
-      // console.log(`Fetching ${request.method} using ${brume.circuit.id}`)
+      const allTriedCircuits = new Set<Pool<Disposer<RpcConnection>, Error>>()
 
-      const allTriedConns = new Set<RpcConnection>()
-
-      const result = await tryLoop(async (i) => {
-        return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
-          let conn: RpcConnection
+      return await tryLoop(async (i) => {
+        return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
+          let circuit: Pool<Disposer<RpcConnection>, Error>
 
           while (true) {
-            conn = await conns.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
+            circuit = await circuits.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
 
-            if (allTriedConns.has(conn))
+            if (allTriedCircuits.has(circuit))
               continue
-            allTriedConns.add(conn)
+            allTriedCircuits.add(circuit)
             break
           }
 
-          const { client, connection } = conn
-          const request = client.prepare(init)
+          const conns = circuit
 
-          if (connection.isURL()) {
-            console.log(`Fetching ${init.method} from ${connection.url.href} using ${brume.circuit.id}`)
+          const allTriedConns = new Set<RpcConnection>()
 
-            const result = await TorRpc.tryFetchWithCircuit<T>(connection.url, { ...request, circuit: brume.circuit })
+          return await tryLoop(async (i) => {
+            return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
+              let conn: RpcConnection
 
-            if (result.isErr())
-              console.warn(`Could not fetch ${init.method} from ${connection.url.href} using ${brume.circuit.id}`)
+              while (true) {
+                conn = await conns.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
 
-            return result.mapErrSync(Retry.new)
-          }
+                if (allTriedConns.has(conn))
+                  continue
+                allTriedConns.add(conn)
+                break
+              }
 
-          if (connection.isWebSocket()) {
-            console.log(`Fetching ${init.method} from ${connection.socket.url} using ${brume.circuit.id}`)
+              const { client, connection } = conn
+              const request = client.prepare(init)
 
-            const result = await TorRpc.tryFetchWithSocket<T>(connection.socket, request, signal)
+              if (connection.isURL()) {
+                console.log(`Fetching ${init.method} from ${connection.url.href} using ${connection.circuit.id}`)
 
-            if (result.isErr())
-              console.warn(`Could not fetch ${init.method} from ${connection.socket.url} using ${brume.circuit.id}`)
+                const result = await TorRpc.tryFetchWithCircuit<T>(connection.url, { ...request, circuit: connection.circuit })
 
-            return result.mapErrSync(Retry.new)
-          }
+                if (result.isErr())
+                  console.warn(`Could not fetch ${init.method} from ${connection.url.href} using ${connection.circuit.id}`)
 
-          connection satisfies never
-          throw new Panic()
+                return result.mapSync(x => Fetched.rewrap(x)).mapErrSync(Retry.new)
+              }
+
+              if (connection.isWebSocket()) {
+                console.log(`Fetching ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`)
+
+                const result = await TorRpc.tryFetchWithSocket<T>(connection.socket, request, signal)
+
+                if (result.isErr())
+                  console.warn(`Could not fetch ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`)
+
+                return result.mapSync(x => Fetched.rewrap(x)).mapErrSync(Retry.new)
+              }
+
+              connection satisfies never
+              throw new Panic()
+            })
+          }, { base: 1, max: conns.capacity }).then(r => r.mapErrSync(Retry.new))
         })
-      }, { base: 1, max: conns.capacity })
-
-      if (result.isErr())
-        console.warn(`Could not fetch ${init.method} using ${brume.circuit.id}`)
-
-      return result
-        .mapSync(x => Fetched.rewrap(x))
-        .mapErrSync(Retry.new)
+      }, { base: 1, max: circuits.capacity }).then(r => r.mapErrSync(Retry.new))
     })
-  }, { base: 1, max: brumes.capacity })
-
-  if (result.isErr())
-    console.warn(`Could not fetch ${init.method}`)
-
-  return result.mapErrSync(FetchError.from)
+  }, { base: 1, max: brumes.capacity }).then(r => r.mapErrSync(FetchError.from))
 }
 
 export function getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {

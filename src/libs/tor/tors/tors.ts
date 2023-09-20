@@ -1,5 +1,5 @@
 import { Disposer } from "@hazae41/cleaner"
-import { TorClientDuplex, TorClientParams, createPooledTor, createWebSocketSnowflakeStream } from "@hazae41/echalote"
+import { TorClientDuplex, TorClientParams, createPooledTorDisposer, createWebSocketSnowflakeStream } from "@hazae41/echalote"
 import { Mutex } from "@hazae41/mutex"
 import { Cancel, Looped, Looper, Pool, PoolParams, Retry, TooManyRetriesError, tryLoop } from "@hazae41/piscine"
 import { AbortedError } from "@hazae41/plume"
@@ -22,7 +22,7 @@ export function createTorPool<CreateError extends Looped.Infer<CreateError>>(try
     return await Result.unthrow(async t => {
       const tor = await tryLoop(tryCreate, params).then(r => r.throw(t))
 
-      return new Ok(createPooledTor(tor, params))
+      return new Ok(createPooledTorDisposer(tor, params))
     })
   }, params))
 }
