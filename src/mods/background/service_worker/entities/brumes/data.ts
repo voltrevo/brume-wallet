@@ -16,12 +16,10 @@ import { None } from "@hazae41/option"
 import { Pool, PoolParams } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 
-export type WcBrumes =
-  Mutex<Pool<Disposer<WcBrume>, Error>>
-
 export interface WcBrume {
-  readonly circuit: Circuit
-  readonly sockets: Pool<Disposer<WebSocketConnection>, Error>
+  readonly key: Ed25519.PrivateKey
+  readonly circuits: Pool<Disposer<Circuit>, Error>
+  readonly sockets: Pool<Disposer<Pool<Disposer<WebSocketConnection>, Error>>, Error>
 }
 
 export type EthBrumes =
@@ -74,46 +72,31 @@ export class UrlConnection {
 
 }
 
-export namespace WcBrumes {
+export namespace WcBrume {
 
-  export async function tryCreate(circuit: Circuit): Promise<Result<WcBrume, Error>> {
+  export async function tryCreate(circuits0: Mutex<Pool<Disposer<Circuit>, Error>>, key: Ed25519.PrivateKey): Promise<Result<WcBrume, Error>> {
     return await Result.unthrow(async t => {
       const relay = Wc.RELAY
-      const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
       const auth = await Jwt.trySign(key, relay).then(r => r.throw(t))
       const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
       const url = `${relay}/?auth=${auth}&projectId=${projectId}`
-      const sockets = WebSocketConnection.createPool(circuit, [url])
 
-      return new Ok({ circuit, sockets })
+      const circuits = Circuits.createSubpool(circuits0, { capacity: 3 })
+      const sockets = WebSocketConnection.createPools(circuits, [url])
+
+      return new Ok({ key, circuits, sockets })
     })
   }
 
-  export function createPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
+  export function createRandomPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
     return new Pool<Disposer<WcBrume>, Error>(async (params) => {
       return await Result.unthrow(async t => {
-        const { pool, index } = params
+        const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
+        const brume = await tryCreate(circuits, key).then(r => r.throw(t))
 
-        const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get().inner)
-
-        const brume = await tryCreate(circuit).then(r => r.throw(t))
-
-        const onCloseOrError = async (reason?: unknown) => {
-          pool.restart(index)
-          return new None()
-        }
-
-        circuit.events.on("close", onCloseOrError, { passive: true })
-        circuit.events.on("error", onCloseOrError, { passive: true })
-
-        const onClean = () => {
-          circuit.events.off("close", onCloseOrError)
-          circuit.events.off("error", onCloseOrError)
-        }
-
-        return new Ok(new Disposer(brume, onClean))
+        return new Ok(new Disposer(brume, () => { }))
       })
-    }, params)
+    })
   }
 }
 
@@ -129,34 +112,6 @@ export namespace EthBrumes {
         const conns = Objects.mapValuesSync(chains, x => RpcConnection.createPools(circuits, x.urls))
 
         const brume: EthBrume = { ...conns, circuits }
-
-        /**
-         * When all circuits died, restart this index to take new ones
-         * @returns 
-         */
-        const onCircuitEntry = async () => {
-          if (brume.circuits.stagnant)
-            await pool.restart(index)
-          return new None()
-        }
-
-        brume.circuits.events.on("created", onCircuitEntry, { passive: true })
-
-        const onDispose = () => {
-          brume.circuits.events.off("created", onCircuitEntry)
-        }
-
-        return new Ok(new Disposer(brume, onDispose))
-      })
-    }, params)
-  }
-
-  export function createSubpool(brumes: Mutex<Pool<Disposer<EthBrume>, Error>>, params: PoolParams) {
-    return new Pool<Disposer<EthBrume>, Error>(async (params) => {
-      return await Result.unthrow(async t => {
-        const { pool, index } = params
-
-        const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.get().inner)
 
         /**
          * When all circuits died, restart this index to take new ones
@@ -230,9 +185,7 @@ export namespace WebSocketConnection {
 
         const url = new URL(urls[index])
 
-        const connection = await WebSocketConnection
-          .tryCreate(circuit, url, signal)
-          .then(r => r.inspectErrSync(() => console.warn(`Could not create ${url.href} using ${circuit.id}`)).throw(t))
+        const connection = await WebSocketConnection.tryCreate(circuit, url, signal).then(r => r.throw(t))
 
         const onCloseOrError = () => {
           pool.restart(index)
@@ -249,6 +202,31 @@ export namespace WebSocketConnection {
         return new Ok(new Disposer(connection, onClean))
       })
     }, { capacity: urls.length })
+  }
+
+  /**
+   * Create a pool of pool of ws connections from a pool of circuits and urls
+   * @param circuits 
+   * @param urls 
+   * @returns 
+   */
+  export function createPools(circuits: Pool<Disposer<Circuit>, Error>, urls: readonly string[]) {
+    return new Pool<Disposer<Pool<Disposer<WebSocketConnection>, Error>>, Error>(async (params) => {
+      return await Result.unthrow(async t => {
+        const { index } = params
+
+        const circuit = await circuits.tryGet(index % circuits.capacity).then(r => r.throw(t).inner)
+
+        const connections = WebSocketConnection.createPool(circuit, urls)
+
+        /**
+         * Restart this index when the circuit dies
+         */
+        const { dispose } = createPooledCircuitDisposer(circuit, params)
+
+        return new Ok(new Disposer(connections, dispose))
+      })
+    }, { capacity: circuits.capacity })
   }
 
 }
@@ -278,9 +256,7 @@ export namespace RpcConnection {
         if (url.protocol === "https:")
           return new Ok(new Disposer(RpcConnection.from(new UrlConnection(circuit, url)), () => { }))
 
-        const connection = await WebSocketConnection
-          .tryCreate(circuit, url, signal)
-          .then(r => r.inspectErrSync(() => console.warn(`Could not create ${url.href} using ${circuit.id}`)).throw(t))
+        const connection = await WebSocketConnection.tryCreate(circuit, url, signal).then(r => r.throw(t))
 
         const onCloseOrError = () => {
           pool.restart(index)

@@ -12,7 +12,7 @@ import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { Url, qurl } from "@/libs/url/url"
 import { CryptoClient } from "@/libs/wconn/mods/crypto/client"
-import { IrnBrumes } from "@/libs/wconn/mods/irn/irn"
+import { IrnBrume } from "@/libs/wconn/mods/irn/irn"
 import { Wc, WcMetadata, WcSession, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Base16 } from "@hazae41/base16"
@@ -39,7 +39,7 @@ import { X25519 } from "@hazae41/x25519"
 import { Core, IDBStorage, RawState, SimpleFetcherfulQueryInstance, State } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
-import { EthBrume, EthBrumes, WcBrume, WcBrumes } from "./entities/brumes/data"
+import { EthBrume, EthBrumes, WcBrume } from "./entities/brumes/data"
 import { Origin, OriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
@@ -120,7 +120,7 @@ export class Global {
   readonly walletconnect: Mutex<Pool<Disposer<WcBrume>, Error>>
   readonly ethereum: Mutex<Pool<Disposer<EthBrume>, Error>>
 
-  readonly brumesByWallet = new Map<string, EthBrumes>()
+  readonly brumeByWallet = new Map<string, EthBrume>()
 
   /**
    * Scripts by session
@@ -148,7 +148,7 @@ export class Global {
   ) {
     this.circuits = new Mutex(Circuits.createPool(this.tors.inner, { capacity: 9 }))
     this.ethereum = new Mutex(EthBrumes.createPool(chainByChainId, this.circuits, { capacity: 9 }))
-    this.walletconnect = new Mutex(WcBrumes.createPool(this.circuits, { capacity: 3 }))
+    this.walletconnect = new Mutex(WcBrume.createRandomPool(this.circuits, { capacity: 3 }))
   }
 
   async tryGetStoredPassword(): Promise<Result<PasswordData, Error>> {
@@ -484,9 +484,8 @@ export class Global {
       const { wallets, chain } = session
 
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
-      const brumes = await this.#getOrCreateEthBrumes(wallet)
-
-      const ethereum: EthereumContext = { user, session, wallet, chain, brumes }
+      const brume = await this.#tryGetOrTakeEthBrumes(wallet).then(r => r.throw(t))
+      const ethereum: EthereumContext = { user, session, wallet, chain, brume }
 
       if (subrequest.method === "eth_requestAccounts")
         return await this.eth_requestAccounts(ethereum, subrequest)
@@ -921,15 +920,18 @@ export class Global {
     })
   }
 
-  async #getOrCreateEthBrumes(wallet: Wallet): Promise<EthBrumes> {
-    let brumes = this.brumesByWallet.get(wallet.uuid)
+  async #tryGetOrTakeEthBrumes(wallet: Wallet): Promise<Result<EthBrume, Error>> {
+    return await Result.unthrow(async t => {
+      const brume = this.brumeByWallet.get(wallet.uuid)
 
-    if (brumes == null) {
-      brumes = EthBrumes.createSubpool(this.ethereum, { capacity: 1 })
-      this.brumesByWallet.set(wallet.uuid, brumes)
-    }
+      if (brume == null) {
+        const brume = await Pool.takeCryptoRandom(this.ethereum).then(r => r.throw(t).result.inner.inner)
+        this.brumeByWallet.set(wallet.uuid, brume)
+        return new Ok(brume)
+      }
 
-    return brumes
+      return new Ok(brume)
+    })
   }
 
   async brume_get_global(request: RpcRequestPreinit<unknown>): Promise<Result<Optional<RawState>, Error>> {
@@ -1014,9 +1016,9 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
-      const brumes = await this.#getOrCreateEthBrumes(wallet)
+      const brume = await this.#tryGetOrTakeEthBrumes(wallet).then(r => r.throw(t))
 
-      const ethereum = { user, port: foreground, wallet, chain, brumes }
+      const ethereum: EthereumContext = { user, wallet, chain, brume }
 
       const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
@@ -1036,9 +1038,8 @@ export class Global {
       const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
-      const brumes = await this.#getOrCreateEthBrumes(wallet)
-
-      const ethereum = { user, port: foreground, wallet, chain, brumes }
+      const brume = await this.#tryGetOrTakeEthBrumes(wallet).then(r => r.throw(t))
+      const ethereum: EthereumContext = { user, wallet, chain, brume }
 
       const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
@@ -1109,25 +1110,28 @@ export class Global {
 
       const { user } = Option.wrap(this.#user).ok().throw(t)
 
-      const { topic, metadata, keyBase64, wallets } = sessionData
+      const { topic, metadata, authKeyBase64, sessionKeyBase64, wallets } = sessionData
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
-      const irn = new IrnBrumes(this.walletconnect)
-      const rawKey = Base64.get().tryDecodePadded(keyBase64).throw(t).copyAndDispose()
-      const key = Bytes.tryCast(rawKey, 32).throw(t)
-      const client = CryptoClient.tryNew(topic, key, irn).throw(t)
-      const session = new WcSession(client, metadata)
+      const rawAuthKey = Base64.get().tryDecodePadded(authKeyBase64).throw(t).copyAndDispose()
+      const authKey = await Ed25519.get().PrivateKey.tryImport(rawAuthKey).then(r => r.throw(t))
+      const wcBrume = await WcBrume.tryCreate(this.circuits, authKey).then(r => r.throw(t))
+      const irn = new IrnBrume(this.walletconnect)
+
+      const rawSessionKey = Base64.get().tryDecodePadded(sessionKeyBase64).throw(t).copyAndDispose()
+      const sessionKey = Bytes.tryCast(rawSessionKey, 32).throw(t)
+      const sessionClient = CryptoClient.tryNew(topic, sessionKey, irn).throw(t)
+      const session = new WcSession(sessionClient, metadata)
 
       await irn.trySubscribe(topic).then(r => r.throw(t))
-
-      const brumes = await this.#getOrCreateEthBrumes(wallet)
 
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")
           return new None()
         const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
         const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
+        const brume = await this.#tryGetOrTakeEthBrumes(wallet).then(r => r.throw(t))
 
-        const ethereum: EthereumContext = { user, wallet, chain, brumes, session: sessionData }
+        const ethereum: EthereumContext = { user, wallet, chain, brume, session: sessionData }
 
         if (request.method === "eth_sendTransaction")
           return new Some(await this.eth_sendTransaction(ethereum, request))
@@ -1168,7 +1172,9 @@ export class Global {
       const wcUrl = Url.tryParse(rawWcUrl).throw(t)
       const params = await Wc.tryParse(wcUrl).then(r => r.throw(t))
 
-      const irn = new IrnBrumes(this.walletconnect)
+      const wcBrume = await Pool.takeCryptoRandom(this.walletconnect).then(r => r.throw(t).result.inner.inner)
+
+      const irn = new IrnBrume(new Mutex(wcBrume))
 
       const session = await Wc.tryPair(irn, params, wallet.address).then(r => r.throw(t))
 
@@ -1198,7 +1204,8 @@ export class Global {
         })
       }, { max: session.metadata.icons.length }).catch(console.warn)
 
-      const keyBase64 = Base64.get().tryEncodePadded(session.client.key).throw(t)
+      const authKeyBase64 = Base64.get().tryEncodePadded()
+      const sessionKeyBase64 = Base64.get().tryEncodePadded(session.client.key).throw(t)
 
       const sessionData: WcSessionData = {
         type: "wc",
@@ -1210,13 +1217,13 @@ export class Global {
         chain: chain,
         relay: Wc.RELAY,
         topic: session.client.topic,
-        keyBase64: keyBase64
+        keyBase64: sessionKeyBase64
       }
 
       const sessionQuery = await Session.schema(sessionData.id, storage).make(this.core)
       await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
-      const brumes = await this.#getOrCreateEthBrumes(wallet)
+      const brumes = await this.#tryGetOrTakeEthBrumes(wallet)
 
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")

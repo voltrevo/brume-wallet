@@ -27,7 +27,7 @@ export interface IrnPublishPayload {
   readonly ttl: number
 }
 
-export class IrnBrumes {
+export class IrnBrume {
 
   readonly topics = new Set<string>()
 
@@ -35,14 +35,14 @@ export class IrnBrumes {
     request: (request: RpcRequestPreinit<unknown>) => Result<unknown, Error>
   }>()
 
-  readonly pool: Mutex<Pool<Disposer<IrnSockets>, Error>>
+  readonly pool: Pool<Disposer<IrnSockets>, Error>
 
   #closed?: { reason: unknown }
 
   constructor(
-    readonly brumes: Mutex<Pool<Disposer<WcBrume>, Error>>
+    readonly brume: WcBrume
   ) {
-    this.pool = new Mutex(this.#pool())
+    this.pool = this.#pool()
   }
 
   get closed() {
@@ -55,8 +55,8 @@ export class IrnBrumes {
         if (this.#closed)
           return new Err(new Error("Closed", { cause: this.#closed.reason }))
 
-        const sockets = await Pool.takeCryptoRandom(this.brumes).then(r => r.throw(t).result.inner.inner.sockets)
-        const irn = new IrnSockets(new Mutex(sockets))
+        const circuit = await this.brume.sockets.tryGet(index % this.brume.sockets.capacity).then(r => r.throw(t).inner)
+        const irn = new IrnSockets(circuit)
 
         for (const topic of this.topics)
           await irn.trySubscribe(topic).then(r => r.throw(t))
@@ -89,7 +89,7 @@ export class IrnBrumes {
 
   async trySubscribe(topic: string): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const client = await this.pool.inner.tryGet(0).then(r => r.throw(t).inner)
+      const client = await this.pool.tryGet(0).then(r => r.throw(t).inner)
       await client.trySubscribe(topic).then(r => r.throw(t))
       this.topics.add(topic)
       return Ok.void()
@@ -98,7 +98,7 @@ export class IrnBrumes {
 
   async tryPublish(payload: IrnPublishPayload): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const client = await this.pool.inner.tryGet(0).then(r => r.throw(t).inner)
+      const client = await this.pool.tryGet(0).then(r => r.throw(t).inner)
       await client.tryPublish(payload).then(r => r.throw(t))
       return Ok.void()
     })
@@ -110,7 +110,7 @@ export class IrnBrumes {
 
       await this.events.emit("close", [reason])
 
-      const irn = await this.pool.inner.tryGet(0).then(r => r.ok().mapSync(x => x.inner))
+      const irn = await this.pool.tryGet(0).then(r => r.ok().mapSync(x => x.inner))
 
       if (irn.isNone())
         return Ok.void()
@@ -134,7 +134,7 @@ export class IrnSockets {
   #closed?: { reason: unknown }
 
   constructor(
-    readonly sockets: Mutex<Pool<Disposer<WebSocketConnection>, Error>>
+    readonly sockets: Pool<Disposer<WebSocketConnection>, Error>
   ) {
     this.pool = new Mutex(this.#pool())
 
@@ -157,7 +157,7 @@ export class IrnSockets {
         if (this.#closed)
           return new Err(new Error("Closed", { cause: this.#closed.reason }))
 
-        const socket = await Pool.takeCryptoRandom(this.sockets).then(r => r.throw(t).result.inner.inner.socket)
+        const socket = await this.sockets.tryGet(index).then(r => r.throw(t).inner.socket)
         const irn = new IrnClient(socket)
 
         for (const topic of this.topics)

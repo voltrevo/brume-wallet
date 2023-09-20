@@ -11,7 +11,7 @@ import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { Data, FetchError, Fetched, FetcherMore, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
-import { EthBrume, EthBrumes, RpcConnection } from "../brumes/data"
+import { EthBrume, RpcConnection } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
 import { SessionData } from "../sessions/data"
@@ -178,96 +178,79 @@ export interface EthereumContext {
   user: User,
   wallet: Wallet
   chain: EthereumChain
-  brumes: EthBrumes
+  brume: EthBrume
   session?: SessionData
 }
 
 export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
-  const { signal = AbortSignals.timeout(30_000) } = more
-  const { brumes } = ethereum
+  return await Result.unthrow<Result<Fetched<T, Error>, Error>>(async t => {
+    const { signal = AbortSignals.timeout(30_000) } = more
+    const { brume } = ethereum
 
-  const allTriedBrumes = new Set<EthBrume>()
+    const circuits = Option.wrap(brume[ethereum.chain.chainId]).ok().throw(t)
+    const allTriedCircuits = new Set<Pool<Disposer<RpcConnection>, Error>>()
 
-  return await tryLoop(async () => {
-    return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
-      let brume: EthBrume
+    return await tryLoop(async (i) => {
+      return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
+        let circuit: Pool<Disposer<RpcConnection>, Error>
 
-      while (true) {
-        brume = await brumes.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
+        while (true) {
+          circuit = await circuits.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
 
-        if (allTriedBrumes.has(brume))
-          continue
-        allTriedBrumes.add(brume)
-        break
-      }
+          if (allTriedCircuits.has(circuit))
+            continue
+          allTriedCircuits.add(circuit)
+          break
+        }
 
-      const circuits = Option.wrap(brume[ethereum.chain.chainId]).ok().mapErrSync(Cancel.new).throw(t)
+        const conns = circuit
+        const allTriedConns = new Set<RpcConnection>()
 
-      const allTriedCircuits = new Set<Pool<Disposer<RpcConnection>, Error>>()
+        return await tryLoop(async (i) => {
+          return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
+            let conn: RpcConnection
 
-      return await tryLoop(async (i) => {
-        return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
-          let circuit: Pool<Disposer<RpcConnection>, Error>
+            while (true) {
+              conn = await conns.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
 
-          while (true) {
-            circuit = await circuits.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
+              if (allTriedConns.has(conn))
+                continue
+              allTriedConns.add(conn)
+              break
+            }
 
-            if (allTriedCircuits.has(circuit))
-              continue
-            allTriedCircuits.add(circuit)
-            break
-          }
+            const { client, connection } = conn
+            const request = client.prepare(init)
 
-          const conns = circuit
+            if (connection.isURL()) {
+              console.log(`Fetching ${init.method} from ${connection.url.href} using ${connection.circuit.id}`)
 
-          const allTriedConns = new Set<RpcConnection>()
+              const result = await TorRpc.tryFetchWithCircuit<T>(connection.url, { ...request, circuit: connection.circuit })
 
-          return await tryLoop(async (i) => {
-            return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
-              let conn: RpcConnection
+              if (result.isErr())
+                console.warn(`Could not fetch ${init.method} from ${connection.url.href} using ${connection.circuit.id}`)
 
-              while (true) {
-                conn = await conns.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
+              return result.mapSync(x => Fetched.rewrap(x)).mapErrSync(Retry.new)
+            }
 
-                if (allTriedConns.has(conn))
-                  continue
-                allTriedConns.add(conn)
-                break
-              }
+            if (connection.isWebSocket()) {
+              console.log(`Fetching ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`)
 
-              const { client, connection } = conn
-              const request = client.prepare(init)
+              const result = await TorRpc.tryFetchWithSocket<T>(connection.socket, request, signal)
 
-              if (connection.isURL()) {
-                console.log(`Fetching ${init.method} from ${connection.url.href} using ${connection.circuit.id}`)
+              if (result.isErr())
+                console.warn(`Could not fetch ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`)
 
-                const result = await TorRpc.tryFetchWithCircuit<T>(connection.url, { ...request, circuit: connection.circuit })
+              return result.mapSync(x => Fetched.rewrap(x)).mapErrSync(Retry.new)
+            }
 
-                if (result.isErr())
-                  console.warn(`Could not fetch ${init.method} from ${connection.url.href} using ${connection.circuit.id}`)
-
-                return result.mapSync(x => Fetched.rewrap(x)).mapErrSync(Retry.new)
-              }
-
-              if (connection.isWebSocket()) {
-                console.log(`Fetching ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`)
-
-                const result = await TorRpc.tryFetchWithSocket<T>(connection.socket, request, signal)
-
-                if (result.isErr())
-                  console.warn(`Could not fetch ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`)
-
-                return result.mapSync(x => Fetched.rewrap(x)).mapErrSync(Retry.new)
-              }
-
-              connection satisfies never
-              throw new Panic()
-            })
-          }, { base: 1, max: conns.capacity }).then(r => r.mapErrSync(Retry.new))
-        })
-      }, { base: 1, max: circuits.capacity }).then(r => r.mapErrSync(Retry.new))
-    })
-  }, { base: 1, max: brumes.capacity }).then(r => r.mapErrSync(FetchError.from))
+            connection satisfies never
+            throw new Panic()
+          })
+        }, { base: 1, max: conns.capacity }).then(r => r.mapErrSync(Retry.new))
+      })
+    }, { base: 1, max: circuits.capacity })
+  }).then(r => r.mapErrSync(FetchError.from))
 }
 
 export function getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {

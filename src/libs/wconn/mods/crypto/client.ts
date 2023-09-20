@@ -10,7 +10,7 @@ import { Future } from "@hazae41/future";
 import { None, Some } from "@hazae41/option";
 import { SuperEventTarget } from "@hazae41/plume";
 import { Err, Ok, Result } from "@hazae41/result";
-import { IrnBrumes, IrnSubscriptionPayload } from "../irn/irn";
+import { IrnBrume, IrnSubscriptionPayload } from "../irn/irn";
 import { SafeRpc } from "../rpc/rpc";
 
 export interface RpcOpts {
@@ -128,13 +128,13 @@ export class CryptoClient {
   private constructor(
     readonly topic: string,
     readonly key: Bytes<32>,
-    readonly irn: IrnBrumes,
+    readonly irn: IrnBrume,
     readonly cipher: ChaCha20Poly1305.Cipher,
   ) {
     irn.events.on("request", this.#onIrnRequest.bind(this))
   }
 
-  static tryNew(topic: string, key: Bytes<32>, irn: IrnBrumes): Result<CryptoClient, Error> {
+  static tryNew(topic: string, key: Bytes<32>, irn: IrnBrume): Result<CryptoClient, Error> {
     return Result.unthrowSync(t => {
       const cipher = ChaCha20Poly1305.get().Cipher.tryImport(key).throw(t)
       const client = new CryptoClient(topic, key, irn, cipher)

@@ -7,7 +7,7 @@ import { None, Option, Some } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
 import { X25519 } from "@hazae41/x25519";
 import { CryptoClient } from "../crypto/client";
-import { IrnBrumes } from "../irn/irn";
+import { IrnBrume } from "../irn/irn";
 
 export interface WcMetadata {
   readonly name: string
@@ -100,7 +100,7 @@ export namespace Wc {
     })
   }
 
-  export async function tryPair(irn: IrnBrumes, params: WcParams, address: string): Promise<Result<WcSession, Error>> {
+  export async function tryPair(irn: IrnBrume, params: WcParams, address: string): Promise<Result<WcSession, Error>> {
     return await Result.unthrow(async t => {
       const { pairingTopic, symKey } = params
 

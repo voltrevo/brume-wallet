@@ -46,7 +46,8 @@ export interface WcSessionData {
   readonly persist: boolean
   readonly relay: string
   readonly topic: string
-  readonly keyBase64: string
+  readonly sessionKeyBase64: string
+  readonly authKeyBase64: string
   readonly chain: EthereumChain
   readonly wallets: [Wallet]
 }

@@ -17,13 +17,8 @@ export namespace Circuits {
       return await Result.unthrow(async t => {
         const { index, signal } = params
 
-        const tor = await tors
-          .tryGet(index % tors.capacity)
-          .then(r => r.throw(t).inner)
-
-        const circuit = await tor
-          .tryCreateAndExtendLoop(signal)
-          .then(r => r.throw(t))
+        const tor = await tors.tryGet(index % tors.capacity).then(r => r.throw(t).inner)
+        const circuit = await tor.tryCreateAndExtendLoop(signal).then(r => r.throw(t))
 
         return new Ok(createPooledCircuitDisposer(circuit, params))
       })
@@ -39,9 +34,7 @@ export namespace Circuits {
   export function createSubpool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
     return new Pool<Disposer<Circuit>, Error>(async (params) => {
       return await Result.unthrow(async t => {
-        const circuit = await Pool
-          .takeCryptoRandom(circuits)
-          .then(r => r.throw(t).result.get().inner)
+        const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.throw(t).result.get().inner)
 
         return new Ok(createPooledCircuitDisposer(circuit, params))
       })
