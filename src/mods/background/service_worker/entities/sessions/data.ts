@@ -1,4 +1,5 @@
 import { EthereumChain } from "@/libs/ethereum/mods/chain"
+import { WcMetadata } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Optional } from "@hazae41/option"
 import { Data, IDBStorage, IndexerMore, RawState2, States, Storage, createQuerySchema } from "@hazae41/xswr"
@@ -41,6 +42,7 @@ export interface WcSessionData {
   readonly id: string,
   readonly type: "wc"
   readonly origin: string
+  readonly metadata: WcMetadata
   readonly persist: boolean
   readonly relay: string
   readonly topic: string

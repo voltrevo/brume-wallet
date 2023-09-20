@@ -11,6 +11,7 @@ import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from 
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { Url, qurl } from "@/libs/url/url"
+import { CryptoClient } from "@/libs/wconn/mods/crypto/client"
 import { IrnBrumes } from "@/libs/wconn/mods/irn/irn"
 import { Wc, WcMetadata, WcSession, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
@@ -40,7 +41,8 @@ import { EthBrume, EthBrumes, WcBrume, WcBrumes } from "./entities/brumes/data"
 import { Origin, OriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
-import { ExSessionData, Session, SessionByOrigin, SessionData, WcSessionData } from "./entities/sessions/data"
+import { PersistentSessions } from "./entities/sessions/all/data"
+import { ExSessionData, Session, SessionByOrigin, SessionData, SessionRef, WcSessionData } from "./entities/sessions/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
 import { EthereumContext, EthereumQueryKey, Wallet, WalletData, WalletRef, getBalance, getEthereumUnknown, getPairPrice, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
@@ -196,6 +198,8 @@ export class Global {
       const userSession: UserSession = { user, storage, hasher, crypter }
 
       this.#user = userSession
+
+      this.#tryWcReconnectAll().catch(console.warn)
 
       return new Ok(userSession)
     })
@@ -1060,6 +1064,93 @@ export class Global {
     })
   }
 
+  async #tryWcReconnectAll(): Promise<Result<void, Error>> {
+    return Result.unthrow(async t => {
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+      const persSessionsQuery = await PersistentSessions.schema(storage).make(this.core)
+
+      for (const sessionRef of Option.wrap(persSessionsQuery?.data?.inner).unwrapOr([]))
+        this.#tryWcResolveAndReconnect(sessionRef).catch(console.warn)
+
+      return Ok.void()
+    })
+  }
+
+  async #tryWcResolveAndReconnect(sessionRef: SessionRef): Promise<Result<void, Error>> {
+    return Result.unthrow(async t => {
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+      const sessionQuery = await Session.schema(sessionRef.id, storage).make(this.core)
+      const sessionDataOpt = Option.wrap(sessionQuery.data?.inner)
+
+      if (sessionDataOpt.isNone())
+        return Ok.void()
+      if (sessionDataOpt.inner.type !== "wc")
+        return Ok.void()
+
+      const result = await this.#tryWcReconnect(sessionDataOpt.inner)
+
+      if (result.isErr())
+        await sessionQuery.delete()
+
+      return Ok.void()
+    })
+  }
+
+  async #tryWcReconnect(sessionData: WcSessionData): Promise<Result<void, Error>> {
+    return await Result.unthrow(async t => {
+      if (this.wcBySession.has(sessionData.id))
+        return Ok.void()
+
+      const { user } = Option.wrap(this.#user).ok().throw(t)
+
+      const { topic, metadata, keyBase64, wallets } = sessionData
+      const wallet = Option.wrap(wallets[0]).ok().throw(t)
+      const irn = new IrnBrumes(this.walletconnect)
+      const rawKey = Base64.get().tryDecodePadded(keyBase64).throw(t).copyAndDispose()
+      const key = Bytes.tryCast(rawKey, 32).throw(t)
+      const client = CryptoClient.tryNew(topic, key, irn).throw(t)
+      const session = new WcSession(client, metadata)
+
+      await irn.trySubscribe(topic).then(r => r.throw(t))
+
+      const brumes = await this.#getOrCreateEthBrumes(wallet)
+
+      const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
+        if (suprequest.method !== "wc_sessionRequest")
+          return new None()
+        const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
+        const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
+
+        const ethereum: EthereumContext = { user, wallet, chain, brumes, session: sessionData }
+
+        if (request.method === "eth_sendTransaction")
+          return new Some(await this.eth_sendTransaction(ethereum, request))
+        if (request.method === "personal_sign")
+          return new Some(await this.personal_sign(ethereum, request))
+        if (request.method === "eth_signTypedData_v4")
+          return new Some(await this.eth_signTypedData_v4(ethereum, request))
+        return new None()
+      }
+
+      const onCloseOrError = async () => {
+        session.client.events.off("request", onRequest)
+        session.client.irn.events.off("close", onCloseOrError)
+        session.client.irn.events.off("error", onCloseOrError)
+        return new None()
+      }
+
+      session.client.events.on("request", onRequest, { passive: true })
+      session.client.irn.events.on("close", onCloseOrError, { passive: true })
+      session.client.irn.events.on("error", onCloseOrError, { passive: true })
+
+      this.wcBySession.set(sessionData.id, session)
+
+      return Ok.void()
+    })
+  }
+
   async brume_wc_connect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<WcMetadata, Error>> {
     return await Result.unthrow(async t => {
       const [rawWcUrl, walletId] = (request as RpcRequestPreinit<[string, string]>).params
@@ -1109,7 +1200,8 @@ export class Global {
         type: "wc",
         id: crypto.randomUUID(),
         origin: originData.origin,
-        persist: false,
+        metadata: session.metadata,
+        persist: true,
         wallets: [WalletRef.from(wallet)],
         chain: chain,
         relay: Wc.RELAY,

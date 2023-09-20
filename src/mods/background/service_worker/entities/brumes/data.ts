@@ -12,7 +12,7 @@ import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { Mutex } from "@hazae41/mutex"
 import { None, Optional } from "@hazae41/option"
-import { Cancel, Looped, Pool, PoolParams, Retry, tryLoop } from "@hazae41/piscine"
+import { Pool, PoolParams } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { createQuerySchema } from "@hazae41/xswr"
 import { Wallet } from "../wallets/data"
@@ -215,18 +215,6 @@ export namespace WebSocketConnection {
     })
   }
 
-  export async function tryCreateLooped(circuit: Circuit, url: URL, signal?: AbortSignal): Promise<Result<WebSocketConnection, Looped<Error>>> {
-    const result = await tryCreate(circuit, url, signal)
-
-    if (result.isErr())
-      console.warn(`Could not create ${url.href} using ${circuit.id}`)
-
-    if (circuit.destroyed)
-      return result.mapErrSync(Cancel.new)
-
-    return result.mapErrSync(Retry.new)
-  }
-
   export function createPool(circuit: Circuit, urls: readonly string[]) {
     return new Pool<Disposer<WebSocketConnection>, Error>(async (params) => {
       return await Result.unthrow(async t => {
@@ -234,9 +222,9 @@ export namespace WebSocketConnection {
 
         const url = new URL(urls[index])
 
-        const connection = await tryLoop(async () => {
-          return WebSocketConnection.tryCreateLooped(circuit, url, signal)
-        }, { signal }).then(r => r.throw(t))
+        const connection = await WebSocketConnection
+          .tryCreate(circuit, url, signal)
+          .then(r => r.inspectErrSync(() => console.warn(`Could not create ${url.href} using ${circuit.id}`)).throw(t))
 
         const onCloseOrError = () => {
           pool.restart(index)
@@ -277,9 +265,9 @@ export namespace RpcConnection {
         if (url.protocol === "https:")
           return new Ok(new Disposer(RpcConnection.from(new UrlConnection(url)), () => { }))
 
-        const connection = await tryLoop(async () => {
-          return WebSocketConnection.tryCreateLooped(circuit, url, signal)
-        }, { signal }).then(r => r.throw(t))
+        const connection = await WebSocketConnection
+          .tryCreate(circuit, url, signal)
+          .then(r => r.inspectErrSync(() => console.warn(`Could not create ${url.href} using ${circuit.id}`)).throw(t))
 
         const onCloseOrError = () => {
           pool.restart(index)
