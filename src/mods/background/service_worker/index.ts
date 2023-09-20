@@ -20,10 +20,12 @@ import { Base58 } from "@hazae41/base58"
 import { Base64 } from "@hazae41/base64"
 import { Base64Url } from "@hazae41/base64url"
 import { Bytes } from "@hazae41/bytes"
+import { Cadenas } from "@hazae41/cadenas"
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305"
 import { Disposer } from "@hazae41/cleaner"
-import { Circuit, Fallback, TorClientDuplex } from "@hazae41/echalote"
+import { Circuit, Echalote, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
+import { Fleche } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
 import { Keccak256 } from "@hazae41/keccak256"
 import { Mutex } from "@hazae41/mutex"
@@ -1280,6 +1282,11 @@ async function tryInit() {
       const ed25519 = Ed25519.get()
       const x25519 = X25519.get()
       const sha1 = Sha1.get()
+
+      const gt = globalThis as any
+      gt.Echalote = Echalote
+      gt.Cadenas = Cadenas
+      gt.Fleche = Fleche
 
       const fallbacks = await tryFetch<Fallback[]>(FALLBACKS_URL).then(r => r.throw(t))
 
