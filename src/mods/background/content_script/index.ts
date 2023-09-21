@@ -170,11 +170,11 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
 
     port.events.on("request", onBackgroundRequest, { passive: true })
 
-    const onClose = () => {
+    const onClose = async () => {
       const output = new CustomEvent("ethereum#disconnect", {})
       window.dispatchEvent(output)
 
-      pool.restart(index)
+      await pool.restart(index)
       return new None()
     }
 

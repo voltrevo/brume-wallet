@@ -36,12 +36,14 @@ export class IrnBrume {
   }>()
 
   readonly pool: Pool<Disposer<IrnSockets>, Error>
+  readonly circuits: Mutex<Pool<Disposer<Pool<Disposer<WebSocketConnection>, Error>>, Error>>
 
   #closed?: { reason: unknown }
 
   constructor(
     readonly brume: WcBrume
   ) {
+    this.circuits = new Mutex(brume.sockets)
     this.pool = this.#pool()
   }
 
@@ -55,8 +57,9 @@ export class IrnBrume {
         if (this.#closed)
           return new Err(new Error("Closed", { cause: this.#closed.reason }))
 
-        const circuit = await this.brume.sockets.tryGet(index % this.brume.sockets.capacity).then(r => r.throw(t).inner)
-        const irn = new IrnSockets(circuit)
+        const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.throw(t).result.inner.inner)
+
+        const irn = new IrnSockets(new Mutex(circuit))
 
         for (const topic of this.topics)
           await irn.trySubscribe(topic).then(r => r.throw(t))
@@ -134,7 +137,7 @@ export class IrnSockets {
   #closed?: { reason: unknown }
 
   constructor(
-    readonly sockets: Pool<Disposer<WebSocketConnection>, Error>
+    readonly sockets: Mutex<Pool<Disposer<WebSocketConnection>, Error>>
   ) {
     this.pool = new Mutex(this.#pool())
 
@@ -157,7 +160,8 @@ export class IrnSockets {
         if (this.#closed)
           return new Err(new Error("Closed", { cause: this.#closed.reason }))
 
-        const socket = await this.sockets.tryGet(index).then(r => r.throw(t).inner.socket)
+        const { socket } = await Pool.takeCryptoRandom(this.sockets).then(r => r.throw(t).result.inner.inner)
+
         const irn = new IrnClient(socket)
 
         for (const topic of this.topics)

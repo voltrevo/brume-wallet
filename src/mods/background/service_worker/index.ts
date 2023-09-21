@@ -39,7 +39,7 @@ import { X25519 } from "@hazae41/x25519"
 import { Core, IDBStorage, RawState, SimpleFetcherfulQueryInstance, State } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
-import { EthBrume, EthBrumes, WcBrume } from "./entities/brumes/data"
+import { EthBrume, WcBrume } from "./entities/brumes/data"
 import { Origin, OriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
@@ -147,7 +147,7 @@ export class Global {
     readonly storage: IDBStorage
   ) {
     this.circuits = new Mutex(Circuits.createPool(this.tors.inner, { capacity: 9 }))
-    this.ethereum = new Mutex(EthBrumes.createPool(chainByChainId, this.circuits, { capacity: 9 }))
+    this.ethereum = new Mutex(EthBrume.createPool(this.circuits, chainByChainId, { capacity: 9 }))
     this.walletconnect = new Mutex(WcBrume.createRandomPool(this.circuits, { capacity: 3 }))
   }
 
@@ -1112,10 +1112,12 @@ export class Global {
 
       const { topic, metadata, authKeyBase64, sessionKeyBase64, wallets } = sessionData
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
-      const rawAuthKey = Base64.get().tryDecodePadded(authKeyBase64).throw(t).copyAndDispose()
-      const authKey = await Ed25519.get().PrivateKey.tryImport(rawAuthKey).then(r => r.throw(t))
+
+      using authKeySlice = Base64.get().tryDecodePadded(authKeyBase64).throw(t)
+      const authKey = await Ed25519.get().PrivateKey.tryImport(authKeySlice.bytes).then(r => r.throw(t))
+
       const wcBrume = await WcBrume.tryCreate(this.circuits, authKey).then(r => r.throw(t))
-      const irn = new IrnBrume(this.walletconnect)
+      const irn = new IrnBrume(wcBrume)
 
       const rawSessionKey = Base64.get().tryDecodePadded(sessionKeyBase64).throw(t).copyAndDispose()
       const sessionKey = Bytes.tryCast(rawSessionKey, 32).throw(t)
@@ -1174,7 +1176,7 @@ export class Global {
 
       const wcBrume = await Pool.takeCryptoRandom(this.walletconnect).then(r => r.throw(t).result.inner.inner)
 
-      const irn = new IrnBrume(new Mutex(wcBrume))
+      const irn = new IrnBrume(wcBrume)
 
       const session = await Wc.tryPair(irn, params, wallet.address).then(r => r.throw(t))
 
@@ -1204,7 +1206,9 @@ export class Global {
         })
       }, { max: session.metadata.icons.length }).catch(console.warn)
 
-      const authKeyBase64 = Base64.get().tryEncodePadded()
+      using authKey = await session.client.irn.brume.key.tryExport().then(r => r.throw(t))
+      const authKeyBase64 = Base64.get().tryEncodePadded(authKey.bytes).throw(t)
+
       const sessionKeyBase64 = Base64.get().tryEncodePadded(session.client.key).throw(t)
 
       const sessionData: WcSessionData = {
@@ -1217,21 +1221,21 @@ export class Global {
         chain: chain,
         relay: Wc.RELAY,
         topic: session.client.topic,
-        keyBase64: sessionKeyBase64
+        authKeyBase64: authKeyBase64,
+        sessionKeyBase64: sessionKeyBase64
       }
 
       const sessionQuery = await Session.schema(sessionData.id, storage).make(this.core)
       await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
-
-      const brumes = await this.#tryGetOrTakeEthBrumes(wallet)
 
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")
           return new None()
         const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
         const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
+        const brume = await this.#tryGetOrTakeEthBrumes(wallet).then(r => r.throw(t))
 
-        const ethereum: EthereumContext = { user, wallet, chain, brumes, session: sessionData }
+        const ethereum: EthereumContext = { user, wallet, chain, brume, session: sessionData }
 
         if (request.method === "eth_sendTransaction")
           return new Some(await this.eth_sendTransaction(ethereum, request))

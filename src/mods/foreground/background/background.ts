@@ -116,7 +116,7 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
         console.log("sw lost")
         await gt.registration.unregister().catch(() => { })
         await registerServiceWorker({}).catch(() => { })
-        pool.restart(index)
+        await pool.restart(index)
         return new None()
       }
 
@@ -199,8 +199,8 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
       port.events.on("request", onRequest, { passive: true })
       port.events.on("response", onResponse, { passive: true })
 
-      const onClose = () => {
-        pool.restart(index)
+      const onClose = async () => {
+        await pool.restart(index)
         return new None()
       }
 
