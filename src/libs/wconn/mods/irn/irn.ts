@@ -57,15 +57,20 @@ export class IrnBrume {
         if (this.#closed)
           return new Err(new Error("Closed", { cause: this.#closed.reason }))
 
-        const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.throw(t).result.inner.inner)
+        const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.inspectErrSync(() => {
+          this.circuits.inner.events.on("started", async i => {
+            await pool.restart(index)
+            return new None()
+          }, { passive: true, once: true })
+        }).throw(t).result.inner.inner)
 
         const irn = new IrnSockets(new Mutex(circuit))
 
         for (const topic of this.topics)
           await irn.trySubscribe(topic).then(r => r.throw(t))
 
-        const onRequest = (request: RpcRequestPreinit<unknown>) => {
-          return this.events.emit("request", [request])
+        const onRequest = async (request: RpcRequestPreinit<unknown>) => {
+          return await this.events.emit("request", [request])
         }
 
         const onCloseOrError = async () => {
@@ -160,15 +165,20 @@ export class IrnSockets {
         if (this.#closed)
           return new Err(new Error("Closed", { cause: this.#closed.reason }))
 
-        const { socket } = await Pool.takeCryptoRandom(this.sockets).then(r => r.throw(t).result.inner.inner)
+        const { socket } = await Pool.takeCryptoRandom(this.sockets).then(r => r.inspectErrSync(() => {
+          this.sockets.inner.events.on("started", async i => {
+            await pool.restart(index)
+            return new None()
+          }, { passive: true, once: true })
+        }).throw(t).result.inner.inner)
 
         const irn = new IrnClient(socket)
 
         for (const topic of this.topics)
           await irn.trySubscribe(topic).then(r => r.throw(t))
 
-        const onRequest = (request: RpcRequestPreinit<unknown>) => {
-          return this.events.emit("request", [request])
+        const onRequest = async (request: RpcRequestPreinit<unknown>) => {
+          return await this.events.emit("request", [request])
         }
 
         const onCloseOrError = async () => {

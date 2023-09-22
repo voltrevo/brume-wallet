@@ -64,21 +64,21 @@ export class WebsitePort {
   }
 
   async onRequest(request: RpcRequestInit<unknown>) {
-    if (request.id !== "ping")
-      console.debug(this.name, "->", request)
+    // if (request.id !== "ping")
+    //   console.debug(this.name, "->", request)
 
     const result = await this.tryRouteRequest(request)
     const response = RpcResponse.rewrap(request.id, result)
 
-    if (request.id !== "ping")
-      console.debug(this.name, "<-", response)
+    // if (request.id !== "ping")
+    //   console.debug(this.name, "<-", response)
 
     this.port.postMessage(JSON.stringify(response))
   }
 
   async onResponse(response: RpcResponseInit<unknown>) {
-    if (response.id !== "ping")
-      console.debug(this.name, "<-", response)
+    // if (response.id !== "ping")
+    //   console.debug(this.name, "<-", response)
 
     const returned = await this.events.emit("response", [response])
 

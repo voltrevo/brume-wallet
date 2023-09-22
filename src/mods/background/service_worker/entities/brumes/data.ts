@@ -12,6 +12,7 @@ import { Circuit, createPooledCircuitDisposer } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { Mutex } from "@hazae41/mutex"
+import { None } from "@hazae41/option"
 import { Pool, PoolParams } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 
@@ -195,9 +196,16 @@ export namespace WebSocketConnection {
   export function createPools(subcircuits: Pool<Disposer<Circuit>, Error>, urls: readonly string[]) {
     return new Pool<Disposer<Pool<Disposer<WebSocketConnection>, Error>>, Error>(async (params) => {
       return await Result.unthrow(async t => {
-        const { index } = params
+        const { pool, index } = params
 
-        const circuit = await subcircuits.tryGet(index % subcircuits.capacity).then(r => r.throw(t).inner)
+        const circuit = await subcircuits.tryGet(index % subcircuits.capacity).then(r => r.inspectErrSync(() => {
+          subcircuits.events.on("started", async i => {
+            if (i !== (index % subcircuits.capacity))
+              return new None()
+            await pool.restart(index)
+            return new None()
+          }, { passive: true, once: true })
+        }).throw(t).inner)
 
         const connections = WebSocketConnection.createPool(circuit, urls)
 
@@ -274,9 +282,16 @@ export namespace RpcCircuits {
   export function create(subcircuits: Pool<Disposer<Circuit>, Error>, urls: readonly string[]) {
     return new Pool<Disposer<Pool<Disposer<RpcConnection>, Error>>, Error>(async (params) => {
       return await Result.unthrow(async t => {
-        const { index } = params
+        const { pool, index } = params
 
-        const circuit = await subcircuits.tryGet(index % subcircuits.capacity).then(r => r.throw(t).inner)
+        const circuit = await subcircuits.tryGet(index % subcircuits.capacity).then(r => r.inspectErrSync(() => {
+          subcircuits.events.on("started", async i => {
+            if (i !== (index % subcircuits.capacity))
+              return new None()
+            await pool.restart(index)
+            return new None()
+          }, { passive: true, once: true })
+        }).throw(t).inner)
 
         const connections = RpcConnections.create(circuit, urls)
 

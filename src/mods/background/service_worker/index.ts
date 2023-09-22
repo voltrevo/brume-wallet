@@ -147,8 +147,8 @@ export class Global {
     readonly storage: IDBStorage
   ) {
     this.circuits = new Mutex(Circuits.createPool(this.tors.inner, { capacity: 9 }))
-    this.ethereum = new Mutex(EthBrume.createPool(this.circuits, chainByChainId, { capacity: 9 }))
     this.walletconnect = new Mutex(WcBrume.createRandomPool(this.circuits, { capacity: 3 }))
+    this.ethereum = new Mutex(EthBrume.createPool(this.circuits, chainByChainId, { capacity: 9 }))
   }
 
   async tryGetStoredPassword(): Promise<Result<PasswordData, Error>> {
@@ -1108,15 +1108,15 @@ export class Global {
       if (this.wcBySession.has(sessionData.id))
         return Ok.void()
 
+      console.log("reconnecting...")
+
       const { user } = Option.wrap(this.#user).ok().throw(t)
 
-      const { topic, metadata, authKeyBase64, sessionKeyBase64, wallets } = sessionData
+      const { topic, metadata, sessionKeyBase64, wallets, settle } = sessionData
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
 
-      using authKeySlice = Base64.get().tryDecodePadded(authKeyBase64).throw(t)
-      const authKey = await Ed25519.get().PrivateKey.tryImport(authKeySlice.bytes).then(r => r.throw(t))
+      const wcBrume = await Pool.takeCryptoRandom(this.walletconnect).then(r => r.throw(t).result.inner.inner)
 
-      const wcBrume = await WcBrume.tryCreate(this.circuits, authKey).then(r => r.throw(t))
       const irn = new IrnBrume(wcBrume)
 
       const rawSessionKey = Base64.get().tryDecodePadded(sessionKeyBase64).throw(t).copyAndDispose()
@@ -1125,6 +1125,23 @@ export class Global {
       const session = new WcSession(sessionClient, metadata)
 
       await irn.trySubscribe(topic).then(r => r.throw(t))
+
+      if (settle != null) {
+        const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+        console.log("waiting settlement...")
+
+        await session.client
+          .tryWait<boolean>(settle)
+          .then(r => r.throw(t).throw(t))
+          .then(Result.assert)
+          .then(r => r.throw(t))
+
+        const sessionQuery = await Session.schema(sessionData.id, storage).make(this.core)
+        await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settle: undefined }))))
+
+        console.log("settled!")
+      }
 
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")
@@ -1172,13 +1189,13 @@ export class Global {
       const chain = Option.wrap(chainByChainId[1]).ok().throw(t)
 
       const wcUrl = Url.tryParse(rawWcUrl).throw(t)
-      const params = await Wc.tryParse(wcUrl).then(r => r.throw(t))
+      const pairParams = await Wc.tryParse(wcUrl).then(r => r.throw(t))
 
       const wcBrume = await Pool.takeCryptoRandom(this.walletconnect).then(r => r.throw(t).result.inner.inner)
 
       const irn = new IrnBrume(wcBrume)
 
-      const session = await Wc.tryPair(irn, params, wallet.address).then(r => r.throw(t))
+      const [session, settle] = await Wc.tryPair(irn, pairParams, wallet.address).then(r => r.throw(t))
 
       const originData: OriginData = {
         origin: `wc://${crypto.randomUUID()}`,
@@ -1206,9 +1223,6 @@ export class Global {
         })
       }, { max: session.metadata.icons.length }).catch(console.warn)
 
-      using authKey = await session.client.irn.brume.key.tryExport().then(r => r.throw(t))
-      const authKeyBase64 = Base64.get().tryEncodePadded(authKey.bytes).throw(t)
-
       const sessionKeyBase64 = Base64.get().tryEncodePadded(session.client.key).throw(t)
 
       const sessionData: WcSessionData = {
@@ -1221,12 +1235,20 @@ export class Global {
         chain: chain,
         relay: Wc.RELAY,
         topic: session.client.topic,
-        authKeyBase64: authKeyBase64,
-        sessionKeyBase64: sessionKeyBase64
+        sessionKeyBase64: sessionKeyBase64,
+        settle: settle
       }
 
       const sessionQuery = await Session.schema(sessionData.id, storage).make(this.core)
       await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
+
+      await session.client
+        .tryWait<boolean>(settle)
+        .then(r => r.throw(t).throw(t))
+        .then(Result.assert)
+        .then(r => r.throw(t))
+
+      await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settle: undefined }))))
 
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")
