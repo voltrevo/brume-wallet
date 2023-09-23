@@ -217,6 +217,7 @@ export class CryptoClient {
     if (returned.isSome())
       return returned.inner
 
+    console.log("unhandled crypto client")
     return new Err(new Error(`Unhandled`))
   }
 
@@ -244,7 +245,45 @@ export class CryptoClient {
     })
   }
 
-  async tryRequestNoWait(init: RpcRequestPreinit<unknown>): Promise<Result<RpcRequestReceipt, Error>> {
+  async tryRequestAndWait<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
+    return await Result.unthrow(async t => {
+      const request = SafeRpc.prepare(init)
+      console.log("relay", "<-", request)
+
+      const { topic } = this
+      const message = this.#tryEncrypt(request).throw(t)
+      const { prompt, tag, ttl } = ENGINE_RPC_OPTS[init.method].req
+
+      const future = new Future<Result<RpcResponse<T>, Error>>()
+      const signal = AbortSignal.timeout(ttl * 1000)
+
+      const onResponse = (init: RpcResponseInit<any>) => {
+        if (init.id !== request.id)
+          return new None()
+        const response = RpcResponse.from<T>(init)
+        future.resolve(new Ok(response))
+        return new Some(undefined)
+      }
+
+      const onAbort = () => {
+        future.resolve(new Err(new Error(`Timed out`)))
+      }
+
+      try {
+        this.events.on("response", onResponse, { passive: true })
+        signal.addEventListener("abort", onAbort, { passive: true })
+
+        await this.irn.tryPublish({ topic, message, prompt, tag, ttl }).then(r => r.throw(t))
+
+        return await future.promise
+      } finally {
+        this.events.off("response", onResponse)
+        signal.removeEventListener("abort", onAbort)
+      }
+    })
+  }
+
+  async tryRequest(init: RpcRequestPreinit<unknown>): Promise<Result<RpcRequestReceipt, Error>> {
     return Result.unthrow(async t => {
       const request = SafeRpc.prepare(init)
       console.log("relay", "<-", request)

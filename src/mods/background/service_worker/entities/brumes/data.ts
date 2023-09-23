@@ -74,9 +74,10 @@ export class UrlConnection {
 
 export namespace WcBrume {
 
-  export async function tryCreate(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, key: Ed25519.PrivateKey): Promise<Result<WcBrume, Error>> {
+  export async function tryCreate(circuits: Mutex<Pool<Disposer<Circuit>, Error>>): Promise<Result<WcBrume, Error>> {
     return await Result.unthrow(async t => {
       const relay = Wc.RELAY
+      const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
       const auth = await Jwt.trySign(key, relay).then(r => r.throw(t))
       const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
       const url = `${relay}/?auth=${auth}&projectId=${projectId}`
@@ -91,8 +92,20 @@ export namespace WcBrume {
   export function createRandomPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
     return new Pool<Disposer<WcBrume>, Error>(async (params) => {
       return await Result.unthrow(async t => {
-        const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
-        const brume = await tryCreate(circuits, key).then(r => r.throw(t))
+        const brume = await tryCreate(circuits).then(r => r.throw(t))
+        console.log("brume created")
+
+        /**
+         * Wait for at least one ready circuit (or skip if all are errored)
+         */
+        await brume.circuits.tryGetRandom().then(r => r.ignore())
+
+        /**
+         * Wait for at least one ready socket pool (or skip if all are errored)
+         */
+        await brume.sockets.tryGetRandom().then(r => r.ignore())
+
+        console.log("brume ready")
 
         return new Ok(new Disposer(brume, () => { }))
       })
@@ -103,7 +116,7 @@ export namespace WcBrume {
 
 export namespace EthBrume {
 
-  export function create(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, chains: EthereumChains) {
+  export function create(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, chains: EthereumChains): EthBrume {
     const subcircuits = Circuits.createSubpool(circuits, { capacity: 3 })
     const conns = Objects.mapValuesSync(chains, x => RpcCircuits.create(subcircuits, x.urls))
 
@@ -113,6 +126,12 @@ export namespace EthBrume {
   export function createPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, chains: EthereumChains, params: PoolParams) {
     return new Pool<Disposer<EthBrume>, Error>(async (params) => {
       const brume = EthBrume.create(circuits, chains)
+
+      /**
+       * Wait for at least one ready circuit (or skip if all are errored)
+       */
+      await brume.circuits.tryGetRandom().then(r => r.ignore())
+
       return new Ok(new Disposer(brume, () => { }))
     }, params)
   }
@@ -210,6 +229,11 @@ export namespace WebSocketConnection {
         const connections = WebSocketConnection.createPool(circuit, urls)
 
         /**
+         * Wait for at least one ready connection (or skip if all are errored)
+         */
+        await connections.tryGetRandom().then(r => r.ignore())
+
+        /**
          * Restart this index when the circuit dies
          */
         const { dispose } = createPooledCircuitDisposer(circuit, params)
@@ -294,6 +318,12 @@ export namespace RpcCircuits {
         }).throw(t).inner)
 
         const connections = RpcConnections.create(circuit, urls)
+
+        /**
+         * Wait for at least one ready connection (or skip if all are errored)
+         * (it will be instant if there is at least one HTTP connection)
+         */
+        await connections.tryGetRandom().then(r => r.ignore())
 
         /**
          * Restart this index when the circuit dies

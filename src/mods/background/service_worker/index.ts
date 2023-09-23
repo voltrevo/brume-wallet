@@ -1112,7 +1112,7 @@ export class Global {
 
       const { user } = Option.wrap(this.#user).ok().throw(t)
 
-      const { topic, metadata, sessionKeyBase64, wallets, settle } = sessionData
+      const { topic, metadata, sessionKeyBase64, wallets } = sessionData
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
 
       const wcBrume = await Pool.takeCryptoRandom(this.walletconnect).then(r => r.throw(t).result.inner.inner)
@@ -1125,23 +1125,6 @@ export class Global {
       const session = new WcSession(sessionClient, metadata)
 
       await irn.trySubscribe(topic).then(r => r.throw(t))
-
-      if (settle != null) {
-        const { storage } = Option.wrap(this.#user).ok().throw(t)
-
-        console.log("waiting settlement...")
-
-        await session.client
-          .tryWait<boolean>(settle)
-          .then(r => r.throw(t).throw(t))
-          .then(Result.assert)
-          .then(r => r.throw(t))
-
-        const sessionQuery = await Session.schema(sessionData.id, storage).make(this.core)
-        await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settle: undefined }))))
-
-        console.log("settled!")
-      }
 
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")
@@ -1195,7 +1178,9 @@ export class Global {
 
       const irn = new IrnBrume(wcBrume)
 
-      const [session, settle] = await Wc.tryPair(irn, pairParams, wallet.address).then(r => r.throw(t))
+      const session = await Wc.tryPair(irn, pairParams, wallet.address).then(r => r.throw(t))
+
+      console.log("paired")
 
       const originData: OriginData = {
         origin: `wc://${crypto.randomUUID()}`,
@@ -1203,25 +1188,12 @@ export class Global {
         description: session.metadata.description,
       }
 
-      const originQuery = await Origin.schema(originData.origin, storage).make(this.core)
+      console.log("origin0")
+
+      const originQuery = await Origin.schema(originData.origin, {} as any).make(this.core)
       await originQuery.mutate(Mutators.data(originData))
 
-      tryLoop(i => {
-        return Result.unthrow<Result<void, Looped<Error>>>(async t => {
-          const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
-
-          const iconUrl = Option.wrap(session.metadata.icons[i]).ok().mapErrSync(Retry.new).throw(t)
-          const iconRes = await circuit.tryFetch(iconUrl).then(r => r.mapErrSync(Retry.new).throw(t))
-          const iconBlob = await Result.runAndDoubleWrap(() => iconRes.blob()).then(r => r.mapErrSync(Retry.new).throw(t))
-
-          Result.assert(Mime.isImage(iconBlob.type)).mapErrSync(Retry.new).throw(t)
-
-          const iconData = await Blobs.tryReadAsDataURL(iconBlob).then(r => r.mapErrSync(Retry.new).throw(t))
-          await originQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icon: iconData }))))
-
-          return Ok.void()
-        })
-      }, { max: session.metadata.icons.length }).catch(console.warn)
+      console.log("origin")
 
       const sessionKeyBase64 = Base64.get().tryEncodePadded(session.client.key).throw(t)
 
@@ -1236,19 +1208,12 @@ export class Global {
         relay: Wc.RELAY,
         topic: session.client.topic,
         sessionKeyBase64: sessionKeyBase64,
-        settle: settle
       }
 
       const sessionQuery = await Session.schema(sessionData.id, storage).make(this.core)
       await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
-      await session.client
-        .tryWait<boolean>(settle)
-        .then(r => r.throw(t).throw(t))
-        .then(Result.assert)
-        .then(r => r.throw(t))
-
-      await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settle: undefined }))))
+      console.log("session")
 
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")
@@ -1280,6 +1245,25 @@ export class Global {
       session.client.irn.events.on("error", onCloseOrError, { passive: true })
 
       this.wcBySession.set(sessionData.id, session)
+
+      console.log("connected")
+
+      tryLoop(i => {
+        return Result.unthrow<Result<void, Looped<Error>>>(async t => {
+          const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
+
+          const iconUrl = Option.wrap(session.metadata.icons[i]).ok().mapErrSync(Retry.new).throw(t)
+          const iconRes = await circuit.tryFetch(iconUrl).then(r => r.mapErrSync(Retry.new).throw(t))
+          const iconBlob = await Result.runAndDoubleWrap(() => iconRes.blob()).then(r => r.mapErrSync(Retry.new).throw(t))
+
+          Result.assert(Mime.isImage(iconBlob.type)).mapErrSync(Retry.new).throw(t)
+
+          const iconData = await Blobs.tryReadAsDataURL(iconBlob).then(r => r.mapErrSync(Retry.new).throw(t))
+          await originQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icon: iconData }))))
+
+          return Ok.void()
+        })
+      }, { max: session.metadata.icons.length }).catch(console.warn)
 
       return new Ok(session.metadata)
     })

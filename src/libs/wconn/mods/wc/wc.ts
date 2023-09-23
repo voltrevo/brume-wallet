@@ -6,7 +6,7 @@ import { Future } from "@hazae41/future";
 import { None, Option, Some } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
 import { X25519 } from "@hazae41/x25519";
-import { CryptoClient, RpcRequestReceipt } from "../crypto/client";
+import { CryptoClient } from "../crypto/client";
 import { IrnBrume } from "../irn/irn";
 
 export interface WcMetadata {
@@ -80,7 +80,7 @@ export class WcSession {
 
   async tryClose(reason: unknown): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      await this.client.tryRequestNoWait({
+      await this.client.tryRequest({
         method: "wc_sessionDelete",
         params: { code: 6000, message: "User disconnected." }
       }).then(r => r.throw(t))
@@ -138,7 +138,7 @@ export namespace Wc {
     })
   }
 
-  export async function tryPair(irn: IrnBrume, params: WcPairParams, address: string): Promise<Result<[WcSession, RpcRequestReceipt], Error>> {
+  export async function tryPair(irn: IrnBrume, params: WcPairParams, address: string): Promise<Result<WcSession, Error>> {
     return await Result.unthrow(async t => {
       const { pairingTopic, symKey } = params
 
@@ -193,9 +193,12 @@ export namespace Wc {
         const expiry = Math.floor((Date.now() + (7 * 24 * 60 * 60)) / 1000)
         const params: WcSessionSettleParams = { relay, namespaces, requiredNamespaces, optionalNamespaces, pairingTopic, controller, expiry }
 
-        const receipt = await session.tryRequestNoWait({ method: "wc_sessionSettle", params }).then(r => r.throw(t))
+        await session.tryRequestAndWait<boolean>({ method: "wc_sessionSettle", params })
+          .then(r => r.throw(t).throw(t))
+          .then(Result.assert)
+          .then(r => r.throw(t))
 
-        return new Ok([new WcSession(session, proposer.metadata), receipt])
+        return new Ok(new WcSession(session, proposer.metadata))
       }
     })
   }
