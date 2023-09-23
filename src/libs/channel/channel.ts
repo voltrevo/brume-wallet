@@ -45,7 +45,7 @@ export class WebsitePort {
 
       if (result.isErr()) {
         console.error(result)
-        await this.events.emit("close", [undefined])
+        // await this.events.emit("close", [undefined])
         return
       }
     }

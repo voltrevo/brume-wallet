@@ -74,10 +74,9 @@ export class UrlConnection {
 
 export namespace WcBrume {
 
-  export async function tryCreate(circuits: Mutex<Pool<Disposer<Circuit>, Error>>): Promise<Result<WcBrume, Error>> {
+  export async function tryCreate(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, key: Ed25519.PrivateKey): Promise<Result<WcBrume, Error>> {
     return await Result.unthrow(async t => {
       const relay = Wc.RELAY
-      const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
       const auth = await Jwt.trySign(key, relay).then(r => r.throw(t))
       const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
       const url = `${relay}/?auth=${auth}&projectId=${projectId}`
@@ -92,7 +91,8 @@ export namespace WcBrume {
   export function createRandomPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
     return new Pool<Disposer<WcBrume>, Error>(async (params) => {
       return await Result.unthrow(async t => {
-        const brume = await tryCreate(circuits).then(r => r.throw(t))
+        const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
+        const brume = await tryCreate(circuits, key).then(r => r.throw(t))
         console.log("brume created")
 
         /**

@@ -1,6 +1,7 @@
 import { EthereumChain } from "@/libs/ethereum/mods/chain"
 import { WcMetadata } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
+import { Ed25519 } from "@hazae41/ed25519"
 import { Data, IDBStorage, RawState2, States, Storage, createQuerySchema } from "@hazae41/glacier"
 import { Promiseable } from "@hazae41/glacier/dist/types/libs/promises/promises"
 import { Optional } from "@hazae41/option"
@@ -49,6 +50,7 @@ export interface WcSessionData {
   readonly relay: string
   readonly topic: string
   readonly sessionKeyBase64: string
+  readonly authKeyJwk: Ed25519.PrivateKeyJwk
 }
 
 export class SessionStorage implements Storage {

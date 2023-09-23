@@ -115,8 +115,9 @@ export class Global {
   #path: string = "/"
 
   readonly circuits: Mutex<Pool<Disposer<Circuit>, Error>>
-  readonly walletconnect: Mutex<Pool<Disposer<WcBrume>, Error>>
-  readonly ethereum: Mutex<Pool<Disposer<EthBrume>, Error>>
+
+  #walletconnect?: Mutex<Pool<Disposer<WcBrume>, Error>>
+  #ethereum?: Mutex<Pool<Disposer<EthBrume>, Error>>
 
   readonly brumeByWallet = new Map<string, EthBrume>()
 
@@ -145,8 +146,6 @@ export class Global {
     readonly storage: IDBStorage
   ) {
     this.circuits = new Mutex(Circuits.createPool(this.tors.inner, { capacity: 9 }))
-    this.walletconnect = new Mutex(WcBrume.createRandomPool(this.circuits, { capacity: 3 }))
-    this.ethereum = new Mutex(EthBrume.createPool(this.circuits, chainByChainId, { capacity: 9 }))
   }
 
   async tryGetStoredPassword(): Promise<Result<PasswordData, Error>> {
@@ -202,7 +201,10 @@ export class Global {
 
       this.#user = userSession
 
-      this.#tryWcReconnectAll().catch(console.warn)
+      await this.#tryWcReconnectAll().then(r => r.throw(t))
+
+      this.#walletconnect = new Mutex(WcBrume.createRandomPool(this.circuits, { capacity: 3 }))
+      this.#ethereum = new Mutex(EthBrume.createPool(this.circuits, chainByChainId, { capacity: 9 }))
 
       return new Ok(userSession)
     })
@@ -933,7 +935,8 @@ export class Global {
       const brume = this.brumeByWallet.get(wallet.uuid)
 
       if (brume == null) {
-        const brume = await Pool.takeCryptoRandom(this.ethereum).then(r => r.throw(t).result.inner.inner)
+        const brumes = Option.wrap(this.#ethereum).ok().throw(t)
+        const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.inner.inner)
         this.brumeByWallet.set(wallet.uuid, brume)
         return new Ok(brume)
       }
@@ -1107,8 +1110,9 @@ export class Global {
 
       const result = await this.#tryWcReconnect(sessionDataOpt.inner)
 
-      if (result.isErr())
-        await sessionQuery.delete()
+      if (result.isErr()) {
+        console.warn(`Could not reconnect to WalletConnect session`, result.inner)
+      }
 
       return Ok.void()
     })
@@ -1123,12 +1127,13 @@ export class Global {
 
       const { user } = Option.wrap(this.#user).ok().throw(t)
 
-      const { topic, metadata, sessionKeyBase64, wallets } = sessionData
+      const { topic, metadata, sessionKeyBase64, authKeyJwk, wallets } = sessionData
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
 
-      const wcBrume = await Pool.takeCryptoRandom(this.walletconnect).then(r => r.throw(t).result.inner.inner)
+      const authKey = await Ed25519.get().PrivateKey.tryImportJwk(authKeyJwk).then(r => r.throw(t))
 
-      const irn = new IrnBrume(wcBrume)
+      const brume = await WcBrume.tryCreate(this.circuits, authKey).then(r => r.throw(t))
+      const irn = new IrnBrume(brume)
 
       const rawSessionKey = Base64.get().tryDecodePadded(sessionKeyBase64).throw(t).copyAndDispose()
       const sessionKey = Bytes.tryCast(rawSessionKey, 32).throw(t)
@@ -1186,9 +1191,9 @@ export class Global {
       const wcUrl = Url.tryParse(rawWcUrl).throw(t)
       const pairParams = await Wc.tryParse(wcUrl).then(r => r.throw(t))
 
-      const wcBrume = await Pool.takeCryptoRandom(this.walletconnect).then(r => r.throw(t).result.inner.inner)
-
-      const irn = new IrnBrume(wcBrume)
+      const brumes = Option.wrap(this.#walletconnect).ok().throw(t)
+      const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.inner.inner)
+      const irn = new IrnBrume(brume)
 
       const session = await Wc.tryPair(irn, pairParams, wallet.address).then(r => r.throw(t))
 
@@ -1207,6 +1212,7 @@ export class Global {
 
       console.log("origin")
 
+      const authKeyJwk = await session.client.irn.brume.key.tryExportJwk().then(r => r.throw(t))
       const sessionKeyBase64 = Base64.get().tryEncodePadded(session.client.key).throw(t)
 
       const sessionData: WcSessionData = {
@@ -1220,6 +1226,7 @@ export class Global {
         relay: Wc.RELAY,
         topic: session.client.topic,
         sessionKeyBase64: sessionKeyBase64,
+        authKeyJwk: authKeyJwk
       }
 
       const sessionQuery = Session.schema(sessionData.id, storage)
