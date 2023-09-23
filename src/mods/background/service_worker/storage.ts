@@ -1,7 +1,7 @@
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
+import { AesGcmCoder, AsyncPipeBicoder, HmacEncoder, IDBStorage } from "@hazae41/glacier"
 import { Err, Ok, Result } from "@hazae41/result"
-import { AesGcmCoder, AsyncPipeBicoder, HmacEncoder, IDBStorage } from "@hazae41/xswr"
 import { Pbdkf2Params } from "./entities/users/crypto"
 import { UserData } from "./entities/users/data"
 

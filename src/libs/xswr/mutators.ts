@@ -1,5 +1,5 @@
+import { Data, Fail, Fetched, Mutator, State, TimesInit } from "@hazae41/glacier";
 import { Option, Some } from "@hazae41/option";
-import { Data, Fail, Fetched, Mutator, State, TimesInit } from "@hazae41/xswr";
 
 export namespace Mutators {
 

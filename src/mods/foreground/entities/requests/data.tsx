@@ -1,5 +1,5 @@
 import { AppRequestData } from "@/mods/background/service_worker/entities/requests/data";
-import { createQuerySchema, useQuery } from "@hazae41/xswr";
+import { createQuerySchema, useQuery } from "@hazae41/glacier";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorage } from "../../storage/user";
 

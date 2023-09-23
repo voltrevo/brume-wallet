@@ -1,6 +1,6 @@
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data";
+import { useQuery } from "@hazae41/glacier";
 import { Optional } from "@hazae41/option";
-import { useQuery } from "@hazae41/xswr";
 import { useSubscribe } from "../../storage/storage";
 import { useUserStorage } from "../../storage/user";
 

@@ -1,6 +1,6 @@
 import { OriginData } from "@/mods/background/service_worker/entities/origins/data"
+import { Query, createQuerySchema, useQuery } from "@hazae41/glacier"
 import { Optional } from "@hazae41/option"
-import { Query, createQuerySchema, useQuery } from "@hazae41/xswr"
 import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorage } from "../../storage/user"
 

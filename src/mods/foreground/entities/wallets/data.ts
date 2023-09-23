@@ -9,9 +9,9 @@ import { EthereumAuthPrivateKeyWalletData, EthereumQueryKey, EthereumSeededWalle
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi } from "@hazae41/cubane"
+import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/glacier"
 import { Option, Optional } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
-import { Core, Data, FetchError, Fetched, FetcherMore, createQuerySchema, useCore, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/xswr"
 import { Transaction, ethers } from "ethers"
 import { useMemo } from "react"
 import { Background } from "../../background/background"
@@ -69,7 +69,7 @@ export class EthereumSeededWalletInstance {
   static async tryNew(data: EthereumSeededWalletData, core: Core, background: Background): Promise<Result<EthereumSeededWalletInstance, Error>> {
     return await Result.unthrow(async t => {
       const storage = new UserStorage(core, background)
-      const seedQuery = await Seed.Foreground.schema(data.seed.uuid, storage)?.make(core)
+      const seedQuery = await Seed.Foreground.schema(data.seed.uuid, storage) ?
       const seedData = Option.wrap(seedQuery?.data?.inner).ok().throw(t)
 
       const seed = await SeedInstance.tryFrom(seedData, core, background).then(r => r.throw(t))

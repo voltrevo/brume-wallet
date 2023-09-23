@@ -1,4 +1,4 @@
-import { IDBStorage, createQuerySchema } from "@hazae41/xswr"
+import { IDBStorage, createQuerySchema } from "@hazae41/glacier"
 
 export type Origin =
   | OriginData

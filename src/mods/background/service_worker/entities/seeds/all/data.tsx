@@ -1,6 +1,6 @@
 import { UserStorage } from "@/mods/foreground/storage/user";
+import { IDBStorage, createQuerySchema } from "@hazae41/glacier";
 import { Optional } from "@hazae41/option";
-import { IDBStorage, createQuerySchema } from "@hazae41/xswr";
 import { WalletRef } from "../../wallets/data";
 import { SeedRef } from "../data";
 

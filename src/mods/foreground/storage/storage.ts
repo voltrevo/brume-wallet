@@ -1,5 +1,5 @@
+import { Query } from "@hazae41/glacier"
 import { Result } from "@hazae41/result"
-import { Query } from "@hazae41/xswr"
 import { useEffect } from "react"
 
 export interface Subscribable {

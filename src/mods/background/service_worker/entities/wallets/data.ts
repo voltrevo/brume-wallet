@@ -6,10 +6,10 @@ import { RpcRequestPreinit, TorRpc } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Disposer } from "@hazae41/cleaner"
+import { Data, FetchError, Fetched, FetcherMore, IDBStorage, States, createQuerySchema } from "@hazae41/glacier"
 import { None, Option, Some } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
-import { Data, FetchError, Fetched, FetcherMore, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Contract, ContractRunner, TransactionRequest } from "ethers"
 import { EthBrume, RpcConnection } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
@@ -132,14 +132,13 @@ export namespace Wallet {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(uuid: string, storage: IDBStorage) {
-    const indexer = async (states: States<WalletData, never>, more: IndexerMore) => {
+    const indexer = async (states: States<WalletData, never>) => {
       const { current, previous = current } = states
-      const { core } = more
 
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
-      const walletsQuery = await Wallets.schema(storage).make(core)
+      const walletsQuery = await Wallets.schema(storage)
 
       await walletsQuery.mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData != null)
@@ -152,7 +151,7 @@ export namespace Wallet {
       if (currentData?.inner.type === "seeded") {
         const { seed } = currentData.inner
 
-        const walletsBySeedQuery = await WalletsBySeed.Background.schema(seed.uuid, storage).make(core)
+        const walletsBySeedQuery = await WalletsBySeed.Background.schema(seed.uuid, storage)
 
         await walletsBySeedQuery.mutate(Mutators.mapData((d = new Data([])) => {
           if (previousData != null)
@@ -276,11 +275,11 @@ export function getTotalPricedBalance(user: User, coin: "usd", storage: IDBStora
 }
 
 export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: IDBStorage) {
-  const indexer = async (states: States<Record<string, FixedInit>, Error>, more: IndexerMore) => {
+  const indexer = async (states: States<Record<string, FixedInit>, Error>) => {
     const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
     const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-    const totalBalance = await getTotalPricedBalance(user, coin, storage).make(more.core)
+    const totalBalance = getTotalPricedBalance(user, coin, storage)
     await totalBalance.mutate(Mutators.data<FixedInit, Error>(total))
   }
 
@@ -292,10 +291,10 @@ export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: 
 }
 
 export function getTotalWalletPricedBalance(user: User, account: string, coin: "usd", storage: IDBStorage) {
-  const indexer = async (states: States<FixedInit, Error>, more: IndexerMore) => {
+  const indexer = async (states: States<FixedInit, Error>) => {
     const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-    const indexQuery = await getTotalPricedBalanceByWallet(user, coin, storage).make(more.core)
+    const indexQuery = await getTotalPricedBalanceByWallet(user, coin, storage)
     await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [account]: value }), new Data({})))
   }
 
@@ -307,11 +306,11 @@ export function getTotalWalletPricedBalance(user: User, account: string, coin: "
 }
 
 export function getPricedBalanceByToken(user: User, account: string, coin: "usd", storage: IDBStorage) {
-  const indexer = async (states: States<Record<string, FixedInit>, Error>, more: IndexerMore) => {
+  const indexer = async (states: States<Record<string, FixedInit>, Error>) => {
     const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
     const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-    const totalBalance = await getTotalWalletPricedBalance(user, account, coin, storage).make(more.core)
+    const totalBalance = await getTotalWalletPricedBalance(user, account, coin, storage)
     await totalBalance.mutate(Mutators.data<FixedInit, Error>(total))
   }
 
@@ -323,11 +322,11 @@ export function getPricedBalanceByToken(user: User, account: string, coin: "usd"
 }
 
 export function getPricedBalance(ethereum: EthereumContext, account: string, coin: "usd", storage: IDBStorage) {
-  const indexer = async (states: States<FixedInit, Error>, more: IndexerMore) => {
+  const indexer = async (states: States<FixedInit, Error>) => {
     const key = `${ethereum.chain.chainId}`
     const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-    const indexQuery = await getPricedBalanceByToken(ethereum.user, account, coin, storage).make(more.core)
+    const indexQuery = await getPricedBalanceByToken(ethereum.user, account, coin, storage)
     await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
   }
 
@@ -350,7 +349,7 @@ export function getBalance(ethereum: EthereumContext, account: string, block: st
     })
   }
 
-  const indexer = async (states: States<FixedInit, Error>, more: IndexerMore) => {
+  const indexer = async (states: States<FixedInit, Error>) => {
     if (block !== "pending")
       return
 
@@ -364,18 +363,19 @@ export function getBalance(ethereum: EthereumContext, account: string, block: st
         const pair = pairByAddress[pairAddress]
         const chain = chainByChainId[pair.chainId]
 
-        const price = await getPairPrice({ ...ethereum, chain }, pair, storage).make(more.core)
+        const price = getPairPrice({ ...ethereum, chain }, pair, storage)
+        const priceState = await price.state
 
-        if (price.data == null)
+        if (priceState.data == null)
           return new None()
 
-        pricedBalance = pricedBalance.mul(Fixed.from(price.data.inner))
+        pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
       }
 
       return new Some(pricedBalance)
     }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
-    const pricedBalanceQuery = await getPricedBalance(ethereum, account, "usd", storage).make(more.core)
+    const pricedBalanceQuery = await getPricedBalance(ethereum, account, "usd", storage)
     await pricedBalanceQuery.mutate(Mutators.set(new Data(pricedBalance)))
   }
 
@@ -451,11 +451,11 @@ export function computePairPrice(pair: PairInfo, reserves: [bigint, bigint]) {
 }
 
 export function getTokenPricedBalance(ethereum: EthereumContext, account: string, token: ContractTokenInfo, coin: "usd", storage: IDBStorage) {
-  const indexer = async (states: States<FixedInit, Error>, more: IndexerMore) => {
+  const indexer = async (states: States<FixedInit, Error>) => {
     const key = `${ethereum.chain.chainId}/${token.address}`
     const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-    const indexQuery = await getPricedBalanceByToken(ethereum.user, account, coin, storage).make(more.core)
+    const indexQuery = await getPricedBalanceByToken(ethereum.user, account, coin, storage)
     await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
   }
 
@@ -484,7 +484,7 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
     }
   }
 
-  const indexer = async (states: States<FixedInit, Error>, more: IndexerMore) => {
+  const indexer = async (states: States<FixedInit, Error>) => {
     if (block !== "pending")
       return
 
@@ -498,18 +498,19 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
         const pair = pairByAddress[pairAddress]
         const chain = chainByChainId[pair.chainId]
 
-        const price = await getPairPrice({ ...ethereum, chain }, pair, storage).make(more.core)
+        const price = getPairPrice({ ...ethereum, chain }, pair, storage)
+        const priceState = await price.state
 
-        if (price.data == null)
+        if (priceState.data == null)
           return new None()
 
-        pricedBalance = pricedBalance.mul(Fixed.from(price.data.inner))
+        pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
       }
 
       return new Some(pricedBalance)
     }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
-    const pricedBalanceQuery = await getTokenPricedBalance(ethereum, account, token, "usd", storage).make(more.core)
+    const pricedBalanceQuery = await getTokenPricedBalance(ethereum, account, token, "usd", storage)
     await pricedBalanceQuery.mutate(Mutators.set(new Data(pricedBalance)))
   }
 

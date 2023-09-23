@@ -27,6 +27,7 @@ import { Circuit, Echalote, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
+import { IDBStorage, RawState, SimpleFetcherfulQuerySchema, State, core } from "@hazae41/glacier"
 import { Keccak256 } from "@hazae41/keccak256"
 import { Mutex } from "@hazae41/mutex"
 import { None, Option, Optional, Some } from "@hazae41/option"
@@ -36,7 +37,6 @@ import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Ripemd160 } from "@hazae41/ripemd160"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
-import { Core, IDBStorage, RawState, SimpleFetcherfulQueryInstance, State } from "@hazae41/xswr"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { EthBrume, WcBrume } from "./entities/brumes/data"
@@ -105,8 +105,6 @@ export interface Slot<T> {
 }
 
 export class Global {
-
-  readonly core = new Core({})
 
   readonly events = new SuperEventTarget<{
     "popup_hello": (foreground: Port) => Result<void, Error>
@@ -189,14 +187,15 @@ export class Global {
       if (password == null)
         return new Ok(undefined)
 
-      const userQuery = await User.schema(uuid, this.storage).make(this.core)
-      const userData = Option.wrap(userQuery.current?.get()).ok().throw(t)
+      const userQuery = User.schema(uuid, this.storage)
+      const userState = await userQuery.state
+      const userData = Option.wrap(userState.current?.get()).ok().throw(t)
 
       const user: User = { ref: true, uuid: userData.uuid }
 
       const { storage, hasher, crypter } = await tryCreateUserStorage(userData, password).then(r => r.throw(t))
 
-      const currentUserQuery = await getCurrentUser().make(this.core)
+      const currentUserQuery = getCurrentUser()
       await currentUserQuery.mutate(Mutators.data<User, never>(user))
 
       const userSession: UserSession = { user, storage, hasher, crypter }
@@ -287,7 +286,7 @@ export class Global {
 
   async tryRequestNoPopup<T>(request: AppRequestData): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
-      const requestQuery = await AppRequest.schema(request.id).make(this.core)
+      const requestQuery = AppRequest.schema(request.id)
       await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
 
       try {
@@ -300,7 +299,7 @@ export class Global {
 
   async tryRequestPopup<T>(request: AppRequestData, mouse: Mouse): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
-      const requestQuery = await AppRequest.schema(request.id).make(this.core)
+      const requestQuery = AppRequest.schema(request.id)
       await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
 
       try {
@@ -374,8 +373,9 @@ export class Global {
       if (currentSession != null) {
         const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-        const sessionQuery = await Session.schema(currentSession, storage).make(this.core)
-        const sessionData = Option.wrap(sessionQuery.data?.inner).ok().throw(t)
+        const sessionQuery = Session.schema(currentSession, storage)
+        const sessionState = await sessionQuery.state
+        const sessionData = Option.wrap(sessionState.data?.inner).ok().throw(t)
 
         return new Ok(sessionData)
       }
@@ -389,16 +389,19 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const sessionByOriginQuery = await SessionByOrigin.schema(originData.origin, storage).make(this.core)
+      const sessionByOriginQuery = SessionByOrigin.schema(originData.origin, storage)
+      const sessionByOriginState = await sessionByOriginQuery.state
 
-      if (sessionByOriginQuery.data != null) {
-        const sessionId = sessionByOriginQuery.data.inner.id
+      if (sessionByOriginState.data != null) {
+        const sessionId = sessionByOriginState.data.inner.id
 
-        const originQuery = await Origin.schema(originData.origin, storage).make(this.core)
+        const originQuery = Origin.schema(originData.origin, storage)
         await originQuery.mutate(Mutators.data(originData))
 
-        const sessionQuery = await Session.schema(sessionId, storage).make(this.core)
-        const sessionData = Option.wrap(sessionQuery.data?.inner).ok().throw(t)
+        const sessionQuery = Session.schema(sessionId, storage)
+        const sessionState = await sessionQuery.state
+
+        const sessionData = Option.wrap(sessionState.data?.inner).ok().throw(t)
 
         this.sessionByScript.set(script.name, sessionId)
 
@@ -420,7 +423,7 @@ export class Global {
         return new Ok(sessionData)
       }
 
-      const originQuery = await Origin.schema(originData.origin, storage).make(this.core)
+      const originQuery = Origin.schema(originData.origin, storage)
       await originQuery.mutate(Mutators.data(originData))
 
       const [persistent, walletId, chainId] = await this.tryRequest<[boolean, string, number]>({
@@ -430,8 +433,9 @@ export class Global {
         params: {}
       }, mouse).then(r => r.throw(t).throw(t))
 
-      const walletQuery = await Wallet.schema(walletId, storage).make(this.core)
-      const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
+      const walletQuery = Wallet.schema(walletId, storage)
+      const walletState = await walletQuery.state
+      const wallet = Option.wrap(walletState.current?.inner).ok().throw(t)
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
       const sessionData: ExSessionData = {
@@ -443,7 +447,7 @@ export class Global {
         chain: chain
       }
 
-      const sessionQuery = await Session.schema(sessionData.id, storage).make(this.core)
+      const sessionQuery = Session.schema(sessionData.id, storage)
       await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
       this.sessionByScript.set(script.name, sessionData.id)
@@ -500,14 +504,14 @@ export class Global {
       if (subrequest.method === "wallet_switchEthereumChain")
         return await this.wallet_switchEthereumChain(ethereum, subrequest, mouse)
 
-      const query = await getEthereumUnknown(ethereum, subrequest, storage).make(this.core)
+      const query = getEthereumUnknown(ethereum, subrequest, storage)
 
       const result = await query.fetch().then(r => r.ignore())
 
       result.inspectSync(r => r.throw(t))
 
-      const stored = this.core.raw.get(query.cacheKey)?.inner
-      const unstored = await this.core.unstore<any, unknown, Error>(stored, { key: query.cacheKey })
+      const stored = core.raw.get(query.cacheKey)?.inner
+      const unstored = await core.unstore<any, unknown, Error>(stored, { key: query.cacheKey })
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
       return fetched
@@ -521,8 +525,9 @@ export class Global {
 
       const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<string, Error>>(async t => {
-          const walletQuery = await Wallet.schema(wallet.uuid, storage).make(this.core)
-          const walletData = Option.wrap(walletQuery.data?.inner).ok().throw(t)
+          const walletQuery = Wallet.schema(wallet.uuid, storage)
+          const walletState = await walletQuery.state
+          const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
 
           return new Ok(walletData.address)
         })
@@ -539,8 +544,9 @@ export class Global {
 
       const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<string, Error>>(async t => {
-          const walletQuery = await Wallet.schema(wallet.uuid, storage).make(this.core)
-          const walletData = Option.wrap(walletQuery.data?.inner).ok().throw(t)
+          const walletQuery = Wallet.schema(wallet.uuid, storage)
+          const walletState = await walletQuery.state
+          const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
 
           return new Ok(walletData.address)
         })
@@ -550,11 +556,11 @@ export class Global {
     })
   }
 
-  async makeEthereumBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
+  async makeEthereumBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
     return await Result.unthrow(async t => {
       const [address, block] = (request as RpcRequestPreinit<[string, string]>).params
 
-      const query = await getBalance(ethereum, address, block, storage).make(this.core)
+      const query = getBalance(ethereum, address, block, storage)
 
       return new Ok(query)
     })
@@ -566,37 +572,37 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const query = await getBalance(ethereum, address, block, storage).make(this.core)
+      const query = getBalance(ethereum, address, block, storage)
 
       const result = await query.fetch().then(r => r.ignore())
 
       result.inspectSync(r => r.throw(t))
 
-      const stored = this.core.raw.get(query.cacheKey)?.inner
-      const unstored = await this.core.unstore<any, unknown, any>(stored, { key: query.cacheKey })
+      const stored = core.raw.get(query.cacheKey)?.inner
+      const unstored = await core.unstore<any, unknown, any>(stored, { key: query.cacheKey })
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
       return fetched
     })
   }
 
-  async makeEthereumPairPrice(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
+  async makeEthereumPairPrice(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
     return await Result.unthrow(async t => {
       const [address] = (request as RpcRequestPreinit<[string]>).params
 
       const pair = Option.wrap(pairByAddress[address]).ok().throw(t)
-      const query = await getPairPrice(ethereum, pair, storage).make(this.core)
+      const query = getPairPrice(ethereum, pair, storage)
 
       return new Ok(query)
     })
   }
 
-  async makeEthereumTokenBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
+  async makeEthereumTokenBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
     return await Result.unthrow(async t => {
       const [account, address, block] = (request as RpcRequestPreinit<[string, string, string]>).params
 
       const token = Option.wrap(tokenByAddress[address]).ok().throw(t)
-      const query = await getTokenBalance(ethereum, account, token, block, storage).make(this.core)
+      const query = getTokenBalance(ethereum, account, token, block, storage)
 
       return new Ok(query)
     })
@@ -688,7 +694,7 @@ export class Global {
 
       const updatedSession = { ...session, chain }
 
-      const sessionQuery = await Session.schema(session.id, storage).make(this.core)
+      const sessionQuery = Session.schema(session.id, storage)
       await sessionQuery.mutate(Mutators.replaceData(updatedSession))
 
       for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([]))
@@ -786,11 +792,12 @@ export class Global {
 
       const user = await User.tryCreate(init).then(r => r.throw(t))
 
-      const userQuery = await User.schema(init.uuid, this.storage).make(this.core)
+      const userQuery = User.schema(init.uuid, this.storage)
       await userQuery.mutate(Mutators.data(user))
 
-      const usersQuery = await Users.schema(this.storage).make(this.core)
-      const usersData = Option.wrap(usersQuery.data?.inner).ok().throw(t)
+      const usersQuery = Users.schema(this.storage)
+      const usersState = await usersQuery.state
+      const usersData = Option.wrap(usersState.data?.inner).ok().throw(t)
 
       return new Ok(usersData)
     })
@@ -816,9 +823,10 @@ export class Global {
       if (userSession == null)
         return new Ok(undefined)
 
-      const userQuery = await User.schema(userSession.user.uuid, this.storage).make(this.core)
+      const userQuery = User.schema(userSession.user.uuid, this.storage)
+      const userState = await userQuery.state
 
-      return new Ok(userQuery.current?.inner)
+      return new Ok(userState.current?.inner)
     })
   }
 
@@ -828,7 +836,7 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const sessionQuery = await Session.schema(id, storage).make(this.core)
+      const sessionQuery = Session.schema(id, storage)
       await sessionQuery.delete()
 
       const wc = this.wcBySession.get(id)
@@ -900,7 +908,7 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const seedQuery = await Seed.Background.schema(seed.uuid, storage).make(this.core)
+      const seedQuery = Seed.Background.schema(seed.uuid, storage)
       await seedQuery.mutate(Mutators.data(seed))
 
       return Ok.void()
@@ -913,7 +921,7 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const walletQuery = await Wallet.schema(wallet.uuid, storage).make(this.core)
+      const walletQuery = Wallet.schema(wallet.uuid, storage)
       await walletQuery.mutate(Mutators.data(wallet))
 
       return Ok.void()
@@ -938,13 +946,13 @@ export class Global {
     return await Result.unthrow(async t => {
       const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
-      const cached = this.core.raw.get(cacheKey)
+      const cached = core.raw.get(cacheKey)
 
       if (cached != null)
         return new Ok(cached.inner)
 
       const stored = await this.storage.get(cacheKey)
-      this.core.raw.set(cacheKey, Option.wrap(stored))
+      core.raw.set(cacheKey, Option.wrap(stored))
 
       return new Ok(stored)
     })
@@ -956,13 +964,13 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const cached = this.core.raw.get(cacheKey)
+      const cached = core.raw.get(cacheKey)
 
       if (cached != null)
         return new Ok(cached.inner)
 
       const stored = await storage.get(cacheKey)
-      this.core.raw.set(cacheKey, Option.wrap(stored))
+      core.raw.set(cacheKey, Option.wrap(stored))
 
       return new Ok(stored)
     })
@@ -973,7 +981,7 @@ export class Global {
       const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
       const onState = async (event: CustomEvent<State<any, any>>) => {
-        const stored = await this.core.store(event.detail, { key: cacheKey })
+        const stored = await core.store(event.detail, { key: cacheKey })
 
         await foreground.tryRequest({
           method: "brume_update",
@@ -981,10 +989,10 @@ export class Global {
         }).then(r => r.ignore())
       }
 
-      this.core.onState.addListener(cacheKey, onState)
+      core.onState.addListener(cacheKey, onState)
 
       foreground.events.on("close", () => {
-        this.core.onState.removeListener(cacheKey, onState)
+        core.onState.removeListener(cacheKey, onState)
         return new None()
       })
 
@@ -993,10 +1001,10 @@ export class Global {
   }
 
   async makeEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-    return new Ok(await getEthereumUnknown(ethereum, request, storage).make(this.core))
+    return new Ok(getEthereumUnknown(ethereum, request, storage))
   }
 
-  async routeAndMakeEthereum(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQueryInstance<any, FixedInit, Error>, Error>> {
+  async routeAndMakeEthereum(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuerySchema<any, FixedInit, Error>, Error>> {
     if (request.method === "eth_getBalance")
       return await this.makeEthereumBalance(ethereum, request, storage)
     if (request.method === "eth_getTokenBalance")
@@ -1012,8 +1020,9 @@ export class Global {
 
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const walletQuery = await Wallet.schema(walletId, storage).make(this.core)
-      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
+      const walletQuery = Wallet.schema(walletId, storage)
+      const walletState = await walletQuery.state
+      const wallet = Option.wrap(walletState.current?.get()).ok().throw(t)
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
       const brume = await this.#tryGetOrTakeEthBrumes(wallet).then(r => r.throw(t))
@@ -1022,7 +1031,7 @@ export class Global {
 
       const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
-      await this.core.reindex(query.cacheKey, query.settings)
+      await core.reindex(query.cacheKey, query.settings)
 
       return Ok.void()
     })
@@ -1034,8 +1043,9 @@ export class Global {
 
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const walletQuery = await Wallet.schema(walletId, storage).make(this.core)
-      const wallet = Option.wrap(walletQuery.current?.get()).ok().throw(t)
+      const walletQuery = Wallet.schema(walletId, storage)
+      const walletState = await walletQuery.state
+      const wallet = Option.wrap(walletState.current?.get()).ok().throw(t)
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
       const brume = await this.#tryGetOrTakeEthBrumes(wallet).then(r => r.throw(t))
@@ -1047,11 +1057,10 @@ export class Global {
 
       result.inspectSync(r => r.throw(t))
 
-      const stored = this.core.raw.get(query.cacheKey)?.inner
-      const unstored = await this.core.unstore<any, unknown, Error>(stored, { key: query.cacheKey })
-      const fetched = Option.wrap(unstored.current).ok().throw(t)
+      const stored = core.raw.get(query.cacheKey)?.inner
+      const unstored = await core.unstore<any, unknown, Error>(stored, { key: query.cacheKey })
 
-      return fetched
+      return Option.wrap(unstored.current).ok().throw(t)
     })
   }
 
@@ -1073,9 +1082,10 @@ export class Global {
     return Result.unthrow(async t => {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const persSessionsQuery = await PersistentSessions.schema(storage).make(this.core)
+      const persSessionsQuery = PersistentSessions.schema(storage)
+      const persSessionsState = await persSessionsQuery.state
 
-      for (const sessionRef of Option.wrap(persSessionsQuery?.data?.inner).unwrapOr([]))
+      for (const sessionRef of Option.wrap(persSessionsState?.data?.inner).unwrapOr([]))
         this.#tryWcResolveAndReconnect(sessionRef).catch(console.warn)
 
       return Ok.void()
@@ -1086,8 +1096,9 @@ export class Global {
     return Result.unthrow(async t => {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const sessionQuery = await Session.schema(sessionRef.id, storage).make(this.core)
-      const sessionDataOpt = Option.wrap(sessionQuery.data?.inner)
+      const sessionQuery = Session.schema(sessionRef.id, storage)
+      const sessionState = await sessionQuery.state
+      const sessionDataOpt = Option.wrap(sessionState.data?.inner)
 
       if (sessionDataOpt.isNone())
         return Ok.void()
@@ -1167,8 +1178,9 @@ export class Global {
 
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const walletQuery = await Wallet.schema(walletId, storage).make(this.core)
-      const wallet = Option.wrap(walletQuery.current?.inner).ok().throw(t)
+      const walletQuery = Wallet.schema(walletId, storage)
+      const walletState = await walletQuery.state
+      const wallet = Option.wrap(walletState.current?.inner).ok().throw(t)
       const chain = Option.wrap(chainByChainId[1]).ok().throw(t)
 
       const wcUrl = Url.tryParse(rawWcUrl).throw(t)
@@ -1190,7 +1202,7 @@ export class Global {
 
       console.log("origin0")
 
-      const originQuery = await Origin.schema(originData.origin, {} as any).make(this.core)
+      const originQuery = Origin.schema(originData.origin, {} as any)
       await originQuery.mutate(Mutators.data(originData))
 
       console.log("origin")
@@ -1210,7 +1222,7 @@ export class Global {
         sessionKeyBase64: sessionKeyBase64,
       }
 
-      const sessionQuery = await Session.schema(sessionData.id, storage).make(this.core)
+      const sessionQuery = Session.schema(sessionData.id, storage)
       await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
       console.log("session")

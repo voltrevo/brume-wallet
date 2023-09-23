@@ -1,4 +1,4 @@
-import { createQuerySchema } from "@hazae41/xswr";
+import { createQuerySchema } from "@hazae41/glacier";
 import { AppRequest } from "../data";
 
 export namespace AppRequests {

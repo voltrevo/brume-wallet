@@ -28,9 +28,9 @@ import { useUserStorage } from "@/mods/foreground/storage/user";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { Abi } from "@hazae41/cubane";
+import { useCore } from "@hazae41/glacier";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
-import { useCore } from "@hazae41/xswr";
 import { Transaction } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 
@@ -120,7 +120,7 @@ export function TransactPage() {
         params: [new RpcOk(id, tx.serialized)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage).make(core)
+      const requestsQuery = await AppRequests.get(storage)
 
       if (requestsQuery.data?.inner.length)
         Path.go("/requests")
@@ -138,7 +138,7 @@ export function TransactPage() {
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage).make(core)
+      const requestsQuery = await AppRequests.get(storage)
 
       if (requestsQuery.data?.inner.length)
         Path.go("/requests")
@@ -218,7 +218,7 @@ export function SwitchPage() {
         params: [new RpcOk(id, undefined)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage).make(core)
+      const requestsQuery = await AppRequests.get(storage)
 
       if (requestsQuery.data?.inner.length)
         Path.go("/requests")
@@ -236,7 +236,7 @@ export function SwitchPage() {
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage).make(core)
+      const requestsQuery = await AppRequests.get(storage)
 
       if (requestsQuery.data?.inner.length)
         Path.go("/requests")
@@ -315,7 +315,7 @@ export function PersonalSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage).make(core)
+      const requestsQuery = await AppRequests.get(storage)
 
       if (requestsQuery.data?.inner.length)
         Path.go("/requests")
@@ -333,7 +333,7 @@ export function PersonalSignPage() {
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage).make(core)
+      const requestsQuery = await AppRequests.get(storage)
 
       if (requestsQuery.data?.inner.length)
         Path.go("/requests")
@@ -413,7 +413,7 @@ export function TypedSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage).make(core)
+      const requestsQuery = await AppRequests.get(storage)
 
       if (requestsQuery.data?.inner.length)
         Path.go("/requests")
@@ -431,7 +431,7 @@ export function TypedSignPage() {
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage).make(core)
+      const requestsQuery = await AppRequests.get(storage)
 
       if (requestsQuery.data?.inner.length)
         Path.go("/requests")
@@ -505,7 +505,7 @@ export function WalletAndChainSelectPage() {
         params: [new RpcOk(id, [persistent, wallet.uuid, chain])]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage).make(core)
+      const requestsQuery = await AppRequests.get(storage)
 
       if (requestsQuery.data?.inner.length)
         Path.go("/requests")

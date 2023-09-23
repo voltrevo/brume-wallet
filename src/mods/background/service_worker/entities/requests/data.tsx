@@ -1,6 +1,6 @@
 import { Mutators } from "@/libs/xswr/mutators"
+import { Data, States, createQuerySchema } from "@hazae41/glacier"
 import { Optional } from "@hazae41/option"
-import { Data, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { AppRequests } from "./all/data"
 
 export type AppRequest =
@@ -39,14 +39,14 @@ export namespace AppRequest {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(id: string) {
-    const indexer = async (states: States<AppRequestData, never>, more: IndexerMore) => {
+    const indexer = async (states: States<AppRequestData, never>) => {
       const { current, previous = current } = states
       const { core } = more
 
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
-      const requestsQuery = await AppRequests.schema().make(core)
+      const requestsQuery = await AppRequests.schema()
 
       await requestsQuery.mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData != null)

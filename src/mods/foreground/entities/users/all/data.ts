@@ -1,6 +1,6 @@
 import { GlobalStorage, useGlobalStorage } from "@/mods/foreground/storage/global";
 import { useSubscribe } from "@/mods/foreground/storage/storage";
-import { createQuerySchema, useQuery } from "@hazae41/xswr";
+import { createQuerySchema, useQuery } from "@hazae41/glacier";
 import { User } from "../data";
 
 export function getUsers(storage: GlobalStorage) {

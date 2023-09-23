@@ -1,7 +1,7 @@
 import { Mutators } from "@/libs/xswr/mutators"
 import { UserStorage } from "@/mods/foreground/storage/user"
+import { Data, IDBStorage, States, createQuerySchema } from "@hazae41/glacier"
 import { Optional } from "@hazae41/option"
-import { Data, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Seeds } from "./all/data"
 
 export type Seed =
@@ -82,14 +82,14 @@ export namespace Seed {
   export namespace Background {
 
     export function schema(uuid: string, storage: IDBStorage) {
-      const indexer = async (states: States<SeedData, never>, more: IndexerMore) => {
+      const indexer = async (states: States<SeedData, never>) => {
         const { current, previous = current } = states
         const { core } = more
 
         const previousData = previous.real?.data
         const currentData = current.real?.data
 
-        const seedsQuery = await Seeds.Background.schema(storage).make(core)
+        const seedsQuery = await Seeds.Background.schema(storage)
 
         await seedsQuery.mutate(Mutators.mapData((d = new Data([])) => {
           if (previousData != null)

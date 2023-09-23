@@ -1,8 +1,8 @@
 import { Mutators } from "@/libs/xswr/mutators"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
+import { AesGcmCoder, Data, HmacEncoder, IDBStorage, States, createQuerySchema } from "@hazae41/glacier"
 import { Ok, Result } from "@hazae41/result"
-import { AesGcmCoder, Data, HmacEncoder, IDBStorage, IndexerMore, States, createQuerySchema } from "@hazae41/xswr"
 import { Users } from "./all/data"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBase64, Pbkdf2ParamsBytes } from "./crypto"
 
@@ -77,14 +77,14 @@ export namespace User {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(uuid: string, storage: IDBStorage) {
-    const indexer = async (states: States<UserData, never>, more: IndexerMore) => {
+    const indexer = async (states: States<UserData, never>) => {
       const { current, previous = current } = states
       const { core } = more
 
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
-      const usersQuery = await Users.schema(storage).make(core)
+      const usersQuery = await Users.schema(storage)
 
       await usersQuery.mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData != null)

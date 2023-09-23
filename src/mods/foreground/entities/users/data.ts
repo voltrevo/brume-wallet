@@ -1,5 +1,5 @@
+import { createQuerySchema, useQuery } from "@hazae41/glacier"
 import { Optional } from "@hazae41/option"
-import { createQuerySchema, useQuery } from "@hazae41/xswr"
 import { GlobalStorage, useGlobalStorage } from "../../storage/global"
 import { useSubscribe } from "../../storage/storage"
 

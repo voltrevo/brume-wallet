@@ -1,9 +1,9 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { RpcRequestPreinit } from "@/libs/rpc";
+import { Core, RawState, Storage, useCore } from "@hazae41/glacier";
 import { Mutex } from "@hazae41/mutex";
 import { None, Option, Optional, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
-import { Core, RawState, Storage, useCore } from "@hazae41/xswr";
 import { createContext, useContext, useMemo } from "react";
 import { Background } from "../background/background";
 import { useBackground } from "../background/context";

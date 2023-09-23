@@ -1,6 +1,6 @@
 import { SessionData } from "@/mods/background/service_worker/entities/sessions/data"
+import { createQuerySchema, useQuery } from "@hazae41/glacier"
 import { Optional } from "@hazae41/option"
-import { createQuerySchema, useQuery } from "@hazae41/xswr"
 import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorage } from "../../storage/user"
 
