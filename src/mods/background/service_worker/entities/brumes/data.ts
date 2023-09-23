@@ -88,7 +88,7 @@ export namespace WcBrume {
     })
   }
 
-  export function createRandomPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
+  export function createPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
     return new Pool<Disposer<WcBrume>, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
@@ -109,7 +109,7 @@ export namespace WcBrume {
 
         return new Ok(new Disposer(brume, () => { }))
       })
-    })
+    }, params)
   }
 }
 

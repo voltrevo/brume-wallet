@@ -190,7 +190,7 @@ export namespace Wc {
 
         const metadata = { name: "Brume", description: "Brume", url: location.origin, icons: [] }
         const controller = { publicKey: selfPublicHex, metadata }
-        const expiry = Math.floor((Date.now() + (7 * 24 * 60 * 60)) / 1000)
+        const expiry = Math.floor((Date.now() + (7 * 24 * 60 * 60 * 1000)) / 1000)
         const params: WcSessionSettleParams = { relay, namespaces, requiredNamespaces, optionalNamespaces, pairingTopic, controller, expiry }
 
         await session.tryRequest({ method: "wc_sessionSettle", params }).then(r => r.throw(t))

@@ -203,7 +203,7 @@ export class Global {
 
       await this.#tryWcReconnectAll().then(r => r.throw(t))
 
-      this.#walletconnect = new Mutex(WcBrume.createRandomPool(this.circuits, { capacity: 1 }))
+      this.#walletconnect = new Mutex(WcBrume.createPool(this.circuits, { capacity: 1 }))
       this.#ethereum = new Mutex(EthBrume.createPool(this.circuits, chainByChainId, { capacity: 1 }))
 
       return new Ok(userSession)
