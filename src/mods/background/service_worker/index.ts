@@ -1108,13 +1108,7 @@ export class Global {
       if (sessionDataOpt.inner.type !== "wc")
         return Ok.void()
 
-      const result = await this.#tryWcReconnect(sessionDataOpt.inner)
-
-      if (result.isErr()) {
-        console.warn(`Could not reconnect to WalletConnect session`, result.inner)
-      }
-
-      return Ok.void()
+      return await this.#tryWcReconnect(sessionDataOpt.inner)
     })
   }
 
