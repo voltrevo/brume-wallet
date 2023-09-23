@@ -193,10 +193,7 @@ export namespace Wc {
         const expiry = Math.floor((Date.now() + (7 * 24 * 60 * 60)) / 1000)
         const params: WcSessionSettleParams = { relay, namespaces, requiredNamespaces, optionalNamespaces, pairingTopic, controller, expiry }
 
-        await session.tryRequestAndWait<boolean>({ method: "wc_sessionSettle", params })
-          .then(r => r.throw(t).throw(t))
-          .then(Result.assert)
-          .then(r => r.throw(t))
+        await session.tryRequest({ method: "wc_sessionSettle", params }).then(r => r.throw(t))
 
         return new Ok(new WcSession(session, proposer.metadata))
       }

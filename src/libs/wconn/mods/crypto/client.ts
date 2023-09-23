@@ -117,7 +117,7 @@ export const ENGINE_RPC_OPTS: Record<string, { req: RpcOpts, res: RpcOpts }> = {
   },
 } as const
 
-export interface RpcRequestReceipt {
+export interface RpcReceipt {
   readonly id: RpcId
 
   /**
@@ -283,7 +283,7 @@ export class CryptoClient {
     })
   }
 
-  async tryRequest(init: RpcRequestPreinit<unknown>): Promise<Result<RpcRequestReceipt, Error>> {
+  async tryRequest(init: RpcRequestPreinit<unknown>): Promise<Result<RpcReceipt, Error>> {
     return Result.unthrow(async t => {
       const request = SafeRpc.prepare(init)
       console.log("relay", "<-", request)
@@ -301,7 +301,7 @@ export class CryptoClient {
     })
   }
 
-  async tryWait<T>(receipt: RpcRequestReceipt): Promise<Result<RpcResponse<T>, Error>> {
+  async tryWait<T>(receipt: RpcReceipt): Promise<Result<RpcResponse<T>, Error>> {
     const future = new Future<Result<RpcResponse<T>, Error>>()
     const signal = AbortSignal.timeout(receipt.end - Date.now())
 

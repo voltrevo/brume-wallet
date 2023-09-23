@@ -1202,7 +1202,7 @@ export class Global {
 
       console.log("origin0")
 
-      const originQuery = Origin.schema(originData.origin, {} as any)
+      const originQuery = Origin.schema(originData.origin, storage)
       await originQuery.mutate(Mutators.data(originData))
 
       console.log("origin")
@@ -1224,8 +1224,6 @@ export class Global {
 
       const sessionQuery = Session.schema(sessionData.id, storage)
       await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
-
-      console.log("session")
 
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")
@@ -1257,8 +1255,6 @@ export class Global {
       session.client.irn.events.on("error", onCloseOrError, { passive: true })
 
       this.wcBySession.set(sessionData.id, session)
-
-      console.log("connected")
 
       tryLoop(i => {
         return Result.unthrow<Result<void, Looped<Error>>>(async t => {
@@ -1342,7 +1338,7 @@ if (IS_WEBSITE) {
   const onSkipWaiting = (event: ExtendableMessageEvent) =>
     self.skipWaiting()
 
-  const onHelloWorld = async (event: ExtendableMessageEvent) => {
+  const onHelloWorld = (event: ExtendableMessageEvent) => {
     const raw = event.ports[0]
 
     const port = new WebsitePort("foreground", raw)
@@ -1369,8 +1365,7 @@ if (IS_WEBSITE) {
 
     raw.start()
 
-    await port.tryRequest({ method: "brume_hello" }).then(r => r.ignore())
-
+    port.tryRequest({ method: "brume_hello" }).then(r => r.ignore())
     port.runPingLoop()
   }
 

@@ -39,6 +39,8 @@ export class WebsitePort {
 
   async runPingLoop() {
     while (true) {
+      await new Promise(ok => setTimeout(ok, 1000))
+
       const result = await this.tryPingOrSignal(AbortSignal.timeout(1000))
 
       if (result.isErr()) {
@@ -46,8 +48,6 @@ export class WebsitePort {
         await this.events.emit("close", [undefined])
         return
       }
-
-      await new Promise(ok => setTimeout(ok, 1000))
     }
   }
 
