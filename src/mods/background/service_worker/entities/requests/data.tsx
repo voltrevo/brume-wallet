@@ -41,14 +41,11 @@ export namespace AppRequest {
   export function schema(id: string) {
     const indexer = async (states: States<AppRequestData, never>) => {
       const { current, previous = current } = states
-      const { core } = more
 
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
-      const requestsQuery = await AppRequests.schema()
-
-      await requestsQuery.mutate(Mutators.mapData((d = new Data([])) => {
+      await AppRequests.schema().mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData != null)
           d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
         if (currentData != null)

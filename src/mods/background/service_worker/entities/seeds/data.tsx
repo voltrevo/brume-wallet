@@ -84,14 +84,11 @@ export namespace Seed {
     export function schema(uuid: string, storage: IDBStorage) {
       const indexer = async (states: States<SeedData, never>) => {
         const { current, previous = current } = states
-        const { core } = more
 
         const previousData = previous.real?.data
         const currentData = current.real?.data
 
-        const seedsQuery = await Seeds.Background.schema(storage)
-
-        await seedsQuery.mutate(Mutators.mapData((d = new Data([])) => {
+        await Seeds.Background.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
           if (previousData != null)
             d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
           if (currentData != null)

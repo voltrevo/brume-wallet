@@ -1,6 +1,6 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { RpcRequestPreinit } from "@/libs/rpc";
-import { Core, RawState, Storage, useCore } from "@hazae41/glacier";
+import { RawState, Storage, core } from "@hazae41/glacier";
 import { Mutex } from "@hazae41/mutex";
 import { None, Option, Optional, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
@@ -17,12 +17,11 @@ export function useGlobalStorage() {
 
 export function GlobalStorageProvider(props: ChildrenProps) {
   const { children } = props
-  const core = useCore().unwrap()
   const background = useBackground().unwrap()
 
   const storage = useMemo(() => {
-    return new GlobalStorage(core, background)
-  }, [core, background])
+    return new GlobalStorage(background)
+  }, [background])
 
   return <GlobalStorageContext.Provider value={storage}>
     {children}
@@ -35,7 +34,6 @@ export class GlobalStorage implements Storage {
   readonly keys = new Mutex(new Set<string>())
 
   constructor(
-    readonly core: Core,
     readonly background: Background
   ) {
     background.ports.events.on("created", e => {
@@ -70,16 +68,16 @@ export class GlobalStorage implements Storage {
         if (cacheKey2 !== cacheKey)
           return new None()
 
-        const unstored = await this.core.unstore(stored, { key: cacheKey })
-        this.core.update(cacheKey, () => unstored, { key: cacheKey })
+        const unstored = await core.unstore(stored, { key: cacheKey })
+        core.update(cacheKey, () => unstored, { key: cacheKey })
 
         return new Some(Ok.void())
       })
 
       const stored = await this.tryGet(cacheKey).then(r => r.throw(t).throw(t))
 
-      const unstored = await this.core.unstore(stored, { key: cacheKey })
-      this.core.update(cacheKey, () => unstored, { key: cacheKey })
+      const unstored = await core.unstore(stored, { key: cacheKey })
+      core.update(cacheKey, () => unstored, { key: cacheKey })
 
       return Ok.void()
     })

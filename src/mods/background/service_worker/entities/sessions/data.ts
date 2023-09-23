@@ -82,20 +82,19 @@ export namespace Session {
   export function schema(id: string, storage: IDBStorage) {
     const indexer = async (states: States<SessionData, never>) => {
       const { current, previous = current } = states
-      const { core } = more
 
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
       if (previousData != null) {
         if (previousData.inner.persist) {
-          const sessionByOrigin = await SessionByOrigin.schema(previousData.inner.origin, storage)
+          const sessionByOrigin = SessionByOrigin.schema(previousData.inner.origin, storage)
           await sessionByOrigin.delete()
         }
 
         const sessionsQuery = previousData.inner.persist
-          ? await PersistentSessions.schema(storage)
-          : await TemporarySessions.schema()
+          ? PersistentSessions.schema(storage)
+          : TemporarySessions.schema()
 
         await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
           return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
@@ -105,8 +104,8 @@ export namespace Session {
 
         for (const wallet of previousWallets) {
           const sessionsByWalletQuery = previousData.inner.persist
-            ? await PersistentSessionsByWallet.schema(wallet.uuid, storage)
-            : await TemporarySessionsByWallet.schema(wallet.uuid)
+            ? PersistentSessionsByWallet.schema(wallet.uuid, storage)
+            : TemporarySessionsByWallet.schema(wallet.uuid)
 
           await sessionsByWalletQuery.mutate(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
@@ -116,13 +115,13 @@ export namespace Session {
 
       if (currentData != null) {
         if (currentData.inner.persist) {
-          const sessionByOrigin = await SessionByOrigin.schema(currentData.inner.origin, storage)
+          const sessionByOrigin = SessionByOrigin.schema(currentData.inner.origin, storage)
           await sessionByOrigin.mutate(Mutators.data(SessionRef.from(currentData.inner)))
         }
 
         const sessionsQuery = currentData.inner.persist
-          ? await PersistentSessions.schema(storage)
-          : await TemporarySessions.schema()
+          ? PersistentSessions.schema(storage)
+          : TemporarySessions.schema()
 
         await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
           return d = d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
@@ -132,8 +131,8 @@ export namespace Session {
 
         for (const wallet of currentWallets) {
           const sessionsByWalletQuery = currentData.inner.persist
-            ? await PersistentSessionsByWallet.schema(wallet.uuid, storage)
-            : await TemporarySessionsByWallet.schema(wallet.uuid)
+            ? PersistentSessionsByWallet.schema(wallet.uuid, storage)
+            : TemporarySessionsByWallet.schema(wallet.uuid)
 
           await sessionsByWalletQuery.mutate(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => [...p, SessionRef.from(currentData.inner)])

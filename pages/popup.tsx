@@ -28,7 +28,6 @@ import { useUserStorage } from "@/mods/foreground/storage/user";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { Abi } from "@hazae41/cubane";
-import { useCore } from "@hazae41/glacier";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction } from "ethers";
@@ -61,7 +60,6 @@ export function Ready() {
 
 export function TransactPage() {
   const { searchParams } = usePath()
-  const core = useCore().unwrap()
   const storage = useUserStorage().unwrap()
   const background = useBackground().unwrap()
 
@@ -112,24 +110,25 @@ export function TransactPage() {
         })
       }).throw(t)
 
-      const instance = await EthereumWalletInstance.tryFrom(wallet, core, background).then(r => r.throw(t))
-      tx.signature = await instance.trySignTransaction(tx, core, background).then(r => r.throw(t))
+      const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.throw(t))
+      tx.signature = await instance.trySignTransaction(tx, background).then(r => r.throw(t))
 
       await background.tryRequest({
         method: "brume_respond",
         params: [new RpcOk(id, tx.serialized)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage)
+      const requestsQuery = AppRequests.get(storage)
+      const requestsState = await requestsQuery.state
 
-      if (requestsQuery.data?.inner.length)
+      if (requestsState.data?.inner.length)
         Path.go("/requests")
       else
         Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, storage, background, id, maybeWallet, maybeGasPrice, maybeNonce, chain])
+  }, [storage, background, id, maybeWallet, maybeGasPrice, maybeNonce, chain])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -138,16 +137,17 @@ export function TransactPage() {
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage)
+      const requestsQuery = AppRequests.get(storage)
+      const requestsState = await requestsQuery.state
 
-      if (requestsQuery.data?.inner.length)
+      if (requestsState.data?.inner.length)
         Path.go("/requests")
       else
         Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, storage, background, id])
+  }, [storage, background, id])
 
   const loading = useMemo(() => {
     if (onApprove.loading)
@@ -205,7 +205,6 @@ export function TransactPage() {
 
 export function SwitchPage() {
   const { searchParams } = usePath()
-  const core = useCore().unwrap()
   const storage = useUserStorage().unwrap()
   const background = useBackground().unwrap()
 
@@ -218,16 +217,17 @@ export function SwitchPage() {
         params: [new RpcOk(id, undefined)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage)
+      const requestsQuery = AppRequests.get(storage)
+      const requestsState = await requestsQuery.state
 
-      if (requestsQuery.data?.inner.length)
+      if (requestsState.data?.inner.length)
         Path.go("/requests")
       else
         Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, storage, background, id])
+  }, [storage, background, id])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -236,16 +236,17 @@ export function SwitchPage() {
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage)
+      const requestsQuery = AppRequests.get(storage)
+      const requestsState = await requestsQuery.state
 
-      if (requestsQuery.data?.inner.length)
+      if (requestsState.data?.inner.length)
         Path.go("/requests")
       else
         Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, storage, background, id])
+  }, [storage, background, id])
 
   return <Page>
     <div className="p-4 grow flex flex-col items-center justify-center">
@@ -280,7 +281,6 @@ export function SwitchPage() {
 
 export function PersonalSignPage() {
   const { searchParams } = usePath()
-  const core = useCore().unwrap()
   const storage = useUserStorage().unwrap()
   const background = useBackground().unwrap()
 
@@ -307,24 +307,25 @@ export function PersonalSignPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const wallet = Option.wrap(maybeWallet).ok().throw(t)
 
-      const instance = await EthereumWalletInstance.tryFrom(wallet, core, background).then(r => r.throw(t))
-      const signature = await instance.trySignPersonalMessage(userMessage, core, background).then(r => r.throw(t))
+      const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.throw(t))
+      const signature = await instance.trySignPersonalMessage(userMessage, background).then(r => r.throw(t))
 
       await background.tryRequest({
         method: "brume_respond",
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage)
+      const requestsQuery = AppRequests.get(storage)
+      const requestsState = await requestsQuery.state
 
-      if (requestsQuery.data?.inner.length)
+      if (requestsState.data?.inner.length)
         Path.go("/requests")
       else
         Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, storage, background, id, maybeWallet, userMessage])
+  }, [storage, background, id, maybeWallet, userMessage])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -333,16 +334,17 @@ export function PersonalSignPage() {
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage)
+      const requestsQuery = AppRequests.get(storage)
+      const requestsState = await requestsQuery.state
 
-      if (requestsQuery.data?.inner.length)
+      if (requestsState.data?.inner.length)
         Path.go("/requests")
       else
         Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, storage, background, id])
+  }, [storage, background, id])
 
   return <Page>
     <div className="p-4 grow flex flex-col items-center justify-center">
@@ -382,7 +384,6 @@ export function PersonalSignPage() {
 
 export function TypedSignPage() {
   const { searchParams } = usePath()
-  const core = useCore().unwrap()
   const storage = useUserStorage().unwrap()
   const background = useBackground().unwrap()
 
@@ -405,24 +406,25 @@ export function TypedSignPage() {
 
       const typed = JSON.parse(data) as Abi.Typed.TypedData
 
-      const instance = await EthereumWalletInstance.tryFrom(wallet, core, background).then(r => r.throw(t))
-      const signature = await instance.trySignEIP712HashedMessage(typed, core, background).then(r => r.throw(t))
+      const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.throw(t))
+      const signature = await instance.trySignEIP712HashedMessage(typed, background).then(r => r.throw(t))
 
       await background.tryRequest({
         method: "brume_respond",
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage)
+      const requestsQuery = AppRequests.get(storage)
+      const requestsState = await requestsQuery.state
 
-      if (requestsQuery.data?.inner.length)
+      if (requestsState.data?.inner.length)
         Path.go("/requests")
       else
         Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, storage, background, id, maybeWallet, data])
+  }, [storage, background, id, maybeWallet, data])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -431,16 +433,17 @@ export function TypedSignPage() {
         params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage)
+      const requestsQuery = AppRequests.get(storage)
+      const requestsState = await requestsQuery.state
 
-      if (requestsQuery.data?.inner.length)
+      if (requestsState.data?.inner.length)
         Path.go("/requests")
       else
         Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, storage, background, id])
+  }, [storage, background, id])
 
   return <Page>
     <div className="p-4 grow flex flex-col items-center justify-center">
@@ -480,7 +483,6 @@ export function TypedSignPage() {
 
 export function WalletAndChainSelectPage() {
   const { searchParams } = usePath()
-  const core = useCore().unwrap()
   const storage = useUserStorage().unwrap()
   const background = useBackground().unwrap()
 
@@ -505,16 +507,17 @@ export function WalletAndChainSelectPage() {
         params: [new RpcOk(id, [persistent, wallet.uuid, chain])]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = await AppRequests.get(storage)
+      const requestsQuery = AppRequests.get(storage)
+      const requestsState = await requestsQuery.state
 
-      if (requestsQuery.data?.inner.length)
+      if (requestsState.data?.inner.length)
         Path.go("/requests")
       else
         Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, storage, background, id, chain, persistent])
+  }, [storage, background, id, chain, persistent])
 
   const Body =
     <PageBody>

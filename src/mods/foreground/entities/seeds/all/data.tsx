@@ -10,7 +10,7 @@ import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
 import { Abi } from "@hazae41/cubane"
-import { Core, useQuery } from "@hazae41/glacier"
+import { useQuery } from "@hazae41/glacier"
 import { Option, Optional } from "@hazae41/option"
 import { Err, Ok, Panic, Result, Unimplemented } from "@hazae41/result"
 import { HDKey } from "@scure/bip32"
@@ -39,7 +39,7 @@ export type SeedInstance =
 
 export namespace SeedInstance {
 
-  export async function tryFrom(seed: SeedData, core: Core, background: Background) {
+  export async function tryFrom(seed: SeedData, background: Background) {
     if (seed.type === "mnemonic")
       return new Ok(new UnauthMnemonicSeedInstance(seed))
     if (seed.type === "authMnemonic")
@@ -57,13 +57,13 @@ export class UnauthMnemonicSeedInstance {
     readonly data: UnauthMnemonicSeedData
   ) { }
 
-  async tryGetMnemonic(core: Core, background: Background): Promise<Result<string, Error>> {
+  async tryGetMnemonic(background: Background): Promise<Result<string, Error>> {
     return new Ok(this.data.mnemonic)
   }
 
-  async tryGetPrivateKey(path: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async tryGetPrivateKey(path: string, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const mnemonic = await this.tryGetMnemonic(core, background).then(r => r.throw(t))
+      const mnemonic = await this.tryGetMnemonic(background).then(r => r.throw(t))
       const masterSeed = await mnemonicToSeed(mnemonic)
 
       const root = HDKey.fromMasterSeed(masterSeed)
@@ -75,9 +75,9 @@ export class UnauthMnemonicSeedInstance {
     })
   }
 
-  async trySignPersonalMessage(path: string, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignPersonalMessage(path: string, message: string, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
+      const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
 
       const signature = await Result.runAndDoubleWrap(async () => {
         return await new ethers.Wallet(privateKey).signMessage(message)
@@ -87,9 +87,9 @@ export class UnauthMnemonicSeedInstance {
     })
   }
 
-  async trySignTransaction(path: string, transaction: Transaction, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
+      const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
 
       const signature = Result.runAndDoubleWrapSync(() => {
         return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
@@ -99,9 +99,9 @@ export class UnauthMnemonicSeedInstance {
     })
   }
 
-  async trySignEIP712HashedMessage(path: string, data: Abi.Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignEIP712HashedMessage(path: string, data: Abi.Typed.TypedData, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
+      const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
 
       delete (data.types as any)["EIP712Domain"]
 
@@ -121,7 +121,7 @@ export class AuthMnemonicSeedInstance {
     readonly data: AuthMnemonicSeedData
   ) { }
 
-  async tryGetMnemonic(core: Core, background: Background): Promise<Result<string, Error>> {
+  async tryGetMnemonic(background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const { idBase64, ivBase64 } = this.data.mnemonic
 
@@ -140,9 +140,9 @@ export class AuthMnemonicSeedInstance {
     })
   }
 
-  async tryGetPrivateKey(path: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async tryGetPrivateKey(path: string, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const mnemonic = await this.tryGetMnemonic(core, background).then(r => r.throw(t))
+      const mnemonic = await this.tryGetMnemonic(background).then(r => r.throw(t))
       const masterSeed = await mnemonicToSeed(mnemonic)
 
       const root = HDKey.fromMasterSeed(masterSeed)
@@ -154,9 +154,9 @@ export class AuthMnemonicSeedInstance {
     })
   }
 
-  async trySignPersonalMessage(path: string, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignPersonalMessage(path: string, message: string, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
+      const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
 
       const signature = await Result.runAndDoubleWrap(async () => {
         return await new ethers.Wallet(privateKey).signMessage(message)
@@ -166,9 +166,9 @@ export class AuthMnemonicSeedInstance {
     })
   }
 
-  async trySignTransaction(path: string, transaction: Transaction, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
+      const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
 
       const signature = Result.runAndDoubleWrapSync(() => {
         return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
@@ -178,9 +178,9 @@ export class AuthMnemonicSeedInstance {
     })
   }
 
-  async trySignEIP712HashedMessage(path: string, data: Abi.Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignEIP712HashedMessage(path: string, data: Abi.Typed.TypedData, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, core, background).then(r => r.throw(t))
+      const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
 
       delete (data.types as any)["EIP712Domain"]
 
@@ -200,15 +200,15 @@ export class LedgerSeedInstance {
     readonly data: LedgerSeedData
   ) { }
 
-  async tryGetMnemonic(core: Core, background: Background): Promise<Result<string, Error>> {
+  async tryGetMnemonic(background: Background): Promise<Result<string, Error>> {
     return new Err(new Unimplemented())
   }
 
-  async tryGetPrivateKey(path: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async tryGetPrivateKey(path: string, background: Background): Promise<Result<string, Error>> {
     return new Err(new Unimplemented())
   }
 
-  async trySignPersonalMessage(path: string, message: string, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignPersonalMessage(path: string, message: string, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
       const signature = await Ledger.Ethereum.trySignPersonalMessage(device, path.slice(2), Bytes.fromUtf8(message)).then(r => r.throw(t))
@@ -217,7 +217,7 @@ export class LedgerSeedInstance {
     })
   }
 
-  async trySignTransaction(path: string, transaction: Transaction, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
       const signature = await Ledger.Ethereum.trySignTransaction(device, path.slice(2), transaction).then(r => r.throw(t))
@@ -226,7 +226,7 @@ export class LedgerSeedInstance {
     })
   }
 
-  async trySignEIP712HashedMessage(path: string, data: Abi.Typed.TypedData, core: Core, background: Background): Promise<Result<string, Error>> {
+  async trySignEIP712HashedMessage(path: string, data: Abi.Typed.TypedData, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
 

@@ -15,7 +15,6 @@ import { Input } from "@/libs/ui/input";
 import { SeedRef } from "@/mods/background/service_worker/entities/seeds/data";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
-import { useCore } from "@hazae41/glacier";
 import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
@@ -28,7 +27,6 @@ import { WalletAvatar } from "../../avatar";
 
 export function SeededWalletCreatorDialog(props: CloseProps) {
   const { close } = props
-  const core = useCore().unwrap()
   const background = useBackground().unwrap()
   const seedData = useSeedData()
 
@@ -80,8 +78,8 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
           params: [wallet]
         }).then(r => r.throw(t).throw(t))
       } else {
-        const instance = await SeedInstance.tryFrom(seedData, core, background).then(r => r.throw(t))
-        const mnemonic = await instance.tryGetMnemonic(core, background).then(r => r.throw(t))
+        const instance = await SeedInstance.tryFrom(seedData, background).then(r => r.throw(t))
+        const mnemonic = await instance.tryGetMnemonic(background).then(r => r.throw(t))
 
         const masterSeed = await mnemonicToSeed(mnemonic)
 
@@ -106,7 +104,7 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [defNameInput, defPathInput, seedData, defPathInput, uuid, color, emoji, core, background, close])
+  }, [defNameInput, defPathInput, seedData, defPathInput, uuid, color, emoji, background, close])
 
   const NameInput =
     <div className="flex items-stretch gap-2">

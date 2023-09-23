@@ -13,7 +13,6 @@ import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { Cubane } from "@hazae41/cubane";
-import { useCore } from "@hazae41/glacier";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
@@ -22,7 +21,6 @@ import { useWalletData } from "../../context";
 import { EthereumContextProps, EthereumWalletInstance, useGasPrice, useNonce, useTokenBalance } from "../../data";
 
 export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps & EthereumContextProps & { token: ContractTokenInfo }) {
-  const core = useCore().unwrap()
   const wallet = useWalletData()
   const { title, context, token, close } = props
 
@@ -139,8 +137,8 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
         })
       }).throw(t)
 
-      const instance = await EthereumWalletInstance.tryFrom(wallet, core, context.background).then(r => r.throw(t))
-      tx.signature = await instance.trySignTransaction(tx, core, context.background).then(r => r.throw(t))
+      const instance = await EthereumWalletInstance.tryFrom(wallet, context.background).then(r => r.throw(t))
+      tx.signature = await instance.trySignTransaction(tx, context.background).then(r => r.throw(t))
 
       const txHash = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",
@@ -157,7 +155,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [core, context, wallet, maybeGasPrice, maybeFinalNonce, defRecipientInput, defValueInput])
+  }, [context, wallet, maybeGasPrice, maybeFinalNonce, defRecipientInput, defValueInput])
 
   const TxHashDisplay = <>
     <div className="">

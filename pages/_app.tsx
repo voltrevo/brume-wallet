@@ -21,7 +21,6 @@ import { Base64 } from "@hazae41/base64"
 import { Base64Url } from "@hazae41/base64url"
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305"
 import { Ed25519 } from "@hazae41/ed25519"
-import { CoreProvider } from "@hazae41/glacier"
 import { Keccak256 } from "@hazae41/keccak256"
 import { Ripemd160 } from "@hazae41/ripemd160"
 import { Sha1 } from "@hazae41/sha1"
@@ -117,17 +116,15 @@ export default function App({ Component, pageProps }: AppProps) {
     <Catcher fallback={Fallback}>
       <PromiseCatcher>
         <Initializer>
-          <CoreProvider>
-            <BackgroundProvider>
-              <GlobalStorageProvider>
-                <UserStorageProvider>
-                  <PathProvider>
-                    <Component {...pageProps} />
-                  </PathProvider>
-                </UserStorageProvider>
-              </GlobalStorageProvider>
-            </BackgroundProvider>
-          </CoreProvider>
+          <BackgroundProvider>
+            <GlobalStorageProvider>
+              <UserStorageProvider>
+                <PathProvider>
+                  <Component {...pageProps} />
+                </PathProvider>
+              </UserStorageProvider>
+            </GlobalStorageProvider>
+          </BackgroundProvider>
         </Initializer>
       </PromiseCatcher>
     </Catcher>

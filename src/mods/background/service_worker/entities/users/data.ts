@@ -79,14 +79,11 @@ export namespace User {
   export function schema(uuid: string, storage: IDBStorage) {
     const indexer = async (states: States<UserData, never>) => {
       const { current, previous = current } = states
-      const { core } = more
 
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
-      const usersQuery = await Users.schema(storage)
-
-      await usersQuery.mutate(Mutators.mapData((d = new Data([])) => {
+      await Users.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData != null)
           d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
         if (currentData != null)
