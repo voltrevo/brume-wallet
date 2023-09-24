@@ -5,10 +5,10 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { OkProps } from "@/libs/react/props/promise";
 import { Semver } from "@/libs/semver/semver";
 import { Button } from "@/libs/ui/button";
+import { None } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { useCallback, useEffect, useState } from "react";
 import { useBackground } from "../background/context";
-import { registerServiceWorker } from "../service_worker/service_worker";
 
 const MAIN_PACKAGE_URL = "https://raw.githubusercontent.com/brumewallet/wallet/main/package.json"
 
@@ -78,7 +78,15 @@ export function WebsiteOverlay(props: ChildrenProps) {
   const [updating, setUpdating] = useState<ServiceWorker>()
 
   useEffect(() => {
-    registerServiceWorker({ onUpdating: setUpdating })
+    if (!background.isWebsite())
+      return
+
+    const onUpdate = (sw: ServiceWorker) => {
+      setUpdating(sw)
+      return new None()
+    }
+
+    return background.sw.on("update", onUpdate)
   }, [background])
 
   const update = useCallback(() => {

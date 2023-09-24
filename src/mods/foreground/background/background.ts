@@ -6,8 +6,7 @@ import { Future } from "@hazae41/future"
 import { None, Some } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Plume, SuperEventTarget } from "@hazae41/plume"
-import { Ok, Result } from "@hazae41/result"
-import { registerServiceWorker } from "../service_worker/service_worker"
+import { Err, Ok, Panic, Result } from "@hazae41/result"
 
 export type Background =
   | WebsiteBackground
@@ -29,6 +28,10 @@ export class WebsiteBackground {
   readonly events = new SuperEventTarget<{
     "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
     "response": (response: RpcResponseInit<unknown>) => void
+  }>()
+
+  readonly sw = new SuperEventTarget<{
+    "update": (sw: ServiceWorker) => void
   }>()
 
   isWebsite(): this is WebsiteBackground {
@@ -60,10 +63,95 @@ export class WebsiteBackground {
 
 }
 
+export async function tryGetServiceWorker(background: WebsiteBackground) {
+  /**
+   * Safari may kill the service worker and not restart it
+   * This will manual start a new one
+   */
+  const registration = await navigator.serviceWorker.register("/service_worker.js")
+
+  /**
+   * Only check updates on the first service worker (navigator.serviceWorker.ready)
+   */
+  {
+    const ready = await navigator.serviceWorker.ready
+
+    if (ready.waiting != null)
+      await background.sw.emit("update", [ready.waiting])
+
+    ready.addEventListener("updatefound", () => {
+      const { installing } = ready
+
+      if (installing == null)
+        return
+
+      const onStateChange = async () => {
+        if (installing.state !== "installed")
+          return
+        if (navigator.serviceWorker.controller == null)
+          return
+        console.log("update2")
+        await background.sw.emit("update", [installing])
+        installing.removeEventListener("statechange", onStateChange)
+      }
+
+      installing.addEventListener("statechange", onStateChange, { passive: true })
+    }, { passive: true, once: true })
+
+    let reloading = false;
+
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (reloading)
+        return
+      location.reload()
+      reloading = true
+    })
+  }
+
+  /**
+   * Get or wait the service worker
+   */
+  {
+    const { active, installing } = registration
+
+    if (active != null)
+      return new Ok(registration)
+    if (installing == null)
+      return new Err(new Panic(`Registration installing is null`))
+
+    const future = new Future<Result<ServiceWorkerRegistration, Error>>()
+
+    const onStateChange = () => {
+      if (installing.state !== "activated")
+        return
+      future.resolve(new Ok(registration))
+    }
+
+    const onError = () => {
+      future.resolve(new Err(new Error()))
+    }
+
+    try {
+      installing.addEventListener("statechange", onStateChange, { passive: true })
+      installing.addEventListener("error", onError, { passive: true })
+
+      return await future.promise
+    } finally {
+      installing.removeEventListener("statechange", onStateChange)
+      installing.removeEventListener("error", onError)
+    }
+  }
+}
+
 export function createWebsitePortPool(background: WebsiteBackground): Pool<Disposer<Port>, Error> {
   return new Pool<Disposer<Port>, Error>(async (params) => {
     return await Result.unthrow(async t => {
       const { pool, index } = params
+
+      const registration = await tryGetServiceWorker(background).then(r => r.throw(t))
+
+      if (registration.active == null)
+        return new Err(new Panic(`Active is null`))
 
       const channel = new MessageChannel()
 
@@ -72,24 +160,7 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
       channel.port1.start()
       channel.port2.start()
 
-      /**
-       * Safari may kill the service worker and not restart it
-       * This will grab the service worker we manually started
-       */
-      let registration: ServiceWorkerRegistration
-      let serviceWorker: ServiceWorker
-
-      while (true) {
-        if ((globalThis as any).registration?.active != null) {
-          registration = (globalThis as any).registration
-          serviceWorker = (globalThis as any).registration.active
-          break
-        }
-
-        await new Promise(ok => setTimeout(ok, 1))
-      }
-
-      serviceWorker.postMessage("HELLO_WORLD", [channel.port2])
+      registration.active.postMessage("HELLO_WORLD", [channel.port2])
 
       await Plume.tryWaitOrSignal(port.events, "request", async (future: Future<Ok<void>>, init: RpcRequestInit<any>) => {
         if (init.method !== "brume_hello")
@@ -122,11 +193,9 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
       const onClose = async () => {
         /**
          * Safari may kill the service worker and not restart it
-         * This will force unregister the old one and manually start a new one
+         * This will force unregister the old one
          */
-        console.log(registration)
-        registration.unregister()
-        registerServiceWorker({})
+        await registration.unregister()
         await pool.restart(index)
         return new None()
       }
