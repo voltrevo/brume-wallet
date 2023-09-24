@@ -6,7 +6,8 @@ import { Future } from "@hazae41/future"
 import { None, Some } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Plume, SuperEventTarget } from "@hazae41/plume"
-import { Err, Ok, Panic, Result } from "@hazae41/result"
+import { Ok, Result } from "@hazae41/result"
+import { registerServiceWorker } from "../service_worker/service_worker"
 
 export type Background =
   | WebsiteBackground
@@ -64,11 +65,6 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
     return await Result.unthrow(async t => {
       const { pool, index } = params
 
-      const registration = await navigator.serviceWorker.ready
-
-      if (registration.active == null)
-        return new Err(new Panic(`Registration is not active`))
-
       const channel = new MessageChannel()
 
       const port = new WebsitePort("background", channel.port1)
@@ -76,7 +72,24 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
       channel.port1.start()
       channel.port2.start()
 
-      registration.active.postMessage("HELLO_WORLD", [channel.port2])
+      /**
+       * Safari may kill the service worker and not restart it
+       * This will grab the service worker we manually started
+       */
+      let registration: ServiceWorkerRegistration
+      let serviceWorker: ServiceWorker
+
+      while (true) {
+        if ((globalThis as any).registration?.active != null) {
+          registration = (globalThis as any).registration
+          serviceWorker = (globalThis as any).registration.active
+          break
+        }
+
+        await new Promise(ok => setTimeout(ok, 1))
+      }
+
+      serviceWorker.postMessage("HELLO_WORLD", [channel.port2])
 
       await Plume.tryWaitOrSignal(port.events, "request", async (future: Future<Ok<void>>, init: RpcRequestInit<any>) => {
         if (init.method !== "brume_hello")
@@ -107,6 +120,13 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
       port.events.on("response", onResponse, { passive: true })
 
       const onClose = async () => {
+        /**
+         * Safari may kill the service worker and not restart it
+         * This will force unregister the old one and manually start a new one
+         */
+        console.log(registration)
+        registration.unregister()
+        registerServiceWorker({})
         await pool.restart(index)
         return new None()
       }
@@ -121,6 +141,8 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
         channel.port1.close()
         channel.port2.close()
       }
+
+      console.log("sw got")
 
       return new Ok(new Disposer(port, onClean))
     })

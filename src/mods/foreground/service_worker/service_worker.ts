@@ -6,6 +6,12 @@ export interface ServiceWorkerParams {
 export async function registerServiceWorker(params: ServiceWorkerParams) {
   const registration = await navigator.serviceWorker.register("/service_worker.js")
 
+  console.log(registration.active?.state)
+
+  /**
+   * Safari may kill the service worker and not restart it
+   * Put the registration in a global variable so we can grab it later
+   */
   const gt = globalThis as any
   gt.registration = registration
 
