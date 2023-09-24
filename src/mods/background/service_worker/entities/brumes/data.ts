@@ -81,7 +81,7 @@ export namespace WcBrume {
       const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
       const url = `${relay}/?auth=${auth}&projectId=${projectId}`
 
-      const subcircuits = Circuits.createSubpool(circuits, { capacity: 3 })
+      const subcircuits = Circuits.createSubpool(circuits, { capacity: 2 })
       const sockets = WebSocketConnection.createPools(subcircuits, [url])
 
       return new Ok({ key, circuits: subcircuits, sockets })
@@ -117,7 +117,7 @@ export namespace WcBrume {
 export namespace EthBrume {
 
   export function create(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, chains: EthereumChains): EthBrume {
-    const subcircuits = Circuits.createSubpool(circuits, { capacity: 3 })
+    const subcircuits = Circuits.createSubpool(circuits, { capacity: 2 })
     const conns = Objects.mapValuesSync(chains, x => RpcCircuits.create(subcircuits, x.urls))
 
     return { ...conns, circuits: subcircuits }

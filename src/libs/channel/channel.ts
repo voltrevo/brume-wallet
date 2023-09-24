@@ -38,13 +38,19 @@ export class WebsitePort {
   }
 
   async runPingLoop() {
+    let count = 0
+
     while (true) {
       await new Promise(ok => setTimeout(ok, 1000))
 
-      const result = await this.tryPingOrSignal(AbortSignal.timeout(1000))
+      const result = await this.tryPingOrSignal(AbortSignal.timeout(1000)).then(r => r.flatten())
 
-      if (result.isErr()) {
-        console.error(result)
+      if (result.isErr())
+        count++
+      else
+        count = 0
+
+      if (count === 2) {
         await this.events.emit("close", [undefined])
         return
       }
@@ -112,7 +118,7 @@ export class WebsitePort {
   }
 
   async tryPingOrSignal<T>(signal: AbortSignal): Promise<Result<RpcResponse<T>, Error>> {
-    const request = { id: "ping", method: "brume_ping " }
+    const request = { id: "ping", method: "brume_ping" }
 
     this.port.postMessage(JSON.stringify(request))
 

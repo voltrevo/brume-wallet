@@ -1320,7 +1320,7 @@ async function tryInit() {
 
       const tors = createTorPool(async () => {
         return await tryCreateTor({ fallbacks, ed25519, x25519, sha1 })
-      }, { capacity: 9 })
+      }, { capacity: 1 })
 
       const storage = IDBStorage.tryCreate({ name: "memory" }).unwrap()
       const global = new Global(tors, storage)
