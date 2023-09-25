@@ -7,7 +7,7 @@ import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
-import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
+import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { Url, qurl } from "@/libs/url/url"
@@ -45,6 +45,7 @@ import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
 import { PersistentSessions } from "./entities/sessions/all/data"
 import { ExSessionData, Session, SessionByOrigin, SessionData, SessionRef, WcSessionData } from "./entities/sessions/data"
+import { Status, StatusData } from "./entities/sessions/status/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
 import { EthereumContext, EthereumQueryKey, Wallet, WalletData, WalletRef, getBalance, getEthereumUnknown, getPairPrice, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
@@ -745,6 +746,8 @@ export class Global {
       return new Some(await this.brume_decrypt(foreground, request))
     if (request.method === "brume_wc_connect")
       return new Some(await this.brume_wc_connect(foreground, request))
+    if (request.method === "brume_wc_status")
+      return new Some(await this.brume_wc_connect(foreground, request))
     if (request.method === "popup_hello")
       return new Some(await this.popup_hello(foreground, request))
     if (request.method === "brume_respond")
@@ -841,10 +844,10 @@ export class Global {
       const sessionQuery = Session.schema(id, storage)
       await sessionQuery.delete()
 
-      const wc = this.wcBySession.get(id)
+      const wcSession = this.wcBySession.get(id)
 
-      if (wc != null) {
-        await wc.tryClose(undefined).then(r => r.throw(t))
+      if (wcSession != null) {
+        await wcSession.tryClose(undefined).then(r => r.throw(t))
         this.wcBySession.delete(id)
       }
 
@@ -1097,6 +1100,9 @@ export class Global {
 
   async #tryWcResolveAndReconnect(sessionRef: SessionRef): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
+      if (this.wcBySession.has(sessionRef.id))
+        return Ok.void()
+
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const sessionQuery = Session.schema(sessionRef.id, storage)
@@ -1108,15 +1114,18 @@ export class Global {
       if (sessionDataOpt.inner.type !== "wc")
         return Ok.void()
 
-      return await this.#tryWcReconnect(sessionDataOpt.inner)
+      const sessionResult = await this.#tryWcReconnect(sessionDataOpt.inner)
+
+      const { id } = sessionRef
+      const error = sessionResult.mapErrSync(RpcError.from).err().inner
+      await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id, error }))
+
+      return Ok.void()
     })
   }
 
-  async #tryWcReconnect(sessionData: WcSessionData): Promise<Result<void, Error>> {
+  async #tryWcReconnect(sessionData: WcSessionData): Promise<Result<WcSession, Error>> {
     return await Result.unthrow(async t => {
-      if (this.wcBySession.has(sessionData.id))
-        return Ok.void()
-
       console.log("reconnecting...")
 
       const { user } = Option.wrap(this.#user).ok().throw(t)
@@ -1167,7 +1176,7 @@ export class Global {
 
       this.wcBySession.set(sessionData.id, session)
 
-      return Ok.void()
+      return new Ok(session)
     })
   }
 
@@ -1191,20 +1200,14 @@ export class Global {
 
       const session = await Wc.tryPair(irn, pairParams, wallet.address).then(r => r.throw(t))
 
-      console.log("paired")
-
       const originData: OriginData = {
         origin: `wc://${crypto.randomUUID()}`,
         title: session.metadata.name,
         description: session.metadata.description,
       }
 
-      console.log("origin0")
-
       const originQuery = Origin.schema(originData.origin, storage)
       await originQuery.mutate(Mutators.data(originData))
-
-      console.log("origin")
 
       const authKeyJwk = await session.client.irn.brume.key.tryExportJwk().then(r => r.throw(t))
       const sessionKeyBase64 = Base64.get().tryEncodePadded(session.client.key).throw(t)
@@ -1256,6 +1259,9 @@ export class Global {
       session.client.irn.events.on("error", onCloseOrError, { passive: true })
 
       this.wcBySession.set(sessionData.id, session)
+
+      const { id } = sessionData
+      await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
 
       tryLoop(i => {
         return Result.unthrow<Result<void, Looped<Error>>>(async t => {

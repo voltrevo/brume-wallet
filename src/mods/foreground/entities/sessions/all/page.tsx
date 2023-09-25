@@ -13,6 +13,7 @@ import { Ok, Result } from "@hazae41/result"
 import { useMemo } from "react"
 import { useOrigin } from "../../origins/data"
 import { useSession } from "../data"
+import { useStatus } from "../status/data"
 import { usePersistentSessions, useTemporarySessions } from "./data"
 
 export function SessionsPage() {
@@ -99,6 +100,9 @@ export function SessionRow(props: { session: Session }) {
 
   console.log("originQuery", originQuery)
 
+  const statusQuery = useStatus(props.session.id)
+  const maybeStatusData = statusQuery.data?.inner
+
   const tryDisconnect = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       if (maybeSessionData == null)
@@ -120,7 +124,14 @@ export function SessionRow(props: { session: Session }) {
 
   return <div role="button" className="po-md rounded-xl flex items-center gap-4"
     onClick={tryDisconnect.run}>
-    <div className="shrink-0">
+    <div className="relative shrink-0">
+      {(() => {
+        if (maybeStatusData == null)
+          return <div className="absolute top-0 -right-2 bg-blue-400 rounded-full w-2 h-2" />
+        if (maybeStatusData.error == null)
+          return <div className="absolute top-0 -right-2 bg-green-400 rounded-full w-2 h-2" />
+        return <div className="absolute top-0 -right-2 bg-red-400 rounded-full w-2 h-2" />
+      })()}
       <ImageWithFallback className="s-3xl"
         alt="icon"
         src={maybeOriginData.icon}>
