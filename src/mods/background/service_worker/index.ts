@@ -159,9 +159,9 @@ export class Global {
         .unwrapOr("")
 
       await Result.runAndWrap(async () => {
-        await chrome.action.setBadgeBackgroundColor({ color: "#ba77ff" })
-        await chrome.action.setBadgeTextColor({ color: "white" })
-        await chrome.action.setBadgeText({ text: badge })
+        await browser.action.setBadgeBackgroundColor({ color: "#ba77ff" })
+        await browser.action.setBadgeTextColor({ color: "white" })
+        await browser.action.setBadgeText({ text: badge })
       }).then(r => r.ignore())
     })
   }
