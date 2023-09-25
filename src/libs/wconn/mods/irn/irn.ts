@@ -278,8 +278,10 @@ export class IrnClient {
   }
 
   async #onRequest(request: RpcRequestInit<unknown>) {
+    console.log("irn", "->", request)
     const result = await this.#tryRouteRequest(request)
     const response = RpcResponse.rewrap(request.id, result)
+    console.log("irn", "<-", response)
     this.socket.send(SafeJson.stringify(response))
   }
 

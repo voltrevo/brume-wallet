@@ -181,9 +181,9 @@ export class CryptoClient {
       const data = SafeJson.parse(plaintext) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
 
       if ("method" in data)
-        await this.#onRequest(data).then(r => r.throw(t))
+        this.#onRequest(data).then(r => r.unwrap()).catch(console.warn)
       else
-        await this.#onResponse(data).then(r => r.throw(t))
+        this.#onResponse(data).then(r => r.unwrap()).catch(console.warn)
 
       return new Ok(true)
     })
@@ -191,13 +191,14 @@ export class CryptoClient {
 
   async #onRequest(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
+      console.log("relay request", "->", request)
+
       if (typeof request.id !== "number")
         return Ok.void()
       if (this.#ack.has(request.id))
         return Ok.void()
       this.#ack.add(request.id)
 
-      console.log("relay request", "->", request)
       const result = await this.#tryRouteRequest(request)
       const response = RpcResponse.rewrap(request.id, result)
       console.log("relay", "<-", response)

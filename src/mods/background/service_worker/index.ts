@@ -1162,9 +1162,9 @@ export class Global {
     return await Result.unthrow(async t => {
       console.log("reconnecting...")
 
-      const { user } = Option.wrap(this.#user).ok().throw(t)
+      const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const { topic, metadata, sessionKeyBase64, authKeyJwk, wallets } = sessionData
+      const { topic, metadata, sessionKeyBase64, authKeyJwk, wallets, settlement } = sessionData
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
 
       const authKey = await Ed25519.get().PrivateKey.tryImportJwk(authKeyJwk).then(r => r.throw(t))
@@ -1178,6 +1178,19 @@ export class Global {
       const session = new WcSession(sessionClient, metadata)
 
       await irn.trySubscribe(topic).then(r => r.throw(t))
+
+      /**
+       * When settlement has been interrupted
+       */
+      if (settlement != null) {
+        await session.client.tryWait<boolean>(settlement)
+          .then(r => r.throw(t).throw(t))
+          .then(Result.assert)
+          .then(r => r.throw(t))
+
+        const sessionQuery = Session.schema(sessionData.id, storage)
+        await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
+      }
 
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")
@@ -1232,7 +1245,7 @@ export class Global {
       const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.inner.inner)
       const irn = new IrnBrume(brume)
 
-      const session = await Wc.tryPair(irn, pairParams, wallet.address).then(r => r.throw(t))
+      const [session, settlement] = await Wc.tryPair(irn, pairParams, wallet.address).then(r => r.throw(t))
 
       const originData: OriginData = {
         origin: `wc://${crypto.randomUUID()}`,
@@ -1257,11 +1270,22 @@ export class Global {
         relay: Wc.RELAY,
         topic: session.client.topic,
         sessionKeyBase64: sessionKeyBase64,
-        authKeyJwk: authKeyJwk
+        authKeyJwk: authKeyJwk,
+        settlement: settlement
       }
 
       const sessionQuery = Session.schema(sessionData.id, storage)
       await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
+
+      /**
+       * Service worker can die here
+       */
+      await session.client.tryWait<boolean>(settlement)
+        .then(r => r.throw(t).throw(t))
+        .then(Result.assert)
+        .then(r => r.throw(t))
+
+      await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
 
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")

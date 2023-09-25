@@ -1,4 +1,5 @@
 import { EthereumChain } from "@/libs/ethereum/mods/chain"
+import { RpcReceipt } from "@/libs/wconn/mods/crypto/client"
 import { WcMetadata } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Ed25519 } from "@hazae41/ed25519"
@@ -50,7 +51,8 @@ export interface WcSessionData {
   readonly relay: string
   readonly topic: string
   readonly sessionKeyBase64: string
-  readonly authKeyJwk: Ed25519.PrivateKeyJwk
+  readonly authKeyJwk: Ed25519.PrivateKeyJwk,
+  readonly settlement?: RpcReceipt
 }
 
 export class SessionStorage implements Storage {
