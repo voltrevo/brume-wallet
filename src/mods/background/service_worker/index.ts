@@ -41,6 +41,7 @@ import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
 import { EthBrume, WcBrume } from "./entities/brumes/data"
 import { Origin, OriginData } from "./entities/origins/data"
+import { AppRequests } from "./entities/requests/all/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
 import { PersistentSessions } from "./entities/sessions/all/data"
@@ -147,6 +148,22 @@ export class Global {
     readonly storage: IDBStorage
   ) {
     this.circuits = new Mutex(Circuits.createPool(this.tors.inner, { capacity: 9 }))
+
+    core.onState.addEventListener(AppRequests.key, async () => {
+      const state = await AppRequests.schema().state
+
+      const badge = Option
+        .wrap(state.data?.inner.length)
+        .filterSync(x => x > 0)
+        .mapSync(String)
+        .unwrapOr("")
+
+      Result.runAndWrap(async () => {
+        await chrome.action.setBadgeBackgroundColor({ color: "#ba77ff" })
+        await chrome.action.setBadgeTextColor({ color: "white" })
+        await chrome.action.setBadgeText({ text: badge })
+      }).then(r => r.ignore())
+    })
   }
 
   async tryGetStoredPassword(): Promise<Result<PasswordData, Error>> {
