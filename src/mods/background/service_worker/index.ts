@@ -403,7 +403,6 @@ export class Global {
 
         const sessionQuery = Session.schema(sessionId, storage)
         const sessionState = await sessionQuery.state
-
         const sessionData = Option.wrap(sessionState.data?.inner).ok().throw(t)
 
         this.sessionByScript.set(script.name, sessionId)
@@ -417,9 +416,18 @@ export class Global {
 
         scripts.add(script)
 
+        const { id } = sessionData
+        await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
+
         script.events.on("close", async () => {
-          scripts?.delete(script)
+          scripts!.delete(script)
           this.sessionByScript.delete(script.name)
+
+          if (scripts!.size === 0) {
+            const { id } = sessionData
+            await Status.schema(id).delete()
+          }
+
           return new None()
         })
 
@@ -464,9 +472,18 @@ export class Global {
 
       scripts.add(script)
 
+      const { id } = sessionData
+      await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
+
       script.events.on("close", async () => {
-        scripts?.delete(script)
+        scripts!.delete(script)
         this.sessionByScript.delete(script.name)
+
+        if (scripts!.size === 0) {
+          const { id } = sessionData
+          await Status.schema(id).delete()
+        }
+
         return new None()
       })
 
