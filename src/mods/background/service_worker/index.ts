@@ -158,7 +158,7 @@ export class Global {
         .mapSync(String)
         .unwrapOr("")
 
-      Result.runAndWrap(async () => {
+      await Result.runAndWrap(async () => {
         await chrome.action.setBadgeBackgroundColor({ color: "#ba77ff" })
         await chrome.action.setBadgeTextColor({ color: "white" })
         await chrome.action.setBadgeText({ text: badge })
