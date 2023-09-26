@@ -118,24 +118,15 @@ export class Global {
 
   readonly circuits: Mutex<Pool<Disposer<Circuit>, Error>>
 
-  #walletconnect?: Mutex<Pool<Disposer<WcBrume>, Error>>
-  #ethereum?: Mutex<Pool<Disposer<EthBrume>, Error>>
+  #wcs?: Mutex<Pool<Disposer<WcBrume>, Error>>
+  #eths?: Mutex<Pool<Disposer<EthBrume>, Error>>
 
-  readonly brumeByWallet = new Map<string, EthBrume>()
+  readonly brumeByWallet = new Mutex(new Map<string, EthBrume>())
 
-  /**
-   * Scripts by session
-   */
   readonly scriptsBySession = new Map<string, Set<Port>>()
 
-  /**
-   * Session by script
-   */
   readonly sessionByScript = new Map<string, string>()
 
-  /**
-   * WalletConnect session by session
-   */
   readonly wcBySession = new Map<string, WcSession>()
 
   /**
@@ -221,8 +212,8 @@ export class Global {
 
       await this.#tryWcReconnectAll().then(r => r.throw(t))
 
-      this.#walletconnect = new Mutex(WcBrume.createPool(this.circuits, { capacity: 1 }))
-      this.#ethereum = new Mutex(EthBrume.createPool(this.circuits, chainByChainId, { capacity: 1 }))
+      this.#wcs = new Mutex(WcBrume.createPool(this.circuits, { capacity: 1 }))
+      this.#eths = new Mutex(EthBrume.createPool(this.circuits, chainByChainId, { capacity: 1 }))
 
       return new Ok(userSession)
     })
@@ -525,7 +516,7 @@ export class Global {
       const { wallets, chain } = session
 
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
-      const brume = await this.#tryGetOrTakeEthBrumes(wallet).then(r => r.throw(t))
+      const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
       const ethereum: EthereumContext = { user, session, wallet, chain, brume }
 
       if (subrequest.method === "eth_requestAccounts")
@@ -967,18 +958,20 @@ export class Global {
     })
   }
 
-  async #tryGetOrTakeEthBrumes(wallet: Wallet): Promise<Result<EthBrume, Error>> {
+  async #tryGetOrTakeEthBrume(wallet: Wallet): Promise<Result<EthBrume, Error>> {
     return await Result.unthrow(async t => {
-      const brume = this.brumeByWallet.get(wallet.uuid)
+      return await this.brumeByWallet.lock(async brumeByWallet => {
+        const brume = brumeByWallet.get(wallet.uuid)
 
-      if (brume == null) {
-        const brumes = Option.wrap(this.#ethereum).ok().throw(t)
-        const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.inner.inner)
-        this.brumeByWallet.set(wallet.uuid, brume)
+        if (brume == null) {
+          const brumes = Option.wrap(this.#eths).ok().throw(t)
+          const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.inner.inner)
+          brumeByWallet.set(wallet.uuid, brume)
+          return new Ok(brume)
+        }
+
         return new Ok(brume)
-      }
-
-      return new Ok(brume)
+      })
     })
   }
 
@@ -1065,7 +1058,7 @@ export class Global {
       const wallet = Option.wrap(walletState.current?.get()).ok().throw(t)
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
-      const brume = await this.#tryGetOrTakeEthBrumes(wallet).then(r => r.throw(t))
+      const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
 
       const ethereum: EthereumContext = { user, wallet, chain, brume }
 
@@ -1088,7 +1081,7 @@ export class Global {
       const wallet = Option.wrap(walletState.current?.get()).ok().throw(t)
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
-      const brume = await this.#tryGetOrTakeEthBrumes(wallet).then(r => r.throw(t))
+      const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
       const ethereum: EthereumContext = { user, wallet, chain, brume }
 
       const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
@@ -1197,7 +1190,7 @@ export class Global {
           return new None()
         const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
         const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
-        const brume = await this.#tryGetOrTakeEthBrumes(wallet).then(r => r.throw(t))
+        const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
 
         const ethereum: EthereumContext = { user, wallet, chain, brume, session: sessionData }
 
@@ -1241,7 +1234,7 @@ export class Global {
       const wcUrl = Url.tryParse(rawWcUrl).throw(t)
       const pairParams = await Wc.tryParse(wcUrl).then(r => r.throw(t))
 
-      const brumes = Option.wrap(this.#walletconnect).ok().throw(t)
+      const brumes = Option.wrap(this.#wcs).ok().throw(t)
       const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.inner.inner)
       const irn = new IrnBrume(brume)
 
@@ -1292,7 +1285,7 @@ export class Global {
           return new None()
         const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
         const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
-        const brume = await this.#tryGetOrTakeEthBrumes(wallet).then(r => r.throw(t))
+        const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
 
         const ethereum: EthereumContext = { user, wallet, chain, brume, session: sessionData }
 
@@ -1387,7 +1380,7 @@ async function tryInit() {
       }, { capacity: 1 })
 
       const storage = IDBStorage.tryCreate({ name: "memory" }).unwrap()
-      const global = new Global(tors, storage)
+      const global = new Global(new Mutex(tors), storage)
 
       await global.tryInit().then(r => r.throw(t))
 
