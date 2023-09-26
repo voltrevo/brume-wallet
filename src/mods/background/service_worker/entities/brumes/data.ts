@@ -90,10 +90,9 @@ export namespace WcBrume {
 
   export function createPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
     return new Pool<Disposer<WcBrume>, Error>(async (params) => {
-      return await Result.unthrow(async t => {
+      return await Result.unthrow<Result<Disposer<WcBrume>, Error>>(async t => {
         const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
         const brume = await tryCreate(circuits, key).then(r => r.throw(t))
-        console.log("brume created")
 
         /**
          * Wait for at least one ready circuit (or skip if all are errored)
@@ -105,19 +104,16 @@ export namespace WcBrume {
          */
         await brume.sockets.tryGetRandom().then(r => r.ignore())
 
-        console.log("brume ready")
-
         return new Ok(new Disposer(brume, () => { }))
-      })
+      }).then(r => r.inspectErrSync(e => console.warn("could not create wc brume", { e })))
     }, params)
   }
 }
 
-
 export namespace EthBrume {
 
   export function create(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, chains: EthereumChains): EthBrume {
-    const subcircuits = Circuits.createSubpool(circuits, { capacity: 2 })
+    const subcircuits = Circuits.createSubpool(circuits, { capacity: 3 })
     const conns = Objects.mapValuesSync(chains, x => RpcCircuits.create(subcircuits, x.urls))
 
     return { ...conns, circuits: subcircuits }
@@ -125,6 +121,7 @@ export namespace EthBrume {
 
   export function createPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, chains: EthereumChains, params: PoolParams) {
     return new Pool<Disposer<EthBrume>, Error>(async (params) => {
+      console.log("creating eth brume")
       const brume = EthBrume.create(circuits, chains)
 
       /**
@@ -182,8 +179,9 @@ export namespace WebSocketConnection {
    */
   export function createPool(circuit: Circuit, urls: readonly string[]) {
     return new Pool<Disposer<WebSocketConnection>, Error>(async (params) => {
-      return await Result.unthrow(async t => {
+      return await Result.unthrow<Result<Disposer<WebSocketConnection>, Error>>(async t => {
         const { pool, index, signal } = params
+        console.log("creating ws")
 
         const url = new URL(urls[index])
 
@@ -202,7 +200,7 @@ export namespace WebSocketConnection {
         }
 
         return new Ok(new Disposer(connection, onClean))
-      })
+      }).then(r => r.inspectErrSync(e => console.warn("could not create ws", { e })))
     }, { capacity: urls.length })
   }
 
@@ -214,10 +212,10 @@ export namespace WebSocketConnection {
    */
   export function createPools(subcircuits: Pool<Disposer<Circuit>, Error>, urls: readonly string[]) {
     return new Pool<Disposer<Pool<Disposer<WebSocketConnection>, Error>>, Error>(async (params) => {
-      return await Result.unthrow(async t => {
+      return await Result.unthrow<Result<Disposer<Pool<Disposer<WebSocketConnection>, Error>>, Error>>(async t => {
         const { pool, index } = params
 
-        const circuit = await subcircuits.tryGet(index % subcircuits.capacity).then(r => r.inspectErrSync(() => {
+        const circuit = await subcircuits.tryGetOrWait(index % subcircuits.capacity).then(r => r.inspectErrSync(() => {
           subcircuits.events.on("started", async i => {
             if (i !== (index % subcircuits.capacity))
               return new None()
@@ -229,17 +227,17 @@ export namespace WebSocketConnection {
         const connections = WebSocketConnection.createPool(circuit, urls)
 
         /**
+         * Restart this index when the circuit dies
+         */
+        const { dispose } = createPooledCircuitDisposer(circuit, params as any)
+
+        /**
          * Wait for at least one ready connection (or skip if all are errored)
          */
         await connections.tryGetRandom().then(r => r.ignore())
 
-        /**
-         * Restart this index when the circuit dies
-         */
-        const { dispose } = createPooledCircuitDisposer(circuit, params)
-
         return new Ok(new Disposer(connections, dispose))
-      })
+      }).then(r => r.inspectErrSync(e => console.warn("could not create ws pool", { e })))
     }, { capacity: subcircuits.capacity })
   }
 
@@ -305,13 +303,16 @@ export namespace RpcCircuits {
    */
   export function create(subcircuits: Pool<Disposer<Circuit>, Error>, urls: readonly string[]) {
     return new Pool<Disposer<Pool<Disposer<RpcConnection>, Error>>, Error>(async (params) => {
-      return await Result.unthrow(async t => {
+      return await Result.unthrow<Result<Disposer<Pool<Disposer<RpcConnection>, Error>>, Error>>(async t => {
         const { pool, index } = params
+        console.log("getting a circuit")
 
-        const circuit = await subcircuits.tryGet(index % subcircuits.capacity).then(r => r.inspectErrSync(() => {
+        const circuit = await subcircuits.tryGetOrWait(index % subcircuits.capacity).then(r => r.inspectErrSync(e => {
+          console.log("could not get circuit", e)
           subcircuits.events.on("started", async i => {
             if (i !== (index % subcircuits.capacity))
               return new None()
+            console.log("retrying to get circuit")
             await pool.restart(index)
             return new None()
           }, { passive: true, once: true })
@@ -320,18 +321,18 @@ export namespace RpcCircuits {
         const connections = RpcConnections.create(circuit, urls)
 
         /**
+         * Restart this index when the circuit dies
+         */
+        const { dispose } = createPooledCircuitDisposer(circuit, params as any)
+
+        /**
          * Wait for at least one ready connection (or skip if all are errored)
          * (it will be instant if there is at least one HTTP connection)
          */
         await connections.tryGetRandom().then(r => r.ignore())
 
-        /**
-         * Restart this index when the circuit dies
-         */
-        const { dispose } = createPooledCircuitDisposer(circuit, params)
-
         return new Ok(new Disposer(connections, dispose))
-      })
+      }).then(r => r.inspectErrSync(e => console.warn("could not create rpc pool", e)))
     }, { capacity: subcircuits.capacity })
   }
 

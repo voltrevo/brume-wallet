@@ -97,7 +97,7 @@ export class IrnBrume {
 
   async trySubscribe(topic: string): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const client = await this.pool.tryGet(0).then(r => r.throw(t).inner)
+      const client = await this.pool.tryGetOrWait(0).then(r => r.throw(t).inner)
       await client.trySubscribe(topic).then(r => r.throw(t))
       this.topics.add(topic)
       return Ok.void()
@@ -106,7 +106,7 @@ export class IrnBrume {
 
   async tryPublish(payload: IrnPublishPayload): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const client = await this.pool.tryGet(0).then(r => r.throw(t).inner)
+      const client = await this.pool.tryGetOrWait(0).then(r => r.throw(t).inner)
       await client.tryPublish(payload).then(r => r.throw(t))
       return Ok.void()
     })
@@ -118,7 +118,7 @@ export class IrnBrume {
 
       await this.events.emit("close", [reason])
 
-      const irn = await this.pool.tryGet(0).then(r => r.ok().mapSync(x => x.inner))
+      const irn = await this.pool.tryGetOrWait(0).then(r => r.ok().mapSync(x => x.inner))
 
       if (irn.isNone())
         return Ok.void()
@@ -205,7 +205,7 @@ export class IrnSockets {
 
   async trySubscribe(topic: string): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const client = await this.pool.inner.tryGet(0).then(r => r.throw(t).inner)
+      const client = await this.pool.inner.tryGetOrWait(0).then(r => r.throw(t).inner)
       await client.trySubscribe(topic).then(r => r.throw(t))
       this.topics.add(topic)
       return Ok.void()
@@ -214,7 +214,7 @@ export class IrnSockets {
 
   async tryPublish(payload: IrnPublishPayload): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const client = await this.pool.inner.tryGet(0).then(r => r.throw(t).inner)
+      const client = await this.pool.inner.tryGetOrWait(0).then(r => r.throw(t).inner)
       await client.tryPublish(payload).then(r => r.throw(t))
       return Ok.void()
     })
@@ -226,7 +226,7 @@ export class IrnSockets {
 
       await this.events.emit("close", [reason])
 
-      const irn = await this.pool.inner.tryGet(0).then(r => r.ok().mapSync(x => x.inner))
+      const irn = await this.pool.inner.tryGetOrWait(0).then(r => r.ok().mapSync(x => x.inner))
 
       if (irn.isNone())
         return Ok.void()

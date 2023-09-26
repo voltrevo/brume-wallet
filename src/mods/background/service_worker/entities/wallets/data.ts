@@ -1,6 +1,7 @@
 import Erc20Abi from "@/assets/Erc20.json"
 import PairAbi from "@/assets/Pair.json"
 import { Fixed, FixedInit } from "@/libs/bigints/bigints"
+import { Errors } from "@/libs/errors/errors"
 import { ContractTokenInfo, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { RpcRequestPreinit, TorRpc } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
@@ -138,7 +139,7 @@ export namespace Wallet {
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
-      const walletsQuery = await Wallets.schema(storage)
+      const walletsQuery = Wallets.schema(storage)
 
       await walletsQuery.mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData != null)
@@ -151,7 +152,7 @@ export namespace Wallet {
       if (currentData?.inner.type === "seeded") {
         const { seed } = currentData.inner
 
-        const walletsBySeedQuery = await WalletsBySeed.Background.schema(seed.uuid, storage)
+        const walletsBySeedQuery = WalletsBySeed.Background.schema(seed.uuid, storage)
 
         await walletsBySeedQuery.mutate(Mutators.mapData((d = new Data([])) => {
           if (previousData != null)
@@ -186,23 +187,23 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
     const { signal = AbortSignals.timeout(30_000) } = more
     const { brume } = ethereum
 
-    const circuits = Option.wrap(brume[ethereum.chain.chainId]).ok().throw(t)
-    const allTriedCircuits = new Set<Pool<Disposer<RpcConnection>, Error>>()
+    const pools = Option.wrap(brume[ethereum.chain.chainId]).ok().throw(t)
+    const allTriedPools = new Set<Pool<Disposer<RpcConnection>, Error>>()
 
     return await tryLoop(async (i) => {
       return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
-        let circuit: Pool<Disposer<RpcConnection>, Error>
+        let pool: Pool<Disposer<RpcConnection>, Error>
 
         while (true) {
-          circuit = await circuits.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
+          pool = await pools.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
 
-          if (allTriedCircuits.has(circuit))
+          if (allTriedPools.has(pool))
             continue
-          allTriedCircuits.add(circuit)
+          allTriedPools.add(pool)
           break
         }
 
-        const conns = circuit
+        const conns = pool
         const allTriedConns = new Set<RpcConnection>()
 
         return await tryLoop(async (i) => {
@@ -227,7 +228,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
               const result = await TorRpc.tryFetchWithCircuit<T>(connection.url, { ...request, circuit: connection.circuit })
 
               if (result.isErr())
-                console.warn(`Could not fetch ${init.method} from ${connection.url.href} using ${connection.circuit.id}`)
+                console.warn(`Could not fetch ${init.method} from ${connection.url.href} using ${connection.circuit.id}`, { result })
 
               return result.mapSync(x => Fetched.rewrap(x)).mapErrSync(Retry.new)
             }
@@ -238,7 +239,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
               const result = await TorRpc.tryFetchWithSocket<T>(connection.socket, request, signal)
 
               if (result.isErr())
-                console.warn(`Could not fetch ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`)
+                console.warn(`Could not fetch ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`, { result })
 
               return result.mapSync(x => Fetched.rewrap(x)).mapErrSync(Retry.new)
             }
@@ -246,10 +247,10 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
             connection satisfies never
             throw new Panic()
           })
-        }, { base: 1, max: conns.capacity }).then(r => r.mapErrSync(Retry.new))
+        }, { max: conns.capacity }).then(r => r.mapErrSync(Retry.new))
       })
-    }, { base: 1, max: circuits.capacity })
-  }).then(r => r.mapErrSync(FetchError.from))
+    }, { max: pools.capacity })
+  }).then(r => r.inspectSync(console.log).inspectErrSync(Errors.log).mapErrSync(FetchError.from))
 }
 
 export function getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
@@ -294,7 +295,7 @@ export function getTotalWalletPricedBalance(user: User, account: string, coin: "
   const indexer = async (states: States<FixedInit, Error>) => {
     const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-    const indexQuery = await getTotalPricedBalanceByWallet(user, coin, storage)
+    const indexQuery = getTotalPricedBalanceByWallet(user, coin, storage)
     await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [account]: value }), new Data({})))
   }
 
@@ -310,7 +311,7 @@ export function getPricedBalanceByToken(user: User, account: string, coin: "usd"
     const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
     const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-    const totalBalance = await getTotalWalletPricedBalance(user, account, coin, storage)
+    const totalBalance = getTotalWalletPricedBalance(user, account, coin, storage)
     await totalBalance.mutate(Mutators.data<FixedInit, Error>(total))
   }
 
@@ -326,7 +327,7 @@ export function getPricedBalance(ethereum: EthereumContext, account: string, coi
     const key = `${ethereum.chain.chainId}`
     const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-    const indexQuery = await getPricedBalanceByToken(ethereum.user, account, coin, storage)
+    const indexQuery = getPricedBalanceByToken(ethereum.user, account, coin, storage)
     await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
   }
 
@@ -342,12 +343,8 @@ export function getPricedBalance(ethereum: EthereumContext, account: string, coi
 }
 
 export function getBalance(ethereum: EthereumContext, account: string, block: string, storage: IDBStorage) {
-  const fetcher = async (request: RpcRequestPreinit<unknown>) => {
-    return await tryEthereumFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals)))).then(r => {
-      console.log("<-", ethereum.chain.chainId, r)
-      return r
-    })
-  }
+  const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+    await tryEthereumFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals))))
 
   const indexer = async (states: States<FixedInit, Error>) => {
     if (block !== "pending")
@@ -375,7 +372,7 @@ export function getBalance(ethereum: EthereumContext, account: string, block: st
       return new Some(pricedBalance)
     }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
-    const pricedBalanceQuery = await getPricedBalance(ethereum, account, "usd", storage)
+    const pricedBalanceQuery = getPricedBalance(ethereum, account, "usd", storage)
     await pricedBalanceQuery.mutate(Mutators.set(new Data(pricedBalance)))
   }
 
@@ -455,7 +452,7 @@ export function getTokenPricedBalance(ethereum: EthereumContext, account: string
     const key = `${ethereum.chain.chainId}/${token.address}`
     const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-    const indexQuery = await getPricedBalanceByToken(ethereum.user, account, coin, storage)
+    const indexQuery = getPricedBalanceByToken(ethereum.user, account, coin, storage)
     await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
   }
 
@@ -510,7 +507,7 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
       return new Some(pricedBalance)
     }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
-    const pricedBalanceQuery = await getTokenPricedBalance(ethereum, account, token, "usd", storage)
+    const pricedBalanceQuery = getTokenPricedBalance(ethereum, account, token, "usd", storage)
     await pricedBalanceQuery.mutate(Mutators.set(new Data(pricedBalance)))
   }
 

@@ -6,6 +6,8 @@ export class UIError extends Error {
 export namespace Errors {
 
   export function toJSON(error: unknown): unknown {
+    if (Array.isArray(error))
+      return error.map(toJSON)
     if (error instanceof Error)
       return { name: error.name, message: error.message, cause: toJSON(error.cause) }
     return error
@@ -16,7 +18,7 @@ export namespace Errors {
   }
 
   export function log(error: unknown) {
-    console.error(toString(error))
+    console.error({ error })
   }
 
   export function alert(error: unknown) {

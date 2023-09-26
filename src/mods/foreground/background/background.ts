@@ -53,7 +53,7 @@ export class WebsiteBackground {
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     return await tryLoop(async () => {
       return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
-        const port = await this.ports.tryGet(0).then(r => r.mapErrSync(Cancel.new).throw(t).inner)
+        const port = await this.ports.tryGetOrWait(0).then(r => r.mapErrSync(Cancel.new).throw(t).inner)
         const response = await port.tryRequest<T>(init).then(r => r.mapErrSync(Retry.new).throw(t))
 
         return new Ok(response)
@@ -245,7 +245,7 @@ export class ExtensionBackground {
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     return await tryLoop(async () => {
       return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
-        const port = await this.ports.tryGet(0).then(r => r.mapErrSync(Cancel.new).throw(t).inner)
+        const port = await this.ports.tryGetOrWait(0).then(r => r.mapErrSync(Cancel.new).throw(t).inner)
         const response = await port.tryRequest<T>(init).then(r => r.mapErrSync(Retry.new).throw(t))
 
         return new Ok(response)
