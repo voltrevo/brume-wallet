@@ -4,7 +4,6 @@ import { Cancel, Looped, Looper, Pool, PoolParams, Retry, TooManyRetriesError, t
 import { AbortedError } from "@hazae41/plume"
 import { Ok, Result } from "@hazae41/result"
 
-
 export async function tryCreateTor(params: TorClientParams): Promise<Result<TorClientDuplex, Cancel<Error> | Retry<Error>>> {
   return await Result.unthrow(async t => {
     const tcp = await createWebSocketSnowflakeStream("wss://snowflake.torproject.net/")

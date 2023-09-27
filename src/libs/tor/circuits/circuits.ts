@@ -17,10 +17,8 @@ export namespace Circuits {
     return new Pool<Disposer<Circuit>, Error | TorPoolError>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index, signal } = params
-        console.log("getting a tor")
 
         const tor = await tors.tryGetOrWait(index % tors.capacity).then(r => r.inspectErrSync(() => {
-          console.log("could not get tor")
           tors.events.on("started", async i => {
             if (i !== (index % tors.capacity))
               return new None()
@@ -32,7 +30,22 @@ export namespace Circuits {
 
         const circuit = await tor.tryCreateAndExtendLoop(signal).then(r => r.throw(t))
 
-        return new Ok(createPooledCircuitDisposer(circuit, params as any))
+        const onCloseOrError = async (reason?: unknown) => {
+          console.log("circuit closed")
+          await pool.restart(index)
+          console.log("circuit restarted")
+          return new None()
+        }
+
+        circuit.events.on("close", onCloseOrError, { passive: true })
+        circuit.events.on("error", onCloseOrError, { passive: true })
+
+        const onClean = () => {
+          circuit.events.off("close", onCloseOrError)
+          circuit.events.off("error", onCloseOrError)
+        }
+
+        return new Ok(new Disposer(circuit, onClean))
       })
     }, params)
   }
@@ -47,16 +60,21 @@ export namespace Circuits {
     return new Pool<Disposer<Circuit>, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index } = params
+        await circuits.inner.mutex.promise
         console.log("stealing a circuit")
 
         const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.inspectErrSync(() => {
-          console.log("could not steal circuit")
           circuits.inner.events.on("started", async i => {
             console.log("retrying to steal circuit")
             await pool.restart(index)
             return new None()
           }, { passive: true, once: true })
         }).throw(t).result.get().inner)
+
+        console.log("stolen circuit")
+
+        if (circuit.destroyed)
+          console.error("Circuit already destroyed 2")
 
         return new Ok(createPooledCircuitDisposer(circuit, params as any))
       })
