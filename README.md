@@ -176,7 +176,7 @@ This mitigates supply-chain attacks and phishing attacks, and prevents phone-lef
 We try our best to avoid supply-chain attacks from external packages
 
 - We use browser APIs when available
-- All WebAssembly packages are reproducible and their dependencies are audited
+- All WebAssembly packages are reproducible and try to use audited dependencies
 - All JavaScript cryptography packages are from [Paul Miller](https://github.com/paulmillr) and are audited
 - We count each individual maintainer in our dependency graph as a risk
 - We use runtime protection techniques such as object-capability model
@@ -197,9 +197,3 @@ Keep in mind that the zero risk doesn't exist, and a highly motivated attacker c
 (Or owning the exit node, since we don't currently check TLS certificates from the JSON-RPC server, the exit node could send your packets to its own JSON-RPC server (Fixed soon))
 
 3. Correlating IP addresses logs with wallet addresses logs, and if both sides are small enough, linking a particular IP address to a particular wallet address
-
-## Next
-
-We plan to further develop Brume Wallet by adding several features necessary for everyday use, such as the integration of on-chain privacy tools (Aztec Network), supporting other blockchains (EVM & Non-EVM) and adding useful features such as a token approval manager
-
-<img width="966" src="https://user-images.githubusercontent.com/111573119/201625406-58c1b481-ce27-47e0-a430-734d03b21fc6.png">
