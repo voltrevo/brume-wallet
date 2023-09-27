@@ -316,7 +316,6 @@ export namespace RpcCircuits {
           subcircuits.events.on("started", async i => {
             if (i !== (index % subcircuits.capacity))
               return new None()
-            console.log("retrying to get circuit")
             await pool.restart(index)
             return new None()
           }, { passive: true, once: true })

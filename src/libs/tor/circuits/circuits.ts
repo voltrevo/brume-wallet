@@ -61,7 +61,6 @@ export namespace Circuits {
         while (true) {
           const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.inspectErrSync(() => {
             circuits.inner.events.on("started", async i => {
-              console.log("retrying to steal circuit")
               await pool.restart(index)
               return new None()
             }, { passive: true, once: true })

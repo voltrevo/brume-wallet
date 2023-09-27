@@ -90,7 +90,6 @@ export async function tryGetServiceWorker(background: WebsiteBackground) {
           return
         if (navigator.serviceWorker.controller == null)
           return
-        console.log("update2")
         await background.sw.emit("update", [installing])
         installing.removeEventListener("statechange", onStateChange)
       }
@@ -210,8 +209,6 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
         channel.port1.close()
         channel.port2.close()
       }
-
-      console.log("sw got")
 
       return new Ok(new Disposer(port, onClean))
     })

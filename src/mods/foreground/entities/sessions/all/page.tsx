@@ -22,12 +22,8 @@ export function SessionsPage() {
   const tempSessionsQuery = useTemporarySessions()
   const maybeTempSessions = tempSessionsQuery.data?.inner
 
-  console.log("maybeTempSessions", maybeTempSessions)
-
   const persSessionsQuery = usePersistentSessions()
   const maybePersSessions = persSessionsQuery.data?.inner
-
-  console.log("maybePersSessions", maybePersSessions)
 
   const length = useMemo(() => {
     const temp = maybeTempSessions?.length || 0
@@ -93,12 +89,8 @@ export function SessionRow(props: { session: Session }) {
   const sessionQuery = useSession(props.session.id)
   const maybeSessionData = sessionQuery.data?.inner
 
-  console.log("sessionQuery", sessionQuery)
-
   const originQuery = useOrigin(maybeSessionData?.origin)
   const maybeOriginData = originQuery.data?.inner
-
-  console.log("originQuery", originQuery)
 
   const statusQuery = useStatus(props.session.id)
   const maybeStatusData = statusQuery.data?.inner

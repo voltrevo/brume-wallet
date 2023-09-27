@@ -191,7 +191,7 @@ export class CryptoClient {
 
   async #onRequest(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
     return Result.unthrow(async t => {
-      console.log("relay request", "->", request)
+      // console.log("relay request", "->", request)
 
       if (typeof request.id !== "number")
         return Ok.void()
@@ -201,7 +201,7 @@ export class CryptoClient {
 
       const result = await this.#tryRouteRequest(request)
       const response = RpcResponse.rewrap(request.id, result)
-      console.log("relay", "<-", response)
+      // console.log("relay", "<-", response)
 
       const { topic } = this
       const message = this.#tryEncrypt(response).throw(t)
@@ -218,12 +218,11 @@ export class CryptoClient {
     if (returned.isSome())
       return returned.inner
 
-    console.log("unhandled crypto client")
     return new Err(new Error(`Unhandled`))
   }
 
   async #onResponse(response: RpcResponseInit<unknown>) {
-    console.log("relay response", "->", response)
+    // console.log("relay response", "->", response)
     const returned = await this.events.emit("response", [response])
 
     if (returned.isSome())
@@ -249,7 +248,7 @@ export class CryptoClient {
   async tryRequestAndWait<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
       const request = SafeRpc.prepare(init)
-      console.log("relay", "<-", request)
+      // console.log("relay", "<-", request)
 
       const { topic } = this
       const message = this.#tryEncrypt(request).throw(t)
@@ -287,7 +286,7 @@ export class CryptoClient {
   async tryRequest(init: RpcRequestPreinit<unknown>): Promise<Result<RpcReceipt, Error>> {
     return Result.unthrow(async t => {
       const request = SafeRpc.prepare(init)
-      console.log("relay", "<-", request)
+      // console.log("relay", "<-", request)
 
       const { topic } = this
       const message = this.#tryEncrypt(request).throw(t)
