@@ -40,10 +40,18 @@ export interface RpcConnection {
 
 export class WebSocketConnection {
 
+  #cooldown = Promise.resolve()
+
   constructor(
     readonly circuit: Circuit,
     readonly socket: WebSocket
   ) { }
+
+  get cooldown() {
+    const cooldown = this.#cooldown
+    this.#cooldown = this.#cooldown.then(() => new Promise<void>(ok => setTimeout(ok, 100)))
+    return cooldown
+  }
 
   isWebSocket(): this is WebSocketConnection {
     return true

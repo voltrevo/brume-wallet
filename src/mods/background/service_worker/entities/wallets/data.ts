@@ -234,6 +234,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
             }
 
             if (connection.isWebSocket()) {
+              await connection.cooldown
               // console.log(`Fetching ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`)
 
               const result = await TorRpc.tryFetchWithSocket<T>(connection.socket, request, signal)
