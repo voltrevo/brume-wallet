@@ -14,7 +14,7 @@ export const chainByChainId: EthereumChains = {
   1: {
     name: "Ethereum",
     chainId: 1,
-    urls: ["wss://eth.llamarpc.com"],
+    urls: ["wss://ethereum.publicnode.com"],
     etherscan: "https://etherscan.io",
     token: {
       name: "ETH",
@@ -27,7 +27,7 @@ export const chainByChainId: EthereumChains = {
   5: {
     name: "Goerli (testnet)",
     chainId: 5,
-    urls: ["wss://goerli.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8"],
+    urls: ["wss://ethereum-goerli.publicnode.com"],
     etherscan: "https://goerli.etherscan.io",
     token: {
       name: "ETH",
@@ -39,7 +39,7 @@ export const chainByChainId: EthereumChains = {
   10: {
     name: "Optimism",
     chainId: 10,
-    urls: ["https://optimism.api.onfinality.io/public"],
+    urls: ["wss://optimism.publicnode.com"],
     etherscan: "https://optimistic.etherscan.io",
     token: {
       name: "ETH",
@@ -52,7 +52,7 @@ export const chainByChainId: EthereumChains = {
   56: {
     name: "Binance",
     chainId: 56,
-    urls: ["https://bnb.api.onfinality.io/public"],
+    urls: ["wss://bsc.publicnode.com"],
     etherscan: "https://bnbscan.com",
     token: {
       name: "BNB",
@@ -89,9 +89,9 @@ export const chainByChainId: EthereumChains = {
     }
   },
   137: {
-    name: "Polygon",
+    name: "Polygon Bor",
     chainId: 137,
-    urls: ["wss://polygon.llamarpc.com"],
+    urls: ["wss://polygon-bor.publicnode.com"],
     etherscan: "https://polygonscan.com",
     token: {
       name: "MATIC",
@@ -117,7 +117,7 @@ export const chainByChainId: EthereumChains = {
   8453: {
     name: "Base",
     chainId: 8453,
-    urls: ["https://1rpc.io/base"],
+    urls: ["wss://base.publicnode.com"],
     etherscan: "https://basescan.org",
     token: {
       name: "ETH",
@@ -128,9 +128,9 @@ export const chainByChainId: EthereumChains = {
     }
   },
   42161: {
-    name: "Arbitrum",
+    name: "Arbitrum One",
     chainId: 42161,
-    urls: ["https://arbitrum.api.onfinality.io/public"],
+    urls: ["wss://arbitrum-one.publicnode.com"],
     etherscan: "https://arbiscan.io",
     token: {
       name: "ETH",
@@ -154,9 +154,9 @@ export const chainByChainId: EthereumChains = {
     }
   },
   43114: {
-    name: "Avalanche",
+    name: "Avalanche C-Chain",
     chainId: 43114,
-    urls: ["https://avalanche.api.onfinality.io/public/ext/bc/C/rpc"],
+    urls: ["wss://avalanche-c-chain.publicnode.com"],
     etherscan: "https://snowtrace.io",
     token: {
       name: "ETH",

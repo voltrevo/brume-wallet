@@ -247,9 +247,9 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
             connection satisfies never
             throw new Panic()
           })
-        }, { max: conns.capacity }).then(r => r.mapErrSync(Retry.new))
+        }, { base: 1, max: conns.capacity }).then(r => r.mapErrSync(Retry.new))
       })
-    }, { max: pools.capacity })
+    }, { base: 1, max: pools.capacity })
   }).then(r => r.inspectSync(console.log).inspectErrSync(Errors.log).mapErrSync(FetchError.from))
 }
 

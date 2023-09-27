@@ -22,7 +22,6 @@ export namespace Circuits {
           tors.events.on("started", async i => {
             if (i !== (index % tors.capacity))
               return new None()
-            console.log("retrying to get tor")
             await pool.restart(index)
             return new None()
           }, { passive: true, once: true })
@@ -60,23 +59,27 @@ export namespace Circuits {
     return new Pool<Disposer<Circuit>, Error>(async (params) => {
       return await Result.unthrow(async t => {
         const { pool, index } = params
-        await circuits.inner.mutex.promise
-        console.log("stealing a circuit")
 
-        const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.inspectErrSync(() => {
-          circuits.inner.events.on("started", async i => {
-            console.log("retrying to steal circuit")
-            await pool.restart(index)
-            return new None()
-          }, { passive: true, once: true })
-        }).throw(t).result.get().inner)
+        while (true) {
+          const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.inspectErrSync(() => {
+            circuits.inner.events.on("started", async i => {
+              console.log("retrying to steal circuit")
+              await pool.restart(index)
+              return new None()
+            }, { passive: true, once: true })
+          }).throw(t).result.get().inner)
 
-        console.log("stolen circuit")
+          /**
+           * TODO fix pooling
+           */
+          if (circuit.destroyed) {
+            console.warn("Circuit already destroyed")
+            await new Promise(ok => setTimeout(ok, 1000))
+            continue
+          }
 
-        if (circuit.destroyed)
-          console.error("Circuit already destroyed 2")
-
-        return new Ok(createPooledCircuitDisposer(circuit, params as any))
+          return new Ok(createPooledCircuitDisposer(circuit, params as any))
+        }
       })
     }, params)
   }
