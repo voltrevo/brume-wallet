@@ -28,6 +28,7 @@ import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
 import { IDBStorage, RawState, SimpleFetcherfulQuerySchema, State, core } from "@hazae41/glacier"
+import { Kcp } from "@hazae41/kcp"
 import { Keccak256 } from "@hazae41/keccak256"
 import { Mutex } from "@hazae41/mutex"
 import { None, Option, Optional, Some } from "@hazae41/option"
@@ -1372,6 +1373,7 @@ async function tryInit() {
       gt.Echalote = Echalote
       gt.Cadenas = Cadenas
       gt.Fleche = Fleche
+      gt.Kcp = Kcp
 
       const fallbacks = await tryFetch<Fallback[]>(FALLBACKS_URL).then(r => r.throw(t))
 
