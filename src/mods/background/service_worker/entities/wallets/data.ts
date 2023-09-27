@@ -250,7 +250,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
         }, { base: 1, max: conns.capacity }).then(r => r.mapErrSync(Retry.new))
       })
     }, { base: 1, max: pools.capacity })
-  }).then(r => r.inspectSync(console.log).inspectErrSync(Errors.log).mapErrSync(FetchError.from))
+  }).then(r => r.inspectErrSync(Errors.log).mapErrSync(FetchError.from))
 }
 
 export function getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
