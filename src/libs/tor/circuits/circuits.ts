@@ -30,9 +30,7 @@ export namespace Circuits {
         const circuit = await tor.tryCreateAndExtendLoop(signal).then(r => r.throw(t))
 
         const onCloseOrError = async (reason?: unknown) => {
-          console.log("circuit closed")
           await pool.restart(index)
-          console.log("circuit restarted")
           return new None()
         }
 
