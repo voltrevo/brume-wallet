@@ -37,7 +37,7 @@ import { SuperEventTarget } from "@hazae41/plume"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Ripemd160 } from "@hazae41/ripemd160"
 import { Sha1 } from "@hazae41/sha1"
-import { SMUX } from "@hazae41/smux"
+import { Smux } from "@hazae41/smux"
 import { X25519 } from "@hazae41/x25519"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
@@ -1373,7 +1373,7 @@ async function tryInit() {
       gt.Cadenas = Cadenas
       gt.Fleche = Fleche
       gt.Kcp = Kcp
-      gt.Smux = SMUX
+      gt.Smux = Smux
 
       const fallbacks = await tryFetch<Fallback[]>(FALLBACKS_URL).then(r => r.throw(t))
 
