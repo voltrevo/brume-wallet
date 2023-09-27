@@ -1154,8 +1154,6 @@ export class Global {
 
   async #tryWcReconnect(sessionData: WcSessionData): Promise<Result<WcSession, Error>> {
     return await Result.unthrow(async t => {
-      console.log("reconnecting...")
-
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
       const { topic, metadata, sessionKeyBase64, authKeyJwk, wallets, settlement } = sessionData

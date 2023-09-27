@@ -74,7 +74,6 @@ export class IrnBrume {
         }
 
         const onCloseOrError = async () => {
-          console.log("irn brume closed")
           await pool.restart(index)
           return new None()
         }
@@ -89,7 +88,6 @@ export class IrnBrume {
           irn.events.off("error", onCloseOrError)
         }
 
-        console.log("irn brume opened")
         return new Ok(new Disposer(irn, dispose))
       })
     }, { capacity: 1 })
@@ -182,7 +180,6 @@ export class IrnSockets {
         }
 
         const onCloseOrError = async () => {
-          console.log("irn socket closed")
           await pool.restart(index)
           return new None()
         }
@@ -197,7 +194,6 @@ export class IrnSockets {
           irn.events.off("error", onCloseOrError)
         }
 
-        console.log("irn socket opened")
         return new Ok(new Disposer(irn, dispose))
       })
     }, { capacity: 1 })
