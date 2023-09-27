@@ -22,9 +22,9 @@ They can track you even if you are using on-chain privacy tools such as Aztec Ne
 
 <img width="762" src="https://user-images.githubusercontent.com/111573119/201625137-293eec93-a6c9-43fd-8eda-56dea0c8e00e.png">
 
-## How to check IP address leaks?
+## How do I know if my current wallet leaks my IP address?
 
-- Add our proxy to your MetaMask networks
+- Add our proxy to your networks on your current wallet
 
 Network name: `Brume Proxy`
 
