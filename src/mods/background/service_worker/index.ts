@@ -1032,7 +1032,7 @@ export class Global {
         }).then(r => r.ignore())
       }
 
-      core.onState.addListener(cacheKey, onState)
+      core.onState.addEventListener(cacheKey, onState, { passive: true })
 
       foreground.events.on("close", () => {
         core.onState.removeListener(cacheKey, onState)
