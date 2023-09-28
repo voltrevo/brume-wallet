@@ -1,12 +1,12 @@
 import { ChildrenProps } from "@/libs/react/props/children"
 import { UUIDProps } from "@/libs/react/props/uuid"
 import { SeedData } from "@/mods/background/service_worker/entities/seeds/data"
-import { Option, Optional } from "@hazae41/option"
+import { Nullable, Option } from "@hazae41/option"
 import { createContext, useContext } from "react"
 import { useSeed } from "./data"
 
 export const SeedDataContext =
-  createContext<Optional<SeedData>>(undefined)
+  createContext<Nullable<SeedData>>(undefined)
 
 export function useSeedData() {
   return Option.unwrap(useContext(SeedDataContext))

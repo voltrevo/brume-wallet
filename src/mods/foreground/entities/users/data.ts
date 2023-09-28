@@ -1,5 +1,5 @@
 import { createQuerySchema, useQuery } from "@hazae41/glacier"
-import { Optional } from "@hazae41/option"
+import { Nullable } from "@hazae41/option"
 import { GlobalStorage, useGlobalStorage } from "../../storage/global"
 import { useSubscribe } from "../../storage/storage"
 
@@ -28,14 +28,14 @@ export interface UserData {
   emoji: string
 }
 
-export function getUser(uuid: Optional<string>, storage: GlobalStorage) {
+export function getUser(uuid: Nullable<string>, storage: GlobalStorage) {
   if (uuid == null)
     return undefined
 
   return createQuerySchema<string, UserData, never>({ key: `user/${uuid}`, storage })
 }
 
-export function useUser(uuid: Optional<string>) {
+export function useUser(uuid: Nullable<string>) {
   const storage = useGlobalStorage().unwrap()
   const query = useQuery(getUser, [uuid, storage])
   useSubscribe(query as any, storage)

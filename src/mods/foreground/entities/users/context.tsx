@@ -1,11 +1,11 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { Mutators } from "@/libs/xswr/mutators";
-import { Optional } from "@hazae41/option";
+import { Nullable } from "@hazae41/option";
 import { createContext, useCallback, useContext } from "react";
 import { UsersPage } from "./all/page";
 import { User, useCurrentUserQuery } from "./data";
 
-export const UserContext = createContext<Optional<User>>(undefined)
+export const UserContext = createContext<Nullable<User>>(undefined)
 
 export function useCurrentUserRef() {
   return useContext(UserContext)!

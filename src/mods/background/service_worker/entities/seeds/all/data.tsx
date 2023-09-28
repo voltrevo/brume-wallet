@@ -1,6 +1,6 @@
 import { UserStorage } from "@/mods/foreground/storage/user";
 import { IDBStorage, createQuerySchema } from "@hazae41/glacier";
-import { Optional } from "@hazae41/option";
+import { Nullable } from "@hazae41/option";
 import { WalletRef } from "../../wallets/data";
 import { SeedRef } from "../data";
 
@@ -46,7 +46,7 @@ export namespace WalletsBySeed {
 
   export namespace Foreground {
 
-    export function schema(uuid: Optional<string>, storage: UserStorage) {
+    export function schema(uuid: Nullable<string>, storage: UserStorage) {
       if (uuid) return createQuerySchema<Key, WalletRef[], never>({ key: key(uuid), storage })
     }
 

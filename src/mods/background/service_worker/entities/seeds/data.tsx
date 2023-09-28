@@ -1,7 +1,7 @@
 import { Mutators } from "@/libs/xswr/mutators"
 import { UserStorage } from "@/mods/foreground/storage/user"
 import { Data, IDBStorage, States, createQuerySchema } from "@hazae41/glacier"
-import { Optional } from "@hazae41/option"
+import { Nullable } from "@hazae41/option"
 import { Seeds } from "./all/data"
 
 export type Seed =
@@ -104,7 +104,7 @@ export namespace Seed {
 
   export namespace Foreground {
 
-    export function schema(uuid: Optional<string>, storage: UserStorage) {
+    export function schema(uuid: Nullable<string>, storage: UserStorage) {
       if (uuid) return createQuerySchema<Key, SeedData, never>({ key: key(uuid), storage })
     }
 

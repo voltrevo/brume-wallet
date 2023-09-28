@@ -31,7 +31,7 @@ import { IDBStorage, RawState, SimpleFetcherfulQuerySchema, State, core } from "
 import { Kcp } from "@hazae41/kcp"
 import { Keccak256 } from "@hazae41/keccak256"
 import { Mutex } from "@hazae41/mutex"
-import { None, Option, Optional, Some } from "@hazae41/option"
+import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { SuperEventTarget } from "@hazae41/plume"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
@@ -190,7 +190,7 @@ export class Global {
     })
   }
 
-  async trySetCurrentUser(uuid: Optional<string>, password: Optional<string>): Promise<Result<Optional<UserSession>, Error>> {
+  async trySetCurrentUser(uuid: Nullable<string>, password: Nullable<string>): Promise<Result<Nullable<UserSession>, Error>> {
     return await Result.unthrow(async t => {
       if (uuid == null)
         return new Ok(undefined)
@@ -644,8 +644,8 @@ export class Global {
         from: string,
         to: string,
         gas: string,
-        value: Optional<string>,
-        data: Optional<string>
+        value: Nullable<string>,
+        data: Nullable<string>
       }]>).params
 
       const session = Option.wrap(ethereum.session).ok().throw(t)
@@ -848,7 +848,7 @@ export class Global {
     })
   }
 
-  async brume_getCurrentUser(request: RpcRequestPreinit<unknown>): Promise<Result<Optional<UserData>, Error>> {
+  async brume_getCurrentUser(request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<UserData>, Error>> {
     return await Result.unthrow(async t => {
       const userSession = this.#user
 
@@ -977,7 +977,7 @@ export class Global {
     })
   }
 
-  async brume_get_global(request: RpcRequestPreinit<unknown>): Promise<Result<Optional<RawState>, Error>> {
+  async brume_get_global(request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
     return await Result.unthrow(async t => {
       const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
@@ -986,14 +986,18 @@ export class Global {
       if (cached != null)
         return new Ok(cached.inner)
 
-      const stored = await this.storage.get(cacheKey)
-      core.raw.set(cacheKey, Option.wrap(stored))
+      const stored = await this.storage.tryGet(cacheKey)
 
-      return new Ok(stored)
+      if (stored.isErr())
+        return stored
+
+      core.raw.set(cacheKey, Option.wrap(stored.inner))
+
+      return new Ok(stored.inner)
     })
   }
 
-  async brume_get_user(request: RpcRequestPreinit<unknown>): Promise<Result<Optional<RawState>, Error>> {
+  async brume_get_user(request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
     return await Result.unthrow(async t => {
       const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
@@ -1004,10 +1008,14 @@ export class Global {
       if (cached != null)
         return new Ok(cached.inner)
 
-      const stored = await storage.get(cacheKey)
-      core.raw.set(cacheKey, Option.wrap(stored))
+      const stored = await storage.tryGet(cacheKey)
 
-      return new Ok(stored)
+      if (stored.isErr())
+        return stored
+
+      core.raw.set(cacheKey, Option.wrap(stored.inner))
+
+      return new Ok(stored.inner)
     })
   }
 

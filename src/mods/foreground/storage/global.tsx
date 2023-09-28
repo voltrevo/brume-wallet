@@ -2,14 +2,14 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { RpcRequestPreinit } from "@/libs/rpc";
 import { RawState, Storage, core } from "@hazae41/glacier";
 import { Mutex } from "@hazae41/mutex";
-import { None, Option, Optional, Some } from "@hazae41/option";
+import { None, Nullable, Option, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { createContext, useContext, useMemo } from "react";
 import { Background } from "../background/background";
 import { useBackground } from "../background/context";
 
 export const GlobalStorageContext =
-  createContext<Optional<GlobalStorage>>(undefined)
+  createContext<Nullable<GlobalStorage>>(undefined)
 
 export function useGlobalStorage() {
   return Option.wrap(useContext(GlobalStorageContext))
@@ -45,12 +45,11 @@ export class GlobalStorage implements Storage {
     })
   }
 
-  async get(cacheKey: string) {
-    return await this.tryGet(cacheKey).then(r => r.unwrap().unwrap())
-  }
-
   async tryGet(cacheKey: string) {
-    return await this.background.tryRequest<RawState>({ method: "brume_get_global", params: [cacheKey] })
+    return await this.background.tryRequest<RawState>({
+      method: "brume_get_global",
+      params: [cacheKey]
+    }).then(r => r.flatten())
   }
 
   async #trySubscribe(cacheKey: string): Promise<Result<void, Error>> {
@@ -63,7 +62,7 @@ export class GlobalStorage implements Storage {
         if (request.method !== "brume_update")
           return new None()
 
-        const [cacheKey2, stored] = (request as RpcRequestPreinit<[string, Optional<RawState>]>).params
+        const [cacheKey2, stored] = (request as RpcRequestPreinit<[string, Nullable<RawState>]>).params
 
         if (cacheKey2 !== cacheKey)
           return new None()
@@ -74,7 +73,7 @@ export class GlobalStorage implements Storage {
         return new Some(Ok.void())
       })
 
-      const stored = await this.tryGet(cacheKey).then(r => r.throw(t).throw(t))
+      const stored = await this.tryGet(cacheKey).then(r => r.throw(t))
 
       const unstored = await core.unstore(stored, { key: cacheKey })
       core.update(cacheKey, () => unstored, { key: cacheKey })

@@ -1,12 +1,12 @@
 import { ChildrenProps } from "@/libs/react/props/children"
 import { UUIDProps } from "@/libs/react/props/uuid"
 import { WalletData } from "@/mods/background/service_worker/entities/wallets/data"
-import { Option, Optional } from "@hazae41/option"
+import { Nullable, Option } from "@hazae41/option"
 import { createContext, useContext } from "react"
 import { useWallet } from "./data"
 
 export const WalletDataContext =
-  createContext<Optional<WalletData>>(undefined)
+  createContext<Nullable<WalletData>>(undefined)
 
 export function useWalletData() {
   return Option.unwrap(useContext(WalletDataContext))

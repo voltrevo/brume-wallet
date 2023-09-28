@@ -11,7 +11,7 @@ import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
 import { Abi } from "@hazae41/cubane"
 import { useQuery } from "@hazae41/glacier"
-import { Option, Optional } from "@hazae41/option"
+import { Nullable, Option } from "@hazae41/option"
 import { Err, Ok, Panic, Result, Unimplemented } from "@hazae41/result"
 import { HDKey } from "@scure/bip32"
 import { entropyToMnemonic, mnemonicToSeed } from "@scure/bip39"
@@ -25,7 +25,7 @@ export function useSeeds() {
   return query
 }
 
-export function useWalletsBySeed(uuid: Optional<string>) {
+export function useWalletsBySeed(uuid: Nullable<string>) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(WalletsBySeed.Foreground.schema, [uuid, storage])
   useSubscribe(query as any, storage)

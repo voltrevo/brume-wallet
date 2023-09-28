@@ -9,8 +9,8 @@ import { EthereumAuthPrivateKeyWalletData, EthereumQueryKey, EthereumSeededWalle
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi } from "@hazae41/cubane"
-import { Data, FetchError, Fetched, FetcherMore, createQuerySchema, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/glacier"
-import { Option, Optional } from "@hazae41/option"
+import { Data, Fetched, FetcherMore, createQuerySchema, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/glacier"
+import { Nullable, Option } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
 import { Transaction, ethers } from "ethers"
 import { useMemo } from "react"
@@ -26,14 +26,14 @@ export interface WalletProps {
   wallet: Wallet
 }
 
-export function getWallet(uuid: Optional<string>, storage: UserStorage) {
+export function getWallet(uuid: Nullable<string>, storage: UserStorage) {
   if (uuid == null)
     return undefined
 
   return createQuerySchema<string, WalletData, never>({ key: `wallet/${uuid}`, storage })
 }
 
-export function useWallet(uuid: Optional<string>) {
+export function useWallet(uuid: Nullable<string>) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getWallet, [uuid, storage])
   useSubscribe(query as any, storage)
@@ -242,7 +242,7 @@ export function useGeneralContext() {
   return useObjectMemo({ user, background })
 }
 
-export function useEthereumContext2(wallet: Optional<Wallet>, chain: Optional<EthereumChain>) {
+export function useEthereumContext2(wallet: Nullable<Wallet>, chain: Nullable<EthereumChain>) {
   const user = useCurrentUserRef()
   const background = useBackground().unwrap()
 
@@ -262,17 +262,13 @@ export function useEthereumContext(wallet: Wallet, chain: EthereumChain): Ethere
   return useObjectMemo({ user, background, wallet, chain })
 }
 
-export async function tryFetch<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext): Promise<Result<Fetched<T, Error>, FetchError>> {
+export async function tryFetch<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext): Promise<Result<Fetched<T, Error>, Error>> {
   const { background, wallet, chain } = ethereum
 
-  const response = await background.tryRequest<T>({
+  return await background.tryRequest<T>({
     method: "brume_eth_fetch",
     params: [wallet.uuid, chain.chainId, request]
-  })
-
-  return response
-    .mapSync(x => Fetched.rewrap(x))
-    .mapErrSync(FetchError.from)
+  }).then(r => r.mapSync(x => Fetched.rewrap(x)))
 }
 
 export async function tryIndex<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext): Promise<Result<RpcResponse<T>, Error>> {
@@ -354,7 +350,7 @@ export function getBalance(address: string, context: EthereumContext, storage: U
   })
 }
 
-export function useBalance(address: string, context: EthereumContext, prices: Optional<FixedInit>[]) {
+export function useBalance(address: string, context: EthereumContext, prices: Nullable<FixedInit>[]) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getBalance, [address, context, storage])
   useFetch(query)
@@ -410,7 +406,7 @@ export function getTokenBalance(address: string, token: ContractTokenInfo, conte
   })
 }
 
-export function useTokenBalance(address: string, token: ContractTokenInfo, context: EthereumContext, prices: Optional<FixedInit>[]) {
+export function useTokenBalance(address: string, token: ContractTokenInfo, context: EthereumContext, prices: Nullable<FixedInit>[]) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getTokenBalance, [address, token, context, storage])
   useFetch(query)
@@ -429,7 +425,7 @@ export function useTokenBalance(address: string, token: ContractTokenInfo, conte
   return query
 }
 
-export function getNonceSchema(address: Optional<string>, context: Optional<EthereumContext>, storage: UserStorage) {
+export function getNonceSchema(address: Nullable<string>, context: Nullable<EthereumContext>, storage: UserStorage) {
   if (address == null)
     return undefined
   if (context == null)
@@ -446,11 +442,11 @@ export function getNonceSchema(address: Optional<string>, context: Optional<Ethe
     },
     fetcher,
     storage,
-    dataSerializer: BigInts
+    dataSerializer: BigInts,
   })
 }
 
-export function useNonce(address: Optional<string>, context: Optional<EthereumContext>) {
+export function useNonce(address: Nullable<string>, context: Nullable<EthereumContext>) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getNonceSchema, [address, context, storage])
   useFetch(query)
@@ -460,7 +456,7 @@ export function useNonce(address: Optional<string>, context: Optional<EthereumCo
   return query
 }
 
-export function getGasPriceSchema(context: Optional<EthereumContext>, storage: UserStorage) {
+export function getGasPriceSchema(context: Nullable<EthereumContext>, storage: UserStorage) {
   if (context == null)
     return undefined
 
@@ -479,7 +475,7 @@ export function getGasPriceSchema(context: Optional<EthereumContext>, storage: U
   })
 }
 
-export function useGasPrice(ethereum: Optional<EthereumContext>) {
+export function useGasPrice(ethereum: Nullable<EthereumContext>) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getGasPriceSchema, [ethereum, storage])
   useFetch(query)

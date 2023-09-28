@@ -7,7 +7,7 @@ import { RpcRequestPreinit, TorRpc } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Disposer } from "@hazae41/cleaner"
-import { Data, FetchError, Fetched, FetcherMore, IDBStorage, States, createQuerySchema } from "@hazae41/glacier"
+import { Data, Fetched, FetcherMore, IDBStorage, States, createQuerySchema } from "@hazae41/glacier"
 import { None, Option, Some } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
@@ -251,7 +251,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
         }, { base: 1, max: conns.capacity }).then(r => r.mapErrSync(Retry.new))
       })
     }, { base: 1, max: pools.capacity })
-  }).then(r => r.inspectErrSync(Errors.log).mapErrSync(FetchError.from))
+  }).then(r => r.inspectErrSync(Errors.log))
 }
 
 export function getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
@@ -418,8 +418,8 @@ export function getPairPrice(ethereum: EthereumContext, pair: PairInfo, storage:
       const price = computePairPrice(pair, reserves)
 
       return new Ok(new Data(price))
-    } catch (e: unknown) {
-      return new Err(FetchError.from(e))
+    } catch (cause: unknown) {
+      return new Err(new Error("Could not get pair price", { cause }))
     }
   }
 
@@ -477,8 +477,8 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
       const fixed = new Fixed(balance, token.decimals)
 
       return new Ok(new Data(fixed))
-    } catch (e: unknown) {
-      return new Err(FetchError.from(e))
+    } catch (cause: unknown) {
+      return new Err(new Error("Could not get pair price", { cause }))
     }
   }
 

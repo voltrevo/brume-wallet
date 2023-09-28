@@ -4,8 +4,8 @@ import { WcMetadata } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Data, IDBStorage, RawState2, States, Storage, createQuerySchema } from "@hazae41/glacier"
-import { Promiseable } from "@hazae41/glacier/dist/types/libs/promises/promises"
-import { Optional } from "@hazae41/option"
+import { Nullable } from "@hazae41/option"
+import { Ok } from "@hazae41/result"
 import { Wallet } from "../wallets/data"
 import { PersistentSessions, PersistentSessionsByWallet, TemporarySessions, TemporarySessionsByWallet } from "./all/data"
 
@@ -61,14 +61,14 @@ export class SessionStorage implements Storage {
     readonly storage: IDBStorage
   ) { }
 
-  get(cacheKey: string) {
-    return this.storage.get(cacheKey)
+  tryGet(cacheKey: string) {
+    return this.storage.tryGet(cacheKey)
   }
 
-  set(cacheKey: string, value: Optional<RawState2<SessionData>>): Promiseable<void> {
+  trySet(cacheKey: string, value: Nullable<RawState2<SessionData>>) {
     if (value?.data?.data.persist === false)
-      return
-    return this.storage.set(cacheKey, value)
+      return Ok.void()
+    return this.storage.trySet(cacheKey, value)
   }
 
 }

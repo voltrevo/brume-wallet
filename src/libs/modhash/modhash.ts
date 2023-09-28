@@ -1,4 +1,4 @@
-import { Optional } from "@hazae41/option"
+import { Nullable } from "@hazae41/option"
 import { useMemo } from "react"
 
 export namespace Modhash {
@@ -20,7 +20,7 @@ export function useModhash(seed: string) {
   }, [seed])
 }
 
-export function useMaybeModhash(seed: Optional<string>) {
+export function useMaybeModhash(seed: Nullable<string>) {
   return useMemo(() => {
     if (seed == null)
       return undefined

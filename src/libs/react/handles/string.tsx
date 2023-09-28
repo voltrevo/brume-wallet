@@ -1,4 +1,4 @@
-import { Optional } from "@hazae41/option"
+import { Nullable } from "@hazae41/option"
 import { useCallback, useState } from "react"
 import { useObjectMemo } from "../memo"
 import { State } from "../state"
@@ -24,7 +24,7 @@ export interface OptionalHandle<T> {
 }
 
 export function useOptional<T>(init?: T) {
-  const [current, set] = useState<Optional<T>>(init)
+  const [current, set] = useState<Nullable<T>>(init)
 
   const unset = useCallback(() => set(undefined), [set])
 

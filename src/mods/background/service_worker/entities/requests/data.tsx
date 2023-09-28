@@ -1,6 +1,6 @@
 import { Mutators } from "@/libs/xswr/mutators"
 import { Data, States, createQuerySchema } from "@hazae41/glacier"
-import { Optional } from "@hazae41/option"
+import { Nullable } from "@hazae41/option"
 import { AppRequests } from "./all/data"
 
 export type AppRequest =
@@ -23,7 +23,7 @@ export namespace AppRequestRef {
 export interface AppRequestData {
   readonly id: string
   readonly method: string
-  readonly params: Record<string, Optional<string>>
+  readonly params: Record<string, Nullable<string>>
   readonly origin: string
   readonly session?: string
 }

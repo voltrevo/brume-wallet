@@ -10,7 +10,7 @@ import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Url } from "@/libs/url/url";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
-import { Option, Optional } from "@hazae41/option";
+import { Nullable, Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { useCallback, useMemo } from "react";
 import { useBackground } from "../../background/context";
@@ -32,7 +32,7 @@ export function WalletPage(props: UUIDProps) {
   </WalletDataProvider>
 }
 
-export function useDisplay(option: Optional<Result<FixedInit, Error>>) {
+export function useDisplay(option: Nullable<Result<FixedInit, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
       return Number(Fixed.from(fixed).move(5).toString()).toLocaleString(undefined)
@@ -40,7 +40,7 @@ export function useDisplay(option: Optional<Result<FixedInit, Error>>) {
   }, [option])
 }
 
-export function useDisplayUsd(option: Optional<Result<FixedInit, Error>>) {
+export function useDisplayUsd(option: Nullable<Result<FixedInit, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
       return Number(Fixed.from(fixed).move(2).toString()).toLocaleString(undefined, { style: "currency", currency: "USD" })
@@ -48,7 +48,7 @@ export function useDisplayUsd(option: Optional<Result<FixedInit, Error>>) {
   }, [option])
 }
 
-export function useCompactDisplayUsd(option: Optional<Result<FixedInit, Error>>) {
+export function useCompactDisplayUsd(option: Nullable<Result<FixedInit, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
       return Number(Fixed.from(fixed).move(2).toString()).toLocaleString(undefined, { style: "currency", currency: "USD", notation: "compact" })
@@ -58,7 +58,7 @@ export function useCompactDisplayUsd(option: Optional<Result<FixedInit, Error>>)
 
 function NativeTokenRow(props: {
   chain: EthereumChain,
-  prices: Optional<FixedInit>[]
+  prices: Nullable<FixedInit>[]
 }) {
   const { chain, prices } = props
   const wallet = useWalletData()
@@ -98,7 +98,7 @@ function NativeTokenRow(props: {
 
 function ContractTokenRow(props: {
   token: ContractTokenInfo,
-  prices: Optional<FixedInit>[]
+  prices: Nullable<FixedInit>[]
 }) {
   const { token, prices } = props
   const chain = chainByChainId[token.chainId]

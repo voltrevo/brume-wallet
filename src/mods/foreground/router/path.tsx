@@ -1,9 +1,9 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { Option, Optional } from "@hazae41/option";
+import { Nullable, Option } from "@hazae41/option";
 import { createContext, useContext, useEffect, useState } from "react";
 
 export const PathContext =
-  createContext<Optional<URL>>(undefined)
+  createContext<Nullable<URL>>(undefined)
 
 export function usePath() {
   return Option.unwrap(useContext(PathContext))
