@@ -1,10 +1,10 @@
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useSubscribe } from "@/mods/foreground/storage/storage";
 import { UserStorage, useUserStorage } from "@/mods/foreground/storage/user";
-import { createQuerySchema, useQuery } from "@hazae41/glacier";
+import { createQuery, useQuery } from "@hazae41/glacier";
 
 export function getWallets(storage: UserStorage) {
-  return createQuerySchema<string, Wallet[], never>({ key: `wallets`, storage })
+  return createQuery<string, Wallet[], never>({ key: `wallets`, storage })
 }
 
 export function useWallets() {

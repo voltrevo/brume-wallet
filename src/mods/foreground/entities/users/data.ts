@@ -1,4 +1,4 @@
-import { createQuerySchema, useQuery } from "@hazae41/glacier"
+import { createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { GlobalStorage, useGlobalStorage } from "../../storage/global"
 import { useSubscribe } from "../../storage/storage"
@@ -32,7 +32,7 @@ export function getUser(uuid: Nullable<string>, storage: GlobalStorage) {
   if (uuid == null)
     return undefined
 
-  return createQuerySchema<string, UserData, never>({ key: `user/${uuid}`, storage })
+  return createQuery<string, UserData, never>({ key: `user/${uuid}`, storage })
 }
 
 export function useUser(uuid: Nullable<string>) {
@@ -43,7 +43,7 @@ export function useUser(uuid: Nullable<string>) {
 }
 
 export function getCurrentUser(storage: GlobalStorage) {
-  return createQuerySchema<string, User, never>({ key: `user`, storage })
+  return createQuery<string, User, never>({ key: `user`, storage })
 }
 
 export function useCurrentUserQuery() {

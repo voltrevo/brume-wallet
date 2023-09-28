@@ -1,5 +1,5 @@
 import { Mutators } from "@/libs/xswr/mutators"
-import { Data, States, createQuerySchema } from "@hazae41/glacier"
+import { Data, States, createQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { AppRequests } from "./all/data"
 
@@ -45,16 +45,16 @@ export namespace AppRequest {
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
-      await AppRequests.schema().mutate(Mutators.mapData((d = new Data([])) => {
+      await AppRequests.schema().tryMutate(Mutators.mapData((d = new Data([])) => {
         if (previousData != null)
           d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
         if (currentData != null)
           d = d.mapSync(p => [...p, AppRequestRef.from(currentData.inner)])
         return d
-      }))
+      })).then(r => r.ignore())
     }
 
-    return createQuerySchema<Key, AppRequestData, never>({ key: key(id), indexer })
+    return createQuery<Key, AppRequestData, never>({ key: key(id), indexer })
   }
 
 }

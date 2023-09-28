@@ -3,7 +3,7 @@ import { RpcReceipt } from "@/libs/wconn/mods/crypto/client"
 import { WcMetadata } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Ed25519 } from "@hazae41/ed25519"
-import { Data, IDBStorage, RawState2, States, Storage, createQuerySchema } from "@hazae41/glacier"
+import { Data, IDBStorage, RawState2, States, Storage, createQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { Ok } from "@hazae41/result"
 import { Wallet } from "../wallets/data"
@@ -93,16 +93,16 @@ export namespace Session {
       if (previousData != null) {
         if (previousData.inner.persist) {
           const sessionByOrigin = SessionByOrigin.schema(previousData.inner.origin, storage)
-          await sessionByOrigin.delete()
+          await sessionByOrigin.tryDelete().then(r => r.ignore())
         }
 
         const sessionsQuery = previousData.inner.persist
           ? PersistentSessions.schema(storage)
           : TemporarySessions.schema()
 
-        await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
+        await sessionsQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
           return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
-        }))
+        })).then(r => r.ignore())
 
         const previousWallets = new Set(previousData.inner.wallets)
 
@@ -111,25 +111,25 @@ export namespace Session {
             ? PersistentSessionsByWallet.schema(wallet.uuid, storage)
             : TemporarySessionsByWallet.schema(wallet.uuid)
 
-          await sessionsByWalletQuery.mutate(Mutators.mapData((d = new Data([])) => {
+          await sessionsByWalletQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
-          }))
+          })).then(r => r.ignore())
         }
       }
 
       if (currentData != null) {
         if (currentData.inner.persist) {
           const sessionByOrigin = SessionByOrigin.schema(currentData.inner.origin, storage)
-          await sessionByOrigin.mutate(Mutators.data(SessionRef.from(currentData.inner)))
+          await sessionByOrigin.tryMutate(Mutators.data(SessionRef.from(currentData.inner))).then(r => r.ignore())
         }
 
         const sessionsQuery = currentData.inner.persist
           ? PersistentSessions.schema(storage)
           : TemporarySessions.schema()
 
-        await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
+        await sessionsQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
           return d = d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
-        }))
+        })).then(r => r.ignore())
 
         const currentWallets = new Set(currentData.inner.wallets)
 
@@ -138,14 +138,14 @@ export namespace Session {
             ? PersistentSessionsByWallet.schema(wallet.uuid, storage)
             : TemporarySessionsByWallet.schema(wallet.uuid)
 
-          await sessionsByWalletQuery.mutate(Mutators.mapData((d = new Data([])) => {
+          await sessionsByWalletQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
-          }))
+          })).then(r => r.ignore())
         }
       }
     }
 
-    return createQuerySchema<Key, SessionData, never>({ key: key(id), indexer, storage: new SessionStorage(storage) })
+    return createQuery<Key, SessionData, never>({ key: key(id), indexer, storage: new SessionStorage(storage) })
   }
 
 }
@@ -161,7 +161,7 @@ export namespace SessionByOrigin {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(origin: string, storage: IDBStorage) {
-    return createQuerySchema<Key, SessionRef, never>({ key: key(origin), storage })
+    return createQuery<Key, SessionRef, never>({ key: key(origin), storage })
   }
 
 }

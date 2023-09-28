@@ -67,16 +67,17 @@ export class UserStorage implements Storage {
         if (cacheKey2 !== cacheKey)
           return new None()
 
-        const unstored = await core.unstore(stored, { key: cacheKey })
-        core.update(cacheKey, () => unstored, { key: cacheKey })
-
-        return new Some(Ok.void())
+        return await Result.unthrow<Result<void, Error>>(async t => {
+          const unstored = await core.tryUnstore(stored, { key: cacheKey }).then(r => r.throw(t))
+          await core.tryUpdate(cacheKey, () => unstored, { key: cacheKey }).then(r => r.throw(t))
+          return Ok.void()
+        }).then(Some.new)
       })
 
       const stored = await this.tryGet(cacheKey).then(r => r.throw(t))
 
-      const unstored = await core.unstore(stored, { key: cacheKey })
-      core.update(cacheKey, () => unstored, { key: cacheKey })
+      const unstored = await core.tryUnstore(stored, { key: cacheKey }).then(r => r.throw(t))
+      await core.tryUpdate(cacheKey, () => unstored, { key: cacheKey }).then(r => r.throw(t))
 
       return Ok.void()
     })

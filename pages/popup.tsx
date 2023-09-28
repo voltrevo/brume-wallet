@@ -1,4 +1,4 @@
-import { BigInts } from "@/libs/bigints/bigints";
+import { BigIntToHex, BigInts } from "@/libs/bigints/bigints";
 import { chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -119,7 +119,7 @@ export function TransactPage() {
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.get(storage)
-      const requestsState = await requestsQuery.state
+      const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
         Path.go("/requests")
@@ -138,7 +138,7 @@ export function TransactPage() {
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.get(storage)
-      const requestsState = await requestsQuery.state
+      const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
         Path.go("/requests")
@@ -174,7 +174,7 @@ export function TransactPage() {
       </div>
       {value &&
         <div className="w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
-          Value: {BigInts.float(BigInts.parse(value), 18)}
+          Value: {BigIntToHex.tryDecode(value).mapSync(x => BigInts.float(x, 18)).ok().unwrapOr("Error")}
         </div>}
       {data &&
         <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
@@ -218,7 +218,7 @@ export function SwitchPage() {
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.get(storage)
-      const requestsState = await requestsQuery.state
+      const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
         Path.go("/requests")
@@ -237,7 +237,7 @@ export function SwitchPage() {
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.get(storage)
-      const requestsState = await requestsQuery.state
+      const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
         Path.go("/requests")
@@ -316,7 +316,7 @@ export function PersonalSignPage() {
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.get(storage)
-      const requestsState = await requestsQuery.state
+      const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
         Path.go("/requests")
@@ -335,7 +335,7 @@ export function PersonalSignPage() {
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.get(storage)
-      const requestsState = await requestsQuery.state
+      const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
         Path.go("/requests")
@@ -415,7 +415,7 @@ export function TypedSignPage() {
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.get(storage)
-      const requestsState = await requestsQuery.state
+      const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
         Path.go("/requests")
@@ -434,7 +434,7 @@ export function TypedSignPage() {
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.get(storage)
-      const requestsState = await requestsQuery.state
+      const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
         Path.go("/requests")
@@ -508,7 +508,7 @@ export function WalletAndChainSelectPage() {
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.get(storage)
-      const requestsState = await requestsQuery.state
+      const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
         Path.go("/requests")

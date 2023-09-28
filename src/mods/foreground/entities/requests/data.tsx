@@ -1,12 +1,12 @@
 import { AppRequestData } from "@/mods/background/service_worker/entities/requests/data";
-import { createQuerySchema, useQuery } from "@hazae41/glacier";
+import { createQuery, useQuery } from "@hazae41/glacier";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorage } from "../../storage/user";
 
 export namespace AppRequest {
 
   export function get(id: string, storage: UserStorage) {
-    return createQuerySchema<string, AppRequestData, never>({ key: `request/${id}`, storage })
+    return createQuery<string, AppRequestData, never>({ key: `request/${id}`, storage })
   }
 
 }

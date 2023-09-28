@@ -1,6 +1,18 @@
 import { Err, Ok } from "@hazae41/result"
 import { FixedNumber } from "ethers"
 
+export namespace BigIntToHex {
+
+  export function tryEncode(value: bigint) {
+    return new Ok(`0x${value.toString(16)}`)
+  }
+
+  export function tryDecode(value: string) {
+    return new Ok(BigInt(value))
+  }
+
+}
+
 export namespace BigInts {
 
   export class ParseError extends Error {
@@ -33,14 +45,6 @@ export namespace BigInts {
     }
   }
 
-  export function stringify(value: bigint) {
-    return `0x${value.toString(16)}`
-  }
-
-  export function parse(value: string) {
-    return BigInt(value)
-  }
-
   export function tens(value: number) {
     return BigInt(`1${`0`.repeat(value)}`)
   }
@@ -70,14 +74,14 @@ export class Fixed<D extends number = number> implements FixedInit {
     this.#value = value
     this.decimals = decimals
 
-    this.value = BigInts.stringify(value)
+    this.value = BigIntToHex.tryEncode(value).get()
     this.#tens = BigInts.tens(decimals)
   }
 
   static from(init: FixedInit) {
     if (init instanceof Fixed)
       return init
-    const value = BigInts.parse(init.value)
+    const value = BigIntToHex.tryDecode(init.value).get()
     return new Fixed(value, init.decimals)
   }
 

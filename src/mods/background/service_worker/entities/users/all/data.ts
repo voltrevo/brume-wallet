@@ -1,4 +1,4 @@
-import { IDBStorage, createQuerySchema } from "@hazae41/glacier"
+import { IDBStorage, createQuery } from "@hazae41/glacier"
 import { User } from "../data"
 
 export namespace Users {
@@ -10,7 +10,7 @@ export namespace Users {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(storage: IDBStorage) {
-    return createQuerySchema<Key, User[], never>({ key, storage })
+    return createQuery<Key, User[], never>({ key, storage })
   }
 
 }

@@ -1,6 +1,6 @@
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
-import { AesGcmCoder, AsyncPipeBicoder, HmacEncoder, IDBStorage } from "@hazae41/glacier"
+import { AesGcmCoder, AsyncJson, AsyncPipeBicoder, HmacEncoder, IDBStorage, RawState } from "@hazae41/glacier"
 import { Err, Ok, Result } from "@hazae41/result"
 import { Pbdkf2Params } from "./entities/users/crypto"
 import { UserData } from "./entities/users/data"
@@ -38,7 +38,7 @@ export async function tryCreateUserStorage(user: UserData, password: string): Pr
     const crypter = new AesGcmCoder(valueKey)
 
     const keySerializer = hasher
-    const valueSerializer = new AsyncPipeBicoder(JSON, crypter)
+    const valueSerializer = new AsyncPipeBicoder<RawState, string, string>(AsyncJson, crypter)
 
     const storage = IDBStorage.tryCreate({ name: user.uuid, keySerializer, valueSerializer }).throw(t)
 

@@ -1,6 +1,6 @@
 import { Mutators } from "@/libs/xswr/mutators"
 import { UserStorage } from "@/mods/foreground/storage/user"
-import { Data, IDBStorage, States, createQuerySchema } from "@hazae41/glacier"
+import { Data, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { Seeds } from "./all/data"
 
@@ -88,16 +88,16 @@ export namespace Seed {
         const previousData = previous.real?.data
         const currentData = current.real?.data
 
-        await Seeds.Background.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+        await Seeds.Background.schema(storage).tryMutate(Mutators.mapData((d = new Data([])) => {
           if (previousData != null)
             d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
           if (currentData != null)
             d = d.mapSync(p => [...p, SeedRef.from(currentData.inner)])
           return d
-        }))
+        })).then(r => r.ignore())
       }
 
-      return createQuerySchema<Key, SeedData, never>({ key: key(uuid), storage, indexer })
+      return createQuery<Key, SeedData, never>({ key: key(uuid), storage, indexer })
     }
 
   }
@@ -105,7 +105,7 @@ export namespace Seed {
   export namespace Foreground {
 
     export function schema(uuid: Nullable<string>, storage: UserStorage) {
-      if (uuid) return createQuerySchema<Key, SeedData, never>({ key: key(uuid), storage })
+      if (uuid) return createQuery<Key, SeedData, never>({ key: key(uuid), storage })
     }
 
   }

@@ -1,5 +1,5 @@
 import { RpcError } from "@/libs/rpc"
-import { createQuerySchema } from "@hazae41/glacier"
+import { createQuery } from "@hazae41/glacier"
 
 export interface StatusData {
   readonly id: string
@@ -17,7 +17,7 @@ export namespace Status {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(id: string) {
-    return createQuerySchema<Key, StatusData, never>({ key: key(id) })
+    return createQuery<Key, StatusData, never>({ key: key(id) })
   }
 
 }

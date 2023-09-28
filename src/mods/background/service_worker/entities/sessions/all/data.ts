@@ -1,4 +1,4 @@
-import { IDBStorage, createQuerySchema } from "@hazae41/glacier"
+import { IDBStorage, createQuery } from "@hazae41/glacier"
 import { SessionRef } from "../data"
 
 export namespace TemporarySessions {
@@ -10,7 +10,7 @@ export namespace TemporarySessions {
   export type Schema = ReturnType<typeof schema>
 
   export function schema() {
-    return createQuerySchema<Key, SessionRef[], never>({ key })
+    return createQuery<Key, SessionRef[], never>({ key })
   }
 
 }
@@ -26,7 +26,7 @@ export namespace TemporarySessionsByWallet {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(wallet: string) {
-    return createQuerySchema<Key, SessionRef[], never>({ key: key(wallet) })
+    return createQuery<Key, SessionRef[], never>({ key: key(wallet) })
   }
 
 }
@@ -40,7 +40,7 @@ export namespace PersistentSessions {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(storage: IDBStorage) {
-    return createQuerySchema<Key, SessionRef[], never>({ key, storage })
+    return createQuery<Key, SessionRef[], never>({ key, storage })
   }
 
 }
@@ -56,7 +56,7 @@ export namespace PersistentSessionsByWallet {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(wallet: string, storage: IDBStorage) {
-    return createQuerySchema<Key, SessionRef[], never>({ key: key(wallet), storage })
+    return createQuery<Key, SessionRef[], never>({ key: key(wallet), storage })
   }
 
 }

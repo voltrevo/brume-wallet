@@ -1,7 +1,7 @@
 import { Mutators } from "@/libs/xswr/mutators"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
-import { AesGcmCoder, Data, HmacEncoder, IDBStorage, States, createQuerySchema } from "@hazae41/glacier"
+import { AesGcmCoder, Data, HmacEncoder, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { Ok, Result } from "@hazae41/result"
 import { Users } from "./all/data"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBase64, Pbkdf2ParamsBytes } from "./crypto"
@@ -63,7 +63,7 @@ export interface UserSession {
 }
 
 export function getCurrentUser() {
-  return createQuerySchema<string, User, never>({ key: `user` })
+  return createQuery<string, User, never>({ key: `user` })
 }
 
 export namespace User {
@@ -83,16 +83,16 @@ export namespace User {
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
-      await Users.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+      await Users.schema(storage).tryMutate(Mutators.mapData((d = new Data([])) => {
         if (previousData != null)
           d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
         if (currentData != null)
           d = d.mapSync(p => [...p, UserRef.from(currentData.inner)])
         return d
-      }))
+      })).then(r => r.ignore())
     }
 
-    return createQuerySchema<Key, UserData, never>({ key: key(uuid), storage, indexer })
+    return createQuery<Key, UserData, never>({ key: key(uuid), storage, indexer })
   }
 
   export async function tryCreate(init: UserInit): Promise<Result<UserData, Error>> {

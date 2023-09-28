@@ -1,4 +1,4 @@
-import { IDBStorage, createQuerySchema } from "@hazae41/glacier"
+import { IDBStorage, createQuery } from "@hazae41/glacier"
 
 export type Origin =
   | OriginData
@@ -27,7 +27,7 @@ export namespace Origin {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(origin: string, storage: IDBStorage) {
-    return createQuerySchema<Key, OriginData, never>({ key: key(origin), storage })
+    return createQuery<Key, OriginData, never>({ key: key(origin), storage })
   }
 
 }

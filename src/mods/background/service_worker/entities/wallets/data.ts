@@ -7,7 +7,7 @@ import { RpcRequestPreinit, TorRpc } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Disposer } from "@hazae41/cleaner"
-import { Data, Fetched, FetcherMore, IDBStorage, States, createQuerySchema } from "@hazae41/glacier"
+import { Data, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { None, Option, Some } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
@@ -141,30 +141,30 @@ export namespace Wallet {
 
       const walletsQuery = Wallets.schema(storage)
 
-      await walletsQuery.mutate(Mutators.mapData((d = new Data([])) => {
+      await walletsQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
         if (previousData != null)
           d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
         if (currentData != null)
           d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
         return d
-      }))
+      })).then(r => r.ignore())
 
       if (currentData?.inner.type === "seeded") {
         const { seed } = currentData.inner
 
         const walletsBySeedQuery = WalletsBySeed.Background.schema(seed.uuid, storage)
 
-        await walletsBySeedQuery.mutate(Mutators.mapData((d = new Data([])) => {
+        await walletsBySeedQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
           if (previousData != null)
             d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
           if (currentData != null)
             d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
           return d
-        }))
+        })).then(r => r.ignore())
       }
     }
 
-    return createQuerySchema<Key, WalletData, never>({ key: key(uuid), storage, indexer })
+    return createQuery<Key, WalletData, never>({ key: key(uuid), storage, indexer })
   }
 
 }
@@ -258,7 +258,7 @@ export function getEthereumUnknown(ethereum: EthereumContext, request: RpcReques
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
     await tryEthereumFetch<unknown>(ethereum, request)
 
-  return createQuerySchema<EthereumQueryKey<unknown>, any, Error>({
+  return createQuery<EthereumQueryKey<unknown>, any, Error>({
     key: {
       chainId: ethereum.chain.chainId,
       method: request.method,
@@ -270,7 +270,7 @@ export function getEthereumUnknown(ethereum: EthereumContext, request: RpcReques
 }
 
 export function getTotalPricedBalance(user: User, coin: "usd", storage: IDBStorage) {
-  return createQuerySchema<string, FixedInit, Error>({
+  return createQuery<string, FixedInit, Error>({
     key: `totalPricedBalance/${user.uuid}/${coin}`,
     storage
   })
@@ -282,10 +282,10 @@ export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: 
     const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
     const totalBalance = getTotalPricedBalance(user, coin, storage)
-    await totalBalance.mutate(Mutators.data<FixedInit, Error>(total))
+    await totalBalance.tryMutate(Mutators.data<FixedInit, Error>(total)).then(r => r.ignore())
   }
 
-  return createQuerySchema<string, Record<string, FixedInit>, Error>({
+  return createQuery<string, Record<string, FixedInit>, Error>({
     key: `totalPricedBalanceByWallet/${user.uuid}/${coin}`,
     indexer,
     storage
@@ -297,10 +297,10 @@ export function getTotalWalletPricedBalance(user: User, account: string, coin: "
     const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
     const indexQuery = getTotalPricedBalanceByWallet(user, coin, storage)
-    await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [account]: value }), new Data({})))
+    await indexQuery.tryMutate(Mutators.mapInnerData(p => ({ ...p, [account]: value }), new Data({}))).then(r => r.ignore())
   }
 
-  return createQuerySchema<string, FixedInit, Error>({
+  return createQuery<string, FixedInit, Error>({
     key: `totalWalletPricedBalance/${account}/${coin}`,
     indexer,
     storage
@@ -313,10 +313,10 @@ export function getPricedBalanceByToken(user: User, account: string, coin: "usd"
     const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
     const totalBalance = getTotalWalletPricedBalance(user, account, coin, storage)
-    await totalBalance.mutate(Mutators.data<FixedInit, Error>(total))
+    await totalBalance.tryMutate(Mutators.data<FixedInit, Error>(total)).then(r => r.ignore())
   }
 
-  return createQuerySchema<string, Record<string, FixedInit>, Error>({
+  return createQuery<string, Record<string, FixedInit>, Error>({
     key: `pricedBalanceByToken/${account}/${coin}`,
     indexer,
     storage
@@ -329,10 +329,10 @@ export function getPricedBalance(ethereum: EthereumContext, account: string, coi
     const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
     const indexQuery = getPricedBalanceByToken(ethereum.user, account, coin, storage)
-    await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
+    await indexQuery.tryMutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({}))).then(r => r.ignore())
   }
 
-  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+  return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
     key: {
       chainId: ethereum.chain.chainId,
       method: "eth_getPricedBalance",
@@ -364,20 +364,22 @@ export function getBalance(ethereum: EthereumContext, account: string, block: st
         const price = getPairPrice({ ...ethereum, chain }, pair, storage)
         const priceState = await price.state
 
-        if (priceState.data == null)
+        if (priceState.isErr())
+          return new None()
+        if (priceState.inner.data == null)
           return new None()
 
-        pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
+        pricedBalance = pricedBalance.mul(Fixed.from(priceState.inner.data.inner))
       }
 
       return new Some(pricedBalance)
     }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
     const pricedBalanceQuery = getPricedBalance(ethereum, account, "usd", storage)
-    await pricedBalanceQuery.mutate(Mutators.set(new Data(pricedBalance)))
+    await pricedBalanceQuery.tryMutate(Mutators.set(new Data(pricedBalance))).then(r => r.ignore())
   }
 
-  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+  return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
     key: {
       version: 2,
       chainId: ethereum.chain.chainId,
@@ -423,7 +425,7 @@ export function getPairPrice(ethereum: EthereumContext, pair: PairInfo, storage:
     }
   }
 
-  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+  return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
     key: {
       chainId: ethereum.chain.chainId,
       method: "eth_getPairPrice",
@@ -454,10 +456,10 @@ export function getTokenPricedBalance(ethereum: EthereumContext, account: string
     const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
     const indexQuery = getPricedBalanceByToken(ethereum.user, account, coin, storage)
-    await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
+    await indexQuery.tryMutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({}))).then(r => r.ignore())
   }
 
-  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+  return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
     key: {
       chainId: ethereum.chain.chainId,
       method: "eth_getTokenPricedBalance",
@@ -499,20 +501,22 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
         const price = getPairPrice({ ...ethereum, chain }, pair, storage)
         const priceState = await price.state
 
-        if (priceState.data == null)
+        if (priceState.isErr())
+          return new None()
+        if (priceState.inner.data == null)
           return new None()
 
-        pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
+        pricedBalance = pricedBalance.mul(Fixed.from(priceState.inner.data.inner))
       }
 
       return new Some(pricedBalance)
     }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
     const pricedBalanceQuery = getTokenPricedBalance(ethereum, account, token, "usd", storage)
-    await pricedBalanceQuery.mutate(Mutators.set(new Data(pricedBalance)))
+    await pricedBalanceQuery.tryMutate(Mutators.set(new Data(pricedBalance))).then(r => r.ignore())
   }
 
-  return createQuerySchema<EthereumQueryKey<unknown>, FixedInit, Error>({
+  return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
     key: {
       chainId: ethereum.chain.chainId,
       method: "eth_getTokenBalance",

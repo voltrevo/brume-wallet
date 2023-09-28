@@ -1,10 +1,10 @@
 import { Session } from "@/mods/background/service_worker/entities/sessions/data"
 import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { UserStorage, useUserStorage } from "@/mods/foreground/storage/user"
-import { createQuerySchema, useQuery } from "@hazae41/glacier"
+import { createQuery, useQuery } from "@hazae41/glacier"
 
 export function getPersistentSessions(storage: UserStorage) {
-  return createQuerySchema<string, Session[], never>({ key: `persistentSessions/v2`, storage })
+  return createQuery<string, Session[], never>({ key: `persistentSessions/v2`, storage })
 }
 
 export function usePersistentSessions() {
@@ -15,7 +15,7 @@ export function usePersistentSessions() {
 }
 
 export function getTemporarySessions(storage: UserStorage) {
-  return createQuerySchema<string, Session[], never>({ key: `temporarySessions/v2`, storage })
+  return createQuery<string, Session[], never>({ key: `temporarySessions/v2`, storage })
 }
 
 export function useTemporarySessions() {

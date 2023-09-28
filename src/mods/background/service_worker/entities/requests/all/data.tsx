@@ -1,4 +1,4 @@
-import { createQuerySchema } from "@hazae41/glacier";
+import { createQuery } from "@hazae41/glacier";
 import { AppRequest } from "../data";
 
 export namespace AppRequests {
@@ -10,7 +10,7 @@ export namespace AppRequests {
   export type Schema = ReturnType<typeof schema>
 
   export function schema() {
-    return createQuerySchema<Key, AppRequest[], never>({ key })
+    return createQuery<Key, AppRequest[], never>({ key })
   }
 
 }

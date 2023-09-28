@@ -1,5 +1,5 @@
 import { UserStorage } from "@/mods/foreground/storage/user";
-import { IDBStorage, createQuerySchema } from "@hazae41/glacier";
+import { IDBStorage, createQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 import { WalletRef } from "../../wallets/data";
 import { SeedRef } from "../data";
@@ -13,7 +13,7 @@ export namespace Seeds {
   export namespace Background {
 
     export function schema(storage: IDBStorage) {
-      return createQuerySchema<Key, SeedRef[], never>({ key, storage })
+      return createQuery<Key, SeedRef[], never>({ key, storage })
     }
 
   }
@@ -21,7 +21,7 @@ export namespace Seeds {
   export namespace Foreground {
 
     export function schema(storage: UserStorage) {
-      return createQuerySchema<Key, SeedRef[], never>({ key, storage })
+      return createQuery<Key, SeedRef[], never>({ key, storage })
     }
 
   }
@@ -39,7 +39,7 @@ export namespace WalletsBySeed {
   export namespace Background {
 
     export function schema(uuid: string, storage: IDBStorage) {
-      return createQuerySchema<Key, WalletRef[], never>({ key: key(uuid), storage })
+      return createQuery<Key, WalletRef[], never>({ key: key(uuid), storage })
     }
 
   }
@@ -47,7 +47,7 @@ export namespace WalletsBySeed {
   export namespace Foreground {
 
     export function schema(uuid: Nullable<string>, storage: UserStorage) {
-      if (uuid) return createQuerySchema<Key, WalletRef[], never>({ key: key(uuid), storage })
+      if (uuid) return createQuery<Key, WalletRef[], never>({ key: key(uuid), storage })
     }
 
   }
