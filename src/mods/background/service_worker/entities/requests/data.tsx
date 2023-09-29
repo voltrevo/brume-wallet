@@ -1,6 +1,7 @@
 import { Mutators } from "@/libs/xswr/mutators"
 import { Data, States, createQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
+import { Ok, Result } from "@hazae41/result"
 import { AppRequests } from "./all/data"
 
 export type AppRequest =
@@ -40,18 +41,22 @@ export namespace AppRequest {
 
   export function schema(id: string) {
     const indexer = async (states: States<AppRequestData, never>) => {
-      const { current, previous = current } = states
+      return await Result.unthrow<Result<void, Error>>(async t => {
+        const { current, previous = current } = states
 
-      const previousData = previous.real?.data
-      const currentData = current.real?.data
+        const previousData = previous.real?.data
+        const currentData = current.real?.data
 
-      await AppRequests.schema().tryMutate(Mutators.mapData((d = new Data([])) => {
-        if (previousData != null)
-          d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
-        if (currentData != null)
-          d = d.mapSync(p => [...p, AppRequestRef.from(currentData.inner)])
-        return d
-      })).then(r => r.ignore())
+        await AppRequests.schema().tryMutate(Mutators.mapData((d = new Data([])) => {
+          if (previousData != null)
+            d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
+          if (currentData != null)
+            d = d.mapSync(p => [...p, AppRequestRef.from(currentData.inner)])
+          return d
+        })).then(r => r.throw(t))
+
+        return Ok.void()
+      })
     }
 
     return createQuery<Key, AppRequestData, never>({ key: key(id), indexer })

@@ -78,18 +78,22 @@ export namespace User {
 
   export function schema(uuid: string, storage: IDBStorage) {
     const indexer = async (states: States<UserData, never>) => {
-      const { current, previous = current } = states
+      return await Result.unthrow<Result<void, Error>>(async t => {
+        const { current, previous = current } = states
 
-      const previousData = previous.real?.data
-      const currentData = current.real?.data
+        const previousData = previous.real?.data
+        const currentData = current.real?.data
 
-      await Users.schema(storage).tryMutate(Mutators.mapData((d = new Data([])) => {
-        if (previousData != null)
-          d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
-        if (currentData != null)
-          d = d.mapSync(p => [...p, UserRef.from(currentData.inner)])
-        return d
-      })).then(r => r.ignore())
+        await Users.schema(storage).tryMutate(Mutators.mapData((d = new Data([])) => {
+          if (previousData != null)
+            d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
+          if (currentData != null)
+            d = d.mapSync(p => [...p, UserRef.from(currentData.inner)])
+          return d
+        })).then(r => r.throw(t))
+
+        return Ok.void()
+      })
     }
 
     return createQuery<Key, UserData, never>({ key: key(uuid), storage, indexer })

@@ -96,7 +96,7 @@ export function WebsiteOverlay(props: ChildrenProps) {
   const [updatable, setUpdatable] = useState(false)
 
   useEffect(() => {
-    tryCheckWebsiteUpdate().then(r => r.inspectSync(setUpdatable).inspectErrSync(console.warn).ignore())
+    tryCheckWebsiteUpdate().then(r => r.inspectSync(setUpdatable).inspectErrSync(console.warn))
   }, [])
 
   const update2 = useCallback(() => {
@@ -141,7 +141,7 @@ export function ExtensionOverlay(props: ChildrenProps) {
   const [updatable, setUpdatable] = useState(false)
 
   useEffect(() => {
-    tryCheckExtensionUpdate().then(r => r.inspectSync(setUpdatable).inspectErrSync(console.warn).ignore())
+    tryCheckExtensionUpdate().then(r => r.inspectSync(setUpdatable).inspectErrSync(console.warn))
   }, [])
 
   const update = useCallback(() => {

@@ -134,34 +134,38 @@ export namespace Wallet {
 
   export function schema(uuid: string, storage: IDBStorage) {
     const indexer = async (states: States<WalletData, never>) => {
-      const { current, previous = current } = states
+      return await Result.unthrow<Result<void, Error>>(async t => {
+        const { current, previous = current } = states
 
-      const previousData = previous.real?.data
-      const currentData = current.real?.data
+        const previousData = previous.real?.data
+        const currentData = current.real?.data
 
-      const walletsQuery = Wallets.schema(storage)
+        const walletsQuery = Wallets.schema(storage)
 
-      await walletsQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
-        if (previousData != null)
-          d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
-        if (currentData != null)
-          d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
-        return d
-      })).then(r => r.ignore())
-
-      if (currentData?.inner.type === "seeded") {
-        const { seed } = currentData.inner
-
-        const walletsBySeedQuery = WalletsBySeed.Background.schema(seed.uuid, storage)
-
-        await walletsBySeedQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
+        await walletsQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
           if (previousData != null)
             d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
           if (currentData != null)
             d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
           return d
-        })).then(r => r.ignore())
-      }
+        })).then(r => r.throw(t))
+
+        if (currentData?.inner.type === "seeded") {
+          const { seed } = currentData.inner
+
+          const walletsBySeedQuery = WalletsBySeed.Background.schema(seed.uuid, storage)
+
+          await walletsBySeedQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
+            if (previousData != null)
+              d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
+            if (currentData != null)
+              d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
+            return d
+          })).then(r => r.throw(t))
+        }
+
+        return Ok.void()
+      })
     }
 
     return createQuery<Key, WalletData, never>({ key: key(uuid), storage, indexer })
@@ -278,11 +282,15 @@ export function getTotalPricedBalance(user: User, coin: "usd", storage: IDBStora
 
 export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<Record<string, FixedInit>, Error>) => {
-    const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
-    const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
+      const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-    const totalBalance = getTotalPricedBalance(user, coin, storage)
-    await totalBalance.tryMutate(Mutators.data<FixedInit, Error>(total)).then(r => r.ignore())
+      const totalBalance = getTotalPricedBalance(user, coin, storage)
+      await totalBalance.tryMutate(Mutators.data<FixedInit, Error>(total)).then(r => r.throw(t))
+
+      return Ok.void()
+    })
   }
 
   return createQuery<string, Record<string, FixedInit>, Error>({
@@ -294,10 +302,14 @@ export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: 
 
 export function getTotalWalletPricedBalance(user: User, account: string, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<FixedInit, Error>) => {
-    const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-    const indexQuery = getTotalPricedBalanceByWallet(user, coin, storage)
-    await indexQuery.tryMutate(Mutators.mapInnerData(p => ({ ...p, [account]: value }), new Data({}))).then(r => r.ignore())
+      const indexQuery = getTotalPricedBalanceByWallet(user, coin, storage)
+      await indexQuery.tryMutate(Mutators.mapInnerData(p => ({ ...p, [account]: value }), new Data({}))).then(r => r.throw(t))
+
+      return Ok.void()
+    })
   }
 
   return createQuery<string, FixedInit, Error>({
@@ -309,11 +321,15 @@ export function getTotalWalletPricedBalance(user: User, account: string, coin: "
 
 export function getPricedBalanceByToken(user: User, account: string, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<Record<string, FixedInit>, Error>) => {
-    const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
-    const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
+      const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-    const totalBalance = getTotalWalletPricedBalance(user, account, coin, storage)
-    await totalBalance.tryMutate(Mutators.data<FixedInit, Error>(total)).then(r => r.ignore())
+      const totalBalance = getTotalWalletPricedBalance(user, account, coin, storage)
+      await totalBalance.tryMutate(Mutators.data<FixedInit, Error>(total)).then(r => r.throw(t))
+
+      return Ok.void()
+    })
   }
 
   return createQuery<string, Record<string, FixedInit>, Error>({
@@ -325,11 +341,15 @@ export function getPricedBalanceByToken(user: User, account: string, coin: "usd"
 
 export function getPricedBalance(ethereum: EthereumContext, account: string, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<FixedInit, Error>) => {
-    const key = `${ethereum.chain.chainId}`
-    const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      const key = `${ethereum.chain.chainId}`
+      const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-    const indexQuery = getPricedBalanceByToken(ethereum.user, account, coin, storage)
-    await indexQuery.tryMutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({}))).then(r => r.ignore())
+      const indexQuery = getPricedBalanceByToken(ethereum.user, account, coin, storage)
+      await indexQuery.tryMutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({}))).then(r => r.throw(t))
+
+      return Ok.void()
+    })
   }
 
   return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
@@ -348,35 +368,39 @@ export function getBalance(ethereum: EthereumContext, account: string, block: st
     await tryEthereumFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals))))
 
   const indexer = async (states: States<FixedInit, Error>) => {
-    if (block !== "pending")
-      return
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      if (block !== "pending")
+        return Ok.void()
 
-    const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
-      if (ethereum.chain.token.pairs == null)
-        return new None()
-
-      let pricedBalance: Fixed = Fixed.from(balance)
-
-      for (const pairAddress of ethereum.chain.token.pairs) {
-        const pair = pairByAddress[pairAddress]
-        const chain = chainByChainId[pair.chainId]
-
-        const price = getPairPrice({ ...ethereum, chain }, pair, storage)
-        const priceState = await price.state
-
-        if (priceState.isErr())
-          return new None()
-        if (priceState.inner.data == null)
+      const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
+        if (ethereum.chain.token.pairs == null)
           return new None()
 
-        pricedBalance = pricedBalance.mul(Fixed.from(priceState.inner.data.inner))
-      }
+        let pricedBalance: Fixed = Fixed.from(balance)
 
-      return new Some(pricedBalance)
-    }).then(o => o.unwrapOr(new Fixed(0n, 0)))
+        for (const pairAddress of ethereum.chain.token.pairs) {
+          const pair = pairByAddress[pairAddress]
+          const chain = chainByChainId[pair.chainId]
 
-    const pricedBalanceQuery = getPricedBalance(ethereum, account, "usd", storage)
-    await pricedBalanceQuery.tryMutate(Mutators.set(new Data(pricedBalance))).then(r => r.ignore())
+          const price = getPairPrice({ ...ethereum, chain }, pair, storage)
+          const priceState = await price.state
+
+          if (priceState.isErr())
+            return new None()
+          if (priceState.inner.data == null)
+            return new None()
+
+          pricedBalance = pricedBalance.mul(Fixed.from(priceState.inner.data.inner))
+        }
+
+        return new Some(pricedBalance)
+      }).then(o => o.unwrapOr(new Fixed(0n, 0)))
+
+      const pricedBalanceQuery = getPricedBalance(ethereum, account, "usd", storage)
+      await pricedBalanceQuery.tryMutate(Mutators.set<FixedInit, Error>(new Data(pricedBalance))).then(r => r.throw(t))
+
+      return Ok.void()
+    })
   }
 
   return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
@@ -452,11 +476,15 @@ export function computePairPrice(pair: PairInfo, reserves: [bigint, bigint]) {
 
 export function getTokenPricedBalance(ethereum: EthereumContext, account: string, token: ContractTokenInfo, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<FixedInit, Error>) => {
-    const key = `${ethereum.chain.chainId}/${token.address}`
-    const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      const key = `${ethereum.chain.chainId}/${token.address}`
+      const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-    const indexQuery = getPricedBalanceByToken(ethereum.user, account, coin, storage)
-    await indexQuery.tryMutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({}))).then(r => r.ignore())
+      const indexQuery = getPricedBalanceByToken(ethereum.user, account, coin, storage)
+      await indexQuery.tryMutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({}))).then(r => r.throw(t))
+
+      return Ok.void()
+    })
   }
 
   return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
@@ -485,35 +513,39 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
   }
 
   const indexer = async (states: States<FixedInit, Error>) => {
-    if (block !== "pending")
-      return
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      if (block !== "pending")
+        return Ok.void()
 
-    const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
-      if (token.pairs == null)
-        return new None()
-
-      let pricedBalance: Fixed = Fixed.from(balance)
-
-      for (const pairAddress of token.pairs) {
-        const pair = pairByAddress[pairAddress]
-        const chain = chainByChainId[pair.chainId]
-
-        const price = getPairPrice({ ...ethereum, chain }, pair, storage)
-        const priceState = await price.state
-
-        if (priceState.isErr())
-          return new None()
-        if (priceState.inner.data == null)
+      const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
+        if (token.pairs == null)
           return new None()
 
-        pricedBalance = pricedBalance.mul(Fixed.from(priceState.inner.data.inner))
-      }
+        let pricedBalance: Fixed = Fixed.from(balance)
 
-      return new Some(pricedBalance)
-    }).then(o => o.unwrapOr(new Fixed(0n, 0)))
+        for (const pairAddress of token.pairs) {
+          const pair = pairByAddress[pairAddress]
+          const chain = chainByChainId[pair.chainId]
 
-    const pricedBalanceQuery = getTokenPricedBalance(ethereum, account, token, "usd", storage)
-    await pricedBalanceQuery.tryMutate(Mutators.set(new Data(pricedBalance))).then(r => r.ignore())
+          const price = getPairPrice({ ...ethereum, chain }, pair, storage)
+          const priceState = await price.state
+
+          if (priceState.isErr())
+            return new None()
+          if (priceState.inner.data == null)
+            return new None()
+
+          pricedBalance = pricedBalance.mul(Fixed.from(priceState.inner.data.inner))
+        }
+
+        return new Some(pricedBalance)
+      }).then(o => o.unwrapOr(new Fixed(0n, 0)))
+
+      const pricedBalanceQuery = getTokenPricedBalance(ethereum, account, token, "usd", storage)
+      await pricedBalanceQuery.tryMutate(Mutators.set<FixedInit, Error>(new Data(pricedBalance))).then(r => r.throw(t))
+
+      return Ok.void()
+    })
   }
 
   return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({

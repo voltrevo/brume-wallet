@@ -5,7 +5,7 @@ import { Mutators } from "@/libs/xswr/mutators"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Data, IDBStorage, RawState2, States, Storage, createQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { Ok } from "@hazae41/result"
+import { Ok, Result } from "@hazae41/result"
 import { Wallet } from "../wallets/data"
 import { PersistentSessions, PersistentSessionsByWallet, TemporarySessions, TemporarySessionsByWallet } from "./all/data"
 
@@ -85,64 +85,68 @@ export namespace Session {
 
   export function schema(id: string, storage: IDBStorage) {
     const indexer = async (states: States<SessionData, never>) => {
-      const { current, previous = current } = states
+      return await Result.unthrow<Result<void, Error>>(async t => {
+        const { current, previous = current } = states
 
-      const previousData = previous.real?.data
-      const currentData = current.real?.data
+        const previousData = previous.real?.data
+        const currentData = current.real?.data
 
-      if (previousData != null) {
-        if (previousData.inner.persist) {
-          const sessionByOrigin = SessionByOrigin.schema(previousData.inner.origin, storage)
-          await sessionByOrigin.tryDelete().then(r => r.ignore())
-        }
+        if (previousData != null) {
+          if (previousData.inner.persist) {
+            const sessionByOrigin = SessionByOrigin.schema(previousData.inner.origin, storage)
+            await sessionByOrigin.tryDelete().then(r => r.throw(t))
+          }
 
-        const sessionsQuery = previousData.inner.persist
-          ? PersistentSessions.schema(storage)
-          : TemporarySessions.schema()
+          const sessionsQuery = previousData.inner.persist
+            ? PersistentSessions.schema(storage)
+            : TemporarySessions.schema()
 
-        await sessionsQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
-          return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
-        })).then(r => r.ignore())
-
-        const previousWallets = new Set(previousData.inner.wallets)
-
-        for (const wallet of previousWallets) {
-          const sessionsByWalletQuery = previousData.inner.persist
-            ? PersistentSessionsByWallet.schema(wallet.uuid, storage)
-            : TemporarySessionsByWallet.schema(wallet.uuid)
-
-          await sessionsByWalletQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
+          await sessionsQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
-          })).then(r => r.ignore())
+          })).then(r => r.throw(t))
+
+          const previousWallets = new Set(previousData.inner.wallets)
+
+          for (const wallet of previousWallets) {
+            const sessionsByWalletQuery = previousData.inner.persist
+              ? PersistentSessionsByWallet.schema(wallet.uuid, storage)
+              : TemporarySessionsByWallet.schema(wallet.uuid)
+
+            await sessionsByWalletQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
+              return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
+            })).then(r => r.throw(t))
+          }
         }
-      }
 
-      if (currentData != null) {
-        if (currentData.inner.persist) {
-          const sessionByOrigin = SessionByOrigin.schema(currentData.inner.origin, storage)
-          await sessionByOrigin.tryMutate(Mutators.data(SessionRef.from(currentData.inner))).then(r => r.ignore())
+        if (currentData != null) {
+          if (currentData.inner.persist) {
+            const sessionByOrigin = SessionByOrigin.schema(currentData.inner.origin, storage)
+            await sessionByOrigin.tryMutate(Mutators.data(SessionRef.from(currentData.inner))).then(r => r.throw(t))
+          }
+
+          const sessionsQuery = currentData.inner.persist
+            ? PersistentSessions.schema(storage)
+            : TemporarySessions.schema()
+
+          await sessionsQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
+            return d = d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
+          })).then(r => r.throw(t))
+
+          const currentWallets = new Set(currentData.inner.wallets)
+
+          for (const wallet of currentWallets) {
+            const sessionsByWalletQuery = currentData.inner.persist
+              ? PersistentSessionsByWallet.schema(wallet.uuid, storage)
+              : TemporarySessionsByWallet.schema(wallet.uuid)
+
+            await sessionsByWalletQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
+              return d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
+            })).then(r => r.throw(t))
+          }
         }
 
-        const sessionsQuery = currentData.inner.persist
-          ? PersistentSessions.schema(storage)
-          : TemporarySessions.schema()
-
-        await sessionsQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
-          return d = d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
-        })).then(r => r.ignore())
-
-        const currentWallets = new Set(currentData.inner.wallets)
-
-        for (const wallet of currentWallets) {
-          const sessionsByWalletQuery = currentData.inner.persist
-            ? PersistentSessionsByWallet.schema(wallet.uuid, storage)
-            : TemporarySessionsByWallet.schema(wallet.uuid)
-
-          await sessionsByWalletQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
-            return d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
-          })).then(r => r.ignore())
-        }
-      }
+        return Ok.void()
+      })
     }
 
     return createQuery<Key, SessionData, never>({ key: key(id), indexer, storage: new SessionStorage(storage) })

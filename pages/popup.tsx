@@ -49,7 +49,7 @@ export function Ready() {
   useEffect(() => {
     background
       .tryRequest<void>({ method: "popup_hello" })
-      .then(r => r.unwrap().ignore())
+      .then(r => r.unwrap().unwrap())
   }, [background])
 
   return <>

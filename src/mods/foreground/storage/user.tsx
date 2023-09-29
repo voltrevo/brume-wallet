@@ -69,7 +69,7 @@ export class UserStorage implements Storage {
 
         return await Result.unthrow<Result<void, Error>>(async t => {
           const unstored = await core.tryUnstore(stored, { key: cacheKey }).then(r => r.throw(t))
-          await core.tryUpdate(cacheKey, () => unstored, { key: cacheKey }).then(r => r.throw(t))
+          await core.tryUpdate(cacheKey, () => new Ok(unstored), { key: cacheKey }).then(r => r.throw(t))
           return Ok.void()
         }).then(Some.new)
       })
@@ -77,7 +77,7 @@ export class UserStorage implements Storage {
       const stored = await this.tryGet(cacheKey).then(r => r.throw(t))
 
       const unstored = await core.tryUnstore(stored, { key: cacheKey }).then(r => r.throw(t))
-      await core.tryUpdate(cacheKey, () => unstored, { key: cacheKey }).then(r => r.throw(t))
+      await core.tryUpdate(cacheKey, () => new Ok(unstored), { key: cacheKey }).then(r => r.throw(t))
 
       return Ok.void()
     })

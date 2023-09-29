@@ -536,9 +536,10 @@ export class Global {
 
       const query = getEthereumUnknown(ethereum, subrequest, storage)
 
-      const result = await query.tryFetch().then(r => r.ignore())
-
-      result.inspectSync(r => r.throw(t))
+      /**
+       * Ignore cooldown or store errors, only throw if the actual fetch failed
+       */
+      await query.tryFetch().then(r => r.inspectSync(r => r.throw(t)))
 
       const stored = core.raw.get(query.cacheKey)?.inner
       const unstored = await core.tryUnstore<any, unknown, Error>(stored, { key: query.cacheKey }).then(r => r.throw(t))
@@ -604,9 +605,10 @@ export class Global {
 
       const query = getBalance(ethereum, address, block, storage)
 
-      const result = await query.tryFetch().then(r => r.ignore())
-
-      result.inspectSync(r => r.throw(t))
+      /**
+       * Ignore cooldown or store errors, only throw if the actual fetch failed
+       */
+      await query.tryFetch().then(r => r.inspectSync(r => r.throw(t)))
 
       const stored = core.raw.get(query.cacheKey)?.inner
       const unstored = await core.tryUnstore<any, unknown, any>(stored, { key: query.cacheKey }).then(r => r.throw(t))
@@ -1099,9 +1101,10 @@ export class Global {
 
       const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
-      const result = await query.tryFetch().then(r => r.ignore())
-
-      result.inspectSync(r => r.throw(t))
+      /**
+       * Ignore cooldown or store errors, only throw if the actual fetch failed
+       */
+      await query.tryFetch().then(r => r.inspectSync(r => r.throw(t)))
 
       const stored = core.raw.get(query.cacheKey)?.inner
       const unstored = await core.tryUnstore<any, unknown, Error>(stored, { key: query.cacheKey }).then(r => r.throw(t))
