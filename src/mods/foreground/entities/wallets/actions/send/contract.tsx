@@ -109,7 +109,8 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
       }).throw(t)
 
       const signature = Cubane.Abi.FunctionSignature.tryParse("transfer(address,uint256)").throw(t)
-      const data = Cubane.Abi.tryEncode(signature, ethers.getAddress(defRecipientInput), ethers.parseUnits(defValueInput, 18)).throw(t)
+      const args = signature.args.from(ethers.getAddress(defRecipientInput), ethers.parseUnits(defValueInput, 18))
+      const data = Cubane.Abi.tryEncode(args).throw(t)
 
       const gas = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",

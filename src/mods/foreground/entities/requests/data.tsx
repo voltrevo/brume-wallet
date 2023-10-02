@@ -5,7 +5,7 @@ import { UserStorage, useUserStorage } from "../../storage/user";
 
 export namespace AppRequest {
 
-  export function get(id: string, storage: UserStorage) {
+  export function schema(id: string, storage: UserStorage) {
     return createQuery<string, AppRequestData, never>({ key: `request/${id}`, storage })
   }
 
@@ -13,7 +13,7 @@ export namespace AppRequest {
 
 export function useAppRequest(id: string) {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(AppRequest.get, [id, storage])
+  const query = useQuery(AppRequest.schema, [id, storage])
   useSubscribe(query, storage)
   return query
 }

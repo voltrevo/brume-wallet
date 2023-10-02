@@ -1,5 +1,3 @@
-import Erc20Abi from "@/assets/Erc20.json"
-import PairAbi from "@/assets/Pair.json"
 import { Fixed, FixedInit } from "@/libs/bigints/bigints"
 import { Errors } from "@/libs/errors/errors"
 import { ContractTokenInfo, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
@@ -7,18 +5,18 @@ import { RpcRequestPreinit, TorRpc } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Disposer } from "@hazae41/cleaner"
-import { Data, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
+import { Cubane, ZeroHexString } from "@hazae41/cubane"
+import { Data, Fail, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { None, Option, Some } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
-import { Err, Ok, Panic, Result } from "@hazae41/result"
-import { Contract, ContractRunner, TransactionRequest } from "ethers"
+import { Ok, Panic, Result } from "@hazae41/result"
+import { ContractRunner, TransactionRequest } from "ethers"
 import { EthBrume, RpcConnection } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
 import { SessionData } from "../sessions/data"
 import { User } from "../users/data"
 import { Wallets } from "./all/data"
-
 
 export type Wallet =
   | WalletRef
@@ -436,18 +434,30 @@ export class BrumeProvider implements ContractRunner {
 }
 
 export function getPairPrice(ethereum: EthereumContext, pair: PairInfo, storage: IDBStorage) {
-  const fetcher = async () => {
-    try {
-      const provider = new BrumeProvider(ethereum)
-      const contract = new Contract(pair.address, PairAbi, provider)
-      const reserves = await contract.getReserves()
-      const price = computePairPrice(pair, reserves)
+  const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
+    const signature = Cubane.Abi.FunctionSignature.tryParse("getReserves()").throw(t)
+    const data = Cubane.Abi.tryEncode(signature.args.from()).throw(t)
 
-      return new Ok(new Data(price))
-    } catch (cause: unknown) {
-      return new Err(new Error("Could not get pair price", { cause }))
-    }
-  }
+    const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
+      method: "eth_call",
+      params: [{
+        to: pair.address,
+        data: data
+      }, "pending"]
+    }).then(r => r.throw(t))
+
+    if (fetched.isErr())
+      return new Ok(new Fail(fetched.inner))
+
+    const returns = Cubane.Abi.createDynamicTuple(
+      Cubane.Abi.createStaticBigUint(32),
+      Cubane.Abi.createStaticBigUint(32))
+
+    const [a, b] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner.map(it => it.value)
+    const price = computePairPrice(pair, [a, b])
+
+    return new Ok(new Data(price))
+  })
 
   return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
     key: {
@@ -499,18 +509,27 @@ export function getTokenPricedBalance(ethereum: EthereumContext, account: string
 }
 
 export function getTokenBalance(ethereum: EthereumContext, account: string, token: ContractTokenInfo, block: string, storage: IDBStorage) {
-  const fetcher = async () => {
-    try {
-      const provider = new BrumeProvider(ethereum)
-      const contract = new Contract(token.address, Erc20Abi, provider)
-      const balance = await contract.balanceOf(account)
-      const fixed = new Fixed(balance, token.decimals)
+  const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
+    const signature = Cubane.Abi.FunctionSignature.tryParse("balanceOf(address)").throw(t)
+    const data = Cubane.Abi.tryEncode(signature.args.from(account)).throw(t)
 
-      return new Ok(new Data(fixed))
-    } catch (cause: unknown) {
-      return new Err(new Error("Could not get pair price", { cause }))
-    }
-  }
+    const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
+      method: "eth_call",
+      params: [{
+        to: token.address,
+        data: data
+      }, "pending"]
+    }).then(r => r.throw(t))
+
+    if (fetched.isErr())
+      return new Ok(new Fail(fetched.inner))
+
+    const returns = Cubane.Abi.createStaticBigUint(32)
+    const balance = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).value
+    const fixed = new Fixed(balance, token.decimals)
+
+    return new Ok(new Data(fixed))
+  })
 
   const indexer = async (states: States<FixedInit, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
