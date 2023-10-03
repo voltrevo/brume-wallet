@@ -5,7 +5,6 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { Results } from "@/libs/results/results";
-import { RpcErr, RpcError, RpcOk } from "@/libs/rpc";
 import { Button } from "@/libs/ui/button";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
@@ -28,8 +27,9 @@ import { useUserStorage } from "@/mods/foreground/storage/user";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { Abi } from "@hazae41/cubane";
+import { RpcErr, RpcOk } from "@hazae41/jsonrpc";
 import { Option } from "@hazae41/option";
-import { Ok, Result } from "@hazae41/result";
+import { Err, Ok, Result } from "@hazae41/result";
 import { Transaction } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 
@@ -134,7 +134,7 @@ export function TransactPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "brume_respond",
-        params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
+        params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.schema(storage)
@@ -233,7 +233,7 @@ export function SwitchPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "brume_respond",
-        params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
+        params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.schema(storage)
@@ -331,7 +331,7 @@ export function PersonalSignPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "brume_respond",
-        params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
+        params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.schema(storage)
@@ -430,7 +430,7 @@ export function TypedSignPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "brume_respond",
-        params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
+        params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = AppRequests.schema(storage)

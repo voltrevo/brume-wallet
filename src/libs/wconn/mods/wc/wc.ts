@@ -1,8 +1,8 @@
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
-import { RpcRequestPreinit } from "@/libs/rpc";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { Future } from "@hazae41/future";
+import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { None, Option, Some } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
 import { X25519 } from "@hazae41/x25519";

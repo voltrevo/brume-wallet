@@ -1,12 +1,13 @@
 import { Errors } from "@/libs/errors/errors"
 import { ContractTokenInfo, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Fixed, FixedInit, ZeroHexFixed } from "@/libs/fixed/fixed"
-import { RpcRequestPreinit, TorRpc } from "@/libs/rpc"
+import { TorRpc } from "@/libs/rpc/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Disposer } from "@hazae41/cleaner"
 import { Cubane, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
+import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Ok, Panic, Result } from "@hazae41/result"
@@ -221,7 +222,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
               break
             }
 
-            const { client, connection } = conn
+            const { counter: client, connection } = conn
             const request = client.prepare(init)
 
             if (connection.isURL()) {

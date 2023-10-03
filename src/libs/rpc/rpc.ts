@@ -1,20 +1,9 @@
 import { Bytes } from "@hazae41/bytes"
 import { Circuit, CircuitOpenParams } from "@hazae41/echalote"
 import { Future } from "@hazae41/future"
+import { RpcRequest, RpcRequestInit, RpcResponse } from "@hazae41/jsonrpc"
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
-import { RpcRequest, RpcRequestInit, RpcRequestPreinit } from "./request"
-import { RpcResponse } from "./response"
-
-export class RpcClient {
-
-  id = 0
-
-  prepare<T>(init: RpcRequestPreinit<T>): RpcRequest<T> {
-    return new RpcRequest(this.id++, init.method, init.params)
-  }
-
-}
 
 export namespace TorRpc {
 

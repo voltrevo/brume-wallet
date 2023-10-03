@@ -1,7 +1,7 @@
 import "@hazae41/symbol-dispose-polyfill"
 
-import { RpcClient, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Future } from "@hazae41/future"
+import { RpcCounter, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 
 declare global {
   interface Window {
@@ -22,7 +22,7 @@ declare global {
 
 class Provider {
 
-  readonly client = new RpcClient()
+  readonly counter = new RpcCounter()
 
   readonly listeners = new Map<string, Map<Sublistener, Suplistener>>()
 
@@ -37,7 +37,7 @@ class Provider {
   }
 
   async tryRequest(init: RpcRequestPreinit<unknown>) {
-    const request = this.client.prepare(init)
+    const request = this.counter.prepare(init)
 
     const future = new Future<RpcResponse<unknown>>()
 

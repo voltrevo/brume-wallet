@@ -1,16 +1,16 @@
 import { Future } from "@hazae41/future"
+import { RpcCounter, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
 import { CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
 import { tryBrowserSync } from "../browser/browser"
-import { RpcClient, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "../rpc"
 
 export type Port =
   | WebsitePort
   | ExtensionPort
 
 export class WebsitePort {
-  readonly client = new RpcClient()
+  readonly counter = new RpcCounter()
   readonly uuid = crypto.randomUUID()
 
   readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
@@ -103,7 +103,7 @@ export class WebsitePort {
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    const request = this.client.prepare(init)
+    const request = this.counter.prepare(init)
 
     this.port.postMessage(JSON.stringify(request))
 
@@ -135,7 +135,7 @@ export class WebsitePort {
 }
 
 export class ExtensionPort {
-  readonly client = new RpcClient()
+  readonly counter = new RpcCounter()
   readonly uuid = crypto.randomUUID()
 
   readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
@@ -218,7 +218,7 @@ export class ExtensionPort {
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
-      const request = this.client.prepare(init)
+      const request = this.counter.prepare(init)
 
       tryBrowserSync(() => {
         this.port.postMessage(JSON.stringify(request))

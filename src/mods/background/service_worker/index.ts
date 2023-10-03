@@ -7,7 +7,6 @@ import { chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/m
 import { FixedInit } from "@/libs/fixed/fixed"
 import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
-import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { Url, qurl } from "@/libs/url/url"
@@ -28,6 +27,7 @@ import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
 import { IDBStorage, RawState, SimpleFetcherfulQuery, State, core } from "@hazae41/glacier"
+import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { Kcp } from "@hazae41/kcp"
 import { Keccak256 } from "@hazae41/keccak256"
 import { Mutex } from "@hazae41/mutex"
@@ -1160,7 +1160,7 @@ export class Global {
       const sessionResult = await this.#tryWcReconnect(sessionDataOpt.inner)
 
       const { id } = sessionRef
-      const error = sessionResult.mapErrSync(RpcError.from).err().inner
+      const error = sessionResult.mapErrSync(RpcError.rewrap).err().inner
       await Status.schema(id).tryMutate(Mutators.data<StatusData, never>({ id, error })).then(r => r.throw(t))
 
       return Ok.void()

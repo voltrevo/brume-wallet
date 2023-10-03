@@ -2,7 +2,6 @@
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { Results } from "@/libs/results/results"
-import { RpcErr, RpcError } from "@/libs/rpc"
 import { Button } from "@/libs/ui/button"
 import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
 import { qurl } from "@/libs/url/url"
@@ -12,7 +11,8 @@ import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { UserRejectionError } from "@/mods/foreground/errors/errors"
 import { Path } from "@/mods/foreground/router/path"
-import { Ok, Result } from "@hazae41/result"
+import { RpcErr } from "@hazae41/jsonrpc"
+import { Err, Ok, Result } from "@hazae41/result"
 import { useCallback } from "react"
 import { useOrigin } from "../../origins/data"
 import { useAppRequest } from "../data"
@@ -34,7 +34,7 @@ export function RequestsPage() {
       for (const { id } of maybeRequests)
         await background.tryRequest({
           method: "brume_respond",
-          params: [new RpcErr(id, RpcError.from(new UserRejectionError()))]
+          params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
         }).then(r => r.throw(t).throw(t))
 
       return Ok.void()

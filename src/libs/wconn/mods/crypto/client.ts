@@ -1,4 +1,3 @@
-import { RpcId, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc";
 import { Ciphertext, Envelope, EnvelopeTypeZero, Plaintext } from "@/libs/wconn/mods/crypto/crypto";
 import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { Base64 } from "@hazae41/base64";
@@ -6,6 +5,7 @@ import { Opaque, Readable, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Future } from "@hazae41/future";
+import { RpcId, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { None, Some } from "@hazae41/option";
 import { SuperEventTarget } from "@hazae41/plume";
 import { Err, Ok, Result } from "@hazae41/result";

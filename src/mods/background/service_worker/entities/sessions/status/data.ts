@@ -1,5 +1,5 @@
-import { RpcError } from "@/libs/rpc"
 import { createQuery } from "@hazae41/glacier"
+import { RpcError } from "@hazae41/jsonrpc"
 
 export interface StatusData {
   readonly id: string

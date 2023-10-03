@@ -1,7 +1,7 @@
-import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@/libs/rpc";
 import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { WcBrume, WebSocketConnection } from "@/mods/background/service_worker/entities/brumes/data";
 import { Disposer } from "@hazae41/cleaner";
+import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { Mutex } from "@hazae41/mutex";
 import { None } from "@hazae41/option";
 import { Pool, PoolEntry } from "@hazae41/piscine";

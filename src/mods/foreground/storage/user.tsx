@@ -1,6 +1,6 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { RpcRequestPreinit } from "@/libs/rpc";
 import { RawState, Storage, core } from "@hazae41/glacier";
+import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Mutex } from "@hazae41/mutex";
 import { None, Nullable, Option, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";

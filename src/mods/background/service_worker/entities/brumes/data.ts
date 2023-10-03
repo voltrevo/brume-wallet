@@ -1,6 +1,5 @@
 import { EthereumChains } from "@/libs/ethereum/mods/chain"
 import { Objects } from "@/libs/objects/objects"
-import { RpcClient } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Sockets } from "@/libs/sockets/sockets"
 import { Circuits } from "@/libs/tor/circuits/circuits"
@@ -11,6 +10,7 @@ import { Disposer } from "@hazae41/cleaner"
 import { Circuit, createPooledCircuitDisposer } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
+import { RpcCounter } from "@hazae41/jsonrpc"
 import { Mutex } from "@hazae41/mutex"
 import { None } from "@hazae41/option"
 import { Pool, PoolParams } from "@hazae41/piscine"
@@ -34,7 +34,7 @@ export type Connection =
   | UrlConnection
 
 export interface RpcConnection {
-  readonly client: RpcClient
+  readonly counter: RpcCounter
   readonly connection: Connection
 }
 
@@ -252,8 +252,8 @@ export namespace WebSocketConnection {
 export namespace RpcConnection {
 
   export function from(connection: Connection) {
-    const client = new RpcClient()
-    return { connection, client }
+    const counter = new RpcCounter()
+    return { connection, counter }
   }
 
 }

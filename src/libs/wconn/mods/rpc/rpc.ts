@@ -1,6 +1,6 @@
-import { RpcRequest, RpcRequestPreinit, RpcResponse } from "@/libs/rpc";
 import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { Future } from "@hazae41/future";
+import { RpcRequest, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume";
 import { Err, Ok, Result } from "@hazae41/result";
 
