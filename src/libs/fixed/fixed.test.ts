@@ -7,4 +7,5 @@ test("fixed", async () => {
   assert(Fixed.fromDecimalString("0.1", 2).value === 10n)
   assert(Fixed.fromDecimalString(".1", 2).value === 10n)
   assert(Fixed.fromDecimalString(".", 2).value === 0n)
+  assert(Fixed.fromDecimalString("0", 2).value === 0n)
 })

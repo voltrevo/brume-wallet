@@ -78,7 +78,7 @@ export class Fixed<D extends number = number> {
   }
 
   static fromDecimalString<D extends number>(text: string, decimals: D) {
-    const [whole, decimal] = text.split(".")
+    const [whole = "0", decimal = "0"] = text.split(".")
     const value = BigInt(whole + decimal.padEnd(decimals, "0").slice(0, decimals))
     return new Fixed(value, decimals)
   }
