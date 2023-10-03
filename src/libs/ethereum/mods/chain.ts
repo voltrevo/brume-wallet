@@ -331,7 +331,7 @@ export const tokenByAddress: Record<string, ContractTokenInfo> = {
   "0x55d398326f99059fF775485246999027B3197955": {
     name: "Tether USD",
     chainId: 56,
-    symbol: "BUSDT",
+    symbol: "USDT",
     decimals: 18,
     address: "0x55d398326f99059fF775485246999027B3197955",
     pairs: [],
@@ -351,6 +351,14 @@ export const tokenByAddress: Record<string, ContractTokenInfo> = {
     decimals: 18,
     address: "0x3d6545b08693dae087e957cb1180ee38b9e3c25e",
     pairs: ["0xdb8721b7a04c3e592264bf58558526b16b15e757"]
+  },
+  "0xc2132D05D31c914a87C6611C10748AEb04B58e8F": {
+    name: "Tether USD",
+    chainId: 137,
+    symbol: "USDT",
+    decimals: 6,
+    address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+    pairs: []
   },
   "0x471EcE3750Da237f93B8E339c536989b8978a438": {
     name: "CELO",
@@ -380,7 +388,7 @@ export const tokenById = {
   STETH_ON_ETHEREUM: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
 
   WBNB_ON_BINANCE: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
-  BUSDT_ON_BINANCE: "0x55d398326f99059fF775485246999027B3197955",
+  USDT_ON_BINANCE: "0x55d398326f99059fF775485246999027B3197955",
   BUSD_ON_BINANCE: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
   ETC_ON_BINANCE: "0x3d6545b08693dae087e957cb1180ee38b9e3c25e",
 
@@ -388,6 +396,8 @@ export const tokenById = {
   USDC_ON_OPTIMISM: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
   DAI_ON_OPTIMISM: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
   WBTC_ON_OPTIMISM: "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+
+  USDT_ON_POLYGON: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
 
   CELO_ON_CELO: "0x471EcE3750Da237f93B8E339c536989b8978a438",
   MSUSD_ON_CELO: "0x64dEFa3544c695db8c535D289d843a189aa26b98"
@@ -426,9 +436,9 @@ export const pairByAddress: Record<string, PairInfo> = {
   },
   "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae": {
     chainId: 56,
-    name: "BUSDT_WBNB",
+    name: "USDT_WBNB",
     address: "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae",
-    token0: tokenById.BUSDT_ON_BINANCE,
+    token0: tokenById.USDT_ON_BINANCE,
     token1: tokenById.WBNB_ON_BINANCE,
     reversed: true
   },
@@ -452,7 +462,7 @@ export const pairByName = {
   WETH_USDT: "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
   WBTC_WETH: "0xbb2b8038a1640196fbe3e38816f3e67cba72d940",
   MATIC_WETH: "0x819f3450dA6f110BA6Ea52195B3beaFa246062dE",
-  BUSDT_WBNB: "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae",
+  USDT_WBNB: "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae",
   ETC_BUSD: "0xdb8721b7a04c3e592264bf58558526b16b15e757",
   CELO_MCUSD: "0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422"
 } as const

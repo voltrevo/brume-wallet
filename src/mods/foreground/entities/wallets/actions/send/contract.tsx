@@ -1,4 +1,4 @@
-import { BigInts } from "@/libs/bigints/bigints";
+import { BigInts, Fixed } from "@/libs/bigints/bigints";
 import { UIError } from "@/libs/errors/errors";
 import { ContractTokenInfo } from "@/libs/ethereum/mods/chain";
 import { Radix } from "@/libs/hex/hex";
@@ -109,7 +109,8 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
       }).throw(t)
 
       const signature = Cubane.Abi.FunctionSignature.tryParse("transfer(address,uint256)").throw(t)
-      const args = signature.args.from(ethers.getAddress(defRecipientInput), ethers.parseUnits(defValueInput, 18))
+      const fixed = Fixed.fromString(defValueInput, token.decimals)
+      const args = signature.args.from(ethers.getAddress(defRecipientInput), fixed.value)
       const data = Cubane.Abi.tryEncode(args).throw(t)
 
       const gas = await context.background.tryRequest<string>({

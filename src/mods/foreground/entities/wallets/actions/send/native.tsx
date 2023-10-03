@@ -1,4 +1,4 @@
-import { BigInts } from "@/libs/bigints/bigints";
+import { BigInts, Fixed } from "@/libs/bigints/bigints";
 import { UIError } from "@/libs/errors/errors";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
@@ -115,7 +115,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
             from: wallet.address,
             to: ethers.getAddress(defRecipientInput),
             gasPrice: Radix.toZeroHex(gasPrice),
-            value: Radix.toZeroHex(ethers.parseUnits(defValueInput, 18)),
+            value: Radix.toZeroHex(Fixed.fromString(defValueInput, 18).value),
             nonce: Radix.toZeroHex(nonce)
           }, "latest"]
         }]
@@ -128,7 +128,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
           chainId: context.chain.chainId,
           gasPrice: gasPrice,
           nonce: Number(nonce),
-          value: ethers.parseUnits(defValueInput, 18)
+          value: Fixed.fromString(defValueInput, 18).value
         })
       }).throw(t)
 

@@ -153,7 +153,7 @@ function WalletDataPage() {
 
   const wethUsdtPriceQuery = usePairPrice(mainnet, pairByAddress[pairByName.WETH_USDT])
   const maticWethPriceQuery = usePairPrice(mainnet, pairByAddress[pairByName.MATIC_WETH])
-  const busdtWbnbPriceQuery = usePairPrice(binance, pairByAddress[pairByName.BUSDT_WBNB])
+  const busdtWbnbPriceQuery = usePairPrice(binance, pairByAddress[pairByName.USDT_WBNB])
   const wbtcWethPriceQuery = usePairPrice(mainnet, pairByAddress[pairByName.WBTC_WETH])
   const etcBusdPriceQuery = usePairPrice(binance, pairByAddress[pairByName.ETC_BUSD])
   const celoMcusdPriceQuery = usePairPrice(celo, pairByAddress[pairByName.CELO_MCUSD])
@@ -322,7 +322,7 @@ function WalletDataPage() {
           chain={chainByChainId[chainIdByName.BINANCE]}
           prices={[busdtWbnbPriceQuery.data?.inner]} />
         <ContractTokenRow
-          token={tokenByAddress[tokenById.BUSDT_ON_BINANCE]}
+          token={tokenByAddress[tokenById.USDT_ON_BINANCE]}
           prices={[]} />
       </div>
       <div className="h-4" />
@@ -334,6 +334,9 @@ function WalletDataPage() {
         <NativeTokenRow
           chain={chainByChainId[chainIdByName.POLYGON]}
           prices={[maticWethPriceQuery.data?.inner, wethUsdtPriceQuery.data?.inner]} />
+        <ContractTokenRow
+          token={tokenByAddress[tokenById.USDT_ON_POLYGON]}
+          prices={[]} />
       </div>
       <div className="h-4" />
       <div className="text-xl font-medium">

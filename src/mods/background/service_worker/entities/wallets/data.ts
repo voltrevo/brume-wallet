@@ -1,4 +1,4 @@
-import { Fixed, FixedInit } from "@/libs/bigints/bigints"
+import { Fixed, FixedInit, ZeroHexFixed } from "@/libs/bigints/bigints"
 import { Errors } from "@/libs/errors/errors"
 import { ContractTokenInfo, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { RpcRequestPreinit, TorRpc } from "@/libs/rpc"
@@ -363,7 +363,7 @@ export function getPricedBalance(ethereum: EthereumContext, account: string, coi
 
 export function getBalance(ethereum: EthereumContext, account: string, block: string, storage: IDBStorage) {
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryEthereumFetch<string>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new FixedInit(x, ethereum.chain.token.decimals))))
+    await tryEthereumFetch<ZeroHexString>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals))))
 
   const indexer = async (states: States<FixedInit, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
