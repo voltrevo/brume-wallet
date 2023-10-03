@@ -1,6 +1,6 @@
-import { Fixed, FixedInit, ZeroHexFixed } from "@/libs/bigints/bigints"
 import { Errors } from "@/libs/errors/errors"
 import { ContractTokenInfo, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
+import { Fixed, FixedInit, ZeroHexFixed } from "@/libs/fixed/fixed"
 import { RpcRequestPreinit, TorRpc } from "@/libs/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"

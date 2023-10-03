@@ -1,5 +1,6 @@
-import { BigInts, Fixed } from "@/libs/bigints/bigints";
+import { BigInts } from "@/libs/bigints/bigints";
 import { UIError } from "@/libs/errors/errors";
+import { Fixed } from "@/libs/fixed/fixed";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
 import { ExternalDivisionLink } from "@/libs/next/anchor";

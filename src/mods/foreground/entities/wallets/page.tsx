@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
-import { Fixed, FixedInit } from "@/libs/bigints/bigints";
 import { Gradients } from "@/libs/colors/colors";
 import { UIError } from "@/libs/errors/errors";
 import { ContractTokenInfo, EthereumChain, chainByChainId, chainIdByName, pairByAddress, pairByName, tokenByAddress, tokenById } from "@/libs/ethereum/mods/chain";
+import { Fixed, FixedInit } from "@/libs/fixed/fixed";
 import { Outline } from "@/libs/icons/icons";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";

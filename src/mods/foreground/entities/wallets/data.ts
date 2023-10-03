@@ -1,5 +1,6 @@
-import { BigIntToHex, Fixed, FixedInit } from "@/libs/bigints/bigints"
+import { BigIntToHex } from "@/libs/bigints/bigints"
 import { ContractTokenInfo, EthereumChain, PairInfo } from "@/libs/ethereum/mods/chain"
+import { Fixed, FixedInit } from "@/libs/fixed/fixed"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { useObjectMemo } from "@/libs/react/memo"
 import { RpcRequestPreinit, RpcResponse } from "@/libs/rpc"
