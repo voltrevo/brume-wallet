@@ -115,7 +115,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
             from: wallet.address,
             to: ethers.getAddress(defRecipientInput),
             gasPrice: Radix.toZeroHex(gasPrice),
-            value: Radix.toZeroHex(Fixed.fromString(defValueInput, 18).value),
+            value: Radix.toZeroHex(Fixed.fromDecimalString(defValueInput, 18).value),
             nonce: Radix.toZeroHex(nonce)
           }, "latest"]
         }]
@@ -128,7 +128,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
           chainId: context.chain.chainId,
           gasPrice: gasPrice,
           nonce: Number(nonce),
-          value: Fixed.fromString(defValueInput, 18).value
+          value: Fixed.fromDecimalString(defValueInput, 18).value
         })
       }).throw(t)
 

@@ -121,14 +121,14 @@ export class Fixed<D extends number = number> {
     return new Fixed(this.value - other.move(this.decimals).value, this.decimals)
   }
 
-  toString() {
+  toDecimalString() {
     const raw = this.value.toString().padStart(this.decimals + 1, "0")
     const whole = raw.slice(0, -this.decimals).replaceAll("0", " ").trimStart().replaceAll(" ", "0")
     const decimal = raw.slice(-this.decimals).replaceAll("0", " ").trimEnd().replaceAll(" ", "0")
     return `${whole || "0"}.${decimal || "0"}`
   }
 
-  static fromString(text: string, decimals: number) {
+  static fromDecimalString(text: string, decimals: number) {
     const [whole = "0", decimal = "0"] = text.split(".")
     const value = BigInt(whole + decimal.padEnd(decimals, "0"))
     return new Fixed(value, decimals)

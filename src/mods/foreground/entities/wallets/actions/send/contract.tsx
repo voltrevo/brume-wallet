@@ -109,7 +109,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
       }).throw(t)
 
       const signature = Cubane.Abi.FunctionSignature.tryParse("transfer(address,uint256)").throw(t)
-      const fixed = Fixed.fromString(defValueInput, token.decimals)
+      const fixed = Fixed.fromDecimalString(defValueInput, token.decimals)
       const args = signature.args.from(ethers.getAddress(defRecipientInput), fixed.value)
       const data = Cubane.Abi.tryEncode(args).throw(t)
 

@@ -35,7 +35,7 @@ export function WalletPage(props: UUIDProps) {
 export function useDisplay(option: Nullable<Result<FixedInit, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return Number(Fixed.from(fixed).move(5).toString()).toLocaleString(undefined)
+      return Number(Fixed.from(fixed).move(5).toDecimalString()).toLocaleString(undefined)
     }).mapErrSync(() => "Error").inner).unwrapOr("...")
   }, [option])
 }
@@ -43,7 +43,7 @@ export function useDisplay(option: Nullable<Result<FixedInit, Error>>) {
 export function useDisplayUsd(option: Nullable<Result<FixedInit, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return Number(Fixed.from(fixed).move(2).toString()).toLocaleString(undefined, { style: "currency", currency: "USD" })
+      return Number(Fixed.from(fixed).move(2).toDecimalString()).toLocaleString(undefined, { style: "currency", currency: "USD" })
     }).mapErrSync(() => "Error").inner).unwrapOr("...")
   }, [option])
 }
@@ -51,7 +51,7 @@ export function useDisplayUsd(option: Nullable<Result<FixedInit, Error>>) {
 export function useCompactDisplayUsd(option: Nullable<Result<FixedInit, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return Number(Fixed.from(fixed).move(2).toString()).toLocaleString(undefined, { style: "currency", currency: "USD", notation: "compact" })
+      return Number(Fixed.from(fixed).move(2).toDecimalString()).toLocaleString(undefined, { style: "currency", currency: "USD", notation: "compact" })
     }).mapErrSync(() => "Error").inner).unwrapOr("??")
   }, [option])
 }
