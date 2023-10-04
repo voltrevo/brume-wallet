@@ -669,12 +669,10 @@ export class Global {
         session: session.id
       }, mouse).then(r => r.throw(t).throw(t))
 
-      const signal = AbortSignal.timeout(600_000)
-
       return await tryEthereumFetch<string>(ethereum, {
         method: "eth_sendRawTransaction",
         params: [signature]
-      }, { signal }).then(r => r.throw(t))
+      }).then(r => r.throw(t))
     })
   }
 
@@ -1343,6 +1341,7 @@ export class Global {
         Result.unthrow<Result<void, Error>>(async t => {
           const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.throw(t).result.get().inner)
 
+          console.debug(`Fetching ${iconUrl} with ${circuit.id}`)
           const iconRes = await circuit.tryFetch(iconUrl).then(r => r.throw(t))
           const iconBlob = await Result.runAndDoubleWrap(() => iconRes.blob()).then(r => r.throw(t))
 

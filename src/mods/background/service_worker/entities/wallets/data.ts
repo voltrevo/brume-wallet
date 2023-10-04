@@ -8,7 +8,6 @@ import { Data, Fail, Fetched, FetcherMore, IDBStorage, States, createQuery } fro
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
-import { ContractRunner, TransactionRequest } from "ethers"
 import { EthBrume } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
@@ -430,25 +429,6 @@ export function getBalance(ethereum: EthereumContext, account: string, block: st
     indexer,
     storage
   })
-}
-
-export class BrumeProvider implements ContractRunner {
-  provider = null
-
-  constructor(
-    readonly ethereum: EthereumContext
-  ) { }
-
-  async call(tx: TransactionRequest) {
-    return await tryEthereumFetch<string>(this.ethereum, {
-      method: "eth_call",
-      params: [{
-        to: tx.to,
-        data: tx.data
-      }, "pending"]
-    }).then(r => r.unwrap().unwrap())
-  }
-
 }
 
 export function getPairPrice(ethereum: EthereumContext, pair: PairInfo, storage: IDBStorage) {
