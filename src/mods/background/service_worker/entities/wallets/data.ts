@@ -1,12 +1,13 @@
 import { ContractTokenInfo, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Fixed, FixedInit, ZeroHexFixed } from "@/libs/fixed/fixed"
+import { Maps } from "@/libs/maps/maps"
 import { TorRpc } from "@/libs/rpc/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Cubane, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
-import { None, Nullable, Option, Some } from "@hazae41/option"
+import { None, Option, Some } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
 import { EthBrume } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
@@ -231,45 +232,81 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
       const promises = Array.from({ length: pool.capacity }, (_, i) => runWithConnOrThrow(i))
       const results = await Promise.allSettled(promises)
 
-      let previous: Nullable<string> = undefined
+      const fetcheds = new Map<string, Fetched<T, Error>>()
+      const counters = new Map<string, number>()
 
       for (const result of results) {
         if (result.status === "rejected")
           continue
-        if (result.value.isErr())
-          continue
-
-        const current = JSON.stringify(result.value.inner)
-
-        if (previous != null && previous !== current)
-          console.warn(`Different results from multiple connections`, previous, current)
-
-        previous = current
+        const raw = JSON.stringify(result.value.inner)
+        const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
+        counters.set(raw, previous + 1)
+        fetcheds.set(raw, result.value)
       }
 
-      return await Promise.any(promises)
+      /**
+       * One truth -> return it
+       * Zero truth -> throw AggregateError
+       */
+      if (counters.size < 2)
+        return await Promise.any(promises)
+
+      console.warn(`Different results from multiple connections`)
+
+      /**
+       * Sort truths by occurence
+       */
+      const sorteds = [...Maps.entries(counters)].sort((a, b) => b.value - a.value)
+
+      /**
+       * Two concurrent truths
+       */
+      if (sorteds[0].value === sorteds[1].value) {
+        console.warn(`Could not choose truth`)
+        throw new Error(`Could not choose truth`)
+      }
+
+      return fetcheds.get(sorteds[0].key)!
     }
 
     const promises = Array.from({ length: pools.capacity }, (_, i) => runWithPoolOrThrow(i))
     const results = await Promise.allSettled(promises)
 
-    let previous: Nullable<string> = undefined
+    const fetcheds = new Map<string, Fetched<T, Error>>()
+    const counters = new Map<string, number>()
 
     for (const result of results) {
       if (result.status === "rejected")
         continue
-      if (result.value.isErr())
-        continue
-
-      const current = JSON.stringify(result.value.inner)
-
-      if (previous != null && previous !== current)
-        console.warn(`Different results from multiple circuits`, previous, current)
-
-      previous = current
+      const raw = JSON.stringify(result.value.inner)
+      const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
+      counters.set(raw, previous + 1)
+      fetcheds.set(raw, result.value)
     }
 
-    return await Promise.any(promises)
+    /**
+     * One truth -> return it
+     * Zero truth -> throw AggregateError
+     */
+    if (counters.size < 2)
+      return await Promise.any(promises)
+
+    console.warn(`Different results from multiple circuits`)
+
+    /**
+     * Sort truths by occurence
+     */
+    const sorteds = [...Maps.entries(counters)].sort((a, b) => b.value - a.value)
+
+    /**
+     * Two concurrent truths
+     */
+    if (sorteds[0].value === sorteds[1].value) {
+      console.warn(`Could not choose truth`)
+      throw new Error(`Could not choose truth`)
+    }
+
+    return fetcheds.get(sorteds[0].key)!
   })
 }
 

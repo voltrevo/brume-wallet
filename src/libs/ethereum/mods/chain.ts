@@ -14,7 +14,7 @@ export const chainByChainId: EthereumChains = {
   1: {
     name: "Ethereum",
     chainId: 1,
-    urls: ["wss://ethereum.publicnode.com", "wss://eth.llamarpc.com"],
+    urls: ["wss://ethereum.publicnode.com", "wss://eth.llamarpc.com", "wss://mainnet.gateway.tenderly.co"],
     etherscan: "https://etherscan.io",
     token: {
       name: "ETH",
@@ -78,7 +78,7 @@ export const chainByChainId: EthereumChains = {
   100: {
     name: "Gnosis",
     chainId: 100,
-    urls: ["https://gnosis.api.onfinality.io/public"],
+    urls: ["wss://gnosis.publicnode.com"],
     etherscan: "https://gnosisscan.io",
     token: {
       name: "xDAI",
