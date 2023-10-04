@@ -8,7 +8,7 @@ import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
 import { EthereumAuthPrivateKeyWalletData, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
-import { Abi } from "@hazae41/cubane"
+import { Abi, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fetched, FetcherMore, createQuery, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc"
 import { Nullable, Option } from "@hazae41/option"
@@ -508,6 +508,35 @@ export function getPairPrice(context: EthereumContext, pair: PairInfo, storage: 
 export function usePairPrice(ethereum: EthereumContext, pair: PairInfo) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getPairPrice, [ethereum, pair, storage])
+  useFetch(query)
+  useVisible(query)
+  useSubscribe(query, storage)
+  useError(query, console.error)
+  return query
+}
+
+
+export function getENS(context: EthereumContext, name: Nullable<string>, storage: UserStorage) {
+  if (name == null)
+    return undefined
+
+  const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
+    await tryFetch<ZeroHexString>(request, context)
+
+  return createQuery<EthereumQueryKey<unknown>, ZeroHexString, Error>({
+    key: {
+      chainId: 1,
+      method: "eth_resolveEns",
+      params: [name]
+    },
+    fetcher,
+    storage
+  })
+}
+
+export function useENS(ethereum: EthereumContext, name: Nullable<string>) {
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getENS, [ethereum, name, storage])
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)

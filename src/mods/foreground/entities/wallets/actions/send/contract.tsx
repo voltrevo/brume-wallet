@@ -1,6 +1,6 @@
 import { BigInts } from "@/libs/bigints/bigints";
 import { UIError } from "@/libs/errors/errors";
-import { ContractTokenInfo } from "@/libs/ethereum/mods/chain";
+import { ContractTokenInfo, chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain";
 import { Fixed } from "@/libs/fixed/fixed";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
@@ -19,11 +19,13 @@ import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useWalletData } from "../../context";
-import { EthereumContextProps, EthereumWalletInstance, useGasPrice, useNonce, useTokenBalance } from "../../data";
+import { EthereumContextProps, EthereumWalletInstance, useENS, useEthereumContext, useGasPrice, useNonce, useTokenBalance } from "../../data";
 
 export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps & EthereumContextProps & { token: ContractTokenInfo }) {
   const wallet = useWalletData()
   const { title, context, token, close } = props
+
+  const mainnet = useEthereumContext(wallet, chainByChainId[chainIdByName.ETHEREUM])
 
   const balanceQuery = useTokenBalance(wallet.address, token, context, [])
   const maybeBalance = balanceQuery.data?.inner
@@ -42,6 +44,15 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
     setRawRecipientInput(e.currentTarget.value)
   }, [])
 
+  const maybeEnsName = defRecipientInput.endsWith(".eth")
+    ? defRecipientInput
+    : undefined
+  const ensAddressQuery = useENS(mainnet, maybeEnsName)
+
+  const maybeFinalAddress = defRecipientInput.endsWith(".eth")
+    ? ensAddressQuery.data?.inner
+    : defRecipientInput
+
   const RecipientInput = <>
     <div className="">
       Recipient
@@ -49,7 +60,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
     <div className="h-2" />
     <Input.Contrast className="w-full"
       value={rawRecipientInput}
-      placeholder="0x..."
+      placeholder="brume.eth"
       onChange={onRecipientInputChange} />
   </>
 
@@ -109,9 +120,13 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
         return new UIError(`Could not fetch or parse nonce`)
       }).throw(t)
 
+      const address = Option.wrap(maybeFinalAddress).okOrElseSync(() => {
+        return new UIError(`Could not fetch or parse address`)
+      }).throw(t)
+
       const signature = Cubane.Abi.FunctionSignature.tryParse("transfer(address,uint256)").throw(t)
       const fixed = Fixed.fromDecimalString(defValueInput, token.decimals)
-      const args = signature.args.from(ethers.getAddress(defRecipientInput), fixed.value)
+      const args = signature.args.from(ethers.getAddress(address), fixed.value)
       const data = Cubane.Abi.tryEncode(args).throw(t)
 
       const gas = await context.background.tryRequest<string>({
@@ -158,7 +173,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [context, wallet, maybeGasPrice, maybeFinalNonce, defRecipientInput, defValueInput])
+  }, [context, wallet, maybeGasPrice, maybeFinalNonce, maybeFinalAddress, defValueInput])
 
   const TxHashDisplay = <>
     <div className="">

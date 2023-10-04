@@ -1,5 +1,6 @@
 import { BigInts } from "@/libs/bigints/bigints";
 import { UIError } from "@/libs/errors/errors";
+import { chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain";
 import { Fixed } from "@/libs/fixed/fixed";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
@@ -17,11 +18,13 @@ import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useWalletData } from "../../context";
-import { EthereumContextProps, EthereumWalletInstance, useBalance, useGasPrice, useNonce } from "../../data";
+import { EthereumContextProps, EthereumWalletInstance, useBalance, useENS, useEthereumContext, useGasPrice, useNonce } from "../../data";
 
 export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps & EthereumContextProps) {
   const wallet = useWalletData()
   const { title, context, close } = props
+
+  const mainnet = useEthereumContext(wallet, chainByChainId[chainIdByName.ETHEREUM])
 
   const balanceQuery = useBalance(wallet.address, context, [])
   const maybeBalance = balanceQuery.data?.inner
@@ -40,6 +43,15 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
     setRawRecipientInput(e.currentTarget.value)
   }, [])
 
+  const maybeEnsName = defRecipientInput.endsWith(".eth")
+    ? defRecipientInput
+    : undefined
+  const ensAddressQuery = useENS(mainnet, maybeEnsName)
+
+  const maybeFinalAddress = defRecipientInput.endsWith(".eth")
+    ? ensAddressQuery.data?.inner
+    : defRecipientInput
+
   const RecipientInput = <>
     <div className="">
       Recipient
@@ -47,7 +59,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
     <div className="h-2" />
     <Input.Contrast className="w-full"
       value={rawRecipientInput}
-      placeholder="0x..."
+      placeholder="brume.eth"
       onChange={onRecipientInputChange} />
   </>
 
@@ -107,6 +119,10 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
         return new UIError(`Could not fetch or parse nonce`)
       }).throw(t)
 
+      const address = Option.wrap(maybeFinalAddress).okOrElseSync(() => {
+        return new UIError(`Could not fetch or parse address`)
+      }).throw(t)
+
       const gas = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",
         params: [context.wallet.uuid, context.chain.chainId, {
@@ -114,7 +130,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
           params: [{
             chainId: Radix.toZeroHex(context.chain.chainId),
             from: wallet.address,
-            to: ethers.getAddress(defRecipientInput),
+            to: ethers.getAddress(address),
             gasPrice: Radix.toZeroHex(gasPrice),
             value: Radix.toZeroHex(Fixed.fromDecimalString(defValueInput, 18).value),
             nonce: Radix.toZeroHex(nonce)
@@ -124,7 +140,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
 
       const tx = Result.runAndDoubleWrapSync(() => {
         return Transaction.from({
-          to: ethers.getAddress(defRecipientInput),
+          to: ethers.getAddress(address),
           gasLimit: gas,
           chainId: context.chain.chainId,
           gasPrice: gasPrice,
@@ -151,7 +167,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [context, wallet, maybeGasPrice, maybeFinalNonce, defRecipientInput, defValueInput])
+  }, [context, wallet, maybeGasPrice, maybeFinalNonce, maybeFinalAddress, defValueInput])
 
   const TxHashDisplay = <>
     <div className="">

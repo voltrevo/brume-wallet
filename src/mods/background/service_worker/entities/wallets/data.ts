@@ -557,7 +557,7 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
     }).then(r => r.throw(t))
 
     if (fetched.isErr())
-      return new Ok(new Fail(fetched.inner))
+      return new Ok(fetched)
 
     const returns = Cubane.Abi.createStaticBigUint(32)
     const balance = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).value
@@ -610,6 +610,70 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
     },
     fetcher,
     indexer,
+    storage
+  })
+}
+
+async function tryFetchResolver(ethereum: EthereumContext, namehash: Uint8Array): Promise<Result<Fetched<ZeroHexString, Error>, Error>> {
+  return await Result.unthrow(async t => {
+    const registry = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
+
+    const signature = Cubane.Abi.FunctionSignature.tryParse("resolver(bytes32)").throw(t)
+    const data = Cubane.Abi.tryEncode(signature.args.from(namehash)).throw(t)
+
+    const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
+      method: "eth_call",
+      params: [{
+        to: registry,
+        data: data
+      }, "pending"]
+    }).then(r => r.throw(t))
+
+    if (fetched.isErr())
+      return new Ok(fetched)
+
+    const returns = Cubane.Abi.StaticAddress
+    const address = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).value
+
+    return new Ok(new Data(address))
+  })
+}
+
+export function getENS(ethereum: EthereumContext, name: string, storage: IDBStorage) {
+  const fetcher = () => Result.unthrow<Result<Fetched<ZeroHexString, Error>, Error>>(async t => {
+    const namehash = Cubane.Ens.tryNamehash(name).throw(t)
+    const resolver = await tryFetchResolver(ethereum, namehash).then(r => r.throw(t))
+
+    if (resolver.isErr())
+      return new Ok(resolver)
+
+    const signature = Cubane.Abi.FunctionSignature.tryParse("addr(bytes32)").throw(t)
+    const data = Cubane.Abi.tryEncode(signature.args.from(namehash)).throw(t)
+
+    const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
+      method: "eth_call",
+      params: [{
+        to: resolver.inner,
+        data: data
+      }, "pending"]
+    }).then(r => r.throw(t))
+
+    if (fetched.isErr())
+      return new Ok(fetched)
+
+    const returns = Cubane.Abi.StaticAddress
+    const address = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).value
+
+    return new Ok(new Data(address))
+  })
+
+  return createQuery<EthereumQueryKey<unknown>, ZeroHexString, Error>({
+    key: {
+      chainId: 1,
+      method: "eth_resolveEns",
+      params: [name]
+    },
+    fetcher,
     storage
   })
 }
