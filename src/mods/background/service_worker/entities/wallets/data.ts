@@ -184,39 +184,44 @@ export interface EthereumContext {
 
 export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
   return await Result.runAndDoubleWrap<Fetched<T, Error>>(async () => {
-    const { signal = AbortSignals.timeout(5_000) } = more
+    const { signal: presignal } = more
     const { brume } = ethereum
 
     const pools = Option.wrap(brume[ethereum.chain.chainId]).ok().unwrap()
 
-    async function runWithPoolOrThrow(index: number, signal: AbortSignal) {
+    async function runWithPoolOrThrow(index: number) {
       const pool = await pools.tryGet(index).then(r => r.unwrap().unwrap().inner)
 
-      async function runWithConnOrThrow(index: number, signal: AbortSignal) {
+      async function runWithConnOrThrow(index: number) {
         const conn = await pool.tryGet(index).then(r => r.unwrap().unwrap().inner)
 
         const { counter, connection } = conn
         const request = counter.prepare(init)
 
         if (connection.isURL()) {
-          console.log(`Fetching ${init.method} from ${connection.url.href} using ${connection.circuit.id}`)
+          const { url, circuit } = connection
+          const signal = AbortSignals.timeout(5_000, presignal)
 
-          const result = await TorRpc.tryFetchWithCircuit<T>(connection.url, { ...request, circuit: connection.circuit })
+          console.debug(`Fetching ${init.method} from ${url.href} using ${circuit.id}`)
+          const result = await TorRpc.tryFetchWithCircuit<T>(url, { ...request, circuit, signal })
 
           if (result.isErr())
-            console.warn(`Could not fetch ${init.method} from ${connection.url.href} using ${connection.circuit.id}`, { result })
+            console.debug(`Could not fetch ${init.method} from ${url.href} using ${circuit.id}`, { result })
 
           return Fetched.rewrap(result.unwrap())
         }
 
         if (connection.isWebSocket()) {
           await connection.cooldown
-          console.log(`Fetching ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`)
 
-          const result = await TorRpc.tryFetchWithSocket<T>(connection.socket, request, signal)
+          const { socket, circuit } = connection
+          const signal = AbortSignals.timeout(5_000, presignal)
+
+          console.debug(`Fetching ${init.method} from ${socket.url} using ${circuit.id}`)
+          const result = await TorRpc.tryFetchWithSocket<T>(socket, request, signal)
 
           if (result.isErr())
-            console.warn(`Could not fetch ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`, { result })
+            console.debug(`Could not fetch ${init.method} from ${socket.url} using ${circuit.id}`, { result })
 
           return Fetched.rewrap(result.unwrap())
         }
@@ -224,7 +229,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
         throw new Panic()
       }
 
-      const promises = Array.from({ length: pool.capacity }, (_, i) => runWithConnOrThrow(i, signal))
+      const promises = Array.from({ length: pool.capacity }, (_, i) => runWithConnOrThrow(i))
       const results = await Promise.allSettled(promises)
 
       let previous: Nullable<string> = undefined
@@ -246,7 +251,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
       return await Promise.any(promises)
     }
 
-    const promises = Array.from({ length: pools.capacity }, (_, i) => runWithPoolOrThrow(i, signal))
+    const promises = Array.from({ length: pools.capacity }, (_, i) => runWithPoolOrThrow(i))
     const results = await Promise.allSettled(promises)
 
     let previous: Nullable<string> = undefined
