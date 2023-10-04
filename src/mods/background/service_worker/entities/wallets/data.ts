@@ -1,18 +1,15 @@
-import { Errors } from "@/libs/errors/errors"
 import { ContractTokenInfo, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Fixed, FixedInit, ZeroHexFixed } from "@/libs/fixed/fixed"
 import { TorRpc } from "@/libs/rpc/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
-import { Disposer } from "@hazae41/cleaner"
 import { Cubane, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
-import { None, Option, Some } from "@hazae41/option"
-import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
+import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
 import { ContractRunner, TransactionRequest } from "ethers"
-import { EthBrume, RpcConnection } from "../brumes/data"
+import { EthBrume } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
 import { SessionData } from "../sessions/data"
@@ -186,75 +183,90 @@ export interface EthereumContext {
 }
 
 export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
-  return await Result.unthrow<Result<Fetched<T, Error>, Error>>(async t => {
-    const { signal = AbortSignals.timeout(30_000) } = more
+  return await Result.runAndDoubleWrap<Fetched<T, Error>>(async () => {
+    const { signal = AbortSignals.timeout(5_000) } = more
     const { brume } = ethereum
 
-    const pools = Option.wrap(brume[ethereum.chain.chainId]).ok().throw(t)
-    const allTriedPools = new Set<Pool<Disposer<RpcConnection>, Error>>()
+    const pools = Option.wrap(brume[ethereum.chain.chainId]).ok().unwrap()
 
-    return await tryLoop(async (i) => {
-      return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
-        let pool: Pool<Disposer<RpcConnection>, Error>
+    async function runWithPoolOrThrow(index: number, signal: AbortSignal) {
+      const pool = await pools.tryGet(index).then(r => r.unwrap().unwrap().inner)
 
-        while (true) {
-          pool = await pools.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
+      async function runWithConnOrThrow(index: number, signal: AbortSignal) {
+        const conn = await pool.tryGet(index).then(r => r.unwrap().unwrap().inner)
 
-          if (allTriedPools.has(pool))
-            continue
-          allTriedPools.add(pool)
-          break
+        const { counter, connection } = conn
+        const request = counter.prepare(init)
+
+        if (connection.isURL()) {
+          console.log(`Fetching ${init.method} from ${connection.url.href} using ${connection.circuit.id}`)
+
+          const result = await TorRpc.tryFetchWithCircuit<T>(connection.url, { ...request, circuit: connection.circuit })
+
+          if (result.isErr())
+            console.warn(`Could not fetch ${init.method} from ${connection.url.href} using ${connection.circuit.id}`, { result })
+
+          return Fetched.rewrap(result.unwrap())
         }
 
-        const conns = pool
-        const allTriedConns = new Set<RpcConnection>()
+        if (connection.isWebSocket()) {
+          await connection.cooldown
+          console.log(`Fetching ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`)
 
-        return await tryLoop(async (i) => {
-          return await Result.unthrow<Result<Fetched<T, Error>, Looped<Error>>>(async t => {
-            let conn: RpcConnection
+          const result = await TorRpc.tryFetchWithSocket<T>(connection.socket, request, signal)
 
-            while (true) {
-              conn = await conns.tryGetCryptoRandom().then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
+          if (result.isErr())
+            console.warn(`Could not fetch ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`, { result })
 
-              if (allTriedConns.has(conn))
-                continue
-              allTriedConns.add(conn)
-              break
-            }
+          return Fetched.rewrap(result.unwrap())
+        }
 
-            const { counter: client, connection } = conn
-            const request = client.prepare(init)
+        throw new Panic()
+      }
 
-            if (connection.isURL()) {
-              // console.log(`Fetching ${init.method} from ${connection.url.href} using ${connection.circuit.id}`)
+      const promises = Array.from({ length: pool.capacity }, (_, i) => runWithConnOrThrow(i, signal))
+      const results = await Promise.allSettled(promises)
 
-              const result = await TorRpc.tryFetchWithCircuit<T>(connection.url, { ...request, circuit: connection.circuit })
+      let previous: Nullable<string> = undefined
 
-              if (result.isErr())
-                console.warn(`Could not fetch ${init.method} from ${connection.url.href} using ${connection.circuit.id}`, { result })
+      for (const result of results) {
+        if (result.status === "rejected")
+          continue
+        if (result.value.isErr())
+          continue
 
-              return result.mapSync(x => Fetched.rewrap(x)).mapErrSync(Retry.new)
-            }
+        const current = JSON.stringify(result.value.inner)
 
-            if (connection.isWebSocket()) {
-              await connection.cooldown
-              // console.log(`Fetching ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`)
+        if (previous != null && previous !== current)
+          console.warn(`Different results from multiple connections`, previous, current)
 
-              const result = await TorRpc.tryFetchWithSocket<T>(connection.socket, request, signal)
+        previous = current
+      }
 
-              if (result.isErr())
-                console.warn(`Could not fetch ${init.method} from ${connection.socket.url} using ${connection.circuit.id}`, { result })
+      return await Promise.any(promises)
+    }
 
-              return result.mapSync(x => Fetched.rewrap(x)).mapErrSync(Retry.new)
-            }
+    const promises = Array.from({ length: pools.capacity }, (_, i) => runWithPoolOrThrow(i, signal))
+    const results = await Promise.allSettled(promises)
 
-            connection satisfies never
-            throw new Panic()
-          })
-        }, { base: 1, max: conns.capacity }).then(r => r.mapErrSync(Retry.new))
-      })
-    }, { base: 1, max: pools.capacity })
-  }).then(r => r.inspectErrSync(Errors.log))
+    let previous: Nullable<string> = undefined
+
+    for (const result of results) {
+      if (result.status === "rejected")
+        continue
+      if (result.value.isErr())
+        continue
+
+      const current = JSON.stringify(result.value.inner)
+
+      if (previous != null && previous !== current)
+        console.warn(`Different results from multiple circuits`, previous, current)
+
+      previous = current
+    }
+
+    return await Promise.any(promises)
+  })
 }
 
 export function getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {

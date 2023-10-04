@@ -1,16 +1,19 @@
 /* eslint-disable @next/next/no-img-element */
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
+import { OkProps } from "@/libs/react/props/promise"
 import { Results } from "@/libs/results/results"
 import { Button } from "@/libs/ui/button"
 import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
+import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/data"
 import { Session } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackground } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
-import { Option } from "@hazae41/option"
+import { Nullable, Option } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
-import { useMemo } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { useBlobby } from "../../blobbys/data"
 import { useOrigin } from "../../origins/data"
 import { useSession } from "../data"
 import { useStatus } from "../status/data"
@@ -95,6 +98,15 @@ export function SessionRow(props: { session: Session }) {
   const statusQuery = useStatus(props.session.id)
   const maybeStatusData = statusQuery.data?.inner
 
+  const [iconDatas, setIconDatas] = useState<Nullable<BlobbyData>[]>([])
+
+  const onIconData = useCallback(([index, data]: [number, Nullable<BlobbyData>]) => {
+    setIconDatas(iconDatas => {
+      iconDatas[index] = data
+      return [...iconDatas]
+    })
+  }, [])
+
   const tryDisconnect = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       if (maybeSessionData == null)
@@ -116,6 +128,12 @@ export function SessionRow(props: { session: Session }) {
 
   return <div role="button" className="po-md rounded-xl flex items-center gap-4"
     onClick={tryDisconnect.run}>
+    {maybeOriginData.icons?.map((x, i) =>
+      <IndexedBlobbyLoader
+        key={x.id}
+        index={i}
+        id={x.id}
+        ok={onIconData} />)}
     <div className="relative shrink-0">
       {(() => {
         if (maybeStatusData == null)
@@ -126,7 +144,7 @@ export function SessionRow(props: { session: Session }) {
       })()}
       <ImageWithFallback className="s-3xl"
         alt="icon"
-        src={maybeOriginData.icon}>
+        src={iconDatas.find(Boolean)?.data}>
         <Outline.CubeTransparentIcon className="s-3xl" />
       </ImageWithFallback>
     </div>
@@ -144,4 +162,16 @@ export function SessionRow(props: { session: Session }) {
       </Button.Shrink>
     </Button.Naked>
   </div>
+}
+
+function IndexedBlobbyLoader(props: OkProps<[number, Nullable<BlobbyData>]> & { id: string, index: number }) {
+  const { index, id, ok } = props
+
+  const { data } = useBlobby(id)
+
+  useEffect(() => {
+    ok([index, data?.inner])
+  }, [index, data, ok])
+
+  return null
 }

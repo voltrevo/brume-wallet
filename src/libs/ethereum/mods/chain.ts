@@ -14,7 +14,7 @@ export const chainByChainId: EthereumChains = {
   1: {
     name: "Ethereum",
     chainId: 1,
-    urls: ["wss://ethereum.publicnode.com"],
+    urls: ["wss://ethereum.publicnode.com", "wss://eth.llamarpc.com"],
     etherscan: "https://etherscan.io",
     token: {
       name: "ETH",
@@ -39,7 +39,7 @@ export const chainByChainId: EthereumChains = {
   10: {
     name: "Optimism",
     chainId: 10,
-    urls: ["wss://optimism.publicnode.com"],
+    urls: ["wss://optimism.publicnode.com", "wss://optimism.llamarpc.com"],
     etherscan: "https://optimistic.etherscan.io",
     token: {
       name: "ETH",
@@ -52,7 +52,7 @@ export const chainByChainId: EthereumChains = {
   56: {
     name: "Binance",
     chainId: 56,
-    urls: ["wss://bsc.publicnode.com"],
+    urls: ["wss://bsc.publicnode.com", "wss://binance.llamarpc.com"],
     etherscan: "https://bnbscan.com",
     token: {
       name: "BNB",
@@ -91,7 +91,7 @@ export const chainByChainId: EthereumChains = {
   137: {
     name: "Polygon Bor",
     chainId: 137,
-    urls: ["wss://polygon-bor.publicnode.com"],
+    urls: ["wss://polygon-bor.publicnode.com", "wss://polygon.llamarpc.com"],
     etherscan: "https://polygonscan.com",
     token: {
       name: "MATIC",
@@ -130,7 +130,7 @@ export const chainByChainId: EthereumChains = {
   42161: {
     name: "Arbitrum One",
     chainId: 42161,
-    urls: ["wss://arbitrum-one.publicnode.com"],
+    urls: ["wss://arbitrum.llamarpc.com"],
     etherscan: "https://arbiscan.io",
     token: {
       name: "ETH",

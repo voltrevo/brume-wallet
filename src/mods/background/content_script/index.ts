@@ -11,7 +11,7 @@ import { RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc
 import { None, Some } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
-import { OriginData } from "../service_worker/entities/origins/data"
+import { PreOriginData } from "../service_worker/entities/origins/data"
 
 declare const self: ServiceWorkerGlobalScope
 
@@ -50,7 +50,7 @@ if (IS_FIREFOX || IS_SAFARI) {
 }
 
 async function tryGetOrigin() {
-  const origin: NonReadonly<OriginData> = {
+  const origin: NonReadonly<PreOriginData> = {
     origin: location.origin,
     title: document.title
   }

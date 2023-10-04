@@ -10,7 +10,7 @@ import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
-import { AppRequests } from "@/mods/foreground/entities/requests/all/data";
+import { FgAppRequests } from "@/mods/foreground/entities/requests/all/data";
 import { useAppRequest } from "@/mods/foreground/entities/requests/data";
 import { useSession } from "@/mods/foreground/entities/sessions/data";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
@@ -118,7 +118,7 @@ export function TransactPage() {
         params: [new RpcOk(id, tx.serialized)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = AppRequests.schema(storage)
+      const requestsQuery = FgAppRequests.schema(storage)
       const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
@@ -137,7 +137,7 @@ export function TransactPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = AppRequests.schema(storage)
+      const requestsQuery = FgAppRequests.schema(storage)
       const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
@@ -217,7 +217,7 @@ export function SwitchPage() {
         params: [new RpcOk(id, undefined)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = AppRequests.schema(storage)
+      const requestsQuery = FgAppRequests.schema(storage)
       const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
@@ -236,7 +236,7 @@ export function SwitchPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = AppRequests.schema(storage)
+      const requestsQuery = FgAppRequests.schema(storage)
       const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
@@ -315,7 +315,7 @@ export function PersonalSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = AppRequests.schema(storage)
+      const requestsQuery = FgAppRequests.schema(storage)
       const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
@@ -334,7 +334,7 @@ export function PersonalSignPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = AppRequests.schema(storage)
+      const requestsQuery = FgAppRequests.schema(storage)
       const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
@@ -414,7 +414,7 @@ export function TypedSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = AppRequests.schema(storage)
+      const requestsQuery = FgAppRequests.schema(storage)
       const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
@@ -433,7 +433,7 @@ export function TypedSignPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = AppRequests.schema(storage)
+      const requestsQuery = FgAppRequests.schema(storage)
       const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)
@@ -507,7 +507,7 @@ export function WalletAndChainSelectPage() {
         params: [new RpcOk(id, [persistent, wallet.uuid, chain])]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = AppRequests.schema(storage)
+      const requestsQuery = FgAppRequests.schema(storage)
       const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
       if (requestsState.data?.inner.length)

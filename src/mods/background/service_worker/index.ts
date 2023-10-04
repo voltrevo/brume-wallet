@@ -41,8 +41,9 @@ import { Smux } from "@hazae41/smux"
 import { X25519 } from "@hazae41/x25519"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
+import { Blobby, BlobbyRef } from "./entities/blobbys/data"
 import { EthBrume, WcBrume } from "./entities/brumes/data"
-import { Origin, OriginData } from "./entities/origins/data"
+import { Origin, OriginData, PreOriginData } from "./entities/origins/data"
 import { AppRequests } from "./entities/requests/all/data"
 import { AppRequest, AppRequestData } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
@@ -393,7 +394,7 @@ export class Global {
         return new Ok(sessionData)
       }
 
-      const originData = await script.tryRequest<OriginData>({
+      const preOriginData = await script.tryRequest<PreOriginData>({
         method: "brume_origin"
       }).then(r => r.throw(t).throw(t))
 
@@ -402,14 +403,24 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const sessionByOriginQuery = SessionByOrigin.schema(originData.origin, storage)
+      const { origin, title, description } = preOriginData
+      const iconQuery = Blobby.schema(origin, storage)
+      const iconRef = BlobbyRef.create(origin)
+
+      if (preOriginData.icon) {
+        const iconData = { id: origin, data: preOriginData.icon }
+        await iconQuery.tryMutate(Mutators.data(iconData)).then(r => r.throw(t))
+      }
+
+      const originQuery = Origin.schema(origin, storage)
+      const originData: OriginData = { origin, title, description, icons: [iconRef] }
+      await originQuery.tryMutate(Mutators.data(originData)).then(r => r.throw(t))
+
+      const sessionByOriginQuery = SessionByOrigin.schema(origin, storage)
       const sessionByOriginState = await sessionByOriginQuery.state.then(r => r.throw(t))
 
       if (sessionByOriginState.data != null) {
         const sessionId = sessionByOriginState.data.inner.id
-
-        const originQuery = Origin.schema(originData.origin, storage)
-        await originQuery.tryMutate(Mutators.data(originData)).then(r => r.throw(t))
 
         const sessionQuery = Session.schema(sessionId, storage)
         const sessionState = await sessionQuery.state.then(r => r.throw(t))
@@ -444,12 +455,9 @@ export class Global {
         return new Ok(sessionData)
       }
 
-      const originQuery = Origin.schema(originData.origin, storage)
-      await originQuery.tryMutate(Mutators.data(originData)).then(r => r.throw(t))
-
       const [persistent, walletId, chainId] = await this.tryRequest<[boolean, string, number]>({
         id: crypto.randomUUID(),
-        origin: originData.origin,
+        origin: origin,
         method: "eth_requestAccounts",
         params: {}
       }, mouse).then(r => r.throw(t).throw(t))
@@ -462,7 +470,7 @@ export class Global {
       const sessionData: ExSessionData = {
         type: "ex",
         id: crypto.randomUUID(),
-        origin: originData.origin,
+        origin: origin,
         persist: persistent,
         wallets: [WalletRef.from(wallet)],
         chain: chain
@@ -1278,7 +1286,7 @@ export class Global {
         topic: session.client.topic,
         sessionKeyBase64: sessionKeyBase64,
         authKeyJwk: authKeyJwk,
-        settlement: settlement
+        settlement: settlement.receipt
       }
 
       const sessionQuery = Session.schema(sessionData.id, storage)
@@ -1287,7 +1295,7 @@ export class Global {
       /**
        * Service worker can die here
        */
-      await session.client.tryWait<boolean>(settlement)
+      await settlement.promise
         .then(r => r.throw(t).throw(t))
         .then(Result.assert)
         .then(r => r.throw(t))
@@ -1328,22 +1336,27 @@ export class Global {
       const { id } = sessionData
       await Status.schema(id).tryMutate(Mutators.data<StatusData, never>({ id })).then(r => r.throw(t))
 
-      tryLoop(i => {
-        return Result.unthrow<Result<void, Looped<Error>>>(async t => {
-          const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Cancel.new).throw(t).result.get().inner)
+      const icons = session.metadata.icons.map<BlobbyRef>(x => ({ ref: true, id: x }))
+      await originQuery.tryMutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icons })))).then(r => r.throw(t))
 
-          const iconUrl = Option.wrap(session.metadata.icons[i]).ok().mapErrSync(Retry.new).throw(t)
-          const iconRes = await circuit.tryFetch(iconUrl).then(r => r.mapErrSync(Retry.new).throw(t))
-          const iconBlob = await Result.runAndDoubleWrap(() => iconRes.blob()).then(r => r.mapErrSync(Retry.new).throw(t))
+      for (const iconUrl of session.metadata.icons) {
+        Result.unthrow<Result<void, Error>>(async t => {
+          const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.throw(t).result.get().inner)
 
-          Result.assert(Mime.isImage(iconBlob.type)).mapErrSync(Retry.new).throw(t)
+          const iconRes = await circuit.tryFetch(iconUrl).then(r => r.throw(t))
+          const iconBlob = await Result.runAndDoubleWrap(() => iconRes.blob()).then(r => r.throw(t))
 
-          const iconData = await Blobs.tryReadAsDataURL(iconBlob).then(r => r.mapErrSync(Retry.new).throw(t))
-          await originQuery.tryMutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icon: iconData })))).then(r => r.mapErrSync(Cancel.new).throw(t))
+          Result.assert(Mime.isImage(iconBlob.type)).throw(t)
+
+          const iconData = await Blobs.tryReadAsDataURL(iconBlob).then(r => r.throw(t))
+
+          const blobbyQuery = Blobby.schema(iconUrl, storage)
+          const blobbyData = { id: iconUrl, data: iconData }
+          await blobbyQuery.tryMutate(Mutators.data(blobbyData)).then(r => r.throw(t))
 
           return Ok.void()
-        })
-      }, { max: session.metadata.icons.length }).catch(console.warn)
+        }).then(r => r.inspectErrSync(console.warn)).catch(console.error)
+      }
 
       return new Ok(session.metadata)
     })

@@ -2,11 +2,11 @@ import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { Future } from "@hazae41/future";
-import { RpcRequestPreinit } from "@hazae41/jsonrpc";
+import { RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
 import { None, Option, Some } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
 import { X25519 } from "@hazae41/x25519";
-import { CryptoClient, RpcReceipt } from "../crypto/client";
+import { CryptoClient, RpcReceipt, WcReceiptAndPromise } from "../crypto/client";
 import { IrnBrume } from "../irn/irn";
 
 export interface WcMetadata {
@@ -138,7 +138,12 @@ export namespace Wc {
     })
   }
 
-  export async function tryPair(irn: IrnBrume, params: WcPairParams, address: string): Promise<Result<[WcSession, RpcReceipt], Error>> {
+  export interface WcSettlement {
+    readonly receipt: RpcReceipt,
+    readonly promise: Promise<Result<RpcResponse<boolean>, Error>>
+  }
+
+  export async function tryPair(irn: IrnBrume, params: WcPairParams, address: string): Promise<Result<[WcSession, WcReceiptAndPromise<boolean>], Error>> {
     return await Result.unthrow(async t => {
       const { pairingTopic, symKey } = params
 
@@ -193,7 +198,7 @@ export namespace Wc {
         const expiry = Math.floor((Date.now() + (7 * 24 * 60 * 60 * 1000)) / 1000)
         const params: WcSessionSettleParams = { relay, namespaces, requiredNamespaces, optionalNamespaces, pairingTopic, controller, expiry }
 
-        const settlement = await session.tryRequest({ method: "wc_sessionSettle", params }).then(r => r.throw(t))
+        const settlement = await session.tryRequest<boolean>({ method: "wc_sessionSettle", params }).then(r => r.throw(t))
 
         return new Ok([new WcSession(session, proposer.metadata), settlement])
       }

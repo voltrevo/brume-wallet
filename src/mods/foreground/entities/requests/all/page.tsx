@@ -1,10 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
+import { OkProps } from "@/libs/react/props/promise"
 import { Results } from "@/libs/results/results"
 import { Button } from "@/libs/ui/button"
 import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
 import { qurl } from "@/libs/url/url"
+import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/data"
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
 import { useBackground } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
@@ -12,8 +14,10 @@ import { Page } from "@/mods/foreground/components/page/page"
 import { UserRejectionError } from "@/mods/foreground/errors/errors"
 import { Path } from "@/mods/foreground/router/path"
 import { RpcErr } from "@hazae41/jsonrpc"
+import { Nullable } from "@hazae41/option"
 import { Err, Ok, Result } from "@hazae41/result"
-import { useCallback } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { useBlobby } from "../../blobbys/data"
 import { useOrigin } from "../../origins/data"
 import { useAppRequest } from "../data"
 import { useAppRequests } from "./data"
@@ -75,6 +79,15 @@ export function RequestRow(props: { request: AppRequest }) {
   const originQuery = useOrigin(maybeRequestData?.origin)
   const maybeOriginData = originQuery.data?.inner
 
+  const [iconDatas, setIconDatas] = useState<Nullable<BlobbyData>[]>([])
+
+  const onIconData = useCallback(([index, data]: [number, Nullable<BlobbyData>]) => {
+    setIconDatas(iconDatas => {
+      iconDatas[index] = data
+      return [...iconDatas]
+    })
+  }, [])
+
   const open = useCallback(async () => {
     if (maybeRequestData == null)
       return
@@ -88,10 +101,16 @@ export function RequestRow(props: { request: AppRequest }) {
 
   return <div role="button" className="po-md rounded-xl flex items-center gap-4"
     onClick={open}>
+    {maybeOriginData.icons?.map((x, i) =>
+      <IndexedBlobbyLoader
+        key={x.id}
+        index={i}
+        id={x.id}
+        ok={onIconData} />)}
     <div className="shrink-0">
       <ImageWithFallback className="s-3xl"
         alt="icon"
-        src={maybeOriginData.icon}>
+        src={iconDatas.find(Boolean)?.data}>
         <Outline.CubeTransparentIcon className="s-3xl" />
       </ImageWithFallback>
     </div>
@@ -104,4 +123,16 @@ export function RequestRow(props: { request: AppRequest }) {
       </div>
     </div>
   </div>
+}
+
+function IndexedBlobbyLoader(props: OkProps<[number, Nullable<BlobbyData>]> & { id: string, index: number }) {
+  const { index, id, ok } = props
+
+  const { data } = useBlobby(id)
+
+  useEffect(() => {
+    ok([index, data?.inner])
+  }, [index, data, ok])
+
+  return null
 }

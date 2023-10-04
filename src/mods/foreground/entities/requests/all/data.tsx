@@ -1,19 +1,20 @@
+import { AppRequests } from "@/mods/background/service_worker/entities/requests/all/data";
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data";
 import { useSubscribe } from "@/mods/foreground/storage/storage";
 import { UserStorage, useUserStorage } from "@/mods/foreground/storage/user";
 import { createQuery, useQuery } from "@hazae41/glacier";
 
-export namespace AppRequests {
+export namespace FgAppRequests {
 
   export function schema(storage: UserStorage) {
-    return createQuery<string, AppRequest[], never>({ key: `requests`, storage })
+    return createQuery<string, AppRequest[], never>({ key: AppRequests.key, storage })
   }
 
 }
 
 export function useAppRequests() {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(AppRequests.schema, [storage])
+  const query = useQuery(FgAppRequests.schema, [storage])
   useSubscribe(query, storage)
   return query
 }
