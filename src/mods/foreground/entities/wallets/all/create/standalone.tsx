@@ -61,6 +61,8 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
         return new Err(new Panic())
       if (!defKeyInput.startsWith("0x"))
         return new Err(new Panic())
+      if (!confirm("Did you backup your private key?"))
+        return Ok.void()
 
       const privateKeyBytes = Base16.get().tryPadStartAndDecode(defKeyInput.slice(2)).throw(t).copyAndDispose()
 
@@ -118,6 +120,8 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
         return new Err(new Panic())
       if (triedEncryptedPrivateKey == null)
         return new Err(new Panic())
+      if (!confirm("Did you backup your private key?"))
+        return Ok.void()
 
       const [_, cipherBase64] = triedEncryptedPrivateKey.throw(t)
       const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
