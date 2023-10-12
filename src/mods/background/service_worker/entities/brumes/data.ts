@@ -14,7 +14,7 @@ import { RpcCounter } from "@hazae41/jsonrpc"
 import { Mutex } from "@hazae41/mutex"
 import { None } from "@hazae41/option"
 import { Pool, PoolParams } from "@hazae41/piscine"
-import { Err, Ok, Panic, Result } from "@hazae41/result"
+import { Err, Ok, Result } from "@hazae41/result"
 
 export interface WcBrume {
   readonly key: Ed25519.PrivateKey
@@ -174,7 +174,7 @@ export namespace WebSocketConnection {
         return new Ok(new WebSocketConnection(circuit, socket))
       }
 
-      return new Err(new Panic(`Unknown protocol ${url.protocol}`))
+      return new Err(new Error(`Unknown protocol ${url.protocol}`))
     })
   }
 

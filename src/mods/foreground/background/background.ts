@@ -6,7 +6,7 @@ import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from 
 import { None, Some } from "@hazae41/option"
 import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Plume, SuperEventTarget } from "@hazae41/plume"
-import { Err, Ok, Panic, Result } from "@hazae41/result"
+import { Err, Ok, Result } from "@hazae41/result"
 
 export type Background =
   | WebsiteBackground
@@ -116,7 +116,7 @@ export async function tryGetServiceWorker(background: WebsiteBackground) {
     if (active != null)
       return new Ok(registration)
     if (installing == null)
-      return new Err(new Panic(`Registration installing is null`))
+      return new Err(new Error(`Registration installing is null`))
 
     const future = new Future<Result<ServiceWorkerRegistration, Error>>()
 
@@ -150,7 +150,7 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
       const registration = await tryGetServiceWorker(background).then(r => r.throw(t))
 
       if (registration.active == null)
-        return new Err(new Panic(`Active is null`))
+        return new Err(new Error(`Active is null`))
 
       const channel = new MessageChannel()
 

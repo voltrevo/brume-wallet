@@ -299,7 +299,7 @@ export function PersonalSignPage() {
 
   const userMessage = useMemo(() => {
     return message.startsWith("0x")
-      ? Bytes.toUtf8(Base16.get().tryPadStartAndDecode(message.slice(2)).unwrap().copyAndDispose())
+      ? Bytes.toUtf8(Base16.get().tryPadStartAndDecode(message.slice(2)).unwrap().copyAndDispose().bytes)
       : message
   }, [message])
 

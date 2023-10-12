@@ -8,6 +8,7 @@ import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
 import { EthereumAuthPrivateKeyWalletData, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
+import { Box, Copied } from "@hazae41/box"
 import { Abi, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fetched, FetcherMore, createQuery, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc"
@@ -166,9 +167,9 @@ export class EthereumAuthPrivateKeyWalletInstance {
     return await Result.unthrow(async t => {
       const { idBase64, ivBase64 } = this.data.privateKey
 
-      const id = Base64.get().tryDecodePadded(idBase64).throw(t).copyAndDispose()
+      const id = Base64.get().tryDecodePadded(idBase64).throw(t).copyAndDispose().bytes
       const cipher = await WebAuthnStorage.get(id).then(r => r.throw(t))
-      const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
+      const cipherBase64 = Base64.get().tryEncodePadded(new Box(new Copied(cipher))).throw(t)
 
       const privateKeyBase64 = await background.tryRequest<string>({
         method: "brume_decrypt",
@@ -177,7 +178,7 @@ export class EthereumAuthPrivateKeyWalletInstance {
 
       const privateKeyBytes = Base64.get().tryDecodePadded(privateKeyBase64).throw(t).copyAndDispose()
 
-      return new Ok(`0x${Base16.get().tryEncode(privateKeyBytes).throw(t)}`)
+      return new Ok(`0x${Base16.get().tryEncode(new Box(privateKeyBytes)).throw(t)}`)
     })
   }
 

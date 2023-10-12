@@ -1,5 +1,6 @@
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Base16 } from "@hazae41/base16";
+import { Box, Copied } from "@hazae41/box";
 import { Bytes } from "@hazae41/bytes";
 import { Future } from "@hazae41/future";
 import { RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
@@ -131,7 +132,7 @@ export namespace Wc {
         return new Err(new Error(`Invalid relay protocol`))
 
       const symKeyHex = Option.wrap(searchParams.get("symKey")).ok().throw(t)
-      const symKeyRaw = Base16.get().tryPadStartAndDecode(symKeyHex).throw(t).copyAndDispose()
+      const symKeyRaw = Base16.get().tryPadStartAndDecode(symKeyHex).throw(t).copyAndDispose().bytes
       const symKey = Bytes.tryCast(symKeyRaw, 32).throw(t)
 
       return new Ok({ protocol, pairingTopic, version, relayProtocol, symKey })
@@ -154,8 +155,8 @@ export namespace Wc {
       const selfPrivate = await X25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
       const selfPublic = selfPrivate.tryGetPublicKey().throw(t)
 
-      using selfPublicSlice = await selfPublic.tryExport().then(r => r.throw(t))
-      const selfPublicHex = Base16.get().tryEncode(selfPublicSlice.bytes).throw(t)
+      using selfPublicSlice = new Box(await selfPublic.tryExport().then(r => r.throw(t)))
+      const selfPublicHex = Base16.get().tryEncode(selfPublicSlice).throw(t)
 
       await irn.trySubscribe(pairingTopic).then(r => r.throw(t))
 
@@ -166,8 +167,8 @@ export namespace Wc {
         return new Some(new Ok({ relay, responderPublicKey: selfPublicHex }))
       }).inner
 
-      using peerPublicSlice = Base16.get().tryPadStartAndDecode(proposal.params.proposer.publicKey).throw(t)
-      const peerPublic = await X25519.get().PublicKey.tryImport(peerPublicSlice.bytes).then(r => r.throw(t))
+      using peerPublicSlice = new Box(Base16.get().tryPadStartAndDecode(proposal.params.proposer.publicKey).throw(t))
+      const peerPublic = await X25519.get().PublicKey.tryImport(peerPublicSlice).then(r => r.throw(t))
 
       const sharedRef = await selfPrivate.tryCompute(peerPublic).then(r => r.throw(t))
       using sharedSlice = sharedRef.tryExport().throw(t)
@@ -176,7 +177,8 @@ export namespace Wc {
       const hkdf_params = { name: "HKDF", hash: "SHA-256", info: new Uint8Array(), salt: new Uint8Array() }
 
       const sessionKey = new Uint8Array(await crypto.subtle.deriveBits(hkdf_params, hdfk_key, 8 * 32)) as Bytes<32>
-      const sessionTopic = Base16.get().tryEncode(new Uint8Array(await crypto.subtle.digest("SHA-256", sessionKey))).throw(t)
+      const sessionDigest = new Uint8Array(await crypto.subtle.digest("SHA-256", sessionKey))
+      const sessionTopic = Base16.get().tryEncode(new Box(new Copied(sessionDigest))).throw(t)
       const session = CryptoClient.tryNew(sessionTopic, sessionKey, irn).throw(t)
 
       await irn.trySubscribe(sessionTopic).then(r => r.throw(t))

@@ -18,6 +18,7 @@ import { Base16 } from "@hazae41/base16"
 import { Base58 } from "@hazae41/base58"
 import { Base64 } from "@hazae41/base64"
 import { Base64Url } from "@hazae41/base64url"
+import { Box, Copied } from "@hazae41/box"
 import { Bytes } from "@hazae41/bytes"
 import { Cadenas } from "@hazae41/cadenas"
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305"
@@ -926,12 +927,12 @@ export class Global {
 
       const { crypter } = Option.wrap(this.#user).ok().throw(t)
 
-      const plain = Base64.get().tryDecodePadded(plainBase64).throw(t).copyAndDispose()
+      const plain = Base64.get().tryDecodePadded(plainBase64).throw(t).copyAndDispose().bytes
       const iv = Bytes.tryRandom(16).throw(t)
       const cipher = await crypter.tryEncrypt(plain, iv).then(r => r.throw(t))
 
-      const ivBase64 = Base64.get().tryEncodePadded(iv).throw(t)
-      const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
+      const ivBase64 = Base64.get().tryEncodePadded(new Box(new Copied(iv))).throw(t)
+      const cipherBase64 = Base64.get().tryEncodePadded(new Box(new Copied(cipher))).throw(t)
 
       return new Ok([ivBase64, cipherBase64])
     })
@@ -943,11 +944,11 @@ export class Global {
 
       const { crypter } = Option.wrap(this.#user).ok().throw(t)
 
-      const iv = Base64.get().tryDecodePadded(ivBase64).throw(t).copyAndDispose()
-      const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
+      const iv = Base64.get().tryDecodePadded(ivBase64).throw(t).copyAndDispose().bytes
+      const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose().bytes
       const plain = await crypter.tryDecrypt(cipher, iv).then(r => r.throw(t))
 
-      const plainBase64 = Base64.get().tryEncodePadded(plain).throw(t)
+      const plainBase64 = Base64.get().tryEncodePadded(new Box(new Copied(plain))).throw(t)
 
       return new Ok(plainBase64)
     })
@@ -1198,7 +1199,7 @@ export class Global {
       const brume = await WcBrume.tryCreate(this.circuits, authKey).then(r => r.throw(t))
       const irn = new IrnBrume(brume)
 
-      const rawSessionKey = Base64.get().tryDecodePadded(sessionKeyBase64).throw(t).copyAndDispose()
+      const rawSessionKey = Base64.get().tryDecodePadded(sessionKeyBase64).throw(t).copyAndDispose().bytes
       const sessionKey = Bytes.tryCast(rawSessionKey, 32).throw(t)
       const sessionClient = CryptoClient.tryNew(topic, sessionKey, irn).throw(t)
       const session = new WcSession(sessionClient, metadata)
@@ -1283,7 +1284,7 @@ export class Global {
       await originQuery.tryMutate(Mutators.data(originData)).then(r => r.throw(t))
 
       const authKeyJwk = await session.client.irn.brume.key.tryExportJwk().then(r => r.throw(t))
-      const sessionKeyBase64 = Base64.get().tryEncodePadded(session.client.key).throw(t)
+      const sessionKeyBase64 = Base64.get().tryEncodePadded(new Box(new Copied(session.client.key))).throw(t)
 
       const sessionData: WcSessionData = {
         type: "wc",
@@ -1403,10 +1404,6 @@ async function tryInit() {
     return await Result.unthrow<Result<Global, Error>>(async t => {
       await Promise.all([initBerith(), initMorax(), initAlocer(), initZepar()])
 
-      const ed25519 = Ed25519.get()
-      const x25519 = X25519.get()
-      const sha1 = Sha1.get()
-
       const gt = globalThis as any
       gt.Echalote = Echalote
       gt.Cadenas = Cadenas
@@ -1417,7 +1414,7 @@ async function tryInit() {
       const fallbacks = await tryFetch<Fallback[]>(FALLBACKS_URL).then(r => r.throw(t))
 
       const tors = createTorPool(async () => {
-        return await tryCreateTor({ fallbacks, ed25519, x25519, sha1 })
+        return await tryCreateTor({ fallbacks })
       }, { capacity: 1 })
 
       const storage = IDBStorage.tryCreate({ name: "memory" }).unwrap()
@@ -1473,7 +1470,7 @@ if (IS_WEBSITE) {
       return void onSkipWaiting(event)
     if (event.data === "HELLO_WORLD")
       return void onHelloWorld(event)
-    throw new Panic(`Invalid message`)
+    throw Panic.from(new Error(`Invalid message`))
   })
 }
 

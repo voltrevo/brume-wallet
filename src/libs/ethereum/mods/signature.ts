@@ -1,4 +1,5 @@
 import { Base16 } from "@hazae41/base16"
+import { Box, Copied } from "@hazae41/box"
 import { Bytes } from "@hazae41/bytes"
 import { Ok, Result } from "@hazae41/result"
 
@@ -23,8 +24,8 @@ export namespace Signature {
       const { v, r, s } = init
 
       const hv = Hex.pad(v.toString(16))
-      const hr = Base16.get().tryEncode(r).throw(t)
-      const hs = Base16.get().tryEncode(s).throw(t)
+      const hr = Base16.get().tryEncode(new Box(new Copied(r))).throw(t)
+      const hs = Base16.get().tryEncode(new Box(new Copied(s))).throw(t)
 
       return new Ok(`0x${hr}${hs}${hv}`)
     })

@@ -2,6 +2,7 @@ import { Ciphertext, Envelope, EnvelopeTypeZero, Plaintext } from "@/libs/wconn/
 import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { Base64 } from "@hazae41/base64";
 import { Opaque, Readable, Writable } from "@hazae41/binary";
+import { Box, Copied } from "@hazae41/box";
 import { Bytes } from "@hazae41/bytes";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Future } from "@hazae41/future";
@@ -152,7 +153,7 @@ export class CryptoClient {
 
   static tryNew(topic: string, key: Bytes<32>, irn: IrnBrume): Result<CryptoClient, Error> {
     return Result.unthrowSync(t => {
-      const cipher = ChaCha20Poly1305.get().Cipher.tryImport(key).throw(t)
+      const cipher = ChaCha20Poly1305.get().Cipher.tryImport(new Box(new Copied(key))).throw(t)
       const client = new CryptoClient(topic, key, irn, cipher)
 
       return new Ok(client)
@@ -244,7 +245,7 @@ export class CryptoClient {
       const cipher = plain.tryEncrypt(this.cipher, iv).throw(t)
       const envelope = new EnvelopeTypeZero(cipher)
       const bytes = Writable.tryWriteToBytes(envelope).throw(t)
-      const message = Base64.get().tryEncodePadded(bytes).throw(t)
+      const message = Base64.get().tryEncodePadded(new Box(new Copied(bytes))).throw(t)
 
       return new Ok(message)
     })

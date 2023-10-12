@@ -16,6 +16,7 @@ import { WebAuthnStorage, WebAuthnStorageError } from "@/libs/webauthn/webauthn"
 import { SeedData } from "@/mods/background/service_worker/entities/seeds/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { Base64 } from "@hazae41/base64";
+import { Box, Copied } from "@hazae41/box";
 import { Bytes } from "@hazae41/bytes";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { generateMnemonic, mnemonicToEntropy, validateMnemonic } from "@scure/bip39";
@@ -88,7 +89,7 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
 
       try {
         const entropyBytes = mnemonicToEntropy(defPhraseInput, wordlist)
-        const entropyBase64 = Base64.get().tryEncodePadded(entropyBytes).throw(t)
+        const entropyBase64 = Base64.get().tryEncodePadded(new Box(new Copied(entropyBytes))).throw(t)
 
         const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
           method: "brume_encrypt",
@@ -120,7 +121,7 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
         return Ok.void()
 
       const [_, cipherBase64] = triedEncryptedPhrase.throw(t)
-      const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
+      const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose().bytes
       const id = await WebAuthnStorage.create(defNameInput, cipher).then(r => r.throw(t))
 
       setId(id)
@@ -148,7 +149,7 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
       if (!Bytes.equals(cipherSlice.bytes, cipherBytes2))
         return new Err(new WebAuthnStorageError())
 
-      const idBase64 = Base64.get().tryEncodePadded(id).throw(t)
+      const idBase64 = Base64.get().tryEncodePadded(new Box(new Copied(id))).throw(t)
       const mnemonic = { ivBase64, idBase64 }
 
       const seed: SeedData = { type: "authMnemonic", uuid, name: defNameInput, color, emoji, mnemonic }
