@@ -8,7 +8,6 @@ import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { useUserStorage } from "@/mods/foreground/storage/user"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
-import { Box, Copied } from "@hazae41/box"
 import { Bytes } from "@hazae41/bytes"
 import { Abi } from "@hazae41/cubane"
 import { useQuery } from "@hazae41/glacier"
@@ -72,7 +71,7 @@ export class UnauthMnemonicSeedInstance {
 
       const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
 
-      return new Ok(`0x${Base16.get().tryEncode(new Box(new Copied(privateKeyBytes))).throw(t)}`)
+      return new Ok(`0x${Base16.get().tryEncode(privateKeyBytes).throw(t)}`)
     })
   }
 
@@ -126,16 +125,16 @@ export class AuthMnemonicSeedInstance {
     return await Result.unthrow(async t => {
       const { idBase64, ivBase64 } = this.data.mnemonic
 
-      const id = Base64.get().tryDecodePadded(idBase64).throw(t).copyAndDispose().bytes
+      const id = Base64.get().tryDecodePadded(idBase64).throw(t).copyAndDispose()
       const cipher = await WebAuthnStorage.get(id).then(r => r.throw(t))
-      const cipherBase64 = Base64.get().tryEncodePadded(new Box(new Copied(cipher))).throw(t)
+      const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
 
       const entropyBase64 = await background.tryRequest<string>({
         method: "brume_decrypt",
         params: [ivBase64, cipherBase64]
       }).then(r => r.throw(t).throw(t))
 
-      const entropy = Base64.get().tryDecodePadded(entropyBase64).throw(t).copyAndDispose().bytes
+      const entropy = Base64.get().tryDecodePadded(entropyBase64).throw(t).copyAndDispose()
 
       return new Ok(entropyToMnemonic(entropy, wordlist))
     })
@@ -151,7 +150,7 @@ export class AuthMnemonicSeedInstance {
 
       const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
 
-      return new Ok(`0x${Base16.get().tryEncode(new Box(new Copied(privateKeyBytes))).throw(t)}`)
+      return new Ok(`0x${Base16.get().tryEncode(privateKeyBytes).throw(t)}`)
     })
   }
 
@@ -238,11 +237,11 @@ export class LedgerSeedInstance {
       }).throw(t)
 
       const domain = Result.runAndDoubleWrapSync(() => {
-        return Base16.get().tryPadStartAndDecode(ethers.TypedDataEncoder.hashDomain(data.domain).slice(2)).unwrap().copyAndDispose().bytes
+        return Base16.get().tryPadStartAndDecode(ethers.TypedDataEncoder.hashDomain(data.domain).slice(2)).unwrap().copyAndDispose()
       }).throw(t) as Bytes<32>
 
       const message = Result.runAndDoubleWrapSync(() => {
-        return Base16.get().tryPadStartAndDecode(encoder.hashStruct(data.primaryType, data.message).slice(2)).unwrap().copyAndDispose().bytes
+        return Base16.get().tryPadStartAndDecode(encoder.hashStruct(data.primaryType, data.message).slice(2)).unwrap().copyAndDispose()
       }).throw(t) as Bytes<32>
 
       const signature = await Ledger.Ethereum.trySignEIP712HashedMessage(device, path.slice(2), domain, message).then(r => r.throw(t))

@@ -1,5 +1,4 @@
 import { Base58 } from "@hazae41/base58"
-import { Box, Copied } from "@hazae41/box"
 import { Bytes } from "@hazae41/bytes"
 import { Cursor } from "@hazae41/cursor"
 import { Result } from "@hazae41/result"
@@ -11,7 +10,7 @@ export namespace Address {
   export async function tryFrom(maybeCompressedPublicKey: Uint8Array): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const sha256 = await Sha256.digest(maybeCompressedPublicKey)
-      using ripemd160 = Ripemd160.get().tryHash(new Box(new Copied(sha256))).throw(t)
+      using ripemd160 = Ripemd160.get().tryHash(sha256).throw(t)
 
       const cursor = new Cursor(Bytes.tryAllocUnsafe(1 + ripemd160.bytes.length + 4).throw(t))
       cursor.tryWriteUint8(0).throw(t)
@@ -23,7 +22,7 @@ export namespace Address {
 
       cursor.tryWrite(checksum).throw(t)
 
-      return Base58.get().tryEncode(new Box(new Copied(cursor.bytes)))
+      return Base58.get().tryEncode(cursor.bytes)
     })
   }
 

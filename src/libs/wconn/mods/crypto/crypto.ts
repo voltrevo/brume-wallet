@@ -1,5 +1,4 @@
 import { BinaryReadError, BinaryWriteError, Opaque, Writable } from "@hazae41/binary";
-import { Box, Copied } from "@hazae41/box";
 import { Bytes } from "@hazae41/bytes";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Cursor } from "@hazae41/cursor";
@@ -24,7 +23,7 @@ export class Plaintext<T extends Writable.Infer<T>> {
   tryEncrypt(key: ChaCha20Poly1305.Cipher, iv: Bytes<12>): Result<Ciphertext, ChaCha20Poly1305.EncryptError | BinaryWriteError | Writable.WriteError<T> | Writable.SizeError<T>> {
     return Result.unthrowSync(t => {
       const plain = Writable.tryWriteToBytes(this.fragment).throw(t)
-      const cipher = key.tryEncrypt(new Box(new Copied(plain)), new Box(new Copied(iv))).throw(t).copyAndDispose().bytes
+      const cipher = key.tryEncrypt(plain, iv).throw(t).copyAndDispose()
 
       return new Ok(new Ciphertext(iv, cipher))
     })
@@ -41,7 +40,7 @@ export class Ciphertext {
 
   tryDecrypt(key: ChaCha20Poly1305.Cipher): Result<Plaintext<Opaque>, ChaCha20Poly1305.DecryptError> {
     return Result.unthrowSync(t => {
-      const plain = key.tryDecrypt(new Box(new Copied(this.inner)), new Box(new Copied(this.iv))).throw(t).copyAndDispose().bytes
+      const plain = key.tryDecrypt(this.inner, this.iv).throw(t).copyAndDispose()
 
       return new Ok(new Plaintext(new Opaque(plain)))
     })
