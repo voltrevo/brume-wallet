@@ -53,7 +53,7 @@ import { ExSessionData, Session, SessionByOrigin, SessionData, SessionRef, WcSes
 import { Status, StatusData } from "./entities/sessions/status/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
-import { EthereumContext, EthereumQueryKey, Wallet, WalletData, WalletRef, getBalance, getENS, getEthereumUnknown, getPairPrice, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
+import { BgEns, EthereumContext, EthereumQueryKey, Wallet, WalletData, WalletRef, getBalance, getEthereumUnknown, getPairPrice, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -653,7 +653,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [name] = (request as RpcRequestPreinit<[string]>).params
 
-      const query = getENS(ethereum, name, storage)
+      const query = BgEns.Lookup.schema(ethereum, name, storage)
 
       return new Ok(query)
     })
@@ -1076,8 +1076,10 @@ export class Global {
       return await this.makeEthereumTokenBalance(ethereum, request, storage)
     if (request.method === "eth_getPairPrice")
       return await this.makeEthereumPairPrice(ethereum, request, storage)
-    if (request.method === "eth_resolveEns")
-      return await this.makeEthereumResolveEns(ethereum, request, storage)
+    if (request.method === BgEns.Lookup.method)
+      return new Ok(BgEns.Lookup.parse(ethereum, request, storage))
+    if (request.method === BgEns.Reverse.method)
+      return new Ok(BgEns.Reverse.parse(ethereum, request, storage))
     return await this.makeEthereumUnknown(ethereum, request, storage)
   }
 

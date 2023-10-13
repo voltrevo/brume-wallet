@@ -16,6 +16,7 @@ import { Input } from "@/libs/ui/input";
 import { SeedRef } from "@/mods/background/service_worker/entities/seeds/data";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
+import { ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
@@ -111,6 +112,9 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
         const { address } = await Ledger.Ethereum.tryGetAddress(device, defPathInput.slice(2)).then(r => r.mapErrSync(cause => {
           return new UIError(`Could not get the address of the device`, { cause })
         }).throw(t))
+
+        if (!ZeroHexString.is(address))
+          return new Err(new UIError(`Could not get the address of the device`))
 
         const seed = SeedRef.from(seedData)
 

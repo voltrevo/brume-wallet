@@ -8,7 +8,7 @@ import { Cubane, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
-import { Ok, Panic, Result } from "@hazae41/result"
+import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { EthBrume } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
@@ -66,7 +66,7 @@ export interface EthereumReadonlyWalletData {
   readonly color: number,
   readonly emoji: string
 
-  readonly address: string
+  readonly address: ZeroHexString
 }
 
 export interface EthereumUnauthPrivateKeyWalletData {
@@ -79,7 +79,7 @@ export interface EthereumUnauthPrivateKeyWalletData {
   readonly color: number,
   readonly emoji: string
 
-  readonly address: string
+  readonly address: ZeroHexString
 
   readonly privateKey: string
 }
@@ -94,7 +94,7 @@ export interface EthereumAuthPrivateKeyWalletData {
   readonly color: number,
   readonly emoji: string
 
-  readonly address: string
+  readonly address: ZeroHexString
 
   readonly privateKey: {
     readonly ivBase64: string,
@@ -112,7 +112,7 @@ export interface EthereumSeededWalletData {
   readonly color: number,
   readonly emoji: string
 
-  readonly address: string
+  readonly address: ZeroHexString
 
   readonly seed: SeedRef
   readonly path: string
@@ -484,12 +484,10 @@ export function getPairPrice(ethereum: EthereumContext, pair: PairInfo, storage:
     if (fetched.isErr())
       return new Ok(new Fail(fetched.inner))
 
-    const returns = Cubane.Abi.createDynamicTuple(
-      Cubane.Abi.createStaticBigUint(32),
-      Cubane.Abi.createStaticBigUint(32))
+    const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.createStaticBigUint(32), Cubane.Abi.createStaticBigUint(32))
+    const [a, b] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
 
-    const [a, b] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner.map(it => it.value)
-    const price = computePairPrice(pair, [a, b])
+    const price = computePairPrice(pair, [a.value, b.value])
 
     return new Ok(new Data(price))
   })
@@ -559,9 +557,9 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
     if (fetched.isErr())
       return new Ok(fetched)
 
-    const returns = Cubane.Abi.createStaticBigUint(32)
-    const balance = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).value
-    const fixed = new Fixed(balance, token.decimals)
+    const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.createStaticBigUint(32))
+    const [balance] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
+    const fixed = new Fixed(balance.value, token.decimals)
 
     return new Ok(new Data(fixed))
   })
@@ -614,66 +612,177 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
   })
 }
 
-async function tryFetchResolver(ethereum: EthereumContext, namehash: Uint8Array): Promise<Result<Fetched<ZeroHexString, Error>, Error>> {
-  return await Result.unthrow(async t => {
-    const registry = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
+export namespace BgEns {
 
-    const signature = Cubane.Abi.FunctionSignature.tryParse("resolver(bytes32)").throw(t)
-    const data = Cubane.Abi.tryEncode(signature.args.from(namehash)).throw(t)
+  export namespace Resolver {
 
-    const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
-      method: "eth_call",
-      params: [{
-        to: registry,
-        data: data
-      }, "pending"]
-    }).then(r => r.throw(t))
+    export async function tryFetch(ethereum: EthereumContext, namehash: Uint8Array): Promise<Result<Fetched<ZeroHexString, Error>, Error>> {
+      return await Result.unthrow(async t => {
+        const registry = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
 
-    if (fetched.isErr())
-      return new Ok(fetched)
+        const signature = Cubane.Abi.FunctionSignature.tryParse("resolver(bytes32)").throw(t)
+        const data = Cubane.Abi.tryEncode(signature.args.from(namehash)).throw(t)
 
-    const returns = Cubane.Abi.StaticAddress
-    const address = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).value
+        const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
+          method: "eth_call",
+          params: [{
+            to: registry,
+            data: data
+          }, "pending"]
+        }).then(r => r.throw(t))
 
-    return new Ok(new Data(address))
-  })
-}
+        if (fetched.isErr())
+          return new Ok(fetched)
 
-export function getENS(ethereum: EthereumContext, name: string, storage: IDBStorage) {
-  const fetcher = () => Result.unthrow<Result<Fetched<ZeroHexString, Error>, Error>>(async t => {
-    const namehash = Cubane.Ens.tryNamehash(name).throw(t)
-    const resolver = await tryFetchResolver(ethereum, namehash).then(r => r.throw(t))
+        const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.StaticAddress)
+        const [address] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
 
-    if (resolver.isErr())
-      return new Ok(resolver)
+        return new Ok(new Data(address.value))
+      })
+    }
 
-    const signature = Cubane.Abi.FunctionSignature.tryParse("addr(bytes32)").throw(t)
-    const data = Cubane.Abi.tryEncode(signature.args.from(namehash)).throw(t)
 
-    const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
-      method: "eth_call",
-      params: [{
-        to: resolver.inner,
-        data: data
-      }, "pending"]
-    }).then(r => r.throw(t))
+  }
 
-    if (fetched.isErr())
-      return new Ok(fetched)
+  export namespace Lookup {
 
-    const returns = Cubane.Abi.StaticAddress
-    const address = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).value
+    export const method = "ens_lookup"
 
-    return new Ok(new Data(address))
-  })
+    export function key(name: string) {
+      return {
+        chainId: 1,
+        method: method,
+        params: [name]
+      }
+    }
 
-  return createQuery<EthereumQueryKey<unknown>, ZeroHexString, Error>({
-    key: {
-      chainId: 1,
-      method: "eth_resolveEns",
-      params: [name]
-    },
-    fetcher,
-    storage
-  })
+    export function parse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+      const [name] = (request as RpcRequestPreinit<[string]>).params
+
+      return schema(ethereum, name, storage)
+    }
+
+    export function schema(ethereum: EthereumContext, name: string, storage: IDBStorage) {
+      const fetcher = () => tryFetch(ethereum, name)
+
+      return createQuery<EthereumQueryKey<unknown>, ZeroHexString, Error>({
+        key: key(name),
+        fetcher,
+        storage
+      })
+    }
+
+    export async function tryFetch(ethereum: EthereumContext, name: string) {
+      return await Result.unthrow<Result<Fetched<ZeroHexString, Error>, Error>>(async t => {
+        const namehash = Cubane.Ens.tryNamehash(name).throw(t)
+        const resolver = await Resolver.tryFetch(ethereum, namehash).then(r => r.throw(t))
+
+        if (resolver.isErr())
+          return new Ok(resolver)
+
+        const signature = Cubane.Abi.FunctionSignature.tryParse("addr(bytes32)").throw(t)
+        const data = Cubane.Abi.tryEncode(signature.args.from(namehash)).throw(t)
+
+        const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
+          method: "eth_call",
+          params: [{
+            to: resolver.inner,
+            data: data
+          }, "pending"]
+        }).then(r => r.throw(t))
+
+        if (fetched.isErr())
+          return new Ok(fetched)
+
+        const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.StaticAddress)
+        const [address] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
+
+        return new Ok(new Data(address.value))
+      })
+    }
+
+  }
+
+  export namespace Reverse {
+
+    export const method = "ens_reverse"
+
+    export function key(address: ZeroHexString) {
+      return {
+        chainId: 1,
+        method: method,
+        params: [address]
+      }
+    }
+
+    export function parse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+      const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
+
+      return schema(ethereum, address, storage)
+    }
+
+    export function schema(ethereum: EthereumContext, address: ZeroHexString, storage: IDBStorage) {
+      const fetcher = () => tryFetch(ethereum, address)
+
+      const indexer = () => {
+        // TODO 
+      }
+
+      return createQuery<EthereumQueryKey<unknown>, string, Error>({
+        key: key(address),
+        fetcher,
+        storage
+      })
+    }
+
+    export async function tryFetchUnchecked(ethereum: EthereumContext, address: ZeroHexString) {
+      return await Result.unthrow<Result<Fetched<string, Error>, Error>>(async t => {
+        const namehash = Cubane.Ens.tryNamehash(`${address.slice(2)}.addr.reverse`).throw(t)
+        const resolver = await Resolver.tryFetch(ethereum, namehash).then(r => r.throw(t))
+
+        if (resolver.isErr())
+          return new Ok(resolver)
+
+        const signature = Cubane.Abi.FunctionSignature.tryParse("name(bytes32)").throw(t)
+        const data = Cubane.Abi.tryEncode(signature.args.from(namehash)).throw(t)
+
+        const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
+          method: "eth_call",
+          params: [{
+            to: resolver.inner,
+            data: data
+          }, "pending"]
+        }).then(r => r.throw(t))
+
+        if (fetched.isErr())
+          return new Ok(fetched)
+
+        const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.DynamicString)
+        const [name] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
+
+        return new Ok(new Data(name.value))
+      })
+    }
+
+    export async function tryFetch(ethereum: EthereumContext, address: ZeroHexString) {
+      return await Result.unthrow<Result<Fetched<string, Error>, Error>>(async t => {
+        const name = await tryFetchUnchecked(ethereum, address).then(r => r.throw(t))
+
+        if (name.isErr())
+          return new Ok(name)
+
+        const address2 = await Lookup.tryFetch(ethereum, name.inner).then(r => r.throw(t))
+
+        if (address2.isErr())
+          return new Ok(address2)
+
+        if (address.toLowerCase() !== address2.inner.toLowerCase())
+          return new Err(new Error(`Invalid address`))
+
+        return new Ok(name)
+      })
+    }
+
+  }
+
 }

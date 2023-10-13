@@ -5,7 +5,7 @@ import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { useObjectMemo } from "@/libs/react/memo"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
-import { EthereumAuthPrivateKeyWalletData, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
+import { BgEns, EthereumAuthPrivateKeyWalletData, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, ZeroHexString } from "@hazae41/cubane"
@@ -514,28 +514,59 @@ export function usePairPrice(ethereum: EthereumContext, pair: PairInfo) {
   return query
 }
 
+export namespace FgEns {
 
-export function getENS(context: EthereumContext, name: Nullable<string>, storage: UserStorage) {
-  if (name == null)
-    return undefined
+  export namespace Lookup {
 
-  const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await tryFetch<ZeroHexString>(request, context)
+    export function schema(context: EthereumContext, name: Nullable<string>, storage: UserStorage) {
+      if (name == null)
+        return undefined
 
-  return createQuery<EthereumQueryKey<unknown>, ZeroHexString, Error>({
-    key: {
-      chainId: 1,
-      method: "eth_resolveEns",
-      params: [name]
-    },
-    fetcher,
-    storage
-  })
+      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+        await tryFetch<ZeroHexString>(request, context)
+
+      return createQuery<EthereumQueryKey<unknown>, ZeroHexString, Error>({
+        key: BgEns.Lookup.key(name),
+        fetcher,
+        storage
+      })
+    }
+
+  }
+
+  export namespace Reverse {
+
+    export function schema(context: EthereumContext, address: Nullable<ZeroHexString>, storage: UserStorage) {
+      if (address == null)
+        return undefined
+
+      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+        await tryFetch<ZeroHexString>(request, context)
+
+      return createQuery<EthereumQueryKey<unknown>, string, Error>({
+        key: BgEns.Reverse.key(address),
+        fetcher,
+        storage
+      })
+    }
+
+  }
+
 }
 
-export function useENS(ethereum: EthereumContext, name: Nullable<string>) {
+export function useEnsLookup(ethereum: EthereumContext, name: Nullable<string>) {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(getENS, [ethereum, name, storage])
+  const query = useQuery(FgEns.Lookup.schema, [ethereum, name, storage])
+  useFetch(query)
+  useVisible(query)
+  useSubscribe(query, storage)
+  useError(query, console.error)
+  return query
+}
+
+export function useEnsReverse(ethereum: EthereumContext, address: Nullable<ZeroHexString>) {
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(FgEns.Reverse.schema, [ethereum, address, storage])
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)

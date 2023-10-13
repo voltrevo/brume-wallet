@@ -19,7 +19,7 @@ import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useWalletData } from "../../context";
-import { EthereumContextProps, EthereumWalletInstance, useENS, useEthereumContext, useGasPrice, useNonce, useTokenBalance } from "../../data";
+import { EthereumContextProps, EthereumWalletInstance, useEnsLookup, useEthereumContext, useGasPrice, useNonce, useTokenBalance } from "../../data";
 
 export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps & EthereumContextProps & { token: ContractTokenInfo }) {
   const wallet = useWalletData()
@@ -47,7 +47,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
   const maybeEnsName = defRecipientInput.endsWith(".eth")
     ? defRecipientInput
     : undefined
-  const ensAddressQuery = useENS(mainnet, maybeEnsName)
+  const ensAddressQuery = useEnsLookup(mainnet, maybeEnsName)
 
   const maybeFinalAddress = defRecipientInput.endsWith(".eth")
     ? ensAddressQuery.data?.inner

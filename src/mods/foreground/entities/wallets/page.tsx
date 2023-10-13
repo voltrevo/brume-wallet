@@ -146,6 +146,8 @@ function WalletDataPage() {
   const binance = useEthereumContext(wallet, chainByChainId[chainIdByName.BINANCE])
   const celo = useEthereumContext(wallet, chainByChainId[chainIdByName.CELO])
 
+  // const name = useEnsReverse(mainnet, wallet.address)
+
   const sendDialog = useBooleanHandle(false)
   const receiveDialog = useBooleanHandle(false)
 

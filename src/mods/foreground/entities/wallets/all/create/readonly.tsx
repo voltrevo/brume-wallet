@@ -13,6 +13,7 @@ import { Input } from "@/libs/ui/input";
 import { Textarea } from "@/libs/ui/textarea";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
+import { ZeroHexString } from "@hazae41/cubane";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { ethers } from "ethers";
 import { useDeferredValue, useMemo, useState } from "react";
@@ -59,7 +60,7 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
       if (!defNameInput)
         return new Err(new Panic())
 
-      const address = ethers.getAddress(defAddressInput)
+      const address = ethers.getAddress(defAddressInput) as ZeroHexString
 
       const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: defNameInput, color, emoji, address }
 
