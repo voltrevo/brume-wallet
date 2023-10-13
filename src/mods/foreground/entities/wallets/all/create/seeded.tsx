@@ -193,6 +193,8 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
   const IndexInput =
     <Input.Contrast className="w-full"
       placeholder="0"
+      type="number"
+      min={0}
       value={rawIndexInput}
       onChange={onIndexInputChange} />
 
