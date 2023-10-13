@@ -77,19 +77,17 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
     if (coin === "custom")
       return setRawPathInput("m/44'/60'/0'/0/0")
 
-    const rawCoin = coin === "eth"
-      ? "60"
-      : "61"
+    const rawCoin = coin === "eth" ? "60" : "61"
 
     if (app === "custom")
       return setRawPathInput(`m/44'/${rawCoin}'/0'/0/0`)
 
-    const input = defIndexInput || "0"
+    const rawInput = Number(defIndexInput).toFixed()
 
     if (app === "ledger")
-      return setRawPathInput(`m/44'/${rawCoin}'/${input}'/0/0`)
+      return setRawPathInput(`m/44'/${rawCoin}'/${rawInput}'/0/0`)
     if (app === "metamask")
-      return setRawPathInput(`m/44'/${rawCoin}'/0'/0/${input}`)
+      return setRawPathInput(`m/44'/${rawCoin}'/0'/0/${rawInput}`)
   }, [coin, app, defIndexInput])
 
   const canAdd = useMemo(() => {
@@ -271,7 +269,7 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
         {IndexInput}
         <div className="h-2" />
         <div className="text-contrast">
-          You derivation path will be {rawPathInput}
+          Your derivation path will be {rawPathInput}
         </div>
       </>}
     </>}
