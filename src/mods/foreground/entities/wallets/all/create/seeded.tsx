@@ -1,5 +1,6 @@
 import { Colors } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
+import { UIError } from "@/libs/errors/errors";
 import { Ethereum } from "@/libs/ethereum";
 import { Outline } from "@/libs/icons/icons";
 import { Ledger } from "@/libs/ledger";
@@ -20,7 +21,7 @@ import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { HDKey } from "@scure/bip32";
 import { mnemonicToSeed } from "@scure/bip39";
-import { useDeferredValue, useMemo, useState } from "react";
+import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { SeedInstance } from "../../../seeds/all/data";
 import { useSeedData } from "../../../seeds/context";
 import { WalletAvatar } from "../../avatar";
@@ -52,6 +53,45 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
     setRawPathInput(e.currentTarget.value)
   }, [])
 
+  const [coin, setCoin] = useState<string>()
+
+  const onCoinChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
+    setCoin(e.currentTarget.value)
+  }, [])
+
+  const [app, setApp] = useState<string>()
+
+  const onAppChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
+    setApp(e.currentTarget.value)
+  }, [])
+
+  const [rawIndexInput = "", setRawIndexInput] = useState<string>("0")
+
+  const defIndexInput = useDeferredValue(rawIndexInput)
+
+  const onIndexInputChange = useInputChange(e => {
+    setRawIndexInput(e.currentTarget.value)
+  }, [coin, app])
+
+  useEffect(() => {
+    if (coin === "custom")
+      return setRawPathInput("m/44'/60'/0'/0/0")
+
+    const rawCoin = coin === "eth"
+      ? "60"
+      : "61"
+
+    if (app === "custom")
+      return setRawPathInput(`m/44'/${rawCoin}'/0'/0/0`)
+
+    const input = defIndexInput || "0"
+
+    if (app === "ledger")
+      return setRawPathInput(`m/44'/${rawCoin}'/${input}'/0/0`)
+    if (app === "metamask")
+      return setRawPathInput(`m/44'/${rawCoin}'/0'/0/${input}`)
+  }, [coin, app, defIndexInput])
+
   const canAdd = useMemo(() => {
     if (!defNameInput)
       return false
@@ -66,8 +106,13 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
         return new Err(new Panic())
 
       if (seedData.type === "ledger") {
-        const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
-        const { address } = await Ledger.Ethereum.tryGetAddress(device, defPathInput.slice(2)).then(r => r.throw(t))
+        const device = await Ledger.USB.tryConnect().then(r => r.mapErrSync(cause => {
+          return new UIError(`Could not connect to the device`, { cause })
+        }).throw(t))
+
+        const { address } = await Ledger.Ethereum.tryGetAddress(device, defPathInput.slice(2)).then(r => r.mapErrSync(cause => {
+          return new UIError(`Could not get the address of the device`, { cause })
+        }).throw(t))
 
         const seed = SeedRef.from(seedData)
 
@@ -76,15 +121,31 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
         await background.tryRequest<Wallet[]>({
           method: "brume_createWallet",
           params: [wallet]
-        }).then(r => r.throw(t).throw(t))
+        }).then(r => r.mapErrSync(cause => {
+          return new UIError(`Could not communicate with the backend`, { cause })
+        }).throw(t).mapErrSync(cause => {
+          return new UIError(`Could not create the wallet`, { cause })
+        }).throw(t))
       } else {
-        const instance = await SeedInstance.tryFrom(seedData, background).then(r => r.throw(t))
-        const mnemonic = await instance.tryGetMnemonic(background).then(r => r.throw(t))
+        const instance = await SeedInstance.tryFrom(seedData, background).then(r => r.get())
 
-        const masterSeed = await mnemonicToSeed(mnemonic)
+        const mnemonic = await instance.tryGetMnemonic(background).then(r => r.mapErrSync(cause => {
+          return new UIError(`Could not get mnemonic`, { cause })
+        }).throw(t))
 
-        const root = HDKey.fromMasterSeed(masterSeed)
-        const child = root.derive(defPathInput)
+        const masterSeed = await Result.runAndDoubleWrap(async () => {
+          return await mnemonicToSeed(mnemonic)
+        }).then(r => r.throw(t))
+
+        const root = Result.runAndDoubleWrapSync(() => {
+          return HDKey.fromMasterSeed(masterSeed)
+        }).throw(t)
+
+        const child = Result.runAndWrapSync(() => {
+          return root.derive(defPathInput)
+        }).mapErrSync((cause) => {
+          return new UIError(`Invalid derivation path`, { cause })
+        }).throw(t)
 
         const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
         const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
@@ -97,7 +158,11 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
         await background.tryRequest<Wallet[]>({
           method: "brume_createWallet",
           params: [wallet]
-        }).then(r => r.throw(t).throw(t))
+        }).then(r => r.mapErrSync(cause => {
+          return new UIError(`Could not communicate with the backend`, { cause })
+        }).throw(t).mapErrSync(cause => {
+          return new UIError(`Could not create the wallet`, { cause })
+        }).throw(t))
       }
 
       close()
@@ -125,6 +190,12 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
       value={rawPathInput}
       onChange={onPathInputChange} />
 
+  const IndexInput =
+    <Input.Contrast className="w-full"
+      placeholder="0"
+      value={rawIndexInput}
+      onChange={onIndexInputChange} />
+
   const AddButon =
     <Button.Gradient className="grow po-md"
       colorIndex={color}
@@ -142,8 +213,66 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
     </Dialog.Title>
     <div className="h-2" />
     {NameInput}
-    <div className="h-8" />
-    {PathInput}
+    <div className="h-4" />
+    <div className="font-medium">
+      Choose an account type
+    </div>
+    <div className="h-2" />
+    <select
+      value={coin}
+      onChange={onCoinChange}>
+      <option value="eth">
+        Ethereum
+      </option>
+      <option value="etc">
+        Ethereum Classic
+      </option>
+      <option value="custom">
+        Other
+      </option>
+    </select>
+    <div className="h-2" />
+    {coin === "custom" && <>
+      <div className="font-medium">
+        Choose a derivation path
+      </div>
+      <div className="h-2" />
+      {PathInput}
+    </>}
+    {coin !== "custom" && <>
+      <select
+        value={app}
+        onChange={onAppChange}>
+        <option value="metamask">
+          MetaMask
+        </option>
+        <option value="ledger">
+          Ledger Live
+        </option>
+        <option value="custom">
+          Other
+        </option>
+      </select>
+      <div className="h-2" />
+      {app === "custom" && <>
+        <div className="font-medium">
+          Choose a derivation path
+        </div>
+        <div className="h-2" />
+        {PathInput}
+      </>}
+      {app !== "custom" && <>
+        <div className="font-medium">
+          Choose an account index
+        </div>
+        <div className="h-2" />
+        {IndexInput}
+        <div className="h-2" />
+        <div className="text-contrast">
+          You derivation path will be {rawPathInput}
+        </div>
+      </>}
+    </>}
     <div className="h-8" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       {AddButon}
