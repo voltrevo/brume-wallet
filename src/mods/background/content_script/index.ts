@@ -127,6 +127,13 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
 
     const port = new ExtensionPort("background", raw)
 
+    {
+      const icon = await port.tryRequest<string>({ method: "brume_icon" }).then(r => r.throw(t).throw(t))
+      const detail = JSON.stringify(icon)
+      const event = new CustomEvent("brume#icon", { detail })
+      window.dispatchEvent(event)
+    }
+
     const onScriptRequest = async (input: CustomEvent<string>) => {
       const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
 
@@ -144,8 +151,8 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       const [accounts] = (request as RpcRequestPreinit<[string[]]>).params
 
       const detail = JSON.stringify(accounts)
-      const output = new CustomEvent("ethereum#accountsChanged", { detail })
-      window.dispatchEvent(output)
+      const event = new CustomEvent("ethereum#accountsChanged", { detail })
+      window.dispatchEvent(event)
       return Ok.void()
     }
 
@@ -153,8 +160,8 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       const [chainId] = (request as RpcRequestPreinit<[string]>).params
 
       const detail = JSON.stringify(chainId)
-      const output = new CustomEvent("ethereum#chainChanged", { detail })
-      window.dispatchEvent(output)
+      const event = new CustomEvent("ethereum#chainChanged", { detail })
+      window.dispatchEvent(event)
       return Ok.void()
     }
 
@@ -171,8 +178,8 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
     port.events.on("request", onBackgroundRequest, { passive: true })
 
     const onClose = async () => {
-      const output = new CustomEvent("ethereum#disconnect", {})
-      window.dispatchEvent(output)
+      const event = new CustomEvent("ethereum#disconnect", {})
+      window.dispatchEvent(event)
 
       await pool.restart(index)
       return new None()
@@ -180,8 +187,10 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
 
     port.events.on("close", onClose, { passive: true })
 
-    const output = new CustomEvent("ethereum#connect", {})
-    window.dispatchEvent(output)
+    {
+      const event = new CustomEvent("ethereum#connect", {})
+      window.dispatchEvent(event)
+    }
 
     const onClean = () => {
       window.removeEventListener("ethereum#request", onScriptRequest)

@@ -511,9 +511,21 @@ export class Global {
   }
 
   async tryRouteContentScript(script: Port, request: RpcRequestPreinit<unknown>) {
+    if (request.method === "brume_icon")
+      return new Some(await this.brume_icon(script, request))
     if (request.method === "brume_run")
       return new Some(await this.brume_run(script, request))
     return new None()
+  }
+
+  async brume_icon(script: Port, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+    return await Result.unthrow(async t => {
+      const res = await fetch("/favicon.png")
+      const blob = await res.blob()
+      const data = await Blobs.tryReadAsDataURL(blob).then(r => r.throw(t))
+
+      return new Ok(data)
+    })
   }
 
   async brume_run(script: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {

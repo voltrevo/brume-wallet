@@ -1,32 +1,83 @@
-import "@hazae41/symbol-dispose-polyfill"
+import "@hazae41/symbol-dispose-polyfill";
 
-import { Future } from "@hazae41/future"
-import { RpcCounter, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
+import { Future } from "@hazae41/future";
+import { RpcCounter, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 
 declare global {
   interface Window {
-    ethereum?: Provider
+    ethereum?: EIP1193Provider
+  }
+}
+
+interface EIP1193Provider {
+  /**
+   * No definition? :(
+   */
+}
+
+interface EIP6963ProviderInfo {
+  uuid: string;
+  name: string;
+  icon: string;
+  rdns: string;
+}
+
+interface EIP6963ProviderDetail {
+  info: EIP6963ProviderInfo;
+  provider: EIP1193Provider;
+}
+
+interface EIP6963AnnounceProviderEvent extends CustomEvent {
+  type: "eip6963:announceProvider";
+  detail: EIP6963ProviderDetail;
+}
+
+interface EIP6963RequestProviderEvent extends CustomEvent {
+  type: "eip6963:requestProvider";
+}
+
+declare global {
+  interface DedicatedWorkerGlobalScopeEventMap {
+    "eip6963:announceProvider": EIP6963AnnounceProviderEvent,
+    "eip6963:requestProvider": EIP6963RequestProviderEvent
   }
 }
 
 type EthereumEventKey = `ethereum#${string}`
+type BrumeEventKey = `brume#${string}`
 
 type Sublistener = (...params: any[]) => void
 type Suplistener = (e: CustomEvent<string>) => void
 
 declare global {
   interface DedicatedWorkerGlobalScopeEventMap {
+    [k: BrumeEventKey]: CustomEvent<string>
     [k: EthereumEventKey]: CustomEvent<string>
   }
 }
 
+const icon = new Future<string>()
+
+const onLogo = (event: CustomEvent<string>) => {
+  icon.resolve(JSON.parse(event.detail))
+}
+
+window.addEventListener("brume#icon", onLogo, { passive: true, once: true })
+
 class Provider {
 
-  readonly counter = new RpcCounter()
+  readonly #counter = new RpcCounter()
 
-  readonly listeners = new Map<string, Map<Sublistener, Suplistener>>()
+  readonly #listeners = new Map<string, Map<Sublistener, Suplistener>>()
 
-  constructor() { }
+  constructor() {
+    /**
+     * Fix for that poorly-coded app that does `const { request } = provider`
+     */
+    this.request = this.request.bind(this)
+    this.on = this.on.bind(this)
+    this.off = this.off.bind(this)
+  }
 
   get isBrume() {
     return true
@@ -37,7 +88,7 @@ class Provider {
   }
 
   async tryRequest(init: RpcRequestPreinit<unknown>) {
-    const request = this.counter.prepare(init)
+    const request = this.#counter.prepare(init)
 
     const future = new Future<RpcResponse<unknown>>()
 
@@ -69,11 +120,11 @@ class Provider {
   }
 
   on(key: string, sublistener: Sublistener) {
-    let listeners = this.listeners.get(key)
+    let listeners = this.#listeners.get(key)
 
     if (listeners == null) {
       listeners = new Map()
-      this.listeners.set(key, listeners)
+      this.#listeners.set(key, listeners)
     }
 
     let suplistener = listeners.get(sublistener)
@@ -87,7 +138,7 @@ class Provider {
   }
 
   off(key: string, sublistener: Sublistener) {
-    const listeners = this.listeners.get(key)
+    const listeners = this.#listeners.get(key)
 
     if (listeners == null)
       return
@@ -104,10 +155,41 @@ class Provider {
     if (listeners.size !== 0)
       return
 
-    this.listeners.delete(key)
+    this.#listeners.delete(key)
   }
 
 }
 
-const provider = new Provider()
+const provider = Object.freeze(new Provider())
+
+/**
+ * EIP1193
+ */
 window.ethereum = provider
+
+/**
+ * EIP6963
+ */
+{
+  async function announce() {
+    const info: EIP6963ProviderInfo = Object.freeze({
+      uuid: "e750a98c-ff2d-4fc4-b6e2-faf4d13d1add",
+      name: "Brume Wallet",
+      icon: await icon.promise,
+      rdns: "money.brume"
+    })
+
+    const detail: EIP6963ProviderDetail = Object.freeze({ info, provider })
+    const event = new CustomEvent("eip6963:announceProvider", { detail })
+
+    window.dispatchEvent(event)
+  }
+
+  function onAnnounceRequest(event: EIP6963RequestProviderEvent) {
+    announce()
+  }
+
+  window.addEventListener("eip6963:requestProvider", onAnnounceRequest, { passive: true })
+
+  announce();
+}
