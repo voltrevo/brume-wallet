@@ -1,5 +1,7 @@
 import { Colors } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
+import { UIError } from "@/libs/errors/errors";
+import { chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -14,16 +16,20 @@ import { Textarea } from "@/libs/ui/textarea";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackground } from "@/mods/foreground/background/context";
 import { ZeroHexString } from "@hazae41/cubane";
+import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { ethers } from "ethers";
 import { useDeferredValue, useMemo, useState } from "react";
 import { WalletAvatar } from "../../avatar";
+import { useEnsLookup, useEthereumContext } from "../../data";
 
 export function ReadonlyWalletCreatorDialog(props: CloseProps) {
   const { close } = props
   const background = useBackground().unwrap()
 
   const uuid = useConstant(() => crypto.randomUUID())
+
+  const mainnet = useEthereumContext(uuid, chainByChainId[chainIdByName.ETHEREUM])
 
   const modhash = useModhash(uuid)
   const color = Colors.mod(modhash)
@@ -45,22 +51,23 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
     setRawAddressInput(e.currentTarget.value)
   }, [])
 
-  const canAdd = useMemo(() => {
-    if (!defNameInput)
-      return false
-    if (!defAddressInput.startsWith("0x"))
-      return false
-    if (defAddressInput.length !== 42)
-      return false
-    return true
-  }, [defNameInput, defAddressInput])
+  const maybeEnsInput = defAddressInput.endsWith(".eth")
+    ? defAddressInput
+    : undefined
+  const ensAddressQuery = useEnsLookup(maybeEnsInput, mainnet)
+
+  const maybeAddress = defAddressInput.endsWith(".eth")
+    ? ensAddressQuery.data?.inner
+    : defAddressInput
 
   const tryAdd = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       if (!defNameInput)
         return new Err(new Panic())
 
-      const address = ethers.getAddress(defAddressInput) as ZeroHexString
+      const address = Option.wrap(maybeAddress).okOrElseSync(() => {
+        return new UIError(`Could not fetch or parse address`)
+      }).mapSync(x => ethers.getAddress(x) as ZeroHexString).throw(t)
 
       const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: defNameInput, color, emoji, address }
 
@@ -73,7 +80,17 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [defNameInput, defAddressInput, uuid, color, emoji, background, close])
+  }, [defNameInput, maybeAddress, uuid, color, emoji, background, close])
+
+  const addDisabled = useMemo(() => {
+    if (tryAdd.loading)
+      return "Loading..."
+    if (!defNameInput)
+      return "Please enter a name"
+    if (!defAddressInput)
+      return "Please enter an address"
+    return undefined
+  }, [tryAdd.loading, defNameInput, defAddressInput])
 
   const NameInput =
     <div className="flex items-stretch gap-2">
@@ -90,7 +107,7 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
 
   const AddressInput =
     <Textarea.Contrast className="w-full resize-none"
-      placeholder="Enter an address"
+      placeholder="vitalik.eth"
       value={rawAddressInput}
       onChange={onAddressInputChange}
       rows={4} />
@@ -98,11 +115,11 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
   const AddButon =
     <Button.Gradient className="grow po-md"
       colorIndex={color}
-      disabled={!defNameInput || !canAdd}
+      disabled={Boolean(addDisabled)}
       onClick={tryAdd.run}>
       <Button.Shrink>
         <Outline.PlusIcon className="s-sm" />
-        Add
+        {addDisabled || "Add"}
       </Button.Shrink>
     </Button.Gradient>
 

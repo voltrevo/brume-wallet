@@ -2,7 +2,6 @@ import { BigIntToHex } from "@/libs/bigints/bigints"
 import { ContractTokenInfo, EthereumChain, PairInfo } from "@/libs/ethereum/mods/chain"
 import { Fixed, FixedInit } from "@/libs/fixed/fixed"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
-import { useObjectMemo } from "@/libs/react/memo"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
 import { BgEns, EthereumAuthPrivateKeyWalletData, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
@@ -20,8 +19,6 @@ import { useBackground } from "../../background/context"
 import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorage } from "../../storage/user"
 import { SeedInstance } from "../seeds/all/data"
-import { useCurrentUserRef } from "../users/context"
-import { User } from "../users/data"
 
 export interface WalletProps {
   wallet: Wallet
@@ -222,23 +219,12 @@ export class EthereumAuthPrivateKeyWalletInstance {
 
 export interface EthereumContext {
   uuid: string,
-  background: Background
   chain: EthereumChain,
-}
-
-export interface UserContext {
-  user: User,
   background: Background
 }
 
 export interface EthereumContextProps {
   context: EthereumContext
-}
-
-export function useUserContext() {
-  const user = useCurrentUserRef()
-  const background = useBackground().unwrap()
-  return useObjectMemo({ user, background })
 }
 
 export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<EthereumChain>) {
