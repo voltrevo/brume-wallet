@@ -136,9 +136,7 @@ export namespace Wallet {
         const previousData = previous.real?.data
         const currentData = current.real?.data
 
-        const walletsQuery = Wallets.schema(storage)
-
-        await walletsQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
+        await Wallets.schema(storage).tryMutate(Mutators.mapData((d = new Data([])) => {
           if (previousData != null)
             d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
           if (currentData != null)
@@ -165,6 +163,20 @@ export namespace Wallet {
     }
 
     return createQuery<Key, WalletData, never>({ key: key(uuid), storage, indexer })
+  }
+
+  export namespace All {
+
+    export type Key = typeof key
+
+    export const key = `wallets`
+
+    export type Schema = ReturnType<typeof schema>
+
+    export function schema(storage: IDBStorage) {
+      return createQuery<Key, WalletRef[], never>({ key, storage })
+    }
+
   }
 
 }
@@ -723,10 +735,6 @@ export namespace BgEns {
 
     export function schema(ethereum: EthereumContext, address: ZeroHexString, storage: IDBStorage) {
       const fetcher = () => tryFetch(ethereum, address)
-
-      const indexer = () => {
-        // TODO 
-      }
 
       return createQuery<EthereumQueryKey<unknown>, string, Error>({
         key: key(address),

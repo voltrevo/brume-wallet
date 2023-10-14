@@ -573,3 +573,11 @@ export function useEnsReverse(ethereum: EthereumContext, address: Nullable<ZeroH
   useError(query, console.error)
   return query
 }
+
+export function useEnsReverseNoFetch(ethereum: EthereumContext, address: Nullable<ZeroHexString>) {
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(FgEns.Reverse.schema, [ethereum, address, storage])
+  useSubscribe(query, storage)
+  useError(query, console.error)
+  return query
+}

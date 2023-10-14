@@ -1,22 +1,29 @@
 import { Gradients } from "@/libs/colors/colors"
 import { useCopy } from "@/libs/copy/copy"
 import { Ethereum } from "@/libs/ethereum"
+import { chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain"
 import { Outline } from "@/libs/icons/icons"
 import { useMouseCancel } from "@/libs/react/events"
 import { Button } from "@/libs/ui/button"
 import { WalletIcon } from "./avatar"
 import { useWalletData } from "./context"
-import { useTotalWalletPricedBalance } from "./data"
+import { useEnsReverseNoFetch, useEthereumContext, useTotalWalletPricedBalance } from "./data"
 import { useCompactDisplayUsd } from "./page"
 
 export function WalletDataCard() {
   const wallet = useWalletData()
 
+  const mainnet = useEthereumContext(wallet, chainByChainId[chainIdByName.ETHEREUM])
+  const ens = useEnsReverseNoFetch(mainnet, wallet.address)
+
   const [color, color2] = Gradients.get(wallet.color)
 
   const onClickEllipsis = useMouseCancel(() => alert("This feature is not implemented yet"), [])
 
-  const copyEthereumAddress = useCopy(wallet.address)
+  const ensOrAddress = ens.data?.inner ?? wallet.address
+  const ensOrAddressDisplay = ens.data?.inner ?? Ethereum.Address.format(wallet.address)
+
+  const copyEthereumAddress = useCopy(ensOrAddress)
   const onClickCopyEthereumAddress = useMouseCancel(copyEthereumAddress.run)
 
   const totalBalanceQuery = useTotalWalletPricedBalance(wallet.address, "usd")
@@ -57,7 +64,7 @@ export function WalletDataCard() {
         onClick={onClickCopyEthereumAddress}>
         {copyEthereumAddress.current
           ? "Copied"
-          : Ethereum.Address.format(wallet.address)}
+          : ensOrAddressDisplay}
       </div>
     </div>
 

@@ -22,7 +22,7 @@ import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { WalletDataCard } from "./card";
 import { WalletDataProvider, useWalletData } from "./context";
-import { useBalance, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
+import { useBalance, useEnsReverse, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
 
 export function WalletPage(props: UUIDProps) {
   const { uuid } = props
@@ -146,7 +146,7 @@ function WalletDataPage() {
   const binance = useEthereumContext(wallet, chainByChainId[chainIdByName.BINANCE])
   const celo = useEthereumContext(wallet, chainByChainId[chainIdByName.CELO])
 
-  // const name = useEnsReverse(mainnet, wallet.address)
+  useEnsReverse(mainnet, wallet.address)
 
   const sendDialog = useBooleanHandle(false)
   const receiveDialog = useBooleanHandle(false)
