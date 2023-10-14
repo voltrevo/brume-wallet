@@ -5,7 +5,7 @@ import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useCallback } from "react";
 import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
-import { Path } from "../../router/path";
+import { Path } from "../../router/path/context";
 import { SeededWalletCreatorDialog } from "../wallets/all/create/seeded";
 import { ClickableWalletGrid } from "../wallets/all/page";
 import { useWalletsBySeed } from "./all/data";

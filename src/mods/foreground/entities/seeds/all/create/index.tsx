@@ -4,7 +4,7 @@ import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { useBackground } from "@/mods/foreground/background/context";
-import { usePath } from "@/mods/foreground/router/path";
+import { usePath } from "@/mods/foreground/router/path/context";
 import { Ok, Result } from "@hazae41/result";
 import { useCallback, useState } from "react";
 import { LedgerSeedCreatorDialog } from "./ledger";

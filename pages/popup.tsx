@@ -21,7 +21,7 @@ import { EthereumWalletInstance, useEthereumContext, useGasPrice, useNonce, useW
 import { UserRejectionError } from "@/mods/foreground/errors/errors";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
-import { Path, usePath } from "@/mods/foreground/router/path";
+import { Path, usePath } from "@/mods/foreground/router/path/context";
 import { Router } from "@/mods/foreground/router/router";
 import { useUserStorage } from "@/mods/foreground/storage/user";
 import { Base16 } from "@hazae41/base16";

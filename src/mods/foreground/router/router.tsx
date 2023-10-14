@@ -6,7 +6,8 @@ import { SessionsPage } from "../entities/sessions/all/page"
 import { WalletsPage } from "../entities/wallets/all/page"
 import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
-import { usePath } from "./path"
+import { SettingsPage } from "../settings/page"
+import { usePath } from "./path/context"
 
 export function Router() {
   const url = usePath()
@@ -39,6 +40,9 @@ export function Router() {
 
   if (matches = url.pathname.match(/^\/seed\/([^\/]+)$/))
     return <SeedPage uuid={matches[1]} />
+
+  if (matches = url.pathname.match(/^\/settings$/))
+    return <SettingsPage />
 
   if (matches = url.pathname.match(/^\/eth_requestAccounts$/))
     return <WalletAndChainSelectPage />

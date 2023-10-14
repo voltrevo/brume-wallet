@@ -3,7 +3,7 @@ import { Button } from "@/libs/ui/button";
 import { useCallback } from "react";
 import { useBackground } from "../background/context";
 import { useAppRequests } from "../entities/requests/all/data";
-import { Path, usePath } from "../router/path";
+import { Path, usePath } from "../router/path/context";
 
 export function Bottom() {
   const path = usePath()
@@ -26,6 +26,10 @@ export function Bottom() {
 
   const onRequestsClick = useCallback(() => {
     Path.go("/requests")
+  }, [])
+
+  const onSettingsClick = useCallback(() => {
+    Path.go("/settings")
   }, [])
 
   return <>
@@ -62,6 +66,13 @@ export function Bottom() {
                 <div className="absolute top-0 -right-2 bg-purple-400 rounded-full w-2 h-2" />}
               <Outline.CheckIcon className="s-md" />
             </div>
+          </Button.Shrink>
+        </Button.Naked>
+        <Button.Naked className="grow text-contrast aria-selected:text-default"
+          aria-selected={path.pathname === "/settings"}
+          onClick={onSettingsClick}>
+          <Button.Shrink>
+            <Outline.CogIcon className="s-md" />
           </Button.Shrink>
         </Button.Naked>
       </div>

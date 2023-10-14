@@ -16,7 +16,7 @@ import { useCallback, useMemo } from "react";
 import { useBackground } from "../../background/context";
 import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
-import { Path } from "../../router/path";
+import { Path } from "../../router/path/context";
 import { WalletDataReceiveDialog } from "./actions/receive/receive";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";

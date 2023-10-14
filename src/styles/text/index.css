@@ -18,4 +18,8 @@
     @apply text-white text-opacity-75;
     @apply dark:text-white dark:text-opacity-75;
   }
+
+  .text-colored {
+    @apply text-purple-400;
+  }
 }
