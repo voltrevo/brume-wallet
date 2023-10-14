@@ -24,7 +24,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
   const wallet = useWalletData()
   const { title, context, close } = props
 
-  const mainnet = useEthereumContext(wallet, chainByChainId[chainIdByName.ETHEREUM])
+  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.ETHEREUM])
 
   const balanceQuery = useBalance(wallet.address, context, [])
   const maybeBalance = balanceQuery.data?.inner
@@ -46,7 +46,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
   const maybeEnsName = defRecipientInput.endsWith(".eth")
     ? defRecipientInput
     : undefined
-  const ensAddressQuery = useEnsLookup(mainnet, maybeEnsName)
+  const ensAddressQuery = useEnsLookup(maybeEnsName, mainnet)
 
   const maybeFinalAddress = defRecipientInput.endsWith(".eth")
     ? ensAddressQuery.data?.inner
@@ -125,7 +125,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
 
       const gas = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",
-        params: [context.wallet.uuid, context.chain.chainId, {
+        params: [context.uuid, context.chain.chainId, {
           method: "eth_estimateGas",
           params: [{
             chainId: Radix.toZeroHex(context.chain.chainId),
@@ -154,7 +154,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
 
       const txHash = await context.background.tryRequest<string>({
         method: "brume_eth_fetch",
-        params: [context.wallet.uuid, context.chain.chainId, {
+        params: [context.uuid, context.chain.chainId, {
           method: "eth_sendRawTransaction",
           params: [tx.serialized]
         }]

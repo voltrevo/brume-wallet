@@ -17,7 +17,7 @@ import { UserProvider } from "@/mods/foreground/entities/users/context";
 import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
 import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
 import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
-import { EthereumWalletInstance, useEthereumContext2, useGasPrice, useNonce, useWallet } from "@/mods/foreground/entities/wallets/data";
+import { EthereumWalletInstance, useEthereumContext, useGasPrice, useNonce, useWallet } from "@/mods/foreground/entities/wallets/data";
 import { UserRejectionError } from "@/mods/foreground/errors/errors";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
@@ -84,7 +84,7 @@ export function TransactPage() {
   const value = searchParams.get("value")
   const data = searchParams.get("data")
 
-  const context = useEthereumContext2(maybeSession?.wallets.at(0), chain)
+  const context = useEthereumContext(maybeSession?.wallets.at(0)?.uuid, chain)
 
   const gasPriceQuery = useGasPrice(context)
   const maybeGasPrice = gasPriceQuery.data?.inner

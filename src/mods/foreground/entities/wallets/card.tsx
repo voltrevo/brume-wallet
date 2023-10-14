@@ -13,8 +13,8 @@ import { useCompactDisplayUsd } from "./page"
 export function WalletDataCard() {
   const wallet = useWalletData()
 
-  const mainnet = useEthereumContext(wallet, chainByChainId[chainIdByName.ETHEREUM])
-  const ens = useEnsReverseNoFetch(mainnet, wallet.address)
+  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.ETHEREUM])
+  const ens = useEnsReverseNoFetch(wallet.address, mainnet)
 
   const [color, color2] = Gradients.get(wallet.color)
 

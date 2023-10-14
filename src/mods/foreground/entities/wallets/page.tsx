@@ -63,14 +63,14 @@ function NativeTokenRow(props: {
   const { chain, prices } = props
   const wallet = useWalletData()
 
-  const context = useEthereumContext(wallet, chain)
+  const context = useEthereumContext(wallet.uuid, chain)
 
   const balanceQuery = useBalance(wallet.address, context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
 
   const sendDialog = useBooleanHandle(false)
 
-  const balanceUsdFixed = usePricedBalance(context, wallet.address, "usd")
+  const balanceUsdFixed = usePricedBalance(wallet.address, "usd", context)
   const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
 
   return <>
@@ -104,7 +104,7 @@ function ContractTokenRow(props: {
   const chain = chainByChainId[token.chainId]
   const wallet = useWalletData()
 
-  const context = useEthereumContext(wallet, chain)
+  const context = useEthereumContext(wallet.uuid, chain)
 
   const balanceQuery = useTokenBalance(wallet.address, token, context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
@@ -142,11 +142,11 @@ function WalletDataPage() {
   const wallet = useWalletData()
   const background = useBackground().unwrap()
 
-  const mainnet = useEthereumContext(wallet, chainByChainId[chainIdByName.ETHEREUM])
-  const binance = useEthereumContext(wallet, chainByChainId[chainIdByName.BINANCE])
-  const celo = useEthereumContext(wallet, chainByChainId[chainIdByName.CELO])
+  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.ETHEREUM])
+  const binance = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.BINANCE])
+  const celo = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.CELO])
 
-  useEnsReverse(mainnet, wallet.address)
+  useEnsReverse(wallet.address, mainnet)
 
   const sendDialog = useBooleanHandle(false)
   const receiveDialog = useBooleanHandle(false)

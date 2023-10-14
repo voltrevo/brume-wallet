@@ -125,7 +125,7 @@ export class Global {
   #wcs?: Mutex<Pool<Disposer<WcBrume>, Error>>
   #eths?: Mutex<Pool<Disposer<EthBrume>, Error>>
 
-  readonly brumeByWallet = new Mutex(new Map<string, EthBrume>())
+  readonly brumeByUuid = new Mutex(new Map<string, EthBrume>())
 
   readonly scriptsBySession = new Map<string, Set<Port>>()
 
@@ -522,26 +522,26 @@ export class Global {
 
       const session = await this.tryGetOrWaitExtensionSession(script, mouse).then(r => r.throw(t))
 
-      const { user, storage } = Option.wrap(this.#user).ok().throw(t)
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const { wallets, chain } = session
 
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
-      const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
-      const ethereum: EthereumContext = { user, session, chain, brume }
+      const brume = await this.#tryGetOrTakeEthBrume(wallet.uuid).then(r => r.throw(t))
+      const ethereum: EthereumContext = { chain, brume }
 
       if (subrequest.method === "eth_requestAccounts")
-        return await this.eth_requestAccounts(ethereum, subrequest)
+        return await this.eth_requestAccounts(ethereum, session, subrequest)
       if (subrequest.method === "eth_accounts")
-        return await this.eth_accounts(ethereum, subrequest)
+        return await this.eth_accounts(ethereum, session, subrequest)
       if (subrequest.method === "eth_sendTransaction")
-        return await this.eth_sendTransaction(ethereum, subrequest, mouse)
+        return await this.eth_sendTransaction(ethereum, session, subrequest, mouse)
       if (subrequest.method === "personal_sign")
-        return await this.personal_sign(ethereum, subrequest, mouse)
+        return await this.personal_sign(ethereum, session, subrequest, mouse)
       if (subrequest.method === "eth_signTypedData_v4")
-        return await this.eth_signTypedData_v4(ethereum, subrequest, mouse)
+        return await this.eth_signTypedData_v4(ethereum, session, subrequest, mouse)
       if (subrequest.method === "wallet_switchEthereumChain")
-        return await this.wallet_switchEthereumChain(ethereum, subrequest, mouse)
+        return await this.wallet_switchEthereumChain(ethereum, session, subrequest, mouse)
 
       const query = getEthereumUnknown(ethereum, subrequest, storage)
 
@@ -558,10 +558,9 @@ export class Global {
     })
   }
 
-  async eth_requestAccounts(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
+  async eth_requestAccounts(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
     return await Result.unthrow(async t => {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
-      const session = Option.wrap(ethereum.session).ok().throw(t)
 
       const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<string, Error>>(async t => {
@@ -577,10 +576,9 @@ export class Global {
     })
   }
 
-  async eth_accounts(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
+  async eth_accounts(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
     return await Result.unthrow(async t => {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
-      const session = Option.wrap(ethereum.session).ok().throw(t)
 
       const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<string, Error>>(async t => {
@@ -659,7 +657,7 @@ export class Global {
     })
   }
 
-  async eth_sendTransaction(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
+  async eth_sendTransaction(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [{ from, to, gas, value, data }] = (request as RpcRequestPreinit<[{
         from: string,
@@ -669,7 +667,6 @@ export class Global {
         data: Nullable<string>
       }]>).params
 
-      const session = Option.wrap(ethereum.session).ok().throw(t)
       const chainId = ethereum.chain.chainId.toString()
 
       const signature = await this.tryRequest<string>({
@@ -687,11 +684,9 @@ export class Global {
     })
   }
 
-  async personal_sign(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
+  async personal_sign(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [message, address] = (request as RpcRequestPreinit<[string, string]>).params
-
-      const session = Option.wrap(ethereum.session).ok().throw(t)
 
       const signature = await this.tryRequest<string>({
         id: crypto.randomUUID(),
@@ -705,11 +700,9 @@ export class Global {
     })
   }
 
-  async eth_signTypedData_v4(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
+  async eth_signTypedData_v4(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcRequestPreinit<[string, string]>).params
-
-      const session = Option.wrap(ethereum.session).ok().throw(t)
 
       const signature = await this.tryRequest<string>({
         id: crypto.randomUUID(),
@@ -723,11 +716,9 @@ export class Global {
     })
   }
 
-  async wallet_switchEthereumChain(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
+  async wallet_switchEthereumChain(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
       const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
-
-      const session = Option.wrap(ethereum.session).ok().throw(t)
 
       const chain = Option.wrap(chainByChainId[parseInt(chainId, 16)]).ok().throw(t)
 
@@ -979,15 +970,15 @@ export class Global {
     })
   }
 
-  async #tryGetOrTakeEthBrume(wallet: Wallet): Promise<Result<EthBrume, Error>> {
+  async #tryGetOrTakeEthBrume(uuid: string): Promise<Result<EthBrume, Error>> {
     return await Result.unthrow(async t => {
-      return await this.brumeByWallet.lock(async brumeByWallet => {
-        const brume = brumeByWallet.get(wallet.uuid)
+      return await this.brumeByUuid.lock(async brumeByUuid => {
+        const brume = brumeByUuid.get(uuid)
 
         if (brume == null) {
           const brumes = Option.wrap(this.#eths).ok().throw(t)
           const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.inner.inner)
-          brumeByWallet.set(wallet.uuid, brume)
+          brumeByUuid.set(uuid, brume)
           return new Ok(brume)
         }
 
@@ -1085,18 +1076,15 @@ export class Global {
 
   async brume_eth_index(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
-      const [walletId, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, RpcRequestPreinit<unknown>]>).params
+      const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, RpcRequestPreinit<unknown>]>).params
 
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const walletQuery = Wallet.schema(walletId, storage)
-      const walletState = await walletQuery.state.then(r => r.throw(t))
-      const wallet = Option.wrap(walletState.current?.get()).ok().throw(t)
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
-      const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
+      const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.throw(t))
 
-      const ethereum: EthereumContext = { user, chain, brume }
+      const ethereum: EthereumContext = { chain, brume }
 
       const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
@@ -1108,17 +1096,14 @@ export class Global {
 
   async brume_eth_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
-      const [walletId, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, RpcRequestPreinit<unknown>]>).params
+      const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, RpcRequestPreinit<unknown>]>).params
 
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const walletQuery = Wallet.schema(walletId, storage)
-      const walletState = await walletQuery.state.then(r => r.throw(t))
-      const wallet = Option.wrap(walletState.current?.get()).ok().throw(t)
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
-      const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
-      const ethereum: EthereumContext = { user, chain, brume }
+      const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.throw(t))
+      const ethereum: EthereumContext = { chain, brume }
 
       const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
@@ -1190,7 +1175,7 @@ export class Global {
 
   async #tryWcReconnect(sessionData: WcSessionData): Promise<Result<WcSession, Error>> {
     return await Result.unthrow(async t => {
-      const { user, storage } = Option.wrap(this.#user).ok().throw(t)
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const { topic, metadata, sessionKeyBase64, authKeyJwk, wallets, settlement } = sessionData
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
@@ -1225,16 +1210,16 @@ export class Global {
           return new None()
         const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
         const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
-        const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
+        const brume = await this.#tryGetOrTakeEthBrume(wallet.uuid).then(r => r.throw(t))
 
-        const ethereum: EthereumContext = { user, chain, brume, session: sessionData }
+        const ethereum: EthereumContext = { chain, brume }
 
         if (request.method === "eth_sendTransaction")
-          return new Some(await this.eth_sendTransaction(ethereum, request))
+          return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
         if (request.method === "personal_sign")
-          return new Some(await this.personal_sign(ethereum, request))
+          return new Some(await this.personal_sign(ethereum, sessionData, request))
         if (request.method === "eth_signTypedData_v4")
-          return new Some(await this.eth_signTypedData_v4(ethereum, request))
+          return new Some(await this.eth_signTypedData_v4(ethereum, sessionData, request))
         return new None()
       }
 
@@ -1320,16 +1305,16 @@ export class Global {
           return new None()
         const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
         const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
-        const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
+        const brume = await this.#tryGetOrTakeEthBrume(wallet.uuid).then(r => r.throw(t))
 
-        const ethereum: EthereumContext = { user, chain, brume, session: sessionData }
+        const ethereum: EthereumContext = { chain, brume }
 
         if (request.method === "eth_sendTransaction")
-          return new Some(await this.eth_sendTransaction(ethereum, request))
+          return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
         if (request.method === "personal_sign")
-          return new Some(await this.personal_sign(ethereum, request))
+          return new Some(await this.personal_sign(ethereum, sessionData, request))
         if (request.method === "eth_signTypedData_v4")
-          return new Some(await this.eth_signTypedData_v4(ethereum, request))
+          return new Some(await this.eth_signTypedData_v4(ethereum, sessionData, request))
         return new None()
       }
 

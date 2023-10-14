@@ -221,13 +221,12 @@ export class EthereumAuthPrivateKeyWalletInstance {
 }
 
 export interface EthereumContext {
-  user: User,
+  uuid: string,
   background: Background
-  wallet: Wallet,
   chain: EthereumChain,
 }
 
-export interface GeneralContext {
+export interface UserContext {
   user: User,
   background: Background
 }
@@ -236,58 +235,49 @@ export interface EthereumContextProps {
   context: EthereumContext
 }
 
-export function useGeneralContext() {
+export function useUserContext() {
   const user = useCurrentUserRef()
   const background = useBackground().unwrap()
   return useObjectMemo({ user, background })
 }
 
-export function useEthereumContext2(wallet: Nullable<Wallet>, chain: Nullable<EthereumChain>) {
-  const user = useCurrentUserRef()
+export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<EthereumChain>) {
   const background = useBackground().unwrap()
 
-  return useMemo(() => {
-    if (wallet == null)
+  return useMemo<Nullable<EthereumContext>>(() => {
+    if (uuid == null)
       return
     if (chain == null)
       return
-    return { user, background, wallet, chain }
-  }, [user, background, wallet, chain])
-}
-
-export function useEthereumContext(wallet: Wallet, chain: EthereumChain): EthereumContext {
-  const user = useCurrentUserRef()
-  const background = useBackground().unwrap()
-
-  return useObjectMemo({ user, background, wallet, chain })
+    return { uuid, chain, background }
+  }, [uuid, chain, background])
 }
 
 export async function tryFetch<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext): Promise<Result<Fetched<T, Error>, Error>> {
-  const { background, wallet, chain } = ethereum
+  const { uuid, background, chain } = ethereum
 
   return await background.tryRequest<T>({
     method: "brume_eth_fetch",
-    params: [wallet.uuid, chain.chainId, request]
+    params: [uuid, chain.chainId, request]
   }).then(r => r.mapSync(x => Fetched.rewrap(x)))
 }
 
 export async function tryIndex<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext): Promise<Result<RpcResponse<T>, Error>> {
-  const { background, wallet, chain } = ethereum
+  const { uuid, background, chain } = ethereum
 
   return await background.tryRequest<T>({
     method: "brume_eth_index",
-    params: [wallet.uuid, chain.chainId, request]
+    params: [uuid, chain.chainId, request]
   })
 }
 
-export function getTotalPricedBalance(context: GeneralContext, coin: "usd", storage: UserStorage) {
-  return createQuery<string, FixedInit, never>({ key: `totalPricedBalance/${context.user.uuid}/${coin}`, storage })
+export function getTotalPricedBalance(coin: "usd", storage: UserStorage) {
+  return createQuery<string, FixedInit, never>({ key: `totalPricedBalance/${coin}`, storage })
 }
 
 export function useTotalPricedBalance(coin: "usd") {
-  const context = useGeneralContext()
   const storage = useUserStorage().unwrap()
-  const query = useQuery(getTotalPricedBalance, [context, coin, storage])
+  const query = useQuery(getTotalPricedBalance, [coin, storage])
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
@@ -296,14 +286,13 @@ export function useTotalPricedBalance(coin: "usd") {
   return query
 }
 
-export function getTotalWalletPricedBalance(context: GeneralContext, address: string, coin: "usd", storage: UserStorage) {
+export function getTotalWalletPricedBalance(address: string, coin: "usd", storage: UserStorage) {
   return createQuery<string, FixedInit, never>({ key: `totalWalletPricedBalance/${address}/${coin}`, storage })
 }
 
 export function useTotalWalletPricedBalance(address: string, coin: "usd") {
-  const context = useGeneralContext()
   const storage = useUserStorage().unwrap()
-  const query = useQuery(getTotalWalletPricedBalance, [context, address, coin, storage])
+  const query = useQuery(getTotalWalletPricedBalance, [address, coin, storage])
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
@@ -312,7 +301,10 @@ export function useTotalWalletPricedBalance(address: string, coin: "usd") {
   return query
 }
 
-export function getPricedBalance(context: EthereumContext, account: string, coin: "usd", storage: UserStorage) {
+export function getPricedBalance(account: string, coin: "usd", context: Nullable<EthereumContext>, storage: UserStorage) {
+  if (context == null)
+    return
+
   return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
     key: {
       chainId: context.chain.chainId,
@@ -323,9 +315,9 @@ export function getPricedBalance(context: EthereumContext, account: string, coin
   })
 }
 
-export function usePricedBalance(context: EthereumContext, address: string, coin: "usd") {
+export function usePricedBalance(address: string, coin: "usd", context: Nullable<EthereumContext>) {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(getPricedBalance, [context, address, coin, storage])
+  const query = useQuery(getPricedBalance, [address, coin, context, storage])
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
@@ -334,7 +326,10 @@ export function usePricedBalance(context: EthereumContext, address: string, coin
   return query
 }
 
-export function getBalance(address: string, context: EthereumContext, storage: UserStorage) {
+export function getBalance(address: string, context: Nullable<EthereumContext>, storage: UserStorage) {
+  if (context == null)
+    return
+
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     await tryFetch<FixedInit>(request, context)
 
@@ -350,7 +345,7 @@ export function getBalance(address: string, context: EthereumContext, storage: U
   })
 }
 
-export function useBalance(address: string, context: EthereumContext, prices: Nullable<FixedInit>[]) {
+export function useBalance(address: string, context: Nullable<EthereumContext>, prices: Nullable<FixedInit>[]) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getBalance, [address, context, storage])
   useFetch(query)
@@ -360,16 +355,21 @@ export function useBalance(address: string, context: EthereumContext, prices: Nu
   useFallback(query, () => new Data(new Fixed(0n, 0)))
 
   useEffectButNotFirstTime(() => {
+    if (context == null)
+      return
     tryIndex(query.key, context)
       .then(r => r.ignore())
       .catch(console.error)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, prices)
+  }, [context, ...prices])
 
   return query
 }
 
-export function getTokenPricedBalance(context: EthereumContext, account: string, token: ContractTokenInfo, coin: "usd", storage: UserStorage) {
+export function getTokenPricedBalance(context: Nullable<EthereumContext>, account: string, token: ContractTokenInfo, coin: "usd", storage: UserStorage) {
+  if (context == null)
+    return
+
   return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
     key: {
       chainId: context.chain.chainId,
@@ -380,7 +380,7 @@ export function getTokenPricedBalance(context: EthereumContext, account: string,
   })
 }
 
-export function useTokenPricedBalance(context: EthereumContext, address: string, token: ContractTokenInfo, coin: "usd") {
+export function useTokenPricedBalance(context: Nullable<EthereumContext>, address: string, token: ContractTokenInfo, coin: "usd") {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getTokenPricedBalance, [context, address, token, coin, storage])
   useFetch(query)
@@ -391,7 +391,10 @@ export function useTokenPricedBalance(context: EthereumContext, address: string,
   return query
 }
 
-export function getTokenBalance(address: string, token: ContractTokenInfo, context: EthereumContext, storage: UserStorage) {
+export function getTokenBalance(address: string, token: ContractTokenInfo, context: Nullable<EthereumContext>, storage: UserStorage) {
+  if (context == null)
+    return
+
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     await tryFetch<FixedInit>(request, context)
 
@@ -406,7 +409,7 @@ export function getTokenBalance(address: string, token: ContractTokenInfo, conte
   })
 }
 
-export function useTokenBalance(address: string, token: ContractTokenInfo, context: EthereumContext, prices: Nullable<FixedInit>[]) {
+export function useTokenBalance(address: string, token: ContractTokenInfo, context: Nullable<EthereumContext>, prices: Nullable<FixedInit>[]) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getTokenBalance, [address, token, context, storage])
   useFetch(query)
@@ -416,11 +419,13 @@ export function useTokenBalance(address: string, token: ContractTokenInfo, conte
   useFallback(query, () => new Data(new Fixed(0n, 0)))
 
   useEffectButNotFirstTime(() => {
+    if (context == null)
+      return
     tryIndex(query.key, context)
       .then(r => r.ignore())
       .catch(console.error)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, prices)
+  }, [context, ...prices])
 
   return query
 }
@@ -489,7 +494,10 @@ export function useMaxPriorityFeePerGas() {
 
 }
 
-export function getPairPrice(context: EthereumContext, pair: PairInfo, storage: UserStorage) {
+export function getPairPrice(context: Nullable<EthereumContext>, pair: PairInfo, storage: UserStorage) {
+  if (context == null)
+    return
+
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
     await tryFetch<FixedInit>(request, context)
 
@@ -504,7 +512,7 @@ export function getPairPrice(context: EthereumContext, pair: PairInfo, storage: 
   })
 }
 
-export function usePairPrice(ethereum: EthereumContext, pair: PairInfo) {
+export function usePairPrice(ethereum: Nullable<EthereumContext>, pair: PairInfo) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getPairPrice, [ethereum, pair, storage])
   useFetch(query)
@@ -518,9 +526,11 @@ export namespace FgEns {
 
   export namespace Lookup {
 
-    export function schema(context: EthereumContext, name: Nullable<string>, storage: UserStorage) {
+    export function schema(name: Nullable<string>, context: Nullable<EthereumContext>, storage: UserStorage) {
+      if (context == null)
+        return
       if (name == null)
-        return undefined
+        return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await tryFetch<ZeroHexString>(request, context)
@@ -536,9 +546,11 @@ export namespace FgEns {
 
   export namespace Reverse {
 
-    export function schema(context: EthereumContext, address: Nullable<ZeroHexString>, storage: UserStorage) {
+    export function schema(address: Nullable<ZeroHexString>, context: Nullable<EthereumContext>, storage: UserStorage) {
+      if (context == null)
+        return
       if (address == null)
-        return undefined
+        return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await tryFetch<ZeroHexString>(request, context)
@@ -554,9 +566,9 @@ export namespace FgEns {
 
 }
 
-export function useEnsLookup(ethereum: EthereumContext, name: Nullable<string>) {
+export function useEnsLookup(name: Nullable<string>, ethereum: Nullable<EthereumContext>) {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(FgEns.Lookup.schema, [ethereum, name, storage])
+  const query = useQuery(FgEns.Lookup.schema, [name, ethereum, storage])
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
@@ -564,9 +576,9 @@ export function useEnsLookup(ethereum: EthereumContext, name: Nullable<string>) 
   return query
 }
 
-export function useEnsReverse(ethereum: EthereumContext, address: Nullable<ZeroHexString>) {
+export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullable<EthereumContext>) {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(FgEns.Reverse.schema, [ethereum, address, storage])
+  const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
@@ -574,9 +586,9 @@ export function useEnsReverse(ethereum: EthereumContext, address: Nullable<ZeroH
   return query
 }
 
-export function useEnsReverseNoFetch(ethereum: EthereumContext, address: Nullable<ZeroHexString>) {
+export function useEnsReverseNoFetch(address: Nullable<ZeroHexString>, ethereum: Nullable<EthereumContext>) {
   const storage = useUserStorage().unwrap()
-  const query = useQuery(FgEns.Reverse.schema, [ethereum, address, storage])
+  const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
   useSubscribe(query, storage)
   useError(query, console.error)
   return query

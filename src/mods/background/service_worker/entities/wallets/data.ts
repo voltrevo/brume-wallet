@@ -12,8 +12,6 @@ import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { EthBrume } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
-import { SessionData } from "../sessions/data"
-import { User } from "../users/data"
 import { Wallets } from "./all/data"
 
 export type Wallet =
@@ -187,10 +185,8 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
 }
 
 export interface EthereumContext {
-  user: User,
   chain: EthereumChain
   brume: EthBrume
-  session?: SessionData
 }
 
 export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
@@ -336,20 +332,20 @@ export function getEthereumUnknown(ethereum: EthereumContext, request: RpcReques
   })
 }
 
-export function getTotalPricedBalance(user: User, coin: "usd", storage: IDBStorage) {
+export function getTotalPricedBalance(coin: "usd", storage: IDBStorage) {
   return createQuery<string, FixedInit, Error>({
-    key: `totalPricedBalance/${user.uuid}/${coin}`,
+    key: `totalPricedBalance/${coin}`,
     storage
   })
 }
 
-export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: IDBStorage) {
+export function getTotalPricedBalanceByWallet(coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<Record<string, FixedInit>, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
       const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-      const totalBalance = getTotalPricedBalance(user, coin, storage)
+      const totalBalance = getTotalPricedBalance(coin, storage)
       await totalBalance.tryMutate(Mutators.data<FixedInit, Error>(total)).then(r => r.throw(t))
 
       return Ok.void()
@@ -357,18 +353,18 @@ export function getTotalPricedBalanceByWallet(user: User, coin: "usd", storage: 
   }
 
   return createQuery<string, Record<string, FixedInit>, Error>({
-    key: `totalPricedBalanceByWallet/${user.uuid}/${coin}`,
+    key: `totalPricedBalanceByWallet/${coin}`,
     indexer,
     storage
   })
 }
 
-export function getTotalWalletPricedBalance(user: User, account: string, coin: "usd", storage: IDBStorage) {
+export function getTotalWalletPricedBalance(account: string, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<FixedInit, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-      const indexQuery = getTotalPricedBalanceByWallet(user, coin, storage)
+      const indexQuery = getTotalPricedBalanceByWallet(coin, storage)
       await indexQuery.tryMutate(Mutators.mapInnerData(p => ({ ...p, [account]: value }), new Data({}))).then(r => r.throw(t))
 
       return Ok.void()
@@ -382,13 +378,13 @@ export function getTotalWalletPricedBalance(user: User, account: string, coin: "
   })
 }
 
-export function getPricedBalanceByToken(user: User, account: string, coin: "usd", storage: IDBStorage) {
+export function getPricedBalanceByToken(account: string, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<Record<string, FixedInit>, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
       const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-      const totalBalance = getTotalWalletPricedBalance(user, account, coin, storage)
+      const totalBalance = getTotalWalletPricedBalance(account, coin, storage)
       await totalBalance.tryMutate(Mutators.data<FixedInit, Error>(total)).then(r => r.throw(t))
 
       return Ok.void()
@@ -408,7 +404,7 @@ export function getPricedBalance(ethereum: EthereumContext, account: string, coi
       const key = `${ethereum.chain.chainId}`
       const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-      const indexQuery = getPricedBalanceByToken(ethereum.user, account, coin, storage)
+      const indexQuery = getPricedBalanceByToken(account, coin, storage)
       await indexQuery.tryMutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({}))).then(r => r.throw(t))
 
       return Ok.void()
@@ -534,7 +530,7 @@ export function getTokenPricedBalance(ethereum: EthereumContext, account: string
       const key = `${ethereum.chain.chainId}/${token.address}`
       const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
-      const indexQuery = getPricedBalanceByToken(ethereum.user, account, coin, storage)
+      const indexQuery = getPricedBalanceByToken(account, coin, storage)
       await indexQuery.tryMutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({}))).then(r => r.throw(t))
 
       return Ok.void()
