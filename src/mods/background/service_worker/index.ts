@@ -528,7 +528,7 @@ export class Global {
 
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
       const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
-      const ethereum: EthereumContext = { user, session, wallet, chain, brume }
+      const ethereum: EthereumContext = { user, session, chain, brume }
 
       if (subrequest.method === "eth_requestAccounts")
         return await this.eth_requestAccounts(ethereum, subrequest)
@@ -1096,7 +1096,7 @@ export class Global {
 
       const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
 
-      const ethereum: EthereumContext = { user, wallet, chain, brume }
+      const ethereum: EthereumContext = { user, chain, brume }
 
       const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
@@ -1118,7 +1118,7 @@ export class Global {
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
       const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
-      const ethereum: EthereumContext = { user, wallet, chain, brume }
+      const ethereum: EthereumContext = { user, chain, brume }
 
       const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
@@ -1227,7 +1227,7 @@ export class Global {
         const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
         const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
 
-        const ethereum: EthereumContext = { user, wallet, chain, brume, session: sessionData }
+        const ethereum: EthereumContext = { user, chain, brume, session: sessionData }
 
         if (request.method === "eth_sendTransaction")
           return new Some(await this.eth_sendTransaction(ethereum, request))
@@ -1322,7 +1322,7 @@ export class Global {
         const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
         const brume = await this.#tryGetOrTakeEthBrume(wallet).then(r => r.throw(t))
 
-        const ethereum: EthereumContext = { user, wallet, chain, brume, session: sessionData }
+        const ethereum: EthereumContext = { user, chain, brume, session: sessionData }
 
         if (request.method === "eth_sendTransaction")
           return new Some(await this.eth_sendTransaction(ethereum, request))

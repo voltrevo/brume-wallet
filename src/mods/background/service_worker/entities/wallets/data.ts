@@ -188,7 +188,6 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
 
 export interface EthereumContext {
   user: User,
-  wallet: Wallet
   chain: EthereumChain
   brume: EthBrume
   session?: SessionData
