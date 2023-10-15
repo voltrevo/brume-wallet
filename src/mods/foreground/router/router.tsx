@@ -3,10 +3,10 @@ import { RequestsPage } from "../entities/requests/all/page"
 import { SeedsPage } from "../entities/seeds/all/page"
 import { SeedPage } from "../entities/seeds/page"
 import { SessionsPage } from "../entities/sessions/all/page"
+import { SettingsPage } from "../entities/settings/page"
 import { WalletsPage } from "../entities/wallets/all/page"
 import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
-import { SettingsPage } from "../settings/page"
 import { usePath } from "./path/context"
 
 export function Router() {

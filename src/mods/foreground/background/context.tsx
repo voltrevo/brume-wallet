@@ -38,10 +38,6 @@ export function WebsiteBackgroundProvider(props: ChildrenProps) {
 
   const background = useConstant(() => new WebsiteBackground())
 
-  useEffect(() => {
-    background.tryRequest({ method: "brume_log" }).then(r => r.inspectErrSync(console.warn))
-  }, [background])
-
   return <BackgroundContext.Provider value={background}>
     {children}
   </BackgroundContext.Provider>
@@ -51,10 +47,6 @@ export function ExtensionBackgroundProvider(props: ChildrenProps) {
   const { children } = props
 
   const background = useConstant(() => new ExtensionBackground())
-
-  useEffect(() => {
-    background.tryRequest({ method: "brume_log" }).then(r => r.inspectErrSync(console.warn))
-  }, [background])
 
   return <BackgroundContext.Provider value={background}>
     {children}

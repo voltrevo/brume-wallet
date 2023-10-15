@@ -7,8 +7,8 @@ import { Mutators } from "@/libs/xswr/mutators"
 import { Cubane, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
-import { None, Option, Some } from "@hazae41/option"
-import { Err, Ok, Panic, Result } from "@hazae41/result"
+import { None, Nullable, Option, Some } from "@hazae41/option"
+import { Ok, Panic, Result } from "@hazae41/result"
 import { EthBrume } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
@@ -731,15 +731,15 @@ export namespace BgEns {
     export function schema(ethereum: EthereumContext, address: ZeroHexString, storage: IDBStorage) {
       const fetcher = () => tryFetch(ethereum, address)
 
-      return createQuery<EthereumQueryKey<unknown>, string, Error>({
+      return createQuery<EthereumQueryKey<unknown>, Nullable<string>, Error>({
         key: key(address),
         fetcher,
         storage
       })
     }
 
-    export async function tryFetchUnchecked(ethereum: EthereumContext, address: ZeroHexString) {
-      return await Result.unthrow<Result<Fetched<string, Error>, Error>>(async t => {
+    export async function tryFetchUnchecked(ethereum: EthereumContext, address: ZeroHexString): Promise<Result<Fetched<Nullable<string>, Error>, Error>> {
+      return await Result.unthrow(async t => {
         const namehash = Cubane.Ens.tryNamehash(`${address.slice(2)}.addr.reverse`).throw(t)
         const resolver = await Resolver.tryFetch(ethereum, namehash).then(r => r.throw(t))
 
@@ -763,15 +763,21 @@ export namespace BgEns {
         const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.DynamicString)
         const [name] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
 
+        if (name.value.length === 0)
+          return new Ok(new Data(undefined))
+
         return new Ok(new Data(name.value))
       })
     }
 
     export async function tryFetch(ethereum: EthereumContext, address: ZeroHexString) {
-      return await Result.unthrow<Result<Fetched<string, Error>, Error>>(async t => {
+      return await Result.unthrow<Result<Fetched<Nullable<string>, Error>, Error>>(async t => {
         const name = await tryFetchUnchecked(ethereum, address).then(r => r.throw(t))
 
         if (name.isErr())
+          return new Ok(name)
+
+        if (name.inner == null)
           return new Ok(name)
 
         const address2 = await Lookup.tryFetch(ethereum, name.inner).then(r => r.throw(t))
@@ -780,7 +786,7 @@ export namespace BgEns {
           return new Ok(address2)
 
         if (address.toLowerCase() !== address2.inner.toLowerCase())
-          return new Err(new Error(`Invalid address`))
+          return new Ok(new Fail(new Error(`Invalid address`)))
 
         return new Ok(name)
       })

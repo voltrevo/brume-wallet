@@ -541,7 +541,7 @@ export namespace FgEns {
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await tryFetch<ZeroHexString>(request, context)
 
-      return createQuery<EthereumQueryKey<unknown>, string, Error>({
+      return createQuery<EthereumQueryKey<unknown>, Nullable<string>, Error>({
         key: BgEns.Reverse.key(address),
         fetcher,
         storage

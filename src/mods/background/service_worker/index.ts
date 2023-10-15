@@ -27,13 +27,13 @@ import { Circuit, Echalote, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
-import { IDBStorage, RawState, SimpleFetcherfulQuery, State, core } from "@hazae41/glacier"
+import { IDBStorage, RawState, SimpleFetcherfulQuery, core } from "@hazae41/glacier"
 import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { Kcp } from "@hazae41/kcp"
 import { Keccak256 } from "@hazae41/keccak256"
 import { Mutex } from "@hazae41/mutex"
 import { None, Nullable, Option, Some } from "@hazae41/option"
-import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
+import { Pool } from "@hazae41/piscine"
 import { SuperEventTarget } from "@hazae41/plume"
 import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
 import { Ripemd160 } from "@hazae41/ripemd160"
@@ -51,6 +51,7 @@ import { Seed, SeedData } from "./entities/seeds/data"
 import { PersistentSessions } from "./entities/sessions/all/data"
 import { ExSessionData, Session, SessionByOrigin, SessionData, SessionRef, WcSessionData } from "./entities/sessions/data"
 import { Status, StatusData } from "./entities/sessions/status/data"
+import { BgSettings } from "./entities/settings/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
 import { BgEns, EthereumContext, EthereumQueryKey, Wallet, WalletData, WalletRef, getBalance, getEthereumUnknown, getPairPrice, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
@@ -562,7 +563,7 @@ export class Global {
        */
       await query.tryFetch().then(r => r.inspectSync(r => r.throw(t)))
 
-      const stored = core.raw.get(query.cacheKey)?.inner
+      const stored = core.storeds.get(query.cacheKey)
       const unstored = await core.tryUnstore<any, unknown, Error>(stored, { key: query.cacheKey }).then(r => r.throw(t))
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
@@ -629,7 +630,7 @@ export class Global {
        */
       await query.tryFetch().then(r => r.inspectSync(r => r.throw(t)))
 
-      const stored = core.raw.get(query.cacheKey)?.inner
+      const stored = core.storeds.get(query.cacheKey)
       const unstored = await core.tryUnstore<any, unknown, any>(stored, { key: query.cacheKey }).then(r => r.throw(t))
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
@@ -779,6 +780,8 @@ export class Global {
       return new Some(await this.brume_get_global(request))
     if (request.method === "brume_get_user")
       return new Some(await this.brume_get_user(request))
+    if (request.method === "brume_set_user")
+      return new Some(await this.brume_set_user(request))
     if (request.method === "brume_subscribe")
       return new Some(await this.brume_subscribe(foreground, request))
     if (request.method === "brume_eth_fetch")
@@ -1003,19 +1006,17 @@ export class Global {
     return await Result.unthrow(async t => {
       const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
-      const cached = core.raw.get(cacheKey)
+      const cached = core.storeds.get(cacheKey)
 
       if (cached != null)
-        return new Ok(cached.inner)
+        return new Ok(cached)
 
-      const stored = await this.storage.tryGet(cacheKey)
+      const stored = await this.storage.tryGet(cacheKey).then(r => r.throw(t))
+      core.storeds.set(cacheKey, stored)
 
-      if (stored.isErr())
-        return stored
+      core.onState.dispatchEvent(new CustomEvent(cacheKey))
 
-      core.raw.set(cacheKey, Option.wrap(stored.inner))
-
-      return new Ok(stored.inner)
+      return new Ok(stored)
     })
   }
 
@@ -1025,19 +1026,33 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const cached = core.raw.get(cacheKey)
+      const cached = core.storeds.get(cacheKey)
 
       if (cached != null)
-        return new Ok(cached.inner)
+        return new Ok(cached)
 
-      const stored = await storage.tryGet(cacheKey)
+      const stored = await storage.tryGet(cacheKey).then(r => r.throw(t))
+      core.storeds.set(cacheKey, stored)
 
-      if (stored.isErr())
-        return stored
+      core.onState.dispatchEvent(new CustomEvent(cacheKey))
 
-      core.raw.set(cacheKey, Option.wrap(stored.inner))
+      return new Ok(stored)
+    })
+  }
 
-      return new Ok(stored.inner)
+  async brume_set_user(request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+    return await Result.unthrow(async t => {
+      const [cacheKey, rawState] = (request as RpcRequestPreinit<[string, Nullable<RawState>]>).params
+
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+      storage.trySet(cacheKey, rawState).throw(t)
+      core.storeds.set(cacheKey, rawState)
+      core.unstoreds.delete(cacheKey)
+
+      core.onState.dispatchEvent(new CustomEvent(cacheKey))
+
+      return Ok.void()
     })
   }
 
@@ -1045,15 +1060,12 @@ export class Global {
     return await Result.unthrow(async t => {
       const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
-      const onState = async (event: CustomEvent<State<any, any>>) => {
-        const stored = await core.tryStore(event.detail, { key: cacheKey })
-
-        if (stored.isErr())
-          return
+      const onState = async () => {
+        const stored = core.storeds.get(cacheKey)
 
         await foreground.tryRequest({
           method: "brume_update",
-          params: [cacheKey, stored.get()]
+          params: [cacheKey, stored]
         }).then(r => r.ignore())
       }
 
@@ -1124,24 +1136,30 @@ export class Global {
        */
       await query.tryFetch().then(r => r.inspectSync(r => r.throw(t)))
 
-      const stored = core.raw.get(query.cacheKey)?.inner
+      const stored = core.storeds.get(query.cacheKey)
       const unstored = await core.tryUnstore<any, unknown, Error>(stored, { key: query.cacheKey }).then(r => r.throw(t))
+      const fetched = Option.wrap(unstored.current).ok().throw(t)
 
-      return Option.wrap(unstored.current).ok().throw(t)
+      return fetched
     })
   }
 
   async brume_log(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
-    return await tryLoop(async (i) => {
-      return await Result.unthrow<Result<void, Looped<Error>>>(async t => {
-        const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.mapErrSync(Retry.new).throw(t).result.get().inner)
+    return Result.unthrow(async t => {
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-        const body = JSON.stringify({ tor: true })
-        await circuit.tryFetch("https://proxy.brume.money", { method: "POST", body }).then(r => r.inspectErrSync(() => console.warn(`Could not fetch logs`)).mapErrSync(Cancel.new).throw(t))
-        await circuit.destroy()
+      const logs = await BgSettings.Logs.schema(storage).state.then(r => r.throw(t))
 
+      if (logs.real?.current?.inner !== true)
         return Ok.void()
-      })
+
+      const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.throw(t).result.get().inner)
+
+      const body = JSON.stringify({ tor: true, method: "eth_getBalance" })
+      await circuit.tryFetch("https://proxy.brume.money", { method: "POST", body }).then(r => r.inspectErrSync(() => console.warn(`Could not fetch logs`)).throw(t))
+      await circuit.destroy()
+
+      return Ok.void()
     })
   }
 

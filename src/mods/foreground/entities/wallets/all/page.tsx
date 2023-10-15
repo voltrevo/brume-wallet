@@ -5,10 +5,11 @@ import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
 import { Button } from "@/libs/ui/button"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
+import { useBackground } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path/context"
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
 import { WalletDataCard } from "../card"
 import { WalletDataProvider, useWalletData } from "../context"
 import { useTotalPricedBalance } from "../data"
@@ -17,6 +18,8 @@ import { WalletCreatorDialog } from "./create"
 import { useWallets } from "./data"
 
 export function WalletsPage() {
+  const background = useBackground().unwrap()
+
   const walletsQuery = useWallets()
   const maybeWallets = walletsQuery.data?.inner
 
@@ -24,6 +27,10 @@ export function WalletsPage() {
 
   const totalPricedBalanceQuery = useTotalPricedBalance("usd")
   const totalPricedBalanceDisplay = useDisplayUsd(totalPricedBalanceQuery.current)
+
+  useEffect(() => {
+    background.tryRequest({ method: "brume_log" }).then(r => r.inspectErrSync(console.warn))
+  }, [background])
 
   const onWalletClick = useCallback((wallet: Wallet) => {
     Path.go(`/wallet/${wallet.uuid}`)

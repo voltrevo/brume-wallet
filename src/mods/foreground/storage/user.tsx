@@ -52,6 +52,13 @@ export class UserStorage implements Storage {
     }).then(r => r.flatten())
   }
 
+  async trySet(cacheKey: string, value: Nullable<RawState>): Promise<Result<void, Error>> {
+    return await this.background.tryRequest<void>({
+      method: "brume_set_user",
+      params: [cacheKey, value]
+    }).then(r => r.flatten())
+  }
+
   async #trySubscribe(cacheKey: string): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
       await this.background
@@ -67,17 +74,17 @@ export class UserStorage implements Storage {
         if (cacheKey2 !== cacheKey)
           return new None()
 
-        return await Result.unthrow<Result<void, Error>>(async t => {
-          const unstored = await core.tryUnstore(stored, { key: cacheKey }).then(r => r.throw(t))
-          await core.tryUpdate(cacheKey, () => new Ok(unstored), { key: cacheKey }).then(r => r.throw(t))
-          return Ok.void()
-        }).then(Some.new)
+        core.storeds.set(cacheKey, stored)
+        core.unstoreds.delete(cacheKey)
+        core.onState.dispatchEvent(new CustomEvent(cacheKey))
+        return new Some(Ok.void())
       })
 
       const stored = await this.tryGet(cacheKey).then(r => r.throw(t))
 
-      const unstored = await core.tryUnstore(stored, { key: cacheKey }).then(r => r.throw(t))
-      await core.tryUpdate(cacheKey, () => new Ok(unstored), { key: cacheKey }).then(r => r.throw(t))
+      core.storeds.set(cacheKey, stored)
+      core.unstoreds.delete(cacheKey)
+      core.onState.dispatchEvent(new CustomEvent(cacheKey))
 
       return Ok.void()
     })
