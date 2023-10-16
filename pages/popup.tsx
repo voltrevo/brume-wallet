@@ -20,6 +20,7 @@ import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page
 import { EthereumWalletInstance, useEthereumContext, useGasPrice, useNonce, useWallet } from "@/mods/foreground/entities/wallets/data";
 import { UserRejectionError } from "@/mods/foreground/errors/errors";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
+import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePath } from "@/mods/foreground/router/path/context";
 import { Router } from "@/mods/foreground/router/router";
@@ -35,6 +36,7 @@ import { useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
   return <main id="main" className="p-safe grow w-full flex flex-col">
+    <NavBar />
     <Overlay>
       <BackgroundLoader>
         <UserProvider>

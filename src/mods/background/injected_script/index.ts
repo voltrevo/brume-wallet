@@ -70,6 +70,11 @@ class Provider {
 
   readonly #listeners = new Map<string, Map<Sublistener, Suplistener>>()
 
+  /**
+   * @deprecated
+   */
+  autoRefreshOnNetworkChange = true
+
   constructor() {
     /**
      * Fix for that poorly-coded app that does `const { request } = provider`
@@ -77,6 +82,15 @@ class Provider {
     this.request = this.request.bind(this)
     this.on = this.on.bind(this)
     this.off = this.off.bind(this)
+
+    /**
+     * Fix for MetaMask-like
+     */
+    this.on("chainChanged", () => {
+      if (!this.autoRefreshOnNetworkChange)
+        return
+      location.reload()
+    })
   }
 
   get isBrume() {
@@ -160,7 +174,7 @@ class Provider {
 
 }
 
-const provider = Object.freeze(new Provider())
+const provider = new Provider()
 
 /**
  * EIP1193
