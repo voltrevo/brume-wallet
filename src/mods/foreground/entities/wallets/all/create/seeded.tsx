@@ -222,7 +222,7 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
       Choose an account type
     </div>
     <div className="h-2" />
-    <select
+    <select className=""
       value={coin}
       onChange={onCoinChange}>
       <option value="eth">
@@ -235,8 +235,8 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
         Other
       </option>
     </select>
-    <div className="h-2" />
     {coin === "custom" && <>
+      <div className="h-4" />
       <div className="font-medium">
         Choose a derivation path
       </div>
@@ -244,6 +244,7 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
       {PathInput}
     </>}
     {coin !== "custom" && <>
+      <div className="h-2" />
       <select
         value={app}
         onChange={onAppChange}>
@@ -257,8 +258,8 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
           Other
         </option>
       </select>
-      <div className="h-2" />
       {app === "custom" && <>
+        <div className="h-4" />
         <div className="font-medium">
           Choose a derivation path
         </div>
@@ -266,6 +267,7 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
         {PathInput}
       </>}
       {app !== "custom" && <>
+        <div className="h-4" />
         <div className="font-medium">
           Choose an account index
         </div>
