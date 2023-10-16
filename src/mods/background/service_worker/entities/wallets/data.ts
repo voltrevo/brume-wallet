@@ -241,6 +241,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
       }
 
       const promises = Array.from({ length: pool.capacity }, (_, i) => runWithConnOrThrow(i))
+
       const results = await Promise.allSettled(promises)
 
       const fetcheds = new Map<string, Fetched<T, Error>>()
@@ -249,6 +250,8 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
       for (const result of results) {
         if (result.status === "rejected")
           continue
+        if (params?.noCheck && result.value.isOk())
+          return result.value
         const raw = JSON.stringify(result.value.inner)
         const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
         counters.set(raw, previous + 1)
@@ -260,8 +263,6 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
        * Zero truth -> throw AggregateError
        */
       if (counters.size < 2)
-        return await Promise.any(promises)
-      if (params?.noCheck)
         return await Promise.any(promises)
 
       console.warn(`Different results from multiple connections for ${init.method}`)
@@ -283,6 +284,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
     }
 
     const promises = Array.from({ length: pools.capacity }, (_, i) => runWithPoolOrThrow(i))
+
     const results = await Promise.allSettled(promises)
 
     const fetcheds = new Map<string, Fetched<T, Error>>()
@@ -291,6 +293,8 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
     for (const result of results) {
       if (result.status === "rejected")
         continue
+      if (params?.noCheck && result.value.isOk())
+        return result.value
       const raw = JSON.stringify(result.value.inner)
       const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
       counters.set(raw, previous + 1)
@@ -302,8 +306,6 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
      * Zero truth -> throw AggregateError
      */
     if (counters.size < 2)
-      return await Promise.any(promises)
-    if (params?.noCheck)
       return await Promise.any(promises)
 
     console.warn(`Different results from multiple circuits for ${init.method}`)

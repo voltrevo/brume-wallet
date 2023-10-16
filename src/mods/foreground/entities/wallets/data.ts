@@ -8,7 +8,7 @@ import { BgEns, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumQ
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fetched, FetcherMore, createQuery, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/glacier"
+import { Data, Fetched, FetcherMore, createQuery, useError, useFallback, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc"
 import { Nullable, Option } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
@@ -336,6 +336,7 @@ export function useBalance(address: string, context: Nullable<EthereumContext>, 
   const query = useQuery(getBalance, [address, context, storage])
   useFetch(query)
   useVisible(query)
+  useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
   useError(query, console.error)
   useFallback(query, () => new Data(new Fixed(0n, 0)))
@@ -442,6 +443,7 @@ export function useNonce(address: Nullable<string>, context: Nullable<EthereumCo
   const query = useQuery(getNonceSchema, [address, context, storage])
   useFetch(query)
   useVisible(query)
+  useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
   useError(query, console.error)
   return query
@@ -471,13 +473,73 @@ export function useGasPrice(ethereum: Nullable<EthereumContext>) {
   const query = useQuery(getGasPriceSchema, [ethereum, storage])
   useFetch(query)
   useVisible(query)
+  useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
   useError(query, console.error)
   return query
 }
 
-export function useMaxPriorityFeePerGas() {
+export function getMaxPriorityFeePerGas(context: Nullable<EthereumContext>, storage: UserStorage) {
+  if (context == null)
+    return undefined
 
+  const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+    await tryFetch<string>(request, context).then(r => r.mapSync(r => r.mapSync(BigInt)))
+
+  return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
+    key: {
+      chainId: context.chain.chainId,
+      method: "eth_maxPriorityFeePerGas",
+      params: []
+    },
+    fetcher,
+    storage,
+    dataSerializer: BigIntToHex
+  })
+}
+
+export function useMaxPriorityFeePerGas(ethereum: Nullable<EthereumContext>) {
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getMaxPriorityFeePerGas, [ethereum, storage])
+  useFetch(query)
+  useVisible(query)
+  useSubscribe(query, storage)
+  useError(query, console.error)
+  return query
+}
+
+export interface Block {
+  baseFeePerGas?: ZeroHexString
+}
+
+export function getBlockByNumber(number: Nullable<string>, context: Nullable<EthereumContext>, storage: UserStorage) {
+  if (context == null)
+    return undefined
+  if (number == null)
+    return undefined
+
+  const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+    await tryFetch<Block>(request, context, { noCheck: true }).then(r => r.mapSync(r => r))
+
+  return createQuery<EthereumQueryKey<unknown>, Block, Error>({
+    key: {
+      chainId: context.chain.chainId,
+      method: "eth_getBlockByNumber",
+      params: [number, false]
+    },
+    fetcher,
+    storage,
+  })
+}
+
+export function useBlockByNumber(number: Nullable<string>, ethereum: Nullable<EthereumContext>) {
+  const storage = useUserStorage().unwrap()
+  const query = useQuery(getBlockByNumber, [number, ethereum, storage])
+  useFetch(query)
+  useVisible(query)
+  useSubscribe(query, storage)
+  useError(query, console.error)
+  return query
 }
 
 export function getPairPrice(context: Nullable<EthereumContext>, pair: PairInfo, storage: UserStorage) {

@@ -54,13 +54,13 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
     setRawPathInput(e.currentTarget.value)
   }, [])
 
-  const [coin, setCoin] = useState<string>()
+  const [coin, setCoin] = useState<string>("eth")
 
   const onCoinChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
     setCoin(e.currentTarget.value)
   }, [])
 
-  const [app, setApp] = useState<string>()
+  const [app, setApp] = useState<string>("metamask")
 
   const onAppChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
     setApp(e.currentTarget.value)

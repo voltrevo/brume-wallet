@@ -5,11 +5,19 @@ import { FixedNumber } from "ethers"
 export namespace BigIntToHex {
 
   export function tryEncode(value: bigint): Result<ZeroHexString, never> {
-    return new Ok(`0x${value.toString(16)}` as ZeroHexString)
+    return new Ok(encode(value))
   }
 
   export function tryDecode(value: string) {
-    return new Ok(BigInt(value))
+    return new Ok(decode(value))
+  }
+
+  export function encode(value: bigint): ZeroHexString {
+    return `0x${value.toString(16)}` as ZeroHexString
+  }
+
+  export function decode(value: string) {
+    return BigInt(value)
   }
 
 }
@@ -37,9 +45,10 @@ export namespace BigInts {
   }
 
   export function tryParseInput(text: string) {
+    if (text.trim().length === 0)
+      return new Err(new ParseError())
+
     try {
-      if (!text.trim().length)
-        return new Err(new ParseError())
       return new Ok(BigInt(text))
     } catch (e: unknown) {
       return new Err(ParseError.from(e))

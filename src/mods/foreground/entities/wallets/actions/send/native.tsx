@@ -1,4 +1,4 @@
-import { BigInts } from "@/libs/bigints/bigints";
+import { BigIntToHex, BigInts } from "@/libs/bigints/bigints";
 import { UIError } from "@/libs/errors/errors";
 import { chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain";
 import { Fixed } from "@/libs/fixed/fixed";
@@ -18,7 +18,7 @@ import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useWalletData } from "../../context";
-import { EthereumContextProps, EthereumWalletInstance, useBalance, useEnsLookup, useEthereumContext, useGasPrice, useNonce } from "../../data";
+import { EthereumContextProps, EthereumWalletInstance, useBalance, useBlockByNumber, useEnsLookup, useEthereumContext, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../data";
 
 export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps & EthereumContextProps) {
   const wallet = useWalletData()
@@ -27,13 +27,12 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.ETHEREUM])
 
   const balanceQuery = useBalance(wallet.address, context, [])
-  const maybeBalance = balanceQuery.data?.inner
-
-  const nonceQuery = useNonce(wallet.address, context)
-  const maybeNonce = nonceQuery.data?.inner
-
+  const pendingNonceQuery = useNonce(wallet.address, context)
   const gasPriceQuery = useGasPrice(context)
-  const maybeGasPrice = gasPriceQuery.data?.inner
+  const maxPriorityFeePerGasQuery = useMaxPriorityFeePerGas(context)
+
+  const pendingBlockQuery = useBlockByNumber("pending", context)
+  const maybePendingBlock = pendingBlockQuery.data?.inner
 
   const [rawRecipientInput = "", setRawRecipientInput] = useState<string>()
 
@@ -93,10 +92,6 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
     setRawNonceInput(e.currentTarget.value)
   }, [])
 
-  const maybeFinalNonce = useMemo(() => {
-    return BigInts.tryParseInput(defNonceInput).ok().unwrapOr(maybeNonce)
-  }, [defNonceInput, maybeNonce])
-
   const NonceInput = <>
     <div className="">
       Custom nonce
@@ -111,11 +106,13 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
 
   const trySend = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      const gasPrice = Option.wrap(maybeGasPrice).okOrElseSync(() => {
-        return new UIError(`Could not fetch gas price`)
-      }).throw(t)
+      const maybeNonce = await BigInts.tryParseInput(defNonceInput).ok().orElse(async () => {
+        return await Result.unthrow<Result<bigint, Error>>(async t => {
+          return new Ok(await pendingNonceQuery.refetch().then(r => r.throw(t).throw(t).throw(t).real!.current.throw(t)))
+        }).then(r => r.ok())
+      }).then(o => o.inner)
 
-      const nonce = Option.wrap(maybeFinalNonce).okOrElseSync(() => {
+      const nonce = Option.wrap(maybeNonce).okOrElseSync(() => {
         return new UIError(`Could not fetch or parse nonce`)
       }).throw(t)
 
@@ -123,31 +120,93 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
         return new UIError(`Could not fetch or parse address`)
       }).throw(t)
 
-      const gas = await context.background.tryRequest<string>({
-        method: "brume_eth_fetch",
-        params: [context.uuid, context.chain.chainId, {
-          method: "eth_estimateGas",
-          params: [{
-            chainId: Radix.toZeroHex(context.chain.chainId),
-            from: wallet.address,
-            to: ethers.getAddress(address),
-            gasPrice: Radix.toZeroHex(gasPrice),
-            value: Radix.toZeroHex(Fixed.fromDecimalString(defValueInput, 18).value),
-            nonce: Radix.toZeroHex(nonce)
-          }, "latest"]
-        }, { noCheck: true }]
-      }).then(r => r.throw(t).throw(t))
-
-      const tx = Result.runAndDoubleWrapSync(() => {
-        return Transaction.from({
-          to: ethers.getAddress(address),
-          gasLimit: gas,
-          chainId: context.chain.chainId,
-          gasPrice: gasPrice,
-          nonce: Number(nonce),
-          value: Fixed.fromDecimalString(defValueInput, 18).value
-        })
+      const pendingBlock = Option.wrap(maybePendingBlock).okOrElseSync(() => {
+        return new UIError(`Could not fetch pending block`)
       }).throw(t)
+
+      let tx: ethers.Transaction
+
+      /**
+       * EIP-1559
+       */
+      if (pendingBlock.baseFeePerGas != null) {
+        const maxPriorityFeePerGas = await Result.unthrow<Result<bigint, Error>>(async t => {
+          return new Ok(await maxPriorityFeePerGasQuery.refetch().then(r => r.throw(t).throw(t).throw(t).real!.current.throw(t)))
+        }).then(r => r.mapErrSync(() => {
+          return new UIError(`Could not fetch maxPriorityFeePerGas`)
+        }).throw(t))
+
+        const baseFeePerGas = BigIntToHex.decode(pendingBlock.baseFeePerGas)
+        const maxFeePerGas = baseFeePerGas + maxPriorityFeePerGas
+
+        console.log("baseFeePerGas", baseFeePerGas)
+        console.log("maxFeePerGas", maxFeePerGas)
+
+        const gas = await context.background.tryRequest<string>({
+          method: "brume_eth_fetch",
+          params: [context.uuid, context.chain.chainId, {
+            method: "eth_estimateGas",
+            params: [{
+              chainId: Radix.toZeroHex(context.chain.chainId),
+              from: wallet.address,
+              to: ethers.getAddress(address),
+              maxFeePerGas: Radix.toZeroHex(maxFeePerGas),
+              maxPriorityFeePerGas: Radix.toZeroHex(maxPriorityFeePerGas),
+              value: Radix.toZeroHex(Fixed.fromDecimalString(defValueInput, 18).value),
+              nonce: Radix.toZeroHex(nonce)
+            }, "latest"]
+          }, { noCheck: true }]
+        }).then(r => r.throw(t).throw(t))
+
+        tx = Result.runAndDoubleWrapSync(() => {
+          return Transaction.from({
+            to: ethers.getAddress(address),
+            gasLimit: gas,
+            chainId: context.chain.chainId,
+            maxFeePerGas: maxFeePerGas,
+            maxPriorityFeePerGas: maxPriorityFeePerGas,
+            nonce: Number(nonce),
+            value: Fixed.fromDecimalString(defValueInput, 18).value
+          })
+        }).throw(t)
+      }
+
+      /**
+       * Not EIP-1559
+       */
+      else {
+        const gasPrice = await Result.unthrow<Result<bigint, Error>>(async t => {
+          return new Ok(await gasPriceQuery.refetch().then(r => r.throw(t).throw(t).throw(t).real!.current.throw(t)))
+        }).then(r => r.mapErrSync(() => {
+          return new UIError(`Could not fetch gasPrice`)
+        }).throw(t))
+
+        const gas = await context.background.tryRequest<string>({
+          method: "brume_eth_fetch",
+          params: [context.uuid, context.chain.chainId, {
+            method: "eth_estimateGas",
+            params: [{
+              chainId: Radix.toZeroHex(context.chain.chainId),
+              from: wallet.address,
+              to: ethers.getAddress(address),
+              gasPrice: Radix.toZeroHex(gasPrice),
+              value: Radix.toZeroHex(Fixed.fromDecimalString(defValueInput, 18).value),
+              nonce: Radix.toZeroHex(nonce)
+            }, "latest"]
+          }, { noCheck: true }]
+        }).then(r => r.throw(t).throw(t))
+
+        tx = Result.runAndDoubleWrapSync(() => {
+          return Transaction.from({
+            to: ethers.getAddress(address),
+            gasLimit: gas,
+            chainId: context.chain.chainId,
+            gasPrice: gasPrice,
+            nonce: Number(nonce),
+            value: Fixed.fromDecimalString(defValueInput, 18).value
+          })
+        }).throw(t)
+      }
 
       const instance = await EthereumWalletInstance.tryFrom(wallet, context.background).then(r => r.throw(t))
       tx.signature = await instance.trySignTransaction(tx, context.background).then(r => r.throw(t))
@@ -163,11 +222,11 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
       setTxHash(txHash)
 
       balanceQuery.refetch()
-      nonceQuery.refetch()
+      pendingNonceQuery.refetch()
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [context, wallet, maybeGasPrice, maybeFinalNonce, maybeFinalAddress, defValueInput])
+  }, [context, wallet, maybePendingBlock, defNonceInput, maybeFinalAddress, defValueInput])
 
   const TxHashDisplay = <>
     <div className="">
