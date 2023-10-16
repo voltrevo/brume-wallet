@@ -7,7 +7,7 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
-import { useBackground } from "@/mods/foreground/background/context";
+import { BackgroundLoader, useBackground } from "@/mods/foreground/background/context";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
 import { FgAppRequests } from "@/mods/foreground/entities/requests/all/data";
@@ -36,9 +36,11 @@ import { useEffect, useMemo, useState } from "react";
 export default function Popup() {
   return <main id="main" className="p-safe grow w-full flex flex-col">
     <Overlay>
-      <UserProvider>
-        <Ready />
-      </UserProvider>
+      <BackgroundLoader>
+        <UserProvider>
+          <Ready />
+        </UserProvider>
+      </BackgroundLoader>
     </Overlay>
   </main>
 }

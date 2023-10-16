@@ -142,8 +142,8 @@ export async function tryGetServiceWorker(background: WebsiteBackground) {
   }
 }
 
-export function createWebsitePortPool(background: WebsiteBackground): Pool<Disposer<Port>, Error> {
-  return new Pool<Disposer<Port>, Error>(async (params) => {
+export function createWebsitePortPool(background: WebsiteBackground): Pool<Disposer<WebsitePort>, Error> {
+  return new Pool<Disposer<WebsitePort>, Error>(async (params) => {
     return await Result.unthrow(async t => {
       const { pool, index } = params
 

@@ -1,4 +1,4 @@
-import { useBackground } from "@/mods/foreground/background/context";
+import { BackgroundLoader, useBackground } from "@/mods/foreground/background/context";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
@@ -36,10 +36,12 @@ export default function Action() {
 
   return <main id="main" className="grow w-full flex flex-col">
     <Overlay>
-      <UserProvider>
-        <Router />
-        <Bottom />
-      </UserProvider>
+      <BackgroundLoader>
+        <UserProvider>
+          <Router />
+          <Bottom />
+        </UserProvider>
+      </BackgroundLoader>
     </Overlay>
   </main>
 }
