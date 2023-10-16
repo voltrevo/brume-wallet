@@ -15,9 +15,8 @@ body {
   font-size: 16px;
 }
 
-html {
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
+body {
+  height: 100dvh;
 }
 
 html {
@@ -25,11 +24,11 @@ html {
 }
 
 body {
-  @apply grow w-full flex flex-col text-base text-default bg-default overflow-y-scroll;
+  @apply grow w-full flex flex-col text-base text-default bg-default overflow-hidden;
 }
 
 #__next {
-  @apply grow w-full flex flex-col;
+  @apply grow w-full flex flex-col overflow-hidden;
 }
 
 * {

@@ -1,5 +1,5 @@
-import { BackgroundLoader, useBackground } from "@/mods/foreground/background/context";
-import { UserProvider } from "@/mods/foreground/entities/users/context";
+import { BackgroundGuard, useBackground } from "@/mods/foreground/background/context";
+import { UserGuard } from "@/mods/foreground/entities/users/context";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
@@ -35,15 +35,19 @@ export default function Action() {
     return () => removeEventListener("hashchange", onHashChange)
   }, [background])
 
-  return <main id="main" className="grow w-full flex flex-col">
+  return <main id="main" className="grow w-full flex flex-col overflow-hidden">
     <NavBar />
     <Overlay>
-      <BackgroundLoader>
-        <UserProvider>
-          <Router />
+      <BackgroundGuard>
+        <UserGuard>
+          <div className="grow w-full flex flex-col overflow-y-scroll">
+            <div className="grow w-full m-auto max-w-3xl flex flex-col">
+              <Router />
+            </div>
+          </div>
           <Bottom />
-        </UserProvider>
-      </BackgroundLoader>
+        </UserGuard>
+      </BackgroundGuard>
     </Overlay>
   </main>
 }

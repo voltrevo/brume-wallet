@@ -106,9 +106,7 @@ export function WebsiteOverlay(props: ChildrenProps) {
   return <>
     {updating && <UpdateBanner ok={update} />}
     {updatable && <UpdateBanner ok={update2} />}
-    <div className="grow w-full m-auto max-w-3xl flex flex-col">
-      {children}
-    </div>
+    {children}
   </>
 }
 
@@ -148,8 +146,8 @@ export function ExtensionOverlay(props: ChildrenProps) {
     open("https://github.com/brumewallet/wallet/releases", "_blank", "noreferrer")
   }, [])
 
-  return <div className="grow w-full m-auto max-w-3xl flex flex-col">
+  return <>
     {updatable && <UpdateBanner ok={update} />}
     {children}
-  </div>
+  </>
 }

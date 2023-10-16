@@ -53,7 +53,7 @@ export function ExtensionBackgroundProvider(props: ChildrenProps) {
   </BackgroundContext.Provider>
 }
 
-export function BackgroundLoader(props: ChildrenProps) {
+export function BackgroundGuard(props: ChildrenProps) {
   const { children } = props
 
   const background = useBackground().unwrap()

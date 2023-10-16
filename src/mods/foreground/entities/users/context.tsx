@@ -11,7 +11,7 @@ export function useCurrentUserRef() {
   return useContext(UserContext)!
 }
 
-export function UserProvider(props: ChildrenProps) {
+export function UserGuard(props: ChildrenProps) {
   const { children } = props
 
   const userQuery = useCurrentUserQuery()

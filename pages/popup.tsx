@@ -7,13 +7,13 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
-import { BackgroundLoader, useBackground } from "@/mods/foreground/background/context";
+import { BackgroundGuard, useBackground } from "@/mods/foreground/background/context";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
 import { FgAppRequests } from "@/mods/foreground/entities/requests/all/data";
 import { useAppRequest } from "@/mods/foreground/entities/requests/data";
 import { useSession } from "@/mods/foreground/entities/sessions/data";
-import { UserProvider } from "@/mods/foreground/entities/users/context";
+import { UserGuard } from "@/mods/foreground/entities/users/context";
 import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
 import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
 import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
@@ -35,14 +35,14 @@ import { Transaction } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
-  return <main id="main" className="p-safe grow w-full flex flex-col">
+  return <main id="main" className="p-safe grow w-full flex flex-col overflow-hidden">
     <NavBar />
     <Overlay>
-      <BackgroundLoader>
-        <UserProvider>
+      <BackgroundGuard>
+        <UserGuard>
           <Ready />
-        </UserProvider>
-      </BackgroundLoader>
+        </UserGuard>
+      </BackgroundGuard>
     </Overlay>
   </main>
 }
@@ -57,7 +57,11 @@ export function Ready() {
   }, [background])
 
   return <>
-    <Router />
+    <div className="grow w-full flex flex-col overflow-y-scroll">
+      <div className="grow w-full m-auto max-w-3xl flex flex-col">
+        <Router />
+      </div>
+    </div>
     <Bottom />
   </>
 }
