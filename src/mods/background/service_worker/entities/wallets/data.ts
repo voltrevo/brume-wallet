@@ -189,7 +189,11 @@ export interface EthereumContext {
   brume: EthBrume
 }
 
-export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRequestPreinit<unknown>, more: FetcherMore = {}) {
+export interface EthereumFetchParams {
+  noCheck?: boolean
+}
+
+export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRequestPreinit<unknown>, params: Nullable<EthereumFetchParams>, more: FetcherMore = {}) {
   return await Result.runAndDoubleWrap<Fetched<T, Error>>(async () => {
     const { signal: presignal } = more
     const { brume } = ethereum
@@ -257,8 +261,10 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
        */
       if (counters.size < 2)
         return await Promise.any(promises)
+      if (params?.noCheck)
+        return await Promise.any(promises)
 
-      console.warn(`Different results from multiple connections`)
+      console.warn(`Different results from multiple connections for ${init.method}`)
 
       /**
        * Sort truths by occurence
@@ -269,7 +275,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
        * Two concurrent truths
        */
       if (sorteds[0].value === sorteds[1].value) {
-        console.warn(`Could not choose truth`)
+        console.warn(`Could not choose truth for ${init.method}`)
         throw new Error(`Could not choose truth`)
       }
 
@@ -297,8 +303,10 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
      */
     if (counters.size < 2)
       return await Promise.any(promises)
+    if (params?.noCheck)
+      return await Promise.any(promises)
 
-    console.warn(`Different results from multiple circuits`)
+    console.warn(`Different results from multiple circuits for ${init.method}`)
 
     /**
      * Sort truths by occurence
@@ -309,17 +317,17 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
      * Two concurrent truths
      */
     if (sorteds[0].value === sorteds[1].value) {
-      console.warn(`Could not choose truth`)
+      console.warn(`Could not choose truth for ${init.method}`)
       throw new Error(`Could not choose truth`)
     }
 
     return fetcheds.get(sorteds[0].key)!
-  })
+  }).then(r => r.inspectErrSync(e => console.error({ e })))
 }
 
-export function getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-  const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryEthereumFetch<unknown>(ethereum, request)
+export function getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, params: Nullable<EthereumFetchParams>, storage: IDBStorage) {
+  const fetcher = async (request: EthereumQueryKey<unknown>) =>
+    await tryEthereumFetch<unknown>(ethereum, request, params)
 
   return createQuery<EthereumQueryKey<unknown>, any, Error>({
     key: {
@@ -424,7 +432,7 @@ export function getPricedBalance(ethereum: EthereumContext, account: string, coi
 
 export function getBalance(ethereum: EthereumContext, account: string, block: string, storage: IDBStorage) {
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryEthereumFetch<ZeroHexString>(ethereum, request).then(r => r.mapSync(d => d.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals))))
+    await tryEthereumFetch<ZeroHexString>(ethereum, request, {}).then(r => r.mapSync(d => d.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals))))
 
   const indexer = async (states: States<FixedInit, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -486,7 +494,7 @@ export function getPairPrice(ethereum: EthereumContext, pair: PairInfo, storage:
         to: pair.address,
         data: data
       }, "pending"]
-    }).then(r => r.throw(t))
+    }, {}).then(r => r.throw(t))
 
     if (fetched.isErr())
       return new Ok(new Fail(fetched.inner))
@@ -559,7 +567,7 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
         to: token.address,
         data: data
       }, "pending"]
-    }).then(r => r.throw(t))
+    }, {}).then(r => r.throw(t))
 
     if (fetched.isErr())
       return new Ok(fetched)
@@ -636,7 +644,7 @@ export namespace BgEns {
             to: registry,
             data: data
           }, "pending"]
-        }).then(r => r.throw(t))
+        }, {}).then(r => r.throw(t))
 
         if (fetched.isErr())
           return new Ok(fetched)
@@ -696,7 +704,7 @@ export namespace BgEns {
             to: resolver.inner,
             data: data
           }, "pending"]
-        }).then(r => r.throw(t))
+        }, {}).then(r => r.throw(t))
 
         if (fetched.isErr())
           return new Ok(fetched)
@@ -755,7 +763,7 @@ export namespace BgEns {
             to: resolver.inner,
             data: data
           }, "pending"]
-        }).then(r => r.throw(t))
+        }, {}).then(r => r.throw(t))
 
         if (fetched.isErr())
           return new Ok(fetched)
@@ -786,7 +794,7 @@ export namespace BgEns {
           return new Ok(address2)
 
         if (address.toLowerCase() !== address2.inner.toLowerCase())
-          return new Ok(new Fail(new Error(`Invalid address`)))
+          return new Ok(new Data(undefined))
 
         return new Ok(name)
       })

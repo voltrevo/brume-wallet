@@ -54,7 +54,7 @@ import { Status, StatusData } from "./entities/sessions/status/data"
 import { BgSettings } from "./entities/settings/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
-import { BgEns, EthereumContext, EthereumQueryKey, Wallet, WalletData, WalletRef, getBalance, getEthereumUnknown, getPairPrice, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
+import { BgEns, EthereumContext, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef, getBalance, getEthereumUnknown, getPairPrice, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -556,7 +556,7 @@ export class Global {
       if (subrequest.method === "wallet_switchEthereumChain")
         return await this.wallet_switchEthereumChain(ethereum, session, subrequest, mouse)
 
-      const query = getEthereumUnknown(ethereum, subrequest, storage)
+      const query = getEthereumUnknown(ethereum, subrequest, {}, storage)
 
       /**
        * Ignore cooldown or store errors, only throw if the actual fetch failed
@@ -693,7 +693,7 @@ export class Global {
       return await tryEthereumFetch<string>(ethereum, {
         method: "eth_sendRawTransaction",
         params: [signature]
-      }).then(r => r.throw(t))
+      }, { noCheck: true }).then(r => r.throw(t))
     })
   }
 
@@ -1080,11 +1080,7 @@ export class Global {
     })
   }
 
-  async makeEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-    return new Ok(getEthereumUnknown(ethereum, request, storage))
-  }
-
-  async routeAndMakeEthereum(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuery<any, any, Error>, Error>> {
+  async routeAndMakeEthereum(ethereum: EthereumContext, request: EthereumQueryKey<unknown>, params: Nullable<EthereumFetchParams>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuery<any, any, Error>, Error>> {
     if (request.method === "eth_getBalance")
       return await this.makeEthereumBalance(ethereum, request, storage)
     if (request.method === "eth_getTokenBalance")
@@ -1095,14 +1091,14 @@ export class Global {
       return new Ok(BgEns.Lookup.parse(ethereum, request, storage))
     if (request.method === BgEns.Reverse.method)
       return new Ok(BgEns.Reverse.parse(ethereum, request, storage))
-    return await this.makeEthereumUnknown(ethereum, request, storage)
+    return new Ok(getEthereumUnknown(ethereum, request, params, storage))
   }
 
   async brume_eth_index(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
-      const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, RpcRequestPreinit<unknown>]>).params
+      const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown>]>).params
 
-      const { user, storage } = Option.wrap(this.#user).ok().throw(t)
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
@@ -1110,7 +1106,7 @@ export class Global {
 
       const ethereum: EthereumContext = { chain, brume }
 
-      const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
+      const query = await this.routeAndMakeEthereum(ethereum, subrequest, {}, storage).then(r => r.throw(t))
 
       await core.tryReindex(query.cacheKey, query.settings).then(r => r.throw(t))
 
@@ -1120,16 +1116,16 @@ export class Global {
 
   async brume_eth_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
-      const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, RpcRequestPreinit<unknown>]>).params
+      const [uuid, chainId, subrequest, params] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown>, Nullable<EthereumFetchParams>]>).params
 
-      const { user, storage } = Option.wrap(this.#user).ok().throw(t)
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
       const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.throw(t))
       const ethereum: EthereumContext = { chain, brume }
 
-      const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
+      const query = await this.routeAndMakeEthereum(ethereum, subrequest, params, storage).then(r => r.throw(t))
 
       /**
        * Ignore cooldown or store errors, only throw if the actual fetch failed

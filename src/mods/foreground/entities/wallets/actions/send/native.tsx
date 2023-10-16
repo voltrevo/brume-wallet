@@ -135,7 +135,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
             value: Radix.toZeroHex(Fixed.fromDecimalString(defValueInput, 18).value),
             nonce: Radix.toZeroHex(nonce)
           }, "latest"]
-        }]
+        }, { noCheck: true }]
       }).then(r => r.throw(t).throw(t))
 
       const tx = Result.runAndDoubleWrapSync(() => {
@@ -157,7 +157,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
         params: [context.uuid, context.chain.chainId, {
           method: "eth_sendRawTransaction",
           params: [tx.serialized]
-        }]
+        }, { noCheck: true }]
       }).then(r => r.throw(t).throw(t))
 
       setTxHash(txHash)
