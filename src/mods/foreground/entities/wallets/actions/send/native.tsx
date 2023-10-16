@@ -139,9 +139,6 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
         const baseFeePerGas = BigIntToHex.decode(pendingBlock.baseFeePerGas)
         const maxFeePerGas = baseFeePerGas + maxPriorityFeePerGas
 
-        console.log("baseFeePerGas", baseFeePerGas)
-        console.log("maxFeePerGas", maxFeePerGas)
-
         const gas = await context.background.tryRequest<string>({
           method: "brume_eth_fetch",
           params: [context.uuid, context.chain.chainId, {
