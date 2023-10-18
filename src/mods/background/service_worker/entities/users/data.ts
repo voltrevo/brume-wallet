@@ -85,6 +85,8 @@ export namespace User {
         const currentData = current.real?.data
 
         await Users.schema(storage).tryMutate(Mutators.mapData((d = new Data([])) => {
+          if (previousData?.inner.uuid === currentData?.inner.uuid)
+            return d
           if (previousData != null)
             d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
           if (currentData != null)

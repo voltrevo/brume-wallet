@@ -48,6 +48,8 @@ export namespace AppRequest {
         const currentData = current.real?.data
 
         await AppRequests.schema().tryMutate(Mutators.mapData((d = new Data([])) => {
+          if (previousData?.inner.id === currentData?.inner.id)
+            return d
           if (previousData != null)
             d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
           if (currentData != null)

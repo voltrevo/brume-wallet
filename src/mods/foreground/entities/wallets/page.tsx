@@ -1,18 +1,24 @@
 /* eslint-disable @next/next/no-img-element */
 import { Gradients } from "@/libs/colors/colors";
 import { UIError } from "@/libs/errors/errors";
-import { ContractTokenInfo, EthereumChain, chainByChainId, chainIdByName, pairByAddress, pairByName, tokenByAddress, tokenById } from "@/libs/ethereum/mods/chain";
+import { ContractTokenData, EthereumChain, EthereumChainId, TokenData, chainByChainId, chainIdByName, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Fixed, FixedInit } from "@/libs/fixed/fixed";
 import { Outline } from "@/libs/icons/icons";
+import { useInputChange } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
+import { ChildrenProps } from "@/libs/react/props/children";
+import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Url } from "@/libs/url/url";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
-import { Nullable, Option } from "@hazae41/option";
+import { Mutators } from "@/libs/xswr/mutators";
+import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
+import { ContractTokenRef, NativeTokenRef, TokenRef, TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data";
+import { Nullable, Option, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useBackground } from "../../background/context";
 import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
@@ -21,8 +27,10 @@ import { WalletDataReceiveDialog } from "./actions/receive/receive";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { WalletDataCard } from "./card";
+import { useChain } from "./chains/data";
 import { WalletDataProvider, useWalletData } from "./context";
-import { useBalance, useEnsReverse, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
+import { EthereumContext, useBalance, useEnsReverse, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
+import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
 
 export function WalletPage(props: UUIDProps) {
   const { uuid } = props
@@ -97,7 +105,7 @@ function NativeTokenRow(props: {
 }
 
 function ContractTokenRow(props: {
-  token: ContractTokenInfo,
+  token: ContractTokenData,
   prices: Nullable<FixedInit>[]
 }) {
   const { token, prices } = props
@@ -138,13 +146,49 @@ function ContractTokenRow(props: {
   </>
 }
 
+function WalletDataChain(props: { chainId: EthereumChainId } & ChildrenProps) {
+  const { chainId, children } = props
+  const wallet = useWalletData()
+
+  const settings = useChain(wallet.uuid, chainId)
+  const enabled = settings.data?.inner.enabled
+
+  const onToggle = useInputChange(e => {
+    const { checked } = e.currentTarget
+
+    settings.mutate(s => {
+      const data = Mutators.Datas.mapOrNew((d = { uuid: wallet.uuid, chainId }) => {
+        return { ...d, enabled: checked }
+      }, s.real?.data)
+
+      return new Ok(new Some(data))
+    })
+  }, [])
+
+  return <>
+    <label className="flex items-center">
+      <div className="text-xl font-medium grow">
+        {chainByChainId[chainId].name}
+      </div>
+      <input className=""
+        type="checkbox"
+        checked={enabled}
+        onChange={onToggle} />
+    </label>
+    {Boolean(settings.data?.inner.enabled) && <>
+      <div className="h-4" />
+      <div className="flex flex-col gap-2">
+        {children}
+      </div>
+    </>}
+  </>
+}
+
 function WalletDataPage() {
   const wallet = useWalletData()
   const background = useBackground().unwrap()
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.ETHEREUM])
-  const binance = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.BINANCE])
-  const celo = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.CELO])
 
   useEnsReverse(wallet.address, mainnet)
 
@@ -153,12 +197,7 @@ function WalletDataPage() {
 
   const [color, color2] = Gradients.get(wallet.color)
 
-  const wethUsdtPriceQuery = usePairPrice(mainnet, pairByAddress[pairByName.WETH_USDT])
-  const maticWethPriceQuery = usePairPrice(mainnet, pairByAddress[pairByName.MATIC_WETH])
-  const busdtWbnbPriceQuery = usePairPrice(binance, pairByAddress[pairByName.USDT_WBNB])
-  const wbtcWethPriceQuery = usePairPrice(mainnet, pairByAddress[pairByName.WBTC_WETH])
-  const etcBusdPriceQuery = usePairPrice(binance, pairByAddress[pairByName.ETC_BUSD])
-  const celoMcusdPriceQuery = usePairPrice(celo, pairByAddress[pairByName.CELO_MCUSD])
+  const tokens = useTokenSettingsByWallet(wallet)
 
   const onBackClick = useCallback(() => {
     Path.go("/wallets")
@@ -239,197 +278,15 @@ function WalletDataPage() {
           {`Receive`}
         </div>
       </div>
-      <div className="flex flex-col items-center gap-2">
-        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}
-          onClick={() => alert("This feature is not implemented yet")}>
-          <Outline.ArrowsRightLeftIcon className="s-md" />
-        </button>
-        <div className="">
-          {`Swap`}
-        </div>
-      </div>
     </div>
 
   const Body =
     <PageBody>
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.ETHEREUM].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.ETHEREUM]}
-          prices={[wethUsdtPriceQuery.data?.inner]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.WETH_ON_ETHEREUM]}
-          prices={[wethUsdtPriceQuery.data?.inner]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.WBTC_ON_ETHEREUM]}
-          prices={[wbtcWethPriceQuery.data?.inner, wethUsdtPriceQuery.data?.inner]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.DAI_ON_ETHEREUM]}
-          prices={[]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.USDT_ON_ETHEREUM]}
-          prices={[]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.USDC_ON_ETHEREUM]}
-          prices={[]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.MATIC_ON_ETHEREUM]}
-          prices={[maticWethPriceQuery.data?.inner, wethUsdtPriceQuery.data?.inner]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.STETH_ON_ETHEREUM]}
-          prices={[wethUsdtPriceQuery.data?.inner]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.GNOSIS].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.GNOSIS]}
-          prices={[]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.OPTIMISM].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[10]}
-          prices={[wethUsdtPriceQuery.data?.inner]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.WBTC_ON_OPTIMISM]}
-          prices={[wbtcWethPriceQuery.data?.inner, wethUsdtPriceQuery.data?.inner]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.DAI_ON_OPTIMISM]}
-          prices={[]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.USDT_ON_OPTIMISM]}
-          prices={[]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.USDC_ON_OPTIMISM]}
-          prices={[]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.BINANCE].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.BINANCE]}
-          prices={[busdtWbnbPriceQuery.data?.inner]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.USDT_ON_BINANCE]}
-          prices={[]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.POLYGON].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.POLYGON]}
-          prices={[maticWethPriceQuery.data?.inner, wethUsdtPriceQuery.data?.inner]} />
-        <ContractTokenRow
-          token={tokenByAddress[tokenById.USDT_ON_POLYGON]}
-          prices={[]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.ARBITRUM].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.ARBITRUM]}
-          prices={[wethUsdtPriceQuery.data?.inner]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.ZKSYNC].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.ZKSYNC]}
-          prices={[wethUsdtPriceQuery.data?.inner]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.AVALANCHE].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.AVALANCHE]}
-          prices={[wethUsdtPriceQuery.data?.inner]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.CELO].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.CELO]}
-          prices={[celoMcusdPriceQuery.data?.inner]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.LINEA].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.LINEA]}
-          prices={[wethUsdtPriceQuery.data?.inner]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.BASE].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.BASE]}
-          prices={[wethUsdtPriceQuery.data?.inner]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.CLASSIC].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.CLASSIC]}
-          prices={[etcBusdPriceQuery.data?.inner]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.GOERLI].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.GOERLI]}
-          prices={[]} />
-      </div>
-      <div className="h-4" />
-      <div className="text-xl font-medium">
-        {chainByChainId[chainIdByName.SEPOLIA].name}
-      </div>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        <NativeTokenRow
-          chain={chainByChainId[chainIdByName.SEPOLIA]}
-          prices={[]} />
-      </div>
+      {tokens.data?.inner.map(tokenSettings =>
+        <TokenSettingsRow
+          key={tokenSettings.uuid}
+          settingsRef={tokenSettings} />)}
+      <AddableTokenRow token={chainByChainId[1].token} />
     </PageBody>
 
   return <Page>
@@ -445,4 +302,132 @@ function WalletDataPage() {
     {Apps}
     {Body}
   </Page>
+}
+
+
+function TokenSettingsRow(props: { settingsRef: TokenSettingsRef }) {
+  const { settingsRef } = props
+  const { wallet, token } = settingsRef
+
+  const settings = useTokenSettings(wallet, token)
+
+  if (!settings.data?.inner.enabled)
+    return null
+  return <TokenRow tokenRef={settings.data.inner.token} />
+}
+
+function TokenRow(props: { tokenRef: TokenRef }) {
+  const { tokenRef } = props
+
+  if (tokenRef.type === "native")
+    return <NativeTokenRow2 tokenRef={tokenRef} />
+  if (tokenRef.type === "contract")
+    return <ContractTokenRow2 tokenRef={tokenRef} />
+  return null
+}
+
+function NativeTokenRow2(props: { tokenRef: NativeTokenRef }) {
+  const { tokenRef } = props
+  const wallet = useWalletData()
+
+  const chain = chainByChainId[tokenRef.chainId]
+  const context = useEthereumContext(wallet.uuid, chain)
+
+  const [prices, setPrices] = useState<Nullable<FixedInit>[]>([])
+
+  const onPrice = useCallback(([index, data]: [number, Nullable<FixedInit>]) => {
+    setPrices(prices => {
+      prices[index] = data
+      return [...prices]
+    })
+  }, [])
+
+  return <>
+    {chain.token.pairs?.map((address, i) =>
+      <PriceResolver key={i}
+        index={i}
+        address={address}
+        context={context}
+        ok={onPrice} />)}
+    <NativeTokenRow
+      chain={chain}
+      prices={prices} />
+  </>
+}
+
+function ContractTokenRow2(props: { tokenRef: ContractTokenRef }) {
+  const { tokenRef } = props
+  const wallet = useWalletData()
+
+  const token = tokenByAddress[tokenRef.address]
+  const chain = chainByChainId[token.chainId]
+  const context = useEthereumContext(wallet.uuid, chain)
+
+  const [prices, setPrices] = useState<Nullable<FixedInit>[]>([])
+
+  const onPrice = useCallback(([index, data]: [number, Nullable<FixedInit>]) => {
+    setPrices(prices => {
+      prices[index] = data
+      return [...prices]
+    })
+  }, [])
+
+  return <>
+    {token.pairs?.map((address, i) =>
+      <PriceResolver key={i}
+        index={i}
+        address={address}
+        context={context}
+        ok={onPrice} />)}
+    <ContractTokenRow
+      token={token}
+      prices={prices} />
+  </>
+}
+
+function PriceResolver(props: { index: number } & { address: string } & { context: Nullable<EthereumContext> } & OkProps<[number, Nullable<FixedInit>]>) {
+  const { ok, index, address, context } = props
+  const pair = pairByAddress[address]
+
+  const { data } = usePairPrice(context, pair)
+
+  useEffect(() => {
+    ok([index, data?.inner])
+  }, [index, data, ok])
+
+  return null
+}
+
+function AddableTokenRow(props: { token: TokenData }) {
+  const { token } = props
+  const wallet = useWalletData()
+
+  const settings = useTokenSettings(wallet, token)
+  const enabled = settings.data?.inner.enabled
+
+  const onToggle = useInputChange(async e => {
+    const enabled = e.currentTarget.checked
+
+    await settings.mutate(s => {
+      const data = Mutators.Datas.mapOrNew((d = {
+        uuid: crypto.randomUUID(),
+        token: TokenRef.from(token),
+        wallet: WalletRef.from(wallet)
+      }): TokenSettingsData => {
+        return { ...d, enabled }
+      }, s.real?.data)
+
+      return new Ok(new Some(data))
+    }).then(Results.logAndAlert)
+  }, [])
+
+  return <label className="flex items-center">
+    <div className="grow">
+      {token.name}
+    </div>
+    <input className=""
+      type="checkbox"
+      checked={enabled}
+      onChange={onToggle} />
+  </label>
 }

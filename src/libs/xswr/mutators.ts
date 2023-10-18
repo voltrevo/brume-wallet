@@ -1,5 +1,5 @@
 import { Data, Fail, Fetched, Mutator, State, TimesInit } from "@hazae41/glacier";
-import { Option, Some } from "@hazae41/option";
+import { Nullable, Option, Some } from "@hazae41/option";
 import { Ok } from "@hazae41/result";
 
 export namespace Mutators {
@@ -38,6 +38,16 @@ export namespace Mutators {
 
   export function mapInnerData<D, F>(piper: (data: D) => D, init: Data<D>): Mutator<D, F> {
     return (state: State<D, F>) => new Ok(new Some((state.data ?? init).mapSync(piper)))
+  }
+
+  export namespace Datas {
+
+    export function mapOrNew<D, O>(mapper: (data?: D) => O, data: Nullable<Data<D>>) {
+      return Option.wrap(data)
+        .mapSync(data => data.mapSync(mapper))
+        .unwrapOr(new Data(mapper()))
+    }
+
   }
 
   export function pushData<D, F>(element: Data<D>): Mutator<D[], F> {

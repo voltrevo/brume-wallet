@@ -1,7 +1,7 @@
 import { IDBStorage, createQuery } from "@hazae41/glacier";
 import { WalletRef } from "../data";
 
-export namespace Wallets {
+export namespace BgWallets {
 
   export type Key = typeof key
 

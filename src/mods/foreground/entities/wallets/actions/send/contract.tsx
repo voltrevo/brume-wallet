@@ -1,6 +1,6 @@
 import { BigIntToHex, BigInts } from "@/libs/bigints/bigints";
 import { UIError } from "@/libs/errors/errors";
-import { ContractTokenInfo, chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain";
+import { ContractTokenData, chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain";
 import { Fixed } from "@/libs/fixed/fixed";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
@@ -21,7 +21,7 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { useWalletData } from "../../context";
 import { EthereumContextProps, EthereumWalletInstance, useBlockByNumber, useEnsLookup, useEthereumContext, useGasPrice, useMaxPriorityFeePerGas, useNonce, useTokenBalance } from "../../data";
 
-export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps & EthereumContextProps & { token: ContractTokenInfo }) {
+export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps & EthereumContextProps & { token: ContractTokenData }) {
   const wallet = useWalletData()
   const { title, context, token, close } = props
 

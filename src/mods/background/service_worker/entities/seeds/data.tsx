@@ -91,6 +91,8 @@ export namespace Seed {
           const currentData = current.real?.data
 
           await Seeds.Background.schema(storage).tryMutate(Mutators.mapData((d = new Data([])) => {
+            if (previousData?.inner.uuid === currentData?.inner.uuid)
+              return d
             if (previousData != null)
               d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
             if (currentData != null)

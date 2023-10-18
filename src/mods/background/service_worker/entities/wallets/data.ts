@@ -1,4 +1,4 @@
-import { ContractTokenInfo, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
+import { ContractTokenData, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Fixed, FixedInit, ZeroHexFixed } from "@/libs/fixed/fixed"
 import { Maps } from "@/libs/maps/maps"
 import { TorRpc } from "@/libs/rpc/rpc"
@@ -12,7 +12,7 @@ import { Ok, Panic, Result } from "@hazae41/result"
 import { EthBrume } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
-import { Wallets } from "./all/data"
+import { BgWallets } from "./all/data"
 
 export type Wallet =
   | WalletRef
@@ -134,7 +134,9 @@ export namespace Wallet {
         const previousData = previous.real?.data
         const currentData = current.real?.data
 
-        await Wallets.schema(storage).tryMutate(Mutators.mapData((d = new Data([])) => {
+        await BgWallets.schema(storage).tryMutate(Mutators.mapData((d = new Data([])) => {
+          if (previousData?.inner.uuid === currentData?.inner.uuid)
+            return d
           if (previousData != null)
             d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
           if (currentData != null)
@@ -148,6 +150,8 @@ export namespace Wallet {
           const walletsBySeedQuery = WalletsBySeed.Background.schema(seed.uuid, storage)
 
           await walletsBySeedQuery.tryMutate(Mutators.mapData((d = new Data([])) => {
+            if (previousData?.inner.uuid === currentData?.inner.uuid)
+              return d
             if (previousData != null)
               d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
             if (currentData != null)
@@ -534,7 +538,7 @@ export function computePairPrice(pair: PairInfo, reserves: [bigint, bigint]) {
   return quantity1.div(quantity0)
 }
 
-export function getTokenPricedBalance(ethereum: EthereumContext, account: string, token: ContractTokenInfo, coin: "usd", storage: IDBStorage) {
+export function getTokenPricedBalance(ethereum: EthereumContext, account: string, token: ContractTokenData, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<FixedInit, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const key = `${ethereum.chain.chainId}/${token.address}`
@@ -558,7 +562,7 @@ export function getTokenPricedBalance(ethereum: EthereumContext, account: string
   })
 }
 
-export function getTokenBalance(ethereum: EthereumContext, account: string, token: ContractTokenInfo, block: string, storage: IDBStorage) {
+export function getTokenBalance(ethereum: EthereumContext, account: string, token: ContractTokenData, block: string, storage: IDBStorage) {
   const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
     const signature = Cubane.Abi.FunctionSignature.tryParse("balanceOf(address)").throw(t)
     const data = Cubane.Abi.tryEncode(signature.args.from(account)).throw(t)

@@ -1,5 +1,5 @@
 import { BigIntToHex } from "@/libs/bigints/bigints"
-import { ContractTokenInfo, EthereumChain, PairInfo } from "@/libs/ethereum/mods/chain"
+import { ContractTokenData, EthereumChain, PairInfo } from "@/libs/ethereum/mods/chain"
 import { Fixed, FixedInit } from "@/libs/fixed/fixed"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
@@ -353,7 +353,7 @@ export function useBalance(address: string, context: Nullable<EthereumContext>, 
   return query
 }
 
-export function getTokenPricedBalance(context: Nullable<EthereumContext>, account: string, token: ContractTokenInfo, coin: "usd", storage: UserStorage) {
+export function getTokenPricedBalance(context: Nullable<EthereumContext>, account: string, token: ContractTokenData, coin: "usd", storage: UserStorage) {
   if (context == null)
     return
 
@@ -367,7 +367,7 @@ export function getTokenPricedBalance(context: Nullable<EthereumContext>, accoun
   })
 }
 
-export function useTokenPricedBalance(context: Nullable<EthereumContext>, address: string, token: ContractTokenInfo, coin: "usd") {
+export function useTokenPricedBalance(context: Nullable<EthereumContext>, address: string, token: ContractTokenData, coin: "usd") {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getTokenPricedBalance, [context, address, token, coin, storage])
   useFetch(query)
@@ -378,7 +378,7 @@ export function useTokenPricedBalance(context: Nullable<EthereumContext>, addres
   return query
 }
 
-export function getTokenBalance(address: string, token: ContractTokenInfo, context: Nullable<EthereumContext>, storage: UserStorage) {
+export function getTokenBalance(address: string, token: ContractTokenData, context: Nullable<EthereumContext>, storage: UserStorage) {
   if (context == null)
     return
 
@@ -396,7 +396,7 @@ export function getTokenBalance(address: string, token: ContractTokenInfo, conte
   })
 }
 
-export function useTokenBalance(address: string, token: ContractTokenInfo, context: Nullable<EthereumContext>, prices: Nullable<FixedInit>[]) {
+export function useTokenBalance(address: string, token: ContractTokenData, context: Nullable<EthereumContext>, prices: Nullable<FixedInit>[]) {
   const storage = useUserStorage().unwrap()
   const query = useQuery(getTokenBalance, [address, token, context, storage])
   useFetch(query)
