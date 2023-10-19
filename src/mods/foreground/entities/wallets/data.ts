@@ -457,11 +457,12 @@ export function getGasPriceSchema(context: Nullable<EthereumContext>, storage: U
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
     await tryFetch<string>(request, context).then(r => r.mapSync(r => r.mapSync(BigInt)))
 
-  return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
+  return createQuery<EthereumQueryKey<unknown> & EthereumFetchParams, bigint, Error>({
     key: {
       chainId: context.chain.chainId,
       method: "eth_gasPrice",
-      params: []
+      params: [],
+      noCheck: true
     },
     fetcher,
     storage,
