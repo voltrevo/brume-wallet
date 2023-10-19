@@ -1,4 +1,4 @@
-import { EthereumChains } from "@/libs/ethereum/mods/chain"
+import { Chains } from "@/libs/ethereum/mods/chain"
 import { Objects } from "@/libs/objects/objects"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Sockets } from "@/libs/sockets/sockets"
@@ -25,7 +25,7 @@ export interface WcBrume {
 export type EthBrumes =
   Pool<Disposer<EthBrume>, Error>
 
-export interface EthBrume extends EthereumChains<Pool<Disposer<Pool<Disposer<RpcConnection>, Error>>, Error>> {
+export interface EthBrume extends Chains<Pool<Disposer<Pool<Disposer<RpcConnection>, Error>>, Error>> {
   readonly circuits: Pool<Disposer<Circuit>, Error>
 }
 
@@ -120,14 +120,14 @@ export namespace WcBrume {
 
 export namespace EthBrume {
 
-  export function create(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, chains: EthereumChains): EthBrume {
+  export function create(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, chains: Chains): EthBrume {
     const subcircuits = Circuits.createSubpool(circuits, { capacity: 3 })
     const conns = Objects.mapValuesSync(chains, x => RpcCircuits.create(subcircuits, x.urls))
 
     return { ...conns, circuits: subcircuits }
   }
 
-  export function createPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, chains: EthereumChains, params: PoolParams) {
+  export function createPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, chains: Chains, params: PoolParams) {
     return new Pool<Disposer<EthBrume>, Error>(async (params) => {
       const brume = EthBrume.create(circuits, chains)
 

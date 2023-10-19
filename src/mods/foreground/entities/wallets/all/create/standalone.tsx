@@ -200,10 +200,10 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
   const GenerateButton =
     <Button.Contrast className="flex-1 whitespace-nowrap po-md"
       onClick={doGenerate.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.KeyIcon className="s-sm" />
         Generate a private key
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Contrast>
 
   const canAdd = useMemo(() => {
@@ -220,10 +220,10 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
     <Button.Contrast className="flex-1 whitespace-nowrap po-md"
       disabled={!canAdd}
       onClick={tryAddUnauthenticated.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.PlusIcon className="s-sm" />
         Add without authentication
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Contrast>
 
   const AddAuthButton1 =
@@ -231,10 +231,10 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       colorIndex={color}
       disabled={!canAdd}
       onClick={tryAddAuthenticated1.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.LockClosedIcon className="s-sm" />
         Add with authentication
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Gradient>
 
   const AddAuthButton2 =
@@ -242,10 +242,10 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       colorIndex={color}
       disabled={!canAdd}
       onClick={tryAddAuthenticated2.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.LockClosedIcon className="s-sm" />
         Add with authentication (1/2)
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Gradient>
 
   return <Dialog close={close}>

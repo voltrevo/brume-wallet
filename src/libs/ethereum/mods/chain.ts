@@ -1,19 +1,19 @@
 import { ZeroHexString } from "@hazae41/cubane"
 
-export type EthereumChainId = number
+export type ChainId = number
 
-export type EthereumChains<T = EthereumChain> =
-  Record<EthereumChainId, T>
+export type Chains<T = ChainData> =
+  Record<ChainId, T>
 
-export interface EthereumChain {
+export interface ChainData {
   readonly name: string
-  readonly chainId: EthereumChainId,
+  readonly chainId: ChainId,
   readonly urls: readonly string[],
   readonly etherscan: string
   readonly token: NativeTokenData
 }
 
-export const chainByChainId: EthereumChains = {
+export const chainByChainId: Chains = {
   1: {
     name: "Ethereum",
     chainId: 1,

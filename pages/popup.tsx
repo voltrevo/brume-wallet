@@ -193,19 +193,19 @@ export function TransactPage() {
       <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.XMarkIcon className="s-sm" />
           No, reject it
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Contrast>
       <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onApprove.run}
         disabled={loading}
         colorIndex={5}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.CheckIcon className="s-sm" />
           Yes, approve it
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Gradient>
     </div>
   </Page>
@@ -269,19 +269,19 @@ export function SwitchPage() {
       <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.XMarkIcon className="s-sm" />
           No, reject it
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Contrast>
       <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onApprove.run}
         disabled={onApprove.loading}
         colorIndex={5}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.CheckIcon className="s-sm" />
           Yes, approve it
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Gradient>
     </div>
   </Page>
@@ -372,19 +372,19 @@ export function PersonalSignPage() {
       <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.XMarkIcon className="s-sm" />
           No, reject it
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Contrast>
       <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onApprove.run}
         disabled={onApprove.loading}
         colorIndex={5}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.CheckIcon className="s-sm" />
           Yes, approve it
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Gradient>
     </div>
   </Page>
@@ -471,19 +471,19 @@ export function TypedSignPage() {
       <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.XMarkIcon className="s-sm" />
           No, reject it
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Contrast>
       <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
         onClick={onApprove.run}
         disabled={onApprove.loading}
         colorIndex={5}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.CheckIcon className="s-sm" />
           Yes, approve it
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Gradient>
     </div>
   </Page>
@@ -533,82 +533,82 @@ export function WalletAndChainSelectPage() {
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === chainByChainId[chainIdByName.ETHEREUM].chainId}
           onClick={() => setChain(chainByChainId[chainIdByName.ETHEREUM].chainId)}>
-          <Button.Shrink>
+          <Button.Shrinker>
             <Outline.CubeIcon className="s-xs" />
             {chainByChainId[chainIdByName.ETHEREUM].name}
-          </Button.Shrink>
+          </Button.Shrinker>
         </Button.Bordered>
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === chainByChainId[chainIdByName.GNOSIS].chainId}
           onClick={() => setChain(chainByChainId[chainIdByName.GNOSIS].chainId)}>
-          <Button.Shrink>
+          <Button.Shrinker>
             <Outline.CubeIcon className="s-xs" />
             {chainByChainId[chainIdByName.GNOSIS].name}
-          </Button.Shrink>
+          </Button.Shrinker>
         </Button.Bordered>
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === chainByChainId[chainIdByName.POLYGON].chainId}
           onClick={() => setChain(chainByChainId[chainIdByName.POLYGON].chainId)}>
-          <Button.Shrink>
+          <Button.Shrinker>
             <Outline.CubeIcon className="s-xs" />
             {chainByChainId[chainIdByName.POLYGON].name}
-          </Button.Shrink>
+          </Button.Shrinker>
         </Button.Bordered>
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === chainByChainId[chainIdByName.BINANCE].chainId}
           onClick={() => setChain(chainByChainId[chainIdByName.BINANCE].chainId)}>
-          <Button.Shrink>
+          <Button.Shrinker>
             <Outline.CubeIcon className="s-xs" />
             {chainByChainId[chainIdByName.BINANCE].name}
-          </Button.Shrink>
+          </Button.Shrinker>
         </Button.Bordered>
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === chainByChainId[chainIdByName.ARBITRUM].chainId}
           onClick={() => setChain(chainByChainId[chainIdByName.ARBITRUM].chainId)}>
-          <Button.Shrink>
+          <Button.Shrinker>
             <Outline.CubeIcon className="s-xs" />
             {chainByChainId[chainIdByName.ARBITRUM].name}
-          </Button.Shrink>
+          </Button.Shrinker>
         </Button.Bordered>
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === chainByChainId[chainIdByName.ZKSYNC].chainId}
           onClick={() => setChain(chainByChainId[chainIdByName.ZKSYNC].chainId)}>
-          <Button.Shrink>
+          <Button.Shrinker>
             <Outline.CubeIcon className="s-xs" />
             {chainByChainId[chainIdByName.ZKSYNC].name}
-          </Button.Shrink>
+          </Button.Shrinker>
         </Button.Bordered>
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === chainByChainId[chainIdByName.AVALANCHE].chainId}
           onClick={() => setChain(chainByChainId[chainIdByName.AVALANCHE].chainId)}>
-          <Button.Shrink>
+          <Button.Shrinker>
             <Outline.CubeIcon className="s-xs" />
             {chainByChainId[chainIdByName.AVALANCHE].name}
-          </Button.Shrink>
+          </Button.Shrinker>
         </Button.Bordered>
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === chainByChainId[chainIdByName.CELO].chainId}
           onClick={() => setChain(chainByChainId[chainIdByName.CELO].chainId)}>
-          <Button.Shrink>
+          <Button.Shrinker>
             <Outline.CubeIcon className="s-xs" />
             {chainByChainId[chainIdByName.CELO].name}
-          </Button.Shrink>
+          </Button.Shrinker>
         </Button.Bordered>
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === chainByChainId[chainIdByName.LINEA].chainId}
           onClick={() => setChain(chainByChainId[chainIdByName.LINEA].chainId)}>
-          <Button.Shrink>
+          <Button.Shrinker>
             <Outline.CubeIcon className="s-xs" />
             {chainByChainId[chainIdByName.LINEA].name}
-          </Button.Shrink>
+          </Button.Shrinker>
         </Button.Bordered>
         <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
           aria-selected={chain === chainByChainId[chainIdByName.BASE].chainId}
           onClick={() => setChain(chainByChainId[chainIdByName.BASE].chainId)}>
-          <Button.Shrink>
+          <Button.Shrinker>
             <Outline.CubeIcon className="s-xs" />
             {chainByChainId[chainIdByName.BASE].name}
-          </Button.Shrink>
+          </Button.Shrinker>
         </Button.Bordered>
       </div>
       <div className="h-4" />
@@ -631,9 +631,9 @@ export function WalletAndChainSelectPage() {
     <PageHeader title="Choose a wallet">
       <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={creator.enable}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.PlusIcon className="s-sm" />
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Naked>
     </PageHeader>
 

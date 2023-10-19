@@ -35,41 +35,41 @@ export function Bottom() {
       <Button.Naked className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/" || path.pathname === "/wallets"}
         onClick={onWalletsClick}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.WalletIcon className="s-md" />
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Naked>
       <Button.Naked className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/seeds"}
         onClick={onSeedsClick}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.SparklesIcon className="s-md" />
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Naked>
       <Button.Naked className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/sessions"}
         onClick={onSessionsClick}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.GlobeAltIcon className="s-md" />
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Naked>
       <Button.Naked className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/requests"}
         onClick={onRequestsClick}>
-        <Button.Shrink className="">
+        <Button.Shrinker className="">
           <div className="relative">
             {Boolean(requests?.length) &&
               <div className="absolute top-0 -right-2 bg-purple-400 rounded-full w-2 h-2" />}
             <Outline.CheckIcon className="s-md" />
           </div>
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Naked>
       <Button.Naked className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/settings"}
         onClick={onSettingsClick}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.CogIcon className="s-md" />
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Naked>
     </div>
   </nav>

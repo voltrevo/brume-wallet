@@ -10,6 +10,14 @@ export type Token =
   | TokenData
   | TokenRef
 
+export type NativeToken =
+  | NativeTokenData
+  | NativeTokenRef
+
+export type ContractToken =
+  | ContractTokenData
+  | ContractTokenRef
+
 export type TokenRef =
   | NativeTokenRef
   | ContractTokenRef

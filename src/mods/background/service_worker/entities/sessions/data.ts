@@ -1,4 +1,4 @@
-import { EthereumChain } from "@/libs/ethereum/mods/chain"
+import { ChainData } from "@/libs/ethereum/mods/chain"
 import { RpcReceipt } from "@/libs/wconn/mods/crypto/client"
 import { WcMetadata } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
@@ -36,7 +36,7 @@ export interface ExSessionData {
   readonly type?: "ex"
   readonly origin: string
   readonly persist: boolean
-  readonly chain: EthereumChain
+  readonly chain: ChainData
   readonly wallets: [Wallet]
 }
 
@@ -45,7 +45,7 @@ export interface WcSessionData {
   readonly type: "wc"
   readonly origin: string
   readonly persist: true
-  readonly chain: EthereumChain
+  readonly chain: ChainData
   readonly wallets: [Wallet]
   readonly metadata: WcMetadata
   readonly relay: string

@@ -1,4 +1,4 @@
-import { ContractTokenData, EthereumChain, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
+import { ChainData, ContractTokenData, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Fixed, FixedInit, ZeroHexFixed } from "@/libs/fixed/fixed"
 import { Maps } from "@/libs/maps/maps"
 import { TorRpc } from "@/libs/rpc/rpc"
@@ -189,7 +189,7 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
 }
 
 export interface EthereumContext {
-  chain: EthereumChain
+  chain: ChainData
   brume: EthBrume
 }
 

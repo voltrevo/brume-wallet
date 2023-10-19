@@ -205,10 +205,10 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
       colorIndex={color}
       disabled={!defNameInput || !canAdd}
       onClick={tryAdd.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.PlusIcon className="s-sm" />
         Add
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Gradient>
 
   return <Dialog close={close}>

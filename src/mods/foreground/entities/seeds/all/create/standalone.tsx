@@ -187,20 +187,20 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
   const Generate12Button =
     <Button.Contrast className="flex-1 whitespace-nowrap po-md"
       onClick={doGenerate12.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.KeyIcon className="s-sm" />
         Generate 12 random words
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Contrast>
 
   const Generate24Button =
     <Button.Gradient className="flex-1 whitespace-nowrap po-md"
       colorIndex={color}
       onClick={doGenerate24.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.KeyIcon className="s-sm" />
         Generate 24 random words
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Gradient>
 
   const canAdd = useMemo(() => {
@@ -215,10 +215,10 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
     <Button.Contrast className="flex-1 whitespace-nowrap po-md"
       disabled={!canAdd}
       onClick={tryAddUnauthenticated.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.PlusIcon className="s-sm" />
         Add without authentication
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Contrast>
 
   const AddAuthButton1 =
@@ -226,10 +226,10 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
       colorIndex={color}
       disabled={!canAdd}
       onClick={tryAddAuthenticated1.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.LockClosedIcon className="s-sm" />
         Add with authentication
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Gradient>
 
   const AddAuthButton2 =
@@ -237,10 +237,10 @@ export function StandaloneSeedCreatorDialog(props: CloseProps) {
       colorIndex={color}
       disabled={!canAdd}
       onClick={tryAddAuthenticated2.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.LockClosedIcon className="s-sm" />
         Add with authentication (1/2)
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Gradient>
 
   return <Dialog close={close}>

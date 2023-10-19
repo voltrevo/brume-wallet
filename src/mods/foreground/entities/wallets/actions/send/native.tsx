@@ -238,10 +238,10 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
       target="_blank" rel="noreferrer">
       <Button.Gradient className="w-full po-md"
         colorIndex={wallet.color}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.ArrowTopRightOnSquareIcon className="s-sm" />
           Etherscan
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Gradient>
     </ExternalDivisionLink>
   </>
@@ -261,10 +261,10 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
       colorIndex={wallet.color}
       disabled={Boolean(sendDisabled)}
       onClick={trySend.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.PaperAirplaneIcon className="s-sm" />
         {sendDisabled || "Send"}
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Gradient>
 
   return <Dialog close={close}>

@@ -94,17 +94,17 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
         <div className="flex items-center gap-2">
           <Button.Contrast className="grow po-sm hovered-or-clicked-or-focused:scale-105 transition-transform"
             onClick={err}>
-            <Button.Shrink>
+            <Button.Shrinker>
               <Outline.ChevronLeftIcon className="s-sm" />
               Cancel
-            </Button.Shrink>
+            </Button.Shrinker>
           </Button.Contrast>
           <Button.Opposite className="grow po-sm hovered-or-clicked-or-focused:scale-105 transition-transform"
             onClick={onLogin}>
-            <Button.Shrink>
+            <Button.Shrinker>
               <Outline.LockOpenIcon className="s-sm" />
               Unlock
-            </Button.Shrink>
+            </Button.Shrinker>
           </Button.Opposite>
         </div>
       </div>

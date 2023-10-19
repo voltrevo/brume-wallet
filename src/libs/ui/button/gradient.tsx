@@ -27,17 +27,17 @@ export namespace Gradient {
     return <div className="p-1">
       <Button.Gradient className="po-md"
         colorIndex={5}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.GlobeAltIcon className="s-sm" />
           Hello world
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Gradient>
       <div className="h-1" />
       <Button.Gradient className="po-md"
         colorIndex={5}>
-        <Button.Shrink>
+        <Button.Shrinker>
           Hello world
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Gradient>
     </div>
   }

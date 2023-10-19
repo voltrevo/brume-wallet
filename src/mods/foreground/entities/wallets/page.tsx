@@ -1,12 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
-import { Gradients } from "@/libs/colors/colors";
+import { Colors, Gradients } from "@/libs/colors/colors";
 import { UIError } from "@/libs/errors/errors";
-import { ContractTokenData, EthereumChain, EthereumChainId, TokenData, chainByChainId, chainIdByName, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { ChainData, ContractTokenData, NativeTokenData, TokenData, chainByChainId, chainIdByName, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Fixed, FixedInit } from "@/libs/fixed/fixed";
 import { Outline } from "@/libs/icons/icons";
+import { useModhash } from "@/libs/modhash/modhash";
 import { useInputChange } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
-import { ChildrenProps } from "@/libs/react/props/children";
 import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Results } from "@/libs/results/results";
@@ -15,10 +15,10 @@ import { Url } from "@/libs/url/url";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { Mutators } from "@/libs/xswr/mutators";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
-import { ContractTokenRef, NativeTokenRef, TokenRef, TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data";
+import { ContractToken, NativeToken, Token, TokenRef, TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data";
 import { Nullable, Option, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useBackground } from "../../background/context";
 import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
@@ -27,7 +27,6 @@ import { WalletDataReceiveDialog } from "./actions/receive/receive";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { WalletDataCard } from "./card";
-import { useChain } from "./chains/data";
 import { WalletDataProvider, useWalletData } from "./context";
 import { EthereumContext, useBalance, useEnsReverse, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
 import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
@@ -64,126 +63,6 @@ export function useCompactDisplayUsd(option: Nullable<Result<FixedInit, Error>>)
   }, [option])
 }
 
-function NativeTokenRow(props: {
-  chain: EthereumChain,
-  prices: Nullable<FixedInit>[]
-}) {
-  const { chain, prices } = props
-  const wallet = useWalletData()
-
-  const context = useEthereumContext(wallet.uuid, chain)
-
-  const balanceQuery = useBalance(wallet.address, context, prices)
-  const balanceDisplay = useDisplay(balanceQuery.current)
-
-  const sendDialog = useBooleanHandle(false)
-
-  const balanceUsdFixed = usePricedBalance(wallet.address, "usd", context)
-  const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
-
-  return <>
-    {sendDialog.current && context &&
-      <WalletDataSendNativeTokenDialog
-        title={`${chain.token.name} on ${chain.name}`}
-        context={context}
-        close={sendDialog.disable} />}
-    <button className="w-full p-4 rounded-xl bg-contrast"
-      onClick={sendDialog.enable}>
-      <div className="w-full flex justify-between items-center">
-        <div className="">
-          {chain.token.name}
-        </div>
-        <div className="">
-          {balanceUsdDisplay}
-        </div>
-      </div>
-      <div className="text-left text-contrast">
-        {`${balanceDisplay} ${chain.token.symbol}`}
-      </div>
-    </button>
-  </>
-}
-
-function ContractTokenRow(props: {
-  token: ContractTokenData,
-  prices: Nullable<FixedInit>[]
-}) {
-  const { token, prices } = props
-  const chain = chainByChainId[token.chainId]
-  const wallet = useWalletData()
-
-  const context = useEthereumContext(wallet.uuid, chain)
-
-  const balanceQuery = useTokenBalance(wallet.address, token, context, prices)
-  const balanceDisplay = useDisplay(balanceQuery.current)
-
-  const sendDialog = useBooleanHandle(false)
-
-  const balanceUsdFixed = useTokenPricedBalance(context, wallet.address, token, "usd")
-  const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
-
-  return <>
-    {sendDialog.current && context &&
-      <WalletDataSendContractTokenDialog
-        title={`${token.name} on ${chain.name}`}
-        context={context}
-        token={token}
-        close={sendDialog.disable} />}
-    <button className="w-full p-4 rounded-xl bg-contrast"
-      onClick={sendDialog.enable}>
-      <div className="w-full flex justify-between items-center">
-        <div className="">
-          {token.name}
-        </div>
-        <div className="">
-          {balanceUsdDisplay}
-        </div>
-      </div>
-      <div className="text-left text-contrast">
-        {`${balanceDisplay} ${token.symbol}`}
-      </div>
-    </button>
-  </>
-}
-
-function WalletDataChain(props: { chainId: EthereumChainId } & ChildrenProps) {
-  const { chainId, children } = props
-  const wallet = useWalletData()
-
-  const settings = useChain(wallet.uuid, chainId)
-  const enabled = settings.data?.inner.enabled
-
-  const onToggle = useInputChange(e => {
-    const { checked } = e.currentTarget
-
-    settings.mutate(s => {
-      const data = Mutators.Datas.mapOrNew((d = { uuid: wallet.uuid, chainId }) => {
-        return { ...d, enabled: checked }
-      }, s.real?.data)
-
-      return new Ok(new Some(data))
-    })
-  }, [])
-
-  return <>
-    <label className="flex items-center">
-      <div className="text-xl font-medium grow">
-        {chainByChainId[chainId].name}
-      </div>
-      <input className=""
-        type="checkbox"
-        checked={enabled}
-        onChange={onToggle} />
-    </label>
-    {Boolean(settings.data?.inner.enabled) && <>
-      <div className="h-4" />
-      <div className="flex flex-col gap-2">
-        {children}
-      </div>
-    </>}
-  </>
-}
-
 function WalletDataPage() {
   const wallet = useWalletData()
   const background = useBackground().unwrap()
@@ -197,7 +76,17 @@ function WalletDataPage() {
 
   const [color, color2] = Gradients.get(wallet.color)
 
+  const [all, setAll] = useState(false)
+  const [edit, setEdit] = useState(false)
+
   const tokens = useTokenSettingsByWallet(wallet)
+
+  const allTokens = useMemo<TokenData[]>(() => {
+    const natives = Object.values(chainByChainId).map(x => x.token)
+    const contracts = Object.values(tokenByAddress)
+    const all = [...natives, ...contracts]
+    return all.sort((a, b) => a.chainId - b.chainId)
+  }, [])
 
   const onBackClick = useCallback(() => {
     Path.go("/wallets")
@@ -237,15 +126,15 @@ function WalletDataPage() {
         {background.isWebsite() && <>
           <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
             onClick={onCameraClick}>
-            <Button.Shrink>
+            <Button.Shrinker>
               <Outline.QrCodeIcon className="s-sm" />
-            </Button.Shrink>
+            </Button.Shrinker>
           </Button.Naked>
           <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
             onClick={onLinkClick}>
-            <Button.Shrink>
+            <Button.Shrinker>
               <Outline.LinkIcon className="s-sm" />
-            </Button.Shrink>
+            </Button.Shrinker>
           </Button.Naked>
         </>}
       </div>
@@ -282,11 +171,45 @@ function WalletDataPage() {
 
   const Body =
     <PageBody>
-      {tokens.data?.inner.map(tokenSettings =>
-        <TokenSettingsRow
-          key={tokenSettings.uuid}
-          settingsRef={tokenSettings} />)}
-      <AddableTokenRow token={chainByChainId[1].token} />
+      <div className="font-medium text-xl">
+        Tokens
+      </div>
+      <div className="h-4" />
+      <div className="flex flex-col gap-4">
+        <TokenRowRouter token={chainByChainId[1].token} />
+        {!edit && tokens.data?.inner.map(tokenSettings =>
+          <AddedTokenRow
+            key={tokenSettings.uuid}
+            settingsRef={tokenSettings} />)}
+      </div>
+      <div className="h-4" />
+      <div className="flex items-center justify-between">
+        <button className={`${Button.Naked.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
+          onClick={() => setAll(!all)}>
+          <div className={`${Button.Shrinker.className}`}>
+            {all ? "Show less" : "Show more"}
+          </div>
+        </button>
+        {all &&
+          <button className={`${Button.Naked.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
+            onClick={() => setEdit(!edit)}>
+            <div className={`${Button.Shrinker.className}`}>
+              {edit ? "Done" : "Edit"}
+            </div>
+          </button>}
+      </div>
+      <div className="h-4" />
+      {all &&
+        <TokensEditContext.Provider value={edit}>
+          <div className="flex flex-col gap-4">
+            {allTokens.map((token, i) => <>
+              {!(token.type === "native" && token.chainId === 1) &&
+                <UnaddedTokenRow
+                  key={i}
+                  token={token} />}
+            </>)}
+          </div>
+        </TokensEditContext.Provider>}
     </PageBody>
 
   return <Page>
@@ -304,36 +227,87 @@ function WalletDataPage() {
   </Page>
 }
 
+const TokensEditContext = createContext(false)
 
-function TokenSettingsRow(props: { settingsRef: TokenSettingsRef }) {
+function useTokensEditContext() {
+  return Option.wrap(useContext(TokensEditContext))
+}
+
+function AddedTokenRow(props: { settingsRef: TokenSettingsRef }) {
+  const wallet = useWalletData()
+
   const { settingsRef } = props
-  const { wallet, token } = settingsRef
+  const { token } = settingsRef
 
   const settings = useTokenSettings(wallet, token)
 
+  if (token.type === "native" && token.chainId === 1)
+    return null
   if (!settings.data?.inner.enabled)
     return null
-  return <TokenRow tokenRef={settings.data.inner.token} />
+  return <TokenRowRouter token={settings.data.inner.token} />
 }
 
-function TokenRow(props: { tokenRef: TokenRef }) {
-  const { tokenRef } = props
+function UnaddedTokenRow(props: { token: TokenData }) {
+  const edit = useTokensEditContext().unwrap()
+  const wallet = useWalletData()
+  const { token } = props
 
-  if (tokenRef.type === "native")
-    return <NativeTokenRow2 tokenRef={tokenRef} />
-  if (tokenRef.type === "contract")
-    return <ContractTokenRow2 tokenRef={tokenRef} />
+  const settings = useTokenSettings(wallet, token)
+
+  if (settings.data?.inner.enabled && !edit)
+    return null
+  return <TokenRowRouter token={token} />
+}
+
+function TokenRowRouter(props: { token: Token }) {
+  const { token } = props
+
+  if (token.type === "native")
+    return <NativeTokenResolver token={token} />
+  if (token.type === "contract")
+    return <ContractTokenResolver token={token} />
   return null
 }
 
-function NativeTokenRow2(props: { tokenRef: NativeTokenRef }) {
-  const { tokenRef } = props
-  const wallet = useWalletData()
+function NativeTokenResolver(props: { token: NativeToken }) {
+  const { token } = props
 
-  const chain = chainByChainId[tokenRef.chainId]
+  const chainData = chainByChainId[token.chainId]
+  const tokenData = chainData.token
+
+  return <NativeTokenRow
+    token={tokenData}
+    chain={chainData} />
+}
+
+function ContractTokenResolver(props: { token: ContractToken }) {
+  const { token } = props
+
+  const tokenData = tokenByAddress[token.address]
+  const chainData = chainByChainId[token.chainId]
+
+  return <ContractTokenRow
+    token={tokenData}
+    chain={chainData} />
+}
+
+function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }) {
+  const { token, chain } = props
+  const wallet = useWalletData()
+  const edit = useTokensEditContext().unwrap()
+
   const context = useEthereumContext(wallet.uuid, chain)
 
   const [prices, setPrices] = useState<Nullable<FixedInit>[]>([])
+
+  const balanceQuery = useBalance(wallet.address, context, prices)
+  const balanceDisplay = useDisplay(balanceQuery.current)
+
+  const sendDialog = useBooleanHandle(false)
+
+  const balanceUsdFixed = usePricedBalance(wallet.address, "usd", context)
+  const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
 
   const onPrice = useCallback(([index, data]: [number, Nullable<FixedInit>]) => {
     setPrices(prices => {
@@ -343,27 +317,49 @@ function NativeTokenRow2(props: { tokenRef: NativeTokenRef }) {
   }, [])
 
   return <>
+    {sendDialog.current && context &&
+      <WalletDataSendNativeTokenDialog
+        title={`${token.name} on ${chain.name}`}
+        context={context}
+        close={sendDialog.disable} />}
     {chain.token.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}
         address={address}
         context={context}
         ok={onPrice} />)}
-    <NativeTokenRow
-      chain={chain}
-      prices={prices} />
+    {!edit &&
+      <ClickableTokenRow
+        ok={sendDialog.enable}
+        token={token}
+        chain={chain}
+        balanceDisplay={balanceDisplay}
+        balanceUsdDisplay={balanceUsdDisplay} />}
+    {edit &&
+      <CheckableTokenRow
+        token={token}
+        chain={chain}
+        balanceDisplay={balanceDisplay}
+        balanceUsdDisplay={balanceUsdDisplay} />}
   </>
 }
 
-function ContractTokenRow2(props: { tokenRef: ContractTokenRef }) {
-  const { tokenRef } = props
+function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainData }) {
+  const { token, chain } = props
   const wallet = useWalletData()
+  const edit = useTokensEditContext().unwrap()
 
-  const token = tokenByAddress[tokenRef.address]
-  const chain = chainByChainId[token.chainId]
   const context = useEthereumContext(wallet.uuid, chain)
 
   const [prices, setPrices] = useState<Nullable<FixedInit>[]>([])
+
+  const balanceQuery = useTokenBalance(wallet.address, token, context, prices)
+  const balanceDisplay = useDisplay(balanceQuery.current)
+
+  const sendDialog = useBooleanHandle(false)
+
+  const balanceUsdFixed = useTokenPricedBalance(context, wallet.address, token, "usd")
+  const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
 
   const onPrice = useCallback(([index, data]: [number, Nullable<FixedInit>]) => {
     setPrices(prices => {
@@ -373,15 +369,31 @@ function ContractTokenRow2(props: { tokenRef: ContractTokenRef }) {
   }, [])
 
   return <>
+    {sendDialog.current && context &&
+      <WalletDataSendContractTokenDialog
+        title={`${token.name} on ${chain.name}`}
+        context={context}
+        token={token}
+        close={sendDialog.disable} />}
     {token.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}
         address={address}
         context={context}
         ok={onPrice} />)}
-    <ContractTokenRow
-      token={token}
-      prices={prices} />
+    {!edit &&
+      <ClickableTokenRow
+        ok={sendDialog.enable}
+        token={token}
+        chain={chain}
+        balanceDisplay={balanceDisplay}
+        balanceUsdDisplay={balanceUsdDisplay} />}
+    {edit &&
+      <CheckableTokenRow
+        token={token}
+        chain={chain}
+        balanceDisplay={balanceDisplay}
+        balanceUsdDisplay={balanceUsdDisplay} />}
   </>
 }
 
@@ -398,12 +410,62 @@ function PriceResolver(props: { index: number } & { address: string } & { contex
   return null
 }
 
-function AddableTokenRow(props: { token: TokenData }) {
-  const { token } = props
+function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay: string } & OkProps<void>) {
+  const { ok, token, chain, balanceDisplay, balanceUsdDisplay } = props
+
+  const onClick = useCallback(() => {
+    ok()
+  }, [ok])
+
+  const tokenId = token.type === "native"
+    ? token.chainId + token.symbol
+    : token.chainId + token.address + token.symbol
+
+  const modtoken = Colors.get(useModhash(`${tokenId}`))
+  const modchain = Colors.get(useModhash(`${chain.chainId}`))
+
+  return <button className="po-sm group flex items-center text-left"
+    onClick={onClick}>
+    <div className={`relative h-12 w-12 flex items-center justify-center bg-${modtoken} text-white rounded-full`}>
+      <div className=""
+        style={{ fontSize: `${Math.min((20 - (2 * token.symbol.length)), 16)}px` }}>
+        {token.symbol}
+      </div>
+      <div className={`absolute -bottom-2 -left-2 h-6 w-6 bg-${modchain} rounded-full flex items-center justify-center`}>
+        {chain.name[0]}
+      </div>
+    </div>
+    <div className="w-4" />
+    <div className="grow">
+      <div className="flex items-center">
+        <div className="grow flex items-center gap-1">
+          <span className="">
+            {token.name}
+          </span>
+          <span className="text-contrast">
+            on
+          </span>
+          <span className="">
+            {chain.name}
+          </span>
+        </div>
+        <div className="">
+          {balanceUsdDisplay}
+        </div>
+      </div>
+      <div className="text-contrast">
+        {balanceDisplay} {token.symbol}
+      </div>
+    </div>
+  </button>
+}
+
+function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay: string }) {
+  const { token, chain, balanceDisplay, balanceUsdDisplay } = props
   const wallet = useWalletData()
 
   const settings = useTokenSettings(wallet, token)
-  const enabled = settings.data?.inner.enabled
+  const checked = settings.data?.inner.enabled
 
   const onToggle = useInputChange(async e => {
     const enabled = e.currentTarget.checked
@@ -421,13 +483,56 @@ function AddableTokenRow(props: { token: TokenData }) {
     }).then(Results.logAndAlert)
   }, [])
 
-  return <label className="flex items-center">
-    <div className="grow">
-      {token.name}
-    </div>
-    <input className=""
+  const tokenId = token.type === "native"
+    ? token.chainId + token.symbol
+    : token.chainId + token.address + token.symbol
+
+  const modtoken = Colors.get(useModhash(`${tokenId}`))
+  const modchain = Colors.get(useModhash(`${chain.chainId}`))
+
+  return <label className={`po-sm group flex items-center`}>
+    <input className="appearance-none"
       type="checkbox"
-      checked={enabled}
+      checked={checked}
       onChange={onToggle} />
+    <div className="h-6 w-6 border border-contrast rounded-full aria-checked:bg-blue-500 flex items-center justify-center transition-colors"
+      aria-checked={checked}>
+      <div className="text-white invisible aria-checked:visible"
+        aria-checked={checked}>
+        {`✓`}
+      </div>
+    </div>
+    <div className="w-4" />
+    <div className={`relative h-12 w-12 flex items-center justify-center bg-${modtoken} text-white rounded-full`}>
+      <div className=""
+        style={{ fontSize: `${Math.min((20 - (2 * token.symbol.length)), 16)}px` }}>
+        {token.symbol}
+      </div>
+      <div className={`absolute -bottom-2 -left-2 h-6 w-6 bg-${modchain} rounded-full flex items-center justify-center`}>
+        {chain.name[0]}
+      </div>
+    </div>
+    <div className="w-4" />
+    <div className="grow">
+      <div className="flex items-center">
+        <div className="grow flex items-center gap-1">
+          <span className="">
+            {token.name}
+          </span>
+          <span className="text-contrast">
+            on
+          </span>
+          <span className="">
+            {chain.name}
+          </span>
+        </div>
+        <div className="">
+          {balanceUsdDisplay}
+        </div>
+      </div>
+      <div className="text-contrast">
+        {balanceDisplay} {token.symbol}
+      </div>
+    </div>
   </label>
 }

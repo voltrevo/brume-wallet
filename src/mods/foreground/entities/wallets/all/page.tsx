@@ -55,9 +55,9 @@ export function WalletsPage() {
     <PageHeader title="Wallets">
       <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={creator.enable}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.PlusIcon className="s-sm" />
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Naked>
     </PageHeader>
 

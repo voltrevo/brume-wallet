@@ -48,9 +48,9 @@ export namespace Dialog {
       <div className="grow" />
       <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={close}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.XMarkIcon className="s-sm" />
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Naked>
     </h1>
   }
@@ -69,15 +69,15 @@ export namespace Dialog {
           <div className="flex items-center gap-2">
             <Button.Naked className="w-full po-md"
               onClick={open.disable}>
-              <Button.Shrink>
+              <Button.Shrinker>
                 Click me
-              </Button.Shrink>
+              </Button.Shrinker>
             </Button.Naked>
             <Button.Opposite className="w-full po-md"
               onClick={open.disable}>
-              <Button.Shrink>
+              <Button.Shrinker>
                 Click me
-              </Button.Shrink>
+              </Button.Shrinker>
             </Button.Opposite>
           </div>
         </Dialog>}

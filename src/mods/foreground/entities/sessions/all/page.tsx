@@ -74,9 +74,9 @@ export function SessionsPage() {
       <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         disabled={tryDisconnectAll.loading || !length}
         onClick={tryDisconnectAll.run}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.TrashIcon className="s-sm" />
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Naked>
     </PageHeader>
 
@@ -157,9 +157,9 @@ export function SessionRow(props: { session: Session }) {
       </div>
     </div>
     <Button.Naked>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.EllipsisVerticalIcon className="s-sm" />
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Naked>
   </div>
 }

@@ -81,10 +81,10 @@ export function LedgerSeedCreatorDialog(props: CloseProps) {
       colorIndex={color}
       disabled={!canAdd}
       onClick={tryAdd.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.PlusIcon className="s-sm" />
         Add
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Gradient>
 
   return <Dialog close={close}>

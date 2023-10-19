@@ -20,16 +20,16 @@ export namespace Contrast {
   export function Test() {
     return <div className="p-1">
       <Button.Contrast className="po-md">
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.GlobeAltIcon className="s-sm" />
           Hello world
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Contrast>
       <div className="h-1" />
       <Button.Contrast className="po-md">
-        <Button.Shrink>
+        <Button.Shrinker>
           Hello world
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Contrast>
     </div>
   }

@@ -1,5 +1,5 @@
 import { BigIntToHex } from "@/libs/bigints/bigints"
-import { ContractTokenData, EthereumChain, PairInfo } from "@/libs/ethereum/mods/chain"
+import { ChainData, ContractTokenData, PairInfo } from "@/libs/ethereum/mods/chain"
 import { Fixed, FixedInit } from "@/libs/fixed/fixed"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
@@ -219,7 +219,7 @@ export class EthereumAuthPrivateKeyWalletInstance {
 
 export interface EthereumContext {
   uuid: string,
-  chain: EthereumChain,
+  chain: ChainData,
   background: Background
 }
 
@@ -227,7 +227,7 @@ export interface EthereumContextProps {
   context: EthereumContext
 }
 
-export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<EthereumChain>) {
+export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<ChainData>) {
   const background = useBackground().unwrap()
 
   return useMemo<Nullable<EthereumContext>>(() => {

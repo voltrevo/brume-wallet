@@ -117,10 +117,10 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
       colorIndex={color}
       disabled={Boolean(addDisabled)}
       onClick={tryAdd.run}>
-      <Button.Shrink>
+      <Button.Shrinker>
         <Outline.PlusIcon className="s-sm" />
         {addDisabled || "Add"}
-      </Button.Shrink>
+      </Button.Shrinker>
     </Button.Gradient>
 
   return <Dialog close={close}>

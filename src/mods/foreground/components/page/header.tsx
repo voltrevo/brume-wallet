@@ -11,9 +11,9 @@ export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps
     {back && <div className="mr-2">
       <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={back}>
-        <Button.Shrink>
+        <Button.Shrinker>
           <Outline.ChevronLeftIcon className="s-sm" />
-        </Button.Shrink>
+        </Button.Shrinker>
       </Button.Naked>
     </div>}
     <div className="text-2xl font-medium">
