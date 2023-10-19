@@ -1,4 +1,4 @@
-import { ChainData, ContractTokenData, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
+import { ChainData, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Fixed, FixedInit, ZeroHexFixed } from "@/libs/fixed/fixed"
 import { Maps } from "@/libs/maps/maps"
 import { TorRpc } from "@/libs/rpc/rpc"
@@ -12,6 +12,7 @@ import { Ok, Panic, Result } from "@hazae41/result"
 import { EthBrume } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
+import { ContractTokenData } from "../tokens/data"
 import { BgWallets } from "./all/data"
 
 export type Wallet =
@@ -197,7 +198,7 @@ export interface EthereumFetchParams {
   noCheck?: boolean
 }
 
-export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRequestPreinit<unknown>, params: Nullable<EthereumFetchParams>, more: FetcherMore = {}) {
+export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}) {
   return await Result.runAndDoubleWrap<Fetched<T, Error>>(async () => {
     const { signal: presignal } = more
     const { brume } = ethereum
@@ -217,7 +218,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
           const { url, circuit } = connection
           const signal = AbortSignals.timeout(5_000, presignal)
 
-          console.debug(`Fetching ${init.method} from ${url.href} using ${circuit.id}`)
+          // console.debug(`Fetching ${init.method} from ${url.href} using ${circuit.id}`)
           const result = await TorRpc.tryFetchWithCircuit<T>(url, { ...request, circuit, signal })
 
           if (result.isErr())
@@ -232,7 +233,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
           const { socket, circuit } = connection
           const signal = AbortSignals.timeout(5_000, presignal)
 
-          console.debug(`Fetching ${init.method} from ${socket.url} using ${circuit.id}`)
+          // console.debug(`Fetching ${init.method} from ${socket.url} using ${circuit.id}`)
           const result = await TorRpc.tryFetchWithSocket<T>(socket, request, signal)
 
           if (result.isErr())
@@ -254,7 +255,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
       for (const result of results) {
         if (result.status === "rejected")
           continue
-        if (params?.noCheck && result.value.isOk())
+        if (init?.noCheck && result.value.isOk())
           return result.value
         const raw = JSON.stringify(result.value.inner)
         const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
@@ -297,7 +298,7 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
     for (const result of results) {
       if (result.status === "rejected")
         continue
-      if (params?.noCheck && result.value.isOk())
+      if (init?.noCheck && result.value.isOk())
         return result.value
       const raw = JSON.stringify(result.value.inner)
       const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
@@ -329,21 +330,6 @@ export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRe
 
     return fetcheds.get(sorteds[0].key)!
   }).then(r => r.inspectErrSync(e => console.error({ e })))
-}
-
-export function getEthereumUnknown(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, params: Nullable<EthereumFetchParams>, storage: IDBStorage) {
-  const fetcher = async (request: EthereumQueryKey<unknown>) =>
-    await tryEthereumFetch<unknown>(ethereum, request, params)
-
-  return createQuery<EthereumQueryKey<unknown>, any, Error>({
-    key: {
-      chainId: ethereum.chain.chainId,
-      method: request.method,
-      params: request.params
-    },
-    fetcher,
-    storage
-  })
 }
 
 export function getTotalPricedBalance(coin: "usd", storage: IDBStorage) {
@@ -580,6 +566,7 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
 
     const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.createStaticBigUint(32))
     const [balance] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
+    console.log(balance)
     const fixed = new Fixed(balance.value, token.decimals)
 
     return new Ok(new Data(fixed))

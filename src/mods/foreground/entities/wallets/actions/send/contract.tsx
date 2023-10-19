@@ -1,6 +1,6 @@
 import { BigIntToHex, BigInts } from "@/libs/bigints/bigints";
 import { UIError } from "@/libs/errors/errors";
-import { ContractTokenData, chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain";
+import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Fixed } from "@/libs/fixed/fixed";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
@@ -13,6 +13,7 @@ import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
+import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { Cubane } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
@@ -25,7 +26,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
   const wallet = useWalletData()
   const { title, context, token, close } = props
 
-  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.ETHEREUM])
+  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
   const balanceQuery = useTokenBalance(wallet.address, token, context, [])
   const pendingNonceQuery = useNonce(wallet.address, context)
@@ -157,8 +158,9 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
               maxPriorityFeePerGas: Radix.toZeroHex(maxPriorityFeePerGas),
               nonce: Radix.toZeroHex(nonce),
               data: data
-            }, "latest"]
-          }, { noCheck: true }]
+            }, "latest"],
+            noCheck: true
+          }]
         }).then(r => r.throw(t).throw(t))
 
         tx = Result.runAndDoubleWrapSync(() => {
@@ -195,8 +197,9 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
               gasPrice: Radix.toZeroHex(gasPrice),
               nonce: Radix.toZeroHex(nonce),
               data: data
-            }, "latest"]
-          }, { noCheck: true }]
+            }, "latest"],
+            noCheck: true
+          }]
         }).then(r => r.throw(t).throw(t))
 
         tx = Result.runAndDoubleWrapSync(() => {
@@ -218,8 +221,9 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
         method: "brume_eth_fetch",
         params: [context.uuid, context.chain.chainId, {
           method: "eth_sendRawTransaction",
-          params: [tx.serialized]
-        }, { noCheck: true }]
+          params: [tx.serialized],
+          noCheck: true
+        }]
       }).then(r => r.throw(t).throw(t))
 
       setTxHash(txHash)

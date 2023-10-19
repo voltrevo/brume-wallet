@@ -1,4 +1,4 @@
-import { ZeroHexString } from "@hazae41/cubane"
+import { ContractTokenData, NativeTokenData } from "@/mods/background/service_worker/entities/tokens/data"
 
 export type ChainId = number
 
@@ -20,6 +20,7 @@ export const chainByChainId: Chains = {
     urls: ["wss://ethereum.publicnode.com", "wss://eth.llamarpc.com", "wss://mainnet.gateway.tenderly.co"],
     etherscan: "https://etherscan.io",
     token: {
+      uuid: "664000af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "ETH",
       chainId: 1,
@@ -34,6 +35,7 @@ export const chainByChainId: Chains = {
     urls: ["wss://ethereum-goerli.publicnode.com"],
     etherscan: "https://goerli.etherscan.io",
     token: {
+      uuid: "664001af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "ETH",
       chainId: 5,
@@ -47,6 +49,7 @@ export const chainByChainId: Chains = {
     urls: ["wss://optimism.publicnode.com", "wss://optimism.llamarpc.com"],
     etherscan: "https://optimistic.etherscan.io",
     token: {
+      uuid: "664002af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "ETH",
       chainId: 10,
@@ -61,6 +64,7 @@ export const chainByChainId: Chains = {
     urls: ["wss://bsc.publicnode.com", "wss://binance.llamarpc.com"],
     etherscan: "https://bnbscan.com",
     token: {
+      uuid: "664003af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "BNB",
       chainId: 56,
@@ -75,6 +79,7 @@ export const chainByChainId: Chains = {
     urls: ["https://etc.rivet.link"],
     etherscan: "https://blockscout.com/etc/mainnet/",
     token: {
+      uuid: "664004af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "ETC",
       chainId: 61,
@@ -89,6 +94,7 @@ export const chainByChainId: Chains = {
     urls: ["wss://gnosis.publicnode.com"],
     etherscan: "https://gnosisscan.io",
     token: {
+      uuid: "664005af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "xDAI",
       chainId: 100,
@@ -103,6 +109,7 @@ export const chainByChainId: Chains = {
     urls: ["wss://polygon-bor.publicnode.com", "wss://polygon.llamarpc.com"],
     etherscan: "https://polygonscan.com",
     token: {
+      uuid: "664006af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "MATIC",
       chainId: 137,
@@ -117,6 +124,7 @@ export const chainByChainId: Chains = {
     urls: ["https://mainnet.era.zksync.io"],
     etherscan: "https://explorer.zksync.io/",
     token: {
+      uuid: "664007af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "ETH",
       chainId: 324,
@@ -131,6 +139,7 @@ export const chainByChainId: Chains = {
     urls: ["wss://base.publicnode.com"],
     etherscan: "https://basescan.org",
     token: {
+      uuid: "664008af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "ETH",
       chainId: 8453,
@@ -145,6 +154,7 @@ export const chainByChainId: Chains = {
     urls: ["wss://arbitrum.llamarpc.com"],
     etherscan: "https://arbiscan.io",
     token: {
+      uuid: "664009af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "ETH",
       chainId: 42161,
@@ -159,6 +169,7 @@ export const chainByChainId: Chains = {
     urls: ["https://celo.api.onfinality.io/public"],
     etherscan: "https://celoscan.io",
     token: {
+      uuid: "664010af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "CELO",
       chainId: 42220,
@@ -173,6 +184,7 @@ export const chainByChainId: Chains = {
     urls: ["wss://avalanche-c-chain.publicnode.com"],
     etherscan: "https://snowtrace.io",
     token: {
+      uuid: "664011af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "ETH",
       chainId: 43114,
@@ -187,6 +199,7 @@ export const chainByChainId: Chains = {
     urls: ["https://rpc.linea.build"],
     etherscan: "https://lineascan.build",
     token: {
+      uuid: "664012af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "ETH",
       chainId: 59144,
@@ -201,6 +214,7 @@ export const chainByChainId: Chains = {
     urls: ["wss://sepolia.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8"],
     etherscan: "https://sepolia.etherscan.io",
     token: {
+      uuid: "664013af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
       name: "ETH",
       chainId: 11155111,
@@ -227,31 +241,9 @@ export const chainIdByName = {
   SEPOLIA: 11155111
 } as const
 
-export type TokenData =
-  | NativeTokenData
-  | ContractTokenData
-
-export interface NativeTokenData {
-  readonly type: "native"
-  readonly name: string
-  readonly chainId: number,
-  readonly symbol: string,
-  readonly decimals: number,
-  readonly pairs?: readonly string[]
-}
-
-export interface ContractTokenData {
-  readonly type: "contract",
-  readonly name: string
-  readonly chainId: number,
-  readonly symbol: string,
-  readonly decimals: number,
-  readonly address: ZeroHexString
-  readonly pairs?: readonly ZeroHexString[]
-}
-
 export const tokenByAddress: Record<string, ContractTokenData> = {
   "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": {
+    uuid: "7b8dab00-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "Wrapped ETH",
     chainId: 1,
@@ -261,6 +253,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
   },
   "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599": {
+    uuid: "7b8dab01-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "Wrapped BTC",
     chainId: 1,
@@ -270,6 +263,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: ["0xbb2b8038a1640196fbe3e38816f3e67cba72d940", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
   },
   "0x6B175474E89094C44Da98b954EedeAC495271d0F": {
+    uuid: "7b8dab02-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "DAI",
     chainId: 1,
@@ -279,6 +273,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: []
   },
   "0xdAC17F958D2ee523a2206206994597C13D831ec7": {
+    uuid: "7b8dab03-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "Tether USD",
     chainId: 1,
@@ -288,6 +283,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: []
   },
   "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48": {
+    uuid: "7b8dab04-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "USD Coin",
     chainId: 1,
@@ -297,6 +293,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: []
   },
   "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0": {
+    uuid: "7b8dab05-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "MATIC",
     chainId: 1,
@@ -306,6 +303,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: ["0x819f3450dA6f110BA6Ea52195B3beaFa246062dE", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"],
   },
   "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84": {
+    uuid: "7b8dab06-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "stETH",
     chainId: 1,
@@ -315,6 +313,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
   },
   "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58": {
+    uuid: "7b8dab07-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "Tether USD",
     chainId: 10,
@@ -324,6 +323,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: []
   },
   "0x7F5c764cBc14f9669B88837ca1490cCa17c31607": {
+    uuid: "7b8dab08-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "USD Coin",
     chainId: 10,
@@ -333,6 +333,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: []
   },
   "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1": {
+    uuid: "7b8dab09-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "DAI",
     chainId: 10,
@@ -342,6 +343,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: []
   },
   "0x68f180fcCe6836688e9084f035309E29Bf0A2095": {
+    uuid: "7b8dab10-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "Wrapped BTC",
     chainId: 10,
@@ -351,6 +353,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: ["0xbb2b8038a1640196fbe3e38816f3e67cba72d940", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
   },
   "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c": {
+    uuid: "7b8dab11-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "Wrapped BNB",
     chainId: 56,
@@ -360,6 +363,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: ["0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae"],
   },
   "0x55d398326f99059fF775485246999027B3197955": {
+    uuid: "7b8dab12-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "Tether USD",
     chainId: 56,
@@ -369,6 +373,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: [],
   },
   "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56": {
+    uuid: "7b8dab13-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "BUSD",
     chainId: 56,
@@ -378,6 +383,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: []
   },
   "0x3d6545b08693dae087e957cb1180ee38b9e3c25e": {
+    uuid: "7b8dab14-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "ETC",
     chainId: 56,
@@ -387,6 +393,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: ["0xdb8721b7a04c3e592264bf58558526b16b15e757"]
   },
   "0xc2132D05D31c914a87C6611C10748AEb04B58e8F": {
+    uuid: "7b8dab15-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "Tether USD",
     chainId: 137,
@@ -396,6 +403,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: []
   },
   "0x471EcE3750Da237f93B8E339c536989b8978a438": {
+    uuid: "7b8dab16-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "CELO",
     chainId: 42220,
@@ -405,6 +413,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     pairs: ["0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422"]
   },
   "0x64dEFa3544c695db8c535D289d843a189aa26b98": {
+    uuid: "7b8dab17-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "mCUSD",
     chainId: 42220,

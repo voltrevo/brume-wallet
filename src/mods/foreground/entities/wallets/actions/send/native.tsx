@@ -1,6 +1,6 @@
 import { BigIntToHex, BigInts } from "@/libs/bigints/bigints";
 import { UIError } from "@/libs/errors/errors";
-import { chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain";
+import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Fixed } from "@/libs/fixed/fixed";
 import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
@@ -24,7 +24,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
   const wallet = useWalletData()
   const { title, context, close } = props
 
-  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.ETHEREUM])
+  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
   const balanceQuery = useBalance(wallet.address, context, [])
   const pendingNonceQuery = useNonce(wallet.address, context)
@@ -151,8 +151,9 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
               maxPriorityFeePerGas: Radix.toZeroHex(maxPriorityFeePerGas),
               value: Radix.toZeroHex(Fixed.fromDecimalString(defValueInput, 18).value),
               nonce: Radix.toZeroHex(nonce)
-            }, "latest"]
-          }, { noCheck: true }]
+            }, "latest"],
+            noCheck: true
+          }]
         }).then(r => r.throw(t).throw(t))
 
         tx = Result.runAndDoubleWrapSync(() => {
@@ -189,8 +190,9 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
               gasPrice: Radix.toZeroHex(gasPrice),
               value: Radix.toZeroHex(Fixed.fromDecimalString(defValueInput, 18).value),
               nonce: Radix.toZeroHex(nonce)
-            }, "latest"]
-          }, { noCheck: true }]
+            }, "latest"],
+            noCheck: true
+          }]
         }).then(r => r.throw(t).throw(t))
 
         tx = Result.runAndDoubleWrapSync(() => {
@@ -212,8 +214,9 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & CloseProps &
         method: "brume_eth_fetch",
         params: [context.uuid, context.chain.chainId, {
           method: "eth_sendRawTransaction",
-          params: [tx.serialized]
-        }, { noCheck: true }]
+          params: [tx.serialized],
+          noCheck: true
+        }]
       }).then(r => r.throw(t).throw(t))
 
       setTxHash(txHash)

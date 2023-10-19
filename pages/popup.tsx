@@ -1,5 +1,5 @@
 import { BigIntToHex, BigInts } from "@/libs/bigints/bigints";
-import { chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain";
+import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
@@ -529,96 +529,14 @@ export function WalletAndChainSelectPage() {
 
   const Body =
     <PageBody>
-      <div className="flex flex-wrap items-center gap-1">
-        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === chainByChainId[chainIdByName.ETHEREUM].chainId}
-          onClick={() => setChain(chainByChainId[chainIdByName.ETHEREUM].chainId)}>
-          <Button.Shrinker>
-            <Outline.CubeIcon className="s-xs" />
-            {chainByChainId[chainIdByName.ETHEREUM].name}
-          </Button.Shrinker>
-        </Button.Bordered>
-        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === chainByChainId[chainIdByName.GNOSIS].chainId}
-          onClick={() => setChain(chainByChainId[chainIdByName.GNOSIS].chainId)}>
-          <Button.Shrinker>
-            <Outline.CubeIcon className="s-xs" />
-            {chainByChainId[chainIdByName.GNOSIS].name}
-          </Button.Shrinker>
-        </Button.Bordered>
-        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === chainByChainId[chainIdByName.POLYGON].chainId}
-          onClick={() => setChain(chainByChainId[chainIdByName.POLYGON].chainId)}>
-          <Button.Shrinker>
-            <Outline.CubeIcon className="s-xs" />
-            {chainByChainId[chainIdByName.POLYGON].name}
-          </Button.Shrinker>
-        </Button.Bordered>
-        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === chainByChainId[chainIdByName.BINANCE].chainId}
-          onClick={() => setChain(chainByChainId[chainIdByName.BINANCE].chainId)}>
-          <Button.Shrinker>
-            <Outline.CubeIcon className="s-xs" />
-            {chainByChainId[chainIdByName.BINANCE].name}
-          </Button.Shrinker>
-        </Button.Bordered>
-        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === chainByChainId[chainIdByName.ARBITRUM].chainId}
-          onClick={() => setChain(chainByChainId[chainIdByName.ARBITRUM].chainId)}>
-          <Button.Shrinker>
-            <Outline.CubeIcon className="s-xs" />
-            {chainByChainId[chainIdByName.ARBITRUM].name}
-          </Button.Shrinker>
-        </Button.Bordered>
-        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === chainByChainId[chainIdByName.ZKSYNC].chainId}
-          onClick={() => setChain(chainByChainId[chainIdByName.ZKSYNC].chainId)}>
-          <Button.Shrinker>
-            <Outline.CubeIcon className="s-xs" />
-            {chainByChainId[chainIdByName.ZKSYNC].name}
-          </Button.Shrinker>
-        </Button.Bordered>
-        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === chainByChainId[chainIdByName.AVALANCHE].chainId}
-          onClick={() => setChain(chainByChainId[chainIdByName.AVALANCHE].chainId)}>
-          <Button.Shrinker>
-            <Outline.CubeIcon className="s-xs" />
-            {chainByChainId[chainIdByName.AVALANCHE].name}
-          </Button.Shrinker>
-        </Button.Bordered>
-        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === chainByChainId[chainIdByName.CELO].chainId}
-          onClick={() => setChain(chainByChainId[chainIdByName.CELO].chainId)}>
-          <Button.Shrinker>
-            <Outline.CubeIcon className="s-xs" />
-            {chainByChainId[chainIdByName.CELO].name}
-          </Button.Shrinker>
-        </Button.Bordered>
-        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === chainByChainId[chainIdByName.LINEA].chainId}
-          onClick={() => setChain(chainByChainId[chainIdByName.LINEA].chainId)}>
-          <Button.Shrinker>
-            <Outline.CubeIcon className="s-xs" />
-            {chainByChainId[chainIdByName.LINEA].name}
-          </Button.Shrinker>
-        </Button.Bordered>
-        <Button.Bordered className="po-sm hovered-or-clicked-or-focused:scale-105 transition"
-          aria-selected={chain === chainByChainId[chainIdByName.BASE].chainId}
-          onClick={() => setChain(chainByChainId[chainIdByName.BASE].chainId)}>
-          <Button.Shrinker>
-            <Outline.CubeIcon className="s-xs" />
-            {chainByChainId[chainIdByName.BASE].name}
-          </Button.Shrinker>
-        </Button.Bordered>
-      </div>
-      <div className="h-4" />
-      <label>
-        <input type="checkbox"
+      <label className="flex items-center justify-between">
+        <div className="">
+          Keep me connected
+        </div>
+        <input className=""
+          type="checkbox"
           checked={persistent}
           onChange={onPersistentChange} />
-        <span className="px-1">
-          Keep me connected
-        </span>
       </label>
       <div className="h-4" />
       <ClickableWalletGrid

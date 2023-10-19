@@ -1,9 +1,10 @@
 import { BigIntToHex } from "@/libs/bigints/bigints"
-import { ChainData, ContractTokenData, PairInfo } from "@/libs/ethereum/mods/chain"
+import { ChainData, PairInfo } from "@/libs/ethereum/mods/chain"
 import { Fixed, FixedInit } from "@/libs/fixed/fixed"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
+import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data"
 import { BgEns, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
@@ -239,12 +240,12 @@ export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<Chain
   }, [uuid, chain, background])
 }
 
-export async function tryFetch<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext, params?: Nullable<EthereumFetchParams>): Promise<Result<Fetched<T, Error>, Error>> {
+export async function tryFetch<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, ethereum: EthereumContext): Promise<Result<Fetched<T, Error>, Error>> {
   const { uuid, background, chain } = ethereum
 
   return await background.tryRequest<T>({
     method: "brume_eth_fetch",
-    params: [uuid, chain.chainId, request, params]
+    params: [uuid, chain.chainId, request]
   }).then(r => r.mapSync(x => Fetched.rewrap(x)))
 }
 
@@ -519,13 +520,14 @@ export function getBlockByNumber(number: Nullable<string>, context: Nullable<Eth
     return undefined
 
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryFetch<Block>(request, context, { noCheck: true }).then(r => r.mapSync(r => r))
+    await tryFetch<Block>(request, context).then(r => r.mapSync(r => r))
 
-  return createQuery<EthereumQueryKey<unknown>, Block, Error>({
+  return createQuery<EthereumQueryKey<unknown> & EthereumFetchParams, Block, Error>({
     key: {
       chainId: context.chain.chainId,
       method: "eth_getBlockByNumber",
-      params: [number, false]
+      params: [number, false],
+      noCheck: true
     },
     fetcher,
     storage,

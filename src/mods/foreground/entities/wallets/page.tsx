@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Colors, Gradients } from "@/libs/colors/colors";
 import { UIError } from "@/libs/errors/errors";
-import { ChainData, ContractTokenData, NativeTokenData, TokenData, chainByChainId, chainIdByName, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { ChainData, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Fixed, FixedInit } from "@/libs/fixed/fixed";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
@@ -14,8 +14,9 @@ import { Button } from "@/libs/ui/button";
 import { Url } from "@/libs/url/url";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { Mutators } from "@/libs/xswr/mutators";
+import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
-import { ContractToken, NativeToken, Token, TokenRef, TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data";
+import { TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data";
 import { Nullable, Option, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
@@ -23,6 +24,8 @@ import { useBackground } from "../../background/context";
 import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { Path } from "../../router/path/context";
+import { TokenAddDialog } from "../tokens/add/dialog";
+import { useToken, useTokens } from "../tokens/data";
 import { WalletDataReceiveDialog } from "./actions/receive/receive";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
@@ -42,6 +45,7 @@ export function WalletPage(props: UUIDProps) {
 export function useDisplay(option: Nullable<Result<FixedInit, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
+      console.log("dd", fixed, Fixed.from(fixed), Fixed.from(fixed).move(5).toDecimalString())
       return Number(Fixed.from(fixed).move(5).toDecimalString()).toLocaleString(undefined)
     }).mapErrSync(() => "Error").inner).unwrapOr("...")
   }, [option])
@@ -67,7 +71,7 @@ function WalletDataPage() {
   const wallet = useWalletData()
   const background = useBackground().unwrap()
 
-  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.ETHEREUM])
+  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
   useEnsReverse(wallet.address, mainnet)
 
@@ -78,8 +82,10 @@ function WalletDataPage() {
 
   const [all, setAll] = useState(false)
   const [edit, setEdit] = useState(false)
+  const add = useBooleanHandle(false)
 
-  const tokens = useTokenSettingsByWallet(wallet)
+  const walletTokens = useTokenSettingsByWallet(wallet)
+  const userTokens = useTokens()
 
   const allTokens = useMemo<TokenData[]>(() => {
     const natives = Object.values(chainByChainId).map(x => x.token)
@@ -144,20 +150,31 @@ function WalletDataPage() {
     <div className="p-4 flex justify-center">
       <div className="w-full max-w-sm">
         <WalletDataCard />
+        {wallet.type === "readonly" && <>
+          <div className="h-2" />
+          <div className="po-sm bg-contrast text-contrast rounded-xl flex items-center justify-center">
+            <Outline.EyeIcon className="s-sm" />
+            <div className="w-2" />
+            <div>
+              This is a watch-only wallet
+            </div>
+          </div>
+        </>}
       </div>
     </div>
 
   const Apps =
     <div className="p-4 flex items-center justify-center flex-wrap gap-12">
-      <div className="flex flex-col items-center gap-2">
-        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}
-          onClick={sendDialog.enable}>
-          <Outline.PaperAirplaneIcon className="s-md" />
-        </button>
-        <div className="">
-          {`Send`}
-        </div>
-      </div>
+      {wallet.type !== "readonly" &&
+        <div className="flex flex-col items-center gap-2">
+          <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}
+            onClick={sendDialog.enable}>
+            <Outline.PaperAirplaneIcon className="s-md" />
+          </button>
+          <div className="">
+            {`Send`}
+          </div>
+        </div>}
       <div className="flex flex-col items-center gap-2">
         <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}
           onClick={receiveDialog.enable}>
@@ -171,43 +188,57 @@ function WalletDataPage() {
 
   const Body =
     <PageBody>
+      {add.current &&
+        <TokenAddDialog close={add.disable} />}
       <div className="font-medium text-xl">
         Tokens
       </div>
       <div className="h-4" />
       <div className="flex flex-col gap-4">
         <TokenRowRouter token={chainByChainId[1].token} />
-        {!edit && tokens.data?.inner.map(tokenSettings =>
+        {!edit && walletTokens.data?.inner.map(tokenSettings =>
           <AddedTokenRow
             key={tokenSettings.uuid}
             settingsRef={tokenSettings} />)}
       </div>
       <div className="h-4" />
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
         <button className={`${Button.Naked.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
           onClick={() => setAll(!all)}>
           <div className={`${Button.Shrinker.className}`}>
             {all ? "Show less" : "Show more"}
           </div>
         </button>
-        {all &&
+        <div className="grow" />
+        {all && <>
           <button className={`${Button.Naked.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
             onClick={() => setEdit(!edit)}>
             <div className={`${Button.Shrinker.className}`}>
               {edit ? "Done" : "Edit"}
             </div>
-          </button>}
+          </button>
+          <button className={`${Button.Naked.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
+            onClick={add.enable}>
+            <div className={`${Button.Shrinker.className}`}>
+              {"Add"}
+            </div>
+          </button>
+        </>}
       </div>
       <div className="h-4" />
       {all &&
         <TokensEditContext.Provider value={edit}>
           <div className="flex flex-col gap-4">
-            {allTokens.map((token, i) => <>
-              {!(token.type === "native" && token.chainId === 1) &&
+            {allTokens.map(token => <>
+              {token.uuid !== chainByChainId[1].token.uuid &&
                 <UnaddedTokenRow
-                  key={i}
+                  key={token.uuid}
                   token={token} />}
             </>)}
+            {userTokens.data?.inner.map(token =>
+              <UnaddedTokenRow
+                key={token.uuid}
+                token={token} />)}
           </div>
         </TokensEditContext.Provider>}
     </PageBody>
@@ -248,7 +279,7 @@ function AddedTokenRow(props: { settingsRef: TokenSettingsRef }) {
   return <TokenRowRouter token={settings.data.inner.token} />
 }
 
-function UnaddedTokenRow(props: { token: TokenData }) {
+function UnaddedTokenRow(props: { token: Token }) {
   const edit = useTokensEditContext().unwrap()
   const wallet = useWalletData()
   const { token } = props
@@ -284,8 +315,12 @@ function NativeTokenResolver(props: { token: NativeToken }) {
 function ContractTokenResolver(props: { token: ContractToken }) {
   const { token } = props
 
-  const tokenData = tokenByAddress[token.address]
+  const tokenQuery = useToken(token.chainId, token.address)
+  const tokenData = tokenQuery.data?.inner ?? tokenByAddress[token.address]
   const chainData = chainByChainId[token.chainId]
+
+  if (tokenData == null)
+    return null
 
   return <ContractTokenRow
     token={tokenData}
@@ -299,7 +334,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
   const context = useEthereumContext(wallet.uuid, chain)
 
-  const [prices, setPrices] = useState<Nullable<FixedInit>[]>([])
+  const [prices, setPrices] = useState(new Array<Nullable<FixedInit>>(token.pairs?.length ?? 0))
 
   const balanceQuery = useBalance(wallet.address, context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
@@ -317,7 +352,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   }, [])
 
   return <>
-    {sendDialog.current && context &&
+    {wallet.type !== "readonly" && sendDialog.current && context &&
       <WalletDataSendNativeTokenDialog
         title={`${token.name} on ${chain.name}`}
         context={context}
@@ -351,7 +386,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const context = useEthereumContext(wallet.uuid, chain)
 
-  const [prices, setPrices] = useState<Nullable<FixedInit>[]>([])
+  const [prices, setPrices] = useState(new Array<Nullable<FixedInit>>(token.pairs?.length ?? 0))
 
   const balanceQuery = useTokenBalance(wallet.address, token, context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
@@ -369,7 +404,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   }, [])
 
   return <>
-    {sendDialog.current && context &&
+    {wallet.type !== "readonly" && sendDialog.current && context &&
       <WalletDataSendContractTokenDialog
         title={`${token.name} on ${chain.name}`}
         context={context}

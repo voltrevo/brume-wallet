@@ -1,7 +1,7 @@
 import { Gradients } from "@/libs/colors/colors"
 import { useCopy } from "@/libs/copy/copy"
 import { Ethereum } from "@/libs/ethereum"
-import { chainByChainId, chainIdByName } from "@/libs/ethereum/mods/chain"
+import { chainByChainId } from "@/libs/ethereum/mods/chain"
 import { Outline } from "@/libs/icons/icons"
 import { useMouseCancel } from "@/libs/react/events"
 import { Button } from "@/libs/ui/button"
@@ -13,7 +13,7 @@ import { useCompactDisplayUsd } from "./page"
 export function WalletDataCard() {
   const wallet = useWalletData()
 
-  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[chainIdByName.ETHEREUM])
+  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
   const ens = useEnsReverseNoFetch(wallet.address, mainnet)
 
   const [color, color2] = Gradients.get(wallet.color)

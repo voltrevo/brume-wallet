@@ -1,63 +1,9 @@
-import { ContractTokenData, NativeTokenData, TokenData } from "@/libs/ethereum/mods/chain";
 import { Mutators } from "@/libs/xswr/mutators";
-import { ZeroHexString } from "@hazae41/cubane";
 import { Data, IDBStorage, States, createQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 import { Ok, Panic, Result } from "@hazae41/result";
+import { Token, TokenRef } from "../../tokens/data";
 import { Wallet, WalletRef } from "../data";
-
-export type Token =
-  | TokenData
-  | TokenRef
-
-export type NativeToken =
-  | NativeTokenData
-  | NativeTokenRef
-
-export type ContractToken =
-  | ContractTokenData
-  | ContractTokenRef
-
-export type TokenRef =
-  | NativeTokenRef
-  | ContractTokenRef
-
-export namespace TokenRef {
-  export function from(token: TokenData) {
-    if (token.type === "native")
-      return NativeTokenRef.from(token)
-    if (token.type === "contract")
-      return ContractTokenRef.from(token)
-    throw new Panic()
-  }
-}
-
-export interface NativeTokenRef {
-  readonly ref: true
-  readonly type: "native"
-  readonly chainId: number
-}
-
-export namespace NativeTokenRef {
-  export function from(token: NativeTokenData): NativeTokenRef {
-    const { type, chainId } = token
-    return { ref: true, type, chainId }
-  }
-}
-
-export interface ContractTokenRef {
-  readonly ref: true
-  readonly type: "contract"
-  readonly chainId: number
-  readonly address: ZeroHexString
-}
-
-export namespace ContractTokenRef {
-  export function from(token: ContractTokenData): ContractTokenRef {
-    const { type, chainId, address } = token
-    return { ref: true, type, chainId, address }
-  }
-}
 
 export type TokenSettings =
   | TokenSettingsRef

@@ -1,6 +1,7 @@
 import { Mutators } from "@/libs/xswr/mutators"
+import { Token } from "@/mods/background/service_worker/entities/tokens/data"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
-import { BgTokenSettings, Token, TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data"
+import { BgTokenSettings, TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data"
 import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { UserStorage, useUserStorage } from "@/mods/foreground/storage/user"
 import { Data, States, createQuery, useQuery } from "@hazae41/glacier"
