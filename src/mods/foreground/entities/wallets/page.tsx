@@ -454,9 +454,7 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
   const tokenId = token.type === "native"
     ? token.chainId + token.symbol
     : token.chainId + token.address + token.symbol
-
   const modtoken = Colors.get(useModhash(`${tokenId}`))
-  const modchain = Colors.get(useModhash(`${chain.chainId}`))
 
   return <button className="po-sm group flex items-center text-left"
     onClick={onClick}>
@@ -465,8 +463,8 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
         style={{ fontSize: `${Math.min((20 - (2 * token.symbol.length)), 16)}px` }}>
         {token.symbol}
       </div>
-      <div className={`absolute -bottom-2 -left-2 h-6 w-6 bg-${modchain} rounded-full flex items-center justify-center`}>
-        {chain.name[0]}
+      <div className="absolute -bottom-2 -left-2">
+        {chain.icon()}
       </div>
     </div>
     <div className="w-4" />
@@ -520,9 +518,7 @@ function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
   const tokenId = token.type === "native"
     ? token.chainId + token.symbol
     : token.chainId + token.address + token.symbol
-
   const modtoken = Colors.get(useModhash(`${tokenId}`))
-  const modchain = Colors.get(useModhash(`${chain.chainId}`))
 
   return <label className={`po-sm group flex items-center`}>
     <input className="appearance-none"
@@ -542,8 +538,8 @@ function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
         style={{ fontSize: `${Math.min((20 - (2 * token.symbol.length)), 16)}px` }}>
         {token.symbol}
       </div>
-      <div className={`absolute -bottom-2 -left-2 h-6 w-6 bg-${modchain} rounded-full flex items-center justify-center`}>
-        {chain.name[0]}
+      <div className="absolute -bottom-2 -left-2">
+        {chain.icon()}
       </div>
     </div>
     <div className="w-4" />

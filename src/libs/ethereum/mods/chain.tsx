@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { ContractTokenData, NativeTokenData } from "@/mods/background/service_worker/entities/tokens/data"
 
 export type ChainId = number
@@ -11,6 +12,7 @@ export interface ChainData {
   readonly urls: readonly string[],
   readonly etherscan: string
   readonly token: NativeTokenData
+  readonly icon: () => JSX.Element
 }
 
 export const chainByChainId: Chains = {
@@ -27,7 +29,15 @@ export const chainByChainId: Chains = {
       symbol: "ETH",
       decimals: 18,
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
-    }
+    },
+    icon() {
+      return <div className="h-6 w-6 bg-gray-900 rounded-full flex items-center justify-center">
+        <div className="w-4 h-4 bg-white" style={{
+          mask: `url(/assets/chains/ethereum.svg) no-repeat center / contain`,
+          WebkitMask: `url(/assets/chains/ethereum.svg) no-repeat center / contain`
+        }} />
+      </div>
+    },
   },
   5: {
     name: "Goerli (testnet)",
@@ -41,7 +51,12 @@ export const chainByChainId: Chains = {
       chainId: 5,
       symbol: "ETH",
       decimals: 18
-    }
+    },
+    icon() {
+      return <div className={`h-6 w-6 bg-gray-900 rounded-full flex items-center justify-center text-xs`}>
+        {`Gö`}
+      </div>
+    },
   },
   10: {
     name: "Optimism",
@@ -56,7 +71,12 @@ export const chainByChainId: Chains = {
       symbol: "ETH",
       decimals: 18,
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
-    }
+    },
+    icon() {
+      return <img className="w-6 h-6"
+        src="/assets/chains/optimism.svg"
+        alt="Optimism" />
+    },
   },
   56: {
     name: "Binance",
@@ -71,7 +91,12 @@ export const chainByChainId: Chains = {
       symbol: "BNB",
       decimals: 18,
       pairs: ["0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae"]
-    }
+    },
+    icon() {
+      return <img className="w-6 h-6"
+        src="/assets/chains/binance.svg"
+        alt="Binance" />
+    },
   },
   61: {
     name: "Ethereum Classic",
@@ -86,7 +111,15 @@ export const chainByChainId: Chains = {
       symbol: "ETC",
       decimals: 18,
       pairs: ["0xdb8721b7a04c3e592264bf58558526b16b15e757"]
-    }
+    },
+    icon() {
+      return <div className="h-6 w-6 bg-green-500 rounded-full flex items-center justify-center">
+        <div className="w-4 h-4 bg-white" style={{
+          mask: `url(/assets/chains/classic.svg) no-repeat center / contain`,
+          WebkitMask: `url(/assets/chains/classic.svg) no-repeat center / contain`
+        }} />
+      </div>
+    },
   },
   100: {
     name: "Gnosis",
@@ -101,7 +134,15 @@ export const chainByChainId: Chains = {
       symbol: "xDAI",
       decimals: 18,
       pairs: []
-    }
+    },
+    icon() {
+      return <div className="h-6 w-6 bg-emerald-600 rounded-full flex items-center justify-center">
+        <div className="w-4 h-4 bg-white" style={{
+          mask: `url(/assets/chains/gnosis.svg) no-repeat center / contain`,
+          WebkitMask: `url(/assets/chains/gnosis.svg) no-repeat center / contain`
+        }} />
+      </div>
+    },
   },
   137: {
     name: "Polygon Bor",
@@ -116,7 +157,15 @@ export const chainByChainId: Chains = {
       symbol: "MATIC",
       decimals: 18,
       pairs: ["0x819f3450dA6f110BA6Ea52195B3beaFa246062dE", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
-    }
+    },
+    icon() {
+      return <div className="h-6 w-6 bg-purple-500 rounded-full flex items-center justify-center">
+        <div className="w-4 h-4 bg-white" style={{
+          mask: `url(/assets/chains/polygon.svg) no-repeat center / contain`,
+          WebkitMask: `url(/assets/chains/polygon.svg) no-repeat center / contain`
+        }} />
+      </div>
+    },
   },
   324: {
     name: "zkSync",
@@ -131,7 +180,15 @@ export const chainByChainId: Chains = {
       symbol: "ETH",
       decimals: 18,
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
-    }
+    },
+    icon() {
+      return <div className="h-6 w-6 bg-violet-500 rounded-full flex items-center justify-center">
+        <div className="w-4 h-4 bg-white" style={{
+          mask: `url(/assets/chains/zksync.png) no-repeat center / contain`,
+          WebkitMask: `url(/assets/chains/zksync.png) no-repeat center / contain`
+        }} />
+      </div>
+    },
   },
   8453: {
     name: "Base",
@@ -146,7 +203,12 @@ export const chainByChainId: Chains = {
       symbol: "ETH",
       decimals: 18,
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
-    }
+    },
+    icon() {
+      return <img className="w-6 h-6"
+        src="/assets/chains/base.svg"
+        alt="Base" />
+    },
   },
   42161: {
     name: "Arbitrum One",
@@ -161,7 +223,15 @@ export const chainByChainId: Chains = {
       symbol: "ETH",
       decimals: 18,
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
-    }
+    },
+    icon() {
+      return <div className="h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center">
+        <div className="w-4 h-4 bg-white" style={{
+          mask: `url(/assets/chains/arbitrum.png) no-repeat center / contain`,
+          WebkitMask: `url(/assets/chains/arbitrum.png) no-repeat center / contain`
+        }} />
+      </div>
+    },
   },
   42220: {
     name: "Celo",
@@ -176,7 +246,12 @@ export const chainByChainId: Chains = {
       symbol: "CELO",
       decimals: 18,
       pairs: ["0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422"]
-    }
+    },
+    icon() {
+      return <img className="w-6 h-6"
+        src="/assets/chains/celo.svg"
+        alt="Celo" />
+    },
   },
   43114: {
     name: "Avalanche C-Chain",
@@ -191,7 +266,12 @@ export const chainByChainId: Chains = {
       symbol: "ETH",
       decimals: 18,
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
-    }
+    },
+    icon() {
+      return <img className="w-6 h-6"
+        src="/assets/chains/avalanche.png"
+        alt="Avalanche" />
+    },
   },
   59144: {
     name: "Linea",
@@ -206,7 +286,12 @@ export const chainByChainId: Chains = {
       symbol: "ETH",
       decimals: 18,
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
-    }
+    },
+    icon() {
+      return <img className="w-6 h-6 rounded-full"
+        src="/assets/chains/linea.jpg"
+        alt="Linea" />
+    },
   },
   11155111: {
     name: "Sepolia (testnet)",
@@ -220,7 +305,12 @@ export const chainByChainId: Chains = {
       chainId: 11155111,
       symbol: "ETH",
       decimals: 18
-    }
+    },
+    icon() {
+      return <div className={`h-6 w-6 bg-gray-900 rounded-full flex items-center justify-center text-xs`}>
+        {`Se`}
+      </div>
+    },
   }
 } as const
 
