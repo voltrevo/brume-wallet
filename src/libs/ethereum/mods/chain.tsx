@@ -205,9 +205,12 @@ export const chainByChainId: Chains = {
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
     },
     icon() {
-      return <img className="w-6 h-6"
-        src="/assets/chains/base.svg"
-        alt="Base" />
+      return <div className="h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center">
+        <div className="w-4 h-4 bg-white" style={{
+          mask: `url(/assets/chains/base.svg) no-repeat center / contain`,
+          WebkitMask: `url(/assets/chains/base.svg) no-repeat center / contain`
+        }} />
+      </div>
     },
   },
   42161: {
