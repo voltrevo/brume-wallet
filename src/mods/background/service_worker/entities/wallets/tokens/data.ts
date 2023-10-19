@@ -69,8 +69,6 @@ export namespace BgTokenSettings {
         const previousData = previous?.real?.data?.inner
         const currentData = current.real?.data?.inner
 
-        console.log(previousData, currentData)
-
         if (previousData?.uuid === currentData?.uuid)
           return Ok.void()
 

@@ -566,7 +566,6 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
 
     const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.createStaticBigUint(32))
     const [balance] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
-    console.log(balance)
     const fixed = new Fixed(balance.value, token.decimals)
 
     return new Ok(new Data(fixed))

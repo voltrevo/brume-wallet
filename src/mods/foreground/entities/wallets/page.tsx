@@ -45,7 +45,6 @@ export function WalletPage(props: UUIDProps) {
 export function useDisplay(option: Nullable<Result<FixedInit, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      console.log("dd", fixed, Fixed.from(fixed), Fixed.from(fixed).move(5).toDecimalString())
       return Number(Fixed.from(fixed).move(5).toDecimalString()).toLocaleString(undefined)
     }).mapErrSync(() => "Error").inner).unwrapOr("...")
   }, [option])
@@ -217,13 +216,13 @@ function WalletDataPage() {
               {edit ? "Done" : "Edit"}
             </div>
           </button>
-          <button className={`${Button.Naked.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
-            onClick={add.enable}>
-            <div className={`${Button.Shrinker.className}`}>
-              {"Add"}
-            </div>
-          </button>
         </>}
+        <button className={`${Button.Naked.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
+          onClick={add.enable}>
+          <div className={`${Button.Shrinker.className}`}>
+            {"Add"}
+          </div>
+        </button>
       </div>
       <div className="h-4" />
       {all &&
