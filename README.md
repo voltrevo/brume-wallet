@@ -1,6 +1,6 @@
 # Brume Wallet ☁️
 
-A non-custodial and private Ethereum wallet with a built-in implementation of the Tor network
+The private Ethereum wallet with built-in Tor
 
 ## TLDR
 - Anonymous requests using Tor (the dark net)
