@@ -3,11 +3,12 @@
 A non-custodial and private Ethereum wallet with a built-in implementation of the Tor network
 
 ## TLDR
-- Anonymous requests using Tor, no installation needed, each wallet address has its own IP address
-- Built for strong privacy and supply-chain hardened
+- Anonymous requests using Tor (the dark net)
+- Built for strong zero-cost privacy and security
 - Available as an extension and on a website
-- Pleasant user experience
-- Made by french cypherpunks
+- Won EthBrno 2022 hackathon (+ design award)
+- Made by two French cypherpunks
+- Almost like with MetaMask
 
 ## I don't understand that Tor thing
 
@@ -16,7 +17,7 @@ Brume Wallet sends your transactions through the Tor network (the dark web), so 
 - Track you and link your multiple identities together
 - Send your IP address to people you don't like
 
-MetaMask and similar wallets send your IP address and your wallet address to third-parties (RPC, Coingecko, Etherscan)
+Traditional wallets send your IP address and your wallet address to third-parties (RPC, Coingecko, Etherscan)
 
 They can track you even if you are using on-chain privacy tools such as Aztec Network or Tornado Cash
 
