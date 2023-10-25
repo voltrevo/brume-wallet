@@ -8,7 +8,7 @@ The private Ethereum wallet with built-in Tor
 - Available as an extension and on a website
 - Won EthBrno 2022 hackathon (+ design award)
 - Made by two French cypherpunks
-- Almost like with MetaMask
+- Almost the same features as MetaMask
 
 ## How do I know that my current wallet leaks my IP address?
 
