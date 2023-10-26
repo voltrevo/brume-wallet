@@ -653,7 +653,7 @@ export class Global {
 
   async makeEthereumTokenBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuery<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
     return await Result.unthrow(async t => {
-      const [account, address, block] = (request as RpcRequestPreinit<[string, string, string]>).params
+      const [account, address, block] = (request as RpcRequestPreinit<[ZeroHexString, string, string]>).params
 
       const tokenQuery = BgContractToken.schema(ethereum.chain.chainId, address, storage)
       const tokenState = await tokenQuery.state.then(r => r.throw(t))

@@ -1,9 +1,13 @@
+import { EnsAbi } from "@/libs/abi/ens.abi"
+import { TokenAbi } from "@/libs/abi/erc20.abi"
+import { PairAbi } from "@/libs/abi/pair.abi"
 import { ChainData, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Fixed, FixedInit, ZeroHexFixed } from "@/libs/fixed/fixed"
 import { Maps } from "@/libs/maps/maps"
 import { TorRpc } from "@/libs/rpc/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
+import { Bytes } from "@hazae41/bytes"
 import { Cubane, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
@@ -477,8 +481,7 @@ export function getBalance(ethereum: EthereumContext, account: string, block: st
 
 export function getPairPrice(ethereum: EthereumContext, pair: PairInfo, storage: IDBStorage) {
   const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
-    const signature = Cubane.Abi.FunctionSignature.tryParse("getReserves()").throw(t)
-    const data = Cubane.Abi.tryEncode(signature.args.from()).throw(t)
+    const data = Cubane.Abi.tryEncode(PairAbi.getReserves.args.from()).throw(t)
 
     const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
       method: "eth_call",
@@ -491,7 +494,7 @@ export function getPairPrice(ethereum: EthereumContext, pair: PairInfo, storage:
     if (fetched.isErr())
       return new Ok(new Fail(fetched.inner))
 
-    const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.createStaticBigUint(32), Cubane.Abi.createStaticBigUint(32))
+    const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.Uint256, Cubane.Abi.Uint256)
     const [a, b] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
 
     const price = computePairPrice(pair, [a.value, b.value])
@@ -548,10 +551,9 @@ export function getTokenPricedBalance(ethereum: EthereumContext, account: string
   })
 }
 
-export function getTokenBalance(ethereum: EthereumContext, account: string, token: ContractTokenData, block: string, storage: IDBStorage) {
+export function getTokenBalance(ethereum: EthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
   const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
-    const signature = Cubane.Abi.FunctionSignature.tryParse("balanceOf(address)").throw(t)
-    const data = Cubane.Abi.tryEncode(signature.args.from(account)).throw(t)
+    const data = Cubane.Abi.tryEncode(TokenAbi.balanceOf.args.from(account)).throw(t)
 
     const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
       method: "eth_call",
@@ -564,7 +566,7 @@ export function getTokenBalance(ethereum: EthereumContext, account: string, toke
     if (fetched.isErr())
       return new Ok(fetched)
 
-    const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.createStaticBigUint(32))
+    const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.Uint256)
     const [balance] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
     const fixed = new Fixed(balance.value, token.decimals)
 
@@ -623,12 +625,11 @@ export namespace BgEns {
 
   export namespace Resolver {
 
-    export async function tryFetch(ethereum: EthereumContext, namehash: Uint8Array): Promise<Result<Fetched<ZeroHexString, Error>, Error>> {
+    export async function tryFetch(ethereum: EthereumContext, namehash: Bytes<32>): Promise<Result<Fetched<ZeroHexString, Error>, Error>> {
       return await Result.unthrow(async t => {
         const registry = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
 
-        const signature = Cubane.Abi.FunctionSignature.tryParse("resolver(bytes32)").throw(t)
-        const data = Cubane.Abi.tryEncode(signature.args.from(namehash)).throw(t)
+        const data = Cubane.Abi.tryEncode(EnsAbi.resolver.args.from(namehash)).throw(t)
 
         const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
           method: "eth_call",
@@ -681,14 +682,13 @@ export namespace BgEns {
 
     export async function tryFetch(ethereum: EthereumContext, name: string) {
       return await Result.unthrow<Result<Fetched<ZeroHexString, Error>, Error>>(async t => {
-        const namehash = Cubane.Ens.tryNamehash(name).throw(t)
+        const namehash = Cubane.Ens.tryNamehash(name).throw(t) as Bytes<32>
         const resolver = await Resolver.tryFetch(ethereum, namehash).then(r => r.throw(t))
 
         if (resolver.isErr())
           return new Ok(resolver)
 
-        const signature = Cubane.Abi.FunctionSignature.tryParse("addr(bytes32)").throw(t)
-        const data = Cubane.Abi.tryEncode(signature.args.from(namehash)).throw(t)
+        const data = Cubane.Abi.tryEncode(EnsAbi.addr.args.from(namehash)).throw(t)
 
         const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
           method: "eth_call",
@@ -740,14 +740,13 @@ export namespace BgEns {
 
     export async function tryFetchUnchecked(ethereum: EthereumContext, address: ZeroHexString): Promise<Result<Fetched<Nullable<string>, Error>, Error>> {
       return await Result.unthrow(async t => {
-        const namehash = Cubane.Ens.tryNamehash(`${address.slice(2)}.addr.reverse`).throw(t)
+        const namehash = Cubane.Ens.tryNamehash(`${address.slice(2)}.addr.reverse`).throw(t) as Bytes<32>
         const resolver = await Resolver.tryFetch(ethereum, namehash).then(r => r.throw(t))
 
         if (resolver.isErr())
           return new Ok(resolver)
 
-        const signature = Cubane.Abi.FunctionSignature.tryParse("name(bytes32)").throw(t)
-        const data = Cubane.Abi.tryEncode(signature.args.from(namehash)).throw(t)
+        const data = Cubane.Abi.tryEncode(EnsAbi.name.args.from(namehash)).throw(t)
 
         const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
           method: "eth_call",
