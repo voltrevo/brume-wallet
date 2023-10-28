@@ -39,6 +39,25 @@ export const chainByChainId: Chains = {
       </div>
     },
   },
+  5: {
+    name: "Goerli (testnet)",
+    chainId: 5,
+    urls: ["wss://ethereum-goerli.publicnode.com"],
+    etherscan: "https://goerli.etherscan.io",
+    token: {
+      uuid: "664001af-5c47-4b6e-ab3e-c0c130e23b3c",
+      type: "native",
+      name: "ETH",
+      chainId: 5,
+      symbol: "ETH",
+      decimals: 18
+    },
+    icon() {
+      return <div className={`h-6 w-6 bg-gray-900 rounded-full flex items-center justify-center text-xs`}>
+        {`Gö`}
+      </div>
+    },
+  },
   10: {
     name: "Optimism",
     chainId: 10,
@@ -277,25 +296,6 @@ export const chainByChainId: Chains = {
         alt="Linea" />
     },
   },
-  5: {
-    name: "Goerli (testnet)",
-    chainId: 5,
-    urls: ["wss://ethereum-goerli.publicnode.com"],
-    etherscan: "https://goerli.etherscan.io",
-    token: {
-      uuid: "664001af-5c47-4b6e-ab3e-c0c130e23b3c",
-      type: "native",
-      name: "ETH",
-      chainId: 5,
-      symbol: "ETH",
-      decimals: 18
-    },
-    icon() {
-      return <div className={`h-6 w-6 bg-gray-900 rounded-full flex items-center justify-center text-xs`}>
-        {`Gö`}
-      </div>
-    },
-  },
   11155111: {
     name: "Sepolia (testnet)",
     chainId: 11155111,
@@ -315,23 +315,6 @@ export const chainByChainId: Chains = {
       </div>
     },
   }
-} as const
-
-export const chainIdByName = {
-  ETHEREUM: 1,
-  GOERLI: 5,
-  OPTIMISM: 10,
-  BINANCE: 56,
-  CLASSIC: 61,
-  GNOSIS: 100,
-  POLYGON: 137,
-  ZKSYNC: 324,
-  BASE: 8453,
-  ARBITRUM: 42161,
-  AVALANCHE: 43114,
-  CELO: 42220,
-  LINEA: 59144,
-  SEPOLIA: 11155111
 } as const
 
 export const tokenByAddress: Record<string, ContractTokenData> = {
