@@ -39,25 +39,6 @@ export const chainByChainId: Chains = {
       </div>
     },
   },
-  5: {
-    name: "Goerli (testnet)",
-    chainId: 5,
-    urls: ["wss://ethereum-goerli.publicnode.com"],
-    etherscan: "https://goerli.etherscan.io",
-    token: {
-      uuid: "664001af-5c47-4b6e-ab3e-c0c130e23b3c",
-      type: "native",
-      name: "ETH",
-      chainId: 5,
-      symbol: "ETH",
-      decimals: 18
-    },
-    icon() {
-      return <div className={`h-6 w-6 bg-gray-900 rounded-full flex items-center justify-center text-xs`}>
-        {`Gö`}
-      </div>
-    },
-  },
   10: {
     name: "Optimism",
     chainId: 10,
@@ -294,6 +275,25 @@ export const chainByChainId: Chains = {
       return <img className="w-6 h-6 rounded-full"
         src="/assets/chains/linea.jpg"
         alt="Linea" />
+    },
+  },
+  5: {
+    name: "Goerli (testnet)",
+    chainId: 5,
+    urls: ["wss://ethereum-goerli.publicnode.com"],
+    etherscan: "https://goerli.etherscan.io",
+    token: {
+      uuid: "664001af-5c47-4b6e-ab3e-c0c130e23b3c",
+      type: "native",
+      name: "ETH",
+      chainId: 5,
+      symbol: "ETH",
+      decimals: 18
+    },
+    icon() {
+      return <div className={`h-6 w-6 bg-gray-900 rounded-full flex items-center justify-center text-xs`}>
+        {`Gö`}
+      </div>
     },
   },
   11155111: {

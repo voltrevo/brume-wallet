@@ -13,9 +13,7 @@ export function Naked(props: ButtonProps) {
 
 export namespace Naked {
 
-  export const className =
-    `group rounded-full outline-none
-     disabled:opacity-50`
+  export const className = `group rounded-full outline-none disabled:opacity-50`
 
   export function Test() {
     return <div className="p-1">
