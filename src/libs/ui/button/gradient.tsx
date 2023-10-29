@@ -24,7 +24,7 @@ export namespace Gradient {
   export const className = (index: number) => {
     const [color1, color2] = Gradients.get(index)
 
-    return `text-opposite border border-${color1} bg-gradient-to-r from-${color1} to-${color2} hovered-or-clicked-or-focused-or-selected:text-${color1} hovered-or-clicked-or-focused-or-selected:bg-none transition`
+    return `text-opposite border border-${color1} bg-gradient-to-r from-${color1} to-${color2} hovered-or-clicked-or-focused-or-selected:text-${color1} hovered-or-clicked-or-focused-or-selected:bg-none`
   }
 
   export function Test() {

@@ -20,7 +20,7 @@ export function Opposite(props: ButtonProps) {
 export namespace Opposite {
 
   export const className =
-    `text-opposite border border-opposite bg-opposite hovered-or-clicked-or-focused-or-selected:bg-transparent hovered-or-clicked-or-focused-or-selected:text-default transition`
+    `text-opposite border border-opposite bg-opposite hovered-or-clicked-or-focused-or-selected:bg-transparent hovered-or-clicked-or-focused-or-selected:text-default`
 
   export function Test() {
     return <div className="p-1">

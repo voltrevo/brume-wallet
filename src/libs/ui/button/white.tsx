@@ -20,7 +20,7 @@ export function White(props: ButtonProps) {
 export namespace White {
 
   export const className =
-    `border border-transparent bg-white hovered-or-clicked-or-focused-or-selected:border-white transition`
+    `border border-transparent bg-white hovered-or-clicked-or-focused-or-selected:border-white`
 
   export function Test() {
     return <div className="p-1">

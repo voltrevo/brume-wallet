@@ -19,7 +19,7 @@ export function Base(props: ButtonProps) {
 export namespace Base {
 
   export const className =
-    `group rounded-full outline-none disabled:opacity-50`
+    `group rounded-full outline-none disabled:opacity-50 transition-opacity`
 
   export function Test() {
     return <div className="p-1">

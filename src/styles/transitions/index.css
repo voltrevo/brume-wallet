@@ -1,0 +1,13 @@
+@layer utilities {
+  .transition-border-and-opacity {
+    transition-property: border-color, opacity;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+
+  .transition-border-and-opacity-and-transform {
+    transition-property: border-color, opacity, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+}

@@ -5,7 +5,7 @@ import { Base } from "./base";
 export namespace Bordered {
 
   export const className =
-    `text-contrast border border-contrast hovered-or-clicked-or-focused-or-selected:text-default hovered-or-clicked-or-focused-or-selected:border-opposite transition`
+    `text-contrast border border-contrast hovered-or-clicked-or-focused-or-selected:text-default hovered-or-clicked-or-focused-or-selected:border-opposite`
 
   export function Test() {
     return <div className="p-1">

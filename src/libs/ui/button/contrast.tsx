@@ -20,7 +20,7 @@ export function Contrast(props: ButtonProps) {
 export namespace Contrast {
 
   export const className =
-    `text-default border border-transparent bg-contrast hovered-or-clicked-or-focused-or-selected:border-opposite transition`
+    `text-default border border-transparent bg-contrast hovered-or-clicked-or-focused-or-selected:border-opposite transition-border-and-opacity`
 
   export function Test() {
     return <div className="p-1">
