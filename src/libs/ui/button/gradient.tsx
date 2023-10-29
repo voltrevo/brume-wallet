@@ -3,7 +3,13 @@ import { Outline } from "@/libs/icons/icons";
 import { ColorIndexProps } from "@/libs/react/props/color";
 import { ButtonProps } from '@/libs/react/props/html';
 import { Button } from "../button";
+import { Base } from "./base";
 
+/**
+ * @deprecated
+ * @param props 
+ * @returns 
+ */
 export function Gradient(props: ButtonProps & ColorIndexProps) {
   const { className, children, colorIndex, ...button } = props
 
@@ -18,27 +24,23 @@ export namespace Gradient {
   export const className = (index: number) => {
     const [color1, color2] = Gradients.get(index)
 
-    return `text-opposite border border-${color1} bg-gradient-to-r from-${color1} to-${color2}
-            hovered-or-clicked-or-focused-or-selected:text-${color1}
-            hovered-or-clicked-or-focused-or-selected:bg-none`
+    return `text-opposite border border-${color1} bg-gradient-to-r from-${color1} to-${color2} hovered-or-clicked-or-focused-or-selected:text-${color1} hovered-or-clicked-or-focused-or-selected:bg-none transition`
   }
 
   export function Test() {
     return <div className="p-1">
-      <Button.Gradient className="po-md"
-        colorIndex={5}>
+      <button className={`${Base.className} ${className(5)} po-md`}>
         <Button.Shrinker>
           <Outline.GlobeAltIcon className="s-sm" />
           Hello world
         </Button.Shrinker>
-      </Button.Gradient>
+      </button>
       <div className="h-1" />
-      <Button.Gradient className="po-md"
-        colorIndex={5}>
+      <button className={`${Base.className} ${className(5)} po-md`}>
         <Button.Shrinker>
           Hello world
         </Button.Shrinker>
-      </Button.Gradient>
+      </button>
     </div>
   }
 

@@ -1,7 +1,13 @@
 import { Outline } from "@/libs/icons/icons";
 import { ButtonProps } from "@/libs/react/props/html";
 import { Button } from "../button";
+import { Base } from "./base";
 
+/**
+ * @deprecated
+ * @param props 
+ * @returns 
+ */
 export function Contrast(props: ButtonProps) {
   const { children, className, ...button } = props
 
@@ -14,23 +20,22 @@ export function Contrast(props: ButtonProps) {
 export namespace Contrast {
 
   export const className =
-    `text-default border border-transparent bg-contrast transition
-     hovered-or-clicked-or-focused-or-selected:border-opposite`
+    `text-default border border-transparent bg-contrast hovered-or-clicked-or-focused-or-selected:border-opposite transition`
 
   export function Test() {
     return <div className="p-1">
-      <Button.Contrast className="po-md">
+      <button className={`${Base.className} ${className} po-md`}>
         <Button.Shrinker>
           <Outline.GlobeAltIcon className="s-sm" />
           Hello world
         </Button.Shrinker>
-      </Button.Contrast>
+      </button>
       <div className="h-1" />
-      <Button.Contrast className="po-md">
+      <button className={`${Base.className} ${className} po-md`}>
         <Button.Shrinker>
           Hello world
         </Button.Shrinker>
-      </Button.Contrast>
+      </button>
     </div>
   }
 
