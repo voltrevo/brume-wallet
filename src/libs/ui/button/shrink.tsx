@@ -13,7 +13,7 @@ export function Shrinker(props: ChildrenProps & ClassNameProps) {
 export namespace Shrinker {
 
   export const className =
-    `h-full w-full flex justify-center items-center gap-2 transition
+    `h-full w-full flex justify-center items-center gap-2 transition 
      group-enabled:group-active:scale-90`
 
 }
