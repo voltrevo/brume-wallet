@@ -104,9 +104,11 @@ function WalletDataPage() {
 
   const onLinkClick = useCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      const clipboard = await Result.runAndDoubleWrap(async () => {
+      const clipboard = await Result.runAndWrap(async () => {
         return await navigator.clipboard.readText()
-      }).then(r => r.throw(t))
+      }).then(r => r.orElseSync(() => {
+        return Option.wrap(prompt("Paste a WalletConnect link here")).ok()
+      }).throw(t))
 
       const url = Url.tryParse(clipboard).setErr(new UIError("You must copy a WalletConnect link")).throw(t)
       await Wc.tryParse(url).then(r => r.setErr(new UIError("You must copy a WalletConnect link")).throw(t))
