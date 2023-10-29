@@ -1,18 +1,18 @@
 @layer utilities {
   .animate-opacity-in {
-    animation: opacity-in 150ms ease;
+    animation: opacity-in 300ms ease;
   }
 
   .animate-scale-in {
-    animation: scale-in 150ms ease;
+    animation: scale-in 300ms ease;
   }
 
   .animate-slideup-in {
-    animation: slideup-in 150ms ease;
+    animation: slideup-in 300ms ease;
   }
 
   .animate-opacity-scale-in {
-    animation: opacity-in 150ms ease, scale 150ms ease;
+    animation: opacity-in 300ms ease, scale 300ms ease;
   }
 
   @keyframes opacity-in {
@@ -34,19 +34,19 @@
   }
 
   .animate-opacity-out {
-    animation: opacity-out 150ms ease;
+    animation: opacity-out 300ms ease;
   }
 
   .animate-scale-out {
-    animation: scale-out 150ms ease;
+    animation: scale-out 300ms ease;
   }
 
   .animate-slideup-out {
-    animation: slideup-out 150ms ease;
+    animation: slideup-out 300ms ease;
   }
 
   .animate-opacity-scale-out {
-    animation: opacity-out 150ms ease, scale 150ms ease;
+    animation: opacity-out 300ms ease, scale 300ms ease;
   }
 
   @keyframes opacity-out {

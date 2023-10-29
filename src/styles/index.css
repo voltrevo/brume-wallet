@@ -40,4 +40,8 @@ body {
   .a {
     @apply text-colored hovered-or-clicked-or-focused:underline;
   }
+
+  ::backdrop {
+    @apply bg-transparent;
+  }
 }

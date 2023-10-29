@@ -2,14 +2,13 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { useObjectMemo } from "@/libs/react/memo"
 import { OpenedProps } from "@/libs/react/props/opened"
 import { Nullable, Option } from "@hazae41/option"
-import { createContext, useCallback, useContext, useState } from "react"
+import { createContext, useCallback, useContext, useLayoutEffect, useState } from "react"
 import { flushSync } from "react-dom"
 import { Outline } from "../../icons/icons"
 import { Events, useKeyboardEscape, useMouse } from "../../react/events"
 import { ChildrenProps } from "../../react/props/children"
 import { CloseProps } from "../../react/props/close"
 import { Button } from "../button"
-import { Portal } from "../portal/portal"
 
 export interface DialogHandle {
   readonly opened: boolean,
@@ -32,6 +31,8 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps) {
   const { opened, children, close } = props
   const handle = useDialogHandle(props)
 
+  const [dialog, setDialog] = useState<HTMLDialogElement | null>(null)
+
   const onEscape = useKeyboardEscape(close)
 
   const onClose = useMouse<HTMLDivElement>(e => {
@@ -47,30 +48,40 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps) {
     flushSync(() => setDisplayed(opened))
   }, [opened])
 
+  useLayoutEffect(() => {
+    if (!displayed) return
+
+    dialog?.showModal()
+    return () => dialog?.close()
+  }, [dialog, displayed])
+
   if (!displayed)
     return null
 
   return <DialogContext.Provider value={handle}>
-    <Portal type="div">
-      <div className="fixed inset-0 z-10">
-        <div className={`p-safe fixed inset-0 z-10 flex flex-col bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
-          onMouseDown={onClose}
-          onClick={Events.keep}
-          onAnimationEnd={onAnimationEnd}>
-          <div className="grow" />
-          <div className="p-2">
-            <aside className={`w-full mx-auto min-w-0 max-w-2xl rounded-2xl ${opened ? "animate-slideup-in" : "animate-slideup-out"} bg-default`}
-              onMouseDown={Events.keep}
-              onKeyDown={onEscape}>
-              <div className="p-4">
-                {opened && children}
-              </div>
-            </aside>
-          </div>
-          <div className="hidden md:block grow" />
+    <dialog className=""
+      ref={setDialog}
+      onAnimationEnd={onAnimationEnd}>
+      <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
+        role="backdrop" />
+      <div className={`p-safe fixed inset-0 flex flex-col`}
+        onMouseDown={onClose}
+        onClick={Events.keep}>
+        <div className="grow" />
+        <div className="p-2">
+          <aside className={`w-full mx-auto min-w-0 max-w-2xl rounded-2xl ${opened ? "animate-slideup-in" : "animate-slideup-out"} bg-default`}
+            role="dialog"
+            aria-modal
+            onMouseDown={Events.keep}
+            onKeyDown={onEscape}>
+            <div className="p-4">
+              {children}
+            </div>
+          </aside>
         </div>
+        <div className="hidden md:block grow" />
       </div>
-    </Portal>
+    </dialog>
   </DialogContext.Provider>
 }
 

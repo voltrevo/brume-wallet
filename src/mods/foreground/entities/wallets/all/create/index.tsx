@@ -6,7 +6,7 @@ import { ReadonlyWalletCreatorDialog } from "./readonly";
 import { StandaloneWalletCreatorDialog } from "./standalone";
 
 export function WalletCreatorDialog(props: {}) {
-  const { close } = useDialogContext().unwrap()
+  const { opened, close } = useDialogContext().unwrap()
 
   const [type, setType] = useState<"readonly" | "privateKey">()
 
@@ -20,12 +20,12 @@ export function WalletCreatorDialog(props: {}) {
 
   return <>
     <Dialog
-      opened={type === "readonly"}
+      opened={opened && type === "readonly"}
       close={close}>
       <ReadonlyWalletCreatorDialog />
     </Dialog>
     <Dialog
-      opened={type === "privateKey"}
+      opened={opened && type === "privateKey"}
       close={close}>
       <StandaloneWalletCreatorDialog />
     </Dialog>

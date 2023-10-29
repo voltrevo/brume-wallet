@@ -55,24 +55,24 @@ export namespace Events {
 
 }
 
-export function useSynthetic<R>(
-  callback: (e: SyntheticEvent<HTMLElement>) => R,
+export function useSynthetic<T = HTMLElement>(
+  callback: (e: SyntheticEvent<T>) => void,
   deps: DependencyList = [callback]
 ) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useCallback(callback, deps)
 }
 
-export function useInputChange<R>(
-  callback: (e: ChangeEvent<HTMLInputElement>) => R,
+export function useInputChange<T = HTMLInputElement>(
+  callback: (e: ChangeEvent<T>) => void,
   deps: DependencyList = [callback]
 ) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useCallback(callback, deps)
 }
 
-export function useTextAreaChange<R>(
-  callback: (e: ChangeEvent<HTMLTextAreaElement>) => R,
+export function useTextAreaChange<T = HTMLTextAreaElement>(
+  callback: (e: ChangeEvent<T>) => void,
   deps: DependencyList = [callback]
 ) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
