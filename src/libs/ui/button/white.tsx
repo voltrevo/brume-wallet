@@ -19,18 +19,18 @@ export namespace White {
 
   export function Test() {
     return <div className="p-1">
-      <Button.White className="po-md">
+      <button className={`po-md ${className}`}>
         <Button.Shrinker>
           <Outline.GlobeAltIcon className="s-sm" />
           Hello world
         </Button.Shrinker>
-      </Button.White>
+      </button>
       <div className="h-1" />
-      <Button.White className="po-md">
+      <button className={`po-md ${className}`}>
         <Button.Shrinker>
           Hello world
         </Button.Shrinker>
-      </Button.White>
+      </button>
     </div>
   }
 
