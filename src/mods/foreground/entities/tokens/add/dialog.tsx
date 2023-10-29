@@ -166,10 +166,10 @@ export function TokenAddDialog(props: CloseProps) {
       colorIndex={wallet.color}
       disabled={Boolean(addDisabled)}
       onClick={onAddClick.run}>
-      <Button.Shrinker>
+      <div className={`${Button.Shrinker.className}`}>
         <Outline.PlusIcon className="s-sm" />
         {addDisabled || "Send"}
-      </Button.Shrinker>
+      </div>
     </Button.Gradient>
   </Dialog>
 }

@@ -1,6 +1,6 @@
 import { Outline } from "@/libs/icons/icons";
-import { Button } from "../button";
 import { Base } from "./base";
+import { Shrinker } from "./shrink";
 
 export namespace Bordered {
 
@@ -10,16 +10,16 @@ export namespace Bordered {
   export function Test() {
     return <div className="p-1">
       <button className={`${Base.className} ${className} po-md`}>
-        <Button.Shrinker>
+        <div className={`${Shrinker.className}`}>
           <Outline.GlobeAltIcon className="s-sm" />
           Hello world
-        </Button.Shrinker>
+        </div>
       </button>
       <div className="h-1" />
       <button className={`${Base.className} ${className} po-md`}>
-        <Button.Shrinker>
+        <div className={`${Shrinker.className}`}>
           Hello world
-        </Button.Shrinker>
+        </div>
       </button>
     </div>
   }

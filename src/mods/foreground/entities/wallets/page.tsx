@@ -131,15 +131,15 @@ function WalletDataPage() {
         {background.isWebsite() && <>
           <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
             onClick={onCameraClick}>
-            <Button.Shrinker>
+            <div className={`${Button.Shrinker.className}`}>
               <Outline.QrCodeIcon className="s-sm" />
-            </Button.Shrinker>
+            </div>
           </Button.Base>
           <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
             onClick={onLinkClick}>
-            <Button.Shrinker>
+            <div className={`${Button.Shrinker.className}`}>
               <Outline.LinkIcon className="s-sm" />
-            </Button.Shrinker>
+            </div>
           </Button.Base>
         </>}
       </div>

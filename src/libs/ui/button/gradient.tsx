@@ -30,16 +30,16 @@ export namespace Gradient {
   export function Test() {
     return <div className="p-1">
       <button className={`${Base.className} ${className(5)} po-md`}>
-        <Button.Shrinker>
+        <div className={`${Button.Shrinker.className}`}>
           <Outline.GlobeAltIcon className="s-sm" />
           Hello world
-        </Button.Shrinker>
+        </div>
       </button>
       <div className="h-1" />
       <button className={`${Base.className} ${className(5)} po-md`}>
-        <Button.Shrinker>
+        <div className={`${Button.Shrinker.className}`}>
           Hello world
-        </Button.Shrinker>
+        </div>
       </button>
     </div>
   }

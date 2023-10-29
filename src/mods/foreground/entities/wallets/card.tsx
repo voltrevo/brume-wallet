@@ -38,9 +38,9 @@ export function WalletDataCard() {
       <div className="w-2 grow" />
       <Button.White className={`text-${color}`}
         onClick={onClickEllipsis}>
-        <Button.Shrinker>
+        <div className={`${Button.Shrinker.className}`}>
           <Outline.EllipsisHorizontalIcon className="s-sm" />
-        </Button.Shrinker>
+        </div>
       </Button.White>
     </div>
 

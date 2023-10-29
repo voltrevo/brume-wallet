@@ -248,10 +248,10 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
       target="_blank" rel="noreferrer">
       <Button.Gradient className="w-full po-md"
         colorIndex={wallet.color}>
-        <Button.Shrinker>
+        <div className={`${Button.Shrinker.className}`}>
           <Outline.ArrowTopRightOnSquareIcon className="s-sm" />
           Etherscan
-        </Button.Shrinker>
+        </div>
       </Button.Gradient>
     </ExternalDivisionLink>
   </>
@@ -271,10 +271,10 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
       colorIndex={wallet.color}
       disabled={Boolean(sendDisabled)}
       onClick={trySend.run}>
-      <Button.Shrinker>
+      <div className={`${Button.Shrinker.className}`}>
         <Outline.PaperAirplaneIcon className="s-sm" />
         {sendDisabled || "Send"}
-      </Button.Shrinker>
+      </div>
     </Button.Gradient>
 
   return <Dialog close={close}>

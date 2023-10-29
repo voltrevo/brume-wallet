@@ -52,17 +52,17 @@ export function SeedCreatorDialog(props: CloseProps) {
       <div className="w-full flex items-center gap-2">
         <Button.Contrast className="flex-1 whitespace-nowrap p-4 rounded-xl"
           onClick={onMnemonicClick}>
-          <Button.Shrinker className="flex flex-col">
+          <div className={`${Button.Shrinker.className} flex-col`}>
             <Outline.DocumentTextIcon className="s-md" />
             <span>Mnemonic phrase</span>
-          </Button.Shrinker>
+          </div>
         </Button.Contrast>
         <Button.Contrast className="flex-1 whitespace-nowrap p-4 rounded-xl"
           onClick={onLedgerClick}>
-          <Button.Shrinker className="flex flex-col">
+          <div className={`${Button.Shrinker.className} flex-col`}>
             <Outline.SwatchIcon className="s-md" />
             <span>Ledger</span>
-          </Button.Shrinker>
+          </div>
         </Button.Contrast>
       </div>
     </>}

@@ -24,16 +24,16 @@ export namespace Base {
   export function Test() {
     return <div className="p-1">
       <button className={`${className} po-md`}>
-        <Button.Shrinker>
+        <div className={`${Button.Shrinker.className}`}>
           <Outline.GlobeAltIcon className="s-sm" />
           Hello world
-        </Button.Shrinker>
+        </div>
       </button>
       <div className="h-1" />
       <button className={`${className} po-md`}>
-        <Button.Shrinker>
+        <div className={`${Button.Shrinker.className}`}>
           Hello world
-        </Button.Shrinker>
+        </div>
       </button>
     </div>
   }

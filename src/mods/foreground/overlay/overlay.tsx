@@ -22,10 +22,10 @@ export function UpdateBanner(props: OkProps<unknown>) {
       </div>
       <Button.Base className="hovered-or-clicked-or-focused:scale-105 transition"
         onClick={ok}>
-        <Button.Shrinker>
+        <div className={`${Button.Shrinker.className}`}>
           <Outline.ArrowPathIcon className="s-sm" />
           Update
-        </Button.Shrinker>
+        </div>
       </Button.Base>
     </div>
   </div>

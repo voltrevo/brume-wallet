@@ -101,10 +101,10 @@ export function UserCreateDialog(props: CloseProps) {
       colorIndex={color}
       disabled={!defNameInput || !defPasswordInput || !defConfirmPasswordInput || !isSamePassword}
       onClick={onClick.run}>
-      <Button.Shrinker>
+      <div className={`${Button.Shrinker.className}`}>
         <Outline.PlusIcon className="s-sm" />
         Add
-      </Button.Shrinker>
+      </div>
     </Button.Gradient>
 
   return <Dialog close={close}>

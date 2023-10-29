@@ -35,41 +35,41 @@ export function Bottom() {
       <Button.Base className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/" || path.pathname === "/wallets"}
         onClick={onWalletsClick}>
-        <Button.Shrinker>
+        <div className={`${Button.Shrinker.className}`}>
           <Outline.WalletIcon className="s-md" />
-        </Button.Shrinker>
+        </div>
       </Button.Base>
       <Button.Base className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/seeds"}
         onClick={onSeedsClick}>
-        <Button.Shrinker>
+        <div className={`${Button.Shrinker.className}`}>
           <Outline.SparklesIcon className="s-md" />
-        </Button.Shrinker>
+        </div>
       </Button.Base>
       <Button.Base className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/sessions"}
         onClick={onSessionsClick}>
-        <Button.Shrinker>
+        <div className={`${Button.Shrinker.className}`}>
           <Outline.GlobeAltIcon className="s-md" />
-        </Button.Shrinker>
+        </div>
       </Button.Base>
       <Button.Base className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/requests"}
         onClick={onRequestsClick}>
-        <Button.Shrinker className="">
+        <div className={`${Button.Shrinker.className}`}>
           <div className="relative">
             {Boolean(requests?.length) &&
               <div className="absolute top-0 -right-2 bg-purple-400 rounded-full w-2 h-2" />}
             <Outline.CheckIcon className="s-md" />
           </div>
-        </Button.Shrinker>
+        </div>
       </Button.Base>
       <Button.Base className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/settings"}
         onClick={onSettingsClick}>
-        <Button.Shrinker>
+        <div className={`${Button.Shrinker.className}`}>
           <Outline.CogIcon className="s-md" />
-        </Button.Shrinker>
+        </div>
       </Button.Base>
     </div>
   </nav>

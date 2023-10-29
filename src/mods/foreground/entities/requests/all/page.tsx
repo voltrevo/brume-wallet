@@ -60,9 +60,9 @@ export function RequestsPage() {
       <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         disabled={tryRejectAll.loading || !Boolean(maybeRequests?.length)}
         onClick={tryRejectAll.run}>
-        <Button.Shrinker>
+        <div className={`${Button.Shrinker.className}`}>
           <Outline.TrashIcon className="s-sm" />
-        </Button.Shrinker>
+        </div>
       </Button.Base>
     </PageHeader>
 

@@ -28,9 +28,9 @@ export function NavBar() {
         <div className="w-2" />
         <Button.Base className="text-contrast hovered-or-clicked-or-focused:scale-105 transition"
           onClick={onOpen}>
-          <Button.Shrinker>
+          <div className={`${Button.Shrinker.className}`}>
             <Outline.ArrowTopRightOnSquareIcon className="s-xs" />
-          </Button.Shrinker>
+          </div>
         </Button.Base>
       </div>
     </div>
