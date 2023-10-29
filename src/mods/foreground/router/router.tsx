@@ -7,10 +7,10 @@ import { SettingsPage } from "../entities/settings/page"
 import { WalletsPage } from "../entities/wallets/all/page"
 import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
-import { usePath } from "./path/context"
+import { usePathContext } from "./path/context"
 
 export function Router() {
-  const url = usePath()
+  const url = usePathContext()
 
   let matches: RegExpMatchArray | null
 

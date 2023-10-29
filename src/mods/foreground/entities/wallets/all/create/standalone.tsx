@@ -6,16 +6,15 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
-import { CloseProps } from "@/libs/react/props/close";
 import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { Textarea } from "@/libs/ui/textarea";
 import { WebAuthnStorage, WebAuthnStorageError } from "@/libs/webauthn/webauthn";
 import { WalletData } from "@/mods/background/service_worker/entities/wallets/data";
-import { useBackground } from "@/mods/foreground/background/context";
+import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Base16 } from "@hazae41/base16";
 import { Base64 } from "@hazae41/base64";
 import { Bytes } from "@hazae41/bytes";
@@ -24,9 +23,9 @@ import { secp256k1 } from "@noble/curves/secp256k1";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../../avatar";
 
-export function StandaloneWalletCreatorDialog(props: CloseProps) {
-  const { close } = props
-  const background = useBackground().unwrap()
+export function StandaloneWalletCreatorDialog(props: {}) {
+  const { close } = useDialogContext().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const uuid = useConstant(() => crypto.randomUUID())
 
@@ -248,7 +247,7 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
       </div>
     </Button.Gradient>
 
-  return <Dialog close={close}>
+  return <>
     <Dialog.Title close={close}>
       New wallet
     </Dialog.Title>
@@ -266,5 +265,5 @@ export function StandaloneWalletCreatorDialog(props: CloseProps) {
         ? AddAuthButton1
         : AddAuthButton2}
     </div>
-  </Dialog>
+  </>
 }

@@ -8,8 +8,8 @@ import { Ok, Result } from "@hazae41/result"
 import { Decoder } from "@nuintun/qrcode"
 import { DecoderResult } from "@nuintun/qrcode/types/qrcode/decoder/Reader"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useBackground } from "../../../background/context"
-import { WalletDataProvider, useWalletData } from "../context"
+import { useBackgroundContext } from "../../../background/context"
+import { WalletDataProvider, useWalletDataContext } from "../context"
 
 export function WalletCameraPage(props: UUIDProps) {
   const { uuid } = props
@@ -20,8 +20,8 @@ export function WalletCameraPage(props: UUIDProps) {
 }
 
 export function WalletDataCameraPage() {
-  const wallet = useWalletData()
-  const background = useBackground().unwrap()
+  const wallet = useWalletDataContext()
+  const background = useBackgroundContext().unwrap()
 
   const mounted = useRef<boolean>(true)
 

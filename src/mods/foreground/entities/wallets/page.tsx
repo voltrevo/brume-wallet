@@ -11,6 +11,7 @@ import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
+import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Url } from "@/libs/url/url";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { Mutators } from "@/libs/xswr/mutators";
@@ -20,7 +21,7 @@ import { TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_w
 import { Nullable, Option, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useBackground } from "../../background/context";
+import { useBackgroundContext } from "../../background/context";
 import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { Path } from "../../router/path/context";
@@ -30,7 +31,7 @@ import { WalletDataReceiveDialog } from "./actions/receive/receive";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { WalletDataCard } from "./card";
-import { WalletDataProvider, useWalletData } from "./context";
+import { WalletDataProvider, useWalletDataContext } from "./context";
 import { EthereumContext, useBalance, useEnsReverse, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
 import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
 
@@ -67,8 +68,8 @@ export function useCompactDisplayUsd(option: Nullable<Result<FixedInit, Error>>)
 }
 
 function WalletDataPage() {
-  const wallet = useWalletData()
-  const background = useBackground().unwrap()
+  const wallet = useWalletDataContext()
+  const background = useBackgroundContext().unwrap()
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
@@ -187,8 +188,11 @@ function WalletDataPage() {
 
   const Body =
     <PageBody>
-      {add.current &&
-        <TokenAddDialog close={add.disable} />}
+      <Dialog
+        opened={add.current}
+        close={add.disable}>
+        <TokenAddDialog />
+      </Dialog>
       <div className="font-medium text-xl">
         Tokens
       </div>
@@ -243,13 +247,17 @@ function WalletDataPage() {
     </PageBody>
 
   return <Page>
-    {sendDialog.current && mainnet &&
+    {mainnet && <Dialog
+      opened={sendDialog.current}
+      close={sendDialog.disable}>
       <WalletDataSendNativeTokenDialog title="ETH on Ethereum"
-        context={mainnet}
-        close={sendDialog.disable} />}
-    {receiveDialog.current &&
-      <WalletDataReceiveDialog
-        close={receiveDialog.disable} />}
+        context={mainnet} />
+    </Dialog>}
+    <Dialog
+      opened={receiveDialog.current}
+      close={receiveDialog.disable}>
+      <WalletDataReceiveDialog />
+    </Dialog>
     {Header}
     {Card}
     {Apps}
@@ -264,7 +272,7 @@ function useTokensEditContext() {
 }
 
 function AddedTokenRow(props: { settingsRef: TokenSettingsRef }) {
-  const wallet = useWalletData()
+  const wallet = useWalletDataContext()
 
   const { settingsRef } = props
   const { token } = settingsRef
@@ -280,7 +288,7 @@ function AddedTokenRow(props: { settingsRef: TokenSettingsRef }) {
 
 function UnaddedTokenRow(props: { token: Token }) {
   const edit = useTokensEditContext().unwrap()
-  const wallet = useWalletData()
+  const wallet = useWalletDataContext()
   const { token } = props
 
   const settings = useTokenSettings(wallet, token)
@@ -328,7 +336,7 @@ function ContractTokenResolver(props: { token: ContractToken }) {
 
 function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }) {
   const { token, chain } = props
-  const wallet = useWalletData()
+  const wallet = useWalletDataContext()
   const edit = useTokensEditContext().unwrap()
 
   const context = useEthereumContext(wallet.uuid, chain)
@@ -351,11 +359,14 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   }, [])
 
   return <>
-    {wallet.type !== "readonly" && sendDialog.current && context &&
-      <WalletDataSendNativeTokenDialog
-        title={`${token.name} on ${chain.name}`}
-        context={context}
-        close={sendDialog.disable} />}
+    {wallet.type !== "readonly" && context &&
+      <Dialog
+        opened={sendDialog.current}
+        close={sendDialog.disable}>
+        <WalletDataSendNativeTokenDialog
+          title={`${token.name} on ${chain.name}`}
+          context={context} />
+      </Dialog>}
     {chain.token.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}
@@ -380,7 +391,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
 function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainData }) {
   const { token, chain } = props
-  const wallet = useWalletData()
+  const wallet = useWalletDataContext()
   const edit = useTokensEditContext().unwrap()
 
   const context = useEthereumContext(wallet.uuid, chain)
@@ -403,12 +414,15 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   }, [])
 
   return <>
-    {wallet.type !== "readonly" && sendDialog.current && context &&
-      <WalletDataSendContractTokenDialog
-        title={`${token.name} on ${chain.name}`}
-        context={context}
-        token={token}
-        close={sendDialog.disable} />}
+    {wallet.type !== "readonly" && context &&
+      <Dialog
+        opened={sendDialog.current}
+        close={sendDialog.disable}>
+        <WalletDataSendContractTokenDialog
+          title={`${token.name} on ${chain.name}`}
+          context={context}
+          token={token} />
+      </Dialog>}
     {token.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}
@@ -494,7 +508,7 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
 
 function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay: string }) {
   const { token, chain, balanceDisplay, balanceUsdDisplay } = props
-  const wallet = useWalletData()
+  const wallet = useWalletDataContext()
 
   const settings = useTokenSettings(wallet, token)
   const checked = settings.data?.inner.enabled

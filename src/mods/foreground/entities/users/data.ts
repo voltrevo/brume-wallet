@@ -1,6 +1,6 @@
 import { createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { GlobalStorage, useGlobalStorage } from "../../storage/global"
+import { GlobalStorage, useGlobalStorageContext } from "../../storage/global"
 import { useSubscribe } from "../../storage/storage"
 
 export type User =
@@ -36,7 +36,7 @@ export function getUser(uuid: Nullable<string>, storage: GlobalStorage) {
 }
 
 export function useUser(uuid: Nullable<string>) {
-  const storage = useGlobalStorage().unwrap()
+  const storage = useGlobalStorageContext().unwrap()
   const query = useQuery(getUser, [uuid, storage])
   useSubscribe(query as any, storage)
   return query
@@ -47,7 +47,7 @@ export function getCurrentUser(storage: GlobalStorage) {
 }
 
 export function useCurrentUserQuery() {
-  const storage = useGlobalStorage().unwrap()
+  const storage = useGlobalStorageContext().unwrap()
   const query = useQuery(getCurrentUser, [storage])
   useSubscribe(query, storage)
   return query

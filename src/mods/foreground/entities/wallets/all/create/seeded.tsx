@@ -7,15 +7,14 @@ import { Ledger } from "@/libs/ledger";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { CloseProps } from "@/libs/react/props/close";
 import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { SeedRef } from "@/mods/background/service_worker/entities/seeds/data";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
-import { useBackground } from "@/mods/foreground/background/context";
+import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
@@ -24,13 +23,13 @@ import { HDKey } from "@scure/bip32";
 import { mnemonicToSeed } from "@scure/bip39";
 import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { SeedInstance } from "../../../seeds/all/data";
-import { useSeedData } from "../../../seeds/context";
+import { useSeedDataContext } from "../../../seeds/context";
 import { WalletAvatar } from "../../avatar";
 
-export function SeededWalletCreatorDialog(props: CloseProps) {
-  const { close } = props
-  const background = useBackground().unwrap()
-  const seedData = useSeedData()
+export function SeededWalletCreatorDialog(props: {}) {
+  const { close } = useDialogContext().unwrap()
+  const background = useBackgroundContext().unwrap()
+  const seedData = useSeedDataContext()
 
   const uuid = useConstant(() => crypto.randomUUID())
 
@@ -211,7 +210,7 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
       </div>
     </Button.Gradient>
 
-  return <Dialog close={close}>
+  return <>
     <Dialog.Title close={close}>
       New wallet
     </Dialog.Title>
@@ -283,5 +282,5 @@ export function SeededWalletCreatorDialog(props: CloseProps) {
     <div className="flex items-center flex-wrap-reverse gap-2">
       {AddButon}
     </div>
-  </Dialog>
+  </>
 }

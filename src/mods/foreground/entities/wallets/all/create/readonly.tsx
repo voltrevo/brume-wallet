@@ -6,15 +6,14 @@ import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
-import { CloseProps } from "@/libs/react/props/close";
 import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { Textarea } from "@/libs/ui/textarea";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
-import { useBackground } from "@/mods/foreground/background/context";
+import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
@@ -23,9 +22,9 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { WalletAvatar } from "../../avatar";
 import { useEnsLookup, useEthereumContext } from "../../data";
 
-export function ReadonlyWalletCreatorDialog(props: CloseProps) {
-  const { close } = props
-  const background = useBackground().unwrap()
+export function ReadonlyWalletCreatorDialog(props: {}) {
+  const { close } = useDialogContext().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const uuid = useConstant(() => crypto.randomUUID())
 
@@ -123,7 +122,7 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
       </div>
     </Button.Gradient>
 
-  return <Dialog close={close}>
+  return <>
     <Dialog.Title close={close}>
       New wallet
     </Dialog.Title>
@@ -135,5 +134,5 @@ export function ReadonlyWalletCreatorDialog(props: CloseProps) {
     <div className="flex items-center flex-wrap-reverse gap-2">
       {AddButon}
     </div>
-  </Dialog>
+  </>
 }

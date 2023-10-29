@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 export const PathContext =
   createContext<Nullable<URL>>(undefined)
 
-export function usePath() {
+export function usePathContext() {
   return Option.unwrap(useContext(PathContext))
 }
 

@@ -3,7 +3,7 @@ import { Token } from "@/mods/background/service_worker/entities/tokens/data"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { BgTokenSettings, TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data"
 import { useSubscribe } from "@/mods/foreground/storage/storage"
-import { UserStorage, useUserStorage } from "@/mods/foreground/storage/user"
+import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
 import { Data, States, createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
@@ -56,14 +56,14 @@ export namespace FgTokenSettings {
 }
 
 export function useTokenSettings(wallet: Nullable<Wallet>, token: Nullable<Token>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgTokenSettings.schema, [wallet, token, storage])
   useSubscribe(query as any, storage)
   return query
 }
 
 export function useTokenSettingsByWallet(wallet: Nullable<Wallet>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgTokenSettings.ByWallet.schema, [wallet, storage])
   useSubscribe(query as any, storage)
   return query

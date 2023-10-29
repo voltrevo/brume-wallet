@@ -5,7 +5,7 @@ import { Seeds, WalletsBySeed } from "@/mods/background/service_worker/entities/
 import { AuthMnemonicSeedData, LedgerSeedData, SeedData, UnauthMnemonicSeedData } from "@/mods/background/service_worker/entities/seeds/data"
 import { Background } from "@/mods/foreground/background/background"
 import { useSubscribe } from "@/mods/foreground/storage/storage"
-import { useUserStorage } from "@/mods/foreground/storage/user"
+import { useUserStorageContext } from "@/mods/foreground/storage/user"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
@@ -19,14 +19,14 @@ import { wordlist } from "@scure/bip39/wordlists/english"
 import { Transaction, ethers } from "ethers"
 
 export function useSeeds() {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(Seeds.Foreground.schema, [storage])
   useSubscribe(query as any, storage)
   return query
 }
 
 export function useWalletsBySeed(uuid: Nullable<string>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(WalletsBySeed.Foreground.schema, [uuid, storage])
   useSubscribe(query as any, storage)
   return query

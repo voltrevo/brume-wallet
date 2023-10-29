@@ -7,11 +7,10 @@ import { Outline } from "@/libs/icons/icons";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { CloseProps } from "@/libs/react/props/close";
 import { TitleProps } from "@/libs/react/props/title";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { Cubane } from "@hazae41/cubane";
@@ -19,12 +18,13 @@ import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { useDeferredValue, useMemo, useState } from "react";
-import { useWalletData } from "../../context";
+import { useWalletDataContext } from "../../context";
 import { EthereumContextProps, EthereumWalletInstance, useBlockByNumber, useEnsLookup, useEthereumContext, useGasPrice, useMaxPriorityFeePerGas, useNonce, useTokenBalance } from "../../data";
 
-export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps & EthereumContextProps & { token: ContractTokenData }) {
-  const wallet = useWalletData()
-  const { title, context, token, close } = props
+export function WalletDataSendContractTokenDialog(props: TitleProps & EthereumContextProps & { token: ContractTokenData }) {
+  const { close } = useDialogContext().unwrap()
+  const wallet = useWalletDataContext()
+  const { title, context, token } = props
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
@@ -277,7 +277,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
       </div>
     </Button.Gradient>
 
-  return <Dialog close={close}>
+  return <>
     <Dialog.Title close={close}>
       Send {title}
     </Dialog.Title>
@@ -293,5 +293,5 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & CloseProps
     </> : <>
       {SendButton}
     </>}
-  </Dialog>
+  </>
 }

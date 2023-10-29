@@ -7,7 +7,7 @@ import { Background, ExtensionBackground, WebsiteBackground } from "./background
 export const BackgroundContext =
   createContext<Background | undefined>(undefined)
 
-export function useBackground() {
+export function useBackgroundContext() {
   return Option.wrap(useContext(BackgroundContext))
 }
 
@@ -56,7 +56,7 @@ export function ExtensionBackgroundProvider(props: ChildrenProps) {
 export function BackgroundGuard(props: ChildrenProps) {
   const { children } = props
 
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const [size, setSize] = useState(background.ports.size)
 

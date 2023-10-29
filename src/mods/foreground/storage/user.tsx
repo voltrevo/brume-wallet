@@ -6,18 +6,18 @@ import { None, Nullable, Option, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { createContext, useContext, useMemo } from "react";
 import { Background } from "../background/background";
-import { useBackground } from "../background/context";
+import { useBackgroundContext } from "../background/context";
 
 export const UserStorageContext =
   createContext<Nullable<UserStorage>>(undefined)
 
-export function useUserStorage() {
+export function useUserStorageContext() {
   return Option.wrap(useContext(UserStorageContext))
 }
 
 export function UserStorageProvider(props: ChildrenProps) {
   const { children } = props
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const storage = useMemo(() => {
     return new UserStorage(background)

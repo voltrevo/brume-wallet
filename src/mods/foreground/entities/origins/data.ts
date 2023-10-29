@@ -2,7 +2,7 @@ import { Origin, OriginData } from "@/mods/background/service_worker/entities/or
 import { createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { useSubscribe } from "../../storage/storage"
-import { UserStorage, useUserStorage } from "../../storage/user"
+import { UserStorage, useUserStorageContext } from "../../storage/user"
 
 export function getOrigin(origin: Nullable<string>, storage: UserStorage) {
   if (origin == null)
@@ -11,7 +11,7 @@ export function getOrigin(origin: Nullable<string>, storage: UserStorage) {
 }
 
 export function useOrigin(origin: Nullable<string>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getOrigin, [origin, storage])
   useSubscribe(query as any, storage)
   return query

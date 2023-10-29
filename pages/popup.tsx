@@ -6,8 +6,9 @@ import { useInputChange } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
+import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
-import { BackgroundGuard, useBackground } from "@/mods/foreground/background/context";
+import { BackgroundGuard, useBackgroundContext } from "@/mods/foreground/background/context";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
 import { FgAppRequests } from "@/mods/foreground/entities/requests/all/data";
@@ -22,9 +23,9 @@ import { UserRejectionError } from "@/mods/foreground/errors/errors";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
-import { Path, usePath } from "@/mods/foreground/router/path/context";
+import { Path, usePathContext } from "@/mods/foreground/router/path/context";
 import { Router } from "@/mods/foreground/router/router";
-import { useUserStorage } from "@/mods/foreground/storage/user";
+import { useUserStorageContext } from "@/mods/foreground/storage/user";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { Abi } from "@hazae41/cubane";
@@ -48,7 +49,7 @@ export default function Popup() {
 }
 
 export function Ready() {
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   useEffect(() => {
     background
@@ -67,9 +68,9 @@ export function Ready() {
 }
 
 export function TransactPage() {
-  const { searchParams } = usePath()
-  const storage = useUserStorage().unwrap()
-  const background = useBackground().unwrap()
+  const { searchParams } = usePathContext()
+  const storage = useUserStorageContext().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
@@ -212,9 +213,9 @@ export function TransactPage() {
 }
 
 export function SwitchPage() {
-  const { searchParams } = usePath()
-  const storage = useUserStorage().unwrap()
-  const background = useBackground().unwrap()
+  const { searchParams } = usePathContext()
+  const storage = useUserStorageContext().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
@@ -288,9 +289,9 @@ export function SwitchPage() {
 }
 
 export function PersonalSignPage() {
-  const { searchParams } = usePath()
-  const storage = useUserStorage().unwrap()
-  const background = useBackground().unwrap()
+  const { searchParams } = usePathContext()
+  const storage = useUserStorageContext().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
@@ -391,9 +392,9 @@ export function PersonalSignPage() {
 }
 
 export function TypedSignPage() {
-  const { searchParams } = usePath()
-  const storage = useUserStorage().unwrap()
-  const background = useBackground().unwrap()
+  const { searchParams } = usePathContext()
+  const storage = useUserStorageContext().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
@@ -490,9 +491,9 @@ export function TypedSignPage() {
 }
 
 export function WalletAndChainSelectPage() {
-  const { searchParams } = usePath()
-  const storage = useUserStorage().unwrap()
-  const background = useBackground().unwrap()
+  const { searchParams } = usePathContext()
+  const storage = useUserStorageContext().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
 
@@ -556,9 +557,11 @@ export function WalletAndChainSelectPage() {
     </PageHeader>
 
   return <Page>
-    {creator.current &&
-      <WalletCreatorDialog
-        close={creator.disable} />}
+    <Dialog
+      opened={creator.current}
+      close={creator.disable}>
+      <WalletCreatorDialog />
+    </Dialog>
     {Header}
     {Body}
   </Page>

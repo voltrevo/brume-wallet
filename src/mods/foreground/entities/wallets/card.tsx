@@ -6,12 +6,12 @@ import { Outline } from "@/libs/icons/icons"
 import { useMouseCancel } from "@/libs/react/events"
 import { Button } from "@/libs/ui/button"
 import { WalletIcon } from "./avatar"
-import { useWalletData } from "./context"
+import { useWalletDataContext } from "./context"
 import { useEnsReverseNoFetch, useEthereumContext, useTotalWalletPricedBalance } from "./data"
 import { useCompactDisplayUsd } from "./page"
 
 export function WalletDataCard() {
-  const wallet = useWalletData()
+  const wallet = useWalletDataContext()
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
   const ens = useEnsReverseNoFetch(wallet.address, mainnet)

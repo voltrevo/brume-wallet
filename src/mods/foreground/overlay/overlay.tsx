@@ -8,7 +8,7 @@ import { Button } from "@/libs/ui/button";
 import { None } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { useCallback, useEffect, useState } from "react";
-import { useBackground } from "../background/context";
+import { useBackgroundContext } from "../background/context";
 
 const MAIN_PACKAGE_URL = "https://raw.githubusercontent.com/brumewallet/wallet/main/package.json"
 
@@ -34,7 +34,7 @@ export function UpdateBanner(props: OkProps<unknown>) {
 export function Overlay(props: ChildrenProps) {
   const { children } = props
 
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   if (background.isExtension())
     return <ExtensionOverlay>
@@ -73,7 +73,7 @@ async function tryCheckWebsiteUpdate(): Promise<Result<boolean, Error>> {
 export function WebsiteOverlay(props: ChildrenProps) {
   const { children } = props
 
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const [updating, setUpdating] = useState<ServiceWorker>()
 

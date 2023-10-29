@@ -7,7 +7,7 @@ import { Button } from "@/libs/ui/button"
 import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
 import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/data"
 import { Session } from "@/mods/background/service_worker/entities/sessions/data"
-import { useBackground } from "@/mods/foreground/background/context"
+import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Nullable, Option } from "@hazae41/option"
@@ -20,7 +20,7 @@ import { useStatus } from "../status/data"
 import { usePersistentSessions, useTemporarySessions } from "./data"
 
 export function SessionsPage() {
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const tempSessionsQuery = useTemporarySessions()
   const maybeTempSessions = tempSessionsQuery.data?.inner
@@ -87,7 +87,7 @@ export function SessionsPage() {
 }
 
 export function SessionRow(props: { session: Session }) {
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const sessionQuery = useSession(props.session.id)
   const maybeSessionData = sessionQuery.data?.inner

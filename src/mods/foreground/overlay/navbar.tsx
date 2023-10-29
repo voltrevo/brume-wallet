@@ -3,10 +3,10 @@ import { Outline } from "@/libs/icons/icons"
 import { Results } from "@/libs/results/results"
 import { Button } from "@/libs/ui/button"
 import { useCallback } from "react"
-import { usePath } from "../router/path/context"
+import { usePathContext } from "../router/path/context"
 
 export function NavBar() {
-  const path = usePath()
+  const path = usePathContext()
 
   const onOpen = useCallback(async () => {
     await tryBrowser(async () => {

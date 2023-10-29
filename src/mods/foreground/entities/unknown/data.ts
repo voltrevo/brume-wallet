@@ -4,7 +4,7 @@ import { createQuery, useError, useFetch, useQuery, useVisible } from "@hazae41/
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
-import { UserStorage, useUserStorage } from "../../storage/user";
+import { UserStorage, useUserStorageContext } from "../../storage/user";
 import { EthereumContext, tryFetch } from "../wallets/data";
 
 export namespace FgUnknown {
@@ -26,7 +26,7 @@ export namespace FgUnknown {
 }
 
 export function useUnknown(request: RpcRequestPreinit<unknown> & EthereumFetchParams, context: Nullable<EthereumContext>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgUnknown.schema, [request, context, storage])
   useFetch(query)
   useVisible(query)

@@ -2,10 +2,10 @@ import { Outline } from "@/libs/icons/icons";
 import { Button } from "@/libs/ui/button";
 import { useCallback } from "react";
 import { useAppRequests } from "../entities/requests/all/data";
-import { Path, usePath } from "../router/path/context";
+import { Path, usePathContext } from "../router/path/context";
 
 export function Bottom() {
-  const path = usePath()
+  const path = usePathContext()
 
   const onWalletsClick = useCallback(() => {
     Path.go("/wallets")

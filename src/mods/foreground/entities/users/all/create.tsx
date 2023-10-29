@@ -4,22 +4,21 @@ import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { CloseProps } from "@/libs/react/props/close";
 import { useConstant } from "@/libs/react/ref";
 import { Button } from "@/libs/ui/button";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { Mutators } from "@/libs/xswr/mutators";
 import { UserInit } from "@/mods/background/service_worker/entities/users/data";
-import { useBackground } from "@/mods/foreground/background/context";
+import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useDeferredValue, useMemo, useState } from "react";
 import { User } from "../data";
 import { useUsers } from "./data";
 import { UserAvatar } from "./page";
 
-export function UserCreateDialog(props: CloseProps) {
-  const { close } = props
-  const background = useBackground().unwrap()
+export function UserCreateDialog(props: {}) {
+  const { close } = useDialogContext().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const users = useUsers()
 
@@ -107,7 +106,7 @@ export function UserCreateDialog(props: CloseProps) {
       </div>
     </Button.Gradient>
 
-  return <Dialog close={close}>
+  return <>
     <Dialog.Title close={close}>
       New user
     </Dialog.Title>
@@ -119,5 +118,5 @@ export function UserCreateDialog(props: CloseProps) {
     {PasswordInput2}
     <div className="h-4" />
     {DoneButton}
-  </Dialog>
+  </>
 }

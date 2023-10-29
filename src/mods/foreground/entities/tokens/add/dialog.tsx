@@ -3,28 +3,27 @@ import { ChainData, chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { CloseProps } from "@/libs/react/props/close";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
-import { useBackground } from "@/mods/foreground/background/context";
-import { useUserStorage } from "@/mods/foreground/storage/user";
+import { useBackgroundContext } from "@/mods/foreground/background/context";
+import { useUserStorageContext } from "@/mods/foreground/storage/user";
 import { Cubane, ZeroHexString } from "@hazae41/cubane";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { useDeferredValue, useMemo, useState } from "react";
 import { FgUnknown } from "../../unknown/data";
-import { useWalletData } from "../../wallets/context";
+import { useWalletDataContext } from "../../wallets/context";
 import { useToken } from "../data";
 
-export function TokenAddDialog(props: CloseProps) {
-  const wallet = useWalletData()
-  const background = useBackground().unwrap()
-  const storage = useUserStorage().unwrap()
-  const { close } = props
+export function TokenAddDialog(props: {}) {
+  const { close } = useDialogContext().unwrap()
+  const wallet = useWalletDataContext()
+  const background = useBackgroundContext().unwrap()
+  const storage = useUserStorageContext().unwrap()
 
   const [chain, setChain] = useState<ChainData>(chainByChainId[1])
 
@@ -140,7 +139,7 @@ export function TokenAddDialog(props: CloseProps) {
     return
   }, [defAddress])
 
-  return <Dialog close={close}>
+  return <>
     <Dialog.Title close={close}>
       New token
     </Dialog.Title>
@@ -171,5 +170,5 @@ export function TokenAddDialog(props: CloseProps) {
         {addDisabled || "Send"}
       </div>
     </Button.Gradient>
-  </Dialog>
+  </>
 }

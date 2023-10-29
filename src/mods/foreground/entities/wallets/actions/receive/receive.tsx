@@ -1,14 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 import { Events } from "@/libs/react/events";
-import { CloseProps } from "@/libs/react/props/close";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import createQR from "@paulmillr/qr";
 import { useMemo } from "react";
-import { useWalletData } from "../../context";
+import { useWalletDataContext } from "../../context";
 
-export function WalletDataReceiveDialog(props: CloseProps) {
-  const { close } = props
-  const wallet = useWalletData()
+export function WalletDataReceiveDialog(props: {}) {
+  const { close } = useDialogContext().unwrap()
+  const wallet = useWalletDataContext()
 
   const url = useMemo(() => {
     const bytes = createQR(wallet.address, "gif", { ecc: "medium", scale: 10 })
@@ -17,7 +16,7 @@ export function WalletDataReceiveDialog(props: CloseProps) {
     return URL.createObjectURL(blob)
   }, [wallet])
 
-  return <Dialog close={close}>
+  return <>
     <Dialog.Title close={close}>
       Receive
     </Dialog.Title>
@@ -36,5 +35,5 @@ export function WalletDataReceiveDialog(props: CloseProps) {
       onClick={Events.Mouse.select}>
       {wallet.address}
     </div>
-  </Dialog>
+  </>
 }

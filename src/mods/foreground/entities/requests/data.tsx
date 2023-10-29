@@ -1,7 +1,7 @@
 import { AppRequest, AppRequestData } from "@/mods/background/service_worker/entities/requests/data";
 import { createQuery, useQuery } from "@hazae41/glacier";
 import { useSubscribe } from "../../storage/storage";
-import { UserStorage, useUserStorage } from "../../storage/user";
+import { UserStorage, useUserStorageContext } from "../../storage/user";
 
 export namespace FgAppRequest {
 
@@ -12,7 +12,7 @@ export namespace FgAppRequest {
 }
 
 export function useAppRequest(id: string) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgAppRequest.schema, [id, storage])
   useSubscribe(query, storage)
   return query

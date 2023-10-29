@@ -4,21 +4,22 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
 import { Button } from "@/libs/ui/button"
+import { Dialog } from "@/libs/ui/dialog/dialog"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
-import { useBackground } from "@/mods/foreground/background/context"
+import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path/context"
 import { useCallback, useEffect } from "react"
 import { WalletDataCard } from "../card"
-import { WalletDataProvider, useWalletData } from "../context"
+import { WalletDataProvider, useWalletDataContext } from "../context"
 import { useTotalPricedBalance } from "../data"
 import { useDisplayUsd } from "../page"
 import { WalletCreatorDialog } from "./create"
 import { useWallets } from "./data"
 
 export function WalletsPage() {
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const walletsQuery = useWallets()
   const maybeWallets = walletsQuery.data?.inner
@@ -62,9 +63,11 @@ export function WalletsPage() {
     </PageHeader>
 
   return <Page>
-    {creator.current &&
-      <WalletCreatorDialog
-        close={creator.disable} />}
+    <Dialog
+      opened={creator.current}
+      close={creator.disable}>
+      <WalletCreatorDialog />
+    </Dialog>
     {Header}
     {Body}
   </Page>
@@ -85,7 +88,7 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & CreateProps & { may
 }
 
 export function ClickableWalletDataCard(props: OkProps<Wallet>) {
-  const wallet = useWalletData()
+  const wallet = useWalletDataContext()
   const { ok } = props
 
   const onClick = useCallback(() => {

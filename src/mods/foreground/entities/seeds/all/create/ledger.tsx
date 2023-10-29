@@ -5,21 +5,20 @@ import { Ledger } from "@/libs/ledger";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { CloseProps } from "@/libs/react/props/close";
 import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { SeedData } from "@/mods/background/service_worker/entities/seeds/data";
-import { useBackground } from "@/mods/foreground/background/context";
+import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { useDeferredValue, useMemo, useState } from "react";
 import { WalletAvatar } from "../../../wallets/avatar";
 
-export function LedgerSeedCreatorDialog(props: CloseProps) {
-  const { close } = props
-  const background = useBackground().unwrap()
+export function LedgerSeedCreatorDialog(props: {}) {
+  const { close } = useDialogContext().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const uuid = useConstant(() => crypto.randomUUID())
 
@@ -87,7 +86,7 @@ export function LedgerSeedCreatorDialog(props: CloseProps) {
       </div>
     </Button.Gradient>
 
-  return <Dialog close={close}>
+  return <>
     <Dialog.Title close={close}>
       New seed
     </Dialog.Title>
@@ -97,5 +96,5 @@ export function LedgerSeedCreatorDialog(props: CloseProps) {
     <div className="flex items-center flex-wrap-reverse gap-2">
       {AddButton}
     </div>
-  </Dialog>
+  </>
 }

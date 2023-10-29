@@ -1,7 +1,7 @@
 import { BgSettings } from "@/mods/background/service_worker/entities/settings/data"
 import { createQuery, useQuery } from "@hazae41/glacier"
 import { useSubscribe } from "../../storage/storage"
-import { UserStorage, useUserStorage } from "../../storage/user"
+import { UserStorage, useUserStorageContext } from "../../storage/user"
 
 export namespace FgSettings {
 
@@ -17,7 +17,7 @@ export namespace FgSettings {
 }
 
 export function useLogs() {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgSettings.Logs.schema, [storage])
   useSubscribe(query as any, storage)
   return query

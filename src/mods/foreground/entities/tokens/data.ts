@@ -1,7 +1,7 @@
 import { Mutators } from "@/libs/xswr/mutators"
 import { BgContractToken, ContractTokenData, ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data"
 import { useSubscribe } from "@/mods/foreground/storage/storage"
-import { UserStorage, useUserStorage } from "@/mods/foreground/storage/user"
+import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
 import { Data, States, createQuery, useQuery } from "@hazae41/glacier"
 import { Ok, Result } from "@hazae41/result"
 
@@ -46,14 +46,14 @@ export namespace FgContractToken {
 }
 
 export function useToken(chainId: number, address: string) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgContractToken.schema, [chainId, address, storage])
   useSubscribe(query as any, storage)
   return query
 }
 
 export function useTokens() {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgContractToken.All.schema, [storage])
   useSubscribe(query as any, storage)
   return query

@@ -2,7 +2,7 @@ import { Blobby, BlobbyData } from "@/mods/background/service_worker/entities/bl
 import { createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { useSubscribe } from "../../storage/storage"
-import { UserStorage, useUserStorage } from "../../storage/user"
+import { UserStorage, useUserStorageContext } from "../../storage/user"
 
 export function getBlobby(id: Nullable<string>, storage: UserStorage) {
   if (id == null)
@@ -11,7 +11,7 @@ export function getBlobby(id: Nullable<string>, storage: UserStorage) {
 }
 
 export function useBlobby(id: Nullable<string>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getBlobby, [id, storage])
   useSubscribe(query as any, storage)
   return query

@@ -5,7 +5,7 @@ import { PromiseProps } from "@/libs/react/props/promise";
 import { Button } from "@/libs/ui/button";
 import { Input } from "@/libs/ui/input";
 import { useCallback, useDeferredValue, useRef, useState } from "react";
-import { useBackground } from "../../background/context";
+import { useBackgroundContext } from "../../background/context";
 import { Page } from "../../components/page/page";
 import { UserAvatar } from "./all/page";
 import { User, UserProps, useUser } from "./data";
@@ -13,7 +13,7 @@ import { User, UserProps, useUser } from "./data";
 export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
   const { user, ok, err } = props
 
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
   const userQuery = useUser(user.uuid)
 
   const passwordInputRef = useRef<HTMLInputElement>(null)

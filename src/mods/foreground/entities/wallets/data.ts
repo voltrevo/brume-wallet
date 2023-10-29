@@ -16,9 +16,9 @@ import { Ok, Panic, Result } from "@hazae41/result"
 import { Transaction, ethers } from "ethers"
 import { useMemo } from "react"
 import { Background } from "../../background/background"
-import { useBackground } from "../../background/context"
+import { useBackgroundContext } from "../../background/context"
 import { useSubscribe } from "../../storage/storage"
-import { UserStorage, useUserStorage } from "../../storage/user"
+import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { SeedInstance } from "../seeds/all/data"
 
 export interface WalletProps {
@@ -33,7 +33,7 @@ export function getWallet(uuid: Nullable<string>, storage: UserStorage) {
 }
 
 export function useWallet(uuid: Nullable<string>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getWallet, [uuid, storage])
   useSubscribe(query as any, storage)
   return query
@@ -229,7 +229,7 @@ export interface EthereumContextProps {
 }
 
 export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<ChainData>) {
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   return useMemo<Nullable<EthereumContext>>(() => {
     if (uuid == null)
@@ -263,7 +263,7 @@ export function getTotalPricedBalance(coin: "usd", storage: UserStorage) {
 }
 
 export function useTotalPricedBalance(coin: "usd") {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getTotalPricedBalance, [coin, storage])
   useFetch(query)
   useVisible(query)
@@ -278,7 +278,7 @@ export function getTotalWalletPricedBalance(address: string, coin: "usd", storag
 }
 
 export function useTotalWalletPricedBalance(address: string, coin: "usd") {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getTotalWalletPricedBalance, [address, coin, storage])
   useFetch(query)
   useVisible(query)
@@ -303,7 +303,7 @@ export function getPricedBalance(account: string, coin: "usd", context: Nullable
 }
 
 export function usePricedBalance(address: string, coin: "usd", context: Nullable<EthereumContext>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getPricedBalance, [address, coin, context, storage])
   useFetch(query)
   useVisible(query)
@@ -333,7 +333,7 @@ export function getBalance(address: string, context: Nullable<EthereumContext>, 
 }
 
 export function useBalance(address: string, context: Nullable<EthereumContext>, prices: Nullable<FixedInit>[]) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getBalance, [address, context, storage])
   useFetch(query)
   useVisible(query)
@@ -369,7 +369,7 @@ export function getTokenPricedBalance(context: Nullable<EthereumContext>, accoun
 }
 
 export function useTokenPricedBalance(context: Nullable<EthereumContext>, address: string, token: ContractTokenData, coin: "usd") {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getTokenPricedBalance, [context, address, token, coin, storage])
   useFetch(query)
   useVisible(query)
@@ -398,7 +398,7 @@ export function getTokenBalance(address: string, token: ContractTokenData, conte
 }
 
 export function useTokenBalance(address: string, token: ContractTokenData, context: Nullable<EthereumContext>, prices: Nullable<FixedInit>[]) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getTokenBalance, [address, token, context, storage])
   useFetch(query)
   useVisible(query)
@@ -440,7 +440,7 @@ export function getNonceSchema(address: Nullable<string>, context: Nullable<Ethe
 }
 
 export function useNonce(address: Nullable<string>, context: Nullable<EthereumContext>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getNonceSchema, [address, context, storage])
   useFetch(query)
   useVisible(query)
@@ -471,7 +471,7 @@ export function getGasPriceSchema(context: Nullable<EthereumContext>, storage: U
 }
 
 export function useGasPrice(ethereum: Nullable<EthereumContext>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getGasPriceSchema, [ethereum, storage])
   useFetch(query)
   useVisible(query)
@@ -501,7 +501,7 @@ export function getMaxPriorityFeePerGas(context: Nullable<EthereumContext>, stor
 }
 
 export function useMaxPriorityFeePerGas(ethereum: Nullable<EthereumContext>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getMaxPriorityFeePerGas, [ethereum, storage])
   useFetch(query)
   useVisible(query)
@@ -536,7 +536,7 @@ export function getBlockByNumber(number: Nullable<string>, context: Nullable<Eth
 }
 
 export function useBlockByNumber(number: Nullable<string>, ethereum: Nullable<EthereumContext>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getBlockByNumber, [number, ethereum, storage])
   useFetch(query)
   useVisible(query)
@@ -564,7 +564,7 @@ export function getPairPrice(context: Nullable<EthereumContext>, pair: PairInfo,
 }
 
 export function usePairPrice(ethereum: Nullable<EthereumContext>, pair: PairInfo) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(getPairPrice, [ethereum, pair, storage])
   useFetch(query)
   useVisible(query)
@@ -618,7 +618,7 @@ export namespace FgEns {
 }
 
 export function useEnsLookup(name: Nullable<string>, ethereum: Nullable<EthereumContext>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgEns.Lookup.schema, [name, ethereum, storage])
   useFetch(query)
   useVisible(query)
@@ -628,7 +628,7 @@ export function useEnsLookup(name: Nullable<string>, ethereum: Nullable<Ethereum
 }
 
 export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullable<EthereumContext>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
   useFetch(query)
   useVisible(query)
@@ -638,7 +638,7 @@ export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullab
 }
 
 export function useEnsReverseNoFetch(address: Nullable<ZeroHexString>, ethereum: Nullable<EthereumContext>) {
-  const storage = useUserStorage().unwrap()
+  const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
   useSubscribe(query, storage)
   useError(query, console.error)

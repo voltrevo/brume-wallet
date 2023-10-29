@@ -8,7 +8,7 @@ import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
 import { qurl } from "@/libs/url/url"
 import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/data"
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
-import { useBackground } from "@/mods/foreground/background/context"
+import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { UserRejectionError } from "@/mods/foreground/errors/errors"
@@ -23,7 +23,7 @@ import { useAppRequest } from "../data"
 import { useAppRequests } from "./data"
 
 export function RequestsPage() {
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   const requestsQuery = useAppRequests()
   const maybeRequests = requestsQuery.data?.inner

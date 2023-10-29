@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";
+import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useCallback } from "react";
 import { PageBody, PageHeader } from "../../components/page/header";
@@ -10,7 +11,7 @@ import { SeededWalletCreatorDialog } from "../wallets/all/create/seeded";
 import { ClickableWalletGrid } from "../wallets/all/page";
 import { useWalletsBySeed } from "./all/data";
 import { SeedDataCard } from "./card";
-import { SeedDataProvider, useSeedData, } from "./context";
+import { SeedDataProvider, useSeedDataContext, } from "./context";
 
 export function SeedPage(props: UUIDProps) {
   const { uuid } = props
@@ -21,7 +22,7 @@ export function SeedPage(props: UUIDProps) {
 }
 
 function SeedDataPage() {
-  const seed = useSeedData()
+  const seed = useSeedDataContext()
 
   const walletsQuery = useWalletsBySeed(seed.uuid)
   const maybeWallets = walletsQuery.data?.inner
@@ -57,9 +58,11 @@ function SeedDataPage() {
     </PageBody>
 
   return <Page>
-    {creator.current &&
-      <SeededWalletCreatorDialog
-        close={creator.disable} />}
+    <Dialog
+      opened={creator.current}
+      close={creator.disable}>
+      <SeededWalletCreatorDialog />
+    </Dialog>
     {Header}
     {Card}
     {Body}

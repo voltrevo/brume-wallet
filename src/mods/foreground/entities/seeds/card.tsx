@@ -2,10 +2,10 @@ import { Gradients } from "@/libs/colors/colors"
 import { Outline } from "@/libs/icons/icons"
 import { Button } from "@/libs/ui/button"
 import { WalletIcon } from "../wallets/avatar"
-import { useSeedData } from "./context"
+import { useSeedDataContext } from "./context"
 
 export function SeedDataCard() {
-  const seed = useSeedData()
+  const seed = useSeedDataContext()
 
   const [color, color2] = Gradients.get(seed.color)
 

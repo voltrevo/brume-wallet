@@ -8,7 +8,7 @@ import { useSeed } from "./data"
 export const SeedDataContext =
   createContext<Nullable<SeedData>>(undefined)
 
-export function useSeedData() {
+export function useSeedDataContext() {
   return Option.unwrap(useContext(SeedDataContext))
 }
 

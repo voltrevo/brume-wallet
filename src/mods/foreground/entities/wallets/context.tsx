@@ -8,7 +8,7 @@ import { useWallet } from "./data"
 export const WalletDataContext =
   createContext<Nullable<WalletData>>(undefined)
 
-export function useWalletData() {
+export function useWalletDataContext() {
   return Option.unwrap(useContext(WalletDataContext))
 }
 

@@ -55,6 +55,14 @@ export namespace Events {
 
 }
 
+export function useSynthetic<R>(
+  callback: (e: SyntheticEvent<HTMLElement>) => R,
+  deps: DependencyList = [callback]
+) {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useCallback(callback, deps)
+}
+
 export function useInputChange<R>(
   callback: (e: ChangeEvent<HTMLInputElement>) => R,
   deps: DependencyList = [callback]

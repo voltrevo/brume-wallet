@@ -5,7 +5,8 @@ import { ClassNameProps } from "@/libs/react/props/className";
 import { ColorIndexProps } from "@/libs/react/props/color";
 import { NameProps } from "@/libs/react/props/name";
 import { OkProps } from "@/libs/react/props/promise";
-import { useBackground } from "@/mods/foreground/background/context";
+import { Dialog } from "@/libs/ui/dialog/dialog";
+import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Page } from "@/mods/foreground/components/page/page";
 import { useCallback, useState } from "react";
 import { User, UserProps, useUser } from "../data";
@@ -31,9 +32,11 @@ export function UsersPage(props: OkProps<User>) {
       err={clear} />
 
   return <Page>
-    {createDialog.current &&
-      <UserCreateDialog
-        close={createDialog.disable} />}
+    <Dialog
+      opened={createDialog.current}
+      close={createDialog.disable}>
+      <UserCreateDialog />
+    </Dialog>
     <div className="grid grow place-items-center place-content-center grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] auto-rows-[10rem]">
       {users.data?.inner.map(user =>
         <UserOkButton
@@ -48,7 +51,7 @@ export function UsersPage(props: OkProps<User>) {
 function UserOkButton(props: UserProps & OkProps<User>) {
   const { ok } = props
 
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
   const user = useUser(props.user.uuid)
 
   const onClick = useCallback(() => {

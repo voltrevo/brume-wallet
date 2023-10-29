@@ -7,7 +7,7 @@ import { User, useCurrentUserQuery } from "./data";
 
 export const UserContext = createContext<Nullable<User>>(undefined)
 
-export function useCurrentUserRef() {
+export function useUserContext() {
   return useContext(UserContext)!
 }
 

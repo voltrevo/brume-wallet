@@ -1,4 +1,4 @@
-import { BackgroundGuard, useBackground } from "@/mods/foreground/background/context";
+import { BackgroundGuard, useBackgroundContext } from "@/mods/foreground/background/context";
 import { UserGuard } from "@/mods/foreground/entities/users/context";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
@@ -7,7 +7,7 @@ import { Router } from "@/mods/foreground/router/router";
 import { useEffect } from "react";
 
 export default function Action() {
-  const background = useBackground().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   useEffect(() => {
     /**

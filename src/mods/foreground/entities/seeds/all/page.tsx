@@ -3,13 +3,14 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
 import { Button } from "@/libs/ui/button"
+import { Dialog } from "@/libs/ui/dialog/dialog"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path/context"
 import { useCallback } from "react"
 import { SeedDataCard } from "../card"
-import { SeedDataProvider, useSeedData } from "../context"
+import { SeedDataProvider, useSeedDataContext } from "../context"
 import { SeedCreatorDialog } from "./create"
 import { useSeeds } from "./data"
 
@@ -42,9 +43,11 @@ export function SeedsPage() {
     </PageHeader>
 
   return <Page>
-    {creator.current &&
-      <SeedCreatorDialog
-        close={creator.disable} />}
+    <Dialog
+      opened={creator.current}
+      close={creator.disable}>
+      <SeedCreatorDialog />
+    </Dialog>
     {Header}
     {Body}
   </Page>
@@ -65,7 +68,7 @@ export function ClickableSeedGrid(props: OkProps<Seed> & CreateProps & { maybeSe
 }
 
 export function ClickableSeedDataCard(props: OkProps<Seed>) {
-  const seed = useSeedData()
+  const seed = useSeedDataContext()
   const { ok } = props
 
   const onClick = useCallback(() => {
