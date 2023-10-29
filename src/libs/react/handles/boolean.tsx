@@ -2,7 +2,7 @@ import { useCallback, useState } from "react"
 import { useObjectMemo } from "../memo"
 
 export interface BooleanHandle {
-  current: boolean
+  readonly current: boolean
 
   set(x: boolean): void
 

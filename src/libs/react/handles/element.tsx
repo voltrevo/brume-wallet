@@ -1,8 +1,9 @@
+import { Nullable } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useState } from "react";
 import { useObjectMemo } from "../memo";
 
 export interface ElementHandle<T extends Element = Element> {
-  current: T | null;
+  readonly current: Nullable<T>
 
   set(x: T | null): void;
   unset(): void;
