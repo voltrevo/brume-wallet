@@ -129,18 +129,18 @@ function WalletDataPage() {
       back={onBackClick}>
       <div className="flex gap-2">
         {background.isWebsite() && <>
-          <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+          <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
             onClick={onCameraClick}>
             <Button.Shrinker>
               <Outline.QrCodeIcon className="s-sm" />
             </Button.Shrinker>
-          </Button.Naked>
-          <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+          </Button.Base>
+          <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
             onClick={onLinkClick}>
             <Button.Shrinker>
               <Outline.LinkIcon className="s-sm" />
             </Button.Shrinker>
-          </Button.Naked>
+          </Button.Base>
         </>}
       </div>
     </PageHeader>
@@ -202,7 +202,7 @@ function WalletDataPage() {
       </div>
       <div className="h-4" />
       <div className="flex items-center gap-2">
-        <button className={`${Button.Naked.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
+        <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
           onClick={() => setAll(!all)}>
           <div className={`${Button.Shrinker.className}`}>
             {all ? "Show less" : "Show more"}
@@ -210,14 +210,14 @@ function WalletDataPage() {
         </button>
         <div className="grow" />
         {all && <>
-          <button className={`${Button.Naked.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
+          <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
             onClick={() => setEdit(!edit)}>
             <div className={`${Button.Shrinker.className}`}>
               {edit ? "Done" : "Edit"}
             </div>
           </button>
         </>}
-        <button className={`${Button.Naked.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
+        <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
           onClick={add.enable}>
           <div className={`${Button.Shrinker.className}`}>
             {"Add"}

@@ -5,10 +5,10 @@ import { Button } from "../button";
 export function Contrast(props: ButtonProps) {
   const { children, className, ...button } = props
 
-  return <Button.Naked className={`${Button.Naked.className} ${Button.Contrast.className} ${className}`}
+  return <Button.Base className={`${Button.Base.className} ${Button.Contrast.className} ${className}`}
     {...button}>
     {children}
-  </Button.Naked>
+  </Button.Base>
 }
 
 export namespace Contrast {

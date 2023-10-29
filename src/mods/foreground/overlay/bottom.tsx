@@ -32,28 +32,28 @@ export function Bottom() {
 
   return <nav className="h-16 w-full shrink-0 border-t border-t-contrast">
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">
-      <Button.Naked className="grow text-contrast aria-selected:text-default"
+      <Button.Base className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/" || path.pathname === "/wallets"}
         onClick={onWalletsClick}>
         <Button.Shrinker>
           <Outline.WalletIcon className="s-md" />
         </Button.Shrinker>
-      </Button.Naked>
-      <Button.Naked className="grow text-contrast aria-selected:text-default"
+      </Button.Base>
+      <Button.Base className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/seeds"}
         onClick={onSeedsClick}>
         <Button.Shrinker>
           <Outline.SparklesIcon className="s-md" />
         </Button.Shrinker>
-      </Button.Naked>
-      <Button.Naked className="grow text-contrast aria-selected:text-default"
+      </Button.Base>
+      <Button.Base className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/sessions"}
         onClick={onSessionsClick}>
         <Button.Shrinker>
           <Outline.GlobeAltIcon className="s-md" />
         </Button.Shrinker>
-      </Button.Naked>
-      <Button.Naked className="grow text-contrast aria-selected:text-default"
+      </Button.Base>
+      <Button.Base className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/requests"}
         onClick={onRequestsClick}>
         <Button.Shrinker className="">
@@ -63,14 +63,14 @@ export function Bottom() {
             <Outline.CheckIcon className="s-md" />
           </div>
         </Button.Shrinker>
-      </Button.Naked>
-      <Button.Naked className="grow text-contrast aria-selected:text-default"
+      </Button.Base>
+      <Button.Base className="grow text-contrast aria-selected:text-default"
         aria-selected={path.pathname === "/settings"}
         onClick={onSettingsClick}>
         <Button.Shrinker>
           <Outline.CogIcon className="s-md" />
         </Button.Shrinker>
-      </Button.Naked>
+      </Button.Base>
     </div>
   </nav>
 }

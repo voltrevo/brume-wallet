@@ -46,12 +46,12 @@ export namespace Dialog {
         {children}
       </div>
       <div className="grow" />
-      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={close}>
         <Button.Shrinker>
           <Outline.XMarkIcon className="s-sm" />
         </Button.Shrinker>
-      </Button.Naked>
+      </Button.Base>
     </h1>
   }
 
@@ -67,12 +67,12 @@ export namespace Dialog {
           Hello world
           <div className="h-2" />
           <div className="flex items-center gap-2">
-            <Button.Naked className="w-full po-md"
+            <Button.Base className="w-full po-md"
               onClick={open.disable}>
               <Button.Shrinker>
                 Click me
               </Button.Shrinker>
-            </Button.Naked>
+            </Button.Base>
             <Button.Opposite className="w-full po-md"
               onClick={open.disable}>
               <Button.Shrinker>

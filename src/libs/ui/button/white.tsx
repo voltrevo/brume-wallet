@@ -5,7 +5,7 @@ import { Button } from "../button";
 export function White(props: ButtonProps) {
   const { children, className, ...button } = props
 
-  return <button className={`${Button.Naked.className} ${Button.White.className} ${className}`}
+  return <button className={`${Button.Base.className} ${Button.White.className} ${className}`}
     {...button}>
     {children}
   </button>

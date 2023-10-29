@@ -1,5 +1,5 @@
 import { Button } from "@/libs/ui/button"
 
 export default function Page() {
-  return <Button.Naked.Test />
+  return <Button.Base.Test />
 }

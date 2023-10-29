@@ -5,7 +5,7 @@ import { Button } from "../button"
 export function Opposite(props: ButtonProps) {
   const { className, children, ...button } = props
 
-  return <button className={`${Button.Naked.className} ${Button.Opposite.className} ${className}`}
+  return <button className={`${Button.Base.className} ${Button.Opposite.className} ${className}`}
     {...button}>
     {children}
   </button>

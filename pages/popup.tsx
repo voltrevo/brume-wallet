@@ -547,12 +547,12 @@ export function WalletAndChainSelectPage() {
 
   const Header =
     <PageHeader title="Choose a wallet">
-      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={creator.enable}>
         <Button.Shrinker>
           <Outline.PlusIcon className="s-sm" />
         </Button.Shrinker>
-      </Button.Naked>
+      </Button.Base>
     </PageHeader>
 
   return <Page>

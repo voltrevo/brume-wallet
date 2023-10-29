@@ -57,13 +57,13 @@ export function RequestsPage() {
 
   const Header =
     <PageHeader title="Requests">
-      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         disabled={tryRejectAll.loading || !Boolean(maybeRequests?.length)}
         onClick={tryRejectAll.run}>
         <Button.Shrinker>
           <Outline.TrashIcon className="s-sm" />
         </Button.Shrinker>
-      </Button.Naked>
+      </Button.Base>
     </PageHeader>
 
   return <Page>

@@ -9,12 +9,12 @@ export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps
 
   return <div className="p-4 flex items-center">
     {back && <div className="mr-2">
-      <Button.Naked className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={back}>
         <Button.Shrinker>
           <Outline.ChevronLeftIcon className="s-sm" />
         </Button.Shrinker>
-      </Button.Naked>
+      </Button.Base>
     </div>}
     <div className="text-2xl font-medium">
       {title}

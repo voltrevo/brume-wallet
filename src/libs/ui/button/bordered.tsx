@@ -5,10 +5,10 @@ import { Button } from "../button";
 export function Bordered(props: ButtonProps) {
   const { children, className, ...button } = props
 
-  return <Button.Naked className={`${Button.Naked.className} ${Button.Bordered.className} ${className}`}
+  return <Button.Base className={`${Button.Base.className} ${Button.Bordered.className} ${className}`}
     {...button}>
     {children}
-  </Button.Naked>
+  </Button.Base>
 }
 
 export namespace Bordered {

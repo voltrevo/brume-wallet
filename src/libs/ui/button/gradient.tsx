@@ -7,7 +7,7 @@ import { Button } from "../button";
 export function Gradient(props: ButtonProps & ColorIndexProps) {
   const { className, children, colorIndex, ...button } = props
 
-  return <button className={`${Button.Naked.className} ${Button.Gradient.className(colorIndex)} ${className}`}
+  return <button className={`${Button.Base.className} ${Button.Gradient.className(colorIndex)} ${className}`}
     {...button}>
     {children}
   </button>

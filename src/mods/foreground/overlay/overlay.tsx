@@ -20,13 +20,13 @@ export function UpdateBanner(props: OkProps<unknown>) {
       <div className="grow">
         {`An update is available`}
       </div>
-      <Button.Naked className="hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Base className="hovered-or-clicked-or-focused:scale-105 transition"
         onClick={ok}>
         <Button.Shrinker>
           <Outline.ArrowPathIcon className="s-sm" />
           Update
         </Button.Shrinker>
-      </Button.Naked>
+      </Button.Base>
     </div>
   </div>
 }

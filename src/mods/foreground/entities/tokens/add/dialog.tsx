@@ -148,7 +148,7 @@ export function TokenAddDialog(props: CloseProps) {
     <div className="flex flex-wrap items-center overflow-hidden gap-2">
       {Object.values(chainByChainId).map(x =>
         <button key={x.chainId}
-          className={`${Button.Naked.className} po-sm border border-contrast shrink-0 data-[selected=true]:border-opposite transition-colors`}
+          className={`${Button.Base.className} po-sm border border-contrast shrink-0 data-[selected=true]:border-opposite transition-colors`}
           onClick={() => setChain(x)}
           data-selected={chain === x}>
           <div className={`${Button.Shrinker.className}`}>

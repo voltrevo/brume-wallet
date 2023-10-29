@@ -26,12 +26,12 @@ export function NavBar() {
           </span>
         </div>
         <div className="w-2" />
-        <Button.Naked className="text-contrast hovered-or-clicked-or-focused:scale-105 transition"
+        <Button.Base className="text-contrast hovered-or-clicked-or-focused:scale-105 transition"
           onClick={onOpen}>
           <Button.Shrinker>
             <Outline.ArrowTopRightOnSquareIcon className="s-xs" />
           </Button.Shrinker>
-        </Button.Naked>
+        </Button.Base>
       </div>
     </div>
   </div>
