@@ -1,7 +1,6 @@
 import { Outline } from "@/libs/icons/icons";
 import { ButtonProps } from "@/libs/react/props/html";
 import { Button } from "../button";
-import { Base } from "./base";
 
 /**
  * @deprecated
@@ -24,14 +23,14 @@ export namespace White {
 
   export function Test() {
     return <div className="p-1">
-      <button className={`${Base.className} ${className} po-md`}>
+      <button className={`${Button.Base.className} ${className} po-md`}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.GlobeAltIcon className="s-sm" />
           Hello world
         </div>
       </button>
       <div className="h-1" />
-      <button className={`${Base.className} ${className} po-md`}>
+      <button className={`${Button.Base.className} ${className} po-md`}>
         <div className={`${Button.Shrinker.className}`}>
           Hello world
         </div>
