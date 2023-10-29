@@ -516,6 +516,11 @@ export class Global {
         return new None()
       })
 
+      await script.tryRequest<void>({
+        method: "connect",
+        params: [{ chainId: `0x${chainId.toString(16)}` }]
+      }).then(r => r.throw(t).throw(t))
+
       return new Ok(sessionData)
     })
   }

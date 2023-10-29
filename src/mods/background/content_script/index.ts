@@ -198,12 +198,6 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
 
     port.events.on("close", onClose, { passive: true })
 
-    {
-      const detail = { chainId: 1 }
-      const event = new CustomEvent("ethereum#connect", { detail })
-      window.dispatchEvent(event)
-    }
-
     const onClean = () => {
       window.removeEventListener("ethereum#request", onScriptRequest)
       port.events.off("close", onClose)

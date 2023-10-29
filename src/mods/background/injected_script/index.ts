@@ -144,7 +144,10 @@ class Provider {
     let suplistener = listeners.get(sublistener)
 
     if (suplistener == null) {
-      suplistener = (e: CustomEvent<string>) => void sublistener(JSON.parse(e.detail))
+      suplistener = (e: CustomEvent<string>) => {
+        sublistener(JSON.parse(e.detail))
+      }
+
       listeners.set(sublistener, suplistener)
     }
 
