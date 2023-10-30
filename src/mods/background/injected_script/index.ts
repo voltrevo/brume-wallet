@@ -73,7 +73,7 @@ class Provider {
   /**
    * @deprecated
    */
-  autoRefreshOnNetworkChange = true
+  autoRefreshOnNetworkChange = false
 
   constructor() {
     /**
@@ -99,6 +99,15 @@ class Provider {
 
   isConnected() {
     return true
+  }
+
+  async enable() {
+    /**
+     * Compatibility mode
+     */
+    this.autoRefreshOnNetworkChange = true
+
+    return await this.request({ method: "eth_requestAccounts" })
   }
 
   async tryRequest(init: RpcRequestPreinit<unknown>) {
@@ -156,6 +165,15 @@ class Provider {
     }
 
     window.addEventListener(`ethereum#${key}`, suplistener, { passive: true })
+  }
+
+  once(key: string, sublistener: Sublistener) {
+    const sublistener2: Sublistener = (...params: any[]) => {
+      sublistener(...params)
+      this.off(key, sublistener)
+    }
+
+    this.on(key, sublistener2)
   }
 
   off(key: string, sublistener: Sublistener) {

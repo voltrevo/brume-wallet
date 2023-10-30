@@ -84,7 +84,7 @@ export class WebsitePort {
 
   async onResponse(response: RpcResponseInit<unknown>) {
     // if (response.id !== "ping")
-    //   console.debug(this.name, "<-", response)
+    //   console.debug(this.name, "->", response)
 
     const returned = await this.events.emit("response", [response])
 
@@ -104,6 +104,9 @@ export class WebsitePort {
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     const request = this.counter.prepare(init)
+
+    // if (request.id !== "ping")
+    //   console.debug(this.name, "<-", request)
 
     this.port.postMessage(JSON.stringify(request))
 
@@ -194,7 +197,7 @@ export class ExtensionPort {
 
   async onResponse(response: RpcResponseInit<unknown>) {
     if (response.id !== "ping")
-      console.debug(this.name, "<-", response)
+      console.debug(this.name, "->", response)
 
     const returned = await this.events.emit("response", [response])
 
@@ -219,6 +222,9 @@ export class ExtensionPort {
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
       const request = this.counter.prepare(init)
+
+      if (request.id !== "ping")
+        console.debug(this.name, "<-", request)
 
       tryBrowserSync(() => {
         this.port.postMessage(JSON.stringify(request))

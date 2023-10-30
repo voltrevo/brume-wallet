@@ -484,6 +484,13 @@ export class Global {
             params: [{ chainId: `0x${chainId.toString(16)}` }]
           }).then(r => r.throw(t).throw(t))
 
+          if (chainId !== 1) {
+            await script.tryRequest<void>({
+              method: "chainChanged",
+              params: [{ chainId: `0x${chainId.toString(16)}` }]
+            }).then(r => r.throw(t).throw(t))
+          }
+
           return new Ok(sessionData)
         }
 
@@ -542,6 +549,13 @@ export class Global {
           params: [{ chainId: `0x${chainId.toString(16)}` }]
         }).then(r => r.throw(t).throw(t))
 
+        if (chainId !== 1) {
+          await script.tryRequest<void>({
+            method: "chainChanged",
+            params: [{ chainId: `0x${chainId.toString(16)}` }]
+          }).then(r => r.throw(t).throw(t))
+        }
+
         return new Ok(sessionData)
       })
     })
@@ -577,6 +591,8 @@ export class Global {
 
       if (subrequest.method === "eth_accounts" && !this.hasExtensionSession(script))
         return new Ok([])
+      if (subrequest.method === "eth_chainId" && !this.hasExtensionSession(script))
+        return new Ok("0x1")
       if (subrequest.method !== "eth_requestAccounts" && !this.hasExtensionSession(script))
         return new Err(new UnauthorizedError())
 
@@ -594,6 +610,8 @@ export class Global {
         return await this.eth_requestAccounts(ethereum, session, subrequest)
       if (subrequest.method === "eth_accounts")
         return await this.eth_accounts(ethereum, session, subrequest)
+      if (subrequest.method === "eth_chainId")
+        return await this.eth_chainId(ethereum, session, subrequest)
       if (subrequest.method === "eth_sendTransaction")
         return await this.eth_sendTransaction(ethereum, session, subrequest, mouse)
       if (subrequest.method === "personal_sign")
@@ -652,6 +670,10 @@ export class Global {
 
       return new Ok(addresses)
     })
+  }
+
+  async eth_chainId(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+    return new Ok(`0x${session.chain.chainId.toString(16)}`)
   }
 
   async eth_getBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
@@ -738,6 +760,9 @@ export class Global {
   async wallet_switchEthereumChain(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
       const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
+
+      if (chainId === `0x${session.chain.chainId.toString(16)}`)
+        return Ok.void()
 
       const chain = Option.wrap(chainByChainId[parseInt(chainId, 16)]).ok().throw(t)
 
