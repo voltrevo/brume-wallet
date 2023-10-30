@@ -1,4 +1,4 @@
-import { AppRequest, AppRequestData } from "@/mods/background/service_worker/entities/requests/data";
+import { AppRequestData, BgAppRequest } from "@/mods/background/service_worker/entities/requests/data";
 import { createQuery, useQuery } from "@hazae41/glacier";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
@@ -6,7 +6,7 @@ import { UserStorage, useUserStorageContext } from "../../storage/user";
 export namespace FgAppRequest {
 
   export function schema(id: string, storage: UserStorage) {
-    return createQuery<string, AppRequestData, never>({ key: AppRequest.key(id), storage })
+    return createQuery<string, AppRequestData, never>({ key: BgAppRequest.key(id), storage })
   }
 
 }

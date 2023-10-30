@@ -1,7 +1,7 @@
 import { createQuery } from "@hazae41/glacier";
 import { AppRequest } from "../data";
 
-export namespace AppRequests {
+export namespace BgAppRequests {
 
   export type Key = typeof key
 

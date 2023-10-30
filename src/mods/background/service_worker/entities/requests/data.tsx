@@ -2,7 +2,7 @@ import { Mutators } from "@/libs/xswr/mutators"
 import { Data, States, createQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
-import { AppRequests } from "./all/data"
+import { BgAppRequests } from "./all/data"
 
 export type AppRequest =
   | AppRequestRef
@@ -29,7 +29,7 @@ export interface AppRequestData {
   readonly session?: string
 }
 
-export namespace AppRequest {
+export namespace BgAppRequest {
 
   export type Key = ReturnType<typeof key>
 
@@ -47,7 +47,7 @@ export namespace AppRequest {
         const previousData = previous.real?.data
         const currentData = current.real?.data
 
-        await AppRequests.schema().tryMutate(Mutators.mapData((d = new Data([])) => {
+        await BgAppRequests.schema().tryMutate(Mutators.mapData((d = new Data([])) => {
           if (previousData?.inner.id === currentData?.inner.id)
             return d
           if (previousData != null)
