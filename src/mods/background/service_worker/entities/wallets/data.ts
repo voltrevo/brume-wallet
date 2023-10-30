@@ -9,7 +9,7 @@ import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Bytes } from "@hazae41/bytes"
 import { Cubane, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fail, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
+import { Data, Fail, Fetched, FetcherMore, IDBStorage, SimpleQuery, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
@@ -445,7 +445,7 @@ export function getBalance(ethereum: EthereumContext, account: string, block: st
           const pair = pairByAddress[pairAddress]
           const chain = chainByChainId[pair.chainId]
 
-          const price = getPairPrice({ ...ethereum, chain }, pair, storage)
+          const price = BgPair.Price.schema({ ...ethereum, chain }, pair, storage)
           const priceState = await price.state
 
           if (priceState.isErr())
@@ -479,52 +479,75 @@ export function getBalance(ethereum: EthereumContext, account: string, block: st
   })
 }
 
-export function getPairPrice(ethereum: EthereumContext, pair: PairInfo, storage: IDBStorage) {
-  const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
-    const data = Cubane.Abi.tryEncode(PairAbi.getReserves.args.from()).throw(t)
+export namespace BgPair {
 
-    const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
-      method: "eth_call",
-      params: [{
-        to: pair.address,
-        data: data
-      }, "pending"]
-    }, {}).then(r => r.throw(t))
+  export namespace Price {
 
-    if (fetched.isErr())
-      return new Ok(new Fail(fetched.inner))
+    export const method = "eth_getPairPrice"
 
-    const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.Uint256, Cubane.Abi.Uint256)
-    const [a, b] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
+    export function key(ethereum: EthereumContext, pair: PairInfo) {
+      return {
+        chainId: ethereum.chain.chainId,
+        method: "eth_getPairPrice",
+        params: [pair.address]
+      }
+    }
 
-    const price = computePairPrice(pair, [a.value, b.value])
+    export function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+      return Result.unthrowSync<Result<SimpleQuery<EthereumQueryKey<unknown>, FixedInit, Error>, Error>>(t => {
+        const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
+        const pair = Option.wrap(pairByAddress[address]).ok().throw(t)
+        const query = schema(ethereum, pair, storage)
+        return new Ok(query)
+      })
+    }
 
-    return new Ok(new Data(price))
-  })
+    export function schema(ethereum: EthereumContext, pair: PairInfo, storage: IDBStorage) {
+      const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
+        const data = Cubane.Abi.tryEncode(PairAbi.getReserves.args.from()).throw(t)
 
-  return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
-    key: {
-      chainId: ethereum.chain.chainId,
-      method: "eth_getPairPrice",
-      params: [pair.address]
-    },
-    fetcher,
-    storage
-  })
-}
+        const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
+          method: "eth_call",
+          params: [{
+            to: pair.address,
+            data: data
+          }, "pending"]
+        }, {}).then(r => r.throw(t))
 
-export function computePairPrice(pair: PairInfo, reserves: [bigint, bigint]) {
-  const decimals0 = tokenByAddress[pair.token0].decimals
-  const decimals1 = tokenByAddress[pair.token1].decimals
+        if (fetched.isErr())
+          return new Ok(new Fail(fetched.inner))
 
-  const [reserve0, reserve1] = reserves
+        const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.Uint256, Cubane.Abi.Uint256)
+        const [a, b] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
 
-  const quantity0 = new Fixed(reserve0, decimals0)
-  const quantity1 = new Fixed(reserve1, decimals1)
+        const price = compute(pair, [a.value, b.value])
 
-  if (pair.reversed)
-    return quantity0.div(quantity1)
-  return quantity1.div(quantity0)
+        return new Ok(new Data(price))
+      })
+
+      return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
+        key: key(ethereum, pair),
+        fetcher,
+        storage
+      })
+    }
+
+    export function compute(pair: PairInfo, reserves: [bigint, bigint]) {
+      const decimals0 = tokenByAddress[pair.token0].decimals
+      const decimals1 = tokenByAddress[pair.token1].decimals
+
+      const [reserve0, reserve1] = reserves
+
+      const quantity0 = new Fixed(reserve0, decimals0)
+      const quantity1 = new Fixed(reserve1, decimals1)
+
+      if (pair.reversed)
+        return quantity0.div(quantity1)
+      return quantity1.div(quantity0)
+    }
+
+  }
+
 }
 
 export function getTokenPricedBalance(ethereum: EthereumContext, account: string, token: ContractTokenData, coin: "usd", storage: IDBStorage) {
@@ -588,7 +611,7 @@ export function getTokenBalance(ethereum: EthereumContext, account: ZeroHexStrin
           const pair = pairByAddress[pairAddress]
           const chain = chainByChainId[pair.chainId]
 
-          const price = getPairPrice({ ...ethereum, chain }, pair, storage)
+          const price = BgPair.Price.schema({ ...ethereum, chain }, pair, storage)
           const priceState = await price.state
 
           if (priceState.isErr())
@@ -664,10 +687,10 @@ export namespace BgEns {
       }
     }
 
-    export function parse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
       const [name] = (request as RpcRequestPreinit<[string]>).params
-
-      return schema(ethereum, name, storage)
+      const query = schema(ethereum, name, storage)
+      return new Ok(query)
     }
 
     export function schema(ethereum: EthereumContext, name: string, storage: IDBStorage) {
@@ -722,10 +745,10 @@ export namespace BgEns {
       }
     }
 
-    export function parse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
       const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
-
-      return schema(ethereum, address, storage)
+      const query = schema(ethereum, address, storage)
+      return new Ok(query)
     }
 
     export function schema(ethereum: EthereumContext, address: ZeroHexString, storage: IDBStorage) {
