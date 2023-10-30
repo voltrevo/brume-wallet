@@ -2,7 +2,6 @@ import { BigIntToHex, BigInts } from "@/libs/bigints/bigints";
 import { UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Fixed } from "@/libs/fixed/fixed";
-import { Radix } from "@/libs/hex/hex";
 import { Outline } from "@/libs/icons/icons";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -13,7 +12,7 @@ import { Button } from "@/libs/ui/button";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
-import { Cubane } from "@hazae41/cubane";
+import { Cubane, ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
@@ -151,12 +150,12 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & EthereumCo
           params: [context.uuid, context.chain.chainId, {
             method: "eth_estimateGas",
             params: [{
-              chainId: Radix.toZeroHex(context.chain.chainId),
+              chainId: ZeroHexString.from(context.chain.chainId),
               from: wallet.address,
               to: token.address,
-              maxFeePerGas: Radix.toZeroHex(maxFeePerGas),
-              maxPriorityFeePerGas: Radix.toZeroHex(maxPriorityFeePerGas),
-              nonce: Radix.toZeroHex(nonce),
+              maxFeePerGas: ZeroHexString.from(maxFeePerGas),
+              maxPriorityFeePerGas: ZeroHexString.from(maxPriorityFeePerGas),
+              nonce: ZeroHexString.from(nonce),
               data: data
             }, "latest"],
             noCheck: true
@@ -191,11 +190,11 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & EthereumCo
           params: [context.uuid, context.chain.chainId, {
             method: "eth_estimateGas",
             params: [{
-              chainId: Radix.toZeroHex(context.chain.chainId),
+              chainId: ZeroHexString.from(context.chain.chainId),
               from: wallet.address,
               to: token.address,
-              gasPrice: Radix.toZeroHex(gasPrice),
-              nonce: Radix.toZeroHex(nonce),
+              gasPrice: ZeroHexString.from(gasPrice),
+              nonce: ZeroHexString.from(nonce),
               data: data
             }, "latest"],
             noCheck: true

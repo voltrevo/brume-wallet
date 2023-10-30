@@ -481,13 +481,13 @@ export class Global {
 
           await script.tryRequest<void>({
             method: "connect",
-            params: [{ chainId: `0x${chainId.toString(16)}` }]
+            params: [{ chainId: ZeroHexString.from(chainId) }]
           }).then(r => r.throw(t).throw(t))
 
           if (chainId !== 1) {
             await script.tryRequest<void>({
               method: "chainChanged",
-              params: [{ chainId: `0x${chainId.toString(16)}` }]
+              params: [{ chainId: ZeroHexString.from(chainId) }]
             }).then(r => r.throw(t).throw(t))
           }
 
@@ -546,13 +546,13 @@ export class Global {
 
         await script.tryRequest<void>({
           method: "connect",
-          params: [{ chainId: `0x${chainId.toString(16)}` }]
+          params: [{ chainId: ZeroHexString.from(chainId) }]
         }).then(r => r.throw(t).throw(t))
 
         if (chainId !== 1) {
           await script.tryRequest<void>({
             method: "chainChanged",
-            params: [{ chainId: `0x${chainId.toString(16)}` }]
+            params: [{ chainId: ZeroHexString.from(chainId) }]
           }).then(r => r.throw(t).throw(t))
         }
 
@@ -673,7 +673,7 @@ export class Global {
   }
 
   async eth_chainId(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
-    return new Ok(`0x${session.chain.chainId.toString(16)}`)
+    return new Ok(ZeroHexString.from(session.chain.chainId))
   }
 
   async eth_getBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
@@ -761,7 +761,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
 
-      if (chainId === `0x${session.chain.chainId.toString(16)}`)
+      if (chainId === ZeroHexString.from(session.chain.chainId))
         return Ok.void()
 
       const chain = Option.wrap(chainByChainId[parseInt(chainId, 16)]).ok().throw(t)

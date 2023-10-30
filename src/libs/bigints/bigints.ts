@@ -13,7 +13,7 @@ export namespace BigIntToHex {
   }
 
   export function encode(value: bigint): ZeroHexString {
-    return `0x${value.toString(16)}` as ZeroHexString
+    return `0x${value.toString(16)}`
   }
 
   export function decode(value: string) {
