@@ -2,7 +2,7 @@ import { EnsAbi } from "@/libs/abi/ens.abi"
 import { TokenAbi } from "@/libs/abi/erc20.abi"
 import { PairAbi } from "@/libs/abi/pair.abi"
 import { ChainData, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
-import { Fixed, FixedInit, ZeroHexFixed } from "@/libs/fixed/fixed"
+import { Fixed, FixedInit } from "@/libs/fixed/fixed"
 import { Maps } from "@/libs/maps/maps"
 import { TorRpc } from "@/libs/rpc/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
@@ -426,59 +426,6 @@ export function getPricedBalance(ethereum: EthereumContext, account: string, coi
   })
 }
 
-export function getBalance(ethereum: EthereumContext, account: string, block: string, storage: IDBStorage) {
-  const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryEthereumFetch<ZeroHexString>(ethereum, request, {}).then(r => r.mapSync(d => d.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals))))
-
-  const indexer = async (states: States<FixedInit, Error>) => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (block !== "pending")
-        return Ok.void()
-
-      const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
-        if (ethereum.chain.token.pairs == null)
-          return new None()
-
-        let pricedBalance: Fixed = Fixed.from(balance)
-
-        for (const pairAddress of ethereum.chain.token.pairs) {
-          const pair = pairByAddress[pairAddress]
-          const chain = chainByChainId[pair.chainId]
-
-          const price = BgPair.Price.schema({ ...ethereum, chain }, pair, storage)
-          const priceState = await price.state
-
-          if (priceState.isErr())
-            return new None()
-          if (priceState.inner.data == null)
-            return new None()
-
-          pricedBalance = pricedBalance.mul(Fixed.from(priceState.inner.data.inner))
-        }
-
-        return new Some(pricedBalance)
-      }).then(o => o.unwrapOr(new Fixed(0n, 0)))
-
-      const pricedBalanceQuery = getPricedBalance(ethereum, account, "usd", storage)
-      await pricedBalanceQuery.tryMutate(Mutators.set<FixedInit, Error>(new Data(pricedBalance))).then(r => r.throw(t))
-
-      return Ok.void()
-    })
-  }
-
-  return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
-    key: {
-      version: 2,
-      chainId: ethereum.chain.chainId,
-      method: "eth_getBalance",
-      params: [account, block]
-    },
-    fetcher,
-    indexer,
-    storage
-  })
-}
-
 export namespace BgPair {
 
   export namespace Price {
@@ -493,8 +440,8 @@ export namespace BgPair {
       }
     }
 
-    export function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-      return Result.unthrowSync<Result<SimpleQuery<EthereumQueryKey<unknown>, FixedInit, Error>, Error>>(t => {
+    export async function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+      return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, FixedInit, Error>, Error>>(async t => {
         const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
         const pair = Option.wrap(pairByAddress[address]).ok().throw(t)
         const query = schema(ethereum, pair, storage)
@@ -687,7 +634,7 @@ export namespace BgEns {
       }
     }
 
-    export function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export async function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
       const [name] = (request as RpcRequestPreinit<[string]>).params
       const query = schema(ethereum, name, storage)
       return new Ok(query)
@@ -745,7 +692,7 @@ export namespace BgEns {
       }
     }
 
-    export function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export async function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
       const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
       const query = schema(ethereum, address, storage)
       return new Ok(query)

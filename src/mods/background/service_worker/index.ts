@@ -3,8 +3,7 @@ import "@hazae41/symbol-dispose-polyfill"
 import { Blobs } from "@/libs/blobs/blobs"
 import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
-import { chainByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain"
-import { FixedInit } from "@/libs/fixed/fixed"
+import { chainByChainId } from "@/libs/ethereum/mods/chain"
 import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
 import { Circuits } from "@/libs/tor/circuits/circuits"
@@ -27,7 +26,7 @@ import { Circuit, Echalote, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
-import { IDBStorage, RawState, SimpleFetcherfulQuery, SimpleQuery, core } from "@hazae41/glacier"
+import { IDBStorage, RawState, SimpleQuery, core } from "@hazae41/glacier"
 import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { Kcp } from "@hazae41/kcp"
 import { Keccak256 } from "@hazae41/keccak256"
@@ -52,11 +51,11 @@ import { PersistentSessions } from "./entities/sessions/all/data"
 import { ExSessionData, Session, SessionByOrigin, SessionData, SessionRef, WcSessionData } from "./entities/sessions/data"
 import { Status, StatusData } from "./entities/sessions/status/data"
 import { BgSettings } from "./entities/settings/data"
-import { BgContractToken } from "./entities/tokens/data"
+import { BgContractToken, BgNativeToken } from "./entities/tokens/data"
 import { BgUnknown } from "./entities/unknown/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
-import { BgEns, BgPair, EthereumContext, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef, getBalance, getTokenBalance, tryEthereumFetch } from "./entities/wallets/data"
+import { BgEns, BgPair, EthereumContext, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -627,23 +626,13 @@ export class Global {
     })
   }
 
-  async makeEthereumBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuery<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
-    return await Result.unthrow(async t => {
-      const [address, block] = (request as RpcRequestPreinit<[string, string]>).params
-
-      const query = getBalance(ethereum, address, block, storage)
-
-      return new Ok(query)
-    })
-  }
-
   async eth_getBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
-      const [address, block] = (request as RpcRequestPreinit<[string, string]>).params
+      const [address, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const query = getBalance(ethereum, address, block, storage)
+      const query = BgNativeToken.Balance.schema(ethereum, address, block, storage)
 
       /**
        * Ignore cooldown or store errors, only throw if the actual fetch failed
@@ -655,31 +644,6 @@ export class Global {
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
       return fetched
-    })
-  }
-
-  async makeEthereumTokenBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuery<EthereumQueryKey<unknown>, FixedInit, Error>, Error>> {
-    return await Result.unthrow(async t => {
-      const [account, address, block] = (request as RpcRequestPreinit<[ZeroHexString, string, string]>).params
-
-      const tokenQuery = BgContractToken.schema(ethereum.chain.chainId, address, storage)
-      const tokenState = await tokenQuery.state.then(r => r.throw(t))
-      const tokenData = tokenState.data?.inner ?? tokenByAddress[address]
-
-      const token = Option.wrap(tokenData).ok().throw(t)
-      const query = getTokenBalance(ethereum, account, token, block, storage)
-
-      return new Ok(query)
-    })
-  }
-
-  async makeEthereumResolveEns(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuery<EthereumQueryKey<unknown>, ZeroHexString, Error>, Error>> {
-    return await Result.unthrow(async t => {
-      const [name] = (request as RpcRequestPreinit<[string]>).params
-
-      const query = BgEns.Lookup.schema(ethereum, name, storage)
-
-      return new Ok(query)
     })
   }
 
@@ -1095,16 +1059,16 @@ export class Global {
   }
 
   async tryRouteEthereum(ethereum: EthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<Result<SimpleQuery<any, any, Error>, Error>> {
-    if (request.method === "eth_getBalance")
-      return await this.makeEthereumBalance(ethereum, request, storage)
-    if (request.method === "eth_getTokenBalance")
-      return await this.makeEthereumTokenBalance(ethereum, request, storage)
+    if (request.method === BgNativeToken.Balance.method)
+      return await BgNativeToken.Balance.tryParse(ethereum, request, storage)
+    if (request.method === BgContractToken.Balance.method)
+      return await BgContractToken.Balance.tryParse(ethereum, request, storage)
     if (request.method === BgPair.Price.method)
-      return BgPair.Price.tryParse(ethereum, request, storage)
+      return await BgPair.Price.tryParse(ethereum, request, storage)
     if (request.method === BgEns.Lookup.method)
-      return BgEns.Lookup.tryParse(ethereum, request, storage)
+      return await BgEns.Lookup.tryParse(ethereum, request, storage)
     if (request.method === BgEns.Reverse.method)
-      return BgEns.Reverse.tryParse(ethereum, request, storage)
+      return await BgEns.Reverse.tryParse(ethereum, request, storage)
 
     if (request.method === "eth_getTransactionByHash")
       request.noCheck = true
