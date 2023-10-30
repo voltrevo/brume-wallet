@@ -259,7 +259,7 @@ export class Global {
           const tabId = Option.wrap(slot.current.window.tabs?.[0].id).ok().throw(t)
 
           await tryBrowser(async () => {
-            return await browser.tabs.update(tabId, { highlighted: true })
+            return await browser.tabs.update(tabId, { url: `popup.html#${pathname}`, highlighted: true })
           }).then(r => r.throw(t))
 
           await tryBrowser(async () => {
@@ -424,6 +424,7 @@ export class Global {
           await this.tryOpenOrFocusPopup("/", mouse).then(r => r.throw(t))
 
         const { storage } = Option.wrap(this.#user).ok().throw(t)
+        console.log("got user")
 
         const { origin, title, description } = preOriginData
         const iconQuery = Blobby.schema(origin, storage)
