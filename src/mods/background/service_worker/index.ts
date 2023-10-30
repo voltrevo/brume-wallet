@@ -45,8 +45,8 @@ import { precacheAndRoute } from "workbox-precaching"
 import { Blobby, BlobbyRef } from "./entities/blobbys/data"
 import { EthBrume, WcBrume } from "./entities/brumes/data"
 import { Origin, OriginData, PreOriginData } from "./entities/origins/data"
-import { AppRequests } from "./entities/requests/all/data"
-import { AppRequest, AppRequestData } from "./entities/requests/data"
+import { BgAppRequests } from "./entities/requests/all/data"
+import { AppRequestData, BgAppRequest } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
 import { PersistentSessions } from "./entities/sessions/all/data"
 import { ExSessionData, Session, SessionByOrigin, SessionData, SessionRef, WcSessionData } from "./entities/sessions/data"
@@ -147,8 +147,8 @@ export class Global {
   ) {
     this.circuits = new Mutex(Circuits.createPool(this.tors.inner, { capacity: 9 }))
 
-    core.onState.addEventListener(AppRequests.key, async () => {
-      const state = await AppRequests.schema().state.then(r => r.ok().inner)
+    core.onState.addEventListener(BgAppRequests.key, async () => {
+      const state = await BgAppRequests.schema().state.then(r => r.ok().inner)
 
       const badge = Option
         .wrap(state?.data?.inner.length)
@@ -307,7 +307,7 @@ export class Global {
 
   async tryRequestNoPopup<T>(request: AppRequestData): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
-      const requestQuery = AppRequest.schema(request.id)
+      const requestQuery = BgAppRequest.schema(request.id)
       await requestQuery.tryMutate(Mutators.data<AppRequestData, never>(request)).then(r => r.throw(t))
 
       try {
@@ -320,7 +320,7 @@ export class Global {
 
   async tryRequestPopup<T>(request: AppRequestData, mouse: Mouse, force?: boolean): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
-      const requestQuery = AppRequest.schema(request.id)
+      const requestQuery = BgAppRequest.schema(request.id)
       await requestQuery.tryMutate(Mutators.data<AppRequestData, never>(request)).then(r => r.throw(t))
 
       try {
@@ -1012,17 +1012,19 @@ export class Global {
     return await Result.unthrow(async t => {
       const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
-      const cached = core.storeds.get(cacheKey)
+      return await core.getOrCreateMutex(cacheKey).lock(async () => {
+        const cached = core.storeds.get(cacheKey)
 
-      if (cached != null)
-        return new Ok(cached)
+        if (cached != null)
+          return new Ok(cached)
 
-      const stored = await this.storage.tryGet(cacheKey).then(r => r.throw(t))
-      core.storeds.set(cacheKey, stored)
+        const stored = await this.storage.tryGet(cacheKey).then(r => r.throw(t))
+        core.storeds.set(cacheKey, stored)
+        core.unstoreds.delete(cacheKey)
+        core.onState.dispatchEvent(new CustomEvent(cacheKey))
 
-      core.onState.dispatchEvent(new CustomEvent(cacheKey))
-
-      return new Ok(stored)
+        return new Ok(stored)
+      })
     })
   }
 
@@ -1032,17 +1034,20 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const cached = core.storeds.get(cacheKey)
+      return await core.getOrCreateMutex(cacheKey).lock(async () => {
+        const cached = core.storeds.get(cacheKey)
 
-      if (cached != null)
-        return new Ok(cached)
+        if (cached != null)
+          return new Ok(cached)
 
-      const stored = await storage.tryGet(cacheKey).then(r => r.throw(t))
-      core.storeds.set(cacheKey, stored)
+        const stored = await storage.tryGet(cacheKey).then(r => r.throw(t))
 
-      core.onState.dispatchEvent(new CustomEvent(cacheKey))
+        core.storeds.set(cacheKey, stored)
+        core.unstoreds.delete(cacheKey)
+        core.onState.dispatchEvent(new CustomEvent(cacheKey))
 
-      return new Ok(stored)
+        return new Ok(stored)
+      })
     })
   }
 
@@ -1055,7 +1060,6 @@ export class Global {
       storage.trySet(cacheKey, rawState).throw(t)
       core.storeds.set(cacheKey, rawState)
       core.unstoreds.delete(cacheKey)
-
       core.onState.dispatchEvent(new CustomEvent(cacheKey))
 
       return Ok.void()
