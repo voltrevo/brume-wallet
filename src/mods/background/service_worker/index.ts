@@ -576,12 +576,7 @@ export class Global {
       if (subrequest.method === "wallet_switchEthereumChain")
         return await this.wallet_switchEthereumChain(ethereum, session, subrequest, mouse)
 
-      const fetch: EthereumFetchParams = {}
-
-      if (subrequest.method === "eth_getTransactionByHash")
-        fetch.noCheck = true
-
-      const query = BgUnknown.schema(ethereum, { ...subrequest, ...fetch }, storage)
+      const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
       /**
        * Ignore cooldown or store errors, only throw if the actual fetch failed
@@ -1110,7 +1105,7 @@ export class Global {
     })
   }
 
-  async routeAndMakeEthereum(ethereum: EthereumContext, request: EthereumQueryKey<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuery<any, any, Error>, Error>> {
+  async routeAndMakeEthereum(ethereum: EthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuery<any, any, Error>, Error>> {
     if (request.method === "eth_getBalance")
       return await this.makeEthereumBalance(ethereum, request, storage)
     if (request.method === "eth_getTokenBalance")
@@ -1121,6 +1116,10 @@ export class Global {
       return new Ok(BgEns.Lookup.parse(ethereum, request, storage))
     if (request.method === BgEns.Reverse.method)
       return new Ok(BgEns.Reverse.parse(ethereum, request, storage))
+
+    if (request.method === "eth_getTransactionByHash")
+      request.noCheck = true
+
     return new Ok(BgUnknown.schema(ethereum, request, storage))
   }
 
