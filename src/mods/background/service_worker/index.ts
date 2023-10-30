@@ -251,15 +251,17 @@ export class Global {
     }
   }
 
-  async tryOpenOrFocusPopup(pathname: string, mouse: Mouse): Promise<Result<PopupData, Error>> {
+  async tryOpenOrFocusPopup(pathname: string, mouse: Mouse, force?: boolean): Promise<Result<PopupData, Error>> {
     return await Result.unthrow(async t => {
       return await this.popup.lock(async (slot) => {
         if (slot.current != null) {
           const windowId = Option.wrap(slot.current.window.id).ok().throw(t)
           const tabId = Option.wrap(slot.current.window.tabs?.[0].id).ok().throw(t)
 
+          const url = force ? `popup.html#${pathname}` : undefined
+
           await tryBrowser(async () => {
-            return await browser.tabs.update(tabId, { url: `popup.html#${pathname}`, highlighted: true })
+            return await browser.tabs.update(tabId, { url, highlighted: true })
           }).then(r => r.throw(t))
 
           await tryBrowser(async () => {
@@ -299,7 +301,8 @@ export class Global {
   async tryRequest<T>(request: AppRequestData, mouse?: Mouse): Promise<Result<RpcResponse<T>, Error>> {
     if (mouse != null)
       return await this.tryRequestPopup(request, mouse)
-    return await this.tryRequestNoPopup(request)
+    else
+      return await this.tryRequestNoPopup(request)
   }
 
   async tryRequestNoPopup<T>(request: AppRequestData): Promise<Result<RpcResponse<T>, Error>> {
@@ -315,7 +318,7 @@ export class Global {
     })
   }
 
-  async tryRequestPopup<T>(request: AppRequestData, mouse: Mouse): Promise<Result<RpcResponse<T>, Error>> {
+  async tryRequestPopup<T>(request: AppRequestData, mouse: Mouse, force?: boolean): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
       const requestQuery = AppRequest.schema(request.id)
       await requestQuery.tryMutate(Mutators.data<AppRequestData, never>(request)).then(r => r.throw(t))
@@ -324,7 +327,7 @@ export class Global {
         const { id, method, params } = request
         const url = qurl(`/${method}?id=${id}`, params)
 
-        const popup = await this.tryOpenOrFocusPopup(url, mouse).then(r => r.throw(t))
+        const popup = await this.tryOpenOrFocusPopup(url, mouse, force).then(r => r.throw(t))
         const response = await this.tryWaitPopupResponse<T>(request.id, popup).then(r => r.throw(t))
 
         return new Ok(response)
@@ -424,7 +427,6 @@ export class Global {
           await this.tryOpenOrFocusPopup("/", mouse).then(r => r.throw(t))
 
         const { storage } = Option.wrap(this.#user).ok().throw(t)
-        console.log("got user")
 
         const { origin, title, description } = preOriginData
         const iconQuery = Blobby.schema(origin, storage)
@@ -485,12 +487,12 @@ export class Global {
           return new Ok(sessionData)
         }
 
-        const [persistent, walletId, chainId] = await this.tryRequest<[boolean, string, number]>({
+        const [persistent, walletId, chainId] = await this.tryRequestPopup<[boolean, string, number]>({
           id: crypto.randomUUID(),
           origin: origin,
           method: "eth_requestAccounts",
           params: {}
-        }, mouse).then(r => r.throw(t).throw(t))
+        }, mouse, true).then(r => r.throw(t).throw(t))
 
         const walletQuery = Wallet.schema(walletId, storage)
         const walletState = await walletQuery.state.then(r => r.throw(t))
