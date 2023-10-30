@@ -69,6 +69,8 @@ export function BackgroundGuard(props: ChildrenProps) {
     background.ports.events.on("created", onEvent, { passive: true })
     background.ports.events.on("deleted", onEvent, { passive: true })
 
+    setSize(background.ports.size)
+
     return () => {
       background.ports.events.off("created", onEvent)
       background.ports.events.off("deleted", onEvent)

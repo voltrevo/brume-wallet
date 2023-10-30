@@ -131,7 +131,7 @@ export class Global {
 
   readonly scriptsBySession = new Map<string, Set<Port>>()
 
-  readonly sessionByScript = new Map<string, string>()
+  readonly sessionByScript = new Map<string, Mutex<Slot<string>>>()
 
   readonly wcBySession = new Map<string, WcSession>()
 
@@ -385,57 +385,125 @@ export class Global {
 
   async tryGetOrWaitExtensionSession(script: Port, mouse: Mouse): Promise<Result<SessionData, Error>> {
     return await Result.unthrow(async t => {
-      const currentSession = this.sessionByScript.get(script.name)
+      let mutex = this.sessionByScript.get(script.name)
 
-      if (currentSession != null) {
+      if (mutex == null) {
+        mutex = new Mutex<Slot<string>>({})
+        this.sessionByScript.set(script.name, mutex)
+      }
+
+      return await mutex.lock(async slot => {
+        const currentSession = slot.current
+
+        if (currentSession != null) {
+          const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+          const sessionQuery = Session.schema(currentSession, storage)
+          const sessionState = await sessionQuery.state.then(r => r.throw(t))
+          const sessionData = Option.wrap(sessionState.data?.inner).ok().throw(t)
+
+          return new Ok(sessionData)
+        }
+
+        const preOriginData = await script.tryRequest<PreOriginData>({
+          method: "brume_origin"
+        }).then(r => r.throw(t).throw(t))
+
+        if (this.#user == null)
+          await this.tryOpenOrFocusPopup("/", mouse).then(r => r.throw(t))
+
         const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-        const sessionQuery = Session.schema(currentSession, storage)
-        const sessionState = await sessionQuery.state.then(r => r.throw(t))
-        const sessionData = Option.wrap(sessionState.data?.inner).ok().throw(t)
+        const { origin, title, description } = preOriginData
+        const iconQuery = Blobby.schema(origin, storage)
+        const iconRef = BlobbyRef.create(origin)
 
-        return new Ok(sessionData)
-      }
+        if (preOriginData.icon) {
+          const iconData = { id: origin, data: preOriginData.icon }
+          await iconQuery.tryMutate(Mutators.data(iconData)).then(r => r.throw(t))
+        }
 
-      const preOriginData = await script.tryRequest<PreOriginData>({
-        method: "brume_origin"
-      }).then(r => r.throw(t).throw(t))
+        const originQuery = Origin.schema(origin, storage)
+        const originData: OriginData = { origin, title, description, icons: [iconRef] }
+        await originQuery.tryMutate(Mutators.data(originData)).then(r => r.throw(t))
 
-      if (this.#user == null)
-        await this.tryOpenOrFocusPopup("/", mouse).then(r => r.throw(t))
+        const sessionByOriginQuery = SessionByOrigin.schema(origin, storage)
+        const sessionByOriginState = await sessionByOriginQuery.state.then(r => r.throw(t))
 
-      const { storage } = Option.wrap(this.#user).ok().throw(t)
+        if (sessionByOriginState.data != null) {
+          const sessionId = sessionByOriginState.data.inner.id
 
-      const { origin, title, description } = preOriginData
-      const iconQuery = Blobby.schema(origin, storage)
-      const iconRef = BlobbyRef.create(origin)
+          const sessionQuery = Session.schema(sessionId, storage)
+          const sessionState = await sessionQuery.state.then(r => r.throw(t))
+          const sessionData = Option.wrap(sessionState.data?.inner).ok().throw(t)
 
-      if (preOriginData.icon) {
-        const iconData = { id: origin, data: preOriginData.icon }
-        await iconQuery.tryMutate(Mutators.data(iconData)).then(r => r.throw(t))
-      }
+          slot.current = sessionId
 
-      const originQuery = Origin.schema(origin, storage)
-      const originData: OriginData = { origin, title, description, icons: [iconRef] }
-      await originQuery.tryMutate(Mutators.data(originData)).then(r => r.throw(t))
+          let scripts = this.scriptsBySession.get(sessionId)
 
-      const sessionByOriginQuery = SessionByOrigin.schema(origin, storage)
-      const sessionByOriginState = await sessionByOriginQuery.state.then(r => r.throw(t))
+          if (scripts == null) {
+            scripts = new Set()
+            this.scriptsBySession.set(sessionId, scripts)
+          }
 
-      if (sessionByOriginState.data != null) {
-        const sessionId = sessionByOriginState.data.inner.id
+          scripts.add(script)
 
-        const sessionQuery = Session.schema(sessionId, storage)
-        const sessionState = await sessionQuery.state.then(r => r.throw(t))
-        const sessionData = Option.wrap(sessionState.data?.inner).ok().throw(t)
+          const { id } = sessionData
+          await Status.schema(id).tryMutate(Mutators.data<StatusData, never>({ id })).then(r => r.throw(t))
 
-        this.sessionByScript.set(script.name, sessionId)
+          script.events.on("close", async () => {
+            scripts!.delete(script)
+            this.sessionByScript.delete(script.name)
 
-        let scripts = this.scriptsBySession.get(sessionId)
+            if (scripts!.size === 0) {
+              const { id } = sessionData
+              await Status.schema(id).tryDelete().then(r => r.throw(t))
+            }
+
+            return new None()
+          })
+
+          const { chainId } = sessionData.chain
+
+          await script.tryRequest<void>({
+            method: "connect",
+            params: [{ chainId: `0x${chainId.toString(16)}` }]
+          }).then(r => r.throw(t).throw(t))
+
+          return new Ok(sessionData)
+        }
+
+        const [persistent, walletId, chainId] = await this.tryRequest<[boolean, string, number]>({
+          id: crypto.randomUUID(),
+          origin: origin,
+          method: "eth_requestAccounts",
+          params: {}
+        }, mouse).then(r => r.throw(t).throw(t))
+
+        const walletQuery = Wallet.schema(walletId, storage)
+        const walletState = await walletQuery.state.then(r => r.throw(t))
+        const wallet = Option.wrap(walletState.current?.inner).ok().throw(t)
+        const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
+
+        const sessionData: ExSessionData = {
+          type: "ex",
+          id: crypto.randomUUID(),
+          origin: origin,
+          persist: persistent,
+          wallets: [WalletRef.from(wallet)],
+          chain: chain
+        }
+
+        const sessionQuery = Session.schema(sessionData.id, storage)
+        await sessionQuery.tryMutate(Mutators.data<SessionData, never>(sessionData)).then(r => r.throw(t))
+
+        slot.current = sessionData.id
+
+        let scripts = this.scriptsBySession.get(sessionData.id)
 
         if (scripts == null) {
           scripts = new Set()
-          this.scriptsBySession.set(sessionId, scripts)
+          this.scriptsBySession.set(sessionData.id, scripts)
         }
 
         scripts.add(script)
@@ -449,13 +517,11 @@ export class Global {
 
           if (scripts!.size === 0) {
             const { id } = sessionData
-            await Status.schema(id).tryDelete().then(r => r.throw(t))
+            await Status.schema(id).tryDelete().then(r => r.inspectErrSync(console.warn))
           }
 
           return new None()
         })
-
-        const { chainId } = sessionData.chain
 
         await script.tryRequest<void>({
           method: "connect",
@@ -463,64 +529,7 @@ export class Global {
         }).then(r => r.throw(t).throw(t))
 
         return new Ok(sessionData)
-      }
-
-      const [persistent, walletId, chainId] = await this.tryRequest<[boolean, string, number]>({
-        id: crypto.randomUUID(),
-        origin: origin,
-        method: "eth_requestAccounts",
-        params: {}
-      }, mouse).then(r => r.throw(t).throw(t))
-
-      const walletQuery = Wallet.schema(walletId, storage)
-      const walletState = await walletQuery.state.then(r => r.throw(t))
-      const wallet = Option.wrap(walletState.current?.inner).ok().throw(t)
-      const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
-
-      const sessionData: ExSessionData = {
-        type: "ex",
-        id: crypto.randomUUID(),
-        origin: origin,
-        persist: persistent,
-        wallets: [WalletRef.from(wallet)],
-        chain: chain
-      }
-
-      const sessionQuery = Session.schema(sessionData.id, storage)
-      await sessionQuery.tryMutate(Mutators.data<SessionData, never>(sessionData)).then(r => r.throw(t))
-
-      this.sessionByScript.set(script.name, sessionData.id)
-
-      let scripts = this.scriptsBySession.get(sessionData.id)
-
-      if (scripts == null) {
-        scripts = new Set()
-        this.scriptsBySession.set(sessionData.id, scripts)
-      }
-
-      scripts.add(script)
-
-      const { id } = sessionData
-      await Status.schema(id).tryMutate(Mutators.data<StatusData, never>({ id })).then(r => r.throw(t))
-
-      script.events.on("close", async () => {
-        scripts!.delete(script)
-        this.sessionByScript.delete(script.name)
-
-        if (scripts!.size === 0) {
-          const { id } = sessionData
-          await Status.schema(id).tryDelete().then(r => r.inspectErrSync(console.warn))
-        }
-
-        return new None()
       })
-
-      await script.tryRequest<void>({
-        method: "connect",
-        params: [{ chainId: `0x${chainId.toString(16)}` }]
-      }).then(r => r.throw(t).throw(t))
-
-      return new Ok(sessionData)
     })
   }
 
