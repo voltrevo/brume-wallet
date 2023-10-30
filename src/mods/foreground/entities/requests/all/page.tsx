@@ -11,7 +11,7 @@ import { AppRequest } from "@/mods/background/service_worker/entities/requests/d
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
-import { UserRejectionError } from "@/mods/foreground/errors/errors"
+import { UserRejectedError } from "@/mods/foreground/errors/errors"
 import { Path } from "@/mods/foreground/router/path/context"
 import { RpcErr } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
@@ -38,7 +38,7 @@ export function RequestsPage() {
       for (const { id } of maybeRequests)
         await background.tryRequest({
           method: "brume_respond",
-          params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
+          params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
         }).then(r => r.throw(t).throw(t))
 
       return Ok.void()

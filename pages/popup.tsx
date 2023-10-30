@@ -19,7 +19,7 @@ import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/crea
 import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
 import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { EthereumWalletInstance, useEthereumContext, useGasPrice, useNonce, useWallet } from "@/mods/foreground/entities/wallets/data";
-import { UserRejectionError } from "@/mods/foreground/errors/errors";
+import { UserRejectedError } from "@/mods/foreground/errors/errors";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
@@ -143,7 +143,7 @@ export function TransactPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "brume_respond",
-        params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
+        params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = FgAppRequests.schema(storage)
@@ -242,7 +242,7 @@ export function SwitchPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "brume_respond",
-        params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
+        params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = FgAppRequests.schema(storage)
@@ -340,7 +340,7 @@ export function PersonalSignPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "brume_respond",
-        params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
+        params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = FgAppRequests.schema(storage)
@@ -439,7 +439,7 @@ export function TypedSignPage() {
     return await Result.unthrow<Result<void, Error>>(async t => {
       await background.tryRequest({
         method: "brume_respond",
-        params: [RpcErr.rewrap(id, new Err(new UserRejectionError()))]
+        params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = FgAppRequests.schema(storage)

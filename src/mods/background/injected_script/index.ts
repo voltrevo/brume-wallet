@@ -130,7 +130,11 @@ class Provider {
   }
 
   async request(init: RpcRequestPreinit<unknown>) {
-    return await this.tryRequest(init).then(r => r.unwrap())
+    const result = await this.tryRequest(init)
+
+    if (result.isErr())
+      throw result.inner
+    return result.inner
   }
 
   on(key: string, sublistener: Sublistener) {

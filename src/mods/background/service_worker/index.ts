@@ -13,6 +13,7 @@ import { CryptoClient } from "@/libs/wconn/mods/crypto/client"
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn"
 import { Wc, WcMetadata, WcSession, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
 import { Mutators } from "@/libs/xswr/mutators"
+import { UnauthorizedError } from "@/mods/foreground/errors/errors"
 import { Base16 } from "@hazae41/base16"
 import { Base58 } from "@hazae41/base58"
 import { Base64 } from "@hazae41/base64"
@@ -383,6 +384,16 @@ export class Global {
     }
   }
 
+  hasExtensionSession(script: Port) {
+    const mutex = this.sessionByScript.get(script.name)
+
+    if (mutex == null)
+      return false
+    if (mutex.inner.current == null)
+      return false
+    return true
+  }
+
   async tryGetOrWaitExtensionSession(script: Port, mouse: Mouse): Promise<Result<SessionData, Error>> {
     return await Result.unthrow(async t => {
       let mutex = this.sessionByScript.get(script.name)
@@ -560,6 +571,11 @@ export class Global {
   async brume_run(script: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [subrequest, mouse] = (request as RpcRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
+
+      if (subrequest.method === "eth_accounts" && !this.hasExtensionSession(script))
+        return new Ok([])
+      if (subrequest.method !== "eth_requestAccounts" && !this.hasExtensionSession(script))
+        return new Err(new UnauthorizedError())
 
       const session = await this.tryGetOrWaitExtensionSession(script, mouse).then(r => r.throw(t))
 
