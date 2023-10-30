@@ -535,8 +535,14 @@ export class Global {
 
   async brume_icon(script: Port, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const res = await fetch("/favicon.png")
-      const blob = await res.blob()
+      const res = await Result.runAndDoubleWrap(async () => {
+        return await fetch("/favicon.png")
+      }).then(r => r.throw(t))
+
+      const blob = await Result.runAndDoubleWrap(async () => {
+        return await res.blob()
+      }).then(r => r.throw(t))
+
       const data = await Blobs.tryReadAsDataURL(blob).then(r => r.throw(t))
 
       return new Ok(data)
@@ -570,7 +576,12 @@ export class Global {
       if (subrequest.method === "wallet_switchEthereumChain")
         return await this.wallet_switchEthereumChain(ethereum, session, subrequest, mouse)
 
-      const query = BgUnknown.schema(ethereum, subrequest, storage)
+      const fetch: EthereumFetchParams = {}
+
+      if (subrequest.method === "eth_getTransactionByHash")
+        fetch.noCheck = true
+
+      const query = BgUnknown.schema(ethereum, { ...subrequest, ...fetch }, storage)
 
       /**
        * Ignore cooldown or store errors, only throw if the actual fetch failed
