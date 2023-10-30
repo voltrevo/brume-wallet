@@ -576,7 +576,7 @@ export class Global {
       if (subrequest.method === "wallet_switchEthereumChain")
         return await this.wallet_switchEthereumChain(ethereum, session, subrequest, mouse)
 
-      const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
+      const query = await this.tryRouteEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
       /**
        * Ignore cooldown or store errors, only throw if the actual fetch failed
@@ -1105,7 +1105,7 @@ export class Global {
     })
   }
 
-  async routeAndMakeEthereum(ethereum: EthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuery<any, any, Error>, Error>> {
+  async tryRouteEthereum(ethereum: EthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<Result<SimpleFetcherfulQuery<any, any, Error>, Error>> {
     if (request.method === "eth_getBalance")
       return await this.makeEthereumBalance(ethereum, request, storage)
     if (request.method === "eth_getTokenBalance")
@@ -1135,7 +1135,7 @@ export class Global {
 
       const ethereum: EthereumContext = { chain, brume }
 
-      const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
+      const query = await this.tryRouteEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
       await core.tryReindex(query.cacheKey, query.settings).then(r => r.throw(t))
 
@@ -1154,7 +1154,7 @@ export class Global {
       const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.throw(t))
       const ethereum: EthereumContext = { chain, brume }
 
-      const query = await this.routeAndMakeEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
+      const query = await this.tryRouteEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
       /**
        * Ignore cooldown or store errors, only throw if the actual fetch failed
