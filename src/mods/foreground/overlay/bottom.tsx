@@ -59,7 +59,12 @@ export function Bottom() {
         <div className={`${Button.Shrinker.className}`}>
           <div className="relative">
             {Boolean(requests?.length) &&
-              <div className="absolute top-0 -right-2 bg-purple-400 rounded-full w-2 h-2" />}
+              <div className="absolute top-0 -right-2">
+                <span className="relative flex w-2 h-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full w-2 h-2 bg-purple-400" />
+                </span>
+              </div>}
             <Outline.CheckIcon className="s-md" />
           </div>
         </div>
