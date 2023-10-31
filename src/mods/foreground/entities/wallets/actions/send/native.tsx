@@ -21,7 +21,7 @@ import { EthereumContextProps, EthereumWalletInstance, useBalance, useBlockByNum
 
 export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumContextProps) {
   const { close } = useDialogContext().unwrap()
-  const wallet = useWalletDataContext()
+  const wallet = useWalletDataContext().unwrap()
   const { title, context } = props
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])

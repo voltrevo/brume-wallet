@@ -13,7 +13,7 @@ import { Path } from "@/mods/foreground/router/path/context"
 import { useCallback, useEffect } from "react"
 import { WalletDataCard } from "../card"
 import { WalletDataProvider, useWalletDataContext } from "../context"
-import { useTotalPricedBalance } from "../data"
+import { WalletProps, useTotalPricedBalance } from "../data"
 import { useDisplayUsd } from "../page"
 import { WalletCreatorDialog } from "./create"
 import { useWallets } from "./data"
@@ -49,7 +49,7 @@ export function WalletsPage() {
       <ClickableWalletGrid
         ok={onWalletClick}
         create={creator.enable}
-        maybeWallets={maybeWallets} />
+        wallets={maybeWallets} />
     </PageBody>
 
   const Header =
@@ -73,11 +73,11 @@ export function WalletsPage() {
   </Page>
 }
 
-export function ClickableWalletGrid(props: OkProps<Wallet> & CreateProps & { maybeWallets?: Wallet[] }) {
-  const { maybeWallets, ok, create } = props
+export function ClickableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] } & { selected?: Wallet }) {
+  const { wallets, ok, create } = props
 
   return <div className="grid grow place-content-start place-items-center gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
-    {maybeWallets?.map(wallet =>
+    {wallets?.map(wallet =>
       <WalletDataProvider
         key={wallet.uuid}
         uuid={wallet.uuid}>
@@ -87,18 +87,53 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & CreateProps & { may
   </div>
 }
 
+export function SelectableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] } & { selecteds: Wallet[] }) {
+  const { wallets, ok, create, selecteds } = props
+
+  return <div className="grid grow place-content-start place-items-center gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
+    {wallets?.map(wallet =>
+      <CheckableWalletDataCard
+        key={wallet.uuid}
+        wallet={wallet}
+        index={selecteds.indexOf(wallet)}
+        ok={ok} />)}
+    <NewWalletCard ok={create} />
+  </div>
+}
+
+export function CheckableWalletDataCard(props: WalletProps & OkProps<Wallet> & { index: number }) {
+  const { wallet, ok, index } = props
+  const checked = index !== -1
+
+  const onClick = useCallback(() => {
+    ok(wallet)
+  }, [ok, wallet])
+
+  return <div className={`w-full aspect-video rounded-xl overflow-hidden aria-checked:outline aria-checked:outline-2 aria-checked:outline-blue-600 animate-vibrate-loop`}
+    role="checkbox"
+    aria-checked={checked}
+    onClick={onClick}>
+    <WalletDataProvider
+      uuid={wallet.uuid}>
+      <WalletDataCard index={index} />
+    </WalletDataProvider>
+  </div>
+}
+
 export function ClickableWalletDataCard(props: OkProps<Wallet>) {
-  const wallet = useWalletDataContext()
+  const wallet = useWalletDataContext().unwrap()
   const { ok } = props
 
   const onClick = useCallback(() => {
     ok(wallet)
   }, [ok, wallet])
 
-  return <button className="w-full hovered-or-clicked-or-focused:scale-105 transition-transform"
+  return <div className={`w-full aspect-video rounded-xl overflow-hidden hovered-or-clicked-or-focused:scale-105 transition-transform`}
+    role="button"
     onClick={onClick}>
     <WalletDataCard />
-  </button>
+  </div>
+
 }
 
 export function NewWalletCard(props: OkProps<unknown>) {

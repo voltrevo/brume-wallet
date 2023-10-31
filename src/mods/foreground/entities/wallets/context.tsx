@@ -9,7 +9,7 @@ export const WalletDataContext =
   createContext<Nullable<WalletData>>(undefined)
 
 export function useWalletDataContext() {
-  return Option.unwrap(useContext(WalletDataContext))
+  return Option.wrap(useContext(WalletDataContext))
 }
 
 export function WalletDataProvider(props: UUIDProps & ChildrenProps) {

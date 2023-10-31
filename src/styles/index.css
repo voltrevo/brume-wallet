@@ -10,6 +10,7 @@
 @import './size/index.css';
 @import './border/index.css';
 @import './transitions/index.css';
+@import './outline/index.css';
 
 html,
 body {

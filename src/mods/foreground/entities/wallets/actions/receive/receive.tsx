@@ -7,7 +7,7 @@ import { useWalletDataContext } from "../../context";
 
 export function WalletDataReceiveDialog(props: {}) {
   const { close } = useDialogContext().unwrap()
-  const wallet = useWalletDataContext()
+  const wallet = useWalletDataContext().unwrap()
 
   const url = useMemo(() => {
     const bytes = createQR(wallet.address, "gif", { ecc: "medium", scale: 10 })

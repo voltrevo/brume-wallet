@@ -10,8 +10,15 @@ import { useWalletDataContext } from "./context"
 import { useEnsReverseNoFetch, useEthereumContext, useTotalWalletPricedBalance } from "./data"
 import { useCompactDisplayUsd } from "./page"
 
-export function WalletDataCard() {
-  const wallet = useWalletDataContext()
+export function SimpleWalletDataCard() {
+  return <div className="w-full aspect-video rounded-xl overflow-hidden">
+    <WalletDataCard />
+  </div>
+}
+
+export function WalletDataCard(props: { index?: number }) {
+  const wallet = useWalletDataContext().unwrap()
+  const { index } = props
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
   const ens = useEnsReverseNoFetch(wallet.address, mainnet)
@@ -36,12 +43,23 @@ export function WalletDataCard() {
           emoji={wallet.emoji} />
       </div>
       <div className="w-2 grow" />
-      <Button.White className={`text-${color}`}
-        onClick={onClickEllipsis}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.EllipsisHorizontalIcon className="s-sm" />
-        </div>
-      </Button.White>
+      {index == null &&
+        <button className={`${Button.Base.className} ${Button.White.className} text-${color}`}
+          onClick={onClickEllipsis}>
+          <div className={`${Button.Shrinker.className}`}>
+            <Outline.EllipsisHorizontalIcon className="s-sm" />
+          </div>
+        </button>}
+      {index != null && index !== -1 &&
+        <div className={`border-2 border-white flex items-center justify-center rounded-full overflow-hidden`}>
+          <div className={`bg-blue-600 flex items-center justify-center s-sm text-white font-medium`}>
+            {index + 1}
+          </div>
+        </div>}
+      {index != null && index === -1 &&
+        <div className={`border-2 border-contrast flex items-center justify-center rounded-full`}>
+          <div className="s-sm" />
+        </div>}
     </div>
 
   const Name =
@@ -68,7 +86,7 @@ export function WalletDataCard() {
       </div>
     </div>
 
-  return <div className={`po-md w-full aspect-video rounded-xl flex flex-col text-white bg-gradient-to-br from-${color} to-${color2}`}>
+  return <div className={`po-md w-full h-full flex flex-col text-white bg-gradient-to-br from-${color} to-${color2}`}>
     {First}
     <div className="grow" />
     {Name}

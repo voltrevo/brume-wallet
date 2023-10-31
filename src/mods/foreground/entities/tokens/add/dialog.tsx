@@ -21,7 +21,7 @@ import { useToken } from "../data";
 
 export function TokenAddDialog(props: {}) {
   const { close } = useDialogContext().unwrap()
-  const wallet = useWalletDataContext()
+  const wallet = useWalletDataContext().unwrap()
   const background = useBackgroundContext().unwrap()
   const storage = useUserStorageContext().unwrap()
 

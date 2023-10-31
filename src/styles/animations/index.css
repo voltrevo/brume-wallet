@@ -66,4 +66,17 @@
       transform: translateY(calc(100vh));
     }
   }
+
+  .animate-vibrate-loop {
+    animation: vibrate-loop 125ms ease-in-out infinite alternate;
+  }
+
+  @keyframes vibrate-loop {
+    from {
+      transform: rotate(-1deg);
+    }
+    to {
+      transform: rotate(1deg);
+    }
+  }
 }

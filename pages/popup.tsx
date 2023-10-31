@@ -1,4 +1,5 @@
 import { BigIntToHex, BigInts } from "@/libs/bigints/bigints";
+import { UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -17,7 +18,7 @@ import { useSession } from "@/mods/foreground/entities/sessions/data";
 import { UserGuard } from "@/mods/foreground/entities/users/context";
 import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
 import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
-import { ClickableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
+import { SelectableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { EthereumWalletInstance, useEthereumContext, useGasPrice, useNonce, useWallet } from "@/mods/foreground/entities/wallets/data";
 import { UserRejectedError } from "@/mods/foreground/errors/errors";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
@@ -33,7 +34,7 @@ import { RpcErr, RpcOk } from "@hazae41/jsonrpc";
 import { Option } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
 import { Transaction } from "ethers";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
   return <main id="main" className="p-safe grow w-full flex flex-col overflow-hidden">
@@ -507,10 +508,30 @@ export function WalletAndChainSelectPage() {
     setPersistent(e.currentTarget.checked)
   }, [])
 
+  const [selecteds, setSelecteds] = useState<Wallet[]>([])
   const [chain, setChain] = useState<number>(1)
 
-  const onWalletClick = useAsyncUniqueCallback(async (wallet: Wallet) => {
+  const onWalletClick = useCallback((wallet: Wallet) => {
+    const clone = new Set(selecteds)
+
+    if (clone.has(wallet))
+      clone.delete(wallet)
+    else
+      clone.add(wallet)
+
+    setSelecteds([...clone])
+  }, [selecteds])
+
+  console.log(selecteds)
+
+  const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
+      const first = selecteds.values().next()
+
+      if (first.done)
+        return new Err(new UIError(`No wallet selected`))
+      const wallet = first.value
+
       await background.tryRequest({
         method: "brume_respond",
         params: [new RpcOk(id, [persistent, wallet.uuid, chain])]
@@ -526,10 +547,35 @@ export function WalletAndChainSelectPage() {
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [storage, background, id, chain, persistent])
+  }, [storage, background, id, selecteds, chain, persistent])
+
+  const onReject = useAsyncUniqueCallback(async () => {
+    return await Result.unthrow<Result<void, Error>>(async t => {
+      await background.tryRequest({
+        method: "brume_respond",
+        params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
+      }).then(r => r.throw(t).throw(t))
+
+      const requestsQuery = FgAppRequests.schema(storage)
+      const requestsState = await requestsQuery.state.then(r => r.throw(t))
+
+      if (requestsState.data?.inner.length)
+        Path.go("/requests")
+      else
+        Path.go("/done")
+
+      return Ok.void()
+    }).then(Results.logAndAlert)
+  }, [storage, background, id])
 
   const Body =
     <PageBody>
+      <SelectableWalletGrid
+        create={creator.enable}
+        wallets={wallets.data?.inner}
+        ok={onWalletClick}
+        selecteds={selecteds} />
+      <div className="h-4" />
       <label className="flex items-center justify-between">
         <div className="">
           Keep me connected
@@ -539,15 +585,10 @@ export function WalletAndChainSelectPage() {
           checked={persistent}
           onChange={onPersistentChange} />
       </label>
-      <div className="h-4" />
-      <ClickableWalletGrid
-        ok={onWalletClick.run}
-        create={creator.enable}
-        maybeWallets={wallets.data?.inner} />
     </PageBody>
 
   const Header =
-    <PageHeader title="Choose a wallet">
+    <PageHeader title="Select wallets">
       <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
         onClick={creator.enable}>
         <div className={`${Button.Shrinker.className}`}>
@@ -564,6 +605,25 @@ export function WalletAndChainSelectPage() {
     </Dialog>
     {Header}
     {Body}
+    <div className="p-4 w-full flex items-center gap-2">
+      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
+        onClick={onReject.run}
+        disabled={onReject.loading}>
+        <div className={`${Button.Shrinker.className}`}>
+          <Outline.XMarkIcon className="s-sm" />
+          No, reject it
+        </div>
+      </Button.Contrast>
+      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
+        onClick={onApprove.run}
+        disabled={onApprove.loading}
+        colorIndex={5}>
+        <div className={`${Button.Shrinker.className}`}>
+          <Outline.CheckIcon className="s-sm" />
+          Yes, approve it
+        </div>
+      </Button.Gradient>
+    </div>
   </Page>
 }
 

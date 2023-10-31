@@ -20,7 +20,7 @@ export function WalletCameraPage(props: UUIDProps) {
 }
 
 export function WalletDataCameraPage() {
-  const wallet = useWalletDataContext()
+  const wallet = useWalletDataContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const mounted = useRef<boolean>(true)

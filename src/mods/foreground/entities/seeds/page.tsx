@@ -54,7 +54,7 @@ function SeedDataPage() {
       <ClickableWalletGrid
         ok={onWalletClick}
         create={creator.enable}
-        maybeWallets={maybeWallets} />
+        wallets={maybeWallets} />
     </PageBody>
 
   return <Page>

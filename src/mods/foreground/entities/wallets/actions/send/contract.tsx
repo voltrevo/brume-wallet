@@ -22,7 +22,7 @@ import { EthereumContextProps, EthereumWalletInstance, useBlockByNumber, useEnsL
 
 export function WalletDataSendContractTokenDialog(props: TitleProps & EthereumContextProps & { token: ContractTokenData }) {
   const { close } = useDialogContext().unwrap()
-  const wallet = useWalletDataContext()
+  const wallet = useWalletDataContext().unwrap()
   const { title, context, token } = props
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])

@@ -30,7 +30,7 @@ import { useToken, useTokens } from "../tokens/data";
 import { WalletDataReceiveDialog } from "./actions/receive/receive";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
-import { WalletDataCard } from "./card";
+import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
 import { EthereumContext, useBalance, useEnsReverse, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
 import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
@@ -68,7 +68,7 @@ export function useCompactDisplayUsd(option: Nullable<Result<FixedInit, Error>>)
 }
 
 function WalletDataPage() {
-  const wallet = useWalletDataContext()
+  const wallet = useWalletDataContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
@@ -151,7 +151,7 @@ function WalletDataPage() {
   const Card =
     <div className="p-4 flex justify-center">
       <div className="w-full max-w-sm">
-        <WalletDataCard />
+        <SimpleWalletDataCard />
         {wallet.type === "readonly" && <>
           <div className="h-2" />
           <div className="po-sm bg-contrast text-contrast rounded-xl flex items-center justify-center">
@@ -274,7 +274,7 @@ function useTokensEditContext() {
 }
 
 function AddedTokenRow(props: { settingsRef: TokenSettingsRef }) {
-  const wallet = useWalletDataContext()
+  const wallet = useWalletDataContext().unwrap()
 
   const { settingsRef } = props
   const { token } = settingsRef
@@ -290,7 +290,7 @@ function AddedTokenRow(props: { settingsRef: TokenSettingsRef }) {
 
 function UnaddedTokenRow(props: { token: Token }) {
   const edit = useTokensEditContext().unwrap()
-  const wallet = useWalletDataContext()
+  const wallet = useWalletDataContext().unwrap()
   const { token } = props
 
   const settings = useTokenSettings(wallet, token)
@@ -338,7 +338,7 @@ function ContractTokenResolver(props: { token: ContractToken }) {
 
 function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }) {
   const { token, chain } = props
-  const wallet = useWalletDataContext()
+  const wallet = useWalletDataContext().unwrap()
   const edit = useTokensEditContext().unwrap()
 
   const context = useEthereumContext(wallet.uuid, chain)
@@ -393,7 +393,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
 function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainData }) {
   const { token, chain } = props
-  const wallet = useWalletDataContext()
+  const wallet = useWalletDataContext().unwrap()
   const edit = useTokensEditContext().unwrap()
 
   const context = useEthereumContext(wallet.uuid, chain)
@@ -510,7 +510,7 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
 
 function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay: string }) {
   const { token, chain, balanceDisplay, balanceUsdDisplay } = props
-  const wallet = useWalletDataContext()
+  const wallet = useWalletDataContext().unwrap()
 
   const settings = useTokenSettings(wallet, token)
   const checked = settings.data?.inner.enabled

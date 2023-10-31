@@ -19,8 +19,8 @@ module.exports = {
   ],
   safelist: [
     {
-      pattern: /(text|bg|border|from|to)-(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(400)/,
-      variants: ["clicked-or-focused", "hovered-or-clicked-or-focused", "hovered-or-clicked-or-focused-or-selected"],
+      pattern: /(text|bg|border|outline|from|to)-(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(400)/,
+      variants: ["aria-checked", "aria-selected", "clicked-or-focused", "hovered-or-clicked-or-focused", "hovered-or-clicked-or-focused-or-selected"],
     },
   ],
 };
