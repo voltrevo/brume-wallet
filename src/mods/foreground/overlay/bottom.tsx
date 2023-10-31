@@ -11,29 +11,29 @@ export function Bottom() {
 
   return <nav className="h-16 w-full shrink-0 border-t border-t-contrast">
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">
-      <a className={`group grow text-contrast aria-selected:text-default`}
-        aria-selected={path.pathname === "/" || path.pathname === "/wallets"}
+      <a className={`group grow text-contrast data-[selected=true]:text-default`}
+        data-selected={path.pathname === "/" || path.pathname === "/wallets"}
         href="#/wallets">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.WalletIcon className="s-md" />
         </div>
       </a>
-      <a className={`grow text-contrast aria-selected:text-default`}
-        aria-selected={path.pathname === "/seeds"}
+      <a className={`group grow text-contrast data-[selected=true]:text-default`}
+        data-selected={path.pathname === "/seeds"}
         href="#/seeds">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.SparklesIcon className="s-md" />
         </div>
       </a>
-      <a className="grow text-contrast aria-selected:text-default"
-        aria-selected={path.pathname === "/sessions"}
+      <a className="group grow text-contrast data-[selected=true]:text-default"
+        data-selected={path.pathname === "/sessions"}
         href="#/sessions">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.GlobeAltIcon className="s-md" />
         </div>
       </a>
-      <a className="grow text-contrast aria-selected:text-default"
-        aria-selected={path.pathname === "/requests"}
+      <a className="group grow text-contrast data-[selected=true]:text-default"
+        data-selected={path.pathname === "/requests"}
         href="#/requests">
         <div className={`${Anchor.Shrinker.className}`}>
           <div className="relative">
@@ -48,8 +48,8 @@ export function Bottom() {
           </div>
         </div>
       </a>
-      <a className="grow text-contrast aria-selected:text-default"
-        aria-selected={path.pathname === "/settings"}
+      <a className="group grow text-contrast data-[selected=true]:text-default"
+        data-selected={path.pathname === "/settings"}
         href="#/settings">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.CogIcon className="s-md" />
