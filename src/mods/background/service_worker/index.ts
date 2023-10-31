@@ -704,12 +704,30 @@ export class Global {
         data: Nullable<string>
       }]>).params
 
-      const chainId = ethereum.chain.chainId.toString()
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+      const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
+        return await Result.unthrow<Result<WalletData, Error>>(async t => {
+          const walletQuery = Wallet.schema(wallet.uuid, storage)
+          const walletState = await walletQuery.state.then(r => r.throw(t))
+          const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
+
+          return new Ok(walletData)
+        })
+      }))).throw(t)
+
+      /**
+       * TODO: maybe ensure two wallets can't have the same address in the same session
+       */
+      const maybeWallet = wallets.find(wallet => wallet.address === from)
+      const walletId = Option.wrap(maybeWallet?.uuid).ok().throw(t)
+
+      const chainId = ZeroHexString.from(ethereum.chain.chainId)
 
       const signature = await this.tryRequest<string>({
         id: crypto.randomUUID(),
         method: "eth_sendTransaction",
-        params: { from, to, gas, value, data, chainId },
+        params: { from, to, gas, value, data, walletId, chainId },
         origin: session.origin,
         session: session.id
       }, mouse).then(r => r.throw(t).throw(t))
@@ -726,10 +744,30 @@ export class Global {
     return await Result.unthrow(async t => {
       const [message, address] = (request as RpcRequestPreinit<[string, string]>).params
 
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+      const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
+        return await Result.unthrow<Result<WalletData, Error>>(async t => {
+          const walletQuery = Wallet.schema(wallet.uuid, storage)
+          const walletState = await walletQuery.state.then(r => r.throw(t))
+          const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
+
+          return new Ok(walletData)
+        })
+      }))).throw(t)
+
+      /**
+       * TODO: maybe ensure two wallets can't have the same address in the same session
+       */
+      const maybeWallet = wallets.find(wallet => wallet.address === address)
+      const walletId = Option.wrap(maybeWallet?.uuid).ok().throw(t)
+
+      const chainId = ZeroHexString.from(ethereum.chain.chainId)
+
       const signature = await this.tryRequest<string>({
         id: crypto.randomUUID(),
         method: "personal_sign",
-        params: { message, address },
+        params: { message, address, walletId, chainId },
         origin: session.origin,
         session: session.id
       }, mouse).then(r => r.throw(t).throw(t))

@@ -74,6 +74,10 @@ export function TransactPage() {
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
+  const to = Option.wrap(searchParams.get("to")).unwrap()
+  const gas = Option.wrap(searchParams.get("gas")).unwrap()
+  const walletId = Option.wrap(searchParams.get("walletId")).unwrap()
+  const chainId = Option.wrap(searchParams.get("chainId")).mapSync(Number).unwrap()
 
   const requestQuery = useAppRequest(id)
   const maybeRequest = requestQuery.data?.inner
@@ -81,14 +85,9 @@ export function TransactPage() {
   const sessionQuery = useSession(maybeRequest?.session)
   const maybeSession = sessionQuery.data?.inner
 
-  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)
+  const walletQuery = useWallet(walletId)
   const maybeWallet = walletQuery.data?.inner
 
-  const from = Option.wrap(searchParams.get("from")).unwrap()
-  const to = Option.wrap(searchParams.get("to")).unwrap()
-  const gas = Option.wrap(searchParams.get("gas")).unwrap()
-
-  const chainId = Option.wrap(searchParams.get("chainId")).mapSync(Number).unwrap()
   const chain = Option.wrap(chainByChainId[chainId]).unwrap()
 
   const value = searchParams.get("value")
@@ -295,17 +294,11 @@ export function PersonalSignPage() {
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
-
-  const requestQuery = useAppRequest(id)
-  const maybeRequest = requestQuery.data?.inner
-
-  const sessionQuery = useSession(maybeRequest?.session)
-  const maybeSession = sessionQuery.data?.inner
-
-  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)
-  const maybeWallet = walletQuery.data?.inner
-
   const message = Option.wrap(searchParams.get("message")).unwrap()
+  const walletId = Option.wrap(searchParams.get("walletId")).unwrap()
+
+  const walletQuery = useWallet(walletId)
+  const maybeWallet = walletQuery.data?.inner
 
   const userMessage = useMemo(() => {
     return message.startsWith("0x")
@@ -398,17 +391,11 @@ export function TypedSignPage() {
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
-
-  const requestQuery = useAppRequest(id)
-  const maybeRequest = requestQuery.data?.inner
-
-  const sessionQuery = useSession(maybeRequest?.session)
-  const maybeSession = sessionQuery.data?.inner
-
-  const walletQuery = useWallet(maybeSession?.wallets.at(0)?.uuid)
-  const maybeWallet = walletQuery.data?.inner
-
   const data = Option.wrap(searchParams.get("data")).unwrap()
+  const walletId = Option.wrap(searchParams.get("walletId")).unwrap()
+
+  const walletQuery = useWallet(walletId)
+  const maybeWallet = walletQuery.data?.inner
 
   const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
