@@ -55,7 +55,7 @@ export function WalletsPage() {
 
   const Header =
     <PageHeader title="Wallets">
-      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={creator.enable}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.PlusIcon className="s-sm" />
@@ -129,7 +129,7 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
     ok(wallet)
   }, [ok, wallet])
 
-  return <div className={`w-full aspect-video rounded-xl overflow-hidden cursor-pointer hovered-or-clicked-or-focused:scale-105 transition-transform`}
+  return <div className={`w-full aspect-video rounded-xl overflow-hidden cursor-pointer hovered-or-clicked-or-focused:scale-105 !transition-transform`}
     role="button"
     onClick={onClick}>
     <WalletDataCard />
@@ -140,7 +140,7 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
 export function NewWalletCard(props: OkProps<unknown>) {
   const { ok } = props
 
-  return <button className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-clicked-or-focused:scale-105 transition-transform"
+  return <button className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-clicked-or-focused:scale-105 !transition-transform"
     onClick={ok}>
     <Outline.PlusIcon className="s-sm" />
     <div className="font-medium">

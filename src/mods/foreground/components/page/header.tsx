@@ -9,7 +9,7 @@ export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps
 
   return <div className="p-4 flex items-center">
     {back && <div className="mr-2">
-      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={back}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.ChevronLeftIcon className="s-sm" />

@@ -57,7 +57,7 @@ export function RequestsPage() {
 
   const Header =
     <PageHeader title="Requests">
-      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         disabled={tryRejectAll.loading || !Boolean(maybeRequests?.length)}
         onClick={tryRejectAll.run}>
         <div className={`${Button.Shrinker.className}`}>

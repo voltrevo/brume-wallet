@@ -1,6 +1,6 @@
 import { AnchorProps } from "@/libs/react/props/html";
 
-export function Anchor(props: AnchorProps) {
+export function TextAnchor(props: AnchorProps) {
   const { className, href, children = href, target = "_blank", rel = "noreferrer", ...others } = props
 
   return <a className={`a ${className}`}

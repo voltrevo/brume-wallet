@@ -34,7 +34,7 @@ export function SeedsPage() {
 
   const Header =
     <PageHeader title="Seeds">
-      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={creator.enable}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.PlusIcon className="s-sm" />
@@ -75,7 +75,7 @@ export function ClickableSeedDataCard(props: OkProps<Seed>) {
     ok(seed)
   }, [ok, seed])
 
-  return <button className="w-full hovered-or-clicked-or-focused:scale-105 transition-transform"
+  return <button className="w-full hovered-or-clicked-or-focused:scale-105 !transition-transform"
     onClick={onClick}>
     <SeedDataCard />
   </button>
@@ -84,7 +84,7 @@ export function ClickableSeedDataCard(props: OkProps<Seed>) {
 export function NewSeedCard(props: OkProps<unknown>) {
   const { ok } = props
 
-  return <button className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-clicked-or-focused:scale-105 transition-transform"
+  return <button className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-clicked-or-focused:scale-105 !transition-transform"
     onClick={ok}>
     <Outline.PlusIcon className="s-sm" />
     <div className="font-medium">

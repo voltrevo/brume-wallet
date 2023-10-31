@@ -191,7 +191,7 @@ export function TransactPage() {
         </div>}
     </div>
     <div className="p-4 w-full flex items-center gap-2">
-      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
         <div className={`${Button.Shrinker.className}`}>
@@ -199,7 +199,7 @@ export function TransactPage() {
           No, reject it
         </div>
       </Button.Contrast>
-      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={onApprove.run}
         disabled={loading}
         colorIndex={5}>
@@ -267,7 +267,7 @@ export function SwitchPage() {
       </div>
     </div>
     <div className="p-4 w-full flex items-center gap-2">
-      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
         <div className={`${Button.Shrinker.className}`}>
@@ -275,7 +275,7 @@ export function SwitchPage() {
           No, reject it
         </div>
       </Button.Contrast>
-      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={onApprove.run}
         disabled={onApprove.loading}
         colorIndex={5}>
@@ -364,7 +364,7 @@ export function PersonalSignPage() {
       </div>
     </div>
     <div className="p-4 w-full flex items-center gap-2">
-      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
         <div className={`${Button.Shrinker.className}`}>
@@ -372,7 +372,7 @@ export function PersonalSignPage() {
           No, reject it
         </div>
       </Button.Contrast>
-      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={onApprove.run}
         disabled={onApprove.loading}
         colorIndex={5}>
@@ -457,7 +457,7 @@ export function TypedSignPage() {
       </div>
     </div>
     <div className="p-4 w-full flex items-center gap-2">
-      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
         <div className={`${Button.Shrinker.className}`}>
@@ -465,7 +465,7 @@ export function TypedSignPage() {
           No, reject it
         </div>
       </Button.Contrast>
-      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={onApprove.run}
         disabled={onApprove.loading}
         colorIndex={5}>
@@ -541,6 +541,8 @@ export function WalletAndChainSelectPage() {
       const requestsQuery = FgAppRequests.schema(storage)
       const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
+      console.log(requestsState.data?.inner.length)
+
       if (requestsState.data?.inner.length)
         Path.go("/requests")
       else
@@ -571,7 +573,7 @@ export function WalletAndChainSelectPage() {
 
   const Header =
     <PageHeader title="Select wallets">
-      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={creator.enable}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.PlusIcon className="s-sm" />
@@ -588,7 +590,7 @@ export function WalletAndChainSelectPage() {
     {Header}
     {Body}
     <div className="p-4 w-full flex items-center gap-2">
-      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={onReject.run}
         disabled={onReject.loading}>
         <div className={`${Button.Shrinker.className}`}>
@@ -596,15 +598,14 @@ export function WalletAndChainSelectPage() {
           No, reject it
         </div>
       </Button.Contrast>
-      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 transition"
+      <button className={`${Button.Base.className} ${Button.Gradient.className(5)} grow po-md hovered-or-clicked-or-focused:scale-105 !transition`}
         onClick={onApprove.run}
-        disabled={onApprove.loading}
-        colorIndex={5}>
+        disabled={onApprove.loading}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.CheckIcon className="s-sm" />
           Yes, approve it
         </div>
-      </Button.Gradient>
+      </button>
     </div>
   </Page>
 }

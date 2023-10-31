@@ -132,13 +132,13 @@ function WalletDataPage() {
       back={onBackClick}>
       <div className="flex gap-2">
         {background.isWebsite() && <>
-          <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+          <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
             onClick={onCameraClick}>
             <div className={`${Button.Shrinker.className}`}>
               <Outline.QrCodeIcon className="s-sm" />
             </div>
           </Button.Base>
-          <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+          <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
             onClick={onLinkClick}>
             <div className={`${Button.Shrinker.className}`}>
               <Outline.LinkIcon className="s-sm" />
@@ -169,7 +169,7 @@ function WalletDataPage() {
     <div className="p-4 flex items-center justify-center flex-wrap gap-12">
       {wallet.type !== "readonly" &&
         <div className="flex flex-col items-center gap-2">
-          <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}
+          <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 !transition-transform`}
             onClick={sendDialog.enable}>
             <Outline.PaperAirplaneIcon className="s-md" />
           </button>
@@ -178,7 +178,7 @@ function WalletDataPage() {
           </div>
         </div>}
       <div className="flex flex-col items-center gap-2">
-        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 transition-transform`}
+        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 !transition-transform`}
           onClick={receiveDialog.enable}>
           <Outline.QrCodeIcon className="s-md" />
         </button>
@@ -208,7 +208,7 @@ function WalletDataPage() {
       </div>
       <div className="h-4" />
       <div className="flex items-center gap-2">
-        <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
+        <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 !transition`}
           onClick={() => setAll(!all)}>
           <div className={`${Button.Shrinker.className}`}>
             {all ? "Show less" : "Show more"}
@@ -216,14 +216,14 @@ function WalletDataPage() {
         </button>
         <div className="grow" />
         {all && <>
-          <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
+          <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 !transition`}
             onClick={() => setEdit(!edit)}>
             <div className={`${Button.Shrinker.className}`}>
               {edit ? "Done" : "Edit"}
             </div>
           </button>
         </>}
-        <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 transition`}
+        <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 !transition`}
           onClick={add.enable}>
           <div className={`${Button.Shrinker.className}`}>
             {"Add"}

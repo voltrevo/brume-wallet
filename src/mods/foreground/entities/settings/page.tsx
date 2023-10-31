@@ -1,5 +1,5 @@
 import { useInputChange } from "@/libs/react/events";
-import { Anchor } from "@/libs/ui/anchor/anchor";
+import { TextAnchor } from "@/libs/ui/anchor/anchor";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { Ok } from "@hazae41/result";
@@ -32,7 +32,7 @@ export function SettingsPage() {
         />
       </label>
       <div className="po-md text-sm text-contrast">
-        All your requests will be seen on <Anchor href="https://logs.brume.money" />
+        All your requests will be seen on <TextAnchor href="https://logs.brume.money" />
       </div>
     </PageBody>
   </Page>

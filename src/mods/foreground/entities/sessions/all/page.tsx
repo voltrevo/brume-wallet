@@ -71,7 +71,7 @@ export function SessionsPage() {
 
   const Header =
     <PageHeader title="Sessions">
-      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         disabled={tryDisconnectAll.loading || !length}
         onClick={tryDisconnectAll.run}>
         <div className={`${Button.Shrinker.className}`}>

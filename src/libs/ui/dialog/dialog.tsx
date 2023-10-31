@@ -95,7 +95,7 @@ export namespace Dialog {
         {children}
       </div>
       <div className="grow" />
-      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 transition"
+      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={close}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.XMarkIcon className="s-sm" />
