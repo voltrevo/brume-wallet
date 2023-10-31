@@ -76,7 +76,8 @@ export class UserStorage implements Storage {
 
         core.storeds.set(cacheKey, stored)
         core.unstoreds.delete(cacheKey)
-        core.onState.dispatchEvent(new CustomEvent(cacheKey))
+        await core.onState.emit(cacheKey, [])
+
         return new Some(Ok.void())
       })
 
@@ -84,7 +85,7 @@ export class UserStorage implements Storage {
 
       core.storeds.set(cacheKey, stored)
       core.unstoreds.delete(cacheKey)
-      core.onState.dispatchEvent(new CustomEvent(cacheKey))
+      await core.onState.emit(cacheKey, [])
 
       return Ok.void()
     })

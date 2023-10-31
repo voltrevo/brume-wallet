@@ -67,9 +67,12 @@ export class GlobalStorage implements Storage {
         if (cacheKey2 !== cacheKey)
           return new None()
 
+        console.log("update", cacheKey, stored)
+
         core.storeds.set(cacheKey, stored)
         core.unstoreds.delete(cacheKey)
-        core.onState.dispatchEvent(new CustomEvent(cacheKey))
+        await core.onState.emit(cacheKey, [])
+
         return new Some(Ok.void())
       })
 
@@ -77,7 +80,7 @@ export class GlobalStorage implements Storage {
 
       core.storeds.set(cacheKey, stored)
       core.unstoreds.delete(cacheKey)
-      core.onState.dispatchEvent(new CustomEvent(cacheKey))
+      await core.onState.emit(cacheKey, [])
 
       return Ok.void()
     })

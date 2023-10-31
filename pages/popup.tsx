@@ -541,8 +541,6 @@ export function WalletAndChainSelectPage() {
       const requestsQuery = FgAppRequests.schema(storage)
       const requestsState = await requestsQuery.state.then(r => r.throw(t))
 
-      console.log(requestsState.data?.inner.length)
-
       if (requestsState.data?.inner.length)
         Path.go("/requests")
       else

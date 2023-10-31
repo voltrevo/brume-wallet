@@ -27,7 +27,7 @@ import { Circuit, Echalote, Fallback, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
-import { IDBStorage, RawState, SimpleQuery, core } from "@hazae41/glacier"
+import { IDBStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier"
 import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { Kcp } from "@hazae41/kcp"
 import { Keccak256 } from "@hazae41/keccak256"
@@ -46,7 +46,7 @@ import { Blobby, BlobbyRef } from "./entities/blobbys/data"
 import { EthBrume, WcBrume } from "./entities/brumes/data"
 import { Origin, OriginData, PreOriginData } from "./entities/origins/data"
 import { BgAppRequests } from "./entities/requests/all/data"
-import { AppRequestData, BgAppRequest } from "./entities/requests/data"
+import { AppRequest, AppRequestData, BgAppRequest } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
 import { PersistentSessions } from "./entities/sessions/all/data"
 import { ExSessionData, Session, SessionByOrigin, SessionData, SessionRef, WcSessionData } from "./entities/sessions/data"
@@ -147,11 +147,11 @@ export class Global {
   ) {
     this.circuits = new Mutex(Circuits.createPool(this.tors.inner, { capacity: 9 }))
 
-    core.onState.addEventListener(BgAppRequests.key, async () => {
-      const state = await BgAppRequests.schema().state.then(r => r.ok().inner)
+    core.onState.on(BgAppRequests.key, async () => {
+      const state = core.getStateSync(BgAppRequests.key) as State<AppRequest[], never>
 
       const badge = Option
-        .wrap(state?.data?.inner.length)
+        .wrap(state?.data?.inner?.length)
         .filterSync(x => x > 0)
         .mapSync(String)
         .unwrapOr("")
@@ -161,6 +161,8 @@ export class Global {
         await browser.action.setBadgeTextColor({ color: "white" })
         await browser.action.setBadgeText({ text: badge })
       }).then(r => r.ignore())
+
+      return new None()
     })
   }
 
@@ -310,10 +312,13 @@ export class Global {
       const requestQuery = BgAppRequest.schema(request.id)
       await requestQuery.tryMutate(Mutators.data<AppRequestData, never>(request)).then(r => r.throw(t))
 
+      const done = new Future<Result<void, Error>>()
+
       try {
-        return await this.tryWaitResponse(request.id)
+        return await this.tryWaitResponse(request.id, done)
       } finally {
         await requestQuery.tryDelete().then(r => r.throw(t))
+        done.resolve(Ok.void())
       }
     })
   }
@@ -323,30 +328,33 @@ export class Global {
       const requestQuery = BgAppRequest.schema(request.id)
       await requestQuery.tryMutate(Mutators.data<AppRequestData, never>(request)).then(r => r.throw(t))
 
+      const done = new Future<Result<void, Error>>()
+
       try {
         const { id, method, params } = request
         const url = qurl(`/${method}?id=${id}`, params)
 
         const popup = await this.tryOpenOrFocusPopup(url, mouse, force).then(r => r.throw(t))
-        const response = await this.tryWaitPopupResponse<T>(request.id, popup).then(r => r.throw(t))
+        const response = await this.tryWaitPopupResponse<T>(request.id, popup, done).then(r => r.throw(t))
 
         return new Ok(response)
       } finally {
         await requestQuery.tryDelete().then(r => r.throw(t))
+        done.resolve(Ok.void())
       }
     })
   }
 
-  async tryWaitResponse<T>(id: string) {
+  async tryWaitResponse<T>(id: string, done: Future<Result<void, Error>>) {
     const future = new Future<Result<RpcResponse<T>, Error>>()
 
-    const onResponse = (init: RpcResponseInit<any>) => {
+    const onResponse = async (init: RpcResponseInit<any>) => {
       if (init.id !== id)
         return new None()
 
       const response = RpcResponse.from<T>(init)
       future.resolve(new Ok(response))
-      return new Some(Ok.void())
+      return new Some(await done.promise)
     }
 
     try {
@@ -358,16 +366,16 @@ export class Global {
     }
   }
 
-  async tryWaitPopupResponse<T>(id: string, popup: PopupData) {
+  async tryWaitPopupResponse<T>(id: string, popup: PopupData, done: Future<Result<void, Error>>) {
     const future = new Future<Result<RpcResponse<T>, Error>>()
 
-    const onResponse = (init: RpcResponseInit<any>) => {
+    const onResponse = async (init: RpcResponseInit<any>) => {
       if (init.id !== id)
         return new None()
 
       const response = RpcResponse.from<T>(init)
       future.resolve(new Ok(response))
-      return new Some(Ok.void())
+      return new Some(await done.promise)
     }
 
     const onRemoved = (id: number) => {
@@ -1081,7 +1089,7 @@ export class Global {
         const stored = await this.storage.tryGet(cacheKey).then(r => r.throw(t))
         core.storeds.set(cacheKey, stored)
         core.unstoreds.delete(cacheKey)
-        core.onState.dispatchEvent(new CustomEvent(cacheKey))
+        await core.onState.emit(cacheKey, [])
 
         return new Ok(stored)
       })
@@ -1104,7 +1112,7 @@ export class Global {
 
         core.storeds.set(cacheKey, stored)
         core.unstoreds.delete(cacheKey)
-        core.onState.dispatchEvent(new CustomEvent(cacheKey))
+        await core.onState.emit(cacheKey, [])
 
         return new Ok(stored)
       })
@@ -1120,7 +1128,7 @@ export class Global {
       storage.trySet(cacheKey, rawState).throw(t)
       core.storeds.set(cacheKey, rawState)
       core.unstoreds.delete(cacheKey)
-      core.onState.dispatchEvent(new CustomEvent(cacheKey))
+      await core.onState.emit(cacheKey, [])
 
       return Ok.void()
     })
@@ -1137,12 +1145,14 @@ export class Global {
           method: "brume_update",
           params: [cacheKey, stored]
         }).then(r => r.ignore())
+
+        return new None()
       }
 
-      core.onState.addEventListener(cacheKey, onState, { passive: true })
+      core.onState.on(cacheKey, onState, { passive: true })
 
       foreground.events.on("close", () => {
-        core.onState.removeListener(cacheKey, onState)
+        core.onState.off(cacheKey, onState)
         return new None()
       })
 
