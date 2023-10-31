@@ -11,6 +11,5 @@ export function useUsers() {
   const storage = useGlobalStorageContext().unwrap()
   const query = useQuery(getUsers, [storage])
   useSubscribe(query, storage)
-  console.log("users", query)
   return query
 }

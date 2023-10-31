@@ -67,8 +67,6 @@ export class GlobalStorage implements Storage {
         if (cacheKey2 !== cacheKey)
           return new None()
 
-        console.log("update", cacheKey, stored)
-
         core.storeds.set(cacheKey, stored)
         core.unstoreds.delete(cacheKey)
         await core.onState.emit(cacheKey, [])
