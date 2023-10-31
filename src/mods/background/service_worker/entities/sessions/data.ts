@@ -37,7 +37,7 @@ export interface ExSessionData {
   readonly origin: string
   readonly persist: boolean
   readonly chain: ChainData
-  readonly wallets: [Wallet]
+  readonly wallets: Wallet[]
 }
 
 export interface WcSessionData {

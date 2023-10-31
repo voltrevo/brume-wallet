@@ -494,16 +494,13 @@ export class Global {
           return new Ok(sessionData)
         }
 
-        const [persistent, walletId, chainId] = await this.tryRequestPopup<[boolean, string, number]>({
+        const [persistent, chainId, wallets] = await this.tryRequestPopup<[boolean, number, Wallet[]]>({
           id: crypto.randomUUID(),
           origin: origin,
           method: "eth_requestAccounts",
           params: {}
         }, mouse, true).then(r => r.throw(t).throw(t))
 
-        const walletQuery = Wallet.schema(walletId, storage)
-        const walletState = await walletQuery.state.then(r => r.throw(t))
-        const wallet = Option.wrap(walletState.current?.inner).ok().throw(t)
         const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
         const sessionData: ExSessionData = {
@@ -511,7 +508,7 @@ export class Global {
           id: crypto.randomUUID(),
           origin: origin,
           persist: persistent,
-          wallets: [WalletRef.from(wallet)],
+          wallets: wallets.map(wallet => WalletRef.from(wallet)),
           chain: chain
         }
 

@@ -38,8 +38,12 @@ export interface WalletRef {
 
 export namespace WalletRef {
 
+  export function create(uuid: string): WalletRef {
+    return { ref: true, uuid }
+  }
+
   export function from(wallet: Wallet): WalletRef {
-    return { ref: true, uuid: wallet.uuid }
+    return create(wallet.uuid)
   }
 
 }

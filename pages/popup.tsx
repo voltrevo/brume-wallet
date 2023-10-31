@@ -31,7 +31,7 @@ import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { Abi } from "@hazae41/cubane";
 import { RpcErr, RpcOk } from "@hazae41/jsonrpc";
-import { Option } from "@hazae41/option";
+import { Nullable, Option } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
 import { Transaction } from "ethers";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -508,7 +508,7 @@ export function WalletAndChainSelectPage() {
     setPersistent(e.currentTarget.checked)
   }, [])
 
-  const [selecteds, setSelecteds] = useState<Wallet[]>([])
+  const [selecteds, setSelecteds] = useState<Nullable<Wallet>[]>([])
   const [chain, setChain] = useState<number>(1)
 
   const onWalletClick = useCallback((wallet: Wallet) => {
@@ -522,19 +522,14 @@ export function WalletAndChainSelectPage() {
     setSelecteds([...clone])
   }, [selecteds])
 
-  console.log(selecteds)
-
   const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      const first = selecteds.values().next()
-
-      if (first.done)
+      if (selecteds.length === 0)
         return new Err(new UIError(`No wallet selected`))
-      const wallet = first.value
 
       await background.tryRequest({
         method: "brume_respond",
-        params: [new RpcOk(id, [persistent, wallet.uuid, chain])]
+        params: [new RpcOk(id, [persistent, chain, selecteds])]
       }).then(r => r.throw(t).throw(t))
 
       const requestsQuery = FgAppRequests.schema(storage)

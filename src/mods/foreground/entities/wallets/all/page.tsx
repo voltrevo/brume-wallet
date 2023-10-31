@@ -10,6 +10,7 @@ import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path/context"
+import { Nullable } from "@hazae41/option"
 import { useCallback, useEffect } from "react"
 import { WalletDataCard } from "../card"
 import { WalletDataProvider, useWalletDataContext } from "../context"
@@ -87,7 +88,7 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & CreateProps & { wal
   </div>
 }
 
-export function SelectableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] } & { selecteds: Wallet[] }) {
+export function SelectableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] } & { selecteds: Nullable<Wallet>[] }) {
   const { wallets, ok, create, selecteds } = props
 
   return <div className="grid grow place-content-start place-items-center gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
