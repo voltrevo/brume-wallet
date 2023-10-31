@@ -29,7 +29,7 @@ import { Router } from "@/mods/foreground/router/router";
 import { useUserStorageContext } from "@/mods/foreground/storage/user";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { Abi } from "@hazae41/cubane";
+import { Abi, ZeroHexString } from "@hazae41/cubane";
 import { RpcErr, RpcOk } from "@hazae41/jsonrpc";
 import { Nullable, Option } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
@@ -100,6 +100,10 @@ export function TransactPage() {
 
   const nonceQuery = useNonce(maybeWallet?.address, context)
   const maybeNonce = nonceQuery.data?.inner
+
+  const hash = Option.wrap(data).mapSync(x => {
+    return x.slice(0, 6) as ZeroHexString
+  }).inner
 
   const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {

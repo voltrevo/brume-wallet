@@ -6,6 +6,7 @@ import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { chainByChainId } from "@/libs/ethereum/mods/chain"
 import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
+import { Strings } from "@/libs/strings/strings"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
 import { Url, qurl } from "@/libs/url/url"
@@ -52,11 +53,12 @@ import { PersistentSessions } from "./entities/sessions/all/data"
 import { ExSessionData, Session, SessionByOrigin, SessionData, SessionRef, WcSessionData } from "./entities/sessions/data"
 import { Status, StatusData } from "./entities/sessions/status/data"
 import { BgSettings } from "./entities/settings/data"
+import { BgSignature } from "./entities/signatures/data"
 import { BgContractToken, BgNativeToken } from "./entities/tokens/data"
 import { BgUnknown } from "./entities/unknown/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
-import { BgEns, BgPair, EthereumContext, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef, tryEthereumFetch } from "./entities/wallets/data"
+import { BgEns, BgEthereumContext, BgPair, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef, tryEthereumFetch } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -609,7 +611,7 @@ export class Global {
 
       const wallet = Option.wrap(wallets[0]).ok().throw(t)
       const brume = await this.#tryGetOrTakeEthBrume(wallet.uuid).then(r => r.throw(t))
-      const ethereum: EthereumContext = { chain, brume }
+      const ethereum: BgEthereumContext = { chain, brume }
 
       if (subrequest.method === "eth_requestAccounts")
         return await this.eth_requestAccounts(ethereum, session, subrequest)
@@ -641,7 +643,7 @@ export class Global {
     })
   }
 
-  async eth_requestAccounts(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
+  async eth_requestAccounts(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
     return await Result.unthrow(async t => {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
@@ -659,7 +661,7 @@ export class Global {
     })
   }
 
-  async eth_accounts(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
+  async eth_accounts(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
     return await Result.unthrow(async t => {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
@@ -677,11 +679,11 @@ export class Global {
     })
   }
 
-  async eth_chainId(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+  async eth_chainId(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return new Ok(ZeroHexString.from(session.chain.chainId))
   }
 
-  async eth_getBalance(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async eth_getBalance(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [address, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
 
@@ -702,7 +704,7 @@ export class Global {
     })
   }
 
-  async eth_sendTransaction(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
+  async eth_sendTransaction(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [{ from, to, gas, value, data }] = (request as RpcRequestPreinit<[{
         from: string,
@@ -727,7 +729,7 @@ export class Global {
       /**
        * TODO: maybe ensure two wallets can't have the same address in the same session
        */
-      const maybeWallet = wallets.find(wallet => wallet.address === from)
+      const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, from))
       const walletId = Option.wrap(maybeWallet?.uuid).ok().throw(t)
 
       const chainId = ZeroHexString.from(ethereum.chain.chainId)
@@ -748,7 +750,7 @@ export class Global {
     })
   }
 
-  async personal_sign(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
+  async personal_sign(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [message, address] = (request as RpcRequestPreinit<[string, string]>).params
 
@@ -767,7 +769,7 @@ export class Global {
       /**
        * TODO: maybe ensure two wallets can't have the same address in the same session
        */
-      const maybeWallet = wallets.find(wallet => wallet.address === address)
+      const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, address))
       const walletId = Option.wrap(maybeWallet?.uuid).ok().throw(t)
 
       const chainId = ZeroHexString.from(ethereum.chain.chainId)
@@ -784,14 +786,34 @@ export class Global {
     })
   }
 
-  async eth_signTypedData_v4(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
+  async eth_signTypedData_v4(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const [address, data] = (request as RpcRequestPreinit<[string, string]>).params
+
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+      const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
+        return await Result.unthrow<Result<WalletData, Error>>(async t => {
+          const walletQuery = Wallet.schema(wallet.uuid, storage)
+          const walletState = await walletQuery.state.then(r => r.throw(t))
+          const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
+
+          return new Ok(walletData)
+        })
+      }))).throw(t)
+
+      /**
+       * TODO: maybe ensure two wallets can't have the same address in the same session
+       */
+      const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, address))
+      const walletId = Option.wrap(maybeWallet?.uuid).ok().throw(t)
+
+      const chainId = ZeroHexString.from(ethereum.chain.chainId)
 
       const signature = await this.tryRequest<string>({
         id: crypto.randomUUID(),
         method: "eth_signTypedData_v4",
-        params: { data, address },
+        params: { data, address, walletId, chainId },
         origin: session.origin,
         session: session.id
       }, mouse).then(r => r.throw(t).throw(t))
@@ -800,7 +822,7 @@ export class Global {
     })
   }
 
-  async wallet_switchEthereumChain(ethereum: EthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
+  async wallet_switchEthereumChain(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
       const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
 
@@ -1160,7 +1182,7 @@ export class Global {
     })
   }
 
-  async tryRouteEthereum(ethereum: EthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<Result<SimpleQuery<any, any, Error>, Error>> {
+  async tryRouteEthereum(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<Result<SimpleQuery<any, any, Error>, Error>> {
     if (request.method === BgNativeToken.Balance.method)
       return await BgNativeToken.Balance.tryParse(ethereum, request, storage)
     if (request.method === BgContractToken.Balance.method)
@@ -1171,8 +1193,18 @@ export class Global {
       return await BgEns.Lookup.tryParse(ethereum, request, storage)
     if (request.method === BgEns.Reverse.method)
       return await BgEns.Reverse.tryParse(ethereum, request, storage)
+    if (request.method === BgSignature.method)
+      return await BgSignature.tryParse(ethereum, request, storage)
 
     if (request.method === "eth_getTransactionByHash")
+      request.noCheck = true
+    if (request.method === "eth_estimateGas")
+      request.noCheck = true
+    if (request.method === "web3_clientVersion")
+      request.noCheck = true
+    if (request.method === "eth_blockNumber")
+      request.noCheck = true
+    if (request.method === "eth_getTransactionReceipt")
       request.noCheck = true
 
     return new Ok(BgUnknown.schema(ethereum, request, storage))
@@ -1188,7 +1220,7 @@ export class Global {
 
       const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.throw(t))
 
-      const ethereum: EthereumContext = { chain, brume }
+      const ethereum: BgEthereumContext = { chain, brume }
 
       const query = await this.tryRouteEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
@@ -1207,7 +1239,7 @@ export class Global {
       const chain = Option.wrap(chainByChainId[chainId]).ok().throw(t)
 
       const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.throw(t))
-      const ethereum: EthereumContext = { chain, brume }
+      const ethereum: BgEthereumContext = { chain, brume }
 
       const query = await this.tryRouteEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
@@ -1322,7 +1354,7 @@ export class Global {
         const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
         const brume = await this.#tryGetOrTakeEthBrume(wallet.uuid).then(r => r.throw(t))
 
-        const ethereum: EthereumContext = { chain, brume }
+        const ethereum: BgEthereumContext = { chain, brume }
 
         if (request.method === "eth_sendTransaction")
           return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
@@ -1417,7 +1449,7 @@ export class Global {
         const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
         const brume = await this.#tryGetOrTakeEthBrume(wallet.uuid).then(r => r.throw(t))
 
-        const ethereum: EthereumContext = { chain, brume }
+        const ethereum: BgEthereumContext = { chain, brume }
 
         if (request.method === "eth_sendTransaction")
           return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))

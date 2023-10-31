@@ -197,7 +197,7 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
   chainId: number
 }
 
-export interface EthereumContext {
+export interface BgEthereumContext {
   chain: ChainData
   brume: EthBrume
 }
@@ -206,7 +206,7 @@ export interface EthereumFetchParams {
   noCheck?: boolean
 }
 
-export async function tryEthereumFetch<T>(ethereum: EthereumContext, init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}) {
+export async function tryEthereumFetch<T>(ethereum: BgEthereumContext, init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}) {
   return await Result.runAndDoubleWrap<Fetched<T, Error>>(async () => {
     const { signal: presignal } = more
     const { brume } = ethereum
@@ -406,7 +406,7 @@ export function getPricedBalanceByToken(account: string, coin: "usd", storage: I
   })
 }
 
-export function getPricedBalance(ethereum: EthereumContext, account: string, coin: "usd", storage: IDBStorage) {
+export function getPricedBalance(ethereum: BgEthereumContext, account: string, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<FixedInit, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const key = `${ethereum.chain.chainId}`
@@ -436,7 +436,7 @@ export namespace BgPair {
 
     export const method = "eth_getPairPrice"
 
-    export function key(ethereum: EthereumContext, pair: PairInfo) {
+    export function key(ethereum: BgEthereumContext, pair: PairInfo) {
       return {
         chainId: ethereum.chain.chainId,
         method: "eth_getPairPrice",
@@ -444,7 +444,7 @@ export namespace BgPair {
       }
     }
 
-    export async function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
       return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, FixedInit, Error>, Error>>(async t => {
         const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
         const pair = Option.wrap(pairByAddress[address]).ok().throw(t)
@@ -453,7 +453,7 @@ export namespace BgPair {
       })
     }
 
-    export function schema(ethereum: EthereumContext, pair: PairInfo, storage: IDBStorage) {
+    export function schema(ethereum: BgEthereumContext, pair: PairInfo, storage: IDBStorage) {
       const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
         const data = Cubane.Abi.tryEncode(PairAbi.getReserves.args.from()).throw(t)
 
@@ -501,7 +501,7 @@ export namespace BgPair {
 
 }
 
-export function getTokenPricedBalance(ethereum: EthereumContext, account: string, token: ContractTokenData, coin: "usd", storage: IDBStorage) {
+export function getTokenPricedBalance(ethereum: BgEthereumContext, account: string, token: ContractTokenData, coin: "usd", storage: IDBStorage) {
   const indexer = async (states: States<FixedInit, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const key = `${ethereum.chain.chainId}/${token.address}`
@@ -525,7 +525,7 @@ export function getTokenPricedBalance(ethereum: EthereumContext, account: string
   })
 }
 
-export function getTokenBalance(ethereum: EthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
+export function getTokenBalance(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
   const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
     const data = Cubane.Abi.tryEncode(TokenAbi.balanceOf.args.from(account)).throw(t)
 
@@ -599,7 +599,7 @@ export namespace BgEns {
 
   export namespace Resolver {
 
-    export async function tryFetch(ethereum: EthereumContext, namehash: Bytes<32>): Promise<Result<Fetched<ZeroHexString, Error>, Error>> {
+    export async function tryFetch(ethereum: BgEthereumContext, namehash: Bytes<32>): Promise<Result<Fetched<ZeroHexString, Error>, Error>> {
       return await Result.unthrow(async t => {
         const registry = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
 
@@ -638,13 +638,13 @@ export namespace BgEns {
       }
     }
 
-    export async function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
       const [name] = (request as RpcRequestPreinit<[string]>).params
       const query = schema(ethereum, name, storage)
       return new Ok(query)
     }
 
-    export function schema(ethereum: EthereumContext, name: string, storage: IDBStorage) {
+    export function schema(ethereum: BgEthereumContext, name: string, storage: IDBStorage) {
       const fetcher = () => tryFetch(ethereum, name)
 
       return createQuery<EthereumQueryKey<unknown>, ZeroHexString, Error>({
@@ -654,7 +654,7 @@ export namespace BgEns {
       })
     }
 
-    export async function tryFetch(ethereum: EthereumContext, name: string) {
+    export async function tryFetch(ethereum: BgEthereumContext, name: string) {
       return await Result.unthrow<Result<Fetched<ZeroHexString, Error>, Error>>(async t => {
         const namehash = Cubane.Ens.tryNamehash(name).throw(t) as Bytes<32>
         const resolver = await Resolver.tryFetch(ethereum, namehash).then(r => r.throw(t))
@@ -696,13 +696,13 @@ export namespace BgEns {
       }
     }
 
-    export async function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
       const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
       const query = schema(ethereum, address, storage)
       return new Ok(query)
     }
 
-    export function schema(ethereum: EthereumContext, address: ZeroHexString, storage: IDBStorage) {
+    export function schema(ethereum: BgEthereumContext, address: ZeroHexString, storage: IDBStorage) {
       const fetcher = () => tryFetch(ethereum, address)
 
       return createQuery<EthereumQueryKey<unknown>, Nullable<string>, Error>({
@@ -712,7 +712,7 @@ export namespace BgEns {
       })
     }
 
-    export async function tryFetchUnchecked(ethereum: EthereumContext, address: ZeroHexString): Promise<Result<Fetched<Nullable<string>, Error>, Error>> {
+    export async function tryFetchUnchecked(ethereum: BgEthereumContext, address: ZeroHexString): Promise<Result<Fetched<Nullable<string>, Error>, Error>> {
       return await Result.unthrow(async t => {
         const namehash = Cubane.Ens.tryNamehash(`${address.slice(2)}.addr.reverse`).throw(t) as Bytes<32>
         const resolver = await Resolver.tryFetch(ethereum, namehash).then(r => r.throw(t))
@@ -743,7 +743,7 @@ export namespace BgEns {
       })
     }
 
-    export async function tryFetch(ethereum: EthereumContext, address: ZeroHexString) {
+    export async function tryFetch(ethereum: BgEthereumContext, address: ZeroHexString) {
       return await Result.unthrow<Result<Fetched<Nullable<string>, Error>, Error>>(async t => {
         const name = await tryFetchUnchecked(ethereum, address).then(r => r.throw(t))
 

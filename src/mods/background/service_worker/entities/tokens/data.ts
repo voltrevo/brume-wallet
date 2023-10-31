@@ -7,7 +7,7 @@ import { Data, Fetched, IDBStorage, SimpleQuery, States, createQuery } from "@ha
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
-import { BgPair, EthereumContext, EthereumQueryKey, getPricedBalance, getTokenPricedBalance, tryEthereumFetch } from "../wallets/data"
+import { BgEthereumContext, BgPair, EthereumQueryKey, getPricedBalance, getTokenPricedBalance, tryEthereumFetch } from "../wallets/data"
 
 export type Token =
   | TokenData
@@ -95,7 +95,7 @@ export namespace BgNativeToken {
 
     export const method = "eth_getBalance"
 
-    export function key(ethereum: EthereumContext, account: ZeroHexString, block: string) {
+    export function key(ethereum: BgEthereumContext, account: ZeroHexString, block: string) {
       return {
         version: 2,
         chainId: ethereum.chain.chainId,
@@ -104,7 +104,7 @@ export namespace BgNativeToken {
       }
     }
 
-    export async function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
       return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, FixedInit, Error>, Error>>(async t => {
         const [account, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
         const query = schema(ethereum, account, block, storage)
@@ -112,7 +112,7 @@ export namespace BgNativeToken {
       })
     }
 
-    export function schema(ethereum: EthereumContext, account: ZeroHexString, block: string, storage: IDBStorage) {
+    export function schema(ethereum: BgEthereumContext, account: ZeroHexString, block: string, storage: IDBStorage) {
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await tryEthereumFetch<ZeroHexString>(ethereum, request, {}).then(r => r.mapSync(d => d.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals))))
 
@@ -181,7 +181,7 @@ export namespace BgContractToken {
 
     export const method = "eth_getTokenBalance"
 
-    export function key(ethereum: EthereumContext, account: ZeroHexString, token: ContractTokenData, block: string) {
+    export function key(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string) {
       return {
         chainId: ethereum.chain.chainId,
         method: method,
@@ -189,7 +189,7 @@ export namespace BgContractToken {
       }
     }
 
-    export async function tryParse(ethereum: EthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
       return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, FixedInit, Error>, Error>>(async t => {
         const [account, address, block] = (request as RpcRequestPreinit<[ZeroHexString, string, string]>).params
 
@@ -204,7 +204,7 @@ export namespace BgContractToken {
       })
     }
 
-    export function schema(ethereum: EthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
+    export function schema(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
       const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
         const data = Cubane.Abi.tryEncode(TokenAbi.balanceOf.args.from(account)).throw(t)
 

@@ -32,7 +32,7 @@ import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
-import { EthereumContext, useBalance, useEnsReverse, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
+import { FgEthereumContext, useBalance, useEnsReverse, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
 import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
 
 export function WalletPage(props: UUIDProps) {
@@ -447,7 +447,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   </>
 }
 
-function PriceResolver(props: { index: number } & { address: string } & { context: Nullable<EthereumContext> } & OkProps<[number, Nullable<FixedInit>]>) {
+function PriceResolver(props: { index: number } & { address: string } & { context: Nullable<FgEthereumContext> } & OkProps<[number, Nullable<FixedInit>]>) {
   const { ok, index, address, context } = props
   const pair = pairByAddress[address]
 

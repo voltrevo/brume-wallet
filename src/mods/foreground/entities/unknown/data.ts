@@ -5,11 +5,11 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
-import { EthereumContext, tryFetch } from "../wallets/data";
+import { FgEthereumContext, tryFetch } from "../wallets/data";
 
 export namespace FgUnknown {
 
-  export function schema<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, context: Nullable<EthereumContext>, storage: UserStorage) {
+  export function schema<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, context: Nullable<FgEthereumContext>, storage: UserStorage) {
     if (context == null)
       return
 
@@ -25,7 +25,7 @@ export namespace FgUnknown {
 
 }
 
-export function useUnknown(request: RpcRequestPreinit<unknown> & EthereumFetchParams, context: Nullable<EthereumContext>) {
+export function useUnknown(request: RpcRequestPreinit<unknown> & EthereumFetchParams, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgUnknown.schema, [request, context, storage])
   useFetch(query)

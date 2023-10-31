@@ -8,29 +8,40 @@ import { Err, Ok, Result } from "@hazae41/result"
 export namespace TorRpc {
 
   export async function tryFetchWithCircuit<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit<unknown> & { circuit: Circuit } & CircuitOpenParams): Promise<Result<RpcResponse<T>, Error>> {
-    const { id, method, params, circuit, ...rest } = init
+    return await Result.unthrow(async t => {
+      const { id, method, params, circuit, ...rest } = init
 
-    const request = new RpcRequest(id, method, params)
-    const body = Bytes.fromUtf8(JSON.stringify(request))
+      const request = new RpcRequest(id, method, params)
+      const body = Bytes.fromUtf8(JSON.stringify(request))
 
-    const headers = new Headers(rest.headers)
-    headers.set("Content-Type", "application/json")
-    headers.set("Content-Length", `${body.length}`)
+      const headers = new Headers(rest.headers)
+      headers.set("Content-Type", "application/json")
+      headers.set("Content-Length", `${body.length}`)
 
-    const res = await circuit.tryFetch(input, { ...rest, method: "POST", headers, body })
+      const res = await circuit.tryFetch(input, { ...rest, method: "POST", headers, body })
 
-    if (!res.isOk())
-      return res
+      if (!res.isOk())
+        return res
 
-    if (!res.inner.ok)
-      return new Err(new Error(await res.inner.text()))
+      if (!res.inner.ok) {
+        const text = await Result.runAndDoubleWrap(() => {
+          return res.inner.text()
+        }).then(r => r.throw(t))
 
-    const response = RpcResponse.from<T>(await res.inner.json())
+        return new Err(new Error(text))
+      }
 
-    if (response.id !== request.id)
-      console.warn(`Invalid response ID`, response.id, "expected", request.id)
+      const json = await Result.runAndDoubleWrap(() => {
+        return res.inner.json()
+      }).then(r => r.throw(t))
 
-    return new Ok(response)
+      const response = RpcResponse.from<T>(json)
+
+      if (response.id !== request.id)
+        console.warn(`Invalid response ID`, response.id, "expected", request.id)
+
+      return new Ok(response)
+    })
   }
 
   export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit<unknown>, signal: AbortSignal) {

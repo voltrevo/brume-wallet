@@ -218,20 +218,20 @@ export class EthereumAuthPrivateKeyWalletInstance {
 
 }
 
-export interface EthereumContext {
+export interface FgEthereumContext {
   uuid: string,
   chain: ChainData,
   background: Background
 }
 
 export interface EthereumContextProps {
-  context: EthereumContext
+  context: FgEthereumContext
 }
 
 export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<ChainData>) {
   const background = useBackgroundContext().unwrap()
 
-  return useMemo<Nullable<EthereumContext>>(() => {
+  return useMemo<Nullable<FgEthereumContext>>(() => {
     if (uuid == null)
       return
     if (chain == null)
@@ -240,7 +240,7 @@ export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<Chain
   }, [uuid, chain, background])
 }
 
-export async function tryFetch<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, ethereum: EthereumContext): Promise<Result<Fetched<T, Error>, Error>> {
+export async function tryFetch<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, ethereum: FgEthereumContext): Promise<Result<Fetched<T, Error>, Error>> {
   const { uuid, background, chain } = ethereum
 
   return await background.tryRequest<T>({
@@ -249,7 +249,7 @@ export async function tryFetch<T>(request: RpcRequestPreinit<unknown> & Ethereum
   }).then(r => r.mapSync(x => Fetched.rewrap(x)))
 }
 
-export async function tryIndex<T>(request: RpcRequestPreinit<unknown>, ethereum: EthereumContext): Promise<Result<RpcResponse<T>, Error>> {
+export async function tryIndex<T>(request: RpcRequestPreinit<unknown>, ethereum: FgEthereumContext): Promise<Result<RpcResponse<T>, Error>> {
   const { uuid, background, chain } = ethereum
 
   return await background.tryRequest<T>({
@@ -288,7 +288,7 @@ export function useTotalWalletPricedBalance(address: string, coin: "usd") {
   return query
 }
 
-export function getPricedBalance(account: string, coin: "usd", context: Nullable<EthereumContext>, storage: UserStorage) {
+export function getPricedBalance(account: string, coin: "usd", context: Nullable<FgEthereumContext>, storage: UserStorage) {
   if (context == null)
     return
 
@@ -302,7 +302,7 @@ export function getPricedBalance(account: string, coin: "usd", context: Nullable
   })
 }
 
-export function usePricedBalance(address: string, coin: "usd", context: Nullable<EthereumContext>) {
+export function usePricedBalance(address: string, coin: "usd", context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getPricedBalance, [address, coin, context, storage])
   useFetch(query)
@@ -313,7 +313,7 @@ export function usePricedBalance(address: string, coin: "usd", context: Nullable
   return query
 }
 
-export function getBalance(address: string, context: Nullable<EthereumContext>, storage: UserStorage) {
+export function getBalance(address: string, context: Nullable<FgEthereumContext>, storage: UserStorage) {
   if (context == null)
     return
 
@@ -332,7 +332,7 @@ export function getBalance(address: string, context: Nullable<EthereumContext>, 
   })
 }
 
-export function useBalance(address: string, context: Nullable<EthereumContext>, prices: Nullable<FixedInit>[]) {
+export function useBalance(address: string, context: Nullable<FgEthereumContext>, prices: Nullable<FixedInit>[]) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getBalance, [address, context, storage])
   useFetch(query)
@@ -354,7 +354,7 @@ export function useBalance(address: string, context: Nullable<EthereumContext>, 
   return query
 }
 
-export function getTokenPricedBalance(context: Nullable<EthereumContext>, account: string, token: ContractTokenData, coin: "usd", storage: UserStorage) {
+export function getTokenPricedBalance(context: Nullable<FgEthereumContext>, account: string, token: ContractTokenData, coin: "usd", storage: UserStorage) {
   if (context == null)
     return
 
@@ -368,7 +368,7 @@ export function getTokenPricedBalance(context: Nullable<EthereumContext>, accoun
   })
 }
 
-export function useTokenPricedBalance(context: Nullable<EthereumContext>, address: string, token: ContractTokenData, coin: "usd") {
+export function useTokenPricedBalance(context: Nullable<FgEthereumContext>, address: string, token: ContractTokenData, coin: "usd") {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getTokenPricedBalance, [context, address, token, coin, storage])
   useFetch(query)
@@ -379,7 +379,7 @@ export function useTokenPricedBalance(context: Nullable<EthereumContext>, addres
   return query
 }
 
-export function getTokenBalance(address: string, token: ContractTokenData, context: Nullable<EthereumContext>, storage: UserStorage) {
+export function getTokenBalance(address: string, token: ContractTokenData, context: Nullable<FgEthereumContext>, storage: UserStorage) {
   if (context == null)
     return
 
@@ -397,7 +397,7 @@ export function getTokenBalance(address: string, token: ContractTokenData, conte
   })
 }
 
-export function useTokenBalance(address: string, token: ContractTokenData, context: Nullable<EthereumContext>, prices: Nullable<FixedInit>[]) {
+export function useTokenBalance(address: string, token: ContractTokenData, context: Nullable<FgEthereumContext>, prices: Nullable<FixedInit>[]) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getTokenBalance, [address, token, context, storage])
   useFetch(query)
@@ -418,7 +418,7 @@ export function useTokenBalance(address: string, token: ContractTokenData, conte
   return query
 }
 
-export function getNonceSchema(address: Nullable<string>, context: Nullable<EthereumContext>, storage: UserStorage) {
+export function getNonceSchema(address: Nullable<string>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
   if (address == null)
     return undefined
   if (context == null)
@@ -439,7 +439,7 @@ export function getNonceSchema(address: Nullable<string>, context: Nullable<Ethe
   })
 }
 
-export function useNonce(address: Nullable<string>, context: Nullable<EthereumContext>) {
+export function useNonce(address: Nullable<string>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getNonceSchema, [address, context, storage])
   useFetch(query)
@@ -450,7 +450,7 @@ export function useNonce(address: Nullable<string>, context: Nullable<EthereumCo
   return query
 }
 
-export function getGasPriceSchema(context: Nullable<EthereumContext>, storage: UserStorage) {
+export function getGasPriceSchema(context: Nullable<FgEthereumContext>, storage: UserStorage) {
   if (context == null)
     return undefined
 
@@ -470,7 +470,7 @@ export function getGasPriceSchema(context: Nullable<EthereumContext>, storage: U
   })
 }
 
-export function useGasPrice(ethereum: Nullable<EthereumContext>) {
+export function useGasPrice(ethereum: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getGasPriceSchema, [ethereum, storage])
   useFetch(query)
@@ -481,7 +481,7 @@ export function useGasPrice(ethereum: Nullable<EthereumContext>) {
   return query
 }
 
-export function getMaxPriorityFeePerGas(context: Nullable<EthereumContext>, storage: UserStorage) {
+export function getMaxPriorityFeePerGas(context: Nullable<FgEthereumContext>, storage: UserStorage) {
   if (context == null)
     return undefined
 
@@ -500,7 +500,7 @@ export function getMaxPriorityFeePerGas(context: Nullable<EthereumContext>, stor
   })
 }
 
-export function useMaxPriorityFeePerGas(ethereum: Nullable<EthereumContext>) {
+export function useMaxPriorityFeePerGas(ethereum: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getMaxPriorityFeePerGas, [ethereum, storage])
   useFetch(query)
@@ -514,7 +514,7 @@ export interface Block {
   baseFeePerGas?: ZeroHexString
 }
 
-export function getBlockByNumber(number: Nullable<string>, context: Nullable<EthereumContext>, storage: UserStorage) {
+export function getBlockByNumber(number: Nullable<string>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
   if (context == null)
     return undefined
   if (number == null)
@@ -535,7 +535,7 @@ export function getBlockByNumber(number: Nullable<string>, context: Nullable<Eth
   })
 }
 
-export function useBlockByNumber(number: Nullable<string>, ethereum: Nullable<EthereumContext>) {
+export function useBlockByNumber(number: Nullable<string>, ethereum: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getBlockByNumber, [number, ethereum, storage])
   useFetch(query)
@@ -545,7 +545,7 @@ export function useBlockByNumber(number: Nullable<string>, ethereum: Nullable<Et
   return query
 }
 
-export function getPairPrice(context: Nullable<EthereumContext>, pair: PairInfo, storage: UserStorage) {
+export function getPairPrice(context: Nullable<FgEthereumContext>, pair: PairInfo, storage: UserStorage) {
   if (context == null)
     return
 
@@ -563,7 +563,7 @@ export function getPairPrice(context: Nullable<EthereumContext>, pair: PairInfo,
   })
 }
 
-export function usePairPrice(ethereum: Nullable<EthereumContext>, pair: PairInfo) {
+export function usePairPrice(ethereum: Nullable<FgEthereumContext>, pair: PairInfo) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getPairPrice, [ethereum, pair, storage])
   useFetch(query)
@@ -577,7 +577,7 @@ export namespace FgEns {
 
   export namespace Lookup {
 
-    export function schema(name: Nullable<string>, context: Nullable<EthereumContext>, storage: UserStorage) {
+    export function schema(name: Nullable<string>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
       if (context == null)
         return
       if (name == null)
@@ -597,7 +597,7 @@ export namespace FgEns {
 
   export namespace Reverse {
 
-    export function schema(address: Nullable<ZeroHexString>, context: Nullable<EthereumContext>, storage: UserStorage) {
+    export function schema(address: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
       if (context == null)
         return
       if (address == null)
@@ -617,7 +617,7 @@ export namespace FgEns {
 
 }
 
-export function useEnsLookup(name: Nullable<string>, ethereum: Nullable<EthereumContext>) {
+export function useEnsLookup(name: Nullable<string>, ethereum: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgEns.Lookup.schema, [name, ethereum, storage])
   useFetch(query)
@@ -627,7 +627,7 @@ export function useEnsLookup(name: Nullable<string>, ethereum: Nullable<Ethereum
   return query
 }
 
-export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullable<EthereumContext>) {
+export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
   useFetch(query)
@@ -637,7 +637,7 @@ export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullab
   return query
 }
 
-export function useEnsReverseNoFetch(address: Nullable<ZeroHexString>, ethereum: Nullable<EthereumContext>) {
+export function useEnsReverseNoFetch(address: Nullable<ZeroHexString>, ethereum: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
   useSubscribe(query, storage)
