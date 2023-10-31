@@ -109,7 +109,7 @@ export function CheckableWalletDataCard(props: WalletProps & OkProps<Wallet> & {
     ok(wallet)
   }, [ok, wallet])
 
-  return <div className={`w-full aspect-video rounded-xl overflow-hidden aria-checked:outline aria-checked:outline-2 aria-checked:outline-blue-600 animate-vibrate-loop`}
+  return <div className={`w-full aspect-video rounded-xl overflow-hidden cursor-pointer aria-checked:outline aria-checked:outline-2 aria-checked:outline-blue-600 animate-vibrate-loop`}
     role="checkbox"
     aria-checked={checked}
     onClick={onClick}>
@@ -128,7 +128,7 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
     ok(wallet)
   }, [ok, wallet])
 
-  return <div className={`w-full aspect-video rounded-xl overflow-hidden hovered-or-clicked-or-focused:scale-105 transition-transform`}
+  return <div className={`w-full aspect-video rounded-xl overflow-hidden cursor-pointer hovered-or-clicked-or-focused:scale-105 transition-transform`}
     role="button"
     onClick={onClick}>
     <WalletDataCard />
