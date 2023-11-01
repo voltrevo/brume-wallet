@@ -45,7 +45,7 @@ declare global {
 }
 
 type EthereumEventKey = `ethereum:${string}`
-type BrumeEventKey = `brume#${string}`
+type BrumeEventKey = `brume:${string}`
 
 type Listener = (...params: any[]) => void
 
@@ -58,9 +58,9 @@ declare global {
 
 class Provider {
 
-  readonly #counter = new RpcCounter()
+  readonly _counter = new RpcCounter()
 
-  readonly #listenersByEvent = new Map<string, Set<Listener>>()
+  readonly _listenersByEvent = new Map<string, Set<Listener>>()
 
   /**
    * @deprecated
@@ -70,22 +70,22 @@ class Provider {
   /**
    * @deprecated
    */
-  #accounts = new Array<string>()
+  _accounts = new Array<string>()
 
   /**
    * @deprecated
    */
-  #chainId = "0x1"
+  _chainId = "0x1"
 
   /**
    * @deprecated
    */
-  #networkVersion = "1"
+  _networkVersion = "1"
 
   /**
    * @deprecated
    */
-  #listenerCount = 0
+  _listenerCount = 0
 
   constructor() {
     /**
@@ -113,25 +113,25 @@ class Provider {
     this.getMaxListeners = this.getMaxListeners.bind(this)
     this.setMaxListeners = this.setMaxListeners.bind(this)
 
-    this.#reemit("connect")
-    this.#reemit("disconnect")
-    this.#reemit("accountsChanged")
-    this.#reemit("chainChanged")
-    this.#reemit("networkChanged")
+    this._reemit("connect")
+    this._reemit("disconnect")
+    this._reemit("accountsChanged")
+    this._reemit("chainChanged")
+    this._reemit("networkChanged")
 
     this.on("accountsChanged", (accounts: string[]) => {
-      this.#accounts = accounts
+      this._accounts = accounts
     })
 
     this.on("chainChanged", (chainId: string) => {
-      this.#chainId = chainId
+      this._chainId = chainId
     })
 
     /**
      * Fix that old app that needs to reload on network change
      */
     this.on("networkChanged", (networkVersion: string) => {
-      this.#networkVersion = networkVersion
+      this._networkVersion = networkVersion
 
       if (!this.autoRefreshOnNetworkChange)
         return
@@ -170,21 +170,21 @@ class Provider {
    * @deprecated
    */
   get chainId() {
-    return this.#chainId
+    return this._chainId
   }
 
   /**
    * @deprecated
    */
   get networkVersion() {
-    return this.#networkVersion
+    return this._networkVersion
   }
 
   /**
    * @deprecated
    */
   get selectedAddress() {
-    return this.#accounts[0]
+    return this._accounts[0]
   }
 
   /**
@@ -219,14 +219,14 @@ class Provider {
    * @deprecated
    */
   listenerCount() {
-    return this.#listenerCount
+    return this._listenerCount
   }
 
   /**
    * @deprecated
    */
   listeners(key: string) {
-    const listeners = this.#listenersByEvent.get(key)
+    const listeners = this._listenersByEvent.get(key)
 
     if (listeners == null)
       return []
@@ -253,7 +253,7 @@ class Provider {
   }
 
   async tryRequest(reqinit: RpcRequestInit<unknown>) {
-    const request = this.#counter.prepare(reqinit)
+    const request = this._counter.prepare(reqinit)
 
     const future = new Future<RpcResponse<unknown>>()
 
@@ -293,7 +293,7 @@ class Provider {
     return await Promise.all(inits.map(init => this.tryRequest(init)))
   }
 
-  async #send(init: RpcRequestInit<unknown>, callback: (err: unknown, ok: unknown) => void) {
+  async _send(init: RpcRequestInit<unknown>, callback: (err: unknown, ok: unknown) => void) {
     const response = await this.tryRequest(init)
 
     if (response.isErr())
@@ -310,13 +310,13 @@ class Provider {
       init = { id: null, method: init }
 
     if (callback != null)
-      return this.#send(init, callback)
+      return this._send(init, callback)
     if (init.method === "eth_accounts")
-      return RpcOk.rewrap(init.id, new Ok(this.#accounts))
+      return RpcOk.rewrap(init.id, new Ok(this._accounts))
     if (init.method === "eth_coinbase")
-      return RpcOk.rewrap(init.id, new Ok(this.#accounts[0]))
+      return RpcOk.rewrap(init.id, new Ok(this._accounts[0]))
     if (init.method === "net_version")
-      return RpcOk.rewrap(init.id, new Ok(this.#networkVersion))
+      return RpcOk.rewrap(init.id, new Ok(this._networkVersion))
     if (init.method === "eth_uninstallFilter")
       throw new Error(`Unimplemented method ${init.method}`)
 
@@ -329,11 +329,11 @@ class Provider {
   sendAsync(init: string | RpcRequestInit<unknown>, callback: (err: unknown, ok: unknown) => void) {
     if (typeof init === "string")
       init = { id: null, method: init }
-    this.#send(init, callback)
+    this._send(init, callback)
   }
 
-  #reemit(key: string) {
-    this.#listenersByEvent.set(key, new Set())
+  _reemit(key: string) {
+    this._listenersByEvent.set(key, new Set())
 
     window.addEventListener(`ethereum:${key}`, (e: CustomEvent<string>) => {
       this.emit(key, JSON.parse(e.detail))
@@ -341,7 +341,7 @@ class Provider {
   }
 
   emit(key: string, ...params: any[]) {
-    const listeners = this.#listenersByEvent.get(key)
+    const listeners = this._listenersByEvent.get(key)
 
     if (listeners == null)
       return
@@ -370,20 +370,20 @@ class Provider {
   }
 
   addListener(key: string, listener: Listener) {
-    const listeners = this.#listenersByEvent.get(key)
+    const listeners = this._listenersByEvent.get(key)
 
     if (listeners == null)
       return
 
-    this.#listenerCount -= listeners.size
+    this._listenerCount -= listeners.size
 
     listeners.add(listener)
 
-    this.#listenerCount += listeners.size
+    this._listenerCount += listeners.size
   }
 
   removeListener(key: string, listener: Listener) {
-    const listeners = this.#listenersByEvent.get(key)
+    const listeners = this._listenersByEvent.get(key)
 
     if (listeners == null)
       return
@@ -391,27 +391,27 @@ class Provider {
     if (!listeners.delete(listener))
       return
 
-    this.#listenerCount--
+    this._listenerCount--
   }
 
   removeAllListeners(key: string) {
-    const listeners = this.#listenersByEvent.get(key)
+    const listeners = this._listenersByEvent.get(key)
 
     if (listeners == null)
       return
 
-    this.#listenerCount -= listeners.size
+    this._listenerCount -= listeners.size
 
     listeners.clear()
   }
 
   prependListener(key: string, listener: Listener) {
-    const listeners = this.#listenersByEvent.get(key)
+    const listeners = this._listenersByEvent.get(key)
 
     if (listeners == null)
       return
 
-    this.#listenerCount -= listeners.size
+    this._listenerCount -= listeners.size
 
     const original = [...listeners]
 
@@ -421,7 +421,7 @@ class Provider {
     for (const listener of original)
       listeners.add(listener)
 
-    this.#listenerCount += listeners.size
+    this._listenerCount += listeners.size
   }
 
   prependOnceListener(key: string, listener: Listener) {
@@ -455,7 +455,7 @@ const onLogo = (event: CustomEvent<string>) => {
   icon.resolve(JSON.parse(event.detail))
 }
 
-window.addEventListener("brume#icon", onLogo, { passive: true, once: true })
+window.addEventListener("brume:icon", onLogo, { passive: true, once: true })
 
 /**
  * EIP-6963

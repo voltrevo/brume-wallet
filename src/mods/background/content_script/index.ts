@@ -205,7 +205,7 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
     {
       const icon = await background.tryRequest<string>({ method: "brume_icon" }).then(r => r.throw(t).throw(t))
       const detail = JSON.stringify(icon)
-      const event = new CustomEvent("brume#icon", { detail })
+      const event = new CustomEvent("brume:icon", { detail })
       window.dispatchEvent(event)
     }
 
