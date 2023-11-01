@@ -70,11 +70,6 @@ class Provider {
   /**
    * @deprecated
    */
-  #connected = false
-
-  /**
-   * @deprecated
-   */
   #accounts = new Array<string>()
 
   /**
@@ -124,14 +119,6 @@ class Provider {
     this.#reemit("chainChanged")
     this.#reemit("networkChanged")
 
-    this.on("connect", () => {
-      this.#connected = true
-    })
-
-    this.on("disconnect", () => {
-      this.#connected = false
-    })
-
     this.on("accountsChanged", (accounts: string[]) => {
       this.#accounts = accounts
     })
@@ -169,14 +156,14 @@ class Provider {
    * @deprecated
    */
   isConnected() {
-    return this.#connected
+    return true
   }
 
   /**
    * @deprecated
    */
   isUnlocked() {
-    return this.#connected
+    return true
   }
 
   /**
@@ -449,6 +436,13 @@ class Provider {
 }
 
 const provider = new Provider()
+
+// const provider = new Proxy(new Provider(), {
+//   get(target, p, receiver) {
+//     console.log("!!!", p)
+//     return Reflect.get(target, p, receiver)
+//   },
+// })
 
 /**
  * EIP-1193

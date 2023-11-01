@@ -504,11 +504,6 @@ export class Global {
 
           const { chainId } = sessionData.chain
 
-          await script.tryRequest<void>({
-            method: "connect",
-            params: [{ chainId: ZeroHexString.from(chainId) }]
-          }).then(r => r.throw(t).throw(t))
-
           if (chainId !== 1) {
             await script.tryRequest<void>({
               method: "chainChanged",
@@ -590,11 +585,6 @@ export class Global {
 
           return new None()
         })
-
-        await script.tryRequest<void>({
-          method: "connect",
-          params: [{ chainId: ZeroHexString.from(chainId) }]
-        }).then(r => r.throw(t).throw(t))
 
         if (chainId !== 1) {
           await script.tryRequest<void>({
