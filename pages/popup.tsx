@@ -12,7 +12,7 @@ import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { BackgroundGuard, useBackgroundContext } from "@/mods/foreground/background/context";
 import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
-import { FgAppRequests } from "@/mods/foreground/entities/requests/all/data";
+import { useAppRequests } from "@/mods/foreground/entities/requests/all/data";
 import { useAppRequest } from "@/mods/foreground/entities/requests/data";
 import { useSession } from "@/mods/foreground/entities/sessions/data";
 import { useSignature } from "@/mods/foreground/entities/signatures/data";
@@ -27,7 +27,6 @@ import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Path, usePathContext } from "@/mods/foreground/router/path/context";
 import { Router } from "@/mods/foreground/router/router";
-import { useUserStorageContext } from "@/mods/foreground/storage/user";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { Abi, Cubane, ZeroHexString } from "@hazae41/cubane";
@@ -71,7 +70,6 @@ export function Ready() {
 
 export function TransactPage() {
   const { searchParams } = usePathContext()
-  const storage = useUserStorageContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -108,8 +106,6 @@ export function TransactPage() {
 
   const signaturesQuery = useSignature(context, maybeHash)
   const maybeSignatures = signaturesQuery.data?.inner
-
-  console.log("maybeSignatures", signaturesQuery)
 
   const maybeSignature = useMemo(() => {
     if (maybeData == null)
@@ -175,17 +171,11 @@ export function TransactPage() {
         params: [new RpcOk(id, tx.serialized)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = FgAppRequests.schema(storage)
-      const requestsState = await requestsQuery.state.then(r => r.throw(t))
-
-      if (requestsState.data?.inner.length)
-        Path.go("/requests")
-      else
-        Path.go("/done")
+      Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [storage, background, id, maybeWallet, maybeGasPrice, maybeNonce, chain])
+  }, [background, id, maybeWallet, maybeGasPrice, maybeNonce, chain])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -194,17 +184,11 @@ export function TransactPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = FgAppRequests.schema(storage)
-      const requestsState = await requestsQuery.state.then(r => r.throw(t))
-
-      if (requestsState.data?.inner.length)
-        Path.go("/requests")
-      else
-        Path.go("/done")
+      Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [storage, background, id])
+  }, [background, id])
 
   const loading = useMemo(() => {
     if (onApprove.loading)
@@ -266,7 +250,6 @@ export function TransactPage() {
 
 export function SwitchPage() {
   const { searchParams } = usePathContext()
-  const storage = useUserStorageContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -278,17 +261,11 @@ export function SwitchPage() {
         params: [new RpcOk(id, undefined)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = FgAppRequests.schema(storage)
-      const requestsState = await requestsQuery.state.then(r => r.throw(t))
-
-      if (requestsState.data?.inner.length)
-        Path.go("/requests")
-      else
-        Path.go("/done")
+      Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [storage, background, id])
+  }, [background, id])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -297,17 +274,13 @@ export function SwitchPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = FgAppRequests.schema(storage)
-      const requestsState = await requestsQuery.state.then(r => r.throw(t))
+      await new Promise(ok => setTimeout(ok, 250))
 
-      if (requestsState.data?.inner.length)
-        Path.go("/requests")
-      else
-        Path.go("/done")
+      Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [storage, background, id])
+  }, [background, id])
 
   return <Page>
     <div className="p-4 grow flex flex-col items-center justify-center">
@@ -342,7 +315,6 @@ export function SwitchPage() {
 
 export function PersonalSignPage() {
   const { searchParams } = usePathContext()
-  const storage = useUserStorageContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -370,17 +342,11 @@ export function PersonalSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = FgAppRequests.schema(storage)
-      const requestsState = await requestsQuery.state.then(r => r.throw(t))
-
-      if (requestsState.data?.inner.length)
-        Path.go("/requests")
-      else
-        Path.go("/done")
+      Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [storage, background, id, maybeWallet, userMessage])
+  }, [background, id, maybeWallet, userMessage])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -389,17 +355,11 @@ export function PersonalSignPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = FgAppRequests.schema(storage)
-      const requestsState = await requestsQuery.state.then(r => r.throw(t))
-
-      if (requestsState.data?.inner.length)
-        Path.go("/requests")
-      else
-        Path.go("/done")
+      Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [storage, background, id])
+  }, [background, id])
 
   return <Page>
     <div className="p-4 grow flex flex-col items-center justify-center">
@@ -439,7 +399,6 @@ export function PersonalSignPage() {
 
 export function TypedSignPage() {
   const { searchParams } = usePathContext()
-  const storage = useUserStorageContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -463,17 +422,11 @@ export function TypedSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = FgAppRequests.schema(storage)
-      const requestsState = await requestsQuery.state.then(r => r.throw(t))
-
-      if (requestsState.data?.inner.length)
-        Path.go("/requests")
-      else
-        Path.go("/done")
+      Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [storage, background, id, maybeWallet, data])
+  }, [background, id, maybeWallet, data])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -482,17 +435,11 @@ export function TypedSignPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = FgAppRequests.schema(storage)
-      const requestsState = await requestsQuery.state.then(r => r.throw(t))
-
-      if (requestsState.data?.inner.length)
-        Path.go("/requests")
-      else
-        Path.go("/done")
+      Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [storage, background, id])
+  }, [background, id])
 
   return <Page>
     <div className="p-4 grow flex flex-col items-center justify-center">
@@ -532,7 +479,6 @@ export function TypedSignPage() {
 
 export function WalletAndChainSelectPage() {
   const { searchParams } = usePathContext()
-  const storage = useUserStorageContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -571,17 +517,11 @@ export function WalletAndChainSelectPage() {
         params: [new RpcOk(id, [persistent, chain, selecteds])]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = FgAppRequests.schema(storage)
-      const requestsState = await requestsQuery.state.then(r => r.throw(t))
-
-      if (requestsState.data?.inner.length)
-        Path.go("/requests")
-      else
-        Path.go("/done")
+      Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [storage, background, id, selecteds, chain, persistent])
+  }, [background, id, selecteds, chain, persistent])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -590,17 +530,11 @@ export function WalletAndChainSelectPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      const requestsQuery = FgAppRequests.schema(storage)
-      const requestsState = await requestsQuery.state.then(r => r.throw(t))
-
-      if (requestsState.data?.inner.length)
-        Path.go("/requests")
-      else
-        Path.go("/done")
+      Path.go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [storage, background, id])
+  }, [background, id])
 
   const Body =
     <PageBody>
@@ -661,6 +595,14 @@ export function WalletAndChainSelectPage() {
 }
 
 export function DonePage() {
+  const requests = useAppRequests().data?.inner
+
+  useEffect(() => {
+    if (!requests?.length)
+      return
+    Path.go("/requests")
+  }, [requests])
+
   return <Page>
     <div className="p-4 grow flex flex-col items-center justify-center">
       <div className="text-center text-xl font-medium">

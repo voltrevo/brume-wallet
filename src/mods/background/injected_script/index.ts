@@ -246,7 +246,6 @@ class Provider {
 
     if (suplistener == null) {
       suplistener = (e: CustomEvent<string>) => {
-        console.log(key, JSON.parse(e.detail))
         sublistener(JSON.parse(e.detail))
       }
 
