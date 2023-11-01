@@ -46,8 +46,7 @@ declare global {
 type EthereumEventKey = `ethereum:${string}`
 type BrumeEventKey = `brume#${string}`
 
-type Sublistener = (...params: any[]) => void
-type Suplistener = (e: CustomEvent<string>) => void
+type Listener = (...params: any[]) => void
 
 declare global {
   interface DedicatedWorkerGlobalScopeEventMap {
@@ -68,7 +67,7 @@ class Provider {
 
   readonly #counter = new RpcCounter()
 
-  readonly #listeners = new Map<string, Map<Sublistener, Suplistener>>()
+  readonly #listenersByEvent = new Map<string, Set<Listener>>()
 
   /**
    * @deprecated
@@ -90,6 +89,11 @@ class Provider {
    */
   #networkVersion = "1"
 
+  /**
+   * @deprecated
+   */
+  #listenerCount = 0
+
   constructor() {
     /**
      * Fix for that poorly-coded app that does `const { request } = provider`
@@ -102,6 +106,13 @@ class Provider {
     this.sendAsync = this.sendAsync.bind(this)
     this.enable = this.enable.bind(this)
     this.isConnected = this.isConnected.bind(this)
+
+    this.#reemit("connect")
+    this.#reemit("disconnect")
+    this.#reemit("accountsChanged")
+    this.#reemit("#accountsChanged")
+    this.#reemit("chainChanged")
+    this.#reemit("networkChanged")
 
     /**
      * Fix for that old app that relies on `window.ethereum.selectedAddress`
@@ -171,10 +182,59 @@ class Provider {
     return this.#accounts[0]
   }
 
+  /**
+   * @deprecated
+   */
+  eventNames() {
+    return ["connect", "disconnect", "chainChanged", "accountsChanged", "networkChanged"] as const
+  }
+
+  /**
+   * @deprecated
+   */
+  getMaxListeners() {
+    return Number.MAX_SAFE_INTEGER
+  }
+
+  setMaxListeners(x: number) {
+    return this
+  }
+
+  /**
+   * @deprecated
+   */
+  listenerCount() {
+    return this.#listenerCount
+  }
+
+  /**
+   * @deprecated
+   */
+  listeners(key: string) {
+    const listeners = this.#listenersByEvent.get(key)
+
+    if (listeners == null)
+      return []
+    return [...listeners]
+  }
+
+  /**
+   * @deprecated
+   */
+  rawListeners(key: string) {
+    return this.listeners(key)
+  }
+
+  /**
+   * @deprecated
+   */
   isConnected() {
     return true
   }
 
+  /**
+   * @deprecated
+   */
   async enable() {
     /**
      * Enable compatibility mode for that old app that needs to reload on network change
@@ -229,67 +289,129 @@ class Provider {
       callback(null, response)
   }
 
+  /**
+   * @deprecated
+   */
   send(init: RpcRequestPreinit<unknown>, callback?: (err: unknown, ok: unknown) => void) {
     if (callback != null)
       return this.#send(init, callback)
     if (init.method === "eth_accounts")
       return { result: this.#accounts }
+    if (init.method === "eth_coinbase")
+      return { result: this.#accounts[0] }
+    if (init.method === "net_version")
+      return { result: this.#networkVersion }
+    if (init.method === "eth_uninstallFilter")
+      throw new Error(`Unimplemented method ${init.method}`)
     throw new Error(`Asynchronous method ${init.method} requires a callback`)
   }
 
+  /**
+   * @deprecated
+   */
   sendAsync(init: RpcRequestPreinit<unknown>, callback: (err: unknown, ok: unknown) => void) {
     this.#send(init, callback)
   }
 
-  on(key: string, sublistener: Sublistener) {
-    let listeners = this.#listeners.get(key)
+  #reemit(key: string) {
+    this.#listenersByEvent.set(key, new Set())
 
-    if (listeners == null) {
-      listeners = new Map()
-      this.#listeners.set(key, listeners)
-    }
-
-    let suplistener = listeners.get(sublistener)
-
-    if (suplistener == null) {
-      suplistener = (e: CustomEvent<string>) => {
-        sublistener(JSON.parse(e.detail))
-      }
-
-      listeners.set(sublistener, suplistener)
-    }
-
-    window.addEventListener(`ethereum:${key}`, suplistener, { passive: true })
+    window.addEventListener(`ethereum:${key}`, (e: CustomEvent<string>) => {
+      this.emit(key, JSON.parse(e.detail))
+    }, { passive: true })
   }
 
-  once(key: string, sublistener: Sublistener) {
-    const sublistener2: Sublistener = (...params: any[]) => {
-      sublistener(...params)
-      this.off(key, sublistener)
-    }
-
-    this.on(key, sublistener2)
-  }
-
-  off(key: string, sublistener: Sublistener) {
-    const listeners = this.#listeners.get(key)
+  emit(key: string, ...params: any[]) {
+    const listeners = this.#listenersByEvent.get(key)
 
     if (listeners == null)
       return
 
-    const suplistener = listeners.get(sublistener)
+    for (const listener of listeners)
+      listener(...params)
 
-    if (suplistener == null)
+    return
+  }
+
+  on(key: string, listener: Listener) {
+    this.addListener(key, listener)
+  }
+
+  off(key: string, listener: Listener) {
+    this.removeListener(key, listener)
+  }
+
+  once(key: string, listener: Listener) {
+    const listener2 = (...params: any[]) => {
+      listener(...params)
+      this.off(key, listener2)
+    }
+
+    this.on(key, listener2)
+  }
+
+  addListener(key: string, listener: Listener) {
+    const listeners = this.#listenersByEvent.get(key)
+
+    if (listeners == null)
       return
 
-    window.removeEventListener(`ethereum:${key}`, suplistener)
+    this.#listenerCount -= listeners.size
 
-    listeners.delete(sublistener)
+    listeners.add(listener)
 
-    if (listeners.size !== 0)
+    this.#listenerCount += listeners.size
+  }
+
+  removeListener(key: string, listener: Listener) {
+    const listeners = this.#listenersByEvent.get(key)
+
+    if (listeners == null)
       return
 
-    this.#listeners.delete(key)
+    if (!listeners.delete(listener))
+      return
+
+    this.#listenerCount--
+  }
+
+  removeAllListeners(key: string) {
+    const listeners = this.#listenersByEvent.get(key)
+
+    if (listeners == null)
+      return
+
+    this.#listenerCount -= listeners.size
+
+    listeners.clear()
+  }
+
+  prependListener(key: string, listener: Listener) {
+    const listeners = this.#listenersByEvent.get(key)
+
+    if (listeners == null)
+      return
+
+    this.#listenerCount -= listeners.size
+
+    const original = [...listeners]
+
+    listeners.clear()
+    listeners.add(listener)
+
+    for (const listener of original)
+      listeners.add(listener)
+
+    this.#listenerCount += listeners.size
+  }
+
+  prependOnceListener(key: string, listener: Listener) {
+    const listener2 = (...params: any[]) => {
+      listener(...params)
+      this.off(key, listener2)
+    }
+
+    this.prependListener(key, listener2)
   }
 
 }
