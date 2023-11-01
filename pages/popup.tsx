@@ -15,6 +15,7 @@ import { Page } from "@/mods/foreground/components/page/page";
 import { FgAppRequests } from "@/mods/foreground/entities/requests/all/data";
 import { useAppRequest } from "@/mods/foreground/entities/requests/data";
 import { useSession } from "@/mods/foreground/entities/sessions/data";
+import { useSignature } from "@/mods/foreground/entities/signatures/data";
 import { UserGuard } from "@/mods/foreground/entities/users/context";
 import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
 import { useWallets } from "@/mods/foreground/entities/wallets/all/data";
@@ -29,7 +30,7 @@ import { Router } from "@/mods/foreground/router/router";
 import { useUserStorageContext } from "@/mods/foreground/storage/user";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { Abi, ZeroHexString } from "@hazae41/cubane";
+import { Abi, Cubane, ZeroHexString } from "@hazae41/cubane";
 import { RpcErr, RpcOk } from "@hazae41/jsonrpc";
 import { Nullable, Option } from "@hazae41/option";
 import { Err, Ok, Result } from "@hazae41/result";
@@ -91,7 +92,7 @@ export function TransactPage() {
   const chain = Option.wrap(chainByChainId[chainId]).unwrap()
 
   const value = searchParams.get("value")
-  const data = searchParams.get("data")
+  const maybeData = searchParams.get("data")
 
   const context = useEthereumContext(maybeSession?.wallets.at(0)?.uuid, chain)
 
@@ -101,9 +102,52 @@ export function TransactPage() {
   const nonceQuery = useNonce(maybeWallet?.address, context)
   const maybeNonce = nonceQuery.data?.inner
 
-  const hash = Option.wrap(data).mapSync(x => {
-    return x.slice(0, 6) as ZeroHexString
+  const maybeHash = Option.wrap(maybeData).mapSync(x => {
+    return x.slice(0, 10) as ZeroHexString
   }).inner
+
+  const signaturesQuery = useSignature(context, maybeHash)
+  const maybeSignatures = signaturesQuery.data?.inner
+
+  console.log("maybeSignatures", signaturesQuery)
+
+  const maybeSignature = useMemo(() => {
+    if (maybeData == null)
+      return
+    if (maybeHash == null)
+      return
+    if (maybeSignatures == null)
+      return
+
+    const zeroHexData = ZeroHexString.from(maybeData)
+
+    return maybeSignatures.items.map(({ text }) => {
+      return Result.unthrowSync<Result<{ text: string, decoded: string }, Error>>(t => {
+        const abi = Cubane.Abi.FunctionSignature.tryParse(text).throw(t)
+        const { args } = Cubane.Abi.tryDecode(abi.args, zeroHexData).throw(t)
+
+        function stringify(x: any): string {
+          if (typeof x === "string")
+            return x
+          if (typeof x === "boolean")
+            return String(x)
+          if (typeof x === "number")
+            return String(x)
+          if (typeof x === "bigint")
+            return String(x)
+          if (x instanceof Uint8Array)
+            return ZeroHexString.from(Base16.get().tryEncode(x).throw(t))
+          if (Array.isArray(x))
+            return `(${x.map(stringify).join(", ")})`
+          return "unknown"
+        }
+
+        const decoded = args.into().map(stringify).join(", ")
+
+        return new Ok({ text, decoded })
+      }).inspectErrSync(e => console.warn({ e })).unwrapOr(undefined)
+    }).find(it => it != null)
+  }, [maybeData, maybeHash, maybeSignatures])
 
   const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -113,7 +157,7 @@ export function TransactPage() {
 
       const tx = Result.runAndDoubleWrapSync(() => {
         return Transaction.from({
-          data: data,
+          data: maybeData,
           to: to,
           gasLimit: gas,
           chainId: chain.chainId,
@@ -189,9 +233,13 @@ export function TransactPage() {
         <div className="w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
           Value: {BigIntToHex.tryDecode(value).mapSync(x => BigInts.float(x, 18)).ok().unwrapOr("Error")}
         </div>}
-      {data &&
+      {maybeSignature?.text &&
         <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
-          Data: {data}
+          Function: {maybeSignature.text}
+        </div>}
+      {maybeData &&
+        <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
+          Data: {maybeSignature?.decoded ?? maybeData}
         </div>}
     </div>
     <div className="p-4 w-full flex items-center gap-2">

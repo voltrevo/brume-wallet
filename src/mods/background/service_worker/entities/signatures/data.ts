@@ -1,34 +1,72 @@
 import { Maps } from "@/libs/maps/maps";
+import { AbortSignals } from "@/libs/signals/signals";
 import { ZeroHexString } from "@hazae41/cubane";
-import { Fetched, IDBStorage, createQuery } from "@hazae41/glacier";
+import { Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Option } from "@hazae41/option";
-import { Ok, Result } from "@hazae41/result";
+import { Err, Ok, Result } from "@hazae41/result";
 import { BgEthereumContext, EthereumFetchParams, EthereumQueryKey } from "../wallets/data";
 
 export interface SignatureData {
   readonly hash: ZeroHexString,
-  readonly signature: string
+  readonly items: SignatureItem[]
 }
 
-export async function tryFetchRaw<T>(ethereum: BgEthereumContext, url: string, init?: EthereumFetchParams) {
+export interface PreSignatureData {
+  readonly items: SignatureItem[],
+  readonly total_items: number
+  readonly total_pages: number
+}
+
+export interface SignatureItem {
+  readonly id: number
+  readonly is_valid: boolean
+
+  /**
+   * Date
+   */
+  readonly added_at: string,
+
+  /**
+   * Untruncated hash (no 0x prefix)
+   */
+  readonly hash: string & { length: 64 },
+
+  /**
+   * Signature
+   */
+  readonly text: string
+}
+
+export async function tryFetchRaw<T>(ethereum: BgEthereumContext, url: string, init: EthereumFetchParams, more: FetcherMore = {}) {
   return await Result.runAndDoubleWrap<Fetched<T, Error>>(async () => {
+    const { signal: presignal } = more
     const { brume } = ethereum
 
     const circuits = Option.wrap(brume.circuits).ok().unwrap()
 
     async function runWithPoolOrThrow(index: number) {
       return await Result.unthrow<Result<T, Error>>(async t => {
-        const circuit = await circuits.tryGet(index).then(r => r.throw(t).throw(t).inner)
+        const circuit = await circuits.tryGet(index).then(r => r.unwrap().unwrap().inner)
 
-        const res = await circuit.tryFetch(url).then(r => r.throw(t))
+        const signal = AbortSignals.timeout(5_000, presignal)
+
+        const res = await circuit.tryFetch(url, { signal }).then(r => r.unwrap())
+
+        if (!res.ok) {
+          const text = await Result.runAndDoubleWrap(() => {
+            return res.text()
+          }).then(r => r.throw(t))
+
+          return new Err(new Error(text))
+        }
 
         const json = await Result.runAndDoubleWrap(async () => {
           return await res.json() as T
         }).then(r => r.throw(t))
 
         return new Ok(json)
-      }).then(r => Fetched.rewrap(r).inspectErrSync(e => console.warn({ e })))
+      }).then(r => Fetched.rewrap(r))
     }
 
     const promises = Array.from({ length: circuits.capacity }, (_, i) => runWithPoolOrThrow(i))
@@ -94,15 +132,16 @@ export namespace BgSignature {
   }
 
   export function schema(ethereum: BgEthereumContext, hash: ZeroHexString, storage: IDBStorage) {
-    const fetcher = async () => {
-      const url = `https://www.4byte.directory/api/v1/signatures/?format=json&hex_signature=${hash}`
-      return await tryFetchRaw<SignatureData>(ethereum, url)
+    const fetcher = async (key: unknown, more: FetcherMore) => {
+      const url = `https://api.etherface.io/v1/signatures/hash/all/${hash}/1`
+      const data = await tryFetchRaw<PreSignatureData>(ethereum, url, {}, more)
+      return data.mapSync(f => f.mapSync(({ items }) => ({ hash, items })))
     }
 
     return createQuery<EthereumQueryKey<unknown>, SignatureData, Error>({
       key: key(hash),
       fetcher,
-      storage
+      // storage
     })
   }
 
