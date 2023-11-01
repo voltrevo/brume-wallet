@@ -439,7 +439,6 @@ const provider = new Provider()
 
 // const provider = new Proxy(new Provider(), {
 //   get(target, p, receiver) {
-//     console.log("!!!", p)
 //     return Reflect.get(target, p, receiver)
 //   },
 // })
