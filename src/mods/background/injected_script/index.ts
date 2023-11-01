@@ -318,7 +318,10 @@ class Provider {
   /**
    * @deprecated
    */
-  send(init: RpcRequestInit<unknown>, callback?: (err: unknown, ok: unknown) => void) {
+  send(init: string | RpcRequestInit<unknown>, callback?: (err: unknown, ok: unknown) => void) {
+    if (typeof init === "string")
+      init = { id: null, method: init }
+
     if (callback != null)
       return this.#send(init, callback)
     if (init.method === "eth_accounts")
@@ -329,13 +332,16 @@ class Provider {
       return RpcOk.rewrap(init.id, new Ok(this.#networkVersion))
     if (init.method === "eth_uninstallFilter")
       throw new Error(`Unimplemented method ${init.method}`)
+
     throw new Error(`Asynchronous method ${init.method} requires a callback`)
   }
 
   /**
    * @deprecated
    */
-  sendAsync(init: RpcRequestInit<unknown>, callback: (err: unknown, ok: unknown) => void) {
+  sendAsync(init: string | RpcRequestInit<unknown>, callback: (err: unknown, ok: unknown) => void) {
+    if (typeof init === "string")
+      init = { id: null, method: init }
     this.#send(init, callback)
   }
 

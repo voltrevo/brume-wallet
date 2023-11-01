@@ -641,7 +641,11 @@ export class Global {
       if (subrequest.method === "eth_accounts" && session == null)
         return new Ok([])
       if (subrequest.method === "eth_chainId" && session == null)
-        return new Ok(ZeroHexString.from(1))
+        return new Ok("0x1")
+      if (subrequest.method === "eth_coinbase" && session == null)
+        return new Ok(undefined)
+      if (subrequest.method === "net_version" && session == null)
+        return new Ok("1")
 
       if (subrequest.method !== "eth_requestAccounts" && session == null)
         return new Err(new UnauthorizedError())
@@ -661,8 +665,12 @@ export class Global {
         return await this.eth_requestAccounts(ethereum, session, subrequest)
       if (subrequest.method === "eth_accounts")
         return await this.eth_accounts(ethereum, session, subrequest)
+      if (subrequest.method === "eth_coinbase")
+        return await this.eth_coinbase(ethereum, session, subrequest)
       if (subrequest.method === "eth_chainId")
         return await this.eth_chainId(ethereum, session, subrequest)
+      if (subrequest.method === "net_version")
+        return await this.net_version(ethereum, session, subrequest)
       if (subrequest.method === "eth_sendTransaction")
         return await this.eth_sendTransaction(ethereum, session, subrequest, mouse)
       if (subrequest.method === "personal_sign")
@@ -723,8 +731,29 @@ export class Global {
     })
   }
 
+  async eth_coinbase(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<string>, Error>> {
+    return await Result.unthrow(async t => {
+      const { storage } = Option.wrap(this.#user).ok().throw(t)
+
+      const walletRef = session.wallets.at(0)
+
+      if (walletRef == null)
+        return new Ok(undefined)
+
+      const walletQuery = Wallet.schema(walletRef.uuid, storage)
+      const walletState = await walletQuery.state.then(r => r.throw(t))
+      const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
+
+      return new Ok(walletData.address)
+    })
+  }
+
   async eth_chainId(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return new Ok(ZeroHexString.from(session.chain.chainId))
+  }
+
+  async net_version(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+    return new Ok(session.chain.chainId.toString())
   }
 
   async eth_getBalance(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
