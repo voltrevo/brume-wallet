@@ -659,11 +659,13 @@ export class Global {
       if (subrequest.method === "net_version" && session == null)
         return new Ok("1")
 
-      if (subrequest.method !== "eth_requestAccounts" && session == null)
-        return new Err(new UnauthorizedError())
+      if (subrequest.method === "wallet_requestPermissions" && session == null)
+        session = await this.tryGetExtensionSession(script, mouse, true).then(r => r.throw(t))
+      if (subrequest.method === "eth_requestAccounts" && session == null)
+        session = await this.tryGetExtensionSession(script, mouse, true).then(r => r.throw(t))
 
       if (session == null)
-        session = await this.tryGetExtensionSession(script, mouse, true).then(r => r.throw(t)) as SessionData
+        return new Err(new UnauthorizedError())
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
