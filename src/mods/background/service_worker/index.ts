@@ -115,6 +115,28 @@ export interface Slot<T> {
   current?: T
 }
 
+interface PermissionRequest {
+  readonly [methodName: string]: {
+    readonly [caveatName: string]: any;
+  }
+}
+
+interface RequestedPermission {
+  readonly parentCapability: string;
+  readonly date?: number;
+}
+
+interface Caveat {
+  readonly type: string;
+  readonly value: any;
+}
+
+interface Permission {
+  readonly invoker: string;
+  readonly parentCapability: string;
+  readonly caveats: Caveat[];
+}
+
 export class Global {
 
   readonly events = new SuperEventTarget<{
@@ -671,6 +693,10 @@ export class Global {
         return await this.eth_chainId(ethereum, session, subrequest)
       if (subrequest.method === "net_version")
         return await this.net_version(ethereum, session, subrequest)
+      if (subrequest.method === "wallet_requestPermissions")
+        return await this.wallet_requestPermissions(ethereum, session, subrequest)
+      if (subrequest.method === "wallet_getPermissions")
+        return await this.wallet_getPermissions(ethereum, session, subrequest)
       if (subrequest.method === "eth_sendTransaction")
         return await this.eth_sendTransaction(ethereum, session, subrequest, mouse)
       if (subrequest.method === "personal_sign")
@@ -754,6 +780,15 @@ export class Global {
 
   async net_version(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return new Ok(session.chain.chainId.toString())
+  }
+
+  async wallet_requestPermissions(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<RequestedPermission[], Error>> {
+    const [prequest] = (request as RpcRequestPreinit<[PermissionRequest]>).params
+    return new Ok(Object.keys(prequest).map(it => ({ parentCapability: it })))
+  }
+
+  async wallet_getPermissions(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<Permission[], Error>> {
+    return new Ok([{ invoker: session.origin, parentCapability: "eth_accounts", caveats: [] }])
   }
 
   async eth_getBalance(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
