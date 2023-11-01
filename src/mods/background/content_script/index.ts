@@ -21,7 +21,7 @@ declare const IS_CHROME: boolean
 
 declare global {
   interface DedicatedWorkerGlobalScopeEventMap {
-    "ethereum#request": CustomEvent<string>
+    "ethereum:request": CustomEvent<string>
   }
 }
 
@@ -141,17 +141,26 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       const response = RpcResponse.rewrap(request.id, result.andThenSync(r => r))
 
       const detail = JSON.stringify(response)
-      const output = new CustomEvent("ethereum#response", { detail })
+      const output = new CustomEvent("ethereum:response", { detail })
       window.dispatchEvent(output)
     }
 
-    window.addEventListener("ethereum#request", onScriptRequest, { passive: true })
+    window.addEventListener("ethereum:request", onScriptRequest, { passive: true })
 
     const onAccountsChanged = async (request: RpcRequestPreinit<unknown>) => {
       const [accounts] = (request as RpcRequestPreinit<[string[]]>).params
 
       const detail = JSON.stringify(accounts)
-      const event = new CustomEvent("ethereum#accountsChanged", { detail })
+      const event = new CustomEvent("ethereum:accountsChanged", { detail })
+      window.dispatchEvent(event)
+      return Ok.void()
+    }
+
+    const onSecretAccountsChanged = async (request: RpcRequestPreinit<unknown>) => {
+      const [accounts] = (request as RpcRequestPreinit<[string[]]>).params
+
+      const detail = JSON.stringify(accounts)
+      const event = new CustomEvent("ethereum:#accountsChanged", { detail })
       window.dispatchEvent(event)
       return Ok.void()
     }
@@ -160,7 +169,7 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
 
       const detail = JSON.stringify({ chainId })
-      const event = new CustomEvent("ethereum#connect", { detail })
+      const event = new CustomEvent("ethereum:connect", { detail })
       window.dispatchEvent(event)
       return Ok.void()
     }
@@ -169,7 +178,7 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       const [chainId] = (request as RpcRequestPreinit<[string]>).params
 
       const detail = JSON.stringify(chainId)
-      const event = new CustomEvent("ethereum#chainChanged", { detail })
+      const event = new CustomEvent("ethereum:chainChanged", { detail })
       window.dispatchEvent(event)
       return Ok.void()
     }
@@ -178,7 +187,7 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       const [chainId] = (request as RpcRequestPreinit<[string]>).params
 
       const detail = JSON.stringify(chainId)
-      const event = new CustomEvent("ethereum#networkChanged", { detail })
+      const event = new CustomEvent("ethereum:networkChanged", { detail })
       window.dispatchEvent(event)
       return Ok.void()
     }
@@ -194,13 +203,15 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
         return new Some(await onChainChanged(request))
       if (request.method === "networkChanged")
         return new Some(await onNetworkChanged(request))
+      if (request.method === "#accountsChanged")
+        return new Some(await onSecretAccountsChanged(request))
       return new None()
     }
 
     port.events.on("request", onBackgroundRequest, { passive: true })
 
     const onClose = async () => {
-      const event = new CustomEvent("ethereum#disconnect", {})
+      const event = new CustomEvent("ethereum:disconnect", {})
       window.dispatchEvent(event)
 
       await pool.restart(index)
@@ -210,7 +221,7 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
     port.events.on("close", onClose, { passive: true })
 
     const onClean = () => {
-      window.removeEventListener("ethereum#request", onScriptRequest)
+      window.removeEventListener("ethereum:request", onScriptRequest)
       port.events.off("close", onClose)
       port.clean()
       raw.disconnect()

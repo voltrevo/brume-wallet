@@ -518,7 +518,7 @@ export class Global {
             }))).throw(t)
 
             await script.tryRequest({
-              method: "accountsChanged",
+              method: "#accountsChanged",
               params: [addresses]
             }).then(r => r.throw(t).throw(t))
           }
@@ -602,7 +602,7 @@ export class Global {
           }))).throw(t)
 
           await script.tryRequest({
-            method: "accountsChanged",
+            method: "#accountsChanged",
             params: [addresses]
           }).then(r => r.throw(t).throw(t))
         }
@@ -1047,7 +1047,11 @@ export class Global {
       }
 
       for (const script of Option.wrap(this.scriptsBySession.get(id)).unwrapOr([])) {
-        await script.tryRequest({ method: "accountsChanged", params: [[]] }).then(r => r.ignore())
+        await script.tryRequest({
+          method: "accountsChanged",
+          params: [[]]
+        }).then(r => r.throw(t).throw(t))
+
         this.sessionByScript.delete(script.name)
       }
 

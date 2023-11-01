@@ -43,7 +43,7 @@ declare global {
   }
 }
 
-type EthereumEventKey = `ethereum#${string}`
+type EthereumEventKey = `ethereum:${string}`
 type BrumeEventKey = `brume#${string}`
 
 type Sublistener = (...params: any[]) => void
@@ -107,6 +107,13 @@ class Provider {
      * Fix for that old app that relies on `window.ethereum.selectedAddress`
      */
     this.on("accountsChanged", (accounts: string[]) => {
+      this.#accounts = accounts
+    })
+
+    /**
+     * Fix for that poorly-coded app that reloads on `accountsChanged`
+     */
+    this.on("#accountsChanged", (accounts: string[]) => {
       this.#accounts = accounts
     })
 
@@ -193,15 +200,15 @@ class Provider {
     }
 
     try {
-      window.addEventListener("ethereum#response", onResponse)
+      window.addEventListener("ethereum:response", onResponse)
 
       const detail = JSON.stringify(request)
-      const event = new CustomEvent("ethereum#request", { detail })
+      const event = new CustomEvent("ethereum:request", { detail })
       window.dispatchEvent(event)
 
       return await future.promise
     } finally {
-      window.removeEventListener("ethereum#response", onResponse)
+      window.removeEventListener("ethereum:response", onResponse)
     }
   }
 
@@ -252,7 +259,7 @@ class Provider {
       listeners.set(sublistener, suplistener)
     }
 
-    window.addEventListener(`ethereum#${key}`, suplistener, { passive: true })
+    window.addEventListener(`ethereum:${key}`, suplistener, { passive: true })
   }
 
   once(key: string, sublistener: Sublistener) {
@@ -275,7 +282,7 @@ class Provider {
     if (suplistener == null)
       return
 
-    window.removeEventListener(`ethereum#${key}`, suplistener)
+    window.removeEventListener(`ethereum:${key}`, suplistener)
 
     listeners.delete(sublistener)
 
