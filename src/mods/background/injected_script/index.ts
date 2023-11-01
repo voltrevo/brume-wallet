@@ -77,6 +77,11 @@ class Provider {
   /**
    * @deprecated
    */
+  #connected = false
+
+  /**
+   * @deprecated
+   */
   #accounts = new Array<string>()
 
   /**
@@ -99,13 +104,25 @@ class Provider {
      * Fix for that poorly-coded app that does `const { request } = provider`
      */
     this.request = this.request.bind(this)
-    this.on = this.on.bind(this)
-    this.off = this.off.bind(this)
-    this.once = this.once.bind(this)
     this.send = this.send.bind(this)
     this.sendAsync = this.sendAsync.bind(this)
     this.enable = this.enable.bind(this)
     this.isConnected = this.isConnected.bind(this)
+    this.on = this.on.bind(this)
+    this.off = this.off.bind(this)
+    this.once = this.once.bind(this)
+    this.emit = this.emit.bind(this)
+    this.addListener = this.addListener.bind(this)
+    this.removeListener = this.removeListener.bind(this)
+    this.prependListener = this.prependListener.bind(this)
+    this.prependOnceListener = this.prependOnceListener.bind(this)
+    this.removeAllListeners = this.removeAllListeners.bind(this)
+    this.eventNames = this.eventNames.bind(this)
+    this.listeners = this.listeners.bind(this)
+    this.rawListeners = this.rawListeners.bind(this)
+    this.listenerCount = this.listenerCount.bind(this)
+    this.getMaxListeners = this.getMaxListeners.bind(this)
+    this.setMaxListeners = this.setMaxListeners.bind(this)
 
     this.#reemit("connect")
     this.#reemit("disconnect")
@@ -114,11 +131,24 @@ class Provider {
     this.#reemit("chainChanged")
     this.#reemit("networkChanged")
 
-    /**
-     * Fix for that old app that relies on `window.ethereum.selectedAddress`
-     */
+    this.on("connect", () => {
+      this.#connected = true
+    })
+
+    this.on("disconnect", () => {
+      this.#connected = false
+    })
+
     this.on("accountsChanged", (accounts: string[]) => {
       this.#accounts = accounts
+    })
+
+    this.on("chainChanged", (chainId: string) => {
+      this.#chainId = chainId
+    })
+
+    this.on("networkChanged", (networkVersion: string) => {
+      this.#networkVersion = networkVersion
     })
 
     /**
@@ -126,20 +156,6 @@ class Provider {
      */
     this.on("#accountsChanged", (accounts: string[]) => {
       this.#accounts = accounts
-    })
-
-    /**
-     * Fix for that old app that relies on `window.ethereum.chainId`
-     */
-    this.on("chainChanged", (chainId: string) => {
-      this.#chainId = chainId
-    })
-
-    /**
-     * Fix for that old app that relies on `window.ethereum.networkVersion`
-     */
-    this.on("networkChanged", (networkVersion: string) => {
-      this.#networkVersion = networkVersion
     })
 
     /**
@@ -152,13 +168,24 @@ class Provider {
     })
 
     /**
-     * Force update of `window.ethereum.selectedAddress`
+     * Force update of `isConnected`, `selectedAddress`, `chainId` `networkVersion`
      */
     this.tryRequest({ method: "eth_accounts" }).then(r => r.ignore())
   }
 
   get isBrume() {
     return true
+  }
+
+  get isMetaMask() {
+    return true
+  }
+
+  /**
+   * @deprecated
+   */
+  isConnected() {
+    return this.#connected
   }
 
   /**
@@ -196,6 +223,9 @@ class Provider {
     return Number.MAX_SAFE_INTEGER
   }
 
+  /**
+   * @deprecated
+   */
   setMaxListeners(x: number) {
     return this
   }
@@ -223,13 +253,6 @@ class Provider {
    */
   rawListeners(key: string) {
     return this.listeners(key)
-  }
-
-  /**
-   * @deprecated
-   */
-  isConnected() {
-    return true
   }
 
   /**

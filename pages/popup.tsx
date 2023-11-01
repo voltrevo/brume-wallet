@@ -5,6 +5,7 @@ import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
+import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
@@ -107,7 +108,7 @@ export function TransactPage() {
   const signaturesQuery = useSignature(context, maybeHash)
   const maybeSignatures = signaturesQuery.data?.inner
 
-  const maybeSignature = useMemo(() => {
+  const maybeSignature = useAsyncReplaceMemo(async () => {
     if (maybeData == null)
       return
     if (maybeHash == null)
@@ -217,11 +218,11 @@ export function TransactPage() {
         <div className="w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
           Value: {BigIntToHex.tryDecode(value).mapSync(x => BigInts.float(x, 18)).ok().unwrapOr("Error")}
         </div>}
-      {maybeSignature?.text &&
+      {maybeSignature &&
         <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
           Function: {maybeSignature.text}
         </div>}
-      {maybeData &&
+      {(maybeSignature || maybeData) &&
         <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
           Data: {maybeSignature?.decoded ?? maybeData}
         </div>}

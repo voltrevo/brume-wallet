@@ -125,19 +125,12 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       return port
     }).then(r => r.throw(t))
 
-    const port = new ExtensionPort("background", raw)
-
-    {
-      const icon = await port.tryRequest<string>({ method: "brume_icon" }).then(r => r.throw(t).throw(t))
-      const detail = JSON.stringify(icon)
-      const event = new CustomEvent("brume#icon", { detail })
-      window.dispatchEvent(event)
-    }
+    const background = new ExtensionPort("background", raw)
 
     const onScriptRequest = async (input: CustomEvent<string>) => {
       const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
 
-      const result = await port.tryRequest({ method: "brume_run", params: [request, mouse] })
+      const result = await background.tryRequest({ method: "brume_run", params: [request, mouse] })
       const response = RpcResponse.rewrap(request.id, result.andThenSync(r => r))
 
       const detail = JSON.stringify(response)
@@ -208,7 +201,7 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       return new None()
     }
 
-    port.events.on("request", onBackgroundRequest, { passive: true })
+    background.events.on("request", onBackgroundRequest, { passive: true })
 
     const onClose = async () => {
       const event = new CustomEvent("ethereum:disconnect", {})
@@ -218,12 +211,19 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       return new None()
     }
 
-    port.events.on("close", onClose, { passive: true })
+    background.events.on("close", onClose, { passive: true })
+
+    {
+      const icon = await background.tryRequest<string>({ method: "brume_icon" }).then(r => r.throw(t).throw(t))
+      const detail = JSON.stringify(icon)
+      const event = new CustomEvent("brume#icon", { detail })
+      window.dispatchEvent(event)
+    }
 
     const onClean = () => {
       window.removeEventListener("ethereum:request", onScriptRequest)
-      port.events.off("close", onClose)
-      port.clean()
+      background.events.off("close", onClose)
+      background.clean()
       raw.disconnect()
     }
 

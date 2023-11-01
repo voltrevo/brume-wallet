@@ -397,17 +397,7 @@ export class Global {
     }
   }
 
-  hasExtensionSession(script: Port) {
-    const mutex = this.sessionByScript.get(script.name)
-
-    if (mutex == null)
-      return false
-    if (mutex.inner.current == null)
-      return false
-    return true
-  }
-
-  async tryGetOrWaitExtensionSession(script: Port, mouse: Mouse): Promise<Result<SessionData, Error>> {
+  async tryGetExtensionSession(script: Port, mouse: Mouse, force: boolean): Promise<Result<Nullable<SessionData>, Error>> {
     return await Result.unthrow(async t => {
       let mutex = this.sessionByScript.get(script.name)
 
@@ -433,7 +423,10 @@ export class Global {
           method: "brume_origin"
         }).then(r => r.throw(t).throw(t))
 
-        if (this.#user == null)
+        if (this.#user == null && !force)
+          return new Ok(undefined)
+
+        if (this.#user == null && force)
           await this.tryOpenOrFocusPopup("/", mouse).then(r => r.throw(t))
 
         const { storage } = Option.wrap(this.#user).ok().throw(t)
@@ -525,6 +518,9 @@ export class Global {
 
           return new Ok(sessionData)
         }
+
+        if (!force)
+          return new Ok(undefined)
 
         const [persistent, chainId, wallets] = await this.tryRequestPopup<[boolean, number, Wallet[]]>({
           id: crypto.randomUUID(),
@@ -640,14 +636,18 @@ export class Global {
     return await Result.unthrow(async t => {
       const [subrequest, mouse] = (request as RpcRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
 
-      if (subrequest.method === "eth_accounts" && !this.hasExtensionSession(script))
+      let session = await this.tryGetExtensionSession(script, mouse, false).then(r => r.throw(t))
+
+      if (subrequest.method === "eth_accounts" && session == null)
         return new Ok([])
-      if (subrequest.method === "eth_chainId" && !this.hasExtensionSession(script))
-        return new Ok("0x1")
-      if (subrequest.method !== "eth_requestAccounts" && !this.hasExtensionSession(script))
+      if (subrequest.method === "eth_chainId" && session == null)
+        return new Ok(ZeroHexString.from(1))
+
+      if (subrequest.method !== "eth_requestAccounts" && session == null)
         return new Err(new UnauthorizedError())
 
-      const session = await this.tryGetOrWaitExtensionSession(script, mouse).then(r => r.throw(t))
+      if (session == null)
+        session = await this.tryGetExtensionSession(script, mouse, true).then(r => r.throw(t)) as SessionData
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
