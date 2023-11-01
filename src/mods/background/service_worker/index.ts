@@ -838,14 +838,6 @@ export class Global {
 
       const chain = Option.wrap(chainByChainId[parseInt(chainId, 16)]).ok().throw(t)
 
-      // await this.tryRequest<void>({
-      //   id: crypto.randomUUID(),
-      //   method: "wallet_switchEthereumChain",
-      //   params: { chainId },
-      //   origin: session.origin,
-      //   session: session.id
-      // }, mouse).then(r => r.throw(t).throw(t))
-
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const updatedSession = { ...session, chain }
