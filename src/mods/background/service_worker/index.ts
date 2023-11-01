@@ -1308,6 +1308,8 @@ export class Global {
       request.noCheck = true
     if (request.method === "eth_getTransactionReceipt")
       request.noCheck = true
+    if (request.method === "eth_maxPriorityFeePerGas")
+      request.noCheck = true
 
     return new Ok(BgUnknown.schema(ethereum, request, storage))
   }
