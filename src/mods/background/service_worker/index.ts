@@ -511,7 +511,7 @@ export class Global {
             }))).throw(t)
 
             await script.tryRequest({
-              method: "#accountsChanged",
+              method: "accountsChanged",
               params: [addresses]
             }).then(r => r.throw(t).throw(t))
           }
@@ -598,7 +598,7 @@ export class Global {
           }))).throw(t)
 
           await script.tryRequest({
-            method: "#accountsChanged",
+            method: "accountsChanged",
             params: [addresses]
           }).then(r => r.throw(t).throw(t))
         }
@@ -880,11 +880,6 @@ export class Global {
       await sessionQuery.tryMutate(Mutators.replaceData(updatedSession)).then(r => r.throw(t))
 
       for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([])) {
-        await script.tryRequest<void>({
-          method: "connect",
-          params: [{ chainId: ZeroHexString.from(chainId) }]
-        }).then(r => r.throw(t).throw(t))
-
         await script.tryRequest({
           method: "chainChanged",
           params: [ZeroHexString.from(chain.chainId)]

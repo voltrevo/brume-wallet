@@ -149,15 +149,6 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       return Ok.void()
     }
 
-    const onSecretAccountsChanged = async (request: RpcRequestPreinit<unknown>) => {
-      const [accounts] = (request as RpcRequestPreinit<[string[]]>).params
-
-      const detail = JSON.stringify(accounts)
-      const event = new CustomEvent("ethereum:#accountsChanged", { detail })
-      window.dispatchEvent(event)
-      return Ok.void()
-    }
-
     const onConnect = async (request: RpcRequestPreinit<unknown>) => {
       const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
 
@@ -196,8 +187,6 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
         return new Some(await onChainChanged(request))
       if (request.method === "networkChanged")
         return new Some(await onNetworkChanged(request))
-      if (request.method === "#accountsChanged")
-        return new Some(await onSecretAccountsChanged(request))
       return new None()
     }
 

@@ -1,7 +1,8 @@
 import "@hazae41/symbol-dispose-polyfill";
 
 import { Future } from "@hazae41/future";
-import { RpcCounter, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
+import { RpcCounter, RpcOk, RpcRequestInit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
+import { Ok } from "@hazae41/result";
 
 declare global {
   interface Window {
@@ -55,14 +56,6 @@ declare global {
   }
 }
 
-const icon = new Future<string>()
-
-const onLogo = (event: CustomEvent<string>) => {
-  icon.resolve(JSON.parse(event.detail))
-}
-
-window.addEventListener("brume#icon", onLogo, { passive: true, once: true })
-
 class Provider {
 
   readonly #counter = new RpcCounter()
@@ -108,6 +101,7 @@ class Provider {
     this.sendAsync = this.sendAsync.bind(this)
     this.enable = this.enable.bind(this)
     this.isConnected = this.isConnected.bind(this)
+    this.isUnlocked = this.isUnlocked.bind(this)
     this.on = this.on.bind(this)
     this.off = this.off.bind(this)
     this.once = this.once.bind(this)
@@ -127,7 +121,6 @@ class Provider {
     this.#reemit("connect")
     this.#reemit("disconnect")
     this.#reemit("accountsChanged")
-    this.#reemit("#accountsChanged")
     this.#reemit("chainChanged")
     this.#reemit("networkChanged")
 
@@ -147,21 +140,12 @@ class Provider {
       this.#chainId = chainId
     })
 
-    this.on("networkChanged", (networkVersion: string) => {
-      this.#networkVersion = networkVersion
-    })
-
-    /**
-     * Fix for that poorly-coded app that reloads on `accountsChanged`
-     */
-    this.on("#accountsChanged", (accounts: string[]) => {
-      this.#accounts = accounts
-    })
-
     /**
      * Fix that old app that needs to reload on network change
      */
-    this.on("networkChanged", () => {
+    this.on("networkChanged", (networkVersion: string) => {
+      this.#networkVersion = networkVersion
+
       if (!this.autoRefreshOnNetworkChange)
         return
       location.reload()
@@ -170,7 +154,7 @@ class Provider {
     /**
      * Force update of `isConnected`, `selectedAddress`, `chainId` `networkVersion`
      */
-    this.tryRequest({ method: "eth_accounts" }).then(r => r.ignore())
+    this.tryRequest({ id: null, method: "eth_accounts" }).then(r => r.ignore())
   }
 
   get isBrume() {
@@ -185,6 +169,13 @@ class Provider {
    * @deprecated
    */
   isConnected() {
+    return this.#connected
+  }
+
+  /**
+   * @deprecated
+   */
+  isUnlocked() {
     return this.#connected
   }
 
@@ -207,6 +198,13 @@ class Provider {
    */
   get selectedAddress() {
     return this.#accounts[0]
+  }
+
+  /**
+   * @deprecated
+   */
+  get _metamask() {
+    return this
   }
 
   /**
@@ -264,22 +262,23 @@ class Provider {
      */
     this.autoRefreshOnNetworkChange = true
 
-    return await this.request({ method: "eth_requestAccounts" })
+    return await this.request({ id: null, method: "eth_requestAccounts" })
   }
 
-  async tryRequest(init: RpcRequestPreinit<unknown>) {
-    const request = this.#counter.prepare(init)
+  async tryRequest(reqinit: RpcRequestInit<unknown>) {
+    const request = this.#counter.prepare(reqinit)
 
     const future = new Future<RpcResponse<unknown>>()
 
     const onResponse = (e: CustomEvent<string>) => {
-      const init = JSON.parse(e.detail) as RpcResponseInit<unknown>
+      const resinit = JSON.parse(e.detail) as RpcResponseInit<unknown>
 
-      if (init.id !== request.id)
+      if (resinit.id !== request.id)
         return
 
-      const response = RpcResponse.from(init)
-      future.resolve(response)
+      const response = RpcResponse.from(resinit)
+      const rewrapped = RpcResponse.rewrap(reqinit.id, response)
+      future.resolve(rewrapped)
     }
 
     try {
@@ -295,7 +294,7 @@ class Provider {
     }
   }
 
-  async request(init: RpcRequestPreinit<unknown>) {
+  async request(init: RpcRequestInit<unknown>) {
     const result = await this.tryRequest(init)
 
     if (result.isErr())
@@ -303,7 +302,11 @@ class Provider {
     return result.inner
   }
 
-  async #send(init: RpcRequestPreinit<unknown>, callback: (err: unknown, ok: unknown) => void) {
+  async requestBatch(inits: RpcRequestInit<unknown>[]) {
+    return await Promise.all(inits.map(init => this.tryRequest(init)))
+  }
+
+  async #send(init: RpcRequestInit<unknown>, callback: (err: unknown, ok: unknown) => void) {
     const response = await this.tryRequest(init)
 
     if (response.isErr())
@@ -315,15 +318,15 @@ class Provider {
   /**
    * @deprecated
    */
-  send(init: RpcRequestPreinit<unknown>, callback?: (err: unknown, ok: unknown) => void) {
+  send(init: RpcRequestInit<unknown>, callback?: (err: unknown, ok: unknown) => void) {
     if (callback != null)
       return this.#send(init, callback)
     if (init.method === "eth_accounts")
-      return { result: this.#accounts }
+      return RpcOk.rewrap(init.id, new Ok(this.#accounts))
     if (init.method === "eth_coinbase")
-      return { result: this.#accounts[0] }
+      return RpcOk.rewrap(init.id, new Ok(this.#accounts[0]))
     if (init.method === "net_version")
-      return { result: this.#networkVersion }
+      return RpcOk.rewrap(init.id, new Ok(this.#networkVersion))
     if (init.method === "eth_uninstallFilter")
       throw new Error(`Unimplemented method ${init.method}`)
     throw new Error(`Asynchronous method ${init.method} requires a callback`)
@@ -332,7 +335,7 @@ class Provider {
   /**
    * @deprecated
    */
-  sendAsync(init: RpcRequestPreinit<unknown>, callback: (err: unknown, ok: unknown) => void) {
+  sendAsync(init: RpcRequestInit<unknown>, callback: (err: unknown, ok: unknown) => void) {
     this.#send(init, callback)
   }
 
@@ -442,12 +445,20 @@ class Provider {
 const provider = new Provider()
 
 /**
- * EIP1193
+ * EIP-1193
  */
 window.ethereum = provider
 
+const icon = new Future<string>()
+
+const onLogo = (event: CustomEvent<string>) => {
+  icon.resolve(JSON.parse(event.detail))
+}
+
+window.addEventListener("brume#icon", onLogo, { passive: true, once: true })
+
 /**
- * EIP6963
+ * EIP-6963
  */
 {
   async function announce() {
