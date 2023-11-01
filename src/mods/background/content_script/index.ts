@@ -174,6 +174,15 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       return Ok.void()
     }
 
+    const onNetworkChanged = async (request: RpcRequestPreinit<unknown>) => {
+      const [chainId] = (request as RpcRequestPreinit<[string]>).params
+
+      const detail = JSON.stringify(chainId)
+      const event = new CustomEvent("ethereum#networkChanged", { detail })
+      window.dispatchEvent(event)
+      return Ok.void()
+    }
+
     const onBackgroundRequest = async (request: RpcRequestPreinit<unknown>) => {
       if (request.method === "brume_origin")
         return new Some(await tryGetOrigin())
@@ -183,6 +192,8 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
         return new Some(await onAccountsChanged(request))
       if (request.method === "chainChanged")
         return new Some(await onChainChanged(request))
+      if (request.method === "networkChanged")
+        return new Some(await onNetworkChanged(request))
       return new None()
     }
 

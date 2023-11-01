@@ -497,8 +497,13 @@ export class Global {
           if (chainId !== 1) {
             await script.tryRequest<void>({
               method: "chainChanged",
-              params: [{ chainId: ZeroHexString.from(chainId) }]
+              params: [ZeroHexString.from(chainId)]
             }).then(r => r.throw(t).throw(t))
+
+            await script.tryRequest({
+              method: "networkChanged",
+              params: [chainId.toString()]
+            }).then(r => r.ignore())
           }
 
           return new Ok(sessionData)
@@ -559,8 +564,13 @@ export class Global {
         if (chainId !== 1) {
           await script.tryRequest<void>({
             method: "chainChanged",
-            params: [{ chainId: ZeroHexString.from(chainId) }]
+            params: [ZeroHexString.from(chainId)]
           }).then(r => r.throw(t).throw(t))
+
+          await script.tryRequest({
+            method: "networkChanged",
+            params: [chainId.toString()]
+          }).then(r => r.ignore())
         }
 
         return new Ok(sessionData)
@@ -826,18 +836,15 @@ export class Global {
     return await Result.unthrow(async t => {
       const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
 
-      if (chainId === ZeroHexString.from(session.chain.chainId))
-        return Ok.void()
-
       const chain = Option.wrap(chainByChainId[parseInt(chainId, 16)]).ok().throw(t)
 
-      await this.tryRequest<void>({
-        id: crypto.randomUUID(),
-        method: "wallet_switchEthereumChain",
-        params: { chainId },
-        origin: session.origin,
-        session: session.id
-      }, mouse).then(r => r.throw(t).throw(t))
+      // await this.tryRequest<void>({
+      //   id: crypto.randomUUID(),
+      //   method: "wallet_switchEthereumChain",
+      //   params: { chainId },
+      //   origin: session.origin,
+      //   session: session.id
+      // }, mouse).then(r => r.throw(t).throw(t))
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
@@ -846,8 +853,17 @@ export class Global {
       const sessionQuery = Session.schema(session.id, storage)
       await sessionQuery.tryMutate(Mutators.replaceData(updatedSession)).then(r => r.throw(t))
 
-      for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([]))
-        await script.tryRequest({ method: "chainChanged", params: [chainId] }).then(r => r.ignore())
+      for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([])) {
+        await script.tryRequest({
+          method: "chainChanged",
+          params: [ZeroHexString.from(chain.chainId)]
+        }).then(r => r.ignore())
+
+        await script.tryRequest({
+          method: "networkChanged",
+          params: [chain.chainId.toString()]
+        }).then(r => r.ignore())
+      }
 
       return Ok.void()
     })

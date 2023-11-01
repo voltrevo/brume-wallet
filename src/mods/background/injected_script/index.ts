@@ -75,6 +75,16 @@ class Provider {
    */
   autoRefreshOnNetworkChange = false
 
+  /**
+   * @deprecated
+   */
+  #chainId = "0x1"
+
+  /**
+   * @deprecated
+   */
+  #networkVersion = "1"
+
   constructor() {
     /**
      * Fix for that poorly-coded app that does `const { request } = provider`
@@ -84,9 +94,23 @@ class Provider {
     this.off = this.off.bind(this)
 
     /**
-     * Fix for MetaMask-like
+     * Fix for that app that relies on `window.ethereum.chainId`
      */
-    this.on("chainChanged", () => {
+    this.on("chainChanged", (chainId: string) => {
+      this.#chainId = chainId
+    })
+
+    /**
+     * Fix for that app that relies on `window.ethereum.networkVersion`
+     */
+    this.on("networkChanged", (networkVersion: string) => {
+      this.#networkVersion = networkVersion
+    })
+
+    /**
+     * Fix that old app that needs to reload on network change
+     */
+    this.on("networkChanged", () => {
       if (!this.autoRefreshOnNetworkChange)
         return
       location.reload()
@@ -97,13 +121,27 @@ class Provider {
     return true
   }
 
+  /**
+   * @deprecated
+   */
+  get chainId() {
+    return this.#chainId
+  }
+
+  /**
+   * @deprecated
+   */
+  get networkVersion() {
+    return this.#networkVersion
+  }
+
   isConnected() {
     return true
   }
 
   async enable() {
     /**
-     * Compatibility mode
+     * Enable compatibility mode for that old app that needs to reload on network change
      */
     this.autoRefreshOnNetworkChange = true
 
@@ -158,6 +196,7 @@ class Provider {
 
     if (suplistener == null) {
       suplistener = (e: CustomEvent<string>) => {
+        console.log(key, JSON.parse(e.detail))
         sublistener(JSON.parse(e.detail))
       }
 
