@@ -78,6 +78,11 @@ class Provider {
   /**
    * @deprecated
    */
+  #accounts = new Array<string>()
+
+  /**
+   * @deprecated
+   */
   #chainId = "0x1"
 
   /**
@@ -92,16 +97,28 @@ class Provider {
     this.request = this.request.bind(this)
     this.on = this.on.bind(this)
     this.off = this.off.bind(this)
+    this.once = this.once.bind(this)
+    this.send = this.send.bind(this)
+    this.sendAsync = this.sendAsync.bind(this)
+    this.enable = this.enable.bind(this)
+    this.isConnected = this.isConnected.bind(this)
 
     /**
-     * Fix for that app that relies on `window.ethereum.chainId`
+     * Fix for that old app that relies on `window.ethereum.selectedAddress`
+     */
+    this.on("accountsChanged", (accounts: string[]) => {
+      this.#accounts = accounts
+    })
+
+    /**
+     * Fix for that old app that relies on `window.ethereum.chainId`
      */
     this.on("chainChanged", (chainId: string) => {
       this.#chainId = chainId
     })
 
     /**
-     * Fix for that app that relies on `window.ethereum.networkVersion`
+     * Fix for that old app that relies on `window.ethereum.networkVersion`
      */
     this.on("networkChanged", (networkVersion: string) => {
       this.#networkVersion = networkVersion
@@ -115,6 +132,11 @@ class Provider {
         return
       location.reload()
     })
+
+    /**
+     * Force update of `window.ethereum.selectedAddress`
+     */
+    this.tryRequest({ method: "eth_accounts" }).then(r => r.ignore())
   }
 
   get isBrume() {
@@ -133,6 +155,13 @@ class Provider {
    */
   get networkVersion() {
     return this.#networkVersion
+  }
+
+  /**
+   * @deprecated
+   */
+  get selectedAddress() {
+    return this.#accounts[0]
   }
 
   isConnected() {
@@ -182,6 +211,27 @@ class Provider {
     if (result.isErr())
       throw result.inner
     return result.inner
+  }
+
+  async #send(init: RpcRequestPreinit<unknown>, callback: (err: unknown, ok: unknown) => void) {
+    const response = await this.tryRequest(init)
+
+    if (response.isErr())
+      callback(response.inner, response)
+    else
+      callback(null, response)
+  }
+
+  send(init: RpcRequestPreinit<unknown>, callback?: (err: unknown, ok: unknown) => void) {
+    if (callback != null)
+      return this.#send(init, callback)
+    if (init.method === "eth_accounts")
+      return { result: this.#accounts }
+    throw new Error(`Asynchronous method ${init.method} requires a callback`)
+  }
+
+  sendAsync(init: RpcRequestPreinit<unknown>, callback: (err: unknown, ok: unknown) => void) {
+    this.#send(init, callback)
   }
 
   on(key: string, sublistener: Sublistener) {

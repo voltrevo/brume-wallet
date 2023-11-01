@@ -503,7 +503,24 @@ export class Global {
             await script.tryRequest({
               method: "networkChanged",
               params: [chainId.toString()]
-            }).then(r => r.ignore())
+            }).then(r => r.throw(t).throw(t))
+          }
+
+          {
+            const addresses = Result.all(await Promise.all(sessionData.wallets.map(async wallet => {
+              return await Result.unthrow<Result<string, Error>>(async t => {
+                const walletQuery = Wallet.schema(wallet.uuid, storage)
+                const walletState = await walletQuery.state.then(r => r.throw(t))
+                const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
+
+                return new Ok(walletData.address)
+              })
+            }))).throw(t)
+
+            await script.tryRequest({
+              method: "accountsChanged",
+              params: [addresses]
+            }).then(r => r.throw(t).throw(t))
           }
 
           return new Ok(sessionData)
@@ -570,7 +587,24 @@ export class Global {
           await script.tryRequest({
             method: "networkChanged",
             params: [chainId.toString()]
-          }).then(r => r.ignore())
+          }).then(r => r.throw(t).throw(t))
+        }
+
+        {
+          const addresses = Result.all(await Promise.all(sessionData.wallets.map(async wallet => {
+            return await Result.unthrow<Result<string, Error>>(async t => {
+              const walletQuery = Wallet.schema(wallet.uuid, storage)
+              const walletState = await walletQuery.state.then(r => r.throw(t))
+              const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
+
+              return new Ok(walletData.address)
+            })
+          }))).throw(t)
+
+          await script.tryRequest({
+            method: "accountsChanged",
+            params: [addresses]
+          }).then(r => r.throw(t).throw(t))
         }
 
         return new Ok(sessionData)
@@ -846,15 +880,20 @@ export class Global {
       await sessionQuery.tryMutate(Mutators.replaceData(updatedSession)).then(r => r.throw(t))
 
       for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([])) {
+        await script.tryRequest<void>({
+          method: "connect",
+          params: [{ chainId: ZeroHexString.from(chainId) }]
+        }).then(r => r.throw(t).throw(t))
+
         await script.tryRequest({
           method: "chainChanged",
           params: [ZeroHexString.from(chain.chainId)]
-        }).then(r => r.ignore())
+        }).then(r => r.throw(t).throw(t))
 
         await script.tryRequest({
           method: "networkChanged",
           params: [chain.chainId.toString()]
-        }).then(r => r.ignore())
+        }).then(r => r.throw(t).throw(t))
       }
 
       return Ok.void()
