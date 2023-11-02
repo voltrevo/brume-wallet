@@ -11,7 +11,7 @@ import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
-import { ZeroHexString } from "@hazae41/cubane";
+import { Address, ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
@@ -146,7 +146,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumCont
             params: [{
               chainId: ZeroHexString.from(context.chain.chainId),
               from: wallet.address,
-              to: ethers.getAddress(address),
+              to: Address.from(address),
               maxFeePerGas: ZeroHexString.from(maxFeePerGas),
               maxPriorityFeePerGas: ZeroHexString.from(maxPriorityFeePerGas),
               value: ZeroHexString.from(Fixed.fromDecimalString(defValueInput, 18).value),
@@ -158,7 +158,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumCont
 
         tx = Result.runAndDoubleWrapSync(() => {
           return Transaction.from({
-            to: ethers.getAddress(address),
+            to: Address.from(address),
             gasLimit: gas,
             chainId: context.chain.chainId,
             maxFeePerGas: maxFeePerGas,
@@ -186,7 +186,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumCont
             params: [{
               chainId: ZeroHexString.from(context.chain.chainId),
               from: wallet.address,
-              to: ethers.getAddress(address),
+              to: Address.from(address),
               gasPrice: ZeroHexString.from(gasPrice),
               value: ZeroHexString.from(Fixed.fromDecimalString(defValueInput, 18).value),
               nonce: ZeroHexString.from(nonce)
@@ -197,7 +197,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumCont
 
         tx = Result.runAndDoubleWrapSync(() => {
           return Transaction.from({
-            to: ethers.getAddress(address),
+            to: Address.from(address),
             gasLimit: gas,
             chainId: context.chain.chainId,
             gasPrice: gasPrice,

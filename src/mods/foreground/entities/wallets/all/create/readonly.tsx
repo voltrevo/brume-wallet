@@ -14,10 +14,9 @@ import { Input } from "@/libs/ui/input";
 import { Textarea } from "@/libs/ui/textarea";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
-import { ZeroHexString } from "@hazae41/cubane";
+import { Address, ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
-import { ethers } from "ethers";
 import { useDeferredValue, useMemo, useState } from "react";
 import { WalletAvatar } from "../../avatar";
 import { useEnsLookup, useEthereumContext } from "../../data";
@@ -66,7 +65,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
 
       const address = Option.wrap(maybeAddress).okOrElseSync(() => {
         return new UIError(`Could not fetch or parse address`)
-      }).mapSync(x => ethers.getAddress(x) as ZeroHexString).throw(t)
+      }).mapSync(x => Address.from(x) as ZeroHexString).throw(t)
 
       const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: defNameInput, color, emoji, address }
 

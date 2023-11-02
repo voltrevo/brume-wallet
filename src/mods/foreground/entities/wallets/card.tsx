@@ -1,10 +1,11 @@
 import { Gradients } from "@/libs/colors/colors"
 import { useCopy } from "@/libs/copy/copy"
-import { Ethereum } from "@/libs/ethereum"
 import { chainByChainId } from "@/libs/ethereum/mods/chain"
 import { Outline } from "@/libs/icons/icons"
 import { useMouseCancel } from "@/libs/react/events"
 import { Button } from "@/libs/ui/button"
+import { Address } from "@hazae41/cubane"
+import { useMemo } from "react"
 import { WalletIcon } from "./avatar"
 import { useWalletDataContext } from "./context"
 import { useEnsReverseNoFetch, useEthereumContext, useTotalWalletPricedBalance } from "./data"
@@ -27,8 +28,12 @@ export function WalletDataCard(props: { index?: number }) {
 
   const onClickEllipsis = useMouseCancel(() => alert("This feature is not implemented yet"), [])
 
-  const ensOrAddress = ens.data?.inner ?? wallet.address
-  const ensOrAddressDisplay = ens.data?.inner ?? Ethereum.Address.format(wallet.address)
+  const address = useMemo(() => {
+    return Address.from(wallet.address)!
+  }, [wallet.address])
+
+  const ensOrAddress = ens.data?.inner ?? address
+  const ensOrAddressDisplay = ens.data?.inner ?? Address.format(address)
 
   const copyEthereumAddress = useCopy(ensOrAddress)
   const onClickCopyEthereumAddress = useMouseCancel(copyEthereumAddress.run)
@@ -73,7 +78,7 @@ export function WalletDataCard(props: { index?: number }) {
       </div>
     </div>
 
-  const Address =
+  const AddressDisplay =
     <div className="flex justify-between items-center text-sm">
       <div className="text-white-high-contrast">
         ETH
@@ -90,6 +95,6 @@ export function WalletDataCard(props: { index?: number }) {
     {First}
     <div className="grow" />
     {Name}
-    {Address}
+    {AddressDisplay}
   </div>
 }

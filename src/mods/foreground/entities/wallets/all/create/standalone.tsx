@@ -1,6 +1,5 @@
 import { Colors } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
-import { Ethereum } from "@/libs/ethereum";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -18,7 +17,7 @@ import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Base16 } from "@hazae41/base16";
 import { Base64 } from "@hazae41/base64";
 import { Bytes } from "@hazae41/bytes";
-import { ZeroHexString } from "@hazae41/cubane";
+import { Address, ZeroHexString } from "@hazae41/cubane";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
@@ -70,7 +69,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
       // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
 
-      const address = Ethereum.Address.tryFrom(uncompressedPublicKeyBytes).throw(t)
+      const address = Address.compute(uncompressedPublicKeyBytes)
 
       // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
       // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
@@ -150,7 +149,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
       // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
 
-      const address = Ethereum.Address.tryFrom(uncompressedPublicKeyBytes).throw(t)
+      const address = Address.compute(uncompressedPublicKeyBytes)
 
       // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
       // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)

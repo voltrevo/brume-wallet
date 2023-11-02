@@ -1,7 +1,6 @@
 import { Colors } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
 import { UIError } from "@/libs/errors/errors";
-import { Ethereum } from "@/libs/ethereum";
 import { Outline } from "@/libs/icons/icons";
 import { Ledger } from "@/libs/ledger";
 import { useModhash } from "@/libs/modhash/modhash";
@@ -15,7 +14,7 @@ import { Input } from "@/libs/ui/input";
 import { SeedRef } from "@/mods/background/service_worker/entities/seeds/data";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
-import { ZeroHexString } from "@hazae41/cubane";
+import { Address, ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
@@ -151,7 +150,7 @@ export function SeededWalletCreatorDialog(props: {}) {
         const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
         const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
 
-        const address = Ethereum.Address.tryFrom(uncompressedPublicKeyBytes).throw(t)
+        const address = Address.compute(uncompressedPublicKeyBytes)
         const seed = SeedRef.from(seedData)
 
         const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: defNameInput, color, emoji, address, seed, path: defPathInput }
