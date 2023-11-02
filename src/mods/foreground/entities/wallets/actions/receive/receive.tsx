@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Events } from "@/libs/react/events";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Address } from "@hazae41/cubane";
 import createQR from "@paulmillr/qr";
 import { useMemo } from "react";
 import { useWalletDataContext } from "../../context";
@@ -9,12 +10,16 @@ export function WalletDataReceiveDialog(props: {}) {
   const { close } = useDialogContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
 
+  const address = useMemo(() => {
+    return Address.from(wallet.address)!
+  }, [wallet.address])
+
   const url = useMemo(() => {
-    const bytes = createQR(wallet.address, "gif", { ecc: "medium", scale: 10 })
+    const bytes = createQR(address, "gif", { ecc: "medium", scale: 10 })
     const blob = new Blob([bytes], { type: "image/gif" })
 
     return URL.createObjectURL(blob)
-  }, [wallet])
+  }, [address])
 
   return <>
     <Dialog.Title close={close}>
@@ -33,7 +38,7 @@ export function WalletDataReceiveDialog(props: {}) {
       onCut={Events.Clipboard.reset}
       onKeyDown={Events.Keyboard.noop}
       onClick={Events.Mouse.select}>
-      {wallet.address}
+      {address}
     </div>
   </>
 }
