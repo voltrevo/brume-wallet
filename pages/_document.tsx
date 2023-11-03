@@ -20,10 +20,7 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <Script
-          id="themer"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: themer }} />
+        <Script id="themer" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themer }} />
         <meta key="application-name" name="application-name" content="Brume Wallet" />
         <meta key="description" name="description" content="The private wallet" />
         <meta key="color-scheme" name="color-scheme" content="dark light" />
