@@ -1,7 +1,7 @@
 import { Outline } from "@/libs/icons/icons";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { usePathContext } from "@/mods/foreground/router/path/context";
 import { Ok, Result } from "@hazae41/result";
@@ -10,7 +10,8 @@ import { LedgerSeedCreatorDialog } from "./ledger";
 import { StandaloneSeedCreatorDialog } from "./standalone";
 
 export function SeedCreatorDialog(props: {}) {
-  const path = usePathContext()
+  const { opened, close } = useDialogContext().unwrap()
+  const path = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const [type, setType] = useState<"mnemonic" | "ledger">()
@@ -36,10 +37,14 @@ export function SeedCreatorDialog(props: {}) {
   }, [])
 
   return <>
-    <Dialog opened={type === "mnemonic"} close={close}>
+    <Dialog
+      opened={opened && type === "mnemonic"}
+      close={close}>
       <StandaloneSeedCreatorDialog />
     </Dialog>
-    <Dialog opened={type === "ledger"} close={close}>
+    <Dialog
+      opened={opened && type === "ledger"}
+      close={close}>
       <LedgerSeedCreatorDialog />
     </Dialog>
     <Dialog.Title close={close}>

@@ -10,7 +10,7 @@ import { WalletPage } from "../entities/wallets/page"
 import { usePathContext } from "./path/context"
 
 export function Router() {
-  const url = usePathContext()
+  const url = usePathContext().unwrap()
 
   let matches: RegExpMatchArray | null
 

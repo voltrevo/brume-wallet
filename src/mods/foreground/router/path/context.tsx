@@ -6,7 +6,7 @@ export const PathContext =
   createContext<Nullable<URL>>(undefined)
 
 export function usePathContext() {
-  return Option.unwrap(useContext(PathContext))
+  return Option.wrap(useContext(PathContext))
 }
 
 export namespace Path {

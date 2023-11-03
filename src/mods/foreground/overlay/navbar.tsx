@@ -6,7 +6,7 @@ import { useCallback } from "react"
 import { usePathContext } from "../router/path/context"
 
 export function NavBar() {
-  const path = usePathContext()
+  const path = usePathContext().unwrap()
 
   const onOpen = useCallback(async () => {
     await tryBrowser(async () => {

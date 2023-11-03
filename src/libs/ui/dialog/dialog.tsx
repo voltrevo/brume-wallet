@@ -10,26 +10,31 @@ import { ChildrenProps } from "../../react/props/children"
 import { CloseProps } from "../../react/props/close"
 import { Button } from "../button"
 
-export interface DialogHandle {
+export interface OpenableHandle {
   readonly opened: boolean,
   close(): void
 }
 
-export function useDialogHandle(props: OpenedProps & CloseProps) {
+export function useOpenableHandle(props: OpenedProps & CloseProps) {
   const { opened, close } = props
 
   return useObjectMemo({ opened, close })
 }
 
-export const DialogContext = createContext<Nullable<DialogHandle>>(undefined)
+export const DialogContext = createContext<Nullable<OpenableHandle>>(undefined)
 
 export function useDialogContext() {
   return Option.wrap(useContext(DialogContext))
 }
 
-export function Dialog(props: ChildrenProps & OpenedProps & CloseProps) {
+/**
+ * Full-screen dialog
+ * @param props 
+ * @returns 
+ */
+export function Screen(props: ChildrenProps & OpenedProps & CloseProps) {
   const { opened, children, close } = props
-  const handle = useDialogHandle(props)
+  const handle = useOpenableHandle(props)
 
   const [dialog, setDialog] = useState<HTMLDialogElement | null>(null)
 
@@ -49,7 +54,70 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps) {
   }, [opened])
 
   useLayoutEffect(() => {
-    if (!displayed) return
+    if (!displayed)
+      return
+    if (!document.body.contains(dialog))
+      return
+
+    dialog?.showModal()
+    return () => dialog?.close()
+  }, [dialog, displayed])
+
+  if (!displayed)
+    return null
+
+  return <DialogContext.Provider value={handle}>
+    <dialog className=""
+      ref={setDialog}
+      onAnimationEnd={onAnimationEnd}>
+      <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
+        role="backdrop" />
+      <div className={`dark fixed inset-0 m-0 h-full w-full p-safe flex flex-col`}
+        onMouseDown={onClose}
+        onClick={Events.keep}>
+        <div className="hidden md:block grow" />
+        <div className="flex flex-col grow md:p-2">
+          <aside className={`flex flex-col grow w-full mx-auto min-w-0 max-w-3xl md:rounded-2xl p-4 text-default bg-default ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+            role="dialog"
+            aria-modal
+            onMouseDown={Events.keep}
+            onKeyDown={onEscape}>
+            {children}
+          </aside>
+        </div>
+        <div className="hidden md:block grow" />
+      </div>
+    </dialog>
+  </DialogContext.Provider>
+}
+
+
+export function Dialog(props: ChildrenProps & OpenedProps & CloseProps) {
+  const { opened, children, close } = props
+  const handle = useOpenableHandle(props)
+
+  const [dialog, setDialog] = useState<HTMLDialogElement | null>(null)
+
+  const onEscape = useKeyboardEscape(close)
+
+  const onClose = useMouse<HTMLDivElement>(e => {
+    if (e.clientX < e.currentTarget.clientWidth) close()
+  }, [close])
+
+  const [displayed, setDisplayed] = useState(opened)
+
+  if (opened && !displayed)
+    setDisplayed(true)
+
+  const onAnimationEnd = useCallback(() => {
+    flushSync(() => setDisplayed(opened))
+  }, [opened])
+
+  useLayoutEffect(() => {
+    if (!displayed)
+      return
+    if (!document.body.contains(dialog))
+      return
 
     dialog?.showModal()
     return () => dialog?.close()
@@ -68,15 +136,13 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps) {
         onMouseDown={onClose}
         onClick={Events.keep}>
         <div className="grow" />
-        <div className="p-2">
-          <aside className={`w-full mx-auto min-w-0 max-w-2xl rounded-2xl ${opened ? "animate-slideup-in" : "animate-slideup-out"} bg-default`}
+        <div className="flex flex-col p-2">
+          <aside className={`w-full mx-auto min-w-0 max-w-2xl rounded-2xl p-4 text-default bg-default ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
             role="dialog"
             aria-modal
             onMouseDown={Events.keep}
             onKeyDown={onEscape}>
-            <div className="p-4">
-              {children}
-            </div>
+            {children}
           </aside>
         </div>
         <div className="hidden md:block grow" />
@@ -95,12 +161,12 @@ export namespace Dialog {
         {children}
       </div>
       <div className="grow" />
-      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
+      <button className={`${Button.Base.className} s-xl hovered-or-clicked-or-focused:scale-105 !transition`}
         onClick={close}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.XMarkIcon className="s-sm" />
         </div>
-      </Button.Base>
+      </button>
     </h1>
   }
 

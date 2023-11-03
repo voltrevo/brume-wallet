@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "macro": "saumon build -r ./src",
+    "macro": "saumon build -r ./src ./pages",
     "build": "npm run build:!before && npm run build:!website && npm run build:!chrome && npm run build:!safari && npm run build:!firefox && npm run build:!after",
     "build:!before": "rimraf ./dist && next build && mv ./out/_next ./out/next && node ./scripts/postbuild.mjs && mkdir ./dist",
     "build:!website": "mkdir ./dist/website && cp -R ./out/* ./dist/website && cd ./dist/website && rimraf ./firefox ./chrome ./safari",

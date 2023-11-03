@@ -1,9 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
-import { Events } from "@/libs/react/events";
+import { useCopy } from "@/libs/copy/copy";
+import { Button } from "@/libs/ui/button";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Address } from "@hazae41/cubane";
+import { Result } from "@hazae41/result";
 import createQR from "@paulmillr/qr";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useWalletDataContext } from "../../context";
 
 export function WalletDataReceiveDialog(props: {}) {
@@ -21,24 +23,38 @@ export function WalletDataReceiveDialog(props: {}) {
     return URL.createObjectURL(blob)
   }, [address])
 
+  const onCopyClick = useCopy(address)
+
+  const onShareClick = useCallback(async () => {
+    await Result.runAndWrap(async () => {
+      await navigator.share({ text: address })
+    }).then(r => r.ignore())
+  }, [address])
+
   return <>
     <Dialog.Title close={close}>
       Receive
     </Dialog.Title>
-    <div className="m-auto max-w-xs">
-      <img className=""
-        alt="QR code"
-        src={url} />
+    <div className="grow flex flex-col items-center justify-center">
+      <div className="text-xl font-medium">
+        {wallet.name}
+      </div>
+      <button className="text-contrast text-center cursor-pointer"
+        onClick={onCopyClick.run}>
+        {onCopyClick.current
+          ? "Copied"
+          : Address.format(address)}
+      </button>
+      <div className="h-4" />
+      <div className="bg-white rounded-xl p-1">
+        <img className=""
+          alt="QR code"
+          src={url} />
+      </div>
     </div>
-    <div className="text-center cursor-pointer break-all outline-none"
-      contentEditable
-      suppressContentEditableWarning
-      spellCheck={false}
-      onPaste={Events.noop}
-      onCut={Events.Clipboard.reset}
-      onKeyDown={Events.Keyboard.noop}
-      onClick={Events.Mouse.select}>
-      {address}
-    </div>
+    <button className={`${Button.Base.className} ${Button.Contrast.className} bg-high-contrast po-md`}
+      onClick={onShareClick}>
+      Share
+    </button>
   </>
 }

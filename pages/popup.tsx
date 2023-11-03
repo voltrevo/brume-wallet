@@ -70,7 +70,7 @@ export function Ready() {
 }
 
 export function TransactPage() {
-  const { searchParams } = usePathContext()
+  const { searchParams } = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -250,7 +250,7 @@ export function TransactPage() {
 }
 
 export function SwitchPage() {
-  const { searchParams } = usePathContext()
+  const { searchParams } = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -315,7 +315,7 @@ export function SwitchPage() {
 }
 
 export function PersonalSignPage() {
-  const { searchParams } = usePathContext()
+  const { searchParams } = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -399,7 +399,7 @@ export function PersonalSignPage() {
 }
 
 export function TypedSignPage() {
-  const { searchParams } = usePathContext()
+  const { searchParams } = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -479,7 +479,7 @@ export function TypedSignPage() {
 }
 
 export function WalletAndChainSelectPage() {
-  const { searchParams } = usePathContext()
+  const { searchParams } = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()

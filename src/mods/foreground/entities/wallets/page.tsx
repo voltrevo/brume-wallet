@@ -11,7 +11,7 @@ import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, Screen } from "@/libs/ui/dialog/dialog";
 import { Url } from "@/libs/url/url";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { Mutators } from "@/libs/xswr/mutators";
@@ -255,11 +255,11 @@ function WalletDataPage() {
       <WalletDataSendNativeTokenDialog title="ETH on Ethereum"
         context={mainnet} />
     </Dialog>}
-    <Dialog
+    <Screen
       opened={receiveDialog.current}
       close={receiveDialog.disable}>
       <WalletDataReceiveDialog />
-    </Dialog>
+    </Screen>
     {Header}
     {Card}
     {Apps}

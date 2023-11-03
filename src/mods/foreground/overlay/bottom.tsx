@@ -4,7 +4,7 @@ import { useAppRequests } from "../entities/requests/all/data";
 import { usePathContext } from "../router/path/context";
 
 export function Bottom() {
-  const path = usePathContext()
+  const path = usePathContext().unwrap()
 
   const requestsQuery = useAppRequests()
   const requests = requestsQuery.data?.inner
