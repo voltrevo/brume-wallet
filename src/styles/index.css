@@ -19,6 +19,7 @@ body {
 
 body {
   height: 100dvh;
+  font-family: ui-rounded, system-ui, sans-serif;
 }
 
 html {

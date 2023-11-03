@@ -5,15 +5,20 @@ const themer = `(() => {
   const matcher = matchMedia("(prefers-color-scheme: dark)")
 
   function apply() {
-    if (matcher.matches)
+    alert(matcher.matches)
+    if (e.matches)
       document.documentElement.classList.add("dark")
     else
       document.documentElement.classList.remove("dark")
   }
 
-  matcher.addEventListener("change", (e) => {
-    apply()
-  }, { passive: true })
+  try {
+    matcher.addEventListener("change", () => apply())
+  } catch (e) {}
+
+  try {
+    matcher.addListener("change", () => apply())
+  } catch (e) {}
   
   apply()
 })()`

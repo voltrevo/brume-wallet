@@ -61,7 +61,26 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps) {
 
     dialog?.showModal()
     return () => dialog?.close()
-  }, [dialog, displayed])
+  }, [displayed, dialog])
+
+  useLayoutEffect(() => {
+    if (!displayed)
+      return
+
+    const color = document.querySelector("meta[name=theme-color]")
+
+    if (color == null)
+      return
+
+    const original = color.getAttribute("content")
+
+    if (original == null)
+      return
+
+    color.setAttribute("content", "#000000")
+
+    return () => color.setAttribute("content", original)
+  }, [displayed])
 
   if (!displayed)
     return null
@@ -72,17 +91,19 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps) {
       onAnimationEnd={onAnimationEnd}>
       <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
         role="backdrop" />
-      <div className={`dark fixed inset-0 m-0 h-full w-full p-safe flex flex-col`}
+      <div className={`dark fixed inset-0 m-0 h-full w-full flex flex-col`}
         onMouseDown={onClose}
         onClick={Events.keep}>
         <div className="hidden md:block grow" />
         <div className="flex flex-col grow md:p-2">
-          <aside className={`flex flex-col grow w-full mx-auto min-w-0 max-w-3xl md:rounded-2xl p-4 text-default bg-default ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+          <aside className={`flex flex-col grow w-full mx-auto min-w-0 max-w-3xl md:rounded-2xl p-safe text-default bg-default ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
             role="dialog"
             aria-modal
             onMouseDown={Events.keep}
             onKeyDown={onEscape}>
-            {children}
+            <div className="flex flex-col grow px-4 md:p-4">
+              {children}
+            </div>
           </aside>
         </div>
         <div className="hidden md:block grow" />
