@@ -51,10 +51,15 @@ export function WalletDataReceiveDialog(props: {}) {
           alt="QR code"
           src={url} />
       </div>
+      <div className="h-4" />
+      <div className="text-contrast text-center max-w-xs">
+        {`This is an Ethereum address, only send Ethereum-compatible stuff to this address`}
+      </div>
     </div>
-    <button className={`${Button.Base.className} ${Button.Contrast.className} bg-high-contrast po-md`}
-      onClick={onShareClick}>
-      Share
-    </button>
+    {typeof navigator.share === "function" &&
+      <button className={`${Button.Base.className} ${Button.Contrast.className} bg-high-contrast po-md`}
+        onClick={onShareClick}>
+        Share
+      </button>}
   </>
 }
