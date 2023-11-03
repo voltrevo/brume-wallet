@@ -2,20 +2,18 @@ import { Head, Html, Main, NextScript } from 'next/document'
 import Script from "next/script"
 
 const themer = `(() => {
-  try {
-    const matcher = matchMedia("(prefers-color-scheme: dark)")
+  const matcher = matchMedia("(prefers-color-scheme: dark)")
 
-    function apply() {
-      if (matcher.matches)
-        document.documentElement.classList.add("dark")
-      else
-        document.documentElement.classList.remove("dark")
-    }
+  function apply() {
+    if (matcher.matches)
+      document.documentElement.classList.add("dark")
+    else
+      document.documentElement.classList.remove("dark")
+  }
+
+  matcher.addEventListener("change", () => apply())
   
-    matcher.addEventListener("change", () => apply())
-    
-    apply()
-  } catch (e) {}
+  apply()
 })()`
 
 export default function Document() {
