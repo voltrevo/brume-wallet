@@ -62,6 +62,6 @@ Or you MAY do the opposite, which is slowly integrating something external.
 
 <img src="https://github.com/brumewallet/wallet/assets/4405263/ee0cf66d-a727-4e2f-8d64-8e3251595c24" alt="cell division" width="400"/>
 
-When you want to introduce a new pattern, the biomimetic "mitochondria" apparoach is to start with something small, then slowly rewrite all the code with this new pattern.
+When you want to introduce a new pattern, the biomimetic "mitochondria" approach is to start with something small, then slowly rewrite all the code with this new pattern.
 
 **Remember, most of the solutions to your problems already exist in nature because it had millions of years to think about it.**
