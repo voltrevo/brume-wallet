@@ -1,7 +1,5 @@
 import { Opaque, Readable, Writable } from "@hazae41/binary"
-import { Bytes } from "@hazae41/bytes"
-import { Cursor, CursorReadError, CursorWriteError } from "@hazae41/cursor"
-import { Err, Ok, Result } from "@hazae41/result"
+import { Cursor } from "@hazae41/cursor"
 
 export class InvalidTagError extends Error {
   readonly #class = InvalidTagError
@@ -15,7 +13,7 @@ export class InvalidTagError extends Error {
 
 }
 
-export class HIDFrame<T extends Writable.Infer<T>> {
+export class HIDFrame<T extends Writable> {
   readonly #class = HIDFrame
 
   static readonly tag = 0x05 as const
@@ -26,39 +24,33 @@ export class HIDFrame<T extends Writable.Infer<T>> {
     readonly index: number,
   ) { }
 
-  trySize(): Result<number, Writable.SizeError<T>> {
-    return this.fragment.trySize().mapSync(x => 5 + x)
+  sizeOrThrow() {
+    return 2 + 1 + 2 + this.fragment.sizeOrThrow()
   }
 
-  tryWrite(cursor: Cursor): Result<void, CursorWriteError | Writable.WriteError<T>> {
-    return Result.unthrowSync(t => {
-      cursor.tryWriteUint16(this.channel).throw(t)
-      cursor.tryWriteUint8(this.#class.tag).throw(t)
-      cursor.tryWriteUint16(this.index).throw(t)
-      this.fragment.tryWrite(cursor).throw(t)
-
-      return Ok.void()
-    })
+  writeOrThrow(cursor: Cursor) {
+    cursor.writeUint16OrThrow(this.channel)
+    cursor.writeUint8OrThrow(this.#class.tag)
+    cursor.writeUint16OrThrow(this.index)
+    this.fragment.writeOrThrow(cursor)
   }
 
-  static tryRead(cursor: Cursor): Result<HIDFrame<Opaque>, CursorReadError | InvalidTagError> {
-    return Result.unthrowSync(t => {
-      const channel = cursor.tryReadUint16().throw(t)
-      const tag = cursor.tryReadUint8().throw(t)
+  static readOrThrow(cursor: Cursor): HIDFrame<Opaque> {
+    const channel = cursor.readUint16OrThrow()
+    const tag = cursor.readUint8OrThrow()
 
-      if (tag !== this.tag)
-        return new Err(new InvalidTagError(tag))
+    if (tag !== this.tag)
+      throw new InvalidTagError(tag)
 
-      const index = cursor.tryReadUint16().throw(t)
-      const bytes = cursor.tryRead(cursor.remaining).throw(t)
-      const fragment = new Opaque(bytes)
+    const index = cursor.readUint16OrThrow()
+    const bytes = cursor.readAndCopyOrThrow(cursor.remaining)
+    const fragment = new Opaque(bytes)
 
-      return new Ok(new HIDFrame(channel, fragment, index))
-    })
+    return new HIDFrame(channel, fragment, index)
   }
 
-  static *trySplit<T extends Writable.Infer<T>>(channel: number, bytes: Uint8Array) {
-    const chunks = new Cursor(bytes).trySplit(59)
+  static *splitOrThrow(channel: number, bytes: Uint8Array) {
+    const chunks = new Cursor(bytes).splitOrThrow(59)
 
     let chunk = chunks.next()
 
@@ -68,40 +60,30 @@ export class HIDFrame<T extends Writable.Infer<T>> {
     return chunk.value
   }
 
-  static async tryUnsplit(channel: number, generator: AsyncGenerator<HIDFrame<Opaque>, Err<Error>, unknown>) {
+  static async unsplitOrThrow(channel: number, generator: AsyncGenerator<HIDFrame<Opaque>, never, unknown>) {
     const first = await generator.next()
 
     if (first.done)
       return first.value
 
-    const frames = Readable.tryReadFromBytes(HIDContainer, first.value.fragment.bytes)
+    const frames = Readable.readFromBytesOrThrow(HIDContainer, first.value.fragment.bytes)
 
-    if (frames.isErr())
-      return frames
+    const bytes = new Uint8Array(frames.length)
+    const cursor = new Cursor(bytes)
 
-    const bytes = Bytes.tryAllocUnsafe(frames.inner.length)
+    cursor.writeOrThrow(frames.fragment.bytes.slice(0, cursor.remaining))
 
-    if (bytes.isErr())
-      return bytes
-
-    const cursor = new Cursor(bytes.inner)
-
-    const write = cursor.tryWrite(frames.inner.fragment.bytes.slice(0, cursor.remaining))
-
-    if (write.isErr())
-      return write
     if (!cursor.remaining)
-      return new Ok(cursor.bytes)
+      return cursor.bytes
 
     let frame = await generator.next()
 
     for (; !frame.done; frame = await generator.next()) {
-      const write = cursor.tryWrite(frame.value.fragment.bytes.slice(0, cursor.remaining))
+      cursor.writeOrThrow(frame.value.fragment.bytes.slice(0, cursor.remaining))
 
-      if (write.isErr())
-        return write
       if (!cursor.remaining)
-        return new Ok(cursor.bytes)
+        return cursor.bytes
+
       continue
     }
 
@@ -110,43 +92,32 @@ export class HIDFrame<T extends Writable.Infer<T>> {
 
 }
 
-export class HIDContainer<T extends Writable.Infer<T>> {
+export class HIDContainer<T extends Writable> {
 
   constructor(
     readonly length: number,
     readonly fragment: T,
   ) { }
 
-  static tryNew<T extends Writable.Infer<T>>(fragment: T): Result<HIDContainer<T>, Writable.SizeError<T>> {
-    return Result.unthrowSync(t => {
-      const length = fragment.trySize().throw(t)
-      const container = new HIDContainer(length, fragment)
-
-      return new Ok(container)
-    })
+  static newOrThrow<T extends Writable>(fragment: T): HIDContainer<T> {
+    return new HIDContainer(fragment.sizeOrThrow(), fragment)
   }
 
-  trySize(): Result<number, Writable.SizeError<T>> {
-    return new Ok(Math.ceil((2 + this.length) / 59) * 59)
+  sizeOrThrow() {
+    return Math.ceil((2 + this.length) / 59) * 59
   }
 
-  tryWrite(cursor: Cursor): Result<void, CursorWriteError | Writable.WriteError<T>> {
-    return Result.unthrowSync(t => {
-      cursor.tryWriteUint16(this.length).throw(t)
-      this.fragment.tryWrite(cursor).throw(t)
-      cursor.fill(0, cursor.remaining)
-
-      return Ok.void()
-    })
+  writeOrThrow(cursor: Cursor) {
+    cursor.writeUint16OrThrow(this.length)
+    this.fragment.writeOrThrow(cursor)
+    cursor.fillOrThrow(0, cursor.remaining)
   }
 
-  static tryRead(cursor: Cursor): Result<HIDContainer<Opaque>, CursorReadError> {
-    return Result.unthrowSync(t => {
-      const length = cursor.tryReadUint16().throw(t)
-      const bytes = cursor.tryRead(cursor.remaining).throw(t)
-      const fragment = new Opaque(bytes)
+  static readOrThrow(cursor: Cursor): HIDContainer<Opaque> {
+    const length = cursor.readUint16OrThrow()
+    const bytes = cursor.readAndCopyOrThrow(cursor.remaining)
+    const fragment = new Opaque(bytes)
 
-      return new Ok(new HIDContainer(length, fragment))
-    })
+    return new HIDContainer(length, fragment)
   }
 }

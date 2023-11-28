@@ -1,5 +1,4 @@
 import { Base58 } from "@hazae41/base58"
-import { Bytes } from "@hazae41/bytes"
 import { Cursor } from "@hazae41/cursor"
 import { Result } from "@hazae41/result"
 import { Ripemd160 } from "@hazae41/ripemd160"
@@ -12,7 +11,7 @@ export namespace Address {
       const sha256 = await Sha256.digest(maybeCompressedPublicKey)
       using ripemd160 = Ripemd160.get().tryHash(sha256).throw(t)
 
-      const cursor = new Cursor(Bytes.tryAllocUnsafe(1 + ripemd160.bytes.length + 4).throw(t))
+      const cursor = new Cursor(new Uint8Array(1 + ripemd160.bytes.length + 4))
       cursor.tryWriteUint8(0).throw(t)
       cursor.tryWrite(ripemd160.bytes).throw(t)
 

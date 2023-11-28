@@ -171,71 +171,49 @@ export class LedgerUSBDevice {
     readonly iface: USBInterface
   ) { }
 
-  async #tryTransferOut(frame: HIDFrame<Opaque>): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const bytes = Writable.tryWriteToBytes(frame).throw(t)
-
-      await Result.runAndWrap(async () => {
-        await this.device.transferOut(3, bytes)
-      }).then(r => r.mapErrSync(DeviceTransferOutError.from).throw(t))
-
-      return Ok.void()
-    })
+  async #transferOutOrThrow(frame: HIDFrame<Opaque>): Promise<void> {
+    await this.device.transferOut(3, Writable.writeToBytesOrThrow(frame))
   }
 
-  async #tryTransferIn(length: number): Promise<Result<HIDFrame<Opaque>, Error>> {
-    return await Result.unthrow(async t => {
-      const result = await Result.runAndWrap(async () => {
-        return await this.device.transferIn(3, length)
-      }).then(r => r.mapErrSync(DeviceTransferInError.from).throw(t))
+  async #transferInOrThrow(length: number): Promise<HIDFrame<Opaque>> {
+    const result = await this.device.transferIn(3, length)
 
-      if (result.data == null)
-        return new Err(new DeviceTransferInError())
+    if (result.data == null)
+      throw new DeviceTransferInError()
 
-      const bytes = Bytes.fromView(result.data)
+    const bytes = Bytes.fromView(result.data)
+    const frame = Readable.readFromBytesOrThrow(HIDFrame, bytes)
 
-      const frame = Readable.tryReadFromBytes(HIDFrame, bytes).throw(t)
-
-      return new Ok(frame)
-    })
+    return frame
   }
 
-  async #trySend<T extends Writable.Infer<T>>(fragment: T): Promise<Result<void, Error | Writable.SizeError<T> | Writable.WriteError<T>>> {
-    return await Result.unthrow(async t => {
-      const container = HIDContainer.tryNew(fragment).throw(t)
-      const bytes = Writable.tryWriteToBytes(container).throw(t)
+  async #sendOrThrow<T extends Writable>(fragment: T): Promise<void> {
+    const container = HIDContainer.newOrThrow(fragment)
+    const bytes = Writable.writeToBytesOrThrow(container)
 
-      const frames = HIDFrame.trySplit(this.#channel, bytes)
+    const frames = HIDFrame.splitOrThrow(this.#channel, bytes)
 
-      let frame = frames.next()
+    let frame = frames.next()
 
-      for (; !frame.done; frame = frames.next())
-        await this.#tryTransferOut(frame.value).then(r => r.throw(t))
+    for (; !frame.done; frame = frames.next())
+      await this.#transferOutOrThrow(frame.value)
 
-      return frame.value
-    })
+    return frame.value
   }
 
-  async *#tryReceive() {
-    while (true) {
-      const frame = await this.#tryTransferIn(64)
-
-      if (frame.isErr())
-        return frame
-      yield frame.get()
-    }
+  async *#receiveOrThrow(): AsyncGenerator<HIDFrame<Opaque>, never, unknown> {
+    while (true)
+      yield await this.#transferInOrThrow(64)
   }
 
-  async tryRequest<T extends Writable.Infer<T>>(init: ApduRequestInit<T>): Promise<Result<ApduResponse<Opaque>, Error | Writable.SizeError<T> | Writable.WriteError<T>>> {
-    return await Result.unthrow(async t => {
-      const request = ApduRequest.tryFrom(init).throw(t)
-      await this.#trySend(request).then(r => r.throw(t))
+  async requestOrThrow<T extends Writable>(init: ApduRequestInit<T>): Promise<ApduResponse<Opaque>> {
+    const request = ApduRequest.fromOrThrow(init)
+    await this.#sendOrThrow(request)
 
-      const bytes = await HIDFrame.tryUnsplit(this.#channel, this.#tryReceive()).then(r => r.throw(t))
-      const response = Readable.tryReadFromBytes(ApduResponse, bytes).throw(t)
+    const bytes = await HIDFrame.unsplitOrThrow(this.#channel, this.#receiveOrThrow())
+    const response = Readable.readFromBytesOrThrow(ApduResponse, bytes)
 
-      return new Ok(response)
-    })
+    return response
   }
 
 }

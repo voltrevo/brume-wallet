@@ -1,33 +1,32 @@
 import { Opaque, Writable } from "@hazae41/binary"
-import { Cursor, CursorReadError } from "@hazae41/cursor"
-import { Err, Ok, Result } from "@hazae41/result"
+import { Cursor } from "@hazae41/cursor"
+import { Err, Ok } from "@hazae41/result"
 
-export interface ApduResponseInit<T extends Writable.Infer<T>> {
+export interface ApduResponseInit<T extends Writable> {
   readonly status: number
   readonly fragment?: T
 }
 
-export type ApduResponse<T extends Writable.Infer<T>> =
+export type ApduResponse<T extends Writable> =
   | ApduOk<T>
   | ApduErr<T>
 
 export namespace ApduResponse {
 
-  export function tryRead(cursor: Cursor): Result<ApduResponse<Opaque>, CursorReadError> {
-    return Result.unthrowSync(t => {
-      const bytes = cursor.tryRead(cursor.remaining - 2).throw(t)
-      const status = cursor.tryReadUint16().throw(t)
-      const fragment = new Opaque(bytes)
+  export function readOrThrow(cursor: Cursor) {
+    const bytes = cursor.readAndCopyOrThrow(cursor.remaining - 2)
+    const status = cursor.readUint16OrThrow()
+    const fragment = new Opaque(bytes)
 
-      if (status === ApduOk.status)
-        return new Ok(new ApduOk(fragment))
-      return new Ok(new ApduErr(status, fragment))
-    })
+    if (status === ApduOk.status)
+      return new ApduOk(fragment)
+
+    return new ApduErr(status, fragment)
   }
 
 }
 
-export class ApduError<T extends Writable.Infer<T>> extends Error {
+export class ApduError<T extends Writable> extends Error {
   readonly #class = ApduError
   readonly name = this.#class.name
 
@@ -40,7 +39,7 @@ export class ApduError<T extends Writable.Infer<T>> extends Error {
 
 }
 
-export class ApduOk<T extends Writable.Infer<T>> extends Ok<T> {
+export class ApduOk<T extends Writable> extends Ok<T> {
   readonly #class = ApduOk
 
   static readonly status = 0x9000 as const
@@ -54,13 +53,16 @@ export class ApduOk<T extends Writable.Infer<T>> extends Ok<T> {
   get status() {
     return this.#class.status
   }
+
 }
 
-export class ApduErr<T extends Writable.Infer<T>> extends Err<ApduError<T>> {
+export class ApduErr<T extends Writable> extends Err<ApduError<T>> {
+
   constructor(
     readonly status: number,
     readonly fragment: T
   ) {
     super(new ApduError(status, fragment))
   }
+
 }

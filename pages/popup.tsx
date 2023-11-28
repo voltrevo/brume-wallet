@@ -121,7 +121,7 @@ export function TransactPage() {
     return maybeSignatures.items.map(({ text }) => {
       return Result.unthrowSync<Result<{ text: string, decoded: string }, Error>>(t => {
         const abi = Cubane.Abi.FunctionSignature.tryParse(text).throw(t)
-        const { args } = Cubane.Abi.tryDecode(abi.args, zeroHexData).throw(t)
+        const { args } = Cubane.Abi.tryDecode(abi.funcAndArgs, zeroHexData).throw(t)
 
         function stringify(x: any): string {
           if (typeof x === "string")
@@ -139,7 +139,9 @@ export function TransactPage() {
           return "unknown"
         }
 
-        const decoded = args.into().map(stringify).join(", ")
+        const decoded = Result.runAndDoubleWrapSync(() => {
+          return args.intoOrThrow().map(stringify).join(", ")
+        }).throw(t)
 
         return new Ok({ text, decoded })
       }).inspectErrSync(e => console.warn({ e })).unwrapOr(undefined)

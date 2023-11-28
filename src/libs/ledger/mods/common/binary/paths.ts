@@ -1,6 +1,4 @@
-import { BinaryWriteError } from "@hazae41/binary";
 import { Cursor } from "@hazae41/cursor";
-import { Ok, Result } from "@hazae41/result";
 
 export class Paths {
 
@@ -21,18 +19,16 @@ export class Paths {
     return new Paths(paths)
   }
 
-  trySize(): Result<number, never> {
-    return new Ok(1 + (this.paths.length * 4))
+  sizeOrThrow() {
+    return 1 + (this.paths.length * 4)
   }
 
-  tryWrite(cursor: Cursor): Result<void, BinaryWriteError> {
-    return Result.unthrowSync(t => {
-      cursor.tryWriteUint8(this.paths.length).throw(t)
+  writeOrThrow(cursor: Cursor) {
+    cursor.writeUint8OrThrow(this.paths.length)
 
-      for (const path of this.paths)
-        cursor.tryWriteUint32(path).throw(t)
+    for (const path of this.paths)
+      cursor.writeUint32OrThrow(path)
 
-      return Ok.void()
-    })
+    return
   }
 }
