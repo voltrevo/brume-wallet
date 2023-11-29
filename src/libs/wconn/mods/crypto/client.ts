@@ -240,7 +240,7 @@ export class CryptoClient {
     return Result.unthrowSync(t => {
       const plaintext = SafeJson.stringify(data)
       const plain = new Plaintext(new Opaque(Bytes.fromUtf8(plaintext)))
-      const iv = Bytes.tryRandom(12).throw(t) // TODO maybe use a counter
+      const iv = Bytes.random(12) // TODO maybe use a counter
       const cipher = plain.tryEncrypt(this.cipher, iv).throw(t)
       const envelope = new EnvelopeTypeZero(cipher)
       const bytes = Writable.tryWriteToBytes(envelope).throw(t)

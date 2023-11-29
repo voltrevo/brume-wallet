@@ -1,26 +1,32 @@
-import { Disposer } from "@hazae41/cleaner"
-import { TorClientDuplex, TorClientParams, createPooledTorDisposer, createWebSocketSnowflakeStream } from "@hazae41/echalote"
-import { Cancel, Looped, Looper, Pool, PoolParams, Retry, TooManyRetriesError, tryLoop } from "@hazae41/piscine"
-import { AbortedError } from "@hazae41/plume"
+import { Box } from "@hazae41/box"
+import { TorClientDuplex, createPooledTorDisposer, createWebSocketSnowflakeStream } from "@hazae41/echalote"
+import { Pool, PoolParams } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
 
-export async function tryCreateTor(params: TorClientParams): Promise<Result<TorClientDuplex, Cancel<Error> | Retry<Error>>> {
+export async function tryCreateTor(): Promise<Result<TorClientDuplex, Error>> {
   return await Result.unthrow(async t => {
     const tcp = await createWebSocketSnowflakeStream("wss://snowflake.torproject.net/")
-    const tor = new TorClientDuplex(tcp, params)
+    const tor = new TorClientDuplex()
 
-    await tor.tryWait().then(r => r.mapErrSync(Retry.new).throw(t))
+    tcp.outer.readable
+      .pipeTo(tor.inner.writable)
+      .catch(console.error)
+
+    tor.inner.readable
+      .pipeTo(tcp.outer.writable)
+      .catch(console.error)
+
+    await tor.tryWait().then(r => r.throw(t))
 
     return new Ok(tor)
   })
 }
 
-export function createTorPool<CreateError extends Looped.Infer<CreateError>>(tryCreate: Looper<TorClientDuplex, CreateError>, params: PoolParams = {}) {
-  return new Pool<Disposer<TorClientDuplex>, Cancel.Inner<CreateError> | AbortedError | TooManyRetriesError>(async (params) => {
+export function createTorPool(params: PoolParams) {
+  return new Pool<TorClientDuplex>(async (params) => {
     return await Result.unthrow(async t => {
-      const tor = await tryLoop(tryCreate, params).then(r => r.throw(t))
-
-      return new Ok(createPooledTorDisposer(tor, params as any))
+      using tor = new Box(await tryCreateTor().then(r => r.throw(t)))
+      return new Ok(createPooledTorDisposer(tor.moveOrThrow(), params))
     })
   }, params)
 }

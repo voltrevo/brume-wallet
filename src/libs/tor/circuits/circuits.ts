@@ -1,11 +1,44 @@
+import { Results } from "@/libs/results/results"
+import { Box } from "@hazae41/box"
+import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Disposer } from "@hazae41/cleaner"
-import { Circuit, TorClientDuplex, createPooledCircuitDisposer } from "@hazae41/echalote"
+import { Circuit, Consensus, TorClientDuplex, createPooledCircuitDisposer } from "@hazae41/echalote"
+import { fetch } from "@hazae41/fleche"
 import { Mutex } from "@hazae41/mutex"
 import { None } from "@hazae41/option"
-import { Pool, PoolParams } from "@hazae41/piscine"
+import { Cancel, Looped, Pool, PoolParams, Retry, tryLoop } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
 
 export namespace Circuits {
+
+  export async function tryOpenAs(circuit: Circuit, input: RequestInfo | URL) {
+    return await Result.runAndDoubleWrap(() => openAsOrThrow(circuit, input))
+  }
+
+  export async function openAsOrThrow(circuit: Circuit, input: RequestInfo | URL) {
+    const req = new Request(input)
+    const url = new URL(req.url)
+
+    if (url.protocol === "http:" || url.protocol === "ws:") {
+      const tcp = await circuit.openOrThrow(url.hostname, Number(url.port) || 80)
+
+      return new Disposer(tcp.outer, () => tcp.close())
+    }
+
+    if (url.protocol === "https:" || url.protocol === "wss:") {
+      const tcp = await circuit.openOrThrow(url.hostname, Number(url.port) || 443)
+
+      const ciphers = [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384]
+      const tls = new TlsClientDuplex({ host_name: url.hostname, ciphers })
+
+      tcp.outer.readable.pipeTo(tls.inner.writable).catch(() => { })
+      tls.inner.readable.pipeTo(tcp.outer.writable).catch(() => { })
+
+      return new Disposer(tls.outer, () => tcp.close())
+    }
+
+    throw new Error(url.protocol)
+  }
 
   /**
    * Create a pool of Circuits modulo a pool of Tor clients
@@ -13,38 +46,114 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function createPool<TorPoolError>(tors: Pool<Disposer<TorClientDuplex>, TorPoolError>, params: PoolParams) {
-    return new Pool<Disposer<Circuit>, Error | TorPoolError>(async (params) => {
-      return await Result.unthrow(async t => {
-        const { pool, index, signal } = params
+  export function createCircuitPool(tors: Mutex<Pool<TorClientDuplex>>, consensus: Consensus, params: PoolParams) {
+    const middles = consensus.microdescs.filter(it => true
+      && it.flags.includes("Fast")
+      && it.flags.includes("Stable")
+      && it.flags.includes("V2Dir"))
 
-        const tor = await tors.tryGetOrWait(index % tors.capacity).then(r => r.inspectErrSync(() => {
-          tors.events.on("started", async i => {
-            if (i !== (index % tors.capacity))
-              return new None()
-            await pool.restart(index)
-            return new None()
-          }, { passive: true, once: true })
-        }).throw(t).inner)
+    const exits = consensus.microdescs.filter(it => true
+      && it.flags.includes("Fast")
+      && it.flags.includes("Stable")
+      && it.flags.includes("Exit")
+      && !it.flags.includes("BadExit"))
 
-        const circuit = await tor.tryCreateAndExtendLoop(signal).then(r => r.throw(t))
+    let update = Date.now()
 
-        const onCloseOrError = async (reason?: unknown) => {
-          await pool.restart(index)
-          return new None()
-        }
+    const pool = new Pool<Circuit>(async (params) => {
+      while (true) {
+        const start = Date.now()
 
-        circuit.events.on("close", onCloseOrError, { passive: true })
-        circuit.events.on("error", onCloseOrError, { passive: true })
+        const result = await Result.unthrow<Result<Disposer<Box<Circuit>>, Error>>(async t => {
+          const { index, signal } = params
 
-        const onClean = () => {
-          circuit.events.off("close", onCloseOrError)
-          circuit.events.off("error", onCloseOrError)
-        }
+          const tor = await tors.inner.tryGetOrWait(index % tors.inner.capacity, signal).then(r => r.throw(t).throw(t).inner.inner)
 
-        return new Ok(new Disposer(circuit, onClean))
-      })
+          using circuit = await tryLoop<Box<Circuit>, Looped<Error>>(async () => {
+            return await Result.unthrow(async t => {
+              using circuit = new Box(await tor.tryCreate(AbortSignal.timeout(1000)).then(r => r.mapErrSync(Cancel.new).throw(t)))
+
+              /**
+               * Try to extend to middle relay 9 times before giving up this circuit
+               */
+              await tryLoop(() => {
+                return Result.unthrow<Result<void, Looped<Error>>>(async t => {
+                  const head = middles[Math.floor(Math.random() * middles.length)]
+                  const body = await Consensus.Microdesc.tryFetch(circuit.inner, head).then(r => r.mapErrSync(Cancel.new).throw(t))
+                  await circuit.inner.tryExtend(body, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Retry.new).throw(t))
+
+                  return Ok.void()
+                })
+              }, { max: 3 }).then(r => r.mapErrSync(Retry.new).throw(t))
+
+              /**
+               * Try to extend to exit relay 9 times before giving up this circuit
+               */
+              await tryLoop(() => {
+                return Result.unthrow<Result<void, Looped<Error>>>(async t => {
+                  const head = exits[Math.floor(Math.random() * exits.length)]
+                  const body = await Consensus.Microdesc.tryFetch(circuit.inner, head).then(r => r.mapErrSync(Cancel.new).throw(t))
+                  await circuit.inner.tryExtend(body, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Retry.new).throw(t))
+
+                  return Ok.void()
+                })
+              }, { max: 3 }).then(r => r.mapErrSync(Retry.new).throw(t))
+
+              /**
+               * Try to open a stream to a reliable endpoint
+               */
+              using stream = await tryOpenAs(circuit.inner, "http://example.com/").then(r => r.mapErrSync(Retry.new).throw(t))
+
+              /**
+               * Reliability test
+               */
+              for (let i = 0; i < 3; i++) {
+                /**
+                 * Speed test
+                 */
+                const signal = AbortSignal.timeout(1000)
+
+                await Result.runAndDoubleWrap(async () => {
+                  await fetch("http://example.com/", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())
+                }).then(r => r.mapErrSync(Retry.new).throw(t))
+              }
+
+              return new Ok(circuit.moveOrThrow())
+            })
+          }, { max: 9 }).then(r => r.throw(t))
+
+          return new Ok(createPooledCircuitDisposer(circuit.moveOrThrow(), params))
+        }).then(Results.log)
+
+        if (result.isOk())
+          return result
+
+        if (start < update)
+          continue
+
+        return result
+      }
     }, params)
+
+    tors.inner.events.on("started", async i => {
+      update = Date.now()
+
+      for (let i = 0; i < pool.capacity; i++) {
+        const child = pool.tryGetSync(i)
+
+        if (child.isErr())
+          continue
+
+        if (child.inner.isErr())
+          pool.restart(i)
+
+        continue
+      }
+
+      return new None()
+    }, { passive: true })
+
+    return new Mutex(pool)
   }
 
   /**
@@ -53,32 +162,47 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function createSubpool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
-    return new Pool<Disposer<Circuit>, Error>(async (params) => {
-      return await Result.unthrow(async t => {
-        const { pool, index } = params
+  export function createSubpool(circuits: Mutex<Pool<Circuit>>, params: PoolParams) {
+    let update = Date.now()
 
-        while (true) {
-          const circuit = await Pool.takeCryptoRandom(circuits).then(r => r.inspectErrSync(() => {
-            circuits.inner.events.on("started", async i => {
-              await pool.restart(index)
-              return new None()
-            }, { passive: true, once: true })
-          }).throw(t).result.get().inner)
+    const pool = new Pool<Circuit>(async (params) => {
+      while (true) {
+        const start = Date.now()
 
-          /**
-           * TODO fix pooling
-           */
-          if (circuit.destroyed) {
-            console.warn("Circuit already destroyed")
-            await new Promise(ok => setTimeout(ok, 1000))
-            continue
-          }
+        const result = await Result.unthrow<Result<Disposer<Box<Circuit>>, Error>>(async t => {
+          using circuit = await Pool.tryTakeCryptoRandom(circuits).then(r => r.throw(t).throw(t).inner)
+          return new Ok(createPooledCircuitDisposer(circuit.moveOrThrow(), params))
+        }).then(Results.log)
 
-          return new Ok(createPooledCircuitDisposer(circuit, params as any))
-        }
-      })
+        if (result.isOk())
+          return result
+
+        if (start < update)
+          continue
+
+        return result
+      }
     }, params)
+
+    circuits.inner.events.on("started", async () => {
+      update = Date.now()
+
+      for (let i = 0; i < pool.capacity; i++) {
+        const child = pool.tryGetSync(i)
+
+        if (child.isErr())
+          continue
+
+        if (child.inner.isErr())
+          pool.restart(i)
+
+        continue
+      }
+
+      return new None()
+    }, { passive: true })
+
+    return new Mutex(pool)
   }
 
 }

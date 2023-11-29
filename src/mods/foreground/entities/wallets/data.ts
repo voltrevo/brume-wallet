@@ -165,7 +165,7 @@ export class EthereumAuthPrivateKeyWalletInstance {
       const { idBase64, ivBase64 } = this.data.privateKey
 
       const id = Base64.get().tryDecodePadded(idBase64).throw(t).copyAndDispose()
-      const cipher = await WebAuthnStorage.get(id).then(r => r.throw(t))
+      const cipher = await WebAuthnStorage.tryGet(id).then(r => r.throw(t))
       const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
 
       const privateKeyBase64 = await background.tryRequest<string>({

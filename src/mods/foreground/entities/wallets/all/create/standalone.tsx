@@ -125,7 +125,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
 
       const [_, cipherBase64] = triedEncryptedPrivateKey.throw(t)
       const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
-      const id = await WebAuthnStorage.create(defNameInput, cipher).then(r => r.throw(t))
+      const id = await WebAuthnStorage.tryCreate(defNameInput, cipher).then(r => r.throw(t))
 
       setId(id)
 
@@ -156,7 +156,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
 
       const [ivBase64, cipherBase64] = triedEncryptedPrivateKey.throw(t)
       const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
-      const cipher2 = await WebAuthnStorage.get(id).then(r => r.throw(t))
+      const cipher2 = await WebAuthnStorage.tryGet(id).then(r => r.throw(t))
 
       if (!Bytes.equals(cipher, cipher2))
         return new Err(new WebAuthnStorageError())

@@ -6,6 +6,7 @@ import { ExtensionPort } from "@/libs/channel/channel"
 import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch"
 import { Mouse } from "@/libs/mouse/mouse"
 import { NonReadonly } from "@/libs/types/readonly"
+import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/cleaner"
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
@@ -113,7 +114,7 @@ async function tryGetOrigin() {
   return new Ok(origin)
 }
 
-new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
+new Pool<Disposer<chrome.runtime.Port>>(async (params) => {
   return Result.unthrow(async t => {
     const { index, pool } = params
 
@@ -125,12 +126,16 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       return port
     }).then(r => r.throw(t))
 
-    const background = new ExtensionPort("background", raw)
+    using preresource = new Box(new Disposer(raw, () => raw.disconnect()))
+    using prebackground = new Box(new ExtensionPort("background", preresource.getOrThrow().inner))
+
+    const resource = preresource.moveOrThrow()
+    const background = prebackground.moveOrThrow()
 
     const onScriptRequest = async (input: CustomEvent<string>) => {
       const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
 
-      const result = await background.tryRequest({ method: "brume_run", params: [request, mouse] })
+      const result = await prebackground.tryRequest({ method: "brume_run", params: [request, mouse] })
       const response = RpcResponse.rewrap(request.id, result.andThenSync(r => r))
 
       const detail = JSON.stringify(response)
@@ -138,14 +143,13 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       window.dispatchEvent(output)
     }
 
-    window.addEventListener("ethereum:request", onScriptRequest, { passive: true })
-
     const onAccountsChanged = async (request: RpcRequestPreinit<unknown>) => {
       const [accounts] = (request as RpcRequestPreinit<[string[]]>).params
 
       const detail = JSON.stringify(accounts)
       const event = new CustomEvent("ethereum:accountsChanged", { detail })
       window.dispatchEvent(event)
+
       return Ok.void()
     }
 
@@ -155,6 +159,7 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       const detail = JSON.stringify({ chainId })
       const event = new CustomEvent("ethereum:connect", { detail })
       window.dispatchEvent(event)
+
       return Ok.void()
     }
 
@@ -164,6 +169,7 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       const detail = JSON.stringify(chainId)
       const event = new CustomEvent("ethereum:chainChanged", { detail })
       window.dispatchEvent(event)
+
       return Ok.void()
     }
 
@@ -173,6 +179,7 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       const detail = JSON.stringify(chainId)
       const event = new CustomEvent("ethereum:networkChanged", { detail })
       window.dispatchEvent(event)
+
       return Ok.void()
     }
 
@@ -190,32 +197,33 @@ new Pool<Disposer<chrome.runtime.Port>, Error>(async (params) => {
       return new None()
     }
 
-    background.events.on("request", onBackgroundRequest, { passive: true })
-
     const onClose = async () => {
       const event = new CustomEvent("ethereum:disconnect", {})
       window.dispatchEvent(event)
 
-      await pool.restart(index)
+      pool.restart(index)
       return new None()
     }
 
-    background.events.on("close", onClose, { passive: true })
+    window.addEventListener("ethereum:request", onScriptRequest, { passive: true })
+    prebackground.events.on("request", onBackgroundRequest, { passive: true })
+    prebackground.events.on("close", onClose, { passive: true })
+
+    const onEntryClean = () => {
+      window.removeEventListener("ethereum:request", onScriptRequest)
+      prebackground.events.off("close", onClose)
+      preresource[Symbol.dispose]()
+    }
+
+    using entry = new Box(new Disposer(preresource.moveOrThrow(), onEntryClean))
 
     {
-      const icon = await background.tryRequest<string>({ method: "brume_icon" }).then(r => r.throw(t).throw(t))
+      const icon = await prebackground.tryRequest<string>({ method: "brume_icon" }).then(r => r.throw(t).throw(t))
       const detail = JSON.stringify(icon)
       const event = new CustomEvent("brume:icon", { detail })
       window.dispatchEvent(event)
     }
 
-    const onClean = () => {
-      window.removeEventListener("ethereum:request", onScriptRequest)
-      background.events.off("close", onClose)
-      background.clean()
-      raw.disconnect()
-    }
-
-    return new Ok(new Disposer(raw, onClean))
+    return new Ok(entry.unwrapOrThrow())
   })
 }, { capacity: 1 })

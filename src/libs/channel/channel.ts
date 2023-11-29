@@ -146,7 +146,7 @@ export class ExtensionPort {
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
-  readonly clean: () => void
+  #clean: () => void
 
   constructor(
     readonly name: string,
@@ -158,14 +158,16 @@ export class ExtensionPort {
     this.port.onMessage.addListener(onMessage)
     this.port.onDisconnect.addListener(onDisconnect)
 
-    this.clean = () => {
+    this.#clean = () => {
       this.port.onMessage.removeListener(onMessage)
       this.port.onDisconnect.removeListener(onDisconnect)
+
+      this.#clean = () => { }
     }
   }
 
   [Symbol.dispose]() {
-    this.clean()
+    this.#clean()
   }
 
   async tryRouteRequest(request: RpcRequestInit<unknown>) {

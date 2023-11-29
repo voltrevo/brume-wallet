@@ -287,7 +287,7 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
         port.events.off("request", onRequest)
         port.events.off("response", onResponse)
         port.events.off("close", onClose)
-        port.clean()
+        port.#clean()
         raw.disconnect()
       }
 

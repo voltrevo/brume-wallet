@@ -1,4 +1,4 @@
-import { Ok, Result } from "@hazae41/result"
+import { Result } from "@hazae41/result"
 
 export class WebAuthnStorageError extends Error {
   readonly #class = WebAuthnStorageError
@@ -24,58 +24,54 @@ export class WebAuthnStorageError extends Error {
  */
 export namespace WebAuthnStorage {
 
-  export async function create(name: string, data: Uint8Array): Promise<Result<Uint8Array, WebAuthnStorageError>> {
-    return await Result.unthrow(async t => {
-      const options: CredentialCreationOptions = {
-        publicKey: {
-          challenge: new Uint8Array([117, 61, 252, 231, 191, 241]),
-          rp: {
-            id: location.hostname,
-            name: "Brume Wallet"
-          },
-          user: {
-            id: data,
-            name: name,
-            displayName: name
-          },
-          pubKeyCredParams: [
-            { type: "public-key", alg: -7 },
-            { type: "public-key", alg: -8 },
-            { type: "public-key", alg: -257 }
-          ],
-          authenticatorSelection: {
-            authenticatorAttachment: "platform"
-          }
-        }
-      }
-
-      const credential = await Result.runAndWrap(async () => {
-        return await navigator.credentials.create(options) as any
-      }).then(r => r.mapErrSync(WebAuthnStorageError.from).throw(t))
-
-      const id = new Uint8Array(credential.rawId)
-
-      return new Ok(id)
-    })
+  export async function tryCreate(name: string, data: Uint8Array): Promise<Result<Uint8Array, WebAuthnStorageError>> {
+    return await Result.runAndWrap(async () => {
+      return await createOrThrow(name, data)
+    }).then(r => r.mapErrSync(WebAuthnStorageError.from))
   }
 
-  export async function get(id: Uint8Array): Promise<Result<Uint8Array, WebAuthnStorageError>> {
-    return await Result.unthrow(async t => {
-
-      const options: CredentialRequestOptions = {
-        publicKey: {
-          challenge: new Uint8Array([117, 61, 252, 231, 191, 241]),
-          allowCredentials: [{ type: "public-key", id }],
+  export async function createOrThrow(name: string, data: Uint8Array): Promise<Uint8Array> {
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge: new Uint8Array([117, 61, 252, 231, 191, 241]),
+        rp: {
+          id: location.hostname,
+          name: "Brume Wallet"
+        },
+        user: {
+          id: data,
+          name: name,
+          displayName: name
+        },
+        pubKeyCredParams: [
+          { type: "public-key", alg: -7 },
+          { type: "public-key", alg: -8 },
+          { type: "public-key", alg: -257 }
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: "platform"
         }
       }
+    }) as any
 
-      const credential = await Result.runAndWrap(async () => {
-        return await navigator.credentials.get(options) as any
-      }).then(r => r.mapErrSync(WebAuthnStorageError.from).throw(t))
-
-      const data = new Uint8Array(credential.response.userHandle)
-
-      return new Ok(data)
-    })
+    return new Uint8Array(credential.rawId)
   }
+
+  export async function tryGet(id: Uint8Array): Promise<Result<Uint8Array, WebAuthnStorageError>> {
+    return await Result.runAndWrap(async () => {
+      return await getOrThrow(id)
+    }).then(r => r.mapErrSync(WebAuthnStorageError.from))
+  }
+
+  export async function getOrThrow(id: Uint8Array): Promise<Uint8Array> {
+    const credential = await navigator.credentials.get({
+      publicKey: {
+        challenge: new Uint8Array([117, 61, 252, 231, 191, 241]),
+        allowCredentials: [{ type: "public-key", id }],
+      }
+    }) as any
+
+    return new Uint8Array(credential.response.userHandle)
+  }
+
 }
