@@ -1,5 +1,7 @@
+import { Results } from "@/libs/results/results";
 import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { WcBrume, WebSocketConnection } from "@/mods/background/service_worker/entities/brumes/data";
+import { Box } from "@hazae41/box";
 import { Disposer } from "@hazae41/cleaner";
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { Mutex } from "@hazae41/mutex";
@@ -35,8 +37,8 @@ export class IrnBrume {
     request: (request: RpcRequestPreinit<unknown>) => Result<unknown, Error>
   }>()
 
-  readonly pool: Pool<Disposer<IrnSockets>, Error>
-  readonly circuits: Mutex<Pool<Disposer<Pool<Disposer<WebSocketConnection>, Error>>, Error>>
+  readonly pool: Pool<IrnSockets>
+  readonly circuits: Mutex<Pool<Pool<WebSocketConnection>>>
 
   #closed?: { reason: unknown }
 
@@ -52,50 +54,79 @@ export class IrnBrume {
   }
 
   #pool() {
-    return new Pool<Disposer<IrnSockets>, Error>(async ({ index, pool }) => {
-      return await Result.unthrow(async t => {
-        if (this.#closed)
-          return new Err(new Error("Closed", { cause: this.#closed.reason }))
+    let update = Date.now()
 
-        const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.inspectErrSync(() => {
-          this.circuits.inner.events.on("started", async i => {
-            await pool.restart(index)
+    const pool = new Pool<IrnSockets>(async ({ index, pool }) => {
+      while (true) {
+        const start = Date.now()
+
+        const result = await Result.unthrow<Result<Disposer<Box<IrnSockets>>, Error>>(async t => {
+          if (this.#closed)
+            return new Err(new Error("Closed", { cause: this.#closed.reason }))
+
+          const circuit = await Pool.tryTakeCryptoRandom(this.circuits).then(r => r.throw(t).throw(t).inner.inner)
+
+          const irn = new IrnSockets(new Mutex(circuit))
+
+          for (const topic of this.topics)
+            await irn.trySubscribe(topic).then(r => r.throw(t))
+
+          const onRequest = async (request: RpcRequestPreinit<unknown>) => {
+            return await this.events.emit("request", [request])
+          }
+
+          const onCloseOrError = async () => {
+            pool.restart(index)
             return new None()
-          }, { passive: true, once: true })
-        }).throw(t).result.inner.inner)
+          }
 
-        const irn = new IrnSockets(new Mutex(circuit))
+          irn.events.on("request", onRequest, { passive: true })
+          irn.events.on("close", onCloseOrError, { passive: true })
+          irn.events.on("error", onCloseOrError, { passive: true })
 
-        for (const topic of this.topics)
-          await irn.trySubscribe(topic).then(r => r.throw(t))
+          const onEntryClean = () => {
+            irn.events.off("request", onRequest)
+            irn.events.off("close", onCloseOrError)
+            irn.events.off("error", onCloseOrError)
+          }
 
-        const onRequest = async (request: RpcRequestPreinit<unknown>) => {
-          return await this.events.emit("request", [request])
-        }
+          return new Ok(new Disposer(new Box(irn), onEntryClean))
+        }).then(Results.log)
 
-        const onCloseOrError = async () => {
-          await pool.restart(index)
-          return new None()
-        }
+        if (result.isOk())
+          return result
 
-        irn.events.on("request", onRequest, { passive: true })
-        irn.events.on("close", onCloseOrError, { passive: true })
-        irn.events.on("error", onCloseOrError, { passive: true })
+        if (start < update)
+          continue
 
-        const dispose = () => {
-          irn.events.off("request", onRequest)
-          irn.events.off("close", onCloseOrError)
-          irn.events.off("error", onCloseOrError)
-        }
-
-        return new Ok(new Disposer(irn, dispose))
-      })
+        return result
+      }
     }, { capacity: 1 })
+
+    this.circuits.inner.events.on("started", async () => {
+      update = Date.now()
+
+      for (let i = 0; i < pool.capacity; i++) {
+        const child = pool.tryGetSync(i)
+
+        if (child.isErr())
+          continue
+
+        if (child.inner.isErr())
+          pool.restart(i)
+
+        continue
+      }
+
+      return new None()
+    }, { passive: true })
+
+    return pool
   }
 
   async trySubscribe(topic: string): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const client = await this.pool.tryGetOrWait(0).then(r => r.throw(t).inner)
+      const client = await this.pool.tryGetOrWait(0).then(r => r.throw(t).throw(t).inner.inner)
       await client.trySubscribe(topic).then(r => r.throw(t))
       this.topics.add(topic)
       return Ok.void()
@@ -104,7 +135,7 @@ export class IrnBrume {
 
   async tryPublish(payload: IrnPublishPayload): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const client = await this.pool.tryGetOrWait(0).then(r => r.throw(t).inner)
+      const client = await this.pool.tryGetOrWait(0).then(r => r.throw(t).throw(t).inner.inner)
       await client.tryPublish(payload).then(r => r.throw(t))
       return Ok.void()
     })
@@ -116,7 +147,7 @@ export class IrnBrume {
 
       await this.events.emit("close", [reason])
 
-      const irn = await this.pool.tryGetOrWait(0).then(r => r.ok().mapSync(x => x.inner))
+      const irn = await this.pool.tryGetOrWait(0).then(r => r.flatten().ok().mapSync(x => x.inner.inner))
 
       if (irn.isNone())
         return Ok.void()
@@ -135,12 +166,12 @@ export class IrnSockets {
     request: (request: RpcRequestPreinit<unknown>) => Result<unknown, Error>
   }>()
 
-  readonly pool: Mutex<Pool<Disposer<IrnClient>, Error>>
+  readonly pool: Mutex<Pool<IrnClient>>
 
   #closed?: { reason: unknown }
 
   constructor(
-    readonly sockets: Mutex<Pool<Disposer<WebSocketConnection>, Error>>
+    readonly sockets: Mutex<Pool<WebSocketConnection>>
   ) {
     this.pool = new Mutex(this.#pool())
 
@@ -151,57 +182,89 @@ export class IrnSockets {
     return this.#closed
   }
 
-  async #onCreated(entry: PoolEntry<Disposer<IrnClient>, Error>) {
-    if (entry.result.isErr())
-      return await this.events.emit("error", [entry.result.inner])
+  async #onCreated(entry: PoolEntry<IrnClient>) {
+    if (entry.isErr())
+      return await this.events.emit("error", [entry.inner])
     return new None()
   }
 
   #pool() {
-    return new Pool<Disposer<IrnClient>, Error>(async ({ index, pool }) => {
-      return await Result.unthrow(async t => {
-        if (this.#closed)
-          return new Err(new Error("Closed", { cause: this.#closed.reason }))
+    let update = Date.now()
 
-        const { socket } = await Pool.takeCryptoRandom(this.sockets).then(r => r.inspectErrSync(() => {
-          this.sockets.inner.events.on("started", async i => {
-            await pool.restart(index)
+    const pool = new Pool<IrnClient>(async ({ index, pool }) => {
+      while (true) {
+        const start = Date.now()
+
+        const result = await Result.unthrow<Result<Disposer<Box<IrnClient>>, Error>>(async t => {
+          if (this.#closed)
+            return new Err(new Error("Closed", { cause: this.#closed.reason }))
+
+          using preconn = await Pool.tryTakeCryptoRandom(this.sockets).then(r => r.throw(t).throw(t).inner)
+          using preirn = new Box(new IrnClient(preconn.unwrapOrThrow().socket))
+
+          for (const topic of this.topics)
+            await preirn.inner.trySubscribe(topic).then(r => r.throw(t))
+
+          const onRequest = async (request: RpcRequestPreinit<unknown>) => {
+            return await this.events.emit("request", [request])
+          }
+
+          const onCloseOrError = async () => {
+            pool.restart(index)
             return new None()
-          }, { passive: true, once: true })
-        }).throw(t).result.inner.inner)
+          }
 
-        const irn = new IrnClient(socket)
+          preirn.inner.events.on("request", onRequest, { passive: true })
+          preirn.inner.events.on("close", onCloseOrError, { passive: true })
+          preirn.inner.events.on("error", onCloseOrError, { passive: true })
 
-        for (const topic of this.topics)
-          await irn.trySubscribe(topic).then(r => r.throw(t))
+          const irn = preirn.moveOrThrow()
 
-        const onRequest = async (request: RpcRequestPreinit<unknown>) => {
-          return await this.events.emit("request", [request])
-        }
+          const onEntryClean = () => {
+            using _ = irn
 
-        const onCloseOrError = async () => {
-          await pool.restart(index)
-          return new None()
-        }
+            irn.inner.events.off("request", onRequest)
+            irn.inner.events.off("close", onCloseOrError)
+            irn.inner.events.off("error", onCloseOrError)
+          }
 
-        irn.events.on("request", onRequest, { passive: true })
-        irn.events.on("close", onCloseOrError, { passive: true })
-        irn.events.on("error", onCloseOrError, { passive: true })
+          return new Ok(new Disposer(irn, onEntryClean))
+        }).then(Results.log)
 
-        const dispose = () => {
-          irn.events.off("request", onRequest)
-          irn.events.off("close", onCloseOrError)
-          irn.events.off("error", onCloseOrError)
-        }
+        if (result.isOk())
+          return result
 
-        return new Ok(new Disposer(irn, dispose))
-      })
+        if (start < update)
+          continue
+
+        return result
+      }
     }, { capacity: 1 })
+
+    this.sockets.inner.events.on("started", async () => {
+      update = Date.now()
+
+      for (let i = 0; i < pool.capacity; i++) {
+        const child = pool.tryGetSync(i)
+
+        if (child.isErr())
+          continue
+
+        if (child.inner.isErr())
+          pool.restart(i)
+
+        continue
+      }
+
+      return new None()
+    }, { passive: true })
+
+    return pool
   }
 
   async trySubscribe(topic: string): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const client = await this.pool.inner.tryGetOrWait(0).then(r => r.throw(t).inner)
+      const client = await this.pool.inner.tryGetOrWait(0).then(r => r.throw(t).throw(t).inner.inner)
       await client.trySubscribe(topic).then(r => r.throw(t))
       this.topics.add(topic)
       return Ok.void()
@@ -210,7 +273,7 @@ export class IrnSockets {
 
   async tryPublish(payload: IrnPublishPayload): Promise<Result<void, Error>> {
     return await Result.unthrow(async t => {
-      const client = await this.pool.inner.tryGetOrWait(0).then(r => r.throw(t).inner)
+      const client = await this.pool.inner.tryGetOrWait(0).then(r => r.throw(t).throw(t).inner.inner)
       await client.tryPublish(payload).then(r => r.throw(t))
       return Ok.void()
     })
@@ -222,7 +285,7 @@ export class IrnSockets {
 
       await this.events.emit("close", [reason])
 
-      const irn = await this.pool.inner.tryGetOrWait(0).then(r => r.ok().mapSync(x => x.inner))
+      const irn = await this.pool.inner.tryGetOrWait(0).then(r => r.flatten().ok().mapSync(x => x.inner.inner))
 
       if (irn.isNone())
         return Ok.void()
@@ -249,6 +312,10 @@ export class IrnClient {
     socket.addEventListener("message", this.#onMessage.bind(this), { passive: true })
     socket.addEventListener("close", this.#onClose.bind(this), { passive: true })
     socket.addEventListener("error", this.#onError.bind(this), { passive: true })
+  }
+
+  [Symbol.dispose]() {
+    this.tryClose(undefined).catch(console.error)
   }
 
   get closed() {
@@ -315,12 +382,10 @@ export class IrnClient {
   }
 
   async tryClose(reason: unknown): Promise<Result<void, Error>> {
-    return Result.unthrow(async t => {
-      this.#closed = { reason }
-      await this.events.emit("close", [reason])
-      this.socket.close()
-      return Ok.void()
-    })
+    this.#closed = { reason }
+    await this.events.emit("close", [reason])
+    this.socket.close()
+    return Ok.void()
   }
 
 }
