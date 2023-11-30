@@ -202,7 +202,7 @@ export namespace Circuits {
       return new None()
     }, { passive: true })
 
-    return new Mutex(pool)
+    return pool
   }
 
 }

@@ -1,13 +1,15 @@
 import { Chains } from "@/libs/ethereum/mods/chain"
 import { Objects } from "@/libs/objects/objects"
+import { Results } from "@/libs/results/results"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Sockets } from "@/libs/sockets/sockets"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { Jwt } from "@/libs/wconn/mods/jwt/jwt"
 import { Wc } from "@/libs/wconn/mods/wc/wc"
+import { Box } from "@hazae41/box"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Disposer } from "@hazae41/cleaner"
-import { Circuit, createPooledCircuitDisposer } from "@hazae41/echalote"
+import { Circuit } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { RpcCounter } from "@hazae41/jsonrpc"
@@ -18,25 +20,19 @@ import { Err, Ok, Result } from "@hazae41/result"
 
 export interface WcBrume {
   readonly key: Ed25519.PrivateKey
-  readonly circuits: Pool<Disposer<Circuit>, Error>
-  readonly sockets: Pool<Disposer<Pool<Disposer<WebSocketConnection>, Error>>, Error>
+  readonly circuits: Pool<Circuit>
+  readonly sockets: Pool<Pool<WebSocketConnection>>
 }
 
-export type EthBrumes =
-  Pool<Disposer<EthBrume>, Error>
+export type EthBrumes = Pool<EthBrume>
 
-export interface EthBrume extends Chains<Pool<Disposer<Pool<Disposer<RpcConnection>, Error>>, Error>> {
-  readonly circuits: Pool<Disposer<Circuit>, Error>
+export interface EthBrume extends Chains<Pool<Pool<RpcConnection>>> {
+  readonly circuits: Pool<Circuit>
 }
 
 export type Connection =
   | WebSocketConnection
   | UrlConnection
-
-export interface RpcConnection {
-  readonly counter: RpcCounter
-  readonly connection: Connection
-}
 
 export class WebSocketConnection {
 
@@ -46,6 +42,10 @@ export class WebSocketConnection {
     readonly circuit: Circuit,
     readonly socket: WebSocket
   ) { }
+
+  [Symbol.dispose]() {
+    this.socket.close()
+  }
 
   get cooldown() {
     const cooldown = this.#cooldown
@@ -70,6 +70,8 @@ export class UrlConnection {
     readonly url: URL
   ) { }
 
+  [Symbol.dispose]() { }
+
   isWebSocket(): false {
     return false
   }
@@ -82,7 +84,7 @@ export class UrlConnection {
 
 export namespace WcBrume {
 
-  export async function tryCreate(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, key: Ed25519.PrivateKey): Promise<Result<WcBrume, Error>> {
+  export async function tryCreate(circuits: Mutex<Pool<Circuit>>, key: Ed25519.PrivateKey): Promise<Result<WcBrume, Error>> {
     return await Result.unthrow(async t => {
       const relay = Wc.RELAY
       const auth = await Jwt.trySign(key, relay).then(r => r.throw(t))
@@ -90,27 +92,27 @@ export namespace WcBrume {
       const url = `${relay}/?auth=${auth}&projectId=${projectId}`
 
       const subcircuits = Circuits.createSubpool(circuits, { capacity: 2 })
-      const sockets = WebSocketConnection.createPools(subcircuits, [url])
+      const subsockets = WebSocketConnection.createPools(subcircuits, [url])
 
-      return new Ok({ key, circuits: subcircuits, sockets })
+      return new Ok({ key, circuits: subcircuits, sockets: subsockets })
     })
   }
 
-  export function createPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, params: PoolParams) {
-    return new Pool<Disposer<WcBrume>, Error>(async (params) => {
-      return await Result.unthrow<Result<Disposer<WcBrume>, Error>>(async t => {
+  export function createPool(circuits: Mutex<Pool<Circuit>>, params: PoolParams) {
+    return new Pool<WcBrume>(async (params) => {
+      return await Result.unthrow<Result<Disposer<Box<WcBrume>>, Error>>(async t => {
         const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
-        const brume = await tryCreate(circuits, key).then(r => r.throw(t))
+        const brume = new Box(await tryCreate(circuits, key).then(r => r.throw(t)))
 
         /**
          * Wait for at least one ready circuit (or skip if all are errored)
          */
-        await brume.circuits.tryGetRandom().then(r => r.ignore())
+        await brume.inner.circuits.tryGetRandom().then(r => r.ignore())
 
         /**
          * Wait for at least one ready socket pool (or skip if all are errored)
          */
-        await brume.sockets.tryGetRandom().then(r => r.ignore())
+        await brume.inner.sockets.tryGetRandom().then(r => r.ignore())
 
         return new Ok(new Disposer(brume, () => { }))
       })
@@ -120,21 +122,21 @@ export namespace WcBrume {
 
 export namespace EthBrume {
 
-  export function create(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, chains: Chains): EthBrume {
+  export function create(circuits: Mutex<Pool<Circuit>>, chains: Chains): EthBrume {
     const subcircuits = Circuits.createSubpool(circuits, { capacity: 3 })
     const conns = Objects.mapValuesSync(chains, x => RpcCircuits.create(subcircuits, x.urls))
 
     return { ...conns, circuits: subcircuits }
   }
 
-  export function createPool(circuits: Mutex<Pool<Disposer<Circuit>, Error>>, chains: Chains, params: PoolParams) {
-    return new Pool<Disposer<EthBrume>, Error>(async (params) => {
-      const brume = EthBrume.create(circuits, chains)
+  export function createPool(circuits: Mutex<Pool<Circuit>>, chains: Chains, params: PoolParams) {
+    return new Pool<EthBrume>(async (params) => {
+      const brume = new Box(EthBrume.create(circuits, chains))
 
       /**
        * Wait for at least one ready circuit (or skip if all are errored)
        */
-      await brume.circuits.tryGetRandom().then(r => r.ignore())
+      await brume.inner.circuits.tryGetRandom().then(r => r.ignore())
 
       return new Ok(new Disposer(brume, () => { }))
     }, params)
@@ -157,8 +159,17 @@ export namespace WebSocketConnection {
 
       if (url.protocol === "wss:") {
         const tcp = await circuit.tryOpen(url.hostname, 443).then(r => r.throw(t))
-        const tls = new TlsClientDuplex(tcp, { ciphers: [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384], host_name: url.hostname })
-        const socket = new Fleche.WebSocket(url, undefined, { subduplex: tls })
+
+        const ciphers = [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384]
+        const tls = new TlsClientDuplex({ ciphers, host_name: url.hostname })
+
+        tcp.outer.readable.pipeTo(tls.inner.writable).catch(() => { })
+        tls.inner.readable.pipeTo(tcp.outer.writable).catch(() => { })
+
+        const socket = new Fleche.WebSocket(url)
+
+        tls.outer.readable.pipeTo(socket.inner.writable).catch(() => { })
+        socket.inner.readable.pipeTo(tls.outer.writable).catch(() => { })
 
         await Sockets.tryWaitOpen(socket, signal2).then(r => r.throw(t))
 
@@ -167,7 +178,10 @@ export namespace WebSocketConnection {
 
       if (url.protocol === "ws:") {
         const tcp = await circuit.tryOpen(url.hostname, 80).then(r => r.throw(t))
-        const socket = new Fleche.WebSocket(url, undefined, { subduplex: tcp })
+        const socket = new Fleche.WebSocket(url)
+
+        tcp.outer.readable.pipeTo(socket.inner.writable).catch(() => { })
+        socket.inner.readable.pipeTo(tcp.outer.writable).catch(() => { })
 
         await Sockets.tryWaitOpen(socket, signal2).then(r => r.throw(t))
 
@@ -185,27 +199,30 @@ export namespace WebSocketConnection {
    * @returns 
    */
   export function createPool(circuit: Circuit, urls: readonly string[]) {
-    return new Pool<Disposer<WebSocketConnection>, Error>(async (params) => {
-      return await Result.unthrow<Result<Disposer<WebSocketConnection>, Error>>(async t => {
+    return new Pool<WebSocketConnection>(async (params) => {
+      return await Result.unthrow<Result<Disposer<Box<WebSocketConnection>>, Error>>(async t => {
         const { pool, index, signal } = params
 
         const url = new URL(urls[index])
-
-        const connection = await WebSocketConnection.tryCreate(circuit, url, signal).then(r => r.throw(t))
+        const raw = await WebSocketConnection.tryCreate(circuit, url, signal).then(r => r.throw(t))
 
         const onCloseOrError = async () => {
-          await pool.restart(index)
+          pool.restart(index)
         }
 
-        connection.socket.addEventListener("close", onCloseOrError, { passive: true })
-        connection.socket.addEventListener("error", onCloseOrError, { passive: true })
+        raw.socket.addEventListener("close", onCloseOrError, { passive: true })
+        raw.socket.addEventListener("error", onCloseOrError, { passive: true })
 
-        const onClean = () => {
-          connection.socket.removeEventListener("close", onCloseOrError)
-          connection.socket.removeEventListener("error", onCloseOrError)
+        const box = new Box(raw)
+
+        const onEntryClean = () => {
+          using _ = box
+
+          raw.socket.removeEventListener("close", onCloseOrError)
+          raw.socket.removeEventListener("error", onCloseOrError)
         }
 
-        return new Ok(new Disposer(connection, onClean))
+        return new Ok(new Disposer(box, onEntryClean))
       })
     }, { capacity: urls.length })
   }
@@ -216,44 +233,83 @@ export namespace WebSocketConnection {
    * @param urls 
    * @returns 
    */
-  export function createPools(subcircuits: Pool<Disposer<Circuit>, Error>, urls: readonly string[]) {
-    return new Pool<Disposer<Pool<Disposer<WebSocketConnection>, Error>>, Error>(async (params) => {
-      return await Result.unthrow<Result<Disposer<Pool<Disposer<WebSocketConnection>, Error>>, Error>>(async t => {
-        const { pool, index } = params
+  export function createPools(subcircuits: Pool<Circuit>, urls: readonly string[]) {
+    let update = Date.now()
 
-        const circuit = await subcircuits.tryGetOrWait(index % subcircuits.capacity).then(r => r.inspectErrSync(() => {
-          subcircuits.events.on("started", async i => {
-            if (i !== (index % subcircuits.capacity))
-              return new None()
-            await pool.restart(index)
+    const pool = new Pool<Pool<WebSocketConnection>>(async (params) => {
+      while (true) {
+        const start = Date.now()
+
+        const result = await Result.unthrow<Result<Disposer<Box<Pool<WebSocketConnection>>>, Error>>(async t => {
+          const { pool, index } = params
+
+          const circuit = await subcircuits.tryGetOrWait(index % subcircuits.capacity).then(r => r.throw(t).throw(t).inner.inner)
+          const subpool = new Box(WebSocketConnection.createPool(circuit, urls))
+
+          const onCloseOrError = async (reason?: unknown) => {
+            pool.restart(index)
             return new None()
-          }, { passive: true, once: true })
-        }).throw(t).inner)
+          }
 
-        const connections = WebSocketConnection.createPool(circuit, urls)
+          circuit.events.on("close", onCloseOrError, { passive: true })
+          circuit.events.on("error", onCloseOrError, { passive: true })
 
-        /**
-         * Restart this index when the circuit dies
-         */
-        const { dispose } = createPooledCircuitDisposer(circuit, params as any)
+          const onEntryClean = () => {
+            circuit.events.off("close", onCloseOrError)
+            circuit.events.off("error", onCloseOrError)
+          }
 
-        /**
-         * Wait for at least one ready connection (or skip if all are errored)
-         */
-        await connections.tryGetRandom().then(r => r.ignore())
+          /**
+           * Wait for at least one ready connection (or skip if all are errored)
+           */
+          await subpool.inner.tryGetRandom().then(r => r.ignore())
 
-        return new Ok(new Disposer(connections, dispose))
-      })
+          return new Ok(new Disposer(subpool, onEntryClean))
+        }).then(Results.log)
+
+        if (result.isOk())
+          return result
+
+        if (start < update)
+          continue
+
+        return result
+      }
     }, { capacity: subcircuits.capacity })
+
+    subcircuits.events.on("started", async () => {
+      update = Date.now()
+
+      for (let i = 0; i < pool.capacity; i++) {
+        const child = pool.tryGetSync(i)
+
+        if (child.isErr())
+          continue
+
+        if (child.inner.isErr())
+          pool.restart(i)
+
+        continue
+      }
+
+      return new None()
+    }, { passive: true })
+
+    return pool
   }
 
 }
 
-export namespace RpcConnection {
+export class RpcConnection {
 
-  export function from(connection: Connection) {
-    const counter = new RpcCounter()
-    return { connection, counter }
+  readonly counter = new RpcCounter()
+
+  constructor(
+    readonly connection: Connection
+  ) { }
+
+  [Symbol.dispose]() {
+    this.connection[Symbol.dispose]()
   }
 
 }
@@ -267,32 +323,40 @@ export namespace RpcConnections {
    * @returns 
    */
   export function create(circuit: Circuit, urls: readonly string[]) {
-    return new Pool<Disposer<RpcConnection>, Error>(async (params) => {
-      return await Result.unthrow<Result<Disposer<RpcConnection>, Error>>(async t => {
+    return new Pool<RpcConnection>(async (params) => {
+      return await Result.unthrow<Result<Disposer<Box<RpcConnection>>, Error>>(async t => {
         const { pool, index, signal } = params
 
         const url = new URL(urls[index])
 
-        if (url.protocol === "http:")
-          return new Ok(new Disposer(RpcConnection.from(new UrlConnection(circuit, url)), () => { }))
-        if (url.protocol === "https:")
-          return new Ok(new Disposer(RpcConnection.from(new UrlConnection(circuit, url)), () => { }))
+        if (url.protocol === "http:" || url.protocol === "https:") {
+          const box = new Box(new RpcConnection(new UrlConnection(circuit, url)))
 
-        const connection = await WebSocketConnection.tryCreate(circuit, url, signal).then(r => r.throw(t))
+          const onEntryClean = () => {
+            using _ = box
+          }
+
+          return new Ok(new Disposer(box, onEntryClean))
+        }
+
+        const raw = await WebSocketConnection.tryCreate(circuit, url, signal).then(r => r.throw(t))
+        const box = new Box(new RpcConnection(raw))
 
         const onCloseOrError = async () => {
-          await pool.restart(index)
+          pool.restart(index)
         }
 
-        connection.socket.addEventListener("close", onCloseOrError, { passive: true })
-        connection.socket.addEventListener("error", onCloseOrError, { passive: true })
+        raw.socket.addEventListener("close", onCloseOrError, { passive: true })
+        raw.socket.addEventListener("error", onCloseOrError, { passive: true })
 
-        const onClean = () => {
-          connection.socket.removeEventListener("close", onCloseOrError)
-          connection.socket.removeEventListener("error", onCloseOrError)
+        const onEntryClean = () => {
+          using _ = box
+
+          raw.socket.removeEventListener("close", onCloseOrError)
+          raw.socket.removeEventListener("error", onCloseOrError)
         }
 
-        return new Ok(new Disposer(RpcConnection.from(connection), onClean))
+        return new Ok(new Disposer(box, onEntryClean))
       })
     }, { capacity: urls.length })
   }
@@ -307,39 +371,69 @@ export namespace RpcCircuits {
    * @param urls 
    * @returns 
    */
-  export function create(subcircuits: Pool<Disposer<Circuit>, Error>, urls: readonly string[]) {
-    return new Pool<Disposer<Pool<Disposer<RpcConnection>, Error>>, Error>(async (params) => {
-      return await Result.unthrow<Result<Disposer<Pool<Disposer<RpcConnection>, Error>>, Error>>(async t => {
-        const { pool, index } = params
+  export function create(subcircuits: Pool<Circuit>, urls: readonly string[]) {
+    let update = Date.now()
 
-        const circuit = await subcircuits.tryGetOrWait(index % subcircuits.capacity).then(r => r.inspectErrSync(e => {
-          subcircuits.events.on("started", async i => {
-            if (i !== (index % subcircuits.capacity))
-              return new None()
-            await pool.restart(index)
+    const pool = new Pool<Pool<RpcConnection>>(async (params) => {
+      while (true) {
+        const start = Date.now()
+
+        const result = await Result.unthrow<Result<Disposer<Box<Pool<RpcConnection>>>, Error>>(async t => {
+          const { pool, index } = params
+
+          const circuit = await subcircuits.tryGetOrWait(index % subcircuits.capacity).then(r => r.throw(t).throw(t).inner.inner)
+          const subpool = new Box(RpcConnections.create(circuit, urls))
+
+          const onCloseOrError = async (reason?: unknown) => {
+            pool.restart(index)
             return new None()
-          }, { passive: true, once: true })
-        }).throw(t).inner)
+          }
 
-        // if (circuit.destroyed)
-        //   console.error("Circuit is already destroyed :(")
+          circuit.events.on("close", onCloseOrError, { passive: true })
+          circuit.events.on("error", onCloseOrError, { passive: true })
 
-        const connections = RpcConnections.create(circuit, urls)
+          const onEntryClean = () => {
+            circuit.events.off("close", onCloseOrError)
+            circuit.events.off("error", onCloseOrError)
+          }
 
-        /**
-         * Restart this index when the circuit dies
-         */
-        const { dispose } = createPooledCircuitDisposer(circuit, params as any)
+          /**
+           * Wait for at least one ready connection (or skip if all are errored)
+           */
+          await subpool.inner.tryGetRandom().then(r => r.ignore())
 
-        /**
-         * Wait for at least one ready connection (or skip if all are errored)
-         * (it will be instant if there is at least one HTTP connection)
-         */
-        await connections.tryGetRandom().then(r => r.ignore())
+          return new Ok(new Disposer(subpool, onEntryClean))
+        }).then(Results.log)
 
-        return new Ok(new Disposer(connections, dispose))
-      })
+        if (result.isOk())
+          return result
+
+        if (start < update)
+          continue
+
+        return result
+      }
     }, { capacity: subcircuits.capacity })
+
+    subcircuits.events.on("started", async () => {
+      update = Date.now()
+
+      for (let i = 0; i < pool.capacity; i++) {
+        const child = pool.tryGetSync(i)
+
+        if (child.isErr())
+          continue
+
+        if (child.inner.isErr())
+          pool.restart(i)
+
+        continue
+      }
+
+      return new None()
+    }, { passive: true })
+
+    return pool
   }
 
 }

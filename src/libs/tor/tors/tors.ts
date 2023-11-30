@@ -1,5 +1,5 @@
 import { Box } from "@hazae41/box"
-import { TorClientDuplex, createPooledTorDisposer, createWebSocketSnowflakeStream } from "@hazae41/echalote"
+import { TorClientDuplex, createTorEntry, createWebSocketSnowflakeStream } from "@hazae41/echalote"
 import { Pool, PoolParams } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
 
@@ -26,7 +26,7 @@ export function createTorPool(params: PoolParams) {
   return new Pool<TorClientDuplex>(async (params) => {
     return await Result.unthrow(async t => {
       using tor = new Box(await tryCreateTor().then(r => r.throw(t)))
-      return new Ok(createPooledTorDisposer(tor.moveOrThrow(), params))
+      return new Ok(createTorEntry(tor.moveOrThrow(), params))
     })
   }, params)
 }
