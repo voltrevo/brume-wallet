@@ -114,7 +114,7 @@ async function tryGetOrigin() {
   return new Ok(origin)
 }
 
-new Pool<Disposer<chrome.runtime.Port>>(async (params) => {
+new Pool<Disposer<ExtensionPort>>(async (params) => {
   return Result.unthrow(async t => {
     const { index, pool } = params
 
@@ -126,16 +126,23 @@ new Pool<Disposer<chrome.runtime.Port>>(async (params) => {
       return port
     }).then(r => r.throw(t))
 
-    using preresource = new Box(new Disposer(raw, () => raw.disconnect()))
-    using prebackground = new Box(new ExtensionPort("background", preresource.getOrThrow().inner))
+    using preport = new Box(new Disposer(raw, () => raw.disconnect()))
+    using prerouter = new Box(new ExtensionPort("background", preport.inner.inner))
 
-    const resource = preresource.moveOrThrow()
-    const background = prebackground.moveOrThrow()
+    const port = preport.moveOrThrow()
+    const router = prerouter.moveOrThrow()
+
+    const onInnerClean = () => {
+      using postrouter = router
+      using postport = port
+    }
+
+    using preinner = new Box(new Disposer(router.inner, onInnerClean))
 
     const onScriptRequest = async (input: CustomEvent<string>) => {
       const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
 
-      const result = await prebackground.tryRequest({ method: "brume_run", params: [request, mouse] })
+      const result = await router.inner.tryRequest({ method: "brume_run", params: [request, mouse] })
       const response = RpcResponse.rewrap(request.id, result.andThenSync(r => r))
 
       const detail = JSON.stringify(response)
@@ -206,24 +213,28 @@ new Pool<Disposer<chrome.runtime.Port>>(async (params) => {
     }
 
     window.addEventListener("ethereum:request", onScriptRequest, { passive: true })
-    prebackground.events.on("request", onBackgroundRequest, { passive: true })
-    prebackground.events.on("close", onClose, { passive: true })
+    router.inner.events.on("request", onBackgroundRequest, { passive: true })
+    router.inner.events.on("close", onClose, { passive: true })
+
+    const inner = preinner.moveOrThrow()
 
     const onEntryClean = () => {
+      using postinner = inner
+
       window.removeEventListener("ethereum:request", onScriptRequest)
-      prebackground.events.off("close", onClose)
-      preresource[Symbol.dispose]()
+      router.inner.events.off("request", onBackgroundRequest)
+      router.inner.events.off("close", onClose)
     }
 
-    using entry = new Box(new Disposer(preresource.moveOrThrow(), onEntryClean))
+    using preentry = new Box(new Disposer(inner, onEntryClean))
 
     {
-      const icon = await prebackground.tryRequest<string>({ method: "brume_icon" }).then(r => r.throw(t).throw(t))
+      const icon = await router.inner.tryRequest<string>({ method: "brume_icon" }).then(r => r.throw(t).throw(t))
       const detail = JSON.stringify(icon)
       const event = new CustomEvent("brume:icon", { detail })
       window.dispatchEvent(event)
     }
 
-    return new Ok(entry.unwrapOrThrow())
+    return new Ok(preentry.unwrapOrThrow())
   })
 }, { capacity: 1 })

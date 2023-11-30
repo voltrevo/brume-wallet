@@ -2,7 +2,7 @@ import { Results } from "@/libs/results/results"
 import { Box } from "@hazae41/box"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Disposer } from "@hazae41/cleaner"
-import { Circuit, Consensus, TorClientDuplex, createPooledCircuitDisposer } from "@hazae41/echalote"
+import { Circuit, Consensus, TorClientDuplex, createCircuitEntry } from "@hazae41/echalote"
 import { fetch } from "@hazae41/fleche"
 import { Mutex } from "@hazae41/mutex"
 import { None } from "@hazae41/option"
@@ -122,7 +122,7 @@ export namespace Circuits {
             })
           }, { max: 9 }).then(r => r.throw(t))
 
-          return new Ok(createPooledCircuitDisposer(circuit.moveOrThrow(), params))
+          return new Ok(createCircuitEntry(circuit.moveOrThrow(), params))
         }).then(Results.log)
 
         if (result.isOk())
@@ -171,7 +171,7 @@ export namespace Circuits {
 
         const result = await Result.unthrow<Result<Disposer<Box<Circuit>>, Error>>(async t => {
           using circuit = await Pool.tryTakeCryptoRandom(circuits).then(r => r.throw(t).throw(t).inner)
-          return new Ok(createPooledCircuitDisposer(circuit.moveOrThrow(), params))
+          return new Ok(createCircuitEntry(circuit.moveOrThrow(), params))
         }).then(Results.log)
 
         if (result.isOk())

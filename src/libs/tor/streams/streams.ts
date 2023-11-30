@@ -17,7 +17,7 @@ export namespace Streams {
     let update = Date.now()
 
     const pool = new Pool<Stream>(async (params) => {
-      const { pool, index, signal } = params
+      const { pool, index } = params
 
       while (true) {
         const start = Date.now()
@@ -25,14 +25,6 @@ export namespace Streams {
         const result = await Result.unthrow<Result<Disposer<Box<Stream>>, Error>>(async t => {
           using precircuit = await Pool.tryTakeCryptoRandom(circuits).then(r => r.throw(t).throw(t).inner)
           using prestream = new Box(await Circuits.tryOpenAs(precircuit.inner, url.origin).then(r => r.throw(t)))
-
-          const circuit = precircuit.moveOrThrow()
-          const stream = prestream.moveOrThrow()
-
-          const onResourceClean = () => {
-            stream[Symbol.dispose]()
-            circuit[Symbol.dispose]()
-          }
 
           const inputer = new TransformStream<Opaque, Opaque>({})
           const outputer = new TransformStream<Writable, Writable>({})
@@ -49,24 +41,38 @@ export namespace Streams {
 
           const watcher = { inner, outer } as const
 
-          let cleaned = false
+          const circuit = precircuit.moveOrThrow()
+          const stream = prestream.moveOrThrow()
 
-          const onEntryClean = () => {
-            cleaned = true
+          const onResourceClean = () => {
+            using postcircuit = circuit
+            using poststream = stream
           }
+
+          using preresource = new Box(new Disposer(new Mutex(watcher.outer), onResourceClean))
+
+          let cleaned = false
 
           const onCloseOrError = async () => {
             if (cleaned) return
+
             pool.restart(index)
             return new None()
           }
 
-          stream.inner.inner.readable.pipeTo(watcher.inner.writable, { signal, preventCancel: true }).then(onCloseOrError).catch(onCloseOrError)
-          watcher.inner.readable.pipeTo(stream.inner.inner.writable, { signal, preventAbort: true, preventClose: true }).then(onCloseOrError).catch(onCloseOrError)
+          stream.inner.inner.readable.pipeTo(watcher.inner.writable).then(onCloseOrError).catch(onCloseOrError)
+          watcher.inner.readable.pipeTo(stream.inner.inner.writable).then(onCloseOrError).catch(onCloseOrError)
 
-          using resource = new Box(new Disposer(new Mutex(watcher.outer), onResourceClean))
+          const resource = preresource.moveOrThrow()
 
-          return new Ok(new Disposer(resource.moveOrThrow(), onEntryClean))
+          const onEntryClean = () => {
+            using postresource = resource
+            cleaned = true
+          }
+
+          using preentry = new Box(new Disposer(resource, onEntryClean))
+
+          return new Ok(preentry.unwrapOrThrow())
         }).then(Results.log)
 
         if (result.isOk())
