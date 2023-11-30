@@ -18,7 +18,7 @@ export class WebsitePort {
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
-  readonly clean: () => void
+  #clean: () => void
 
   constructor(
     readonly name: string,
@@ -28,13 +28,15 @@ export class WebsitePort {
 
     this.port.addEventListener("message", onMessage, { passive: true })
 
-    this.clean = () => {
+    this.#clean = () => {
       this.port.removeEventListener("message", onMessage)
+
+      this.#clean = () => { }
     }
   }
 
   [Symbol.dispose]() {
-    this.clean()
+    this.#clean()
   }
 
   async runPingLoop() {
@@ -43,7 +45,8 @@ export class WebsitePort {
     while (true) {
       await new Promise(ok => setTimeout(ok, 1000))
 
-      const result = await this.tryPingOrSignal(AbortSignal.timeout(1000)).then(r => r.flatten())
+      const signal = AbortSignal.timeout(1000)
+      const result = await this.tryPingOrSignal(signal).then(r => r.flatten())
 
       if (result.isErr())
         count++

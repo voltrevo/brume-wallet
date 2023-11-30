@@ -1,10 +1,11 @@
 import { browser, tryBrowser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
+import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/cleaner"
 import { Future } from "@hazae41/future"
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
-import { Cancel, Looped, Pool, Retry, tryLoop } from "@hazae41/piscine"
+import { Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Plume, SuperEventTarget } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
 
@@ -51,13 +52,11 @@ export class WebsiteBackground {
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return await tryLoop(async () => {
-      return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
-        const port = await this.ports.tryGetOrWait(0).then(r => r.mapErrSync(Cancel.new).throw(t).inner)
-        const response = await port.tryRequest<T>(init).then(r => r.mapErrSync(Retry.new).throw(t))
+    return await Result.unthrow<Result<RpcResponse<T>, Error>>(async t => {
+      const port = await this.ports.tryGetOrWait(0).then(r => r.throw(t).throw(t).inner.inner.inner)
+      const response = await port.tryRequest<T>(init).then(r => r.throw(t))
 
-        return new Ok(response)
-      })
+      return new Ok(response)
     })
   }
 
@@ -142,8 +141,8 @@ export async function tryGetServiceWorker(background: WebsiteBackground) {
   }
 }
 
-export function createWebsitePortPool(background: WebsiteBackground): Pool<Disposer<WebsitePort>, Error> {
-  return new Pool<Disposer<WebsitePort>, Error>(async (params) => {
+export function createWebsitePortPool(background: WebsiteBackground): Pool<Disposer<WebsitePort>> {
+  return new Pool<Disposer<WebsitePort>>(async (params) => {
     return await Result.unthrow(async t => {
       const { pool, index } = params
 
@@ -152,16 +151,32 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
       if (registration.active == null)
         return new Err(new Error(`Active is null`))
 
-      const channel = new MessageChannel()
+      const raw = new MessageChannel()
 
-      const port = new WebsitePort("background", channel.port1)
+      const onRawClean = () => {
+        raw.port1.close()
+        raw.port2.close()
+      }
 
-      channel.port1.start()
-      channel.port2.start()
+      using prechannel = new Box(new Disposer(raw, onRawClean))
+      using prerouter = new Box(new WebsitePort("background", raw.port1))
 
-      registration.active.postMessage("HELLO_WORLD", [channel.port2])
+      const channel = prechannel.moveOrThrow()
+      const router = prerouter.moveOrThrow()
 
-      await Plume.tryWaitOrSignal(port.events, "request", async (future: Future<Ok<void>>, init: RpcRequestInit<any>) => {
+      const onInnerClean = () => {
+        using postchannel = channel
+        using postrouter = router
+      }
+
+      using preinner = new Box(new Disposer(router.inner, onInnerClean))
+
+      raw.port1.start()
+      raw.port2.start()
+
+      registration.active.postMessage("HELLO_WORLD", [raw.port2])
+
+      await Plume.tryWaitOrSignal(router.inner.events, "request", async (future: Future<Ok<void>>, init: RpcRequestInit<any>) => {
         if (init.method !== "brume_hello")
           return new None()
 
@@ -169,25 +184,16 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
         return new Some(Ok.void())
       }, AbortSignal.timeout(60_000)).then(r => r.throw(t))
 
-      port.runPingLoop()
+      router.inner.runPingLoop()
 
       const uuid = sessionStorage.getItem("uuid")
       const password = sessionStorage.getItem("password")
 
       if (uuid && password)
-        await port.tryRequest({
+        await router.inner.tryRequest({
           method: "brume_login",
           params: [uuid, password]
         }).then(r => r.throw(t))
-
-      const onRequest = (request: RpcRequestInit<unknown>) =>
-        background.onRequest(port, request)
-
-      const onResponse = (response: RpcResponseInit<unknown>) =>
-        background.onResponse(port, response)
-
-      port.events.on("request", onRequest, { passive: true })
-      port.events.on("response", onResponse, { passive: true })
 
       const onClose = async () => {
         /**
@@ -195,22 +201,32 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
          * This will force unregister the old one
          */
         await registration.unregister()
-        await pool.restart(index)
+
+        pool.restart(index)
         return new None()
       }
 
-      port.events.on("close", onClose, { passive: true })
+      const onRequest = (request: RpcRequestInit<unknown>) =>
+        background.onRequest(router.inner, request)
 
-      const onClean = () => {
-        port.events.off("request", onRequest)
-        port.events.off("response", onResponse)
-        port.events.off("close", onClose)
-        port.clean()
-        channel.port1.close()
-        channel.port2.close()
+      const onResponse = (response: RpcResponseInit<unknown>) =>
+        background.onResponse(router.inner, response)
+
+      router.inner.events.on("request", onRequest, { passive: true })
+      router.inner.events.on("response", onResponse, { passive: true })
+      router.inner.events.on("close", onClose, { passive: true })
+
+      const inner = preinner.moveOrThrow()
+
+      const onEntryClean = () => {
+        using postinner = inner
+
+        router.inner.events.off("request", onRequest)
+        router.inner.events.off("response", onResponse)
+        router.inner.events.off("close", onClose)
       }
 
-      return new Ok(new Disposer(port, onClean))
+      return new Ok(new Disposer(inner, onEntryClean))
     })
   }, { capacity: 1 })
 }
@@ -240,20 +256,18 @@ export class ExtensionBackground {
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return await tryLoop(async () => {
-      return await Result.unthrow<Result<RpcResponse<T>, Looped<Error>>>(async t => {
-        const port = await this.ports.tryGetOrWait(0).then(r => r.mapErrSync(Cancel.new).throw(t).inner)
-        const response = await port.tryRequest<T>(init).then(r => r.mapErrSync(Retry.new).throw(t))
+    return await Result.unthrow<Result<RpcResponse<T>, Error>>(async t => {
+      const port = await this.ports.tryGetOrWait(0).then(r => r.throw(t).throw(t).inner.inner.inner)
+      const response = await port.tryRequest<T>(init).then(r => r.throw(t))
 
-        return new Ok(response)
-      })
+      return new Ok(response)
     })
   }
 
 }
 
-export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<Port>, Error> {
-  return new Pool<Disposer<Port>, Error>(async (params) => {
+export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<Port>> {
+  return new Pool<Disposer<Port>>(async (params) => {
     return await Result.unthrow(async t => {
       const { index, pool } = params
 
@@ -265,33 +279,45 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
         }).then(r => r.mapErrSync(Retry.new))
       }).then(r => r.throw(t))
 
-      const port = new ExtensionPort("background", raw)
+      using preport = new Box(new Disposer(raw, () => raw.disconnect()))
+      using prerouter = new Box(new ExtensionPort("background", raw))
 
-      const onRequest = (request: RpcRequestInit<unknown>) =>
-        background.onRequest(port, request)
+      const port = preport.moveOrThrow()
+      const router = prerouter.moveOrThrow()
 
-      const onResponse = (response: RpcResponseInit<unknown>) =>
-        background.onResponse(port, response)
+      const onInnerClean = () => {
+        using postport = port
+        using postrouter = router
+      }
 
-      port.events.on("request", onRequest, { passive: true })
-      port.events.on("response", onResponse, { passive: true })
+      using preinner = new Box(new Disposer(router.inner, onInnerClean))
 
       const onClose = async () => {
-        await pool.restart(index)
+        pool.restart(index)
         return new None()
       }
 
-      port.events.on("close", onClose, { passive: true })
+      const onRequest = (request: RpcRequestInit<unknown>) =>
+        background.onRequest(router.inner, request)
 
-      const onClean = () => {
-        port.events.off("request", onRequest)
-        port.events.off("response", onResponse)
-        port.events.off("close", onClose)
-        port.#clean()
-        raw.disconnect()
+      const onResponse = (response: RpcResponseInit<unknown>) =>
+        background.onResponse(router.inner, response)
+
+      router.inner.events.on("request", onRequest, { passive: true })
+      router.inner.events.on("response", onResponse, { passive: true })
+      router.inner.events.on("close", onClose, { passive: true })
+
+      const inner = preinner.moveOrThrow()
+
+      const onEntryClean = () => {
+        using postinner = inner
+
+        router.inner.events.off("request", onRequest)
+        router.inner.events.off("response", onResponse)
+        router.inner.events.off("close", onClose)
       }
 
-      return new Ok(new Disposer(port, onClean))
+      return new Ok(new Disposer(inner, onEntryClean))
     })
   }, { capacity: 1 })
 }

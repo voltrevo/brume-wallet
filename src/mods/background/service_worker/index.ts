@@ -1684,7 +1684,7 @@ if (IS_WEBSITE) {
 
     const onClose = () => {
       port.events.off("request", onRequest)
-      port.clean()
+      port.#clean()
       port.port.close()
       return new None()
     }
