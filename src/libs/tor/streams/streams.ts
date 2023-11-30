@@ -103,7 +103,7 @@ export namespace Streams {
       return new None()
     }, { passive: true })
 
-    return new Mutex(pool)
+    return pool
   }
 
 }

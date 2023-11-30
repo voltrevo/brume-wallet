@@ -8,7 +8,7 @@ import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
 import { Strings } from "@/libs/strings/strings"
 import { Circuits } from "@/libs/tor/circuits/circuits"
-import { createTorPool, tryCreateTor } from "@/libs/tor/tors/tors"
+import { createTorPool } from "@/libs/tor/tors/tors"
 import { Url, qurl } from "@/libs/url/url"
 import { CryptoClient } from "@/libs/wconn/mods/crypto/client"
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn"
@@ -22,11 +22,10 @@ import { Base64Url } from "@hazae41/base64url"
 import { Bytes } from "@hazae41/bytes"
 import { Cadenas } from "@hazae41/cadenas"
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305"
-import { Disposer } from "@hazae41/cleaner"
 import { ZeroHexString } from "@hazae41/cubane"
-import { Circuit, Echalote, Fallback, TorClientDuplex } from "@hazae41/echalote"
+import { Circuit, Consensus, Echalote, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
-import { Fleche } from "@hazae41/fleche"
+import { Fleche, fetch } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
 import { IDBStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier"
 import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
@@ -36,7 +35,7 @@ import { Mutex } from "@hazae41/mutex"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
 import { SuperEventTarget } from "@hazae41/plume"
-import { Catched, Err, Ok, Panic, Result } from "@hazae41/result"
+import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { Ripemd160 } from "@hazae41/ripemd160"
 import { Sha1 } from "@hazae41/sha1"
 import { Smux } from "@hazae41/smux"
@@ -87,20 +86,6 @@ if (IS_WEBSITE && self.__WB_PRODUCTION) {
   })
 }
 
-async function tryFetch<T>(url: string): Promise<Result<T, Error>> {
-  try {
-    const res = await fetch(url)
-
-    if (!res.ok)
-      return new Err(new Error(await res.text()))
-    return new Ok(await res.json() as T)
-  } catch (e: unknown) {
-    return new Err(Catched.from(e))
-  }
-}
-
-const FALLBACKS_URL = "https://raw.githubusercontent.com/hazae41/echalote/master/tools/fallbacks/fallbacks.json"
-
 export interface PasswordData {
   uuid?: string
   password?: string
@@ -147,10 +132,10 @@ export class Global {
   #user?: UserSession
   #path: string = "/"
 
-  readonly circuits: Mutex<Pool<Disposer<Circuit>, Error>>
+  readonly circuits: Mutex<Pool<Circuit>>
 
-  #wcs?: Mutex<Pool<Disposer<WcBrume>, Error>>
-  #eths?: Mutex<Pool<Disposer<EthBrume>, Error>>
+  #wcs?: Mutex<Pool<WcBrume>>
+  #eths?: Mutex<Pool<EthBrume>>
 
   readonly brumeByUuid = new Mutex(new Map<string, EthBrume>())
 
@@ -166,10 +151,11 @@ export class Global {
   readonly popup = new Mutex<Slot<PopupData>>({})
 
   constructor(
-    readonly tors: Mutex<Pool<Disposer<TorClientDuplex>, Error>>,
+    readonly consensus: Consensus,
+    readonly tors: Pool<TorClientDuplex>,
     readonly storage: IDBStorage
   ) {
-    this.circuits = new Mutex(Circuits.createPool(this.tors.inner, { capacity: 9 }))
+    this.circuits = new Mutex(Circuits.pool(this.tors, consensus, { capacity: 9 }))
 
     core.onState.on(BgAppRequests.key, async () => {
       const state = core.getStateSync(BgAppRequests.key) as State<AppRequest[], never>
@@ -631,7 +617,7 @@ export class Global {
   async brume_icon(script: Port, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
       const res = await Result.runAndDoubleWrap(async () => {
-        return await fetch("/favicon.png")
+        return await globalThis.fetch("/favicon.png")
       }).then(r => r.throw(t))
 
       const blob = await Result.runAndDoubleWrap(async () => {
@@ -1131,7 +1117,7 @@ export class Global {
       const { crypter } = Option.wrap(this.#user).ok().throw(t)
 
       const plain = Base64.get().tryDecodePadded(plainBase64).throw(t).copyAndDispose()
-      const iv = Bytes.tryRandom(16).throw(t)
+      const iv = Bytes.random(16)
       const cipher = await crypter.tryEncrypt(plain, iv).then(r => r.throw(t))
 
       const ivBase64 = Base64.get().tryEncodePadded(iv).throw(t)
@@ -1190,7 +1176,7 @@ export class Global {
 
         if (brume == null) {
           const brumes = Option.wrap(this.#eths).ok().throw(t)
-          const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.inner.inner)
+          const brume = await Pool.tryTakeCryptoRandom(brumes).then(r => r.throw(t).throw(t).inner.inner)
           brumeByUuid.set(uuid, brume)
           return new Ok(brume)
         }
@@ -1369,11 +1355,12 @@ export class Global {
       if (logs.real?.current?.inner !== true)
         return Ok.void()
 
-      const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.throw(t).result.get().inner)
+      using circuit = await Pool.tryTakeCryptoRandom(this.circuits).then(r => r.throw(t).throw(t).inner.inner)
 
       const body = JSON.stringify({ tor: true, method: "eth_getBalance" })
-      await circuit.tryFetch("https://proxy.brume.money", { method: "POST", body }).then(r => r.inspectErrSync(() => console.warn(`Could not fetch logs`)).throw(t))
-      await circuit.destroy()
+
+      using stream = await Circuits.openAsOrThrow(circuit, "https://proxy.brume.money")
+      await fetch("https://proxy.brume.money", { method: "POST", body, stream: stream.inner })
 
       return Ok.void()
     })
@@ -1501,7 +1488,7 @@ export class Global {
       const pairParams = await Wc.tryParse(wcUrl).then(r => r.throw(t))
 
       const brumes = Option.wrap(this.#wcs).ok().throw(t)
-      const brume = await Pool.takeCryptoRandom(brumes).then(r => r.throw(t).result.inner.inner)
+      const brume = await Pool.tryTakeCryptoRandom(brumes).then(r => r.throw(t).throw(t).inner.inner)
       const irn = new IrnBrume(brume)
 
       const [session, settlement] = await Wc.tryPair(irn, pairParams, wallet.address).then(r => r.throw(t))
@@ -1585,10 +1572,11 @@ export class Global {
 
       for (const iconUrl of session.metadata.icons) {
         Result.unthrow<Result<void, Error>>(async t => {
-          const circuit = await Pool.takeCryptoRandom(this.circuits).then(r => r.throw(t).result.get().inner)
+          using circuit = await Pool.tryTakeCryptoRandom(this.circuits).then(r => r.throw(t).throw(t).inner.inner)
 
           console.debug(`Fetching ${iconUrl} with ${circuit.id}`)
-          const iconRes = await circuit.tryFetch(iconUrl).then(r => r.throw(t))
+          using stream = await Circuits.openAsOrThrow(circuit, iconUrl)
+          const iconRes = await fetch(iconUrl, { stream: stream.inner })
           const iconBlob = await Result.runAndDoubleWrap(() => iconRes.blob()).then(r => r.throw(t))
 
           Result.assert(Mime.isImage(iconBlob.type)).throw(t)
@@ -1643,14 +1631,15 @@ async function tryInit() {
       gt.Kcp = Kcp
       gt.Smux = Smux
 
-      const fallbacks = await tryFetch<Fallback[]>(FALLBACKS_URL).then(r => r.throw(t))
+      const tors = createTorPool({ capacity: 1 })
 
-      const tors = createTorPool(async () => {
-        return await tryCreateTor({ fallbacks })
-      }, { capacity: 1 })
+      const tor = await tors.tryGetCryptoRandom().then(r => r.throw(t).throw(t).inner.inner)
+
+      using circuit = await tor.createOrThrow(AbortSignal.timeout(5000))
+      const consensus = await Consensus.fetchOrThrow(circuit)
 
       const storage = IDBStorage.tryCreate({ name: "memory" }).unwrap()
-      const global = new Global(new Mutex(tors), storage)
+      const global = new Global(consensus, tors, storage)
 
       await global.tryInit().then(r => r.throw(t))
 
@@ -1669,7 +1658,7 @@ if (IS_WEBSITE) {
   const onHelloWorld = (event: ExtendableMessageEvent) => {
     const raw = event.ports[0]
 
-    const port = new WebsitePort("foreground", raw)
+    const router = new WebsitePort("foreground", raw)
 
     const onRequest = async (request: RpcRequestInit<unknown>) => {
       const inited = await init
@@ -1677,24 +1666,26 @@ if (IS_WEBSITE) {
       if (inited.isErr())
         return new Some(inited)
 
-      return await inited.get().tryRouteForeground(port, request)
+      return await inited.get().tryRouteForeground(router, request)
     }
 
-    port.events.on("request", onRequest, { passive: true })
+    router.events.on("request", onRequest, { passive: true })
 
     const onClose = () => {
-      port.events.off("request", onRequest)
-      port.#clean()
-      port.port.close()
+      using _ = router
+
+      router.events.off("request", onRequest)
+      router.port.close()
+
       return new None()
     }
 
-    port.events.on("close", onClose, { passive: true })
+    router.events.on("close", onClose, { passive: true })
 
     raw.start()
 
-    port.tryRequest({ method: "brume_hello" }).then(r => r.ignore())
-    port.runPingLoop()
+    router.tryRequest({ method: "brume_hello" }).then(r => r.ignore())
+    router.runPingLoop()
   }
 
   self.addEventListener("message", (event) => {

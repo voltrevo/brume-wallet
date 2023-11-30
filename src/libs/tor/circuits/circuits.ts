@@ -46,7 +46,7 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function createCircuitPool(tors: Mutex<Pool<TorClientDuplex>>, consensus: Consensus, params: PoolParams) {
+  export function pool(tors: Pool<TorClientDuplex>, consensus: Consensus, params: PoolParams) {
     const middles = consensus.microdescs.filter(it => true
       && it.flags.includes("Fast")
       && it.flags.includes("Stable")
@@ -67,7 +67,7 @@ export namespace Circuits {
         const result = await Result.unthrow<Result<Disposer<Box<Circuit>>, Error>>(async t => {
           const { index, signal } = params
 
-          const tor = await tors.inner.tryGetOrWait(index % tors.inner.capacity, signal).then(r => r.throw(t).throw(t).inner.inner)
+          const tor = await tors.tryGetOrWait(index % tors.capacity, signal).then(r => r.throw(t).throw(t).inner.inner)
 
           using circuit = await tryLoop<Box<Circuit>, Looped<Error>>(async () => {
             return await Result.unthrow(async t => {
@@ -135,7 +135,7 @@ export namespace Circuits {
       }
     }, params)
 
-    tors.inner.events.on("started", async i => {
+    tors.events.on("started", async i => {
       update = Date.now()
 
       for (let i = 0; i < pool.capacity; i++) {
@@ -153,7 +153,7 @@ export namespace Circuits {
       return new None()
     }, { passive: true })
 
-    return new Mutex(pool)
+    return pool
   }
 
   /**
@@ -162,7 +162,7 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function createSubpool(circuits: Mutex<Pool<Circuit>>, params: PoolParams) {
+  export function subpool(circuits: Mutex<Pool<Circuit>>, params: PoolParams) {
     let update = Date.now()
 
     const pool = new Pool<Circuit>(async (params) => {

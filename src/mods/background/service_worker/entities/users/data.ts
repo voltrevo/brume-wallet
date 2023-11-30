@@ -116,7 +116,7 @@ export namespace User {
           name: "PBKDF2",
           hash: "SHA-256",
           iterations: 1_000_000,
-          salt: Bytes.tryRandom(16).throw(t)
+          salt: Bytes.random(16)
         })
       }
 
@@ -129,7 +129,7 @@ export namespace User {
           name: "PBKDF2",
           hash: "SHA-256",
           iterations: 1_000_000,
-          salt: Bytes.tryRandom(16).throw(t)
+          salt: Bytes.random(16)
         })
       }
 
@@ -137,7 +137,7 @@ export namespace User {
         name: "PBKDF2",
         hash: "SHA-256",
         iterations: 1_000_000,
-        salt: Bytes.tryRandom(16).throw(t)
+        salt: Bytes.random(16)
       }
 
       const passwordParamsBase64 = Pbdkf2Params.stringify(passwordParamsBytes)

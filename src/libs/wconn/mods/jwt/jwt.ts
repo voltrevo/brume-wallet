@@ -21,7 +21,7 @@ export namespace Jwt {
       const publicKeyBytes = await publicKey.tryExport().then(r => r.throw(t).copyAndDispose())
 
       const iss = `did:key:z${Base58.get().tryEncode(Bytes.concat([prefix, publicKeyBytes])).throw(t)}`
-      const sub = Base16.get().tryEncode(Bytes.tryRandom(32).throw(t)).throw(t)
+      const sub = Base16.get().tryEncode(Bytes.random(32)).throw(t)
       const aud = audience
       const iat = Math.floor(Date.now() / 1000)
       const ttl = 24 * 60 * 60 // one day in seconds

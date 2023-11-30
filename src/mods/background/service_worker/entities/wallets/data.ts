@@ -230,10 +230,10 @@ export async function tryEthereumFetch<T>(ethereum: BgEthereumContext, init: Rpc
     const pools = Option.wrap(brume[ethereum.chain.chainId]).ok().unwrap()
 
     async function runWithPoolOrThrow(index: number) {
-      const pool = await pools.tryGet(index).then(r => r.unwrap().unwrap().inner)
+      const pool = await pools.tryGet(index).then(r => r.unwrap().unwrap().inner.inner)
 
       async function runWithConnOrThrow(index: number) {
-        const conn = await pool.tryGet(index).then(r => r.unwrap().unwrap().inner)
+        const conn = await pool.tryGet(index).then(r => r.unwrap().unwrap().inner.inner)
 
         const { counter, connection } = conn
         const request = counter.prepare(init)
@@ -471,7 +471,7 @@ export namespace BgPair {
 
     export function schema(ethereum: BgEthereumContext, pair: PairInfo, storage: IDBStorage) {
       const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
-        const data = Cubane.Abi.tryEncode(PairAbi.getReserves.args.from()).throw(t)
+        const data = Cubane.Abi.tryEncode(PairAbi.getReserves.from()).throw(t)
 
         const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
           method: "eth_call",
@@ -484,10 +484,10 @@ export namespace BgPair {
         if (fetched.isErr())
           return new Ok(new Fail(fetched.inner))
 
-        const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.Uint256, Cubane.Abi.Uint256)
-        const [a, b] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
+        const returns = Cubane.Abi.createTuple(Cubane.Abi.Uint256, Cubane.Abi.Uint256)
+        const [a, b] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).intoOrThrow()
 
-        const price = compute(pair, [a.value, b.value])
+        const price = compute(pair, [a, b])
 
         return new Ok(new Data(price))
       })
@@ -543,7 +543,7 @@ export function getTokenPricedBalance(ethereum: BgEthereumContext, account: stri
 
 export function getTokenBalance(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
   const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
-    const data = Cubane.Abi.tryEncode(TokenAbi.balanceOf.args.from(account)).throw(t)
+    const data = Cubane.Abi.tryEncode(TokenAbi.balanceOf.from(account)).throw(t)
 
     const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
       method: "eth_call",
@@ -556,9 +556,9 @@ export function getTokenBalance(ethereum: BgEthereumContext, account: ZeroHexStr
     if (fetched.isErr())
       return new Ok(fetched)
 
-    const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.Uint256)
-    const [balance] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
-    const fixed = new Fixed(balance.value, token.decimals)
+    const returns = Cubane.Abi.createTuple(Cubane.Abi.Uint256)
+    const [balance] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).intoOrThrow()
+    const fixed = new Fixed(balance, token.decimals)
 
     return new Ok(new Data(fixed))
   })
@@ -616,10 +616,10 @@ export namespace BgEns {
   export namespace Resolver {
 
     export async function tryFetch(ethereum: BgEthereumContext, namehash: Bytes<32>): Promise<Result<Fetched<ZeroHexString, Error>, Error>> {
-      return await Result.unthrow(async t => {
+      return await Result.unthrow<Result<Fetched<ZeroHexString, Error>, Error>>(async t => {
         const registry = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
 
-        const data = Cubane.Abi.tryEncode(EnsAbi.resolver.args.from(namehash)).throw(t)
+        const data = Cubane.Abi.tryEncode(EnsAbi.resolver.from(namehash)).throw(t)
 
         const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
           method: "eth_call",
@@ -632,10 +632,10 @@ export namespace BgEns {
         if (fetched.isErr())
           return new Ok(fetched)
 
-        const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.StaticAddress)
-        const [address] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
+        const returns = Cubane.Abi.createTuple(Cubane.Abi.Address)
+        const [address] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).intoOrThrow()
 
-        return new Ok(new Data(address.value))
+        return new Ok(new Data(address))
       })
     }
 
@@ -678,7 +678,7 @@ export namespace BgEns {
         if (resolver.isErr())
           return new Ok(resolver)
 
-        const data = Cubane.Abi.tryEncode(EnsAbi.addr.args.from(namehash)).throw(t)
+        const data = Cubane.Abi.tryEncode(EnsAbi.addr.from(namehash)).throw(t)
 
         const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
           method: "eth_call",
@@ -691,10 +691,10 @@ export namespace BgEns {
         if (fetched.isErr())
           return new Ok(fetched)
 
-        const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.StaticAddress)
-        const [address] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
+        const returns = Cubane.Abi.createTuple(Cubane.Abi.Address)
+        const [address] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).intoOrThrow()
 
-        return new Ok(new Data(address.value))
+        return new Ok(new Data(address))
       })
     }
 
@@ -729,14 +729,14 @@ export namespace BgEns {
     }
 
     export async function tryFetchUnchecked(ethereum: BgEthereumContext, address: ZeroHexString): Promise<Result<Fetched<Nullable<string>, Error>, Error>> {
-      return await Result.unthrow(async t => {
+      return await Result.unthrow<Result<Fetched<Nullable<string>, Error>, Error>>(async t => {
         const namehash = Cubane.Ens.tryNamehash(`${address.slice(2)}.addr.reverse`).throw(t) as Bytes<32>
         const resolver = await Resolver.tryFetch(ethereum, namehash).then(r => r.throw(t))
 
         if (resolver.isErr())
           return new Ok(resolver)
 
-        const data = Cubane.Abi.tryEncode(EnsAbi.name.args.from(namehash)).throw(t)
+        const data = Cubane.Abi.tryEncode(EnsAbi.name.from(namehash)).throw(t)
 
         const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
           method: "eth_call",
@@ -749,13 +749,13 @@ export namespace BgEns {
         if (fetched.isErr())
           return new Ok(fetched)
 
-        const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.DynamicString)
-        const [name] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
+        const returns = Cubane.Abi.createTuple(Cubane.Abi.String)
+        const [name] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).intoOrThrow()
 
-        if (name.value.length === 0)
+        if (name.length === 0)
           return new Ok(new Data(undefined))
 
-        return new Ok(new Data(name.value))
+        return new Ok(new Data(name))
       })
     }
 

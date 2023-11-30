@@ -206,7 +206,7 @@ export namespace BgContractToken {
 
     export function schema(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
       const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
-        const data = Cubane.Abi.tryEncode(TokenAbi.balanceOf.args.from(account)).throw(t)
+        const data = Cubane.Abi.tryEncode(TokenAbi.balanceOf.from(account)).throw(t)
 
         const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
           method: "eth_call",
@@ -219,9 +219,9 @@ export namespace BgContractToken {
         if (fetched.isErr())
           return new Ok(fetched)
 
-        const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.Uint256)
+        const returns = Cubane.Abi.createTuple(Cubane.Abi.Uint256)
         const [balance] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
-        const fixed = new Fixed(balance.value, token.decimals)
+        const fixed = new Fixed(balance.intoOrThrow(), token.decimals)
 
         return new Ok(new Data(fixed))
       })

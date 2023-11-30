@@ -141,7 +141,7 @@ export class EthereumUnauthPrivateKeyWalletInstance {
       delete (data.types as any)["EIP712Domain"]
 
       const signature = await Result.runAndDoubleWrap(async () => {
-        return await new ethers.Wallet(privateKey).signTypedData(data.domain, data.types, data.message)
+        return await new ethers.Wallet(privateKey).signTypedData(data.domain as any, data.types as any, data.message)
       }).then(r => r.throw(t))
 
       return new Ok(signature)
@@ -209,7 +209,7 @@ export class EthereumAuthPrivateKeyWalletInstance {
       delete (data.types as any)["EIP712Domain"]
 
       const signature = await Result.runAndDoubleWrap(async () => {
-        return await new ethers.Wallet(privateKey).signTypedData(data.domain, data.types, data.message)
+        return await new ethers.Wallet(privateKey).signTypedData(data.domain as any, data.types as any, data.message)
       }).then(r => r.throw(t))
 
       return new Ok(signature)

@@ -1,6 +1,8 @@
 import { Maps } from "@/libs/maps/maps";
 import { AbortSignals } from "@/libs/signals/signals";
+import { Circuits } from "@/libs/tor/circuits/circuits";
 import { ZeroHexString } from "@hazae41/cubane";
+import { fetch } from "@hazae41/fleche";
 import { Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Option } from "@hazae41/option";
@@ -51,7 +53,8 @@ export async function tryFetchRaw<T>(ethereum: BgEthereumContext, url: string, i
 
         const signal = AbortSignals.timeout(5_000, presignal)
 
-        const res = await circuit.tryFetch(url, { signal }).then(r => r.unwrap())
+        using stream = await Circuits.openAsOrThrow(circuit.inner, url)
+        const res = await fetch(url, { signal, stream: stream.inner })
 
         if (!res.ok) {
           const text = await Result.runAndDoubleWrap(() => {

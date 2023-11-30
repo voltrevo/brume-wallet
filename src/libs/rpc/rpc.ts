@@ -1,8 +1,11 @@
+import { Bytes } from "@hazae41/bytes"
 import { Circuit, CircuitOpenParams } from "@hazae41/echalote"
+import { fetch } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
 import { RpcRequest, RpcRequestInit, RpcResponse } from "@hazae41/jsonrpc"
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
+import { Circuits } from "../tor/circuits/circuits"
 
 export namespace TorRpc {
 
@@ -10,42 +13,41 @@ export namespace TorRpc {
 
   }
 
-  // export async function tryFetchWithCircuit<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit<unknown> & { circuit: Circuit } & CircuitOpenParams): Promise<Result<RpcResponse<T>, Error>> {
-  //   return await Result.unthrow(async t => {
-  //     const { id, method, params, circuit, ...rest } = init
+  export async function tryFetchWithCircuit<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit<unknown> & { circuit: Circuit } & CircuitOpenParams): Promise<Result<RpcResponse<T>, Error>> {
+    return await Result.unthrow(async t => {
+      const { id, method, params, circuit, ...rest } = init
 
-  //     const request = new RpcRequest(id, method, params)
-  //     const body = Bytes.fromUtf8(JSON.stringify(request))
+      const request = new RpcRequest(id, method, params)
+      const body = Bytes.fromUtf8(JSON.stringify(request))
 
-  //     const headers = new Headers(rest.headers)
-  //     headers.set("Content-Type", "application/json")
-  //     headers.set("Content-Length", `${body.length}`)
+      const headers = new Headers(rest.headers)
+      headers.set("Content-Type", "application/json")
+      headers.set("Content-Length", `${body.length}`)
 
-  //     const res = await circuit.tryFetch(input, { ...rest, method: "POST", headers, body })
+      using stream = await Circuits.openAsOrThrow(circuit, input)
 
-  //     if (!res.isOk())
-  //       return res
+      const res = await fetch(input, { ...rest, method: "POST", headers, body, stream: stream.inner })
 
-  //     if (!res.inner.ok) {
-  //       const text = await Result.runAndDoubleWrap(() => {
-  //         return res.inner.text()
-  //       }).then(r => r.throw(t))
+      if (!res.ok) {
+        const text = await Result.runAndDoubleWrap(() => {
+          return res.text()
+        }).then(r => r.throw(t))
 
-  //       return new Err(new Error(text))
-  //     }
+        return new Err(new Error(text))
+      }
 
-  //     const json = await Result.runAndDoubleWrap(() => {
-  //       return res.inner.json()
-  //     }).then(r => r.throw(t))
+      const json = await Result.runAndDoubleWrap(() => {
+        return res.json()
+      }).then(r => r.throw(t))
 
-  //     const response = RpcResponse.from<T>(json)
+      const response = RpcResponse.from<T>(json)
 
-  //     if (response.id !== request.id)
-  //       console.warn(`Invalid response ID`, response.id, "expected", request.id)
+      if (response.id !== request.id)
+        console.warn(`Invalid response ID`, response.id, "expected", request.id)
 
-  //     return new Ok(response)
-  //   })
-  // }
+      return new Ok(response)
+    })
+  }
 
   export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit<unknown>, signal: AbortSignal) {
     const { id, method, params = [] } = request
