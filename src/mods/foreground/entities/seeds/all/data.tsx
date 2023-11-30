@@ -106,7 +106,7 @@ export class UnauthMnemonicSeedInstance {
       delete (data.types as any)["EIP712Domain"]
 
       const signature = await Result.runAndDoubleWrap(async () => {
-        return await new ethers.Wallet(privateKey).signTypedData(data.domain, data.types, data.message)
+        return await new ethers.Wallet(privateKey).signTypedData(data.domain as any, data.types as any, data.message)
       }).then(r => r.throw(t))
 
       return new Ok(signature)
@@ -185,7 +185,7 @@ export class AuthMnemonicSeedInstance {
       delete (data.types as any)["EIP712Domain"]
 
       const signature = await Result.runAndDoubleWrap(async () => {
-        return await new ethers.Wallet(privateKey).signTypedData(data.domain, data.types, data.message)
+        return await new ethers.Wallet(privateKey).signTypedData(data.domain as any, data.types as any, data.message)
       }).then(r => r.throw(t))
 
       return new Ok(signature)
@@ -233,11 +233,11 @@ export class LedgerSeedInstance {
       delete (data.types as any)["EIP712Domain"]
 
       const encoder = Result.runAndDoubleWrapSync(() => {
-        return new ethers.TypedDataEncoder(data.types)
+        return new ethers.TypedDataEncoder(data.types as any)
       }).throw(t)
 
       const domain = Result.runAndDoubleWrapSync(() => {
-        return Base16.get().tryPadStartAndDecode(ethers.TypedDataEncoder.hashDomain(data.domain).slice(2)).unwrap().copyAndDispose()
+        return Base16.get().tryPadStartAndDecode(ethers.TypedDataEncoder.hashDomain(data.domain as any).slice(2)).unwrap().copyAndDispose()
       }).throw(t) as Bytes<32>
 
       const message = Result.runAndDoubleWrapSync(() => {

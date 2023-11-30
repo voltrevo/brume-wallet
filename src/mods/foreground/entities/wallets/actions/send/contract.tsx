@@ -127,7 +127,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & EthereumCo
 
       const signature = Cubane.Abi.FunctionSignature.tryParse("transfer(address,uint256)").throw(t)
       const fixed = Fixed.fromDecimalString(defValueInput, token.decimals)
-      const args = signature.args.from(Address.from(address), fixed.value)
+      const args = signature.from(Address.from(address), fixed.value)
       const data = Cubane.Abi.tryEncode(args).throw(t)
 
       let tx: ethers.Transaction

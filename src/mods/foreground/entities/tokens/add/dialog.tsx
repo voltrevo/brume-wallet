@@ -44,7 +44,7 @@ export function TokenAddDialog(props: {}) {
       const name = await Result.unthrow<Result<string, Error>>(async t => {
         const context = { uuid: wallet.uuid, background, chain }
         const signature = Cubane.Abi.FunctionSignature.tryParse("name()").throw(t)
-        const data = Cubane.Abi.tryEncode(signature.args.from()).throw(t)
+        const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
 
         const schema = FgUnknown.schema<ZeroHexString>({
           method: "eth_call",
@@ -59,16 +59,16 @@ export function TokenAddDialog(props: {}) {
 
         const result = await schema.tryFetch().then(r => r.throw(t).throw(t).real?.current.throw(t))
 
-        const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.DynamicString)
-        const [name] = Cubane.Abi.tryDecode(returns, result!).throw(t).inner
+        const returns = Cubane.Abi.createTuple(Cubane.Abi.String)
+        const [name] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
 
-        return new Ok(name.value)
+        return new Ok(name)
       }).then(r => r.throw(t))
 
       const symbol = await Result.unthrow<Result<string, Error>>(async t => {
         const context = { uuid: wallet.uuid, background, chain }
         const signature = Cubane.Abi.FunctionSignature.tryParse("symbol()").throw(t)
-        const data = Cubane.Abi.tryEncode(signature.args.from()).throw(t)
+        const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
 
         const schema = FgUnknown.schema<ZeroHexString>({
           method: "eth_call",
@@ -83,16 +83,16 @@ export function TokenAddDialog(props: {}) {
 
         const result = await schema.tryFetch().then(r => r.throw(t).throw(t).real?.current.throw(t))
 
-        const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.DynamicString)
-        const [symbol] = Cubane.Abi.tryDecode(returns, result!).throw(t).inner
+        const returns = Cubane.Abi.createTuple(Cubane.Abi.String)
+        const [symbol] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
 
-        return new Ok(symbol.value)
+        return new Ok(symbol)
       }).then(r => r.throw(t))
 
       const decimals = await Result.unthrow<Result<number, Error>>(async t => {
         const context = { uuid: wallet.uuid, background, chain }
         const signature = Cubane.Abi.FunctionSignature.tryParse("decimals()").throw(t)
-        const data = Cubane.Abi.tryEncode(signature.args.from()).throw(t)
+        const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
 
         const schema = FgUnknown.schema<ZeroHexString>({
           method: "eth_call",
@@ -107,10 +107,10 @@ export function TokenAddDialog(props: {}) {
 
         const result = await schema.tryFetch().then(r => r.throw(t).throw(t).real?.current.throw(t))
 
-        const returns = Cubane.Abi.createDynamicTuple(Cubane.Abi.Uint8)
-        const [decimals] = Cubane.Abi.tryDecode(returns, result!).throw(t).inner
+        const returns = Cubane.Abi.createTuple(Cubane.Abi.Uint8)
+        const [decimals] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
 
-        return new Ok(decimals.value)
+        return new Ok(Number(decimals))
       }).then(r => r.throw(t))
 
       await token.mutate(s => {

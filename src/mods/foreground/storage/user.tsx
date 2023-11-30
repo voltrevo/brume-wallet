@@ -37,7 +37,7 @@ export class UserStorage implements Storage {
     readonly background: Background
   ) {
     background.ports.events.on("created", e => {
-      if (e.result.isErr())
+      if (e.isErr())
         return new None()
       for (const key of this.keys.inner)
         this.#trySubscribe(key)
