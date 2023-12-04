@@ -70,7 +70,7 @@ export namespace Circuits {
           const tor = await tors.tryGetOrWait(index % tors.capacity, signal).then(r => r.throw(t).throw(t).inner.inner)
 
           using circuit = await tryLoop<Box<Circuit>, Looped<Error>>(async () => {
-            return await Result.unthrow(async t => {
+            return await Result.unthrow<Result<Box<Circuit>, Looped<Error>>>(async t => {
               using circuit = new Box(await tor.tryCreate(AbortSignal.timeout(1000)).then(r => r.mapErrSync(Cancel.new).throw(t)))
 
               /**

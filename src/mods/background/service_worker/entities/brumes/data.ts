@@ -44,7 +44,9 @@ export class WebSocketConnection {
   ) { }
 
   [Symbol.dispose]() {
-    this.socket.close()
+    try {
+      this.socket.close()
+    } catch { }
   }
 
   get cooldown() {

@@ -73,21 +73,21 @@ export class WebsitePort {
   }
 
   async onRequest(request: RpcRequestInit<unknown>) {
-    // if (request.id !== "ping")
-    //   console.debug(this.name, "->", request)
+    if (request.id !== "ping")
+      console.debug(this.name, "->", request)
 
     const result = await this.tryRouteRequest(request)
     const response = RpcResponse.rewrap(request.id, result)
 
-    // if (request.id !== "ping")
-    //   console.debug(this.name, "<-", response)
+    if (request.id !== "ping")
+      console.debug(this.name, "<-", response, result)
 
     this.port.postMessage(JSON.stringify(response))
   }
 
   async onResponse(response: RpcResponseInit<unknown>) {
-    // if (response.id !== "ping")
-    //   console.debug(this.name, "->", response)
+    if (response.id !== "ping")
+      console.debug(this.name, "->", response)
 
     const returned = await this.events.emit("response", [response])
 
@@ -108,8 +108,8 @@ export class WebsitePort {
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
     const request = this.counter.prepare(init)
 
-    // if (request.id !== "ping")
-    //   console.debug(this.name, "<-", request)
+    if (request.id !== "ping")
+      console.debug(this.name, "<-", request)
 
     this.port.postMessage(JSON.stringify(request))
 
