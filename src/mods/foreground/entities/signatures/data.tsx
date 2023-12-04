@@ -1,3 +1,4 @@
+import { Errors } from "@/libs/errors/errors";
 import { BgSignature, SignatureData } from "@/mods/background/service_worker/entities/signatures/data";
 import { EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data";
 import { ZeroHexString } from "@hazae41/cubane";
@@ -34,6 +35,6 @@ export function useSignature(ethereum: Nullable<FgEthereumContext>, hash: Nullab
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, console.error)
+  useError(query, Errors.log)
   return query
 }

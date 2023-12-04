@@ -1,3 +1,4 @@
+import { Errors } from "@/libs/errors/errors";
 import { BgUnknown } from "@/mods/background/service_worker/entities/unknown/data";
 import { EthereumFetchParams } from "@/mods/background/service_worker/entities/wallets/data";
 import { createQuery, useError, useFetch, useQuery, useVisible } from "@hazae41/glacier";
@@ -31,6 +32,6 @@ export function useUnknown(request: RpcRequestPreinit<unknown> & EthereumFetchPa
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, console.error)
+  useError(query, Errors.log)
   return query
 }

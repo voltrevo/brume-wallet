@@ -353,7 +353,7 @@ export async function tryEthereumFetch<T>(ethereum: BgEthereumContext, init: Rpc
     }
 
     return fetcheds.get(sorteds[0].key)!
-  }).then(r => r.inspectErrSync(e => console.error({ e })))
+  })
 }
 
 export function getTotalPricedBalance(coin: "usd", storage: IDBStorage) {
@@ -484,8 +484,16 @@ export namespace BgPair {
         if (fetched.isErr())
           return new Ok(new Fail(fetched.inner))
 
+        console.warn(ethereum, {
+          method: "eth_call",
+          params: [{
+            to: pair.address,
+            data: data
+          }, "pending"]
+        }, fetched.inner)
+
         const returns = Abi.createTuple(Abi.Uint112, Abi.Uint112, Abi.Uint32)
-        const [a, b] = Abi.tryDecode(returns, fetched.inner).inspectErrSync(e => console.error(ethereum, pair, fetched.inner)).throw(t).intoOrThrow()
+        const [a, b] = Abi.tryDecode(returns, fetched.inner).throw(t).intoOrThrow()
 
         const price = compute(pair, [a, b])
 

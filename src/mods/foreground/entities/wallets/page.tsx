@@ -32,7 +32,7 @@ import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
-import { FgEthereumContext, useBalance, useEnsReverse, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
+import { useBalance, useEnsReverse, useEthereumContext, usePairPrice, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
 import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
 
 export function WalletPage(props: UUIDProps) {
@@ -373,7 +373,6 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
       <PriceResolver key={i}
         index={i}
         address={address}
-        context={context}
         ok={onPrice} />)}
     {!edit &&
       <ClickableTokenRow
@@ -429,7 +428,6 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
       <PriceResolver key={i}
         index={i}
         address={address}
-        context={context}
         ok={onPrice} />)}
     {!edit &&
       <ClickableTokenRow
@@ -447,11 +445,16 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   </>
 }
 
-function PriceResolver(props: { index: number } & { address: string } & { context: Nullable<FgEthereumContext> } & OkProps<[number, Nullable<FixedInit>]>) {
-  const { ok, index, address, context } = props
-  const pair = pairByAddress[address]
+function PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<FixedInit>]>) {
+  const { ok, index, address } = props
+  const wallet = useWalletDataContext().unwrap()
 
-  const { data } = usePairPrice(context, pair)
+  const pairData = pairByAddress[address]
+  const chainData = chainByChainId[pairData.chainId]
+
+  const context = useEthereumContext(wallet.uuid, chainData)
+
+  const { data } = usePairPrice(context, pairData)
 
   useEffect(() => {
     ok([index, data?.inner])

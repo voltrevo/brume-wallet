@@ -193,7 +193,7 @@ export const chainByChainId: Chains = {
   8453: {
     name: "Base",
     chainId: 8453,
-    urls: ["wss://base.publicnode.com"],
+    urls: ["wss://base.publicnode.com", "wss://base.llamarpc.com"],
     etherscan: "https://basescan.org",
     token: {
       uuid: "664008af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -216,7 +216,7 @@ export const chainByChainId: Chains = {
   42161: {
     name: "Arbitrum One",
     chainId: 42161,
-    urls: ["wss://arbitrum.llamarpc.com"],
+    urls: ["wss://arbitrum-one.publicnode.com", "wss://arbitrum.llamarpc.com"],
     etherscan: "https://arbiscan.io",
     token: {
       uuid: "664009af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -239,7 +239,7 @@ export const chainByChainId: Chains = {
   42220: {
     name: "Celo",
     chainId: 42220,
-    urls: ["https://celo.api.onfinality.io/public"],
+    urls: ["https://forno.celo.org", "https://celo.api.onfinality.io/public"],
     etherscan: "https://celoscan.io",
     token: {
       uuid: "664010af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -299,7 +299,7 @@ export const chainByChainId: Chains = {
   11155111: {
     name: "Sepolia (testnet)",
     chainId: 11155111,
-    urls: ["wss://sepolia.infura.io/ws/v3/b6bf7d3508c941499b10025c0776eaf8"],
+    urls: ["https://endpoints.omniatech.io/v1/eth/sepolia/public"],
     etherscan: "https://sepolia.etherscan.io",
     token: {
       uuid: "664013af-5c47-4b6e-ab3e-c0c130e23b3c",
