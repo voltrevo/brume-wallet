@@ -28,7 +28,7 @@ export namespace Circuits {
     if (url.protocol === "https:" || url.protocol === "wss:") {
       const tcp = await circuit.openOrThrow(url.hostname, Number(url.port) || 443)
 
-      const ciphers = [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384]
+      const ciphers = [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, Ciphers.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384]
       const tls = new TlsClientDuplex({ host_name: url.hostname, ciphers })
 
       tcp.outer.readable.pipeTo(tls.inner.writable).catch(() => { })

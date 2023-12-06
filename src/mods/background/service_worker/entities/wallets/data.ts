@@ -279,7 +279,9 @@ export async function tryEthereumFetch<T>(ethereum: BgEthereumContext, init: Rpc
       for (const result of results) {
         if (result.status === "rejected")
           continue
-        if (init?.noCheck && result.value.isOk())
+        if (result.value.isErr())
+          continue
+        if (init?.noCheck)
           return result.value
         const raw = JSON.stringify(result.value.inner)
         const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
@@ -294,7 +296,7 @@ export async function tryEthereumFetch<T>(ethereum: BgEthereumContext, init: Rpc
       if (counters.size < 2)
         return await Promise.any(promises)
 
-      console.warn(`Different results from multiple connections for ${init.method}`)
+      console.warn(`Different results from multiple connections for ${init.method} on ${ethereum.chain.name}`)
 
       /**
        * Sort truths by occurence
@@ -305,7 +307,7 @@ export async function tryEthereumFetch<T>(ethereum: BgEthereumContext, init: Rpc
        * Two concurrent truths
        */
       if (sorteds[0].value === sorteds[1].value) {
-        console.warn(`Could not choose truth for ${init.method}`)
+        console.warn(`Could not choose truth for ${init.method} on ${ethereum.chain.name}`)
         throw new Error(`Could not choose truth`)
       }
 
@@ -322,7 +324,9 @@ export async function tryEthereumFetch<T>(ethereum: BgEthereumContext, init: Rpc
     for (const result of results) {
       if (result.status === "rejected")
         continue
-      if (init?.noCheck && result.value.isOk())
+      if (result.value.isErr())
+        continue
+      if (init?.noCheck)
         return result.value
       const raw = JSON.stringify(result.value.inner)
       const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
@@ -337,7 +341,7 @@ export async function tryEthereumFetch<T>(ethereum: BgEthereumContext, init: Rpc
     if (counters.size < 2)
       return await Promise.any(promises)
 
-    console.warn(`Different results from multiple circuits for ${init.method}`)
+    console.warn(`Different results from multiple circuits for ${init.method} on ${ethereum.chain.name}`)
 
     /**
      * Sort truths by occurence
@@ -348,12 +352,12 @@ export async function tryEthereumFetch<T>(ethereum: BgEthereumContext, init: Rpc
      * Two concurrent truths
      */
     if (sorteds[0].value === sorteds[1].value) {
-      console.warn(`Could not choose truth for ${init.method}`)
+      console.warn(`Could not choose truth for ${init.method} on ${ethereum.chain.name}`)
       throw new Error(`Could not choose truth`)
     }
 
     return fetcheds.get(sorteds[0].key)!
-  })
+  }).then(r => new Ok(r.mapErrSync(e => new Fail(e)).inner))
 }
 
 export function getTotalPricedBalance(coin: "usd", storage: IDBStorage) {

@@ -1342,6 +1342,9 @@ export class Global {
       const unstored = await core.tryUnstore<any, unknown, Error>(stored, { key: query.cacheKey }).then(r => r.throw(t))
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
+      if (fetched.isErr())
+        console.warn(`Could not fetch ${ethereum.chain.name}`, fetched)
+
       return fetched
     })
   }

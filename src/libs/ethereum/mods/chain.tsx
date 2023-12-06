@@ -170,7 +170,7 @@ export const chainByChainId: Chains = {
   324: {
     name: "zkSync",
     chainId: 324,
-    urls: ["https://mainnet.era.zksync.io"],
+    urls: ["https://1rpc.io/zksync2-era"],
     etherscan: "https://explorer.zksync.io/",
     token: {
       uuid: "664007af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -187,6 +187,25 @@ export const chainByChainId: Chains = {
           mask: `url(/assets/chains/zksync.png) no-repeat center / contain`,
           WebkitMask: `url(/assets/chains/zksync.png) no-repeat center / contain`
         }} />
+      </div>
+    },
+  },
+  7700: {
+    name: "Canto",
+    chainId: 7700,
+    urls: ["https://canto.gravitychain.io"],
+    etherscan: "https://cantoscan.com/",
+    token: {
+      uuid: "c0098941-1a08-4db1-9498-03a4cbceb672",
+      type: "native",
+      name: "Canto",
+      chainId: 7700,
+      symbol: "CANTO",
+      decimals: 18
+    },
+    icon() {
+      return <div className="h-6 w-6 bg-green-300 rounded-full flex items-center justify-center">
+
       </div>
     },
   },
@@ -239,7 +258,7 @@ export const chainByChainId: Chains = {
   42220: {
     name: "Celo",
     chainId: 42220,
-    urls: ["https://forno.celo.org", "https://celo.api.onfinality.io/public"],
+    urls: ["https://1rpc.io/celo"],
     etherscan: "https://celoscan.io",
     token: {
       uuid: "664010af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -299,7 +318,7 @@ export const chainByChainId: Chains = {
   11155111: {
     name: "Sepolia (testnet)",
     chainId: 11155111,
-    urls: ["https://endpoints.omniatech.io/v1/eth/sepolia/public"],
+    urls: ["wss://ethereum-sepolia.publicnode.com"],
     etherscan: "https://sepolia.etherscan.io",
     token: {
       uuid: "664013af-5c47-4b6e-ab3e-c0c130e23b3c",
