@@ -19,6 +19,7 @@
     "zip:chrome": "cd ./dist/chrome && zip -r -X ../chrome.zip .",
     "zip:firefox": "cd ./dist/firefox && zip -r -X ../firefox.zip .",
     "zip:safari": "cd ./dist/safari && zip -r ../safari.zip .",
+    "preversion": "find . -name '.DS_Store' -delete",
     "version": "npm run build && npm run zip && git update-index --no-assume-unchanged ./dist/chrome.zip ./dist/firefox.zip ./dist/safari.zip ./dist/website.zip && git add --force ./dist/*.zip",
     "postversion": "git update-index --assume-unchanged ./dist/chrome.zip ./dist/firefox.zip ./dist/safari.zip ./dist/website.zip",
     "xcode": "xcrun safari-web-extension-converter ./dist/safari --project-location xcode --app-name brume-wallet",
