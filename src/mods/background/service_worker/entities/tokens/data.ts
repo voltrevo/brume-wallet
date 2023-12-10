@@ -1,8 +1,7 @@
 import { TokenAbi } from "@/libs/abi/erc20.abi"
 import { chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
-import { Fixed, FixedInit, ZeroHexFixed } from "@/libs/fixed/fixed"
 import { Mutators } from "@/libs/xswr/mutators"
-import { Cubane, ZeroHexString } from "@hazae41/cubane"
+import { Cubane, Fixed, ZeroHexFixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fetched, IDBStorage, SimpleQuery, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
@@ -105,7 +104,7 @@ export namespace BgNativeToken {
     }
 
     export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-      return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, FixedInit, Error>, Error>>(async t => {
+      return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, Fixed.From, Error>, Error>>(async t => {
         const [account, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
         const query = schema(ethereum, account, block, storage)
         return new Ok(query)
@@ -116,7 +115,7 @@ export namespace BgNativeToken {
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await tryEthereumFetch<ZeroHexString>(ethereum, request, {}).then(r => r.mapSync(d => d.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals))))
 
-      const indexer = async (states: States<FixedInit, Error>) => {
+      const indexer = async (states: States<Fixed.From, Error>) => {
         return await Result.unthrow<Result<void, Error>>(async t => {
           if (block !== "pending")
             return Ok.void()
@@ -146,13 +145,13 @@ export namespace BgNativeToken {
           }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
           const pricedBalanceQuery = getPricedBalance(ethereum, account, "usd", storage)
-          await pricedBalanceQuery.tryMutate(Mutators.set<FixedInit, Error>(new Data(pricedBalance))).then(r => r.throw(t))
+          await pricedBalanceQuery.tryMutate(Mutators.set<Fixed.From, Error>(new Data(pricedBalance))).then(r => r.throw(t))
 
           return Ok.void()
         })
       }
 
-      return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
+      return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
         key: key(ethereum, account, block),
         fetcher,
         indexer,
@@ -190,7 +189,7 @@ export namespace BgContractToken {
     }
 
     export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-      return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, FixedInit, Error>, Error>>(async t => {
+      return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, Fixed.From, Error>, Error>>(async t => {
         const [account, address, block] = (request as RpcRequestPreinit<[ZeroHexString, string, string]>).params
 
         const tokenQuery = BgContractToken.schema(ethereum.chain.chainId, address, storage)
@@ -205,7 +204,7 @@ export namespace BgContractToken {
     }
 
     export function schema(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
-      const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
+      const fetcher = () => Result.unthrow<Result<Fetched<Fixed.From, Error>, Error>>(async t => {
         const data = Cubane.Abi.tryEncode(TokenAbi.balanceOf.from(account)).throw(t)
 
         const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
@@ -226,7 +225,7 @@ export namespace BgContractToken {
         return new Ok(new Data(fixed))
       })
 
-      const indexer = async (states: States<FixedInit, Error>) => {
+      const indexer = async (states: States<Fixed.From, Error>) => {
         return await Result.unthrow<Result<void, Error>>(async t => {
           if (block !== "pending")
             return Ok.void()
@@ -256,13 +255,13 @@ export namespace BgContractToken {
           }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
           const pricedBalanceQuery = getTokenPricedBalance(ethereum, account, token, "usd", storage)
-          await pricedBalanceQuery.tryMutate(Mutators.set<FixedInit, Error>(new Data(pricedBalance))).then(r => r.throw(t))
+          await pricedBalanceQuery.tryMutate(Mutators.set<Fixed.From, Error>(new Data(pricedBalance))).then(r => r.throw(t))
 
           return Ok.void()
         })
       }
 
-      return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
+      return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
         key: key(ethereum, account, token, block),
         fetcher,
         indexer,

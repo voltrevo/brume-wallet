@@ -1,7 +1,6 @@
 import { BigIntToHex, BigInts } from "@/libs/bigints/bigints";
 import { UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
-import { Fixed } from "@/libs/fixed/fixed";
 import { Outline } from "@/libs/icons/icons";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -12,7 +11,7 @@ import { Button } from "@/libs/ui/button";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
-import { Address, Cubane, ZeroHexString } from "@hazae41/cubane";
+import { Address, Cubane, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
@@ -126,7 +125,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & EthereumCo
       }).throw(t)
 
       const signature = Cubane.Abi.FunctionSignature.tryParse("transfer(address,uint256)").throw(t)
-      const fixed = Fixed.fromDecimalString(defValueInput, token.decimals)
+      const fixed = Fixed.fromString(defValueInput, token.decimals)
       const args = signature.from(Address.from(address), fixed.value)
       const data = Cubane.Abi.tryEncode(args).throw(t)
 

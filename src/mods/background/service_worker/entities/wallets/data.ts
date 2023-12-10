@@ -2,13 +2,12 @@ import { EnsAbi } from "@/libs/abi/ens.abi"
 import { TokenAbi } from "@/libs/abi/erc20.abi"
 import { PairAbi } from "@/libs/abi/pair.abi"
 import { ChainData, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
-import { Fixed, FixedInit } from "@/libs/fixed/fixed"
 import { Maps } from "@/libs/maps/maps"
 import { TorRpc } from "@/libs/rpc/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Bytes } from "@hazae41/bytes"
-import { Abi, Ens, ZeroHexString } from "@hazae41/cubane"
+import { Abi, Ens, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, Fetched, FetcherMore, IDBStorage, SimpleQuery, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
@@ -361,26 +360,26 @@ export async function tryEthereumFetch<T>(ethereum: BgEthereumContext, init: Rpc
 }
 
 export function getTotalPricedBalance(coin: "usd", storage: IDBStorage) {
-  return createQuery<string, FixedInit, Error>({
+  return createQuery<string, Fixed.From, Error>({
     key: `totalPricedBalance/${coin}`,
     storage
   })
 }
 
 export function getTotalPricedBalanceByWallet(coin: "usd", storage: IDBStorage) {
-  const indexer = async (states: States<Record<string, FixedInit>, Error>) => {
+  const indexer = async (states: States<Record<string, Fixed.From>, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
       const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
       const totalBalance = getTotalPricedBalance(coin, storage)
-      await totalBalance.tryMutate(Mutators.data<FixedInit, Error>(total)).then(r => r.throw(t))
+      await totalBalance.tryMutate(Mutators.data<Fixed.From, Error>(total)).then(r => r.throw(t))
 
       return Ok.void()
     })
   }
 
-  return createQuery<string, Record<string, FixedInit>, Error>({
+  return createQuery<string, Record<string, Fixed.From>, Error>({
     key: `totalPricedBalanceByWallet/${coin}`,
     indexer,
     storage
@@ -388,7 +387,7 @@ export function getTotalPricedBalanceByWallet(coin: "usd", storage: IDBStorage) 
 }
 
 export function getTotalWalletPricedBalance(account: string, coin: "usd", storage: IDBStorage) {
-  const indexer = async (states: States<FixedInit, Error>) => {
+  const indexer = async (states: States<Fixed.From, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
@@ -399,7 +398,7 @@ export function getTotalWalletPricedBalance(account: string, coin: "usd", storag
     })
   }
 
-  return createQuery<string, FixedInit, Error>({
+  return createQuery<string, Fixed.From, Error>({
     key: `totalWalletPricedBalance/${account}/${coin}`,
     indexer,
     storage
@@ -407,19 +406,19 @@ export function getTotalWalletPricedBalance(account: string, coin: "usd", storag
 }
 
 export function getPricedBalanceByToken(account: string, coin: "usd", storage: IDBStorage) {
-  const indexer = async (states: States<Record<string, FixedInit>, Error>) => {
+  const indexer = async (states: States<Record<string, Fixed.From>, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
       const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
       const totalBalance = getTotalWalletPricedBalance(account, coin, storage)
-      await totalBalance.tryMutate(Mutators.data<FixedInit, Error>(total)).then(r => r.throw(t))
+      await totalBalance.tryMutate(Mutators.data<Fixed.From, Error>(total)).then(r => r.throw(t))
 
       return Ok.void()
     })
   }
 
-  return createQuery<string, Record<string, FixedInit>, Error>({
+  return createQuery<string, Record<string, Fixed.From>, Error>({
     key: `pricedBalanceByToken/${account}/${coin}`,
     indexer,
     storage
@@ -427,7 +426,7 @@ export function getPricedBalanceByToken(account: string, coin: "usd", storage: I
 }
 
 export function getPricedBalance(ethereum: BgEthereumContext, account: string, coin: "usd", storage: IDBStorage) {
-  const indexer = async (states: States<FixedInit, Error>) => {
+  const indexer = async (states: States<Fixed.From, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const key = `${ethereum.chain.chainId}`
       const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
@@ -439,7 +438,7 @@ export function getPricedBalance(ethereum: BgEthereumContext, account: string, c
     })
   }
 
-  return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
+  return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
     key: {
       chainId: ethereum.chain.chainId,
       method: "eth_getPricedBalance",
@@ -465,7 +464,7 @@ export namespace BgPair {
     }
 
     export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-      return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, FixedInit, Error>, Error>>(async t => {
+      return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, Fixed.From, Error>, Error>>(async t => {
         const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
         const pair = Option.wrap(pairByAddress[address]).ok().throw(t)
         const query = schema(ethereum, pair, storage)
@@ -474,7 +473,7 @@ export namespace BgPair {
     }
 
     export function schema(ethereum: BgEthereumContext, pair: PairInfo, storage: IDBStorage) {
-      const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
+      const fetcher = () => Result.unthrow<Result<Fetched<Fixed.From, Error>, Error>>(async t => {
         const data = Abi.tryEncode(PairAbi.getReserves.from()).throw(t)
 
         const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
@@ -504,7 +503,7 @@ export namespace BgPair {
         return new Ok(new Data(price))
       })
 
-      return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
+      return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
         key: key(ethereum, pair),
         fetcher,
         storage
@@ -522,6 +521,7 @@ export namespace BgPair {
 
       if (pair.reversed)
         return quantity0.div(quantity1)
+
       return quantity1.div(quantity0)
     }
 
@@ -530,7 +530,7 @@ export namespace BgPair {
 }
 
 export function getTokenPricedBalance(ethereum: BgEthereumContext, account: string, token: ContractTokenData, coin: "usd", storage: IDBStorage) {
-  const indexer = async (states: States<FixedInit, Error>) => {
+  const indexer = async (states: States<Fixed.From, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       const key = `${ethereum.chain.chainId}/${token.address}`
       const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
@@ -542,7 +542,7 @@ export function getTokenPricedBalance(ethereum: BgEthereumContext, account: stri
     })
   }
 
-  return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
+  return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
     key: {
       chainId: ethereum.chain.chainId,
       method: "eth_getTokenPricedBalance",
@@ -554,7 +554,7 @@ export function getTokenPricedBalance(ethereum: BgEthereumContext, account: stri
 }
 
 export function getTokenBalance(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
-  const fetcher = () => Result.unthrow<Result<Fetched<FixedInit, Error>, Error>>(async t => {
+  const fetcher = () => Result.unthrow<Result<Fetched<Fixed.From, Error>, Error>>(async t => {
     const data = Abi.tryEncode(TokenAbi.balanceOf.from(account)).throw(t)
 
     const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
@@ -575,7 +575,7 @@ export function getTokenBalance(ethereum: BgEthereumContext, account: ZeroHexStr
     return new Ok(new Data(fixed))
   })
 
-  const indexer = async (states: States<FixedInit, Error>) => {
+  const indexer = async (states: States<Fixed.From, Error>) => {
     return await Result.unthrow<Result<void, Error>>(async t => {
       if (block !== "pending")
         return Ok.void()
@@ -605,13 +605,13 @@ export function getTokenBalance(ethereum: BgEthereumContext, account: ZeroHexStr
       }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
       const pricedBalanceQuery = getTokenPricedBalance(ethereum, account, token, "usd", storage)
-      await pricedBalanceQuery.tryMutate(Mutators.set<FixedInit, Error>(new Data(pricedBalance))).then(r => r.throw(t))
+      await pricedBalanceQuery.tryMutate(Mutators.set<Fixed.From, Error>(new Data(pricedBalance))).then(r => r.throw(t))
 
       return Ok.void()
     })
   }
 
-  return createQuery<EthereumQueryKey<unknown>, FixedInit, Error>({
+  return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
     key: {
       chainId: ethereum.chain.chainId,
       method: "eth_getTokenBalance",

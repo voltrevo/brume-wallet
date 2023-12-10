@@ -2,7 +2,6 @@
 import { Colors, Gradients } from "@/libs/colors/colors";
 import { UIError } from "@/libs/errors/errors";
 import { ChainData, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
-import { Fixed, FixedInit } from "@/libs/fixed/fixed";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useInputChange } from "@/libs/react/events";
@@ -18,6 +17,7 @@ import { Mutators } from "@/libs/xswr/mutators";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
 import { TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data";
+import { Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
@@ -43,26 +43,26 @@ export function WalletPage(props: UUIDProps) {
   </WalletDataProvider>
 }
 
-export function useDisplay(option: Nullable<Result<FixedInit, Error>>) {
+export function useDisplay(option: Nullable<Result<Fixed.From, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return Number(Fixed.from(fixed).move(5).toDecimalString()).toLocaleString(undefined)
+      return Number(Fixed.from(fixed).move(5).toString()).toLocaleString(undefined)
     }).mapErrSync(() => "Error").inner).unwrapOr("...")
   }, [option])
 }
 
-export function useDisplayUsd(option: Nullable<Result<FixedInit, Error>>) {
+export function useDisplayUsd(option: Nullable<Result<Fixed.From, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return Number(Fixed.from(fixed).move(2).toDecimalString()).toLocaleString(undefined, { style: "currency", currency: "USD" })
+      return Number(Fixed.from(fixed).move(2).toString()).toLocaleString(undefined, { style: "currency", currency: "USD" })
     }).mapErrSync(() => "Error").inner).unwrapOr("...")
   }, [option])
 }
 
-export function useCompactDisplayUsd(option: Nullable<Result<FixedInit, Error>>) {
+export function useCompactDisplayUsd(option: Nullable<Result<Fixed.From, Error>>) {
   return useMemo(() => {
     return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return Number(Fixed.from(fixed).move(2).toDecimalString()).toLocaleString(undefined, { style: "currency", currency: "USD", notation: "compact" })
+      return Number(Fixed.from(fixed).move(2).toString()).toLocaleString(undefined, { style: "currency", currency: "USD", notation: "compact" })
     }).mapErrSync(() => "Error").inner).unwrapOr("??")
   }, [option])
 }
@@ -343,7 +343,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
   const context = useEthereumContext(wallet.uuid, chain)
 
-  const [prices, setPrices] = useState(new Array<Nullable<FixedInit>>(token.pairs?.length ?? 0))
+  const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
   const balanceQuery = useBalance(wallet.address, context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
@@ -353,7 +353,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const balanceUsdFixed = usePricedBalance(wallet.address, "usd", context)
   const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
 
-  const onPrice = useCallback(([index, data]: [number, Nullable<FixedInit>]) => {
+  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
     setPrices(prices => {
       prices[index] = data
       return [...prices]
@@ -397,7 +397,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const context = useEthereumContext(wallet.uuid, chain)
 
-  const [prices, setPrices] = useState(new Array<Nullable<FixedInit>>(token.pairs?.length ?? 0))
+  const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
   const balanceQuery = useTokenBalance(wallet.address, token, context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
@@ -407,7 +407,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const balanceUsdFixed = useTokenPricedBalance(context, wallet.address, token, "usd")
   const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
 
-  const onPrice = useCallback(([index, data]: [number, Nullable<FixedInit>]) => {
+  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
     setPrices(prices => {
       prices[index] = data
       return [...prices]
@@ -445,7 +445,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   </>
 }
 
-function PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<FixedInit>]>) {
+function PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<Fixed.From>]>) {
   const { ok, index, address } = props
   const wallet = useWalletDataContext().unwrap()
 

@@ -1,7 +1,6 @@
 import { BigIntToHex, BigInts } from "@/libs/bigints/bigints";
 import { UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
-import { Fixed } from "@/libs/fixed/fixed";
 import { Outline } from "@/libs/icons/icons";
 import { ExternalDivisionLink } from "@/libs/next/anchor";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -11,7 +10,7 @@ import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
-import { Address, ZeroHexString } from "@hazae41/cubane";
+import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
@@ -149,7 +148,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumCont
               to: Address.from(address),
               maxFeePerGas: ZeroHexString.from(maxFeePerGas),
               maxPriorityFeePerGas: ZeroHexString.from(maxPriorityFeePerGas),
-              value: ZeroHexString.from(Fixed.fromDecimalString(defValueInput, 18).value),
+              value: ZeroHexString.from(Fixed.fromString(defValueInput, 18).value),
               nonce: ZeroHexString.from(nonce)
             }, "latest"],
             noCheck: true
@@ -164,7 +163,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumCont
             maxFeePerGas: maxFeePerGas,
             maxPriorityFeePerGas: maxPriorityFeePerGas,
             nonce: Number(nonce),
-            value: Fixed.fromDecimalString(defValueInput, 18).value
+            value: Fixed.fromString(defValueInput, 18).value
           })
         }).throw(t)
       }
@@ -188,7 +187,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumCont
               from: wallet.address,
               to: Address.from(address),
               gasPrice: ZeroHexString.from(gasPrice),
-              value: ZeroHexString.from(Fixed.fromDecimalString(defValueInput, 18).value),
+              value: ZeroHexString.from(Fixed.fromString(defValueInput, 18).value),
               nonce: ZeroHexString.from(nonce)
             }, "latest"],
             noCheck: true
@@ -202,7 +201,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumCont
             chainId: context.chain.chainId,
             gasPrice: gasPrice,
             nonce: Number(nonce),
-            value: Fixed.fromDecimalString(defValueInput, 18).value
+            value: Fixed.fromString(defValueInput, 18).value
           })
         }).throw(t)
       }
