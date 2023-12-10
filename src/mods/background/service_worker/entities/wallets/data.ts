@@ -487,14 +487,6 @@ export namespace BgPair {
         if (fetched.isErr())
           return new Ok(new Fail(fetched.inner))
 
-        console.warn(ethereum, {
-          method: "eth_call",
-          params: [{
-            to: pair.address,
-            data: data
-          }, "pending"]
-        }, fetched.inner)
-
         const returns = Abi.createTuple(Abi.Uint112, Abi.Uint112, Abi.Uint32)
         const [a, b] = Abi.tryDecode(returns, fetched.inner).throw(t).intoOrThrow()
 
