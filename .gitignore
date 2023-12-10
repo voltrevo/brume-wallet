@@ -39,5 +39,7 @@ next-env.d.ts
 
 xcode
 
+/dist
+
 # ignore jetbrains IDEs files
 .idea
