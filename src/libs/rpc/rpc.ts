@@ -9,10 +9,6 @@ import { Circuits } from "../tor/circuits/circuits"
 
 export namespace TorRpc {
 
-  export async function fetchWithCircuit<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit<unknown> & { circuit: Circuit } & CircuitOpenParams) {
-
-  }
-
   export async function tryFetchWithCircuit<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit<unknown> & { circuit: Circuit } & CircuitOpenParams): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
       const { id, method, params, circuit, ...rest } = init

@@ -1,5 +1,5 @@
 import { Future } from "@hazae41/future"
-import { RpcCounter, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
+import { RpcCounter, RpcInternalError, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
 import { CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
@@ -61,15 +61,19 @@ export class WebsitePort {
   }
 
   async tryRouteRequest(request: RpcRequestInit<unknown>) {
-    if (request.method === "brume_ping")
-      return Ok.void()
+    try {
+      if (request.method === "brume_ping")
+        return Ok.void()
 
-    const returned = await this.events.emit("request", [request])
+      const returned = await this.events.emit("request", [request])
 
-    if (returned.isSome())
-      return returned.inner
+      if (returned.isSome())
+        return returned.inner
 
-    return new Err(new Error(`Unhandled JSON-RPC request ${JSON.stringify(request)}`))
+      return new Err(new RpcInvalidRequestError())
+    } catch (e: unknown) {
+      return new Err(new RpcInternalError())
+    }
   }
 
   async onRequest(request: RpcRequestInit<unknown>) {
@@ -174,15 +178,19 @@ export class ExtensionPort {
   }
 
   async tryRouteRequest(request: RpcRequestInit<unknown>) {
-    if (request.method === "brume_ping")
-      return Ok.void()
+    try {
+      if (request.method === "brume_ping")
+        return Ok.void()
 
-    const returned = await this.events.emit("request", [request])
+      const returned = await this.events.emit("request", [request])
 
-    if (returned.isSome())
-      return returned.inner
+      if (returned.isSome())
+        return returned.inner
 
-    return new Err(new Error(`Unhandled JSON-RPC request ${JSON.stringify(request)}`))
+      return new Err(new RpcInvalidRequestError())
+    } catch (e: unknown) {
+      return new Err(new RpcInternalError())
+    }
   }
 
   async onRequest(request: RpcRequestInit<unknown>) {

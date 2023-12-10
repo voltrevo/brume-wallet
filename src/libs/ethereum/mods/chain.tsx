@@ -204,8 +204,10 @@ export const chainByChainId: Chains = {
       decimals: 18
     },
     icon() {
-      return <div className="h-6 w-6 bg-green-300 rounded-full flex items-center justify-center">
-
+      return <div className="h-6 w-6 bg-[#111111] rounded-full flex items-center justify-center">
+        <img className="w-4 h-4"
+          src="/assets/chains/canto.png"
+          alt="Canto" />
       </div>
     },
   },

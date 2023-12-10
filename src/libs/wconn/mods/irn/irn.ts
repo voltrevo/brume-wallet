@@ -3,7 +3,7 @@ import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { WcBrume, WebSocketConnection } from "@/mods/background/service_worker/entities/brumes/data";
 import { Box } from "@hazae41/box";
 import { Disposer } from "@hazae41/cleaner";
-import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
+import { RpcInternalError, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { Mutex } from "@hazae41/mutex";
 import { None } from "@hazae41/option";
 import { Pool, PoolEntry } from "@hazae41/piscine";
@@ -349,12 +349,16 @@ export class IrnClient {
   }
 
   async #tryRouteRequest(request: RpcRequestPreinit<unknown>) {
-    const returned = await this.events.emit("request", [request])
+    try {
+      const returned = await this.events.emit("request", [request])
 
-    if (returned.isSome())
-      return returned.inner
+      if (returned.isSome())
+        return returned.inner
 
-    return new Err(new Error(`Unhandled`))
+      return new Err(new RpcInvalidRequestError())
+    } catch (e: unknown) {
+      return new Err(new RpcInternalError())
+    }
   }
 
   async trySubscribe(topic: string): Promise<Result<string, Error>> {
