@@ -4,6 +4,7 @@ import { SeedsPage } from "../entities/seeds/all/page"
 import { SeedPage } from "../entities/seeds/page"
 import { SessionsPage } from "../entities/sessions/all/page"
 import { SettingsPage } from "../entities/settings/page"
+import { SnapsPage } from "../entities/snaps/all/page"
 import { WalletsPage } from "../entities/wallets/all/page"
 import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
@@ -31,6 +32,9 @@ export function Router() {
 
   if (matches = url.pathname.match(/^\/requests$/))
     return <RequestsPage />
+
+  if (matches = url.pathname.match(/^\/plugins$/))
+    return <SnapsPage />
 
   if (matches = url.pathname.match(/^\/wallet\/([^\/]+)$/))
     return <WalletPage uuid={matches[1]} />
