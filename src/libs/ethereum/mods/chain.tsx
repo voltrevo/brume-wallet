@@ -502,9 +502,9 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
   "0x471EcE3750Da237f93B8E339c536989b8978a438": {
     uuid: "7b8dab16-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
-    name: "CELO",
+    name: "Wrapped CELO",
     chainId: 42220,
-    symbol: "CELO",
+    symbol: "WCELO",
     decimals: 18,
     address: "0x471EcE3750Da237f93B8E339c536989b8978a438",
     pairs: ["0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422"]
