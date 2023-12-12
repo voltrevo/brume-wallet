@@ -42,9 +42,9 @@ import { Smux } from "@hazae41/smux"
 import { X25519 } from "@hazae41/x25519"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
-import { Blobby, BlobbyRef } from "./entities/blobbys/data"
+import { BgBlobby, BlobbyRef } from "./entities/blobbys/data"
 import { EthBrume, WcBrume } from "./entities/brumes/data"
-import { Origin, OriginData, PreOriginData } from "./entities/origins/data"
+import { BgOrigin, OriginData, PreOriginData } from "./entities/origins/data"
 import { BgAppRequests } from "./entities/requests/all/data"
 import { AppRequest, AppRequestData, BgAppRequest } from "./entities/requests/data"
 import { Seed, SeedData } from "./entities/seeds/data"
@@ -440,7 +440,7 @@ export class Global {
         const { storage } = Option.wrap(this.#user).ok().throw(t)
 
         const { origin, title, description } = preOriginData
-        const iconQuery = Blobby.schema(origin, storage)
+        const iconQuery = BgBlobby.schema(origin, storage)
         const iconRef = BlobbyRef.create(origin)
 
         if (preOriginData.icon) {
@@ -448,7 +448,7 @@ export class Global {
           await iconQuery.tryMutate(Mutators.data(iconData)).then(r => r.throw(t))
         }
 
-        const originQuery = Origin.schema(origin, storage)
+        const originQuery = BgOrigin.schema(origin, storage)
         const originData: OriginData = { origin, title, description, icons: [iconRef] }
         await originQuery.tryMutate(Mutators.data(originData)).then(r => r.throw(t))
 
@@ -1502,7 +1502,7 @@ export class Global {
         description: session.metadata.description,
       }
 
-      const originQuery = Origin.schema(originData.origin, storage)
+      const originQuery = BgOrigin.schema(originData.origin, storage)
       await originQuery.tryMutate(Mutators.data(originData)).then(r => r.throw(t))
 
       const authKeyJwk = await session.client.irn.brume.key.tryExportJwk().then(r => r.throw(t))
@@ -1586,7 +1586,7 @@ export class Global {
 
           const iconData = await Blobs.tryReadAsDataURL(iconBlob).then(r => r.throw(t))
 
-          const blobbyQuery = Blobby.schema(iconUrl, storage)
+          const blobbyQuery = BgBlobby.schema(iconUrl, storage)
           const blobbyData = { id: iconUrl, data: iconData }
           await blobbyQuery.tryMutate(Mutators.data(blobbyData)).then(r => r.throw(t))
 

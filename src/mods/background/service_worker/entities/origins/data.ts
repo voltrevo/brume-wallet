@@ -24,7 +24,7 @@ export interface OriginData {
   readonly description?: string
 }
 
-export namespace Origin {
+export namespace BgOrigin {
 
   export type Key = ReturnType<typeof key>
 

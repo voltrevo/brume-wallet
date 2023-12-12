@@ -118,7 +118,7 @@ export function TransactPage() {
 
     const zeroHexData = ZeroHexString.from(maybeData)
 
-    return maybeSignatures.items.map(({ text }) => {
+    return maybeSignatures.map(({ text }) => {
       return Result.unthrowSync<Result<{ text: string, decoded: string }, Error>>(t => {
         const abi = Cubane.Abi.FunctionSignature.tryParse(text).throw(t)
         const { args } = Cubane.Abi.tryDecode(abi.funcAndArgs, zeroHexData).throw(t)

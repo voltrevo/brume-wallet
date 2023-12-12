@@ -26,7 +26,7 @@ export interface BlobbyData {
   readonly data: string
 }
 
-export namespace Blobby {
+export namespace BgBlobby {
 
   export type Key = ReturnType<typeof key>
 

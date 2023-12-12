@@ -10,30 +10,6 @@ import { Err, Ok, Result } from "@hazae41/result";
 import { BgEthereumContext, EthereumFetchParams, EthereumQueryKey } from "../wallets/data";
 
 export interface SignatureData {
-  readonly hash: ZeroHexString,
-  readonly items: SignatureItem[]
-}
-
-export interface PreSignatureData {
-  readonly items: SignatureItem[],
-  readonly total_items: number
-  readonly total_pages: number
-}
-
-export interface SignatureItem {
-  readonly id: number
-  readonly is_valid: boolean
-
-  /**
-   * Date
-   */
-  readonly added_at: string,
-
-  /**
-   * Untruncated hash (no 0x prefix)
-   */
-  readonly hash: string & { length: 64 },
-
   /**
    * Signature
    */
@@ -82,7 +58,9 @@ export async function tryFetchRaw<T>(ethereum: BgEthereumContext, url: string, i
     for (const result of results) {
       if (result.status === "rejected")
         continue
-      if (init?.noCheck && result.value.isOk())
+      if (result.value.isErr())
+        continue
+      if (init?.noCheck)
         return result.value
       const raw = JSON.stringify(result.value.inner)
       const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
@@ -122,6 +100,7 @@ export namespace BgSignature {
 
   export function key(hash: ZeroHexString): EthereumQueryKey<unknown> {
     return {
+      version: 2,
       chainId: 1,
       method: method,
       params: [hash]
@@ -136,12 +115,11 @@ export namespace BgSignature {
 
   export function schema(ethereum: BgEthereumContext, hash: ZeroHexString, storage: IDBStorage) {
     const fetcher = async (key: unknown, more: FetcherMore) => {
-      const url = `https://api.etherface.io/v1/signatures/hash/all/${hash}/1`
-      const data = await tryFetchRaw<PreSignatureData>(ethereum, url, {}, more)
-      return data.mapSync(f => f.mapSync(({ items }) => ({ hash, items })))
+      const url = `https://sig.api.vechain.energy/${hash}`
+      return await tryFetchRaw<SignatureData[]>(ethereum, url, {}, more)
     }
 
-    return createQuery<EthereumQueryKey<unknown>, SignatureData, Error>({
+    return createQuery<EthereumQueryKey<unknown>, SignatureData[], Error>({
       key: key(hash),
       fetcher,
       // storage

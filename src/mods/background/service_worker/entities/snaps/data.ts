@@ -1,13 +1,63 @@
+import { IDBStorage, createQuery } from "@hazae41/glacier"
 import { RpcErr, RpcError, RpcOk, RpcRequestInit, RpcResponse } from "@hazae41/jsonrpc"
 import { Result } from "@hazae41/result"
 import { createSnap } from "./glue"
+
+export type Snap =
+  | SnapData
+  | SnapRef
+
+export interface SnapRef {
+  readonly ref: true
+  readonly uuid: string
+}
+
+export namespace SnapRef {
+
+  export function create(uuid: string): SnapRef {
+    return { ref: true, uuid }
+  }
+
+  export function from(snap: Snap): SnapRef {
+    return create(snap.uuid)
+  }
+
+}
 
 export interface SnapData {
   readonly uuid: string
   readonly name: string
 
+  readonly iconBase64: string
+
   readonly bytecodeBase64: string
   readonly signatureBase64: string
+}
+
+export namespace BgSnap {
+
+  export namespace All {
+
+    export const key = `snaps`
+
+    export function schema(storage: IDBStorage) {
+      return createQuery<string, SnapRef[], never>({ key, storage })
+    }
+
+  }
+
+  export type Key = ReturnType<typeof key>
+
+  export function key(uuid: string) {
+    return `snap/${uuid}`
+  }
+
+  export type Schema = ReturnType<typeof schema>
+
+  export function schema(id: string, storage: IDBStorage) {
+    return createQuery<Key, SnapData, never>({ key: key(id), storage })
+  }
+
 }
 
 export class SnapError extends Error {

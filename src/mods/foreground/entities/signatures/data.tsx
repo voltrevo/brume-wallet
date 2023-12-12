@@ -18,9 +18,9 @@ export namespace FgSignature {
       return
 
     const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-      await tryFetch<SignatureData>(request, ethereum)
+      await tryFetch<SignatureData[]>(request, ethereum)
 
-    return createQuery<EthereumQueryKey<unknown>, SignatureData, Error>({
+    return createQuery<EthereumQueryKey<unknown>, SignatureData[], Error>({
       key: BgSignature.key(hash),
       fetcher,
       storage
