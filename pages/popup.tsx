@@ -118,12 +118,12 @@ export function TransactPage() {
 
     const zeroHexData = ZeroHexString.from(maybeData)
 
-    return maybeSignatures.map(({ text }) => {
-      return Result.unthrowSync<Result<{ text: string, decoded: string }, Error>>(t => {
-        const abi = Cubane.Abi.FunctionSignature.tryParse(text).throw(t)
-        const { args } = Cubane.Abi.tryDecode(abi.funcAndArgs, zeroHexData).throw(t)
+    return maybeSignatures.map(({ name }) => {
+      return Result.runAndWrapSync<{ name: string, decoded: string }>(() => {
+        const abi = Cubane.Abi.FunctionSignature.parseOrThrow(name)
+        const { args } = Cubane.Abi.decodeOrThrow(abi.funcAndArgs, zeroHexData)
 
-        function stringify(x: any): string {
+        function stringifyOrThrow(x: any): string {
           if (typeof x === "string")
             return x
           if (typeof x === "boolean")
@@ -133,17 +133,15 @@ export function TransactPage() {
           if (typeof x === "bigint")
             return String(x)
           if (x instanceof Uint8Array)
-            return ZeroHexString.from(Base16.get().tryEncode(x).throw(t))
+            return ZeroHexString.from(Base16.get().encodeOrThrow(x))
           if (Array.isArray(x))
-            return `(${x.map(stringify).join(", ")})`
+            return `(${x.map(stringifyOrThrow).join(", ")})`
           return "unknown"
         }
 
-        const decoded = Result.runAndDoubleWrapSync(() => {
-          return args.intoOrThrow().map(stringify).join(", ")
-        }).throw(t)
+        const decoded = args.intoOrThrow().map(stringifyOrThrow).join(", ")
 
-        return new Ok({ text, decoded })
+        return { name, decoded }
       }).inspectErrSync(e => console.warn({ e })).unwrapOr(undefined)
     }).find(it => it != null)
   }, [maybeData, maybeHash, maybeSignatures])
@@ -222,7 +220,7 @@ export function TransactPage() {
         </div>}
       {maybeSignature &&
         <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
-          Function: {maybeSignature.text}
+          Function: {maybeSignature.name}
         </div>}
       {(maybeSignature || maybeData) &&
         <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">

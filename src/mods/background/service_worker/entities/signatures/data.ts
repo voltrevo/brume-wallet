@@ -3,17 +3,55 @@ import { AbortSignals } from "@/libs/signals/signals";
 import { Circuits } from "@/libs/tor/circuits/circuits";
 import { ZeroHexString } from "@hazae41/cubane";
 import { fetch } from "@hazae41/fleche";
-import { Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier";
+import { Data, Fail, Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Option } from "@hazae41/option";
-import { Err, Ok, Result } from "@hazae41/result";
+import { Catched, Err, Ok, Result } from "@hazae41/result";
 import { BgEthereumContext, EthereumFetchParams, EthereumQueryKey } from "../wallets/data";
+
+export type ApiResult<T> =
+  | ApiOk<T>
+  | ApiErr
+
+export interface ApiOk<T> {
+  readonly ok: true,
+  readonly result: T
+}
+
+export interface ApiErr {
+  readonly ok: false,
+  readonly error: unknown
+}
+
+export class ApiError extends Error {
+  readonly #class = ApiError
+  readonly name = this.#class.name
+
+  constructor(options: ErrorOptions) {
+    super(`Could not fetch`, options)
+  }
+
+  static from(cause: unknown) {
+    return new ApiError({ cause })
+  }
+
+}
+
+export interface ApiData {
+  readonly event: Record<string, unknown>,
+  readonly function: Record<string, ApiFunction[]>
+}
+
+export interface ApiFunction {
+  readonly name: string
+  readonly filtered: boolean
+}
 
 export interface SignatureData {
   /**
    * Signature
    */
-  readonly text: string
+  readonly name: string
 }
 
 export async function tryFetchRaw<T>(ethereum: BgEthereumContext, url: string, init: EthereumFetchParams, more: FetcherMore = {}) {
@@ -100,7 +138,7 @@ export namespace BgSignature {
 
   export function key(hash: ZeroHexString): EthereumQueryKey<unknown> {
     return {
-      version: 2,
+      version: 3,
       chainId: 1,
       method: method,
       params: [hash]
@@ -115,14 +153,28 @@ export namespace BgSignature {
 
   export function schema(ethereum: BgEthereumContext, hash: ZeroHexString, storage: IDBStorage) {
     const fetcher = async (key: unknown, more: FetcherMore) => {
-      const url = `https://sig.api.vechain.energy/${hash}`
-      return await tryFetchRaw<SignatureData[]>(ethereum, url, {}, more)
+      try {
+        const url = `https://sig.eth.samczsun.com/api/v1/signatures?function=${hash}`
+        const fetched = await tryFetchRaw<ApiResult<ApiData>>(ethereum, url, {}, more).then(r => r.unwrap())
+
+        if (fetched.isErr())
+          return new Ok(fetched)
+
+        const result = fetched.unwrap()
+
+        if (!result.ok)
+          return new Ok(new Fail(ApiError.from(result.error)))
+
+        return new Ok(new Data(result.result.function[hash]))
+      } catch (e: unknown) {
+        return new Ok(new Fail(Catched.from(e)))
+      }
     }
 
     return createQuery<EthereumQueryKey<unknown>, SignatureData[], Error>({
       key: key(hash),
       fetcher,
-      // storage
+      storage
     })
   }
 
