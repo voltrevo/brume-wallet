@@ -8,6 +8,10 @@ import { useTotalPricedBalance } from "../entities/wallets/data"
 import { useDisplayUsd } from "../entities/wallets/page"
 
 export function HomePage() {
+  const IS_CHROME_EXTENSION = location.protocol === "chrome-extension:"
+  const IS_FIREFOX_EXTENSION = location.protocol === "moz-extension:"
+  const IS_SAFARI_EXTENSION = location.protocol === "safari-web-extension:"
+
   const userData = useUserContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
@@ -27,9 +31,14 @@ export function HomePage() {
   useEffect(() => {
     getPersisted()
 
+    if (background.isExtension())
+      return
+    if (navigator.userAgent.toLowerCase().includes("firefox"))
+      return
+
     const t = setInterval(getPersisted, 1000)
     return () => clearTimeout(t)
-  }, [getPersisted])
+  }, [background, getPersisted])
 
   const Body =
     <PageBody>
@@ -52,7 +61,7 @@ export function HomePage() {
       </div>
       <div className="h-8" />
       <div className="grow" />
-      {persisted === false && <>
+      {persisted === false && background.isWebsite() && <>
         <div className="text-lg font-medium">
           Alerts
         </div>
@@ -67,7 +76,7 @@ export function HomePage() {
           <div className="h-2" />
         </div>
       </>}
-    </PageBody>
+    </PageBody >
 
   const Header =
     <PageHeader title="Home" />
