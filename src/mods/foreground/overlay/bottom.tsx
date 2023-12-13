@@ -12,7 +12,14 @@ export function Bottom() {
   return <nav className="h-16 w-full shrink-0 border-t border-t-contrast">
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">
       <a className={`group grow text-contrast data-[selected=true]:text-default`}
-        data-selected={path.pathname === "/" || path.pathname === "/wallets"}
+        data-selected={path.pathname === "/"}
+        href="#/">
+        <div className={`${Anchor.Shrinker.className}`}>
+          <Outline.HomeIcon className="s-md" />
+        </div>
+      </a>
+      <a className={`group grow text-contrast data-[selected=true]:text-default`}
+        data-selected={path.pathname === "/wallets"}
         href="#/wallets">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.WalletIcon className="s-md" />

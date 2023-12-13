@@ -8,6 +8,7 @@ import { SnapsPage } from "../entities/snaps/all/page"
 import { WalletsPage } from "../entities/wallets/all/page"
 import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
+import { HomePage } from "../home/page"
 import { usePathContext } from "./path/context"
 
 export function Router() {
@@ -16,10 +17,10 @@ export function Router() {
   let matches: RegExpMatchArray | null
 
   if (url.pathname === "")
-    return <WalletsPage />
+    return <HomePage />
 
   if (matches = url.pathname.match(/^\/$/))
-    return <WalletsPage />
+    return <HomePage />
 
   if (matches = url.pathname.match(/^\/wallets$/))
     return <WalletsPage />

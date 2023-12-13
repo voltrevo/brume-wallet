@@ -3,8 +3,11 @@ import { OptionalBackProps } from "@/libs/react/props/back";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { TitleProps } from "@/libs/react/props/title";
 import { Button } from "@/libs/ui/button";
+import { UserAvatar } from "../../entities/users/all/page";
+import { useUserContext } from "../../entities/users/context";
 
 export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps) {
+  const userData = useUserContext().unwrap()
   const { title, children, back } = props
 
   return <div className="p-4 flex items-center">
@@ -16,6 +19,16 @@ export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps
         </div>
       </Button.Base>
     </div>}
+    <button onClick={() => alert("This feature is not implemented yet")}>
+      <UserAvatar className="mt-0.5 s-lg text-lg"
+        colorIndex={userData.color}
+        name={userData.name} />
+    </button>
+    <div className="w-2" />
+    <div className="text-2xl font-medium text-contrast">
+      /
+    </div>
+    <div className="w-2" />
     <div className="text-2xl font-medium">
       {title}
     </div>
