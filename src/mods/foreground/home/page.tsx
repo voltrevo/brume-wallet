@@ -52,7 +52,7 @@ export function HomePage() {
       </div>
       <div className="h-8" />
       <div className="grow" />
-      {persisted === true && <>
+      {persisted === false && <>
         <div className="text-lg font-medium">
           Alerts
         </div>
