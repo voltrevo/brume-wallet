@@ -44,7 +44,7 @@ export function HomePage() {
         {totalPricedBalanceDisplay}
       </div>
       <div className="h-4" />
-      <div className="po-md border border-contrast h-[400px] rounded-xl flex flex-col items-center justify-center">
+      <div className="po-md border border-contrast h-[300px] rounded-xl flex flex-col items-center justify-center">
         <img src="/favicon.png" alt="logo" className="h-12 w-auto" />
         <div className="">
           Coming soon...

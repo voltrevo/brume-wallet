@@ -53,8 +53,6 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
     sessionStorage.setItem("uuid", userQuery.data.inner.uuid)
     sessionStorage.setItem("password", defPasswordInput)
 
-    await navigator.storage.persist()
-
     ok(userQuery.data.inner)
   }, [defPasswordInput, userQuery.data?.inner.uuid, background])
 
