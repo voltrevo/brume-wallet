@@ -57,7 +57,7 @@ import { BgContractToken, BgNativeToken } from "./entities/tokens/data"
 import { BgUnknown } from "./entities/unknown/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
-import { BgEns, BgEthereumContext, BgPair, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef, tryEthereumFetch } from "./entities/wallets/data"
+import { BgEns, BgEthereumContext, BgPair, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -828,7 +828,7 @@ export class Global {
         session: session.id
       }, mouse).then(r => r.throw(t).throw(t))
 
-      return await tryEthereumFetch<string>(ethereum, {
+      return await fetchOrFail<string>(ethereum, {
         method: "eth_sendRawTransaction",
         params: [signature],
         noCheck: true

@@ -2,7 +2,6 @@ import { Mutators } from "@/libs/xswr/mutators"
 import { UserStorage } from "@/mods/foreground/storage/user"
 import { Data, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { Ok, Result } from "@hazae41/result"
 import { Seeds } from "./all/data"
 
 export type Seed =
@@ -84,24 +83,20 @@ export namespace Seed {
 
     export function schema(uuid: string, storage: IDBStorage) {
       const indexer = async (states: States<SeedData, never>) => {
-        return await Result.unthrow<Result<void, Error>>(async t => {
-          const { current, previous = current } = states
+        const { current, previous = current } = states
 
-          const previousData = previous.real?.data
-          const currentData = current.real?.data
+        const previousData = previous.real?.data
+        const currentData = current.real?.data
 
-          await Seeds.Background.schema(storage).tryMutate(Mutators.mapData((d = new Data([])) => {
-            if (previousData?.inner.uuid === currentData?.inner.uuid)
-              return d
-            if (previousData != null)
-              d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
-            if (currentData != null)
-              d = d.mapSync(p => [...p, SeedRef.from(currentData.inner)])
+        await Seeds.Background.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+          if (previousData?.inner.uuid === currentData?.inner.uuid)
             return d
-          })).then(r => r.throw(t))
-
-          return Ok.void()
-        })
+          if (previousData != null)
+            d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
+          if (currentData != null)
+            d = d.mapSync(p => [...p, SeedRef.from(currentData.inner)])
+          return d
+        }))
       }
 
       return createQuery<Key, SeedData, never>({ key: key(uuid), storage, indexer })

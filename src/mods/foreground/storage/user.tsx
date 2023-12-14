@@ -3,7 +3,7 @@ import { RawState, Storage, core } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Mutex } from "@hazae41/mutex";
 import { None, Nullable, Option, Some } from "@hazae41/option";
-import { Ok, Result } from "@hazae41/result";
+import { Ok } from "@hazae41/result";
 import { createContext, useContext, useMemo } from "react";
 import { Background } from "../background/background";
 import { useBackgroundContext } from "../background/context";
@@ -40,68 +40,60 @@ export class UserStorage implements Storage {
       if (e.isErr())
         return new None()
       for (const key of this.keys.inner)
-        this.#trySubscribe(key)
+        this.#subscribeOrThrow(key)
       return new None()
     })
   }
 
-  async tryGet(cacheKey: string) {
+  async getOrThrow(cacheKey: string) {
     return await this.background.tryRequest<RawState>({
       method: "brume_get_user",
       params: [cacheKey]
-    }).then(r => r.flatten())
+    }).then(r => r.unwrap().unwrap())
   }
 
-  async trySet(cacheKey: string, value: Nullable<RawState>): Promise<Result<void, Error>> {
+  async setOrThrow(cacheKey: string, value: Nullable<RawState>): Promise<void> {
     return await this.background.tryRequest<void>({
       method: "brume_set_user",
       params: [cacheKey, value]
-    }).then(r => r.flatten())
+    }).then(r => r.unwrap().unwrap())
   }
 
-  async #trySubscribe(cacheKey: string): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      await this.background
-        .tryRequest<void>({ method: "brume_subscribe", params: [cacheKey] })
-        .then(r => r.throw(t).throw(t))
+  async #subscribeOrThrow(cacheKey: string): Promise<void> {
+    await this.background
+      .tryRequest<void>({ method: "brume_subscribe", params: [cacheKey] })
+      .then(r => r.unwrap().unwrap())
 
-      this.background.events.on("request", async (request) => {
-        if (request.method !== "brume_update")
-          return new None()
+    this.background.events.on("request", async (request) => {
+      if (request.method !== "brume_update")
+        return new None()
 
-        const [cacheKey2, stored] = (request as RpcRequestPreinit<[string, Nullable<RawState>]>).params
+      const [cacheKey2, stored] = (request as RpcRequestPreinit<[string, Nullable<RawState>]>).params
 
-        if (cacheKey2 !== cacheKey)
-          return new None()
-
-        core.storeds.set(cacheKey, stored)
-        core.unstoreds.delete(cacheKey)
-        await core.onState.emit(cacheKey, [])
-
-        return new Some(Ok.void())
-      })
-
-      const stored = await this.tryGet(cacheKey).then(r => r.throw(t))
+      if (cacheKey2 !== cacheKey)
+        return new None()
 
       core.storeds.set(cacheKey, stored)
       core.unstoreds.delete(cacheKey)
       await core.onState.emit(cacheKey, [])
 
-      return Ok.void()
+      return new Some(Ok.void())
     })
+
+    const stored = await this.getOrThrow(cacheKey)
+
+    core.storeds.set(cacheKey, stored)
+    core.unstoreds.delete(cacheKey)
+    await core.onState.emit(cacheKey, [])
   }
 
-  async trySubscribe(cacheKey: string): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      return this.keys.lock(async (keys) => {
-        if (keys.has(cacheKey))
-          return Ok.void()
+  async subscribeOrThrow(cacheKey: string): Promise<void> {
+    return this.keys.lock(async (keys) => {
+      if (keys.has(cacheKey))
+        return
 
-        await this.#trySubscribe(cacheKey).then(r => r.throw(t))
-        keys.add(cacheKey)
-
-        return Ok.void()
-      })
+      await this.#subscribeOrThrow(cacheKey)
+      keys.add(cacheKey)
     })
   }
 

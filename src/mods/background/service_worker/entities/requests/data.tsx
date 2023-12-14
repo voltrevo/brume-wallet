@@ -1,7 +1,6 @@
 import { Mutators } from "@/libs/xswr/mutators"
 import { Data, States, createQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { Ok, Result } from "@hazae41/result"
 import { BgAppRequests } from "./all/data"
 
 export type AppRequest =
@@ -41,24 +40,20 @@ export namespace BgAppRequest {
 
   export function schema(id: string) {
     const indexer = async (states: States<AppRequestData, never>) => {
-      return await Result.unthrow<Result<void, Error>>(async t => {
-        const { current, previous = current } = states
+      const { current, previous = current } = states
 
-        const previousData = previous.real?.data
-        const currentData = current.real?.data
+      const previousData = previous.real?.data
+      const currentData = current.real?.data
 
-        await BgAppRequests.schema().tryMutate(Mutators.mapData((d = new Data([])) => {
-          if (previousData?.inner.id === currentData?.inner.id)
-            return d
-          if (previousData != null)
-            d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
-          if (currentData != null)
-            d = d.mapSync(p => [...p, AppRequestRef.from(currentData.inner)])
+      await BgAppRequests.schema().mutate(Mutators.mapData((d = new Data([])) => {
+        if (previousData?.inner.id === currentData?.inner.id)
           return d
-        })).then(r => r.throw(t))
-
-        return Ok.void()
-      })
+        if (previousData != null)
+          d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
+        if (currentData != null)
+          d = d.mapSync(p => [...p, AppRequestRef.from(currentData.inner)])
+        return d
+      }))
     }
 
     return createQuery<Key, AppRequestData, never>({ key: key(id), indexer })

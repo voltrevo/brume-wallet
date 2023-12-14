@@ -8,10 +8,6 @@ import { useTotalPricedBalance } from "../entities/wallets/data"
 import { useDisplayUsd } from "../entities/wallets/page"
 
 export function HomePage() {
-  const IS_CHROME_EXTENSION = location.protocol === "chrome-extension:"
-  const IS_FIREFOX_EXTENSION = location.protocol === "moz-extension:"
-  const IS_SAFARI_EXTENSION = location.protocol === "safari-web-extension:"
-
   const userData = useUserContext().unwrap()
   const background = useBackgroundContext().unwrap()
 

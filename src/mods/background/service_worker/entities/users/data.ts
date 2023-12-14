@@ -78,27 +78,27 @@ export namespace User {
 
   export function schema(uuid: string, storage: IDBStorage) {
     const indexer = async (states: States<UserData, never>) => {
-      return await Result.unthrow<Result<void, Error>>(async t => {
-        const { current, previous = current } = states
+      const { current, previous = current } = states
 
-        const previousData = previous.real?.data
-        const currentData = current.real?.data
+      const previousData = previous.real?.data
+      const currentData = current.real?.data
 
-        await Users.schema(storage).tryMutate(Mutators.mapData((d = new Data([])) => {
-          if (previousData?.inner.uuid === currentData?.inner.uuid)
-            return d
-          if (previousData != null)
-            d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
-          if (currentData != null)
-            d = d.mapSync(p => [...p, UserRef.from(currentData.inner)])
+      await Users.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+        if (previousData?.inner.uuid === currentData?.inner.uuid)
           return d
-        })).then(r => r.throw(t))
-
-        return Ok.void()
-      })
+        if (previousData != null)
+          d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
+        if (currentData != null)
+          d = d.mapSync(p => [...p, UserRef.from(currentData.inner)])
+        return d
+      }))
     }
 
-    return createQuery<Key, UserData, never>({ key: key(uuid), storage, indexer })
+    return createQuery<Key, UserData, never>({
+      key: key(uuid),
+      storage,
+      indexer
+    })
   }
 
   export async function tryCreate(init: UserInit): Promise<Result<UserData, Error>> {

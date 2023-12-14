@@ -2,11 +2,11 @@ import { TokenAbi } from "@/libs/abi/erc20.abi"
 import { chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/xswr/mutators"
 import { Cubane, Fixed, ZeroHexFixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fetched, IDBStorage, SimpleQuery, States, createQuery } from "@hazae41/glacier"
+import { Data, Fail, IDBStorage, SimpleQuery, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
-import { Ok, Panic, Result } from "@hazae41/result"
-import { BgEthereumContext, BgPair, EthereumQueryKey, getPricedBalance, getTokenPricedBalance, tryEthereumFetch } from "../wallets/data"
+import { Catched, Ok, Panic, Result } from "@hazae41/result"
+import { BgEthereumContext, BgPair, EthereumContext, EthereumQueryKey, getPricedBalance, getTokenPricedBalance } from "../wallets/data"
 
 export type Token =
   | TokenData
@@ -113,42 +113,36 @@ export namespace BgNativeToken {
 
     export function schema(ethereum: BgEthereumContext, account: ZeroHexString, block: string, storage: IDBStorage) {
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await tryEthereumFetch<ZeroHexString>(ethereum, request, {}).then(r => r.mapSync(d => d.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals))))
+        await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, {}).then(f => f.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals)))
 
       const indexer = async (states: States<Fixed.From, Error>) => {
-        return await Result.unthrow<Result<void, Error>>(async t => {
-          if (block !== "pending")
-            return Ok.void()
+        if (block !== "pending")
+          return
 
-          const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
-            if (ethereum.chain.token.pairs == null)
+        const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
+          if (ethereum.chain.token.pairs == null)
+            return new None()
+
+          let pricedBalance: Fixed = Fixed.from(balance)
+
+          for (const pairAddress of ethereum.chain.token.pairs) {
+            const pair = pairByAddress[pairAddress]
+            const chain = chainByChainId[pair.chainId]
+
+            const price = BgPair.Price.schema({ ...ethereum, chain }, pair, storage)
+            const priceState = await price.state
+
+            if (priceState.data == null)
               return new None()
 
-            let pricedBalance: Fixed = Fixed.from(balance)
+            pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
+          }
 
-            for (const pairAddress of ethereum.chain.token.pairs) {
-              const pair = pairByAddress[pairAddress]
-              const chain = chainByChainId[pair.chainId]
+          return new Some(pricedBalance)
+        }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
-              const price = BgPair.Price.schema({ ...ethereum, chain }, pair, storage)
-              const priceState = await price.state
-
-              if (priceState.isErr())
-                return new None()
-              if (priceState.inner.data == null)
-                return new None()
-
-              pricedBalance = pricedBalance.mul(Fixed.from(priceState.inner.data.inner))
-            }
-
-            return new Some(pricedBalance)
-          }).then(o => o.unwrapOr(new Fixed(0n, 0)))
-
-          const pricedBalanceQuery = getPricedBalance(ethereum, account, "usd", storage)
-          await pricedBalanceQuery.tryMutate(Mutators.set<Fixed.From, Error>(new Data(pricedBalance))).then(r => r.throw(t))
-
-          return Ok.void()
-        })
+        const pricedBalanceQuery = getPricedBalance(ethereum, account, "usd", storage)
+        await pricedBalanceQuery.mutate(Mutators.set<Fixed.From, Error>(new Data(pricedBalance)))
       }
 
       return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
@@ -193,7 +187,7 @@ export namespace BgContractToken {
         const [account, address, block] = (request as RpcRequestPreinit<[ZeroHexString, string, string]>).params
 
         const tokenQuery = BgContractToken.schema(ethereum.chain.chainId, address, storage)
-        const tokenState = await tokenQuery.state.then(r => r.throw(t))
+        const tokenState = await tokenQuery.state
         const tokenData = tokenState.data?.inner ?? tokenByAddress[address]
 
         const token = Option.wrap(tokenData).ok().throw(t)
@@ -204,61 +198,59 @@ export namespace BgContractToken {
     }
 
     export function schema(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
-      const fetcher = () => Result.unthrow<Result<Fetched<Fixed.From, Error>, Error>>(async t => {
-        const data = Cubane.Abi.tryEncode(TokenAbi.balanceOf.from(account)).throw(t)
+      const fetcher = async () => {
+        try {
+          const data = Cubane.Abi.encodeOrThrow(TokenAbi.balanceOf.from(account))
 
-        const fetched = await tryEthereumFetch<ZeroHexString>(ethereum, {
-          method: "eth_call",
-          params: [{
-            to: token.address,
-            data: data
-          }, "pending"]
-        }, {}).then(r => r.throw(t))
+          const fetched = await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
+            method: "eth_call",
+            params: [{
+              to: token.address,
+              data: data
+            }, "pending"]
+          }, {})
 
-        if (fetched.isErr())
-          return new Ok(fetched)
+          if (fetched.isErr())
+            return fetched
 
-        const returns = Cubane.Abi.createTuple(Cubane.Abi.Uint256)
-        const [balance] = Cubane.Abi.tryDecode(returns, fetched.inner).throw(t).inner
-        const fixed = new Fixed(balance.intoOrThrow(), token.decimals)
+          const returns = Cubane.Abi.createTuple(Cubane.Abi.Uint256)
+          const [balance] = Cubane.Abi.decodeOrThrow(returns, fetched.inner).inner
+          const fixed = new Fixed(balance.intoOrThrow(), token.decimals)
 
-        return new Ok(new Data(fixed))
-      })
+          return new Data(fixed)
+        } catch (e: unknown) {
+          return new Fail(Catched.from(e))
+        }
+      }
 
       const indexer = async (states: States<Fixed.From, Error>) => {
-        return await Result.unthrow<Result<void, Error>>(async t => {
-          if (block !== "pending")
-            return Ok.void()
+        if (block !== "pending")
+          return
 
-          const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
-            if (token.pairs == null)
+        const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
+          if (token.pairs == null)
+            return new None()
+
+          let pricedBalance: Fixed = Fixed.from(balance)
+
+          for (const pairAddress of token.pairs) {
+            const pair = pairByAddress[pairAddress]
+            const chain = chainByChainId[pair.chainId]
+
+            const price = BgPair.Price.schema({ ...ethereum, chain }, pair, storage)
+            const priceState = await price.state
+
+            if (priceState.data == null)
               return new None()
 
-            let pricedBalance: Fixed = Fixed.from(balance)
+            pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
+          }
 
-            for (const pairAddress of token.pairs) {
-              const pair = pairByAddress[pairAddress]
-              const chain = chainByChainId[pair.chainId]
+          return new Some(pricedBalance)
+        }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
-              const price = BgPair.Price.schema({ ...ethereum, chain }, pair, storage)
-              const priceState = await price.state
-
-              if (priceState.isErr())
-                return new None()
-              if (priceState.inner.data == null)
-                return new None()
-
-              pricedBalance = pricedBalance.mul(Fixed.from(priceState.inner.data.inner))
-            }
-
-            return new Some(pricedBalance)
-          }).then(o => o.unwrapOr(new Fixed(0n, 0)))
-
-          const pricedBalanceQuery = getTokenPricedBalance(ethereum, account, token, "usd", storage)
-          await pricedBalanceQuery.tryMutate(Mutators.set<Fixed.From, Error>(new Data(pricedBalance))).then(r => r.throw(t))
-
-          return Ok.void()
-        })
+        const pricedBalanceQuery = getTokenPricedBalance(ethereum, account, token, "usd", storage)
+        await pricedBalanceQuery.mutate(Mutators.set<Fixed.From, Error>(new Data(pricedBalance)))
       }
 
       return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
@@ -277,30 +269,32 @@ export namespace BgContractToken {
 
   export function schema(chainId: number, address: string, storage: IDBStorage) {
     const indexer = async (states: States<ContractTokenData, never>) => {
-      return await Result.unthrow<Result<void, Error>>(async t => {
-        const { current, previous } = states
+      const { current, previous } = states
 
-        const previousData = previous?.real?.data?.inner
-        const currentData = current.real?.data?.inner
+      const previousData = previous?.real?.data?.inner
+      const currentData = current.real?.data?.inner
 
-        if (previousData?.uuid === currentData?.uuid)
-          return Ok.void()
+      if (previousData?.uuid === currentData?.uuid)
+        return
 
-        if (previousData != null)
-          await All.schema(storage)?.tryMutate(Mutators.mapData((d = new Data([])) => {
-            return d.mapSync(p => p.filter(x => x.uuid !== previousData.uuid))
-          })).then(r => r.throw(t))
+      if (previousData != null) {
+        await All.schema(storage)?.mutate(Mutators.mapData((d = new Data([])) => {
+          return d.mapSync(p => p.filter(x => x.uuid !== previousData.uuid))
+        }))
+      }
 
-        if (currentData != null)
-          await All.schema(storage)?.tryMutate(Mutators.mapData((d = new Data([])) => {
-            return d.mapSync(p => [...p, ContractTokenRef.from(currentData)])
-          })).then(r => r.throw(t))
-
-        return Ok.void()
-      })
+      if (currentData != null) {
+        await All.schema(storage)?.mutate(Mutators.mapData((d = new Data([])) => {
+          return d.mapSync(p => [...p, ContractTokenRef.from(currentData)])
+        }))
+      }
     }
 
-    return createQuery<string, ContractTokenData, never>({ key: key(chainId, address), indexer, storage })
+    return createQuery<string, ContractTokenData, never>({
+      key: key(chainId, address),
+      indexer,
+      storage
+    })
   }
 
 }

@@ -158,16 +158,16 @@ export namespace BgSignature {
         const fetched = await tryFetchRaw<ApiResult<ApiData>>(ethereum, url, {}, more).then(r => r.unwrap())
 
         if (fetched.isErr())
-          return new Ok(fetched)
+          return fetched
 
         const result = fetched.unwrap()
 
         if (!result.ok)
-          return new Ok(new Fail(ApiError.from(result.error)))
+          return new Fail(ApiError.from(result.error))
 
-        return new Ok(new Data(result.result.function[hash]))
+        return new Data(result.result.function[hash])
       } catch (e: unknown) {
-        return new Ok(new Fail(Catched.from(e)))
+        return new Fail(Catched.from(e))
       }
     }
 

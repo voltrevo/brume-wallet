@@ -1,6 +1,6 @@
 import { IDBStorage, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
-import { BgEthereumContext, EthereumFetchParams, EthereumQueryKey, tryEthereumFetch } from "../wallets/data"
+import { BgEthereumContext, EthereumContext, EthereumFetchParams, EthereumQueryKey } from "../wallets/data"
 
 export namespace BgUnknown {
 
@@ -11,7 +11,7 @@ export namespace BgUnknown {
 
   export function schema(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage) {
     const fetcher = async (request: EthereumQueryKey<unknown> & EthereumFetchParams) =>
-      await tryEthereumFetch<unknown>(ethereum, request)
+      await EthereumContext.fetchOrFail<unknown>(ethereum, request)
 
     return createQuery<EthereumQueryKey<unknown> & EthereumFetchParams, any, Error>({
       key: key(ethereum.chain.chainId, request),
