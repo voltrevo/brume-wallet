@@ -6,7 +6,6 @@ import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
 import { Data, States, createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { Ok, Result } from "@hazae41/result"
 
 export namespace FgTokenSettings {
 
@@ -27,27 +26,25 @@ export namespace FgTokenSettings {
       return
 
     const indexer = async (states: States<TokenSettingsData, never>) => {
-      return await Result.unthrow<Result<void, Error>>(async t => {
-        const { current, previous } = states
+      const { current, previous } = states
 
-        const previousData = previous?.real?.data?.inner
-        const currentData = current.real?.data?.inner
+      const previousData = previous?.real?.data?.inner
+      const currentData = current.real?.data?.inner
 
-        if (previousData?.uuid === currentData?.uuid)
-          return Ok.void()
+      if (previousData?.uuid === currentData?.uuid)
+        return
 
-        if (previousData != null)
-          await ByWallet.schema(previousData.wallet, storage)?.tryMutate(Mutators.mapData((d = new Data([])) => {
-            return d.mapSync(p => p.filter(x => x.uuid !== previousData.uuid))
-          })).then(r => r.throw(t))
+      if (previousData != null) {
+        await ByWallet.schema(previousData.wallet, storage)?.mutate(Mutators.mapData((d = new Data([])) => {
+          return d.mapSync(p => p.filter(x => x.uuid !== previousData.uuid))
+        }))
+      }
 
-        if (currentData != null)
-          await ByWallet.schema(currentData.wallet, storage)?.tryMutate(Mutators.mapData((d = new Data([])) => {
-            return d.mapSync(p => [...p, TokenSettingsRef.from(currentData)])
-          })).then(r => r.throw(t))
-
-        return Ok.void()
-      })
+      if (currentData != null) {
+        await ByWallet.schema(currentData.wallet, storage)?.mutate(Mutators.mapData((d = new Data([])) => {
+          return d.mapSync(p => [...p, TokenSettingsRef.from(currentData)])
+        }))
+      }
     }
 
     return createQuery<string, TokenSettingsData, never>({ key: BgTokenSettings.key(wallet, token), storage, indexer })

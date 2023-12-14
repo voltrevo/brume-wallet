@@ -57,7 +57,7 @@ export function TokenAddDialog(props: {}) {
         if (schema == null)
           throw new Panic()
 
-        const result = await schema.tryFetch().then(r => r.throw(t).throw(t).real?.current.throw(t))
+        const result = await schema.refetch().then(r => r.real?.current.throw(t))
 
         const returns = Cubane.Abi.createTuple(Cubane.Abi.String)
         const [name] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
@@ -81,7 +81,7 @@ export function TokenAddDialog(props: {}) {
         if (schema == null)
           throw new Panic()
 
-        const result = await schema.tryFetch().then(r => r.throw(t).throw(t).real?.current.throw(t))
+        const result = await schema.refetch().then(r => r.real?.current.throw(t))
 
         const returns = Cubane.Abi.createTuple(Cubane.Abi.String)
         const [symbol] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
@@ -105,7 +105,7 @@ export function TokenAddDialog(props: {}) {
         if (schema == null)
           throw new Panic()
 
-        const result = await schema.tryFetch().then(r => r.throw(t).throw(t).real?.current.throw(t))
+        const result = await schema.refetch().then(r => r.real?.current.throw(t))
 
         const returns = Cubane.Abi.createTuple(Cubane.Abi.Uint8)
         const [decimals] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
@@ -124,8 +124,8 @@ export function TokenAddDialog(props: {}) {
           decimals: decimals
         })
 
-        return new Ok(new Some(data))
-      }).then(r => r.throw(t))
+        return new Some(data)
+      })
 
       close()
 

@@ -530,8 +530,8 @@ function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
         return { ...d, enabled }
       }, s.real?.data)
 
-      return new Ok(new Some(data))
-    }).then(Results.logAndAlert)
+      return new Some(data)
+    })
   }, [])
 
   const tokenId = token.type === "native"

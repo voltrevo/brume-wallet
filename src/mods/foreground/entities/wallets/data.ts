@@ -69,7 +69,7 @@ export class EthereumSeededWalletInstance {
     return await Result.unthrow(async t => {
       const storage = new UserStorage(background)
       const seedQuery = Seed.Foreground.schema(data.seed.uuid, storage)
-      const seedState = await seedQuery?.state.then(r => r.throw(t))
+      const seedState = await seedQuery?.state
       const seedData = Option.wrap(seedState?.data?.inner).ok().throw(t)
 
       const seed = await SeedInstance.tryFrom(seedData, background).then(r => r.throw(t))
@@ -240,13 +240,13 @@ export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<Chain
   }, [uuid, chain, background])
 }
 
-export async function tryFetch<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, ethereum: FgEthereumContext): Promise<Result<Fetched<T, Error>, Error>> {
+export async function fetchOrFail<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, ethereum: FgEthereumContext): Promise<Fetched<T, Error>> {
   const { uuid, background, chain } = ethereum
 
   return await background.tryRequest<T>({
     method: "brume_eth_fetch",
     params: [uuid, chain.chainId, request]
-  }).then(r => r.mapSync(x => Fetched.rewrap(x)))
+  }).then(r => Fetched.rewrap(r.unwrap()))
 }
 
 export async function tryIndex<T>(request: RpcRequestPreinit<unknown>, ethereum: FgEthereumContext): Promise<Result<RpcResponse<T>, Error>> {
@@ -318,7 +318,7 @@ export function getBalance(address: string, context: Nullable<FgEthereumContext>
     return
 
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await tryFetch<Fixed.From>(request, context)
+    await fetchOrFail<Fixed.From>(request, context)
 
   return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
     key: {
@@ -384,7 +384,7 @@ export function getTokenBalance(address: string, token: ContractTokenData, conte
     return
 
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await tryFetch<Fixed.From>(request, context)
+    await fetchOrFail<Fixed.From>(request, context)
 
   return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
     key: {
@@ -425,7 +425,7 @@ export function getNonceSchema(address: Nullable<string>, context: Nullable<FgEt
     return undefined
 
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await tryFetch<string>(request, context).then(r => r.mapSync(r => r.mapSync(BigInt)))
+    await fetchOrFail<string>(request, context).then(r => r.mapSync(BigInt))
 
   return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
     key: {
@@ -455,7 +455,7 @@ export function getGasPriceSchema(context: Nullable<FgEthereumContext>, storage:
     return undefined
 
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryFetch<string>(request, context).then(r => r.mapSync(r => r.mapSync(BigInt)))
+    await fetchOrFail<string>(request, context).then(r => r.mapSync(BigInt))
 
   return createQuery<EthereumQueryKey<unknown> & EthereumFetchParams, bigint, Error>({
     key: {
@@ -486,7 +486,7 @@ export function getMaxPriorityFeePerGas(context: Nullable<FgEthereumContext>, st
     return undefined
 
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryFetch<string>(request, context).then(r => r.mapSync(r => r.mapSync(BigInt)))
+    await fetchOrFail<string>(request, context).then(r => r.mapSync(BigInt))
 
   return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
     key: {
@@ -521,7 +521,7 @@ export function getBlockByNumber(number: Nullable<string>, context: Nullable<FgE
     return undefined
 
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await tryFetch<Block>(request, context).then(r => r.mapSync(r => r))
+    await fetchOrFail<Block>(request, context).then(r => r.mapSync(r => r))
 
   return createQuery<EthereumQueryKey<unknown> & EthereumFetchParams, Block, Error>({
     key: {
@@ -550,7 +550,7 @@ export function getPairPrice(context: Nullable<FgEthereumContext>, pair: PairInf
     return
 
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await tryFetch<Fixed.From>(request, context)
+    await fetchOrFail<Fixed.From>(request, context)
 
   return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
     key: {
@@ -584,7 +584,7 @@ export namespace FgEns {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await tryFetch<ZeroHexString>(request, context)
+        await fetchOrFail<ZeroHexString>(request, context)
 
       return createQuery<EthereumQueryKey<unknown>, ZeroHexString, Error>({
         key: BgEns.Lookup.key(name),
@@ -604,7 +604,7 @@ export namespace FgEns {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await tryFetch<ZeroHexString>(request, context)
+        await fetchOrFail<ZeroHexString>(request, context)
 
       return createQuery<EthereumQueryKey<unknown>, Nullable<string>, Error>({
         key: BgEns.Reverse.key(address),

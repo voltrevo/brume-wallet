@@ -108,7 +108,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & EthereumCo
     return await Result.unthrow<Result<void, Error>>(async t => {
       const maybeNonce = await BigInts.tryParseInput(defNonceInput).ok().orElse(async () => {
         return await Result.unthrow<Result<bigint, Error>>(async t => {
-          return new Ok(await pendingNonceQuery.refetch().then(r => r.throw(t).throw(t).throw(t).real!.current.throw(t)))
+          return new Ok(await pendingNonceQuery.refetch().then(r => r.real!.current.throw(t)))
         }).then(r => r.ok())
       }).then(o => o.inner)
 
@@ -136,12 +136,12 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & EthereumCo
       */
       if (pendingBlock.baseFeePerGas != null) {
         const maxPriorityFeePerGas = await Result.unthrow<Result<bigint, Error>>(async t => {
-          return new Ok(await maxPriorityFeePerGasQuery.refetch().then(r => r.throw(t).throw(t).throw(t).real!.current.throw(t)))
+          return new Ok(await maxPriorityFeePerGasQuery.refetch().then(r => r.real!.current.throw(t)))
         }).then(r => r.mapErrSync(() => {
           return new UIError(`Could not fetch maxPriorityFeePerGas`)
         }).throw(t))
 
-        const baseFeePerGas = BigIntToHex.decode(pendingBlock.baseFeePerGas)
+        const baseFeePerGas = BigIntToHex.decodeOrThrow(pendingBlock.baseFeePerGas)
         const maxFeePerGas = baseFeePerGas + maxPriorityFeePerGas
 
         const gas = await context.background.tryRequest<string>({
@@ -179,7 +179,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & EthereumCo
        */
       else {
         const gasPrice = await Result.unthrow<Result<bigint, Error>>(async t => {
-          return new Ok(await gasPriceQuery.refetch().then(r => r.throw(t).throw(t).throw(t).real!.current.throw(t)))
+          return new Ok(await gasPriceQuery.refetch().then(r => r.real!.current.throw(t)))
         }).then(r => r.mapErrSync(() => {
           return new UIError(`Could not fetch gasPrice`)
         }).throw(t))

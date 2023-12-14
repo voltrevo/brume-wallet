@@ -2,7 +2,6 @@ import { useInputChange } from "@/libs/react/events";
 import { TextAnchor } from "@/libs/ui/anchor/anchor";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
-import { Ok } from "@hazae41/result";
 import { PageBody, PageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { useLogs } from "./data";
@@ -12,7 +11,7 @@ export function SettingsPage() {
 
   const onLogsChange = useInputChange(e => {
     const checked = e.currentTarget.checked
-    logs.mutate(() => new Ok(new Some(new Data(checked))))
+    logs.mutate(() => new Some(new Data(checked)))
   }, [])
 
   return <Page>

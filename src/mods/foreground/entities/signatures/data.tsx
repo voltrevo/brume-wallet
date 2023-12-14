@@ -7,7 +7,7 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
-import { FgEthereumContext, tryFetch } from "../wallets/data";
+import { FgEthereumContext, fetchOrFail } from "../wallets/data";
 
 export namespace FgSignature {
 
@@ -18,7 +18,7 @@ export namespace FgSignature {
       return
 
     const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-      await tryFetch<SignatureData[]>(request, ethereum)
+      await fetchOrFail<SignatureData[]>(request, ethereum)
 
     return createQuery<EthereumQueryKey<unknown>, SignatureData[], Error>({
       key: BgSignature.key(hash),

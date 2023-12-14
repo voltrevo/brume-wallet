@@ -4,20 +4,16 @@ import { FixedNumber } from "ethers"
 
 export namespace BigIntToHex {
 
-  export function tryEncode(value: bigint): Result<ZeroHexString, never> {
-    return new Ok(encode(value))
-  }
-
-  export function tryDecode(value: string) {
-    return new Ok(decode(value))
-  }
-
-  export function encode(value: bigint): ZeroHexString {
+  export function encodeOrThrow(value: bigint): ZeroHexString {
     return `0x${value.toString(16)}`
   }
 
-  export function decode(value: string) {
-    return BigInt(value)
+  export function decodeOrThrow(value: ZeroHexString) {
+    return value.length === 2 ? 0n : BigInt(value)
+  }
+
+  export function tryDecode(value: ZeroHexString) {
+    return Result.runAndDoubleWrapSync(() => decodeOrThrow(value))
   }
 
 }

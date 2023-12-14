@@ -6,7 +6,7 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
-import { FgEthereumContext, tryFetch } from "../wallets/data";
+import { FgEthereumContext, fetchOrFail } from "../wallets/data";
 
 export namespace FgUnknown {
 
@@ -15,7 +15,7 @@ export namespace FgUnknown {
       return
 
     const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-      await tryFetch<T>(request, context)
+      await fetchOrFail<T>(request, context)
 
     return createQuery<RpcRequestPreinit<unknown>, T, Error>({
       key: BgUnknown.key(context.chain.chainId, request),

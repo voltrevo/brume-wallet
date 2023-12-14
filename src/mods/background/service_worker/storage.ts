@@ -40,7 +40,7 @@ export async function tryCreateUserStorage(user: UserData, password: string): Pr
     const keySerializer = hasher
     const valueSerializer = new AsyncPipeBicoder<RawState, string, string>(AsyncJson, crypter)
 
-    const storage = IDBStorage.tryCreate({ name: user.uuid, keySerializer, valueSerializer }).throw(t)
+    const storage = IDBStorage.createOrThrow({ name: user.uuid, keySerializer, valueSerializer })
 
     return new Ok({ storage, hasher, crypter })
   })

@@ -216,7 +216,7 @@ export function TransactPage() {
       </div>
       {value &&
         <div className="w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
-          Value: {BigIntToHex.tryDecode(value).mapSync(x => BigInts.float(x, 18)).ok().unwrapOr("Error")}
+          Value: {BigIntToHex.tryDecode(ZeroHexString.from(value)).mapSync(x => BigInts.float(x, 18)).ok().unwrapOr("Error")}
         </div>}
       {maybeSignature &&
         <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">

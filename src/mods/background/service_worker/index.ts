@@ -57,7 +57,7 @@ import { BgContractToken, BgNativeToken } from "./entities/tokens/data"
 import { BgUnknown } from "./entities/unknown/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
-import { BgEns, BgEthereumContext, BgPair, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
+import { BgEns, BgEthereumContext, BgPair, EthereumContext, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
 import { tryCreateUserStorage } from "./storage"
 
 declare global {
@@ -176,14 +176,16 @@ export class Global {
     })
   }
 
-  async tryGetStoredPassword(): Promise<Result<PasswordData, Error>> {
+  async getStoredPasswordOrThrow(): Promise<PasswordData> {
     if (IS_FIREFOX_EXTENSION) {
       const uuid = sessionStorage.getItem("uuid") ?? undefined
       const password = sessionStorage.getItem("password") ?? undefined
-      return new Ok({ uuid, password })
+      return { uuid, password }
     }
 
-    return await tryBrowser(() => browser.storage.session.get(["uuid", "password"]))
+    return await tryBrowser(() => {
+      return browser.storage.session.get(["uuid", "password"])
+    }).then(r => r.unwrap())
   }
 
   async trySetStoredPassword(uuid: string, password: string) {
@@ -196,46 +198,40 @@ export class Global {
     return await tryBrowser(() => browser.storage.session.set({ uuid, password }))
   }
 
-  async tryInit(): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      if (IS_EXTENSION) {
-        const { uuid, password } = await this.tryGetStoredPassword().then(r => r.throw(t))
-        await this.trySetCurrentUser(uuid, password).then(r => r.throw(t))
-      }
-
-      return Ok.void()
-    })
+  async initOrThrow(): Promise<void> {
+    if (IS_EXTENSION) {
+      const { uuid, password } = await this.getStoredPasswordOrThrow()
+      await this.setCurrentUserOrThrow(uuid, password)
+    }
   }
 
-  async trySetCurrentUser(uuid: Nullable<string>, password: Nullable<string>): Promise<Result<Nullable<UserSession>, Error>> {
-    return await Result.unthrow(async t => {
-      if (uuid == null)
-        return new Ok(undefined)
-      if (password == null)
-        return new Ok(undefined)
+  async setCurrentUserOrThrow(uuid: Nullable<string>, password: Nullable<string>): Promise<Nullable<UserSession>> {
+    if (uuid == null)
+      return undefined
+    if (password == null)
+      return undefined
 
-      const userQuery = User.schema(uuid, this.storage)
-      const userState = await userQuery.state.then(r => r.throw(t))
-      const userData = Option.wrap(userState.current?.get()).ok().throw(t)
+    const userQuery = User.schema(uuid, this.storage)
+    const userState = await userQuery.state
+    const userData = Option.unwrap(userState.current?.get())
 
-      const user: User = { ref: true, uuid: userData.uuid }
+    const user: User = { ref: true, uuid: userData.uuid }
 
-      const { storage, hasher, crypter } = await tryCreateUserStorage(userData, password).then(r => r.throw(t))
+    const { storage, hasher, crypter } = await tryCreateUserStorage(userData, password).then(r => r.unwrap())
 
-      const currentUserQuery = getCurrentUser()
-      await currentUserQuery.tryMutate(Mutators.data<User, never>(user)).then(r => r.throw(t))
+    const currentUserQuery = getCurrentUser()
+    await currentUserQuery.mutate(Mutators.data<User, never>(user))
 
-      const userSession: UserSession = { user, storage, hasher, crypter }
+    const userSession: UserSession = { user, storage, hasher, crypter }
 
-      this.#user = userSession
+    this.#user = userSession
 
-      await this.#tryWcReconnectAll().then(r => r.throw(t))
+    await this.#tryWcReconnectAll().then(r => r.unwrap())
 
-      this.#wcs = new Mutex(WcBrume.createPool(this.circuits, { capacity: 1 }))
-      this.#eths = new Mutex(EthBrume.createPool(this.circuits, chainByChainId, { capacity: 1 }))
+    this.#wcs = new Mutex(WcBrume.createPool(this.circuits, { capacity: 1 }))
+    this.#eths = new Mutex(EthBrume.createPool(this.circuits, chainByChainId, { capacity: 1 }))
 
-      return new Ok(userSession)
-    })
+    return userSession
   }
 
   async tryWaitPopupHello(window: chrome.windows.Window) {
@@ -320,14 +316,14 @@ export class Global {
   async tryRequestNoPopup<T>(request: AppRequestData): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
       const requestQuery = BgAppRequest.schema(request.id)
-      await requestQuery.tryMutate(Mutators.data<AppRequestData, never>(request)).then(r => r.throw(t))
+      await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
 
       const done = new Future<Result<void, Error>>()
 
       try {
         return await this.tryWaitResponse(request.id, done)
       } finally {
-        await requestQuery.tryDelete().then(r => r.throw(t))
+        await requestQuery.delete()
         done.resolve(Ok.void())
       }
     })
@@ -336,7 +332,7 @@ export class Global {
   async tryRequestPopup<T>(request: AppRequestData, mouse: Mouse, force?: boolean): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.unthrow(async t => {
       const requestQuery = BgAppRequest.schema(request.id)
-      await requestQuery.tryMutate(Mutators.data<AppRequestData, never>(request)).then(r => r.throw(t))
+      await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
 
       const done = new Future<Result<void, Error>>()
 
@@ -349,7 +345,7 @@ export class Global {
 
         return new Ok(response)
       } finally {
-        await requestQuery.tryDelete().then(r => r.throw(t))
+        await requestQuery.delete()
         done.resolve(Ok.void())
       }
     })
@@ -421,7 +417,7 @@ export class Global {
           const { storage } = Option.wrap(this.#user).ok().throw(t)
 
           const sessionQuery = Session.schema(currentSession, storage)
-          const sessionState = await sessionQuery.state.then(r => r.throw(t))
+          const sessionState = await sessionQuery.state
           const sessionData = Option.wrap(sessionState.data?.inner).ok().throw(t)
 
           return new Ok(sessionData)
@@ -445,21 +441,21 @@ export class Global {
 
         if (preOriginData.icon) {
           const iconData = { id: origin, data: preOriginData.icon }
-          await iconQuery.tryMutate(Mutators.data(iconData)).then(r => r.throw(t))
+          await iconQuery.mutate(Mutators.data(iconData))
         }
 
         const originQuery = BgOrigin.schema(origin, storage)
         const originData: OriginData = { origin, title, description, icons: [iconRef] }
-        await originQuery.tryMutate(Mutators.data(originData)).then(r => r.throw(t))
+        await originQuery.mutate(Mutators.data(originData))
 
         const sessionByOriginQuery = SessionByOrigin.schema(origin, storage)
-        const sessionByOriginState = await sessionByOriginQuery.state.then(r => r.throw(t))
+        const sessionByOriginState = await sessionByOriginQuery.state
 
         if (sessionByOriginState.data != null) {
           const sessionId = sessionByOriginState.data.inner.id
 
           const sessionQuery = Session.schema(sessionId, storage)
-          const sessionState = await sessionQuery.state.then(r => r.throw(t))
+          const sessionState = await sessionQuery.state
           const sessionData = Option.wrap(sessionState.data?.inner).ok().throw(t)
 
           slot.current = sessionId
@@ -474,7 +470,7 @@ export class Global {
           scripts.add(script)
 
           const { id } = sessionData
-          await Status.schema(id).tryMutate(Mutators.data<StatusData, never>({ id })).then(r => r.throw(t))
+          await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
 
           script.events.on("close", async () => {
             scripts!.delete(script)
@@ -482,7 +478,7 @@ export class Global {
 
             if (scripts!.size === 0) {
               const { id } = sessionData
-              await Status.schema(id).tryDelete().then(r => r.throw(t))
+              await Status.schema(id).delete()
             }
 
             return new None()
@@ -506,7 +502,7 @@ export class Global {
             const addresses = Result.all(await Promise.all(sessionData.wallets.map(async wallet => {
               return await Result.unthrow<Result<string, Error>>(async t => {
                 const walletQuery = Wallet.schema(wallet.uuid, storage)
-                const walletState = await walletQuery.state.then(r => r.throw(t))
+                const walletState = await walletQuery.state
                 const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
 
                 return new Ok(walletData.address)
@@ -544,7 +540,7 @@ export class Global {
         }
 
         const sessionQuery = Session.schema(sessionData.id, storage)
-        await sessionQuery.tryMutate(Mutators.data<SessionData, never>(sessionData)).then(r => r.throw(t))
+        await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
         slot.current = sessionData.id
 
@@ -558,7 +554,7 @@ export class Global {
         scripts.add(script)
 
         const { id } = sessionData
-        await Status.schema(id).tryMutate(Mutators.data<StatusData, never>({ id })).then(r => r.throw(t))
+        await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
 
         script.events.on("close", async () => {
           scripts!.delete(script)
@@ -566,7 +562,7 @@ export class Global {
 
           if (scripts!.size === 0) {
             const { id } = sessionData
-            await Status.schema(id).tryDelete().then(r => r.inspectErrSync(console.warn))
+            await Status.schema(id).delete().catch(console.warn)
           }
 
           return new None()
@@ -588,7 +584,7 @@ export class Global {
           const addresses = Result.all(await Promise.all(sessionData.wallets.map(async wallet => {
             return await Result.unthrow<Result<string, Error>>(async t => {
               const walletQuery = Wallet.schema(wallet.uuid, storage)
-              const walletState = await walletQuery.state.then(r => r.throw(t))
+              const walletState = await walletQuery.state
               const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
 
               return new Ok(walletData.address)
@@ -686,13 +682,10 @@ export class Global {
 
       const query = await this.tryRouteEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
-      /**
-       * Ignore cooldown or store errors, only throw if the actual fetch failed
-       */
-      await query.tryFetch().then(r => r.inspectSync(r => r.throw(t)))
+      try { await query.fetch() } catch { }
 
       const stored = core.storeds.get(query.cacheKey)
-      const unstored = await core.tryUnstore<any, unknown, Error>(stored, { key: query.cacheKey }).then(r => r.throw(t))
+      const unstored = await core.unstoreOrThrow<any, unknown, Error>(stored, { key: query.cacheKey })
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
       return fetched
@@ -706,7 +699,7 @@ export class Global {
       const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<string, Error>>(async t => {
           const walletQuery = Wallet.schema(wallet.uuid, storage)
-          const walletState = await walletQuery.state.then(r => r.throw(t))
+          const walletState = await walletQuery.state
           const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
 
           return new Ok(walletData.address)
@@ -724,7 +717,7 @@ export class Global {
       const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<string, Error>>(async t => {
           const walletQuery = Wallet.schema(wallet.uuid, storage)
-          const walletState = await walletQuery.state.then(r => r.throw(t))
+          const walletState = await walletQuery.state
           const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
 
           return new Ok(walletData.address)
@@ -745,7 +738,7 @@ export class Global {
         return new Ok(undefined)
 
       const walletQuery = Wallet.schema(walletRef.uuid, storage)
-      const walletState = await walletQuery.state.then(r => r.throw(t))
+      const walletState = await walletQuery.state
       const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
 
       return new Ok(walletData.address)
@@ -777,13 +770,10 @@ export class Global {
 
       const query = BgNativeToken.Balance.schema(ethereum, address, block, storage)
 
-      /**
-       * Ignore cooldown or store errors, only throw if the actual fetch failed
-       */
-      await query.tryFetch().then(r => r.inspectSync(r => r.throw(t)))
+      try { await query.fetch() } catch { }
 
       const stored = core.storeds.get(query.cacheKey)
-      const unstored = await core.tryUnstore<any, unknown, any>(stored, { key: query.cacheKey }).then(r => r.throw(t))
+      const unstored = await core.unstoreOrThrow<any, unknown, any>(stored, { key: query.cacheKey })
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
       return fetched
@@ -805,7 +795,7 @@ export class Global {
       const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<WalletData, Error>>(async t => {
           const walletQuery = Wallet.schema(wallet.uuid, storage)
-          const walletState = await walletQuery.state.then(r => r.throw(t))
+          const walletState = await walletQuery.state
           const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
 
           return new Ok(walletData)
@@ -828,11 +818,11 @@ export class Global {
         session: session.id
       }, mouse).then(r => r.throw(t).throw(t))
 
-      return await fetchOrFail<string>(ethereum, {
+      return await EthereumContext.fetchOrFail<string>(ethereum, {
         method: "eth_sendRawTransaction",
         params: [signature],
         noCheck: true
-      }).then(r => r.throw(t))
+      })
     })
   }
 
@@ -845,7 +835,7 @@ export class Global {
       const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<WalletData, Error>>(async t => {
           const walletQuery = Wallet.schema(wallet.uuid, storage)
-          const walletState = await walletQuery.state.then(r => r.throw(t))
+          const walletState = await walletQuery.state
           const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
 
           return new Ok(walletData)
@@ -881,7 +871,7 @@ export class Global {
       const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<WalletData, Error>>(async t => {
           const walletQuery = Wallet.schema(wallet.uuid, storage)
-          const walletState = await walletQuery.state.then(r => r.throw(t))
+          const walletState = await walletQuery.state
           const walletData = Option.wrap(walletState.data?.inner).ok().throw(t)
 
           return new Ok(walletData)
@@ -919,7 +909,7 @@ export class Global {
       const updatedSession = { ...session, chain }
 
       const sessionQuery = Session.schema(session.id, storage)
-      await sessionQuery.tryMutate(Mutators.replaceData(updatedSession)).then(r => r.throw(t))
+      await sessionQuery.mutate(Mutators.replaceData(updatedSession))
 
       for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([])) {
         await script.tryRequest({
@@ -1030,10 +1020,10 @@ export class Global {
       const user = await User.tryCreate(init).then(r => r.throw(t))
 
       const userQuery = User.schema(init.uuid, this.storage)
-      await userQuery.tryMutate(Mutators.data(user)).then(r => r.throw(t))
+      await userQuery.mutate(Mutators.data(user))
 
       const usersQuery = Users.schema(this.storage)
-      const usersState = await usersQuery.state.then(r => r.throw(t))
+      const usersState = await usersQuery.state
       const usersData = Option.wrap(usersState.data?.inner).ok().throw(t)
 
       return new Ok(usersData)
@@ -1044,10 +1034,12 @@ export class Global {
     return await Result.unthrow(async t => {
       const [uuid, password] = (request as RpcRequestPreinit<[string, string]>).params
 
-      await this.trySetCurrentUser(uuid, password).then(r => r.throw(t))
+      await this.setCurrentUserOrThrow(uuid, password)
 
-      if (IS_EXTENSION)
+      if (IS_EXTENSION) {
         await this.trySetStoredPassword(uuid, password).then(r => r.throw(t))
+        return Ok.void()
+      }
 
       return Ok.void()
     })
@@ -1061,7 +1053,7 @@ export class Global {
         return new Ok(undefined)
 
       const userQuery = User.schema(userSession.user.uuid, this.storage)
-      const userState = await userQuery.state.then(r => r.throw(t))
+      const userState = await userQuery.state
 
       return new Ok(userState.current?.inner)
     })
@@ -1074,7 +1066,7 @@ export class Global {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const sessionQuery = Session.schema(id, storage)
-      await sessionQuery.tryDelete().then(r => r.throw(t))
+      await sessionQuery.delete()
 
       const wcSession = this.wcBySession.get(id)
 
@@ -1118,7 +1110,7 @@ export class Global {
 
       const plain = Base64.get().tryDecodePadded(plainBase64).throw(t).copyAndDispose()
       const iv = Bytes.random(16)
-      const cipher = await crypter.tryEncrypt(plain, iv).then(r => r.throw(t))
+      const cipher = await crypter.encryptOrThrow(plain, iv)
 
       const ivBase64 = Base64.get().tryEncodePadded(iv).throw(t)
       const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
@@ -1135,7 +1127,7 @@ export class Global {
 
       const iv = Base64.get().tryDecodePadded(ivBase64).throw(t).copyAndDispose()
       const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
-      const plain = await crypter.tryDecrypt(cipher, iv).then(r => r.throw(t))
+      const plain = await crypter.decryptOrThrow(cipher, iv)
 
       const plainBase64 = Base64.get().tryEncodePadded(plain).throw(t)
 
@@ -1150,7 +1142,7 @@ export class Global {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const seedQuery = Seed.Background.schema(seed.uuid, storage)
-      await seedQuery.tryMutate(Mutators.data(seed)).then(r => r.throw(t))
+      await seedQuery.mutate(Mutators.data(seed))
 
       return Ok.void()
     })
@@ -1163,7 +1155,7 @@ export class Global {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const walletQuery = Wallet.schema(wallet.uuid, storage)
-      await walletQuery.tryMutate(Mutators.data(wallet)).then(r => r.throw(t))
+      await walletQuery.mutate(Mutators.data(wallet))
 
       return Ok.void()
     })
@@ -1196,7 +1188,7 @@ export class Global {
         if (cached != null)
           return new Ok(cached)
 
-        const stored = await this.storage.tryGet(cacheKey).then(r => r.throw(t))
+        const stored = await this.storage.getOrThrow(cacheKey)
         core.storeds.set(cacheKey, stored)
         core.unstoreds.delete(cacheKey)
         await core.onState.emit(cacheKey, [])
@@ -1218,7 +1210,7 @@ export class Global {
         if (cached != null)
           return new Ok(cached)
 
-        const stored = await storage.tryGet(cacheKey).then(r => r.throw(t))
+        const stored = await storage.getOrThrow(cacheKey)
 
         core.storeds.set(cacheKey, stored)
         core.unstoreds.delete(cacheKey)
@@ -1235,7 +1227,7 @@ export class Global {
 
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      storage.trySet(cacheKey, rawState).throw(t)
+      storage.setOrThrow(cacheKey, rawState)
       core.storeds.set(cacheKey, rawState)
       core.unstoreds.delete(cacheKey)
       await core.onState.emit(cacheKey, [])
@@ -1314,7 +1306,7 @@ export class Global {
 
       const query = await this.tryRouteEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
-      await core.tryReindex(query.cacheKey, query.settings).then(r => r.throw(t))
+      await core.reindexOrThrow(query.cacheKey, query.settings)
 
       return Ok.void()
     })
@@ -1333,13 +1325,10 @@ export class Global {
 
       const query = await this.tryRouteEthereum(ethereum, subrequest, storage).then(r => r.throw(t))
 
-      /**
-       * Ignore cooldown or store errors, only throw if the actual fetch failed
-       */
-      await query.tryFetch().then(r => r.inspectSync(r => r.throw(t)))
+      try { await query.fetch() } catch { }
 
       const stored = core.storeds.get(query.cacheKey)
-      const unstored = await core.tryUnstore<any, unknown, Error>(stored, { key: query.cacheKey }).then(r => r.throw(t))
+      const unstored = await core.unstoreOrThrow<any, unknown, Error>(stored, { key: query.cacheKey })
       const fetched = Option.wrap(unstored.current).ok().throw(t)
 
       if (fetched.isErr())
@@ -1353,7 +1342,7 @@ export class Global {
     return Result.unthrow(async t => {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
-      const logs = await BgSettings.Logs.schema(storage).state.then(r => r.throw(t))
+      const logs = await BgSettings.Logs.schema(storage).state
 
       if (logs.real?.current?.inner !== true)
         return Ok.void()
@@ -1374,7 +1363,7 @@ export class Global {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const persSessionsQuery = PersistentSessions.schema(storage)
-      const persSessionsState = await persSessionsQuery.state.then(r => r.throw(t))
+      const persSessionsState = await persSessionsQuery.state
 
       for (const sessionRef of Option.wrap(persSessionsState?.data?.inner).unwrapOr([]))
         this.#tryWcResolveAndReconnect(sessionRef).catch(console.warn)
@@ -1391,7 +1380,7 @@ export class Global {
       const { storage } = Option.wrap(this.#user).ok().throw(t)
 
       const sessionQuery = Session.schema(sessionRef.id, storage)
-      const sessionState = await sessionQuery.state.then(r => r.throw(t))
+      const sessionState = await sessionQuery.state
       const sessionDataOpt = Option.wrap(sessionState.data?.inner)
 
       if (sessionDataOpt.isNone())
@@ -1403,7 +1392,7 @@ export class Global {
 
       const { id } = sessionRef
       const error = sessionResult.mapErrSync(RpcError.rewrap).err().inner
-      await Status.schema(id).tryMutate(Mutators.data<StatusData, never>({ id, error })).then(r => r.throw(t))
+      await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id, error }))
 
       return Ok.void()
     })
@@ -1438,7 +1427,7 @@ export class Global {
           .then(r => r.throw(t))
 
         const sessionQuery = Session.schema(sessionData.id, storage)
-        await sessionQuery.tryMutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined })))).then(r => r.throw(t))
+        await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
       }
 
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
@@ -1483,7 +1472,7 @@ export class Global {
       const { user, storage } = Option.wrap(this.#user).ok().throw(t)
 
       const walletQuery = Wallet.schema(walletId, storage)
-      const walletState = await walletQuery.state.then(r => r.throw(t))
+      const walletState = await walletQuery.state
       const wallet = Option.wrap(walletState.current?.inner).ok().throw(t)
       const chain = Option.wrap(chainByChainId[1]).ok().throw(t)
 
@@ -1503,7 +1492,7 @@ export class Global {
       }
 
       const originQuery = BgOrigin.schema(originData.origin, storage)
-      await originQuery.tryMutate(Mutators.data(originData)).then(r => r.throw(t))
+      await originQuery.mutate(Mutators.data(originData))
 
       const authKeyJwk = await session.client.irn.brume.key.tryExportJwk().then(r => r.throw(t))
       const sessionKeyBase64 = Base64.get().tryEncodePadded(session.client.key).throw(t)
@@ -1524,7 +1513,7 @@ export class Global {
       }
 
       const sessionQuery = Session.schema(sessionData.id, storage)
-      await sessionQuery.tryMutate(Mutators.data<SessionData, never>(sessionData)).then(r => r.throw(t))
+      await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
       /**
        * Service worker can die here
@@ -1534,7 +1523,7 @@ export class Global {
         .then(Result.assert)
         .then(r => r.throw(t))
 
-      await sessionQuery.tryMutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined })))).then(r => r.throw(t))
+      await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
 
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")
@@ -1568,10 +1557,10 @@ export class Global {
       this.wcBySession.set(sessionData.id, session)
 
       const { id } = sessionData
-      await Status.schema(id).tryMutate(Mutators.data<StatusData, never>({ id })).then(r => r.throw(t))
+      await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
 
       const icons = session.metadata.icons.map<BlobbyRef>(x => ({ ref: true, id: x }))
-      await originQuery.tryMutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icons })))).then(r => r.throw(t))
+      await originQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icons }))))
 
       for (const iconUrl of session.metadata.icons) {
         Result.unthrow<Result<void, Error>>(async t => {
@@ -1588,7 +1577,7 @@ export class Global {
 
           const blobbyQuery = BgBlobby.schema(iconUrl, storage)
           const blobbyData = { id: iconUrl, data: iconData }
-          await blobbyQuery.tryMutate(Mutators.data(blobbyData)).then(r => r.throw(t))
+          await blobbyQuery.mutate(Mutators.data(blobbyData))
 
           return Ok.void()
         }).then(r => r.inspectErrSync(console.warn)).catch(console.error)
@@ -1622,36 +1611,32 @@ async function initZepar() {
   ChaCha20Poly1305.set(await ChaCha20Poly1305.fromZepar())
 }
 
-async function tryInit() {
-  return await Result.runAndDoubleWrap(async () => {
-    return await Result.unthrow<Result<Global, Error>>(async t => {
-      await Promise.all([initBerith(), initMorax(), initAlocer(), initZepar()])
+async function initOrThrow() {
+  await Promise.all([initBerith(), initMorax(), initAlocer(), initZepar()])
 
-      const gt = globalThis as any
-      gt.Echalote = Echalote
-      gt.Cadenas = Cadenas
-      gt.Fleche = Fleche
-      gt.Kcp = Kcp
-      gt.Smux = Smux
+  const gt = globalThis as any
+  gt.Echalote = Echalote
+  gt.Cadenas = Cadenas
+  gt.Fleche = Fleche
+  gt.Kcp = Kcp
+  gt.Smux = Smux
 
-      const tors = createTorPool({ capacity: 1 })
+  const tors = createTorPool({ capacity: 1 })
 
-      const tor = await tors.tryGetCryptoRandom().then(r => r.throw(t).throw(t).inner.inner)
+  const tor = await tors.tryGetCryptoRandom().then(r => r.unwrap().unwrap().inner.inner)
 
-      using circuit = await tor.createOrThrow(AbortSignal.timeout(5000))
-      const consensus = await Consensus.fetchOrThrow(circuit)
+  using circuit = await tor.createOrThrow(AbortSignal.timeout(5000))
+  const consensus = await Consensus.fetchOrThrow(circuit)
 
-      const storage = IDBStorage.tryCreate({ name: "memory" }).unwrap()
-      const global = new Global(consensus, tors, storage)
+  const storage = IDBStorage.createOrThrow({ name: "memory" })
+  const global = new Global(consensus, tors, storage)
 
-      await global.tryInit().then(r => r.throw(t))
+  await global.initOrThrow()
 
-      return new Ok(global)
-    })
-  }).then(r => r.flatten())
+  return global
 }
 
-const init = tryInit()
+const init = Result.runAndDoubleWrap(() => initOrThrow())
 
 if (IS_WEBSITE) {
 
