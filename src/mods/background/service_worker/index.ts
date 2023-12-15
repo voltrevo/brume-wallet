@@ -191,7 +191,8 @@ export class Global {
     if (IS_FIREFOX_EXTENSION) {
       sessionStorage.setItem("uuid", uuid)
       sessionStorage.setItem("password", password)
-      return { uuid, password }
+
+      return
     }
 
     await BrowserError.runOrThrow(() => browser.storage.session.set({ uuid, password }))
