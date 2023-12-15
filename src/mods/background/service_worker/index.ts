@@ -1,7 +1,7 @@
 import "@hazae41/symbol-dispose-polyfill"
 
 import { Blobs } from "@/libs/blobs/blobs"
-import { browser, tryBrowser } from "@/libs/browser/browser"
+import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { chainByChainId } from "@/libs/ethereum/mods/chain"
 import { Mime } from "@/libs/mime/mime"
@@ -58,7 +58,7 @@ import { BgUnknown } from "./entities/unknown/data"
 import { Users } from "./entities/users/all/data"
 import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
 import { BgEns, BgEthereumContext, BgPair, EthereumContext, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
-import { tryCreateUserStorage } from "./storage"
+import { createUserStorageOrThrow } from "./storage"
 
 declare global {
   interface ServiceWorkerGlobalScope {
@@ -180,22 +180,21 @@ export class Global {
     if (IS_FIREFOX_EXTENSION) {
       const uuid = sessionStorage.getItem("uuid") ?? undefined
       const password = sessionStorage.getItem("password") ?? undefined
+
       return { uuid, password }
     }
 
-    return await tryBrowser(() => {
-      return browser.storage.session.get(["uuid", "password"])
-    }).then(r => r.unwrap())
+    return await BrowserError.runOrThrow(() => browser.storage.session.get(["uuid", "password"]))
   }
 
-  async trySetStoredPassword(uuid: string, password: string) {
+  async setStoredPasswordOrThrow(uuid: string, password: string) {
     if (IS_FIREFOX_EXTENSION) {
       sessionStorage.setItem("uuid", uuid)
       sessionStorage.setItem("password", password)
-      return new Ok({ uuid, password })
+      return { uuid, password }
     }
 
-    return await tryBrowser(() => browser.storage.session.set({ uuid, password }))
+    await BrowserError.runOrThrow(() => browser.storage.session.set({ uuid, password }))
   }
 
   async initOrThrow(): Promise<void> {
@@ -217,7 +216,7 @@ export class Global {
 
     const user: User = { ref: true, uuid: userData.uuid }
 
-    const { storage, hasher, crypter } = await tryCreateUserStorage(userData, password).then(r => r.unwrap())
+    const { storage, hasher, crypter } = await createUserStorageOrThrow(userData, password)
 
     const currentUserQuery = getCurrentUser()
     await currentUserQuery.mutate(Mutators.data<User, never>(user))
@@ -226,7 +225,7 @@ export class Global {
 
     this.#user = userSession
 
-    await this.#tryWcReconnectAll().then(r => r.unwrap())
+    await this.#wcReconnectAllOrThrow()
 
     this.#wcs = new Mutex(WcBrume.createPool(this.circuits, { capacity: 1 }))
     this.#eths = new Mutex(EthBrume.createPool(this.circuits, chainByChainId, { capacity: 1 }))
@@ -268,11 +267,11 @@ export class Global {
 
           const url = force ? `popup.html#${pathname}` : undefined
 
-          await tryBrowser(async () => {
+          await BrowserError.tryRun(async () => {
             return await browser.tabs.update(tabId, { url, highlighted: true })
           }).then(r => r.throw(t))
 
-          await tryBrowser(async () => {
+          await BrowserError.tryRun(async () => {
             return await browser.windows.update(windowId, { focused: true })
           }).then(r => r.throw(t))
 
@@ -285,7 +284,7 @@ export class Global {
         const top = Math.max(mouse.y - (height / 2), 0)
         const left = Math.max(mouse.x - (width / 2), 0)
 
-        const window = await tryBrowser(async () => {
+        const window = await BrowserError.tryRun(async () => {
           return await browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left })
         }).then(r => r.throw(t))
 
@@ -1037,7 +1036,7 @@ export class Global {
       await this.setCurrentUserOrThrow(uuid, password)
 
       if (IS_EXTENSION) {
-        await this.trySetStoredPassword(uuid, password).then(r => r.throw(t))
+        await this.setStoredPasswordOrThrow(uuid, password)
         return Ok.void()
       }
 
@@ -1094,7 +1093,7 @@ export class Global {
     return await Result.unthrow(async t => {
       const [pathname] = (request as RpcRequestPreinit<[string]>).params
 
-      await tryBrowser(async () => {
+      await BrowserError.tryRun(async () => {
         return await browser.tabs.create({ url: `index.html#${pathname}` })
       }).then(r => r.throw(t))
 
@@ -1358,111 +1357,107 @@ export class Global {
     })
   }
 
-  async #tryWcReconnectAll(): Promise<Result<void, Error>> {
-    return Result.unthrow(async t => {
-      const { storage } = Option.wrap(this.#user).ok().throw(t)
+  async #wcReconnectAllOrThrow(): Promise<void> {
+    const { storage } = Option.unwrap(this.#user)
 
-      const persSessionsQuery = PersistentSessions.schema(storage)
-      const persSessionsState = await persSessionsQuery.state
+    const persSessionsQuery = PersistentSessions.schema(storage)
+    const persSessionsState = await persSessionsQuery.state
 
-      for (const sessionRef of Option.wrap(persSessionsState?.data?.inner).unwrapOr([]))
-        this.#tryWcResolveAndReconnect(sessionRef).catch(console.warn)
+    for (const sessionRef of Option.wrap(persSessionsState?.data?.inner).unwrapOr([]))
+      this.#wcResolveAndReconnectOrThrow(sessionRef).catch(console.warn)
 
-      return Ok.void()
-    })
+    return
   }
 
-  async #tryWcResolveAndReconnect(sessionRef: SessionRef): Promise<Result<void, Error>> {
-    return Result.unthrow(async t => {
-      if (this.wcBySession.has(sessionRef.id))
-        return Ok.void()
+  async #wcResolveAndReconnectOrThrow(sessionRef: SessionRef): Promise<void> {
+    if (this.wcBySession.has(sessionRef.id))
+      return
 
-      const { storage } = Option.wrap(this.#user).ok().throw(t)
+    const { storage } = Option.unwrap(this.#user)
 
-      const sessionQuery = Session.schema(sessionRef.id, storage)
-      const sessionState = await sessionQuery.state
-      const sessionDataOpt = Option.wrap(sessionState.data?.inner)
+    const sessionQuery = Session.schema(sessionRef.id, storage)
+    const sessionState = await sessionQuery.state
+    const sessionDataOpt = Option.wrap(sessionState.data?.inner)
 
-      if (sessionDataOpt.isNone())
-        return Ok.void()
-      if (sessionDataOpt.inner.type !== "wc")
-        return Ok.void()
+    if (sessionDataOpt.isNone())
+      return
+    if (sessionDataOpt.inner.type !== "wc")
+      return
 
-      const sessionResult = await this.#tryWcReconnect(sessionDataOpt.inner)
+    const sessionResult = await this.#tryWcReconnectOrThrow(sessionDataOpt.inner)
 
-      const { id } = sessionRef
-      const error = sessionResult.mapErrSync(RpcError.rewrap).err().inner
-      await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id, error }))
-
-      return Ok.void()
-    })
+    const { id } = sessionRef
+    const error = sessionResult.mapErrSync(RpcError.rewrap).err().inner
+    await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id, error }))
   }
 
-  async #tryWcReconnect(sessionData: WcSessionData): Promise<Result<WcSession, Error>> {
-    return await Result.unthrow(async t => {
-      const { storage } = Option.wrap(this.#user).ok().throw(t)
+  async #tryWcReconnectOrThrow(sessionData: WcSessionData): Promise<Result<WcSession, Error>> {
+    return await Result.runAndDoubleWrap(() => this.#wcReconnectOrThrow(sessionData))
+  }
 
-      const { topic, metadata, sessionKeyBase64, authKeyJwk, wallets, settlement } = sessionData
-      const wallet = Option.wrap(wallets[0]).ok().throw(t)
+  async #wcReconnectOrThrow(sessionData: WcSessionData): Promise<WcSession> {
+    const { storage } = Option.unwrap(this.#user)
 
-      const authKey = await Ed25519.get().PrivateKey.tryImportJwk(authKeyJwk).then(r => r.throw(t))
+    const { topic, metadata, sessionKeyBase64, authKeyJwk, wallets, settlement } = sessionData
+    const wallet = Option.unwrap(wallets[0])
 
-      const brume = await WcBrume.tryCreate(this.circuits, authKey).then(r => r.throw(t))
-      const irn = new IrnBrume(brume)
+    const authKey = await Ed25519.get().PrivateKey.importJwkOrThrow(authKeyJwk)
 
-      const rawSessionKey = Base64.get().tryDecodePadded(sessionKeyBase64).throw(t).copyAndDispose()
-      const sessionKey = Bytes.tryCast(rawSessionKey, 32).throw(t)
-      const sessionClient = CryptoClient.tryNew(topic, sessionKey, irn).throw(t)
-      const session = new WcSession(sessionClient, metadata)
+    const brume = await WcBrume.tryCreate(this.circuits, authKey).then(r => r.unwrap())
+    const irn = new IrnBrume(brume)
 
-      await irn.trySubscribe(topic).then(r => r.throw(t))
+    const rawSessionKey = Base64.get().decodePaddedOrThrow(sessionKeyBase64).copyAndDispose()
+    const sessionKey = Bytes.castOrThrow(rawSessionKey, 32)
+    const sessionClient = CryptoClient.tryNew(topic, sessionKey, irn).unwrap()
+    const session = new WcSession(sessionClient, metadata)
 
-      /**
-       * When settlement has been interrupted
-       */
-      if (settlement != null) {
-        await session.client.tryWait<boolean>(settlement)
-          .then(r => r.throw(t).throw(t))
-          .then(Result.assert)
-          .then(r => r.throw(t))
+    await irn.trySubscribe(topic).then(r => r.unwrap())
 
-        const sessionQuery = Session.schema(sessionData.id, storage)
-        await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
-      }
+    /**
+     * When settlement has been interrupted
+     */
+    if (settlement != null) {
+      await session.client.tryWait<boolean>(settlement)
+        .then(r => r.unwrap().unwrap())
+        .then(Result.assert)
+        .then(r => r.unwrap())
 
-      const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
-        if (suprequest.method !== "wc_sessionRequest")
-          return new None()
-        const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
-        const chain = Option.wrap(chainByChainId[Number(chainId.split(":")[1])]).ok().throw(t)
-        const brume = await this.#tryGetOrTakeEthBrume(wallet.uuid).then(r => r.throw(t))
+      const sessionQuery = Session.schema(sessionData.id, storage)
+      await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
+    }
 
-        const ethereum: BgEthereumContext = { chain, brume }
-
-        if (request.method === "eth_sendTransaction")
-          return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
-        if (request.method === "personal_sign")
-          return new Some(await this.personal_sign(ethereum, sessionData, request))
-        if (request.method === "eth_signTypedData_v4")
-          return new Some(await this.eth_signTypedData_v4(ethereum, sessionData, request))
+    const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
+      if (suprequest.method !== "wc_sessionRequest")
         return new None()
-      }
+      const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
+      const chain = Option.unwrap(chainByChainId[Number(chainId.split(":")[1])])
+      const brume = await this.#tryGetOrTakeEthBrume(wallet.uuid).then(r => r.unwrap())
 
-      const onCloseOrError = async () => {
-        session.client.events.off("request", onRequest)
-        session.client.irn.events.off("close", onCloseOrError)
-        session.client.irn.events.off("error", onCloseOrError)
-        return new None()
-      }
+      const ethereum: BgEthereumContext = { chain, brume }
 
-      session.client.events.on("request", onRequest, { passive: true })
-      session.client.irn.events.on("close", onCloseOrError, { passive: true })
-      session.client.irn.events.on("error", onCloseOrError, { passive: true })
+      if (request.method === "eth_sendTransaction")
+        return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
+      if (request.method === "personal_sign")
+        return new Some(await this.personal_sign(ethereum, sessionData, request))
+      if (request.method === "eth_signTypedData_v4")
+        return new Some(await this.eth_signTypedData_v4(ethereum, sessionData, request))
+      return new None()
+    }
 
-      this.wcBySession.set(sessionData.id, session)
+    const onCloseOrError = async () => {
+      session.client.events.off("request", onRequest)
+      session.client.irn.events.off("close", onCloseOrError)
+      session.client.irn.events.off("error", onCloseOrError)
+      return new None()
+    }
 
-      return new Ok(session)
-    })
+    session.client.events.on("request", onRequest, { passive: true })
+    session.client.irn.events.on("close", onCloseOrError, { passive: true })
+    session.client.irn.events.on("error", onCloseOrError, { passive: true })
+
+    this.wcBySession.set(sessionData.id, session)
+
+    return session
   }
 
   async brume_wc_connect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<WcMetadata, Error>> {

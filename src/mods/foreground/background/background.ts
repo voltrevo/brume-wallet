@@ -1,4 +1,4 @@
-import { browser, tryBrowser } from "@/libs/browser/browser"
+import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/cleaner"
@@ -272,11 +272,11 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
       const { index, pool } = params
 
       const raw = await tryLoop(async () => {
-        return await tryBrowser(async () => {
+        return BrowserError.tryRunSync(() => {
           const port = browser.runtime.connect({ name: "foreground" })
           port.onDisconnect.addListener(() => void chrome.runtime.lastError)
           return port
-        }).then(r => r.mapErrSync(Retry.new))
+        }).mapErrSync(Retry.new)
       }).then(r => r.throw(t))
 
       using preport = new Box(new Disposer(raw, () => raw.disconnect()))

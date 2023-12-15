@@ -17,32 +17,56 @@ export class BrowserError extends Error {
     return new BrowserError(undefined, { cause })
   }
 
-}
+  static async runOrThrow<T>(callback: () => Promise<T>) {
+    try {
+      const result = await callback()
 
-export async function tryBrowser<T>(callback: () => Promise<T>) {
-  try {
-    const result = await callback()
+      if (browser.runtime.lastError)
+        throw browser.runtime.lastError
 
-    if (browser.runtime.lastError)
-      return new Err(new BrowserError())
-
-    return new Ok(result)
-  } catch (e: unknown) {
-    return new Err(new BrowserError())
+      return result
+    } catch (e: unknown) {
+      throw BrowserError.from(e)
+    }
   }
-}
 
-export function tryBrowserSync<T>(callback: () => T) {
-  try {
-    const result = callback()
+  static runOrThrowSync<T>(callback: () => T) {
+    try {
+      const result = callback()
 
-    const error = browser.runtime.lastError
+      if (browser.runtime.lastError)
+        throw browser.runtime.lastError
 
-    if (error)
-      return new Err(BrowserError.from(error))
-
-    return new Ok(result)
-  } catch (e: unknown) {
-    return new Err(BrowserError.from(e))
+      return result
+    } catch (e: unknown) {
+      throw BrowserError.from(e)
+    }
   }
+
+  static async tryRun<T>(callback: () => Promise<T>) {
+    try {
+      const result = await callback()
+
+      if (browser.runtime.lastError)
+        throw browser.runtime.lastError
+
+      return new Ok(result)
+    } catch (e: unknown) {
+      return new Err(BrowserError.from(e))
+    }
+  }
+
+  static tryRunSync<T>(callback: () => T) {
+    try {
+      const result = callback()
+
+      if (browser.runtime.lastError)
+        throw browser.runtime.lastError
+
+      return new Ok(result)
+    } catch (e: unknown) {
+      return new Err(BrowserError.from(e))
+    }
+  }
+
 }

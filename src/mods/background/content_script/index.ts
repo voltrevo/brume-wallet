@@ -1,7 +1,7 @@
 import "@hazae41/symbol-dispose-polyfill"
 
 import { Blobs } from "@/libs/blobs/blobs"
-import { browser, tryBrowser } from "@/libs/browser/browser"
+import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionPort } from "@/libs/channel/channel"
 import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch"
 import { Mouse } from "@/libs/mouse/mouse"
@@ -120,11 +120,11 @@ new Pool<Disposer<ExtensionPort>>(async (params) => {
 
     await new Promise(ok => setTimeout(ok, 1))
 
-    const raw = await tryBrowser(async () => {
+    const raw = BrowserError.tryRunSync(() => {
       const port = browser.runtime.connect({ name: location.origin })
       port.onDisconnect.addListener(() => void chrome.runtime.lastError)
       return port
-    }).then(r => r.throw(t))
+    }).throw(t)
 
     using preport = new Box(new Disposer(raw, () => raw.disconnect()))
     using prerouter = new Box(new ExtensionPort("background", preport.inner.inner))

@@ -1,4 +1,4 @@
-import { browser, tryBrowser } from "@/libs/browser/browser";
+import { BrowserError, browser } from "@/libs/browser/browser";
 import { tryFetchAsJson } from "@/libs/fetch/fetch";
 import { Outline } from "@/libs/icons/icons";
 import { ChildrenProps } from "@/libs/react/props/children";
@@ -122,8 +122,8 @@ async function tryCheckDevExtensionUpdate(self: chrome.management.ExtensionInfo)
 
 async function tryCheckExtensionUpdate(): Promise<Result<boolean, Error>> {
   return await Result.unthrow(async t => {
-    const self = await tryBrowser(() => {
-      return browser.management.getSelf()
+    const self = await BrowserError.tryRun(async () => {
+      return await browser.management.getSelf()
     }).then(r => r.throw(t))
 
     if (self.installType === "development")

@@ -1,4 +1,4 @@
-import { browser, tryBrowser } from "@/libs/browser/browser"
+import { BrowserError, browser } from "@/libs/browser/browser"
 import { Outline } from "@/libs/icons/icons"
 import { Results } from "@/libs/results/results"
 import { Button } from "@/libs/ui/button"
@@ -9,7 +9,7 @@ export function NavBar() {
   const path = usePathContext().unwrap()
 
   const onOpen = useCallback(async () => {
-    await tryBrowser(async () => {
+    await BrowserError.tryRun(async () => {
       return await browser.tabs.create({ url: `index.html#${path.pathname}` })
     }).then(Results.logAndAlert)
   }, [path])
