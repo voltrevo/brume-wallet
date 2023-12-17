@@ -11,7 +11,7 @@ import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { BackgroundGuard, useBackgroundContext } from "@/mods/foreground/background/context";
-import { PageBody, PageHeader } from "@/mods/foreground/components/page/header";
+import { PageBody, UserPageHeader } from "@/mods/foreground/components/page/header";
 import { Page } from "@/mods/foreground/components/page/page";
 import { useAppRequests } from "@/mods/foreground/entities/requests/all/data";
 import { useAppRequest } from "@/mods/foreground/entities/requests/data";
@@ -557,14 +557,14 @@ export function WalletAndChainSelectPage() {
     </PageBody>
 
   const Header =
-    <PageHeader title="Select wallets">
+    <UserPageHeader title="Select wallets">
       <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={creator.enable}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.PlusIcon className="s-sm" />
         </div>
       </Button.Base>
-    </PageHeader>
+    </UserPageHeader>
 
   return <Page>
     <Dialog

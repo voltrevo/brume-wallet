@@ -22,7 +22,7 @@ import { Nullable, Option, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
-import { PageBody, PageHeader } from "../../components/page/header";
+import { PageBody, UserPageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { Path } from "../../router/path/context";
 import { TokenAddDialog } from "../tokens/add/dialog";
@@ -127,7 +127,7 @@ function WalletDataPage() {
   }, [wallet, background])
 
   const Header =
-    <PageHeader
+    <UserPageHeader
       title="Wallet"
       back={onBackClick}>
       <div className="flex gap-2">
@@ -146,7 +146,7 @@ function WalletDataPage() {
           </Button.Base>
         </>}
       </div>
-    </PageHeader>
+    </UserPageHeader>
 
   const Card =
     <div className="p-4 flex justify-center">

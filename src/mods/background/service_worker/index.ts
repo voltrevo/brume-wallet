@@ -822,7 +822,7 @@ export class Global {
         method: "eth_sendRawTransaction",
         params: [signature],
         noCheck: true
-      })
+      }, {})
     })
   }
 
@@ -1283,6 +1283,8 @@ export class Global {
     if (request.method === "web3_clientVersion")
       request.noCheck = true
     if (request.method === "eth_blockNumber")
+      request.noCheck = true
+    if (request.method === "eth_getBlockByNumber")
       request.noCheck = true
     if (request.method === "eth_getTransactionReceipt")
       request.noCheck = true

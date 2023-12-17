@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { useBackgroundContext } from "@/mods/foreground/background/context"
-import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
+import { PageBody, UserPageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { useCallback, useEffect, useState } from "react"
 import { useUserContext } from "../entities/users/context"
@@ -75,7 +75,7 @@ export function HomePage() {
     </PageBody >
 
   const Header =
-    <PageHeader title="Home" />
+    <UserPageHeader title="Home" />
 
   return <Page>
     {Header}

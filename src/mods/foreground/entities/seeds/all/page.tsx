@@ -5,7 +5,7 @@ import { OkProps } from "@/libs/react/props/promise"
 import { Button } from "@/libs/ui/button"
 import { Dialog } from "@/libs/ui/dialog/dialog"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
-import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
+import { PageBody, UserPageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path/context"
 import { useCallback } from "react"
@@ -33,14 +33,14 @@ export function SeedsPage() {
     </PageBody>
 
   const Header = <>
-    <PageHeader title="Seeds">
+    <UserPageHeader title="Seeds">
       <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={creator.enable}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.PlusIcon className="s-sm" />
         </div>
       </Button.Base>
-    </PageHeader>
+    </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">
         {`Seeds allow you to generate wallets from a single secret. You can import a seed from a mnemonic phrase or connect a hardware wallet.`}

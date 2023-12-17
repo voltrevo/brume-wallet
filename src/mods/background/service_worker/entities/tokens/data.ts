@@ -2,7 +2,7 @@ import { TokenAbi } from "@/libs/abi/erc20.abi"
 import { chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Cubane, Fixed, ZeroHexFixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fail, IDBStorage, SimpleQuery, States, createQuery } from "@hazae41/glacier"
+import { Data, Fail, FetcherMore, IDBStorage, SimpleQuery, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
 import { Catched, Ok, Panic, Result } from "@hazae41/result"
@@ -112,8 +112,8 @@ export namespace BgNativeToken {
     }
 
     export function schema(ethereum: BgEthereumContext, account: ZeroHexString, block: string, storage: IDBStorage) {
-      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, {}).then(f => f.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals)))
+      const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore) =>
+        await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, more).then(f => f.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals)))
 
       const indexer = async (states: States<Fixed.From, Error>) => {
         if (block !== "pending")
@@ -198,7 +198,7 @@ export namespace BgContractToken {
     }
 
     export function schema(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
-      const fetcher = async () => {
+      const fetcher = async (key: unknown, more: FetcherMore) => {
         try {
           const data = Cubane.Abi.encodeOrThrow(TokenAbi.balanceOf.from(account))
 
@@ -208,7 +208,7 @@ export namespace BgContractToken {
               to: token.address,
               data: data
             }, "pending"]
-          }, {})
+          }, more)
 
           if (fetched.isErr())
             return fetched

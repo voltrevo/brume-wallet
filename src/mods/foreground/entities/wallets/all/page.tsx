@@ -6,7 +6,7 @@ import { OkProps } from "@/libs/react/props/promise"
 import { Button } from "@/libs/ui/button"
 import { Dialog } from "@/libs/ui/dialog/dialog"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
-import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
+import { PageBody, UserPageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Path } from "@/mods/foreground/router/path/context"
 import { Nullable } from "@hazae41/option"
@@ -36,14 +36,14 @@ export function WalletsPage() {
     </PageBody>
 
   const Header = <>
-    <PageHeader title="Wallets">
+    <UserPageHeader title="Wallets">
       <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={creator.enable}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.PlusIcon className="s-sm" />
         </div>
       </Button.Base>
-    </PageHeader>
+    </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">
         {`Wallets allow you to hold funds and generate signatures. You can import wallets from a private key or generate them from a seed.`}

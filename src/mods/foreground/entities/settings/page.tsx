@@ -2,7 +2,7 @@ import { useInputChange } from "@/libs/react/events";
 import { TextAnchor } from "@/libs/ui/anchor/anchor";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
-import { PageBody, PageHeader } from "../../components/page/header";
+import { PageBody, UserPageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { useLogs } from "./data";
 
@@ -15,7 +15,7 @@ export function SettingsPage() {
   }, [])
 
   return <Page>
-    <PageHeader title="Settings" />
+    <UserPageHeader title="Settings" />
     <PageBody>
       <div className="po-md text-sm text-contrast uppercase">
         Others

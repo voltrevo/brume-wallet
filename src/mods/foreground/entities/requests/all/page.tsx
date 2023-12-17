@@ -9,7 +9,7 @@ import { qurl } from "@/libs/url/url"
 import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/data"
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
-import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
+import { PageBody, UserPageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { UserRejectedError } from "@/mods/foreground/errors/errors"
 import { Path } from "@/mods/foreground/router/path/context"
@@ -56,7 +56,7 @@ export function RequestsPage() {
     </PageBody>
 
   const Header = <>
-    <PageHeader title="Requests">
+    <UserPageHeader title="Requests">
       <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         disabled={tryRejectAll.loading || !Boolean(maybeRequests?.length)}
         onClick={tryRejectAll.run}>
@@ -64,7 +64,7 @@ export function RequestsPage() {
           <Outline.TrashIcon className="s-sm" />
         </div>
       </Button.Base>
-    </PageHeader>
+    </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">
         {`Request allow you to approve various actions such as transactions and signatures. These requests are sent by applications through sessions.`}

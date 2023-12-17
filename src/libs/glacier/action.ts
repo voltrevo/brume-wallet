@@ -25,7 +25,8 @@ export function useAction<K, D, P extends []>(
   const setAborter = useCallback((aborter: Nullable<AbortController>) => {
     aborterRef.current = aborter
     setCounter(c => c + 1)
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cacheKey])
 
   useEffect(() => {
     const onAborter = () => {

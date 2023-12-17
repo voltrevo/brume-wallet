@@ -4,7 +4,7 @@ import { UUIDProps } from "@/libs/react/props/uuid";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useCallback } from "react";
-import { PageBody, PageHeader } from "../../components/page/header";
+import { PageBody, UserPageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
 import { Path } from "../../router/path/context";
 import { SeededWalletCreatorDialog } from "../wallets/all/create/seeded";
@@ -38,7 +38,7 @@ function SeedDataPage() {
   }, [])
 
   const Header =
-    <PageHeader
+    <UserPageHeader
       title="Seed"
       back={onBackClick} />
 

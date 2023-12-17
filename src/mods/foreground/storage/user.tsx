@@ -60,9 +60,10 @@ export class UserStorage implements Storage {
   }
 
   async #subscribeOrThrow(cacheKey: string): Promise<void> {
-    await this.background
-      .tryRequest<void>({ method: "brume_subscribe", params: [cacheKey] })
-      .then(r => r.unwrap().unwrap())
+    await this.background.tryRequest<void>({
+      method: "brume_subscribe",
+      params: [cacheKey]
+    }).then(r => r.unwrap().unwrap())
 
     this.background.events.on("request", async (request) => {
       if (request.method !== "brume_update")

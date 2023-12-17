@@ -10,7 +10,7 @@ import { ChildrenProps } from "@/libs/react/props/children"
 import { ErrorProps } from "@/libs/react/props/error"
 import { Button } from "@/libs/ui/button"
 import { BackgroundProvider } from "@/mods/foreground/background/context"
-import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
+import { GlobalPageHeader, PageBody } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { PathProvider } from "@/mods/foreground/router/path/context"
 import { GlobalStorageProvider } from "@/mods/foreground/storage/global"
@@ -51,7 +51,7 @@ export function Fallback(props: ErrorProps) {
   }, [])
 
   return <Page>
-    <PageHeader title="Error" />
+    <GlobalPageHeader title="Error" />
     <PageBody>
       <div className="text-red-500">
         An unexpected error occured

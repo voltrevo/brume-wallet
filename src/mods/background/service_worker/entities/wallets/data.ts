@@ -229,45 +229,53 @@ export namespace EthereumContext {
       const { brume } = ethereum
 
       const pools = Option.wrap(brume[ethereum.chain.chainId]).ok().unwrap()
+      console.log("!!!pools", pools)
 
       async function runWithPoolOrThrow(index: number) {
-        const pool = await pools.tryGet(index).then(r => r.unwrap().unwrap().inner.inner)
+        const pool = await pools.tryGet(index, presignal).then(r => r.unwrap().unwrap().inner.inner)
+        console.log("!!!pool", pool, index)
 
         async function runWithConnOrThrow(index: number) {
-          const conn = await pool.tryGet(index).then(r => r.unwrap().unwrap().inner.inner)
+          const conn = await pool.tryGet(index, presignal).then(r => r.unwrap().unwrap().inner.inner)
+          console.log("!!!conn", conn, index)
 
-          const { counter, connection } = conn
-          const request = counter.prepare(init)
+          try {
+            const { counter, connection } = conn
+            const request = counter.prepare(init)
 
-          if (connection.isURL()) {
-            const { url, circuit } = connection
-            const signal = AbortSignals.timeout(5_000, presignal)
+            if (connection.isURL()) {
+              const { url, circuit } = connection
+              const signal = AbortSignals.timeout(5_000, presignal)
 
-            // console.debug(`Fetching ${init.method} from ${url.href} using ${circuit.id}`)
-            const result = await TorRpc.tryFetchWithCircuit<T>(url, { ...request, circuit, signal })
+              // console.debug(`Fetching ${init.method} from ${url.href} using ${circuit.id}`)
+              const result = await TorRpc.tryFetchWithCircuit<T>(url, { ...request, circuit, signal })
 
-            if (result.isErr())
-              console.debug(`Could not fetch ${init.method} from ${url.href} using ${circuit.id}`, { result })
+              if (result.isErr())
+                console.debug(`Could not fetch ${init.method} from ${url.href} using ${circuit.id}`, { result })
 
-            return Fetched.rewrap(result.unwrap())
+              return Fetched.rewrap(result.unwrap())
+            }
+
+            if (connection.isWebSocket()) {
+              await connection.cooldown
+
+              const { socket, circuit } = connection
+              const signal = AbortSignals.timeout(5_000, presignal)
+
+              // console.debug(`Fetching ${init.method} from ${socket.url} using ${circuit.id}`)
+              const result = await TorRpc.tryFetchWithSocket<T>(socket, request, signal)
+
+              if (result.isErr())
+                console.debug(`Could not fetch ${init.method} from ${socket.url} using ${circuit.id}`, { result })
+
+              return Fetched.rewrap(result.unwrap())
+            }
+
+            throw new Panic()
+          } catch (e: unknown) {
+            console.debug(`!!!Could not fetch ${init.method} on ${ethereum.chain.name}`, { e })
+            throw e
           }
-
-          if (connection.isWebSocket()) {
-            await connection.cooldown
-
-            const { socket, circuit } = connection
-            const signal = AbortSignals.timeout(5_000, presignal)
-
-            // console.debug(`Fetching ${init.method} from ${socket.url} using ${circuit.id}`)
-            const result = await TorRpc.tryFetchWithSocket<T>(socket, request, signal)
-
-            if (result.isErr())
-              console.debug(`Could not fetch ${init.method} from ${socket.url} using ${circuit.id}`, { result })
-
-            return Fetched.rewrap(result.unwrap())
-          }
-
-          throw new Panic()
         }
 
         const promises = Array.from({ length: pool.capacity }, (_, i) => runWithConnOrThrow(i))
@@ -463,31 +471,27 @@ export namespace BgPair {
     }
 
     export function schema(ethereum: BgEthereumContext, pair: PairInfo, storage: IDBStorage) {
-      const fetcher = async () => {
-        try {
-          const data = Abi.encodeOrThrow(PairAbi.getReserves.from())
+      const fetcher = (key: unknown, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
+        const data = Abi.encodeOrThrow(PairAbi.getReserves.from())
 
-          const fetched = await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
-            method: "eth_call",
-            params: [{
-              to: pair.address,
-              data: data
-            }, "pending"]
-          }, {})
+        const fetched = await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
+          method: "eth_call",
+          params: [{
+            to: pair.address,
+            data: data
+          }, "pending"]
+        }, more)
 
-          if (fetched.isErr())
-            return fetched
+        if (fetched.isErr())
+          return fetched
 
-          const returns = Abi.createTuple(Abi.Uint112, Abi.Uint112, Abi.Uint32)
-          const [a, b] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
+        const returns = Abi.createTuple(Abi.Uint112, Abi.Uint112, Abi.Uint32)
+        const [a, b] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
 
-          const price = compute(pair, [a, b])
+        const price = compute(pair, [a, b])
 
-          return new Data(price)
-        } catch (e: unknown) {
-          return new Fail(Catched.from(e))
-        }
-      }
+        return new Data(price)
+      })
 
       return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
         key: key(ethereum, pair),
@@ -536,7 +540,7 @@ export function getTokenPricedBalance(ethereum: BgEthereumContext, account: stri
 }
 
 export function getTokenBalance(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
-  const fetcher = async () => {
+  const fetcher = async (key: unknown, more: FetcherMore) => {
     try {
       const data = Abi.encodeOrThrow(TokenAbi.balanceOf.from(account))
 
@@ -546,7 +550,7 @@ export function getTokenBalance(ethereum: BgEthereumContext, account: ZeroHexStr
           to: token.address,
           data: data
         }, "pending"]
-      }, {})
+      }, more)
 
       if (fetched.isErr())
         return fetched
@@ -607,7 +611,7 @@ export namespace BgEns {
 
   export namespace Resolver {
 
-    export async function fetchOrFail(ethereum: BgEthereumContext, namehash: Uint8Array<32>): Promise<Fetched<ZeroHexString, Error>> {
+    export async function fetchOrFail(ethereum: BgEthereumContext, namehash: Uint8Array<32>, more: FetcherMore): Promise<Fetched<ZeroHexString, Error>> {
       try {
         const registry = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
 
@@ -619,7 +623,7 @@ export namespace BgEns {
             to: registry,
             data: data
           }, "pending"]
-        }, {})
+        }, more)
 
         if (fetched.isErr())
           return fetched
@@ -655,7 +659,7 @@ export namespace BgEns {
     }
 
     export function schema(ethereum: BgEthereumContext, name: string, storage: IDBStorage) {
-      const fetcher = () => fetchOrFail(ethereum, name)
+      const fetcher = (key: unknown, more: FetcherMore) => fetchOrFail(ethereum, name, more)
 
       return createQuery<EthereumQueryKey<unknown>, ZeroHexString, Error>({
         key: key(name),
@@ -664,10 +668,10 @@ export namespace BgEns {
       })
     }
 
-    export async function fetchOrFail(ethereum: BgEthereumContext, name: string) {
+    export async function fetchOrFail(ethereum: BgEthereumContext, name: string, more: FetcherMore) {
       try {
         const namehash = Ens.namehashOrThrow(name) as Uint8Array<32>
-        const resolver = await Resolver.fetchOrFail(ethereum, namehash)
+        const resolver = await Resolver.fetchOrFail(ethereum, namehash, more)
 
         if (resolver)
           return resolver
@@ -680,7 +684,7 @@ export namespace BgEns {
             to: resolver,
             data: data
           }, "pending"]
-        }, {})
+        }, more)
 
         if (fetched.isErr())
           return fetched
@@ -715,7 +719,7 @@ export namespace BgEns {
     }
 
     export function schema(ethereum: BgEthereumContext, address: ZeroHexString, storage: IDBStorage) {
-      const fetcher = () => fetchOrFail(ethereum, address)
+      const fetcher = (key: unknown, more: FetcherMore) => fetchOrFail(ethereum, address, more)
 
       return createQuery<EthereumQueryKey<unknown>, Nullable<string>, Error>({
         key: key(address),
@@ -724,10 +728,10 @@ export namespace BgEns {
       })
     }
 
-    export async function fetchUncheckedOrFail(ethereum: BgEthereumContext, address: ZeroHexString): Promise<Fetched<Nullable<string>, Error>> {
+    export async function fetchUncheckedOrFail(ethereum: BgEthereumContext, address: ZeroHexString, more: FetcherMore): Promise<Fetched<Nullable<string>, Error>> {
       try {
         const namehash = Ens.namehashOrThrow(`${address.slice(2)}.addr.reverse`) as Uint8Array<32>
-        const resolver = await Resolver.fetchOrFail(ethereum, namehash)
+        const resolver = await Resolver.fetchOrFail(ethereum, namehash, more)
 
         if (resolver.isErr())
           return resolver
@@ -740,7 +744,7 @@ export namespace BgEns {
             to: resolver.inner,
             data: data
           }, "pending"]
-        }, {})
+        }, more)
 
         if (fetched.isErr())
           return fetched
@@ -757,8 +761,8 @@ export namespace BgEns {
       }
     }
 
-    export async function fetchOrFail(ethereum: BgEthereumContext, address: ZeroHexString) {
-      const name = await fetchUncheckedOrFail(ethereum, address)
+    export async function fetchOrFail(ethereum: BgEthereumContext, address: ZeroHexString, more: FetcherMore) {
+      const name = await fetchUncheckedOrFail(ethereum, address, more)
 
       if (name.isErr())
         return name
@@ -766,7 +770,7 @@ export namespace BgEns {
       if (name.inner == null)
         return name
 
-      const address2 = await Lookup.fetchOrFail(ethereum, name.inner)
+      const address2 = await Lookup.fetchOrFail(ethereum, name.inner, more)
 
       if (address2.isErr())
         return address2

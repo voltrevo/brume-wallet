@@ -8,7 +8,7 @@ import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
 import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/data"
 import { Session } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
-import { PageBody, PageHeader } from "@/mods/foreground/components/page/header"
+import { PageBody, UserPageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { Nullable, Option } from "@hazae41/option"
 import { Ok, Result } from "@hazae41/result"
@@ -70,7 +70,7 @@ export function SessionsPage() {
     </PageBody>
 
   const Header = <>
-    <PageHeader title="Sessions">
+    <UserPageHeader title="Sessions">
       <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         disabled={tryDisconnectAll.loading || !length}
         onClick={tryDisconnectAll.run}>
@@ -78,7 +78,7 @@ export function SessionsPage() {
           <Outline.TrashIcon className="s-sm" />
         </div>
       </Button.Base>
-    </PageHeader>
+    </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">
         {`Sessions allow you to connect to applications. These applications can then make requests for you to approve.`}

@@ -20,6 +20,8 @@ const nextConfig = {
     return "brume"
   },
   webpack(config, options) {
+    config.optimization.minimize = false
+
     config.module.rules.push({
       test: /\.tsx?$/,
       use: "ts-loader",
