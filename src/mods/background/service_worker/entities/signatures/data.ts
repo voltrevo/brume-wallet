@@ -63,7 +63,7 @@ export async function tryFetchRaw<T>(ethereum: BgEthereumContext, url: string, i
 
     async function runWithPoolOrThrow(index: number) {
       return await Result.unthrow<Result<T, Error>>(async t => {
-        const circuit = await circuits.tryGet(index).then(r => r.unwrap().unwrap().inner)
+        const circuit = circuits.tryGetSync(index).unwrap().unwrap().inner
 
         const signal = AbortSignals.timeout(5_000, presignal)
 
