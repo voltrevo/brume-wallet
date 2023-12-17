@@ -20,16 +20,16 @@ export function PageHeader(props: TitleProps & ChildrenProps & OptionalBackProps
       </button>
     </div>}
     <button onClick={() => alert("This feature is not implemented yet")}>
-      <UserAvatar className="mt-0.5 s-lg text-lg"
+      <UserAvatar className="s-lg text-lg"
         colorIndex={userData.color}
         name={userData.name} />
     </button>
     <div className="w-2" />
-    <div className="text-2xl font-medium text-contrast">
+    <div className="text-2xl font-medium text-contrast mb-1">
       /
     </div>
     <div className="w-2" />
-    <div className="text-2xl font-medium">
+    <div className="text-2xl font-medium mb-0.5">
       {title}
     </div>
     <div className="grow" />
