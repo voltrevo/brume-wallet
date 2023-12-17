@@ -73,7 +73,7 @@ export namespace Circuits {
               using circuit = new Box(await tor.tryCreate(AbortSignal.timeout(1000)).then(r => r.mapErrSync(Cancel.new).throw(t)))
 
               /**
-               * Try to extend to middle relay 9 times before giving up this circuit
+               * Try to extend to middle relay 3 times before giving up this circuit
                */
               await tryLoop(() => {
                 return Result.unthrow<Result<void, Looped<Error>>>(async t => {
@@ -83,10 +83,10 @@ export namespace Circuits {
 
                   return Ok.void()
                 })
-              }, { max: 3 }).then(r => r.mapErrSync(Retry.new).throw(t))
+              }, { init: 0, base: 0, max: 3 }).then(r => r.mapErrSync(Retry.new).throw(t))
 
               /**
-               * Try to extend to exit relay 9 times before giving up this circuit
+               * Try to extend to exit relay 3 times before giving up this circuit
                */
               await tryLoop(() => {
                 return Result.unthrow<Result<void, Looped<Error>>>(async t => {
@@ -96,12 +96,12 @@ export namespace Circuits {
 
                   return Ok.void()
                 })
-              }, { max: 3 }).then(r => r.mapErrSync(Retry.new).throw(t))
+              }, { init: 0, base: 0, max: 3 }).then(r => r.mapErrSync(Retry.new).throw(t))
 
               /**
                * Try to open a stream to a reliable endpoint
                */
-              using stream = await tryOpenAs(circuit.inner, "http://example.com/").then(r => r.mapErrSync(Retry.new).throw(t))
+              using stream = await tryOpenAs(circuit.inner, "http://detectportal.firefox.com").then(r => r.mapErrSync(Retry.new).throw(t))
 
               /**
                * Reliability test
@@ -113,16 +113,16 @@ export namespace Circuits {
                 const signal = AbortSignal.timeout(1000)
 
                 await Result.runAndDoubleWrap(async () => {
-                  await fetch("http://example.com/", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())
+                  await fetch("http://detectportal.firefox.com", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())
                 }).then(r => r.mapErrSync(Retry.new).throw(t))
               }
 
               return new Ok(circuit.moveOrThrow())
-            })
+            }).then(r => r.inspectErrSync(e => console.error(`Could not create circuit`, { e })))
           }, { max: 9 }).then(r => r.throw(t))
 
           return new Ok(createCircuitEntry(circuit.moveOrThrow(), params))
-        }).then(r => r.inspectErrSync(e => console.error(`Could not create circuit`, { e })))
+        })
 
         if (result.isOk())
           return result

@@ -229,15 +229,12 @@ export namespace EthereumContext {
       const { brume } = ethereum
 
       const pools = Option.wrap(brume[ethereum.chain.chainId]).ok().unwrap()
-      console.log("!!!pools", pools)
 
       async function runWithPoolOrThrow(index: number) {
         const pool = pools.tryGetSync(index).unwrap().unwrap().inner.inner
-        console.log("!!!pool", pool, index)
 
         async function runWithConnOrThrow(index: number) {
           const conn = pool.tryGetSync(index).unwrap().unwrap().inner.inner
-          console.log("!!!conn", conn, index)
 
           try {
             const { counter, connection } = conn
