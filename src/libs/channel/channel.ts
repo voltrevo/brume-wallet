@@ -3,7 +3,7 @@ import { RpcCounter, RpcInternalError, RpcInvalidRequestError, RpcRequestInit, R
 import { None, Some } from "@hazae41/option"
 import { CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
-import { tryBrowserSync } from "../browser/browser"
+import { BrowserError } from "../browser/browser"
 
 export type Port =
   | WebsitePort
@@ -203,7 +203,7 @@ export class ExtensionPort {
     if (request.id !== "ping")
       console.debug(this.name, "<-", response)
 
-    tryBrowserSync(() => {
+    BrowserError.tryRunSync(() => {
       this.port.postMessage(JSON.stringify(response))
     }).ignore()
   }
@@ -239,7 +239,7 @@ export class ExtensionPort {
       if (request.id !== "ping")
         console.debug(this.name, "<-", request)
 
-      tryBrowserSync(() => {
+      BrowserError.tryRunSync(() => {
         this.port.postMessage(JSON.stringify(request))
       }).throw(t)
 
