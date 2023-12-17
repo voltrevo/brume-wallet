@@ -67,7 +67,7 @@ export namespace Circuits {
         const result = await Result.unthrow<Result<Disposer<Box<Circuit>>, Error>>(async t => {
           const { index, signal } = params
 
-          const tor = await tors.tryGetOrWait(index % tors.capacity, signal).then(r => r.throw(t).throw(t).inner.inner)
+          const tor = await tors.tryGet(index % tors.capacity, signal).then(r => r.throw(t).throw(t).inner.inner)
 
           using circuit = await tryLoop<Box<Circuit>, Looped<Error>>(async () => {
             return await Result.unthrow<Result<Box<Circuit>, Looped<Error>>>(async t => {

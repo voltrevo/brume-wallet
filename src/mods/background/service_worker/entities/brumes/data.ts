@@ -245,7 +245,7 @@ export namespace WebSocketConnection {
         const result = await Result.unthrow<Result<Disposer<Box<Pool<WebSocketConnection>>>, Error>>(async t => {
           const { pool, index } = params
 
-          const circuit = await subcircuits.tryGetOrWait(index % subcircuits.capacity).then(r => r.throw(t).throw(t).inner.inner)
+          const circuit = await subcircuits.tryGet(index % subcircuits.capacity).then(r => r.throw(t).throw(t).inner.inner)
           const subpool = new Box(WebSocketConnection.createPool(circuit, urls))
 
           const onCloseOrError = async (reason?: unknown) => {
@@ -383,7 +383,7 @@ export namespace RpcCircuits {
         const result = await Result.unthrow<Result<Disposer<Box<Pool<RpcConnection>>>, Error>>(async t => {
           const { pool, index } = params
 
-          const circuit = await subcircuits.tryGetOrWait(index % subcircuits.capacity).then(r => r.throw(t).throw(t).inner.inner)
+          const circuit = await subcircuits.tryGet(index % subcircuits.capacity).then(r => r.throw(t).throw(t).inner.inner)
           const subpool = new Box(RpcConnections.create(circuit, urls))
 
           const onCloseOrError = async (reason?: unknown) => {
