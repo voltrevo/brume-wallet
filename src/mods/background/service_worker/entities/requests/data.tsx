@@ -1,4 +1,4 @@
-import { Mutators } from "@/libs/xswr/mutators"
+import { Mutators } from "@/libs/glacier/mutators"
 import { Data, States, createQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { BgAppRequests } from "./all/data"

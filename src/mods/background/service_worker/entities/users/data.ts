@@ -1,4 +1,4 @@
-import { Mutators } from "@/libs/xswr/mutators"
+import { Mutators } from "@/libs/glacier/mutators"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
 import { AesGcmCoder, Data, HmacEncoder, IDBStorage, States, createQuery } from "@hazae41/glacier"

@@ -2,6 +2,7 @@
 import { Colors, Gradients } from "@/libs/colors/colors";
 import { UIError } from "@/libs/errors/errors";
 import { ChainData, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { Mutators } from "@/libs/glacier/mutators";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useInputChange } from "@/libs/react/events";
@@ -13,7 +14,6 @@ import { Button } from "@/libs/ui/button";
 import { Dialog, Screen } from "@/libs/ui/dialog/dialog";
 import { Url } from "@/libs/url/url";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
-import { Mutators } from "@/libs/xswr/mutators";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
 import { TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data";

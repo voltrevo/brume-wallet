@@ -1,4 +1,4 @@
-import { Mutators } from "@/libs/xswr/mutators"
+import { Mutators } from "@/libs/glacier/mutators"
 import { Token } from "@/mods/background/service_worker/entities/tokens/data"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { BgTokenSettings, TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data"

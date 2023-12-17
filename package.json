@@ -48,7 +48,7 @@
     "@hazae41/ed25519": "^2.1.10",
     "@hazae41/fleche": "^1.2.9",
     "@hazae41/future": "^1.0.3",
-    "@hazae41/glacier": "^2.0.1",
+    "@hazae41/glacier": "^2.0.2",
     "@hazae41/jsonrpc": "^1.0.3",
     "@hazae41/kcp": "^0.2.40",
     "@hazae41/keccak256": "^1.0.8",
