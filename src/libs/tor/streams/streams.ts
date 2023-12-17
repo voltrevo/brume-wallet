@@ -1,4 +1,3 @@
-import { Results } from "@/libs/results/results"
 import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/cleaner"
@@ -73,7 +72,7 @@ export namespace Streams {
           using preentry = new Box(new Disposer(resource, onEntryClean))
 
           return new Ok(preentry.unwrapOrThrow())
-        }).then(Results.log)
+        })
 
         if (result.isOk())
           return result

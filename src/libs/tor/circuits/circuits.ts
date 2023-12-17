@@ -1,4 +1,3 @@
-import { Results } from "@/libs/results/results"
 import { Box } from "@hazae41/box"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Disposer } from "@hazae41/cleaner"
@@ -123,7 +122,7 @@ export namespace Circuits {
           }, { max: 9 }).then(r => r.throw(t))
 
           return new Ok(createCircuitEntry(circuit.moveOrThrow(), params))
-        }).then(Results.log)
+        }).then(r => r.inspectErrSync(e => console.error(`Could not create circuit`, { e })))
 
         if (result.isOk())
           return result
@@ -172,7 +171,7 @@ export namespace Circuits {
         const result = await Result.unthrow<Result<Disposer<Box<Circuit>>, Error>>(async t => {
           using circuit = await Pool.tryTakeCryptoRandom(circuits).then(r => r.throw(t).throw(t).inner)
           return new Ok(createCircuitEntry(circuit.moveOrThrow(), params))
-        }).then(Results.log)
+        })
 
         if (result.isOk())
           return result

@@ -1,6 +1,5 @@
 import { Chains } from "@/libs/ethereum/mods/chain"
 import { Objects } from "@/libs/objects/objects"
-import { Results } from "@/libs/results/results"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Sockets } from "@/libs/sockets/sockets"
 import { Circuits } from "@/libs/tor/circuits/circuits"
@@ -267,7 +266,7 @@ export namespace WebSocketConnection {
           await subpool.inner.tryGetRandom().then(r => r.ignore())
 
           return new Ok(new Disposer(subpool, onEntryClean))
-        }).then(Results.log)
+        })
 
         if (result.isOk())
           return result
@@ -405,7 +404,7 @@ export namespace RpcCircuits {
           await subpool.inner.tryGetRandom().then(r => r.ignore())
 
           return new Ok(new Disposer(subpool, onEntryClean))
-        }).then(Results.log)
+        })
 
         if (result.isOk())
           return result
