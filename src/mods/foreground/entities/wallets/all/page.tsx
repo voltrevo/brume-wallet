@@ -13,8 +13,7 @@ import { Nullable } from "@hazae41/option"
 import { useCallback } from "react"
 import { WalletDataCard } from "../card"
 import { WalletDataProvider, useWalletDataContext } from "../context"
-import { WalletProps, useTotalPricedBalance } from "../data"
-import { useDisplayUsd } from "../page"
+import { WalletProps } from "../data"
 import { WalletCreatorDialog } from "./create"
 import { useWallets } from "./data"
 
@@ -24,29 +23,19 @@ export function WalletsPage() {
 
   const creator = useBooleanHandle(false)
 
-  const totalPricedBalanceQuery = useTotalPricedBalance("usd")
-  const totalPricedBalanceDisplay = useDisplayUsd(totalPricedBalanceQuery.current)
-
   const onWalletClick = useCallback((wallet: Wallet) => {
     Path.go(`/wallet/${wallet.uuid}`)
   }, [])
 
   const Body =
     <PageBody>
-      <div className="text-lg font-medium">
-        Total balance
-      </div>
-      <div className="text-2xl font-bold">
-        {totalPricedBalanceDisplay}
-      </div>
-      <div className="h-8" />
       <ClickableWalletGrid
         ok={onWalletClick}
         create={creator.enable}
         wallets={maybeWallets} />
     </PageBody>
 
-  const Header =
+  const Header = <>
     <PageHeader title="Wallets">
       <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={creator.enable}>
@@ -55,6 +44,12 @@ export function WalletsPage() {
         </div>
       </Button.Base>
     </PageHeader>
+    <div className="po-md flex items-center">
+      <div className="text-contrast">
+        {`Wallets allow you to hold funds and generate signatures. You can import wallets from a private key or generate them from a seed.`}
+      </div>
+    </div>
+  </>
 
   return <Page>
     <Dialog

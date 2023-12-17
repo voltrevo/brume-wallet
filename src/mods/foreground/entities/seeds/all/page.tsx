@@ -32,7 +32,7 @@ export function SeedsPage() {
         maybeSeeds={maybeSeeds} />
     </PageBody>
 
-  const Header =
+  const Header = <>
     <PageHeader title="Seeds">
       <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={creator.enable}>
@@ -41,7 +41,12 @@ export function SeedsPage() {
         </div>
       </Button.Base>
     </PageHeader>
-
+    <div className="po-md flex items-center">
+      <div className="text-contrast">
+        {`Seeds allow you to generate wallets from a single secret. You can import a seed from a mnemonic phrase or connect a hardware wallet.`}
+      </div>
+    </div>
+  </>
   return <Page>
     <Dialog
       opened={creator.current}

@@ -69,7 +69,7 @@ export function SessionsPage() {
       </div>
     </PageBody>
 
-  const Header =
+  const Header = <>
     <PageHeader title="Sessions">
       <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         disabled={tryDisconnectAll.loading || !length}
@@ -79,6 +79,12 @@ export function SessionsPage() {
         </div>
       </Button.Base>
     </PageHeader>
+    <div className="po-md flex items-center">
+      <div className="text-contrast">
+        {`Sessions allow you to connect to applications. These applications can then make requests for you to approve.`}
+      </div>
+    </div>
+  </>
 
   return <Page>
     {Header}

@@ -55,7 +55,7 @@ export function RequestsPage() {
       </div>
     </PageBody>
 
-  const Header =
+  const Header = <>
     <PageHeader title="Requests">
       <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
         disabled={tryRejectAll.loading || !Boolean(maybeRequests?.length)}
@@ -65,6 +65,12 @@ export function RequestsPage() {
         </div>
       </Button.Base>
     </PageHeader>
+    <div className="po-md flex items-center">
+      <div className="text-contrast">
+        {`Request allow you to approve various actions such as transactions and signatures. These requests are sent by applications through sessions.`}
+      </div>
+    </div>
+  </>
 
   return <Page>
     {Header}

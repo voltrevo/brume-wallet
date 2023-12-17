@@ -17,7 +17,7 @@ export function SnapsPage() {
       Coming soon...
     </PageBody>
 
-  const Header =
+  const Header = <>
     <PageHeader title="Plugins">
       <button className={`${Button.Base.className} s-xl hovered-or-clicked-or-focused:scale-105 !transition`}
         onClick={onAdd}>
@@ -26,6 +26,12 @@ export function SnapsPage() {
         </div>
       </button>
     </PageHeader>
+    <div className="po-md flex items-center">
+      <div className="text-contrast">
+        {`Plugins allow you to securely extend the features. These features can then be used by applications you connect to.`}
+      </div>
+    </div>
+  </>
 
   return <Page>
     {Header}
