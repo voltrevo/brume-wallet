@@ -241,7 +241,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumCont
       <Button.Gradient className="w-full po-md"
         colorIndex={wallet.color}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.ArrowTopRightOnSquareIcon className="s-sm" />
+          <Outline.ArrowTopRightOnSquareIcon className="size-5" />
           Etherscan
         </div>
       </Button.Gradient>
@@ -264,7 +264,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumCont
       disabled={Boolean(sendDisabled)}
       onClick={trySend.run}>
       <div className={`${Button.Shrinker.className}`}>
-        <Outline.PaperAirplaneIcon className="s-sm" />
+        <Outline.PaperAirplaneIcon className="size-5" />
         {sendDisabled || "Send"}
       </div>
     </Button.Gradient>

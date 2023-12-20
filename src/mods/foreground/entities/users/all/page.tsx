@@ -71,7 +71,7 @@ function UserOkButton(props: UserProps & OkProps<User>) {
 
   return <button className="flex flex-col items-center"
     onClick={onClick}>
-    <UserAvatar className="s-7xl text-2xl"
+    <UserAvatar className="size-16 text-2xl"
       colorIndex={user.data.inner.color}
       name={user.data.inner.name} />
     <div className="h-1" />
@@ -86,8 +86,8 @@ function NewUserButton(props: OkProps<unknown>) {
 
   return <button className="flex flex-col items-center"
     onClick={ok}>
-    <div className="rounded-full s-7xl flex justify-center items-center border border-contrast border-dashed">
-      <Outline.PlusIcon className="s-md" />
+    <div className="rounded-full size-16 flex justify-center items-center border border-contrast border-dashed">
+      <Outline.PlusIcon className="size-6" />
     </div>
     <div className="h-1" />
     <div className="font-medium">

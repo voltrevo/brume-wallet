@@ -10,7 +10,7 @@ export namespace Bordered {
     return <div className="p-1">
       <button className={`${Button.Base.className} ${className} po-md`}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.GlobeAltIcon className="s-sm" />
+          <Outline.GlobeAltIcon className="size-5" />
           Hello world
         </div>
       </button>

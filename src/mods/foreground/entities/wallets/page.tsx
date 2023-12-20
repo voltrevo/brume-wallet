@@ -132,16 +132,16 @@ function WalletDataPage() {
       back={onBackClick}>
       <div className="flex gap-2">
         {background.isWebsite() && <>
-          <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
+          <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
             onClick={onCameraClick}>
             <div className={`${Button.Shrinker.className}`}>
-              <Outline.QrCodeIcon className="s-sm" />
+              <Outline.QrCodeIcon className="size-5" />
             </div>
           </Button.Base>
-          <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
+          <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
             onClick={onLinkClick}>
             <div className={`${Button.Shrinker.className}`}>
-              <Outline.LinkIcon className="s-sm" />
+              <Outline.LinkIcon className="size-5" />
             </div>
           </Button.Base>
         </>}
@@ -155,7 +155,7 @@ function WalletDataPage() {
         {wallet.type === "readonly" && <>
           <div className="h-2" />
           <div className="po-sm bg-contrast text-contrast rounded-xl flex items-center justify-center">
-            <Outline.EyeIcon className="s-sm" />
+            <Outline.EyeIcon className="size-5" />
             <div className="w-2" />
             <div>
               This is a watch-only wallet
@@ -171,7 +171,7 @@ function WalletDataPage() {
         <div className="flex flex-col items-center gap-2">
           <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 !transition-transform`}
             onClick={sendDialog.enable}>
-            <Outline.PaperAirplaneIcon className="s-md" />
+            <Outline.PaperAirplaneIcon className="size-6" />
           </button>
           <div className="">
             {`Send`}
@@ -180,7 +180,7 @@ function WalletDataPage() {
       <div className="flex flex-col items-center gap-2">
         <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 !transition-transform`}
           onClick={receiveDialog.enable}>
-          <Outline.QrCodeIcon className="s-md" />
+          <Outline.QrCodeIcon className="size-6" />
         </button>
         <div className="">
           {`Receive`}

@@ -166,7 +166,7 @@ export function TokenAddDialog(props: {}) {
       disabled={Boolean(addDisabled)}
       onClick={onAddClick.run}>
       <div className={`${Button.Shrinker.className}`}>
-        <Outline.PlusIcon className="s-sm" />
+        <Outline.PlusIcon className="size-5" />
         {addDisabled || "Send"}
       </div>
     </Button.Gradient>

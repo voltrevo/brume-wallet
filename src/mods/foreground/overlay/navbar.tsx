@@ -29,7 +29,7 @@ export function NavBar() {
         <Button.Base className="text-contrast hovered-or-clicked-or-focused:scale-105 !transition"
           onClick={onOpen}>
           <div className={`${Button.Shrinker.className}`}>
-            <Outline.ArrowTopRightOnSquareIcon className="s-xs" />
+            <Outline.ArrowTopRightOnSquareIcon className="size-4" />
           </div>
         </Button.Base>
       </div>

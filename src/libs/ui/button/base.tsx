@@ -25,7 +25,7 @@ export namespace Base {
     return <div className="p-1">
       <button className={`${className} po-md`}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.GlobeAltIcon className="s-sm" />
+          <Outline.GlobeAltIcon className="size-5" />
           Hello world
         </div>
       </button>

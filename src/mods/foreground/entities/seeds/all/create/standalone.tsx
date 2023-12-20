@@ -166,7 +166,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
   const NameInput =
     <div className="flex items-stretch gap-2">
       <div className="shrink-0">
-        <WalletAvatar className="s-5xl text-2xl"
+        <WalletAvatar className="size-12 text-2xl"
           colorIndex={color}
           emoji={emoji} />
       </div>
@@ -187,7 +187,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     <Button.Contrast className="flex-1 whitespace-nowrap po-md"
       onClick={doGenerate12.run}>
       <div className={`${Button.Shrinker.className}`}>
-        <Outline.KeyIcon className="s-sm" />
+        <Outline.KeyIcon className="size-5" />
         Generate 12 random words
       </div>
     </Button.Contrast>
@@ -197,7 +197,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       colorIndex={color}
       onClick={doGenerate24.run}>
       <div className={`${Button.Shrinker.className}`}>
-        <Outline.KeyIcon className="s-sm" />
+        <Outline.KeyIcon className="size-5" />
         Generate 24 random words
       </div>
     </Button.Gradient>
@@ -215,7 +215,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       disabled={!canAdd}
       onClick={tryAddUnauthenticated.run}>
       <div className={`${Button.Shrinker.className}`}>
-        <Outline.PlusIcon className="s-sm" />
+        <Outline.PlusIcon className="size-5" />
         Add without authentication
       </div>
     </Button.Contrast>
@@ -226,7 +226,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       disabled={!canAdd}
       onClick={tryAddAuthenticated1.run}>
       <div className={`${Button.Shrinker.className}`}>
-        <Outline.LockClosedIcon className="s-sm" />
+        <Outline.LockClosedIcon className="size-5" />
         Add with authentication
       </div>
     </Button.Gradient>
@@ -237,7 +237,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       disabled={!canAdd}
       onClick={tryAddAuthenticated2.run}>
       <div className={`${Button.Shrinker.className}`}>
-        <Outline.LockClosedIcon className="s-sm" />
+        <Outline.LockClosedIcon className="size-5" />
         Add with authentication (1/2)
       </div>
     </Button.Gradient>

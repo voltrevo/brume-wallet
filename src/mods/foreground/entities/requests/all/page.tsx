@@ -57,11 +57,11 @@ export function RequestsPage() {
 
   const Header = <>
     <UserPageHeader title="Requests">
-      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
+      <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
         disabled={tryRejectAll.loading || !Boolean(maybeRequests?.length)}
         onClick={tryRejectAll.run}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.TrashIcon className="s-sm" />
+          <Outline.TrashIcon className="size-5" />
         </div>
       </Button.Base>
     </UserPageHeader>
@@ -114,10 +114,10 @@ export function RequestRow(props: { request: AppRequest }) {
         id={x.id}
         ok={onIconData} />)}
     <div className="shrink-0">
-      <ImageWithFallback className="s-3xl"
+      <ImageWithFallback className="size-10"
         alt="icon"
         src={iconDatas.find(Boolean)?.data}>
-        <Outline.CubeTransparentIcon className="s-3xl" />
+        <Outline.CubeTransparentIcon className="size-10" />
       </ImageWithFallback>
     </div>
     <div className="grow">

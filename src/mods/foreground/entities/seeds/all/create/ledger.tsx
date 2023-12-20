@@ -59,7 +59,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
   const NameInput =
     <div className="flex items-stretch gap-2">
       <div className="shrink-0">
-        <WalletAvatar className="s-5xl text-2xl"
+        <WalletAvatar className="size-12 text-2xl"
           colorIndex={color}
           emoji={emoji} />
       </div>
@@ -81,7 +81,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
       disabled={!canAdd}
       onClick={tryAdd.run}>
       <div className={`${Button.Shrinker.className}`}>
-        <Outline.PlusIcon className="s-sm" />
+        <Outline.PlusIcon className="size-5" />
         Add
       </div>
     </Button.Gradient>

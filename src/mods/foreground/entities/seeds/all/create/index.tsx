@@ -55,14 +55,14 @@ export function SeedCreatorDialog(props: {}) {
       <Button.Contrast className="flex-1 whitespace-nowrap p-4 rounded-xl"
         onClick={onMnemonicClick}>
         <div className={`${Button.Shrinker.className} flex-col`}>
-          <Outline.DocumentTextIcon className="s-md" />
+          <Outline.DocumentTextIcon className="size-6" />
           <span>Mnemonic phrase</span>
         </div>
       </Button.Contrast>
       <Button.Contrast className="flex-1 whitespace-nowrap p-4 rounded-xl"
         onClick={onLedgerClick}>
         <div className={`${Button.Shrinker.className} flex-col`}>
-          <Outline.SwatchIcon className="s-md" />
+          <Outline.SwatchIcon className="size-6" />
           <span>Ledger</span>
         </div>
       </Button.Contrast>

@@ -15,28 +15,28 @@ export function Bottom() {
         data-selected={path.pathname === "/"}
         href="#/">
         <div className={`${Anchor.Shrinker.className}`}>
-          <Outline.HomeIcon className="s-md" />
+          <Outline.HomeIcon className="size-6" />
         </div>
       </a>
       <a className={`group grow text-contrast data-[selected=true]:text-default`}
         data-selected={path.pathname === "/wallets"}
         href="#/wallets">
         <div className={`${Anchor.Shrinker.className}`}>
-          <Outline.WalletIcon className="s-md" />
+          <Outline.WalletIcon className="size-6" />
         </div>
       </a>
       <a className={`group grow text-contrast data-[selected=true]:text-default`}
         data-selected={path.pathname === "/seeds"}
         href="#/seeds">
         <div className={`${Anchor.Shrinker.className}`}>
-          <Outline.SparklesIcon className="s-md" />
+          <Outline.SparklesIcon className="size-6" />
         </div>
       </a>
       <a className="group grow text-contrast data-[selected=true]:text-default"
         data-selected={path.pathname === "/sessions"}
         href="#/sessions">
         <div className={`${Anchor.Shrinker.className}`}>
-          <Outline.GlobeAltIcon className="s-md" />
+          <Outline.GlobeAltIcon className="size-6" />
         </div>
       </a>
       <a className="group grow text-contrast data-[selected=true]:text-default"
@@ -51,7 +51,7 @@ export function Bottom() {
                   <span className="relative inline-flex rounded-full w-2 h-2 bg-purple-400" />
                 </span>
               </div>}
-            <Outline.CheckIcon className="s-md" />
+            <Outline.CheckIcon className="size-6" />
           </div>
         </div>
       </a>
@@ -59,14 +59,14 @@ export function Bottom() {
         data-selected={path.pathname === "/plugins"}
         href="#/plugins">
         <div className={`${Anchor.Shrinker.className}`}>
-          <Outline.PuzzlePieceIcon className="s-md" />
+          <Outline.PuzzlePieceIcon className="size-6" />
         </div>
       </a>
       <a className="group grow text-contrast data-[selected=true]:text-default"
         data-selected={path.pathname === "/settings"}
         href="#/settings">
         <div className={`${Anchor.Shrinker.className}`}>
-          <Outline.CogIcon className="s-md" />
+          <Outline.CogIcon className="size-6" />
         </div>
       </a>
     </div>

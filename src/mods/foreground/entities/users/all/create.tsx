@@ -71,7 +71,7 @@ export function UserCreateDialog(props: {}) {
   const NameInput =
     <div className="flex items-stretch gap-2">
       <div className="shrink-0">
-        <UserAvatar className="s-5xl text-2xl"
+        <UserAvatar className="size-12 text-2xl"
           colorIndex={color}
           name={defNameInput} />
       </div>
@@ -101,7 +101,7 @@ export function UserCreateDialog(props: {}) {
       disabled={!defNameInput || !defPasswordInput || !defConfirmPasswordInput || !isSamePassword}
       onClick={onClick.run}>
       <div className={`${Button.Shrinker.className}`}>
-        <Outline.PlusIcon className="s-sm" />
+        <Outline.PlusIcon className="size-5" />
         Add
       </div>
     </Button.Gradient>

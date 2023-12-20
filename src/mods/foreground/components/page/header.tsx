@@ -11,10 +11,10 @@ export function GlobalPageHeader(props: TitleProps & ChildrenProps & OptionalBac
 
   return <div className="p-4 flex items-center">
     {back && <div className="mr-2">
-      <button className={`${Button.Base.className} s-xl hovered-or-clicked-or-focused:scale-105 !transition`}
+      <button className={`${Button.Base.className} size-8 hovered-or-clicked-or-focused:scale-105 !transition`}
         onClick={back}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.ChevronLeftIcon className="s-sm" />
+          <Outline.ChevronLeftIcon className="size-5" />
         </div>
       </button>
     </div>}
@@ -33,15 +33,15 @@ export function UserPageHeader(props: TitleProps & ChildrenProps & OptionalBackP
 
   return <div className="p-4 flex items-center">
     {back && <div className="mr-2">
-      <button className={`${Button.Base.className} s-xl hovered-or-clicked-or-focused:scale-105 !transition`}
+      <button className={`${Button.Base.className} size-8 hovered-or-clicked-or-focused:scale-105 !transition`}
         onClick={back}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.ChevronLeftIcon className="s-sm" />
+          <Outline.ChevronLeftIcon className="size-5" />
         </div>
       </button>
     </div>}
     <button onClick={() => alert("This feature is not implemented yet")}>
-      <UserAvatar className="s-lg text-lg"
+      <UserAvatar className="size-7 text-lg"
         colorIndex={userData.color}
         name={userData.name} />
     </button>

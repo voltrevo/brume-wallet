@@ -18,7 +18,7 @@ export function SeedDataCard() {
       <div className="w-2 grow" />
       <Button.White className={`text-${color}`}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.EllipsisHorizontalIcon className="s-sm" />
+          <Outline.EllipsisHorizontalIcon className="size-5" />
         </div>
       </Button.White>
     </div>

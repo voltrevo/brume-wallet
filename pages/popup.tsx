@@ -232,7 +232,7 @@ export function TransactPage() {
         onClick={onReject.run}
         disabled={onReject.loading}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.XMarkIcon className="s-sm" />
+          <Outline.XMarkIcon className="size-5" />
           No, reject it
         </div>
       </Button.Contrast>
@@ -241,7 +241,7 @@ export function TransactPage() {
         disabled={loading}
         colorIndex={5}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.CheckIcon className="s-sm" />
+          <Outline.CheckIcon className="size-5" />
           Yes, approve it
         </div>
       </Button.Gradient>
@@ -297,7 +297,7 @@ export function SwitchPage() {
         onClick={onReject.run}
         disabled={onReject.loading}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.XMarkIcon className="s-sm" />
+          <Outline.XMarkIcon className="size-5" />
           No, reject it
         </div>
       </Button.Contrast>
@@ -306,7 +306,7 @@ export function SwitchPage() {
         disabled={onApprove.loading}
         colorIndex={5}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.CheckIcon className="s-sm" />
+          <Outline.CheckIcon className="size-5" />
           Yes, approve it
         </div>
       </Button.Gradient>
@@ -381,7 +381,7 @@ export function PersonalSignPage() {
         onClick={onReject.run}
         disabled={onReject.loading}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.XMarkIcon className="s-sm" />
+          <Outline.XMarkIcon className="size-5" />
           No, reject it
         </div>
       </Button.Contrast>
@@ -390,7 +390,7 @@ export function PersonalSignPage() {
         disabled={onApprove.loading}
         colorIndex={5}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.CheckIcon className="s-sm" />
+          <Outline.CheckIcon className="size-5" />
           Yes, approve it
         </div>
       </Button.Gradient>
@@ -461,7 +461,7 @@ export function TypedSignPage() {
         onClick={onReject.run}
         disabled={onReject.loading}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.XMarkIcon className="s-sm" />
+          <Outline.XMarkIcon className="size-5" />
           No, reject it
         </div>
       </Button.Contrast>
@@ -470,7 +470,7 @@ export function TypedSignPage() {
         disabled={onApprove.loading}
         colorIndex={5}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.CheckIcon className="s-sm" />
+          <Outline.CheckIcon className="size-5" />
           Yes, approve it
         </div>
       </Button.Gradient>
@@ -558,10 +558,10 @@ export function WalletAndChainSelectPage() {
 
   const Header =
     <UserPageHeader title="Select wallets">
-      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
+      <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={creator.enable}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.PlusIcon className="s-sm" />
+          <Outline.PlusIcon className="size-5" />
         </div>
       </Button.Base>
     </UserPageHeader>
@@ -579,7 +579,7 @@ export function WalletAndChainSelectPage() {
         onClick={onReject.run}
         disabled={onReject.loading}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.XMarkIcon className="s-sm" />
+          <Outline.XMarkIcon className="size-5" />
           No, reject it
         </div>
       </Button.Contrast>
@@ -587,7 +587,7 @@ export function WalletAndChainSelectPage() {
         onClick={onApprove.run}
         disabled={onApprove.loading}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.CheckIcon className="s-sm" />
+          <Outline.CheckIcon className="size-5" />
           Yes, approve it
         </div>
       </button>

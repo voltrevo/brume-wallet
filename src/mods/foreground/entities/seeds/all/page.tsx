@@ -34,10 +34,10 @@ export function SeedsPage() {
 
   const Header = <>
     <UserPageHeader title="Seeds">
-      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
+      <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
         onClick={creator.enable}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.PlusIcon className="s-sm" />
+          <Outline.PlusIcon className="size-5" />
         </div>
       </Button.Base>
     </UserPageHeader>
@@ -91,7 +91,7 @@ export function NewSeedCard(props: OkProps<unknown>) {
 
   return <button className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-clicked-or-focused:scale-105 !transition-transform"
     onClick={ok}>
-    <Outline.PlusIcon className="s-sm" />
+    <Outline.PlusIcon className="size-5" />
     <div className="font-medium">
       New seed
     </div>

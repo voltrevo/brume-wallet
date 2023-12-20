@@ -52,18 +52,18 @@ export function WalletDataCard(props: { index?: number }) {
         <button className={`${Button.Base.className} ${Button.White.className} text-${color}`}
           onClick={onClickEllipsis}>
           <div className={`${Button.Shrinker.className}`}>
-            <Outline.EllipsisHorizontalIcon className="s-sm" />
+            <Outline.EllipsisHorizontalIcon className="size-5" />
           </div>
         </button>}
       {index != null && index !== -1 &&
         <div className={`border-2 border-white flex items-center justify-center rounded-full overflow-hidden`}>
-          <div className={`bg-blue-600 flex items-center justify-center s-sm text-white font-medium`}>
+          <div className={`bg-blue-600 flex items-center justify-center size-5 text-white font-medium`}>
             {index + 1}
           </div>
         </div>}
       {index != null && index === -1 &&
         <div className={`border-2 border-contrast flex items-center justify-center rounded-full`}>
-          <div className="s-sm" />
+          <div className="size-5" />
         </div>}
     </div>
 

@@ -19,10 +19,10 @@ export function SnapsPage() {
 
   const Header = <>
     <UserPageHeader title="Plugins">
-      <button className={`${Button.Base.className} s-xl hovered-or-clicked-or-focused:scale-105 !transition`}
+      <button className={`${Button.Base.className} size-8 hovered-or-clicked-or-focused:scale-105 !transition`}
         onClick={onAdd}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.PlusIcon className="s-sm" />
+          <Outline.PlusIcon className="size-5" />
         </div>
       </button>
     </UserPageHeader>

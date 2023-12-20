@@ -71,11 +71,11 @@ export function SessionsPage() {
 
   const Header = <>
     <UserPageHeader title="Sessions">
-      <Button.Base className="s-xl hovered-or-clicked-or-focused:scale-105 !transition"
+      <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
         disabled={tryDisconnectAll.loading || !length}
         onClick={tryDisconnectAll.run}>
         <div className={`${Button.Shrinker.className}`}>
-          <Outline.TrashIcon className="s-sm" />
+          <Outline.TrashIcon className="size-5" />
         </div>
       </Button.Base>
     </UserPageHeader>
@@ -148,10 +148,10 @@ export function SessionRow(props: { session: Session }) {
           return <div className="absolute top-0 -right-2 bg-green-400 rounded-full w-2 h-2" />
         return <div className="absolute top-0 -right-2 bg-red-400 rounded-full w-2 h-2" />
       })()}
-      <ImageWithFallback className="s-3xl"
+      <ImageWithFallback className="size-10"
         alt="icon"
         src={iconDatas.find(Boolean)?.data}>
-        <Outline.CubeTransparentIcon className="s-3xl" />
+        <Outline.CubeTransparentIcon className="size-10" />
       </ImageWithFallback>
     </div>
     <div className="grow">
@@ -164,7 +164,7 @@ export function SessionRow(props: { session: Session }) {
     </div>
     <Button.Base>
       <div className={`${Button.Shrinker.className}`}>
-        <Outline.EllipsisVerticalIcon className="s-sm" />
+        <Outline.EllipsisVerticalIcon className="size-5" />
       </div>
     </Button.Base>
   </div>
