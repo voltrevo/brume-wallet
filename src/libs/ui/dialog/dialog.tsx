@@ -2,6 +2,7 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { useObjectMemo } from "@/libs/react/memo"
 import { OpenedProps } from "@/libs/react/props/opened"
 import { Nullable, Option } from "@hazae41/option"
+import * as Headless from "@headlessui/react"
 import { createContext, useCallback, useContext, useLayoutEffect, useState } from "react"
 import { flushSync } from "react-dom"
 import { Outline } from "../../icons/icons"
@@ -112,6 +113,27 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps) {
   </DialogContext.Provider>
 }
 
+export function Dialog2(props: ChildrenProps & OpenedProps & CloseProps) {
+  const { opened, close } = props
+
+  return <Headless.Dialog className="relative z-10"
+    as="div"
+    open={opened}
+    onClose={close}>
+    <div className="fixed inset-0 bg-black/25"
+      aria-hidden="true" />
+    <div className="fixed inset-0 overflow-y-auto flex flex-col p-4">
+      <div className="grow" />
+      <Headless.Dialog.Panel className="w-full mx-auto min-w-0 max-w-2xl transform rounded-2xl bg-default p-6 transition-all">
+        Hello
+        <div className="h-[110dvh]">
+          lol
+        </div>
+      </Headless.Dialog.Panel>
+      <div className="grow" />
+    </div>
+  </Headless.Dialog>
+}
 
 export function Dialog(props: ChildrenProps & OpenedProps & CloseProps) {
   const { opened, children, close } = props
@@ -218,6 +240,39 @@ export namespace Dialog {
           </Button.Opposite>
         </div>
       </Dialog>
+      <button onClick={open.enable}>
+        Click me
+      </button>
+    </div>
+  }
+
+  export function Test2() {
+    const open = useBooleanHandle(false)
+
+    return <div className="p-1">
+      <Dialog2
+        opened={open.current}
+        close={open.disable}>
+        <Dialog.Title close={open.disable}>
+          Hello world
+        </Dialog.Title>
+        Hello world
+        <div className="h-2" />
+        <div className="flex items-center gap-2">
+          <Button.Base className="w-full po-md"
+            onClick={open.disable}>
+            <div className={`${Button.Shrinker.className}`}>
+              Click me
+            </div>
+          </Button.Base>
+          <Button.Opposite className="w-full po-md"
+            onClick={open.disable}>
+            <div className={`${Button.Shrinker.className}`}>
+              Click me
+            </div>
+          </Button.Opposite>
+        </div>
+      </Dialog2>
       <button onClick={open.enable}>
         Click me
       </button>
