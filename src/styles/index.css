@@ -17,7 +17,6 @@ body {
 }
 
 body {
-  height: 100dvh;
   font-family: ui-rounded, system-ui, sans-serif;
 }
 
@@ -26,7 +25,7 @@ html {
 }
 
 body {
-  @apply grow w-full flex flex-col text-base text-default bg-default overflow-hidden;
+  @apply grow h-dvh w-full flex flex-col text-base text-default bg-default overflow-hidden;
 }
 
 #__next {
