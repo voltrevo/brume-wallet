@@ -33,10 +33,6 @@ body {
   @apply grow w-full flex flex-col overflow-hidden;
 }
 
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
 @layer utilities {
   .a {
     @apply text-colored hovered-or-clicked-or-focused:underline;
