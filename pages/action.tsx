@@ -13,11 +13,11 @@ export default function Action() {
     /**
      * Chromium
      */
-    document.documentElement.className = "h-[600px] w-[400px]"
+    document.documentElement.classList.add("h-[600px", "w-[400px]")
     /**
      * Firefox
      */
-    document.body.className = "h-[600px] w-[400px]"
+    document.body.classList.add("h-[600px]", "w-[400px]")
   }, [])
 
   useEffect(() => {

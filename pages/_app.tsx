@@ -4,7 +4,6 @@ import "@/styles/index.css"
 
 import { Errors } from "@/libs/errors/errors"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
-import { useEffectButOnlyFirstTime } from "@/libs/react/effect"
 import { Catcher, PromiseCatcher } from "@/libs/react/error"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { ErrorProps } from "@/libs/react/props/error"
@@ -27,7 +26,7 @@ import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
 import type { AppProps } from 'next/app'
 import Head from "next/head"
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
 
 export function Fallback(props: ErrorProps) {
   const { error } = props
@@ -97,7 +96,7 @@ async function initZepar() {
 }
 
 export function Initializer(props: ChildrenProps) {
-  useEffectButOnlyFirstTime(() => {
+  useEffect(() => {
     initBerith()
     initMorax()
     initAlocer()

@@ -1,6 +1,9 @@
+/* eslint-disable @next/next/no-sync-scripts */
 import { Head, Html, Main, NextScript } from 'next/document'
-import Script from "next/script"
 
+/**
+ * @hash sha256-KZDiiq1aLzoureckHIhfUNfx76ayy2z0Avqsfq0a9aI=
+ */
 const themer = `(() => {
   const matcher = matchMedia("(prefers-color-scheme: dark)")
 
@@ -20,7 +23,7 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <Script id="themer" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themer }} />
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' data: https://raw.githubusercontent.com wss://snowflake.torproject.net;" />
         <meta key="application-name" name="application-name" content="Brume Wallet" />
         <meta key="description" name="description" content="The private wallet" />
         <meta key="color-scheme" name="color-scheme" content="dark light" />
@@ -32,6 +35,7 @@ export default function Document() {
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/square.png" />
+        <script id="themer" src="/themer.js" />
       </Head>
       <body>
         <Main />
