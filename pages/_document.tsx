@@ -1,29 +1,13 @@
 /* eslint-disable @next/next/no-sync-scripts */
 import { Head, Html, Main, NextScript } from 'next/document'
 
-/**
- * @hash sha256-KZDiiq1aLzoureckHIhfUNfx76ayy2z0Avqsfq0a9aI=
- */
-const themer = `(() => {
-  const matcher = matchMedia("(prefers-color-scheme: dark)")
-
-  function apply() {
-    if (matcher.matches)
-      document.documentElement.classList.add("dark")
-    else
-      document.documentElement.classList.remove("dark")
-  }
-
-  matcher.addEventListener("change", () => apply())
-  
-  apply()
-})()`
-
 export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' data: https://raw.githubusercontent.com wss://snowflake.torproject.net;" />
+        {process.env.NODE_ENV === "production"
+          ? <meta key="content-security-policy" httpEquiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' data: https://raw.githubusercontent.com wss://snowflake.torproject.net;" />
+          : <meta key="content-security-policy" httpEquiv="Content-Security-Policy" />}
         <meta key="application-name" name="application-name" content="Brume Wallet" />
         <meta key="description" name="description" content="The private wallet" />
         <meta key="color-scheme" name="color-scheme" content="dark light" />
