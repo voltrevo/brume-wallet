@@ -1,3 +1,3 @@
 export interface ErrorProps {
-  error: unknown
+  readonly error: unknown
 }

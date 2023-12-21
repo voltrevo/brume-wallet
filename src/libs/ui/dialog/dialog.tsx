@@ -109,9 +109,9 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
       <div className={`fixed inset-0 flex flex-col md:p-safe ${dark ? "dark" : ""}`}
         onMouseDown={onClose}
         onClick={Events.keep}>
-        <div className="hidden md:block grow" />
-        <div className="flex flex-col grow md:p-2">
-          <aside className={`grow flex flex-col md:grow-0 w-full mx-auto min-w-0 max-w-3xl text-default bg-default p-safe md:p-0 md:rounded-2xl ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+        <div className="hidden md:block h-4" />
+        <div className="grow flex flex-col md:p-2">
+          <aside className={`grow flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default p-safe md:p-0 md:rounded-2xl ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
             role="dialog"
             aria-modal
             onMouseDown={Events.keep}
@@ -121,7 +121,7 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
             </div>
           </aside>
         </div>
-        <div className="hidden md:block grow" />
+        <div className="hidden md:block h-4" />
       </div>
     </dialog>
   </DialogContext.Provider>

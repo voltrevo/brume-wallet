@@ -1,7 +1,7 @@
 export interface BackProps {
-  back: () => void
+  readonly back: () => void
 }
 
 export interface OptionalBackProps {
-  back?: () => void
+  readonly back?: () => void
 }

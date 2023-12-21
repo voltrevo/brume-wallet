@@ -1,3 +1,3 @@
 export interface ColorIndexProps {
-  colorIndex: number
+  readonly colorIndex: number
 }

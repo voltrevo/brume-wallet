@@ -1,3 +1,3 @@
 export interface NameProps {
-  name: string
+  readonly name: string
 }

@@ -28,6 +28,7 @@ import { Path } from "../../router/path/context";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useToken, useTokens } from "../tokens/data";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
+import { WalletSendScreen } from "./actions/send";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { SimpleWalletDataCard } from "./card";
@@ -249,12 +250,12 @@ function WalletDataPage() {
     </PageBody>
 
   return <Page>
-    {mainnet && <Dialog
+    {mainnet && <Screen
       opened={sendDialog.current}
       close={sendDialog.disable}>
-      <WalletDataSendNativeTokenDialog title="ETH on Ethereum"
-        context={mainnet} />
-    </Dialog>}
+      <WalletSendScreen
+        token={mainnet.chain.token} />
+    </Screen>}
     <Screen dark
       opened={receiveDialog.current}
       close={receiveDialog.disable}>
@@ -445,7 +446,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   </>
 }
 
-function PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<Fixed.From>]>) {
+export function PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<Fixed.From>]>) {
   const { ok, index, address } = props
   const wallet = useWalletDataContext().unwrap()
 

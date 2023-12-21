@@ -1,3 +1,3 @@
 export interface ClassNameProps {
-  className?: string
+  readonly className?: string
 }
