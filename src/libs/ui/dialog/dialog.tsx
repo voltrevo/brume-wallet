@@ -1,8 +1,8 @@
 import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { useObjectMemo } from "@/libs/react/memo"
+import { DarkProps } from "@/libs/react/props/dark"
 import { OpenedProps } from "@/libs/react/props/opened"
 import { Nullable, Option } from "@hazae41/option"
-import * as Headless from "@headlessui/react"
 import { createContext, useCallback, useContext, useLayoutEffect, useState } from "react"
 import { flushSync } from "react-dom"
 import { Outline } from "../../icons/icons"
@@ -33,8 +33,8 @@ export function useDialogContext() {
  * @param props 
  * @returns 
  */
-export function Screen(props: ChildrenProps & OpenedProps & CloseProps) {
-  const { opened, children, close } = props
+export function Screen(props: ChildrenProps & OpenedProps & CloseProps & DarkProps) {
+  const { opened, dark, children, close } = props
   const handle = useOpenableHandle(props)
 
   const [dialog, setDialog] = useState<HTMLDialogElement | null>(null)
@@ -42,7 +42,9 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps) {
   const onEscape = useKeyboardEscape(close)
 
   const onClose = useMouse<HTMLDivElement>(e => {
-    if (e.clientX < e.currentTarget.clientWidth) close()
+    if (e.clientX > e.currentTarget.clientWidth)
+      return
+    close()
   }, [close])
 
   const [displayed, setDisplayed] = useState(opened)
@@ -51,9 +53,15 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps) {
     setDisplayed(true)
 
   const onAnimationEnd = useCallback(() => {
+    /**
+     * Flush sync to avoid jitter
+     */
     flushSync(() => setDisplayed(opened))
   }, [opened])
 
+  /**
+   * Show HTML dialog when displayed
+   */
   useLayoutEffect(() => {
     if (!displayed)
       return
@@ -64,8 +72,13 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps) {
     return () => dialog?.close()
   }, [displayed, dialog])
 
+  /**
+   * Set theme-color based on dark prop
+   */
   useLayoutEffect(() => {
     if (!displayed)
+      return
+    if (!dark)
       return
 
     const color = document.querySelector("meta[name=theme-color]")
@@ -81,7 +94,7 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps) {
     color.setAttribute("content", "#000000")
 
     return () => color.setAttribute("content", original)
-  }, [displayed])
+  }, [displayed, dark])
 
   if (!displayed)
     return null
@@ -91,18 +104,19 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps) {
       ref={setDialog}
       onAnimationEnd={onAnimationEnd}>
       <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
+        aria-hidden="true"
         role="backdrop" />
-      <div className={`dark fixed inset-0 m-0 h-full w-full flex flex-col`}
+      <div className={`fixed inset-0 flex flex-col md:p-safe ${dark ? "dark" : ""}`}
         onMouseDown={onClose}
         onClick={Events.keep}>
         <div className="hidden md:block grow" />
         <div className="flex flex-col grow md:p-2">
-          <aside className={`flex flex-col grow w-full mx-auto min-w-0 max-w-3xl md:rounded-2xl p-safe text-default bg-default ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+          <aside className={`grow flex flex-col md:grow-0 w-full mx-auto min-w-0 max-w-3xl text-default bg-default p-safe md:p-0 md:rounded-2xl ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
             role="dialog"
             aria-modal
             onMouseDown={Events.keep}
             onKeyDown={onEscape}>
-            <div className="flex flex-col grow px-4 md:p-4">
+            <div className="grow flex flex-col p-4">
               {children}
             </div>
           </aside>
@@ -113,30 +127,8 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps) {
   </DialogContext.Provider>
 }
 
-export function Dialog2(props: ChildrenProps & OpenedProps & CloseProps) {
-  const { opened, close } = props
-
-  return <Headless.Dialog className="relative z-10"
-    as="div"
-    open={opened}
-    onClose={close}>
-    <div className="fixed inset-0 bg-black/25"
-      aria-hidden="true" />
-    <div className="fixed inset-0 overflow-y-auto flex flex-col p-4">
-      <div className="grow" />
-      <Headless.Dialog.Panel className="w-full mx-auto min-w-0 max-w-2xl transform rounded-2xl bg-default p-6 transition-all">
-        Hello
-        <div className="h-[110dvh]">
-          lol
-        </div>
-      </Headless.Dialog.Panel>
-      <div className="grow" />
-    </div>
-  </Headless.Dialog>
-}
-
-export function Dialog(props: ChildrenProps & OpenedProps & CloseProps) {
-  const { opened, children, close } = props
+export function Dialog(props: ChildrenProps & OpenedProps & CloseProps & DarkProps) {
+  const { opened, dark, children, close } = props
   const handle = useOpenableHandle(props)
 
   const [dialog, setDialog] = useState<HTMLDialogElement | null>(null)
@@ -144,7 +136,9 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps) {
   const onEscape = useKeyboardEscape(close)
 
   const onClose = useMouse<HTMLDivElement>(e => {
-    if (e.clientX < e.currentTarget.clientWidth) close()
+    if (e.clientX > e.currentTarget.clientWidth)
+      return
+    close()
   }, [close])
 
   const [displayed, setDisplayed] = useState(opened)
@@ -153,6 +147,9 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps) {
     setDisplayed(true)
 
   const onAnimationEnd = useCallback(() => {
+    /**
+     * Flush sync to avoid jitter
+     */
     flushSync(() => setDisplayed(opened))
   }, [opened])
 
@@ -174,18 +171,21 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps) {
       ref={setDialog}
       onAnimationEnd={onAnimationEnd}>
       <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
+        aria-hidden="true"
         role="backdrop" />
-      <div className={`p-safe fixed inset-0 flex flex-col`}
+      <div className={`fixed inset-0 flex flex-col p-safe ${dark ? "dark" : ""}`}
         onMouseDown={onClose}
         onClick={Events.keep}>
         <div className="grow" />
         <div className="flex flex-col p-2">
-          <aside className={`w-full mx-auto min-w-0 max-w-2xl rounded-2xl p-4 text-default bg-default ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+          <aside className={`flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default rounded-2xl ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
             role="dialog"
             aria-modal
             onMouseDown={Events.keep}
             onKeyDown={onEscape}>
-            {children}
+            <div className="grow flex flex-col p-4">
+              {children}
+            </div>
           </aside>
         </div>
         <div className="hidden md:block grow" />
@@ -250,7 +250,7 @@ export namespace Dialog {
     const open = useBooleanHandle(false)
 
     return <div className="p-1">
-      <Dialog2
+      <Dialog
         opened={open.current}
         close={open.disable}>
         <Dialog.Title close={open.disable}>
@@ -272,7 +272,7 @@ export namespace Dialog {
             </div>
           </Button.Opposite>
         </div>
-      </Dialog2>
+      </Dialog>
       <button onClick={open.enable}>
         Click me
       </button>

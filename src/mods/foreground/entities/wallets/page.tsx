@@ -27,7 +27,7 @@ import { Page } from "../../components/page/page";
 import { Path } from "../../router/path/context";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useToken, useTokens } from "../tokens/data";
-import { WalletDataReceiveDialog } from "./actions/receive/receive";
+import { WalletDataReceiveScreen } from "./actions/receive/receive";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { SimpleWalletDataCard } from "./card";
@@ -255,10 +255,10 @@ function WalletDataPage() {
       <WalletDataSendNativeTokenDialog title="ETH on Ethereum"
         context={mainnet} />
     </Dialog>}
-    <Screen
+    <Screen dark
       opened={receiveDialog.current}
       close={receiveDialog.disable}>
-      <WalletDataReceiveDialog />
+      <WalletDataReceiveScreen />
     </Screen>
     {Header}
     {Card}

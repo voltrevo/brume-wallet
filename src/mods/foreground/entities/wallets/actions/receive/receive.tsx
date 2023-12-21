@@ -8,7 +8,7 @@ import createQR from "@paulmillr/qr";
 import { useCallback, useMemo } from "react";
 import { useWalletDataContext } from "../../context";
 
-export function WalletDataReceiveDialog(props: {}) {
+export function WalletDataReceiveScreen(props: {}) {
   const { close } = useDialogContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
 
