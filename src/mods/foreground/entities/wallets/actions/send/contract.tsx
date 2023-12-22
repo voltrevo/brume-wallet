@@ -106,7 +106,7 @@ export function WalletDataSendContractTokenDialog(props: TitleProps & EthereumCo
 
   const trySend = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      const maybeNonce = await BigInts.tryParseInput(defNonceInput).ok().orElse(async () => {
+      const maybeNonce = await BigInts.tryParse(defNonceInput).ok().orElse(async () => {
         return await Result.unthrow<Result<bigint, Error>>(async t => {
           return new Ok(await pendingNonceQuery.refetch().then(r => r.real!.current.throw(t)))
         }).then(r => r.ok())

@@ -540,6 +540,7 @@ export function useBlockByNumber(number: Nullable<string>, ethereum: Nullable<Fg
   const query = useQuery(getBlockByNumber, [number, ethereum, storage])
   useFetch(query)
   useVisible(query)
+  useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
   useError(query, Errors.log)
   return query

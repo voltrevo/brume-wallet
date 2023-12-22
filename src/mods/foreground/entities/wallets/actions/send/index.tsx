@@ -1,6 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
+import { BigIntToHex } from "@/libs/bigints/bigints";
+import { UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
+import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
@@ -8,10 +11,12 @@ import { Setter } from "@/libs/react/state";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { NativeTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
-import { Nullable, Optional } from "@hazae41/option";
-import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useState } from "react";
+import { Nullable, Option, Optional } from "@hazae41/option";
+import { Result } from "@hazae41/result";
+import { Transaction, ethers } from "ethers";
+import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useWalletDataContext } from "../../context";
-import { FgEthereumContext, useBalance, useEnsLookup, useEthereumContext, useNonce, usePricedBalance } from "../../data";
+import { EthereumWalletInstance, FgEthereumContext, useBalance, useBlockByNumber, useEnsLookup, useEthereumContext, useGasPrice, useMaxPriorityFeePerGas, useNonce, usePricedBalance } from "../../data";
 import { PriceResolver } from "../../page";
 
 type Step =
@@ -95,7 +100,7 @@ export function WalletSendScreenTarget(props: {
     : undefined
 
   const ensQuery = useEnsLookup(maybeEnsInput, mainnet)
-  const maybeEnsData = ensQuery.data?.get()
+  const maybeEns = ensQuery.data?.get()
 
   const onSubmit = useCallback(async () => {
     if (!Address.is(input) && !input.endsWith(".eth"))
@@ -141,7 +146,7 @@ export function WalletSendScreenTarget(props: {
       Send
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleInputBox>
+    <SimpleBox>
       <div className="">
         Target
       </div>
@@ -170,8 +175,8 @@ export function WalletSendScreenTarget(props: {
           OK
         </ShrinkableContrastButtonInInputBox>
       </div>
-    </SimpleInputBox>
-    {maybeEnsData != null && <>
+    </SimpleBox>
+    {maybeEns != null && <>
       <div className="h-2" />
       <div className="po-md flex items-center bg-contrast rounded-xl cursor-pointer"
         role="button"
@@ -183,7 +188,7 @@ export function WalletSendScreenTarget(props: {
             {input}
           </div>
           <div className="text-contrast truncate">
-            {maybeEnsData}
+            {maybeEns}
           </div>
         </div>
       </div>
@@ -225,7 +230,7 @@ export function WalletSendScreenTarget(props: {
   </>
 }
 
-function SimpleInputBox(props: ChildrenProps) {
+function SimpleBox(props: ChildrenProps) {
   const { children } = props
 
   return <div className="po-md flex items-start bg-contrast rounded-xl">
@@ -235,14 +240,6 @@ function SimpleInputBox(props: ChildrenProps) {
 
 function SimpleInput(props: InputProps) {
   return <input className="grow bg-transparent outline-none" {...props} />
-}
-
-function SimpleTextareaBox(props: ChildrenProps) {
-  const { children } = props
-
-  return <div className="po-md flex items-start bg-contrast rounded-xl">
-    {children}
-  </div>
 }
 
 function SimpleTextarea(props: TextareaProps) {
@@ -275,15 +272,12 @@ export function WalletSendScreenValue(props: {
   readonly tokenData: NativeTokenData
   readonly context: FgEthereumContext
 }) {
-  const { tokenData, step, setStep } = props
+  const { context, tokenData, step, setStep } = props
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
 
-  const chainData = chainByChainId[tokenData.chainId]
-  const context = useEthereumContext(wallet.uuid, chainData)
-
   const nonceQuery = useNonce(wallet.address, context)
-  const nonceData = nonceQuery.data?.get()
+  const maybeNonce = nonceQuery.data?.get()
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(tokenData.pairs?.length ?? 0))
 
@@ -318,35 +312,43 @@ export function WalletSendScreenValue(props: {
   const setValue = useCallback((input: string) => {
     setRawValueInput(input)
 
-    let priced = Fixed.fromString(input, tokenData.decimals)
+    try {
+      let priced = Fixed.fromString(input, tokenData.decimals)
 
-    for (const price of prices) {
-      if (price == null)
-        return
-      priced = priced.mul(Fixed.from(price))
-    }
+      for (const price of prices) {
+        if (price == null)
+          return
+        priced = priced.mul(Fixed.from(price))
+      }
 
-    if (priced.value > 0n)
-      setRawPricedInput(priced.toString())
-    else
+      if (priced.value > 0n)
+        setRawPricedInput(priced.toString())
+      else
+        setRawPricedInput(undefined)
+    } catch (e: unknown) {
       setRawPricedInput(undefined)
+    }
   }, [tokenData, prices])
 
   const setPrice = useCallback((input: string) => {
     setRawPricedInput(input)
 
-    let valued = Fixed.fromString(input, tokenData.decimals)
+    try {
+      let valued = Fixed.fromString(input, tokenData.decimals)
 
-    for (const price of prices) {
-      if (price == null)
-        return
-      valued = valued.div(Fixed.from(price))
-    }
+      for (const price of prices) {
+        if (price == null)
+          return
+        valued = valued.div(Fixed.from(price))
+      }
 
-    if (valued.value > 0n)
-      setRawValueInput(valued.toString())
-    else
+      if (valued.value > 0n)
+        setRawValueInput(valued.toString())
+      else
+        setRawValueInput(undefined)
+    } catch (e: unknown) {
       setRawValueInput(undefined)
+    }
   }, [tokenData, prices])
 
   const valueInput = useDeferredValue(rawValueInput)
@@ -404,6 +406,298 @@ export function WalletSendScreenValue(props: {
     setMode("valued")
   }, [])
 
+  const maybeEnsInput = step.target.endsWith(".eth")
+    ? step.target
+    : undefined
+
+  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
+  const ensQuery = useEnsLookup(maybeEnsInput, mainnet)
+  const maybeEns = ensQuery.data?.get()
+
+  const [gasMode, setGasMode] = useState<"normal" | "fast" | "urgent">("normal")
+
+  const gasPriceQuery = useGasPrice(context)
+  const maybeGasPrice = gasPriceQuery.data?.get()
+
+  const maxPriorityFeePerGasQuery = useMaxPriorityFeePerGas(context)
+  const maybeMaxPriorityFeePerGas = maxPriorityFeePerGasQuery.data?.get()
+
+  const pendingBlockQuery = useBlockByNumber("pending", context)
+  const maybePendingBlock = pendingBlockQuery.data?.inner
+
+  const maybeIsEip1559 = maybePendingBlock != null
+    ? maybePendingBlock.baseFeePerGas != null
+    : undefined
+
+  const maybeBaseFeePerGas = useMemo(() => {
+    if (maybePendingBlock?.baseFeePerGas == null)
+      return undefined
+    return BigIntToHex.decodeOrThrow(maybePendingBlock.baseFeePerGas)
+  }, [maybePendingBlock])
+
+  const maybeNormalBaseFeePerGas = useMemo(() => {
+    if (maybeBaseFeePerGas == null)
+      return undefined
+    return maybeBaseFeePerGas
+  }, [maybeBaseFeePerGas])
+
+  const maybeFastBaseFeePerGas = useMemo(() => {
+    if (maybeBaseFeePerGas == null)
+      return undefined
+    return maybeBaseFeePerGas + (1n * (10n ** 9n))
+  }, [maybeBaseFeePerGas])
+
+  const maybeUrgentBaseFeePerGas = useMemo(() => {
+    if (maybeBaseFeePerGas == null)
+      return undefined
+    return maybeBaseFeePerGas + (2n * (10n ** 9n))
+  }, [maybeBaseFeePerGas])
+
+  const maybeNormalMaxPriorityFeePerGas = useMemo(() => {
+    if (maybeMaxPriorityFeePerGas == null)
+      return undefined
+    return maybeMaxPriorityFeePerGas
+  }, [maybeMaxPriorityFeePerGas])
+
+  const maybeFastMaxPriorityFeePerGas = useMemo(() => {
+    if (maybeMaxPriorityFeePerGas == null)
+      return undefined
+    return maybeMaxPriorityFeePerGas + (1n * (10n ** 9n))
+  }, [maybeMaxPriorityFeePerGas])
+
+  const maybeUrgentMaxPriorityFeePerGas = useMemo(() => {
+    if (maybeMaxPriorityFeePerGas == null)
+      return undefined
+    return maybeMaxPriorityFeePerGas + (2n * (10n ** 9n))
+  }, [maybeMaxPriorityFeePerGas])
+
+  const maybeNormalGasPrice = useMemo(() => {
+    if (maybeGasPrice == null)
+      return undefined
+    return maybeGasPrice
+  }, [maybeGasPrice])
+
+  const maybeFastGasPrice = useMemo(() => {
+    if (maybeGasPrice == null)
+      return undefined
+    return maybeGasPrice + (maybeGasPrice * (10n / 100n))
+  }, [maybeGasPrice])
+
+  const maybeUrgentGasPrice = useMemo(() => {
+    if (maybeGasPrice == null)
+      return undefined
+    return maybeGasPrice + (maybeGasPrice * (20n / 100n))
+  }, [maybeGasPrice])
+
+  const maybeFinalGasPrice = useMemo(() => {
+    if (gasMode === "normal")
+      return maybeNormalGasPrice
+    if (gasMode === "fast")
+      return maybeFastGasPrice
+    if (gasMode === "urgent")
+      return maybeUrgentGasPrice
+    return undefined
+  }, [gasMode, maybeNormalGasPrice, maybeFastGasPrice, maybeUrgentGasPrice])
+
+  const maybeFinalBaseFeePerGas = useMemo(() => {
+    if (gasMode === "normal")
+      return maybeNormalBaseFeePerGas
+    if (gasMode === "fast")
+      return maybeFastBaseFeePerGas
+    if (gasMode === "urgent")
+      return maybeUrgentBaseFeePerGas
+    return undefined
+  }, [gasMode, maybeNormalBaseFeePerGas, maybeFastBaseFeePerGas, maybeUrgentBaseFeePerGas])
+
+  const maybeFinalMaxPriorityFeePerGas = useMemo(() => {
+    if (gasMode === "normal")
+      return maybeNormalMaxPriorityFeePerGas
+    if (gasMode === "fast")
+      return maybeFastMaxPriorityFeePerGas
+    if (gasMode === "urgent")
+      return maybeUrgentMaxPriorityFeePerGas
+    return undefined
+  }, [gasMode, maybeNormalMaxPriorityFeePerGas, maybeFastMaxPriorityFeePerGas, maybeUrgentMaxPriorityFeePerGas])
+
+  const normalGasPriceDisplay = useMemo(() => {
+    if (maybeNormalGasPrice == null)
+      return undefined
+    return new Fixed(maybeNormalGasPrice, 9).toString()
+  }, [maybeNormalGasPrice])
+
+  const fastGasPriceDisplay = useMemo(() => {
+    if (maybeFastGasPrice == null)
+      return undefined
+    return new Fixed(maybeFastGasPrice, 9).toString()
+  }, [maybeFastGasPrice])
+
+  const urgentGasPriceDisplay = useMemo(() => {
+    if (maybeUrgentGasPrice == null)
+      return undefined
+    return new Fixed(maybeUrgentGasPrice, 9).toString()
+  }, [maybeUrgentGasPrice])
+
+  const normalBaseFeePerGasDisplay = useMemo(() => {
+    if (maybeNormalBaseFeePerGas == null)
+      return undefined
+    return new Fixed(maybeNormalBaseFeePerGas, 9).toString()
+  }, [maybeNormalBaseFeePerGas])
+
+  const fastBaseFeePerGasDisplay = useMemo(() => {
+    if (maybeFastBaseFeePerGas == null)
+      return undefined
+    return new Fixed(maybeFastBaseFeePerGas, 9).toString()
+  }, [maybeFastBaseFeePerGas])
+
+  const urgentBaseFeePerGasDisplay = useMemo(() => {
+    if (maybeUrgentBaseFeePerGas == null)
+      return undefined
+    return new Fixed(maybeUrgentBaseFeePerGas, 9).toString()
+  }, [maybeUrgentBaseFeePerGas])
+
+  const normalMaxPriorityFeePerGasDisplay = useMemo(() => {
+    if (maybeNormalMaxPriorityFeePerGas == null)
+      return undefined
+    return new Fixed(maybeNormalMaxPriorityFeePerGas, 9).toString()
+  }, [maybeNormalMaxPriorityFeePerGas])
+
+  const fastMaxPriorityFeePerGasDisplay = useMemo(() => {
+    if (maybeFastMaxPriorityFeePerGas == null)
+      return undefined
+    return new Fixed(maybeFastMaxPriorityFeePerGas, 9).toString()
+  }, [maybeFastMaxPriorityFeePerGas])
+
+  const urgentMaxPriorityFeePerGasDisplay = useMemo(() => {
+    if (maybeUrgentMaxPriorityFeePerGas == null)
+      return undefined
+    return new Fixed(maybeUrgentMaxPriorityFeePerGas, 9).toString()
+  }, [maybeUrgentMaxPriorityFeePerGas])
+
+  const send = useAsyncUniqueCallback(async () => {
+    if (maybeIsEip1559 == null)
+      return
+
+    const value = Result.runAndWrapSync(() => {
+      if (step.valued?.trim().length)
+        return Fixed.fromString(step.valued, tokenData.decimals)
+      return new Fixed(0n, tokenData.decimals)
+    }).mapErrSync(() => {
+      return new UIError(`Could not parse value`)
+    }).unwrap()
+
+    const nonce = Result.runAndWrapSync(() => {
+      if (step.nonce?.trim().length)
+        return BigInt(step.nonce)
+      return Option.unwrap(maybeNonce)
+    }).mapErrSync(() => {
+      return new UIError(`Could not fetch or parse nonce`)
+    }).unwrap()
+
+    const address = Result.runAndWrapSync(() => {
+      if (Address.is(step.target))
+        return step.target
+      return Option.unwrap(maybeEns)
+    }).mapErrSync(() => {
+      return new UIError(`Could not fetch or parse address`)
+    }).unwrap()
+
+    let tx: ethers.Transaction
+
+    /**
+     * EIP-1559
+     */
+    if (maybeIsEip1559) {
+      const baseFeePerGas = Result.runAndWrapSync(() => {
+        return Option.unwrap(maybeFinalBaseFeePerGas)
+      }).mapErrSync(() => {
+        return new UIError(`Could not fetch baseFeePerGas`)
+      }).unwrap()
+
+      const maxPriorityFeePerGas = Result.runAndWrapSync(() => {
+        return Option.unwrap(maybeFinalMaxPriorityFeePerGas)
+      }).mapErrSync(() => {
+        return new UIError(`Could not fetch maxPriorityFeePerGas`)
+      }).unwrap()
+
+      const maxFeePerGas = (baseFeePerGas * 2n) + maxPriorityFeePerGas
+
+      const gas = await context.background.tryRequest<string>({
+        method: "brume_eth_fetch",
+        params: [context.uuid, context.chain.chainId, {
+          method: "eth_estimateGas",
+          params: [{
+            chainId: ZeroHexString.from(context.chain.chainId),
+            from: wallet.address,
+            to: Address.from(address),
+            maxFeePerGas: ZeroHexString.from(maxFeePerGas),
+            maxPriorityFeePerGas: ZeroHexString.from(maxPriorityFeePerGas),
+            value: ZeroHexString.from(value.value),
+            nonce: ZeroHexString.from(nonce)
+          }, "latest"],
+          noCheck: true
+        }]
+      }).then(r => r.unwrap().unwrap())
+
+      tx = Transaction.from({
+        to: Address.from(address),
+        gasLimit: gas,
+        chainId: context.chain.chainId,
+        maxFeePerGas: maxFeePerGas,
+        maxPriorityFeePerGas: maxPriorityFeePerGas,
+        nonce: Number(nonce),
+        value: value.value
+      })
+    }
+
+    /**
+     * Not EIP-1559
+     */
+    else {
+      const gasPrice = Result.runAndWrapSync(() => {
+        return Option.unwrap(maybeFinalGasPrice)
+      }).mapErrSync(() => {
+        return new UIError(`Could not fetch gasPrice`)
+      }).unwrap()
+
+      const gas = await context.background.tryRequest<string>({
+        method: "brume_eth_fetch",
+        params: [context.uuid, context.chain.chainId, {
+          method: "eth_estimateGas",
+          params: [{
+            chainId: ZeroHexString.from(context.chain.chainId),
+            from: wallet.address,
+            to: Address.from(address),
+            gasPrice: ZeroHexString.from(gasPrice),
+            value: ZeroHexString.from(value.value),
+            nonce: ZeroHexString.from(nonce)
+          }, "latest"],
+          noCheck: true
+        }]
+      }).then(r => r.unwrap().unwrap())
+
+      tx = Transaction.from({
+        to: Address.from(address),
+        gasLimit: gas,
+        chainId: context.chain.chainId,
+        gasPrice: gasPrice,
+        nonce: Number(nonce),
+        value: value.value
+      })
+    }
+
+    const instance = await EthereumWalletInstance.tryFrom(wallet, context.background).then(r => r.unwrap())
+    tx.signature = await instance.trySignTransaction(tx, context.background).then(r => r.unwrap())
+
+    const txHash = await context.background.tryRequest<string>({
+      method: "brume_eth_fetch",
+      params: [context.uuid, context.chain.chainId, {
+        method: "eth_sendRawTransaction",
+        params: [tx.serialized],
+        noCheck: true
+      }]
+    }).then(r => r.unwrap().unwrap())
+  }, [wallet, context, step, tokenData, maybeNonce, maybeEns, maybeIsEip1559, maybeFinalGasPrice, maybeFinalBaseFeePerGas, maybeFinalMaxPriorityFeePerGas])
+
   return <>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}
@@ -414,7 +708,7 @@ export function WalletSendScreenValue(props: {
       Send
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleInputBox>
+    <SimpleBox>
       <div className="">
         Target
       </div>
@@ -422,10 +716,10 @@ export function WalletSendScreenValue(props: {
       <SimpleInput key="target"
         onFocus={onTargetFocus}
         value={step.target} />
-    </SimpleInputBox>
+    </SimpleBox>
     <div className="h-2" />
     {mode === "valued" &&
-      <SimpleInputBox>
+      <SimpleBox>
         <div className="">
           Value
         </div>
@@ -472,9 +766,9 @@ export function WalletSendScreenValue(props: {
             100%
           </ShrinkableContrastButtonInInputBox>
         </div>
-      </SimpleInputBox>}
+      </SimpleBox>}
     {mode === "priced" &&
-      <SimpleInputBox>
+      <SimpleBox>
         <div className="">
           Value
         </div>
@@ -521,42 +815,28 @@ export function WalletSendScreenValue(props: {
             100%
           </ShrinkableContrastButtonInInputBox>
         </div>
-      </SimpleInputBox>}
+      </SimpleBox>}
+    <div className="h-4" />
+    <div className="font-medium">
+      Advanced
+    </div>
     <div className="h-2" />
-    <SimpleInputBox>
+    <SimpleBox>
       <div className="">
         Nonce
       </div>
       <div className="w-4" />
       <SimpleInput
         value={step.nonce}
-        placeholder={nonceData?.toString()} />
+        placeholder={maybeNonce?.toString()} />
       <div className="w-1" />
-      <ShrinkableContrastButtonInInputBox
-        onClick={onNonceClick}>
-        Replace
-      </ShrinkableContrastButtonInInputBox>
-    </SimpleInputBox>
-    <div className="h-2" />
-    <SimpleInputBox>
-      <div className="shrink-0">
-        Gas
-      </div>
-      <div className="w-4" />
-      <SimpleInput
-        placeholder="30" />
-      <div className="w-1" />
-      <div className="text-contrast">
-        GWEI
-      </div>
-      <div className="w-2" />
       <ShrinkableContrastButtonInInputBox
         onClick={onNonceClick}>
         Select
       </ShrinkableContrastButtonInInputBox>
-    </SimpleInputBox>
+    </SimpleBox>
     <div className="h-2" />
-    <SimpleTextareaBox>
+    <SimpleBox>
       <div className="">
         Data
       </div>
@@ -565,10 +845,49 @@ export function WalletSendScreenValue(props: {
         rows={3}
         value={step.data}
         placeholder="0x0" />
-    </SimpleTextareaBox>
+    </SimpleBox>
+    <div className="h-4" />
+    <div className="font-medium">
+      Gas
+    </div>
+    <div className="h-2" />
+    <SimpleBox>
+      <div className="">
+        Gas
+      </div>
+      <div className="w-4" />
+      {maybeIsEip1559 === true && maybeBaseFeePerGas != null && maybeMaxPriorityFeePerGas != null &&
+        <select className="w-full my-0.5 bg-transparent outline-none">
+          <option value="urgent">
+            {`Urgent — ${urgentBaseFeePerGasDisplay}'${urgentMaxPriorityFeePerGasDisplay} Gwei — $5 — 5 seconds`}
+          </option>
+          <option value="fast">
+            {`Fast — ${fastBaseFeePerGasDisplay}'${fastMaxPriorityFeePerGasDisplay} Gwei — $5 — 5 seconds`}
+          </option>
+          <option value="normal">
+            {`Normal — ${normalBaseFeePerGasDisplay}'${normalMaxPriorityFeePerGasDisplay} Gwei — $5 — 5 seconds`}
+          </option>
+          {/* <option value="custom">Custom</option> */}
+        </select>}
+      {maybeIsEip1559 === false && maybeGasPrice != null &&
+        <select className="w-full my-0.5 bg-transparent outline-none">
+          <option value="urgent">
+            {`Urgent — ${urgentGasPriceDisplay} Gwei — $5 — 5 seconds`}
+          </option>
+          <option value="fast">
+            {`Fast — ${fastGasPriceDisplay} Gwei — $5 — 5 seconds`}
+          </option>
+          <option value="normal">
+            {`Normal — ${normalGasPriceDisplay} Gwei — $5 — 5 seconds`}
+          </option>
+          {/* <option value="custom">Custom</option> */}
+        </select>}
+    </SimpleBox>
     <div className="h-4 grow" />
     <div className="flex items-center">
-      <WideShrinkableOppositeButton>
+      <WideShrinkableOppositeButton
+        disabled={send.loading}
+        onClick={send.run}>
         <Outline.PaperAirplaneIcon className="size-5" />
         Send
       </WideShrinkableOppositeButton>
@@ -620,16 +939,15 @@ export function WalletSendScreenNonce(props: {
 
   const onPaste = useCallback(async () => {
     const input = await navigator.clipboard.readText()
-
-    setRawInput(input)
-  }, [setStep])
+    setStep({ ...step, step: "value", nonce: input })
+  }, [step, setStep])
 
   return <>
     <Dialog.Title close={close}>
       Send
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleInputBox>
+    <SimpleBox>
       <div className="">
         Nonce
       </div>
@@ -641,21 +959,23 @@ export function WalletSendScreenNonce(props: {
         onKeyDown={onEnter}
         placeholder={nonceData?.toString()} />
       <div className="w-1" />
-      {rawInput.length === 0
-        ? <ShrinkableNakedButtonInInputBox
-          onClick={onPaste}>
-          <Outline.ClipboardIcon className="size-4" />
-        </ShrinkableNakedButtonInInputBox>
-        : <ShrinkableNakedButtonInInputBox
-          onClick={onClear}>
-          <Outline.XMarkIcon className="size-4" />
-        </ShrinkableNakedButtonInInputBox>}
-      <div className="w-1" />
-      <ShrinkableContrastButtonInInputBox
-        onClick={onSubmit}>
-        OK
-      </ShrinkableContrastButtonInInputBox>
-    </SimpleInputBox>
+      <div className="flex items-center">
+        {rawInput.length === 0
+          ? <ShrinkableNakedButtonInInputBox
+            onClick={onPaste}>
+            <Outline.ClipboardIcon className="size-4" />
+          </ShrinkableNakedButtonInInputBox>
+          : <ShrinkableNakedButtonInInputBox
+            onClick={onClear}>
+            <Outline.XMarkIcon className="size-4" />
+          </ShrinkableNakedButtonInInputBox>}
+        <div className="w-1" />
+        <ShrinkableContrastButtonInInputBox
+          onClick={onSubmit}>
+          OK
+        </ShrinkableContrastButtonInInputBox>
+      </div>
+    </SimpleBox>
     <div className="h-4" />
     <div className="text-lg font-medium">
       Pending transactions

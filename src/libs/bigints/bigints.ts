@@ -1,5 +1,5 @@
 import { ZeroHexString } from "@hazae41/cubane"
-import { Err, Ok, Result } from "@hazae41/result"
+import { Result } from "@hazae41/result"
 import { FixedNumber } from "ethers"
 
 export namespace BigIntToHex {
@@ -40,15 +40,14 @@ export namespace BigInts {
       .toUnsafeFloat()
   }
 
-  export function tryParseInput(text: string) {
-    if (text.trim().length === 0)
-      return new Err(new ParseError())
+  export function tryParse(text: string) {
+    return Result.runAndDoubleWrapSync(() => parseOrThrow(text))
+  }
 
-    try {
-      return new Ok(BigInt(text))
-    } catch (e: unknown) {
-      return new Err(ParseError.from(e))
-    }
+  export function parseOrThrow(text: string) {
+    if (text.trim().length === 0)
+      throw new ParseError()
+    return BigInt(text)
   }
 
   export function tens(value: number) {
