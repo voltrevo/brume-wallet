@@ -143,6 +143,12 @@ export function WalletSendScreenTarget(props: {
           onClick={onClear}>
           <Outline.XMarkIcon className="size-4" />
         </ShrinkableNakedButtonInInputBox>}
+      <div className="w-2" />
+      <ShrinkableContrastButtonInInputBox
+        disabled={!Address.is(input) && !input.endsWith(".eth")}
+        onClick={onSubmit}>
+        OK
+      </ShrinkableContrastButtonInInputBox>
     </SimpleInputBox>
     {maybeEnsData != null && <>
       <div className="h-2" />
@@ -239,11 +245,11 @@ export function WalletSendScreenValue(props: {
   const [rawPricedInput = "", setRawPricedInput] = useState(step.priced)
 
   const onValueInputChange = useInputChange(e => {
-    onValueChange(e.target.value)
+    setValue(e.target.value)
   }, [])
 
   const onPricedInputChange = useInputChange(e => {
-    onPriceChange(e.target.value)
+    setPrice(e.target.value)
   }, [prices])
 
   useEffect(() => {
@@ -256,7 +262,7 @@ export function WalletSendScreenValue(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawPricedInput])
 
-  const onValueChange = useCallback((input: string) => {
+  const setValue = useCallback((input: string) => {
     setRawValueInput(input)
 
     let priced = Fixed.fromString(input, tokenData.decimals)
@@ -273,7 +279,7 @@ export function WalletSendScreenValue(props: {
       setRawPricedInput(undefined)
   }, [tokenData, prices])
 
-  const onPriceChange = useCallback((input: string) => {
+  const setPrice = useCallback((input: string) => {
     setRawPricedInput(input)
 
     let valued = Fixed.fromString(input, tokenData.decimals)
@@ -302,30 +308,30 @@ export function WalletSendScreenValue(props: {
   const onValueMaxClick = useCallback(() => {
     if (valuedBalanceData == null)
       return
-    onValueChange(Fixed.from(valuedBalanceData).toString())
-  }, [valuedBalanceData, onValueChange])
+    setValue(Fixed.from(valuedBalanceData).toString())
+  }, [valuedBalanceData, setValue])
 
   const onPricedMaxClick = useCallback(() => {
     if (pricedBalanceData == null)
       return
-    onPriceChange(Fixed.from(pricedBalanceData).toString())
-  }, [pricedBalanceData, onPriceChange])
+    setPrice(Fixed.from(pricedBalanceData).toString())
+  }, [pricedBalanceData, setPrice])
 
   const onValuedPaste = useCallback(async () => {
-    setRawValueInput(await navigator.clipboard.readText())
-  }, [])
+    setValue(await navigator.clipboard.readText())
+  }, [setValue])
 
   const onPricedPaste = useCallback(async () => {
-    setRawPricedInput(await navigator.clipboard.readText())
-  }, [])
+    setPrice(await navigator.clipboard.readText())
+  }, [setPrice])
 
   const onValuedClear = useCallback(async () => {
-    setRawValueInput("")
-  }, [])
+    setValue("")
+  }, [setValue])
 
   const onPricedClear = useCallback(async () => {
-    setRawPricedInput("")
-  }, [])
+    setPrice("")
+  }, [setPrice])
 
   const onTargetFocus = useCallback(() => {
     setStep({ ...step, step: "target" })
@@ -491,6 +497,11 @@ export function WalletSendScreenNonce(props: {
           onClick={onClear}>
           <Outline.XMarkIcon className="size-4" />
         </ShrinkableNakedButtonInInputBox>}
+      <div className="w-2" />
+      <ShrinkableContrastButtonInInputBox
+        onClick={onSubmit}>
+        OK
+      </ShrinkableContrastButtonInInputBox>
     </SimpleInputBox>
     <div className="h-4" />
     <div className="text-lg font-medium">
