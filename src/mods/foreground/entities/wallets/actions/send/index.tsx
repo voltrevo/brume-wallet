@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
@@ -117,6 +118,21 @@ export function WalletSendScreenTarget(props: {
     setStep({ ...step, step: "value", target: input })
   }, [step, setStep])
 
+  const [mode, setMode] = useState<"recents" | "contacts">("recents")
+
+  const onRecentsClick = useCallback(() => {
+    setMode("recents")
+  }, [])
+
+  const onContactsClick = useCallback(() => {
+    setMode("contacts")
+  }, [])
+
+  const onBrumeClick = useCallback(() => {
+    setRawInput("brume.eth")
+    setStep({ ...step, step: "value", target: "brume.eth" })
+  }, [step, setStep])
+
   return <>
     <Dialog.Title close={close}>
       Send
@@ -168,15 +184,35 @@ export function WalletSendScreenTarget(props: {
       </div>
     </>}
     <div className="h-4" />
-    <div className="text-lg font-medium">
-      Recent
+    <div className="flex items-center">
+      <button className="text-lg font-medium text-contrast data-[active=true]:text-default"
+        onClick={onRecentsClick}
+        data-active={mode === "recents"}>
+        Recents
+      </button>
+      <div className="grow" />
+      <button className="text-contrast font-medium text-contrast data-[active=true]:text-default"
+        onClick={onContactsClick}
+        data-active={mode === "contacts"}>
+        Contacts
+      </button>
     </div>
-    <div className="grow flex flex-col items-center justify-center">
-      Coming soon...
-    </div>
-    <div className="h-4" />
-    <div className="text-lg font-medium">
-      Contacts
+    <div className="h-2" />
+    <div className="po-md flex items-center bg-contrast rounded-xl cursor-pointer"
+      role="button"
+      onClick={onBrumeClick}>
+      <img className="size-12 shrink-0 rounded-full bg-contrast"
+        src="/square.png"
+        alt="logo" />
+      <div className="w-4" />
+      <div className="flex flex-col truncate">
+        <div className="font-medium">
+          Brume Wallet
+        </div>
+        <div className="text-contrast truncate">
+          brume.eth
+        </div>
+      </div>
     </div>
     <div className="grow flex flex-col items-center justify-center">
       Coming soon...
