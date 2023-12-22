@@ -399,7 +399,7 @@ export function WalletSendScreenValue(props: {
     <div className="h-4" />
     <SimpleInputBox>
       <div className="">
-        ETH
+        {tokenData.symbol}
       </div>
       <div className="w-4" />
       <SimpleInput
