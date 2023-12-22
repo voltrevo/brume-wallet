@@ -112,10 +112,10 @@ export function WalletSendScreenTarget(props: {
 
     setRawInput(input)
 
-    if (!Address.is(input))
+    if (!Address.is(input) && !input.endsWith(".eth"))
       return
-    setStep({ step: "value", target: input })
-  }, [setStep])
+    setStep({ ...step, step: "value", target: input })
+  }, [step, setStep])
 
   return <>
     <Dialog.Title close={close}>
@@ -311,6 +311,22 @@ export function WalletSendScreenValue(props: {
     onPriceChange(Fixed.from(pricedBalanceData).toString())
   }, [pricedBalanceData, onPriceChange])
 
+  const onValuedPaste = useCallback(async () => {
+    setRawValueInput(await navigator.clipboard.readText())
+  }, [])
+
+  const onPricedPaste = useCallback(async () => {
+    setRawPricedInput(await navigator.clipboard.readText())
+  }, [])
+
+  const onValuedClear = useCallback(async () => {
+    setRawValueInput("")
+  }, [])
+
+  const onPricedClear = useCallback(async () => {
+    setRawPricedInput("")
+  }, [])
+
   const onTargetFocus = useCallback(() => {
     setStep({ ...step, step: "target" })
   }, [step, setStep])
@@ -350,6 +366,16 @@ export function WalletSendScreenValue(props: {
         onChange={onValueInputChange}
         placeholder="0.0" />
       <div className="w-2" />
+      {rawValueInput.length === 0
+        ? <ShrinkableNakedButtonInInputBox
+          onClick={onValuedPaste}>
+          <Outline.ClipboardIcon className="size-4" />
+        </ShrinkableNakedButtonInInputBox>
+        : <ShrinkableNakedButtonInInputBox
+          onClick={onValuedClear}>
+          <Outline.XMarkIcon className="size-4" />
+        </ShrinkableNakedButtonInInputBox>}
+      <div className="w-2" />
       <ShrinkableContrastButtonInInputBox
         disabled={valuedBalanceQuery.data == null}
         onClick={onValueMaxClick}>
@@ -367,6 +393,16 @@ export function WalletSendScreenValue(props: {
         onChange={onPricedInputChange}
         placeholder="0.0" />
       <div className="w-2" />
+      {rawPricedInput.length === 0
+        ? <ShrinkableNakedButtonInInputBox
+          onClick={onPricedPaste}>
+          <Outline.ClipboardIcon className="size-4" />
+        </ShrinkableNakedButtonInInputBox>
+        : <ShrinkableNakedButtonInInputBox
+          onClick={onPricedClear}>
+          <Outline.XMarkIcon className="size-4" />
+        </ShrinkableNakedButtonInInputBox>}
+      <div className="w-2" />
       <ShrinkableContrastButtonInInputBox
         disabled={pricedBalanceQuery.data == null}
         onClick={onPricedMaxClick}>
@@ -381,7 +417,6 @@ export function WalletSendScreenValue(props: {
       <div className="w-4" />
       <SimpleInput
         value={step.nonce}
-        onFocus={onNonceClick}
         placeholder={nonceData?.toString()} />
       <div className="w-2" />
       <ShrinkableContrastButtonInInputBox
@@ -428,10 +463,6 @@ export function WalletSendScreenNonce(props: {
     const input = await navigator.clipboard.readText()
 
     setRawInput(input)
-
-    if (!Address.is(input))
-      return
-    setStep({ step: "value", target: input })
   }, [setStep])
 
   return <>
