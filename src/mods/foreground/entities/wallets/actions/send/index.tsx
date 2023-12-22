@@ -149,13 +149,13 @@ export function WalletSendScreenTarget(props: {
       <div className="po-md flex items-center bg-contrast rounded-xl cursor-pointer"
         role="button"
         onClick={onSubmit}>
-        <div className="size-12 rounded-full bg-contrast" />
+        <div className="size-12 shrink-0 rounded-full bg-contrast" />
         <div className="w-4" />
-        <div className="flex flex-col">
+        <div className="flex flex-col truncate">
           <div className="font-medium">
             {input}
           </div>
-          <div className="text-contrast">
+          <div className="text-contrast truncate">
             {maybeEnsData}
           </div>
         </div>
