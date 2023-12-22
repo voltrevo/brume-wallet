@@ -3,11 +3,11 @@ import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
-import { ButtonProps, InputProps } from "@/libs/react/props/html";
+import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
 import { Setter } from "@/libs/react/state";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { NativeTokenData } from "@/mods/background/service_worker/entities/tokens/data";
-import { Address, Fixed } from "@hazae41/cubane";
+import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Nullable, Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useState } from "react";
 import { useWalletDataContext } from "../../context";
@@ -25,6 +25,7 @@ type TargetStep = {
   readonly valued?: string
   readonly priced?: string
   readonly nonce?: string
+  readonly data?: ZeroHexString
 }
 
 type ValueStep = {
@@ -33,6 +34,7 @@ type ValueStep = {
   readonly valued?: string
   readonly priced?: string
   readonly nonce?: string
+  readonly data?: ZeroHexString
 }
 
 type NonceStep = {
@@ -41,6 +43,7 @@ type NonceStep = {
   readonly valued?: string
   readonly priced?: string
   readonly nonce?: string
+  readonly data?: ZeroHexString
 }
 
 export function WalletSendScreen(props: {
@@ -149,22 +152,24 @@ export function WalletSendScreenTarget(props: {
         onChange={onInputChange}
         onKeyDown={onEnter}
         placeholder="brume.eth" />
-      <div className="w-2" />
-      {rawInput.length === 0
-        ? <ShrinkableNakedButtonInInputBox
-          onClick={onPaste}>
-          <Outline.ClipboardIcon className="size-4" />
-        </ShrinkableNakedButtonInInputBox>
-        : <ShrinkableNakedButtonInInputBox
-          onClick={onClear}>
-          <Outline.XMarkIcon className="size-4" />
-        </ShrinkableNakedButtonInInputBox>}
-      <div className="w-2" />
-      <ShrinkableContrastButtonInInputBox
-        disabled={!Address.is(input) && !input.endsWith(".eth")}
-        onClick={onSubmit}>
-        OK
-      </ShrinkableContrastButtonInInputBox>
+      <div className="w-1" />
+      <div className="flex items-center">
+        {rawInput.length === 0
+          ? <ShrinkableNakedButtonInInputBox
+            onClick={onPaste}>
+            <Outline.ClipboardIcon className="size-4" />
+          </ShrinkableNakedButtonInInputBox>
+          : <ShrinkableNakedButtonInInputBox
+            onClick={onClear}>
+            <Outline.XMarkIcon className="size-4" />
+          </ShrinkableNakedButtonInInputBox>}
+        <div className="w-1" />
+        <ShrinkableContrastButtonInInputBox
+          disabled={!Address.is(input) && !input.endsWith(".eth")}
+          onClick={onSubmit}>
+          OK
+        </ShrinkableContrastButtonInInputBox>
+      </div>
     </SimpleInputBox>
     {maybeEnsData != null && <>
       <div className="h-2" />
@@ -223,13 +228,25 @@ export function WalletSendScreenTarget(props: {
 function SimpleInputBox(props: ChildrenProps) {
   const { children } = props
 
-  return <div className="po-md flex items-center bg-contrast rounded-full">
+  return <div className="po-md flex items-start bg-contrast rounded-xl">
     {children}
   </div>
 }
 
 function SimpleInput(props: InputProps) {
   return <input className="grow bg-transparent outline-none" {...props} />
+}
+
+function SimpleTextareaBox(props: ChildrenProps) {
+  const { children } = props
+
+  return <div className="po-md flex items-start bg-contrast rounded-xl">
+    {children}
+  </div>
+}
+
+function SimpleTextarea(props: TextareaProps) {
+  return <textarea className="grow bg-transparent outline-none" {...props} />
 }
 
 function ShrinkableNakedButtonInInputBox(props: ChildrenProps & ButtonProps) {
@@ -335,6 +352,8 @@ export function WalletSendScreenValue(props: {
   const valueInput = useDeferredValue(rawValueInput)
   const pricedInput = useDeferredValue(rawPricedInput)
 
+  const [mode, setMode] = useState<"valued" | "priced">("valued")
+
   const valuedBalanceQuery = useBalance(wallet.address, context, prices)
   const pricedBalanceQuery = usePricedBalance(wallet.address, "usd", context)
 
@@ -377,6 +396,14 @@ export function WalletSendScreenValue(props: {
     setStep({ ...step, step: "nonce" })
   }, [step, setStep])
 
+  const onPricedClick = useCallback(() => {
+    setMode("priced")
+  }, [])
+
+  const onValuedClick = useCallback(() => {
+    setMode("valued")
+  }, [])
+
   return <>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}
@@ -396,62 +423,106 @@ export function WalletSendScreenValue(props: {
         onFocus={onTargetFocus}
         value={step.target} />
     </SimpleInputBox>
-    <div className="h-4" />
-    <SimpleInputBox>
-      <div className="">
-        {tokenData.symbol}
-      </div>
-      <div className="w-4" />
-      <SimpleInput
-        autoFocus
-        value={rawValueInput}
-        onChange={onValueInputChange}
-        placeholder="0.0" />
-      <div className="w-2" />
-      {rawValueInput.length === 0
-        ? <ShrinkableNakedButtonInInputBox
-          onClick={onValuedPaste}>
-          <Outline.ClipboardIcon className="size-4" />
-        </ShrinkableNakedButtonInInputBox>
-        : <ShrinkableNakedButtonInInputBox
-          onClick={onValuedClear}>
-          <Outline.XMarkIcon className="size-4" />
-        </ShrinkableNakedButtonInInputBox>}
-      <div className="w-2" />
-      <ShrinkableContrastButtonInInputBox
-        disabled={valuedBalanceQuery.data == null}
-        onClick={onValueMaxClick}>
-        100%
-      </ShrinkableContrastButtonInInputBox>
-    </SimpleInputBox>
     <div className="h-2" />
-    <SimpleInputBox>
-      <div className="">
-        USD
-      </div>
-      <div className="w-4" />
-      <SimpleInput
-        value={rawPricedInput}
-        onChange={onPricedInputChange}
-        placeholder="0.0" />
-      <div className="w-2" />
-      {rawPricedInput.length === 0
-        ? <ShrinkableNakedButtonInInputBox
-          onClick={onPricedPaste}>
-          <Outline.ClipboardIcon className="size-4" />
-        </ShrinkableNakedButtonInInputBox>
-        : <ShrinkableNakedButtonInInputBox
-          onClick={onPricedClear}>
-          <Outline.XMarkIcon className="size-4" />
-        </ShrinkableNakedButtonInInputBox>}
-      <div className="w-2" />
-      <ShrinkableContrastButtonInInputBox
-        disabled={pricedBalanceQuery.data == null}
-        onClick={onPricedMaxClick}>
-        100%
-      </ShrinkableContrastButtonInInputBox>
-    </SimpleInputBox>
-    <div className="h-4" />
+    {mode === "valued" &&
+      <SimpleInputBox>
+        <div className="">
+          Value
+        </div>
+        <div className="w-4" />
+        <div className="grow flex flex-col">
+          <div className="flex items-center">
+            <SimpleInput
+              autoFocus
+              value={rawValueInput}
+              onChange={onValueInputChange}
+              placeholder="0.0" />
+            <div className="w-1" />
+            <div className="text-contrast">
+              {tokenData.symbol}
+            </div>
+          </div>
+          <div className="flex items-center cursor-pointer"
+            role="button"
+            onClick={onPricedClick}>
+            <div className="text-contrast">
+              {rawPricedInput || "0.0"}
+            </div>
+            <div className="grow" />
+            <div className="text-contrast">
+              USD
+            </div>
+          </div>
+        </div>
+        <div className="w-2" />
+        <div className="flex items-center">
+          {rawValueInput.length === 0
+            ? <ShrinkableNakedButtonInInputBox
+              onClick={onValuedPaste}>
+              <Outline.ClipboardIcon className="size-4" />
+            </ShrinkableNakedButtonInInputBox>
+            : <ShrinkableNakedButtonInInputBox
+              onClick={onValuedClear}>
+              <Outline.XMarkIcon className="size-4" />
+            </ShrinkableNakedButtonInInputBox>}
+          <div className="w-1" />
+          <ShrinkableContrastButtonInInputBox
+            disabled={valuedBalanceQuery.data == null}
+            onClick={onValueMaxClick}>
+            100%
+          </ShrinkableContrastButtonInInputBox>
+        </div>
+      </SimpleInputBox>}
+    {mode === "priced" &&
+      <SimpleInputBox>
+        <div className="">
+          Value
+        </div>
+        <div className="w-4" />
+        <div className="grow flex flex-col">
+          <div className="flex items-center">
+            <SimpleInput
+              autoFocus
+              value={rawPricedInput}
+              onChange={onPricedInputChange}
+              placeholder="0.0" />
+            <div className="w-1" />
+            <div className="text-contrast">
+              USD
+            </div>
+          </div>
+          <div className="flex items-center cursor-pointer"
+            role="button"
+            onClick={onValuedClick}>
+            <div className="text-contrast">
+              {rawValueInput || "0.0"}
+            </div>
+            <div className="grow" />
+            <div className="text-contrast">
+              {tokenData.symbol}
+            </div>
+          </div>
+        </div>
+        <div className="w-2" />
+        <div className="flex items-center">
+          {rawPricedInput.length === 0
+            ? <ShrinkableNakedButtonInInputBox
+              onClick={onPricedPaste}>
+              <Outline.ClipboardIcon className="size-4" />
+            </ShrinkableNakedButtonInInputBox>
+            : <ShrinkableNakedButtonInInputBox
+              onClick={onPricedClear}>
+              <Outline.XMarkIcon className="size-4" />
+            </ShrinkableNakedButtonInInputBox>}
+          <div className="w-1" />
+          <ShrinkableContrastButtonInInputBox
+            disabled={pricedBalanceQuery.data == null}
+            onClick={onPricedMaxClick}>
+            100%
+          </ShrinkableContrastButtonInInputBox>
+        </div>
+      </SimpleInputBox>}
+    <div className="h-2" />
     <SimpleInputBox>
       <div className="">
         Nonce
@@ -460,13 +531,59 @@ export function WalletSendScreenValue(props: {
       <SimpleInput
         value={step.nonce}
         placeholder={nonceData?.toString()} />
-      <div className="w-2" />
+      <div className="w-1" />
       <ShrinkableContrastButtonInInputBox
         onClick={onNonceClick}>
         Replace
       </ShrinkableContrastButtonInInputBox>
     </SimpleInputBox>
+    <div className="h-2" />
+    <SimpleInputBox>
+      <div className="shrink-0">
+        Gas
+      </div>
+      <div className="w-4" />
+      <SimpleInput
+        placeholder="30" />
+      <div className="w-1" />
+      <div className="text-contrast">
+        GWEI
+      </div>
+      <div className="w-2" />
+      <ShrinkableContrastButtonInInputBox
+        onClick={onNonceClick}>
+        Select
+      </ShrinkableContrastButtonInInputBox>
+    </SimpleInputBox>
+    <div className="h-2" />
+    <SimpleTextareaBox>
+      <div className="">
+        Data
+      </div>
+      <div className="w-4" />
+      <SimpleTextarea
+        rows={3}
+        value={step.data}
+        placeholder="0x0" />
+    </SimpleTextareaBox>
+    <div className="h-4 grow" />
+    <div className="flex items-center">
+      <WideShrinkableOppositeButton>
+        <Outline.PaperAirplaneIcon className="size-5" />
+        Send
+      </WideShrinkableOppositeButton>
+    </div>
   </>
+}
+
+function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps) {
+  const { children, ...rest } = props
+
+  return <button className="grow group po-md bg-opposite text-opposite rounded-xl outline-none disabled:opacity-50 transition-opacity" {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </button>
 }
 
 export function WalletSendScreenNonce(props: {
@@ -523,7 +640,7 @@ export function WalletSendScreenNonce(props: {
         onChange={onInputChange}
         onKeyDown={onEnter}
         placeholder={nonceData?.toString()} />
-      <div className="w-2" />
+      <div className="w-1" />
       {rawInput.length === 0
         ? <ShrinkableNakedButtonInInputBox
           onClick={onPaste}>
@@ -533,7 +650,7 @@ export function WalletSendScreenNonce(props: {
           onClick={onClear}>
           <Outline.XMarkIcon className="size-4" />
         </ShrinkableNakedButtonInInputBox>}
-      <div className="w-2" />
+      <div className="w-1" />
       <ShrinkableContrastButtonInInputBox
         onClick={onSubmit}>
         OK
