@@ -8,7 +8,7 @@ import { ContractTokenData } from "@/mods/background/service_worker/entities/tok
 import { BgEns, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
-import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
+import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fetched, FetcherMore, createQuery, useError, useFallback, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc"
 import { Nullable, Option } from "@hazae41/option"
@@ -584,9 +584,9 @@ export namespace FgEns {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await fetchOrFail<ZeroHexString>(request, context)
+        await fetchOrFail<Address>(request, context)
 
-      return createQuery<EthereumQueryKey<unknown>, ZeroHexString, Error>({
+      return createQuery<EthereumQueryKey<unknown>, Address, Error>({
         key: BgEns.Lookup.key(name),
         fetcher,
         storage

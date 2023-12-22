@@ -254,6 +254,7 @@ function WalletDataPage() {
       opened={sendDialog.current}
       close={sendDialog.disable}>
       <WalletSendScreen
+        context={mainnet}
         token={mainnet.chain.token} />
     </Screen>}
     <Screen dark
