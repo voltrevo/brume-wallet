@@ -1,7 +1,6 @@
 import { EnsAbi } from "@/libs/abi/ens.abi"
-import { TokenAbi } from "@/libs/abi/erc20.abi"
 import { PairAbi } from "@/libs/abi/pair.abi"
-import { ChainData, PairInfo, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
+import { ChainData, PairInfo, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Maps } from "@/libs/maps/maps"
 import { TorRpc } from "@/libs/rpc/rpc"
@@ -10,7 +9,7 @@ import { Uint8Array } from "@hazae41/bytes"
 import { Abi, Ens, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, Fetched, FetcherMore, IDBStorage, SimpleQuery, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
-import { None, Nullable, Option, Some } from "@hazae41/option"
+import { Nullable, Option } from "@hazae41/option"
 import { Catched, Ok, Panic, Result } from "@hazae41/result"
 import { EthBrume } from "../brumes/data"
 import { WalletsBySeed } from "../seeds/all/data"
@@ -528,74 +527,6 @@ export function getTokenPricedBalance(ethereum: BgEthereumContext, account: stri
       method: "eth_getTokenPricedBalance",
       params: [account, token.address, coin]
     },
-    indexer,
-    storage
-  })
-}
-
-export function getTokenBalance(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
-  const fetcher = async (key: unknown, more: FetcherMore) => {
-    try {
-      const data = Abi.encodeOrThrow(TokenAbi.balanceOf.from(account))
-
-      const fetched = await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
-        method: "eth_call",
-        params: [{
-          to: token.address,
-          data: data
-        }, "pending"]
-      }, more)
-
-      if (fetched.isErr())
-        return fetched
-
-      const returns = Abi.createTuple(Abi.Uint256)
-      const [balance] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
-      const fixed = new Fixed(balance, token.decimals)
-
-      return new Data(fixed)
-    } catch (e: unknown) {
-      return new Fail(Catched.from(e))
-    }
-  }
-
-  const indexer = async (states: States<Fixed.From, Error>) => {
-    if (block !== "pending")
-      return
-
-    const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
-      if (token.pairs == null)
-        return new None()
-
-      let pricedBalance: Fixed = Fixed.from(balance)
-
-      for (const pairAddress of token.pairs) {
-        const pair = pairByAddress[pairAddress]
-        const chain = chainByChainId[pair.chainId]
-
-        const price = BgPair.Price.schema({ ...ethereum, chain }, pair, storage)
-        const priceState = await price.state
-
-        if (priceState.data == null)
-          return new None()
-
-        pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
-      }
-
-      return new Some(pricedBalance)
-    }).then(o => o.unwrapOr(new Fixed(0n, 0)))
-
-    const pricedBalanceQuery = getTokenPricedBalance(ethereum, account, token, "usd", storage)
-    await pricedBalanceQuery.mutate(Mutators.set<Fixed.From, Error>(new Data(pricedBalance)))
-  }
-
-  return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
-    key: {
-      chainId: ethereum.chain.chainId,
-      method: "eth_getTokenBalance",
-      params: [account, token.address, block]
-    },
-    fetcher,
     indexer,
     storage
   })
