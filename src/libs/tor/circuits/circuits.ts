@@ -118,11 +118,11 @@ export namespace Circuits {
               }
 
               return new Ok(circuit.moveOrThrow())
-            }).then(r => r.inspectErrSync(e => console.error(`Could not create circuit`, { e })))
+            })
           }, { max: 9 }).then(r => r.throw(t))
 
           return new Ok(createCircuitEntry(circuit.moveOrThrow(), params))
-        })
+        }).then(r => r.inspectErrSync(e => console.error(`Circuit creation failed`, { e })))
 
         if (result.isOk())
           return result
