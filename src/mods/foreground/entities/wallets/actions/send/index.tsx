@@ -551,9 +551,7 @@ export function WalletSendScreenValue(props: {
 
   const maybeFinalValue = useMemo(() => {
     try {
-      if (valueInput.trim().length === 0)
-        return undefined
-      return Fixed.fromString(valueInput, tokenData.decimals)
+      return Fixed.fromString(valueInput.trim() || "0", tokenData.decimals)
     } catch { }
   }, [valueInput, tokenData])
 
@@ -567,9 +565,7 @@ export function WalletSendScreenValue(props: {
 
   const maybeCustomNonce = useMemo(() => {
     try {
-      if (nonceInput.trim().length === 0)
-        return undefined
-      return BigInt(nonceInput)
+      return BigInt(nonceInput.trim() || "0")
     } catch { }
   }, [nonceInput])
 
