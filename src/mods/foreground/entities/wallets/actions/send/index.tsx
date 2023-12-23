@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { BigIntToHex } from "@/libs/bigints/bigints";
-import { UIError } from "@/libs/errors/errors";
+import { Errors, UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -9,6 +9,7 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
 import { Setter } from "@/libs/react/state";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Loading } from "@/libs/ui/loading/loading";
 import { NativeTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Nullable, Option, Optional } from "@hazae41/option";
@@ -310,9 +311,9 @@ export function WalletSendScreenValue(props: {
   }, [rawPricedInput])
 
   const setValue = useCallback((input: string) => {
-    setRawValueInput(input)
-
     try {
+      setRawValueInput(input)
+
       let priced = Fixed.fromString(input, tokenData.decimals)
 
       for (const price of prices) {
@@ -331,9 +332,9 @@ export function WalletSendScreenValue(props: {
   }, [tokenData, prices])
 
   const setPrice = useCallback((input: string) => {
-    setRawPricedInput(input)
-
     try {
+      setRawPricedInput(input)
+
       let valued = Fixed.fromString(input, tokenData.decimals)
 
       for (const price of prices) {
@@ -435,267 +436,227 @@ export function WalletSendScreenValue(props: {
     return BigIntToHex.decodeOrThrow(maybePendingBlock.baseFeePerGas)
   }, [maybePendingBlock])
 
-  const maybeNormalBaseFeePerGas = useMemo(() => {
-    if (maybeBaseFeePerGas == null)
-      return undefined
-    return maybeBaseFeePerGas
+  function useMaybeMemo<T>(f: (x: T) => T, [x]: [Nullable<T>]) {
+    return useMemo(() => {
+      if (x == null)
+        return undefined
+      return f(x)
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [x])
+  }
+
+  const maybeNormalBaseFeePerGas = useMaybeMemo((baseFeePerGas) => {
+    return baseFeePerGas
   }, [maybeBaseFeePerGas])
 
-  const maybeFastBaseFeePerGas = useMemo(() => {
-    if (maybeBaseFeePerGas == null)
-      return undefined
-    return maybeBaseFeePerGas + (1n * (10n ** 9n))
+  const maybeFastBaseFeePerGas = useMaybeMemo((baseFeePerGas) => {
+    return baseFeePerGas + (1n * (10n ** 9n))
   }, [maybeBaseFeePerGas])
 
-  const maybeUrgentBaseFeePerGas = useMemo(() => {
-    if (maybeBaseFeePerGas == null)
-      return undefined
-    return maybeBaseFeePerGas + (2n * (10n ** 9n))
+  const maybeUrgentBaseFeePerGas = useMaybeMemo((baseFeePerGas) => {
+    return baseFeePerGas + (2n * (10n ** 9n))
   }, [maybeBaseFeePerGas])
 
-  const maybeNormalMaxPriorityFeePerGas = useMemo(() => {
-    if (maybeMaxPriorityFeePerGas == null)
-      return undefined
-    return maybeMaxPriorityFeePerGas
+  const maybeNormalMaxPriorityFeePerGas = useMaybeMemo(() => {
+    return 0n
   }, [maybeMaxPriorityFeePerGas])
 
-  const maybeFastMaxPriorityFeePerGas = useMemo(() => {
-    if (maybeMaxPriorityFeePerGas == null)
-      return undefined
-    return maybeMaxPriorityFeePerGas + (1n * (10n ** 9n))
+  const maybeFastMaxPriorityFeePerGas = useMaybeMemo((maxPriorityFeePerGas) => {
+    return maxPriorityFeePerGas / 2n
   }, [maybeMaxPriorityFeePerGas])
 
-  const maybeUrgentMaxPriorityFeePerGas = useMemo(() => {
-    if (maybeMaxPriorityFeePerGas == null)
-      return undefined
-    return maybeMaxPriorityFeePerGas + (2n * (10n ** 9n))
+  const maybeUrgentMaxPriorityFeePerGas = useMaybeMemo((maxPriorityFeePerGas) => {
+    return maxPriorityFeePerGas
   }, [maybeMaxPriorityFeePerGas])
 
-  const maybeNormalGasPrice = useMemo(() => {
-    if (maybeGasPrice == null)
-      return undefined
-    return maybeGasPrice
+  const maybeNormalGasPrice = useMaybeMemo((gasPrice) => {
+    return gasPrice
   }, [maybeGasPrice])
 
-  const maybeFastGasPrice = useMemo(() => {
-    if (maybeGasPrice == null)
-      return undefined
-    return maybeGasPrice + (maybeGasPrice * (10n / 100n))
+  const maybeFastGasPrice = useMaybeMemo((gasPrice) => {
+    return gasPrice + (gasPrice * (10n / 100n))
   }, [maybeGasPrice])
 
-  const maybeUrgentGasPrice = useMemo(() => {
-    if (maybeGasPrice == null)
-      return undefined
-    return maybeGasPrice + (maybeGasPrice * (20n / 100n))
+  const maybeUrgentGasPrice = useMaybeMemo((gasPrice) => {
+    return gasPrice + (gasPrice * (20n / 100n))
   }, [maybeGasPrice])
 
-  const maybeFinalGasPrice = useMemo(() => {
-    if (gasMode === "normal")
-      return maybeNormalGasPrice
-    if (gasMode === "fast")
-      return maybeFastGasPrice
-    if (gasMode === "urgent")
-      return maybeUrgentGasPrice
-    return undefined
-  }, [gasMode, maybeNormalGasPrice, maybeFastGasPrice, maybeUrgentGasPrice])
-
-  const maybeFinalBaseFeePerGas = useMemo(() => {
-    if (gasMode === "normal")
-      return maybeNormalBaseFeePerGas
-    if (gasMode === "fast")
-      return maybeFastBaseFeePerGas
-    if (gasMode === "urgent")
-      return maybeUrgentBaseFeePerGas
-    return undefined
-  }, [gasMode, maybeNormalBaseFeePerGas, maybeFastBaseFeePerGas, maybeUrgentBaseFeePerGas])
-
-  const maybeFinalMaxPriorityFeePerGas = useMemo(() => {
-    if (gasMode === "normal")
-      return maybeNormalMaxPriorityFeePerGas
-    if (gasMode === "fast")
-      return maybeFastMaxPriorityFeePerGas
-    if (gasMode === "urgent")
-      return maybeUrgentMaxPriorityFeePerGas
-    return undefined
-  }, [gasMode, maybeNormalMaxPriorityFeePerGas, maybeFastMaxPriorityFeePerGas, maybeUrgentMaxPriorityFeePerGas])
-
-  const normalGasPriceDisplay = useMemo(() => {
-    if (maybeNormalGasPrice == null)
+  function useFinal(normal: Nullable<bigint>, fast: Nullable<bigint>, urgent: Nullable<bigint>) {
+    return useMemo(() => {
+      if (gasMode === "normal")
+        return normal
+      if (gasMode === "fast")
+        return fast
+      if (gasMode === "urgent")
+        return urgent
       return undefined
-    return new Fixed(maybeNormalGasPrice, 9).toString()
-  }, [maybeNormalGasPrice])
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gasMode, normal, fast, urgent])
+  }
 
-  const fastGasPriceDisplay = useMemo(() => {
-    if (maybeFastGasPrice == null)
-      return undefined
-    return new Fixed(maybeFastGasPrice, 9).toString()
-  }, [maybeFastGasPrice])
+  function useGasDisplay(gasPrice: Nullable<bigint>) {
+    return useMemo(() => {
+      if (gasPrice == null)
+        return undefined
+      return new Fixed(gasPrice, 9).floor().toString()
+    }, [gasPrice])
+  }
 
-  const urgentGasPriceDisplay = useMemo(() => {
-    if (maybeUrgentGasPrice == null)
-      return undefined
-    return new Fixed(maybeUrgentGasPrice, 9).toString()
-  }, [maybeUrgentGasPrice])
+  function usePriorityFeeDisplay(priorityFee: Nullable<bigint>) {
+    return useMemo(() => {
+      if (priorityFee == null)
+        return undefined
+      return new Fixed(priorityFee, 9).toString()
+    }, [priorityFee])
+  }
 
-  const normalBaseFeePerGasDisplay = useMemo(() => {
-    if (maybeNormalBaseFeePerGas == null)
-      return undefined
-    return new Fixed(maybeNormalBaseFeePerGas, 9).toString()
-  }, [maybeNormalBaseFeePerGas])
+  const maybeFinalGasPrice = useFinal(maybeNormalGasPrice, maybeFastGasPrice, maybeUrgentGasPrice)
+  const maybeFinalBaseFeePerGas = useFinal(maybeNormalBaseFeePerGas, maybeFastBaseFeePerGas, maybeUrgentBaseFeePerGas)
+  const maybeFinalMaxPriorityFeePerGas = useFinal(maybeNormalMaxPriorityFeePerGas, maybeFastMaxPriorityFeePerGas, maybeUrgentMaxPriorityFeePerGas)
 
-  const fastBaseFeePerGasDisplay = useMemo(() => {
-    if (maybeFastBaseFeePerGas == null)
-      return undefined
-    return new Fixed(maybeFastBaseFeePerGas, 9).toString()
-  }, [maybeFastBaseFeePerGas])
+  const normalGasPriceDisplay = useGasDisplay(maybeNormalGasPrice)
+  const fastGasPriceDisplay = useGasDisplay(maybeFastGasPrice)
+  const urgentGasPriceDisplay = useGasDisplay(maybeUrgentGasPrice)
 
-  const urgentBaseFeePerGasDisplay = useMemo(() => {
-    if (maybeUrgentBaseFeePerGas == null)
-      return undefined
-    return new Fixed(maybeUrgentBaseFeePerGas, 9).toString()
-  }, [maybeUrgentBaseFeePerGas])
+  const normalBaseFeePerGasDisplay = useGasDisplay(maybeNormalBaseFeePerGas)
+  const fastBaseFeePerGasDisplay = useGasDisplay(maybeFastBaseFeePerGas)
+  const urgentBaseFeePerGasDisplay = useGasDisplay(maybeUrgentBaseFeePerGas)
 
-  const normalMaxPriorityFeePerGasDisplay = useMemo(() => {
-    if (maybeNormalMaxPriorityFeePerGas == null)
-      return undefined
-    return new Fixed(maybeNormalMaxPriorityFeePerGas, 9).toString()
-  }, [maybeNormalMaxPriorityFeePerGas])
+  const normalMaxPriorityFeePerGasDisplay = usePriorityFeeDisplay(maybeNormalMaxPriorityFeePerGas)
+  const fastMaxPriorityFeePerGasDisplay = usePriorityFeeDisplay(maybeFastMaxPriorityFeePerGas)
+  const urgentMaxPriorityFeePerGasDisplay = usePriorityFeeDisplay(maybeUrgentMaxPriorityFeePerGas)
 
-  const fastMaxPriorityFeePerGasDisplay = useMemo(() => {
-    if (maybeFastMaxPriorityFeePerGas == null)
-      return undefined
-    return new Fixed(maybeFastMaxPriorityFeePerGas, 9).toString()
-  }, [maybeFastMaxPriorityFeePerGas])
-
-  const urgentMaxPriorityFeePerGasDisplay = useMemo(() => {
-    if (maybeUrgentMaxPriorityFeePerGas == null)
-      return undefined
-    return new Fixed(maybeUrgentMaxPriorityFeePerGas, 9).toString()
-  }, [maybeUrgentMaxPriorityFeePerGas])
+  const [txHash, setTxHash] = useState<ZeroHexString>()
 
   const send = useAsyncUniqueCallback(async () => {
-    if (maybeIsEip1559 == null)
-      return
+    try {
+      if (maybeIsEip1559 == null)
+        return
 
-    const value = Result.runAndWrapSync(() => {
-      if (step.valued?.trim().length)
-        return Fixed.fromString(step.valued, tokenData.decimals)
-      return new Fixed(0n, tokenData.decimals)
-    }).mapErrSync(() => {
-      return new UIError(`Could not parse value`)
-    }).unwrap()
-
-    const nonce = Result.runAndWrapSync(() => {
-      if (step.nonce?.trim().length)
-        return BigInt(step.nonce)
-      return Option.unwrap(maybeNonce)
-    }).mapErrSync(() => {
-      return new UIError(`Could not fetch or parse nonce`)
-    }).unwrap()
-
-    const address = Result.runAndWrapSync(() => {
-      if (Address.is(step.target))
-        return step.target
-      return Option.unwrap(maybeEns)
-    }).mapErrSync(() => {
-      return new UIError(`Could not fetch or parse address`)
-    }).unwrap()
-
-    let tx: ethers.Transaction
-
-    /**
-     * EIP-1559
-     */
-    if (maybeIsEip1559) {
-      const baseFeePerGas = Result.runAndWrapSync(() => {
-        return Option.unwrap(maybeFinalBaseFeePerGas)
+      const value = Result.runAndWrapSync(() => {
+        if (step.valued?.trim().length)
+          return Fixed.fromString(step.valued, tokenData.decimals)
+        return new Fixed(0n, tokenData.decimals)
       }).mapErrSync(() => {
-        return new UIError(`Could not fetch baseFeePerGas`)
+        return new UIError(`Could not parse value`)
       }).unwrap()
 
-      const maxPriorityFeePerGas = Result.runAndWrapSync(() => {
-        return Option.unwrap(maybeFinalMaxPriorityFeePerGas)
+      const nonce = Result.runAndWrapSync(() => {
+        if (step.nonce?.trim().length)
+          return BigInt(step.nonce)
+        return Option.unwrap(maybeNonce)
       }).mapErrSync(() => {
-        return new UIError(`Could not fetch maxPriorityFeePerGas`)
+        return new UIError(`Could not fetch or parse nonce`)
       }).unwrap()
 
-      const maxFeePerGas = (baseFeePerGas * 2n) + maxPriorityFeePerGas
+      const address = Result.runAndWrapSync(() => {
+        if (Address.is(step.target))
+          return step.target
+        return Option.unwrap(maybeEns)
+      }).mapErrSync(() => {
+        return new UIError(`Could not fetch or parse address`)
+      }).unwrap()
 
-      const gas = await context.background.tryRequest<string>({
+      let tx: ethers.Transaction
+
+      /**
+       * EIP-1559
+       */
+      if (maybeIsEip1559) {
+        const baseFeePerGas = Result.runAndWrapSync(() => {
+          return Option.unwrap(maybeFinalBaseFeePerGas)
+        }).mapErrSync(() => {
+          return new UIError(`Could not fetch baseFeePerGas`)
+        }).unwrap()
+
+        const maxPriorityFeePerGas = Result.runAndWrapSync(() => {
+          return Option.unwrap(maybeFinalMaxPriorityFeePerGas)
+        }).mapErrSync(() => {
+          return new UIError(`Could not fetch maxPriorityFeePerGas`)
+        }).unwrap()
+
+        const maxFeePerGas = (baseFeePerGas * 2n) + maxPriorityFeePerGas
+
+        const gas = await context.background.tryRequest<string>({
+          method: "brume_eth_fetch",
+          params: [context.uuid, context.chain.chainId, {
+            method: "eth_estimateGas",
+            params: [{
+              chainId: ZeroHexString.from(context.chain.chainId),
+              from: wallet.address,
+              to: Address.from(address),
+              maxFeePerGas: ZeroHexString.from(maxFeePerGas),
+              maxPriorityFeePerGas: ZeroHexString.from(maxPriorityFeePerGas),
+              value: ZeroHexString.from(value.value),
+              nonce: ZeroHexString.from(nonce)
+            }, "latest"],
+            noCheck: true
+          }]
+        }).then(r => r.unwrap().unwrap())
+
+        tx = Transaction.from({
+          to: Address.from(address),
+          gasLimit: gas,
+          chainId: context.chain.chainId,
+          maxFeePerGas: maxFeePerGas,
+          maxPriorityFeePerGas: maxPriorityFeePerGas,
+          nonce: Number(nonce),
+          value: value.value
+        })
+      }
+
+      /**
+       * Not EIP-1559
+       */
+      else {
+        const gasPrice = Result.runAndWrapSync(() => {
+          return Option.unwrap(maybeFinalGasPrice)
+        }).mapErrSync(() => {
+          return new UIError(`Could not fetch gasPrice`)
+        }).unwrap()
+
+        const gas = await context.background.tryRequest<string>({
+          method: "brume_eth_fetch",
+          params: [context.uuid, context.chain.chainId, {
+            method: "eth_estimateGas",
+            params: [{
+              chainId: ZeroHexString.from(context.chain.chainId),
+              from: wallet.address,
+              to: Address.from(address),
+              gasPrice: ZeroHexString.from(gasPrice),
+              value: ZeroHexString.from(value.value),
+              nonce: ZeroHexString.from(nonce)
+            }, "latest"],
+            noCheck: true
+          }]
+        }).then(r => r.unwrap().unwrap())
+
+        tx = Transaction.from({
+          to: Address.from(address),
+          gasLimit: gas,
+          chainId: context.chain.chainId,
+          gasPrice: gasPrice,
+          nonce: Number(nonce),
+          value: value.value
+        })
+      }
+
+      const instance = await EthereumWalletInstance.tryFrom(wallet, context.background).then(r => r.unwrap())
+      tx.signature = await instance.trySignTransaction(tx, context.background).then(r => r.unwrap())
+
+      const txHash = await context.background.tryRequest<ZeroHexString>({
         method: "brume_eth_fetch",
         params: [context.uuid, context.chain.chainId, {
-          method: "eth_estimateGas",
-          params: [{
-            chainId: ZeroHexString.from(context.chain.chainId),
-            from: wallet.address,
-            to: Address.from(address),
-            maxFeePerGas: ZeroHexString.from(maxFeePerGas),
-            maxPriorityFeePerGas: ZeroHexString.from(maxPriorityFeePerGas),
-            value: ZeroHexString.from(value.value),
-            nonce: ZeroHexString.from(nonce)
-          }, "latest"],
+          method: "eth_sendRawTransaction",
+          params: [tx.serialized],
           noCheck: true
         }]
       }).then(r => r.unwrap().unwrap())
 
-      tx = Transaction.from({
-        to: Address.from(address),
-        gasLimit: gas,
-        chainId: context.chain.chainId,
-        maxFeePerGas: maxFeePerGas,
-        maxPriorityFeePerGas: maxPriorityFeePerGas,
-        nonce: Number(nonce),
-        value: value.value
-      })
+      setTxHash(txHash)
+    } catch (e) {
+      Errors.logAndAlert(e)
     }
-
-    /**
-     * Not EIP-1559
-     */
-    else {
-      const gasPrice = Result.runAndWrapSync(() => {
-        return Option.unwrap(maybeFinalGasPrice)
-      }).mapErrSync(() => {
-        return new UIError(`Could not fetch gasPrice`)
-      }).unwrap()
-
-      const gas = await context.background.tryRequest<string>({
-        method: "brume_eth_fetch",
-        params: [context.uuid, context.chain.chainId, {
-          method: "eth_estimateGas",
-          params: [{
-            chainId: ZeroHexString.from(context.chain.chainId),
-            from: wallet.address,
-            to: Address.from(address),
-            gasPrice: ZeroHexString.from(gasPrice),
-            value: ZeroHexString.from(value.value),
-            nonce: ZeroHexString.from(nonce)
-          }, "latest"],
-          noCheck: true
-        }]
-      }).then(r => r.unwrap().unwrap())
-
-      tx = Transaction.from({
-        to: Address.from(address),
-        gasLimit: gas,
-        chainId: context.chain.chainId,
-        gasPrice: gasPrice,
-        nonce: Number(nonce),
-        value: value.value
-      })
-    }
-
-    const instance = await EthereumWalletInstance.tryFrom(wallet, context.background).then(r => r.unwrap())
-    tx.signature = await instance.trySignTransaction(tx, context.background).then(r => r.unwrap())
-
-    const txHash = await context.background.tryRequest<string>({
-      method: "brume_eth_fetch",
-      params: [context.uuid, context.chain.chainId, {
-        method: "eth_sendRawTransaction",
-        params: [tx.serialized],
-        noCheck: true
-      }]
-    }).then(r => r.unwrap().unwrap())
   }, [wallet, context, step, tokenData, maybeNonce, maybeEns, maybeIsEip1559, maybeFinalGasPrice, maybeFinalBaseFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
   return <>
@@ -859,32 +820,69 @@ export function WalletSendScreenValue(props: {
       {maybeIsEip1559 === true && maybeBaseFeePerGas != null && maybeMaxPriorityFeePerGas != null &&
         <select className="w-full my-0.5 bg-transparent outline-none">
           <option value="urgent">
-            {`Urgent — ${urgentBaseFeePerGasDisplay}'${urgentMaxPriorityFeePerGasDisplay} Gwei — $5 — 5 seconds`}
+            {`Urgent — ${urgentBaseFeePerGasDisplay}'${urgentMaxPriorityFeePerGasDisplay} Gwei — $5`}
           </option>
           <option value="fast">
-            {`Fast — ${fastBaseFeePerGasDisplay}'${fastMaxPriorityFeePerGasDisplay} Gwei — $5 — 5 seconds`}
+            {`Fast — ${fastBaseFeePerGasDisplay}'${fastMaxPriorityFeePerGasDisplay} Gwei — $5`}
           </option>
           <option value="normal">
-            {`Normal — ${normalBaseFeePerGasDisplay}'${normalMaxPriorityFeePerGasDisplay} Gwei — $5 — 5 seconds`}
+            {`Normal — ${normalBaseFeePerGasDisplay}'${normalMaxPriorityFeePerGasDisplay} Gwei — $5`}
           </option>
           {/* <option value="custom">Custom</option> */}
         </select>}
       {maybeIsEip1559 === false && maybeGasPrice != null &&
         <select className="w-full my-0.5 bg-transparent outline-none">
           <option value="urgent">
-            {`Urgent — ${urgentGasPriceDisplay} Gwei — $5 — 5 seconds`}
+            {`Urgent — ${urgentGasPriceDisplay} Gwei — $5`}
           </option>
           <option value="fast">
-            {`Fast — ${fastGasPriceDisplay} Gwei — $5 — 5 seconds`}
+            {`Fast — ${fastGasPriceDisplay} Gwei — $5`}
           </option>
           <option value="normal">
-            {`Normal — ${normalGasPriceDisplay} Gwei — $5 — 5 seconds`}
+            {`Normal — ${normalGasPriceDisplay} Gwei — $5`}
           </option>
           {/* <option value="custom">Custom</option> */}
         </select>}
     </SimpleBox>
     <div className="h-4 grow" />
+    <div className="po-md flex items-center bg-contrast rounded-xl">
+      <div className="flex flex-col truncate">
+        <div className="flex items-center">
+          <Loading className="size-4 shrink-0" />
+          <div className="w-2" />
+          <div className="font-medium">
+            Pending transaction #{112}
+          </div>
+        </div>
+        <div className="text-contrast truncate">
+          {"0xc3112f518e854af13465d3eca80323d8930de20687997906b052828c53af7c24"}
+        </div>
+        <div className="h-2" />
+        <div className="flex items-center gap-1">
+          <a className="group px-2 bg-contrast rounded-full"
+            target="_blank" rel="noreferrer">
+            <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+              Copy
+              <Outline.ClipboardIcon className="size-4" />
+            </div>
+          </a>
+          <a className="group px-2 bg-contrast rounded-full"
+            target="_blank" rel="noreferrer">
+            <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+              Etherscan
+              <Outline.ArrowTopRightOnSquareIcon className="size-4" />
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div className="h-2" />
     <div className="flex items-center">
+      <WideShrinkableContrastButton>
+        <Outline.PencilIcon className="size-5" />
+        Sign
+      </WideShrinkableContrastButton>
+      <div className="w-2" />
       <WideShrinkableOppositeButton
         disabled={send.loading}
         onClick={send.run}>
@@ -904,6 +902,17 @@ function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps) {
     </div>
   </button>
 }
+
+function WideShrinkableContrastButton(props: ChildrenProps & ButtonProps) {
+  const { children, ...rest } = props
+
+  return <button className="grow group po-md bg-contrast rounded-xl outline-none disabled:opacity-50 transition-opacity" {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </button>
+}
+
 
 export function WalletSendScreenNonce(props: {
   readonly step: NonceStep
