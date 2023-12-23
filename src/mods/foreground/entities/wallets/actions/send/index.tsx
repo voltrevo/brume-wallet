@@ -12,12 +12,13 @@ import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { NativeTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
+import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useWalletDataContext } from "../../context";
-import { EthereumWalletInstance, FgEthereumContext, useBalance, useBlockByNumber, useEnsLookup, useEthereumContext, useGasPrice, useMaxPriorityFeePerGas, useNonce, usePricedBalance } from "../../data";
+import { EthereumWalletInstance, FgEthereumContext, useBalance, useBlockByNumber, useEnsLookup, useEstimateGas, useEthereumContext, useGasPrice, useMaxPriorityFeePerGas, useNonce, usePricedBalance } from "../../data";
 import { PriceResolver } from "../../page";
 
 type Step =
@@ -277,8 +278,8 @@ export function WalletSendScreenValue(props: {
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
 
-  const nonceQuery = useNonce(wallet.address, context)
-  const maybeNonce = nonceQuery.data?.get()
+  const pendingNonceQuery = useNonce(wallet.address, context)
+  const maybePendingNonce = pendingNonceQuery.data?.get()
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(tokenData.pairs?.length ?? 0))
 
@@ -289,16 +290,75 @@ export function WalletSendScreenValue(props: {
     })
   }, [])
 
+  const maybeTokenPrice = useMemo(() => {
+    if (prices.length === 0)
+      return undefined
+
+    return prices.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
+      if (a == null)
+        return undefined
+      if (b == null)
+        return undefined
+      return a.mul(Fixed.from(b))
+    }, Fixed.unit(18))
+  }, [prices])
+
   const [rawValueInput = "", setRawValueInput] = useState(step.valued)
   const [rawPricedInput = "", setRawPricedInput] = useState(step.priced)
 
+  const setValue = useCallback((input: string) => {
+    try {
+      setRawValueInput(input)
+
+      if (maybeTokenPrice == null) {
+        setRawPricedInput(undefined)
+        return
+      }
+
+      const priced = Fixed.fromString(input, tokenData.decimals).mul(maybeTokenPrice)
+
+      if (priced.value === 0n) {
+        setRawPricedInput(undefined)
+        return
+      }
+
+      setRawPricedInput(priced.toString())
+    } catch (e: unknown) {
+      setRawPricedInput(undefined)
+      return
+    }
+  }, [tokenData, maybeTokenPrice])
+
+  const setPrice = useCallback((input: string) => {
+    try {
+      setRawPricedInput(input)
+
+      if (maybeTokenPrice == null) {
+        setRawValueInput(undefined)
+        return
+      }
+
+      const valued = Fixed.fromString(input, tokenData.decimals).div(maybeTokenPrice)
+
+      if (valued.value === 0n) {
+        setRawPricedInput(undefined)
+        return
+      }
+
+      setRawValueInput(valued.toString())
+    } catch (e: unknown) {
+      setRawValueInput(undefined)
+      return
+    }
+  }, [tokenData, maybeTokenPrice])
+
   const onValueInputChange = useInputChange(e => {
     setValue(e.target.value)
-  }, [])
+  }, [setValue])
 
   const onPricedInputChange = useInputChange(e => {
     setPrice(e.target.value)
-  }, [prices])
+  }, [setPrice])
 
   useEffect(() => {
     setStep(p => ({ ...p, valued: rawValueInput }))
@@ -309,48 +369,6 @@ export function WalletSendScreenValue(props: {
     setStep(p => ({ ...p, priced: rawPricedInput }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawPricedInput])
-
-  const setValue = useCallback((input: string) => {
-    try {
-      setRawValueInput(input)
-
-      let priced = Fixed.fromString(input, tokenData.decimals)
-
-      for (const price of prices) {
-        if (price == null)
-          return
-        priced = priced.mul(Fixed.from(price))
-      }
-
-      if (priced.value > 0n)
-        setRawPricedInput(priced.toString())
-      else
-        setRawPricedInput(undefined)
-    } catch (e: unknown) {
-      setRawPricedInput(undefined)
-    }
-  }, [tokenData, prices])
-
-  const setPrice = useCallback((input: string) => {
-    try {
-      setRawPricedInput(input)
-
-      let valued = Fixed.fromString(input, tokenData.decimals)
-
-      for (const price of prices) {
-        if (price == null)
-          return
-        valued = valued.div(Fixed.from(price))
-      }
-
-      if (valued.value > 0n)
-        setRawValueInput(valued.toString())
-      else
-        setRawValueInput(undefined)
-    } catch (e: unknown) {
-      setRawValueInput(undefined)
-    }
-  }, [tokenData, prices])
 
   const valueInput = useDeferredValue(rawValueInput)
   const pricedInput = useDeferredValue(rawPricedInput)
@@ -412,8 +430,9 @@ export function WalletSendScreenValue(props: {
     : undefined
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
-  const ensQuery = useEnsLookup(maybeEnsInput, mainnet)
-  const maybeEns = ensQuery.data?.get()
+
+  const ensTargetQuery = useEnsLookup(maybeEnsInput, mainnet)
+  const maybeEnsTarget = ensTargetQuery.data?.get()
 
   const [gasMode, setGasMode] = useState<"normal" | "fast" | "urgent">("normal")
 
@@ -497,22 +516,143 @@ export function WalletSendScreenValue(props: {
   function useGasDisplay(gasPrice: Nullable<bigint>) {
     return useMemo(() => {
       if (gasPrice == null)
-        return undefined
-      return new Fixed(gasPrice, 9).floor().toString()
+        return "???"
+      return new Fixed(gasPrice, 9).move(0).toString()
     }, [gasPrice])
   }
 
   function usePriorityFeeDisplay(priorityFee: Nullable<bigint>) {
     return useMemo(() => {
       if (priorityFee == null)
-        return undefined
-      return new Fixed(priorityFee, 9).toString()
+        return "???"
+      return new Fixed(priorityFee, 9).move(3).toString()
     }, [priorityFee])
+  }
+
+  function useCompactUsdDisplay(fixed: Nullable<Fixed>) {
+    return useMemo(() => {
+      if (fixed == null)
+        return "???"
+      return Number(fixed.move(2).toString()).toLocaleString(undefined, { style: "currency", currency: "USD", notation: "compact" })
+    }, [fixed])
   }
 
   const maybeFinalGasPrice = useFinal(maybeNormalGasPrice, maybeFastGasPrice, maybeUrgentGasPrice)
   const maybeFinalBaseFeePerGas = useFinal(maybeNormalBaseFeePerGas, maybeFastBaseFeePerGas, maybeUrgentBaseFeePerGas)
   const maybeFinalMaxPriorityFeePerGas = useFinal(maybeNormalMaxPriorityFeePerGas, maybeFastMaxPriorityFeePerGas, maybeUrgentMaxPriorityFeePerGas)
+
+  const maybeFinalMaxFeePerGas = useMemo(() => {
+    if (maybeFinalBaseFeePerGas == null)
+      return undefined
+    if (maybeFinalMaxPriorityFeePerGas == null)
+      return undefined
+    return (maybeFinalBaseFeePerGas * 2n) + maybeFinalMaxPriorityFeePerGas
+  }, [maybeFinalBaseFeePerGas, maybeFinalMaxPriorityFeePerGas])
+
+  const maybeFinalValue = useMemo(() => {
+    try {
+      if (valueInput.trim().length === 0)
+        return undefined
+      return Fixed.fromString(valueInput, tokenData.decimals)
+    } catch { }
+  }, [valueInput, tokenData])
+
+  const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(step.nonce)
+
+  const onNonceInputChange = useInputChange(e => {
+    setRawNonceInput(e.target.value)
+  }, [])
+
+  const nonceInput = useDeferredValue(rawNonceInput)
+
+  const maybeCustomNonce = useMemo(() => {
+    try {
+      if (nonceInput.trim().length === 0)
+        return undefined
+      return BigInt(nonceInput)
+    } catch { }
+  }, [nonceInput])
+
+  const maybeFinalNonce = useMemo(() => {
+    if (maybeCustomNonce != null)
+      return maybeCustomNonce
+    if (maybePendingNonce != null)
+      return maybePendingNonce
+    return undefined
+  }, [maybeCustomNonce, maybePendingNonce])
+
+  const finalNonceDisplay = useMemo(() => {
+    return maybeFinalNonce?.toString() ?? "???"
+  }, [maybeFinalNonce])
+
+  const maybeFinalTarget = useMemo(() => {
+    if (Address.is(step.target))
+      return step.target
+    if (maybeEnsTarget != null)
+      return maybeEnsTarget
+    return undefined
+  }, [step.target, maybeEnsTarget])
+
+  const maybeEip1559EstimateGasKey = useMemo<Nullable<RpcRequestPreinit<[unknown, unknown]>>>(() => {
+    if (maybeFinalValue == null)
+      return undefined
+    if (maybeFinalNonce == null)
+      return undefined
+    if (maybeFinalMaxFeePerGas == null)
+      return undefined
+    if (maybeFinalMaxPriorityFeePerGas == null)
+      return undefined
+
+    return {
+      method: "eth_estimateGas",
+      params: [{
+        chainId: ZeroHexString.from(context.chain.chainId),
+        from: wallet.address,
+        to: maybeFinalTarget,
+        maxFeePerGas: ZeroHexString.from(maybeFinalMaxFeePerGas),
+        maxPriorityFeePerGas: ZeroHexString.from(maybeFinalMaxPriorityFeePerGas),
+        value: ZeroHexString.from(maybeFinalValue.value),
+        nonce: ZeroHexString.from(maybeFinalNonce)
+      }, "latest"]
+    }
+  }, [context, wallet, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
+
+  const eip1559EstimateGasQuery = useEstimateGas(maybeEip1559EstimateGasKey, context)
+  const maybeEip1559EstimateGas = eip1559EstimateGasQuery.data?.get()
+
+  const maybeNormalEip1559GasCost = useMemo(() => {
+    if (maybeEip1559EstimateGas == null)
+      return undefined
+    if (maybeNormalBaseFeePerGas == null)
+      return undefined
+    if (maybeTokenPrice == null)
+      return undefined
+    return new Fixed(maybeEip1559EstimateGas * maybeNormalBaseFeePerGas, 18).mul(maybeTokenPrice) // TODO use ETH price
+  }, [maybeEip1559EstimateGas, maybeNormalBaseFeePerGas, maybeTokenPrice])
+
+  const maybeFastEip1559GasCost = useMemo(() => {
+    if (maybeEip1559EstimateGas == null)
+      return undefined
+    if (maybeFastBaseFeePerGas == null)
+      return undefined
+    if (maybeTokenPrice == null)
+      return undefined
+    return new Fixed(maybeEip1559EstimateGas * maybeFastBaseFeePerGas, 18).mul(maybeTokenPrice)
+  }, [maybeEip1559EstimateGas, maybeFastBaseFeePerGas, maybeTokenPrice])
+
+  const maybeUrgentEip1559GasCost = useMemo(() => {
+    if (maybeEip1559EstimateGas == null)
+      return undefined
+    if (maybeUrgentBaseFeePerGas == null)
+      return undefined
+    if (maybeTokenPrice == null)
+      return undefined
+    return new Fixed(maybeEip1559EstimateGas * maybeUrgentBaseFeePerGas, 18).mul(maybeTokenPrice)
+  }, [maybeEip1559EstimateGas, maybeUrgentBaseFeePerGas, maybeTokenPrice])
+
+  const normalEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalEip1559GasCost)
+  const fastEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastEip1559GasCost)
+  const urgentEip1559GasCostDisplay = useCompactUsdDisplay(maybeUrgentEip1559GasCost)
 
   const normalGasPriceDisplay = useGasDisplay(maybeNormalGasPrice)
   const fastGasPriceDisplay = useGasDisplay(maybeFastGasPrice)
@@ -544,7 +684,7 @@ export function WalletSendScreenValue(props: {
       const nonce = Result.runAndWrapSync(() => {
         if (step.nonce?.trim().length)
           return BigInt(step.nonce)
-        return Option.unwrap(maybeNonce)
+        return Option.unwrap(maybePendingNonce)
       }).mapErrSync(() => {
         return new UIError(`Could not fetch or parse nonce`)
       }).unwrap()
@@ -552,7 +692,7 @@ export function WalletSendScreenValue(props: {
       const address = Result.runAndWrapSync(() => {
         if (Address.is(step.target))
           return step.target
-        return Option.unwrap(maybeEns)
+        return Option.unwrap(maybeEnsTarget)
       }).mapErrSync(() => {
         return new UIError(`Could not fetch or parse address`)
       }).unwrap()
@@ -563,8 +703,8 @@ export function WalletSendScreenValue(props: {
        * EIP-1559
        */
       if (maybeIsEip1559) {
-        const baseFeePerGas = Result.runAndWrapSync(() => {
-          return Option.unwrap(maybeFinalBaseFeePerGas)
+        const maxFeePerGas = Result.runAndWrapSync(() => {
+          return Option.unwrap(maybeFinalMaxFeePerGas)
         }).mapErrSync(() => {
           return new UIError(`Could not fetch baseFeePerGas`)
         }).unwrap()
@@ -574,8 +714,6 @@ export function WalletSendScreenValue(props: {
         }).mapErrSync(() => {
           return new UIError(`Could not fetch maxPriorityFeePerGas`)
         }).unwrap()
-
-        const maxFeePerGas = (baseFeePerGas * 2n) + maxPriorityFeePerGas
 
         const gas = await context.background.tryRequest<string>({
           method: "brume_eth_fetch",
@@ -657,7 +795,7 @@ export function WalletSendScreenValue(props: {
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, step, tokenData, maybeNonce, maybeEns, maybeIsEip1559, maybeFinalGasPrice, maybeFinalBaseFeePerGas, maybeFinalMaxPriorityFeePerGas])
+  }, [wallet, context, step, tokenData, maybePendingNonce, maybeEnsTarget, maybeIsEip1559, maybeFinalGasPrice, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
   return <>
     {tokenData.pairs?.map((address, i) =>
@@ -788,8 +926,9 @@ export function WalletSendScreenValue(props: {
       </div>
       <div className="w-4" />
       <SimpleInput
-        value={step.nonce}
-        placeholder={maybeNonce?.toString()} />
+        value={rawNonceInput}
+        onChange={onNonceInputChange}
+        placeholder={maybePendingNonce?.toString()} />
       <div className="w-1" />
       <ShrinkableContrastButtonInInputBox
         onClick={onNonceClick}>
@@ -820,13 +959,13 @@ export function WalletSendScreenValue(props: {
       {maybeIsEip1559 === true && maybeBaseFeePerGas != null && maybeMaxPriorityFeePerGas != null &&
         <select className="w-full my-0.5 bg-transparent outline-none">
           <option value="urgent">
-            {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — $5`}
+            {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentEip1559GasCostDisplay}`}
           </option>
           <option value="fast">
-            {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — $5`}
+            {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastEip1559GasCostDisplay}`}
           </option>
           <option value="normal">
-            {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — $5`}
+            {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalEip1559GasCostDisplay}`}
           </option>
           {/* <option value="custom">Custom</option> */}
         </select>}
@@ -851,7 +990,7 @@ export function WalletSendScreenValue(props: {
           <Loading className="size-4 shrink-0" />
           <div className="w-2" />
           <div className="font-medium">
-            Pending transaction #{112}
+            Pending transaction #{finalNonceDisplay}
           </div>
         </div>
         <div className="text-contrast truncate">
@@ -923,8 +1062,8 @@ export function WalletSendScreenNonce(props: {
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
 
-  const nonceQuery = useNonce(wallet.address, context)
-  const nonceData = nonceQuery.data?.get()
+  const pendingNonceQuery = useNonce(wallet.address, context)
+  const maybePendingNonce = pendingNonceQuery.data?.get()
 
   const [rawInput = "", setRawInput] = useState<Optional<string>>(step.nonce)
 
@@ -966,7 +1105,7 @@ export function WalletSendScreenNonce(props: {
         value={rawInput}
         onChange={onInputChange}
         onKeyDown={onEnter}
-        placeholder={nonceData?.toString()} />
+        placeholder={maybePendingNonce?.toString()} />
       <div className="w-1" />
       <div className="flex items-center">
         {rawInput.length === 0

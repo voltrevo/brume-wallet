@@ -425,7 +425,7 @@ export function getNonceSchema(address: Nullable<string>, context: Nullable<FgEt
     return undefined
 
   const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await fetchOrFail<string>(request, context).then(r => r.mapSync(BigInt))
+    await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
 
   return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
     key: {
@@ -455,7 +455,7 @@ export function getGasPriceSchema(context: Nullable<FgEthereumContext>, storage:
     return undefined
 
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await fetchOrFail<string>(request, context).then(r => r.mapSync(BigInt))
+    await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
 
   return createQuery<EthereumQueryKey<unknown> & EthereumFetchParams, bigint, Error>({
     key: {
@@ -486,7 +486,7 @@ export function getMaxPriorityFeePerGas(context: Nullable<FgEthereumContext>, st
     return undefined
 
   const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await fetchOrFail<string>(request, context).then(r => r.mapSync(BigInt))
+    await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
 
   return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
     key: {
@@ -638,9 +638,54 @@ export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullab
   return query
 }
 
+/**
+ * Used in the wallet list to display the ens name
+ * @param address 
+ * @param ethereum 
+ * @returns 
+ */
 export function useEnsReverseNoFetch(address: Nullable<ZeroHexString>, ethereum: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
+  useSubscribe(query, storage)
+  useError(query, Errors.log)
+  return query
+}
+
+export namespace FgEthereum {
+
+  export namespace EstimateGas {
+
+    export function schema(request: Nullable<RpcRequestPreinit<[unknown, unknown]>>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
+      if (context == null)
+        return
+      if (request == null)
+        return
+
+      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+        await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
+
+      return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
+        key: {
+          chainId: context.chain.chainId,
+          method: "eth_estimateGas",
+          params: request.params
+        },
+        fetcher,
+        storage,
+        dataSerializer: BigIntToHex
+      })
+    }
+
+  }
+
+}
+
+export function useEstimateGas(request: Nullable<RpcRequestPreinit<[unknown, unknown]>>, ethereum: Nullable<FgEthereumContext>) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgEthereum.EstimateGas.schema, [request, ethereum, storage])
+  useFetch(query)
+  useVisible(query)
   useSubscribe(query, storage)
   useError(query, Errors.log)
   return query
