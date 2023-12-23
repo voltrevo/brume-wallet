@@ -820,13 +820,13 @@ export function WalletSendScreenValue(props: {
       {maybeIsEip1559 === true && maybeBaseFeePerGas != null && maybeMaxPriorityFeePerGas != null &&
         <select className="w-full my-0.5 bg-transparent outline-none">
           <option value="urgent">
-            {`Urgent — ${urgentBaseFeePerGasDisplay}'${urgentMaxPriorityFeePerGasDisplay} Gwei — $5`}
+            {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — $5`}
           </option>
           <option value="fast">
-            {`Fast — ${fastBaseFeePerGasDisplay}'${fastMaxPriorityFeePerGasDisplay} Gwei — $5`}
+            {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — $5`}
           </option>
           <option value="normal">
-            {`Normal — ${normalBaseFeePerGasDisplay}'${normalMaxPriorityFeePerGasDisplay} Gwei — $5`}
+            {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — $5`}
           </option>
           {/* <option value="custom">Custom</option> */}
         </select>}
