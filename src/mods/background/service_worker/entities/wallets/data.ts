@@ -309,7 +309,8 @@ export namespace EthereumContext {
          */
         if (sorteds[0].value === sorteds[1].value) {
           console.warn(`Could not choose truth for ${init.method} on ${ethereum.chain.name}`)
-          throw new Error(`Could not choose truth`)
+          const random = Math.round(Math.random())
+          return fetcheds.get(sorteds[random].key)!
         }
 
         return fetcheds.get(sorteds[0].key)!
@@ -354,7 +355,8 @@ export namespace EthereumContext {
        */
       if (sorteds[0].value === sorteds[1].value) {
         console.warn(`Could not choose truth for ${init.method} on ${ethereum.chain.name}`)
-        throw new Error(`Could not choose truth`)
+        const random = Math.round(Math.random())
+        return fetcheds.get(sorteds[random].key)!
       }
 
       return fetcheds.get(sorteds[0].key)!

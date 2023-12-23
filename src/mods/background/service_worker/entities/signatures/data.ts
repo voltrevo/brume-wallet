@@ -125,7 +125,8 @@ export async function tryFetchRaw<T>(ethereum: BgEthereumContext, url: string, i
      */
     if (sorteds[0].value === sorteds[1].value) {
       console.warn(`Could not choose truth for ${url}`)
-      throw new Error(`Could not choose truth`)
+      const random = Math.round(Math.random())
+      return fetcheds.get(sorteds[random].key)!
     }
 
     return fetcheds.get(sorteds[0].key)!
