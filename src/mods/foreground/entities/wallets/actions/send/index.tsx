@@ -809,6 +809,7 @@ export function WalletSendScreenValue(props: {
       </div>
       <div className="w-4" />
       <SimpleInput key="target"
+        readOnly
         onFocus={onTargetFocus}
         value={step.target} />
     </SimpleBox>

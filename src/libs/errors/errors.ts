@@ -1,3 +1,5 @@
+import { ReactQuery } from "@hazae41/glacier"
+
 export class UIError extends Error {
   readonly #class = UIError
   readonly name = this.#class.name
@@ -15,6 +17,10 @@ export namespace Errors {
 
   export function toString(error: unknown) {
     return JSON.stringify(toJSON(error))
+  }
+
+  export function onQueryError<K, D, F>(query: ReactQuery<K, D, F>, error: unknown) {
+    console.warn(query.cacheKey, { error })
   }
 
   export function log(error: unknown) {

@@ -268,7 +268,7 @@ export function useTotalPricedBalance(coin: "usd") {
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   useFallback(query, () => new Data(new Fixed(0n, 0)))
   return query
 }
@@ -283,7 +283,7 @@ export function useTotalWalletPricedBalance(address: string, coin: "usd") {
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   useFallback(query, () => new Data(new Fixed(0n, 0)))
   return query
 }
@@ -308,7 +308,7 @@ export function usePricedBalance(address: string, coin: "usd", context: Nullable
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   useFallback(query, () => new Data(new Fixed(0n, 0)))
   return query
 }
@@ -339,7 +339,7 @@ export function useBalance(address: string, context: Nullable<FgEthereumContext>
   useVisible(query)
   useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   useFallback(query, () => new Data(new Fixed(0n, 0)))
 
   useEffectButNotFirstTime(() => {
@@ -374,7 +374,7 @@ export function useTokenPricedBalance(context: Nullable<FgEthereumContext>, addr
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   useFallback(query, () => new Data(new Fixed(0n, 0)))
   return query
 }
@@ -403,7 +403,7 @@ export function useTokenBalance(address: string, token: ContractTokenData, conte
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   useFallback(query, () => new Data(new Fixed(0n, 0)))
 
   useEffectButNotFirstTime(() => {
@@ -446,7 +446,7 @@ export function useNonce(address: Nullable<string>, context: Nullable<FgEthereum
   useVisible(query)
   useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   return query
 }
 
@@ -477,7 +477,7 @@ export function useGasPrice(ethereum: Nullable<FgEthereumContext>) {
   useVisible(query)
   useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   return query
 }
 
@@ -506,7 +506,7 @@ export function useMaxPriorityFeePerGas(ethereum: Nullable<FgEthereumContext>) {
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   return query
 }
 
@@ -542,7 +542,7 @@ export function useBlockByNumber(number: Nullable<string>, ethereum: Nullable<Fg
   useVisible(query)
   useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   return query
 }
 
@@ -570,7 +570,7 @@ export function usePairPrice(ethereum: Nullable<FgEthereumContext>, pair: PairIn
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   return query
 }
 
@@ -624,7 +624,7 @@ export function useEnsLookup(name: Nullable<string>, ethereum: Nullable<FgEthere
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   return query
 }
 
@@ -634,7 +634,7 @@ export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullab
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   return query
 }
 
@@ -648,7 +648,6 @@ export function useEnsReverseNoFetch(address: Nullable<ZeroHexString>, ethereum:
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
   useSubscribe(query, storage)
-  useError(query, Errors.log)
   return query
 }
 
@@ -687,6 +686,6 @@ export function useEstimateGas(request: Nullable<RpcRequestPreinit<[unknown, unk
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   return query
 }

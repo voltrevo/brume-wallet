@@ -35,6 +35,6 @@ export function useSignature(ethereum: Nullable<FgEthereumContext>, hash: Nullab
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   return query
 }

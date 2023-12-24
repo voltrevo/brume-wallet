@@ -32,6 +32,6 @@ export function useUnknown(request: RpcRequestPreinit<unknown> & EthereumFetchPa
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
-  useError(query, Errors.log)
+  useError(query, Errors.onQueryError)
   return query
 }
