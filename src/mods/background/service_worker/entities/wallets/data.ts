@@ -296,7 +296,7 @@ export namespace EthereumContext {
         if (counters.size < 2)
           return await Promise.any(promises)
 
-        console.warn(`Different results from multiple connections for ${init.method} on ${ethereum.chain.name}`)
+        console.warn(`Different results from multiple connections for ${init.method} on ${ethereum.chain.name}`, { fetcheds })
 
         /**
          * Sort truths by occurence
@@ -342,7 +342,7 @@ export namespace EthereumContext {
       if (counters.size < 2)
         return await Promise.any(promises)
 
-      console.warn(`Different results from multiple circuits for ${init.method} on ${ethereum.chain.name}`)
+      console.warn(`Different results from multiple circuits for ${init.method} on ${ethereum.chain.name}`, { fetcheds })
 
       /**
        * Sort truths by occurence

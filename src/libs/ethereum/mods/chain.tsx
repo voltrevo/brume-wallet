@@ -19,7 +19,7 @@ export const chainByChainId: Chains = {
   1: {
     name: "Ethereum",
     chainId: 1,
-    urls: ["wss://ethereum.publicnode.com", "wss://eth.llamarpc.com", "wss://mainnet.gateway.tenderly.co"],
+    urls: ["wss://ethereum.publicnode.com", "wss://mainnet.gateway.tenderly.co"],
     etherscan: "https://etherscan.io",
     token: {
       uuid: "664000af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -61,7 +61,7 @@ export const chainByChainId: Chains = {
   10: {
     name: "Optimism",
     chainId: 10,
-    urls: ["wss://optimism.publicnode.com", "wss://optimism.llamarpc.com"],
+    urls: ["wss://optimism.publicnode.com"],
     etherscan: "https://optimistic.etherscan.io",
     token: {
       uuid: "664002af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -81,7 +81,7 @@ export const chainByChainId: Chains = {
   56: {
     name: "Binance",
     chainId: 56,
-    urls: ["wss://bsc.publicnode.com", "wss://binance.llamarpc.com"],
+    urls: ["wss://bsc.publicnode.com"],
     etherscan: "https://bnbscan.com",
     token: {
       uuid: "664003af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -147,7 +147,7 @@ export const chainByChainId: Chains = {
   137: {
     name: "Polygon Bor",
     chainId: 137,
-    urls: ["wss://polygon-bor.publicnode.com", "wss://polygon.llamarpc.com"],
+    urls: ["wss://polygon-bor.publicnode.com"],
     etherscan: "https://polygonscan.com",
     token: {
       uuid: "664006af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -214,7 +214,7 @@ export const chainByChainId: Chains = {
   8453: {
     name: "Base",
     chainId: 8453,
-    urls: ["wss://base.publicnode.com", "wss://base.llamarpc.com"],
+    urls: ["wss://base.publicnode.com"],
     etherscan: "https://basescan.org",
     token: {
       uuid: "664008af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -237,7 +237,7 @@ export const chainByChainId: Chains = {
   42161: {
     name: "Arbitrum One",
     chainId: 42161,
-    urls: ["wss://arbitrum-one.publicnode.com", "wss://arbitrum.llamarpc.com"],
+    urls: ["wss://arbitrum-one.publicnode.com"],
     etherscan: "https://arbiscan.io",
     token: {
       uuid: "664009af-5c47-4b6e-ab3e-c0c130e23b3c",

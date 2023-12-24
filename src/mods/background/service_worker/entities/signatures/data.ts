@@ -113,7 +113,7 @@ export async function tryFetchRaw<T>(ethereum: BgEthereumContext, url: string, i
     if (counters.size < 2)
       return await Promise.any(promises)
 
-    console.warn(`Different results from multiple circuits for ${url}`)
+    console.warn(`Different results from multiple circuits for ${url}`, { fetcheds })
 
     /**
      * Sort truths by occurence
