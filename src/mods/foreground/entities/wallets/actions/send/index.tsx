@@ -350,7 +350,7 @@ export function WalletSendScreenValue(props: {
       const valued = Fixed.fromString(input, tokenData.decimals).div(maybeTokenPrice)
 
       if (valued.value === 0n) {
-        setRawPricedInput(undefined)
+        setRawValueInput(undefined)
         return
       }
 
