@@ -20,7 +20,7 @@ import { TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_w
 import { Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
 import { PageBody, UserPageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
@@ -216,14 +216,13 @@ function WalletDataPage() {
           </div>
         </button>
         <div className="grow" />
-        {all && <>
+        {all &&
           <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 !transition`}
             onClick={() => setEdit(!edit)}>
             <div className={`${Button.Shrinker.className}`}>
               {edit ? "Done" : "Edit"}
             </div>
-          </button>
-        </>}
+          </button>}
         <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 !transition`}
           onClick={add.enable}>
           <div className={`${Button.Shrinker.className}`}>
@@ -235,12 +234,11 @@ function WalletDataPage() {
       {all &&
         <TokensEditContext.Provider value={edit}>
           <div className="flex flex-col gap-4">
-            {allTokens.map(token => <>
-              {token.uuid !== chainByChainId[1].token.uuid &&
-                <UnaddedTokenRow
-                  key={token.uuid}
-                  token={token} />}
-            </>)}
+            {allTokens.map(token =>
+              <Fragment key={token.uuid}>
+                {token.uuid !== chainByChainId[1].token.uuid &&
+                  <UnaddedTokenRow token={token} />}
+              </Fragment>)}
             {userTokens.data?.inner.map(token =>
               <UnaddedTokenRow
                 key={token.uuid}

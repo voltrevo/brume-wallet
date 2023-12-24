@@ -56,19 +56,20 @@ export interface SignatureData {
 
 export async function tryFetchRaw<T>(ethereum: BgEthereumContext, url: string, init: EthereumFetchParams, more: FetcherMore = {}) {
   return await Result.runAndDoubleWrap<Fetched<T, Error>>(async () => {
-    const { signal: presignal } = more
+    const { signal: parentSignal } = more
     const { brume } = ethereum
 
     const circuits = Option.wrap(brume.circuits).ok().unwrap()
 
     async function runWithPoolOrThrow(index: number) {
       return await Result.unthrow<Result<T, Error>>(async t => {
-        const circuit = circuits.tryGetSync(index).unwrap().unwrap().inner
-
-        const signal = AbortSignals.timeout(5_000, presignal)
+        const circuitSignal = AbortSignals.timeout(5_000, parentSignal)
+        const circuit = await circuits.tryGet(index, circuitSignal).then(r => r.unwrap().unwrap().inner)
 
         using stream = await Circuits.openAsOrThrow(circuit.inner, url)
-        const res = await fetch(url, { signal, stream: stream.inner })
+
+        const fetchSignal = AbortSignals.timeout(5_000, parentSignal)
+        const res = await fetch(url, { signal: fetchSignal, stream: stream.inner })
 
         if (!res.ok) {
           const text = await Result.runAndDoubleWrap(() => {

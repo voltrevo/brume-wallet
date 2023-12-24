@@ -224,25 +224,26 @@ export namespace EthereumContext {
 
   export async function fetchOrFail<T>(ethereum: BgEthereumContext, init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}) {
     try {
-      const { signal: presignal } = more
+      const { signal: parentSignal } = more
       const { brume } = ethereum
 
       const pools = Option.wrap(brume[ethereum.chain.chainId]).ok().unwrap()
 
       async function runWithPoolOrThrow(index: number) {
-        const pool = pools.tryGetSync(index).unwrap().unwrap().inner.inner
+        const poolSignal = AbortSignals.timeout(5_000, parentSignal)
+        const pool = await pools.tryGet(index, poolSignal).then(r => r.unwrap().unwrap().inner.inner)
 
         async function runWithConnOrThrow(index: number) {
-          const conn = pool.tryGetSync(index).unwrap().unwrap().inner.inner
+          const connSignal = AbortSignals.timeout(5_000, parentSignal)
+          const conn = await pool.tryGet(index, connSignal).then(r => r.unwrap().unwrap().inner.inner)
 
           const { counter, connection } = conn
           const request = counter.prepare(init)
 
           if (connection.isURL()) {
             const { url, circuit } = connection
-            const signal = AbortSignals.timeout(10_000, presignal)
+            const signal = AbortSignals.timeout(10_000, parentSignal)
 
-            // console.debug(`Fetching ${init.method} from ${url.href} using ${circuit.id}`)
             const result = await TorRpc.tryFetchWithCircuit<T>(url, { ...request, circuit, signal })
 
             if (result.isErr())
@@ -255,9 +256,8 @@ export namespace EthereumContext {
             await connection.cooldown
 
             const { socket, circuit } = connection
-            const signal = AbortSignals.timeout(10_000, presignal)
+            const signal = AbortSignals.timeout(10_000, parentSignal)
 
-            // console.debug(`Fetching ${init.method} from ${socket.url} using ${circuit.id}`)
             const result = await TorRpc.tryFetchWithSocket<T>(socket, request, signal)
 
             if (result.isErr())
