@@ -101,7 +101,7 @@ export function WalletSendScreenTarget(props: {
     : undefined
 
   const ensQuery = useEnsLookup(maybeEnsInput, mainnet)
-  const maybeEns = ensQuery.data?.get()
+  const maybeEns = ensQuery.current?.ok().get()
 
   const onSubmit = useCallback(async () => {
     if (!Address.is(input) && !input.endsWith(".eth"))
@@ -278,7 +278,7 @@ export function WalletSendScreenValue(props: {
   const { close } = useDialogContext().unwrap()
 
   const pendingNonceQuery = useNonce(wallet.address, context)
-  const maybePendingNonce = pendingNonceQuery.data?.get()
+  const maybePendingNonce = pendingNonceQuery.current?.ok().get()
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(tokenData.pairs?.length ?? 0))
 
@@ -377,8 +377,8 @@ export function WalletSendScreenValue(props: {
   const valuedBalanceQuery = useBalance(wallet.address, context, prices)
   const pricedBalanceQuery = usePricedBalance(wallet.address, "usd", context)
 
-  const valuedBalanceData = valuedBalanceQuery.data?.get()
-  const pricedBalanceData = pricedBalanceQuery.data?.get()
+  const valuedBalanceData = valuedBalanceQuery.current?.ok().get()
+  const pricedBalanceData = pricedBalanceQuery.current?.ok().get()
 
   const onValueMaxClick = useCallback(() => {
     if (valuedBalanceData == null)
@@ -431,7 +431,7 @@ export function WalletSendScreenValue(props: {
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
   const ensTargetQuery = useEnsLookup(maybeEnsInput, mainnet)
-  const maybeEnsTarget = ensTargetQuery.data?.get()
+  const maybeEnsTarget = ensTargetQuery.current?.ok().get()
 
   const [gasMode, setGasMode] = useState<"normal" | "fast" | "urgent">("normal")
 
@@ -440,10 +440,10 @@ export function WalletSendScreenValue(props: {
   }, [])
 
   const gasPriceQuery = useGasPrice(context)
-  const maybeGasPrice = gasPriceQuery.data?.get()
+  const maybeGasPrice = gasPriceQuery.current?.ok().get()
 
   const maxPriorityFeePerGasQuery = useMaxPriorityFeePerGas(context)
-  const maybeMaxPriorityFeePerGas = maxPriorityFeePerGasQuery.data?.get()
+  const maybeMaxPriorityFeePerGas = maxPriorityFeePerGasQuery.current?.ok().get()
 
   const pendingBlockQuery = useBlockByNumber("pending", context)
   const maybePendingBlock = pendingBlockQuery.data?.inner
@@ -621,7 +621,7 @@ export function WalletSendScreenValue(props: {
   }, [context, wallet, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
   const eip1559GasLimitQuery = useEstimateGas(maybeEip1559EstimateGasKey, context)
-  const maybeEip1559GasLimit = eip1559GasLimitQuery.data?.get()
+  const maybeEip1559GasLimit = eip1559GasLimitQuery.current?.ok().get()
 
   const maybeNormalEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
@@ -999,6 +999,12 @@ export function WalletSendScreenValue(props: {
       </div>
       <div className="h-2" />
     </>}
+    {eip1559GasLimitQuery.current?.isErr() && <>
+      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+        {eip1559GasLimitQuery.current.err().get()?.message}
+      </div>
+      <div className="h-2" />
+    </>}
     <div className="flex items-center">
       <WideShrinkableContrastButton
         disabled>
@@ -1047,7 +1053,7 @@ export function WalletSendScreenNonce(props: {
   const { close } = useDialogContext().unwrap()
 
   const pendingNonceQuery = useNonce(wallet.address, context)
-  const maybePendingNonce = pendingNonceQuery.data?.get()
+  const maybePendingNonce = pendingNonceQuery.current?.ok().get()
 
   const [rawInput = "", setRawInput] = useState<Optional<string>>(step.nonce)
 
