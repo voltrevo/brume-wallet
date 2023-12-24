@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { BigIntToHex } from "@/libs/bigints/bigints";
+import { useCopy } from "@/libs/copy/copy";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
@@ -14,7 +15,6 @@ import { NativeTokenData } from "@/mods/background/service_worker/entities/token
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
-import { Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useWalletDataContext } from "../../context";
@@ -436,6 +436,10 @@ export function WalletSendScreenValue(props: {
 
   const [gasMode, setGasMode] = useState<"normal" | "fast" | "urgent">("normal")
 
+  const onGasModeChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
+    setGasMode(e.currentTarget.value as any)
+  }, [])
+
   const gasPriceQuery = useGasPrice(context)
   const maybeGasPrice = gasPriceQuery.data?.get()
 
@@ -613,38 +617,38 @@ export function WalletSendScreenValue(props: {
     }
   }, [context, wallet, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
-  const eip1559EstimateGasQuery = useEstimateGas(maybeEip1559EstimateGasKey, context)
-  const maybeEip1559EstimateGas = eip1559EstimateGasQuery.data?.get()
+  const eip1559GasLimitQuery = useEstimateGas(maybeEip1559EstimateGasKey, context)
+  const maybeEip1559GasLimit = eip1559GasLimitQuery.data?.get()
 
   const maybeNormalEip1559GasCost = useMemo(() => {
-    if (maybeEip1559EstimateGas == null)
+    if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeNormalBaseFeePerGas == null)
       return undefined
     if (maybeTokenPrice == null)
       return undefined
-    return new Fixed(maybeEip1559EstimateGas * maybeNormalBaseFeePerGas, 18).mul(maybeTokenPrice) // TODO use ETH price
-  }, [maybeEip1559EstimateGas, maybeNormalBaseFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeNormalBaseFeePerGas, 18).mul(maybeTokenPrice) // TODO use ETH price
+  }, [maybeEip1559GasLimit, maybeNormalBaseFeePerGas, maybeTokenPrice])
 
   const maybeFastEip1559GasCost = useMemo(() => {
-    if (maybeEip1559EstimateGas == null)
+    if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeFastBaseFeePerGas == null)
       return undefined
     if (maybeTokenPrice == null)
       return undefined
-    return new Fixed(maybeEip1559EstimateGas * maybeFastBaseFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeEip1559EstimateGas, maybeFastBaseFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeFastBaseFeePerGas, 18).mul(maybeTokenPrice)
+  }, [maybeEip1559GasLimit, maybeFastBaseFeePerGas, maybeTokenPrice])
 
   const maybeUrgentEip1559GasCost = useMemo(() => {
-    if (maybeEip1559EstimateGas == null)
+    if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeUrgentBaseFeePerGas == null)
       return undefined
     if (maybeTokenPrice == null)
       return undefined
-    return new Fixed(maybeEip1559EstimateGas * maybeUrgentBaseFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeEip1559EstimateGas, maybeUrgentBaseFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeUrgentBaseFeePerGas, 18).mul(maybeTokenPrice)
+  }, [maybeEip1559GasLimit, maybeUrgentBaseFeePerGas, maybeTokenPrice])
 
   const normalEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalEip1559GasCost)
   const fastEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastEip1559GasCost)
@@ -662,34 +666,24 @@ export function WalletSendScreenValue(props: {
   const fastMaxPriorityFeePerGasDisplay = usePriorityFeeDisplay(maybeFastMaxPriorityFeePerGas)
   const urgentMaxPriorityFeePerGasDisplay = usePriorityFeeDisplay(maybeUrgentMaxPriorityFeePerGas)
 
-  const [txHash, setTxHash] = useState<ZeroHexString>()
+  const [txHash, setTxHash] = useState<ZeroHexString>("0x19b896be5689b2b9fe34bb4e79ed7cedc4b0969de7606c95ecdc5aa18759d625")
+
+  const onTxHashCopy = useCopy(txHash)
 
   const send = useAsyncUniqueCallback(async () => {
     try {
       if (maybeIsEip1559 == null)
         return
 
-      const value = Result.runAndWrapSync(() => {
-        if (step.valued?.trim().length)
-          return Fixed.fromString(step.valued, tokenData.decimals)
-        return new Fixed(0n, tokenData.decimals)
-      }).mapErrSync(() => {
+      const value = Option.wrap(maybeFinalValue).okOrElseSync(() => {
         return new UIError(`Could not parse value`)
       }).unwrap()
 
-      const nonce = Result.runAndWrapSync(() => {
-        if (step.nonce?.trim().length)
-          return BigInt(step.nonce)
-        return Option.unwrap(maybePendingNonce)
-      }).mapErrSync(() => {
+      const nonce = Option.wrap(maybeFinalNonce).okOrElseSync(() => {
         return new UIError(`Could not fetch or parse nonce`)
       }).unwrap()
 
-      const address = Result.runAndWrapSync(() => {
-        if (Address.is(step.target))
-          return step.target
-        return Option.unwrap(maybeEnsTarget)
-      }).mapErrSync(() => {
+      const target = Option.wrap(maybeFinalTarget).okOrElseSync(() => {
         return new UIError(`Could not fetch or parse address`)
       }).unwrap()
 
@@ -699,38 +693,21 @@ export function WalletSendScreenValue(props: {
        * EIP-1559
        */
       if (maybeIsEip1559) {
-        const maxFeePerGas = Result.runAndWrapSync(() => {
-          return Option.unwrap(maybeFinalMaxFeePerGas)
-        }).mapErrSync(() => {
+        const maxFeePerGas = Option.wrap(maybeFinalMaxFeePerGas).okOrElseSync(() => {
           return new UIError(`Could not fetch baseFeePerGas`)
         }).unwrap()
 
-        const maxPriorityFeePerGas = Result.runAndWrapSync(() => {
-          return Option.unwrap(maybeFinalMaxPriorityFeePerGas)
-        }).mapErrSync(() => {
+        const maxPriorityFeePerGas = Option.wrap(maybeFinalMaxPriorityFeePerGas).okOrElseSync(() => {
           return new UIError(`Could not fetch maxPriorityFeePerGas`)
         }).unwrap()
 
-        const gas = await context.background.tryRequest<string>({
-          method: "brume_eth_fetch",
-          params: [context.uuid, context.chain.chainId, {
-            method: "eth_estimateGas",
-            params: [{
-              chainId: ZeroHexString.from(context.chain.chainId),
-              from: wallet.address,
-              to: Address.from(address),
-              maxFeePerGas: ZeroHexString.from(maxFeePerGas),
-              maxPriorityFeePerGas: ZeroHexString.from(maxPriorityFeePerGas),
-              value: ZeroHexString.from(value.value),
-              nonce: ZeroHexString.from(nonce)
-            }, "latest"],
-            noCheck: true
-          }]
-        }).then(r => r.unwrap().unwrap())
+        const gasLimit = Option.wrap(maybeEip1559GasLimit).okOrElseSync(() => {
+          return new UIError(`Could not fetch gasLimit`)
+        }).unwrap()
 
         tx = Transaction.from({
-          to: Address.from(address),
-          gasLimit: gas,
+          to: Address.from(target),
+          gasLimit: gasLimit,
           chainId: context.chain.chainId,
           maxFeePerGas: maxFeePerGas,
           maxPriorityFeePerGas: maxPriorityFeePerGas,
@@ -743,9 +720,7 @@ export function WalletSendScreenValue(props: {
        * Not EIP-1559
        */
       else {
-        const gasPrice = Result.runAndWrapSync(() => {
-          return Option.unwrap(maybeFinalGasPrice)
-        }).mapErrSync(() => {
+        const gasPrice = Option.wrap(maybeFinalGasPrice).okOrElseSync(() => {
           return new UIError(`Could not fetch gasPrice`)
         }).unwrap()
 
@@ -756,7 +731,7 @@ export function WalletSendScreenValue(props: {
             params: [{
               chainId: ZeroHexString.from(context.chain.chainId),
               from: wallet.address,
-              to: Address.from(address),
+              to: Address.from(target),
               gasPrice: ZeroHexString.from(gasPrice),
               value: ZeroHexString.from(value.value),
               nonce: ZeroHexString.from(nonce)
@@ -766,7 +741,7 @@ export function WalletSendScreenValue(props: {
         }).then(r => r.unwrap().unwrap())
 
         tx = Transaction.from({
-          to: Address.from(address),
+          to: Address.from(target),
           gasLimit: gas,
           chainId: context.chain.chainId,
           gasPrice: gasPrice,
@@ -791,7 +766,7 @@ export function WalletSendScreenValue(props: {
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, step, tokenData, maybePendingNonce, maybeEnsTarget, maybeIsEip1559, maybeFinalGasPrice, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
+  }, [wallet, context, tokenData, maybeFinalTarget, maybeFinalNonce, maybeFinalValue, maybeIsEip1559, maybeEip1559GasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
 
   return <>
     {tokenData.pairs?.map((address, i) =>
@@ -954,7 +929,9 @@ export function WalletSendScreenValue(props: {
       </div>
       <div className="w-4" />
       {maybeIsEip1559 === true && maybeBaseFeePerGas != null && maybeMaxPriorityFeePerGas != null &&
-        <select className="w-full my-0.5 bg-transparent outline-none">
+        <select className="w-full my-0.5 bg-transparent outline-none"
+          value={gasMode}
+          onChange={onGasModeChange}>
           <option value="urgent">
             {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentEip1559GasCostDisplay}`}
           </option>
@@ -981,38 +958,43 @@ export function WalletSendScreenValue(props: {
         </select>}
     </SimpleBox>
     <div className="h-4 grow" />
-    <div className="po-md flex items-center bg-contrast rounded-xl">
-      <div className="flex flex-col truncate">
-        <div className="flex items-center">
-          <Loading className="size-4 shrink-0" />
-          <div className="w-2" />
-          <div className="font-medium">
-            Pending transaction #{finalNonceDisplay}
+    {txHash != null && <>
+      <div className="po-md flex items-center bg-contrast rounded-xl">
+        <div className="flex flex-col truncate">
+          <div className="flex items-center">
+            <Loading className="size-4 shrink-0" />
+            <div className="w-2" />
+            <div className="font-medium">
+              Pending transaction #{finalNonceDisplay}
+            </div>
+          </div>
+          <div className="text-contrast truncate">
+            {txHash}
+          </div>
+          <div className="h-2" />
+          <div className="flex items-center gap-1">
+            <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+              onClick={onTxHashCopy.run}>
+              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+                Copy
+                {onTxHashCopy.current
+                  ? <Outline.CheckIcon className="size-4" />
+                  : <Outline.ClipboardIcon className="size-4" />}
+              </div>
+            </button>
+            <a className="group px-2 bg-contrast rounded-full"
+              target="_blank" rel="noreferrer"
+              href={`https://etherscan.io/tx/${txHash}`}>
+              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+                Etherscan
+                <Outline.ArrowTopRightOnSquareIcon className="size-4" />
+              </div>
+            </a>
           </div>
         </div>
-        <div className="text-contrast truncate">
-          {"0xc3112f518e854af13465d3eca80323d8930de20687997906b052828c53af7c24"}
-        </div>
-        <div className="h-2" />
-        <div className="flex items-center gap-1">
-          <a className="group px-2 bg-contrast rounded-full"
-            target="_blank" rel="noreferrer">
-            <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-              Copy
-              <Outline.ClipboardIcon className="size-4" />
-            </div>
-          </a>
-          <a className="group px-2 bg-contrast rounded-full"
-            target="_blank" rel="noreferrer">
-            <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-              Etherscan
-              <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-            </div>
-          </a>
-        </div>
       </div>
-    </div>
-    <div className="h-2" />
+      <div className="h-2" />
+    </>}
     <div className="flex items-center">
       <WideShrinkableContrastButton>
         <Outline.PencilIcon className="size-5" />
