@@ -798,7 +798,7 @@ export function WalletSendScreenValue(props: {
           Value
         </div>
         <div className="w-4" />
-        <div className="grow flex flex-col">
+        <div className="grow flex flex-col overflow-hidden">
           <div className="flex items-center">
             <SimpleInput
               autoFocus
@@ -813,7 +813,7 @@ export function WalletSendScreenValue(props: {
           <div className="flex items-center cursor-pointer"
             role="button"
             onClick={onPricedClick}>
-            <div className="text-contrast">
+            <div className="text-contrast truncate">
               {rawPricedInput || "0.0"}
             </div>
             <div className="grow" />
@@ -847,7 +847,7 @@ export function WalletSendScreenValue(props: {
           Value
         </div>
         <div className="w-4" />
-        <div className="grow flex flex-col">
+        <div className="grow flex flex-col overflow-hidden">
           <div className="flex items-center">
             <SimpleInput
               autoFocus
@@ -862,7 +862,7 @@ export function WalletSendScreenValue(props: {
           <div className="flex items-center cursor-pointer"
             role="button"
             onClick={onValuedClick}>
-            <div className="text-contrast">
+            <div className="text-contrast truncate">
               {rawValueInput || "0.0"}
             </div>
             <div className="grow" />
