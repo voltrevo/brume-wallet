@@ -309,6 +309,11 @@ export function WalletSendScreenValue(props: {
     try {
       setRawValueInput(input)
 
+      if (input.trim().length === 0) {
+        setRawPricedInput(undefined)
+        return
+      }
+
       if (maybeTokenPrice == null) {
         setRawPricedInput(undefined)
         return
@@ -331,6 +336,11 @@ export function WalletSendScreenValue(props: {
   const setPrice = useCallback((input: string) => {
     try {
       setRawPricedInput(input)
+
+      if (input.trim().length === 0) {
+        setRawValueInput(undefined)
+        return
+      }
 
       if (maybeTokenPrice == null) {
         setRawValueInput(undefined)
