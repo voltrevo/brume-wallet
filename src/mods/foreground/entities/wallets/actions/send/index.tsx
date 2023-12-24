@@ -10,7 +10,6 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
 import { Setter } from "@/libs/react/state";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
-import { Loading } from "@/libs/ui/loading/loading";
 import { NativeTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
@@ -555,7 +554,9 @@ export function WalletSendScreenValue(props: {
 
   const maybeFinalValue = useMemo(() => {
     try {
-      return Fixed.fromString(valueInput.trim() || "0", tokenData.decimals)
+      return valueInput.trim().length
+        ? Fixed.fromString(valueInput.trim(), tokenData.decimals)
+        : undefined
     } catch { }
   }, [valueInput, tokenData])
 
@@ -569,7 +570,9 @@ export function WalletSendScreenValue(props: {
 
   const maybeCustomNonce = useMemo(() => {
     try {
-      return BigInt(nonceInput.trim() || "0")
+      return nonceInput.trim().length
+        ? BigInt(nonceInput.trim())
+        : undefined
     } catch { }
   }, [nonceInput])
 
@@ -666,7 +669,7 @@ export function WalletSendScreenValue(props: {
   const fastMaxPriorityFeePerGasDisplay = usePriorityFeeDisplay(maybeFastMaxPriorityFeePerGas)
   const urgentMaxPriorityFeePerGasDisplay = usePriorityFeeDisplay(maybeUrgentMaxPriorityFeePerGas)
 
-  const [txHash, setTxHash] = useState<ZeroHexString>("0x19b896be5689b2b9fe34bb4e79ed7cedc4b0969de7606c95ecdc5aa18759d625")
+  const [txHash, setTxHash] = useState<ZeroHexString>()
 
   const onTxHashCopy = useCopy(txHash)
 
@@ -914,6 +917,7 @@ export function WalletSendScreenValue(props: {
       </div>
       <div className="w-4" />
       <SimpleTextarea
+        disabled
         rows={3}
         value={step.data}
         placeholder="0x0" />
@@ -962,10 +966,10 @@ export function WalletSendScreenValue(props: {
       <div className="po-md flex items-center bg-contrast rounded-xl">
         <div className="flex flex-col truncate">
           <div className="flex items-center">
-            <Loading className="size-4 shrink-0" />
-            <div className="w-2" />
+            {/* <Loading className="size-4 shrink-0" />
+            <div className="w-2" /> */}
             <div className="font-medium">
-              Pending transaction #{finalNonceDisplay}
+              Transaction #{finalNonceDisplay}
             </div>
           </div>
           <div className="text-contrast truncate">
@@ -996,7 +1000,8 @@ export function WalletSendScreenValue(props: {
       <div className="h-2" />
     </>}
     <div className="flex items-center">
-      <WideShrinkableContrastButton>
+      <WideShrinkableContrastButton
+        disabled>
         <Outline.PencilIcon className="size-5" />
         Sign
       </WideShrinkableContrastButton>
