@@ -598,7 +598,7 @@ export namespace BgEns {
         const namehash = Ens.namehashOrThrow(name) as Uint8Array<32>
         const resolver = await Resolver.fetchOrFail(ethereum, namehash, more)
 
-        if (resolver)
+        if (resolver.isErr())
           return resolver
 
         const data = Abi.encodeOrThrow(EnsAbi.addr.from(namehash))
@@ -606,7 +606,7 @@ export namespace BgEns {
         const fetched = await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
           method: "eth_call",
           params: [{
-            to: resolver,
+            to: resolver.inner,
             data: data
           }, "pending"]
         }, more)
