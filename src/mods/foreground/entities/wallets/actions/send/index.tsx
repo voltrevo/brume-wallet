@@ -489,8 +489,8 @@ export function WalletSendScreenValue(props: {
     return baseFeePerGas + (2n * (10n ** 9n))
   }, [maybeBaseFeePerGas])
 
-  const maybeNormalMaxPriorityFeePerGas = useMaybeMemo(() => {
-    return 0n
+  const maybeNormalMaxPriorityFeePerGas = useMaybeMemo((maxPriorityFeePerGas) => {
+    return maxPriorityFeePerGas / 4n
   }, [maybeMaxPriorityFeePerGas])
 
   const maybeFastMaxPriorityFeePerGas = useMaybeMemo((maxPriorityFeePerGas) => {
@@ -538,7 +538,7 @@ export function WalletSendScreenValue(props: {
     return useMemo(() => {
       if (priorityFee == null)
         return "???"
-      return new Fixed(priorityFee, 9).move(3).toString()
+      return new Fixed(priorityFee, 9).move(4).toString()
     }, [priorityFee])
   }
 
@@ -979,7 +979,8 @@ export function WalletSendScreenValue(props: {
             {/* <Loading className="size-4 shrink-0" />
             <div className="w-2" /> */}
             <div className="font-medium">
-              Transaction #{finalNonceDisplay}
+              Transaction sent
+              {/* Pending transaction #{finalNonceDisplay} */}
             </div>
           </div>
           <div className="text-contrast truncate">
