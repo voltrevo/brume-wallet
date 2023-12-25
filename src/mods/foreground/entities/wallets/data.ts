@@ -1,4 +1,3 @@
-import { BigIntToHex } from "@/libs/bigints/bigints"
 import { Errors } from "@/libs/errors/errors"
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
@@ -7,7 +6,7 @@ import { ContractTokenData } from "@/mods/background/service_worker/entities/tok
 import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
-import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
+import { Abi, Fixed } from "@hazae41/cubane"
 import { Data, Fetched, FetcherMore, createQuery, useError, useFallback, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable, Option } from "@hazae41/option"
@@ -466,97 +465,5 @@ export function useTokenBalance(address: string, token: ContractTokenData, conte
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context, ...prices])
 
-  return query
-}
-
-export function getNonceSchema(address: Nullable<string>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
-  if (address == null)
-    return undefined
-  if (context == null)
-    return undefined
-
-  const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
-
-  return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
-    key: {
-      chainId: context.chain.chainId,
-      method: "eth_getTransactionCount",
-      params: [address, "pending"]
-    },
-    fetcher,
-    storage,
-    dataSerializer: BigIntToHex,
-  })
-}
-
-export function useNonce(address: Nullable<string>, context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(getNonceSchema, [address, context, storage])
-  useFetch(query)
-  useVisible(query)
-  useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  return query
-}
-
-export function getGasPriceSchema(context: Nullable<FgEthereumContext>, storage: UserStorage) {
-  if (context == null)
-    return undefined
-
-  const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
-
-  return createQuery<EthereumQueryKey<unknown> & EthereumFetchParams, bigint, Error>({
-    key: {
-      chainId: context.chain.chainId,
-      method: "eth_gasPrice",
-      params: [],
-      noCheck: true
-    },
-    fetcher,
-    storage,
-    dataSerializer: BigIntToHex
-  })
-}
-
-export function useGasPrice(ethereum: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(getGasPriceSchema, [ethereum, storage])
-  useFetch(query)
-  useVisible(query)
-  useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  return query
-}
-
-export function getMaxPriorityFeePerGas(context: Nullable<FgEthereumContext>, storage: UserStorage) {
-  if (context == null)
-    return undefined
-
-  const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
-
-  return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
-    key: {
-      chainId: context.chain.chainId,
-      method: "eth_maxPriorityFeePerGas",
-      params: []
-    },
-    fetcher,
-    storage,
-    dataSerializer: BigIntToHex
-  })
-}
-
-export function useMaxPriorityFeePerGas(ethereum: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(getMaxPriorityFeePerGas, [ethereum, storage])
-  useFetch(query)
-  useVisible(query)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
   return query
 }

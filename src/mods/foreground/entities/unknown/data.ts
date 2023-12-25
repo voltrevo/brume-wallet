@@ -1,9 +1,10 @@
 import { BigIntToHex } from "@/libs/bigints/bigints";
 import { Errors } from "@/libs/errors/errors";
+import { ChainData } from "@/libs/ethereum/mods/chain";
 import { BgUnknown } from "@/mods/background/service_worker/entities/unknown/data";
 import { EthereumFetchParams, EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data";
 import { ZeroHexString } from "@hazae41/cubane";
-import { createQuery, useError, useFetch, useQuery, useVisible } from "@hazae41/glacier";
+import { FetcherMore, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
@@ -79,6 +80,102 @@ export namespace FgEthereum {
 
   }
 
+  export namespace MaxPriorityFeePerGas {
+
+    export type Key = EthereumQueryKey<unknown>
+    export type Data = bigint
+    export type Fail = Error
+
+    export function key(chain: ChainData) {
+      return {
+        chainId: chain.chainId,
+        method: "eth_maxPriorityFeePerGas",
+        params: []
+      }
+    }
+
+    export function schema(context: Nullable<FgEthereumContext>, storage: UserStorage) {
+      if (context == null)
+        return
+
+      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+        await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
+
+      return createQuery<Key, Data, Fail>({
+        key: key(context.chain),
+        fetcher,
+        storage,
+        dataSerializer: BigIntToHex
+      })
+    }
+
+  }
+
+  export namespace GasPrice {
+
+    export type Key = EthereumQueryKey<unknown> & EthereumFetchParams
+    export type Data = bigint
+    export type Fail = Error
+
+    export function key(chain: ChainData) {
+      return {
+        chainId: chain.chainId,
+        method: "eth_gasPrice",
+        params: [],
+        noCheck: true
+      }
+    }
+
+    export function schema(context: Nullable<FgEthereumContext>, storage: UserStorage) {
+      if (context == null)
+        return
+
+      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+        await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
+
+      return createQuery<Key, Data, Error>({
+        key: key(context.chain),
+        fetcher,
+        storage,
+        dataSerializer: BigIntToHex
+      })
+    }
+
+  }
+
+  export namespace Nonce {
+
+    export type Key = EthereumQueryKey<unknown>
+    export type Data = bigint
+    export type Fail = Error
+
+    export function key(address: ZeroHexString, chain: ChainData) {
+      return {
+        chainId: chain.chainId,
+        method: "eth_getTransactionCount",
+        params: [address, "pending"]
+      }
+    }
+
+    export function schema(address: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
+      if (address == null)
+        return
+      if (context == null)
+        return
+
+      const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
+        await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
+
+      return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
+        key: key(address, context.chain),
+        fetcher,
+        storage,
+        dataSerializer: BigIntToHex,
+      })
+    }
+
+  }
+
 }
 
 export function useEstimateGas(request: Nullable<RpcRequestPreinit<[unknown, unknown]>>, ethereum: Nullable<FgEthereumContext>) {
@@ -86,6 +183,39 @@ export function useEstimateGas(request: Nullable<RpcRequestPreinit<[unknown, unk
   const query = useQuery(FgEthereum.EstimateGas.schema, [request, ethereum, storage])
   useFetch(query)
   useVisible(query)
+  useSubscribe(query, storage)
+  useError(query, Errors.onQueryError)
+  return query
+}
+
+export function useMaxPriorityFeePerGas(ethereum: Nullable<FgEthereumContext>) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgEthereum.MaxPriorityFeePerGas.schema, [ethereum, storage])
+  useFetch(query)
+  useVisible(query)
+  useInterval(query, 10 * 1000)
+  useSubscribe(query, storage)
+  useError(query, Errors.onQueryError)
+  return query
+}
+
+export function useGasPrice(ethereum: Nullable<FgEthereumContext>) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgEthereum.GasPrice.schema, [ethereum, storage])
+  useFetch(query)
+  useVisible(query)
+  useInterval(query, 10 * 1000)
+  useSubscribe(query, storage)
+  useError(query, Errors.onQueryError)
+  return query
+}
+
+export function useNonce(address: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgEthereum.Nonce.schema, [address, context, storage])
+  useFetch(query)
+  useVisible(query)
+  useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
   useError(query, Errors.onQueryError)
   return query
