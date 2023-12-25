@@ -5,12 +5,12 @@ import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { BgEns } from "@/mods/background/service_worker/entities/names/data"
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data"
-import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
+import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fetched, FetcherMore, createQuery, useError, useFallback, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
-import { RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc"
+import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable, Option } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
 import { Transaction, ethers } from "ethers"
@@ -23,14 +23,7 @@ import { SeedInstance } from "../seeds/all/helpers"
 import { FgSeed } from "../seeds/data"
 
 export interface WalletProps {
-  wallet: Wallet
-}
-
-export function getWallet(uuid: Nullable<string>, storage: UserStorage) {
-  if (uuid == null)
-    return undefined
-
-  return createQuery<string, WalletData, never>({ key: `wallet/${uuid}`, storage })
+  readonly wallet: Wallet
 }
 
 export namespace FgWallet {
@@ -56,11 +49,24 @@ export namespace FgWallet {
 
   }
 
+  export type Key = BgWallet.Key
+  export type Data = BgWallet.Data
+  export type Fail = BgWallet.Fail
+
+  export const key = BgWallet.key
+
+  export function schema(uuid: Nullable<string>, storage: UserStorage) {
+    if (uuid == null)
+      return
+
+    return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
+  }
+
 }
 
 export function useWallet(uuid: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
-  const query = useQuery(getWallet, [uuid, storage])
+  const query = useQuery(FgWallet.schema, [uuid, storage])
   useSubscribe(query, storage)
   return query
 }
@@ -245,13 +251,13 @@ export class EthereumAuthPrivateKeyWalletInstance {
 }
 
 export interface FgEthereumContext {
-  uuid: string,
-  chain: ChainData,
-  background: Background
+  readonly uuid: string,
+  readonly chain: ChainData,
+  readonly background: Background
 }
 
 export interface EthereumContextProps {
-  context: FgEthereumContext
+  readonly context: FgEthereumContext
 }
 
 export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<ChainData>) {
@@ -275,13 +281,13 @@ export async function fetchOrFail<T>(request: RpcRequestPreinit<unknown> & Ether
   }).then(r => Fetched.rewrap(r.unwrap()))
 }
 
-export async function tryIndex<T>(request: RpcRequestPreinit<unknown>, ethereum: FgEthereumContext): Promise<Result<RpcResponse<T>, Error>> {
+export async function indexOrThrow(request: RpcRequestPreinit<unknown>, ethereum: FgEthereumContext) {
   const { uuid, background, chain } = ethereum
 
-  return await background.tryRequest<T>({
+  await background.tryRequest({
     method: "brume_eth_index",
     params: [uuid, chain.chainId, request]
-  })
+  }).then(r => r.unwrap().unwrap())
 }
 
 export function getTotalPricedBalance(coin: "usd", storage: UserStorage) {
@@ -371,9 +377,7 @@ export function useBalance(address: string, context: Nullable<FgEthereumContext>
   useEffectButNotFirstTime(() => {
     if (context == null)
       return
-    tryIndex(query.key, context)
-      .then(r => r.ignore())
-      .catch(console.error)
+    indexOrThrow(query.key, context).catch(() => { })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context, ...prices])
 
@@ -435,9 +439,7 @@ export function useTokenBalance(address: string, token: ContractTokenData, conte
   useEffectButNotFirstTime(() => {
     if (context == null)
       return
-    tryIndex(query.key, context)
-      .then(r => r.ignore())
-      .catch(console.error)
+    indexOrThrow(query.key, context).catch(() => { })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context, ...prices])
 
@@ -537,7 +539,7 @@ export function useMaxPriorityFeePerGas(ethereum: Nullable<FgEthereumContext>) {
 }
 
 export interface Block {
-  baseFeePerGas?: ZeroHexString
+  readonly baseFeePerGas?: ZeroHexString
 }
 
 export function getBlockByNumber(number: Nullable<string>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
