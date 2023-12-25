@@ -1,6 +1,6 @@
 import { BigIntToHex } from "@/libs/bigints/bigints"
 import { Errors } from "@/libs/errors/errors"
-import { ChainData, PairInfo } from "@/libs/ethereum/mods/chain"
+import { ChainData } from "@/libs/ethereum/mods/chain"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data"
@@ -592,34 +592,6 @@ export function useBlockByNumber(number: Nullable<string>, ethereum: Nullable<Fg
   useFetch(query)
   useVisible(query)
   useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  return query
-}
-
-export function getPairPrice(context: Nullable<FgEthereumContext>, pair: PairInfo, storage: UserStorage) {
-  if (context == null)
-    return
-
-  const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await fetchOrFail<Fixed.From>(request, context)
-
-  return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
-    key: {
-      chainId: context.chain.chainId,
-      method: "eth_getPairPrice",
-      params: [pair.address]
-    },
-    fetcher,
-    storage
-  })
-}
-
-export function usePairPrice(ethereum: Nullable<FgEthereumContext>, pair: PairInfo) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(getPairPrice, [ethereum, pair, storage])
-  useFetch(query)
-  useVisible(query)
   useSubscribe(query, storage)
   useError(query, Errors.onQueryError)
   return query

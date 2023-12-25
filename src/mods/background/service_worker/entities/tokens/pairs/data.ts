@@ -1,5 +1,5 @@
 import { PairAbi } from "@/libs/abi/pair.abi"
-import { PairInfo, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
+import { PairData, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
@@ -19,9 +19,9 @@ export namespace BgPair {
 
     export const method = "eth_getPairPrice"
 
-    export function key(ethereum: BgEthereumContext, pair: PairInfo) {
+    export function key(pair: PairData) {
       return {
-        chainId: ethereum.chain.chainId,
+        chainId: pair.chainId,
         method: "eth_getPairPrice",
         params: [pair.address]
       }
@@ -35,7 +35,7 @@ export namespace BgPair {
       return schema(ethereum, pair, storage)
     }
 
-    export function schema(ethereum: BgEthereumContext, pair: PairInfo, storage: IDBStorage) {
+    export function schema(ethereum: BgEthereumContext, pair: PairData, storage: IDBStorage) {
       const fetcher = (key: unknown, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
         const data = Abi.encodeOrThrow(PairAbi.getReserves.from())
 
@@ -59,13 +59,13 @@ export namespace BgPair {
       })
 
       return createQuery<Key, Data, Fail>({
-        key: key(ethereum, pair),
+        key: key(pair),
         fetcher,
         storage
       })
     }
 
-    export function computeOrThrow(pair: PairInfo, reserves: [bigint, bigint]) {
+    export function computeOrThrow(pair: PairData, reserves: [bigint, bigint]) {
       const decimals0 = tokenByAddress[pair.token0].decimals
       const decimals1 = tokenByAddress[pair.token1].decimals
 

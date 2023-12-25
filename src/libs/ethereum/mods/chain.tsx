@@ -546,7 +546,7 @@ export const tokenById = {
   MSUSD_ON_CELO: "0x64dEFa3544c695db8c535D289d843a189aa26b98"
 } as const
 
-export interface PairInfo {
+export interface PairData {
   readonly chainId: number,
   readonly name: string
   readonly address: string,
@@ -555,7 +555,7 @@ export interface PairInfo {
   readonly reversed?: boolean
 }
 
-export const pairByAddress: Record<string, PairInfo> = {
+export const pairByAddress: Record<string, PairData> = {
   "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852": {
     chainId: 1,
     name: "WETH_USDT",
