@@ -694,15 +694,13 @@ export class Global {
     return await Result.unthrow(async t => {
       const { storage } = Option.unwrap(this.#user)
 
-      const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
-        return await Result.unthrow<Result<string, Error>>(async t => {
-          const walletQuery = BgWallet.schema(wallet.uuid, storage)
-          const walletState = await walletQuery.state
-          const walletData = Option.unwrap(walletState.data?.inner)
+      const addresses = await Promise.all(session.wallets.map(async wallet => {
+        const walletQuery = BgWallet.schema(wallet.uuid, storage)
+        const walletState = await walletQuery.state
+        const walletData = Option.unwrap(walletState.data?.inner)
 
-          return new Ok(walletData.address)
-        })
-      }))).unwrap()
+        return walletData.address
+      }))
 
       return new Ok(addresses)
     })
