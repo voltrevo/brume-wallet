@@ -1,3 +1,4 @@
+import { Session } from "@/mods/background/service_worker/entities/sessions/data"
 import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
 import { createQuery, useQuery } from "@hazae41/glacier"
