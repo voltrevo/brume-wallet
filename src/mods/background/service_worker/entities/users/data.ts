@@ -2,7 +2,6 @@ import { Mutators } from "@/libs/glacier/mutators"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
 import { AesGcmCoder, Data, HmacEncoder, IDBStorage, States, createQuery } from "@hazae41/glacier"
-import { Ok, Result } from "@hazae41/result"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBase64, Pbkdf2ParamsBytes } from "./crypto"
 
 export type User =
@@ -124,51 +123,49 @@ export namespace BgUser {
     })
   }
 
-  export async function tryCreate(init: UserInit): Promise<Result<UserData, Error>> {
-    return await Result.unthrow(async t => {
-      const { uuid, name, color, emoji, password } = init
+  export async function createOrThrow(init: UserInit): Promise<UserData> {
+    const { uuid, name, color, emoji, password } = init
 
-      const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits"])
+    const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits"])
 
-      const keyParamsBase64: HmacPbkdf2ParamsBase64 = {
-        derivedKeyType: {
-          name: "HMAC",
-          hash: "SHA-256"
-        },
-        algorithm: Pbdkf2Params.stringify({
-          name: "PBKDF2",
-          hash: "SHA-256",
-          iterations: 1_000_000,
-          salt: Bytes.random(16)
-        })
-      }
-
-      const valueParamsBase64: AesGcmPbkdf2ParamsBase64 = {
-        derivedKeyType: {
-          name: "AES-GCM",
-          length: 256
-        },
-        algorithm: Pbdkf2Params.stringify({
-          name: "PBKDF2",
-          hash: "SHA-256",
-          iterations: 1_000_000,
-          salt: Bytes.random(16)
-        })
-      }
-
-      const passwordParamsBytes: Pbkdf2ParamsBytes = {
+    const keyParamsBase64: HmacPbkdf2ParamsBase64 = {
+      derivedKeyType: {
+        name: "HMAC",
+        hash: "SHA-256"
+      },
+      algorithm: Pbdkf2Params.stringify({
         name: "PBKDF2",
         hash: "SHA-256",
         iterations: 1_000_000,
         salt: Bytes.random(16)
-      }
+      })
+    }
 
-      const passwordParamsBase64 = Pbdkf2Params.stringify(passwordParamsBytes)
-      const passwordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, 256))
-      const passwordHashBase64 = Base64.get().tryEncodePadded(passwordHashBytes).throw(t)
+    const valueParamsBase64: AesGcmPbkdf2ParamsBase64 = {
+      derivedKeyType: {
+        name: "AES-GCM",
+        length: 256
+      },
+      algorithm: Pbdkf2Params.stringify({
+        name: "PBKDF2",
+        hash: "SHA-256",
+        iterations: 1_000_000,
+        salt: Bytes.random(16)
+      })
+    }
 
-      return new Ok({ uuid, name, color, emoji, keyParamsBase64, valueParamsBase64, passwordParamsBase64, passwordHashBase64 })
-    })
+    const passwordParamsBytes: Pbkdf2ParamsBytes = {
+      name: "PBKDF2",
+      hash: "SHA-256",
+      iterations: 1_000_000,
+      salt: Bytes.random(16)
+    }
+
+    const passwordParamsBase64 = Pbdkf2Params.stringify(passwordParamsBytes)
+    const passwordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, 256))
+    const passwordHashBase64 = Base64.get().encodePaddedOrThrow(passwordHashBytes)
+
+    return { uuid, name, color, emoji, keyParamsBase64, valueParamsBase64, passwordParamsBase64, passwordHashBase64 }
   }
 
 }

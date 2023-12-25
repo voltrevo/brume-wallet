@@ -1013,10 +1013,9 @@ export class Global {
     return await Result.unthrow(async t => {
       const [init] = (request as RpcRequestPreinit<[UserInit]>).params
 
-      const user = await BgUser.tryCreate(init).then(r => r.unwrap())
-
+      const userData = await BgUser.createOrThrow(init)
       const userQuery = BgUser.schema(init.uuid, this.storage)
-      await userQuery.mutate(Mutators.data(user))
+      await userQuery.mutate(Mutators.data(userData))
 
       const usersQuery = BgUser.All.schema(this.storage)
       const usersState = await usersQuery.state
