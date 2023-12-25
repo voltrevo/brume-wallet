@@ -1,7 +1,6 @@
 import { Signature } from "@/libs/ethereum/mods/signature"
 import { Ledger } from "@/libs/ledger"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
-import { WalletsBySeed } from "@/mods/background/service_worker/entities/seeds/all/data"
 import { AuthMnemonicSeedData, LedgerSeedData, SeedData, UnauthMnemonicSeedData } from "@/mods/background/service_worker/entities/seeds/data"
 import { Background } from "@/mods/foreground/background/background"
 import { useSubscribe } from "@/mods/foreground/storage/storage"
@@ -17,6 +16,7 @@ import { HDKey } from "@scure/bip32"
 import { entropyToMnemonic, mnemonicToSeed } from "@scure/bip39"
 import { wordlist } from "@scure/bip39/wordlists/english"
 import { Transaction, ethers } from "ethers"
+import { FgWallet } from "../../wallets/data"
 import { FgSeed } from "../data"
 
 export function useSeeds() {
@@ -28,7 +28,7 @@ export function useSeeds() {
 
 export function useWalletsBySeed(uuid: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
-  const query = useQuery(WalletsBySeed.Foreground.schema, [uuid, storage])
+  const query = useQuery(FgWallet.All.BySeed.schema, [uuid, storage])
   useSubscribe(query as any, storage)
   return query
 }

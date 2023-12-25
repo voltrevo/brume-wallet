@@ -5,7 +5,7 @@ import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { BgEns } from "@/mods/background/service_worker/entities/names/data"
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data"
-import { EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
+import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane"
@@ -31,6 +31,31 @@ export function getWallet(uuid: Nullable<string>, storage: UserStorage) {
     return undefined
 
   return createQuery<string, WalletData, never>({ key: `wallet/${uuid}`, storage })
+}
+
+export namespace FgWallet {
+
+  export namespace All {
+
+    export namespace BySeed {
+
+      export type Key = BgWallet.All.BySeed.Key
+      export type Data = BgWallet.All.BySeed.Data
+      export type Fail = BgWallet.All.BySeed.Fail
+
+      export const key = BgWallet.All.BySeed.key
+
+      export function schema(uuid: Nullable<string>, storage: UserStorage) {
+        if (uuid == null)
+          return
+
+        return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
+      }
+
+    }
+
+  }
+
 }
 
 export function useWallet(uuid: Nullable<string>) {

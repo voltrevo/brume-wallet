@@ -6,7 +6,6 @@ import { Data, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@ha
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Option } from "@hazae41/option"
 import { BgEthereumContext } from "../../context"
-import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
 import { ContractTokenData } from "../tokens/data"
 
@@ -136,6 +135,22 @@ export namespace BgWallet {
 
   export namespace All {
 
+    export namespace BySeed {
+
+      export type Key = string
+      export type Data = Wallet[]
+      export type Fail = never
+
+      export function key(uuid: string) {
+        return `walletsBySeed/${uuid}`
+      }
+
+      export function schema(uuid: string, storage: IDBStorage) {
+        return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
+      }
+
+    }
+
     export type Key = string
     export type Data = Wallet[]
     export type Fail = never
@@ -178,7 +193,7 @@ export namespace BgWallet {
       if (currentData?.inner.type === "seeded") {
         const { seed } = currentData.inner
 
-        const walletsBySeedQuery = WalletsBySeed.Background.schema(seed.uuid, storage)
+        const walletsBySeedQuery = All.BySeed.schema(seed.uuid, storage)
 
         await walletsBySeedQuery.mutate(Mutators.mapData((d = new Data([])) => {
           if (previousData?.inner.uuid === currentData?.inner.uuid)
