@@ -22,14 +22,14 @@ import { FgSeed } from "../data"
 export function useSeeds() {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgSeed.All.schema, [storage])
-  useSubscribe(query as any, storage)
+  useSubscribe(query, storage)
   return query
 }
 
 export function useWalletsBySeed(uuid: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgWallet.All.BySeed.schema, [uuid, storage])
-  useSubscribe(query as any, storage)
+  useSubscribe(query, storage)
   return query
 }
 

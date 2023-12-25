@@ -55,13 +55,13 @@ export namespace FgTokenSettings {
 export function useTokenSettings(wallet: Nullable<Wallet>, token: Nullable<Token>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgTokenSettings.schema, [wallet, token, storage])
-  useSubscribe(query as any, storage)
+  useSubscribe(query, storage)
   return query
 }
 
 export function useTokenSettingsByWallet(wallet: Nullable<Wallet>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgTokenSettings.ByWallet.schema, [wallet, storage])
-  useSubscribe(query as any, storage)
+  useSubscribe(query, storage)
   return query
 }

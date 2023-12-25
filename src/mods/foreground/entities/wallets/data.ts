@@ -61,7 +61,7 @@ export namespace FgWallet {
 export function useWallet(uuid: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getWallet, [uuid, storage])
-  useSubscribe(query as any, storage)
+  useSubscribe(query, storage)
   return query
 }
 

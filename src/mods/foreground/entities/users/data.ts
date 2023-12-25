@@ -38,7 +38,7 @@ export function getUser(uuid: Nullable<string>, storage: GlobalStorage) {
 export function useUser(uuid: Nullable<string>) {
   const storage = useGlobalStorageContext().unwrap()
   const query = useQuery(getUser, [uuid, storage])
-  useSubscribe(query as any, storage)
+  useSubscribe(query, storage)
   return query
 }
 

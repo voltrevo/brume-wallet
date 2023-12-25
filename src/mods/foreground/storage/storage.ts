@@ -6,7 +6,11 @@ export interface Subscribable {
   subscribeOrThrow(cacheKey: string): Promise<void>
 }
 
-export function useSubscribe<K, D, F>(query: ReactQuery<K, D, F>, storage: Subscribable) {
+export type AnyReactQuery<K, D, F> =
+  | ReactQuery<K, D, F>
+  | ReactQuery<K, D, never>
+
+export function useSubscribe<K, D, F>(query: AnyReactQuery<K, D, F>, storage: Subscribable) {
   const { cacheKey } = query
 
   useEffect(() => {

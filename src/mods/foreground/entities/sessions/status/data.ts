@@ -14,6 +14,6 @@ export function getStatus(id: Nullable<string>, storage: UserStorage) {
 export function useStatus(id: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getStatus, [id, storage])
-  useSubscribe(query as any, storage)
+  useSubscribe(query, storage)
   return query
 }

@@ -19,6 +19,6 @@ export namespace FgSettings {
 export function useLogs() {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgSettings.Logs.schema, [storage])
-  useSubscribe(query as any, storage)
+  useSubscribe(query, storage)
   return query
 }

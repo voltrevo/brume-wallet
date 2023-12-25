@@ -14,6 +14,6 @@ export function getSession(id: Nullable<string>, storage: UserStorage) {
 export function useSession(id: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getSession, [id, storage])
-  useSubscribe(query as any, storage)
+  useSubscribe(query, storage)
   return query
 }

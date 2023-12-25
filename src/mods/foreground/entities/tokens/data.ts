@@ -61,13 +61,13 @@ export namespace FgContractToken {
 export function useToken(chainId: number, address: string) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgContractToken.schema, [chainId, address, storage])
-  useSubscribe(query as any, storage)
+  useSubscribe(query, storage)
   return query
 }
 
 export function useTokens() {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgContractToken.All.schema, [storage])
-  useSubscribe(query as any, storage)
+  useSubscribe(query, storage)
   return query
 }

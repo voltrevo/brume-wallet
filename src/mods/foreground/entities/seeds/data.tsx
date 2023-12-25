@@ -26,6 +26,6 @@ export namespace FgSeed {
 export function useSeed(uuid: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgSeed.schema, [uuid, storage])
-  useSubscribe(query as any, storage)
+  useSubscribe(query, storage)
   return query
 }
