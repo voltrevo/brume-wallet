@@ -92,6 +92,10 @@ export namespace BgNativeToken {
 
   export namespace Balance {
 
+    export type Key = EthereumQueryKey<unknown>
+    export type Data = Fixed.From
+    export type Fail = Error
+
     export const method = "eth_getBalance"
 
     export function key(ethereum: BgEthereumContext, account: ZeroHexString, block: string) {
@@ -145,7 +149,7 @@ export namespace BgNativeToken {
         await pricedBalanceQuery.mutate(Mutators.set<Fixed.From, Error>(new Data(pricedBalance)))
       }
 
-      return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
+      return createQuery<Key, Data, Fail>({
         key: key(ethereum, account, block),
         fetcher,
         indexer,
@@ -162,6 +166,10 @@ export namespace BgContractToken {
 
   export namespace All {
 
+    export type Key = string
+    export type Data = ContractToken[]
+    export type Fail = never
+
     export const key = `contractTokens`
 
     export function schema(storage: IDBStorage) {
@@ -171,6 +179,10 @@ export namespace BgContractToken {
   }
 
   export namespace Balance {
+
+    export type Key = EthereumQueryKey<unknown>
+    export type Data = Fixed.From
+    export type Fail = Error
 
     export const method = "eth_getTokenBalance"
 
@@ -263,6 +275,10 @@ export namespace BgContractToken {
 
   }
 
+  export type Key = string
+  export type Data = ContractTokenData
+  export type Fail = never
+
   export function key(chainId: number, address: string) {
     return `contractToken/${chainId}/${address}`
   }
@@ -290,7 +306,7 @@ export namespace BgContractToken {
       }
     }
 
-    return createQuery<string, ContractTokenData, never>({
+    return createQuery<Key, Data, Fail>({
       key: key(chainId, address),
       indexer,
       storage

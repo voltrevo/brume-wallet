@@ -3,7 +3,6 @@ import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
 import { AesGcmCoder, Data, HmacEncoder, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { Ok, Result } from "@hazae41/result"
-import { Users } from "./all/data"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBase64, Pbkdf2ParamsBytes } from "./crypto"
 
 export type User =
@@ -62,19 +61,43 @@ export interface UserSession {
   readonly crypter: AesGcmCoder
 }
 
-export function getCurrentUser() {
-  return createQuery<string, User, never>({ key: `user` })
-}
+export namespace BgUser {
 
-export namespace User {
+  export namespace All {
 
-  export type Key = ReturnType<typeof key>
+    export type Key = string
+    export type Data = User[]
+    export type Fail = never
+
+    export const key = `users`
+
+    export function schema(storage: IDBStorage) {
+      return createQuery<Key, Data, Fail>({ key, storage })
+    }
+
+  }
+
+  export namespace Current {
+
+    export type Key = string
+    export type Data = User
+    export type Fail = never
+
+    export const key = `user`
+
+    export function schema(storage: IDBStorage) {
+      return createQuery<Key, Data, Fail>({ key, storage })
+    }
+
+  }
+
+  export type Key = string
+  export type Data = UserData
+  export type Fail = never
 
   export function key(uuid: string) {
     return `user/${uuid}`
   }
-
-  export type Schema = ReturnType<typeof schema>
 
   export function schema(uuid: string, storage: IDBStorage) {
     const indexer = async (states: States<UserData, never>) => {
@@ -83,7 +106,7 @@ export namespace User {
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
-      await Users.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+      await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData?.inner.uuid === currentData?.inner.uuid)
           return d
         if (previousData != null)
@@ -94,7 +117,7 @@ export namespace User {
       }))
     }
 
-    return createQuery<Key, UserData, never>({
+    return createQuery<Key, Data, Fail>({
       key: key(uuid),
       storage,
       indexer

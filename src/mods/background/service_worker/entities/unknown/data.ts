@@ -4,6 +4,10 @@ import { BgEthereumContext, EthereumContext, EthereumFetchParams, EthereumQueryK
 
 export namespace BgUnknown {
 
+  export type Key = EthereumQueryKey<unknown> & EthereumFetchParams
+  export type Data = unknown
+  export type Fail = Error
+
   export function key(chainId: number, request: RpcRequestPreinit<unknown> & EthereumFetchParams) {
     const { method, params, noCheck } = request
     return { chainId, method, params, noCheck }
@@ -13,7 +17,7 @@ export namespace BgUnknown {
     const fetcher = async (request: EthereumQueryKey<unknown> & EthereumFetchParams, more: FetcherMore) =>
       await EthereumContext.fetchOrFail<unknown>(ethereum, request, more)
 
-    return createQuery<EthereumQueryKey<unknown> & EthereumFetchParams, any, Error>({
+    return createQuery<Key, Data, Fail>({
       key: key(ethereum.chain.chainId, request),
       fetcher,
       storage

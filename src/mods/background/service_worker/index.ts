@@ -54,8 +54,7 @@ import { BgSettings } from "./entities/settings/data"
 import { BgSignature } from "./entities/signatures/data"
 import { BgContractToken, BgNativeToken } from "./entities/tokens/data"
 import { BgUnknown } from "./entities/unknown/data"
-import { Users } from "./entities/users/all/data"
-import { User, UserData, UserInit, UserSession, getCurrentUser } from "./entities/users/data"
+import { BgUser, User, UserData, UserInit, UserSession } from "./entities/users/data"
 import { BgEns, BgEthereumContext, BgPair, EthereumContext, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
 import { createUserStorageOrThrow } from "./storage"
 
@@ -210,7 +209,7 @@ export class Global {
     if (password == null)
       return undefined
 
-    const userQuery = User.schema(uuid, this.storage)
+    const userQuery = BgUser.schema(uuid, this.storage)
     const userState = await userQuery.state
     const userData = Option.unwrap(userState.current?.get())
 
@@ -218,7 +217,7 @@ export class Global {
 
     const { storage, hasher, crypter } = await createUserStorageOrThrow(userData, password)
 
-    const currentUserQuery = getCurrentUser()
+    const currentUserQuery = BgUser.Current.schema(storage)
     await currentUserQuery.mutate(Mutators.data<User, never>(user))
 
     const userSession: UserSession = { user, storage, hasher, crypter }
@@ -1014,12 +1013,12 @@ export class Global {
     return await Result.unthrow(async t => {
       const [init] = (request as RpcRequestPreinit<[UserInit]>).params
 
-      const user = await User.tryCreate(init).then(r => r.unwrap())
+      const user = await BgUser.tryCreate(init).then(r => r.unwrap())
 
-      const userQuery = User.schema(init.uuid, this.storage)
+      const userQuery = BgUser.schema(init.uuid, this.storage)
       await userQuery.mutate(Mutators.data(user))
 
-      const usersQuery = Users.schema(this.storage)
+      const usersQuery = BgUser.All.schema(this.storage)
       const usersState = await usersQuery.state
       const usersData = Option.unwrap(usersState.data?.inner)
 
@@ -1049,7 +1048,7 @@ export class Global {
       if (userSession == null)
         return new Ok(undefined)
 
-      const userQuery = User.schema(userSession.user.uuid, this.storage)
+      const userQuery = BgUser.schema(userSession.user.uuid, this.storage)
       const userState = await userQuery.state
 
       return new Ok(userState.current?.inner)

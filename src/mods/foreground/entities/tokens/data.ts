@@ -8,11 +8,23 @@ export namespace FgContractToken {
 
   export namespace All {
 
+    export type Key = BgContractToken.All.Key
+    export type Data = BgContractToken.All.Data
+    export type Fail = BgContractToken.All.Fail
+
+    export const key = BgContractToken.All.key
+
     export function schema(storage: UserStorage) {
-      return createQuery<string, ContractTokenRef[], never>({ key: BgContractToken.All.key, storage })
+      return createQuery<Key, Data, Fail>({ key, storage })
     }
 
   }
+
+  export type Key = BgContractToken.Key
+  export type Data = BgContractToken.Data
+  export type Fail = BgContractToken.Fail
+
+  export const key = BgContractToken.key
 
   export function schema(chainId: number, address: string, storage: UserStorage) {
     const indexer = async (states: States<ContractTokenData, never>) => {
@@ -37,7 +49,7 @@ export namespace FgContractToken {
       }
     }
 
-    return createQuery<string, ContractTokenData, never>({
+    return createQuery<Key, Data, Fail>({
       key: BgContractToken.key(chainId, address),
       indexer,
       storage
