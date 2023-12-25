@@ -49,15 +49,15 @@ import { BgEns } from "./entities/names/data"
 import { BgOrigin, OriginData, PreOriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData, BgAppRequest } from "./entities/requests/data"
 import { BgSeed, SeedData } from "./entities/seeds/data"
-import { PersistentSessions } from "./entities/sessions/all/data"
 import { BgSession, ExSessionData, SessionData, SessionRef, WcSessionData } from "./entities/sessions/data"
 import { Status, StatusData } from "./entities/sessions/status/data"
 import { BgSettings } from "./entities/settings/data"
 import { BgSignature } from "./entities/signatures/data"
 import { BgContractToken, BgNativeToken } from "./entities/tokens/data"
+import { BgPair } from "./entities/tokens/pairs/data"
 import { BgUnknown } from "./entities/unknown/data"
 import { BgUser, User, UserData, UserInit, UserSession } from "./entities/users/data"
-import { BgPair, BgWallet, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
+import { BgWallet, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
 import { createUserStorageOrThrow } from "./storage"
 
 declare global {
@@ -1355,7 +1355,7 @@ export class Global {
   async #wcReconnectAllOrThrow(): Promise<void> {
     const { storage } = Option.unwrap(this.#user)
 
-    const persSessionsQuery = PersistentSessions.schema(storage)
+    const persSessionsQuery = BgSession.All.Persistent.schema(storage)
     const persSessionsState = await persSessionsQuery.state
 
     for (const sessionRef of Option.wrap(persSessionsState?.data?.inner).unwrapOr([]))

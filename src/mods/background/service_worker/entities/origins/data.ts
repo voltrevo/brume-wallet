@@ -1,5 +1,5 @@
 import { IDBStorage, createQuery } from "@hazae41/glacier"
-import { BlobbyRef } from "../blobbys/data"
+import { Blobby } from "../blobbys/data"
 
 export type Origin =
   | OriginData
@@ -20,7 +20,7 @@ export interface PreOriginData {
 export interface OriginData {
   readonly origin: string,
   readonly title?: string
-  readonly icons?: BlobbyRef[]
+  readonly icons?: Blobby[]
   readonly description?: string
 }
 

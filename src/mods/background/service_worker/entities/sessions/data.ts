@@ -6,7 +6,6 @@ import { Ed25519 } from "@hazae41/ed25519"
 import { Data, IDBStorage, RawState2, States, Storage, createQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { Wallet } from "../wallets/data"
-import { PersistentSessions, PersistentSessionsByWallet, TemporarySessions, TemporarySessionsByWallet } from "./all/data"
 
 export type Session =
   | SessionData
@@ -74,6 +73,70 @@ export class SessionStorage implements Storage {
 
 export namespace BgSession {
 
+  export namespace All {
+
+    export namespace Temporary {
+
+      export namespace ByWallet {
+
+        export type Key = ReturnType<typeof key>
+
+        export function key(wallet: string) {
+          return `temporarySessionsByWallet/v2/${wallet}`
+        }
+
+        export type Schema = ReturnType<typeof schema>
+
+        export function schema(wallet: string) {
+          return createQuery<Key, SessionRef[], never>({ key: key(wallet) })
+        }
+
+      }
+
+      export type Key = typeof key
+
+      export const key = `temporarySessions/v2`
+
+      export type Schema = ReturnType<typeof schema>
+
+      export function schema() {
+        return createQuery<Key, SessionRef[], never>({ key })
+      }
+
+    }
+
+    export namespace Persistent {
+
+      export namespace ByWallet {
+
+        export type Key = ReturnType<typeof key>
+
+        export function key(wallet: string) {
+          return `persistentSessionsByWallet/v2/${wallet}`
+        }
+
+        export type Schema = ReturnType<typeof schema>
+
+        export function schema(wallet: string, storage: IDBStorage) {
+          return createQuery<Key, SessionRef[], never>({ key: key(wallet), storage })
+        }
+
+      }
+
+      export type Key = typeof key
+
+      export const key = `persistentSessions/v2`
+
+      export type Schema = ReturnType<typeof schema>
+
+      export function schema(storage: IDBStorage) {
+        return createQuery<Key, SessionRef[], never>({ key, storage })
+      }
+
+    }
+
+  }
+
   export namespace ByOrigin {
 
     export type Key = string
@@ -112,8 +175,8 @@ export namespace BgSession {
         }
 
         const sessionsQuery = previousData.inner.persist
-          ? PersistentSessions.schema(storage)
-          : TemporarySessions.schema()
+          ? BgSession.All.Persistent.schema(storage)
+          : BgSession.All.Temporary.schema()
 
         await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
           return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
@@ -123,8 +186,8 @@ export namespace BgSession {
 
         for (const wallet of previousWallets) {
           const sessionsByWalletQuery = previousData.inner.persist
-            ? PersistentSessionsByWallet.schema(wallet.uuid, storage)
-            : TemporarySessionsByWallet.schema(wallet.uuid)
+            ? BgSession.All.Persistent.ByWallet.schema(wallet.uuid, storage)
+            : BgSession.All.Temporary.ByWallet.schema(wallet.uuid)
 
           await sessionsByWalletQuery.mutate(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
@@ -139,8 +202,8 @@ export namespace BgSession {
         }
 
         const sessionsQuery = currentData.inner.persist
-          ? PersistentSessions.schema(storage)
-          : TemporarySessions.schema()
+          ? BgSession.All.Persistent.schema(storage)
+          : BgSession.All.Temporary.schema()
 
         await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
           return d = d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
@@ -150,8 +213,8 @@ export namespace BgSession {
 
         for (const wallet of currentWallets) {
           const sessionsByWalletQuery = currentData.inner.persist
-            ? PersistentSessionsByWallet.schema(wallet.uuid, storage)
-            : TemporarySessionsByWallet.schema(wallet.uuid)
+            ? BgSession.All.Persistent.ByWallet.schema(wallet.uuid, storage)
+            : BgSession.All.Temporary.ByWallet.schema(wallet.uuid)
 
           await sessionsByWalletQuery.mutate(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => [...p, SessionRef.from(currentData.inner)])

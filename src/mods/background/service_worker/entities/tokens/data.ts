@@ -7,7 +7,8 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
 import { Catched, Panic } from "@hazae41/result"
 import { BgEthereumContext } from "../../context"
-import { BgPair, EthereumQueryKey, getPricedBalance, getTokenPricedBalance } from "../wallets/data"
+import { EthereumQueryKey, getPricedBalance } from "../wallets/data"
+import { BgPair, getTokenPricedBalance } from "./pairs/data"
 
 export type Token =
   | TokenData
