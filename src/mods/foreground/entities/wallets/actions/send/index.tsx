@@ -243,11 +243,11 @@ function SimpleBox(props: ChildrenProps) {
 }
 
 function SimpleInput(props: InputProps) {
-  return <input className="grow bg-transparent outline-none" {...props} />
+  return <input className="grow bg-transparent outline-none min-w-0" {...props} />
 }
 
 function SimpleTextarea(props: TextareaProps) {
-  return <textarea className="grow bg-transparent outline-none" {...props} />
+  return <textarea className="grow bg-transparent outline-none min-w-0" {...props} />
 }
 
 function ShrinkableNakedButtonInInputBox(props: ChildrenProps & ButtonProps) {
