@@ -6,9 +6,10 @@ import { useMouseCancel } from "@/libs/react/events"
 import { Button } from "@/libs/ui/button"
 import { Address } from "@hazae41/cubane"
 import { useMemo } from "react"
+import { useEnsReverseNoFetch } from "../names/data"
 import { WalletIcon } from "./avatar"
 import { useWalletDataContext } from "./context"
-import { useEnsReverseNoFetch, useEthereumContext, useTotalWalletPricedBalance } from "./data"
+import { useEthereumContext, useTotalWalletPricedBalance } from "./data"
 import { useCompactDisplayUsd } from "./page"
 
 export function SimpleWalletDataCard() {

@@ -16,8 +16,10 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useEnsLookup } from "../../../names/data";
+import { useEstimateGas } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
-import { EthereumWalletInstance, FgEthereumContext, useBalance, useBlockByNumber, useEnsLookup, useEstimateGas, useEthereumContext, useGasPrice, useMaxPriorityFeePerGas, useNonce, usePricedBalance } from "../../data";
+import { EthereumWalletInstance, FgEthereumContext, useBalance, useBlockByNumber, useEthereumContext, useGasPrice, useMaxPriorityFeePerGas, useNonce, usePricedBalance } from "../../data";
 import { PriceResolver } from "../../page";
 
 type Step =

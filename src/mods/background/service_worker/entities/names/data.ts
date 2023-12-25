@@ -1,6 +1,6 @@
 import { EnsAbi } from "@/libs/abi/ens.abi"
 import { Uint8Array } from "@hazae41/bytes"
-import { Abi, Ens, ZeroHexString } from "@hazae41/cubane"
+import { Abi, Address, Ens, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
@@ -44,7 +44,7 @@ export namespace BgEns {
   export namespace Lookup {
 
     export type Key = EthereumQueryKey<unknown>
-    export type Data = ZeroHexString
+    export type Data = Address
     export type Fail = Error
 
     export const method = "ens_lookup"

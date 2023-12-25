@@ -18,8 +18,9 @@ import { Address, ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { useDeferredValue, useMemo, useState } from "react";
+import { useEnsLookup } from "../../../names/data";
 import { WalletAvatar } from "../../avatar";
-import { useEnsLookup, useEthereumContext } from "../../data";
+import { useEthereumContext } from "../../data";
 
 export function ReadonlyWalletCreatorDialog(props: {}) {
   const { close } = useDialogContext().unwrap()

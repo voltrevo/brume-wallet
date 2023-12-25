@@ -15,8 +15,9 @@ import { Option } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { useDeferredValue, useMemo, useState } from "react";
+import { useEnsLookup } from "../../../names/data";
 import { useWalletDataContext } from "../../context";
-import { EthereumContextProps, EthereumWalletInstance, useBalance, useBlockByNumber, useEnsLookup, useEthereumContext, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../data";
+import { EthereumContextProps, EthereumWalletInstance, useBalance, useBlockByNumber, useEthereumContext, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../data";
 
 export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumContextProps) {
   const { close } = useDialogContext().unwrap()
