@@ -38,15 +38,21 @@ export namespace BgSnap {
 
   export namespace All {
 
+    export type Key = string
+    export type Data = Snap[]
+    export type Fail = never
+
     export const key = `snaps`
 
     export function schema(storage: IDBStorage) {
-      return createQuery<string, SnapRef[], never>({ key, storage })
+      return createQuery<Key, Data, Fail>({ key, storage })
     }
 
   }
 
-  export type Key = ReturnType<typeof key>
+  export type Key = string
+  export type Data = SnapData
+  export type Fail = never
 
   export function key(uuid: string) {
     return `snap/${uuid}`
@@ -55,7 +61,7 @@ export namespace BgSnap {
   export type Schema = ReturnType<typeof schema>
 
   export function schema(id: string, storage: IDBStorage) {
-    return createQuery<Key, SnapData, never>({ key: key(id), storage })
+    return createQuery<Key, Data, Fail>({ key: key(id), storage })
   }
 
 }

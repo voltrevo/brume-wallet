@@ -4,10 +4,14 @@ export namespace BgSettings {
 
   export namespace Logs {
 
+    export type Key = string
+    export type Data = boolean
+    export type Fail = never
+
     export const key = `settings/logs`
 
     export function schema(storage: IDBStorage) {
-      return createQuery<string, boolean, never>({ key, storage })
+      return createQuery<Key, Data, Fail>({ key, storage })
     }
 
   }

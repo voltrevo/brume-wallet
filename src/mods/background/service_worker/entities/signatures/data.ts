@@ -136,6 +136,10 @@ export async function tryFetchRaw<T>(ethereum: BgEthereumContext, url: string, i
 
 export namespace BgSignature {
 
+  export type Key = EthereumQueryKey<unknown>
+  export type Data = SignatureData[]
+  export type Fail = Error
+
   export const method = "eth_getSignature"
 
   export function key(hash: ZeroHexString): EthereumQueryKey<unknown> {
@@ -173,7 +177,7 @@ export namespace BgSignature {
       }
     }
 
-    return createQuery<EthereumQueryKey<unknown>, SignatureData[], Error>({
+    return createQuery<Key, Data, Fail>({
       key: key(hash),
       fetcher,
       storage

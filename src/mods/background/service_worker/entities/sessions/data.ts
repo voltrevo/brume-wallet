@@ -72,15 +72,31 @@ export class SessionStorage implements Storage {
 
 }
 
-export namespace Session {
+export namespace BgSession {
 
-  export type Key = ReturnType<typeof key>
+  export namespace ByOrigin {
+
+    export type Key = string
+    export type Data = Session
+    export type Fail = never
+
+    export function key(origin: string) {
+      return `sessionByOrigin/${origin}`
+    }
+
+    export function schema(origin: string, storage: IDBStorage) {
+      return createQuery<Key, Data, Fail>({ key: key(origin), storage })
+    }
+
+  }
+
+  export type Key = string
+  export type Data = SessionData
+  export type Fail = never
 
   export function key(id: string) {
     return `session/v4/${id}`
   }
-
-  export type Schema = ReturnType<typeof schema>
 
   export function schema(id: string, storage: IDBStorage) {
     const indexer = async (states: States<SessionData, never>) => {
@@ -91,7 +107,7 @@ export namespace Session {
 
       if (previousData != null) {
         if (previousData.inner.persist) {
-          const sessionByOrigin = SessionByOrigin.schema(previousData.inner.origin, storage)
+          const sessionByOrigin = BgSession.ByOrigin.schema(previousData.inner.origin, storage)
           await sessionByOrigin.delete()
         }
 
@@ -118,8 +134,8 @@ export namespace Session {
 
       if (currentData != null) {
         if (currentData.inner.persist) {
-          const sessionByOrigin = SessionByOrigin.schema(currentData.inner.origin, storage)
-          await sessionByOrigin.mutate(Mutators.data(SessionRef.from(currentData.inner)))
+          const sessionByOrigin = BgSession.ByOrigin.schema(currentData.inner.origin, storage)
+          await sessionByOrigin.mutate(Mutators.data<Session, never>(SessionRef.from(currentData.inner)))
         }
 
         const sessionsQuery = currentData.inner.persist
@@ -144,23 +160,7 @@ export namespace Session {
       }
     }
 
-    return createQuery<Key, SessionData, never>({ key: key(id), indexer, storage: new SessionStorage(storage) })
-  }
-
-}
-
-export namespace SessionByOrigin {
-
-  export type Key = ReturnType<typeof key>
-
-  export function key(origin: string) {
-    return `sessionByOrigin/${origin}`
-  }
-
-  export type Schema = ReturnType<typeof schema>
-
-  export function schema(origin: string, storage: IDBStorage) {
-    return createQuery<Key, SessionRef, never>({ key: key(origin), storage })
+    return createQuery<Key, Data, Fail>({ key: key(id), indexer, storage: new SessionStorage(storage) })
   }
 
 }

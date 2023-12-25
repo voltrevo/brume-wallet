@@ -48,7 +48,7 @@ import { BgOrigin, OriginData, PreOriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData, BgAppRequest } from "./entities/requests/data"
 import { BgSeed, SeedData } from "./entities/seeds/data"
 import { PersistentSessions } from "./entities/sessions/all/data"
-import { ExSessionData, Session, SessionByOrigin, SessionData, SessionRef, WcSessionData } from "./entities/sessions/data"
+import { BgSession, ExSessionData, SessionData, SessionRef, WcSessionData } from "./entities/sessions/data"
 import { Status, StatusData } from "./entities/sessions/status/data"
 import { BgSettings } from "./entities/settings/data"
 import { BgSignature } from "./entities/signatures/data"
@@ -415,7 +415,7 @@ export class Global {
         if (currentSession != null) {
           const { storage } = Option.unwrap(this.#user)
 
-          const sessionQuery = Session.schema(currentSession, storage)
+          const sessionQuery = BgSession.schema(currentSession, storage)
           const sessionState = await sessionQuery.state
           const sessionData = Option.unwrap(sessionState.data?.inner)
 
@@ -447,13 +447,13 @@ export class Global {
         const originData: OriginData = { origin, title, description, icons: [iconRef] }
         await originQuery.mutate(Mutators.data(originData))
 
-        const sessionByOriginQuery = SessionByOrigin.schema(origin, storage)
+        const sessionByOriginQuery = BgSession.ByOrigin.schema(origin, storage)
         const sessionByOriginState = await sessionByOriginQuery.state
 
         if (sessionByOriginState.data != null) {
           const sessionId = sessionByOriginState.data.inner.id
 
-          const sessionQuery = Session.schema(sessionId, storage)
+          const sessionQuery = BgSession.schema(sessionId, storage)
           const sessionState = await sessionQuery.state
           const sessionData = Option.unwrap(sessionState.data?.inner)
 
@@ -538,7 +538,7 @@ export class Global {
           chain: chain
         }
 
-        const sessionQuery = Session.schema(sessionData.id, storage)
+        const sessionQuery = BgSession.schema(sessionData.id, storage)
         await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
         slot.current = sessionData.id
@@ -905,7 +905,7 @@ export class Global {
 
       const updatedSession = { ...session, chain }
 
-      const sessionQuery = Session.schema(session.id, storage)
+      const sessionQuery = BgSession.schema(session.id, storage)
       await sessionQuery.mutate(Mutators.replaceData(updatedSession))
 
       for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([])) {
@@ -1062,7 +1062,7 @@ export class Global {
 
       const { storage } = Option.unwrap(this.#user)
 
-      const sessionQuery = Session.schema(id, storage)
+      const sessionQuery = BgSession.schema(id, storage)
       await sessionQuery.delete()
 
       const wcSession = this.wcBySession.get(id)
@@ -1371,7 +1371,7 @@ export class Global {
 
     const { storage } = Option.unwrap(this.#user)
 
-    const sessionQuery = Session.schema(sessionRef.id, storage)
+    const sessionQuery = BgSession.schema(sessionRef.id, storage)
     const sessionState = await sessionQuery.state
     const sessionDataOpt = Option.wrap(sessionState.data?.inner)
 
@@ -1418,7 +1418,7 @@ export class Global {
         .then(Result.assert)
         .then(r => r.unwrap())
 
-      const sessionQuery = Session.schema(sessionData.id, storage)
+      const sessionQuery = BgSession.schema(sessionData.id, storage)
       await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
     }
 
@@ -1503,7 +1503,7 @@ export class Global {
         settlement: settlement.receipt
       }
 
-      const sessionQuery = Session.schema(sessionData.id, storage)
+      const sessionQuery = BgSession.schema(sessionData.id, storage)
       await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
       /**
