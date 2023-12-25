@@ -6,7 +6,7 @@ import { ContractTokenData } from "@/mods/background/service_worker/entities/tok
 import { BgUnknown } from "@/mods/background/service_worker/entities/unknown/data";
 import { EthereumFetchParams, EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
-import { Data, FetcherMore, createQuery, useError, useFallback, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
+import { FetcherMore, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
@@ -373,6 +373,7 @@ export function useContractBalance(address: Nullable<ZeroHexString>, token: Null
   const query = useQuery(FgEthereum.ContractBalance.schema, [address, token, context, storage])
   useFetch(query)
   useVisible(query)
+  useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
   useError(query, Errors.onQueryError)
 
@@ -391,9 +392,9 @@ export function useNativePricedBalance(address: Nullable<ZeroHexString>, coin: "
   const query = useQuery(FgEthereum.NativeBalance.Priced.schema, [address, coin, context, storage])
   useFetch(query)
   useVisible(query)
+  useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
   useError(query, Errors.onQueryError)
-  useFallback(query, () => new Data(new Fixed(0n, 0)))
   return query
 }
 
@@ -402,8 +403,62 @@ export function useContractPricedBalance(address: Nullable<ZeroHexString>, token
   const query = useQuery(FgEthereum.ContractBalance.Priced.schema, [address, token, coin, context, storage])
   useFetch(query)
   useVisible(query)
+  useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
   useError(query, Errors.onQueryError)
-  useFallback(query, () => new Data(new Fixed(0n, 0)))
+  return query
+}
+
+export namespace FgTotalBalance {
+
+  export namespace Priced {
+
+    export namespace ByAddress {
+
+      export type Key = string
+      export type Data = Fixed.From
+      export type Fail = never
+
+      export function key(address: ZeroHexString, coin: "usd") {
+        return `totalWalletPricedBalance/${address}/${coin}`
+      }
+
+      export function schema(address: Nullable<ZeroHexString>, coin: "usd", storage: UserStorage) {
+        if (address == null)
+          return
+
+        return createQuery<Key, Data, Fail>({ key: key(address, coin), storage })
+      }
+
+    }
+
+    export type Key = string
+    export type Data = Fixed.From
+    export type Fail = never
+
+    export function key(coin: "usd") {
+      return `totalPricedBalance/${coin}`
+    }
+
+    export function schema(coin: "usd", storage: UserStorage) {
+      return createQuery<Key, Data, Fail>({ key: key(coin), storage })
+    }
+
+  }
+
+
+}
+
+export function useTotalPricedBalance(coin: "usd") {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgTotalBalance.Priced.schema, [coin, storage])
+  useSubscribe(query, storage)
+  return query
+}
+
+export function useTotalWalletPricedBalance(address: Nullable<ZeroHexString>, coin: "usd") {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgTotalBalance.Priced.ByAddress.schema, [address, coin, storage])
+  useSubscribe(query, storage)
   return query
 }

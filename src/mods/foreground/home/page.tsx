@@ -3,8 +3,8 @@ import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { PageBody, UserPageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { useCallback, useEffect, useState } from "react"
+import { useTotalPricedBalance } from "../entities/unknown/data"
 import { useUserContext } from "../entities/users/context"
-import { useTotalPricedBalance } from "../entities/wallets/data"
 import { useDisplayUsd } from "../entities/wallets/page"
 
 export function HomePage() {

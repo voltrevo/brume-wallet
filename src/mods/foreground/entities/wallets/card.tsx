@@ -7,9 +7,10 @@ import { Button } from "@/libs/ui/button"
 import { Address } from "@hazae41/cubane"
 import { useMemo } from "react"
 import { useEnsReverseNoFetch } from "../names/data"
+import { useTotalWalletPricedBalance } from "../unknown/data"
 import { WalletIcon } from "./avatar"
 import { useWalletDataContext } from "./context"
-import { useEthereumContext, useTotalWalletPricedBalance } from "./data"
+import { useEthereumContext } from "./data"
 import { useCompactDisplayUsd } from "./page"
 
 export function SimpleWalletDataCard() {

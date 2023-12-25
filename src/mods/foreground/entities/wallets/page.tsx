@@ -47,28 +47,48 @@ export function WalletPage(props: UUIDProps) {
   </WalletDataProvider>
 }
 
-export function useDisplay(option: Nullable<Result<Fixed.From, Error>>) {
+export function useDisplay(result: Nullable<Result<Fixed.From, Error>>) {
   return useMemo(() => {
-    return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return Number(Fixed.from(fixed).move(5).toString()).toLocaleString(undefined)
-    }).mapErrSync(() => "Error").inner).unwrapOr("...")
-  }, [option])
+    if (result == null)
+      return "0.00"
+    if (result.isErr())
+      return "0.00"
+    const number = Number(Fixed.from(result.unwrap()).move(5).toString())
+
+    return number.toLocaleString(undefined)
+  }, [result])
 }
 
-export function useDisplayUsd(option: Nullable<Result<Fixed.From, Error>>) {
+export function useDisplayUsd(result: Nullable<Result<Fixed.From, Error>>) {
   return useMemo(() => {
-    return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return Number(Fixed.from(fixed).move(2).toString()).toLocaleString(undefined, { style: "currency", currency: "USD" })
-    }).mapErrSync(() => "Error").inner).unwrapOr("...")
-  }, [option])
+    if (result == null)
+      return "0.00"
+    if (result.isErr())
+      return "Error"
+    const number = Number(Fixed.from(result.unwrap()).move(2).toString())
+
+    return number.toLocaleString(undefined, {
+      style: "currency",
+      currency: "USD",
+      notation: "standard"
+    })
+  }, [result])
 }
 
-export function useCompactDisplayUsd(option: Nullable<Result<Fixed.From, Error>>) {
+export function useCompactDisplayUsd(result: Nullable<Result<Fixed.From, Error>>) {
   return useMemo(() => {
-    return Option.wrap(option).mapSync(result => result.mapSync(fixed => {
-      return Number(Fixed.from(fixed).move(2).toString()).toLocaleString(undefined, { style: "currency", currency: "USD", notation: "compact" })
-    }).mapErrSync(() => "Error").inner).unwrapOr("??")
-  }, [option])
+    if (result == null)
+      return "0.00"
+    if (result.isErr())
+      return "Error"
+    const number = Number(Fixed.from(result.unwrap()).move(2).toString())
+
+    return number.toLocaleString(undefined, {
+      style: "currency",
+      currency: "USD",
+      notation: "compact"
+    })
+  }, [result])
 }
 
 function WalletDataPage() {

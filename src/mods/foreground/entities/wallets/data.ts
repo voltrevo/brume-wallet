@@ -1,11 +1,10 @@
-import { Errors } from "@/libs/errors/errors"
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
-import { Abi, Fixed } from "@hazae41/cubane"
-import { Data, Fetched, createQuery, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/glacier"
+import { Abi } from "@hazae41/cubane"
+import { Fetched, createQuery, useQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable, Option } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
@@ -308,34 +307,4 @@ export async function indexOrThrow(request: RpcRequestPreinit<unknown>, ethereum
     method: "brume_eth_index",
     params: [uuid, chain.chainId, request]
   }).then(r => r.unwrap().unwrap())
-}
-
-export function getTotalPricedBalance(coin: "usd", storage: UserStorage) {
-  return createQuery<string, Fixed.From, never>({ key: `totalPricedBalance/${coin}`, storage })
-}
-
-export function useTotalPricedBalance(coin: "usd") {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(getTotalPricedBalance, [coin, storage])
-  useFetch(query)
-  useVisible(query)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  useFallback(query, () => new Data(new Fixed(0n, 0)))
-  return query
-}
-
-export function getTotalWalletPricedBalance(address: string, coin: "usd", storage: UserStorage) {
-  return createQuery<string, Fixed.From, never>({ key: `totalWalletPricedBalance/${address}/${coin}`, storage })
-}
-
-export function useTotalWalletPricedBalance(address: string, coin: "usd") {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(getTotalWalletPricedBalance, [address, coin, storage])
-  useFetch(query)
-  useVisible(query)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  useFallback(query, () => new Data(new Fixed(0n, 0)))
-  return query
 }
