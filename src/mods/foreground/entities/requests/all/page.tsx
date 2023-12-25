@@ -19,8 +19,7 @@ import { Err, Ok, Result } from "@hazae41/result"
 import { useCallback, useEffect, useState } from "react"
 import { useBlobby } from "../../blobbys/data"
 import { useOrigin } from "../../origins/data"
-import { useAppRequest } from "../data"
-import { useAppRequests } from "./data"
+import { useAppRequest, useAppRequests } from "../data"
 
 export function RequestsPage() {
   const background = useBackgroundContext().unwrap()

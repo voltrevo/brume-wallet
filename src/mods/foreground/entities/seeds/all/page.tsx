@@ -11,8 +11,8 @@ import { Path } from "@/mods/foreground/router/path/context"
 import { useCallback } from "react"
 import { SeedDataCard } from "../card"
 import { SeedDataProvider, useSeedDataContext } from "../context"
+import { useSeeds } from "../data"
 import { SeedCreatorDialog } from "./create"
-import { useSeeds } from "./data"
 
 export function SeedsPage() {
   const seedsQuery = useSeeds()

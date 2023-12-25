@@ -1,6 +1,6 @@
 import { Outline } from "@/libs/icons/icons";
 import { Anchor } from "@/libs/ui/anchor";
-import { useAppRequests } from "../entities/requests/all/data";
+import { useAppRequests } from "../entities/requests/data";
 import { usePathContext } from "../router/path/context";
 
 export function Bottom() {

@@ -21,7 +21,7 @@ import { secp256k1 } from "@noble/curves/secp256k1";
 import { HDKey } from "@scure/bip32";
 import { mnemonicToSeed } from "@scure/bip39";
 import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { SeedInstance } from "../../../seeds/all/data";
+import { SeedInstance } from "../../../seeds/all/helpers";
 import { useSeedDataContext } from "../../../seeds/context";
 import { WalletAvatar } from "../../avatar";
 

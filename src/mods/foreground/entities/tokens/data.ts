@@ -50,7 +50,7 @@ export namespace FgContractToken {
     }
 
     return createQuery<Key, Data, Fail>({
-      key: BgContractToken.key(chainId, address),
+      key: key(chainId, address),
       indexer,
       storage
     })

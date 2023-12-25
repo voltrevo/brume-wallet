@@ -19,7 +19,7 @@ import { Background } from "../../background/background"
 import { useBackgroundContext } from "../../background/context"
 import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
-import { SeedInstance } from "../seeds/all/data"
+import { SeedInstance } from "../seeds/all/helpers"
 import { FgSeed } from "../seeds/data"
 
 export interface WalletProps {

@@ -4,11 +4,12 @@ import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { PromiseProps } from "@/libs/react/props/promise";
 import { Button } from "@/libs/ui/button";
 import { Input } from "@/libs/ui/input";
+import { User, UserProps } from "@/mods/background/service_worker/entities/users/data";
 import { useCallback, useDeferredValue, useRef, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
 import { Page } from "../../components/page/page";
 import { UserAvatar } from "./all/page";
-import { User, UserProps, useUser } from "./data";
+import { useUser } from "./data";
 
 export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
   const { user, ok, err } = props

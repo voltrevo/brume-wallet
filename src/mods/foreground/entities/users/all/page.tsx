@@ -7,10 +7,10 @@ import { NameProps } from "@/libs/react/props/name";
 import { OkProps } from "@/libs/react/props/promise";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
-import { useBackgroundContext } from "@/mods/foreground/background/context";
+import { User, UserProps } from "@/mods/background/service_worker/entities/users/data";
 import { Page } from "@/mods/foreground/components/page/page";
 import { useCallback, useState } from "react";
-import { User, UserProps, useUser } from "../data";
+import { useUser } from "../data";
 import { UserLoginPage } from "../login";
 import { UserCreateDialog } from "./create";
 import { useUsers } from "./data";
@@ -57,7 +57,6 @@ export function UsersPage(props: OkProps<User>) {
 function UserOkButton(props: UserProps & OkProps<User>) {
   const { ok } = props
 
-  const background = useBackgroundContext().unwrap()
   const user = useUser(props.user.uuid)
 
   const onClick = useCallback(() => {

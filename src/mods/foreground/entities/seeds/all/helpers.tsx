@@ -3,35 +3,16 @@ import { Ledger } from "@/libs/ledger"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { AuthMnemonicSeedData, LedgerSeedData, SeedData, UnauthMnemonicSeedData } from "@/mods/background/service_worker/entities/seeds/data"
 import { Background } from "@/mods/foreground/background/background"
-import { useSubscribe } from "@/mods/foreground/storage/storage"
-import { useUserStorageContext } from "@/mods/foreground/storage/user"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
 import { Abi } from "@hazae41/cubane"
-import { useQuery } from "@hazae41/glacier"
-import { Nullable, Option } from "@hazae41/option"
+import { Option } from "@hazae41/option"
 import { Err, Ok, Panic, Result, Unimplemented } from "@hazae41/result"
 import { HDKey } from "@scure/bip32"
 import { entropyToMnemonic, mnemonicToSeed } from "@scure/bip39"
 import { wordlist } from "@scure/bip39/wordlists/english"
 import { Transaction, ethers } from "ethers"
-import { FgWallet } from "../../wallets/data"
-import { FgSeed } from "../data"
-
-export function useSeeds() {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgSeed.All.schema, [storage])
-  useSubscribe(query, storage)
-  return query
-}
-
-export function useWalletsBySeed(uuid: Nullable<string>) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgWallet.All.BySeed.schema, [uuid, storage])
-  useSubscribe(query, storage)
-  return query
-}
 
 export type SeedInstance =
   | UnauthMnemonicSeedInstance

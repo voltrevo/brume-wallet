@@ -10,6 +10,12 @@ import { FgEthereumContext, fetchOrFail } from "../wallets/data";
 
 export namespace FgUnknown {
 
+  export type Key = BgUnknown.Key
+  export type Data = BgUnknown.Data
+  export type Fail = BgUnknown.Fail
+
+  export const key = BgUnknown.key
+
   export function schema<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, context: Nullable<FgEthereumContext>, storage: UserStorage) {
     if (context == null)
       return
@@ -17,8 +23,8 @@ export namespace FgUnknown {
     const fetcher = async (request: RpcRequestPreinit<unknown>) =>
       await fetchOrFail<T>(request, context)
 
-    return createQuery<RpcRequestPreinit<unknown>, T, Error>({
-      key: BgUnknown.key(context.chain.chainId, request),
+    return createQuery<Key, T, Fail>({
+      key: key(context.chain.chainId, request),
       fetcher,
       storage
     })

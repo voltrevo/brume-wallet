@@ -41,3 +41,10 @@ export function useAppRequest(id: Nullable<string>) {
   useSubscribe(query, storage)
   return query
 }
+
+export function useAppRequests() {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgAppRequest.All.schema, [storage])
+  useSubscribe(query, storage)
+  return query
+}

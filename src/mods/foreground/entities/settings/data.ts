@@ -7,10 +7,14 @@ export namespace FgSettings {
 
   export namespace Logs {
 
+    export type Key = BgSettings.Logs.Key
+    export type Data = BgSettings.Logs.Data
+    export type Fail = BgSettings.Logs.Fail
+
     export const key = BgSettings.Logs.key
 
     export function schema(storage: UserStorage) {
-      return createQuery<string, boolean, never>({ key, storage })
+      return createQuery<Key, Data, Fail>({ key, storage })
     }
 
   }

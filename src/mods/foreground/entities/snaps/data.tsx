@@ -1,4 +1,4 @@
-import { BgSnap, SnapData, SnapRef } from "@/mods/background/service_worker/entities/snaps/data"
+import { BgSnap } from "@/mods/background/service_worker/entities/snaps/data"
 import { createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { useSubscribe } from "../../storage/storage"
@@ -8,16 +8,29 @@ export namespace FgSnap {
 
   export namespace All {
 
+    export type Key = BgSnap.All.Key
+    export type Data = BgSnap.All.Data
+    export type Fail = BgSnap.All.Fail
+
+    export const key = BgSnap.All.key
+
     export function schema(storage: UserStorage) {
-      return createQuery<string, SnapRef[], never>({ key: BgSnap.All.key, storage })
+      return createQuery<Key, Data, Fail>({ key, storage })
     }
 
   }
 
+  export type Key = BgSnap.Key
+  export type Data = BgSnap.Data
+  export type Fail = BgSnap.Fail
+
+  export const key = BgSnap.key
+
   export function schema(uuid: Nullable<string>, storage: UserStorage) {
     if (uuid == null)
-      return undefined
-    return createQuery<string, SnapData, never>({ key: BgSnap.key(uuid), storage })
+      return
+
+    return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
   }
 
 }

@@ -1,54 +1,50 @@
+import { BgUser } from "@/mods/background/service_worker/entities/users/data"
 import { createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { GlobalStorage, useGlobalStorageContext } from "../../storage/global"
 import { useSubscribe } from "../../storage/storage"
 
-export type User =
-  | UserRef
-  | UserData
+export namespace FgUser {
 
-export interface UserProps {
-  user: User
-}
+  export namespace Current {
 
-export interface UserDataProps {
-  user: UserData
-}
+    export type Key = BgUser.Current.Key
+    export type Data = BgUser.Current.Data
+    export type Fail = BgUser.Current.Fail
 
-export interface UserRef {
-  ref: true
-  uuid: string
-}
+    export const key = BgUser.Current.key
 
-export interface UserData {
-  uuid: string,
-  name: string,
+    export function schema(storage: GlobalStorage) {
+      return createQuery<Key, Data, Fail>({ key, storage })
+    }
 
-  color: number
-  emoji: string
-}
+  }
 
-export function getUser(uuid: Nullable<string>, storage: GlobalStorage) {
-  if (uuid == null)
-    return undefined
+  export type Key = BgUser.Key
+  export type Data = BgUser.Data
+  export type Fail = BgUser.Fail
 
-  return createQuery<string, UserData, never>({ key: `user/${uuid}`, storage })
+  export const key = BgUser.key
+
+  export function schema(uuid: Nullable<string>, storage: GlobalStorage) {
+    if (uuid == null)
+      return
+
+    return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
+  }
+
 }
 
 export function useUser(uuid: Nullable<string>) {
   const storage = useGlobalStorageContext().unwrap()
-  const query = useQuery(getUser, [uuid, storage])
+  const query = useQuery(FgUser.schema, [uuid, storage])
   useSubscribe(query, storage)
   return query
 }
 
-export function getCurrentUser(storage: GlobalStorage) {
-  return createQuery<string, User, never>({ key: `user`, storage })
-}
-
-export function useCurrentUserQuery() {
+export function useCurrentUser() {
   const storage = useGlobalStorageContext().unwrap()
-  const query = useQuery(getCurrentUser, [storage])
+  const query = useQuery(FgUser.Current.schema, [storage])
   useSubscribe(query, storage)
   return query
 }
