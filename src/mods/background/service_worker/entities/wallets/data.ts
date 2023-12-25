@@ -2,10 +2,9 @@ import { PairAbi } from "@/libs/abi/pair.abi"
 import { PairInfo, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fetched, FetcherMore, IDBStorage, SimpleQuery, States, createQuery } from "@hazae41/glacier"
+import { Data, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Option } from "@hazae41/option"
-import { Ok, Result } from "@hazae41/result"
 import { BgEthereumContext } from "../../context"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
@@ -299,13 +298,12 @@ export namespace BgPair {
       }
     }
 
-    export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-      return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, Fixed.From, Error>, Error>>(async t => {
-        const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
-        const pair = Option.wrap(pairByAddress[address]).ok().throw(t)
-        const query = schema(ethereum, pair, storage)
-        return new Ok(query)
-      })
+    export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+      const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
+
+      const pair = Option.unwrap(pairByAddress[address])
+
+      return schema(ethereum, pair, storage)
     }
 
     export function schema(ethereum: BgEthereumContext, pair: PairInfo, storage: IDBStorage) {

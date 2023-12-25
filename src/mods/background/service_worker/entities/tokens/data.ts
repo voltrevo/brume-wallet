@@ -2,10 +2,10 @@ import { TokenAbi } from "@/libs/abi/erc20.abi"
 import { chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Cubane, Fixed, ZeroHexFixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fail, FetcherMore, IDBStorage, SimpleQuery, States, createQuery } from "@hazae41/glacier"
+import { Data, Fail, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
-import { Catched, Ok, Panic, Result } from "@hazae41/result"
+import { Catched, Panic } from "@hazae41/result"
 import { BgEthereumContext } from "../../context"
 import { BgPair, EthereumQueryKey, getPricedBalance, getTokenPricedBalance } from "../wallets/data"
 
@@ -108,12 +108,10 @@ export namespace BgNativeToken {
       }
     }
 
-    export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-      return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, Fixed.From, Error>, Error>>(async t => {
-        const [account, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
-        const query = schema(ethereum, account, block, storage)
-        return new Ok(query)
-      })
+    export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+      const [account, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
+
+      return schema(ethereum, account, block, storage)
     }
 
     export function schema(ethereum: BgEthereumContext, account: ZeroHexString, block: string, storage: IDBStorage) {
@@ -195,19 +193,17 @@ export namespace BgContractToken {
       }
     }
 
-    export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-      return await Result.unthrow<Result<SimpleQuery<EthereumQueryKey<unknown>, Fixed.From, Error>, Error>>(async t => {
-        const [account, address, block] = (request as RpcRequestPreinit<[ZeroHexString, string, string]>).params
+    export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+      const [account, address, block] = (request as RpcRequestPreinit<[ZeroHexString, string, string]>).params
 
-        const tokenQuery = BgContractToken.schema(ethereum.chain.chainId, address, storage)
-        const tokenState = await tokenQuery.state
-        const tokenData = tokenState.data?.inner ?? tokenByAddress[address]
+      const tokenQuery = BgContractToken.schema(ethereum.chain.chainId, address, storage)
+      const tokenState = await tokenQuery.state
 
-        const token = Option.wrap(tokenData).ok().throw(t)
-        const query = schema(ethereum, account, token, block, storage)
+      const tokenData = Option.wrap(tokenState.data?.inner)
+        .or(Option.wrap(tokenByAddress[address]))
+        .unwrap()
 
-        return new Ok(query)
-      })
+      return schema(ethereum, account, tokenData, block, storage)
     }
 
     export function schema(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {

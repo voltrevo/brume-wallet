@@ -152,10 +152,10 @@ export namespace BgSignature {
     }
   }
 
-  export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+  export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
     const [hash] = (request as RpcRequestPreinit<[ZeroHexString]>).params
-    const query = schema(ethereum, hash, storage)
-    return new Ok(query)
+
+    return schema(ethereum, hash, storage)
   }
 
   export function schema(ethereum: BgEthereumContext, hash: ZeroHexString, storage: IDBStorage) {

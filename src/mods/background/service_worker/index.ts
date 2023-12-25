@@ -680,7 +680,7 @@ export class Global {
       if (subrequest.method === "wallet_switchEthereumChain")
         return await this.wallet_switchEthereumChain(ethereum, session, subrequest, mouse)
 
-      const query = await this.tryRouteEthereum(ethereum, subrequest, storage).then(r => r.unwrap())
+      const query = await this.routeOrThrow(ethereum, subrequest, storage)
 
       try { await query.fetch() } catch { }
 
@@ -1260,19 +1260,19 @@ export class Global {
     })
   }
 
-  async tryRouteEthereum(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<Result<SimpleQuery<any, any, Error>, Error>> {
+  async routeOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<SimpleQuery<any, any, Error>> {
     if (request.method === BgNativeToken.Balance.method)
-      return await BgNativeToken.Balance.tryParse(ethereum, request, storage)
+      return await BgNativeToken.Balance.parseOrThrow(ethereum, request, storage)
     if (request.method === BgContractToken.Balance.method)
-      return await BgContractToken.Balance.tryParse(ethereum, request, storage)
+      return await BgContractToken.Balance.parseOrThrow(ethereum, request, storage)
     if (request.method === BgPair.Price.method)
-      return await BgPair.Price.tryParse(ethereum, request, storage)
+      return await BgPair.Price.parseOrThrow(ethereum, request, storage)
     if (request.method === BgEns.Lookup.method)
-      return await BgEns.Lookup.tryParse(ethereum, request, storage)
+      return await BgEns.Lookup.parseOrThrow(ethereum, request, storage)
     if (request.method === BgEns.Reverse.method)
-      return await BgEns.Reverse.tryParse(ethereum, request, storage)
+      return await BgEns.Reverse.parseOrThrow(ethereum, request, storage)
     if (request.method === BgSignature.method)
-      return await BgSignature.tryParse(ethereum, request, storage)
+      return await BgSignature.parseOrThrow(ethereum, request, storage)
 
     if (request.method === "eth_getTransactionByHash")
       request.noCheck = true
@@ -1289,7 +1289,7 @@ export class Global {
     if (request.method === "eth_maxPriorityFeePerGas")
       request.noCheck = true
 
-    return new Ok(BgUnknown.schema(ethereum, request, storage))
+    return BgUnknown.schema(ethereum, request, storage)
   }
 
   async brume_eth_index(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
@@ -1304,7 +1304,7 @@ export class Global {
 
       const ethereum: BgEthereumContext = { chain, brume }
 
-      const query = await this.tryRouteEthereum(ethereum, subrequest, storage).then(r => r.unwrap())
+      const query = await this.routeOrThrow(ethereum, subrequest, storage)
 
       await core.reindexOrThrow(query.cacheKey, query.settings)
 
@@ -1323,7 +1323,7 @@ export class Global {
       const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.unwrap())
       const ethereum: BgEthereumContext = { chain, brume }
 
-      const query = await this.tryRouteEthereum(ethereum, subrequest, storage).then(r => r.unwrap())
+      const query = await this.routeOrThrow(ethereum, subrequest, storage)
 
       try { await query.fetch() } catch { }
 

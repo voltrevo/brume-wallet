@@ -4,7 +4,7 @@ import { Abi, Ens, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
-import { Catched, Ok } from "@hazae41/result"
+import { Catched } from "@hazae41/result"
 import { BgEthereumContext } from "../../context"
 import { EthereumQueryKey } from "../wallets/data"
 
@@ -57,10 +57,10 @@ export namespace BgEns {
       }
     }
 
-    export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
       const [name] = (request as RpcRequestPreinit<[string]>).params
-      const query = schema(ethereum, name, storage)
-      return new Ok(query)
+
+      return schema(ethereum, name, storage)
     }
 
     export function schema(ethereum: BgEthereumContext, name: string, storage: IDBStorage) {
@@ -122,10 +122,10 @@ export namespace BgEns {
       }
     }
 
-    export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
       const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
-      const query = schema(ethereum, address, storage)
-      return new Ok(query)
+
+      return schema(ethereum, address, storage)
     }
 
     export function schema(ethereum: BgEthereumContext, address: ZeroHexString, storage: IDBStorage) {
