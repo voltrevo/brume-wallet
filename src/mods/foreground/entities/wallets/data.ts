@@ -560,39 +560,3 @@ export function useMaxPriorityFeePerGas(ethereum: Nullable<FgEthereumContext>) {
   useError(query, Errors.onQueryError)
   return query
 }
-
-export interface Block {
-  readonly baseFeePerGas?: ZeroHexString
-}
-
-export function getBlockByNumber(number: Nullable<string>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
-  if (context == null)
-    return undefined
-  if (number == null)
-    return undefined
-
-  const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-    await fetchOrFail<Block>(request, context).then(r => r.mapSync(r => r))
-
-  return createQuery<EthereumQueryKey<unknown> & EthereumFetchParams, Block, Error>({
-    key: {
-      chainId: context.chain.chainId,
-      method: "eth_getBlockByNumber",
-      params: [number, false],
-      noCheck: true
-    },
-    fetcher,
-    storage,
-  })
-}
-
-export function useBlockByNumber(number: Nullable<string>, ethereum: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(getBlockByNumber, [number, ethereum, storage])
-  useFetch(query)
-  useVisible(query)
-  useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  return query
-}
