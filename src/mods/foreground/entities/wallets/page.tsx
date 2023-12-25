@@ -29,13 +29,14 @@ import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useToken, useTokens } from "../tokens/data";
 import { usePairPrice } from "../tokens/pairs/data";
+import { useContractBalance, useNativeBalance } from "../unknown/data";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
 import { WalletSendScreen } from "./actions/send";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
-import { useBalance, useEthereumContext, usePricedBalance, useTokenBalance, useTokenPricedBalance } from "./data";
+import { useEthereumContext, usePricedBalance, useTokenPricedBalance } from "./data";
 import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
 
 export function WalletPage(props: UUIDProps) {
@@ -347,7 +348,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
-  const balanceQuery = useBalance(wallet.address, context, prices)
+  const balanceQuery = useNativeBalance(wallet.address, context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
 
   const sendDialog = useBooleanHandle(false)
@@ -401,7 +402,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
-  const balanceQuery = useTokenBalance(wallet.address, token, context, prices)
+  const balanceQuery = useContractBalance(wallet.address, token, context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
 
   const sendDialog = useBooleanHandle(false)

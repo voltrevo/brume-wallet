@@ -1,13 +1,12 @@
 import { Errors } from "@/libs/errors/errors"
 import { ChainData } from "@/libs/ethereum/mods/chain"
-import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data"
 import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, Fixed } from "@hazae41/cubane"
-import { Data, Fetched, FetcherMore, createQuery, useError, useFallback, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
+import { Data, Fetched, createQuery, useError, useFallback, useFetch, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable, Option } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
@@ -367,45 +366,6 @@ export function usePricedBalance(address: string, coin: "usd", context: Nullable
   return query
 }
 
-export function getBalance(address: string, context: Nullable<FgEthereumContext>, storage: UserStorage) {
-  if (context == null)
-    return
-
-  const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await fetchOrFail<Fixed.From>(request, context)
-
-  return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
-    key: {
-      version: 2,
-      chainId: context.chain.chainId,
-      method: "eth_getBalance",
-      params: [address, "pending"]
-    },
-    fetcher,
-    storage
-  })
-}
-
-export function useBalance(address: string, context: Nullable<FgEthereumContext>, prices: Nullable<Fixed.From>[]) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(getBalance, [address, context, storage])
-  useFetch(query)
-  useVisible(query)
-  useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  useFallback(query, () => new Data(new Fixed(0n, 0)))
-
-  useEffectButNotFirstTime(() => {
-    if (context == null)
-      return
-    indexOrThrow(query.key, context).catch(() => { })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context, ...prices])
-
-  return query
-}
-
 export function getTokenPricedBalance(context: Nullable<FgEthereumContext>, account: string, token: ContractTokenData, coin: "usd", storage: UserStorage) {
   if (context == null)
     return
@@ -428,42 +388,5 @@ export function useTokenPricedBalance(context: Nullable<FgEthereumContext>, addr
   useSubscribe(query, storage)
   useError(query, Errors.onQueryError)
   useFallback(query, () => new Data(new Fixed(0n, 0)))
-  return query
-}
-
-export function getTokenBalance(address: string, token: ContractTokenData, context: Nullable<FgEthereumContext>, storage: UserStorage) {
-  if (context == null)
-    return
-
-  const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-    await fetchOrFail<Fixed.From>(request, context)
-
-  return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
-    key: {
-      chainId: context.chain.chainId,
-      method: "eth_getTokenBalance",
-      params: [address, token.address, "pending"]
-    },
-    fetcher,
-    storage
-  })
-}
-
-export function useTokenBalance(address: string, token: ContractTokenData, context: Nullable<FgEthereumContext>, prices: Nullable<Fixed.From>[]) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(getTokenBalance, [address, token, context, storage])
-  useFetch(query)
-  useVisible(query)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  useFallback(query, () => new Data(new Fixed(0n, 0)))
-
-  useEffectButNotFirstTime(() => {
-    if (context == null)
-      return
-    indexOrThrow(query.key, context).catch(() => { })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context, ...prices])
-
   return query
 }

@@ -1,15 +1,17 @@
 import { BigIntToHex } from "@/libs/bigints/bigints";
 import { Errors } from "@/libs/errors/errors";
 import { ChainData } from "@/libs/ethereum/mods/chain";
+import { useEffectButNotFirstTime } from "@/libs/react/effect";
+import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { BgUnknown } from "@/mods/background/service_worker/entities/unknown/data";
 import { EthereumFetchParams, EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data";
-import { ZeroHexString } from "@hazae41/cubane";
+import { Fixed, ZeroHexString } from "@hazae41/cubane";
 import { FetcherMore, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
-import { FgEthereumContext, fetchOrFail } from "../wallets/data";
+import { FgEthereumContext, fetchOrFail, indexOrThrow } from "../wallets/data";
 
 export namespace FgUnknown {
 
@@ -176,21 +178,78 @@ export namespace FgEthereum {
 
   }
 
+  export namespace NativeBalance {
+
+    export type Key = EthereumQueryKey<unknown>
+    export type Data = Fixed.From
+    export type Fail = Error
+
+    export function key(address: ZeroHexString, chain: ChainData) {
+      return {
+        version: 2,
+        chainId: chain.chainId,
+        method: "eth_getBalance",
+        params: [address, "pending"]
+      }
+    }
+
+    export function schema(address: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
+      if (address == null)
+        return
+      if (context == null)
+        return
+
+      const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
+        await fetchOrFail<Fixed.From>(request, context)
+
+      return createQuery<Key, Data, Fail>({
+        key: key(address, context.chain),
+        fetcher,
+        storage
+      })
+    }
+
+  }
+
+  export namespace TokenBalance {
+
+    export type Key = EthereumQueryKey<unknown>
+    export type Data = Fixed.From
+    export type Fail = Error
+
+    export function key(address: ZeroHexString, token: ContractTokenData, chain: ChainData) {
+      return {
+        chainId: chain.chainId,
+        method: "eth_getTokenBalance",
+        params: [address, token.address, "pending"]
+      }
+    }
+
+    export function schema(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
+      if (address == null)
+        return
+      if (token == null)
+        return
+      if (context == null)
+        return
+
+      const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
+        await fetchOrFail<Fixed.From>(request, context)
+
+      return createQuery<Key, Data, Fail>({
+        key: key(address, token, context.chain),
+        fetcher,
+        storage
+      })
+    }
+
+  }
+
 }
 
-export function useEstimateGas(request: Nullable<RpcRequestPreinit<[unknown, unknown]>>, ethereum: Nullable<FgEthereumContext>) {
+export function useEstimateGas(request: Nullable<RpcRequestPreinit<[unknown, unknown]>>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgEthereum.EstimateGas.schema, [request, ethereum, storage])
-  useFetch(query)
-  useVisible(query)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  return query
-}
-
-export function useMaxPriorityFeePerGas(ethereum: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgEthereum.MaxPriorityFeePerGas.schema, [ethereum, storage])
+  const query = useQuery(FgEthereum.EstimateGas.schema, [request, context, storage])
   useFetch(query)
   useVisible(query)
   useInterval(query, 10 * 1000)
@@ -199,9 +258,20 @@ export function useMaxPriorityFeePerGas(ethereum: Nullable<FgEthereumContext>) {
   return query
 }
 
-export function useGasPrice(ethereum: Nullable<FgEthereumContext>) {
+export function useMaxPriorityFeePerGas(context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgEthereum.GasPrice.schema, [ethereum, storage])
+  const query = useQuery(FgEthereum.MaxPriorityFeePerGas.schema, [context, storage])
+  useFetch(query)
+  useVisible(query)
+  useInterval(query, 10 * 1000)
+  useSubscribe(query, storage)
+  useError(query, Errors.onQueryError)
+  return query
+}
+
+export function useGasPrice(context: Nullable<FgEthereumContext>) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgEthereum.GasPrice.schema, [context, storage])
   useFetch(query)
   useVisible(query)
   useInterval(query, 10 * 1000)
@@ -218,5 +288,42 @@ export function useNonce(address: Nullable<ZeroHexString>, context: Nullable<FgE
   useInterval(query, 10 * 1000)
   useSubscribe(query, storage)
   useError(query, Errors.onQueryError)
+  return query
+}
+
+export function useNativeBalance(address: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>, prices: Nullable<Fixed.From>[]) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgEthereum.NativeBalance.schema, [address, context, storage])
+  useFetch(query)
+  useVisible(query)
+  useInterval(query, 10 * 1000)
+  useSubscribe(query, storage)
+  useError(query, Errors.onQueryError)
+
+  useEffectButNotFirstTime(() => {
+    if (context == null)
+      return
+    indexOrThrow(query.key, context).catch(() => { })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context, ...prices])
+
+  return query
+}
+
+export function useContractBalance(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, context: Nullable<FgEthereumContext>, prices: Nullable<Fixed.From>[]) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgEthereum.TokenBalance.schema, [address, token, context, storage])
+  useFetch(query)
+  useVisible(query)
+  useSubscribe(query, storage)
+  useError(query, Errors.onQueryError)
+
+  useEffectButNotFirstTime(() => {
+    if (context == null)
+      return
+    indexOrThrow(query.key, context).catch(() => { })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context, ...prices])
+
   return query
 }
