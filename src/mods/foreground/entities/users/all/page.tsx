@@ -10,10 +10,9 @@ import { Loading } from "@/libs/ui/loading/loading";
 import { User, UserProps } from "@/mods/background/service_worker/entities/users/data";
 import { Page } from "@/mods/foreground/components/page/page";
 import { useCallback, useState } from "react";
-import { useUser } from "../data";
+import { useUser, useUsers } from "../data";
 import { UserLoginPage } from "../login";
 import { UserCreateDialog } from "./create";
-import { useUsers } from "./data";
 
 export function UsersPage(props: OkProps<User>) {
   const { ok } = props

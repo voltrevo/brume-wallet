@@ -12,7 +12,7 @@ import { Input } from "@/libs/ui/input";
 import { User, UserInit } from "@/mods/background/service_worker/entities/users/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useDeferredValue, useMemo, useState } from "react";
-import { useUsers } from "./data";
+import { useUsers } from "../data";
 import { UserAvatar } from "./page";
 
 export function UserCreateDialog(props: {}) {

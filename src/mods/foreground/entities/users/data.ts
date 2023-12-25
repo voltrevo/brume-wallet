@@ -6,6 +6,20 @@ import { useSubscribe } from "../../storage/storage"
 
 export namespace FgUser {
 
+  export namespace All {
+
+    export type Key = BgUser.All.Key
+    export type Data = BgUser.All.Data
+    export type Fail = BgUser.All.Fail
+
+    export const key = BgUser.All.key
+
+    export function schema(storage: GlobalStorage) {
+      return createQuery<Key, Data, Fail>({ key, storage })
+    }
+
+  }
+
   export namespace Current {
 
     export type Key = BgUser.Current.Key
@@ -33,6 +47,13 @@ export namespace FgUser {
     return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
   }
 
+}
+
+export function useUsers() {
+  const storage = useGlobalStorageContext().unwrap()
+  const query = useQuery(FgUser.All.schema, [storage])
+  useSubscribe(query, storage)
+  return query
 }
 
 export function useUser(uuid: Nullable<string>) {
