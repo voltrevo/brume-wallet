@@ -13,9 +13,8 @@ import { Nullable } from "@hazae41/option"
 import { useCallback } from "react"
 import { WalletDataCard } from "../card"
 import { WalletDataProvider, useWalletDataContext } from "../context"
-import { WalletProps } from "../data"
+import { WalletProps, useWallets } from "../data"
 import { WalletCreatorDialog } from "./create"
-import { useWallets } from "./data"
 
 export function WalletsPage() {
   const walletsQuery = useWallets()

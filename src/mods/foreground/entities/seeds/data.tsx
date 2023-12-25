@@ -3,7 +3,6 @@ import { createQuery, useQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
-import { FgWallet } from "../wallets/data";
 
 export namespace FgSeed {
 
@@ -40,13 +39,6 @@ export function useSeed(uuid: Nullable<string>) {
 export function useSeeds() {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgSeed.All.schema, [storage])
-  useSubscribe(query, storage)
-  return query
-}
-
-export function useWalletsBySeed(uuid: Nullable<string>) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgWallet.All.BySeed.schema, [uuid, storage])
   useSubscribe(query, storage)
   return query
 }

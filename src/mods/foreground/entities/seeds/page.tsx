@@ -9,9 +9,9 @@ import { Page } from "../../components/page/page";
 import { Path } from "../../router/path/context";
 import { SeededWalletCreatorDialog } from "../wallets/all/create/seeded";
 import { ClickableWalletGrid } from "../wallets/all/page";
+import { useWalletsBySeed } from "../wallets/data";
 import { SeedDataCard } from "./card";
 import { SeedDataProvider, useSeedDataContext, } from "./context";
-import { useWalletsBySeed } from "./data";
 
 export function SeedPage(props: UUIDProps) {
   const { uuid } = props

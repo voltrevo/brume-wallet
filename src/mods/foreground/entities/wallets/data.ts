@@ -47,6 +47,16 @@ export namespace FgWallet {
 
     }
 
+    export type Key = BgWallet.All.Key
+    export type Data = BgWallet.All.Data
+    export type Fail = BgWallet.All.Fail
+
+    export const key = BgWallet.All.key
+
+    export function schema(storage: UserStorage) {
+      return createQuery<Key, Data, Fail>({ key, storage })
+    }
+
   }
 
   export type Key = BgWallet.Key
@@ -67,6 +77,20 @@ export namespace FgWallet {
 export function useWallet(uuid: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgWallet.schema, [uuid, storage])
+  useSubscribe(query, storage)
+  return query
+}
+
+export function useWallets() {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgWallet.All.schema, [storage])
+  useSubscribe(query, storage)
+  return query
+}
+
+export function useWalletsBySeed(uuid: Nullable<string>) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgWallet.All.BySeed.schema, [uuid, storage])
   useSubscribe(query, storage)
   return query
 }
