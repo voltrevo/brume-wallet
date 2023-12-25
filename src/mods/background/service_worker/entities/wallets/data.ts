@@ -10,7 +10,6 @@ import { BgEthereumContext } from "../../context"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
 import { ContractTokenData } from "../tokens/data"
-import { BgWallets } from "./all/data"
 
 export type Wallet =
   | WalletRef
@@ -167,7 +166,7 @@ export namespace BgWallet {
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
-      await BgWallets.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+      await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData?.inner.uuid === currentData?.inner.uuid)
           return d
         if (previousData != null)
