@@ -6,7 +6,8 @@ import { Data, Fail, FetcherMore, IDBStorage, SimpleQuery, States, createQuery }
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
 import { Catched, Ok, Panic, Result } from "@hazae41/result"
-import { BgEthereumContext, BgPair, EthereumContext, EthereumQueryKey, getPricedBalance, getTokenPricedBalance } from "../wallets/data"
+import { BgEthereumContext } from "../../context"
+import { BgPair, EthereumQueryKey, getPricedBalance, getTokenPricedBalance } from "../wallets/data"
 
 export type Token =
   | TokenData
@@ -117,7 +118,7 @@ export namespace BgNativeToken {
 
     export function schema(ethereum: BgEthereumContext, account: ZeroHexString, block: string, storage: IDBStorage) {
       const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore) =>
-        await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, more).then(f => f.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals)))
+        await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, more).then(f => f.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals)))
 
       const indexer = async (states: States<Fixed.From, Error>) => {
         if (block !== "pending")
@@ -214,7 +215,7 @@ export namespace BgContractToken {
         try {
           const data = Cubane.Abi.encodeOrThrow(TokenAbi.balanceOf.from(account))
 
-          const fetched = await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
+          const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
             method: "eth_call",
             params: [{
               to: token.address,

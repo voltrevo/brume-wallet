@@ -1,17 +1,12 @@
-import { EnsAbi } from "@/libs/abi/ens.abi"
 import { PairAbi } from "@/libs/abi/pair.abi"
-import { ChainData, PairInfo, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
+import { PairInfo, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
-import { Maps } from "@/libs/maps/maps"
-import { TorRpc } from "@/libs/rpc/rpc"
-import { AbortSignals } from "@/libs/signals/signals"
-import { Uint8Array } from "@hazae41/bytes"
-import { Abi, Ens, Fixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fail, Fetched, FetcherMore, IDBStorage, SimpleQuery, States, createQuery } from "@hazae41/glacier"
+import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
+import { Data, Fetched, FetcherMore, IDBStorage, SimpleQuery, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
-import { Nullable, Option } from "@hazae41/option"
-import { Catched, Ok, Panic, Result } from "@hazae41/result"
-import { EthBrume } from "../brumes/data"
+import { Option } from "@hazae41/option"
+import { Ok, Result } from "@hazae41/result"
+import { BgEthereumContext } from "../../context"
 import { WalletsBySeed } from "../seeds/all/data"
 import { SeedRef } from "../seeds/data"
 import { ContractTokenData } from "../tokens/data"
@@ -139,15 +134,31 @@ export interface EthereumTrezorWalletData {
   readonly path: string
 }
 
-export namespace Wallet {
+export namespace BgWallet {
 
-  export type Key = ReturnType<typeof key>
+  export namespace All {
+
+    export type Key = string
+    export type Data = Wallet[]
+    export type Fail = never
+
+    export const key = `wallets`
+
+    export type Schema = ReturnType<typeof schema>
+
+    export function schema(storage: IDBStorage) {
+      return createQuery<Key, Data, Fail>({ key, storage })
+    }
+
+  }
+
+  export type Key = string
+  export type Data = WalletData
+  export type Fail = never
 
   export function key(uuid: string) {
     return `wallet/${uuid}`
   }
-
-  export type Schema = ReturnType<typeof schema>
 
   export function schema(uuid: string, storage: IDBStorage) {
     const indexer = async (states: States<WalletData, never>) => {
@@ -183,25 +194,11 @@ export namespace Wallet {
       }
     }
 
-    return createQuery<Key, WalletData, never>({
+    return createQuery<Key, Data, never>({
       key: key(uuid),
       storage,
       indexer
     })
-  }
-
-  export namespace All {
-
-    export type Key = typeof key
-
-    export const key = `wallets`
-
-    export type Schema = ReturnType<typeof schema>
-
-    export function schema(storage: IDBStorage) {
-      return createQuery<Key, WalletRef[], never>({ key, storage })
-    }
-
   }
 
 }
@@ -211,159 +208,8 @@ export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
   chainId: number
 }
 
-export interface BgEthereumContext {
-  chain: ChainData
-  brume: EthBrume
-}
-
 export interface EthereumFetchParams {
   noCheck?: boolean
-}
-
-export namespace EthereumContext {
-
-  export async function fetchOrFail<T>(ethereum: BgEthereumContext, init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}) {
-    try {
-      const { signal: parentSignal } = more
-      const { brume } = ethereum
-
-      const pools = Option.wrap(brume[ethereum.chain.chainId]).ok().unwrap()
-
-      async function runWithPoolOrThrow(index: number) {
-        const poolSignal = AbortSignals.timeout(5_000, parentSignal)
-        const pool = await pools.tryGet(index, poolSignal).then(r => r.unwrap().unwrap().inner.inner)
-
-        async function runWithConnOrThrow(index: number) {
-          const connSignal = AbortSignals.timeout(5_000, parentSignal)
-          const conn = await pool.tryGet(index, connSignal).then(r => r.unwrap().unwrap().inner.inner)
-
-          const { counter, connection } = conn
-          const request = counter.prepare(init)
-
-          if (connection.isURL()) {
-            const { url, circuit } = connection
-            const signal = AbortSignals.timeout(10_000, parentSignal)
-
-            const result = await TorRpc.tryFetchWithCircuit<T>(url, { ...request, circuit, signal })
-
-            if (result.isErr())
-              console.debug(`Could not fetch ${init.method} from ${url.href} using ${circuit.id}`, { result })
-
-            return Fetched.rewrap(result.unwrap())
-          }
-
-          if (connection.isWebSocket()) {
-            await connection.cooldown
-
-            const { socket, circuit } = connection
-            const signal = AbortSignals.timeout(10_000, parentSignal)
-
-            const result = await TorRpc.tryFetchWithSocket<T>(socket, request, signal)
-
-            if (result.isErr())
-              console.debug(`Could not fetch ${init.method} from ${socket.url} using ${circuit.id}`, { result })
-
-            return Fetched.rewrap(result.unwrap())
-          }
-
-          throw new Panic()
-        }
-
-        const promises = Array.from({ length: pool.capacity }, (_, i) => runWithConnOrThrow(i))
-
-        const results = await Promise.allSettled(promises)
-
-        const fetcheds = new Map<string, Fetched<T, Error>>()
-        const counters = new Map<string, number>()
-
-        for (const result of results) {
-          if (result.status === "rejected")
-            continue
-          if (result.value.isErr())
-            continue
-          if (init?.noCheck)
-            return result.value
-          const raw = JSON.stringify(result.value.inner)
-          const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
-          counters.set(raw, previous + 1)
-          fetcheds.set(raw, result.value)
-        }
-
-        /**
-         * One truth -> return it
-         * Zero truth -> throw AggregateError
-         */
-        if (counters.size < 2)
-          return await Promise.any(promises)
-
-        console.warn(`Different results from multiple connections for ${init.method} on ${ethereum.chain.name}`, { fetcheds })
-
-        /**
-         * Sort truths by occurence
-         */
-        const sorteds = [...Maps.entries(counters)].sort((a, b) => b.value - a.value)
-
-        /**
-         * Two concurrent truths
-         */
-        if (sorteds[0].value === sorteds[1].value) {
-          console.warn(`Could not choose truth for ${init.method} on ${ethereum.chain.name}`)
-          const random = Math.round(Math.random())
-          return fetcheds.get(sorteds[random].key)!
-        }
-
-        return fetcheds.get(sorteds[0].key)!
-      }
-
-      const promises = Array.from({ length: pools.capacity }, (_, i) => runWithPoolOrThrow(i))
-
-      const results = await Promise.allSettled(promises)
-
-      const fetcheds = new Map<string, Fetched<T, Error>>()
-      const counters = new Map<string, number>()
-
-      for (const result of results) {
-        if (result.status === "rejected")
-          continue
-        if (result.value.isErr())
-          continue
-        if (init?.noCheck)
-          return result.value
-        const raw = JSON.stringify(result.value.inner)
-        const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
-        counters.set(raw, previous + 1)
-        fetcheds.set(raw, result.value)
-      }
-
-      /**
-       * One truth -> return it
-       * Zero truth -> throw AggregateError
-       */
-      if (counters.size < 2)
-        return await Promise.any(promises)
-
-      console.warn(`Different results from multiple circuits for ${init.method} on ${ethereum.chain.name}`, { fetcheds })
-
-      /**
-       * Sort truths by occurence
-       */
-      const sorteds = [...Maps.entries(counters)].sort((a, b) => b.value - a.value)
-
-      /**
-       * Two concurrent truths
-       */
-      if (sorteds[0].value === sorteds[1].value) {
-        console.warn(`Could not choose truth for ${init.method} on ${ethereum.chain.name}`)
-        const random = Math.round(Math.random())
-        return fetcheds.get(sorteds[random].key)!
-      }
-
-      return fetcheds.get(sorteds[0].key)!
-    } catch (e: unknown) {
-      return new Fail(Catched.from(e))
-    }
-  }
-
 }
 
 export function getTotalPricedBalance(coin: "usd", storage: IDBStorage) {
@@ -467,7 +313,7 @@ export namespace BgPair {
       const fetcher = (key: unknown, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
         const data = Abi.encodeOrThrow(PairAbi.getReserves.from())
 
-        const fetched = await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
+        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
           method: "eth_call",
           params: [{
             to: pair.address,
@@ -530,182 +376,4 @@ export function getTokenPricedBalance(ethereum: BgEthereumContext, account: stri
     indexer,
     storage
   })
-}
-
-export namespace BgEns {
-
-  export namespace Resolver {
-
-    export async function fetchOrFail(ethereum: BgEthereumContext, namehash: Uint8Array<32>, more: FetcherMore): Promise<Fetched<ZeroHexString, Error>> {
-      try {
-        const registry = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
-
-        const data = Abi.encodeOrThrow(EnsAbi.resolver.from(namehash))
-
-        const fetched = await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
-          method: "eth_call",
-          params: [{
-            to: registry,
-            data: data
-          }, "pending"]
-        }, more)
-
-        if (fetched.isErr())
-          return fetched
-
-        const returns = Abi.createTuple(Abi.Address)
-        const [address] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
-
-        return new Data(address)
-      } catch (e: unknown) {
-        return new Fail(Catched.from(e))
-      }
-    }
-
-
-  }
-
-  export namespace Lookup {
-
-    export const method = "ens_lookup"
-
-    export function key(name: string) {
-      return {
-        chainId: 1,
-        method: method,
-        params: [name]
-      }
-    }
-
-    export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-      const [name] = (request as RpcRequestPreinit<[string]>).params
-      const query = schema(ethereum, name, storage)
-      return new Ok(query)
-    }
-
-    export function schema(ethereum: BgEthereumContext, name: string, storage: IDBStorage) {
-      const fetcher = (key: unknown, more: FetcherMore) => fetchOrFail(ethereum, name, more)
-
-      return createQuery<EthereumQueryKey<unknown>, ZeroHexString, Error>({
-        key: key(name),
-        fetcher,
-        storage
-      })
-    }
-
-    export async function fetchOrFail(ethereum: BgEthereumContext, name: string, more: FetcherMore) {
-      try {
-        const namehash = Ens.namehashOrThrow(name) as Uint8Array<32>
-        const resolver = await Resolver.fetchOrFail(ethereum, namehash, more)
-
-        if (resolver.isErr())
-          return resolver
-
-        const data = Abi.encodeOrThrow(EnsAbi.addr.from(namehash))
-
-        const fetched = await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
-          method: "eth_call",
-          params: [{
-            to: resolver.inner,
-            data: data
-          }, "pending"]
-        }, more)
-
-        if (fetched.isErr())
-          return fetched
-
-        const returns = Abi.createTuple(Abi.Address)
-        const [address] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
-
-        return new Data(address)
-      } catch (e: unknown) {
-        return new Fail(Catched.from(e))
-      }
-    }
-
-  }
-
-  export namespace Reverse {
-
-    export const method = "ens_reverse"
-
-    export function key(address: ZeroHexString) {
-      return {
-        chainId: 1,
-        method: method,
-        params: [address]
-      }
-    }
-
-    export async function tryParse(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-      const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
-      const query = schema(ethereum, address, storage)
-      return new Ok(query)
-    }
-
-    export function schema(ethereum: BgEthereumContext, address: ZeroHexString, storage: IDBStorage) {
-      const fetcher = (key: unknown, more: FetcherMore) => fetchOrFail(ethereum, address, more)
-
-      return createQuery<EthereumQueryKey<unknown>, Nullable<string>, Error>({
-        key: key(address),
-        fetcher,
-        storage
-      })
-    }
-
-    export async function fetchUncheckedOrFail(ethereum: BgEthereumContext, address: ZeroHexString, more: FetcherMore): Promise<Fetched<Nullable<string>, Error>> {
-      try {
-        const namehash = Ens.namehashOrThrow(`${address.slice(2)}.addr.reverse`) as Uint8Array<32>
-        const resolver = await Resolver.fetchOrFail(ethereum, namehash, more)
-
-        if (resolver.isErr())
-          return resolver
-
-        const data = Abi.encodeOrThrow(EnsAbi.name.from(namehash))
-
-        const fetched = await EthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
-          method: "eth_call",
-          params: [{
-            to: resolver.inner,
-            data: data
-          }, "pending"]
-        }, more)
-
-        if (fetched.isErr())
-          return fetched
-
-        const returns = Abi.createTuple(Abi.String)
-        const [name] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
-
-        if (name.length === 0)
-          return new Data(undefined)
-
-        return new Data(name)
-      } catch (e: unknown) {
-        return new Fail(Catched.from(e))
-      }
-    }
-
-    export async function fetchOrFail(ethereum: BgEthereumContext, address: ZeroHexString, more: FetcherMore) {
-      const name = await fetchUncheckedOrFail(ethereum, address, more)
-
-      if (name.isErr())
-        return name
-
-      if (name.inner == null)
-        return name
-
-      const address2 = await Lookup.fetchOrFail(ethereum, name.inner, more)
-
-      if (address2.isErr())
-        return address2
-
-      if (address.toLowerCase() !== address2.inner.toLowerCase())
-        return new Data(undefined)
-
-      return name
-    }
-
-  }
-
 }

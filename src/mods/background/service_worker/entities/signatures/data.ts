@@ -7,7 +7,8 @@ import { Data, Fail, Fetched, FetcherMore, IDBStorage, createQuery } from "@haza
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Option } from "@hazae41/option";
 import { Catched, Err, Ok, Result } from "@hazae41/result";
-import { BgEthereumContext, EthereumFetchParams, EthereumQueryKey } from "../wallets/data";
+import { BgEthereumContext } from "../../context";
+import { EthereumFetchParams, EthereumQueryKey } from "../wallets/data";
 
 export type ApiResult<T> =
   | ApiOk<T>

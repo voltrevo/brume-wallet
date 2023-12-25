@@ -42,8 +42,10 @@ import { Smux } from "@hazae41/smux"
 import { X25519 } from "@hazae41/x25519"
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute } from "workbox-precaching"
+import { BgEthereumContext } from "./context"
 import { BgBlobby, BlobbyRef } from "./entities/blobbys/data"
 import { EthBrume, WcBrume } from "./entities/brumes/data"
+import { BgEns } from "./entities/names/data"
 import { BgOrigin, OriginData, PreOriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData, BgAppRequest } from "./entities/requests/data"
 import { BgSeed, SeedData } from "./entities/seeds/data"
@@ -55,7 +57,7 @@ import { BgSignature } from "./entities/signatures/data"
 import { BgContractToken, BgNativeToken } from "./entities/tokens/data"
 import { BgUnknown } from "./entities/unknown/data"
 import { BgUser, User, UserData, UserInit, UserSession } from "./entities/users/data"
-import { BgEns, BgEthereumContext, BgPair, EthereumContext, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
+import { BgPair, BgWallet, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
 import { createUserStorageOrThrow } from "./storage"
 
 declare global {
@@ -499,7 +501,7 @@ export class Global {
           {
             const addresses = Result.all(await Promise.all(sessionData.wallets.map(async wallet => {
               return await Result.unthrow<Result<string, Error>>(async t => {
-                const walletQuery = Wallet.schema(wallet.uuid, storage)
+                const walletQuery = BgWallet.schema(wallet.uuid, storage)
                 const walletState = await walletQuery.state
                 const walletData = Option.unwrap(walletState.data?.inner)
 
@@ -581,7 +583,7 @@ export class Global {
         {
           const addresses = Result.all(await Promise.all(sessionData.wallets.map(async wallet => {
             return await Result.unthrow<Result<string, Error>>(async t => {
-              const walletQuery = Wallet.schema(wallet.uuid, storage)
+              const walletQuery = BgWallet.schema(wallet.uuid, storage)
               const walletState = await walletQuery.state
               const walletData = Option.unwrap(walletState.data?.inner)
 
@@ -694,7 +696,7 @@ export class Global {
 
       const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<string, Error>>(async t => {
-          const walletQuery = Wallet.schema(wallet.uuid, storage)
+          const walletQuery = BgWallet.schema(wallet.uuid, storage)
           const walletState = await walletQuery.state
           const walletData = Option.unwrap(walletState.data?.inner)
 
@@ -712,7 +714,7 @@ export class Global {
 
       const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<string, Error>>(async t => {
-          const walletQuery = Wallet.schema(wallet.uuid, storage)
+          const walletQuery = BgWallet.schema(wallet.uuid, storage)
           const walletState = await walletQuery.state
           const walletData = Option.unwrap(walletState.data?.inner)
 
@@ -733,7 +735,7 @@ export class Global {
       if (walletRef == null)
         return new Ok(undefined)
 
-      const walletQuery = Wallet.schema(walletRef.uuid, storage)
+      const walletQuery = BgWallet.schema(walletRef.uuid, storage)
       const walletState = await walletQuery.state
       const walletData = Option.unwrap(walletState.data?.inner)
 
@@ -790,7 +792,7 @@ export class Global {
 
       const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<WalletData, Error>>(async t => {
-          const walletQuery = Wallet.schema(wallet.uuid, storage)
+          const walletQuery = BgWallet.schema(wallet.uuid, storage)
           const walletState = await walletQuery.state
           const walletData = Option.unwrap(walletState.data?.inner)
 
@@ -814,7 +816,7 @@ export class Global {
         session: session.id
       }, mouse).then(r => r.unwrap().unwrap())
 
-      return await EthereumContext.fetchOrFail<string>(ethereum, {
+      return await BgEthereumContext.fetchOrFail<string>(ethereum, {
         method: "eth_sendRawTransaction",
         params: [signature],
         noCheck: true
@@ -830,7 +832,7 @@ export class Global {
 
       const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<WalletData, Error>>(async t => {
-          const walletQuery = Wallet.schema(wallet.uuid, storage)
+          const walletQuery = BgWallet.schema(wallet.uuid, storage)
           const walletState = await walletQuery.state
           const walletData = Option.unwrap(walletState.data?.inner)
 
@@ -866,7 +868,7 @@ export class Global {
 
       const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
         return await Result.unthrow<Result<WalletData, Error>>(async t => {
-          const walletQuery = Wallet.schema(wallet.uuid, storage)
+          const walletQuery = BgWallet.schema(wallet.uuid, storage)
           const walletState = await walletQuery.state
           const walletData = Option.unwrap(walletState.data?.inner)
 
@@ -1150,7 +1152,7 @@ export class Global {
 
       const { storage } = Option.unwrap(this.#user)
 
-      const walletQuery = Wallet.schema(wallet.uuid, storage)
+      const walletQuery = BgWallet.schema(wallet.uuid, storage)
       await walletQuery.mutate(Mutators.data(wallet))
 
       return Ok.void()
@@ -1461,7 +1463,7 @@ export class Global {
 
       const { user, storage } = Option.unwrap(this.#user)
 
-      const walletQuery = Wallet.schema(walletId, storage)
+      const walletQuery = BgWallet.schema(walletId, storage)
       const walletState = await walletQuery.state
       const wallet = Option.unwrap(walletState.current?.inner)
       const chain = Option.unwrap(chainByChainId[1])
