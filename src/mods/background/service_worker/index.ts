@@ -1414,8 +1414,8 @@ export class Global {
      * When settlement has been interrupted
      */
     if (settlement != null) {
-      await session.client.tryWait<boolean>(settlement)
-        .then(r => r.unwrap().unwrap())
+      await session.client.waitOrThrow<boolean>(settlement)
+        .then(r => r.unwrap())
         .then(Result.assert)
         .then(r => r.unwrap())
 

@@ -275,20 +275,20 @@ export class CryptoClient {
     })
   }
 
-  async tryWait<T>(receipt: RpcReceipt): Promise<Result<RpcResponse<T>, Error>> {
-    const future = new Future<Result<RpcResponse<T>, Error>>()
+  async waitOrThrow<T>(receipt: RpcReceipt): Promise<RpcResponse<T>> {
+    const future = new Future<RpcResponse<T>>()
     const signal = AbortSignal.timeout(receipt.end - Date.now())
 
     const onResponse = (init: RpcResponseInit<any>) => {
       if (init.id !== receipt.id)
         return new None()
       const response = RpcResponse.from<T>(init)
-      future.resolve(new Ok(response))
+      future.resolve(response)
       return new Some(undefined)
     }
 
     const onAbort = () => {
-      future.resolve(new Err(new Error(`Timed out`)))
+      future.reject(new Error(`Timed out`))
     }
 
     try {
@@ -300,6 +300,11 @@ export class CryptoClient {
       this.events.off("response", onResponse)
       signal.removeEventListener("abort", onAbort)
     }
+  }
+
+
+  async tryWait<T>(receipt: RpcReceipt): Promise<Result<RpcResponse<T>, Error>> {
+    return await Result.runAndDoubleWrap(async () => this.waitOrThrow(receipt))
   }
 
 }
