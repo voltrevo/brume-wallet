@@ -6,7 +6,7 @@ import { ContractTokenData } from "@/mods/background/service_worker/entities/tok
 import { BgUnknown } from "@/mods/background/service_worker/entities/unknown/data";
 import { EthereumFetchParams, EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
-import { FetcherMore, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
+import { Data, FetcherMore, createQuery, useError, useFallback, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
@@ -180,6 +180,34 @@ export namespace FgEthereum {
 
   export namespace NativeBalance {
 
+    export namespace Priced {
+
+      export type Key = EthereumQueryKey<unknown>
+      export type Data = Fixed.From
+      export type Fail = Error
+
+      export function key(address: ZeroHexString, coin: "usd", chain: ChainData) {
+        return {
+          chainId: chain.chainId,
+          method: "eth_getPricedBalance",
+          params: [address, coin]
+        }
+      }
+
+      export function schema(address: Nullable<ZeroHexString>, coin: "usd", context: Nullable<FgEthereumContext>, storage: UserStorage) {
+        if (context == null)
+          return
+        if (address == null)
+          return
+
+        return createQuery<Key, Data, Fail>({
+          key: key(address, coin, context.chain),
+          storage
+        })
+      }
+
+    }
+
     export type Key = EthereumQueryKey<unknown>
     export type Data = Fixed.From
     export type Fail = Error
@@ -211,7 +239,37 @@ export namespace FgEthereum {
 
   }
 
-  export namespace TokenBalance {
+  export namespace ContractBalance {
+
+    export namespace Priced {
+
+      export type Key = EthereumQueryKey<unknown>
+      export type Data = Fixed.From
+      export type Fail = Error
+
+      export function key(address: ZeroHexString, token: ContractTokenData, coin: "usd", chain: ChainData) {
+        return {
+          chainId: chain.chainId,
+          method: "eth_getTokenPricedBalance",
+          params: [address, token.address, coin]
+        }
+      }
+
+      export function schema(account: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, coin: "usd", context: Nullable<FgEthereumContext>, storage: UserStorage) {
+        if (context == null)
+          return
+        if (account == null)
+          return
+        if (token == null)
+          return
+
+        return createQuery<Key, Data, Fail>({
+          key: key(account, token, coin, context.chain),
+          storage
+        })
+      }
+
+    }
 
     export type Key = EthereumQueryKey<unknown>
     export type Data = Fixed.From
@@ -312,7 +370,7 @@ export function useNativeBalance(address: Nullable<ZeroHexString>, context: Null
 
 export function useContractBalance(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, context: Nullable<FgEthereumContext>, prices: Nullable<Fixed.From>[]) {
   const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgEthereum.TokenBalance.schema, [address, token, context, storage])
+  const query = useQuery(FgEthereum.ContractBalance.schema, [address, token, context, storage])
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
@@ -325,5 +383,27 @@ export function useContractBalance(address: Nullable<ZeroHexString>, token: Null
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context, ...prices])
 
+  return query
+}
+
+export function useNativePricedBalance(address: Nullable<ZeroHexString>, coin: "usd", context: Nullable<FgEthereumContext>) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgEthereum.NativeBalance.Priced.schema, [address, coin, context, storage])
+  useFetch(query)
+  useVisible(query)
+  useSubscribe(query, storage)
+  useError(query, Errors.onQueryError)
+  useFallback(query, () => new Data(new Fixed(0n, 0)))
+  return query
+}
+
+export function useContractPricedBalance(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, coin: "usd", context: Nullable<FgEthereumContext>) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgEthereum.ContractBalance.Priced.schema, [address, token, coin, context, storage])
+  useFetch(query)
+  useVisible(query)
+  useSubscribe(query, storage)
+  useError(query, Errors.onQueryError)
+  useFallback(query, () => new Data(new Fixed(0n, 0)))
   return query
 }

@@ -29,14 +29,14 @@ import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useToken, useTokens } from "../tokens/data";
 import { usePairPrice } from "../tokens/pairs/data";
-import { useContractBalance, useNativeBalance } from "../unknown/data";
+import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance } from "../unknown/data";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
 import { WalletSendScreen } from "./actions/send";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
 import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
-import { useEthereumContext, usePricedBalance, useTokenPricedBalance } from "./data";
+import { useEthereumContext } from "./data";
 import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
 
 export function WalletPage(props: UUIDProps) {
@@ -353,7 +353,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
   const sendDialog = useBooleanHandle(false)
 
-  const balanceUsdFixed = usePricedBalance(wallet.address, "usd", context)
+  const balanceUsdFixed = useNativePricedBalance(wallet.address, "usd", context)
   const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
 
   const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
@@ -407,7 +407,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const sendDialog = useBooleanHandle(false)
 
-  const balanceUsdFixed = useTokenPricedBalance(context, wallet.address, token, "usd")
+  const balanceUsdFixed = useContractPricedBalance(wallet.address, token, "usd", context)
   const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
 
   const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {

@@ -1,8 +1,7 @@
 import { Errors } from "@/libs/errors/errors"
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
-import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data"
-import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet } from "@/mods/background/service_worker/entities/wallets/data"
+import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, Fixed } from "@hazae41/cubane"
@@ -333,56 +332,6 @@ export function getTotalWalletPricedBalance(address: string, coin: "usd", storag
 export function useTotalWalletPricedBalance(address: string, coin: "usd") {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(getTotalWalletPricedBalance, [address, coin, storage])
-  useFetch(query)
-  useVisible(query)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  useFallback(query, () => new Data(new Fixed(0n, 0)))
-  return query
-}
-
-export function getPricedBalance(account: string, coin: "usd", context: Nullable<FgEthereumContext>, storage: UserStorage) {
-  if (context == null)
-    return
-
-  return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
-    key: {
-      chainId: context.chain.chainId,
-      method: "eth_getPricedBalance",
-      params: [account, coin]
-    },
-    storage
-  })
-}
-
-export function usePricedBalance(address: string, coin: "usd", context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(getPricedBalance, [address, coin, context, storage])
-  useFetch(query)
-  useVisible(query)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  useFallback(query, () => new Data(new Fixed(0n, 0)))
-  return query
-}
-
-export function getTokenPricedBalance(context: Nullable<FgEthereumContext>, account: string, token: ContractTokenData, coin: "usd", storage: UserStorage) {
-  if (context == null)
-    return
-
-  return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
-    key: {
-      chainId: context.chain.chainId,
-      method: "eth_getTokenPricedBalance",
-      params: [account, token.address, coin]
-    },
-    storage
-  })
-}
-
-export function useTokenPricedBalance(context: Nullable<FgEthereumContext>, address: string, token: ContractTokenData, coin: "usd") {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(getTokenPricedBalance, [context, address, token, coin, storage])
   useFetch(query)
   useVisible(query)
   useSubscribe(query, storage)
