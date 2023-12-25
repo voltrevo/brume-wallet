@@ -45,9 +45,8 @@ import { precacheAndRoute } from "workbox-precaching"
 import { BgBlobby, BlobbyRef } from "./entities/blobbys/data"
 import { EthBrume, WcBrume } from "./entities/brumes/data"
 import { BgOrigin, OriginData, PreOriginData } from "./entities/origins/data"
-import { BgAppRequests } from "./entities/requests/all/data"
 import { AppRequest, AppRequestData, BgAppRequest } from "./entities/requests/data"
-import { Seed, SeedData } from "./entities/seeds/data"
+import { BgSeed, SeedData } from "./entities/seeds/data"
 import { PersistentSessions } from "./entities/sessions/all/data"
 import { ExSessionData, Session, SessionByOrigin, SessionData, SessionRef, WcSessionData } from "./entities/sessions/data"
 import { Status, StatusData } from "./entities/sessions/status/data"
@@ -157,8 +156,8 @@ export class Global {
   ) {
     this.circuits = new Mutex(Circuits.pool(this.tors, consensus, { capacity: 9 }))
 
-    core.onState.on(BgAppRequests.key, async () => {
-      const state = core.getStateSync(BgAppRequests.key) as State<AppRequest[], never>
+    core.onState.on(BgAppRequest.All.key, async () => {
+      const state = core.getStateSync(BgAppRequest.All.key) as State<AppRequest[], never>
 
       const badge = Option
         .wrap(state?.data?.inner?.length)
@@ -1139,7 +1138,7 @@ export class Global {
 
       const { storage } = Option.unwrap(this.#user)
 
-      const seedQuery = Seed.Background.schema(seed.uuid, storage)
+      const seedQuery = BgSeed.Background.schema(seed.uuid, storage)
       await seedQuery.mutate(Mutators.data(seed))
 
       return Ok.void()

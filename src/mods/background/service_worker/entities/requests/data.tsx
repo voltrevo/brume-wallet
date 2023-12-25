@@ -1,7 +1,6 @@
 import { Mutators } from "@/libs/glacier/mutators"
 import { Data, States, createQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { BgAppRequests } from "./all/data"
 
 export type AppRequest =
   | AppRequestRef
@@ -30,13 +29,27 @@ export interface AppRequestData {
 
 export namespace BgAppRequest {
 
-  export type Key = ReturnType<typeof key>
+  export namespace All {
+
+    export type Key = string
+    export type Data = AppRequest[]
+    export type Fail = never
+
+    export const key = `requests`
+
+    export function schema() {
+      return createQuery<Key, Data, Fail>({ key })
+    }
+
+  }
+
+  export type Key = string
+  export type Data = AppRequestData
+  export type Fail = never
 
   export function key(id: string) {
     return `request/${id}`
   }
-
-  export type Schema = ReturnType<typeof schema>
 
   export function schema(id: string) {
     const indexer = async (states: States<AppRequestData, never>) => {
@@ -45,7 +58,7 @@ export namespace BgAppRequest {
       const previousData = previous.real?.data
       const currentData = current.real?.data
 
-      await BgAppRequests.schema().mutate(Mutators.mapData((d = new Data([])) => {
+      await BgAppRequest.All.schema().mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData?.inner.id === currentData?.inner.id)
           return d
         if (previousData != null)
@@ -56,7 +69,7 @@ export namespace BgAppRequest {
       }))
     }
 
-    return createQuery<Key, AppRequestData, never>({ key: key(id), indexer })
+    return createQuery<Key, Data, Fail>({ key: key(id), indexer })
   }
 
 }

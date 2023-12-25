@@ -26,16 +26,16 @@ export interface OriginData {
 
 export namespace BgOrigin {
 
-  export type Key = ReturnType<typeof key>
+  export type Key = string
+  export type Data = OriginData
+  export type Fail = never
 
   export function key(origin: string) {
     return `origins/${origin}`
   }
 
-  export type Schema = ReturnType<typeof schema>
-
   export function schema(origin: string, storage: IDBStorage) {
-    return createQuery<Key, OriginData, never>({ key: key(origin), storage })
+    return createQuery<Key, Data, Fail>({ key: key(origin), storage })
   }
 
 }

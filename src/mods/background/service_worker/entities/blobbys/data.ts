@@ -28,16 +28,16 @@ export interface BlobbyData {
 
 export namespace BgBlobby {
 
-  export type Key = ReturnType<typeof key>
+  export type Key = string
+  export type Data = BlobbyData
+  export type Fail = never
 
   export function key(id: string) {
     return `blobby/${id}`
   }
 
-  export type Schema = ReturnType<typeof schema>
-
   export function schema(id: string, storage: IDBStorage) {
-    return createQuery<Key, BlobbyData, never>({ key: key(id), storage })
+    return createQuery<Key, Data, Fail>({ key: key(id), storage })
   }
 
 }

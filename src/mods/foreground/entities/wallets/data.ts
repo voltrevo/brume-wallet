@@ -3,7 +3,6 @@ import { Errors } from "@/libs/errors/errors"
 import { ChainData, PairInfo } from "@/libs/ethereum/mods/chain"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
-import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data"
 import { BgEns, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
@@ -20,6 +19,7 @@ import { useBackgroundContext } from "../../background/context"
 import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { SeedInstance } from "../seeds/all/data"
+import { FgSeed } from "../seeds/data"
 
 export interface WalletProps {
   wallet: Wallet
@@ -68,7 +68,7 @@ export class EthereumSeededWalletInstance {
   static async tryNew(data: EthereumSeededWalletData, background: Background): Promise<Result<EthereumSeededWalletInstance, Error>> {
     return await Result.unthrow(async t => {
       const storage = new UserStorage(background)
-      const seedQuery = Seed.Foreground.schema(data.seed.uuid, storage)
+      const seedQuery = FgSeed.schema(data.seed.uuid, storage)
       const seedState = await seedQuery?.state
       const seedData = Option.wrap(seedState?.data?.inner).ok().throw(t)
 

@@ -1,8 +1,5 @@
 import { Mutators } from "@/libs/glacier/mutators"
-import { UserStorage } from "@/mods/foreground/storage/user"
 import { Data, IDBStorage, States, createQuery } from "@hazae41/glacier"
-import { Nullable } from "@hazae41/option"
-import { Seeds } from "./all/data"
 
 export type Seed =
   | SeedRef
@@ -71,11 +68,27 @@ export interface LedgerSeedData {
   readonly address: string
 }
 
-export namespace Seed {
+export namespace BgSeed {
 
-  export type Key = ReturnType<typeof key>
+  export namespace All {
 
-  export function key(uuid: string) {
+    export type Key = typeof key
+    export type Data = SeedRef[]
+    export type Fail = never
+
+    export const key = `seeds`
+
+    export function schema(storage: IDBStorage) {
+      return createQuery<Key, Data, Fail>({ key, storage })
+    }
+
+  }
+
+  export type Key = string
+  export type Data = SeedData
+  export type Fail = never
+
+  export function key(uuid: string): Key {
     return `seed/${uuid}`
   }
 
@@ -88,7 +101,7 @@ export namespace Seed {
         const previousData = previous.real?.data
         const currentData = current.real?.data
 
-        await Seeds.Background.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+        await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
           if (previousData?.inner.uuid === currentData?.inner.uuid)
             return d
           if (previousData != null)
@@ -99,15 +112,7 @@ export namespace Seed {
         }))
       }
 
-      return createQuery<Key, SeedData, never>({ key: key(uuid), storage, indexer })
-    }
-
-  }
-
-  export namespace Foreground {
-
-    export function schema(uuid: Nullable<string>, storage: UserStorage) {
-      if (uuid) return createQuery<Key, SeedData, never>({ key: key(uuid), storage })
+      return createQuery<Key, Data, Fail>({ key: key(uuid), storage, indexer })
     }
 
   }
