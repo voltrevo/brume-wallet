@@ -3,7 +3,7 @@ import { Errors } from "@/libs/errors/errors";
 import { ChainData } from "@/libs/ethereum/mods/chain";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
-import { BgUnknown } from "@/mods/background/service_worker/entities/unknown/data";
+import { BgEthereum } from "@/mods/background/service_worker/entities/unknown/data";
 import { EthereumFetchParams, EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
 import { FetcherMore, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
@@ -13,41 +13,33 @@ import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
 import { FgEthereumContext, fetchOrFail, indexOrThrow } from "../wallets/data";
 
-export namespace FgUnknown {
-
-  export type Key = BgUnknown.Key
-  export type Data = BgUnknown.Data
-  export type Fail = BgUnknown.Fail
-
-  export const key = BgUnknown.key
-
-  export function schema<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, context: Nullable<FgEthereumContext>, storage: UserStorage) {
-    if (context == null)
-      return
-
-    const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-      await fetchOrFail<T>(request, context)
-
-    return createQuery<Key, T, Fail>({
-      key: key(context.chain.chainId, request),
-      fetcher,
-      storage
-    })
-  }
-
-}
-
-export function useUnknown(request: RpcRequestPreinit<unknown> & EthereumFetchParams, context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgUnknown.schema, [request, context, storage])
-  useFetch(query)
-  useVisible(query)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  return query
-}
-
 export namespace FgEthereum {
+
+  export namespace Unknown {
+
+    export type Key = BgEthereum.Unknown.Key
+    export type Data = BgEthereum.Unknown.Data
+    export type Fail = BgEthereum.Unknown.Fail
+
+    export const key = BgEthereum.Unknown.key
+
+    export function schema<T>(request: Nullable<RpcRequestPreinit<unknown> & EthereumFetchParams>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
+      if (context == null)
+        return
+      if (request == null)
+        return
+
+      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+        await fetchOrFail<T>(request, context)
+
+      return createQuery<Key, T, Fail>({
+        key: key(context.chain.chainId, request),
+        fetcher,
+        storage
+      })
+    }
+
+  }
 
   export namespace EstimateGas {
 
@@ -305,6 +297,16 @@ export namespace FgEthereum {
 
 }
 
+export function useUnknown(request: Nullable<RpcRequestPreinit<unknown> & EthereumFetchParams>, context: Nullable<FgEthereumContext>) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgEthereum.Unknown.schema, [request, context, storage])
+  useFetch(query)
+  useVisible(query)
+  useSubscribe(query, storage)
+  useError(query, Errors.onQueryError)
+  return query
+}
+
 export function useEstimateGas(request: Nullable<RpcRequestPreinit<[unknown, unknown]>>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgEthereum.EstimateGas.schema, [request, context, storage])
@@ -409,39 +411,43 @@ export function useContractPricedBalance(address: Nullable<ZeroHexString>, token
   return query
 }
 
-export namespace FgTotalBalance {
+export namespace FgTotal {
 
-  export namespace Priced {
+  export namespace Balance {
 
-    export namespace ByAddress {
+    export namespace Priced {
+
+      export namespace ByAddress {
+
+        export type Key = string
+        export type Data = Fixed.From
+        export type Fail = never
+
+        export function key(address: ZeroHexString, coin: "usd") {
+          return `totalWalletPricedBalance/${address}/${coin}`
+        }
+
+        export function schema(address: Nullable<ZeroHexString>, coin: "usd", storage: UserStorage) {
+          if (address == null)
+            return
+
+          return createQuery<Key, Data, Fail>({ key: key(address, coin), storage })
+        }
+
+      }
 
       export type Key = string
       export type Data = Fixed.From
       export type Fail = never
 
-      export function key(address: ZeroHexString, coin: "usd") {
-        return `totalWalletPricedBalance/${address}/${coin}`
+      export function key(coin: "usd") {
+        return `totalPricedBalance/${coin}`
       }
 
-      export function schema(address: Nullable<ZeroHexString>, coin: "usd", storage: UserStorage) {
-        if (address == null)
-          return
-
-        return createQuery<Key, Data, Fail>({ key: key(address, coin), storage })
+      export function schema(coin: "usd", storage: UserStorage) {
+        return createQuery<Key, Data, Fail>({ key: key(coin), storage })
       }
 
-    }
-
-    export type Key = string
-    export type Data = Fixed.From
-    export type Fail = never
-
-    export function key(coin: "usd") {
-      return `totalPricedBalance/${coin}`
-    }
-
-    export function schema(coin: "usd", storage: UserStorage) {
-      return createQuery<Key, Data, Fail>({ key: key(coin), storage })
     }
 
   }
@@ -451,14 +457,14 @@ export namespace FgTotalBalance {
 
 export function useTotalPricedBalance(coin: "usd") {
   const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgTotalBalance.Priced.schema, [coin, storage])
+  const query = useQuery(FgTotal.Balance.Priced.schema, [coin, storage])
   useSubscribe(query, storage)
   return query
 }
 
 export function useTotalWalletPricedBalance(address: Nullable<ZeroHexString>, coin: "usd") {
   const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgTotalBalance.Priced.ByAddress.schema, [address, coin, storage])
+  const query = useQuery(FgTotal.Balance.Priced.ByAddress.schema, [address, coin, storage])
   useSubscribe(query, storage)
   return query
 }

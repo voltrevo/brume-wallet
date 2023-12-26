@@ -53,9 +53,9 @@ import { BgSession, ExSessionData, SessionData, SessionRef, WcSessionData } from
 import { Status, StatusData } from "./entities/sessions/status/data"
 import { BgSettings } from "./entities/settings/data"
 import { BgSignature } from "./entities/signatures/data"
-import { BgContractToken, BgNativeToken } from "./entities/tokens/data"
+import { BgToken } from "./entities/tokens/data"
 import { BgPair } from "./entities/tokens/pairs/data"
-import { BgUnknown } from "./entities/unknown/data"
+import { BgEthereum } from "./entities/unknown/data"
 import { BgUser, User, UserData, UserInit, UserSession } from "./entities/users/data"
 import { BgWallet, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
 import { createUserStorageOrThrow } from "./storage"
@@ -764,7 +764,7 @@ export class Global {
 
       const { storage } = Option.unwrap(this.#user)
 
-      const query = BgNativeToken.Balance.schema(ethereum, address, block, storage)
+      const query = BgToken.Native.Balance.schema(ethereum, address, block, storage)
 
       try { await query.fetch() } catch { }
 
@@ -1258,10 +1258,10 @@ export class Global {
   }
 
   async routeOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<SimpleQuery<any, any, Error>> {
-    if (request.method === BgNativeToken.Balance.method)
-      return await BgNativeToken.Balance.parseOrThrow(ethereum, request, storage)
-    if (request.method === BgContractToken.Balance.method)
-      return await BgContractToken.Balance.parseOrThrow(ethereum, request, storage)
+    if (request.method === BgToken.Native.Balance.method)
+      return await BgToken.Native.Balance.parseOrThrow(ethereum, request, storage)
+    if (request.method === BgToken.Contract.Balance.method)
+      return await BgToken.Contract.Balance.parseOrThrow(ethereum, request, storage)
     if (request.method === BgPair.Price.method)
       return await BgPair.Price.parseOrThrow(ethereum, request, storage)
     if (request.method === BgEns.Lookup.method)
@@ -1286,7 +1286,7 @@ export class Global {
     if (request.method === "eth_maxPriorityFeePerGas")
       request.noCheck = true
 
-    return BgUnknown.schema(ethereum, request, storage)
+    return BgEthereum.Unknown.schema(ethereum, request, storage)
   }
 
   async brume_eth_index(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {

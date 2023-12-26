@@ -15,7 +15,7 @@ import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { useDeferredValue, useMemo, useState } from "react";
-import { FgUnknown } from "../../unknown/data";
+import { FgEthereum } from "../../unknown/data";
 import { useWalletDataContext } from "../../wallets/context";
 import { useToken } from "../data";
 
@@ -46,7 +46,7 @@ export function TokenAddDialog(props: {}) {
         const signature = Cubane.Abi.FunctionSignature.tryParse("name()").throw(t)
         const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
 
-        const schema = FgUnknown.schema<ZeroHexString>({
+        const schema = FgEthereum.Unknown.schema<ZeroHexString>({
           method: "eth_call",
           params: [{
             to: defAddress,
@@ -70,7 +70,7 @@ export function TokenAddDialog(props: {}) {
         const signature = Cubane.Abi.FunctionSignature.tryParse("symbol()").throw(t)
         const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
 
-        const schema = FgUnknown.schema<ZeroHexString>({
+        const schema = FgEthereum.Unknown.schema<ZeroHexString>({
           method: "eth_call",
           params: [{
             to: defAddress,
@@ -94,7 +94,7 @@ export function TokenAddDialog(props: {}) {
         const signature = Cubane.Abi.FunctionSignature.tryParse("decimals()").throw(t)
         const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
 
-        const schema = FgUnknown.schema<ZeroHexString>({
+        const schema = FgEthereum.Unknown.schema<ZeroHexString>({
           method: "eth_call",
           params: [{
             to: defAddress,

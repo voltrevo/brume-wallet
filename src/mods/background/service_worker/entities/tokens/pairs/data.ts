@@ -1,13 +1,11 @@
 import { PairAbi } from "@/libs/abi/pair.abi"
 import { PairData, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
-import { Mutators } from "@/libs/glacier/mutators"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fetched, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
+import { Data, Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Option } from "@hazae41/option"
 import { BgEthereumContext } from "../../../context"
-import { EthereumQueryKey, getPricedBalanceByToken } from "../../wallets/data"
-import { ContractTokenData } from "../data"
+import { EthereumQueryKey } from "../../wallets/data"
 
 export namespace BgPair {
 
@@ -82,24 +80,4 @@ export namespace BgPair {
 
   }
 
-}
-
-export function getTokenPricedBalance(ethereum: BgEthereumContext, account: string, token: ContractTokenData, coin: "usd", storage: IDBStorage) {
-  const indexer = async (states: States<Fixed.From, Error>) => {
-    const key = `${ethereum.chain.chainId}/${token.address}`
-    const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
-
-    const indexQuery = getPricedBalanceByToken(account, coin, storage)
-    await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
-  }
-
-  return createQuery<EthereumQueryKey<unknown>, Fixed.From, Error>({
-    key: {
-      chainId: ethereum.chain.chainId,
-      method: "eth_getTokenPricedBalance",
-      params: [account, token.address, coin]
-    },
-    indexer,
-    storage
-  })
 }
