@@ -1,5 +1,6 @@
-import { BgAppRequest } from "@/mods/background/service_worker/entities/requests/data";
-import { createQuery, useQuery } from "@hazae41/glacier";
+import { Mutators } from "@/libs/glacier/mutators";
+import { AppRequestRef, BgAppRequest } from "@/mods/background/service_worker/entities/requests/data";
+import { Data, States, createQuery, useQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
@@ -30,7 +31,24 @@ export namespace FgAppRequest {
     if (id == null)
       return
 
-    return createQuery<Key, Data, Fail>({ key: key(id), storage })
+    const indexer = async (states: States<Data, Fail>) => {
+      const { current, previous = current } = states
+
+      const previousData = previous.real?.data
+      const currentData = current.real?.data
+
+      await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+        if (previousData?.inner.id === currentData?.inner.id)
+          return d
+        if (previousData != null)
+          d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
+        if (currentData != null)
+          d = d.mapSync(p => [...p, AppRequestRef.from(currentData.inner)])
+        return d
+      }))
+    }
+
+    return createQuery<Key, Data, Fail>({ key: key(id), indexer, storage })
   }
 
 }

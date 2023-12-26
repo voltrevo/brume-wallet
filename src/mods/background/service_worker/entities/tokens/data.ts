@@ -112,11 +112,7 @@ export namespace BgToken {
         await totalBalance.mutate(Mutators.data<Fixed.From, never>(total))
       }
 
-      return createQuery<Key, Data, Fail>({
-        key: key(address, currency),
-        indexer,
-        storage
-      })
+      return createQuery<Key, Data, Fail>({ key: key(address, currency), indexer, storage })
     }
 
   }
@@ -178,25 +174,25 @@ export namespace BgToken {
         return schema(account, block, ethereum, storage)
       }
 
-      export function schema(account: ZeroHexString, block: string, ethereum: BgEthereumContext, storage: IDBStorage) {
+      export function schema(account: ZeroHexString, block: string, context: BgEthereumContext, storage: IDBStorage) {
         const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore) =>
-          await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, more).then(f => f.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals)))
+          await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more).then(f => f.mapSync(x => new ZeroHexFixed(x, context.chain.token.decimals)))
 
         const indexer = async (states: States<Data, Fail>) => {
           if (block !== "pending")
             return
 
           const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
-            if (ethereum.chain.token.pairs == null)
+            if (context.chain.token.pairs == null)
               return new None()
 
             let pricedBalance: Fixed = Fixed.from(balance)
 
-            for (const pairAddress of ethereum.chain.token.pairs) {
+            for (const pairAddress of context.chain.token.pairs) {
               const pair = pairByAddress[pairAddress]
               const chain = chainByChainId[pair.chainId]
 
-              const price = BgPair.Price.schema({ ...ethereum, chain }, pair, storage)
+              const price = BgPair.Price.schema({ ...context, chain }, pair, storage)
               const priceState = await price.state
 
               if (priceState.data == null)
@@ -208,12 +204,12 @@ export namespace BgToken {
             return new Some(pricedBalance)
           }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
-          const pricedBalanceQuery = Priced.schema(account, "usd", ethereum, storage)
+          const pricedBalanceQuery = Priced.schema(account, "usd", context, storage)
           await pricedBalanceQuery.mutate(Mutators.set<Fixed.From, never>(new Data(pricedBalance)))
         }
 
         return createQuery<Key, Data, Fail>({
-          key: key(account, block, ethereum.chain),
+          key: key(account, block, context.chain),
           fetcher,
           indexer,
           storage

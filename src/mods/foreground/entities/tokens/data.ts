@@ -1,4 +1,5 @@
 import { Errors } from "@/libs/errors/errors"
+import { chainByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { BgToken, ContractTokenData, ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data"
@@ -7,10 +8,37 @@ import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/us
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, FetcherMore, States, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
-import { Nullable } from "@hazae41/option"
+import { None, Nullable, Option, Some } from "@hazae41/option"
+import { FgTotal } from "../unknown/data"
 import { FgEthereumContext, fetchOrFail, indexOrThrow } from "../wallets/data"
+import { FgPair } from "./pairs/data"
 
 export namespace FgToken {
+
+  export namespace Balance {
+
+    export type Key = BgToken.Balance.Key
+    export type Data = BgToken.Balance.Data
+    export type Fail = BgToken.Balance.Fail
+
+    export const key = BgToken.Balance.key
+
+    export function schema(address: Nullable<ZeroHexString>, currency: "usd", storage: UserStorage) {
+      if (address == null)
+        return
+
+      const indexer = async (states: States<Data, Fail>) => {
+        const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
+        const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
+
+        const totalBalance = FgTotal.Balance.Priced.ByAddress.schema(address, currency, storage)
+        await totalBalance?.mutate(Mutators.data<Fixed.From, never>(total))
+      }
+
+      return createQuery<Key, Data, Fail>({ key: key(address, currency), indexer, storage })
+    }
+
+  }
 
   export namespace Native {
 
@@ -30,8 +58,17 @@ export namespace FgToken {
           if (address == null)
             return
 
+          const indexer = async (states: States<Data, Fail>) => {
+            const key = `${context.chain.chainId}`
+            const value = Option.wrap(states.current.real?.data?.inner).unwrapOr(new Fixed(0n, 0))
+
+            const indexQuery = FgToken.Balance.schema(address, coin, storage)
+            await indexQuery?.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
+          }
+
           return createQuery<Key, Data, Fail>({
             key: key(address, coin, context.chain),
+            indexer,
             storage
           })
         }
@@ -55,15 +92,45 @@ export namespace FgToken {
         const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
           await fetchOrFail<Fixed.From>(request, context)
 
+        const indexer = async (states: States<Data, Fail>) => {
+          if (block !== "pending")
+            return
+
+          const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
+            if (context.chain.token.pairs == null)
+              return new None()
+
+            let pricedBalance: Fixed = Fixed.from(balance)
+
+            for (const pairAddress of context.chain.token.pairs) {
+              const pair = pairByAddress[pairAddress]
+              const chain = chainByChainId[pair.chainId]
+
+              const price = FgPair.Price.schema({ ...context, chain }, pair, storage)
+              const priceState = await price?.state
+
+              if (priceState?.data == null)
+                return new None()
+
+              pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
+            }
+
+            return new Some(pricedBalance)
+          }).then(o => o.unwrapOr(new Fixed(0n, 0)))
+
+          const pricedBalanceQuery = Priced.schema(address, "usd", context, storage)
+          await pricedBalanceQuery?.mutate(Mutators.set<Fixed.From, never>(new Data(pricedBalance)))
+        }
+
         return createQuery<Key, Data, Fail>({
           key: key(address, block, context.chain),
           fetcher,
+          indexer,
           storage
         })
+
       }
-
     }
-
   }
 
   export namespace Contract {

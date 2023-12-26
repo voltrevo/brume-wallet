@@ -1,12 +1,13 @@
 import { BigIntToHex } from "@/libs/bigints/bigints";
 import { Errors } from "@/libs/errors/errors";
 import { ChainData } from "@/libs/ethereum/mods/chain";
-import { BgEthereum } from "@/mods/background/service_worker/entities/unknown/data";
+import { Mutators } from "@/libs/glacier/mutators";
+import { BgEthereum, BgTotal } from "@/mods/background/service_worker/entities/unknown/data";
 import { EthereumFetchParams, EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
-import { FetcherMore, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
+import { Data, FetcherMore, States, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
-import { Nullable } from "@hazae41/option";
+import { Nullable, Option } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
 import { FgEthereumContext, fetchOrFail } from "../wallets/data";
@@ -232,6 +233,28 @@ export namespace FgTotal {
 
       export namespace ByAddress {
 
+        export namespace Record {
+
+          export type Key = BgTotal.Balance.Priced.ByAddress.Record.Key
+          export type Data = BgTotal.Balance.Priced.ByAddress.Record.Data
+          export type Fail = BgTotal.Balance.Priced.ByAddress.Record.Fail
+
+          export const key = BgTotal.Balance.Priced.ByAddress.Record.key
+
+          export function schema(coin: "usd", storage: UserStorage) {
+            const indexer = async (states: States<Data, Fail>) => {
+              const values = Option.wrap(states.current.real?.data?.inner).unwrapOr({})
+              const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
+
+              const totalQuery = Priced.schema(coin, storage)
+              await totalQuery.mutate(Mutators.data<Fixed.From, never>(total))
+            }
+
+            return createQuery<Key, Data, Fail>({ key: key(coin), indexer, storage })
+          }
+
+        }
+
         export type Key = string
         export type Data = Fixed.From
         export type Fail = never
@@ -244,7 +267,14 @@ export namespace FgTotal {
           if (address == null)
             return
 
-          return createQuery<Key, Data, Fail>({ key: key(address, coin), storage })
+          const indexer = async (states: States<Data, Fail>) => {
+            const indexQuery = Record.schema(coin, storage)
+
+            const value = Option.wrap(states.current.real?.data?.inner).unwrapOr(new Fixed(0n, 0))
+            await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [address]: value }), new Data({})))
+          }
+
+          return createQuery<Key, Data, Fail>({ key: key(address, coin), indexer, storage })
         }
 
       }

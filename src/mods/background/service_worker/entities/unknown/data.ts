@@ -57,15 +57,11 @@ export namespace BgTotal {
               const values = Option.wrap(states.current.real?.data?.inner).unwrapOr({})
               const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-              const totalQuery = BgTotal.Balance.Priced.schema(coin, storage)
+              const totalQuery = Priced.schema(coin, storage)
               await totalQuery.mutate(Mutators.data<Fixed.From, never>(total))
             }
 
-            return createQuery<Key, Data, Fail>({
-              key: key(coin),
-              indexer,
-              storage
-            })
+            return createQuery<Key, Data, Fail>({ key: key(coin), indexer, storage })
           }
 
         }
