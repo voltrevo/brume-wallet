@@ -1,5 +1,6 @@
-import { BgUser } from "@/mods/background/service_worker/entities/users/data"
-import { createQuery, useQuery } from "@hazae41/glacier"
+import { Mutators } from "@/libs/glacier/mutators"
+import { BgUser, UserRef } from "@/mods/background/service_worker/entities/users/data"
+import { Data, States, createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { GlobalStorage, useGlobalStorageContext } from "../../storage/global"
 import { useSubscribe } from "../../storage/storage"
@@ -44,7 +45,24 @@ export namespace FgUser {
     if (uuid == null)
       return
 
-    return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
+    const indexer = async (states: States<Data, Fail>) => {
+      const { current, previous = current } = states
+
+      const previousData = previous.real?.data
+      const currentData = current.real?.data
+
+      await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+        if (previousData?.inner.uuid === currentData?.inner.uuid)
+          return d
+        if (previousData != null)
+          d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
+        if (currentData != null)
+          d = d.mapSync(p => [...p, UserRef.from(currentData.inner)])
+        return d
+      }))
+    }
+
+    return createQuery<Key, Data, Fail>({ key: key(uuid), indexer, storage })
   }
 
 }

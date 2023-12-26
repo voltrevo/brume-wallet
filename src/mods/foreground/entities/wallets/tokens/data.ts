@@ -1,7 +1,7 @@
 import { Mutators } from "@/libs/glacier/mutators"
 import { Token } from "@/mods/background/service_worker/entities/tokens/data"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
-import { BgTokenSettings, TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data"
+import { BgTokenSettings, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data"
 import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
 import { Data, States, createQuery, useQuery } from "@hazae41/glacier"
@@ -11,13 +11,26 @@ export namespace FgTokenSettings {
 
   export namespace ByWallet {
 
+    export type Key = BgTokenSettings.ByWallet.Key
+    export type Data = BgTokenSettings.ByWallet.Data
+    export type Fail = BgTokenSettings.ByWallet.Fail
+
+    export const key = BgTokenSettings.ByWallet.key
+
     export function schema(wallet: Nullable<Wallet>, storage: UserStorage) {
       if (wallet == null)
         return
-      return createQuery<string, TokenSettingsRef[], never>({ key: BgTokenSettings.ByWallet.key(wallet), storage })
+
+      return createQuery<Key, Data, Fail>({ key: key(wallet), storage })
     }
 
   }
+
+  export type Key = BgTokenSettings.Key
+  export type Data = BgTokenSettings.Data
+  export type Fail = BgTokenSettings.Fail
+
+  export const key = BgTokenSettings.key
 
   export function schema(wallet: Nullable<Wallet>, token: Nullable<Token>, storage: UserStorage) {
     if (wallet == null)
@@ -25,7 +38,7 @@ export namespace FgTokenSettings {
     if (token == null)
       return
 
-    const indexer = async (states: States<TokenSettingsData, never>) => {
+    const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.data?.inner
@@ -47,7 +60,7 @@ export namespace FgTokenSettings {
       }
     }
 
-    return createQuery<string, TokenSettingsData, never>({ key: BgTokenSettings.key(wallet, token), storage, indexer })
+    return createQuery<Key, Data, Fail>({ key: key(wallet, token), storage, indexer })
   }
 
 }

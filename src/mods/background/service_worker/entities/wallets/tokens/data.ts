@@ -70,7 +70,7 @@ export namespace BgTokenSettings {
     if (token == null)
       return
 
-    const indexer = async (states: States<TokenSettingsData, never>) => {
+    const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.data?.inner

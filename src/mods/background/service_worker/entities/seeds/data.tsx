@@ -92,29 +92,25 @@ export namespace BgSeed {
     return `seed/${uuid}`
   }
 
-  export namespace Background {
+  export function schema(uuid: string, storage: IDBStorage) {
+    const indexer = async (states: States<Data, Fail>) => {
+      const { current, previous = current } = states
 
-    export function schema(uuid: string, storage: IDBStorage) {
-      const indexer = async (states: States<SeedData, never>) => {
-        const { current, previous = current } = states
+      const previousData = previous.real?.data
+      const currentData = current.real?.data
 
-        const previousData = previous.real?.data
-        const currentData = current.real?.data
-
-        await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
-          if (previousData?.inner.uuid === currentData?.inner.uuid)
-            return d
-          if (previousData != null)
-            d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
-          if (currentData != null)
-            d = d.mapSync(p => [...p, SeedRef.from(currentData.inner)])
+      await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+        if (previousData?.inner.uuid === currentData?.inner.uuid)
           return d
-        }))
-      }
-
-      return createQuery<Key, Data, Fail>({ key: key(uuid), storage, indexer })
+        if (previousData != null)
+          d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
+        if (currentData != null)
+          d = d.mapSync(p => [...p, SeedRef.from(currentData.inner)])
+        return d
+      }))
     }
 
+    return createQuery<Key, Data, Fail>({ key: key(uuid), storage, indexer })
   }
 
 }

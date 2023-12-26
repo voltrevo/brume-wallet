@@ -143,7 +143,7 @@ export namespace FgToken {
     export const key = BgToken.Contract.key
 
     export function schema(chainId: number, address: string, storage: UserStorage) {
-      const indexer = async (states: States<ContractTokenData, never>) => {
+      const indexer = async (states: States<Data, Fail>) => {
         const { current, previous } = states
 
         const previousData = previous?.real?.data?.inner

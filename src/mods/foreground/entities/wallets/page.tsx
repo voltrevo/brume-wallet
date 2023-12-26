@@ -16,7 +16,7 @@ import { Url } from "@/libs/url/url";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
-import { TokenSettingsData, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data";
+import { TokenSettings, TokenSettingsData } from "@/mods/background/service_worker/entities/wallets/tokens/data";
 import { Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
@@ -295,7 +295,7 @@ function useTokensEditContext() {
   return Option.wrap(useContext(TokensEditContext))
 }
 
-function AddedTokenRow(props: { settingsRef: TokenSettingsRef }) {
+function AddedTokenRow(props: { settingsRef: TokenSettings }) {
   const wallet = useWalletDataContext().unwrap()
 
   const { settingsRef } = props

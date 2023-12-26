@@ -169,7 +169,7 @@ export namespace BgWallet {
   }
 
   export function schema(uuid: string, storage: IDBStorage) {
-    const indexer = async (states: States<WalletData, never>) => {
+    const indexer = async (states: States<Data, Fail>) => {
       const { current, previous = current } = states
 
       const previousData = previous.real?.data
@@ -202,11 +202,7 @@ export namespace BgWallet {
       }
     }
 
-    return createQuery<Key, Data, never>({
-      key: key(uuid),
-      storage,
-      indexer
-    })
+    return createQuery<Key, Data, never>({ key: key(uuid), indexer, storage })
   }
 
 }

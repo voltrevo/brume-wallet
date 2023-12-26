@@ -52,7 +52,7 @@ export namespace BgAppRequest {
   }
 
   export function schema(id: string) {
-    const indexer = async (states: States<AppRequestData, never>) => {
+    const indexer = async (states: States<Data, Fail>) => {
       const { current, previous = current } = states
 
       const previousData = previous.real?.data

@@ -1,10 +1,11 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
+import { Mutators } from "@/libs/glacier/mutators"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
-import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet } from "@/mods/background/service_worker/entities/wallets/data"
+import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletRef } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi } from "@hazae41/cubane"
-import { Fetched, createQuery, useQuery } from "@hazae41/glacier"
+import { Data, Fetched, States, createQuery, useQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable, Option } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
@@ -64,7 +65,40 @@ export namespace FgWallet {
     if (uuid == null)
       return
 
-    return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
+    const indexer = async (states: States<Data, Fail>) => {
+      const { current, previous = current } = states
+
+      const previousData = previous.real?.data
+      const currentData = current.real?.data
+
+      await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+        if (previousData?.inner.uuid === currentData?.inner.uuid)
+          return d
+        if (previousData != null)
+          d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
+        if (currentData != null)
+          d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
+        return d
+      }))
+
+      if (currentData?.inner.type === "seeded") {
+        const { seed } = currentData.inner
+
+        const walletsBySeedQuery = All.BySeed.schema(seed.uuid, storage)
+
+        await walletsBySeedQuery?.mutate(Mutators.mapData((d = new Data([])) => {
+          if (previousData?.inner.uuid === currentData?.inner.uuid)
+            return d
+          if (previousData != null)
+            d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
+          if (currentData != null)
+            d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
+          return d
+        }))
+      }
+    }
+
+    return createQuery<Key, Data, Fail>({ key: key(uuid), indexer, storage })
   }
 
 }

@@ -104,7 +104,7 @@ export namespace BgToken {
     }
 
     export function schema(address: ZeroHexString, currency: "usd", storage: IDBStorage) {
-      const indexer = async (states: States<Record<string, Fixed.From>, Error>) => {
+      const indexer = async (states: States<Data, Fail>) => {
         const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
         const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
@@ -140,7 +140,7 @@ export namespace BgToken {
         }
 
         export function schema(account: ZeroHexString, coin: "usd", ethereum: BgEthereumContext, storage: IDBStorage) {
-          const indexer = async (states: States<Fixed.From, Error>) => {
+          const indexer = async (states: States<Data, Fail>) => {
             const key = `${ethereum.chain.chainId}`
             const value = Option.wrap(states.current.real?.data?.inner).unwrapOr(new Fixed(0n, 0))
 
@@ -182,7 +182,7 @@ export namespace BgToken {
         const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore) =>
           await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, more).then(f => f.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals)))
 
-        const indexer = async (states: States<Fixed.From, Error>) => {
+        const indexer = async (states: States<Data, Fail>) => {
           if (block !== "pending")
             return
 
@@ -258,7 +258,7 @@ export namespace BgToken {
         }
 
         export function schema(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, coin: "usd", storage: IDBStorage) {
-          const indexer = async (states: States<Fixed.From, Error>) => {
+          const indexer = async (states: States<Data, Fail>) => {
             const key = `${ethereum.chain.chainId}/${token.address}`
             const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
 
@@ -328,7 +328,7 @@ export namespace BgToken {
           }
         }
 
-        const indexer = async (states: States<Fixed.From, Error>) => {
+        const indexer = async (states: States<Data, Fail>) => {
           if (block !== "pending")
             return
 
@@ -377,7 +377,7 @@ export namespace BgToken {
     }
 
     export function schema(chainId: number, address: string, storage: IDBStorage) {
-      const indexer = async (states: States<ContractTokenData, never>) => {
+      const indexer = async (states: States<Data, Fail>) => {
         const { current, previous } = states
 
         const previousData = previous?.real?.data?.inner

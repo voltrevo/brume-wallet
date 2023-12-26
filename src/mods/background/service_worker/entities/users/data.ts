@@ -99,7 +99,7 @@ export namespace BgUser {
   }
 
   export function schema(uuid: string, storage: IDBStorage) {
-    const indexer = async (states: States<UserData, never>) => {
+    const indexer = async (states: States<Data, Fail>) => {
       const { current, previous = current } = states
 
       const previousData = previous.real?.data
@@ -116,11 +116,7 @@ export namespace BgUser {
       }))
     }
 
-    return createQuery<Key, Data, Fail>({
-      key: key(uuid),
-      storage,
-      indexer
-    })
+    return createQuery<Key, Data, Fail>({ key: key(uuid), storage, indexer })
   }
 
   export async function createOrThrow(init: UserInit): Promise<UserData> {

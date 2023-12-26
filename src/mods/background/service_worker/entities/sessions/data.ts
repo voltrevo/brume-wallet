@@ -79,28 +79,30 @@ export namespace BgSession {
 
       export namespace ByWallet {
 
-        export type Key = ReturnType<typeof key>
+        export type Key = string
+        export type Data = SessionRef[]
+        export type Fail = never
 
         export function key(wallet: string) {
           return `temporarySessionsByWallet/v2/${wallet}`
         }
 
-        export type Schema = ReturnType<typeof schema>
-
         export function schema(wallet: string) {
-          return createQuery<Key, SessionRef[], never>({ key: key(wallet) })
+          return createQuery<Key, Data, Fail>({ key: key(wallet) })
         }
 
       }
 
-      export type Key = typeof key
+      export type Key = string
+      export type Data = SessionRef[]
+      export type Fail = never
 
       export const key = `temporarySessions/v2`
 
       export type Schema = ReturnType<typeof schema>
 
       export function schema() {
-        return createQuery<Key, SessionRef[], never>({ key })
+        return createQuery<Key, Data, Fail>({ key })
       }
 
     }
@@ -109,28 +111,28 @@ export namespace BgSession {
 
       export namespace ByWallet {
 
-        export type Key = ReturnType<typeof key>
+        export type Key = string
+        export type Data = SessionRef[]
+        export type Fail = never
 
         export function key(wallet: string) {
           return `persistentSessionsByWallet/v2/${wallet}`
         }
 
-        export type Schema = ReturnType<typeof schema>
-
         export function schema(wallet: string, storage: IDBStorage) {
-          return createQuery<Key, SessionRef[], never>({ key: key(wallet), storage })
+          return createQuery<Key, Data, Fail>({ key: key(wallet), storage })
         }
 
       }
 
-      export type Key = typeof key
+      export type Key = string
+      export type Data = SessionRef[]
+      export type Fail = never
 
       export const key = `persistentSessions/v2`
 
-      export type Schema = ReturnType<typeof schema>
-
       export function schema(storage: IDBStorage) {
-        return createQuery<Key, SessionRef[], never>({ key, storage })
+        return createQuery<Key, Data, Fail>({ key, storage })
       }
 
     }
@@ -162,7 +164,7 @@ export namespace BgSession {
   }
 
   export function schema(id: string, storage: IDBStorage) {
-    const indexer = async (states: States<SessionData, never>) => {
+    const indexer = async (states: States<Data, Fail>) => {
       const { current, previous = current } = states
 
       const previousData = previous.real?.data
@@ -170,13 +172,13 @@ export namespace BgSession {
 
       if (previousData != null) {
         if (previousData.inner.persist) {
-          const sessionByOrigin = BgSession.ByOrigin.schema(previousData.inner.origin, storage)
+          const sessionByOrigin = ByOrigin.schema(previousData.inner.origin, storage)
           await sessionByOrigin.delete()
         }
 
         const sessionsQuery = previousData.inner.persist
-          ? BgSession.All.Persistent.schema(storage)
-          : BgSession.All.Temporary.schema()
+          ? All.Persistent.schema(storage)
+          : All.Temporary.schema()
 
         await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
           return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
@@ -186,8 +188,8 @@ export namespace BgSession {
 
         for (const wallet of previousWallets) {
           const sessionsByWalletQuery = previousData.inner.persist
-            ? BgSession.All.Persistent.ByWallet.schema(wallet.uuid, storage)
-            : BgSession.All.Temporary.ByWallet.schema(wallet.uuid)
+            ? All.Persistent.ByWallet.schema(wallet.uuid, storage)
+            : All.Temporary.ByWallet.schema(wallet.uuid)
 
           await sessionsByWalletQuery.mutate(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
@@ -197,13 +199,13 @@ export namespace BgSession {
 
       if (currentData != null) {
         if (currentData.inner.persist) {
-          const sessionByOrigin = BgSession.ByOrigin.schema(currentData.inner.origin, storage)
+          const sessionByOrigin = ByOrigin.schema(currentData.inner.origin, storage)
           await sessionByOrigin.mutate(Mutators.data<Session, never>(SessionRef.from(currentData.inner)))
         }
 
         const sessionsQuery = currentData.inner.persist
-          ? BgSession.All.Persistent.schema(storage)
-          : BgSession.All.Temporary.schema()
+          ? All.Persistent.schema(storage)
+          : All.Temporary.schema()
 
         await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
           return d = d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
@@ -213,8 +215,8 @@ export namespace BgSession {
 
         for (const wallet of currentWallets) {
           const sessionsByWalletQuery = currentData.inner.persist
-            ? BgSession.All.Persistent.ByWallet.schema(wallet.uuid, storage)
-            : BgSession.All.Temporary.ByWallet.schema(wallet.uuid)
+            ? All.Persistent.ByWallet.schema(wallet.uuid, storage)
+            : All.Temporary.ByWallet.schema(wallet.uuid)
 
           await sessionsByWalletQuery.mutate(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => [...p, SessionRef.from(currentData.inner)])

@@ -1136,7 +1136,7 @@ export class Global {
 
       const { storage } = Option.unwrap(this.#user)
 
-      const seedQuery = BgSeed.Background.schema(seed.uuid, storage)
+      const seedQuery = BgSeed.schema(seed.uuid, storage)
       await seedQuery.mutate(Mutators.data(seed))
 
       return Ok.void()

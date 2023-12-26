@@ -53,7 +53,7 @@ export namespace BgTotal {
           }
 
           export function schema(coin: "usd", storage: IDBStorage) {
-            const indexer = async (states: States<Record<string, Fixed.From>, Error>) => {
+            const indexer = async (states: States<Data, Fail>) => {
               const values = Option.wrap(states.current.real?.data?.inner).unwrapOr({})
               const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
@@ -79,7 +79,7 @@ export namespace BgTotal {
         }
 
         export function schema(address: string, coin: "usd", storage: IDBStorage) {
-          const indexer = async (states: States<Fixed.From, Error>) => {
+          const indexer = async (states: States<Data, Fail>) => {
             const indexQuery = Record.schema(coin, storage)
 
             const value = Option.wrap(states.current.real?.data?.inner).unwrapOr(new Fixed(0n, 0))
