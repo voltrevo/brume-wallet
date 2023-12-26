@@ -27,9 +27,8 @@ import { Page } from "../../components/page/page";
 import { Path } from "../../router/path/context";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
-import { useToken, useTokens } from "../tokens/data";
+import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
 import { usePairPrice } from "../tokens/pairs/data";
-import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance } from "../unknown/data";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
 import { WalletSendScreen } from "./actions/send";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
@@ -368,7 +367,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
-  const balanceQuery = useNativeBalance(wallet.address, context, prices)
+  const balanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
 
   const sendDialog = useBooleanHandle(false)
@@ -422,7 +421,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
-  const balanceQuery = useContractBalance(wallet.address, token, context, prices)
+  const balanceQuery = useContractBalance(wallet.address, token, "pending", context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
 
   const sendDialog = useBooleanHandle(false)

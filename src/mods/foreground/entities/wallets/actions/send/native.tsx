@@ -17,7 +17,8 @@ import { Transaction, ethers } from "ethers";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useBlockByNumber } from "../../../blocks/data";
 import { useEnsLookup } from "../../../names/data";
-import { useGasPrice, useMaxPriorityFeePerGas, useNativeBalance, useNonce } from "../../../unknown/data";
+import { useNativeBalance } from "../../../tokens/data";
+import { useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
 import { EthereumContextProps, EthereumWalletInstance, useEthereumContext } from "../../data";
 
@@ -28,7 +29,7 @@ export function WalletDataSendNativeTokenDialog(props: TitleProps & EthereumCont
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
-  const balanceQuery = useNativeBalance(wallet.address, context, [])
+  const balanceQuery = useNativeBalance(wallet.address, "pending", context, [])
   const pendingNonceQuery = useNonce(wallet.address, context)
   const gasPriceQuery = useGasPrice(context)
   const maxPriorityFeePerGasQuery = useMaxPriorityFeePerGas(context)

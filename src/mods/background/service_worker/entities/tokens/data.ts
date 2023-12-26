@@ -163,22 +163,22 @@ export namespace BgToken {
 
       export const method = "eth_getBalance"
 
-      export function key(ethereum: BgEthereumContext, account: ZeroHexString, block: string) {
+      export function key(account: ZeroHexString, block: string, chain: ChainData) {
         return {
           version: 2,
-          chainId: ethereum.chain.chainId,
+          chainId: chain.chainId,
           method: method,
           params: [account, block]
         }
       }
 
-      export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+      export async function parseOrThrow(request: RpcRequestPreinit<unknown>, ethereum: BgEthereumContext, storage: IDBStorage) {
         const [account, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
 
-        return schema(ethereum, account, block, storage)
+        return schema(account, block, ethereum, storage)
       }
 
-      export function schema(ethereum: BgEthereumContext, account: ZeroHexString, block: string, storage: IDBStorage) {
+      export function schema(account: ZeroHexString, block: string, ethereum: BgEthereumContext, storage: IDBStorage) {
         const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore) =>
           await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, more).then(f => f.mapSync(x => new ZeroHexFixed(x, ethereum.chain.token.decimals)))
 
@@ -213,7 +213,7 @@ export namespace BgToken {
         }
 
         return createQuery<Key, Data, Fail>({
-          key: key(ethereum, account, block),
+          key: key(account, block, ethereum.chain),
           fetcher,
           indexer,
           storage
@@ -281,9 +281,9 @@ export namespace BgToken {
 
       export const method = "eth_getTokenBalance"
 
-      export function key(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string) {
+      export function key(account: ZeroHexString, token: ContractTokenData, block: string, chain: ChainData) {
         return {
-          chainId: ethereum.chain.chainId,
+          chainId: chain.chainId,
           method: method,
           params: [account, token.address, block]
         }
@@ -359,7 +359,7 @@ export namespace BgToken {
         }
 
         return createQuery<Key, Data, Fail>({
-          key: key(ethereum, account, token, block),
+          key: key(account, token, block, ethereum.chain),
           fetcher,
           indexer,
           storage

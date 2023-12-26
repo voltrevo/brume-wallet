@@ -18,7 +18,8 @@ import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useBlockByNumber } from "../../../blocks/data";
 import { useEnsLookup } from "../../../names/data";
-import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNativeBalance, useNativePricedBalance, useNonce } from "../../../unknown/data";
+import { useNativeBalance, useNativePricedBalance } from "../../../tokens/data";
+import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, FgEthereumContext, useEthereumContext } from "../../data";
 import { PriceResolver } from "../../page";
@@ -387,7 +388,7 @@ export function WalletSendScreenValue(props: {
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
-  const valuedBalanceQuery = useNativeBalance(wallet.address, context, prices)
+  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
   const pricedBalanceQuery = useNativePricedBalance(wallet.address, "usd", context)
 
   const valuedBalanceData = valuedBalanceQuery.current?.ok().get()

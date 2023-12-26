@@ -764,7 +764,7 @@ export class Global {
 
       const { storage } = Option.unwrap(this.#user)
 
-      const query = BgToken.Native.Balance.schema(ethereum, address, block, storage)
+      const query = BgToken.Native.Balance.schema(address, block, ethereum, storage)
 
       try { await query.fetch() } catch { }
 
@@ -1259,7 +1259,7 @@ export class Global {
 
   async routeOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<SimpleQuery<any, any, Error>> {
     if (request.method === BgToken.Native.Balance.method)
-      return await BgToken.Native.Balance.parseOrThrow(ethereum, request, storage)
+      return await BgToken.Native.Balance.parseOrThrow(request, ethereum, storage)
     if (request.method === BgToken.Contract.Balance.method)
       return await BgToken.Contract.Balance.parseOrThrow(ethereum, request, storage)
     if (request.method === BgPair.Price.method)

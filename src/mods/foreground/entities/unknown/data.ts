@@ -1,8 +1,6 @@
 import { BigIntToHex } from "@/libs/bigints/bigints";
 import { Errors } from "@/libs/errors/errors";
 import { ChainData } from "@/libs/ethereum/mods/chain";
-import { useEffectButNotFirstTime } from "@/libs/react/effect";
-import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { BgEthereum } from "@/mods/background/service_worker/entities/unknown/data";
 import { EthereumFetchParams, EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
@@ -11,7 +9,7 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
-import { FgEthereumContext, fetchOrFail, indexOrThrow } from "../wallets/data";
+import { FgEthereumContext, fetchOrFail } from "../wallets/data";
 
 export namespace FgEthereum {
 
@@ -170,131 +168,6 @@ export namespace FgEthereum {
 
   }
 
-  export namespace NativeBalance {
-
-    export namespace Priced {
-
-      export type Key = EthereumQueryKey<unknown>
-      export type Data = Fixed.From
-      export type Fail = Error
-
-      export function key(address: ZeroHexString, coin: "usd", chain: ChainData) {
-        return {
-          chainId: chain.chainId,
-          method: "eth_getPricedBalance",
-          params: [address, coin]
-        }
-      }
-
-      export function schema(address: Nullable<ZeroHexString>, coin: "usd", context: Nullable<FgEthereumContext>, storage: UserStorage) {
-        if (context == null)
-          return
-        if (address == null)
-          return
-
-        return createQuery<Key, Data, Fail>({
-          key: key(address, coin, context.chain),
-          storage
-        })
-      }
-
-    }
-
-    export type Key = EthereumQueryKey<unknown>
-    export type Data = Fixed.From
-    export type Fail = Error
-
-    export function key(address: ZeroHexString, chain: ChainData) {
-      return {
-        version: 2,
-        chainId: chain.chainId,
-        method: "eth_getBalance",
-        params: [address, "pending"]
-      }
-    }
-
-    export function schema(address: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
-      if (address == null)
-        return
-      if (context == null)
-        return
-
-      const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-        await fetchOrFail<Fixed.From>(request, context)
-
-      return createQuery<Key, Data, Fail>({
-        key: key(address, context.chain),
-        fetcher,
-        storage
-      })
-    }
-
-  }
-
-  export namespace ContractBalance {
-
-    export namespace Priced {
-
-      export type Key = EthereumQueryKey<unknown>
-      export type Data = Fixed.From
-      export type Fail = Error
-
-      export function key(address: ZeroHexString, token: ContractTokenData, coin: "usd", chain: ChainData) {
-        return {
-          chainId: chain.chainId,
-          method: "eth_getTokenPricedBalance",
-          params: [address, token.address, coin]
-        }
-      }
-
-      export function schema(account: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, coin: "usd", context: Nullable<FgEthereumContext>, storage: UserStorage) {
-        if (context == null)
-          return
-        if (account == null)
-          return
-        if (token == null)
-          return
-
-        return createQuery<Key, Data, Fail>({
-          key: key(account, token, coin, context.chain),
-          storage
-        })
-      }
-
-    }
-
-    export type Key = EthereumQueryKey<unknown>
-    export type Data = Fixed.From
-    export type Fail = Error
-
-    export function key(address: ZeroHexString, token: ContractTokenData, chain: ChainData) {
-      return {
-        chainId: chain.chainId,
-        method: "eth_getTokenBalance",
-        params: [address, token.address, "pending"]
-      }
-    }
-
-    export function schema(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
-      if (address == null)
-        return
-      if (token == null)
-        return
-      if (context == null)
-        return
-
-      const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-        await fetchOrFail<Fixed.From>(request, context)
-
-      return createQuery<Key, Data, Fail>({
-        key: key(address, token, context.chain),
-        fetcher,
-        storage
-      })
-    }
-
-  }
-
 }
 
 export function useUnknown(request: Nullable<RpcRequestPreinit<unknown> & EthereumFetchParams>, context: Nullable<FgEthereumContext>) {
@@ -343,66 +216,6 @@ export function useGasPrice(context: Nullable<FgEthereumContext>) {
 export function useNonce(address: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgEthereum.Nonce.schema, [address, context, storage])
-  useFetch(query)
-  useVisible(query)
-  useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  return query
-}
-
-export function useNativeBalance(address: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>, prices: Nullable<Fixed.From>[]) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgEthereum.NativeBalance.schema, [address, context, storage])
-  useFetch(query)
-  useVisible(query)
-  useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-
-  useEffectButNotFirstTime(() => {
-    if (context == null)
-      return
-    indexOrThrow(query.key, context).catch(() => { })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context, ...prices])
-
-  return query
-}
-
-export function useContractBalance(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, context: Nullable<FgEthereumContext>, prices: Nullable<Fixed.From>[]) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgEthereum.ContractBalance.schema, [address, token, context, storage])
-  useFetch(query)
-  useVisible(query)
-  useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-
-  useEffectButNotFirstTime(() => {
-    if (context == null)
-      return
-    indexOrThrow(query.key, context).catch(() => { })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context, ...prices])
-
-  return query
-}
-
-export function useNativePricedBalance(address: Nullable<ZeroHexString>, coin: "usd", context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgEthereum.NativeBalance.Priced.schema, [address, coin, context, storage])
-  useFetch(query)
-  useVisible(query)
-  useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  return query
-}
-
-export function useContractPricedBalance(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, coin: "usd", context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgEthereum.ContractBalance.Priced.schema, [address, token, coin, context, storage])
   useFetch(query)
   useVisible(query)
   useInterval(query, 10 * 1000)
