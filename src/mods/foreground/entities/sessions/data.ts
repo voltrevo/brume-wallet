@@ -158,6 +158,7 @@ export namespace FgSession {
       }
     }
 
+    // TODO storage
     return createQuery<Key, Data, Fail>({ key: key(id), indexer, storage })
   }
 
