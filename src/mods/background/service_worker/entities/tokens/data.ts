@@ -256,7 +256,7 @@ export namespace BgToken {
         export function schema(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, coin: "usd", storage: IDBStorage) {
           const indexer = async (states: States<Data, Fail>) => {
             const key = `${ethereum.chain.chainId}/${token.address}`
-            const value = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr(new Fixed(0n, 0))
+            const value = Option.wrap(states.current.real?.data?.inner).unwrapOr(new Fixed(0n, 0))
 
             const indexQuery = BgToken.Balance.schema(account, coin, storage)
             await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))

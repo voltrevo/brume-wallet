@@ -153,8 +153,17 @@ export namespace FgToken {
           if (token == null)
             return
 
+          const indexer = async (states: States<Data, Fail>) => {
+            const key = `${context.chain.chainId}/${token.address}`
+            const value = Option.wrap(states.current.real?.data?.inner).unwrapOr(new Fixed(0n, 0))
+
+            const indexQuery = FgToken.Balance.schema(account, coin, storage)
+            await indexQuery?.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
+          }
+
           return createQuery<Key, Data, Fail>({
             key: key(account, token, coin, context.chain),
+            indexer,
             storage
           })
         }
@@ -180,9 +189,40 @@ export namespace FgToken {
         const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
           await fetchOrFail<Fixed.From>(request, context)
 
+        const indexer = async (states: States<Data, Fail>) => {
+          if (block !== "pending")
+            return
+
+          const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
+            if (token.pairs == null)
+              return new None()
+
+            let pricedBalance: Fixed = Fixed.from(balance)
+
+            for (const pairAddress of token.pairs) {
+              const pair = pairByAddress[pairAddress]
+              const chain = chainByChainId[pair.chainId]
+
+              const price = FgPair.Price.schema({ ...context, chain }, pair, storage)
+              const priceState = await price?.state
+
+              if (priceState?.data == null)
+                return new None()
+
+              pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
+            }
+
+            return new Some(pricedBalance)
+          }).then(o => o.unwrapOr(new Fixed(0n, 0)))
+
+          const pricedBalanceQuery = Priced.schema(address, token, "usd", context, storage)
+          await pricedBalanceQuery?.mutate(Mutators.set<Fixed.From, never>(new Data(pricedBalance)))
+        }
+
         return createQuery<Key, Data, Fail>({
           key: key(address, token, block, context.chain),
           fetcher,
+          indexer,
           storage
         })
       }
