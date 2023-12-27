@@ -1,7 +1,8 @@
 import { SignatureInit } from "@/libs/ethereum/mods/signature";
 import { Base16 } from "@hazae41/base16";
 import { Empty, Opaque, Readable, Writable } from "@hazae41/binary";
-import { Bytes, Uint8Array } from "@hazae41/bytes";
+import type { Uint8Array } from "@hazae41/bytes";
+import { Bytes } from "@hazae41/bytes";
 import { Rlp } from "@hazae41/cubane";
 import { Cursor } from "@hazae41/cursor";
 import { Result } from "@hazae41/result";

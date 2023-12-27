@@ -8,7 +8,7 @@ import { Dialog } from "@/libs/ui/dialog/dialog"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { PageBody, UserPageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
-import { Path } from "@/mods/foreground/router/path/context"
+import { usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable } from "@hazae41/option"
 import { useCallback } from "react"
 import { WalletDataCard } from "../card"
@@ -17,14 +17,15 @@ import { WalletProps, useWallets } from "../data"
 import { WalletCreatorDialog } from "./create"
 
 export function WalletsPage() {
+  const { go } = usePathContext().unwrap()
   const walletsQuery = useWallets()
   const maybeWallets = walletsQuery.data?.inner
 
   const creator = useBooleanHandle(false)
 
   const onWalletClick = useCallback((wallet: Wallet) => {
-    Path.go(`/wallet/${wallet.uuid}`)
-  }, [])
+    go(`/wallet/${wallet.uuid}`)
+  }, [go])
 
   const Body =
     <PageBody>

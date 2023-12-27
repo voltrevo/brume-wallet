@@ -6,7 +6,7 @@ import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useCallback } from "react";
 import { PageBody, UserPageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
-import { Path } from "../../router/path/context";
+import { Paths } from "../../router/path/context";
 import { SeededWalletCreatorDialog } from "../wallets/all/create/seeded";
 import { ClickableWalletGrid } from "../wallets/all/page";
 import { useWalletsBySeed } from "../wallets/data";
@@ -30,11 +30,11 @@ function SeedDataPage() {
   const creator = useBooleanHandle(false)
 
   const onBackClick = useCallback(() => {
-    Path.go("/seeds")
+    Paths.go("/seeds")
   }, [])
 
   const onWalletClick = useCallback((wallet: Wallet) => {
-    Path.go(`/wallet/${wallet.uuid}`)
+    Paths.go(`/wallet/${wallet.uuid}`)
   }, [])
 
   const Header =

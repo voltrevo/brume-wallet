@@ -24,7 +24,7 @@ import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, u
 import { useBackgroundContext } from "../../background/context";
 import { PageBody, UserPageHeader } from "../../components/page/header";
 import { Page } from "../../components/page/page";
-import { Path } from "../../router/path/context";
+import { PathContext, Paths, useSubpath } from "../../router/path/context";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
@@ -93,12 +93,22 @@ export function useCompactDisplayUsd(result: Nullable<Result<Fixed.From, Error>>
 function WalletDataPage() {
   const wallet = useWalletDataContext().unwrap()
   const background = useBackgroundContext().unwrap()
+  const subpath = useSubpath()
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
   useEnsReverse(wallet.address, mainnet)
 
-  const sendDialog = useBooleanHandle(false)
+  const send = subpath.url.pathname === "/send"
+
+  const enableSend = useCallback(() => {
+    subpath.go(`/send?step=target`)
+  }, [subpath])
+
+  const closeSend = useCallback(() => {
+    subpath.go(`/`)
+  }, [subpath])
+
   const receiveDialog = useBooleanHandle(false)
 
   const [color, color2] = Gradients.get(wallet.color)
@@ -118,11 +128,11 @@ function WalletDataPage() {
   }, [])
 
   const onBackClick = useCallback(() => {
-    Path.go("/wallets")
+    Paths.go("/wallets")
   }, [])
 
   const onCameraClick = useCallback(() => {
-    Path.go(`/wallet/${wallet.uuid}/camera`)
+    Paths.go(`/wallet/${wallet.uuid}/camera`)
   }, [wallet])
 
   const onLinkClick = useCallback(async () => {
@@ -193,7 +203,7 @@ function WalletDataPage() {
       {wallet.type !== "readonly" &&
         <div className="flex flex-col items-center gap-2">
           <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 !transition-transform`}
-            onClick={sendDialog.enable}>
+            onClick={enableSend}>
             <Outline.PaperAirplaneIcon className="size-6" />
           </button>
           <div className="">
@@ -270,13 +280,16 @@ function WalletDataPage() {
     </PageBody>
 
   return <Page>
-    {mainnet && <Screen
-      opened={sendDialog.current}
-      close={sendDialog.disable}>
-      <WalletSendScreen
-        context={mainnet}
-        token={mainnet.chain.token} />
-    </Screen>}
+    {mainnet &&
+      <PathContext.Provider value={subpath}>
+        <Screen
+          opened={send}
+          close={closeSend}>
+          <WalletSendScreen
+            context={mainnet}
+            token={mainnet.chain.token} />
+        </Screen>
+      </PathContext.Provider>}
     <Screen dark
       opened={receiveDialog.current}
       close={receiveDialog.disable}>

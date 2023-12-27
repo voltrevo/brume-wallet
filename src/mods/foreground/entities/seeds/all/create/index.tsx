@@ -11,7 +11,7 @@ import { StandaloneSeedCreatorDialog } from "./standalone";
 
 export function SeedCreatorDialog(props: {}) {
   const { opened, close } = useDialogContext().unwrap()
-  const path = usePathContext().unwrap()
+  const { url } = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const [type, setType] = useState<"mnemonic" | "ledger">()
@@ -21,7 +21,7 @@ export function SeedCreatorDialog(props: {}) {
       if (location.pathname !== "/" && location.pathname !== "/index.html") {
         await background.tryRequest({
           method: "brume_open",
-          params: [path.pathname]
+          params: [url.pathname]
         }).then(r => r.throw(t).throw(t))
 
         return Ok.void()
@@ -30,7 +30,7 @@ export function SeedCreatorDialog(props: {}) {
       setType("ledger")
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [path, background])
+  }, [url, background])
 
   const onMnemonicClick = useCallback(() => {
     setType("mnemonic")

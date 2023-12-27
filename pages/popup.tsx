@@ -25,7 +25,7 @@ import { UserRejectedError } from "@/mods/foreground/errors/errors";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
-import { Path, usePathContext } from "@/mods/foreground/router/path/context";
+import { usePathContext } from "@/mods/foreground/router/path/context";
 import { Router } from "@/mods/foreground/router/router";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
@@ -69,7 +69,8 @@ export function Ready() {
 }
 
 export function TransactPage() {
-  const { searchParams } = usePathContext().unwrap()
+  const { url, go } = usePathContext().unwrap()
+  const { searchParams } = url
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -171,7 +172,7 @@ export function TransactPage() {
         params: [new RpcOk(id, tx.serialized)]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -184,7 +185,7 @@ export function TransactPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -249,7 +250,8 @@ export function TransactPage() {
 }
 
 export function SwitchPage() {
-  const { searchParams } = usePathContext().unwrap()
+  const { url, go } = usePathContext().unwrap()
+  const { searchParams } = url
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -261,7 +263,7 @@ export function SwitchPage() {
         params: [new RpcOk(id, undefined)]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -276,7 +278,7 @@ export function SwitchPage() {
 
       await new Promise(ok => setTimeout(ok, 250))
 
-      Path.go("/done")
+      go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -314,7 +316,8 @@ export function SwitchPage() {
 }
 
 export function PersonalSignPage() {
-  const { searchParams } = usePathContext().unwrap()
+  const { url, go } = usePathContext().unwrap()
+  const { searchParams } = url
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -342,7 +345,7 @@ export function PersonalSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -355,7 +358,7 @@ export function PersonalSignPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -398,7 +401,8 @@ export function PersonalSignPage() {
 }
 
 export function TypedSignPage() {
-  const { searchParams } = usePathContext().unwrap()
+  const { url, go } = usePathContext().unwrap()
+  const { searchParams } = url
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -422,7 +426,7 @@ export function TypedSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -435,7 +439,7 @@ export function TypedSignPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -478,7 +482,8 @@ export function TypedSignPage() {
 }
 
 export function WalletAndChainSelectPage() {
-  const { searchParams } = usePathContext().unwrap()
+  const { url, go } = usePathContext().unwrap()
+  const { searchParams } = url
   const background = useBackgroundContext().unwrap()
 
   const id = Option.wrap(searchParams.get("id")).unwrap()
@@ -517,7 +522,7 @@ export function WalletAndChainSelectPage() {
         params: [new RpcOk(id, [persistent, chain, selecteds])]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -530,7 +535,7 @@ export function WalletAndChainSelectPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      Path.go("/done")
+      go("/done")
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -595,12 +600,13 @@ export function WalletAndChainSelectPage() {
 }
 
 export function DonePage() {
+  const { go } = usePathContext().unwrap()
   const requests = useAppRequests().data?.inner
 
   useEffect(() => {
     if (!requests?.length)
       return
-    Path.go("/requests")
+    go("/requests")
   }, [requests])
 
   return <Page>

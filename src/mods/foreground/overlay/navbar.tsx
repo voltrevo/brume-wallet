@@ -6,13 +6,13 @@ import { useCallback } from "react"
 import { usePathContext } from "../router/path/context"
 
 export function NavBar() {
-  const path = usePathContext().unwrap()
+  const { url } = usePathContext().unwrap()
 
   const onOpen = useCallback(async () => {
     await BrowserError.tryRun(async () => {
-      return await browser.tabs.create({ url: `index.html#${path.pathname}` })
+      return await browser.tabs.create({ url: `index.html#${url.pathname}` })
     }).then(Results.logAndAlert)
-  }, [path])
+  }, [url])
 
   return <div className="w-full po-md border-b border-b-contrast">
     <div className="w-full max-w-[400px] m-auto flex items-center">
@@ -22,7 +22,7 @@ export function NavBar() {
             {`brume://`}
           </span>
           <span>
-            {path.pathname.slice(1)}
+            {url.pathname.slice(1)}
           </span>
         </div>
         <div className="w-2" />

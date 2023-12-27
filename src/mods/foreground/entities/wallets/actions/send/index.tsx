@@ -5,18 +5,18 @@ import { Errors, UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
+import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
-import { State } from "@/libs/react/state";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { NativeTokenData } from "@/mods/background/service_worker/entities/tokens/data";
-import { Path, usePathContext } from "@/mods/foreground/router/path/context";
+import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { Transaction, ethers } from "ethers";
-import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useBlockByNumber } from "../../../blocks/data";
 import { useEnsLookup } from "../../../names/data";
 import { useNativeBalance, useNativePricedBalance } from "../../../tokens/data";
@@ -34,36 +34,6 @@ type PathState = {
   readonly data?: ZeroHexString
 }
 
-export function usePathState<T extends Record<string, string>>() {
-  const path = usePathContext().unwrap()
-
-  const [state, setState] = useState<T>(() => Object.fromEntries(path.searchParams.entries()) as T)
-
-  useEffect(() => {
-    setState(Object.fromEntries(path.searchParams.entries()) as T)
-  }, [path])
-
-  useEffect(() => {
-    if (state == null)
-      return
-    Path.go(`${path.pathname}?${new URLSearchParams(state).toString()}`)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state])
-
-  return [state, setState] as const
-}
-
-export function useSearchState<T extends Record<string, string>>(key: keyof T, $parent: State<T>) {
-  const [parent, setParent] = $parent
-
-  const state = parent[key]
-
-  const setState = useCallback((value: string) => {
-    setParent(p => ({ ...p, [key]: value }))
-  }, [setParent, key])
-
-  return [state, setState] as const
-}
 
 export function WalletSendScreen(props: {
   readonly context: FgEthereumContext
@@ -103,12 +73,11 @@ export function WalletSendScreenTarget(props: {}) {
 
   const targetInput = useDeferredValue(rawTargetInput)
 
-  useEffect(() => {
+  useEffectButNotFirstTime(() => {
     setTarget(targetInput)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetInput])
 
-  const maybeEnsInput = targetInput.endsWith(".eth")
+  const maybeEnsInput = target?.endsWith(".eth")
     ? targetInput
     : undefined
 
@@ -116,11 +85,12 @@ export function WalletSendScreenTarget(props: {}) {
   const maybeEns = ensQuery.current?.ok().get()
 
   const onSubmit = useCallback(async () => {
-    if (!Address.is(targetInput) && !targetInput.endsWith(".eth"))
+    if (target == null)
+      return
+    if (!Address.is(target) && !target.endsWith(".eth"))
       return
     setStep("value")
-    setTarget(targetInput)
-  }, [targetInput, setStep, setTarget])
+  }, [target, setStep])
 
   const onEnter = useKeyboardEnter(() => {
     onSubmit()
@@ -133,12 +103,11 @@ export function WalletSendScreenTarget(props: {}) {
   const onPaste = useCallback(async () => {
     const input = await navigator.clipboard.readText()
 
-    setRawTargetInput(input)
-
     if (!Address.is(input) && !input.endsWith(".eth"))
       return
-    setStep("value")
+
     setTarget(input)
+    setStep("value")
   }, [setStep, setTarget])
 
   const [mode, setMode] = useState<"recents" | "contacts">("recents")
@@ -152,9 +121,8 @@ export function WalletSendScreenTarget(props: {}) {
   }, [])
 
   const onBrumeClick = useCallback(() => {
-    setRawTargetInput("brume.eth")
-    setStep("value")
     setTarget("brume.eth")
+    setStep("value")
   }, [setStep, setTarget])
 
   return <>
@@ -389,18 +357,18 @@ export function WalletSendScreenValue(props: {
     setPrice(e.target.value)
   }, [setPrice])
 
-  useEffect(() => {
-    setValued(rawValueInput)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rawValueInput])
-
-  useEffect(() => {
-    setPriced(rawPricedInput)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rawPricedInput])
-
   const valueInput = useDeferredValue(rawValueInput)
   const pricedInput = useDeferredValue(rawPricedInput)
+
+  useEffectButNotFirstTime(() => {
+    setValued(valueInput)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [valueInput])
+
+  useEffectButNotFirstTime(() => {
+    setPriced(pricedInput)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pricedInput])
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
@@ -584,11 +552,11 @@ export function WalletSendScreenValue(props: {
 
   const maybeFinalValue = useMemo(() => {
     try {
-      return valueInput.trim().length
-        ? Fixed.fromString(valueInput.trim(), tokenData.decimals)
+      return valued?.trim().length
+        ? Fixed.fromString(valued.trim(), tokenData.decimals)
         : undefined
     } catch { }
-  }, [valueInput, tokenData])
+  }, [valued, tokenData])
 
   const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(nonce)
 
@@ -598,13 +566,17 @@ export function WalletSendScreenValue(props: {
 
   const nonceInput = useDeferredValue(rawNonceInput)
 
+  useEffectButNotFirstTime(() => {
+    setNonce(nonceInput)
+  }, [nonceInput])
+
   const maybeCustomNonce = useMemo(() => {
     try {
-      return nonceInput.trim().length
-        ? BigInt(nonceInput.trim())
+      return nonce?.trim().length
+        ? BigInt(nonce.trim())
         : undefined
     } catch { }
-  }, [nonceInput])
+  }, [nonce])
 
   const maybeFinalNonce = useMemo(() => {
     if (maybeCustomNonce != null)
@@ -1093,10 +1065,13 @@ export function WalletSendScreenNonce(props: {
 
   const nonceInput = useDeferredValue(rawNonceInput)
 
-  const onSubmit = useCallback(async () => {
+  useEffectButNotFirstTime(() => {
     setNonce(nonceInput)
+  }, [nonceInput])
+
+  const onSubmit = useCallback(async () => {
     setStep("value")
-  }, [nonceInput, setNonce, setStep])
+  }, [setStep])
 
   const onEnter = useKeyboardEnter(() => {
     onSubmit()
@@ -1107,8 +1082,7 @@ export function WalletSendScreenNonce(props: {
   }, [])
 
   const onPaste = useCallback(async () => {
-    const input = await navigator.clipboard.readText()
-    setNonce(input)
+    setNonce(await navigator.clipboard.readText())
     setStep("value")
   }, [setNonce, setStep])
 

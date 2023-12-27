@@ -7,7 +7,7 @@ import { Dialog } from "@/libs/ui/dialog/dialog"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
 import { PageBody, UserPageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
-import { Path } from "@/mods/foreground/router/path/context"
+import { Paths } from "@/mods/foreground/router/path/context"
 import { useCallback } from "react"
 import { SeedDataCard } from "../card"
 import { SeedDataProvider, useSeedDataContext } from "../context"
@@ -21,7 +21,7 @@ export function SeedsPage() {
   const creator = useBooleanHandle(false)
 
   const onSeedClick = useCallback((seed: Seed) => {
-    Path.go(`/seed/${seed.uuid}`)
+    Paths.go(`/seed/${seed.uuid}`)
   }, [])
 
   const Body =

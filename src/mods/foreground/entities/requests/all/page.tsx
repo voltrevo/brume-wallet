@@ -12,7 +12,7 @@ import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { PageBody, UserPageHeader } from "@/mods/foreground/components/page/header"
 import { Page } from "@/mods/foreground/components/page/page"
 import { UserRejectedError } from "@/mods/foreground/errors/errors"
-import { Path } from "@/mods/foreground/router/path/context"
+import { Paths } from "@/mods/foreground/router/path/context"
 import { RpcErr } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { Err, Ok, Result } from "@hazae41/result"
@@ -98,7 +98,7 @@ export function RequestRow(props: { request: AppRequest }) {
       return
 
     const { id, method, params } = maybeRequestData
-    Path.go(qurl(`/${method}?id=${id}`, params))
+    Paths.go(qurl(`/${method}?id=${id}`, params))
   }, [maybeRequestData])
 
   if (maybeOriginData == null)

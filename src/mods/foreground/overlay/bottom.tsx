@@ -4,7 +4,7 @@ import { useAppRequests } from "../entities/requests/data";
 import { usePathContext } from "../router/path/context";
 
 export function Bottom() {
-  const path = usePathContext().unwrap()
+  const { url } = usePathContext().unwrap()
 
   const requestsQuery = useAppRequests()
   const requests = requestsQuery.data?.inner
@@ -12,35 +12,35 @@ export function Bottom() {
   return <nav className="h-16 w-full shrink-0 border-t border-t-contrast">
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">
       <a className={`group grow text-contrast data-[selected=true]:text-default`}
-        data-selected={path.pathname === "/"}
+        data-selected={url.pathname === "/"}
         href="#/">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.HomeIcon className="size-6" />
         </div>
       </a>
       <a className={`group grow text-contrast data-[selected=true]:text-default`}
-        data-selected={path.pathname === "/wallets"}
+        data-selected={url.pathname === "/wallets"}
         href="#/wallets">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.WalletIcon className="size-6" />
         </div>
       </a>
       <a className={`group grow text-contrast data-[selected=true]:text-default`}
-        data-selected={path.pathname === "/seeds"}
+        data-selected={url.pathname === "/seeds"}
         href="#/seeds">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.SparklesIcon className="size-6" />
         </div>
       </a>
       <a className="group grow text-contrast data-[selected=true]:text-default"
-        data-selected={path.pathname === "/sessions"}
+        data-selected={url.pathname === "/sessions"}
         href="#/sessions">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.GlobeAltIcon className="size-6" />
         </div>
       </a>
       <a className="group grow text-contrast data-[selected=true]:text-default"
-        data-selected={path.pathname === "/requests"}
+        data-selected={url.pathname === "/requests"}
         href="#/requests">
         <div className={`${Anchor.Shrinker.className}`}>
           <div className="relative">
@@ -56,14 +56,14 @@ export function Bottom() {
         </div>
       </a>
       <a className="group grow text-contrast data-[selected=true]:text-default"
-        data-selected={path.pathname === "/plugins"}
+        data-selected={url.pathname === "/plugins"}
         href="#/plugins">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.PuzzlePieceIcon className="size-6" />
         </div>
       </a>
       <a className="group grow text-contrast data-[selected=true]:text-default"
-        data-selected={path.pathname === "/settings"}
+        data-selected={url.pathname === "/settings"}
         href="#/settings">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.CogIcon className="size-6" />

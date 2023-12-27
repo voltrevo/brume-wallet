@@ -12,7 +12,7 @@ import { HomePage } from "../home/page"
 import { usePathContext } from "./path/context"
 
 export function Router() {
-  const url = usePathContext().unwrap()
+  const { url } = usePathContext().unwrap()
 
   let matches: RegExpMatchArray | null
 
@@ -22,49 +22,49 @@ export function Router() {
   if (matches = url.pathname.match(/^\/$/))
     return <HomePage />
 
-  if (matches = url.pathname.match(/^\/wallets$/))
+  if (matches = url.pathname.match(/^\/wallets(\/)?$/))
     return <WalletsPage />
 
-  if (matches = url.pathname.match(/^\/seeds$/))
+  if (matches = url.pathname.match(/^\/seeds(\/)?$/))
     return <SeedsPage />
 
-  if (matches = url.pathname.match(/^\/sessions$/))
+  if (matches = url.pathname.match(/^\/sessions(\/)?$/))
     return <SessionsPage />
 
-  if (matches = url.pathname.match(/^\/requests$/))
+  if (matches = url.pathname.match(/^\/requests(\/)?$/))
     return <RequestsPage />
 
-  if (matches = url.pathname.match(/^\/plugins$/))
+  if (matches = url.pathname.match(/^\/plugins(\/)?$/))
     return <SnapsPage />
 
-  if (matches = url.pathname.match(/^\/wallet\/([^\/]+)$/))
+  if (matches = url.pathname.match(/^\/wallet\/([^\/]+)(\/)?$/))
     return <WalletPage uuid={matches[1]} />
 
-  if (matches = url.pathname.match(/^\/wallet\/([^\/]+)\/camera$/))
+  if (matches = url.pathname.match(/^\/wallet\/([^\/]+)\/camera(\/)?$/))
     return <WalletCameraPage uuid={matches[1]} />
 
-  if (matches = url.pathname.match(/^\/seed\/([^\/]+)$/))
+  if (matches = url.pathname.match(/^\/seed\/([^\/]+)(\/)?$/))
     return <SeedPage uuid={matches[1]} />
 
-  if (matches = url.pathname.match(/^\/settings$/))
+  if (matches = url.pathname.match(/^\/settings(\/)?$/))
     return <SettingsPage />
 
-  if (matches = url.pathname.match(/^\/eth_requestAccounts$/))
+  if (matches = url.pathname.match(/^\/eth_requestAccounts(\/)?$/))
     return <WalletAndChainSelectPage />
 
-  if (matches = url.pathname.match(/^\/eth_sendTransaction$/))
+  if (matches = url.pathname.match(/^\/eth_sendTransaction(\/)?$/))
     return <TransactPage />
 
-  if (matches = url.pathname.match(/^\/wallet_switchEthereumChain$/))
+  if (matches = url.pathname.match(/^\/wallet_switchEthereumChain(\/)?$/))
     return <SwitchPage />
 
-  if (matches = url.pathname.match(/^\/personal_sign$/))
+  if (matches = url.pathname.match(/^\/personal_sign(\/)?$/))
     return <PersonalSignPage />
 
-  if (matches = url.pathname.match(/^\/eth_signTypedData_v4$/))
+  if (matches = url.pathname.match(/^\/eth_signTypedData_v4(\/)?$/))
     return <TypedSignPage />
 
-  if (matches = url.pathname.match(/^\/done$/))
+  if (matches = url.pathname.match(/^\/done(\/)?$/))
     return <DonePage />
 
   return <>Error 404</>
