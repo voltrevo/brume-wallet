@@ -8,9 +8,10 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
-import { Setter } from "@/libs/react/state";
+import { State } from "@/libs/react/state";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { NativeTokenData } from "@/mods/background/service_worker/entities/tokens/data";
+import { Path, usePathContext } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
@@ -24,13 +25,8 @@ import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, FgEthereumContext, useEthereumContext } from "../../data";
 import { PriceResolver } from "../../page";
 
-type Step =
-  | TargetStep
-  | ValueStep
-  | NonceStep
-
-type TargetStep = {
-  readonly step: "target"
+type PathState = {
+  readonly step: string
   readonly target?: string
   readonly valued?: string
   readonly priced?: string
@@ -38,22 +34,35 @@ type TargetStep = {
   readonly data?: ZeroHexString
 }
 
-type ValueStep = {
-  readonly step: "value",
-  readonly target: string
-  readonly valued?: string
-  readonly priced?: string
-  readonly nonce?: string
-  readonly data?: ZeroHexString
+export function usePathState<T extends Record<string, string>>() {
+  const path = usePathContext().unwrap()
+
+  const [state, setState] = useState<T>(() => Object.fromEntries(path.searchParams.entries()) as T)
+
+  useEffect(() => {
+    setState(Object.fromEntries(path.searchParams.entries()) as T)
+  }, [path])
+
+  useEffect(() => {
+    if (state == null)
+      return
+    Path.go(`${path.pathname}?${new URLSearchParams(state).toString()}`)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state])
+
+  return [state, setState] as const
 }
 
-type NonceStep = {
-  readonly step: "nonce",
-  readonly target: string
-  readonly valued?: string
-  readonly priced?: string
-  readonly nonce?: string
-  readonly data?: ZeroHexString
+export function useSearchState<T extends Record<string, string>>(key: keyof T, $parent: State<T>) {
+  const [parent, setParent] = $parent
+
+  const state = parent[key]
+
+  const setState = useCallback((value: string) => {
+    setParent(p => ({ ...p, [key]: value }))
+  }, [setParent, key])
+
+  return [state, setState] as const
 }
 
 export function WalletSendScreen(props: {
@@ -61,75 +70,76 @@ export function WalletSendScreen(props: {
   readonly token: NativeTokenData
 }) {
   const { context, token } = props
+  const $path = usePathState<PathState>()
+  const [step] = useSearchState("step", $path)
 
-  const [step, setStep] = useState<Step>({ step: "target" })
-
-  if (step.step === "target")
-    return <WalletSendScreenTarget
-      step={step}
-      setStep={setStep} />
-  if (step.step === "value")
+  if (step === "target")
+    return <WalletSendScreenTarget />
+  if (step === "value")
     return <WalletSendScreenValue
       tokenData={token}
-      context={context}
-      step={step}
-      setStep={setStep} />
-  if (step.step === "nonce")
+      context={context} />
+  if (step === "nonce")
     return <WalletSendScreenNonce
-      context={context}
-      step={step}
-      setStep={setStep} />
-  return null
+      context={context} />
+  return <WalletSendScreenTarget />
 }
 
-export function WalletSendScreenTarget(props: {
-  readonly step: TargetStep
-  readonly setStep: Setter<Step>
-}) {
-  const { step, setStep } = props
+export function WalletSendScreenTarget(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
 
+  const $state = usePathState<PathState>()
+  const [step, setStep] = useSearchState("step", $state)
+  const [target, setTarget] = useSearchState("target", $state)
+
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
-  const [rawInput = "", setRawInput] = useState<Optional<string>>(step.target)
+  const [rawTargetInput = "", setRawTargetInput] = useState<Optional<string>>(target)
 
-  const onInputChange = useInputChange(e => {
-    setRawInput(e.target.value)
+  const onTargetInputChange = useInputChange(e => {
+    setRawTargetInput(e.target.value)
   }, [])
 
-  const input = useDeferredValue(rawInput)
+  const targetInput = useDeferredValue(rawTargetInput)
 
-  const maybeEnsInput = input.endsWith(".eth")
-    ? input
+  useEffect(() => {
+    setTarget(targetInput)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetInput])
+
+  const maybeEnsInput = targetInput.endsWith(".eth")
+    ? targetInput
     : undefined
 
   const ensQuery = useEnsLookup(maybeEnsInput, mainnet)
   const maybeEns = ensQuery.current?.ok().get()
 
   const onSubmit = useCallback(async () => {
-    if (!Address.is(input) && !input.endsWith(".eth"))
+    if (!Address.is(targetInput) && !targetInput.endsWith(".eth"))
       return
-    setStep({ ...step, step: "value", target: input })
-  }, [step, setStep, input])
+    setStep("value")
+    setTarget(targetInput)
+  }, [targetInput, setStep, setTarget])
 
   const onEnter = useKeyboardEnter(() => {
     onSubmit()
   }, [onSubmit])
 
   const onClear = useCallback((e: SyntheticEvent) => {
-    setRawInput("")
+    setRawTargetInput("")
   }, [])
 
   const onPaste = useCallback(async () => {
     const input = await navigator.clipboard.readText()
 
-    setRawInput(input)
+    setRawTargetInput(input)
 
     if (!Address.is(input) && !input.endsWith(".eth"))
       return
-    setStep({ ...step, step: "value", target: input })
-  }, [step, setStep])
+    setStep("value")
+    setTarget(input)
+  }, [setStep, setTarget])
 
   const [mode, setMode] = useState<"recents" | "contacts">("recents")
 
@@ -142,9 +152,10 @@ export function WalletSendScreenTarget(props: {
   }, [])
 
   const onBrumeClick = useCallback(() => {
-    setRawInput("brume.eth")
-    setStep({ ...step, step: "value", target: "brume.eth" })
-  }, [step, setStep])
+    setRawTargetInput("brume.eth")
+    setStep("value")
+    setTarget("brume.eth")
+  }, [setStep, setTarget])
 
   return <>
     <Dialog.Title close={close}>
@@ -158,13 +169,13 @@ export function WalletSendScreenTarget(props: {
       <div className="w-4" />
       <SimpleInput key="target"
         autoFocus
-        value={rawInput}
-        onChange={onInputChange}
+        value={rawTargetInput}
+        onChange={onTargetInputChange}
         onKeyDown={onEnter}
         placeholder="brume.eth" />
       <div className="w-1" />
       <div className="flex items-center">
-        {rawInput.length === 0
+        {rawTargetInput.length === 0
           ? <ShrinkableNakedButtonInInputBox
             onClick={onPaste}>
             <Outline.ClipboardIcon className="size-4" />
@@ -175,7 +186,7 @@ export function WalletSendScreenTarget(props: {
           </ShrinkableNakedButtonInInputBox>}
         <div className="w-1" />
         <ShrinkableContrastButtonInInputBox
-          disabled={!Address.is(input) && !input.endsWith(".eth")}
+          disabled={!Address.is(targetInput) && !targetInput.endsWith(".eth")}
           onClick={onSubmit}>
           OK
         </ShrinkableContrastButtonInInputBox>
@@ -190,7 +201,7 @@ export function WalletSendScreenTarget(props: {
         <div className="w-4" />
         <div className="flex flex-col truncate">
           <div className="font-medium">
-            {input}
+            {targetInput}
           </div>
           <div className="text-contrast truncate">
             {maybeEns}
@@ -272,14 +283,19 @@ function ShrinkableContrastButtonInInputBox(props: ChildrenProps & ButtonProps) 
 }
 
 export function WalletSendScreenValue(props: {
-  readonly step: ValueStep
-  readonly setStep: Setter<Step>
   readonly tokenData: NativeTokenData
   readonly context: FgEthereumContext
 }) {
-  const { context, tokenData, step, setStep } = props
+  const { context, tokenData } = props
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
+
+  const $state = usePathState<PathState>()
+  const [step, setStep] = useSearchState("step", $state)
+  const [target, setTarget] = useSearchState("target", $state)
+  const [valued, setValued] = useSearchState("valued", $state)
+  const [priced, setPriced] = useSearchState("priced", $state)
+  const [nonce, setNonce] = useSearchState("nonce", $state)
 
   const pendingNonceQuery = useNonce(wallet.address, context)
   const maybePendingNonce = pendingNonceQuery.current?.ok().get()
@@ -306,8 +322,8 @@ export function WalletSendScreenValue(props: {
     }, Fixed.unit(18))
   }, [prices])
 
-  const [rawValueInput = "", setRawValueInput] = useState(step.valued)
-  const [rawPricedInput = "", setRawPricedInput] = useState(step.priced)
+  const [rawValueInput = "", setRawValueInput] = useState(valued)
+  const [rawPricedInput = "", setRawPricedInput] = useState(priced)
 
   const setValue = useCallback((input: string) => {
     try {
@@ -374,12 +390,12 @@ export function WalletSendScreenValue(props: {
   }, [setPrice])
 
   useEffect(() => {
-    setStep(p => ({ ...p, valued: rawValueInput }))
+    setValued(rawValueInput)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawValueInput])
 
   useEffect(() => {
-    setStep(p => ({ ...p, priced: rawPricedInput }))
+    setPriced(rawPricedInput)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawPricedInput])
 
@@ -423,12 +439,12 @@ export function WalletSendScreenValue(props: {
   }, [setPrice])
 
   const onTargetFocus = useCallback(() => {
-    setStep({ ...step, step: "target" })
-  }, [step, setStep])
+    setStep("target")
+  }, [setStep])
 
   const onNonceClick = useCallback(() => {
-    setStep({ ...step, step: "nonce" })
-  }, [step, setStep])
+    setStep("nonce")
+  }, [setStep])
 
   const onPricedClick = useCallback(() => {
     setMode("priced")
@@ -438,8 +454,8 @@ export function WalletSendScreenValue(props: {
     setMode("valued")
   }, [])
 
-  const maybeEnsInput = step.target.endsWith(".eth")
-    ? step.target
+  const maybeEnsInput = target?.endsWith(".eth")
+    ? target
     : undefined
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
@@ -574,7 +590,7 @@ export function WalletSendScreenValue(props: {
     } catch { }
   }, [valueInput, tokenData])
 
-  const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(step.nonce)
+  const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(nonce)
 
   const onNonceInputChange = useInputChange(e => {
     setRawNonceInput(e.target.value)
@@ -598,17 +614,15 @@ export function WalletSendScreenValue(props: {
     return undefined
   }, [maybeCustomNonce, maybePendingNonce])
 
-  const finalNonceDisplay = useMemo(() => {
-    return maybeFinalNonce?.toString() ?? "???"
-  }, [maybeFinalNonce])
-
   const maybeFinalTarget = useMemo(() => {
-    if (Address.is(step.target))
-      return step.target
+    if (target == null)
+      return undefined
+    if (Address.is(target))
+      return target
     if (maybeEnsTarget != null)
       return maybeEnsTarget
     return undefined
-  }, [step.target, maybeEnsTarget])
+  }, [target, maybeEnsTarget])
 
   const maybeEip1559EstimateGasKey = useMemo<Nullable<RpcRequestPreinit<[unknown, unknown]>>>(() => {
     if (maybeFinalValue == null)
@@ -803,7 +817,7 @@ export function WalletSendScreenValue(props: {
       <SimpleInput key="target"
         readOnly
         onFocus={onTargetFocus}
-        value={step.target} />
+        value={target} />
     </SimpleBox>
     <div className="h-2" />
     {mode === "valued" &&
@@ -933,7 +947,6 @@ export function WalletSendScreenValue(props: {
       <SimpleTextarea
         disabled
         rows={3}
-        value={step.data}
         placeholder="0x0" />
     </SimpleBox>
     <div className="h-4" />
@@ -1059,41 +1072,45 @@ function WideShrinkableContrastButton(props: ChildrenProps & ButtonProps) {
 
 
 export function WalletSendScreenNonce(props: {
-  readonly step: NonceStep
-  readonly setStep: Setter<Step>
   readonly context: FgEthereumContext
 }) {
-  const { context, step, setStep } = props
+  const { context } = props
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
+
+  const $state = usePathState<PathState>()
+  const [step, setStep] = useSearchState("step", $state)
+  const [nonce, setNonce] = useSearchState("nonce", $state)
 
   const pendingNonceQuery = useNonce(wallet.address, context)
   const maybePendingNonce = pendingNonceQuery.current?.ok().get()
 
-  const [rawInput = "", setRawInput] = useState<Optional<string>>(step.nonce)
+  const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(nonce)
 
   const onInputChange = useInputChange(e => {
-    setRawInput(e.target.value)
+    setRawNonceInput(e.target.value)
   }, [])
 
-  const input = useDeferredValue(rawInput)
+  const nonceInput = useDeferredValue(rawNonceInput)
 
   const onSubmit = useCallback(async () => {
-    setStep({ ...step, step: "value", nonce: input })
-  }, [step, setStep, input])
+    setNonce(nonceInput)
+    setStep("value")
+  }, [nonceInput, setNonce, setStep])
 
   const onEnter = useKeyboardEnter(() => {
     onSubmit()
   }, [onSubmit])
 
   const onClear = useCallback((e: SyntheticEvent) => {
-    setRawInput("")
+    setRawNonceInput("")
   }, [])
 
   const onPaste = useCallback(async () => {
     const input = await navigator.clipboard.readText()
-    setStep({ ...step, step: "value", nonce: input })
-  }, [step, setStep])
+    setNonce(input)
+    setStep("value")
+  }, [setNonce, setStep])
 
   return <>
     <Dialog.Title close={close}>
@@ -1107,13 +1124,13 @@ export function WalletSendScreenNonce(props: {
       <div className="w-4" />
       <SimpleInput
         autoFocus
-        value={rawInput}
+        value={rawNonceInput}
         onChange={onInputChange}
         onKeyDown={onEnter}
         placeholder={maybePendingNonce?.toString()} />
       <div className="w-1" />
       <div className="flex items-center">
-        {rawInput.length === 0
+        {rawNonceInput.length === 0
           ? <ShrinkableNakedButtonInInputBox
             onClick={onPaste}>
             <Outline.ClipboardIcon className="size-4" />

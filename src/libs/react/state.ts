@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useState } from "react";
 
-export type State<T> = [T, Setter<T>]
+export type State<T> = readonly [T, Setter<T>]
 
 export type Setter<T> = Dispatch<SetStateAction<T>>
 
