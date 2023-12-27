@@ -49,7 +49,7 @@ import { BgEns } from "./entities/names/data"
 import { BgOrigin, OriginData, PreOriginData } from "./entities/origins/data"
 import { AppRequest, AppRequestData, BgAppRequest } from "./entities/requests/data"
 import { BgSeed, SeedData } from "./entities/seeds/data"
-import { BgSession, ExSessionData, SessionData, SessionRef, WcSessionData } from "./entities/sessions/data"
+import { BgSession, ExSessionData, SessionData, SessionRef, SessionStorage, WcSessionData } from "./entities/sessions/data"
 import { Status, StatusData } from "./entities/sessions/status/data"
 import { BgSettings } from "./entities/settings/data"
 import { BgSignature } from "./entities/signatures/data"
@@ -1222,7 +1222,13 @@ export class Global {
 
       const { storage } = Option.unwrap(this.#user)
 
-      storage.setOrThrow(cacheKey, rawState)
+      if (cacheKey.startsWith("session/")) {
+        const storage2 = new SessionStorage(storage)
+        storage2.setOrThrow(cacheKey, rawState as any)
+      } else {
+        storage.setOrThrow(cacheKey, rawState)
+      }
+
       core.storeds.set(cacheKey, rawState)
       core.unstoreds.delete(cacheKey)
       await core.onState.emit(cacheKey, [])
