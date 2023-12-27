@@ -6,7 +6,7 @@ import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
-import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
+import { useInputChange, useKeyboardEnter, useTextAreaChange } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
@@ -25,22 +25,21 @@ import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, FgEthereumContext, useEthereumContext } from "../../data";
 import { PriceResolver } from "../../page";
 
-type PathState = {
-  readonly step: string
+type UrlState = {
+  readonly step?: string
   readonly target?: string
   readonly valued?: string
   readonly priced?: string
   readonly nonce?: string
-  readonly data?: ZeroHexString
+  readonly data?: string
 }
-
 
 export function WalletSendScreen(props: {
   readonly context: FgEthereumContext
   readonly token: NativeTokenData
 }) {
   const { context, token } = props
-  const $path = usePathState<PathState>()
+  const $path = usePathState<UrlState>()
   const [step] = useSearchState("step", $path)
 
   if (step === "target")
@@ -59,7 +58,7 @@ export function WalletSendScreenTarget(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
 
-  const $state = usePathState<PathState>()
+  const $state = usePathState<UrlState>()
   const [step, setStep] = useSearchState("step", $state)
   const [target, setTarget] = useSearchState("target", $state)
 
@@ -87,7 +86,7 @@ export function WalletSendScreenTarget(props: {}) {
   const onSubmit = useCallback(async () => {
     if (target == null)
       return
-    if (!Address.is(target) && !target.endsWith(".eth"))
+    if (Address.from(target) == null && !target.endsWith(".eth"))
       return
     setStep("value")
   }, [target, setStep])
@@ -103,7 +102,7 @@ export function WalletSendScreenTarget(props: {}) {
   const onPaste = useCallback(async () => {
     const input = await navigator.clipboard.readText()
 
-    if (!Address.is(input) && !input.endsWith(".eth"))
+    if (Address.from(input) == null && !input.endsWith(".eth"))
       return
 
     setTarget(input)
@@ -154,7 +153,6 @@ export function WalletSendScreenTarget(props: {}) {
           </ShrinkableNakedButtonInInputBox>}
         <div className="w-1" />
         <ShrinkableContrastButtonInInputBox
-          disabled={!Address.is(targetInput) && !targetInput.endsWith(".eth")}
           onClick={onSubmit}>
           OK
         </ShrinkableContrastButtonInInputBox>
@@ -258,12 +256,13 @@ export function WalletSendScreenValue(props: {
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
 
-  const $state = usePathState<PathState>()
+  const $state = usePathState<UrlState>()
   const [step, setStep] = useSearchState("step", $state)
   const [target, setTarget] = useSearchState("target", $state)
   const [valued, setValued] = useSearchState("valued", $state)
   const [priced, setPriced] = useSearchState("priced", $state)
   const [nonce, setNonce] = useSearchState("nonce", $state)
+  const [data, setData] = useSearchState("data", $state)
 
   const pendingNonceQuery = useNonce(wallet.address, context)
   const maybePendingNonce = pendingNonceQuery.current?.ok().get()
@@ -422,14 +421,80 @@ export function WalletSendScreenValue(props: {
     setMode("valued")
   }, [])
 
-  const maybeEnsInput = target?.endsWith(".eth")
+  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
+
+  const maybeEnsQueryKey = target?.endsWith(".eth")
     ? target
     : undefined
 
-  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
-
-  const ensTargetQuery = useEnsLookup(maybeEnsInput, mainnet)
+  const ensTargetQuery = useEnsLookup(maybeEnsQueryKey, mainnet)
   const maybeEnsTarget = ensTargetQuery.current?.ok().get()
+
+  const maybeFinalTarget = useMemo(() => {
+    if (target == null)
+      return undefined
+    if (Address.from(target) != null)
+      return target
+    if (maybeEnsTarget != null)
+      return maybeEnsTarget
+    return undefined
+  }, [target, maybeEnsTarget])
+
+  const maybeFinalValue = useMemo(() => {
+    try {
+      return valued?.trim().length
+        ? Fixed.fromString(valued.trim(), tokenData.decimals)
+        : undefined
+    } catch { }
+  }, [valued, tokenData])
+
+  const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(nonce)
+
+  const onNonceInputChange = useInputChange(e => {
+    setRawNonceInput(e.target.value)
+  }, [])
+
+  const nonceInput = useDeferredValue(rawNonceInput)
+
+  useEffectButNotFirstTime(() => {
+    setNonce(nonceInput)
+  }, [nonceInput])
+
+  const maybeCustomNonce = useMemo(() => {
+    try {
+      return nonce?.trim().length
+        ? BigInt(nonce.trim())
+        : undefined
+    } catch { }
+  }, [nonce])
+
+  const maybeFinalNonce = useMemo(() => {
+    if (maybeCustomNonce != null)
+      return maybeCustomNonce
+    if (maybePendingNonce != null)
+      return maybePendingNonce
+    return undefined
+  }, [maybeCustomNonce, maybePendingNonce])
+
+  const [rawDataInput = "", setRawDataInput] = useState<Optional<string>>(data)
+
+  const onDataInputChange = useTextAreaChange(e => {
+    setRawDataInput(e.target.value)
+  }, [])
+
+  const dataInput = useDeferredValue(rawDataInput)
+
+  useEffectButNotFirstTime(() => {
+    setData(dataInput)
+  }, [dataInput])
+
+  const maybeFinalData = useMemo(() => {
+    try {
+      return data?.trim().length
+        ? ZeroHexString.from(data.trim())
+        : undefined
+    } catch { }
+  }, [data])
 
   const [gasMode, setGasMode] = useState<"normal" | "fast" | "urgent">("normal")
 
@@ -550,52 +615,6 @@ export function WalletSendScreenValue(props: {
     return (maybeFinalBaseFeePerGas * 2n) + maybeFinalMaxPriorityFeePerGas
   }, [maybeFinalBaseFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
-  const maybeFinalValue = useMemo(() => {
-    try {
-      return valued?.trim().length
-        ? Fixed.fromString(valued.trim(), tokenData.decimals)
-        : undefined
-    } catch { }
-  }, [valued, tokenData])
-
-  const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(nonce)
-
-  const onNonceInputChange = useInputChange(e => {
-    setRawNonceInput(e.target.value)
-  }, [])
-
-  const nonceInput = useDeferredValue(rawNonceInput)
-
-  useEffectButNotFirstTime(() => {
-    setNonce(nonceInput)
-  }, [nonceInput])
-
-  const maybeCustomNonce = useMemo(() => {
-    try {
-      return nonce?.trim().length
-        ? BigInt(nonce.trim())
-        : undefined
-    } catch { }
-  }, [nonce])
-
-  const maybeFinalNonce = useMemo(() => {
-    if (maybeCustomNonce != null)
-      return maybeCustomNonce
-    if (maybePendingNonce != null)
-      return maybePendingNonce
-    return undefined
-  }, [maybeCustomNonce, maybePendingNonce])
-
-  const maybeFinalTarget = useMemo(() => {
-    if (target == null)
-      return undefined
-    if (Address.is(target))
-      return target
-    if (maybeEnsTarget != null)
-      return maybeEnsTarget
-    return undefined
-  }, [target, maybeEnsTarget])
-
   const maybeEip1559EstimateGasKey = useMemo<Nullable<RpcRequestPreinit<[unknown, unknown]>>>(() => {
     if (maybeFinalValue == null)
       return undefined
@@ -615,10 +634,11 @@ export function WalletSendScreenValue(props: {
         maxFeePerGas: ZeroHexString.from(maybeFinalMaxFeePerGas),
         maxPriorityFeePerGas: ZeroHexString.from(maybeFinalMaxPriorityFeePerGas),
         value: ZeroHexString.from(maybeFinalValue.value),
-        nonce: ZeroHexString.from(maybeFinalNonce)
+        nonce: ZeroHexString.from(maybeFinalNonce),
+        data: maybeFinalData
       }, "latest"]
     }
-  }, [context, wallet, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
+  }, [context, wallet, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
   const eip1559GasLimitQuery = useEstimateGas(maybeEip1559EstimateGasKey, context)
   const maybeEip1559GasLimit = eip1559GasLimitQuery.current?.ok().get()
@@ -678,16 +698,20 @@ export function WalletSendScreenValue(props: {
       if (maybeIsEip1559 == null)
         return
 
+      const target = Option.wrap(maybeFinalTarget).okOrElseSync(() => {
+        return new UIError(`Could not parse or fetch address`)
+      }).unwrap()
+
       const value = Option.wrap(maybeFinalValue).okOrElseSync(() => {
         return new UIError(`Could not parse value`)
       }).unwrap()
 
       const nonce = Option.wrap(maybeFinalNonce).okOrElseSync(() => {
-        return new UIError(`Could not fetch or parse nonce`)
+        return new UIError(`Could not parse or fetch nonce`)
       }).unwrap()
 
-      const target = Option.wrap(maybeFinalTarget).okOrElseSync(() => {
-        return new UIError(`Could not fetch or parse address`)
+      const data = Option.wrap(maybeFinalData).okOrElseSync(() => {
+        return new UIError(`Could not parse data`)
       }).unwrap()
 
       let tx: ethers.Transaction
@@ -715,7 +739,8 @@ export function WalletSendScreenValue(props: {
           maxFeePerGas: maxFeePerGas,
           maxPriorityFeePerGas: maxPriorityFeePerGas,
           nonce: Number(nonce),
-          value: value.value
+          value: value.value,
+          data: data
         })
       }
 
@@ -737,7 +762,8 @@ export function WalletSendScreenValue(props: {
               to: Address.from(target),
               gasPrice: ZeroHexString.from(gasPrice),
               value: ZeroHexString.from(value.value),
-              nonce: ZeroHexString.from(nonce)
+              nonce: ZeroHexString.from(nonce),
+              data: data
             }, "latest"],
             noCheck: true
           }]
@@ -749,7 +775,8 @@ export function WalletSendScreenValue(props: {
           chainId: context.chain.chainId,
           gasPrice: gasPrice,
           nonce: Number(nonce),
-          value: value.value
+          value: value.value,
+          data: data
         })
       }
 
@@ -769,7 +796,7 @@ export function WalletSendScreenValue(props: {
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, tokenData, maybeFinalTarget, maybeFinalNonce, maybeFinalValue, maybeIsEip1559, maybeEip1559GasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+  }, [wallet, context, tokenData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeFinalData, maybeIsEip1559, maybeEip1559GasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
 
   return <>
     {tokenData.pairs?.map((address, i) =>
@@ -917,8 +944,9 @@ export function WalletSendScreenValue(props: {
       </div>
       <div className="w-4" />
       <SimpleTextarea
-        disabled
         rows={3}
+        value={rawDataInput}
+        onChange={onDataInputChange}
         placeholder="0x0" />
     </SimpleBox>
     <div className="h-4" />
@@ -1050,7 +1078,7 @@ export function WalletSendScreenNonce(props: {
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
 
-  const $state = usePathState<PathState>()
+  const $state = usePathState<UrlState>()
   const [step, setStep] = useSearchState("step", $state)
   const [nonce, setNonce] = useSearchState("nonce", $state)
 
