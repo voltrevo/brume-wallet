@@ -6,11 +6,11 @@ import { BgToken, ContractTokenData, ContractTokenRef } from "@/mods/background/
 import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, FetcherMore, States, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
+import { Data, FetcherMore, States, core, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { FgTotal } from "../unknown/data"
-import { FgEthereumContext, fetchOrFail, indexOrThrow } from "../wallets/data"
+import { FgEthereumContext, fetchOrFail } from "../wallets/data"
 import { FgPair } from "./pairs/data"
 
 export namespace FgToken {
@@ -309,7 +309,9 @@ export function useNativeBalance(address: Nullable<ZeroHexString>, block: Nullab
   useEffectButNotFirstTime(() => {
     if (context == null)
       return
-    indexOrThrow(query.key, context).catch(() => { })
+    if (query.cacheKey == null)
+      return
+    core.reindexOrThrow(query.cacheKey, query).catch(console.warn)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context, ...prices])
 
@@ -328,7 +330,9 @@ export function useContractBalance(address: Nullable<ZeroHexString>, token: Null
   useEffectButNotFirstTime(() => {
     if (context == null)
       return
-    indexOrThrow(query.key, context).catch(() => { })
+    if (query.cacheKey == null)
+      return
+    core.reindexOrThrow(query.cacheKey, query).catch(console.warn)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context, ...prices])
 

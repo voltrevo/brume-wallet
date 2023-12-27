@@ -952,8 +952,6 @@ export class Global {
       return new Some(await this.brume_subscribe(foreground, request))
     if (request.method === "brume_eth_fetch")
       return new Some(await this.brume_eth_fetch(foreground, request))
-    if (request.method === "brume_eth_index")
-      return new Some(await this.brume_eth_index(foreground, request))
     if (request.method === "brume_log")
       return new Some(await this.brume_log(request))
     if (request.method === "brume_open")
@@ -1293,26 +1291,6 @@ export class Global {
       request.noCheck = true
 
     return BgEthereum.Unknown.schema(ethereum, request, storage)
-  }
-
-  async brume_eth_index(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
-    return await Result.unthrow(async t => {
-      const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown>]>).params
-
-      const { storage } = Option.unwrap(this.#user)
-
-      const chain = Option.unwrap(chainByChainId[chainId])
-
-      const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.unwrap())
-
-      const ethereum: BgEthereumContext = { chain, brume }
-
-      const query = await this.routeOrThrow(ethereum, subrequest, storage)
-
-      await core.reindexOrThrow(query.cacheKey, query.settings)
-
-      return Ok.void()
-    })
   }
 
   async brume_eth_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {

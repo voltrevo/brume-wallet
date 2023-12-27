@@ -333,12 +333,3 @@ export async function fetchOrFail<T>(request: RpcRequestPreinit<unknown> & Ether
     params: [uuid, chain.chainId, request]
   }).then(r => Fetched.rewrap(r.unwrap()))
 }
-
-export async function indexOrThrow(request: RpcRequestPreinit<unknown>, ethereum: FgEthereumContext) {
-  const { uuid, background, chain } = ethereum
-
-  await background.tryRequest({
-    method: "brume_eth_index",
-    params: [uuid, chain.chainId, request]
-  }).then(r => r.unwrap().unwrap())
-}
