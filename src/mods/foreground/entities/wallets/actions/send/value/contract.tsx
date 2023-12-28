@@ -35,7 +35,6 @@ export function WalletSendScreenContractValue(props: {}) {
   const [maybeValued, setValued] = useSearchState("valued", $state)
   const [maybePriced, setPriced] = useSearchState("priced", $state)
   const [maybeNonce, setNonce] = useSearchState("nonce", $state)
-  const [maybeData, setData] = useSearchState("data", $state)
 
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
