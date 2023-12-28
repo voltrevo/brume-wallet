@@ -30,8 +30,7 @@ import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
 import { usePairPrice } from "../tokens/pairs/data";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
-import { WalletSendScreen } from "./actions/send";
-import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
+import { WalletSendScreen } from "./actions/send/new";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
 import { useEthereumContext, useEthereumContext2 } from "./data";
@@ -420,6 +419,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const { token, chain } = props
   const wallet = useWalletDataContext().unwrap()
   const edit = useTokensEditContext().unwrap()
+  const subpath = useSubpath()
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
@@ -428,7 +428,9 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const balanceQuery = useContractBalance(wallet.address, token, "pending", context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
 
-  const sendDialog = useBooleanHandle(false)
+  const onSendClick = useCallback(() => {
+    subpath.go(`/send?step=target&chain=${context?.chain.chainId}&token=${token.address}`)
+  }, [subpath, context, token])
 
   const balanceUsdFixed = useContractPricedBalance(wallet.address, token, "usd", context)
   const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
@@ -441,15 +443,6 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   }, [])
 
   return <>
-    {wallet.type !== "readonly" &&
-      <Dialog
-        opened={sendDialog.current}
-        close={sendDialog.disable}>
-        <WalletDataSendContractTokenDialog
-          title={`${token.name} on ${chain.name}`}
-          context={context}
-          token={token} />
-      </Dialog>}
     {token.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}
@@ -457,7 +450,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
         ok={onPrice} />)}
     {!edit &&
       <ClickableTokenRow
-        ok={sendDialog.enable}
+        ok={onSendClick}
         token={token}
         chain={chain}
         balanceDisplay={balanceDisplay}

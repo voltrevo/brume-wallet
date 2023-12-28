@@ -1,14 +1,11 @@
-/* eslint-disable @next/next/no-img-element */
 import { BigIntToHex } from "@/libs/bigints/bigints";
 import { useCopy } from "@/libs/copy/copy";
 import { Errors, UIError } from "@/libs/errors/errors";
-import { chainByChainId } from "@/libs/ethereum/mods/chain";
+import { chainByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
-import { useInputChange, useKeyboardEnter, useTextAreaChange } from "@/libs/react/events";
-import { ChildrenProps } from "@/libs/react/props/children";
-import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
+import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
@@ -17,277 +14,102 @@ import { Nullable, Option, Optional } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
-import { useBlockByNumber } from "../../../blocks/data";
-import { useEnsLookup } from "../../../names/data";
-import { useNativeBalance, useNativePricedBalance } from "../../../tokens/data";
-import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../unknown/data";
-import { useWalletDataContext } from "../../context";
-import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../data";
-import { PriceResolver } from "../../page";
+import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, SimpleTextarea, UrlState, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "..";
+import { useBlockByNumber } from "../../../../../blocks/data";
+import { useEnsLookup } from "../../../../../names/data";
+import { useNativeBalance, useNativePricedBalance, useToken } from "../../../../../tokens/data";
+import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../../../unknown/data";
+import { useWalletDataContext } from "../../../../context";
+import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../../../data";
+import { PriceResolver } from "../../../../page";
 
-type UrlState = {
-  readonly step?: string
-  readonly chain?: string
-  readonly token?: string
-  readonly target?: string
-  readonly valued?: string
-  readonly priced?: string
-  readonly nonce?: string
-  readonly data?: string
-}
-
-export function WalletSendScreen(props: {}) {
-  const $path = usePathState<UrlState>()
-  const [step] = useSearchState("step", $path)
-
-  if (step === "target")
-    return <WalletSendScreenTarget />
-  if (step === "value")
-    return <WalletSendScreenNativeValue />
-  if (step === "nonce")
-    return <WalletSendScreenNonce />
-  return <WalletSendScreenTarget />
-}
-
-export function WalletSendScreenTarget(props: {}) {
+export function WalletSendScreenContractValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
 
   const $state = usePathState<UrlState>()
-  const [step, setStep] = useSearchState("step", $state)
-  const [target, setTarget] = useSearchState("target", $state)
+  const [maybeStep, setStep] = useSearchState("step", $state)
+  const [maybeChain, setChain] = useSearchState("chain", $state)
+  const [maybeToken, setToken] = useSearchState("token", $state)
+  const [maybeTarget, setTarget] = useSearchState("target", $state)
+  const [maybeValued, setValued] = useSearchState("valued", $state)
+  const [maybePriced, setPriced] = useSearchState("priced", $state)
+  const [maybeNonce, setNonce] = useSearchState("nonce", $state)
+  const [maybeData, setData] = useSearchState("data", $state)
 
-  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
-
-  const [rawTargetInput = "", setRawTargetInput] = useState<Optional<string>>(target)
-
-  const onTargetInputChange = useInputChange(e => {
-    setRawTargetInput(e.target.value)
-  }, [])
-
-  const targetInput = useDeferredValue(rawTargetInput)
-
-  useEffectButNotFirstTime(() => {
-    setTarget(targetInput)
-  }, [targetInput])
-
-  const maybeEnsInput = target?.endsWith(".eth")
-    ? targetInput
-    : undefined
-
-  const ensQuery = useEnsLookup(maybeEnsInput, mainnet)
-  const maybeEns = ensQuery.current?.ok().get()
-
-  const onSubmit = useCallback(async () => {
-    if (target == null)
-      return
-    if (Address.from(target) == null && !target.endsWith(".eth"))
-      return
-    setStep("value")
-  }, [target, setStep])
-
-  const onEnter = useKeyboardEnter(() => {
-    onSubmit()
-  }, [onSubmit])
-
-  const onClear = useCallback((e: SyntheticEvent) => {
-    setRawTargetInput("")
-  }, [])
-
-  const onPaste = useCallback(async () => {
-    const input = await navigator.clipboard.readText()
-
-    if (Address.from(input) == null && !input.endsWith(".eth"))
-      return
-
-    setTarget(input)
-    setStep("value")
-  }, [setStep, setTarget])
-
-  const [mode, setMode] = useState<"recents" | "contacts">("recents")
-
-  const onRecentsClick = useCallback(() => {
-    setMode("recents")
-  }, [])
-
-  const onContactsClick = useCallback(() => {
-    setMode("contacts")
-  }, [])
-
-  const onBrumeClick = useCallback(() => {
-    setTarget("brume.eth")
-    setStep("value")
-  }, [setStep, setTarget])
-
-  return <>
-    <Dialog.Title close={close}>
-      Send
-    </Dialog.Title>
-    <div className="h-4" />
-    <SimpleBox>
-      <div className="">
-        Target
-      </div>
-      <div className="w-4" />
-      <SimpleInput key="target"
-        autoFocus
-        value={rawTargetInput}
-        onChange={onTargetInputChange}
-        onKeyDown={onEnter}
-        placeholder="brume.eth" />
-      <div className="w-1" />
-      <div className="flex items-center">
-        {rawTargetInput.length === 0
-          ? <ShrinkableNakedButtonInInputBox
-            onClick={onPaste}>
-            <Outline.ClipboardIcon className="size-4" />
-          </ShrinkableNakedButtonInInputBox>
-          : <ShrinkableNakedButtonInInputBox
-            onClick={onClear}>
-            <Outline.XMarkIcon className="size-4" />
-          </ShrinkableNakedButtonInInputBox>}
-        <div className="w-1" />
-        <ShrinkableContrastButtonInInputBox
-          onClick={onSubmit}>
-          OK
-        </ShrinkableContrastButtonInInputBox>
-      </div>
-    </SimpleBox>
-    {maybeEns != null && <>
-      <div className="h-2" />
-      <div className="po-md flex items-center bg-contrast rounded-xl cursor-pointer"
-        role="button"
-        onClick={onSubmit}>
-        <div className="size-12 shrink-0 rounded-full bg-contrast" />
-        <div className="w-4" />
-        <div className="flex flex-col truncate">
-          <div className="font-medium">
-            {targetInput}
-          </div>
-          <div className="text-contrast truncate">
-            {maybeEns}
-          </div>
-        </div>
-      </div>
-    </>}
-    <div className="h-4" />
-    <div className="flex items-center">
-      <button className="text-lg font-medium text-contrast data-[active=true]:text-default"
-        onClick={onRecentsClick}
-        data-active={mode === "recents"}>
-        Recents
-      </button>
-      <div className="grow" />
-      <button className="text-contrast font-medium text-contrast data-[active=true]:text-default"
-        onClick={onContactsClick}
-        data-active={mode === "contacts"}>
-        Contacts
-      </button>
-    </div>
-    <div className="h-2" />
-    <div className="po-md flex items-center bg-contrast rounded-xl cursor-pointer"
-      role="button"
-      onClick={onBrumeClick}>
-      <img className="size-12 shrink-0 rounded-full bg-contrast"
-        src="/square.png"
-        alt="logo" />
-      <div className="w-4" />
-      <div className="flex flex-col truncate">
-        <div className="font-medium">
-          Brume Wallet
-        </div>
-        <div className="text-contrast truncate">
-          brume.eth
-        </div>
-      </div>
-    </div>
-    <div className="grow flex flex-col items-center justify-center">
-      Coming soon...
-    </div>
-  </>
-}
-
-function SimpleBox(props: ChildrenProps) {
-  const { children } = props
-
-  return <div className="po-md flex items-start bg-contrast rounded-xl">
-    {children}
-  </div>
-}
-
-function SimpleInput(props: InputProps) {
-  return <input className="grow bg-transparent outline-none min-w-0" {...props} />
-}
-
-function SimpleTextarea(props: TextareaProps) {
-  return <textarea className="grow bg-transparent outline-none min-w-0" {...props} />
-}
-
-function ShrinkableNakedButtonInInputBox(props: ChildrenProps & ButtonProps) {
-  const { children, ...rest } = props
-
-  return <button className="group rounded-full outline-none disabled:opacity-50 transition-opacity" {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
-      {children}
-    </div>
-  </button>
-}
-
-function ShrinkableContrastButtonInInputBox(props: ChildrenProps & ButtonProps) {
-  const { children, ...rest } = props
-
-  return <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity" {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
-      {children}
-    </div>
-  </button>
-}
-
-export function WalletSendScreenNativeValue(props: {}) {
-  const wallet = useWalletDataContext().unwrap()
-  const { close } = useDialogContext().unwrap()
-
-  const $state = usePathState<UrlState>()
-  const [step, setStep] = useSearchState("step", $state)
-  const [chain, setChain] = useSearchState("chain", $state)
-  const [target, setTarget] = useSearchState("target", $state)
-  const [valued, setValued] = useSearchState("valued", $state)
-  const [priced, setPriced] = useSearchState("priced", $state)
-  const [nonce, setNonce] = useSearchState("nonce", $state)
-  const [data, setData] = useSearchState("data", $state)
-
+  const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
-  const tokenData = chainData.token
+
+  const token = Option.unwrap(maybeToken)
+  const tokenQuery = useToken(chainData.chainId, token)
+
+  const maybeTokenData = Option.wrap(tokenQuery.current?.get())
+  const maybeTokenDef = Option.wrap(tokenByAddress[token])
+  const tokenData = maybeTokenData.or(maybeTokenDef).unwrap()
 
   const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
 
   const pendingNonceQuery = useNonce(wallet.address, context)
   const maybePendingNonce = pendingNonceQuery.current?.ok().get()
 
-  const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(tokenData.pairs?.length ?? 0))
+  const [tokenPrices, setTokenPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
+    if (tokenData.pairs == null)
+      return
+    return new Array(tokenData.pairs.length)
+  })
 
-  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setPrices(prices => {
+  const [chainPrices, setChainPrices] = useState(() => {
+    if (chainData.token.pairs == null)
+      return
+    return new Array(chainData.token.pairs.length)
+  })
+
+  const onTokenPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
+    setTokenPrices(prices => {
+      if (prices == null)
+        return
+      prices[index] = data
+      return [...prices]
+    })
+  }, [])
+
+  const onChainPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
+    setChainPrices(prices => {
+      if (prices == null)
+        return
       prices[index] = data
       return [...prices]
     })
   }, [])
 
   const maybeTokenPrice = useMemo(() => {
-    if (prices.length === 0)
-      return undefined
+    if (tokenPrices == null)
+      return
 
-    return prices.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
+    return tokenPrices.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
       if (a == null)
         return undefined
       if (b == null)
         return undefined
       return a.mul(Fixed.from(b))
     }, Fixed.unit(18))
-  }, [prices])
+  }, [tokenPrices])
 
-  const [rawValueInput = "", setRawValueInput] = useState(valued)
-  const [rawPricedInput = "", setRawPricedInput] = useState(priced)
+  const maybeChainPrice = useMemo(() => {
+    if (chainPrices == null)
+      return
+
+    return chainPrices.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
+      if (a == null)
+        return undefined
+      if (b == null)
+        return undefined
+      return a.mul(Fixed.from(b))
+    }, Fixed.unit(18))
+  }, [chainPrices])
+
+  const [rawValueInput = "", setRawValueInput] = useState(maybeValued)
+  const [rawPricedInput = "", setRawPricedInput] = useState(maybePriced)
 
   const setValue = useCallback((input: string) => {
     try {
@@ -368,7 +190,7 @@ export function WalletSendScreenNativeValue(props: {}) {
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
-  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
+  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, tokenPrices)
   const pricedBalanceQuery = useNativePricedBalance(wallet.address, "usd", context)
 
   const valuedBalanceData = valuedBalanceQuery.current?.ok().get()
@@ -420,32 +242,32 @@ export function WalletSendScreenNativeValue(props: {}) {
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
-  const maybeEnsQueryKey = target?.endsWith(".eth")
-    ? target
+  const maybeEnsQueryKey = maybeTarget?.endsWith(".eth")
+    ? maybeTarget
     : undefined
 
   const ensTargetQuery = useEnsLookup(maybeEnsQueryKey, mainnet)
   const maybeEnsTarget = ensTargetQuery.current?.ok().get()
 
   const maybeFinalTarget = useMemo(() => {
-    if (target == null)
+    if (maybeTarget == null)
       return undefined
-    if (Address.from(target) != null)
-      return target
+    if (Address.from(maybeTarget) != null)
+      return maybeTarget
     if (maybeEnsTarget != null)
       return maybeEnsTarget
     return undefined
-  }, [target, maybeEnsTarget])
+  }, [maybeTarget, maybeEnsTarget])
 
   const maybeFinalValue = useMemo(() => {
     try {
-      return valued?.trim().length
-        ? Fixed.fromString(valued.trim(), tokenData.decimals)
+      return maybeValued?.trim().length
+        ? Fixed.fromString(maybeValued.trim(), tokenData.decimals)
         : undefined
     } catch { }
-  }, [valued, tokenData])
+  }, [maybeValued, tokenData])
 
-  const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(nonce)
+  const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(maybeNonce)
 
   const onNonceInputChange = useInputChange(e => {
     setRawNonceInput(e.target.value)
@@ -459,11 +281,11 @@ export function WalletSendScreenNativeValue(props: {}) {
 
   const maybeCustomNonce = useMemo(() => {
     try {
-      return nonce?.trim().length
-        ? BigInt(nonce.trim())
+      return maybeNonce?.trim().length
+        ? BigInt(maybeNonce.trim())
         : undefined
     } catch { }
-  }, [nonce])
+  }, [maybeNonce])
 
   const maybeFinalNonce = useMemo(() => {
     if (maybeCustomNonce != null)
@@ -473,7 +295,7 @@ export function WalletSendScreenNativeValue(props: {}) {
     return undefined
   }, [maybeCustomNonce, maybePendingNonce])
 
-  const [rawDataInput = "", setRawDataInput] = useState<Optional<string>>(data)
+  const [rawDataInput = "", setRawDataInput] = useState<Optional<string>>(maybeData)
 
   const onDataInputChange = useTextAreaChange(e => {
     setRawDataInput(e.target.value)
@@ -486,10 +308,10 @@ export function WalletSendScreenNativeValue(props: {}) {
   }, [dataInput])
 
   const triedFinalData = useMemo(() => {
-    if (!data?.trim().length)
+    if (!maybeData?.trim().length)
       return new Ok(undefined)
-    return Result.runAndWrapSync(() => ZeroHexString.from(data.trim()))
-  }, [data])
+    return Result.runAndWrapSync(() => ZeroHexString.from(maybeData.trim()))
+  }, [maybeData])
 
   const [gasMode, setGasMode] = useState<"normal" | "fast" | "urgent">("normal")
 
@@ -645,30 +467,30 @@ export function WalletSendScreenNativeValue(props: {}) {
       return undefined
     if (maybeNormalBaseFeePerGas == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeNormalBaseFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeEip1559GasLimit, maybeNormalBaseFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeNormalBaseFeePerGas, 18).mul(maybeChainPrice)
+  }, [maybeEip1559GasLimit, maybeNormalBaseFeePerGas, maybeChainPrice])
 
   const maybeFastEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeFastBaseFeePerGas == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeFastBaseFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeEip1559GasLimit, maybeFastBaseFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeFastBaseFeePerGas, 18).mul(maybeChainPrice)
+  }, [maybeEip1559GasLimit, maybeFastBaseFeePerGas, maybeChainPrice])
 
   const maybeUrgentEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeUrgentBaseFeePerGas == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeUrgentBaseFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeEip1559GasLimit, maybeUrgentBaseFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeUrgentBaseFeePerGas, 18).mul(maybeChainPrice)
+  }, [maybeEip1559GasLimit, maybeUrgentBaseFeePerGas, maybeChainPrice])
 
   const normalEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalEip1559GasCost)
   const fastEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastEip1559GasCost)
@@ -800,7 +622,12 @@ export function WalletSendScreenNativeValue(props: {}) {
       <PriceResolver key={i}
         index={i}
         address={address}
-        ok={onPrice} />)}
+        ok={onTokenPrice} />)}
+    {chainData.token.pairs?.map((address, i) =>
+      <PriceResolver key={i}
+        index={i}
+        address={address}
+        ok={onChainPrice} />)}
     <Dialog.Title close={close}>
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
@@ -813,7 +640,7 @@ export function WalletSendScreenNativeValue(props: {}) {
       <SimpleInput key="target"
         readOnly
         onFocus={onTargetFocus}
-        value={target} />
+        value={maybeTarget} />
     </SimpleBox>
     <div className="h-2" />
     {mode === "valued" &&
@@ -1043,115 +870,6 @@ export function WalletSendScreenNativeValue(props: {}) {
         <Outline.PaperAirplaneIcon className="size-5" />
         Send
       </WideShrinkableOppositeButton>
-    </div>
-  </>
-}
-
-function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps) {
-  const { children, ...rest } = props
-
-  return <button className="grow group po-md bg-opposite text-opposite rounded-xl outline-none disabled:opacity-50 transition-opacity" {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
-      {children}
-    </div>
-  </button>
-}
-
-function WideShrinkableContrastButton(props: ChildrenProps & ButtonProps) {
-  const { children, ...rest } = props
-
-  return <button className="grow group po-md bg-contrast rounded-xl outline-none disabled:opacity-50 transition-opacity" {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
-      {children}
-    </div>
-  </button>
-}
-
-
-export function WalletSendScreenNonce(props: {}) {
-  const wallet = useWalletDataContext().unwrap()
-  const { close } = useDialogContext().unwrap()
-
-  const $state = usePathState<UrlState>()
-  const [chain, setChain] = useSearchState("chain", $state)
-  const [step, setStep] = useSearchState("step", $state)
-  const [nonce, setNonce] = useSearchState("nonce", $state)
-
-  const chainData = chainByChainId[Number(chain)]
-  const context = useEthereumContext(wallet.uuid, chainData)
-
-  const pendingNonceQuery = useNonce(wallet.address, context)
-  const maybePendingNonce = pendingNonceQuery.current?.ok().get()
-
-  const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(nonce)
-
-  const onInputChange = useInputChange(e => {
-    setRawNonceInput(e.target.value)
-  }, [])
-
-  const nonceInput = useDeferredValue(rawNonceInput)
-
-  useEffectButNotFirstTime(() => {
-    setNonce(nonceInput)
-  }, [nonceInput])
-
-  const onSubmit = useCallback(async () => {
-    setStep("value")
-  }, [setStep])
-
-  const onEnter = useKeyboardEnter(() => {
-    onSubmit()
-  }, [onSubmit])
-
-  const onClear = useCallback((e: SyntheticEvent) => {
-    setRawNonceInput("")
-  }, [])
-
-  const onPaste = useCallback(async () => {
-    setNonce(await navigator.clipboard.readText())
-    setStep("value")
-  }, [setNonce, setStep])
-
-  return <>
-    <Dialog.Title close={close}>
-      Send
-    </Dialog.Title>
-    <div className="h-4" />
-    <SimpleBox>
-      <div className="">
-        Nonce
-      </div>
-      <div className="w-4" />
-      <SimpleInput
-        autoFocus
-        value={rawNonceInput}
-        onChange={onInputChange}
-        onKeyDown={onEnter}
-        placeholder={maybePendingNonce?.toString()} />
-      <div className="w-1" />
-      <div className="flex items-center">
-        {rawNonceInput.length === 0
-          ? <ShrinkableNakedButtonInInputBox
-            onClick={onPaste}>
-            <Outline.ClipboardIcon className="size-4" />
-          </ShrinkableNakedButtonInInputBox>
-          : <ShrinkableNakedButtonInInputBox
-            onClick={onClear}>
-            <Outline.XMarkIcon className="size-4" />
-          </ShrinkableNakedButtonInInputBox>}
-        <div className="w-1" />
-        <ShrinkableContrastButtonInInputBox
-          onClick={onSubmit}>
-          OK
-        </ShrinkableContrastButtonInInputBox>
-      </div>
-    </SimpleBox>
-    <div className="h-4" />
-    <div className="text-lg font-medium">
-      Pending transactions
-    </div>
-    <div className="grow flex flex-col items-center justify-center">
-      Coming soon...
     </div>
   </>
 }

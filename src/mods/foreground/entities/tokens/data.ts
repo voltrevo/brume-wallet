@@ -297,7 +297,7 @@ export function useTokens() {
   return query
 }
 
-export function useNativeBalance(address: Nullable<ZeroHexString>, block: Nullable<string>, context: Nullable<FgEthereumContext>, prices: Nullable<Fixed.From>[]) {
+export function useNativeBalance(address: Nullable<ZeroHexString>, block: Nullable<string>, context: Nullable<FgEthereumContext>, prices: Nullable<Nullable<Fixed.From>[]>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgToken.Native.Balance.schema, [address, block, context, storage])
   useFetch(query)
@@ -313,12 +313,12 @@ export function useNativeBalance(address: Nullable<ZeroHexString>, block: Nullab
       return
     core.reindexOrThrow(query.cacheKey, query).catch(console.warn)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context, ...prices])
+  }, [context, prices])
 
   return query
 }
 
-export function useContractBalance(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, block: Nullable<string>, context: Nullable<FgEthereumContext>, prices: Nullable<Fixed.From>[]) {
+export function useContractBalance(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, block: Nullable<string>, context: Nullable<FgEthereumContext>, prices: Nullable<Nullable<Fixed.From>[]>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgToken.Contract.Balance.schema, [address, token, block, context, storage])
   useFetch(query)
@@ -334,7 +334,7 @@ export function useContractBalance(address: Nullable<ZeroHexString>, token: Null
       return
     core.reindexOrThrow(query.cacheKey, query).catch(console.warn)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context, ...prices])
+  }, [context, prices])
 
   return query
 }
