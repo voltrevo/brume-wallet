@@ -617,25 +617,13 @@ export function WalletSendScreenContractValue(props: {}) {
           return new UIError(`Could not fetch gasPrice`)
         }).unwrap()
 
-        const gas = await context.background.tryRequest<string>({
-          method: "brume_eth_fetch",
-          params: [context.uuid, context.chain.chainId, {
-            method: "eth_estimateGas",
-            params: [{
-              chainId: ZeroHexString.from(chainData.chainId),
-              from: wallet.address,
-              to: tokenData.address,
-              gasPrice: ZeroHexString.from(gasPrice),
-              nonce: ZeroHexString.from(nonce),
-              data: data
-            }, "latest"],
-            noCheck: true
-          }]
-        }).then(r => r.unwrap().unwrap())
+        const gasLimit = Option.wrap(maybeLegacyGasLimit).okOrElseSync(() => {
+          return new UIError(`Could not fetch gasLimit`)
+        }).unwrap()
 
         tx = Transaction.from({
           to: Address.from(target),
-          gasLimit: gas,
+          gasLimit: gasLimit,
           chainId: chainData.chainId,
           gasPrice: gasPrice,
           nonce: Number(nonce),
@@ -659,7 +647,7 @@ export function WalletSendScreenContractValue(props: {}) {
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, chainData, tokenData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeFinalData, maybeIsEip1559, maybeEip1559GasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+  }, [wallet, context, chainData, tokenData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeFinalData, maybeIsEip1559, maybeEip1559GasLimit, maybeLegacyGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
 
   return <>
     {tokenData.pairs?.map((address, i) =>
