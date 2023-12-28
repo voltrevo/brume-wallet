@@ -292,8 +292,6 @@ export function WalletSendScreenNativeValue(props: {}) {
   const pendingBlockQuery = useBlockByNumber("pending", context)
   const maybePendingBlock = pendingBlockQuery.data?.inner
 
-  console.log("block", maybePendingBlock)
-
   const maybeIsEip1559 = maybePendingBlock != null
     ? maybePendingBlock.baseFeePerGas != null
     : undefined
@@ -342,11 +340,11 @@ export function WalletSendScreenNativeValue(props: {}) {
   }, [maybeGasPrice])
 
   const maybeFastGasPrice = useMaybeMemo((gasPrice) => {
-    return gasPrice + (gasPrice * (10n / 100n))
+    return (gasPrice * 110n) / 100n
   }, [maybeGasPrice])
 
   const maybeUrgentGasPrice = useMaybeMemo((gasPrice) => {
-    return gasPrice + (gasPrice * (20n / 100n))
+    return (gasPrice * 120n) / 100n
   }, [maybeGasPrice])
 
   function useMode(normal: Nullable<bigint>, fast: Nullable<bigint>, urgent: Nullable<bigint>) {
@@ -366,16 +364,8 @@ export function WalletSendScreenNativeValue(props: {}) {
     return useMemo(() => {
       if (gasPrice == null)
         return "???"
-      return new Fixed(gasPrice, 9).move(0).toString()
+      return new Fixed(gasPrice, 9).move(4).toString()
     }, [gasPrice])
-  }
-
-  function usePriorityFeeDisplay(priorityFee: Nullable<bigint>) {
-    return useMemo(() => {
-      if (priorityFee == null)
-        return "???"
-      return new Fixed(priorityFee, 9).move(4).toString()
-    }, [priorityFee])
   }
 
   function useCompactUsdDisplay(fixed: Nullable<Fixed>) {
@@ -398,7 +388,37 @@ export function WalletSendScreenNativeValue(props: {}) {
     return (maybeFinalBaseFeePerGas * 2n) + maybeFinalMaxPriorityFeePerGas
   }, [maybeFinalBaseFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
-  const maybeEip1559EstimateGasKey = useMemo<Nullable<RpcRequestPreinit<[unknown, unknown]>>>(() => {
+  const maybeLegacyGasLimitKey = useMemo<Nullable<RpcRequestPreinit<[unknown, unknown]>>>(() => {
+    if (maybeIsEip1559 !== false)
+      return undefined
+    if (maybeFinalTarget == null)
+      return undefined
+    if (maybeFinalValue == null)
+      return undefined
+    if (maybeFinalNonce == null)
+      return undefined
+    if (maybeFinalGasPrice == null)
+      return undefined
+    if (triedFinalData.isErr())
+      return undefined
+
+    return {
+      method: "eth_estimateGas",
+      params: [{
+        chainId: ZeroHexString.from(chainData.chainId),
+        from: wallet.address,
+        to: maybeFinalTarget,
+        gasPrice: ZeroHexString.from(maybeFinalGasPrice),
+        value: ZeroHexString.from(maybeFinalValue.value),
+        nonce: ZeroHexString.from(maybeFinalNonce),
+        data: triedFinalData.get()
+      }, "latest"]
+    }
+  }, [wallet, chainData, maybeIsEip1559, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeFinalGasPrice])
+
+  const maybeEip1559GasLimitKey = useMemo<Nullable<RpcRequestPreinit<[unknown, unknown]>>>(() => {
+    if (maybeIsEip1559 !== true)
+      return undefined
     if (maybeFinalTarget == null)
       return undefined
     if (maybeFinalValue == null)
@@ -425,10 +445,43 @@ export function WalletSendScreenNativeValue(props: {}) {
         data: triedFinalData.get()
       }, "latest"]
     }
-  }, [wallet, chainData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
+  }, [wallet, chainData, maybeIsEip1559, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
-  const eip1559GasLimitQuery = useEstimateGas(maybeEip1559EstimateGasKey, context)
+  const legacyGasLimitQuery = useEstimateGas(maybeLegacyGasLimitKey, context)
+  const maybeLegacyGasLimit = legacyGasLimitQuery.current?.ok().get()
+
+  const eip1559GasLimitQuery = useEstimateGas(maybeEip1559GasLimitKey, context)
   const maybeEip1559GasLimit = eip1559GasLimitQuery.current?.ok().get()
+
+  const maybeNormalLegacyGasCost = useMemo(() => {
+    if (maybeLegacyGasLimit == null)
+      return undefined
+    if (maybeNormalGasPrice == null)
+      return undefined
+    if (maybeTokenPrice == null)
+      return undefined
+    return new Fixed(maybeLegacyGasLimit * maybeNormalGasPrice, 18).mul(maybeTokenPrice)
+  }, [maybeLegacyGasLimit, maybeNormalGasPrice, maybeTokenPrice])
+
+  const maybeFastLegacyGasCost = useMemo(() => {
+    if (maybeLegacyGasLimit == null)
+      return undefined
+    if (maybeFastGasPrice == null)
+      return undefined
+    if (maybeTokenPrice == null)
+      return undefined
+    return new Fixed(maybeLegacyGasLimit * maybeFastGasPrice, 18).mul(maybeTokenPrice)
+  }, [maybeLegacyGasLimit, maybeFastGasPrice, maybeTokenPrice])
+
+  const maybeUrgentLegacyGasCost = useMemo(() => {
+    if (maybeLegacyGasLimit == null)
+      return undefined
+    if (maybeUrgentGasPrice == null)
+      return undefined
+    if (maybeTokenPrice == null)
+      return undefined
+    return new Fixed(maybeLegacyGasLimit * maybeUrgentGasPrice, 18).mul(maybeTokenPrice)
+  }, [maybeLegacyGasLimit, maybeUrgentGasPrice, maybeTokenPrice])
 
   const maybeNormalEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
@@ -460,6 +513,10 @@ export function WalletSendScreenNativeValue(props: {}) {
     return new Fixed(maybeEip1559GasLimit * maybeUrgentBaseFeePerGas, 18).mul(maybeTokenPrice)
   }, [maybeEip1559GasLimit, maybeUrgentBaseFeePerGas, maybeTokenPrice])
 
+  const normalLegacyGasCostDisplay = useCompactUsdDisplay(maybeNormalLegacyGasCost)
+  const fastLegacyGasCostDisplay = useCompactUsdDisplay(maybeFastLegacyGasCost)
+  const urgentLegacyGasCostDisplay = useCompactUsdDisplay(maybeUrgentLegacyGasCost)
+
   const normalEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalEip1559GasCost)
   const fastEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastEip1559GasCost)
   const urgentEip1559GasCostDisplay = useCompactUsdDisplay(maybeUrgentEip1559GasCost)
@@ -472,9 +529,9 @@ export function WalletSendScreenNativeValue(props: {}) {
   const fastBaseFeePerGasDisplay = useGasDisplay(maybeFastBaseFeePerGas)
   const urgentBaseFeePerGasDisplay = useGasDisplay(maybeUrgentBaseFeePerGas)
 
-  const normalMaxPriorityFeePerGasDisplay = usePriorityFeeDisplay(maybeNormalMaxPriorityFeePerGas)
-  const fastMaxPriorityFeePerGasDisplay = usePriorityFeeDisplay(maybeFastMaxPriorityFeePerGas)
-  const urgentMaxPriorityFeePerGasDisplay = usePriorityFeeDisplay(maybeUrgentMaxPriorityFeePerGas)
+  const normalMaxPriorityFeePerGasDisplay = useGasDisplay(maybeNormalMaxPriorityFeePerGas)
+  const fastMaxPriorityFeePerGasDisplay = useGasDisplay(maybeFastMaxPriorityFeePerGas)
+  const urgentMaxPriorityFeePerGasDisplay = useGasDisplay(maybeUrgentMaxPriorityFeePerGas)
 
   const [txHash, setTxHash] = useState<ZeroHexString>()
 
@@ -746,7 +803,7 @@ export function WalletSendScreenNativeValue(props: {}) {
         Gas
       </div>
       <div className="w-4" />
-      {maybeIsEip1559 === true && maybeBaseFeePerGas != null && maybeMaxPriorityFeePerGas != null &&
+      {maybeIsEip1559 === true &&
         <select className="w-full my-0.5 bg-transparent outline-none"
           value={gasMode}
           onChange={onGasModeChange}>
@@ -761,16 +818,16 @@ export function WalletSendScreenNativeValue(props: {}) {
           </option>
           {/* <option value="custom">Custom</option> */}
         </select>}
-      {maybeIsEip1559 === false && maybeGasPrice != null &&
+      {maybeIsEip1559 === false &&
         <select className="w-full my-0.5 bg-transparent outline-none">
           <option value="urgent">
-            {`Urgent — ${urgentGasPriceDisplay} Gwei — $5`}
+            {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
           </option>
           <option value="fast">
-            {`Fast — ${fastGasPriceDisplay} Gwei — $5`}
+            {`Fast — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
           </option>
           <option value="normal">
-            {`Normal — ${normalGasPriceDisplay} Gwei — $5`}
+            {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
           </option>
           {/* <option value="custom">Custom</option> */}
         </select>}
@@ -816,7 +873,13 @@ export function WalletSendScreenNativeValue(props: {}) {
     </>}
     {eip1559GasLimitQuery.current?.isErr() && <>
       <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-        {eip1559GasLimitQuery.current.err().get()?.message}
+        {eip1559GasLimitQuery.current.get()?.message}
+      </div>
+      <div className="h-2" />
+    </>}
+    {legacyGasLimitQuery.current?.isErr() && <>
+      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+        {legacyGasLimitQuery.current.get()?.message}
       </div>
       <div className="h-2" />
     </>}
