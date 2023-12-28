@@ -35,6 +35,11 @@ export function WalletSendScreenNativeValue(props: {}) {
   const [maybePriced, setPriced] = useSearchState("priced", $state)
   const [maybeNonce, setNonce] = useSearchState("nonce", $state)
   const [maybeData, setData] = useSearchState("data", $state)
+  const [maybeGasMode, setGasMode] = useSearchState("gasMode", $state)
+  const [maybeGasLimit, setGasLimit] = useSearchState("gasLimit", $state)
+  const [maybeGasPrice, setGasPrice] = useSearchState("gasPrice", $state)
+
+  const gasMode = Option.wrap(maybeGasMode).unwrapOr("normal")
 
   const chainData = chainByChainId[Number(maybeChain)]
   const tokenData = chainData.token
@@ -277,30 +282,56 @@ export function WalletSendScreenNativeValue(props: {}) {
     return Result.runAndWrapSync(() => ZeroHexString.from(maybeData.trim()))
   }, [maybeData])
 
-  const [gasMode, setGasMode] = useState<"normal" | "fast" | "urgent">("normal")
-
   const onGasModeChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
-    setGasMode(e.currentTarget.value as any)
-  }, [])
+    setGasMode(e.currentTarget.value)
+  }, [setGasMode])
 
-  const gasPriceQuery = useGasPrice(context)
-  const maybeGasPrice = gasPriceQuery.current?.ok().get()
+  const fetchedGasPriceQuery = useGasPrice(context)
+  const maybeFetchedGasPrice = fetchedGasPriceQuery.current?.ok().get()
 
   const maxPriorityFeePerGasQuery = useMaxPriorityFeePerGas(context)
   const maybeMaxPriorityFeePerGas = maxPriorityFeePerGasQuery.current?.ok().get()
 
   const pendingBlockQuery = useBlockByNumber("pending", context)
-  const maybePendingBlock = pendingBlockQuery.data?.inner
+  const maybePendingBlock = pendingBlockQuery.current?.ok().get()
 
-  const maybeIsEip1559 = maybePendingBlock != null
-    ? maybePendingBlock.baseFeePerGas != null
-    : undefined
+  const maybeIsEip1559 = useMemo(() => {
+    if (gasMode === "custom")
+      return false
+    if (maybePendingBlock != null)
+      return maybePendingBlock.baseFeePerGas != null
+    return undefined
+  }, [gasMode, maybePendingBlock])
 
   const maybeBaseFeePerGas = useMemo(() => {
     if (maybePendingBlock?.baseFeePerGas == null)
       return undefined
     return BigIntToHex.decodeOrThrow(maybePendingBlock.baseFeePerGas)
   }, [maybePendingBlock])
+
+  const [rawGasLimitInput = "", setRawGasLimitInput] = useState<Optional<string>>(maybeGasLimit)
+
+  const onGasLimitInputChange = useInputChange(e => {
+    setRawGasLimitInput(e.target.value)
+  }, [])
+
+  const gasLimitInput = useDeferredValue(rawGasLimitInput)
+
+  useEffectButNotFirstTime(() => {
+    setGasLimit(gasLimitInput)
+  }, [gasLimitInput])
+
+  const [rawGasPriceInput = "", setRawGasPriceInput] = useState<Optional<string>>(maybeGasPrice)
+
+  const onGasPriceInputChange = useInputChange(e => {
+    setRawGasPriceInput(e.target.value)
+  }, [])
+
+  const gasPriceInput = useDeferredValue(rawGasPriceInput)
+
+  useEffectButNotFirstTime(() => {
+    setGasPrice(gasPriceInput)
+  }, [gasPriceInput])
 
   function useMaybeMemo<T>(f: (x: T) => T, [x]: [Nullable<T>]) {
     return useMemo(() => {
@@ -337,17 +368,25 @@ export function WalletSendScreenNativeValue(props: {}) {
 
   const maybeNormalGasPrice = useMaybeMemo((gasPrice) => {
     return gasPrice
-  }, [maybeGasPrice])
+  }, [maybeFetchedGasPrice])
 
   const maybeFastGasPrice = useMaybeMemo((gasPrice) => {
     return (gasPrice * 110n) / 100n
-  }, [maybeGasPrice])
+  }, [maybeFetchedGasPrice])
 
   const maybeUrgentGasPrice = useMaybeMemo((gasPrice) => {
     return (gasPrice * 120n) / 100n
-  }, [maybeGasPrice])
+  }, [maybeFetchedGasPrice])
 
-  function useMode(normal: Nullable<bigint>, fast: Nullable<bigint>, urgent: Nullable<bigint>) {
+  const maybeCustomGasPrice = useMemo(() => {
+    try {
+      return maybeGasPrice?.trim().length
+        ? BigInt(maybeGasPrice.trim())
+        : maybeNormalGasPrice
+    } catch { }
+  }, [maybeGasPrice, maybeNormalGasPrice])
+
+  function useMode(normal: Nullable<bigint>, fast: Nullable<bigint>, urgent: Nullable<bigint>, custom?: Nullable<bigint>) {
     return useMemo(() => {
       if (gasMode === "normal")
         return normal
@@ -355,9 +394,11 @@ export function WalletSendScreenNativeValue(props: {}) {
         return fast
       if (gasMode === "urgent")
         return urgent
+      if (gasMode === "custom")
+        return custom
       return undefined
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [gasMode, normal, fast, urgent])
+    }, [gasMode, normal, fast, urgent, custom])
   }
 
   function useGasDisplay(gasPrice: Nullable<bigint>) {
@@ -376,7 +417,7 @@ export function WalletSendScreenNativeValue(props: {}) {
     }, [fixed])
   }
 
-  const maybeFinalGasPrice = useMode(maybeNormalGasPrice, maybeFastGasPrice, maybeUrgentGasPrice)
+  const maybeFinalGasPrice = useMode(maybeNormalGasPrice, maybeFastGasPrice, maybeUrgentGasPrice, maybeCustomGasPrice)
   const maybeFinalBaseFeePerGas = useMode(maybeNormalBaseFeePerGas, maybeFastBaseFeePerGas, maybeUrgentBaseFeePerGas)
   const maybeFinalMaxPriorityFeePerGas = useMode(maybeNormalMaxPriorityFeePerGas, maybeFastMaxPriorityFeePerGas, maybeUrgentMaxPriorityFeePerGas)
 
@@ -452,6 +493,32 @@ export function WalletSendScreenNativeValue(props: {}) {
 
   const eip1559GasLimitQuery = useEstimateGas(maybeEip1559GasLimitKey, context)
   const maybeEip1559GasLimit = eip1559GasLimitQuery.current?.ok().get()
+
+  const maybeCustomGasLimit = useMemo(() => {
+    try {
+      return maybeGasLimit?.trim().length
+        ? BigInt(maybeGasLimit.trim())
+        : undefined
+    } catch { }
+  }, [maybeGasLimit])
+
+  const maybeFetchedGasLimit = useMemo(() => {
+    if (maybeIsEip1559 == null)
+      return undefined
+    if (maybeLegacyGasLimit != null)
+      return maybeLegacyGasLimit
+    if (maybeEip1559GasLimit != null)
+      return maybeEip1559GasLimit
+    return undefined
+  }, [maybeIsEip1559, maybeLegacyGasLimit, maybeEip1559GasLimit])
+
+  const maybeFinalGasLimit = useMemo(() => {
+    if (maybeCustomGasLimit != null)
+      return maybeCustomGasLimit
+    if (maybeFetchedGasLimit != null)
+      return maybeFetchedGasLimit
+    return undefined
+  }, [maybeCustomGasLimit, maybeFetchedGasLimit])
 
   const maybeNormalLegacyGasCost = useMemo(() => {
     if (maybeLegacyGasLimit == null)
@@ -560,6 +627,10 @@ export function WalletSendScreenNativeValue(props: {}) {
         return new UIError(`Could not parse data`)
       }).unwrap()
 
+      const gasLimit = Option.wrap(maybeFinalGasLimit).okOrElseSync(() => {
+        return new UIError(`Could not fetch gasLimit`)
+      }).unwrap()
+
       let tx: ethers.Transaction
 
       /**
@@ -572,10 +643,6 @@ export function WalletSendScreenNativeValue(props: {}) {
 
         const maxPriorityFeePerGas = Option.wrap(maybeFinalMaxPriorityFeePerGas).okOrElseSync(() => {
           return new UIError(`Could not fetch maxPriorityFeePerGas`)
-        }).unwrap()
-
-        const gasLimit = Option.wrap(maybeEip1559GasLimit).okOrElseSync(() => {
-          return new UIError(`Could not fetch gasLimit`)
         }).unwrap()
 
         tx = Transaction.from({
@@ -596,10 +663,6 @@ export function WalletSendScreenNativeValue(props: {}) {
       else {
         const gasPrice = Option.wrap(maybeFinalGasPrice).okOrElseSync(() => {
           return new UIError(`Could not fetch gasPrice`)
-        }).unwrap()
-
-        const gasLimit = Option.wrap(maybeLegacyGasLimit).okOrElseSync(() => {
-          return new UIError(`Could not fetch gasLimit`)
         }).unwrap()
 
         tx = Transaction.from({
@@ -641,7 +704,7 @@ export function WalletSendScreenNativeValue(props: {}) {
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, chainData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeIsEip1559, maybeEip1559GasLimit, maybeLegacyGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+  }, [wallet, context, chainData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeIsEip1559, maybeFinalGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
 
   const onSignClick = useAsyncUniqueCallback(async () => {
     return await signOrSend("sign")
@@ -816,31 +879,61 @@ export function WalletSendScreenNativeValue(props: {}) {
         <select className="w-full my-0.5 bg-transparent outline-none"
           value={gasMode}
           onChange={onGasModeChange}>
-          <option value="urgent">
-            {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentEip1559GasCostDisplay}`}
+          <option value="normal">
+            {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalEip1559GasCostDisplay}`}
           </option>
           <option value="fast">
             {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastEip1559GasCostDisplay}`}
           </option>
-          <option value="normal">
-            {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalEip1559GasCostDisplay}`}
+          <option value="urgent">
+            {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentEip1559GasCostDisplay}`}
           </option>
-          {/* <option value="custom">Custom</option> */}
+          <option value="custom">
+            Custom
+          </option>
         </select>}
       {maybeIsEip1559 === false &&
-        <select className="w-full my-0.5 bg-transparent outline-none">
-          <option value="urgent">
-            {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
+        <select className="w-full my-0.5 bg-transparent outline-none"
+          value={gasMode}
+          onChange={onGasModeChange}>
+          <option value="normal">
+            {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
           </option>
           <option value="fast">
             {`Fast — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
           </option>
-          <option value="normal">
-            {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
+          <option value="urgent">
+            {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
           </option>
-          {/* <option value="custom">Custom</option> */}
+          <option value="custom">
+            Custom
+          </option>
         </select>}
     </SimpleBox>
+    {gasMode === "custom" && <>
+      <div className="h-2" />
+      <SimpleBox>
+        <div className="">
+          Gas Limit
+        </div>
+        <div className="w-4" />
+        <SimpleInput
+          value={rawGasLimitInput}
+          onChange={onGasLimitInputChange}
+          placeholder={maybeFetchedGasLimit?.toString()} />
+      </SimpleBox>
+      <div className="h-2" />
+      <SimpleBox>
+        <div className="">
+          Gas Price
+        </div>
+        <div className="w-4" />
+        <SimpleInput
+          value={rawGasPriceInput}
+          onChange={onGasPriceInputChange}
+          placeholder={maybeFetchedGasPrice?.toString()} />
+      </SimpleBox>
+    </>}
     <div className="h-4 grow" />
     {txSign != null && <>
       <div className="po-md flex items-center bg-contrast rounded-xl">

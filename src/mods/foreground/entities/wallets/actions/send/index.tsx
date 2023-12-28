@@ -16,6 +16,9 @@ export type UrlState = {
   readonly priced?: string
   readonly nonce?: string
   readonly data?: string
+  readonly gasMode?: string
+  readonly gasLimit?: string
+  readonly gasPrice?: string
 }
 
 export function WalletSendScreen(props: {}) {
