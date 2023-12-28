@@ -30,7 +30,7 @@ import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
 import { usePairPrice } from "../tokens/pairs/data";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
-import { WalletSendScreen } from "./actions/send/new";
+import { WalletSendScreen } from "./actions/send";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
 import { useEthereumContext, useEthereumContext2 } from "./data";
@@ -279,11 +279,12 @@ function WalletDataPage() {
 
   return <Page>
     <PathContext.Provider value={subpath}>
-      <Screen
-        opened={send}
-        close={onSendClose}>
-        <WalletSendScreen />
-      </Screen>
+      {wallet.type !== "readonly" &&
+        <Screen
+          opened={send}
+          close={onSendClose}>
+          <WalletSendScreen />
+        </Screen>}
     </PathContext.Provider>
     <Screen dark
       opened={receiveDialog.current}

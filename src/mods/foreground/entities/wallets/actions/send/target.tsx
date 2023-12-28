@@ -8,9 +8,9 @@ import { Address } from "@hazae41/cubane";
 import { Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
 import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState } from ".";
-import { useEnsLookup } from "../../../../names/data";
-import { useWalletDataContext } from "../../../context";
-import { useEthereumContext } from "../../../data";
+import { useEnsLookup } from "../../../names/data";
+import { useWalletDataContext } from "../../context";
+import { useEthereumContext } from "../../data";
 
 export function WalletSendScreenTarget(props: {}) {
   const wallet = useWalletDataContext().unwrap()
