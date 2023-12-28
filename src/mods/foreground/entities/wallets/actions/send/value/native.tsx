@@ -494,14 +494,6 @@ export function WalletSendScreenNativeValue(props: {}) {
   const eip1559GasLimitQuery = useEstimateGas(maybeEip1559GasLimitKey, context)
   const maybeEip1559GasLimit = eip1559GasLimitQuery.current?.ok().get()
 
-  const maybeCustomGasLimit = useMemo(() => {
-    try {
-      return maybeGasLimit?.trim().length
-        ? BigInt(maybeGasLimit.trim())
-        : undefined
-    } catch { }
-  }, [maybeGasLimit])
-
   const maybeFetchedGasLimit = useMemo(() => {
     if (maybeIsEip1559 == null)
       return undefined
@@ -512,13 +504,19 @@ export function WalletSendScreenNativeValue(props: {}) {
     return undefined
   }, [maybeIsEip1559, maybeLegacyGasLimit, maybeEip1559GasLimit])
 
+  const maybeCustomGasLimit = useMemo(() => {
+    try {
+      return maybeGasLimit?.trim().length
+        ? BigInt(maybeGasLimit.trim())
+        : maybeFetchedGasLimit
+    } catch { }
+  }, [maybeGasLimit, maybeFetchedGasLimit])
+
   const maybeFinalGasLimit = useMemo(() => {
-    if (maybeCustomGasLimit != null)
+    if (gasMode === "custom")
       return maybeCustomGasLimit
-    if (maybeFetchedGasLimit != null)
-      return maybeFetchedGasLimit
-    return undefined
-  }, [maybeCustomGasLimit, maybeFetchedGasLimit])
+    return maybeFetchedGasLimit
+  }, [gasMode, maybeCustomGasLimit, maybeFetchedGasLimit])
 
   const maybeNormalLegacyGasCost = useMemo(() => {
     if (maybeLegacyGasLimit == null)
@@ -879,14 +877,14 @@ export function WalletSendScreenNativeValue(props: {}) {
         <select className="w-full my-0.5 bg-transparent outline-none"
           value={gasMode}
           onChange={onGasModeChange}>
-          <option value="normal">
-            {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalEip1559GasCostDisplay}`}
+          <option value="urgent">
+            {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentEip1559GasCostDisplay}`}
           </option>
           <option value="fast">
             {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastEip1559GasCostDisplay}`}
           </option>
-          <option value="urgent">
-            {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentEip1559GasCostDisplay}`}
+          <option value="normal">
+            {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalEip1559GasCostDisplay}`}
           </option>
           <option value="custom">
             Custom
@@ -896,14 +894,14 @@ export function WalletSendScreenNativeValue(props: {}) {
         <select className="w-full my-0.5 bg-transparent outline-none"
           value={gasMode}
           onChange={onGasModeChange}>
-          <option value="normal">
-            {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
+          <option value="urgent">
+            {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
           </option>
           <option value="fast">
             {`Fast — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
           </option>
-          <option value="urgent">
-            {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
+          <option value="normal">
+            {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
           </option>
           <option value="custom">
             Custom
