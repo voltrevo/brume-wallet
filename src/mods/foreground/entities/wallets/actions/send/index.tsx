@@ -10,11 +10,11 @@ import { useInputChange, useKeyboardEnter, useTextAreaChange } from "@/libs/reac
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
-import { NativeTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
+import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useBlockByNumber } from "../../../blocks/data";
@@ -22,11 +22,13 @@ import { useEnsLookup } from "../../../names/data";
 import { useNativeBalance, useNativePricedBalance } from "../../../tokens/data";
 import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
-import { EthereumWalletInstance, FgEthereumContext, useEthereumContext } from "../../data";
+import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../data";
 import { PriceResolver } from "../../page";
 
 type UrlState = {
   readonly step?: string
+  readonly chain?: string
+  readonly token?: string
   readonly target?: string
   readonly valued?: string
   readonly priced?: string
@@ -34,23 +36,16 @@ type UrlState = {
   readonly data?: string
 }
 
-export function WalletSendScreen(props: {
-  readonly context: FgEthereumContext
-  readonly token: NativeTokenData
-}) {
-  const { context, token } = props
+export function WalletSendScreen(props: {}) {
   const $path = usePathState<UrlState>()
   const [step] = useSearchState("step", $path)
 
   if (step === "target")
     return <WalletSendScreenTarget />
   if (step === "value")
-    return <WalletSendScreenValue
-      tokenData={token}
-      context={context} />
+    return <WalletSendScreenNativeValue />
   if (step === "nonce")
-    return <WalletSendScreenNonce
-      context={context} />
+    return <WalletSendScreenNonce />
   return <WalletSendScreenTarget />
 }
 
@@ -248,21 +243,23 @@ function ShrinkableContrastButtonInInputBox(props: ChildrenProps & ButtonProps) 
   </button>
 }
 
-export function WalletSendScreenValue(props: {
-  readonly tokenData: NativeTokenData
-  readonly context: FgEthereumContext
-}) {
-  const { context, tokenData } = props
+export function WalletSendScreenNativeValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
 
   const $state = usePathState<UrlState>()
   const [step, setStep] = useSearchState("step", $state)
+  const [chain, setChain] = useSearchState("chain", $state)
   const [target, setTarget] = useSearchState("target", $state)
   const [valued, setValued] = useSearchState("valued", $state)
   const [priced, setPriced] = useSearchState("priced", $state)
   const [nonce, setNonce] = useSearchState("nonce", $state)
   const [data, setData] = useSearchState("data", $state)
+
+  const chainData = chainByChainId[Number(chain)]
+  const tokenData = chainData.token
+
+  const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
 
   const pendingNonceQuery = useNonce(wallet.address, context)
   const maybePendingNonce = pendingNonceQuery.current?.ok().get()
@@ -488,12 +485,10 @@ export function WalletSendScreenValue(props: {
     setData(dataInput)
   }, [dataInput])
 
-  const maybeFinalData = useMemo(() => {
-    try {
-      return data?.trim().length
-        ? ZeroHexString.from(data.trim())
-        : undefined
-    } catch { }
+  const triedFinalData = useMemo(() => {
+    if (!data?.trim().length)
+      return new Ok(undefined)
+    return Result.runAndWrapSync(() => ZeroHexString.from(data.trim()))
   }, [data])
 
   const [gasMode, setGasMode] = useState<"normal" | "fast" | "urgent">("normal")
@@ -624,6 +619,8 @@ export function WalletSendScreenValue(props: {
       return undefined
     if (maybeFinalMaxPriorityFeePerGas == null)
       return undefined
+    if (triedFinalData.isErr())
+      return undefined
 
     return {
       method: "eth_estimateGas",
@@ -635,10 +632,10 @@ export function WalletSendScreenValue(props: {
         maxPriorityFeePerGas: ZeroHexString.from(maybeFinalMaxPriorityFeePerGas),
         value: ZeroHexString.from(maybeFinalValue.value),
         nonce: ZeroHexString.from(maybeFinalNonce),
-        data: maybeFinalData
+        data: triedFinalData.get()
       }, "latest"]
     }
-  }, [context, wallet, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
+  }, [context, wallet, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
   const eip1559GasLimitQuery = useEstimateGas(maybeEip1559EstimateGasKey, context)
   const maybeEip1559GasLimit = eip1559GasLimitQuery.current?.ok().get()
@@ -650,7 +647,7 @@ export function WalletSendScreenValue(props: {
       return undefined
     if (maybeTokenPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeNormalBaseFeePerGas, 18).mul(maybeTokenPrice) // TODO use ETH price
+    return new Fixed(maybeEip1559GasLimit * maybeNormalBaseFeePerGas, 18).mul(maybeTokenPrice)
   }, [maybeEip1559GasLimit, maybeNormalBaseFeePerGas, maybeTokenPrice])
 
   const maybeFastEip1559GasCost = useMemo(() => {
@@ -710,7 +707,7 @@ export function WalletSendScreenValue(props: {
         return new UIError(`Could not parse or fetch nonce`)
       }).unwrap()
 
-      const data = Option.wrap(maybeFinalData).okOrElseSync(() => {
+      const data = triedFinalData.mapErrSync(() => {
         return new UIError(`Could not parse data`)
       }).unwrap()
 
@@ -796,7 +793,7 @@ export function WalletSendScreenValue(props: {
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, tokenData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeFinalData, maybeIsEip1559, maybeEip1559GasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+  }, [wallet, context, tokenData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeIsEip1559, maybeEip1559GasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
 
   return <>
     {tokenData.pairs?.map((address, i) =>
@@ -805,7 +802,7 @@ export function WalletSendScreenValue(props: {
         address={address}
         ok={onPrice} />)}
     <Dialog.Title close={close}>
-      Send
+      Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
     <SimpleBox>
@@ -1016,9 +1013,9 @@ export function WalletSendScreenValue(props: {
             </button>
             <a className="group px-2 bg-contrast rounded-full"
               target="_blank" rel="noreferrer"
-              href={`https://etherscan.io/tx/${txHash}`}>
+              href={`${chainData.etherscan}/tx/${txHash}`}>
               <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-                Etherscan
+                Open
                 <Outline.ArrowTopRightOnSquareIcon className="size-4" />
               </div>
             </a>
@@ -1071,16 +1068,17 @@ function WideShrinkableContrastButton(props: ChildrenProps & ButtonProps) {
 }
 
 
-export function WalletSendScreenNonce(props: {
-  readonly context: FgEthereumContext
-}) {
-  const { context } = props
+export function WalletSendScreenNonce(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
 
   const $state = usePathState<UrlState>()
+  const [chain, setChain] = useSearchState("chain", $state)
   const [step, setStep] = useSearchState("step", $state)
   const [nonce, setNonce] = useSearchState("nonce", $state)
+
+  const chainData = chainByChainId[Number(chain)]
+  const context = useEthereumContext(wallet.uuid, chainData)
 
   const pendingNonceQuery = useNonce(wallet.address, context)
   const maybePendingNonce = pendingNonceQuery.current?.ok().get()

@@ -32,10 +32,9 @@ import { usePairPrice } from "../tokens/pairs/data";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
 import { WalletSendScreen } from "./actions/send";
 import { WalletDataSendContractTokenDialog } from "./actions/send/contract";
-import { WalletDataSendNativeTokenDialog } from "./actions/send/native";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
-import { useEthereumContext } from "./data";
+import { useEthereumContext, useEthereumContext2 } from "./data";
 import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
 
 export function WalletPage(props: UUIDProps) {
@@ -95,19 +94,19 @@ function WalletDataPage() {
   const background = useBackgroundContext().unwrap()
   const subpath = useSubpath()
 
-  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
+  const mainnet = useEthereumContext2(wallet.uuid, chainByChainId[1]).unwrap()
 
   useEnsReverse(wallet.address, mainnet)
 
   const send = subpath.url.pathname === "/send"
 
-  const enableSend = useCallback(() => {
-    subpath.go(`/send?step=target`)
-  }, [subpath])
-
-  const closeSend = useCallback(() => {
+  const onSendClose = useCallback(() => {
     subpath.go(`/`)
   }, [subpath])
+
+  const onSendClick = useCallback(() => {
+    subpath.go(`/send?step=target&chain=${mainnet?.chain.chainId}`)
+  }, [subpath, mainnet])
 
   const receiveDialog = useBooleanHandle(false)
 
@@ -203,7 +202,7 @@ function WalletDataPage() {
       {wallet.type !== "readonly" &&
         <div className="flex flex-col items-center gap-2">
           <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 !transition-transform`}
-            onClick={enableSend}>
+            onClick={onSendClick}>
             <Outline.PaperAirplaneIcon className="size-6" />
           </button>
           <div className="">
@@ -280,16 +279,13 @@ function WalletDataPage() {
     </PageBody>
 
   return <Page>
-    {mainnet &&
-      <PathContext.Provider value={subpath}>
-        <Screen
-          opened={send}
-          close={closeSend}>
-          <WalletSendScreen
-            context={mainnet}
-            token={mainnet.chain.token} />
-        </Screen>
-      </PathContext.Provider>}
+    <PathContext.Provider value={subpath}>
+      <Screen
+        opened={send}
+        close={onSendClose}>
+        <WalletSendScreen />
+      </Screen>
+    </PathContext.Provider>
     <Screen dark
       opened={receiveDialog.current}
       close={receiveDialog.disable}>
@@ -375,15 +371,18 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const { token, chain } = props
   const wallet = useWalletDataContext().unwrap()
   const edit = useTokensEditContext().unwrap()
+  const subpath = useSubpath()
 
-  const context = useEthereumContext(wallet.uuid, chain)
+  const context = useEthereumContext2(wallet.uuid, chain).unwrap()
+
+  const onSendClick = useCallback(() => {
+    subpath.go(`/send?step=target&chain=${context?.chain.chainId}`)
+  }, [subpath, context])
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
   const balanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
-
-  const sendDialog = useBooleanHandle(false)
 
   const balanceUsdFixed = useNativePricedBalance(wallet.address, "usd", context)
   const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
@@ -396,14 +395,6 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   }, [])
 
   return <>
-    {wallet.type !== "readonly" && context &&
-      <Dialog
-        opened={sendDialog.current}
-        close={sendDialog.disable}>
-        <WalletDataSendNativeTokenDialog
-          title={`${token.name} on ${chain.name}`}
-          context={context} />
-      </Dialog>}
     {chain.token.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}
@@ -411,7 +402,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
         ok={onPrice} />)}
     {!edit &&
       <ClickableTokenRow
-        ok={sendDialog.enable}
+        ok={onSendClick}
         token={token}
         chain={chain}
         balanceDisplay={balanceDisplay}
@@ -430,7 +421,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const wallet = useWalletDataContext().unwrap()
   const edit = useTokensEditContext().unwrap()
 
-  const context = useEthereumContext(wallet.uuid, chain)
+  const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
@@ -450,7 +441,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   }, [])
 
   return <>
-    {wallet.type !== "readonly" && context &&
+    {wallet.type !== "readonly" &&
       <Dialog
         opened={sendDialog.current}
         close={sendDialog.disable}>

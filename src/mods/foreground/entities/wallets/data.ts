@@ -316,13 +316,29 @@ export interface EthereumContextProps {
 export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<ChainData>) {
   const background = useBackgroundContext().unwrap()
 
-  return useMemo<Nullable<FgEthereumContext>>(() => {
+  const maybeContext = useMemo<Nullable<FgEthereumContext>>(() => {
     if (uuid == null)
       return
     if (chain == null)
       return
     return { uuid, chain, background }
   }, [uuid, chain, background])
+
+  return maybeContext
+}
+
+export function useEthereumContext2(uuid: Nullable<string>, chain: Nullable<ChainData>) {
+  const background = useBackgroundContext().unwrap()
+
+  const maybeContext = useMemo<Nullable<FgEthereumContext>>(() => {
+    if (uuid == null)
+      return
+    if (chain == null)
+      return
+    return { uuid, chain, background }
+  }, [uuid, chain, background])
+
+  return Option.wrap(maybeContext)
 }
 
 export async function fetchOrFail<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, ethereum: FgEthereumContext): Promise<Fetched<T, Error>> {
