@@ -263,7 +263,7 @@ export function WalletSendScreenContractValue(props: {}) {
     try {
       return maybeValued?.trim().length
         ? Fixed.fromString(maybeValued.trim(), tokenData.decimals)
-        : undefined
+        : new Fixed(0n, tokenData.decimals)
     } catch { }
   }, [maybeValued, tokenData])
 

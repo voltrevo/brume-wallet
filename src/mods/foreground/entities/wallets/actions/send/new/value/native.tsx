@@ -227,7 +227,7 @@ export function WalletSendScreenNativeValue(props: {}) {
     try {
       return mayeValued?.trim().length
         ? Fixed.fromString(mayeValued.trim(), tokenData.decimals)
-        : undefined
+        : new Fixed(0n, tokenData.decimals)
     } catch { }
   }, [mayeValued, tokenData])
 
