@@ -6,7 +6,7 @@ import { Background } from "@/mods/foreground/background/background"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
-import { Abi } from "@hazae41/cubane"
+import { Abi, ZeroHexString } from "@hazae41/cubane"
 import { Option } from "@hazae41/option"
 import { Err, Ok, Panic, Result, Unimplemented } from "@hazae41/result"
 import { HDKey } from "@scure/bip32"
@@ -69,12 +69,12 @@ export class UnauthMnemonicSeedInstance {
     })
   }
 
-  async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<ZeroHexString, Error>> {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
 
       const signature = Result.runAndDoubleWrapSync(() => {
-        return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
+        return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized as ZeroHexString
       }).throw(t)
 
       return new Ok(signature)
@@ -148,12 +148,12 @@ export class AuthMnemonicSeedInstance {
     })
   }
 
-  async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<ZeroHexString, Error>> {
     return await Result.unthrow(async t => {
       const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
 
       const signature = Result.runAndDoubleWrapSync(() => {
-        return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
+        return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized as ZeroHexString
       }).throw(t)
 
       return new Ok(signature)
@@ -199,7 +199,7 @@ export class LedgerSeedInstance {
     })
   }
 
-  async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<string, Error>> {
+  async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<ZeroHexString, Error>> {
     return await Result.unthrow(async t => {
       const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
       const signature = await Ledger.Ethereum.trySignTransaction(device, path.slice(2), transaction).then(r => r.throw(t))

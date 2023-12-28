@@ -1,5 +1,6 @@
 import { Base16 } from "@hazae41/base16"
 import { Bytes } from "@hazae41/bytes"
+import { ZeroHexString } from "@hazae41/cubane"
 import { Ok, Result } from "@hazae41/result"
 
 export interface SignatureInit {
@@ -18,7 +19,7 @@ namespace Hex {
 
 export namespace Signature {
 
-  export function tryFrom(init: SignatureInit): Result<string, Error> {
+  export function tryFrom(init: SignatureInit): Result<ZeroHexString, Error> {
     return Result.unthrowSync(t => {
       const { v, r, s } = init
 
@@ -26,7 +27,7 @@ export namespace Signature {
       const hr = Base16.get().tryEncode(r).throw(t)
       const hs = Base16.get().tryEncode(s).throw(t)
 
-      return new Ok(`0x${hr}${hs}${hv}`)
+      return new Ok(`0x${hr}${hs}${hv}` satisfies ZeroHexString)
     })
   }
 

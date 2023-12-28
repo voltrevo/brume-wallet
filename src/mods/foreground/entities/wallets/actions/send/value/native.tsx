@@ -533,11 +533,13 @@ export function WalletSendScreenNativeValue(props: {}) {
   const fastMaxPriorityFeePerGasDisplay = useGasDisplay(maybeFastMaxPriorityFeePerGas)
   const urgentMaxPriorityFeePerGasDisplay = useGasDisplay(maybeUrgentMaxPriorityFeePerGas)
 
+  const [txSign, setTxSign] = useState<ZeroHexString>()
   const [txHash, setTxHash] = useState<ZeroHexString>()
 
+  const onTxSignCopy = useCopy(txSign)
   const onTxHashCopy = useCopy(txHash)
 
-  const send = useAsyncUniqueCallback(async () => {
+  const signOrSend = useCallback(async (action: "sign" | "send") => {
     try {
       if (maybeIsEip1559 == null)
         return
@@ -612,22 +614,42 @@ export function WalletSendScreenNativeValue(props: {}) {
       }
 
       const instance = await EthereumWalletInstance.tryFrom(wallet, context.background).then(r => r.unwrap())
-      tx.signature = await instance.trySignTransaction(tx, context.background).then(r => r.unwrap())
+      const signature = await instance.trySignTransaction(tx, context.background).then(r => r.unwrap())
 
-      const txHash = await context.background.tryRequest<ZeroHexString>({
-        method: "brume_eth_fetch",
-        params: [context.uuid, context.chain.chainId, {
-          method: "eth_sendRawTransaction",
-          params: [tx.serialized],
-          noCheck: true
-        }]
-      }).then(r => r.unwrap().unwrap())
+      tx.signature = signature
 
-      setTxHash(txHash)
+      if (action === "sign") {
+        setTxSign(tx.serialized as ZeroHexString)
+        setTxHash(undefined)
+        return
+      }
+
+      if (action === "send") {
+        const txHash = await context.background.tryRequest<ZeroHexString>({
+          method: "brume_eth_fetch",
+          params: [context.uuid, context.chain.chainId, {
+            method: "eth_sendRawTransaction",
+            params: [tx.serialized],
+            noCheck: true
+          }]
+        }).then(r => r.unwrap().unwrap())
+
+        setTxHash(txHash)
+        setTxSign(undefined)
+        return
+      }
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, chainData, tokenData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeIsEip1559, maybeEip1559GasLimit, maybeLegacyGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+  }, [wallet, context, chainData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeIsEip1559, maybeEip1559GasLimit, maybeLegacyGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+
+  const onSignClick = useAsyncUniqueCallback(async () => {
+    return await signOrSend("sign")
+  }, [signOrSend])
+
+  const onSendClick = useAsyncUniqueCallback(async () => {
+    return await signOrSend("send")
+  }, [signOrSend])
 
   return <>
     {tokenData.pairs?.map((address, i) =>
@@ -820,6 +842,33 @@ export function WalletSendScreenNativeValue(props: {}) {
         </select>}
     </SimpleBox>
     <div className="h-4 grow" />
+    {txSign != null && <>
+      <div className="po-md flex items-center bg-contrast rounded-xl">
+        <div className="flex flex-col truncate">
+          <div className="flex items-center">
+            <div className="font-medium">
+              Transaction signed
+            </div>
+          </div>
+          <div className="text-contrast truncate">
+            {txSign}
+          </div>
+          <div className="h-2" />
+          <div className="flex items-center gap-1">
+            <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+              onClick={onTxSignCopy.run}>
+              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+                Copy
+                {onTxSignCopy.current
+                  ? <Outline.CheckIcon className="size-4" />
+                  : <Outline.ClipboardIcon className="size-4" />}
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="h-2" />
+    </>}
     {txHash != null && <>
       <div className="po-md flex items-center bg-contrast rounded-xl">
         <div className="flex flex-col truncate">
@@ -872,14 +921,15 @@ export function WalletSendScreenNativeValue(props: {}) {
     </>}
     <div className="flex items-center">
       <WideShrinkableContrastButton
-        disabled>
+        disabled={onSignClick.loading}
+        onClick={onSignClick.run}>
         <Outline.PencilIcon className="size-5" />
         Sign
       </WideShrinkableContrastButton>
       <div className="w-2" />
       <WideShrinkableOppositeButton
-        disabled={send.loading}
-        onClick={send.run}>
+        disabled={onSendClick.loading}
+        onClick={onSendClick.run}>
         <Outline.PaperAirplaneIcon className="size-5" />
         Send
       </WideShrinkableOppositeButton>
