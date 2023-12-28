@@ -292,6 +292,8 @@ export function WalletSendScreenNativeValue(props: {}) {
   const pendingBlockQuery = useBlockByNumber("pending", context)
   const maybePendingBlock = pendingBlockQuery.data?.inner
 
+  console.log("block", maybePendingBlock)
+
   const maybeIsEip1559 = maybePendingBlock != null
     ? maybePendingBlock.baseFeePerGas != null
     : undefined
@@ -347,7 +349,7 @@ export function WalletSendScreenNativeValue(props: {}) {
     return gasPrice + (gasPrice * (20n / 100n))
   }, [maybeGasPrice])
 
-  function useFinal(normal: Nullable<bigint>, fast: Nullable<bigint>, urgent: Nullable<bigint>) {
+  function useMode(normal: Nullable<bigint>, fast: Nullable<bigint>, urgent: Nullable<bigint>) {
     return useMemo(() => {
       if (gasMode === "normal")
         return normal
@@ -384,9 +386,9 @@ export function WalletSendScreenNativeValue(props: {}) {
     }, [fixed])
   }
 
-  const maybeFinalGasPrice = useFinal(maybeNormalGasPrice, maybeFastGasPrice, maybeUrgentGasPrice)
-  const maybeFinalBaseFeePerGas = useFinal(maybeNormalBaseFeePerGas, maybeFastBaseFeePerGas, maybeUrgentBaseFeePerGas)
-  const maybeFinalMaxPriorityFeePerGas = useFinal(maybeNormalMaxPriorityFeePerGas, maybeFastMaxPriorityFeePerGas, maybeUrgentMaxPriorityFeePerGas)
+  const maybeFinalGasPrice = useMode(maybeNormalGasPrice, maybeFastGasPrice, maybeUrgentGasPrice)
+  const maybeFinalBaseFeePerGas = useMode(maybeNormalBaseFeePerGas, maybeFastBaseFeePerGas, maybeUrgentBaseFeePerGas)
+  const maybeFinalMaxPriorityFeePerGas = useMode(maybeNormalMaxPriorityFeePerGas, maybeFastMaxPriorityFeePerGas, maybeUrgentMaxPriorityFeePerGas)
 
   const maybeFinalMaxFeePerGas = useMemo(() => {
     if (maybeFinalBaseFeePerGas == null)
@@ -397,6 +399,8 @@ export function WalletSendScreenNativeValue(props: {}) {
   }, [maybeFinalBaseFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
   const maybeEip1559EstimateGasKey = useMemo<Nullable<RpcRequestPreinit<[unknown, unknown]>>>(() => {
+    if (maybeFinalTarget == null)
+      return undefined
     if (maybeFinalValue == null)
       return undefined
     if (maybeFinalNonce == null)
@@ -411,7 +415,7 @@ export function WalletSendScreenNativeValue(props: {}) {
     return {
       method: "eth_estimateGas",
       params: [{
-        chainId: ZeroHexString.from(context.chain.chainId),
+        chainId: ZeroHexString.from(chainData.chainId),
         from: wallet.address,
         to: maybeFinalTarget,
         maxFeePerGas: ZeroHexString.from(maybeFinalMaxFeePerGas),
@@ -421,7 +425,7 @@ export function WalletSendScreenNativeValue(props: {}) {
         data: triedFinalData.get()
       }, "latest"]
     }
-  }, [context, wallet, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
+  }, [wallet, chainData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
   const eip1559GasLimitQuery = useEstimateGas(maybeEip1559EstimateGasKey, context)
   const maybeEip1559GasLimit = eip1559GasLimitQuery.current?.ok().get()
@@ -518,7 +522,7 @@ export function WalletSendScreenNativeValue(props: {}) {
         tx = Transaction.from({
           to: Address.from(target),
           gasLimit: gasLimit,
-          chainId: context.chain.chainId,
+          chainId: chainData.chainId,
           maxFeePerGas: maxFeePerGas,
           maxPriorityFeePerGas: maxPriorityFeePerGas,
           nonce: Number(nonce),
@@ -540,7 +544,7 @@ export function WalletSendScreenNativeValue(props: {}) {
           params: [context.uuid, context.chain.chainId, {
             method: "eth_estimateGas",
             params: [{
-              chainId: ZeroHexString.from(context.chain.chainId),
+              chainId: ZeroHexString.from(chainData.chainId),
               from: wallet.address,
               to: Address.from(target),
               gasPrice: ZeroHexString.from(gasPrice),
@@ -555,7 +559,7 @@ export function WalletSendScreenNativeValue(props: {}) {
         tx = Transaction.from({
           to: Address.from(target),
           gasLimit: gas,
-          chainId: context.chain.chainId,
+          chainId: chainData.chainId,
           gasPrice: gasPrice,
           nonce: Number(nonce),
           value: value.value,
@@ -579,7 +583,7 @@ export function WalletSendScreenNativeValue(props: {}) {
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, tokenData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeIsEip1559, maybeEip1559GasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+  }, [wallet, context, chainData, tokenData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeIsEip1559, maybeEip1559GasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
 
   return <>
     {tokenData.pairs?.map((address, i) =>

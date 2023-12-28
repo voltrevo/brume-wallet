@@ -1,3 +1,4 @@
+import { TokenAbi } from "@/libs/abi/erc20.abi";
 import { BigIntToHex } from "@/libs/bigints/bigints";
 import { useCopy } from "@/libs/copy/copy";
 import { Errors, UIError } from "@/libs/errors/errors";
@@ -5,16 +6,15 @@ import { chainByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
-import { useInputChange, useTextAreaChange } from "@/libs/react/events";
+import { useInputChange } from "@/libs/react/events";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
-import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
+import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
-import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, SimpleTextarea, UrlState, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "..";
+import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "..";
 import { useBlockByNumber } from "../../../../../blocks/data";
 import { useEnsLookup } from "../../../../../names/data";
 import { useNativeBalance, useNativePricedBalance, useToken } from "../../../../../tokens/data";
@@ -295,23 +295,19 @@ export function WalletSendScreenContractValue(props: {}) {
     return undefined
   }, [maybeCustomNonce, maybePendingNonce])
 
-  const [rawDataInput = "", setRawDataInput] = useState<Optional<string>>(maybeData)
+  const maybeFinalData = useMemo(() => {
+    try {
+      if (maybeFinalTarget == null)
+        return undefined
+      if (maybeFinalValue == null)
+        return undefined
 
-  const onDataInputChange = useTextAreaChange(e => {
-    setRawDataInput(e.target.value)
-  }, [])
+      const address = Address.fromOrThrow(maybeFinalTarget)
+      const value = maybeFinalValue.value
 
-  const dataInput = useDeferredValue(rawDataInput)
-
-  useEffectButNotFirstTime(() => {
-    setData(dataInput)
-  }, [dataInput])
-
-  const triedFinalData = useMemo(() => {
-    if (!maybeData?.trim().length)
-      return new Ok(undefined)
-    return Result.runAndWrapSync(() => ZeroHexString.from(maybeData.trim()))
-  }, [maybeData])
+      return Abi.encodeOrThrow(TokenAbi.transfer.from(address, value))
+    } catch { }
+  }, [maybeFinalTarget, maybeFinalValue])
 
   const [gasMode, setGasMode] = useState<"normal" | "fast" | "urgent">("normal")
 
@@ -383,7 +379,7 @@ export function WalletSendScreenContractValue(props: {}) {
     return gasPrice + (gasPrice * (20n / 100n))
   }, [maybeGasPrice])
 
-  function useFinal(normal: Nullable<bigint>, fast: Nullable<bigint>, urgent: Nullable<bigint>) {
+  function useMode(normal: Nullable<bigint>, fast: Nullable<bigint>, urgent: Nullable<bigint>) {
     return useMemo(() => {
       if (gasMode === "normal")
         return normal
@@ -420,9 +416,9 @@ export function WalletSendScreenContractValue(props: {}) {
     }, [fixed])
   }
 
-  const maybeFinalGasPrice = useFinal(maybeNormalGasPrice, maybeFastGasPrice, maybeUrgentGasPrice)
-  const maybeFinalBaseFeePerGas = useFinal(maybeNormalBaseFeePerGas, maybeFastBaseFeePerGas, maybeUrgentBaseFeePerGas)
-  const maybeFinalMaxPriorityFeePerGas = useFinal(maybeNormalMaxPriorityFeePerGas, maybeFastMaxPriorityFeePerGas, maybeUrgentMaxPriorityFeePerGas)
+  const maybeFinalGasPrice = useMode(maybeNormalGasPrice, maybeFastGasPrice, maybeUrgentGasPrice)
+  const maybeFinalBaseFeePerGas = useMode(maybeNormalBaseFeePerGas, maybeFastBaseFeePerGas, maybeUrgentBaseFeePerGas)
+  const maybeFinalMaxPriorityFeePerGas = useMode(maybeNormalMaxPriorityFeePerGas, maybeFastMaxPriorityFeePerGas, maybeUrgentMaxPriorityFeePerGas)
 
   const maybeFinalMaxFeePerGas = useMemo(() => {
     if (maybeFinalBaseFeePerGas == null)
@@ -433,7 +429,7 @@ export function WalletSendScreenContractValue(props: {}) {
   }, [maybeFinalBaseFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
   const maybeEip1559EstimateGasKey = useMemo<Nullable<RpcRequestPreinit<[unknown, unknown]>>>(() => {
-    if (maybeFinalValue == null)
+    if (maybeFinalTarget == null)
       return undefined
     if (maybeFinalNonce == null)
       return undefined
@@ -441,23 +437,22 @@ export function WalletSendScreenContractValue(props: {}) {
       return undefined
     if (maybeFinalMaxPriorityFeePerGas == null)
       return undefined
-    if (triedFinalData.isErr())
+    if (maybeFinalData == null)
       return undefined
 
     return {
       method: "eth_estimateGas",
       params: [{
-        chainId: ZeroHexString.from(context.chain.chainId),
+        chainId: ZeroHexString.from(chainData.chainId),
         from: wallet.address,
-        to: maybeFinalTarget,
+        to: tokenData.address,
         maxFeePerGas: ZeroHexString.from(maybeFinalMaxFeePerGas),
         maxPriorityFeePerGas: ZeroHexString.from(maybeFinalMaxPriorityFeePerGas),
-        value: ZeroHexString.from(maybeFinalValue.value),
         nonce: ZeroHexString.from(maybeFinalNonce),
-        data: triedFinalData.get()
+        data: maybeFinalData
       }, "latest"]
     }
-  }, [context, wallet, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
+  }, [wallet, chainData, tokenData, maybeFinalTarget, maybeFinalNonce, maybeFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
   const eip1559GasLimitQuery = useEstimateGas(maybeEip1559EstimateGasKey, context)
   const maybeEip1559GasLimit = eip1559GasLimitQuery.current?.ok().get()
@@ -521,16 +516,12 @@ export function WalletSendScreenContractValue(props: {}) {
         return new UIError(`Could not parse or fetch address`)
       }).unwrap()
 
-      const value = Option.wrap(maybeFinalValue).okOrElseSync(() => {
-        return new UIError(`Could not parse value`)
-      }).unwrap()
-
       const nonce = Option.wrap(maybeFinalNonce).okOrElseSync(() => {
         return new UIError(`Could not parse or fetch nonce`)
       }).unwrap()
 
-      const data = triedFinalData.mapErrSync(() => {
-        return new UIError(`Could not parse data`)
+      const data = Option.wrap(maybeFinalData).okOrElseSync(() => {
+        return new UIError(`Could not encode data`)
       }).unwrap()
 
       let tx: ethers.Transaction
@@ -552,13 +543,12 @@ export function WalletSendScreenContractValue(props: {}) {
         }).unwrap()
 
         tx = Transaction.from({
-          to: Address.from(target),
+          to: tokenData.address,
           gasLimit: gasLimit,
-          chainId: context.chain.chainId,
+          chainId: chainData.chainId,
           maxFeePerGas: maxFeePerGas,
           maxPriorityFeePerGas: maxPriorityFeePerGas,
           nonce: Number(nonce),
-          value: value.value,
           data: data
         })
       }
@@ -576,11 +566,10 @@ export function WalletSendScreenContractValue(props: {}) {
           params: [context.uuid, context.chain.chainId, {
             method: "eth_estimateGas",
             params: [{
-              chainId: ZeroHexString.from(context.chain.chainId),
+              chainId: ZeroHexString.from(chainData.chainId),
               from: wallet.address,
-              to: Address.from(target),
+              to: tokenData.address,
               gasPrice: ZeroHexString.from(gasPrice),
-              value: ZeroHexString.from(value.value),
               nonce: ZeroHexString.from(nonce),
               data: data
             }, "latest"],
@@ -591,10 +580,9 @@ export function WalletSendScreenContractValue(props: {}) {
         tx = Transaction.from({
           to: Address.from(target),
           gasLimit: gas,
-          chainId: context.chain.chainId,
+          chainId: chainData.chainId,
           gasPrice: gasPrice,
           nonce: Number(nonce),
-          value: value.value,
           data: data
         })
       }
@@ -615,7 +603,7 @@ export function WalletSendScreenContractValue(props: {}) {
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, tokenData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, triedFinalData, maybeIsEip1559, maybeEip1559GasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+  }, [wallet, context, chainData, tokenData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeFinalData, maybeIsEip1559, maybeEip1559GasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
 
   return <>
     {tokenData.pairs?.map((address, i) =>
@@ -760,18 +748,6 @@ export function WalletSendScreenContractValue(props: {}) {
         onClick={onNonceClick}>
         Select
       </ShrinkableContrastButtonInInputBox>
-    </SimpleBox>
-    <div className="h-2" />
-    <SimpleBox>
-      <div className="">
-        Data
-      </div>
-      <div className="w-4" />
-      <SimpleTextarea
-        rows={3}
-        value={rawDataInput}
-        onChange={onDataInputChange}
-        placeholder="0x0" />
     </SimpleBox>
     <div className="h-4" />
     <div className="font-medium">
