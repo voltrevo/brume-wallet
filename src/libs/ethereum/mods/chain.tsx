@@ -82,7 +82,7 @@ export const chainByChainId: Chains = {
     name: "Binance",
     chainId: 56,
     urls: ["wss://bsc.publicnode.com"],
-    etherscan: "https://bnbscan.com",
+    etherscan: "https://bscscan.com",
     token: {
       uuid: "664003af-5c47-4b6e-ab3e-c0c130e23b3c",
       type: "native",
