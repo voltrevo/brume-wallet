@@ -734,20 +734,24 @@ export function WalletSendScreenNativeValue(props: {}) {
     return new Fixed(maybeCustomGasLimit * maybeCustomMaxFeePerGas, 18).mul(maybeTokenPrice)
   }, [maybeCustomGasLimit, maybeCustomMaxFeePerGas, maybeTokenPrice])
 
+  const maybeFinalLegacyGasCost = useMode(maybeNormalLegacyGasCost, maybeFastLegacyGasCost, maybeUrgentLegacyGasCost, maybeCustomLegacyGasCost)
+  const maybeFinalMinEip1559GasCost = useMode(maybeNormalMinEip1559GasCost, maybeFastMinEip1559GasCost, maybeUrgentMinEip1559GasCost, maybeCustomMinEip1559GasCost)
+  const maybeFinalMaxEip1559GasCost = useMode(maybeNormalMaxEip1559GasCost, maybeFastMaxEip1559GasCost, maybeUrgentMaxEip1559GasCost, maybeCustomMaxEip1559GasCost)
+
   const normalLegacyGasCostDisplay = useCompactUsdDisplay(maybeNormalLegacyGasCost)
   const fastLegacyGasCostDisplay = useCompactUsdDisplay(maybeFastLegacyGasCost)
   const urgentLegacyGasCostDisplay = useCompactUsdDisplay(maybeUrgentLegacyGasCost)
-  const customLegacyGasCostDisplay = useCompactUsdDisplay(maybeCustomLegacyGasCost)
+  const finalLegacyGasCostDisplay = useCompactUsdDisplay(maybeFinalLegacyGasCost)
 
   const normalMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalMinEip1559GasCost)
   const fastMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastMinEip1559GasCost)
   const urgentMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeUrgentMinEip1559GasCost)
-  const customMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeCustomMinEip1559GasCost)
+  const finalMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeFinalMinEip1559GasCost)
 
   const normalMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalMaxEip1559GasCost)
   const fastMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastMaxEip1559GasCost)
   const urgentMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeUrgentMaxEip1559GasCost)
-  const customMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeCustomMaxEip1559GasCost)
+  const finalMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeFinalMaxEip1559GasCost)
 
   const normalGasPriceDisplay = useGasDisplay(maybeNormalGasPrice)
   const fastGasPriceDisplay = useGasDisplay(maybeFastGasPrice)
@@ -1094,12 +1098,6 @@ export function WalletSendScreenNativeValue(props: {}) {
           onChange={onGasPriceInputChange}
           placeholder={maybeFetchedGasPrice?.toString()} />
       </SimpleBox>
-      {maybeCustomLegacyGasCost != null && <>
-        <div className="h-2" />
-        <div className="text-contrast">
-          Your transaction is expected to cost {customLegacyGasCostDisplay}
-        </div>
-      </>}
     </>}
     {gasMode === "custom" && maybeIsEip1559 === true && <>
       <div className="h-2" />
@@ -1135,12 +1133,18 @@ export function WalletSendScreenNativeValue(props: {}) {
           onChange={onMaxPriorityFeePerGasInputChange}
           placeholder={maybeFetchedMaxPriorityFeePerGas?.toString()} />
       </SimpleBox>
-      {maybeCustomMinEip1559GasCost != null && maybeCustomMaxEip1559GasCost != null && <>
-        <div className="h-2" />
-        <div className="text-contrast">
-          Your transaction is expected to cost {customMinEip1559GasCostDisplay} but can cost up to {customMaxEip1559GasCostDisplay}
-        </div>
-      </>}
+    </>}
+    {maybeIsEip1559 === false && maybeFinalLegacyGasCost != null && <>
+      <div className="h-2" />
+      <div className="text-contrast">
+        This transaction is expected to cost {finalLegacyGasCostDisplay}
+      </div>
+    </>}
+    {maybeIsEip1559 === true && maybeFinalMinEip1559GasCost != null && maybeFinalMaxEip1559GasCost != null && <>
+      <div className="h-2" />
+      <div className="text-contrast">
+        This transaction is expected to cost {finalMinEip1559GasCostDisplay} but can cost up to {finalMaxEip1559GasCostDisplay}
+      </div>
     </>}
     <div className="h-4 grow" />
     {txSign != null && <>
