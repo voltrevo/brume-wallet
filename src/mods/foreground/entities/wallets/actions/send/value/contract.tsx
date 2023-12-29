@@ -457,6 +457,38 @@ export function WalletSendScreenContractValue(props: {}) {
     } catch { }
   }, [maybeGasPrice, maybeNormalGasPrice])
 
+  const maybeNormalMinFeePerGas = useMemo(() => {
+    if (maybeNormalBaseFeePerGas == null)
+      return undefined
+    if (maybeNormalMaxPriorityFeePerGas == null)
+      return undefined
+    return maybeNormalBaseFeePerGas + maybeNormalMaxPriorityFeePerGas
+  }, [maybeNormalBaseFeePerGas, maybeNormalMaxPriorityFeePerGas])
+
+  const maybeFastMinFeePerGas = useMemo(() => {
+    if (maybeFastBaseFeePerGas == null)
+      return undefined
+    if (maybeFastMaxPriorityFeePerGas == null)
+      return undefined
+    return maybeFastBaseFeePerGas + maybeFastMaxPriorityFeePerGas
+  }, [maybeFastBaseFeePerGas, maybeFastMaxPriorityFeePerGas])
+
+  const maybeUrgentMinFeePerGas = useMemo(() => {
+    if (maybeUrgentBaseFeePerGas == null)
+      return undefined
+    if (maybeUrgentMaxPriorityFeePerGas == null)
+      return undefined
+    return maybeUrgentBaseFeePerGas + maybeUrgentMaxPriorityFeePerGas
+  }, [maybeUrgentBaseFeePerGas, maybeUrgentMaxPriorityFeePerGas])
+
+  const maybeCustomMinFeePerGas = useMemo(() => {
+    if (maybeCustomBaseFeePerGas == null)
+      return undefined
+    if (maybeCustomMaxPriorityFeePerGas == null)
+      return undefined
+    return maybeCustomBaseFeePerGas + maybeCustomMaxPriorityFeePerGas
+  }, [maybeCustomBaseFeePerGas, maybeCustomMaxPriorityFeePerGas])
+
   const maybeNormalMaxFeePerGas = useMemo(() => {
     if (maybeNormalBaseFeePerGas == null)
       return undefined
@@ -508,7 +540,7 @@ export function WalletSendScreenContractValue(props: {}) {
     return useMemo(() => {
       if (gasPrice == null)
         return "???"
-      return new Fixed(gasPrice, 9).move(4).toString()
+      return Number(new Fixed(gasPrice, 9).move(4).toString()).toLocaleString(undefined, { maximumSignificantDigits: 2 })
     }, [gasPrice])
   }
 
@@ -637,7 +669,37 @@ export function WalletSendScreenContractValue(props: {}) {
     return new Fixed(maybeLegacyGasLimit * maybeUrgentGasPrice, 18).mul(maybeTokenPrice)
   }, [maybeLegacyGasLimit, maybeUrgentGasPrice, maybeTokenPrice])
 
-  const maybeNormalEip1559GasCost = useMemo(() => {
+  const maybeNormalMinEip1559GasCost = useMemo(() => {
+    if (maybeEip1559GasLimit == null)
+      return undefined
+    if (maybeNormalMinFeePerGas == null)
+      return undefined
+    if (maybeTokenPrice == null)
+      return undefined
+    return new Fixed(maybeEip1559GasLimit * maybeNormalMinFeePerGas, 18).mul(maybeTokenPrice)
+  }, [maybeEip1559GasLimit, maybeNormalMinFeePerGas, maybeTokenPrice])
+
+  const maybeFastMinEip1559GasCost = useMemo(() => {
+    if (maybeEip1559GasLimit == null)
+      return undefined
+    if (maybeFastMinFeePerGas == null)
+      return undefined
+    if (maybeTokenPrice == null)
+      return undefined
+    return new Fixed(maybeEip1559GasLimit * maybeFastMinFeePerGas, 18).mul(maybeTokenPrice)
+  }, [maybeEip1559GasLimit, maybeFastMinFeePerGas, maybeTokenPrice])
+
+  const maybeUrgentMinEip1559GasCost = useMemo(() => {
+    if (maybeEip1559GasLimit == null)
+      return undefined
+    if (maybeUrgentMinFeePerGas == null)
+      return undefined
+    if (maybeTokenPrice == null)
+      return undefined
+    return new Fixed(maybeEip1559GasLimit * maybeUrgentMinFeePerGas, 18).mul(maybeTokenPrice)
+  }, [maybeEip1559GasLimit, maybeUrgentMinFeePerGas, maybeTokenPrice])
+
+  const maybeNormalMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeNormalMaxFeePerGas == null)
@@ -647,7 +709,7 @@ export function WalletSendScreenContractValue(props: {}) {
     return new Fixed(maybeEip1559GasLimit * maybeNormalMaxFeePerGas, 18).mul(maybeTokenPrice)
   }, [maybeEip1559GasLimit, maybeNormalMaxFeePerGas, maybeTokenPrice])
 
-  const maybeFastEip1559GasCost = useMemo(() => {
+  const maybeFastMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeFastMaxFeePerGas == null)
@@ -657,7 +719,7 @@ export function WalletSendScreenContractValue(props: {}) {
     return new Fixed(maybeEip1559GasLimit * maybeFastMaxFeePerGas, 18).mul(maybeTokenPrice)
   }, [maybeEip1559GasLimit, maybeFastMaxFeePerGas, maybeTokenPrice])
 
-  const maybeUrgentEip1559GasCost = useMemo(() => {
+  const maybeUrgentMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeUrgentMaxFeePerGas == null)
@@ -671,9 +733,13 @@ export function WalletSendScreenContractValue(props: {}) {
   const fastLegacyGasCostDisplay = useCompactUsdDisplay(maybeFastLegacyGasCost)
   const urgentLegacyGasCostDisplay = useCompactUsdDisplay(maybeUrgentLegacyGasCost)
 
-  const normalEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalEip1559GasCost)
-  const fastEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastEip1559GasCost)
-  const urgentEip1559GasCostDisplay = useCompactUsdDisplay(maybeUrgentEip1559GasCost)
+  const normalMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalMinEip1559GasCost)
+  const fastMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastMinEip1559GasCost)
+  const urgentMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeUrgentMinEip1559GasCost)
+
+  const normalMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalMaxEip1559GasCost)
+  const fastMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastMaxEip1559GasCost)
+  const urgentMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeUrgentMaxEip1559GasCost)
 
   const normalGasPriceDisplay = useGasDisplay(maybeNormalGasPrice)
   const fastGasPriceDisplay = useGasDisplay(maybeFastGasPrice)
@@ -954,13 +1020,13 @@ export function WalletSendScreenContractValue(props: {}) {
           value={gasMode}
           onChange={onGasModeChange}>
           <option value="urgent">
-            {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentEip1559GasCostDisplay}`}
+            {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
           </option>
           <option value="fast">
-            {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastEip1559GasCostDisplay}`}
+            {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
           </option>
           <option value="normal">
-            {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalEip1559GasCostDisplay}`}
+            {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
           </option>
           <option value="custom">
             Custom
