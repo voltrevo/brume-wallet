@@ -38,6 +38,8 @@ export function WalletSendScreenContractValue(props: {}) {
   const [maybeGasMode, setGasMode] = useSearchState("gasMode", $state)
   const [maybeGasLimit, setGasLimit] = useSearchState("gasLimit", $state)
   const [maybeGasPrice, setGasPrice] = useSearchState("gasPrice", $state)
+  const [maybeBaseFeePerGas, setBaseFeePerGas] = useSearchState("baseFeePerGas", $state)
+  const [maybeMaxPriorityFeePerGas, setMaxPriorityFeePerGas] = useSearchState("maxPriorityFeePerGas", $state)
 
   const gasMode = Option.wrap(maybeGasMode).unwrapOr("normal")
 
@@ -320,24 +322,22 @@ export function WalletSendScreenContractValue(props: {}) {
   const fetchedGasPriceQuery = useGasPrice(context)
   const maybeFetchedGasPrice = fetchedGasPriceQuery.current?.ok().get()
 
-  const maxPriorityFeePerGasQuery = useMaxPriorityFeePerGas(context)
-  const maybeMaxPriorityFeePerGas = maxPriorityFeePerGasQuery.current?.ok().get()
+  const fetchedMaxPriorityFeePerGasQuery = useMaxPriorityFeePerGas(context)
+  const maybeFetchedMaxPriorityFeePerGas = fetchedMaxPriorityFeePerGasQuery.current?.ok().get()
 
   const pendingBlockQuery = useBlockByNumber("pending", context)
   const maybePendingBlock = pendingBlockQuery.current?.ok().get()
 
-  const maybeIsEip1559 = useMemo(() => {
-    if (gasMode === "custom")
-      return false
-    if (maybePendingBlock != null)
-      return maybePendingBlock.baseFeePerGas != null
-    return undefined
-  }, [gasMode, maybePendingBlock])
+  const maybeFetchedBaseFeePerGas = useMemo(() => {
+    try {
+      return maybePendingBlock?.baseFeePerGas != null
+        ? BigIntToHex.decodeOrThrow(maybePendingBlock.baseFeePerGas)
+        : undefined
+    } catch { }
+  }, [maybePendingBlock])
 
-  const maybeBaseFeePerGas = useMemo(() => {
-    if (maybePendingBlock?.baseFeePerGas == null)
-      return undefined
-    return BigIntToHex.decodeOrThrow(maybePendingBlock.baseFeePerGas)
+  const maybeIsEip1559 = useMemo(() => {
+    return maybePendingBlock?.baseFeePerGas != null
   }, [maybePendingBlock])
 
   const [rawGasLimitInput = "", setRawGasLimitInput] = useState<Optional<string>>(maybeGasLimit)
@@ -364,6 +364,30 @@ export function WalletSendScreenContractValue(props: {}) {
     setGasPrice(gasPriceInput)
   }, [gasPriceInput])
 
+  const [rawBaseFeePerGasInput = "", setRawBaseFeePerGasInput] = useState<Optional<string>>(maybeBaseFeePerGas)
+
+  const onBaseFeePerGasInputChange = useInputChange(e => {
+    setRawBaseFeePerGasInput(e.target.value)
+  }, [])
+
+  const baseFeePerGasInput = useDeferredValue(rawBaseFeePerGasInput)
+
+  useEffectButNotFirstTime(() => {
+    setBaseFeePerGas(baseFeePerGasInput)
+  }, [baseFeePerGasInput])
+
+  const [rawMaxPriorityFeePerGasInput = "", setRawMaxPriorityFeePerGasInput] = useState<Optional<string>>(maybeMaxPriorityFeePerGas)
+
+  const onMaxPriorityFeePerGasInputChange = useInputChange(e => {
+    setRawMaxPriorityFeePerGasInput(e.target.value)
+  }, [])
+
+  const maxPriorityFeePerGasInput = useDeferredValue(rawMaxPriorityFeePerGasInput)
+
+  useEffectButNotFirstTime(() => {
+    setMaxPriorityFeePerGas(maxPriorityFeePerGasInput)
+  }, [maxPriorityFeePerGasInput])
+
   function useMaybeMemo<T>(f: (x: T) => T, [x]: [Nullable<T>]) {
     return useMemo(() => {
       if (x == null)
@@ -375,27 +399,27 @@ export function WalletSendScreenContractValue(props: {}) {
 
   const maybeNormalBaseFeePerGas = useMaybeMemo((baseFeePerGas) => {
     return baseFeePerGas
-  }, [maybeBaseFeePerGas])
+  }, [maybeFetchedBaseFeePerGas])
 
   const maybeFastBaseFeePerGas = useMaybeMemo((baseFeePerGas) => {
     return baseFeePerGas + (1n * (10n ** 9n))
-  }, [maybeBaseFeePerGas])
+  }, [maybeFetchedBaseFeePerGas])
 
   const maybeUrgentBaseFeePerGas = useMaybeMemo((baseFeePerGas) => {
     return baseFeePerGas + (2n * (10n ** 9n))
-  }, [maybeBaseFeePerGas])
+  }, [maybeFetchedBaseFeePerGas])
 
   const maybeNormalMaxPriorityFeePerGas = useMaybeMemo((maxPriorityFeePerGas) => {
     return maxPriorityFeePerGas / 4n
-  }, [maybeMaxPriorityFeePerGas])
+  }, [maybeFetchedMaxPriorityFeePerGas])
 
   const maybeFastMaxPriorityFeePerGas = useMaybeMemo((maxPriorityFeePerGas) => {
     return maxPriorityFeePerGas / 2n
-  }, [maybeMaxPriorityFeePerGas])
+  }, [maybeFetchedMaxPriorityFeePerGas])
 
   const maybeUrgentMaxPriorityFeePerGas = useMaybeMemo((maxPriorityFeePerGas) => {
     return maxPriorityFeePerGas
-  }, [maybeMaxPriorityFeePerGas])
+  }, [maybeFetchedMaxPriorityFeePerGas])
 
   const maybeNormalGasPrice = useMaybeMemo((gasPrice) => {
     return gasPrice
@@ -409,6 +433,22 @@ export function WalletSendScreenContractValue(props: {}) {
     return (gasPrice * 120n) / 100n
   }, [maybeFetchedGasPrice])
 
+  const maybeCustomBaseFeePerGas = useMemo(() => {
+    try {
+      return maybeBaseFeePerGas?.trim().length
+        ? BigInt(maybeBaseFeePerGas.trim())
+        : maybeNormalBaseFeePerGas
+    } catch { }
+  }, [maybeBaseFeePerGas, maybeNormalBaseFeePerGas])
+
+  const maybeCustomMaxPriorityFeePerGas = useMemo(() => {
+    try {
+      return maybeMaxPriorityFeePerGas?.trim().length
+        ? BigInt(maybeMaxPriorityFeePerGas.trim())
+        : maybeNormalMaxPriorityFeePerGas
+    } catch { }
+  }, [maybeMaxPriorityFeePerGas, maybeNormalMaxPriorityFeePerGas])
+
   const maybeCustomGasPrice = useMemo(() => {
     try {
       return maybeGasPrice?.trim().length
@@ -417,7 +457,7 @@ export function WalletSendScreenContractValue(props: {}) {
     } catch { }
   }, [maybeGasPrice, maybeNormalGasPrice])
 
-  function useMode(normal: Nullable<bigint>, fast: Nullable<bigint>, urgent: Nullable<bigint>, custom?: Nullable<bigint>) {
+  function useMode(normal: Nullable<bigint>, fast: Nullable<bigint>, urgent: Nullable<bigint>, custom: Nullable<bigint>) {
     return useMemo(() => {
       if (gasMode === "normal")
         return normal
@@ -449,8 +489,8 @@ export function WalletSendScreenContractValue(props: {}) {
   }
 
   const maybeFinalGasPrice = useMode(maybeNormalGasPrice, maybeFastGasPrice, maybeUrgentGasPrice, maybeCustomGasPrice)
-  const maybeFinalBaseFeePerGas = useMode(maybeNormalBaseFeePerGas, maybeFastBaseFeePerGas, maybeUrgentBaseFeePerGas)
-  const maybeFinalMaxPriorityFeePerGas = useMode(maybeNormalMaxPriorityFeePerGas, maybeFastMaxPriorityFeePerGas, maybeUrgentMaxPriorityFeePerGas)
+  const maybeFinalBaseFeePerGas = useMode(maybeNormalBaseFeePerGas, maybeFastBaseFeePerGas, maybeUrgentBaseFeePerGas, maybeCustomBaseFeePerGas)
+  const maybeFinalMaxPriorityFeePerGas = useMode(maybeNormalMaxPriorityFeePerGas, maybeFastMaxPriorityFeePerGas, maybeUrgentMaxPriorityFeePerGas, maybeCustomMaxPriorityFeePerGas)
 
   const maybeFinalMaxFeePerGas = useMemo(() => {
     if (maybeFinalBaseFeePerGas == null)
@@ -920,7 +960,7 @@ export function WalletSendScreenContractValue(props: {}) {
           </option>
         </select>}
     </SimpleBox>
-    {gasMode === "custom" && <>
+    {gasMode === "custom" && maybeIsEip1559 === false && <>
       <div className="h-2" />
       <SimpleBox>
         <div className="">
@@ -942,6 +982,41 @@ export function WalletSendScreenContractValue(props: {}) {
           value={rawGasPriceInput}
           onChange={onGasPriceInputChange}
           placeholder={maybeFetchedGasPrice?.toString()} />
+      </SimpleBox>
+    </>}
+    {gasMode === "custom" && maybeIsEip1559 === true && <>
+      <div className="h-2" />
+      <SimpleBox>
+        <div className="">
+          Gas Limit
+        </div>
+        <div className="w-4" />
+        <SimpleInput
+          value={rawGasLimitInput}
+          onChange={onGasLimitInputChange}
+          placeholder={maybeFetchedGasLimit?.toString()} />
+      </SimpleBox>
+      <div className="h-2" />
+      <SimpleBox>
+        <div className="">
+          Base Fee Per Gas
+        </div>
+        <div className="w-4" />
+        <SimpleInput
+          value={rawBaseFeePerGasInput}
+          onChange={onBaseFeePerGasInputChange}
+          placeholder={maybeFetchedBaseFeePerGas?.toString()} />
+      </SimpleBox>
+      <div className="h-2" />
+      <SimpleBox>
+        <div className="">
+          Max Priority Fee Per Gas
+        </div>
+        <div className="w-4" />
+        <SimpleInput
+          value={rawMaxPriorityFeePerGasInput}
+          onChange={onMaxPriorityFeePerGasInputChange}
+          placeholder={maybeFetchedMaxPriorityFeePerGas?.toString()} />
       </SimpleBox>
     </>}
     <div className="h-4 grow" />
