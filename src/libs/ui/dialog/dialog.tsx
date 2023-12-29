@@ -41,7 +41,7 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
 
   const onEscape = useKeyboardEscape(close)
 
-  const onClose = useMouse<HTMLDivElement>(e => {
+  const onClickOutside = useMouse<HTMLDivElement>(e => {
     if (e.clientX > e.currentTarget.clientWidth)
       return
     close()
@@ -49,6 +49,9 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
 
   const [displayed, setDisplayed] = useState(opened)
 
+  /**
+   * Opened => Displayed
+   */
   if (opened && !displayed)
     setDisplayed(true)
 
@@ -96,6 +99,9 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
     return () => color.setAttribute("content", original)
   }, [displayed, dark])
 
+  /**
+   * Only unmount when transition is finished
+   */
   if (!displayed)
     return null
 
@@ -106,12 +112,12 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
       <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
         aria-hidden="true"
         role="backdrop" />
-      <div className={`fixed inset-0 flex flex-col md:p-safe ${dark ? "dark" : ""}`}
-        onMouseDown={onClose}
+      <div className={`fixed inset-0 flex flex-col md:p-safe overflow-y-scroll ${dark ? "dark" : ""} ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+        onMouseDown={onClickOutside}
         onClick={Events.keep}>
         <div className="hidden md:block h-4" />
         <div className="grow flex flex-col md:p-2">
-          <aside className={`grow flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default p-safe md:p-0 md:rounded-2xl ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+          <aside className={`grow flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default p-safe md:p-0 md:rounded-2xl`}
             role="dialog"
             aria-modal
             onMouseDown={Events.keep}
@@ -135,7 +141,7 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
 
   const onEscape = useKeyboardEscape(close)
 
-  const onClose = useMouse<HTMLDivElement>(e => {
+  const onClickOutside = useMouse<HTMLDivElement>(e => {
     if (e.clientX > e.currentTarget.clientWidth)
       return
     close()
@@ -143,6 +149,9 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
 
   const [displayed, setDisplayed] = useState(opened)
 
+  /**
+   * Opened => Displayed
+   */
   if (opened && !displayed)
     setDisplayed(true)
 
@@ -163,6 +172,9 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
     return () => dialog?.close()
   }, [dialog, displayed])
 
+  /**
+   * Only unmount when transition is finished
+   */
   if (!displayed)
     return null
 
@@ -173,12 +185,12 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
       <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
         aria-hidden="true"
         role="backdrop" />
-      <div className={`fixed inset-0 flex flex-col p-safe ${dark ? "dark" : ""}`}
-        onMouseDown={onClose}
+      <div className={`fixed inset-0 flex flex-col p-safe overflow-y-scroll ${dark ? "dark" : ""} ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+        onMouseDown={onClickOutside}
         onClick={Events.keep}>
         <div className="grow" />
         <div className="flex flex-col p-2">
-          <aside className={`flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default rounded-2xl ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+          <aside className={`flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default rounded-2xl`}
             role="dialog"
             aria-modal
             onMouseDown={Events.keep}
