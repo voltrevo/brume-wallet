@@ -1150,7 +1150,7 @@ export function WalletSendScreenContractValue(props: {}) {
       {maybeCustomMinEip1559GasCost != null && maybeCustomMaxEip1559GasCost != null && <>
         <div className="h-2" />
         <div className="text-contrast">
-          Your transaction is expected to cost between {customMinEip1559GasCostDisplay} and {customMaxEip1559GasCostDisplay}
+          Your transaction is expected to cost {customMinEip1559GasCostDisplay} but can cost up to {customMaxEip1559GasCostDisplay}
         </div>
       </>}
     </>}
