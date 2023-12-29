@@ -644,120 +644,120 @@ export function WalletSendScreenContractValue(props: {}) {
       return undefined
     if (maybeNormalGasPrice == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeLegacyGasLimit * maybeNormalGasPrice, 18).mul(maybeTokenPrice)
-  }, [maybeLegacyGasLimit, maybeNormalGasPrice, maybeTokenPrice])
+    return new Fixed(maybeLegacyGasLimit * maybeNormalGasPrice, 18).mul(maybeChainPrice)
+  }, [maybeLegacyGasLimit, maybeNormalGasPrice, maybeChainPrice])
 
   const maybeFastLegacyGasCost = useMemo(() => {
     if (maybeLegacyGasLimit == null)
       return undefined
     if (maybeFastGasPrice == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeLegacyGasLimit * maybeFastGasPrice, 18).mul(maybeTokenPrice)
-  }, [maybeLegacyGasLimit, maybeFastGasPrice, maybeTokenPrice])
+    return new Fixed(maybeLegacyGasLimit * maybeFastGasPrice, 18).mul(maybeChainPrice)
+  }, [maybeLegacyGasLimit, maybeFastGasPrice, maybeChainPrice])
 
   const maybeUrgentLegacyGasCost = useMemo(() => {
     if (maybeLegacyGasLimit == null)
       return undefined
     if (maybeUrgentGasPrice == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeLegacyGasLimit * maybeUrgentGasPrice, 18).mul(maybeTokenPrice)
-  }, [maybeLegacyGasLimit, maybeUrgentGasPrice, maybeTokenPrice])
+    return new Fixed(maybeLegacyGasLimit * maybeUrgentGasPrice, 18).mul(maybeChainPrice)
+  }, [maybeLegacyGasLimit, maybeUrgentGasPrice, maybeChainPrice])
 
   const maybeCustomLegacyGasCost = useMemo(() => {
     if (maybeCustomGasLimit == null)
       return undefined
     if (maybeCustomGasPrice == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeCustomGasLimit * maybeCustomGasPrice, 18).mul(maybeTokenPrice)
-  }, [maybeCustomGasLimit, maybeCustomGasPrice, maybeTokenPrice])
+    return new Fixed(maybeCustomGasLimit * maybeCustomGasPrice, 18).mul(maybeChainPrice)
+  }, [maybeCustomGasLimit, maybeCustomGasPrice, maybeChainPrice])
 
   const maybeNormalMinEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeNormalMinFeePerGas == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeNormalMinFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeEip1559GasLimit, maybeNormalMinFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeNormalMinFeePerGas, 18).mul(maybeChainPrice)
+  }, [maybeEip1559GasLimit, maybeNormalMinFeePerGas, maybeChainPrice])
 
   const maybeFastMinEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeFastMinFeePerGas == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeFastMinFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeEip1559GasLimit, maybeFastMinFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeFastMinFeePerGas, 18).mul(maybeChainPrice)
+  }, [maybeEip1559GasLimit, maybeFastMinFeePerGas, maybeChainPrice])
 
   const maybeUrgentMinEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeUrgentMinFeePerGas == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeUrgentMinFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeEip1559GasLimit, maybeUrgentMinFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeUrgentMinFeePerGas, 18).mul(maybeChainPrice)
+  }, [maybeEip1559GasLimit, maybeUrgentMinFeePerGas, maybeChainPrice])
 
   const maybeCustomMinEip1559GasCost = useMemo(() => {
     if (maybeCustomGasLimit == null)
       return undefined
     if (maybeCustomMinFeePerGas == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeCustomGasLimit * maybeCustomMinFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeCustomGasLimit, maybeCustomMinFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeCustomGasLimit * maybeCustomMinFeePerGas, 18).mul(maybeChainPrice)
+  }, [maybeCustomGasLimit, maybeCustomMinFeePerGas, maybeChainPrice])
 
   const maybeNormalMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeNormalMaxFeePerGas == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeNormalMaxFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeEip1559GasLimit, maybeNormalMaxFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeNormalMaxFeePerGas, 18).mul(maybeChainPrice)
+  }, [maybeEip1559GasLimit, maybeNormalMaxFeePerGas, maybeChainPrice])
 
   const maybeFastMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeFastMaxFeePerGas == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeFastMaxFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeEip1559GasLimit, maybeFastMaxFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeFastMaxFeePerGas, 18).mul(maybeChainPrice)
+  }, [maybeEip1559GasLimit, maybeFastMaxFeePerGas, maybeChainPrice])
 
   const maybeUrgentMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeUrgentMaxFeePerGas == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeUrgentMaxFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeEip1559GasLimit, maybeUrgentMaxFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeUrgentMaxFeePerGas, 18).mul(maybeChainPrice)
+  }, [maybeEip1559GasLimit, maybeUrgentMaxFeePerGas, maybeChainPrice])
 
   const maybeCustomMaxEip1559GasCost = useMemo(() => {
     if (maybeCustomGasLimit == null)
       return undefined
     if (maybeCustomMaxFeePerGas == null)
       return undefined
-    if (maybeTokenPrice == null)
+    if (maybeChainPrice == null)
       return undefined
-    return new Fixed(maybeCustomGasLimit * maybeCustomMaxFeePerGas, 18).mul(maybeTokenPrice)
-  }, [maybeCustomGasLimit, maybeCustomMaxFeePerGas, maybeTokenPrice])
+    return new Fixed(maybeCustomGasLimit * maybeCustomMaxFeePerGas, 18).mul(maybeChainPrice)
+  }, [maybeCustomGasLimit, maybeCustomMaxFeePerGas, maybeChainPrice])
 
   const maybeFinalLegacyGasCost = useMode(maybeNormalLegacyGasCost, maybeFastLegacyGasCost, maybeUrgentLegacyGasCost, maybeCustomLegacyGasCost)
   const maybeFinalMinEip1559GasCost = useMode(maybeNormalMinEip1559GasCost, maybeFastMinEip1559GasCost, maybeUrgentMinEip1559GasCost, maybeCustomMinEip1559GasCost)
