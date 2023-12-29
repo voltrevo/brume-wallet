@@ -31,7 +31,7 @@ export function WalletSendScreenNativeValue(props: {}) {
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeTarget, setTarget] = useSearchState("target", $state)
-  const [mayeValued, setValued] = useSearchState("valued", $state)
+  const [maybeValued, setValued] = useSearchState("valued", $state)
   const [maybePriced, setPriced] = useSearchState("priced", $state)
   const [maybeNonce, setNonce] = useSearchState("nonce", $state)
   const [maybeData, setData] = useSearchState("data", $state)
@@ -81,7 +81,7 @@ export function WalletSendScreenNativeValue(props: {}) {
 
   const maybeChainPrice = maybeTokenPrice
 
-  const [rawValueInput = "", setRawValueInput] = useState(mayeValued)
+  const [rawValueInput = "", setRawValueInput] = useState(maybeValued)
   const [rawPricedInput = "", setRawPricedInput] = useState(maybePriced)
 
   const setValue = useCallback((input: string) => {
@@ -234,11 +234,11 @@ export function WalletSendScreenNativeValue(props: {}) {
 
   const maybeFinalValue = useMemo(() => {
     try {
-      return mayeValued?.trim().length
-        ? Fixed.fromString(mayeValued.trim(), tokenData.decimals)
+      return maybeValued?.trim().length
+        ? Fixed.fromString(maybeValued.trim(), tokenData.decimals)
         : new Fixed(0n, tokenData.decimals)
     } catch { }
-  }, [mayeValued, tokenData])
+  }, [maybeValued, tokenData])
 
   const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(maybeNonce)
 
