@@ -43,7 +43,8 @@ export function WalletSendScreenNativeValue(props: {}) {
 
   const gasMode = Option.wrap(maybeGasMode).unwrapOr("normal")
 
-  const chainData = chainByChainId[Number(maybeChain)]
+  const chain = Option.unwrap(maybeChain)
+  const chainData = chainByChainId[Number(chain)]
   const tokenData = chainData.token
 
   const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
