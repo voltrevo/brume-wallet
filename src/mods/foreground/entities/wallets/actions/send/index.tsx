@@ -2,12 +2,14 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
+import { WalletSendScreenContractValue } from "./direct/contract";
+import { WalletSendScreenNativeValue } from "./direct/native";
 import { WalletSendScreenNonce } from "./nonce";
+import { WalletPeanutSendScreenNativeValue } from "./peanut/native";
 import { WalletSendScreenTarget } from "./target";
-import { WalletSendScreenContractValue } from "./value/contract";
-import { WalletSendScreenNativeValue } from "./value/native";
 
 export type UrlState = {
+  readonly type?: string
   readonly step?: string
   readonly chain?: string
   readonly token?: string
@@ -23,15 +25,18 @@ export type UrlState = {
   readonly maxPriorityFeePerGas?: string
 }
 
-export function WalletDirectSendScreen(props: {}) {
+export function WalletSendScreen(props: {}) {
   const $path = usePathState<UrlState>()
   const [step] = useSearchState("step", $path)
+  const [type] = useSearchState("type", $path)
   const [token] = useSearchState("token", $path)
 
   if (step === "target")
     return <WalletSendScreenTarget />
-  if (step === "value" && token == null)
+  if (step === "value" && token == null && type == null)
     return <WalletSendScreenNativeValue />
+  if (step === "value" && token == null && type == "peanut")
+    return <WalletPeanutSendScreenNativeValue />
   if (step === "value" && token != null)
     return <WalletSendScreenContractValue />
   if (step === "nonce")

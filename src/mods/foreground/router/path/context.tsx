@@ -91,7 +91,8 @@ export function usePathState<T extends Record<string, string>>() {
   useEffect(() => {
     if (state == null)
       return
-    go(`${url.pathname}?${new URLSearchParams(state).toString()}${url.hash}`)
+    const filtered = Object.fromEntries(Object.entries(state).filter(([_, value]) => value != null)) as T
+    go(`${url.pathname}?${new URLSearchParams(filtered).toString()}${url.hash}`)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state])
 
@@ -103,7 +104,7 @@ export function useSearchState<T extends Record<string, string>>(key: keyof T, $
 
   const state = parent[key]
 
-  const setState = useCallback((value: string) => {
+  const setState = useCallback((value: T[typeof key]) => {
     setParent(p => ({ ...p, [key]: value }))
   }, [setParent, key])
 

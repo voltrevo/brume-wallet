@@ -1,43 +1,40 @@
-import { PeanutAbi } from "@/libs/abi/peanut.abi";
 import { BigIntToHex } from "@/libs/bigints/bigints";
 import { useCopy } from "@/libs/copy/copy";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
-import { Peanut } from "@/libs/peanut";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
-import { useInputChange } from "@/libs/react/events";
+import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
-import { Base16 } from "@hazae41/base16";
-import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
-import { Cursor } from "@hazae41/cursor";
+import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
-import { Keccak256 } from "@hazae41/keccak256";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
-import { Secp256k1 } from "@hazae41/secp256k1";
 import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
-import { useBlockByNumber } from "../../../../../blocks/data";
-import { useNativeBalance, useNativePricedBalance } from "../../../../../tokens/data";
-import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../../../unknown/data";
-import { useWalletDataContext } from "../../../../context";
-import { EthereumWalletInstance, useEthereumContext2 } from "../../../../data";
-import { PriceResolver } from "../../../../page";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../../direct";
+import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, SimpleTextarea, UrlState, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "..";
+import { useBlockByNumber } from "../../../../blocks/data";
+import { useEnsLookup } from "../../../../names/data";
+import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/data";
+import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../../unknown/data";
+import { useWalletDataContext } from "../../../context";
+import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../../data";
+import { PriceResolver } from "../../../page";
 
-export function WalletPeanutSendScreenNativeValue(props: {}) {
+export function WalletSendScreenNativeValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
 
   const $state = usePathState<UrlState>()
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
+  const [maybeTarget, setTarget] = useSearchState("target", $state)
   const [maybeValued, setValued] = useSearchState("valued", $state)
   const [maybePriced, setPriced] = useSearchState("priced", $state)
   const [maybeNonce, setNonce] = useSearchState("nonce", $state)
+  const [maybeData, setData] = useSearchState("data", $state)
   const [maybeGasMode, setGasMode] = useSearchState("gasMode", $state)
   const [maybeGasLimit, setGasLimit] = useSearchState("gasLimit", $state)
   const [maybeGasPrice, setGasPrice] = useSearchState("gasPrice", $state)
@@ -201,6 +198,10 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     setPrice("")
   }, [setPrice])
 
+  const onTargetFocus = useCallback(() => {
+    setStep("target")
+  }, [setStep])
+
   const onNonceClick = useCallback(() => {
     setStep("nonce")
   }, [setStep])
@@ -213,33 +214,24 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     setMode("valued")
   }, [])
 
+  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
+
+  const maybeEnsQueryKey = maybeTarget?.endsWith(".eth")
+    ? maybeTarget
+    : undefined
+
+  const ensTargetQuery = useEnsLookup(maybeEnsQueryKey, mainnet)
+  const maybeEnsTarget = ensTargetQuery.current?.ok().get()
+
   const maybeFinalTarget = useMemo(() => {
-    return Peanut.contracts[chainData.chainId]?.v4 as string | undefined
-  }, [chainData])
-
-  const triedFinalPassword = useMemo(() => Result.runAndDoubleWrapSync(() => {
-    const byte = new Uint8Array(1)
-    const bytes = new Uint8Array(32)
-    const cursor = new Cursor(bytes)
-
-    function isAlphanumeric(byte: number) {
-      if (byte >= 97 /*a*/ && byte <= 122 /*z*/)
-        return true
-      if (byte >= 65 /*A*/ && byte <= 90 /*Z*/)
-        return true
-      if (byte >= 48 /*0*/ && byte <= 57 /*9*/)
-        return true
-      return false
-    }
-
-    while (cursor.remaining) {
-      if (!isAlphanumeric(crypto.getRandomValues(byte)[0]))
-        continue
-      cursor.writeOrThrow(byte)
-    }
-
-    return bytes
-  }), [])
+    if (maybeTarget == null)
+      return undefined
+    if (Address.from(maybeTarget) != null)
+      return maybeTarget
+    if (maybeEnsTarget != null)
+      return maybeEnsTarget
+    return undefined
+  }, [maybeTarget, maybeEnsTarget])
 
   const maybeFinalValue = useMemo(() => {
     try {
@@ -277,27 +269,23 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     return undefined
   }, [maybeCustomNonce, maybePendingNonce])
 
-  const maybeTriedMaybeFinalData = useMemo(() => {
-    if (maybeFinalValue == null)
-      return undefined
+  const [rawDataInput = "", setRawDataInput] = useState<Optional<string>>(maybeData)
 
-    return Result.runAndDoubleWrapSync(() => {
-      const token = "0x0000000000000000000000000000000000000000"
-      const value = maybeFinalValue.value
+  const onDataInputChange = useTextAreaChange(e => {
+    setRawDataInput(e.target.value)
+  }, [])
 
-      const password = triedFinalPassword.unwrap()
-      const hash = Keccak256.get().hashOrThrow(password)
-      const privateKey = Secp256k1.get().PrivateKey.tryImport(hash).unwrap()
-      const publicKey = privateKey.tryGetPublicKey().unwrap().tryExportUncompressed().unwrap()
-      const publicKeyHex = Base16.get().encodeOrThrow(publicKey)
-      const publicKey20 = ZeroHexString.from(publicKeyHex.slice(-40))
+  const dataInput = useDeferredValue(rawDataInput)
 
-      const abi = PeanutAbi.makeDeposit.from(token, 0, value, 0, publicKey20)
-      const hex = Abi.encodeOrThrow(abi)
+  useEffectButNotFirstTime(() => {
+    setData(dataInput)
+  }, [dataInput])
 
-      return hex
-    })
-  }, [maybeFinalValue, triedFinalPassword])
+  const maybeTriedMaybeFinalData = useMemo(() => Result.runAndDoubleWrapSync(() => {
+    return maybeData?.trim().length
+      ? ZeroHexString.from(maybeData.trim())
+      : undefined
+  }), [maybeData])
 
   const onGasModeChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
     setGasMode(e.currentTarget.value)
@@ -914,6 +902,17 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     <Dialog.Title close={close}>
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
+    <div className="h-4" />
+    <SimpleBox>
+      <div className="">
+        Target
+      </div>
+      <div className="w-4" />
+      <SimpleInput key="target"
+        readOnly
+        onFocus={onTargetFocus}
+        value={maybeTarget} />
+    </SimpleBox>
     <div className="h-2" />
     {mode === "valued" &&
       <SimpleBox>
@@ -1032,6 +1031,18 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
         onClick={onNonceClick}>
         Select
       </ShrinkableContrastButtonInInputBox>
+    </SimpleBox>
+    <div className="h-2" />
+    <SimpleBox>
+      <div className="">
+        Data
+      </div>
+      <div className="w-4" />
+      <SimpleTextarea
+        rows={3}
+        value={rawDataInput}
+        onChange={onDataInputChange}
+        placeholder="0x0" />
     </SimpleBox>
     <div className="h-4" />
     <div className="font-medium">

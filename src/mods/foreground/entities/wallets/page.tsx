@@ -12,7 +12,6 @@ import { UUIDProps } from "@/libs/react/props/uuid";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog, Screen } from "@/libs/ui/dialog/dialog";
-import { Menu, Position } from "@/libs/ui2/menu/menu";
 import { Url } from "@/libs/url/url";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
@@ -31,8 +30,7 @@ import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
 import { usePairPrice } from "../tokens/pairs/data";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
-import { WalletDirectSendScreen } from "./actions/send/direct";
-import { WalletPeanutSendScreen } from "./actions/send/peanut";
+import { WalletSendScreen } from "./actions/send";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
 import { useEthereumContext, useEthereumContext2 } from "./data";
@@ -99,7 +97,7 @@ function WalletDataPage() {
 
   useEnsReverse(wallet.address, mainnet)
 
-  const isDirectSendOpened = subpath.url.pathname === "/send"
+  const isSendOpened = subpath.url.pathname === "/send"
 
   const onDirectSendClose = useCallback(() => {
     subpath.go(`/`)
@@ -108,12 +106,6 @@ function WalletDataPage() {
   const onSendClick = useCallback(() => {
     subpath.go(`/send?step=target&chain=${mainnet?.chain.chainId}`)
   }, [subpath, mainnet])
-
-  const isPeanutSendOpened = subpath.url.pathname === "/send/peanut"
-
-  const onPeanutSendClose = useCallback(() => {
-    subpath.go(`/`)
-  }, [subpath])
 
   const receiveDialog = useBooleanHandle(false)
 
@@ -289,15 +281,9 @@ function WalletDataPage() {
     <PathContext.Provider value={subpath}>
       {wallet.type !== "readonly" &&
         <Screen
-          opened={isDirectSendOpened}
+          opened={isSendOpened}
           close={onDirectSendClose}>
-          <WalletDirectSendScreen />
-        </Screen>}
-      {wallet.type !== "readonly" &&
-        <Screen
-          opened={isPeanutSendOpened}
-          close={onPeanutSendClose}>
-          <WalletPeanutSendScreen />
+          <WalletSendScreen />
         </Screen>}
     </PathContext.Provider>
     <Screen dark
@@ -389,27 +375,9 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
-  const [position, setPosition] = useState<Position>()
-
-  const close = useCallback(() => {
-    setPosition(undefined)
-  }, [])
-
-  const onClick = useMouse(e => {
-    const x = e.clientX
-    const y = e.clientY
-    setPosition({ x, y })
-  }, [])
-
-  const onDirectSendClick = useCallback(() => {
+  const onClick = useCallback(() => {
     subpath.go(`/send?step=target&chain=${context?.chain.chainId}`)
-    close()
-  }, [subpath, context, close])
-
-  const onPeanutSendClick = useCallback(() => {
-    subpath.go(`/send/peanut?step=value&chain=${context?.chain.chainId}`)
-    close()
-  }, [subpath, context, close])
+  }, [subpath, context])
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
@@ -432,20 +400,6 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
         index={i}
         address={address}
         ok={onPrice} />)}
-    <Menu
-      position={position}
-      close={close}>
-      <Menu.SimpleButton
-        onClick={onDirectSendClick}>
-        <Outline.PaperAirplaneIcon className="size-5" />
-        Send
-      </Menu.SimpleButton>
-      <Menu.SimpleButton
-        onClick={onPeanutSendClick}>
-        <Outline.LinkIcon className="size-5" />
-        Send with link
-      </Menu.SimpleButton>
-    </Menu>
     {!edit &&
       <ClickableTokenRow
         ok={onClick}

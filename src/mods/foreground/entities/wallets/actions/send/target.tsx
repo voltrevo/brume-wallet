@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
@@ -7,10 +8,10 @@ import { usePathState, useSearchState } from "@/mods/foreground/router/path/cont
 import { Address } from "@hazae41/cubane";
 import { Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState } from ".";
-import { useEnsLookup } from "../../../../names/data";
-import { useWalletDataContext } from "../../../context";
-import { useEthereumContext } from "../../../data";
+import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableContrastButton } from ".";
+import { useEnsLookup } from "../../../names/data";
+import { useWalletDataContext } from "../../context";
+import { useEthereumContext } from "../../data";
 
 export function WalletSendScreenTarget(props: {}) {
   const wallet = useWalletDataContext().unwrap()
@@ -19,6 +20,7 @@ export function WalletSendScreenTarget(props: {}) {
   const $state = usePathState<UrlState>()
   const [step, setStep] = useSearchState("step", $state)
   const [target, setTarget] = useSearchState("target", $state)
+  const [type, setType] = useSearchState("type", $state)
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
@@ -31,6 +33,7 @@ export function WalletSendScreenTarget(props: {}) {
   const targetInput = useDeferredValue(rawTargetInput)
 
   useEffectButNotFirstTime(() => {
+    setType(undefined)
     setTarget(targetInput)
   }, [targetInput])
 
@@ -63,9 +66,10 @@ export function WalletSendScreenTarget(props: {}) {
     if (Address.from(input) == null && !input.endsWith(".eth"))
       return
 
+    setType(undefined)
     setTarget(input)
     setStep("value")
-  }, [setStep, setTarget])
+  }, [setType, setStep, setTarget])
 
   const [mode, setMode] = useState<"recents" | "contacts">("recents")
 
@@ -77,10 +81,17 @@ export function WalletSendScreenTarget(props: {}) {
     setMode("contacts")
   }, [])
 
+  const onPeanutClick = useCallback(() => {
+    setType("peanut")
+    setTarget(undefined)
+    setStep("value")
+  }, [setType, setStep, setTarget])
+
   const onBrumeClick = useCallback(() => {
+    setType(undefined)
     setTarget("brume.eth")
     setStep("value")
-  }, [setStep, setTarget])
+  }, [setType, setStep, setTarget])
 
   return <>
     <Dialog.Title close={close}>
@@ -116,6 +127,14 @@ export function WalletSendScreenTarget(props: {}) {
         </ShrinkableContrastButtonInInputBox>
       </div>
     </SimpleBox>
+    <div className="h-2" />
+    <div className="flex items-center">
+      <WideShrinkableContrastButton
+        onClick={onPeanutClick}>
+        <Outline.LinkIcon className="size-4" />
+        Create Peanut link
+      </WideShrinkableContrastButton>
+    </div>
     {maybeEns != null && <>
       <div className="h-2" />
       <div className="po-md flex items-center bg-contrast rounded-xl cursor-pointer"

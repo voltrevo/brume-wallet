@@ -7,9 +7,9 @@ import { usePathState, useSearchState } from "@/mods/foreground/router/path/cont
 import { Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
 import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState } from ".";
-import { useNonce } from "../../../../unknown/data";
-import { useWalletDataContext } from "../../../context";
-import { useEthereumContext } from "../../../data";
+import { useNonce } from "../../../unknown/data";
+import { useWalletDataContext } from "../../context";
+import { useEthereumContext } from "../../data";
 
 export function WalletSendScreenNonce(props: {}) {
   const wallet = useWalletDataContext().unwrap()
