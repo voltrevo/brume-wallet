@@ -10,6 +10,7 @@ import { Events, useKeyboardEscape, useMouse } from "../../react/events"
 import { ChildrenProps } from "../../react/props/children"
 import { CloseProps } from "../../react/props/close"
 import { Button } from "../button"
+import { Portal } from "../portal/portal"
 
 export interface OpenableHandle {
   readonly opened: boolean,
@@ -18,7 +19,6 @@ export interface OpenableHandle {
 
 export function useOpenableHandle(props: OpenedProps & CloseProps) {
   const { opened, close } = props
-
   return useObjectMemo({ opened, close })
 }
 
@@ -105,32 +105,34 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
   if (!displayed)
     return null
 
-  return <DialogContext.Provider value={handle}>
-    <dialog className=""
-      ref={setDialog}
-      onAnimationEnd={onAnimationEnd}>
-      <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
-        aria-hidden="true"
-        role="backdrop" />
-      <div className={`fixed inset-0 flex flex-col md:p-safe overflow-y-scroll ${dark ? "dark" : ""} ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
-        onMouseDown={onClickOutside}
-        onClick={Events.keep}>
-        <div className="hidden md:block h-4" />
-        <div className="grow flex flex-col md:p-2">
-          <aside className={`grow flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default p-safe md:p-0 md:rounded-2xl`}
-            role="dialog"
-            aria-modal
-            onMouseDown={Events.keep}
-            onKeyDown={onEscape}>
-            <div className="grow flex flex-col p-4">
-              {children}
-            </div>
-          </aside>
+  return <Portal type="div">
+    <DialogContext.Provider value={handle}>
+      <dialog className=""
+        ref={setDialog}
+        onAnimationEnd={onAnimationEnd}>
+        <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
+          aria-hidden="true"
+          role="backdrop" />
+        <div className={`fixed inset-0 flex flex-col md:p-safe overflow-y-scroll ${dark ? "dark" : ""} ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+          onMouseDown={onClickOutside}
+          onClick={Events.keep}>
+          <div className="hidden md:block h-4" />
+          <div className="grow flex flex-col md:p-2">
+            <aside className={`grow flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default p-safe md:p-0 md:rounded-2xl`}
+              role="dialog"
+              aria-modal
+              onMouseDown={Events.keep}
+              onKeyDown={onEscape}>
+              <div className="grow flex flex-col p-4">
+                {children}
+              </div>
+            </aside>
+          </div>
+          <div className="hidden md:block h-4" />
         </div>
-        <div className="hidden md:block h-4" />
-      </div>
-    </dialog>
-  </DialogContext.Provider>
+      </dialog>
+    </DialogContext.Provider>
+  </Portal>
 }
 
 export function Dialog(props: ChildrenProps & OpenedProps & CloseProps & DarkProps) {
@@ -178,32 +180,34 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
   if (!displayed)
     return null
 
-  return <DialogContext.Provider value={handle}>
-    <dialog className=""
-      ref={setDialog}
-      onAnimationEnd={onAnimationEnd}>
-      <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
-        aria-hidden="true"
-        role="backdrop" />
-      <div className={`fixed inset-0 flex flex-col p-safe overflow-y-scroll ${dark ? "dark" : ""} ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
-        onMouseDown={onClickOutside}
-        onClick={Events.keep}>
-        <div className="grow" />
-        <div className="flex flex-col p-2">
-          <aside className={`flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default rounded-2xl`}
-            role="dialog"
-            aria-modal
-            onMouseDown={Events.keep}
-            onKeyDown={onEscape}>
-            <div className="grow flex flex-col p-4">
-              {children}
-            </div>
-          </aside>
+  return <Portal type="div">
+    <DialogContext.Provider value={handle}>
+      <dialog className=""
+        ref={setDialog}
+        onAnimationEnd={onAnimationEnd}>
+        <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
+          aria-hidden="true"
+          role="backdrop" />
+        <div className={`fixed inset-0 flex flex-col p-safe overflow-y-scroll ${dark ? "dark" : ""} ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+          onMouseDown={onClickOutside}
+          onClick={Events.keep}>
+          <div className="grow" />
+          <div className="flex flex-col p-2">
+            <aside className={`flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default rounded-2xl`}
+              role="dialog"
+              aria-modal
+              onMouseDown={Events.keep}
+              onKeyDown={onEscape}>
+              <div className="grow flex flex-col p-4">
+                {children}
+              </div>
+            </aside>
+          </div>
+          <div className="hidden md:block grow" />
         </div>
-        <div className="hidden md:block grow" />
-      </div>
-    </dialog>
-  </DialogContext.Provider>
+      </dialog>
+    </DialogContext.Provider>
+  </Portal>
 }
 
 export namespace Dialog {
@@ -271,18 +275,18 @@ export namespace Dialog {
         Hello world
         <div className="h-2" />
         <div className="flex items-center gap-2">
-          <Button.Base className="w-full po-md"
+          <button className="w-full po-md"
             onClick={open.disable}>
             <div className={`${Button.Shrinker.className}`}>
               Click me
             </div>
-          </Button.Base>
-          <Button.Opposite className="w-full po-md"
+          </button>
+          <button className="w-full po-md"
             onClick={open.disable}>
             <div className={`${Button.Shrinker.className}`}>
               Click me
             </div>
-          </Button.Opposite>
+          </button>
         </div>
       </Dialog>
       <button onClick={open.enable}>

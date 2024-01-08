@@ -3,8 +3,8 @@ import { OptionalBackProps } from "@/libs/react/props/back";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { TitleProps } from "@/libs/react/props/title";
 import { Button } from "@/libs/ui/button";
-import { UserAvatar } from "../../entities/users/all/page";
-import { useUserContext } from "../../entities/users/context";
+import { UserAvatar } from "../../../mods/foreground/entities/users/all/page";
+import { useUserContext } from "../../../mods/foreground/entities/users/context";
 
 export function GlobalPageHeader(props: TitleProps & ChildrenProps & OptionalBackProps) {
   const { title, children, back } = props

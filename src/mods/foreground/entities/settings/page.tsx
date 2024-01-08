@@ -2,8 +2,8 @@ import { useInputChange } from "@/libs/react/events";
 import { TextAnchor } from "@/libs/ui/anchor/anchor";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
-import { PageBody, UserPageHeader } from "../../components/page/header";
-import { Page } from "../../components/page/page";
+import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
+import { Page } from "../../../../libs/ui2/page/page";
 import { useLogs } from "./data";
 
 export function SettingsPage() {

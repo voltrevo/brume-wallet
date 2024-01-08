@@ -5,13 +5,14 @@ import { ChainData, chainByChainId, pairByAddress, tokenByAddress } from "@/libs
 import { Mutators } from "@/libs/glacier/mutators";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
-import { useInputChange } from "@/libs/react/events";
+import { useInputChange, useMouse } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog, Screen } from "@/libs/ui/dialog/dialog";
+import { Menu, Position } from "@/libs/ui2/menu/menu";
 import { Url } from "@/libs/url/url";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
@@ -20,10 +21,10 @@ import { TokenSettings, TokenSettingsData } from "@/mods/background/service_work
 import { Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
-import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Fragment, MouseEvent, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
+import { Page } from "../../../../libs/ui2/page/page";
 import { useBackgroundContext } from "../../background/context";
-import { PageBody, UserPageHeader } from "../../components/page/header";
-import { Page } from "../../components/page/page";
 import { PathContext, Paths, useSubpath } from "../../router/path/context";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
@@ -388,13 +389,27 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
+  const [position, setPosition] = useState<Position>()
+
+  const close = useCallback(() => {
+    setPosition(undefined)
+  }, [])
+
+  const onClick = useMouse(e => {
+    const x = e.clientX
+    const y = e.clientY
+    setPosition({ x, y })
+  }, [])
+
   const onDirectSendClick = useCallback(() => {
     subpath.go(`/send?step=target&chain=${context?.chain.chainId}`)
-  }, [subpath, context])
+    close()
+  }, [subpath, context, close])
 
   const onPeanutSendClick = useCallback(() => {
     subpath.go(`/send/peanut?step=value&chain=${context?.chain.chainId}`)
-  }, [subpath, context])
+    close()
+  }, [subpath, context, close])
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
@@ -417,9 +432,23 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
         index={i}
         address={address}
         ok={onPrice} />)}
+    <Menu
+      position={position}
+      close={close}>
+      <Menu.SimpleButton
+        onClick={onDirectSendClick}>
+        <Outline.PaperAirplaneIcon className="size-5" />
+        Send
+      </Menu.SimpleButton>
+      <Menu.SimpleButton
+        onClick={onPeanutSendClick}>
+        <Outline.LinkIcon className="size-5" />
+        Send with link
+      </Menu.SimpleButton>
+    </Menu>
     {!edit &&
       <ClickableTokenRow
-        ok={onDirectSendClick}
+        ok={onClick}
         token={token}
         chain={chain}
         balanceDisplay={balanceDisplay}
@@ -500,11 +529,11 @@ export function PriceResolver(props: { index: number } & { address: string } & O
   return null
 }
 
-function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay: string } & OkProps<void>) {
+function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay: string } & OkProps<MouseEvent<HTMLElement>>) {
   const { ok, token, chain, balanceDisplay, balanceUsdDisplay } = props
 
-  const onClick = useCallback(() => {
-    ok()
+  const onClick = useMouse(e => {
+    ok(e)
   }, [ok])
 
   const tokenId = token.type === "native"

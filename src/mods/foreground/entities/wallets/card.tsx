@@ -28,7 +28,9 @@ export function WalletDataCard(props: { index?: number }) {
 
   const [color, color2] = Gradients.get(wallet.color)
 
-  const onClickEllipsis = useMouseCancel(() => alert("This feature is not implemented yet"), [])
+  const onClickEllipsis = useMouseCancel(e => {
+    // TODO
+  }, [])
 
   const address = useMemo(() => {
     return Address.from(wallet.address)!

@@ -1,7 +1,7 @@
 import { Outline } from "@/libs/icons/icons"
 import { Button } from "@/libs/ui/button"
-import { PageBody, UserPageHeader } from "@/mods/foreground/components/page/header"
-import { Page } from "@/mods/foreground/components/page/page"
+import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
+import { Page } from "@/libs/ui2/page/page"
 import { useCallback } from "react"
 import { useSnaps } from "../data"
 

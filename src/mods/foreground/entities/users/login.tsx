@@ -6,8 +6,8 @@ import { Button } from "@/libs/ui/button";
 import { Input } from "@/libs/ui/input";
 import { User, UserProps } from "@/mods/background/service_worker/entities/users/data";
 import { useCallback, useDeferredValue, useRef, useState } from "react";
+import { Page } from "../../../../libs/ui2/page/page";
 import { useBackgroundContext } from "../../background/context";
-import { Page } from "../../components/page/page";
 import { UserAvatar } from "./all/page";
 import { useUser } from "./data";
 
