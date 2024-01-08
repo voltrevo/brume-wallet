@@ -66,6 +66,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
 
       const privateKeyBytes = Base16.get().tryPadStartAndDecode(zeroHexKey.slice(2)).throw(t).copyAndDispose()
 
+      // TODO: use adapter
       const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
       // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
 
