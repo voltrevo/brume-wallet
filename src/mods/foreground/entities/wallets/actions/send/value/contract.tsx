@@ -12,6 +12,7 @@ import { usePathState, useSearchState } from "@/mods/foreground/router/path/cont
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
+import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "..";
@@ -301,18 +302,21 @@ export function WalletSendScreenContractValue(props: {}) {
     return undefined
   }, [maybeCustomNonce, maybePendingNonce])
 
-  const maybeFinalData = useMemo(() => {
-    try {
-      if (maybeFinalTarget == null)
-        return undefined
-      if (maybeFinalValue == null)
-        return undefined
+  const maybeTriedMaybeFinalData = useMemo(() => {
+    if (maybeFinalTarget == null)
+      return undefined
+    if (maybeFinalValue == null)
+      return undefined
 
+    return Result.runAndDoubleWrapSync(() => {
       const address = Address.fromOrThrow(maybeFinalTarget)
       const value = maybeFinalValue.value
 
-      return Abi.encodeOrThrow(TokenAbi.transfer.from(address, value))
-    } catch { }
+      const abi = TokenAbi.transfer.from(address, value)
+      const hex = Abi.encodeOrThrow(abi)
+
+      return hex
+    })
   }, [maybeFinalTarget, maybeFinalValue])
 
   const onGasModeChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
@@ -556,7 +560,7 @@ export function WalletSendScreenContractValue(props: {}) {
   const maybeFinalMaxFeePerGas = useMode(maybeNormalMaxFeePerGas, maybeFastMaxFeePerGas, maybeUrgentMaxFeePerGas, maybeCustomMaxFeePerGas)
   const maybeFinalMaxPriorityFeePerGas = useMode(maybeNormalMaxPriorityFeePerGas, maybeFastMaxPriorityFeePerGas, maybeUrgentMaxPriorityFeePerGas, maybeCustomMaxPriorityFeePerGas)
 
-  const maybeLegacyGasLimitKey = useMemo<Nullable<RpcRequestPreinit<[unknown, unknown]>>>(() => {
+  const maybeTriedLegacyGasLimitKey = useMemo(() => {
     if (maybeIsEip1559 !== false)
       return undefined
     if (maybeFinalTarget == null)
@@ -565,10 +569,12 @@ export function WalletSendScreenContractValue(props: {}) {
       return undefined
     if (maybeFinalGasPrice == null)
       return undefined
-    if (maybeFinalData == null)
+    if (maybeTriedMaybeFinalData == null)
       return undefined
+    if (maybeTriedMaybeFinalData.isErr())
+      return maybeTriedMaybeFinalData
 
-    return {
+    const key = {
       method: "eth_estimateGas",
       params: [{
         chainId: ZeroHexString.from(chainData.chainId),
@@ -576,12 +582,14 @@ export function WalletSendScreenContractValue(props: {}) {
         to: tokenData.address,
         gasPrice: ZeroHexString.from(maybeFinalGasPrice),
         nonce: ZeroHexString.from(maybeFinalNonce),
-        data: maybeFinalData
+        data: maybeTriedMaybeFinalData.get()
       }, "latest"]
-    }
-  }, [wallet, chainData, tokenData, maybeIsEip1559, maybeFinalTarget, maybeFinalNonce, maybeFinalData, maybeFinalGasPrice])
+    } satisfies RpcRequestPreinit<[unknown, unknown]>
 
-  const maybeEip1559GasLimitKey = useMemo<Nullable<RpcRequestPreinit<[unknown, unknown]>>>(() => {
+    return new Ok(key)
+  }, [wallet, chainData, tokenData, maybeIsEip1559, maybeFinalTarget, maybeFinalNonce, maybeTriedMaybeFinalData, maybeFinalGasPrice])
+
+  const maybeTriedEip1559GasLimitKey = useMemo(() => {
     if (maybeIsEip1559 !== true)
       return undefined
     if (maybeFinalTarget == null)
@@ -592,10 +600,12 @@ export function WalletSendScreenContractValue(props: {}) {
       return undefined
     if (maybeFinalMaxPriorityFeePerGas == null)
       return undefined
-    if (maybeFinalData == null)
+    if (maybeTriedMaybeFinalData == null)
       return undefined
+    if (maybeTriedMaybeFinalData.isErr())
+      return maybeTriedMaybeFinalData
 
-    return {
+    const key = {
       method: "eth_estimateGas",
       params: [{
         chainId: ZeroHexString.from(chainData.chainId),
@@ -604,10 +614,15 @@ export function WalletSendScreenContractValue(props: {}) {
         maxFeePerGas: ZeroHexString.from(maybeFinalMaxFeePerGas),
         maxPriorityFeePerGas: ZeroHexString.from(maybeFinalMaxPriorityFeePerGas),
         nonce: ZeroHexString.from(maybeFinalNonce),
-        data: maybeFinalData
+        data: maybeTriedMaybeFinalData.get()
       }, "latest"]
-    }
-  }, [wallet, chainData, tokenData, maybeIsEip1559, maybeFinalTarget, maybeFinalNonce, maybeFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
+    } satisfies RpcRequestPreinit<[unknown, unknown]>
+
+    return new Ok(key)
+  }, [wallet, chainData, tokenData, maybeIsEip1559, maybeFinalTarget, maybeFinalNonce, maybeTriedMaybeFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
+
+  const maybeLegacyGasLimitKey = maybeTriedLegacyGasLimitKey?.ok().get()
+  const maybeEip1559GasLimitKey = maybeTriedEip1559GasLimitKey?.ok().get()
 
   const legacyGasLimitQuery = useEstimateGas(maybeLegacyGasLimitKey, context)
   const maybeLegacyGasLimit = legacyGasLimitQuery.current?.ok().get()
@@ -809,8 +824,8 @@ export function WalletSendScreenContractValue(props: {}) {
         return new UIError(`Could not parse or fetch nonce`)
       }).unwrap()
 
-      const data = Option.wrap(maybeFinalData).okOrElseSync(() => {
-        return new UIError(`Could not encode data`)
+      const data = Option.wrap(maybeTriedMaybeFinalData).andThenSync(x => x.ok()).okOrElseSync(() => {
+        return new UIError(`Could not parse or encode data`)
       }).unwrap()
 
       const gasLimit = Option.wrap(maybeFinalGasLimit).okOrElseSync(() => {
@@ -888,7 +903,7 @@ export function WalletSendScreenContractValue(props: {}) {
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, chainData, tokenData, maybeFinalTarget, maybeFinalNonce, maybeFinalData, maybeIsEip1559, maybeFinalGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+  }, [wallet, context, chainData, tokenData, maybeFinalTarget, maybeFinalNonce, maybeTriedMaybeFinalData, maybeIsEip1559, maybeFinalGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
 
   const onSignClick = useAsyncUniqueCallback(async () => {
     return await signOrSend("sign")
@@ -1221,6 +1236,18 @@ export function WalletSendScreenContractValue(props: {}) {
             </a>
           </div>
         </div>
+      </div>
+      <div className="h-2" />
+    </>}
+    {maybeTriedEip1559GasLimitKey?.isErr() && <>
+      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+        {maybeTriedEip1559GasLimitKey.get()?.message}
+      </div>
+      <div className="h-2" />
+    </>}
+    {maybeTriedLegacyGasLimitKey?.isErr() && <>
+      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+        {maybeTriedLegacyGasLimitKey.get()?.message}
       </div>
       <div className="h-2" />
     </>}
