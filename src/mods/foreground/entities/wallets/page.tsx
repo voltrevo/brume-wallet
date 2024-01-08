@@ -30,7 +30,8 @@ import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
 import { usePairPrice } from "../tokens/pairs/data";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
-import { WalletSendScreen } from "./actions/send";
+import { WalletDirectSendScreen } from "./actions/send/direct";
+import { WalletPeanutSendScreen } from "./actions/send/peanut";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
 import { useEthereumContext, useEthereumContext2 } from "./data";
@@ -97,15 +98,21 @@ function WalletDataPage() {
 
   useEnsReverse(wallet.address, mainnet)
 
-  const send = subpath.url.pathname === "/send"
+  const isDirectSendOpened = subpath.url.pathname === "/send"
 
-  const onSendClose = useCallback(() => {
+  const onDirectSendClose = useCallback(() => {
     subpath.go(`/`)
   }, [subpath])
 
   const onSendClick = useCallback(() => {
     subpath.go(`/send?step=target&chain=${mainnet?.chain.chainId}`)
   }, [subpath, mainnet])
+
+  const isPeanutSendOpened = subpath.url.pathname === "/send/peanut"
+
+  const onPeanutSendClose = useCallback(() => {
+    subpath.go(`/`)
+  }, [subpath])
 
   const receiveDialog = useBooleanHandle(false)
 
@@ -281,9 +288,15 @@ function WalletDataPage() {
     <PathContext.Provider value={subpath}>
       {wallet.type !== "readonly" &&
         <Screen
-          opened={send}
-          close={onSendClose}>
-          <WalletSendScreen />
+          opened={isDirectSendOpened}
+          close={onDirectSendClose}>
+          <WalletDirectSendScreen />
+        </Screen>}
+      {wallet.type !== "readonly" &&
+        <Screen
+          opened={isPeanutSendOpened}
+          close={onPeanutSendClose}>
+          <WalletPeanutSendScreen />
         </Screen>}
     </PathContext.Provider>
     <Screen dark
@@ -375,8 +388,12 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
-  const onSendClick = useCallback(() => {
+  const onDirectSendClick = useCallback(() => {
     subpath.go(`/send?step=target&chain=${context?.chain.chainId}`)
+  }, [subpath, context])
+
+  const onPeanutSendClick = useCallback(() => {
+    subpath.go(`/send/peanut?step=value&chain=${context?.chain.chainId}`)
   }, [subpath, context])
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
@@ -402,7 +419,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
         ok={onPrice} />)}
     {!edit &&
       <ClickableTokenRow
-        ok={onSendClick}
+        ok={onDirectSendClick}
         token={token}
         chain={chain}
         balanceDisplay={balanceDisplay}

@@ -23,7 +23,7 @@ export type UrlState = {
   readonly maxPriorityFeePerGas?: string
 }
 
-export function WalletSendScreen(props: {}) {
+export function WalletDirectSendScreen(props: {}) {
   const $path = usePathState<UrlState>()
   const [step] = useSearchState("step", $path)
   const [token] = useSearchState("token", $path)
@@ -36,7 +36,7 @@ export function WalletSendScreen(props: {}) {
     return <WalletSendScreenContractValue />
   if (step === "nonce")
     return <WalletSendScreenNonce />
-  return <WalletSendScreenTarget />
+  return null
 }
 
 export function SimpleBox(props: ChildrenProps) {

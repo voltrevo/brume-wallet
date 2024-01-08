@@ -22,6 +22,7 @@ import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Keccak256 } from "@hazae41/keccak256"
 import { Ripemd160 } from "@hazae41/ripemd160"
+import { Secp256k1 } from "@hazae41/secp256k1"
 import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
 import type { AppProps } from 'next/app'
@@ -78,6 +79,10 @@ async function initBerith() {
   X25519.set(await X25519.fromSafeOrBerith())
 }
 
+async function initEligos() {
+  Secp256k1.set(await Secp256k1.fromEligos())
+}
+
 async function initMorax() {
   Keccak256.set(await Keccak256.fromMorax())
   Sha1.set(await Sha1.fromMorax())
@@ -98,6 +103,7 @@ async function initZepar() {
 export function Initializer(props: ChildrenProps) {
   useEffect(() => {
     initBerith()
+    initEligos()
     initMorax()
     initAlocer()
     initZepar()
