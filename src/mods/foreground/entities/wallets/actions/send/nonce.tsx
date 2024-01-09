@@ -4,7 +4,7 @@ import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
-import { Optional } from "@hazae41/option";
+import { Option, Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
 import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState } from ".";
 import { useNonce } from "../../../unknown/data";
@@ -16,17 +16,20 @@ export function WalletSendScreenNonce(props: {}) {
   const { close } = useDialogContext().unwrap()
 
   const $state = usePathState<UrlState>()
-  const [chain, setChain] = useSearchState("chain", $state)
-  const [step, setStep] = useSearchState("step", $state)
-  const [nonce, setNonce] = useSearchState("nonce", $state)
+  const [maybeStep, setStep] = useSearchState("step", $state)
+  const [maybeChain, setChain] = useSearchState("chain", $state)
+  const [maybeNonce, setNonce] = useSearchState("nonce", $state)
 
+  const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
+  const tokenData = chainData.token
+
   const context = useEthereumContext(wallet.uuid, chainData)
 
   const pendingNonceQuery = useNonce(wallet.address, context)
   const maybePendingNonce = pendingNonceQuery.current?.ok().get()
 
-  const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(nonce)
+  const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(maybeNonce)
 
   const onInputChange = useInputChange(e => {
     setRawNonceInput(e.target.value)
@@ -57,7 +60,7 @@ export function WalletSendScreenNonce(props: {}) {
 
   return <>
     <Dialog.Title close={close}>
-      Send
+      Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
     <SimpleBox>

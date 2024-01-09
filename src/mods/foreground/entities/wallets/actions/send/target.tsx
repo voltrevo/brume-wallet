@@ -6,7 +6,7 @@ import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Address } from "@hazae41/cubane";
-import { Optional } from "@hazae41/option";
+import { Option, Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
 import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableContrastButton } from ".";
 import { useEnsLookup } from "../../../names/data";
@@ -18,13 +18,18 @@ export function WalletSendScreenTarget(props: {}) {
   const { close } = useDialogContext().unwrap()
 
   const $state = usePathState<UrlState>()
-  const [step, setStep] = useSearchState("step", $state)
-  const [target, setTarget] = useSearchState("target", $state)
-  const [type, setType] = useSearchState("type", $state)
+  const [maybeStep, setStep] = useSearchState("step", $state)
+  const [maybeChain, setChain] = useSearchState("chain", $state)
+  const [maybeTarget, setTarget] = useSearchState("target", $state)
+  const [maybeType, setType] = useSearchState("type", $state)
+
+  const chain = Option.unwrap(maybeChain)
+  const chainData = chainByChainId[Number(chain)]
+  const tokenData = chainData.token
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
-  const [rawTargetInput = "", setRawTargetInput] = useState<Optional<string>>(target)
+  const [rawTargetInput = "", setRawTargetInput] = useState<Optional<string>>(maybeTarget)
 
   const onTargetInputChange = useInputChange(e => {
     setRawTargetInput(e.target.value)
@@ -37,7 +42,7 @@ export function WalletSendScreenTarget(props: {}) {
     setTarget(targetInput)
   }, [targetInput])
 
-  const maybeEnsInput = target?.endsWith(".eth")
+  const maybeEnsInput = maybeTarget?.endsWith(".eth")
     ? targetInput
     : undefined
 
@@ -45,12 +50,12 @@ export function WalletSendScreenTarget(props: {}) {
   const maybeEns = ensQuery.current?.ok().get()
 
   const onSubmit = useCallback(async () => {
-    if (target == null)
+    if (maybeTarget == null)
       return
-    if (Address.from(target) == null && !target.endsWith(".eth"))
+    if (Address.from(maybeTarget) == null && !maybeTarget.endsWith(".eth"))
       return
     setStep("value")
-  }, [target, setStep])
+  }, [maybeTarget, setStep])
 
   const onEnter = useKeyboardEnter(() => {
     onSubmit()
@@ -95,7 +100,7 @@ export function WalletSendScreenTarget(props: {}) {
 
   return <>
     <Dialog.Title close={close}>
-      Send
+      Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
     <SimpleBox>
@@ -132,7 +137,7 @@ export function WalletSendScreenTarget(props: {}) {
       <WideShrinkableContrastButton
         onClick={onPeanutClick}>
         <Outline.LinkIcon className="size-4" />
-        Create Peanut link
+        Create Peanut link (beta)
       </WideShrinkableContrastButton>
     </div>
     {maybeEns != null && <>
