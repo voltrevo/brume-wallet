@@ -8,6 +8,8 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange } from "@/libs/react/events";
 import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Loading } from "@/libs/ui/loading/loading";
+import { useTransactionReceipt } from "@/mods/foreground/entities/transactions/data";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
@@ -913,6 +915,9 @@ export function WalletSendScreenContractValue(props: {}) {
     return await signOrSend("send")
   }, [signOrSend])
 
+  const receiptQuery = useTransactionReceipt(txHash, context)
+  const maybeReceipt = receiptQuery.current?.ok().get()
+
   return <>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}
@@ -1201,15 +1206,51 @@ export function WalletSendScreenContractValue(props: {}) {
       </div>
       <div className="h-2" />
     </>}
-    {txHash != null && <>
+    {txHash != null && maybeReceipt == null && <>
       <div className="po-md flex items-center bg-contrast rounded-xl">
         <div className="flex flex-col truncate">
           <div className="flex items-center">
-            {/* <Loading className="size-4 shrink-0" />
-            <div className="w-2" /> */}
+            <Loading className="size-4 shrink-0" />
+            <div className="w-2" />
             <div className="font-medium">
               Transaction sent
-              {/* Pending transaction #{finalNonceDisplay} */}
+            </div>
+          </div>
+          <div className="text-contrast truncate">
+            {txHash}
+          </div>
+          <div className="h-2" />
+          <div className="flex items-center gap-1">
+            <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+              onClick={onTxHashCopy.run}>
+              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+                Copy
+                {onTxHashCopy.current
+                  ? <Outline.CheckIcon className="size-4" />
+                  : <Outline.ClipboardIcon className="size-4" />}
+              </div>
+            </button>
+            <a className="group px-2 bg-contrast rounded-full"
+              target="_blank" rel="noreferrer"
+              href={`${chainData.etherscan}/tx/${txHash}`}>
+              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+                Open
+                <Outline.ArrowTopRightOnSquareIcon className="size-4" />
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div className="h-2" />
+    </>}
+    {txHash != null && maybeReceipt != null && <>
+      <div className="po-md flex items-center bg-contrast rounded-xl">
+        <div className="flex flex-col truncate">
+          <div className="flex items-center">
+            <Outline.CheckIcon className="size-4 shrink-0" />
+            <div className="w-2" />
+            <div className="font-medium">
+              Transaction confirmed
             </div>
           </div>
           <div className="text-contrast truncate">
