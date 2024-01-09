@@ -5,6 +5,7 @@ import { usePathState, useSearchState } from "@/mods/foreground/router/path/cont
 import { WalletSendScreenContractValue } from "./direct/contract";
 import { WalletSendScreenNativeValue } from "./direct/native";
 import { WalletSendScreenNonce } from "./nonce";
+import { WalletPeanutSendScreenContractValue } from "./peanut/contract";
 import { WalletPeanutSendScreenNativeValue } from "./peanut/native";
 import { WalletSendScreenTarget } from "./target";
 
@@ -37,8 +38,10 @@ export function WalletSendScreen(props: {}) {
     return <WalletSendScreenNativeValue />
   if (step === "value" && token == null && type == "peanut")
     return <WalletPeanutSendScreenNativeValue />
-  if (step === "value" && token != null)
+  if (step === "value" && token != null && type == null)
     return <WalletSendScreenContractValue />
+  if (step === "value" && token != null && type == "peanut")
+    return <WalletPeanutSendScreenContractValue />
   if (step === "nonce")
     return <WalletSendScreenNonce />
   return null

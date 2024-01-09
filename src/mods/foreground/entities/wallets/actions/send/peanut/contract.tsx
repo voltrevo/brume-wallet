@@ -2,7 +2,7 @@ import { PeanutAbi } from "@/libs/abi/peanut.abi";
 import { BigIntToHex } from "@/libs/bigints/bigints";
 import { useCopy } from "@/libs/copy/copy";
 import { Errors, UIError } from "@/libs/errors/errors";
-import { chainByChainId } from "@/libs/ethereum/mods/chain";
+import { chainByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { Peanut } from "@/libs/peanut";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -25,19 +25,20 @@ import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "..";
 import { useBlockByNumber } from "../../../../blocks/data";
-import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/data";
+import { useNativeBalance, useNativePricedBalance, useToken } from "../../../../tokens/data";
 import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../../unknown/data";
 import { useWalletDataContext } from "../../../context";
 import { EthereumWalletInstance, useEthereumContext2 } from "../../../data";
 import { PriceResolver } from "../../../page";
 
-export function WalletPeanutSendScreenNativeValue(props: {}) {
+export function WalletPeanutSendScreenContractValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const { close } = useDialogContext().unwrap()
 
   const $state = usePathState<UrlState>()
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
+  const [maybeToken, setToken] = useSearchState("token", $state)
   const [maybeValued, setValued] = useSearchState("valued", $state)
   const [maybePriced, setPriced] = useSearchState("priced", $state)
   const [maybeNonce, setNonce] = useSearchState("nonce", $state)
@@ -51,7 +52,13 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
 
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
-  const tokenData = chainData.token
+
+  const token = Option.unwrap(maybeToken)
+  const tokenQuery = useToken(chainData.chainId, token)
+
+  const maybeTokenData = Option.wrap(tokenQuery.current?.get())
+  const maybeTokenDef = Option.wrap(tokenByAddress[token])
+  const tokenData = maybeTokenData.or(maybeTokenDef).unwrap()
 
   const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
 
@@ -64,8 +71,23 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     return new Array(tokenData.pairs.length)
   })
 
-  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
+  const [chainPrices, setChainPrices] = useState(() => {
+    if (chainData.token.pairs == null)
+      return
+    return new Array(chainData.token.pairs.length)
+  })
+
+  const onTokenPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
     setTokenPrices(prices => {
+      if (prices == null)
+        return
+      prices[index] = data
+      return [...prices]
+    })
+  }, [])
+
+  const onChainPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
+    setChainPrices(prices => {
       if (prices == null)
         return
       prices[index] = data
@@ -86,7 +108,18 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     }, Fixed.unit(18))
   }, [tokenPrices])
 
-  const maybeChainPrice = maybeTokenPrice
+  const maybeChainPrice = useMemo(() => {
+    if (chainPrices == null)
+      return
+
+    return chainPrices.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
+      if (a == null)
+        return undefined
+      if (b == null)
+        return undefined
+      return a.mul(Fixed.from(b))
+    }, Fixed.unit(18))
+  }, [chainPrices])
 
   const [rawValueInput = "", setRawValueInput] = useState(maybeValued)
   const [rawPricedInput = "", setRawPricedInput] = useState(maybePriced)
@@ -289,7 +322,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       return undefined
 
     return Result.runAndDoubleWrapSync(() => {
-      const token = "0x0000000000000000000000000000000000000000"
+      const token = tokenData.address
       const value = maybeFinalValue.value
 
       const password = triedFinalPassword.unwrap()
@@ -299,11 +332,11 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       const publicKeyHex = Base16.get().encodeOrThrow(publicKey)
       const publicKey20 = ZeroHexString.from(publicKeyHex.slice(-40))
 
-      const abi = PeanutAbi.makeDeposit.from(token, 0, value, 0, publicKey20)
+      const abi = PeanutAbi.makeDeposit.from(token, 1, value, 0, publicKey20)
 
       return Abi.encodeOrThrow(abi)
     })
-  }, [maybeFinalValue, triedFinalPassword])
+  }, [tokenData, maybeFinalValue, triedFinalPassword])
 
   const onGasModeChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
     setGasMode(e.currentTarget.value)
@@ -812,10 +845,6 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
         return new UIError(`Could not parse or fetch address`)
       }).unwrap()
 
-      const value = Option.wrap(maybeFinalValue).okOrElseSync(() => {
-        return new UIError(`Could not parse value`)
-      }).unwrap()
-
       const nonce = Option.wrap(maybeFinalNonce).okOrElseSync(() => {
         return new UIError(`Could not parse or fetch nonce`)
       }).unwrap()
@@ -849,7 +878,6 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
           maxFeePerGas: maxFeePerGas,
           maxPriorityFeePerGas: maxPriorityFeePerGas,
           nonce: Number(nonce),
-          value: value.value,
           data: data
         })
       }
@@ -868,7 +896,6 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
           chainId: chainData.chainId,
           gasPrice: gasPrice,
           nonce: Number(nonce),
-          value: value.value,
           data: data
         })
       }
@@ -901,7 +928,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, chainData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeTriedMaybeFinalData, maybeIsEip1559, maybeFinalGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+  }, [wallet, context, chainData, maybeFinalTarget, maybeFinalNonce, maybeTriedMaybeFinalData, maybeIsEip1559, maybeFinalGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
 
   const onSignClick = useAsyncUniqueCallback(async () => {
     return await signOrSend("sign")
@@ -946,7 +973,12 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       <PriceResolver key={i}
         index={i}
         address={address}
-        ok={onPrice} />)}
+        ok={onTokenPrice} />)}
+    {chainData.token.pairs?.map((address, i) =>
+      <PriceResolver key={i}
+        index={i}
+        address={address}
+        ok={onChainPrice} />)}
     <Dialog.Title close={close}>
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
