@@ -868,7 +868,7 @@ export function WalletSendScreenContractValue(props: {}) {
         }).unwrap()
 
         tx = Transaction.from({
-          to: Address.from(target),
+          to: tokenData.address,
           gasLimit: gasLimit,
           chainId: chainData.chainId,
           gasPrice: gasPrice,
