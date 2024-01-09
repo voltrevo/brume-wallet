@@ -870,7 +870,7 @@ export function WalletSendScreenNativeValue(props: {}) {
 
       if (action === "send") {
         const txHash = await context.background.tryRequest<ZeroHexString>({
-          method: "brume_eth_fetch",
+          method: "brume_eth_fetch2",
           params: [context.uuid, context.chain.chainId, {
             method: "eth_sendRawTransaction",
             params: [tx.serialized],

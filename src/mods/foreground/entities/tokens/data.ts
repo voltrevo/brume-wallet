@@ -5,12 +5,12 @@ import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { BgToken, ContractTokenData, ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data"
 import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
-import { Fixed, ZeroHexString } from "@hazae41/cubane"
+import { Fixed, ZeroHexFixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, FetcherMore, States, core, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { FgTotal } from "../unknown/data"
-import { FgEthereumContext, fetchOrFail } from "../wallets/data"
+import { FgEthereumContext, fetchOrFail, fetchOrFail2 } from "../wallets/data"
 import { FgPair } from "./pairs/data"
 
 export namespace FgToken {
@@ -90,7 +90,7 @@ export namespace FgToken {
           return
 
         const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-          await fetchOrFail<Fixed.From>(request, context)
+          await fetchOrFail2<ZeroHexString>(request, context).then(f => f.mapSync(x => new ZeroHexFixed(x, context.chain.token.decimals)))
 
         const indexer = async (states: States<Data, Fail>) => {
           if (block !== "pending")

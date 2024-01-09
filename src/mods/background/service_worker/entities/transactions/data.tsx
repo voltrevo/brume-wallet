@@ -43,7 +43,8 @@ export namespace BgTransactionReceipt {
     return {
       chainId: chain.chainId,
       method: "eth_getTransactionReceipt",
-      params: [hash]
+      params: [hash],
+      noCheck: true
     }
   }
 

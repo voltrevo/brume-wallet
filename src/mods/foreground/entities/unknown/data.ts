@@ -10,7 +10,7 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
-import { FgEthereumContext, fetchOrFail } from "../wallets/data";
+import { FgEthereumContext, fetchOrFail2 } from "../wallets/data";
 
 export namespace FgEthereum {
 
@@ -29,7 +29,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await fetchOrFail<T>(request, context)
+        await fetchOrFail2<T>(request, context)
 
       return createQuery<Key, T, Fail>({
         key: key(context.chain.chainId, request),
@@ -50,7 +50,8 @@ export namespace FgEthereum {
       return {
         chainId: context.chain.chainId,
         method: "eth_estimateGas",
-        params: request.params
+        params: request.params,
+        noCheck: true
       }
     }
 
@@ -61,7 +62,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
+        await fetchOrFail2<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
 
       return createQuery<Key, Data, Fail>({
         key: key(request, context),
@@ -83,7 +84,8 @@ export namespace FgEthereum {
       return {
         chainId: chain.chainId,
         method: "eth_maxPriorityFeePerGas",
-        params: []
+        params: [],
+        noCheck: true
       }
     }
 
@@ -92,7 +94,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
+        await fetchOrFail2<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
 
       return createQuery<Key, Data, Fail>({
         key: key(context.chain),
@@ -124,7 +126,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
+        await fetchOrFail2<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
 
       return createQuery<Key, Data, Error>({
         key: key(context.chain),
@@ -157,7 +159,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-        await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
+        await fetchOrFail2<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
 
       return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
         key: key(address, context.chain),

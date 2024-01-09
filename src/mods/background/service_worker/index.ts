@@ -650,44 +650,37 @@ export class Global {
       if (session == null)
         return new Err(new UnauthorizedError())
 
-      const { storage } = Option.unwrap(this.#user)
-
       const { wallets, chain } = session
 
       const wallet = Option.unwrap(wallets[0])
       const brume = await this.#tryGetOrTakeEthBrume(wallet.uuid).then(r => r.unwrap())
-      const ethereum: BgEthereumContext = { chain, brume }
+
+      const context: BgEthereumContext = { chain, brume }
 
       if (subrequest.method === "eth_requestAccounts")
-        return await this.eth_requestAccounts(ethereum, session, subrequest)
+        return await this.eth_requestAccounts(context, session, subrequest)
       if (subrequest.method === "eth_accounts")
-        return await this.eth_accounts(ethereum, session, subrequest)
+        return await this.eth_accounts(context, session, subrequest)
       if (subrequest.method === "eth_coinbase")
-        return await this.eth_coinbase(ethereum, session, subrequest)
+        return await this.eth_coinbase(context, session, subrequest)
       if (subrequest.method === "eth_chainId")
-        return await this.eth_chainId(ethereum, session, subrequest)
+        return await this.eth_chainId(context, session, subrequest)
       if (subrequest.method === "net_version")
-        return await this.net_version(ethereum, session, subrequest)
+        return await this.net_version(context, session, subrequest)
       if (subrequest.method === "wallet_requestPermissions")
-        return await this.wallet_requestPermissions(ethereum, session, subrequest)
+        return await this.wallet_requestPermissions(context, session, subrequest)
       if (subrequest.method === "wallet_getPermissions")
-        return await this.wallet_getPermissions(ethereum, session, subrequest)
+        return await this.wallet_getPermissions(context, session, subrequest)
       if (subrequest.method === "eth_sendTransaction")
-        return await this.eth_sendTransaction(ethereum, session, subrequest, mouse)
+        return await this.eth_sendTransaction(context, session, subrequest, mouse)
       if (subrequest.method === "personal_sign")
-        return await this.personal_sign(ethereum, session, subrequest, mouse)
+        return await this.personal_sign(context, session, subrequest, mouse)
       if (subrequest.method === "eth_signTypedData_v4")
-        return await this.eth_signTypedData_v4(ethereum, session, subrequest, mouse)
+        return await this.eth_signTypedData_v4(context, session, subrequest, mouse)
       if (subrequest.method === "wallet_switchEthereumChain")
-        return await this.wallet_switchEthereumChain(ethereum, session, subrequest, mouse)
+        return await this.wallet_switchEthereumChain(context, session, subrequest, mouse)
 
-      const query = await this.routeOrThrow(ethereum, subrequest, storage)
-
-      try { await query.fetch() } catch { }
-
-      const stored = core.storeds.get(query.cacheKey)
-      const unstored = await core.unstoreOrThrow<any, unknown, Error>(stored, { key: query.cacheKey })
-      return Option.unwrap(unstored.current)
+      return await BgEthereumContext.fetchOrFail(context, { ...subrequest, noCheck: true })
     })
   }
 
@@ -951,6 +944,8 @@ export class Global {
       return new Some(await this.brume_set_user(request))
     if (request.method === "brume_subscribe")
       return new Some(await this.brume_subscribe(foreground, request))
+    if (request.method === "brume_eth_fetch2")
+      return new Some(await this.brume_eth_fetch2(foreground, request))
     if (request.method === "brume_eth_fetch")
       return new Some(await this.brume_eth_fetch(foreground, request))
     if (request.method === "brume_log")
@@ -1263,8 +1258,6 @@ export class Global {
   }
 
   async routeOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<SimpleQuery<any, any, Error>> {
-    if (request.method === BgToken.Native.Balance.method)
-      return await BgToken.Native.Balance.parseOrThrow(request, ethereum, storage)
     if (request.method === BgToken.Contract.Balance.method)
       return await BgToken.Contract.Balance.parseOrThrow(ethereum, request, storage)
     if (request.method === BgPair.Price.method)
@@ -1276,22 +1269,20 @@ export class Global {
     if (request.method === BgSignature.method)
       return await BgSignature.parseOrThrow(ethereum, request, storage)
 
-    if (request.method === "eth_getTransactionByHash")
-      request.noCheck = true
-    if (request.method === "eth_estimateGas")
-      request.noCheck = true
-    if (request.method === "web3_clientVersion")
-      request.noCheck = true
-    if (request.method === "eth_blockNumber")
-      request.noCheck = true
-    if (request.method === "eth_getBlockByNumber")
-      request.noCheck = true
-    if (request.method === "eth_getTransactionReceipt")
-      request.noCheck = true
-    if (request.method === "eth_maxPriorityFeePerGas")
-      request.noCheck = true
+    request.noCheck = true
 
     return BgEthereum.Unknown.schema(ethereum, request, storage)
+  }
+
+  async brume_eth_fetch2(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+    const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown> & EthereumFetchParams]>).params
+
+    const chain = Option.unwrap(chainByChainId[chainId])
+    const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.unwrap())
+
+    const context: BgEthereumContext = { chain, brume }
+
+    return await BgEthereumContext.fetchOrFail<unknown>(context, subrequest)
   }
 
   async brume_eth_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {

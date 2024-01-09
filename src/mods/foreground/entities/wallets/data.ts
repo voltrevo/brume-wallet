@@ -349,3 +349,15 @@ export async function fetchOrFail<T>(request: RpcRequestPreinit<unknown> & Ether
     params: [uuid, chain.chainId, request]
   }).then(r => Fetched.rewrap(r.unwrap()))
 }
+
+export async function fetchOrFail2<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, ethereum: FgEthereumContext): Promise<Fetched<T, Error>> {
+  const { uuid, background, chain } = ethereum
+
+  const x = await background.tryRequest<T>({
+    method: "brume_eth_fetch2",
+    params: [uuid, chain.chainId, request]
+  }).then(r => Fetched.rewrap(r.unwrap()))
+
+  console.log("fetchOrFail2", x)
+  return x
+}
