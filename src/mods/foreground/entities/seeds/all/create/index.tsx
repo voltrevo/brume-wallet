@@ -1,7 +1,7 @@
 import { Outline } from "@/libs/icons/icons";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { usePathContext } from "@/mods/foreground/router/path/context";
 import { Ok, Result } from "@hazae41/result";
@@ -10,7 +10,7 @@ import { LedgerSeedCreatorDialog } from "./ledger";
 import { StandaloneSeedCreatorDialog } from "./standalone";
 
 export function SeedCreatorDialog(props: {}) {
-  const { opened, close } = useDialogContext().unwrap()
+  const close = useCloseContext().unwrap()
   const { url } = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
@@ -36,17 +36,21 @@ export function SeedCreatorDialog(props: {}) {
     setType("mnemonic")
   }, [])
 
+  const onClose = useCallback(() => {
+    setType(undefined)
+  }, [])
+
   return <>
-    <Dialog
-      opened={opened && type === "mnemonic"}
-      close={close}>
-      <StandaloneSeedCreatorDialog />
-    </Dialog>
-    <Dialog
-      opened={opened && type === "ledger"}
-      close={close}>
-      <LedgerSeedCreatorDialog />
-    </Dialog>
+    {type === "mnemonic" &&
+      <Dialog
+        close={onClose}>
+        <StandaloneSeedCreatorDialog />
+      </Dialog>}
+    {type === "ledger" &&
+      <Dialog
+        close={onClose}>
+        <LedgerSeedCreatorDialog />
+      </Dialog>}
     <Dialog.Title close={close}>
       New seed
     </Dialog.Title>

@@ -7,7 +7,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Button } from "@/libs/ui/button";
-import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { User, UserInit } from "@/mods/background/service_worker/entities/users/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -16,7 +16,7 @@ import { useUsers } from "../data";
 import { UserAvatar } from "./page";
 
 export function UserCreateDialog(props: {}) {
-  const { close } = useDialogContext().unwrap()
+  const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const users = useUsers()

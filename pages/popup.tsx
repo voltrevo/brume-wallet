@@ -571,11 +571,11 @@ export function WalletAndChainSelectPage() {
     </UserPageHeader>
 
   return <Page>
-    <Dialog
-      opened={creator.current}
-      close={creator.disable}>
-      <WalletCreatorDialog />
-    </Dialog>
+    {creator.current &&
+      <Dialog
+        close={creator.disable}>
+        <WalletCreatorDialog />
+      </Dialog>}
     {Header}
     {Body}
     <div className="p-4 w-full flex items-center gap-2">

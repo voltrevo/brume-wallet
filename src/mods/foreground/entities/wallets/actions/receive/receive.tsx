@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useCopy } from "@/libs/copy/copy";
 import { Button } from "@/libs/ui/button";
-import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Address } from "@hazae41/cubane";
 import { Result } from "@hazae41/result";
 import createQR from "@paulmillr/qr";
@@ -9,7 +9,7 @@ import { useCallback, useMemo } from "react";
 import { useWalletDataContext } from "../../context";
 
 export function WalletDataReceiveScreen(props: {}) {
-  const { close } = useDialogContext().unwrap()
+  const close = useCloseContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
 
   const address = useMemo(() => {

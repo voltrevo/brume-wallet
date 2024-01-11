@@ -48,11 +48,11 @@ export function SeedsPage() {
     </div>
   </>
   return <Page>
-    <Dialog
-      opened={creator.current}
-      close={creator.disable}>
-      <SeedCreatorDialog />
-    </Dialog>
+    {creator.current &&
+      <Dialog
+        close={creator.disable}>
+        <SeedCreatorDialog />
+      </Dialog>}
     {Header}
     {Body}
   </Page>

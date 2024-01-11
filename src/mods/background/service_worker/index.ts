@@ -10,7 +10,7 @@ import { Mouse } from "@/libs/mouse/mouse"
 import { Strings } from "@/libs/strings/strings"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool } from "@/libs/tor/tors/tors"
-import { Url, qurl } from "@/libs/url/url"
+import { qurl } from "@/libs/url/url"
 import { CryptoClient } from "@/libs/wconn/mods/crypto/client"
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn"
 import { Wc, WcMetadata, WcSession, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
@@ -1441,7 +1441,7 @@ export class Global {
       const wallet = Option.unwrap(walletState.current?.inner)
       const chain = Option.unwrap(chainByChainId[1])
 
-      const wcUrl = Url.tryParse(rawWcUrl).unwrap()
+      const wcUrl = new URL(rawWcUrl)
       const pairParams = await Wc.tryParse(wcUrl).then(r => r.unwrap())
 
       const brumes = Option.unwrap(this.#wcs)

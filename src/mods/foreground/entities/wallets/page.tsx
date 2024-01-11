@@ -97,9 +97,7 @@ function WalletDataPage() {
 
   useEnsReverse(wallet.address, mainnet)
 
-  const isSendOpened = subpath.url.pathname === "/send"
-
-  const onDirectSendClose = useCallback(() => {
+  const onSubpathClose = useCallback(() => {
     subpath.go(`/`)
   }, [subpath])
 
@@ -221,11 +219,11 @@ function WalletDataPage() {
 
   const Body =
     <PageBody>
-      <Dialog
-        opened={add.current}
-        close={add.disable}>
-        <TokenAddDialog />
-      </Dialog>
+      {add.current &&
+        <Dialog
+          close={add.disable}>
+          <TokenAddDialog />
+        </Dialog>}
       <div className="font-medium text-xl">
         Tokens
       </div>
@@ -279,18 +277,16 @@ function WalletDataPage() {
 
   return <Page>
     <PathContext.Provider value={subpath}>
-      {wallet.type !== "readonly" &&
-        <Screen
-          opened={isSendOpened}
-          close={onDirectSendClose}>
+      {subpath.url.pathname === "/send" && wallet.type !== "readonly" &&
+        <Screen close={onSubpathClose}>
           <WalletSendScreen />
         </Screen>}
     </PathContext.Provider>
-    <Screen dark
-      opened={receiveDialog.current}
-      close={receiveDialog.disable}>
-      <WalletDataReceiveScreen />
-    </Screen>
+    {receiveDialog.current &&
+      <Screen dark
+        close={receiveDialog.disable}>
+        <WalletDataReceiveScreen />
+      </Screen>}
     {Header}
     {Card}
     {Apps}

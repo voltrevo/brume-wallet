@@ -9,7 +9,7 @@ import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { Textarea } from "@/libs/ui/textarea";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
@@ -23,7 +23,7 @@ import { WalletAvatar } from "../../avatar";
 import { useEthereumContext } from "../../data";
 
 export function ReadonlyWalletCreatorDialog(props: {}) {
-  const { close } = useDialogContext().unwrap()
+  const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const uuid = useConstant(() => crypto.randomUUID())

@@ -2,10 +2,9 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
+import { WalletSendTransactionScreenValue } from "../eth_sendTransaction/screen";
 import { WalletSendScreenContractValue } from "./direct/contract";
-import { WalletSendScreenNativeValue } from "./direct/native";
 import { WalletSendScreenNonce } from "./nonce";
-import { WalletPeanutSendScreenContractValue } from "./peanut/contract";
 import { WalletPeanutSendScreenNativeValue } from "./peanut/native";
 import { WalletSendScreenTarget } from "./target";
 
@@ -15,6 +14,7 @@ export type UrlState = {
   readonly chain?: string
   readonly token?: string
   readonly target?: string
+  readonly value?: string
   readonly valued?: string
   readonly priced?: string
   readonly nonce?: string
@@ -35,13 +35,11 @@ export function WalletSendScreen(props: {}) {
   if (step === "target")
     return <WalletSendScreenTarget />
   if (step === "value" && token == null && type == null)
-    return <WalletSendScreenNativeValue />
+    return <WalletSendTransactionScreenValue />
   if (step === "value" && token == null && type == "peanut")
     return <WalletPeanutSendScreenNativeValue />
-  if (step === "value" && token != null && type == null)
+  if (step === "value" && token != null)
     return <WalletSendScreenContractValue />
-  if (step === "value" && token != null && type == "peanut")
-    return <WalletPeanutSendScreenContractValue />
   if (step === "nonce")
     return <WalletSendScreenNonce />
   return null
@@ -56,11 +54,11 @@ export function SimpleBox(props: ChildrenProps) {
 }
 
 export function SimpleInput(props: InputProps) {
-  return <input className="grow bg-transparent outline-none min-w-0" {...props} />
+  return <input className="grow bg-transparent outline-none min-w-0 disabled:text-contrast" {...props} />
 }
 
 export function SimpleTextarea(props: TextareaProps) {
-  return <textarea className="grow bg-transparent outline-none min-w-0" {...props} />
+  return <textarea className="grow bg-transparent outline-none min-w-0 disabled:text-contrast" {...props} />
 }
 
 export function ShrinkableNakedButtonInInputBox(props: ChildrenProps & ButtonProps) {

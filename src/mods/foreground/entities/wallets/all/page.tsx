@@ -52,11 +52,11 @@ export function WalletsPage() {
   </>
 
   return <Page>
-    <Dialog
-      opened={creator.current}
-      close={creator.disable}>
-      <WalletCreatorDialog />
-    </Dialog>
+    {creator.current &&
+      <Dialog
+        close={creator.disable}>
+        <WalletCreatorDialog />
+      </Dialog>}
     {Header}
     {Body}
   </Page>

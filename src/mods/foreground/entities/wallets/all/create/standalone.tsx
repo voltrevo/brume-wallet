@@ -8,7 +8,7 @@ import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { Textarea } from "@/libs/ui/textarea";
 import { WebAuthnStorage, WebAuthnStorageError } from "@/libs/webauthn/webauthn";
@@ -24,7 +24,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { WalletAvatar } from "../../avatar";
 
 export function StandaloneWalletCreatorDialog(props: {}) {
-  const { close } = useDialogContext().unwrap()
+  const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const uuid = useConstant(() => crypto.randomUUID())

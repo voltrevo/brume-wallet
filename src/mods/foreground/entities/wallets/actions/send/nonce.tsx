@@ -2,7 +2,7 @@ import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
-import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Option, Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
@@ -13,7 +13,7 @@ import { useEthereumContext } from "../../data";
 
 export function WalletSendScreenNonce(props: {}) {
   const wallet = useWalletDataContext().unwrap()
-  const { close } = useDialogContext().unwrap()
+  const close = useCloseContext().unwrap()
 
   const $state = usePathState<UrlState>()
   const [maybeStep, setStep] = useSearchState("step", $state)

@@ -1,6 +1,6 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { State } from "@/libs/react/state";
-import { Nullable, Option } from "@hazae41/option";
+import { Nullable, Option, Optional } from "@hazae41/option";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 export interface Path {
@@ -79,7 +79,7 @@ export function useSubpath() {
   return handle
 }
 
-export function usePathState<T extends Record<string, string>>() {
+export function usePathState<T extends Record<string, Optional<string>>>() {
   const { url, go } = usePathContext().unwrap()
 
   const [state, setState] = useState<T>(() => Object.fromEntries(url.searchParams.entries()) as T)
@@ -91,7 +91,7 @@ export function usePathState<T extends Record<string, string>>() {
   useEffect(() => {
     if (state == null)
       return
-    const filtered = Object.fromEntries(Object.entries(state).filter(([_, value]) => value != null)) as T
+    const filtered = Object.fromEntries(Object.entries(state).filter(([_, value]) => value != null) as [keyof T, string][])
     go(`${url.pathname}?${new URLSearchParams(filtered).toString()}${url.hash}`)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state])
@@ -99,7 +99,7 @@ export function usePathState<T extends Record<string, string>>() {
   return [state, setState] as const
 }
 
-export function useSearchState<T extends Record<string, string>>(key: keyof T, $parent: State<T>) {
+export function useSearchState<T extends Record<string, Optional<string>>>(key: keyof T, $parent: State<T>) {
   const [parent, setParent] = $parent
 
   const state = parent[key]

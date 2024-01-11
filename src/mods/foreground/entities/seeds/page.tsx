@@ -58,11 +58,11 @@ function SeedDataPage() {
     </PageBody>
 
   return <Page>
-    <Dialog
-      opened={creator.current}
-      close={creator.disable}>
-      <SeededWalletCreatorDialog />
-    </Dialog>
+    {creator.current &&
+      <Dialog
+        close={creator.disable}>
+        <SeededWalletCreatorDialog />
+      </Dialog>}
     {Header}
     {Card}
     {Body}

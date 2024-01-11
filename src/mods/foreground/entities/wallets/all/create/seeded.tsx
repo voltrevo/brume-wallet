@@ -9,7 +9,7 @@ import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { SeedRef } from "@/mods/background/service_worker/entities/seeds/data";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
@@ -26,7 +26,7 @@ import { useSeedDataContext } from "../../../seeds/context";
 import { WalletAvatar } from "../../avatar";
 
 export function SeededWalletCreatorDialog(props: {}) {
-  const { close } = useDialogContext().unwrap()
+  const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
   const seedData = useSeedDataContext()
 

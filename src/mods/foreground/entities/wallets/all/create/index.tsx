@@ -1,12 +1,12 @@
 import { Outline } from "@/libs/icons/icons";
 import { Button } from "@/libs/ui/button";
-import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { useCallback, useState } from "react";
 import { ReadonlyWalletCreatorDialog } from "./readonly";
 import { StandaloneWalletCreatorDialog } from "./standalone";
 
 export function WalletCreatorDialog(props: {}) {
-  const { opened, close } = useDialogContext().unwrap()
+  const close = useCloseContext().unwrap()
 
   const [type, setType] = useState<"readonly" | "privateKey">()
 
@@ -18,17 +18,22 @@ export function WalletCreatorDialog(props: {}) {
     setType("privateKey")
   }, [])
 
+  const onClose = useCallback(() => {
+    setType(undefined)
+  }, [])
+
+
   return <>
-    <Dialog
-      opened={opened && type === "readonly"}
-      close={close}>
-      <ReadonlyWalletCreatorDialog />
-    </Dialog>
-    <Dialog
-      opened={opened && type === "privateKey"}
-      close={close}>
-      <StandaloneWalletCreatorDialog />
-    </Dialog>
+    {type === "readonly" &&
+      <Dialog
+        close={onClose}>
+        <ReadonlyWalletCreatorDialog />
+      </Dialog>}
+    {type === "privateKey" &&
+      <Dialog
+        close={onClose}>
+        <StandaloneWalletCreatorDialog />
+      </Dialog>}
     <Dialog.Title close={close}>
       New wallet
     </Dialog.Title>

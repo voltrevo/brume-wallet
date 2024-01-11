@@ -37,11 +37,11 @@ export function UsersPage(props: OkProps<User>) {
     </div>
 
   return <Page>
-    <Dialog
-      opened={createDialog.current}
-      close={createDialog.disable}>
-      <UserCreateDialog />
-    </Dialog>
+    {createDialog.current &&
+      <Dialog
+        close={createDialog.disable}>
+        <UserCreateDialog />
+      </Dialog>}
     <div className="grid grow place-items-center place-content-center grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] auto-rows-[10rem]">
       {users.data?.inner.map(user =>
         <UserOkButton

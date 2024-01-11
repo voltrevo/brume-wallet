@@ -8,7 +8,7 @@ import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { SeedData } from "@/mods/background/service_worker/entities/seeds/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -17,7 +17,7 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { WalletAvatar } from "../../../wallets/avatar";
 
 export function LedgerSeedCreatorDialog(props: {}) {
-  const { close } = useDialogContext().unwrap()
+  const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const uuid = useConstant(() => crypto.randomUUID())

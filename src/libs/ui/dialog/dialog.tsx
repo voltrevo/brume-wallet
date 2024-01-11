@@ -1,9 +1,7 @@
 import { useBooleanHandle } from "@/libs/react/handles/boolean"
-import { useObjectMemo } from "@/libs/react/memo"
 import { DarkProps } from "@/libs/react/props/dark"
-import { OpenedProps } from "@/libs/react/props/opened"
 import { Nullable, Option } from "@hazae41/option"
-import { createContext, useCallback, useContext, useLayoutEffect, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react"
 import { flushSync } from "react-dom"
 import { Outline } from "../../icons/icons"
 import { Events, useKeyboardEscape, useMouse } from "../../react/events"
@@ -12,74 +10,59 @@ import { CloseProps } from "../../react/props/close"
 import { Button } from "../button"
 import { Portal } from "../portal/portal"
 
-export interface OpenableHandle {
-  readonly opened: boolean,
-  close(): void
+export const CloseContext = createContext<Nullable<() => void>>(undefined)
+
+export function useCloseContext() {
+  return Option.wrap(useContext(CloseContext))
 }
 
-export function useOpenableHandle(props: OpenedProps & CloseProps) {
-  const { opened, close } = props
-  return useObjectMemo({ opened, close })
-}
+export function Screen(props: ChildrenProps & CloseProps & DarkProps) {
+  const { dark, children, close } = props
 
-export const DialogContext = createContext<Nullable<OpenableHandle>>(undefined)
+  const [visible, setVisible] = useState(true)
+  const [mounted, setMounted] = useState(true)
 
-export function useDialogContext() {
-  return Option.wrap(useContext(DialogContext))
-}
-
-/**
- * Full-screen dialog
- * @param props 
- * @returns 
- */
-export function Screen(props: ChildrenProps & OpenedProps & CloseProps & DarkProps) {
-  const { opened, dark, children, close } = props
-  const handle = useOpenableHandle(props)
+  const hide = useCallback(() => {
+    setVisible(false)
+  }, [])
 
   const [dialog, setDialog] = useState<HTMLDialogElement | null>(null)
 
-  const onEscape = useKeyboardEscape(close)
+  const onEscape = useKeyboardEscape(hide)
 
   const onClickOutside = useMouse<HTMLDivElement>(e => {
     if (e.clientX > e.currentTarget.clientWidth)
       return
-    close()
-  }, [close])
-
-  const [displayed, setDisplayed] = useState(opened)
-
-  /**
-   * Opened => Displayed
-   */
-  if (opened && !displayed)
-    setDisplayed(true)
+    hide()
+  }, [hide])
 
   const onAnimationEnd = useCallback(() => {
-    /**
-     * Flush sync to avoid jitter
-     */
-    flushSync(() => setDisplayed(opened))
-  }, [opened])
+    flushSync(() => setMounted(visible))
+  }, [visible])
+
+  useEffect(() => {
+    if (mounted)
+      return
+    close()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted])
 
   /**
    * Show HTML dialog when displayed
    */
   useLayoutEffect(() => {
-    if (!displayed)
-      return
     if (!document.body.contains(dialog))
       return
 
     dialog?.showModal()
     return () => dialog?.close()
-  }, [displayed, dialog])
+  }, [dialog])
 
   /**
    * Set theme-color based on dark prop
    */
   useLayoutEffect(() => {
-    if (!displayed)
+    if (!visible)
       return
     if (!dark)
       return
@@ -97,23 +80,23 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
     color.setAttribute("content", "#000000")
 
     return () => color.setAttribute("content", original)
-  }, [displayed, dark])
+  }, [visible, dark])
 
   /**
    * Only unmount when transition is finished
    */
-  if (!displayed)
+  if (!mounted)
     return null
 
   return <Portal type="div">
-    <DialogContext.Provider value={handle}>
+    <CloseContext.Provider value={hide}>
       <dialog className=""
         ref={setDialog}
         onAnimationEnd={onAnimationEnd}>
-        <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
+        <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
           aria-hidden="true"
           role="backdrop" />
-        <div className={`fixed inset-0 flex flex-col md:p-safe overflow-y-scroll ${dark ? "dark" : ""} ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+        <div className={`fixed inset-0 flex flex-col md:p-safe overflow-y-scroll ${dark ? "dark" : ""} ${visible ? "animate-slideup-in" : "animate-slideup-out"}`}
           onMouseDown={onClickOutside}
           onClick={Events.keep}>
           <div className="hidden md:block h-4" />
@@ -131,64 +114,67 @@ export function Screen(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
           <div className="hidden md:block h-4" />
         </div>
       </dialog>
-    </DialogContext.Provider>
+    </CloseContext.Provider>
   </Portal>
 }
 
-export function Dialog(props: ChildrenProps & OpenedProps & CloseProps & DarkProps) {
-  const { opened, dark, children, close } = props
-  const handle = useOpenableHandle(props)
+export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
+  const { dark, children, close } = props
+
+  const [visible, setVisible] = useState(true)
+  const [mounted, setMounted] = useState(true)
+
+  const hide = useCallback(() => {
+    setVisible(false)
+  }, [])
 
   const [dialog, setDialog] = useState<HTMLDialogElement | null>(null)
 
-  const onEscape = useKeyboardEscape(close)
+  const onEscape = useKeyboardEscape(hide)
 
   const onClickOutside = useMouse<HTMLDivElement>(e => {
     if (e.clientX > e.currentTarget.clientWidth)
       return
-    close()
-  }, [close])
-
-  const [displayed, setDisplayed] = useState(opened)
-
-  /**
-   * Opened => Displayed
-   */
-  if (opened && !displayed)
-    setDisplayed(true)
+    hide()
+  }, [hide])
 
   const onAnimationEnd = useCallback(() => {
-    /**
-     * Flush sync to avoid jitter
-     */
-    flushSync(() => setDisplayed(opened))
-  }, [opened])
+    flushSync(() => setMounted(visible))
+  }, [visible])
 
-  useLayoutEffect(() => {
-    if (!displayed)
+  useEffect(() => {
+    if (mounted)
       return
+    close()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted])
+
+  /**
+   * Show HTML dialog when displayed
+   */
+  useLayoutEffect(() => {
     if (!document.body.contains(dialog))
       return
 
     dialog?.showModal()
     return () => dialog?.close()
-  }, [dialog, displayed])
+  }, [dialog])
 
   /**
    * Only unmount when transition is finished
    */
-  if (!displayed)
+  if (!mounted)
     return null
 
   return <Portal type="div">
-    <DialogContext.Provider value={handle}>
+    <CloseContext.Provider value={hide}>
       <dialog className=""
         ref={setDialog}
         onAnimationEnd={onAnimationEnd}>
-        <div className={`fixed inset-0 bg-backdrop ${opened ? "animate-opacity-in" : "animate-opacity-out"}`}
+        <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
           aria-hidden="true"
           role="backdrop" />
-        <div className={`fixed inset-0 flex flex-col p-safe overflow-y-scroll ${dark ? "dark" : ""} ${opened ? "animate-slideup-in" : "animate-slideup-out"}`}
+        <div className={`fixed inset-0 flex flex-col p-safe overflow-y-scroll ${dark ? "dark" : ""} ${visible ? "animate-slideup-in" : "animate-slideup-out"}`}
           onMouseDown={onClickOutside}
           onClick={Events.keep}>
           <div className="grow" />
@@ -206,7 +192,7 @@ export function Dialog(props: ChildrenProps & OpenedProps & CloseProps & DarkPro
           <div className="hidden md:block grow" />
         </div>
       </dialog>
-    </DialogContext.Provider>
+    </CloseContext.Provider>
   </Portal>
 }
 
@@ -233,29 +219,29 @@ export namespace Dialog {
     const open = useBooleanHandle(false)
 
     return <div className="p-1">
-      <Dialog
-        opened={open.current}
-        close={open.disable}>
-        <Dialog.Title close={open.disable}>
+      {open.current &&
+        <Dialog
+          close={open.disable}>
+          <Dialog.Title close={open.disable}>
+            Hello world
+          </Dialog.Title>
           Hello world
-        </Dialog.Title>
-        Hello world
-        <div className="h-2" />
-        <div className="flex items-center gap-2">
-          <Button.Base className="w-full po-md"
-            onClick={open.disable}>
-            <div className={`${Button.Shrinker.className}`}>
-              Click me
-            </div>
-          </Button.Base>
-          <Button.Opposite className="w-full po-md"
-            onClick={open.disable}>
-            <div className={`${Button.Shrinker.className}`}>
-              Click me
-            </div>
-          </Button.Opposite>
-        </div>
-      </Dialog>
+          <div className="h-2" />
+          <div className="flex items-center gap-2">
+            <Button.Base className="w-full po-md"
+              onClick={open.disable}>
+              <div className={`${Button.Shrinker.className}`}>
+                Click me
+              </div>
+            </Button.Base>
+            <Button.Opposite className="w-full po-md"
+              onClick={open.disable}>
+              <div className={`${Button.Shrinker.className}`}>
+                Click me
+              </div>
+            </Button.Opposite>
+          </div>
+        </Dialog>}
       <button onClick={open.enable}>
         Click me
       </button>
@@ -266,29 +252,29 @@ export namespace Dialog {
     const open = useBooleanHandle(false)
 
     return <div className="p-1">
-      <Dialog
-        opened={open.current}
-        close={open.disable}>
-        <Dialog.Title close={open.disable}>
+      {open.current &&
+        <Dialog
+          close={open.disable}>
+          <Dialog.Title close={open.disable}>
+            Hello world
+          </Dialog.Title>
           Hello world
-        </Dialog.Title>
-        Hello world
-        <div className="h-2" />
-        <div className="flex items-center gap-2">
-          <button className="w-full po-md"
-            onClick={open.disable}>
-            <div className={`${Button.Shrinker.className}`}>
-              Click me
-            </div>
-          </button>
-          <button className="w-full po-md"
-            onClick={open.disable}>
-            <div className={`${Button.Shrinker.className}`}>
-              Click me
-            </div>
-          </button>
-        </div>
-      </Dialog>
+          <div className="h-2" />
+          <div className="flex items-center gap-2">
+            <button className="w-full po-md"
+              onClick={open.disable}>
+              <div className={`${Button.Shrinker.className}`}>
+                Click me
+              </div>
+            </button>
+            <button className="w-full po-md"
+              onClick={open.disable}>
+              <div className={`${Button.Shrinker.className}`}>
+                Click me
+              </div>
+            </button>
+          </div>
+        </Dialog>}
       <button onClick={open.enable}>
         Click me
       </button>

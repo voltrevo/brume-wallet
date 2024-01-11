@@ -5,7 +5,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Input } from "@/libs/ui/input";
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -20,7 +20,7 @@ import { useWalletDataContext } from "../../wallets/context";
 import { useToken } from "../data";
 
 export function TokenAddDialog(props: {}) {
-  const { close } = useDialogContext().unwrap()
+  const close = useCloseContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const background = useBackgroundContext().unwrap()
   const storage = useUserStorageContext().unwrap()

@@ -1,84 +1,76 @@
-import { PeanutAbi } from "@/libs/abi/peanut.abi";
 import { BigIntToHex } from "@/libs/bigints/bigints";
 import { useCopy } from "@/libs/copy/copy";
 import { Errors, UIError } from "@/libs/errors/errors";
-import { chainByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
-import { Peanut } from "@/libs/peanut";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
-import { useInputChange } from "@/libs/react/events";
-import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { useInputChange, useTextAreaChange } from "@/libs/react/events";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { useTransactionReceipt } from "@/mods/foreground/entities/transactions/data";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
-import { Base16 } from "@hazae41/base16";
-import { Bytes } from "@hazae41/bytes";
-import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
-import { Cursor } from "@hazae41/cursor";
+import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
-import { Keccak256 } from "@hazae41/keccak256";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
-import { Secp256k1 } from "@hazae41/secp256k1";
 import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "..";
-import { useBlockByNumber } from "../../../../blocks/data";
-import { useNativeBalance, useNativePricedBalance, useToken } from "../../../../tokens/data";
-import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../../unknown/data";
-import { useWalletDataContext } from "../../../context";
-import { EthereumWalletInstance, useEthereumContext2 } from "../../../data";
-import { PriceResolver } from "../../../page";
+import { UrlState } from ".";
+import { useBlockByNumber } from "../../../blocks/data";
+import { useEnsLookup } from "../../../names/data";
+import { useNativeBalance, useNativePricedBalance } from "../../../tokens/data";
+import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../unknown/data";
+import { useWalletDataContext } from "../../context";
+import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../data";
+import { PriceResolver } from "../../page";
+import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../send";
 
-export function WalletPeanutSendScreenContractValue(props: {}) {
+export function WalletSendTransactionScreenValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
-  const { close } = useDialogContext().unwrap()
+  const close = useCloseContext().unwrap()
 
   const $state = usePathState<UrlState>()
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
-  const [maybeToken, setToken] = useSearchState("token", $state)
-  const [maybeValued, setValued] = useSearchState("valued", $state)
-  const [maybePriced, setPriced] = useSearchState("priced", $state)
+  const [maybeTarget, setTarget] = useSearchState("target", $state)
+  const [maybeValue, setValue] = useSearchState("valued", $state)
   const [maybeNonce, setNonce] = useSearchState("nonce", $state)
+  const [maybeData, setData] = useSearchState("data", $state)
   const [maybeGasMode, setGasMode] = useSearchState("gasMode", $state)
   const [maybeGasLimit, setGasLimit] = useSearchState("gasLimit", $state)
   const [maybeGasPrice, setGasPrice] = useSearchState("gasPrice", $state)
   const [maybeBaseFeePerGas, setBaseFeePerGas] = useSearchState("baseFeePerGas", $state)
   const [maybeMaxPriorityFeePerGas, setMaxPriorityFeePerGas] = useSearchState("maxPriorityFeePerGas", $state)
+  const [maybeDisableTarget, setDisableTarget] = useSearchState("disableTarget", $state)
+  const [maybeDisableValue, setDisableValue] = useSearchState("disableValue", $state)
+  const [maybeDisableData, setDisableData] = useSearchState("disableData", $state)
+  const [maybeDisableSign, setDisableSign] = useSearchState("disableSign", $state)
 
   const gasMode = Option.wrap(maybeGasMode).unwrapOr("normal")
 
+  const disableTarget = Boolean(maybeDisableTarget)
+  const disableValue = Boolean(maybeDisableValue)
+  const disableData = Boolean(maybeDisableData)
+  const disableSign = Boolean(maybeDisableSign)
+
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
-
-  const token = Option.unwrap(maybeToken)
-  const tokenQuery = useToken(chainData.chainId, token)
-
-  const maybeTokenData = Option.wrap(tokenQuery.current?.get())
-  const maybeTokenDef = Option.wrap(tokenByAddress[token])
-  const tokenData = maybeTokenData.or(maybeTokenDef).unwrap()
+  const tokenData = chainData.token
 
   const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
 
   const pendingNonceQuery = useNonce(wallet.address, context)
   const maybePendingNonce = pendingNonceQuery.current?.ok().get()
 
-  const [tokenPrices, setTokenPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
+  const [weiPrices, setWeiPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)
       return
     return new Array(tokenData.pairs.length)
   })
 
-  const [chainPrices, setChainPrices] = useState(() => {
-    if (chainData.token.pairs == null)
-      return
-    return new Array(chainData.token.pairs.length)
-  })
-
-  const onTokenPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setTokenPrices(prices => {
+  const onWeiPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
+    setWeiPrices(prices => {
       if (prices == null)
         return
       prices[index] = data
@@ -86,59 +78,37 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
     })
   }, [])
 
-  const onChainPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setChainPrices(prices => {
-      if (prices == null)
-        return
-      prices[index] = data
-      return [...prices]
-    })
-  }, [])
-
-  const maybeTokenPrice = useMemo(() => {
-    if (tokenPrices == null)
+  const maybeWeiPrice = useMemo(() => {
+    if (weiPrices == null)
       return
 
-    return tokenPrices.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
+    return weiPrices.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
       if (a == null)
         return undefined
       if (b == null)
         return undefined
       return a.mul(Fixed.from(b))
     }, Fixed.unit(18))
-  }, [tokenPrices])
+  }, [weiPrices])
 
-  const maybeChainPrice = useMemo(() => {
-    if (chainPrices == null)
-      return
+  const [rawValuedInput = "", setRawValuedInput] = useState<Optional<string>>(maybeValue)
+  const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
 
-    return chainPrices.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
-      if (a == null)
-        return undefined
-      if (b == null)
-        return undefined
-      return a.mul(Fixed.from(b))
-    }, Fixed.unit(18))
-  }, [chainPrices])
-
-  const [rawValueInput = "", setRawValueInput] = useState(maybeValued)
-  const [rawPricedInput = "", setRawPricedInput] = useState(maybePriced)
-
-  const setValue = useCallback((input: string) => {
+  const setRawValued = useCallback((input: string) => {
     try {
-      setRawValueInput(input)
+      setRawValuedInput(input)
 
       if (input.trim().length === 0) {
         setRawPricedInput(undefined)
         return
       }
 
-      if (maybeTokenPrice == null) {
+      if (maybeWeiPrice == null) {
         setRawPricedInput(undefined)
         return
       }
 
-      const priced = Fixed.fromString(input, tokenData.decimals).mul(maybeTokenPrice)
+      const priced = Fixed.fromString(input, tokenData.decimals).mul(maybeWeiPrice)
 
       if (priced.value === 0n) {
         setRawPricedInput(undefined)
@@ -150,144 +120,153 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       setRawPricedInput(undefined)
       return
     }
-  }, [tokenData, maybeTokenPrice])
+  }, [tokenData, maybeWeiPrice])
 
-  const setPrice = useCallback((input: string) => {
+  const setRawPriced = useCallback((input: string) => {
     try {
       setRawPricedInput(input)
 
       if (input.trim().length === 0) {
-        setRawValueInput(undefined)
+        setRawValuedInput(undefined)
         return
       }
 
-      if (maybeTokenPrice == null) {
-        setRawValueInput(undefined)
+      if (maybeWeiPrice == null) {
+        setRawValuedInput(undefined)
         return
       }
 
-      const valued = Fixed.fromString(input, tokenData.decimals).div(maybeTokenPrice)
+      const valued = Fixed.fromString(input, tokenData.decimals).div(maybeWeiPrice)
 
       if (valued.value === 0n) {
-        setRawValueInput(undefined)
+        setRawValuedInput(undefined)
         return
       }
 
-      setRawValueInput(valued.toString())
+      setRawValuedInput(valued.toString())
     } catch (e: unknown) {
-      setRawValueInput(undefined)
+      setRawValuedInput(undefined)
       return
     }
-  }, [tokenData, maybeTokenPrice])
+  }, [tokenData, maybeWeiPrice])
 
-  const onValueInputChange = useInputChange(e => {
-    setValue(e.target.value)
-  }, [setValue])
+  const onValuedInputChange = useInputChange(e => {
+    setRawValued(e.target.value)
+  }, [setRawValued])
 
   const onPricedInputChange = useInputChange(e => {
-    setPrice(e.target.value)
-  }, [setPrice])
+    setRawPriced(e.target.value)
+  }, [setRawPriced])
 
-  const valueInput = useDeferredValue(rawValueInput)
-  const pricedInput = useDeferredValue(rawPricedInput)
-
-  useEffectButNotFirstTime(() => {
-    setValued(valueInput)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valueInput])
+  const valuedInput = useDeferredValue(rawValuedInput)
 
   useEffectButNotFirstTime(() => {
-    setPriced(pricedInput)
+    setValue(valuedInput)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pricedInput])
+  }, [valuedInput])
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
-  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, tokenPrices)
+  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, weiPrices)
   const pricedBalanceQuery = useNativePricedBalance(wallet.address, "usd", context)
 
   const valuedBalanceData = valuedBalanceQuery.current?.ok().get()
   const pricedBalanceData = pricedBalanceQuery.current?.ok().get()
 
   const onValueMaxClick = useCallback(() => {
+    if (disableValue)
+      return
     if (valuedBalanceData == null)
       return
-    setValue(Fixed.from(valuedBalanceData).toString())
-  }, [valuedBalanceData, setValue])
+    setRawValued(Fixed.from(valuedBalanceData).toString())
+  }, [disableValue, valuedBalanceData, setRawValued])
 
   const onPricedMaxClick = useCallback(() => {
+    if (disableValue)
+      return
     if (pricedBalanceData == null)
       return
-    setPrice(Fixed.from(pricedBalanceData).toString())
-  }, [pricedBalanceData, setPrice])
+    setRawPriced(Fixed.from(pricedBalanceData).toString())
+  }, [disableValue, pricedBalanceData, setRawPriced])
 
   const onValuedPaste = useCallback(async () => {
-    setValue(await navigator.clipboard.readText())
-  }, [setValue])
+    if (disableValue)
+      return
+    setRawValued(await navigator.clipboard.readText())
+  }, [disableValue, setRawValued])
 
   const onPricedPaste = useCallback(async () => {
-    setPrice(await navigator.clipboard.readText())
-  }, [setPrice])
+    if (disableValue)
+      return
+    setRawPriced(await navigator.clipboard.readText())
+  }, [disableValue, setRawPriced])
 
   const onValuedClear = useCallback(async () => {
-    setValue("")
-  }, [setValue])
+    if (disableValue)
+      return
+    setRawValued("")
+  }, [disableValue, setRawValued])
 
   const onPricedClear = useCallback(async () => {
-    setPrice("")
-  }, [setPrice])
+    if (disableValue)
+      return
+    setRawPriced("")
+  }, [disableValue, setRawPriced])
 
   const onTargetFocus = useCallback(() => {
+    if (disableValue)
+      return
     setStep("target")
-  }, [setStep])
+  }, [disableValue, setStep])
 
   const onNonceClick = useCallback(() => {
+    if (disableValue)
+      return
     setStep("nonce")
-  }, [setStep])
+  }, [disableValue, setStep])
 
   const onPricedClick = useCallback(() => {
+    if (disableValue)
+      return
     setMode("priced")
-  }, [])
+  }, [disableValue])
 
   const onValuedClick = useCallback(() => {
+    if (disableValue)
+      return
     setMode("valued")
-  }, [])
+  }, [disableValue])
+
+  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
+
+  const maybeEnsQueryKey = maybeTarget?.endsWith(".eth")
+    ? maybeTarget
+    : undefined
+
+  const ensTargetQuery = useEnsLookup(maybeEnsQueryKey, mainnet)
+  const maybeEnsTarget = ensTargetQuery.current?.ok().get()
 
   const maybeFinalTarget = useMemo(() => {
-    return Peanut.contracts[chainData.chainId]?.v4 as string | undefined
-  }, [chainData])
+    if (maybeTarget == null)
+      return undefined
+    if (Address.from(maybeTarget) != null)
+      return maybeTarget
+    if (maybeEnsTarget != null)
+      return maybeEnsTarget
+    return undefined
+  }, [maybeTarget, maybeEnsTarget])
 
-  const triedFinalPassword = useMemo(() => Result.runAndDoubleWrapSync(() => {
-    const byte = new Uint8Array(1)
-    const bytes = new Uint8Array(32)
-    const cursor = new Cursor(bytes)
-
-    function isAlphanumeric(byte: number) {
-      if (byte >= 97 /*a*/ && byte <= 122 /*z*/)
-        return true
-      if (byte >= 65 /*A*/ && byte <= 90 /*Z*/)
-        return true
-      if (byte >= 48 /*0*/ && byte <= 57 /*9*/)
-        return true
-      return false
-    }
-
-    while (cursor.remaining) {
-      if (!isAlphanumeric(crypto.getRandomValues(byte)[0]))
-        continue
-      cursor.writeOrThrow(byte)
-    }
-
-    return bytes
-  }), [])
+  const rawValue = useMemo(() => {
+    return maybeValue?.trim().length
+      ? maybeValue.trim()
+      : "0"
+  }, [maybeValue])
 
   const maybeFinalValue = useMemo(() => {
     try {
-      return maybeValued?.trim().length
-        ? Fixed.fromString(maybeValued.trim(), tokenData.decimals)
-        : new Fixed(0n, tokenData.decimals)
+      return Fixed.fromString(rawValue, tokenData.decimals)
     } catch { }
-  }, [maybeValued, tokenData])
+  }, [rawValue, tokenData])
 
   const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(maybeNonce)
 
@@ -317,26 +296,23 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
     return undefined
   }, [maybeCustomNonce, maybePendingNonce])
 
-  const maybeTriedMaybeFinalData = useMemo(() => {
-    if (maybeFinalValue == null)
-      return undefined
+  const [rawDataInput = "", setRawDataInput] = useState<Optional<string>>(maybeData)
 
-    return Result.runAndDoubleWrapSync(() => {
-      const token = tokenData.address
-      const value = maybeFinalValue.value
+  const onDataInputChange = useTextAreaChange(e => {
+    setRawDataInput(e.target.value)
+  }, [])
 
-      const password = triedFinalPassword.unwrap()
-      const hash = Keccak256.get().hashOrThrow(password)
-      const privateKey = Secp256k1.get().PrivateKey.tryImport(hash).unwrap()
-      const publicKey = privateKey.tryGetPublicKey().unwrap().tryExportUncompressed().unwrap()
-      const publicKeyHex = Base16.get().encodeOrThrow(publicKey)
-      const publicKey20 = ZeroHexString.from(publicKeyHex.slice(-40))
+  const dataInput = useDeferredValue(rawDataInput)
 
-      const abi = PeanutAbi.makeDeposit.from(token, 1, value, 0, publicKey20)
+  useEffectButNotFirstTime(() => {
+    setData(dataInput)
+  }, [dataInput])
 
-      return Abi.encodeOrThrow(abi)
-    })
-  }, [tokenData, maybeFinalValue, triedFinalPassword])
+  const maybeTriedMaybeFinalData = useMemo(() => Result.runAndDoubleWrapSync(() => {
+    return maybeData?.trim().length
+      ? ZeroHexString.from(maybeData.trim())
+      : undefined
+  }), [maybeData])
 
   const onGasModeChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
     setGasMode(e.currentTarget.value)
@@ -684,120 +660,120 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       return undefined
     if (maybeNormalGasPrice == null)
       return undefined
-    if (maybeChainPrice == null)
+    if (maybeWeiPrice == null)
       return undefined
-    return new Fixed(maybeLegacyGasLimit * maybeNormalGasPrice, 18).mul(maybeChainPrice)
-  }, [maybeLegacyGasLimit, maybeNormalGasPrice, maybeChainPrice])
+    return new Fixed(maybeLegacyGasLimit * maybeNormalGasPrice, 18).mul(maybeWeiPrice)
+  }, [maybeLegacyGasLimit, maybeNormalGasPrice, maybeWeiPrice])
 
   const maybeFastLegacyGasCost = useMemo(() => {
     if (maybeLegacyGasLimit == null)
       return undefined
     if (maybeFastGasPrice == null)
       return undefined
-    if (maybeChainPrice == null)
+    if (maybeWeiPrice == null)
       return undefined
-    return new Fixed(maybeLegacyGasLimit * maybeFastGasPrice, 18).mul(maybeChainPrice)
-  }, [maybeLegacyGasLimit, maybeFastGasPrice, maybeChainPrice])
+    return new Fixed(maybeLegacyGasLimit * maybeFastGasPrice, 18).mul(maybeWeiPrice)
+  }, [maybeLegacyGasLimit, maybeFastGasPrice, maybeWeiPrice])
 
   const maybeUrgentLegacyGasCost = useMemo(() => {
     if (maybeLegacyGasLimit == null)
       return undefined
     if (maybeUrgentGasPrice == null)
       return undefined
-    if (maybeChainPrice == null)
+    if (maybeWeiPrice == null)
       return undefined
-    return new Fixed(maybeLegacyGasLimit * maybeUrgentGasPrice, 18).mul(maybeChainPrice)
-  }, [maybeLegacyGasLimit, maybeUrgentGasPrice, maybeChainPrice])
+    return new Fixed(maybeLegacyGasLimit * maybeUrgentGasPrice, 18).mul(maybeWeiPrice)
+  }, [maybeLegacyGasLimit, maybeUrgentGasPrice, maybeWeiPrice])
 
   const maybeCustomLegacyGasCost = useMemo(() => {
     if (maybeCustomGasLimit == null)
       return undefined
     if (maybeCustomGasPrice == null)
       return undefined
-    if (maybeChainPrice == null)
+    if (maybeWeiPrice == null)
       return undefined
-    return new Fixed(maybeCustomGasLimit * maybeCustomGasPrice, 18).mul(maybeChainPrice)
-  }, [maybeCustomGasLimit, maybeCustomGasPrice, maybeChainPrice])
+    return new Fixed(maybeCustomGasLimit * maybeCustomGasPrice, 18).mul(maybeWeiPrice)
+  }, [maybeCustomGasLimit, maybeCustomGasPrice, maybeWeiPrice])
 
   const maybeNormalMinEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeNormalMinFeePerGas == null)
       return undefined
-    if (maybeChainPrice == null)
+    if (maybeWeiPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeNormalMinFeePerGas, 18).mul(maybeChainPrice)
-  }, [maybeEip1559GasLimit, maybeNormalMinFeePerGas, maybeChainPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeNormalMinFeePerGas, 18).mul(maybeWeiPrice)
+  }, [maybeEip1559GasLimit, maybeNormalMinFeePerGas, maybeWeiPrice])
 
   const maybeFastMinEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeFastMinFeePerGas == null)
       return undefined
-    if (maybeChainPrice == null)
+    if (maybeWeiPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeFastMinFeePerGas, 18).mul(maybeChainPrice)
-  }, [maybeEip1559GasLimit, maybeFastMinFeePerGas, maybeChainPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeFastMinFeePerGas, 18).mul(maybeWeiPrice)
+  }, [maybeEip1559GasLimit, maybeFastMinFeePerGas, maybeWeiPrice])
 
   const maybeUrgentMinEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeUrgentMinFeePerGas == null)
       return undefined
-    if (maybeChainPrice == null)
+    if (maybeWeiPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeUrgentMinFeePerGas, 18).mul(maybeChainPrice)
-  }, [maybeEip1559GasLimit, maybeUrgentMinFeePerGas, maybeChainPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeUrgentMinFeePerGas, 18).mul(maybeWeiPrice)
+  }, [maybeEip1559GasLimit, maybeUrgentMinFeePerGas, maybeWeiPrice])
 
   const maybeCustomMinEip1559GasCost = useMemo(() => {
     if (maybeCustomGasLimit == null)
       return undefined
     if (maybeCustomMinFeePerGas == null)
       return undefined
-    if (maybeChainPrice == null)
+    if (maybeWeiPrice == null)
       return undefined
-    return new Fixed(maybeCustomGasLimit * maybeCustomMinFeePerGas, 18).mul(maybeChainPrice)
-  }, [maybeCustomGasLimit, maybeCustomMinFeePerGas, maybeChainPrice])
+    return new Fixed(maybeCustomGasLimit * maybeCustomMinFeePerGas, 18).mul(maybeWeiPrice)
+  }, [maybeCustomGasLimit, maybeCustomMinFeePerGas, maybeWeiPrice])
 
   const maybeNormalMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeNormalMaxFeePerGas == null)
       return undefined
-    if (maybeChainPrice == null)
+    if (maybeWeiPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeNormalMaxFeePerGas, 18).mul(maybeChainPrice)
-  }, [maybeEip1559GasLimit, maybeNormalMaxFeePerGas, maybeChainPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeNormalMaxFeePerGas, 18).mul(maybeWeiPrice)
+  }, [maybeEip1559GasLimit, maybeNormalMaxFeePerGas, maybeWeiPrice])
 
   const maybeFastMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeFastMaxFeePerGas == null)
       return undefined
-    if (maybeChainPrice == null)
+    if (maybeWeiPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeFastMaxFeePerGas, 18).mul(maybeChainPrice)
-  }, [maybeEip1559GasLimit, maybeFastMaxFeePerGas, maybeChainPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeFastMaxFeePerGas, 18).mul(maybeWeiPrice)
+  }, [maybeEip1559GasLimit, maybeFastMaxFeePerGas, maybeWeiPrice])
 
   const maybeUrgentMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeUrgentMaxFeePerGas == null)
       return undefined
-    if (maybeChainPrice == null)
+    if (maybeWeiPrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeUrgentMaxFeePerGas, 18).mul(maybeChainPrice)
-  }, [maybeEip1559GasLimit, maybeUrgentMaxFeePerGas, maybeChainPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeUrgentMaxFeePerGas, 18).mul(maybeWeiPrice)
+  }, [maybeEip1559GasLimit, maybeUrgentMaxFeePerGas, maybeWeiPrice])
 
   const maybeCustomMaxEip1559GasCost = useMemo(() => {
     if (maybeCustomGasLimit == null)
       return undefined
     if (maybeCustomMaxFeePerGas == null)
       return undefined
-    if (maybeChainPrice == null)
+    if (maybeWeiPrice == null)
       return undefined
-    return new Fixed(maybeCustomGasLimit * maybeCustomMaxFeePerGas, 18).mul(maybeChainPrice)
-  }, [maybeCustomGasLimit, maybeCustomMaxFeePerGas, maybeChainPrice])
+    return new Fixed(maybeCustomGasLimit * maybeCustomMaxFeePerGas, 18).mul(maybeWeiPrice)
+  }, [maybeCustomGasLimit, maybeCustomMaxFeePerGas, maybeWeiPrice])
 
   const maybeFinalLegacyGasCost = useMode(maybeNormalLegacyGasCost, maybeFastLegacyGasCost, maybeUrgentLegacyGasCost, maybeCustomLegacyGasCost)
   const maybeFinalMinEip1559GasCost = useMode(maybeNormalMinEip1559GasCost, maybeFastMinEip1559GasCost, maybeUrgentMinEip1559GasCost, maybeCustomMinEip1559GasCost)
@@ -845,6 +821,10 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         return new UIError(`Could not parse or fetch address`)
       }).unwrap()
 
+      const value = Option.wrap(maybeFinalValue).okOrElseSync(() => {
+        return new UIError(`Could not parse value`)
+      }).unwrap()
+
       const nonce = Option.wrap(maybeFinalNonce).okOrElseSync(() => {
         return new UIError(`Could not parse or fetch nonce`)
       }).unwrap()
@@ -878,6 +858,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
           maxFeePerGas: maxFeePerGas,
           maxPriorityFeePerGas: maxPriorityFeePerGas,
           nonce: Number(nonce),
+          value: value.value,
           data: data
         })
       }
@@ -896,6 +877,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
           chainId: chainData.chainId,
           gasPrice: gasPrice,
           nonce: Number(nonce),
+          value: value.value,
           data: data
         })
       }
@@ -928,7 +910,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, chainData, maybeFinalTarget, maybeFinalNonce, maybeTriedMaybeFinalData, maybeIsEip1559, maybeFinalGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+  }, [wallet, context, chainData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeTriedMaybeFinalData, maybeIsEip1559, maybeFinalGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
 
   const onSignClick = useAsyncUniqueCallback(async () => {
     return await signOrSend("sign")
@@ -941,46 +923,14 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   const receiptQuery = useTransactionReceipt(txHash, context)
   const maybeReceipt = receiptQuery.current?.ok().get()
 
-  const maybeTriedLink = useMemo(() => {
-    if (maybeReceipt == null)
-      return
-    if (triedFinalPassword.isErr())
-      return
-
-    return Result.runAndDoubleWrapSync(() => {
-      const signatureUtf8 = "DepositEvent(uint256,uint8,uint256,address)"
-      const signatureBytes = Bytes.fromUtf8(signatureUtf8)
-
-      using hashSlice = Keccak256.get().hashOrThrow(signatureBytes)
-      const hashHex = `0x${Base16.get().encodeOrThrow(hashSlice)}`
-
-      const log = maybeReceipt.logs.find(log => log.topics[0] === hashHex)
-
-      if (log == null)
-        throw new Error(`Could not find log`)
-
-      const index = BigInt(log.topics[1])
-      const password = Bytes.toUtf8(triedFinalPassword.get())
-
-      return `https://peanut.to/claim?c=${chainData.chainId}&i=${index}&v=v4&p=${password}`
-    })
-  }, [chainData, maybeReceipt, triedFinalPassword])
-
-  const onLinkCopy = useCopy(maybeTriedLink?.ok().inner)
-
   return <>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}
         address={address}
-        ok={onTokenPrice} />)}
-    {chainData.token.pairs?.map((address, i) =>
-      <PriceResolver key={i}
-        index={i}
-        address={address}
-        ok={onChainPrice} />)}
+        ok={onWeiPrice} />)}
     <Dialog.Title close={close}>
-      Send {tokenData.symbol} on {chainData.name}
+      Transact on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
     <SimpleBox>
@@ -989,9 +939,10 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       </div>
       <div className="w-4" />
       <SimpleInput key="target"
+        disabled={disableTarget}
         readOnly
         onFocus={onTargetFocus}
-        value="Peanut" />
+        value={maybeTarget} />
     </SimpleBox>
     <div className="h-2" />
     {mode === "valued" &&
@@ -1004,8 +955,9 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
           <div className="flex items-center">
             <SimpleInput
               autoFocus
-              value={rawValueInput}
-              onChange={onValueInputChange}
+              disabled={disableValue}
+              value={rawValuedInput}
+              onChange={onValuedInputChange}
               placeholder="0.0" />
             <div className="w-1" />
             <div className="text-contrast">
@@ -1024,24 +976,26 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
             </div>
           </div>
         </div>
-        <div className="w-2" />
-        <div className="flex items-center">
-          {rawValueInput.length === 0
-            ? <ShrinkableNakedButtonInInputBox
-              onClick={onValuedPaste}>
-              <Outline.ClipboardIcon className="size-4" />
-            </ShrinkableNakedButtonInInputBox>
-            : <ShrinkableNakedButtonInInputBox
-              onClick={onValuedClear}>
-              <Outline.XMarkIcon className="size-4" />
-            </ShrinkableNakedButtonInInputBox>}
-          <div className="w-1" />
-          <ShrinkableContrastButtonInInputBox
-            disabled={valuedBalanceQuery.data == null}
-            onClick={onValueMaxClick}>
-            100%
-          </ShrinkableContrastButtonInInputBox>
-        </div>
+        {!disableValue && <>
+          <div className="w-2" />
+          <div className="flex items-center">
+            {rawValuedInput.length === 0
+              ? <ShrinkableNakedButtonInInputBox
+                onClick={onValuedPaste}>
+                <Outline.ClipboardIcon className="size-4" />
+              </ShrinkableNakedButtonInInputBox>
+              : <ShrinkableNakedButtonInInputBox
+                onClick={onValuedClear}>
+                <Outline.XMarkIcon className="size-4" />
+              </ShrinkableNakedButtonInInputBox>}
+            <div className="w-1" />
+            <ShrinkableContrastButtonInInputBox
+              disabled={valuedBalanceQuery.data == null}
+              onClick={onValueMaxClick}>
+              100%
+            </ShrinkableContrastButtonInInputBox>
+          </div>
+        </>}
       </SimpleBox>}
     {mode === "priced" &&
       <SimpleBox>
@@ -1053,6 +1007,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
           <div className="flex items-center">
             <SimpleInput
               autoFocus
+              disabled={disableValue}
               value={rawPricedInput}
               onChange={onPricedInputChange}
               placeholder="0.0" />
@@ -1065,7 +1020,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
             role="button"
             onClick={onValuedClick}>
             <div className="text-contrast truncate">
-              {rawValueInput || "0.0"}
+              {rawValuedInput || "0.0"}
             </div>
             <div className="grow" />
             <div className="text-contrast">
@@ -1073,24 +1028,26 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
             </div>
           </div>
         </div>
-        <div className="w-2" />
-        <div className="flex items-center">
-          {rawPricedInput.length === 0
-            ? <ShrinkableNakedButtonInInputBox
-              onClick={onPricedPaste}>
-              <Outline.ClipboardIcon className="size-4" />
-            </ShrinkableNakedButtonInInputBox>
-            : <ShrinkableNakedButtonInInputBox
-              onClick={onPricedClear}>
-              <Outline.XMarkIcon className="size-4" />
-            </ShrinkableNakedButtonInInputBox>}
-          <div className="w-1" />
-          <ShrinkableContrastButtonInInputBox
-            disabled={pricedBalanceQuery.data == null}
-            onClick={onPricedMaxClick}>
-            100%
-          </ShrinkableContrastButtonInInputBox>
-        </div>
+        {!disableValue && <>
+          <div className="w-2" />
+          <div className="flex items-center">
+            {rawPricedInput.length === 0
+              ? <ShrinkableNakedButtonInInputBox
+                onClick={onPricedPaste}>
+                <Outline.ClipboardIcon className="size-4" />
+              </ShrinkableNakedButtonInInputBox>
+              : <ShrinkableNakedButtonInInputBox
+                onClick={onPricedClear}>
+                <Outline.XMarkIcon className="size-4" />
+              </ShrinkableNakedButtonInInputBox>}
+            <div className="w-1" />
+            <ShrinkableContrastButtonInInputBox
+              disabled={pricedBalanceQuery.data == null}
+              onClick={onPricedMaxClick}>
+              100%
+            </ShrinkableContrastButtonInInputBox>
+          </div>
+        </>}
       </SimpleBox>}
     <div className="h-4" />
     <div className="font-medium">
@@ -1111,6 +1068,19 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         onClick={onNonceClick}>
         Select
       </ShrinkableContrastButtonInInputBox>
+    </SimpleBox>
+    <div className="h-2" />
+    <SimpleBox>
+      <div className="">
+        Data
+      </div>
+      <div className="w-4" />
+      <SimpleTextarea
+        disabled={disableData}
+        rows={3}
+        value={rawDataInput}
+        onChange={onDataInputChange}
+        placeholder="0x0" />
     </SimpleBox>
     <div className="h-4" />
     <div className="font-medium">
@@ -1229,41 +1199,6 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       </div>
     </>}
     <div className="h-4 grow" />
-    {maybeTriedLink != null && maybeTriedLink.isOk() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl">
-        <div className="flex flex-col truncate">
-          <div className="flex items-center">
-            <div className="font-medium">
-              Link created
-            </div>
-          </div>
-          <div className="text-contrast truncate">
-            {maybeTriedLink.get()}
-          </div>
-          <div className="h-2" />
-          <div className="flex items-center gap-1">
-            <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
-              onClick={onLinkCopy.run}>
-              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-                Copy
-                {onLinkCopy.current
-                  ? <Outline.CheckIcon className="size-4" />
-                  : <Outline.ClipboardIcon className="size-4" />}
-              </div>
-            </button>
-            <a className="group px-2 bg-contrast rounded-full"
-              target="_blank" rel="noreferrer"
-              href={maybeTriedLink.get()}>
-              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-                Open
-                <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-              </div>
-            </a>
-          </div>
-        </div>
-      </div>
-      <div className="h-2" />
-    </>}
     {txSign != null && <>
       <div className="po-md flex items-center bg-contrast rounded-xl">
         <div className="flex flex-col truncate">
@@ -1389,14 +1324,14 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       </div>
       <div className="h-2" />
     </>}
-    <div className="flex items-center">
-      <WideShrinkableContrastButton
-        disabled={onSignClick.loading}
-        onClick={onSignClick.run}>
-        <Outline.PencilIcon className="size-5" />
-        Sign
-      </WideShrinkableContrastButton>
-      <div className="w-2" />
+    <div className="flex items-center gap-2">
+      {!disableSign &&
+        <WideShrinkableContrastButton
+          disabled={onSignClick.loading}
+          onClick={onSignClick.run}>
+          <Outline.PencilIcon className="size-5" />
+          Sign
+        </WideShrinkableContrastButton>}
       <WideShrinkableOppositeButton
         disabled={onSendClick.loading}
         onClick={onSendClick.run}>

@@ -7,7 +7,7 @@ import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange } from "@/libs/react/events";
-import { Dialog, useDialogContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { useTransactionReceipt } from "@/mods/foreground/entities/transactions/data";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
@@ -28,7 +28,7 @@ import { PriceResolver } from "../../../page";
 
 export function WalletSendScreenContractValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
-  const { close } = useDialogContext().unwrap()
+  const close = useCloseContext().unwrap()
 
   const $state = usePathState<UrlState>()
   const [maybeStep, setStep] = useSearchState("step", $state)
