@@ -1,6 +1,7 @@
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context"
 import { WalletSendScreenNonce } from "../send/nonce"
 import { WalletSendScreenTarget } from "../send/target"
+import { WalletSendTransactionScreenValue } from "./screen"
 
 export type UrlState = {
   readonly type?: string
@@ -8,6 +9,7 @@ export type UrlState = {
   readonly chain?: string
   readonly token?: string
   readonly target?: string
+  readonly value?: string
   readonly valued?: string
   readonly priced?: string
   readonly nonce?: string
@@ -30,7 +32,7 @@ export function WalletSendTransactionScreen(props: {}) {
   if (step === "target")
     return <WalletSendScreenTarget />
   if (step === "value")
-    return <WalletSendTransactionScreen />
+    return <WalletSendTransactionScreenValue />
   if (step === "nonce")
     return <WalletSendScreenNonce />
   return null

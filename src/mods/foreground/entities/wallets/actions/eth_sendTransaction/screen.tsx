@@ -15,7 +15,7 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
-import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
+import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { UrlState } from ".";
 import { useBlockByNumber } from "../../../blocks/data";
 import { useEnsLookup } from "../../../names/data";
@@ -24,7 +24,7 @@ import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "
 import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../data";
 import { PriceResolver } from "../../page";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../send";
+import { BigShrinkableContrastButtonInInputBox, ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../send";
 
 export function WalletSendTransactionScreenValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
@@ -34,7 +34,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeTarget, setTarget] = useSearchState("target", $state)
-  const [maybeValue, setValue] = useSearchState("valued", $state)
+  const [maybeValue, setValue] = useSearchState("value", $state)
   const [maybeNonce, setNonce] = useSearchState("nonce", $state)
   const [maybeData, setData] = useSearchState("data", $state)
   const [maybeGasMode, setGasMode] = useSearchState("gasMode", $state)
@@ -79,25 +79,23 @@ export function WalletSendTransactionScreenValue(props: {}) {
   }, [])
 
   const maybeWeiPrice = useMemo(() => {
-    if (weiPrices == null)
-      return
-
-    return weiPrices.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
-      if (a == null)
-        return undefined
+    return weiPrices?.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
       if (b == null)
         return undefined
+      if (a == null)
+        return Fixed.from(b)
       return a.mul(Fixed.from(b))
-    }, Fixed.unit(18))
+    }, undefined)
   }, [weiPrices])
 
   const [rawValuedInput = "", setRawValuedInput] = useState<Optional<string>>(maybeValue)
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
 
-  const setRawValued = useCallback((input: string) => {
-    try {
-      setRawValuedInput(input)
+  const valuedInput = useDeferredValue(rawValuedInput)
+  const pricedInput = useDeferredValue(rawPricedInput)
 
+  const onValuedChange = useCallback((input: string) => {
+    try {
       if (input.trim().length === 0) {
         setRawPricedInput(undefined)
         return
@@ -120,12 +118,10 @@ export function WalletSendTransactionScreenValue(props: {}) {
       setRawPricedInput(undefined)
       return
     }
-  }, [tokenData, maybeWeiPrice])
+  }, [maybeWeiPrice, tokenData])
 
-  const setRawPriced = useCallback((input: string) => {
+  const onPricedChange = useCallback((input: string) => {
     try {
-      setRawPricedInput(input)
-
       if (input.trim().length === 0) {
         setRawValuedInput(undefined)
         return
@@ -148,7 +144,17 @@ export function WalletSendTransactionScreenValue(props: {}) {
       setRawValuedInput(undefined)
       return
     }
-  }, [tokenData, maybeWeiPrice])
+  }, [maybeWeiPrice, tokenData])
+
+  const setRawValued = useCallback((input: string) => {
+    setRawValuedInput(input)
+    onValuedChange(input)
+  }, [onValuedChange])
+
+  const setRawPriced = useCallback((input: string) => {
+    setRawPricedInput(input)
+    onPricedChange(input)
+  }, [onPricedChange])
 
   const onValuedInputChange = useInputChange(e => {
     setRawValued(e.target.value)
@@ -158,9 +164,14 @@ export function WalletSendTransactionScreenValue(props: {}) {
     setRawPriced(e.target.value)
   }, [setRawPriced])
 
-  const valuedInput = useDeferredValue(rawValuedInput)
+  useEffect(() => {
+    if (maybeWeiPrice == null)
+      return
+    onValuedChange(valuedInput)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maybeWeiPrice])
 
-  useEffectButNotFirstTime(() => {
+  useEffect(() => {
     setValue(valuedInput)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valuedInput])
@@ -1070,18 +1081,24 @@ export function WalletSendTransactionScreenValue(props: {}) {
       </ShrinkableContrastButtonInInputBox>
     </SimpleBox>
     <div className="h-2" />
-    <SimpleBox>
-      <div className="">
-        Data
+    <div className="po-md flex flex-col bg-contrast rounded-xl">
+      <div className="flex items-start">
+        <div className="">
+          Data
+        </div>
+        <div className="w-4" />
+        <SimpleTextarea
+          disabled={disableData}
+          rows={3}
+          value={rawDataInput}
+          onChange={onDataInputChange}
+          placeholder="0x0" />
       </div>
-      <div className="w-4" />
-      <SimpleTextarea
-        disabled={disableData}
-        rows={3}
-        value={rawDataInput}
-        onChange={onDataInputChange}
-        placeholder="0x0" />
-    </SimpleBox>
+      <div className="h-2" />
+      <BigShrinkableContrastButtonInInputBox>
+        Decode
+      </BigShrinkableContrastButtonInInputBox>
+    </div>
     <div className="h-4" />
     <div className="font-medium">
       Gas

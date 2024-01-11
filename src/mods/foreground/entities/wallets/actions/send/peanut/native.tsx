@@ -6,6 +6,7 @@ import { Peanut } from "@/libs/peanut";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange } from "@/libs/react/events";
 import { Dialog, Screen, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { qurl } from "@/libs/url/url";
 import { useTransactionReceipt } from "@/mods/foreground/entities/transactions/data";
 import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
@@ -33,12 +34,6 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeValue, setValue] = useSearchState("value", $state)
-  const [maybeNonce, setNonce] = useSearchState("nonce", $state)
-  const [maybeGasMode, setGasMode] = useSearchState("gasMode", $state)
-  const [maybeGasLimit, setGasLimit] = useSearchState("gasLimit", $state)
-  const [maybeGasPrice, setGasPrice] = useSearchState("gasPrice", $state)
-  const [maybeBaseFeePerGas, setBaseFeePerGas] = useSearchState("baseFeePerGas", $state)
-  const [maybeMaxPriorityFeePerGas, setMaxPriorityFeePerGas] = useSearchState("maxPriorityFeePerGas", $state)
 
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
@@ -188,10 +183,6 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     setStep("target")
   }, [setStep])
 
-  const onNonceClick = useCallback(() => {
-    setStep("nonce")
-  }, [setStep])
-
   const onPricedClick = useCallback(() => {
     setMode("priced")
   }, [])
@@ -292,17 +283,17 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const onLinkCopy = useCopy(maybeTriedLink?.ok().inner)
 
   const onSendTransactionClick = useCallback(() => {
-    subpath.go(`/eth_sendTransaction?chain=${maybeChain}&target=${maybeFinalTarget}&valued=${rawValue}&data=${maybeTriedMaybeFinalData?.ok().get()}&gasMode=${maybeGasMode}&gasLimit=${maybeGasLimit}&gasPrice=${maybeGasPrice}&baseFeePerGas=${maybeBaseFeePerGas}&maxPriorityFeePerGas=${maybeMaxPriorityFeePerGas}&disableTarget=true&disableValue=true&disableData=true&disableSign=true`)
-  }, [subpath, maybeChain, maybeFinalTarget, rawValue, maybeTriedMaybeFinalData, maybeGasMode, maybeGasLimit, maybeGasPrice, maybeBaseFeePerGas, maybeMaxPriorityFeePerGas])
+    subpath.go(qurl("/eth_sendTransaction", { chain: chainData.chainId, target: maybeFinalTarget, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
+  }, [subpath, chainData, maybeFinalTarget, rawValue, maybeTriedMaybeFinalData])
 
-  const onSubpathClose = useCallback(() => {
+  const onClose = useCallback(() => {
     subpath.go(`/`)
   }, [subpath])
 
   return <>
     <PathContext.Provider value={subpath}>
       {subpath.url.pathname === "/eth_sendTransaction" &&
-        <Screen close={onSubpathClose}>
+        <Screen close={onClose}>
           <WalletSendTransactionScreenValue />
         </Screen>}
     </PathContext.Provider>
