@@ -81,10 +81,10 @@ export function ShrinkableContrastButtonInInputBox(props: ChildrenProps & Button
   </button>
 }
 
-export function BigShrinkableContrastButtonInInputBox(props: ChildrenProps & ButtonProps) {
+export function ShrinkableContrastButtonInTextareaBox(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="group po-sm bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="group po-sm bg-contrast rounded-xl outline-none disabled:opacity-50 transition-opacity" {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>

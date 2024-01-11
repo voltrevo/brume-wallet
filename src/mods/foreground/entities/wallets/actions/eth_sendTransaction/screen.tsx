@@ -24,7 +24,7 @@ import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "
 import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../data";
 import { PriceResolver } from "../../page";
-import { BigShrinkableContrastButtonInInputBox, ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../send";
+import { ShrinkableContrastButtonInInputBox, ShrinkableContrastButtonInTextareaBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../send";
 
 export function WalletSendTransactionScreenValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
@@ -1095,9 +1095,10 @@ export function WalletSendTransactionScreenValue(props: {}) {
           placeholder="0x0" />
       </div>
       <div className="h-2" />
-      <BigShrinkableContrastButtonInInputBox>
+      <ShrinkableContrastButtonInTextareaBox>
+        <Outline.MagnifyingGlassIcon className="size-4" />
         Decode
-      </BigShrinkableContrastButtonInInputBox>
+      </ShrinkableContrastButtonInTextareaBox>
     </div>
     <div className="h-4" />
     <div className="font-medium">
