@@ -23,7 +23,7 @@ import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/dat
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext2 } from "../../../data";
 import { PriceResolver } from "../../../page";
-import { WalletSendTransactionScreenValue } from "../../eth_sendTransaction/screen";
+import { WalletSendTransactionScreen } from "../../eth_sendTransaction";
 
 export function WalletPeanutSendScreenNativeValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
@@ -191,7 +191,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     setMode("valued")
   }, [])
 
-  const maybeFinalTarget = useMemo(() => {
+  const maybeContract = useMemo(() => {
     return Peanut.contracts[chainData.chainId]?.v4 as string | undefined
   }, [chainData])
 
@@ -283,8 +283,8 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const onLinkCopy = useCopy(maybeTriedLink?.ok().inner)
 
   const onSendTransactionClick = useCallback(() => {
-    subpath.go(qurl("/eth_sendTransaction", { chain: chainData.chainId, target: maybeFinalTarget, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
-  }, [subpath, chainData, maybeFinalTarget, rawValue, maybeTriedMaybeFinalData])
+    subpath.go(qurl("/eth_sendTransaction", { step: "value", chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
+  }, [subpath, chainData, maybeContract, rawValue, maybeTriedMaybeFinalData])
 
   const onClose = useCallback(() => {
     subpath.go(`/`)
@@ -294,7 +294,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     <PathContext.Provider value={subpath}>
       {subpath.url.pathname === "/eth_sendTransaction" &&
         <Screen close={onClose}>
-          <WalletSendTransactionScreenValue />
+          <WalletSendTransactionScreen />
         </Screen>}
     </PathContext.Provider>
     {tokenData.pairs?.map((address, i) =>
@@ -455,7 +455,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       <WideShrinkableOppositeButton
         onClick={onSendTransactionClick}>
         <Outline.PaperAirplaneIcon className="size-5" />
-        Send
+        Transact
       </WideShrinkableOppositeButton>
     </div>
   </>

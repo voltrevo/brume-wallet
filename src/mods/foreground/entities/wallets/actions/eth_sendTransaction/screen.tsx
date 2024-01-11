@@ -92,7 +92,6 @@ export function WalletSendTransactionScreenValue(props: {}) {
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
 
   const valuedInput = useDeferredValue(rawValuedInput)
-  const pricedInput = useDeferredValue(rawPricedInput)
 
   const onValuedChange = useCallback((input: string) => {
     try {
