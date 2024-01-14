@@ -1,6 +1,6 @@
 import { Errors } from "@/libs/errors/errors"
 import { useWait } from "@/libs/glacier/hooks"
-import { BgTransactionReceipt } from "@/mods/background/service_worker/entities/transactions/data"
+import { BgTransaction, BgTransactionReceipt, BgTransactionTrial } from "@/mods/background/service_worker/entities/transactions/data"
 import { ZeroHexString } from "@hazae41/cubane"
 import { createQuery, useError, useQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
@@ -8,6 +8,60 @@ import { Nullable } from "@hazae41/option"
 import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { FgEthereumContext, fetchOrFail2 } from "../wallets/data"
+
+export namespace FgTransaction {
+
+  export type Key = BgTransaction.Key
+  export type Data = BgTransaction.Data
+  export type Fail = BgTransaction.Fail
+
+  export const key = BgTransaction.key
+
+  export function schema(uuid: Nullable<string>, storage: UserStorage) {
+    if (uuid == null)
+      return
+
+    return createQuery<Key, Data, Fail>({
+      key: key(uuid),
+      storage
+    })
+  }
+
+}
+
+export function useTransaction(uuid: Nullable<string>) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgTransaction.schema, [uuid, storage])
+  useSubscribe(query, storage)
+  return query
+}
+
+export namespace FgTransactionTrial {
+
+  export type Key = BgTransactionTrial.Key
+  export type Data = BgTransactionTrial.Data
+  export type Fail = BgTransactionTrial.Fail
+
+  export const key = BgTransactionTrial.key
+
+  export function schema(uuid: Nullable<string>, storage: UserStorage) {
+    if (uuid == null)
+      return
+
+    return createQuery<Key, Data, Fail>({
+      key: key(uuid),
+      storage
+    })
+  }
+
+}
+
+export function useTransactionTrial(uuid: Nullable<string>) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgTransactionTrial.schema, [uuid, storage])
+  useSubscribe(query, storage)
+  return query
+}
 
 export namespace FgTransactionReceipt {
 

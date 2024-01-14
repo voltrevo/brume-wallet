@@ -76,30 +76,14 @@ export function WalletSendScreenContractValue(props: {}) {
   }, [])
 
   const maybeTokenPrice = useMemo(() => {
-    if (tokenPrices == null)
-      return
-
-    return tokenPrices.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
-      if (a == null)
-        return undefined
+    return tokenPrices?.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
       if (b == null)
         return undefined
+      if (a == null)
+        return Fixed.from(b)
       return a.mul(Fixed.from(b))
-    }, Fixed.unit(18))
+    }, undefined)
   }, [tokenPrices])
-
-  const maybeChainPrice = useMemo(() => {
-    if (chainPrices == null)
-      return
-
-    return chainPrices.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
-      if (a == null)
-        return undefined
-      if (b == null)
-        return undefined
-      return a.mul(Fixed.from(b))
-    }, Fixed.unit(18))
-  }, [chainPrices])
 
   const [rawValuedInput = "", setRawValuedInput] = useState<Optional<string>>(maybeValue)
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
@@ -282,8 +266,6 @@ export function WalletSendScreenContractValue(props: {}) {
       return Abi.encodeOrThrow(abi)
     })
   }, [maybeFinalTarget, maybeFinalValue])
-
-  console.log(maybeEnsTarget, maybeFinalTarget, maybeFinalValue, maybeTriedMaybeFinalData)
 
   const onSendTransactionClick = useCallback(() => {
     subpath.go(qurl("/eth_sendTransaction", { step: "value", chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true }))

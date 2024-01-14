@@ -202,7 +202,7 @@ export namespace BgWallet {
       }
     }
 
-    return createQuery<Key, Data, never>({ key: key(uuid), indexer, storage })
+    return createQuery<Key, Data, Fail>({ key: key(uuid), indexer, storage })
   }
 
 }

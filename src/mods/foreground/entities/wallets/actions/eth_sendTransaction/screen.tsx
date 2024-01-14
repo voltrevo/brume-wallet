@@ -2,13 +2,16 @@ import { BigIntToHex } from "@/libs/bigints/bigints";
 import { useCopy } from "@/libs/copy/copy";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
+import { Mutators } from "@/libs/glacier/mutators";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
+import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
-import { useTransactionReceipt } from "@/mods/foreground/entities/transactions/data";
+import { TransactionData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
+import { useTransaction, useTransactionReceipt, useTransactionTrial } from "@/mods/foreground/entities/transactions/data";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
@@ -31,6 +34,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
   const close = useCloseContext().unwrap()
 
   const $state = usePathState<UrlState>()
+  const [maybeTrialUuid, setTrialUuid] = useSearchState("uuid", $state)
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeTarget, setTarget] = useSearchState("target", $state)
@@ -48,6 +52,15 @@ export function WalletSendTransactionScreenValue(props: {}) {
   const [maybeDisableSign, setDisableSign] = useSearchState("disableSign", $state)
 
   const gasMode = Option.wrap(maybeGasMode).unwrapOr("normal")
+
+  const fallbackTrialUuid = useConstant(() => crypto.randomUUID())
+  const trialUuid = Option.wrap(maybeTrialUuid).unwrapOr(fallbackTrialUuid)
+  const trialQuery = useTransactionTrial(trialUuid)
+  const maybeTrial = trialQuery.current?.ok().get()
+
+  const transactionUuid = useConstant(() => crypto.randomUUID())
+  const transactionQuery = useTransaction(transactionUuid)
+  const maybeTransaction = transactionQuery.current?.ok().get()
 
   const disableTarget = Boolean(maybeDisableTarget)
   const disableValue = Boolean(maybeDisableValue)
@@ -816,12 +829,6 @@ export function WalletSendTransactionScreenValue(props: {}) {
   const fastMaxPriorityFeePerGasDisplay = useGasDisplay(maybeFastMaxPriorityFeePerGas)
   const urgentMaxPriorityFeePerGasDisplay = useGasDisplay(maybeUrgentMaxPriorityFeePerGas)
 
-  const [txSign, setTxSign] = useState<ZeroHexString>()
-  const [txHash, setTxHash] = useState<ZeroHexString>()
-
-  const onTxSignCopy = useCopy(txSign)
-  const onTxHashCopy = useCopy(txHash)
-
   const signOrSend = useCallback(async (action: "sign" | "send") => {
     try {
       if (maybeIsEip1559 == null)
@@ -898,29 +905,37 @@ export function WalletSendTransactionScreenValue(props: {}) {
       tx.signature = signature
 
       if (action === "sign") {
-        setTxSign(tx.serialized as ZeroHexString)
-        setTxHash(undefined)
+        const uuid = transactionUuid
+        const hash = tx.hash as ZeroHexString
+        const data = tx.serialized as ZeroHexString
+        const trial = TransactionTrialRef.create(trialUuid)
+
+        await transactionQuery.mutate(Mutators.data<TransactionData, never>({ type: "signed", uuid, trial, hash, data }))
         return
       }
 
       if (action === "send") {
-        const txHash = await context.background.tryRequest<ZeroHexString>({
+        const uuid = transactionUuid
+        const hash = tx.hash as ZeroHexString
+        const data = tx.serialized as ZeroHexString
+        const trial = TransactionTrialRef.create(trialUuid)
+
+        await context.background.tryRequest<ZeroHexString>({
           method: "brume_eth_fetch2",
           params: [context.uuid, context.chain.chainId, {
             method: "eth_sendRawTransaction",
-            params: [tx.serialized],
+            params: [data],
             noCheck: true
           }]
         }).then(r => r.unwrap().unwrap())
 
-        setTxHash(txHash)
-        setTxSign(undefined)
+        await transactionQuery.mutate(Mutators.data<TransactionData, never>({ type: "pending", uuid, trial, hash, data }))
         return
       }
     } catch (e) {
       Errors.logAndAlert(e)
     }
-  }, [wallet, context, chainData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeTriedMaybeFinalData, maybeIsEip1559, maybeFinalGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+  }, [wallet, context, trialUuid, transactionUuid, transactionQuery, chainData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeTriedMaybeFinalData, maybeIsEip1559, maybeFinalGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
 
   const onSignClick = useAsyncUniqueCallback(async () => {
     return await signOrSend("sign")
@@ -930,8 +945,21 @@ export function WalletSendTransactionScreenValue(props: {}) {
     return await signOrSend("send")
   }, [signOrSend])
 
-  const receiptQuery = useTransactionReceipt(txHash, context)
+  const receiptQuery = useTransactionReceipt(maybeTransaction?.hash, context)
   const maybeReceipt = receiptQuery.current?.ok().get()
+
+  useEffect(() => {
+    if (maybeReceipt == null)
+      return
+    if (maybeTransaction == null)
+      return
+
+    transactionQuery.mutate(Mutators.data<TransactionData, never>({ ...maybeTransaction, type: "executed", receipt: maybeReceipt }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maybeTransaction, maybeReceipt])
+
+  const onTxSignCopy = useCopy(maybeTransaction?.data)
+  const onTxHashCopy = useCopy(maybeTransaction?.hash)
 
   return <>
     {tokenData.pairs?.map((address, i) =>
@@ -1216,7 +1244,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
       </div>
     </>}
     <div className="h-4 grow" />
-    {txSign != null && <>
+    {maybeTransaction?.type === "signed" && <>
       <div className="po-md flex items-center bg-contrast rounded-xl">
         <div className="flex flex-col truncate">
           <div className="flex items-center">
@@ -1225,7 +1253,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
             </div>
           </div>
           <div className="text-contrast truncate">
-            {txSign}
+            {maybeTransaction.data}
           </div>
           <div className="h-2" />
           <div className="flex items-center gap-1">
@@ -1242,8 +1270,47 @@ export function WalletSendTransactionScreenValue(props: {}) {
         </div>
       </div>
       <div className="h-2" />
+      {maybeTriedEip1559GasLimitKey?.isErr() && <>
+        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+          {maybeTriedEip1559GasLimitKey.get()?.message}
+        </div>
+        <div className="h-2" />
+      </>}
+      {maybeTriedLegacyGasLimitKey?.isErr() && <>
+        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+          {maybeTriedLegacyGasLimitKey.get()?.message}
+        </div>
+        <div className="h-2" />
+      </>}
+      {eip1559GasLimitQuery.current?.isErr() && <>
+        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+          {eip1559GasLimitQuery.current.get()?.message}
+        </div>
+        <div className="h-2" />
+      </>}
+      {legacyGasLimitQuery.current?.isErr() && <>
+        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+          {legacyGasLimitQuery.current.get()?.message}
+        </div>
+        <div className="h-2" />
+      </>}
+      <div className="flex items-center gap-2">
+        {!disableSign &&
+          <WideShrinkableContrastButton
+            disabled={onSignClick.loading}
+            onClick={onSignClick.run}>
+            <Outline.PencilIcon className="size-5" />
+            Sign
+          </WideShrinkableContrastButton>}
+        <WideShrinkableOppositeButton
+          disabled={onSendClick.loading}
+          onClick={onSendClick.run}>
+          <Outline.PaperAirplaneIcon className="size-5" />
+          Send
+        </WideShrinkableOppositeButton>
+      </div>
     </>}
-    {txHash != null && maybeReceipt == null && <>
+    {maybeTransaction?.type === "pending" && <>
       <div className="po-md flex items-center bg-contrast rounded-xl">
         <div className="flex flex-col truncate">
           <div className="flex items-center">
@@ -1254,7 +1321,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
             </div>
           </div>
           <div className="text-contrast truncate">
-            {txHash}
+            {maybeTransaction.hash}
           </div>
           <div className="h-2" />
           <div className="flex items-center gap-1">
@@ -1269,7 +1336,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
             </button>
             <a className="group px-2 bg-contrast rounded-full"
               target="_blank" rel="noreferrer"
-              href={`${chainData.etherscan}/tx/${txHash}`}>
+              href={`${chainData.etherscan}/tx/${maybeTransaction.hash}`}>
               <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
                 Open
                 <Outline.ArrowTopRightOnSquareIcon className="size-4" />
@@ -1279,8 +1346,15 @@ export function WalletSendTransactionScreenValue(props: {}) {
         </div>
       </div>
       <div className="h-2" />
+      <div className="flex items-center gap-2">
+        <WideShrinkableOppositeButton
+          onClick={close}>
+          <Outline.CheckIcon className="size-5" />
+          Close
+        </WideShrinkableOppositeButton>
+      </div>
     </>}
-    {txHash != null && maybeReceipt != null && <>
+    {maybeTransaction?.type === "executed" && <>
       <div className="po-md flex items-center bg-contrast rounded-xl">
         <div className="flex flex-col truncate">
           <div className="flex items-center">
@@ -1291,7 +1365,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
             </div>
           </div>
           <div className="text-contrast truncate">
-            {txHash}
+            {maybeTransaction.hash}
           </div>
           <div className="h-2" />
           <div className="flex items-center gap-1">
@@ -1306,7 +1380,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
             </button>
             <a className="group px-2 bg-contrast rounded-full"
               target="_blank" rel="noreferrer"
-              href={`${chainData.etherscan}/tx/${txHash}`}>
+              href={`${chainData.etherscan}/tx/${maybeTransaction.hash}`}>
               <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
                 Open
                 <Outline.ArrowTopRightOnSquareIcon className="size-4" />
@@ -1316,45 +1390,54 @@ export function WalletSendTransactionScreenValue(props: {}) {
         </div>
       </div>
       <div className="h-2" />
-    </>}
-    {maybeTriedEip1559GasLimitKey?.isErr() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-        {maybeTriedEip1559GasLimitKey.get()?.message}
+      <div className="flex items-center gap-2">
+        <WideShrinkableOppositeButton
+          onClick={close}>
+          <Outline.CheckIcon className="size-5" />
+          Close
+        </WideShrinkableOppositeButton>
       </div>
-      <div className="h-2" />
     </>}
-    {maybeTriedLegacyGasLimitKey?.isErr() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-        {maybeTriedLegacyGasLimitKey.get()?.message}
+    {maybeTransaction == null && <>
+      {maybeTriedEip1559GasLimitKey?.isErr() && <>
+        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+          {maybeTriedEip1559GasLimitKey.get()?.message}
+        </div>
+        <div className="h-2" />
+      </>}
+      {maybeTriedLegacyGasLimitKey?.isErr() && <>
+        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+          {maybeTriedLegacyGasLimitKey.get()?.message}
+        </div>
+        <div className="h-2" />
+      </>}
+      {eip1559GasLimitQuery.current?.isErr() && <>
+        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+          {eip1559GasLimitQuery.current.get()?.message}
+        </div>
+        <div className="h-2" />
+      </>}
+      {legacyGasLimitQuery.current?.isErr() && <>
+        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+          {legacyGasLimitQuery.current.get()?.message}
+        </div>
+        <div className="h-2" />
+      </>}
+      <div className="flex items-center gap-2">
+        {!disableSign &&
+          <WideShrinkableContrastButton
+            disabled={onSignClick.loading}
+            onClick={onSignClick.run}>
+            <Outline.PencilIcon className="size-5" />
+            Sign
+          </WideShrinkableContrastButton>}
+        <WideShrinkableOppositeButton
+          disabled={onSendClick.loading}
+          onClick={onSendClick.run}>
+          <Outline.PaperAirplaneIcon className="size-5" />
+          Send
+        </WideShrinkableOppositeButton>
       </div>
-      <div className="h-2" />
     </>}
-    {eip1559GasLimitQuery.current?.isErr() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-        {eip1559GasLimitQuery.current.get()?.message}
-      </div>
-      <div className="h-2" />
-    </>}
-    {legacyGasLimitQuery.current?.isErr() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-        {legacyGasLimitQuery.current.get()?.message}
-      </div>
-      <div className="h-2" />
-    </>}
-    <div className="flex items-center gap-2">
-      {!disableSign &&
-        <WideShrinkableContrastButton
-          disabled={onSignClick.loading}
-          onClick={onSignClick.run}>
-          <Outline.PencilIcon className="size-5" />
-          Sign
-        </WideShrinkableContrastButton>}
-      <WideShrinkableOppositeButton
-        disabled={onSendClick.loading}
-        onClick={onSendClick.run}>
-        <Outline.PaperAirplaneIcon className="size-5" />
-        Send
-      </WideShrinkableOppositeButton>
-    </div>
   </>
 }

@@ -5,9 +5,10 @@ import { Outline } from "@/libs/icons/icons";
 import { Peanut } from "@/libs/peanut";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange } from "@/libs/react/events";
+import { useConstant } from "@/libs/react/ref";
 import { Dialog, Screen, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
-import { useTransactionReceipt } from "@/mods/foreground/entities/transactions/data";
+import { useTransaction } from "@/mods/foreground/entities/transactions/data";
 import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
@@ -41,14 +42,14 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
 
   const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
 
-  const [tokenPrices, setTokenPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
+  const [weiPrices, setWeiPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)
       return
     return new Array(tokenData.pairs.length)
   })
 
-  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setTokenPrices(prices => {
+  const onWeiPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
+    setWeiPrices(prices => {
       if (prices == null)
         return
       prices[index] = data
@@ -56,18 +57,15 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     })
   }, [])
 
-  const maybeTokenPrice = useMemo(() => {
-    if (tokenPrices == null)
-      return
-
-    return tokenPrices.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
-      if (a == null)
-        return undefined
+  const maybeWeiPrice = useMemo(() => {
+    return weiPrices?.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
       if (b == null)
         return undefined
+      if (a == null)
+        return Fixed.from(b)
       return a.mul(Fixed.from(b))
-    }, Fixed.unit(18))
-  }, [tokenPrices])
+    }, undefined)
+  }, [weiPrices])
 
   const [rawValueInput = "", setRawValueInput] = useState<Optional<string>>(maybeValue)
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
@@ -81,12 +79,12 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
         return
       }
 
-      if (maybeTokenPrice == null) {
+      if (maybeWeiPrice == null) {
         setRawPricedInput(undefined)
         return
       }
 
-      const priced = Fixed.fromString(input, tokenData.decimals).mul(maybeTokenPrice)
+      const priced = Fixed.fromString(input, tokenData.decimals).mul(maybeWeiPrice)
 
       if (priced.value === 0n) {
         setRawPricedInput(undefined)
@@ -98,7 +96,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       setRawPricedInput(undefined)
       return
     }
-  }, [tokenData, maybeTokenPrice])
+  }, [tokenData, maybeWeiPrice])
 
   const setRawPrice = useCallback((input: string) => {
     try {
@@ -109,12 +107,12 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
         return
       }
 
-      if (maybeTokenPrice == null) {
+      if (maybeWeiPrice == null) {
         setRawValueInput(undefined)
         return
       }
 
-      const valued = Fixed.fromString(input, tokenData.decimals).div(maybeTokenPrice)
+      const valued = Fixed.fromString(input, tokenData.decimals).div(maybeWeiPrice)
 
       if (valued.value === 0n) {
         setRawValueInput(undefined)
@@ -126,7 +124,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       setRawValueInput(undefined)
       return
     }
-  }, [tokenData, maybeTokenPrice])
+  }, [tokenData, maybeWeiPrice])
 
   const onValueInputChange = useInputChange(e => {
     setRawValue(e.target.value)
@@ -145,7 +143,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
-  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, tokenPrices)
+  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, weiPrices)
   const pricedBalanceQuery = useNativePricedBalance(wallet.address, "usd", context)
 
   const valuedBalanceData = valuedBalanceQuery.current?.ok().get()
@@ -252,13 +250,25 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     })
   }, [maybeFinalValue, triedFinalPassword])
 
-  const receiptQuery = useTransactionReceipt(undefined, context)
-  const maybeReceipt = receiptQuery.current?.ok().get()
+  const uuid = useConstant(() => crypto.randomUUID())
+
+  const onSendTransactionClick = useCallback(() => {
+    subpath.go(qurl("/eth_sendTransaction", { uuid, step: "value", chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
+  }, [subpath, uuid, chainData, maybeContract, rawValue, maybeTriedMaybeFinalData])
+
+  const onClose = useCallback(() => {
+    subpath.go(`/`)
+  }, [subpath])
+
+  const transactionQuery = useTransaction(uuid)
+  const maybeTransaction = transactionQuery.current?.ok().get()
 
   const maybeTriedLink = useMemo(() => {
-    if (maybeReceipt == null)
+    if (maybeTransaction == null)
       return
     if (triedFinalPassword.isErr())
+      return
+    if (maybeTransaction.type !== "executed")
       return
 
     return Result.runAndDoubleWrapSync(() => {
@@ -268,7 +278,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       using hashSlice = Keccak256.get().hashOrThrow(signatureBytes)
       const hashHex = `0x${Base16.get().encodeOrThrow(hashSlice)}`
 
-      const log = maybeReceipt.logs.find(log => log.topics[0] === hashHex)
+      const log = maybeTransaction.receipt.logs.find(log => log.topics[0] === hashHex)
 
       if (log == null)
         throw new Error(`Could not find log`)
@@ -278,17 +288,9 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
 
       return `https://peanut.to/claim?c=${chainData.chainId}&i=${index}&v=v4&p=${password}`
     })
-  }, [chainData, maybeReceipt, triedFinalPassword])
+  }, [chainData, maybeTransaction, triedFinalPassword])
 
   const onLinkCopy = useCopy(maybeTriedLink?.ok().inner)
-
-  const onSendTransactionClick = useCallback(() => {
-    subpath.go(qurl("/eth_sendTransaction", { step: "value", chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
-  }, [subpath, chainData, maybeContract, rawValue, maybeTriedMaybeFinalData])
-
-  const onClose = useCallback(() => {
-    subpath.go(`/`)
-  }, [subpath])
 
   return <>
     <PathContext.Provider value={subpath}>
@@ -301,7 +303,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       <PriceResolver key={i}
         index={i}
         address={address}
-        ok={onPrice} />)}
+        ok={onWeiPrice} />)}
     <Dialog.Title close={close}>
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
@@ -416,47 +418,55 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
         </div>
       </SimpleBox>}
     <div className="h-4 grow" />
-    {maybeTriedLink != null && maybeTriedLink.isOk() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl">
-        <div className="flex flex-col truncate">
-          <div className="flex items-center">
-            <div className="font-medium">
-              Link created
+    {maybeTriedLink?.isOk()
+      ? <>
+        <div className="po-md flex items-center bg-contrast rounded-xl">
+          <div className="flex flex-col truncate">
+            <div className="flex items-center">
+              <div className="font-medium">
+                Link created
+              </div>
+            </div>
+            <div className="text-contrast truncate">
+              {maybeTriedLink.get()}
+            </div>
+            <div className="h-2" />
+            <div className="flex items-center gap-1">
+              <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+                onClick={onLinkCopy.run}>
+                <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+                  Copy
+                  {onLinkCopy.current
+                    ? <Outline.CheckIcon className="size-4" />
+                    : <Outline.ClipboardIcon className="size-4" />}
+                </div>
+              </button>
+              <a className="group px-2 bg-contrast rounded-full"
+                target="_blank" rel="noreferrer"
+                href={maybeTriedLink.get()}>
+                <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+                  Open
+                  <Outline.ArrowTopRightOnSquareIcon className="size-4" />
+                </div>
+              </a>
             </div>
           </div>
-          <div className="text-contrast truncate">
-            {maybeTriedLink.get()}
-          </div>
-          <div className="h-2" />
-          <div className="flex items-center gap-1">
-            <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
-              onClick={onLinkCopy.run}>
-              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-                Copy
-                {onLinkCopy.current
-                  ? <Outline.CheckIcon className="size-4" />
-                  : <Outline.ClipboardIcon className="size-4" />}
-              </div>
-            </button>
-            <a className="group px-2 bg-contrast rounded-full"
-              target="_blank" rel="noreferrer"
-              href={maybeTriedLink.get()}>
-              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-                Open
-                <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-              </div>
-            </a>
-          </div>
         </div>
-      </div>
-      <div className="h-2" />
-    </>}
-    <div className="flex items-center">
-      <WideShrinkableOppositeButton
-        onClick={onSendTransactionClick}>
-        <Outline.PaperAirplaneIcon className="size-5" />
-        Transact
-      </WideShrinkableOppositeButton>
-    </div>
+        <div className="h-2" />
+        <div className="flex items-center">
+          <WideShrinkableOppositeButton
+            onClick={close}>
+            <Outline.CheckIcon className="size-5" />
+            Close
+          </WideShrinkableOppositeButton>
+        </div>
+      </>
+      : <div className="flex items-center">
+        <WideShrinkableOppositeButton
+          onClick={onSendTransactionClick}>
+          <Outline.PaperAirplaneIcon className="size-5" />
+          Transact
+        </WideShrinkableOppositeButton>
+      </div>}
   </>
 }

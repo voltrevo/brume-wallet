@@ -541,7 +541,8 @@ function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
       const data = Mutators.Datas.mapOrNew((d = {
         uuid: crypto.randomUUID(),
         token: TokenRef.from(token),
-        wallet: WalletRef.from(wallet)
+        wallet: WalletRef.from(wallet),
+        enabled
       }): TokenSettingsData => {
         return { ...d, enabled }
       }, s.real?.data)
