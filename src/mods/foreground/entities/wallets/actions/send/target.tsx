@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { chainByChainId } from "@/libs/ethereum/mods/chain";
+import { chainByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
@@ -10,6 +10,7 @@ import { Option, Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
 import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableContrastButton } from ".";
 import { useEnsLookup } from "../../../names/data";
+import { useToken } from "../../../tokens/data";
 import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
 
@@ -22,10 +23,17 @@ export function WalletSendScreenTarget(props: {}) {
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeTarget, setTarget] = useSearchState("target", $state)
   const [maybeType, setType] = useSearchState("type", $state)
+  const [maybeToken, setToken] = useSearchState("token", $state)
 
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
-  const tokenData = chainData.token
+
+  const token = Option.unwrap(maybeToken)
+  const tokenQuery = useToken(chainData.chainId, token)
+
+  const maybeTokenData = Option.wrap(tokenQuery.current?.get())
+  const maybeTokenDef = Option.wrap(tokenByAddress[token])
+  const tokenData = maybeTokenData.or(maybeTokenDef).unwrapOr(chainData.token)
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 

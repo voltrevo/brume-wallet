@@ -74,14 +74,14 @@ export function WalletSendTransactionScreenValue(props: {}) {
   const pendingNonceQuery = useNonce(wallet.address, context)
   const maybePendingNonce = pendingNonceQuery.current?.ok().get()
 
-  const [weiPrices, setWeiPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
+  const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)
       return
     return new Array(tokenData.pairs.length)
   })
 
-  const onWeiPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setWeiPrices(prices => {
+  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
+    setPrices(prices => {
       if (prices == null)
         return
       prices[index] = data
@@ -89,15 +89,13 @@ export function WalletSendTransactionScreenValue(props: {}) {
     })
   }, [])
 
-  const maybeWeiPrice = useMemo(() => {
-    return weiPrices?.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
+  const maybePrice = useMemo(() => {
+    return prices?.reduce((a: Fixed, b: Nullable<Fixed.From>) => {
       if (b == null)
-        return undefined
-      if (a == null)
-        return Fixed.from(b)
+        return a
       return a.mul(Fixed.from(b))
-    }, undefined)
-  }, [weiPrices])
+    }, Fixed.unit(tokenData.decimals))
+  }, [prices, tokenData])
 
   const [rawValuedInput = "", setRawValuedInput] = useState<Optional<string>>(maybeValue)
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
@@ -111,12 +109,12 @@ export function WalletSendTransactionScreenValue(props: {}) {
         return
       }
 
-      if (maybeWeiPrice == null) {
+      if (maybePrice == null) {
         setRawPricedInput(undefined)
         return
       }
 
-      const priced = Fixed.fromString(input, tokenData.decimals).mul(maybeWeiPrice)
+      const priced = Fixed.fromString(input, tokenData.decimals).mul(maybePrice)
 
       if (priced.value === 0n) {
         setRawPricedInput(undefined)
@@ -128,7 +126,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
       setRawPricedInput(undefined)
       return
     }
-  }, [maybeWeiPrice, tokenData])
+  }, [maybePrice, tokenData])
 
   const onPricedChange = useCallback((input: string) => {
     try {
@@ -137,12 +135,12 @@ export function WalletSendTransactionScreenValue(props: {}) {
         return
       }
 
-      if (maybeWeiPrice == null) {
+      if (maybePrice == null) {
         setRawValuedInput(undefined)
         return
       }
 
-      const valued = Fixed.fromString(input, tokenData.decimals).div(maybeWeiPrice)
+      const valued = Fixed.fromString(input, tokenData.decimals).div(maybePrice)
 
       if (valued.value === 0n) {
         setRawValuedInput(undefined)
@@ -154,7 +152,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
       setRawValuedInput(undefined)
       return
     }
-  }, [maybeWeiPrice, tokenData])
+  }, [maybePrice, tokenData])
 
   const setRawValued = useCallback((input: string) => {
     setRawValuedInput(input)
@@ -175,11 +173,11 @@ export function WalletSendTransactionScreenValue(props: {}) {
   }, [setRawPriced])
 
   useEffect(() => {
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return
     onValuedChange(valuedInput)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maybeWeiPrice])
+  }, [maybePrice])
 
   useEffect(() => {
     setValue(valuedInput)
@@ -188,7 +186,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
-  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, weiPrices)
+  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
   const pricedBalanceQuery = useNativePricedBalance(wallet.address, "usd", context)
 
   const valuedBalanceData = valuedBalanceQuery.current?.ok().get()
@@ -681,120 +679,120 @@ export function WalletSendTransactionScreenValue(props: {}) {
       return undefined
     if (maybeNormalGasPrice == null)
       return undefined
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return undefined
-    return new Fixed(maybeLegacyGasLimit * maybeNormalGasPrice, 18).mul(maybeWeiPrice)
-  }, [maybeLegacyGasLimit, maybeNormalGasPrice, maybeWeiPrice])
+    return new Fixed(maybeLegacyGasLimit * maybeNormalGasPrice, 18).mul(maybePrice)
+  }, [maybeLegacyGasLimit, maybeNormalGasPrice, maybePrice])
 
   const maybeFastLegacyGasCost = useMemo(() => {
     if (maybeLegacyGasLimit == null)
       return undefined
     if (maybeFastGasPrice == null)
       return undefined
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return undefined
-    return new Fixed(maybeLegacyGasLimit * maybeFastGasPrice, 18).mul(maybeWeiPrice)
-  }, [maybeLegacyGasLimit, maybeFastGasPrice, maybeWeiPrice])
+    return new Fixed(maybeLegacyGasLimit * maybeFastGasPrice, 18).mul(maybePrice)
+  }, [maybeLegacyGasLimit, maybeFastGasPrice, maybePrice])
 
   const maybeUrgentLegacyGasCost = useMemo(() => {
     if (maybeLegacyGasLimit == null)
       return undefined
     if (maybeUrgentGasPrice == null)
       return undefined
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return undefined
-    return new Fixed(maybeLegacyGasLimit * maybeUrgentGasPrice, 18).mul(maybeWeiPrice)
-  }, [maybeLegacyGasLimit, maybeUrgentGasPrice, maybeWeiPrice])
+    return new Fixed(maybeLegacyGasLimit * maybeUrgentGasPrice, 18).mul(maybePrice)
+  }, [maybeLegacyGasLimit, maybeUrgentGasPrice, maybePrice])
 
   const maybeCustomLegacyGasCost = useMemo(() => {
     if (maybeCustomGasLimit == null)
       return undefined
     if (maybeCustomGasPrice == null)
       return undefined
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return undefined
-    return new Fixed(maybeCustomGasLimit * maybeCustomGasPrice, 18).mul(maybeWeiPrice)
-  }, [maybeCustomGasLimit, maybeCustomGasPrice, maybeWeiPrice])
+    return new Fixed(maybeCustomGasLimit * maybeCustomGasPrice, 18).mul(maybePrice)
+  }, [maybeCustomGasLimit, maybeCustomGasPrice, maybePrice])
 
   const maybeNormalMinEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeNormalMinFeePerGas == null)
       return undefined
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeNormalMinFeePerGas, 18).mul(maybeWeiPrice)
-  }, [maybeEip1559GasLimit, maybeNormalMinFeePerGas, maybeWeiPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeNormalMinFeePerGas, 18).mul(maybePrice)
+  }, [maybeEip1559GasLimit, maybeNormalMinFeePerGas, maybePrice])
 
   const maybeFastMinEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeFastMinFeePerGas == null)
       return undefined
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeFastMinFeePerGas, 18).mul(maybeWeiPrice)
-  }, [maybeEip1559GasLimit, maybeFastMinFeePerGas, maybeWeiPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeFastMinFeePerGas, 18).mul(maybePrice)
+  }, [maybeEip1559GasLimit, maybeFastMinFeePerGas, maybePrice])
 
   const maybeUrgentMinEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeUrgentMinFeePerGas == null)
       return undefined
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeUrgentMinFeePerGas, 18).mul(maybeWeiPrice)
-  }, [maybeEip1559GasLimit, maybeUrgentMinFeePerGas, maybeWeiPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeUrgentMinFeePerGas, 18).mul(maybePrice)
+  }, [maybeEip1559GasLimit, maybeUrgentMinFeePerGas, maybePrice])
 
   const maybeCustomMinEip1559GasCost = useMemo(() => {
     if (maybeCustomGasLimit == null)
       return undefined
     if (maybeCustomMinFeePerGas == null)
       return undefined
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return undefined
-    return new Fixed(maybeCustomGasLimit * maybeCustomMinFeePerGas, 18).mul(maybeWeiPrice)
-  }, [maybeCustomGasLimit, maybeCustomMinFeePerGas, maybeWeiPrice])
+    return new Fixed(maybeCustomGasLimit * maybeCustomMinFeePerGas, 18).mul(maybePrice)
+  }, [maybeCustomGasLimit, maybeCustomMinFeePerGas, maybePrice])
 
   const maybeNormalMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeNormalMaxFeePerGas == null)
       return undefined
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeNormalMaxFeePerGas, 18).mul(maybeWeiPrice)
-  }, [maybeEip1559GasLimit, maybeNormalMaxFeePerGas, maybeWeiPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeNormalMaxFeePerGas, 18).mul(maybePrice)
+  }, [maybeEip1559GasLimit, maybeNormalMaxFeePerGas, maybePrice])
 
   const maybeFastMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeFastMaxFeePerGas == null)
       return undefined
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeFastMaxFeePerGas, 18).mul(maybeWeiPrice)
-  }, [maybeEip1559GasLimit, maybeFastMaxFeePerGas, maybeWeiPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeFastMaxFeePerGas, 18).mul(maybePrice)
+  }, [maybeEip1559GasLimit, maybeFastMaxFeePerGas, maybePrice])
 
   const maybeUrgentMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
     if (maybeUrgentMaxFeePerGas == null)
       return undefined
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeUrgentMaxFeePerGas, 18).mul(maybeWeiPrice)
-  }, [maybeEip1559GasLimit, maybeUrgentMaxFeePerGas, maybeWeiPrice])
+    return new Fixed(maybeEip1559GasLimit * maybeUrgentMaxFeePerGas, 18).mul(maybePrice)
+  }, [maybeEip1559GasLimit, maybeUrgentMaxFeePerGas, maybePrice])
 
   const maybeCustomMaxEip1559GasCost = useMemo(() => {
     if (maybeCustomGasLimit == null)
       return undefined
     if (maybeCustomMaxFeePerGas == null)
       return undefined
-    if (maybeWeiPrice == null)
+    if (maybePrice == null)
       return undefined
-    return new Fixed(maybeCustomGasLimit * maybeCustomMaxFeePerGas, 18).mul(maybeWeiPrice)
-  }, [maybeCustomGasLimit, maybeCustomMaxFeePerGas, maybeWeiPrice])
+    return new Fixed(maybeCustomGasLimit * maybeCustomMaxFeePerGas, 18).mul(maybePrice)
+  }, [maybeCustomGasLimit, maybeCustomMaxFeePerGas, maybePrice])
 
   const maybeFinalLegacyGasCost = useMode(maybeNormalLegacyGasCost, maybeFastLegacyGasCost, maybeUrgentLegacyGasCost, maybeCustomLegacyGasCost)
   const maybeFinalMinEip1559GasCost = useMode(maybeNormalMinEip1559GasCost, maybeFastMinEip1559GasCost, maybeUrgentMinEip1559GasCost, maybeCustomMinEip1559GasCost)
@@ -990,7 +988,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
       <PriceResolver key={i}
         index={i}
         address={address}
-        ok={onWeiPrice} />)}
+        ok={onPrice} />)}
     <Dialog.Title close={close}>
       Transact on {chainData.name}
     </Dialog.Title>

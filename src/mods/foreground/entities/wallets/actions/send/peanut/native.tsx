@@ -3,7 +3,6 @@ import { useCopy } from "@/libs/copy/copy";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { Peanut } from "@/libs/peanut";
-import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, Screen, useCloseContext } from "@/libs/ui/dialog/dialog";
@@ -38,14 +37,14 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const [maybeValue, setValue] = useSearchState("value", $state)
   const [maybePassword, setPassword] = useSearchState("password", $state)
 
-  const trialUuidFallback = useConstant(() => crypto.randomUUID())
-  const trialUuid = Option.wrap(maybeTrial0).unwrapOr(trialUuidFallback)
+  const trial0UuidFallback = useConstant(() => crypto.randomUUID())
+  const trial0Uuid = Option.wrap(maybeTrial0).unwrapOr(trial0UuidFallback)
 
   useEffect(() => {
-    if (maybeTrial0 === trialUuid)
+    if (maybeTrial0 === trial0Uuid)
       return
-    setTrial0(trialUuid)
-  }, [maybeTrial0, setTrial0, trialUuid])
+    setTrial0(trial0Uuid)
+  }, [maybeTrial0, setTrial0, trial0Uuid])
 
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
@@ -53,14 +52,14 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
 
   const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
 
-  const [weiPrices, setWeiPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
+  const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)
       return
     return new Array(tokenData.pairs.length)
   })
 
-  const onWeiPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setWeiPrices(prices => {
+  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
+    setPrices(prices => {
       if (prices == null)
         return
       prices[index] = data
@@ -68,34 +67,32 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     })
   }, [])
 
-  const maybeWeiPrice = useMemo(() => {
-    return weiPrices?.reduce((a: Nullable<Fixed>, b: Nullable<Fixed.From>) => {
+  const maybePrice = useMemo(() => {
+    return prices?.reduce((a: Fixed, b: Nullable<Fixed.From>) => {
       if (b == null)
-        return undefined
-      if (a == null)
-        return Fixed.from(b)
+        return a
       return a.mul(Fixed.from(b))
-    }, undefined)
-  }, [weiPrices])
+    }, Fixed.unit(tokenData.decimals))
+  }, [prices, tokenData])
 
-  const [rawValueInput = "", setRawValueInput] = useState<Optional<string>>(maybeValue)
+  const [rawValuedInput = "", setRawValuedInput] = useState<Optional<string>>(maybeValue)
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
 
-  const setRawValue = useCallback((input: string) => {
-    try {
-      setRawValueInput(input)
+  const valuedInput = useDeferredValue(rawValuedInput)
 
+  const onValuedChange = useCallback((input: string) => {
+    try {
       if (input.trim().length === 0) {
         setRawPricedInput(undefined)
         return
       }
 
-      if (maybeWeiPrice == null) {
+      if (maybePrice == null) {
         setRawPricedInput(undefined)
         return
       }
 
-      const priced = Fixed.fromString(input, tokenData.decimals).mul(maybeWeiPrice)
+      const priced = Fixed.fromString(input, tokenData.decimals).mul(maybePrice)
 
       if (priced.value === 0n) {
         setRawPricedInput(undefined)
@@ -107,54 +104,67 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       setRawPricedInput(undefined)
       return
     }
-  }, [tokenData, maybeWeiPrice])
+  }, [maybePrice, tokenData])
 
-  const setRawPrice = useCallback((input: string) => {
+  const onPricedChange = useCallback((input: string) => {
     try {
-      setRawPricedInput(input)
-
       if (input.trim().length === 0) {
-        setRawValueInput(undefined)
+        setRawValuedInput(undefined)
         return
       }
 
-      if (maybeWeiPrice == null) {
-        setRawValueInput(undefined)
+      if (maybePrice == null) {
+        setRawValuedInput(undefined)
         return
       }
 
-      const valued = Fixed.fromString(input, tokenData.decimals).div(maybeWeiPrice)
+      const valued = Fixed.fromString(input, tokenData.decimals).div(maybePrice)
 
       if (valued.value === 0n) {
-        setRawValueInput(undefined)
+        setRawValuedInput(undefined)
         return
       }
 
-      setRawValueInput(valued.toString())
+      setRawValuedInput(valued.toString())
     } catch (e: unknown) {
-      setRawValueInput(undefined)
+      setRawValuedInput(undefined)
       return
     }
-  }, [tokenData, maybeWeiPrice])
+  }, [maybePrice, tokenData])
 
-  const onValueInputChange = useInputChange(e => {
-    setRawValue(e.target.value)
-  }, [setRawValue])
+  const setRawValued = useCallback((input: string) => {
+    setRawValuedInput(input)
+    onValuedChange(input)
+  }, [onValuedChange])
+
+  const setRawPriced = useCallback((input: string) => {
+    setRawPricedInput(input)
+    onPricedChange(input)
+  }, [onPricedChange])
+
+  const onValuedInputChange = useInputChange(e => {
+    setRawValued(e.target.value)
+  }, [setRawValued])
 
   const onPricedInputChange = useInputChange(e => {
-    setRawPrice(e.target.value)
-  }, [setRawPrice])
+    setRawPriced(e.target.value)
+  }, [setRawPriced])
 
-  const valueInput = useDeferredValue(rawValueInput)
-
-  useEffectButNotFirstTime(() => {
-    setValue(valueInput)
+  useEffect(() => {
+    if (maybePrice == null)
+      return
+    onValuedChange(valuedInput)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valueInput])
+  }, [maybePrice])
+
+  useEffect(() => {
+    setValue(valuedInput)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [valuedInput])
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
-  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, weiPrices)
+  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
   const pricedBalanceQuery = useNativePricedBalance(wallet.address, "usd", context)
 
   const valuedBalanceData = valuedBalanceQuery.current?.ok().get()
@@ -163,30 +173,30 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const onValueMaxClick = useCallback(() => {
     if (valuedBalanceData == null)
       return
-    setRawValue(Fixed.from(valuedBalanceData).toString())
-  }, [valuedBalanceData, setRawValue])
+    setValue(Fixed.from(valuedBalanceData).toString())
+  }, [valuedBalanceData, setValue])
 
   const onPricedMaxClick = useCallback(() => {
     if (pricedBalanceData == null)
       return
-    setRawPrice(Fixed.from(pricedBalanceData).toString())
-  }, [pricedBalanceData, setRawPrice])
+    setRawPriced(Fixed.from(pricedBalanceData).toString())
+  }, [pricedBalanceData, setRawPriced])
 
   const onValuedPaste = useCallback(async () => {
-    setRawValue(await navigator.clipboard.readText())
-  }, [setRawValue])
+    setRawValued(await navigator.clipboard.readText())
+  }, [setRawValued])
 
   const onPricedPaste = useCallback(async () => {
-    setRawPrice(await navigator.clipboard.readText())
-  }, [setRawPrice])
+    setRawPriced(await navigator.clipboard.readText())
+  }, [setRawPriced])
 
   const onValuedClear = useCallback(async () => {
-    setRawValue("")
-  }, [setRawValue])
+    setRawValued("")
+  }, [setRawValued])
 
   const onPricedClear = useCallback(async () => {
-    setRawPrice("")
-  }, [setRawPrice])
+    setRawPriced("")
+  }, [setRawPriced])
 
   const onTargetFocus = useCallback(() => {
     setStep("target")
@@ -270,17 +280,17 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   }, [maybeFinalValue, password])
 
   const onSendTransactionClick = useCallback(() => {
-    subpath.go(qurl("/eth_sendTransaction", { trial: trialUuid, step: "value", chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
-  }, [subpath, trialUuid, chainData, maybeContract, rawValue, maybeTriedMaybeFinalData])
+    subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, step: "value", chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
+  }, [subpath, trial0Uuid, chainData, maybeContract, rawValue, maybeTriedMaybeFinalData])
 
   const onClose = useCallback(() => {
     subpath.go(`/`)
   }, [subpath])
 
-  const trialQuery = useTransactionTrial(trialUuid)
-  const maybeTrialData = trialQuery.current?.ok().get()
+  const trial0Query = useTransactionTrial(trial0Uuid)
+  const maybeTrial0Data = trial0Query.current?.ok().get()
 
-  const transactionQuery = useTransaction(maybeTrialData?.transactions[0].uuid)
+  const transactionQuery = useTransaction(maybeTrial0Data?.transactions[0].uuid)
   const maybeTransaction = transactionQuery.current?.ok().get()
 
   const maybeTriedLink = useMemo(() => {
@@ -320,7 +330,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       <PriceResolver key={i}
         index={i}
         address={address}
-        ok={onWeiPrice} />)}
+        ok={onPrice} />)}
     <Dialog.Title close={close}>
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
@@ -346,8 +356,8 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
           <div className="flex items-center">
             <SimpleInput
               autoFocus
-              value={rawValueInput}
-              onChange={onValueInputChange}
+              value={rawValuedInput}
+              onChange={onValuedInputChange}
               placeholder="0.0" />
             <div className="w-1" />
             <div className="text-contrast">
@@ -368,7 +378,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
         </div>
         <div className="w-2" />
         <div className="flex items-center">
-          {rawValueInput.length === 0
+          {rawValuedInput.length === 0
             ? <ShrinkableNakedButtonInInputBox
               onClick={onValuedPaste}>
               <Outline.ClipboardIcon className="size-4" />
@@ -407,7 +417,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
             role="button"
             onClick={onValuedClick}>
             <div className="text-contrast truncate">
-              {rawValueInput || "0.0"}
+              {rawValuedInput || "0.0"}
             </div>
             <div className="grow" />
             <div className="text-contrast">
