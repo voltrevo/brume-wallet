@@ -9,7 +9,6 @@ import { WalletPeanutSendScreenNativeValue } from "./peanut/native";
 import { WalletSendScreenTarget } from "./target";
 
 export type UrlState = {
-  readonly trial?: string
   readonly type?: string
   readonly step?: string
   readonly chain?: string
@@ -26,6 +25,8 @@ export type UrlState = {
   readonly baseFeePerGas?: string
   readonly maxPriorityFeePerGas?: string
   readonly trial0?: string
+  readonly trial1?: string
+  readonly password?: string
 }
 
 export function WalletSendScreen(props: {}) {

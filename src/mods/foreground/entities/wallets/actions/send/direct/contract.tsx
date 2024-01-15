@@ -26,7 +26,7 @@ export function WalletSendScreenContractValue(props: {}) {
   const subpath = useSubpath()
 
   const $state = usePathState<UrlState>()
-  const [maybeTrial, setTrial] = useSearchState("trial", $state)
+  const [maybeTrial0, setTrial0] = useSearchState("trial0", $state)
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeToken, setToken] = useSearchState("token", $state)
@@ -34,7 +34,13 @@ export function WalletSendScreenContractValue(props: {}) {
   const [maybeValue, setValue] = useSearchState("value", $state)
 
   const trialUuidFallback = useConstant(() => crypto.randomUUID())
-  const trialUuid = Option.wrap(maybeTrial).unwrapOr(trialUuidFallback)
+  const trialUuid = Option.wrap(maybeTrial0).unwrapOr(trialUuidFallback)
+
+  useEffect(() => {
+    if (maybeTrial0 === trialUuid)
+      return
+    setTrial0(trialUuid)
+  }, [maybeTrial0, setTrial0, trialUuid])
 
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]

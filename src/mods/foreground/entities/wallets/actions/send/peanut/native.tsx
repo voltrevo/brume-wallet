@@ -18,7 +18,7 @@ import { Keccak256 } from "@hazae41/keccak256";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { Result } from "@hazae41/result";
 import { Secp256k1 } from "@hazae41/secp256k1";
-import { useCallback, useDeferredValue, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableOppositeButton } from "..";
 import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/data";
 import { useWalletDataContext } from "../../../context";
@@ -32,13 +32,20 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const subpath = useSubpath()
 
   const $state = usePathState<UrlState>()
-  const [maybeTrial, setTrial] = useSearchState("trial", $state)
+  const [maybeTrial0, setTrial0] = useSearchState("trial0", $state)
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeValue, setValue] = useSearchState("value", $state)
+  const [maybePassword, setPassword] = useSearchState("password", $state)
 
   const trialUuidFallback = useConstant(() => crypto.randomUUID())
-  const trialUuid = Option.wrap(maybeTrial).unwrapOr(trialUuidFallback)
+  const trialUuid = Option.wrap(maybeTrial0).unwrapOr(trialUuidFallback)
+
+  useEffect(() => {
+    if (maybeTrial0 === trialUuid)
+      return
+    setTrial0(trialUuid)
+  }, [maybeTrial0, setTrial0, trialUuid])
 
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
@@ -197,7 +204,10 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     return Peanut.contracts[chainData.chainId]?.v4 as string | undefined
   }, [chainData])
 
-  const triedFinalPassword = useMemo(() => Result.runAndDoubleWrapSync(() => {
+  const password = useMemo(() => {
+    if (maybePassword != null)
+      return maybePassword
+
     const byte = new Uint8Array(1)
     const bytes = new Uint8Array(32)
     const cursor = new Cursor(bytes)
@@ -218,8 +228,14 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       cursor.writeOrThrow(byte)
     }
 
-    return bytes
-  }), [])
+    return Bytes.toUtf8(bytes)
+  }, [maybePassword])
+
+  useEffect(() => {
+    if (maybePassword === password)
+      return
+    setPassword(password)
+  }, [maybePassword, password, setPassword])
 
   const rawValue = useMemo(() => {
     return maybeValue?.trim().length
@@ -241,18 +257,18 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       const token = "0x0000000000000000000000000000000000000000"
       const value = maybeFinalValue.value
 
-      const password = triedFinalPassword.unwrap()
-      const hash = Keccak256.get().hashOrThrow(password)
-      const privateKey = Secp256k1.get().PrivateKey.tryImport(hash).unwrap()
-      const publicKey = privateKey.tryGetPublicKey().unwrap().tryExportUncompressed().unwrap()
-      const publicKeyHex = Base16.get().encodeOrThrow(publicKey)
+      const passwordBytes = Bytes.fromUtf8(password)
+      const hashSlice = Keccak256.get().hashOrThrow(passwordBytes)
+      const privateKey = Secp256k1.get().PrivateKey.tryImport(hashSlice).unwrap()
+      const publicKeySlice = privateKey.tryGetPublicKey().unwrap().tryExportUncompressed().unwrap()
+      const publicKeyHex = Base16.get().encodeOrThrow(publicKeySlice)
       const publicKey20 = ZeroHexString.from(publicKeyHex.slice(-40))
 
       const abi = PeanutAbi.makeDeposit.from(token, 0, value, 0, publicKey20)
 
       return Abi.encodeOrThrow(abi)
     })
-  }, [maybeFinalValue, triedFinalPassword])
+  }, [maybeFinalValue, password])
 
   const onSendTransactionClick = useCallback(() => {
     subpath.go(qurl("/eth_sendTransaction", { trial: trialUuid, step: "value", chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
@@ -271,8 +287,6 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const maybeTriedLink = useMemo(() => {
     if (maybeTransaction == null)
       return
-    if (triedFinalPassword.isErr())
-      return
     if (maybeTransaction.type !== "executed")
       return
 
@@ -289,11 +303,10 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
         throw new Error(`Could not find log`)
 
       const index = BigInt(log.topics[1])
-      const password = Bytes.toUtf8(triedFinalPassword.get())
 
-      return `https://peanut.to/claim?c=${chainData.chainId}&i=${index}&v=v4&p=${password}`
+      return `https://peanut.to/claim?c=${chainData.chainId}&i=${index}&v=v4&t=ui#p=${password}`
     })
-  }, [chainData, maybeTransaction, triedFinalPassword])
+  }, [maybeTransaction, password, chainData.chainId])
 
   const onLinkCopy = useCopy(maybeTriedLink?.ok().inner)
 
