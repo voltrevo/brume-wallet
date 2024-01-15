@@ -1,6 +1,7 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { ZeroHexString } from "@hazae41/cubane"
-import { FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier"
+import { Data, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
+import { None, Some } from "@hazae41/option"
 import { BgEthereumContext } from "../../context"
 import { EthereumQueryKey } from "../wallets/data"
 
@@ -57,7 +58,7 @@ export interface DraftTransactionTrialData {
   /**
    * The nonce of all tried transactions
    */
-  readonly nonce: number
+  readonly nonce: ZeroHexString
 
   /**
    * All tried transactions
@@ -72,7 +73,7 @@ export interface FinalTransactionTrialData {
   /**
    * The nonce of all tried transactions
    */
-  readonly nonce: number
+  readonly nonce: ZeroHexString
 
   /**
    * All tried transactions
@@ -83,6 +84,31 @@ export interface FinalTransactionTrialData {
    * The transaction that was executed
    */
   readonly transaction: TransactionRef
+}
+
+export type TransactionParametersData =
+  | LegacyTransactionParametersData
+  | Eip1559TransactionParametersData
+
+export interface LegacyTransactionParametersData {
+  readonly from: ZeroHexString
+  readonly to: ZeroHexString
+  readonly value: ZeroHexString
+  readonly gas: ZeroHexString
+  readonly gasPrice: ZeroHexString
+  readonly nonce: ZeroHexString
+  readonly data?: ZeroHexString
+}
+
+export interface Eip1559TransactionParametersData {
+  readonly from: ZeroHexString
+  readonly to: ZeroHexString
+  readonly value: ZeroHexString
+  readonly maxFeePerGas: ZeroHexString
+  readonly maxPriorityFeePerGas: ZeroHexString
+  readonly gas: ZeroHexString
+  readonly nonce: ZeroHexString
+  readonly data?: ZeroHexString
 }
 
 export type TransactionData =
@@ -99,6 +125,8 @@ export interface SignedTransactionData {
 
   readonly hash: ZeroHexString
   readonly data: ZeroHexString
+
+  readonly params: TransactionParametersData
 }
 
 export interface PendingTransactionData {
@@ -110,6 +138,8 @@ export interface PendingTransactionData {
 
   readonly hash: ZeroHexString
   readonly data: ZeroHexString
+
+  readonly params: TransactionParametersData
 }
 
 export interface ExecutedTransactionData {
@@ -122,6 +152,7 @@ export interface ExecutedTransactionData {
   readonly hash: ZeroHexString
   readonly data: ZeroHexString
 
+  readonly params: TransactionParametersData
   readonly receipt: TransactionReceiptData
 }
 
@@ -136,9 +167,72 @@ export namespace BgTransaction {
   }
 
   export function schema(uuid: string, storage: IDBStorage) {
+    const indexer = async (states: States<Data, Fail>) => {
+      const { current, previous } = states
+
+      const previousData = previous?.real?.data?.inner
+      const currentData = current.real?.data?.inner
+
+      /**
+       * Reindex transactions
+       */
+      if (previousData?.uuid !== currentData?.uuid) {
+        if (previousData != null) {
+          await BgTransactionTrial.schema(previousData.trial.uuid, storage)?.mutate(s => {
+            const current = s.real?.current
+
+            if (current == null)
+              return new None()
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(d => ({ ...d, transactions: d.transactions.filter(t => t.uuid !== uuid) })))
+          })
+        }
+
+        if (currentData != null) {
+          await BgTransactionTrial.schema(currentData.trial.uuid, storage).mutate(s => {
+            const current = s.real?.current
+
+            /**
+             * Create a new trial
+             */
+            if (current == null) {
+              const uuid = currentData.trial.uuid
+              const nonce = currentData.params.nonce
+              const transactions = [TransactionRef.from(currentData)]
+
+              const inner = { type: "draft", uuid, nonce, transactions } as const
+
+              return new Some(new Data(inner))
+            }
+
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(d => ({ ...d, transactions: [...d.transactions, TransactionRef.from(currentData)] })))
+          })
+        }
+      }
+
+      if (currentData?.type === "executed") {
+        await BgTransactionTrial.schema(currentData.trial.uuid, storage).mutate(s => {
+          const current = s.real?.current
+
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(d => ({ ...d, transaction: TransactionRef.from(currentData) })))
+        })
+      }
+    }
+
     return createQuery<Key, Data, Fail>({
       key: key(uuid),
-      storage
+      storage,
+      indexer
     })
   }
 

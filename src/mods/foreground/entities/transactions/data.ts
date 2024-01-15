@@ -1,10 +1,10 @@
 import { Errors } from "@/libs/errors/errors"
 import { useWait } from "@/libs/glacier/hooks"
-import { BgTransaction, BgTransactionReceipt, BgTransactionTrial } from "@/mods/background/service_worker/entities/transactions/data"
+import { BgTransaction, BgTransactionReceipt, BgTransactionTrial, TransactionRef } from "@/mods/background/service_worker/entities/transactions/data"
 import { ZeroHexString } from "@hazae41/cubane"
-import { createQuery, useError, useQuery } from "@hazae41/glacier"
+import { Data, States, createQuery, useError, useQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
-import { Nullable } from "@hazae41/option"
+import { None, Nullable, Some } from "@hazae41/option"
 import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { FgEthereumContext, fetchOrFail2 } from "../wallets/data"
@@ -21,9 +21,72 @@ export namespace FgTransaction {
     if (uuid == null)
       return
 
+    const indexer = async (states: States<Data, Fail>) => {
+      const { current, previous } = states
+
+      const previousData = previous?.real?.data?.inner
+      const currentData = current.real?.data?.inner
+
+      /**
+       * Reindex transactions
+       */
+      if (previousData?.uuid !== currentData?.uuid) {
+        if (previousData != null) {
+          await FgTransactionTrial.schema(previousData.trial.uuid, storage)?.mutate(s => {
+            const current = s.real?.current
+
+            if (current == null)
+              return new None()
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(d => ({ ...d, transactions: d.transactions.filter(t => t.uuid !== uuid) })))
+          })
+        }
+
+        if (currentData != null) {
+          await FgTransactionTrial.schema(currentData.trial.uuid, storage)?.mutate(s => {
+            const current = s.real?.current
+
+            /**
+             * Create a new trial
+             */
+            if (current == null) {
+              const uuid = currentData.trial.uuid
+              const nonce = currentData.params.nonce
+              const transactions = [TransactionRef.from(currentData)]
+
+              const inner = { type: "draft", uuid, nonce, transactions } as const
+
+              return new Some(new Data(inner))
+            }
+
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(d => ({ ...d, transactions: [...d.transactions, TransactionRef.from(currentData)] })))
+          })
+        }
+      }
+
+      if (currentData?.type === "executed") {
+        await FgTransactionTrial.schema(currentData.trial.uuid, storage)?.mutate(s => {
+          const current = s.real?.current
+
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(d => ({ ...d, transaction: TransactionRef.from(currentData) })))
+        })
+      }
+    }
+
     return createQuery<Key, Data, Fail>({
       key: key(uuid),
-      storage
+      storage,
+      indexer
     })
   }
 

@@ -8,7 +8,7 @@ import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, Screen, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
-import { useTransaction } from "@/mods/foreground/entities/transactions/data";
+import { useTransaction, useTransactionTrial } from "@/mods/foreground/entities/transactions/data";
 import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
@@ -260,7 +260,12 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     subpath.go(`/`)
   }, [subpath])
 
-  const transactionQuery = useTransaction(uuid)
+  const trialQuery = useTransactionTrial(uuid)
+  const maybeTrial = trialQuery.current?.ok().get()
+
+  console.log(maybeTrial)
+
+  const transactionQuery = useTransaction(maybeTrial?.transactions[0].uuid)
   const maybeTransaction = transactionQuery.current?.ok().get()
 
   const maybeTriedLink = useMemo(() => {

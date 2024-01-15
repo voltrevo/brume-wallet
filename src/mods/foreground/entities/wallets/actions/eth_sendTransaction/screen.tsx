@@ -10,7 +10,7 @@ import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
-import { TransactionData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
+import { TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
 import { useTransaction, useTransactionReceipt, useTransactionTrial } from "@/mods/foreground/entities/transactions/data";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
@@ -53,8 +53,8 @@ export function WalletSendTransactionScreenValue(props: {}) {
 
   const gasMode = Option.wrap(maybeGasMode).unwrapOr("normal")
 
-  const fallbackTrialUuid = useConstant(() => crypto.randomUUID())
-  const trialUuid = Option.wrap(maybeTrialUuid).unwrapOr(fallbackTrialUuid)
+  const trialUuidFallback = useConstant(() => crypto.randomUUID())
+  const trialUuid = Option.wrap(maybeTrialUuid).unwrapOr(trialUuidFallback)
   const trialQuery = useTransactionTrial(trialUuid)
   const maybeTrial = trialQuery.current?.ok().get()
 
@@ -855,6 +855,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
       }).unwrap()
 
       let tx: ethers.Transaction
+      let params: TransactionParametersData
 
       /**
        * EIP-1559
@@ -869,7 +870,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
         }).unwrap()
 
         tx = Transaction.from({
-          to: Address.from(target),
+          to: Address.fromOrThrow(target),
           gasLimit: gasLimit,
           chainId: chainData.chainId,
           maxFeePerGas: maxFeePerGas,
@@ -878,6 +879,17 @@ export function WalletSendTransactionScreenValue(props: {}) {
           value: value.value,
           data: data
         })
+
+        params = {
+          from: wallet.address,
+          to: Address.fromOrThrow(target),
+          gas: ZeroHexString.from(gasLimit),
+          maxFeePerGas: ZeroHexString.from(maxFeePerGas),
+          maxPriorityFeePerGas: ZeroHexString.from(maxPriorityFeePerGas),
+          value: ZeroHexString.from(value.value),
+          nonce: ZeroHexString.from(nonce),
+          data: data
+        }
       }
 
       /**
@@ -897,6 +909,16 @@ export function WalletSendTransactionScreenValue(props: {}) {
           value: value.value,
           data: data
         })
+
+        params = {
+          from: wallet.address,
+          to: Address.fromOrThrow(target),
+          gas: ZeroHexString.from(gasLimit),
+          gasPrice: ZeroHexString.from(gasPrice),
+          value: ZeroHexString.from(value.value),
+          nonce: ZeroHexString.from(nonce),
+          data: data
+        }
       }
 
       const instance = await EthereumWalletInstance.tryFrom(wallet, context.background).then(r => r.unwrap())
@@ -910,7 +932,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
         const data = tx.serialized as ZeroHexString
         const trial = TransactionTrialRef.create(trialUuid)
 
-        await transactionQuery.mutate(Mutators.data<TransactionData, never>({ type: "signed", uuid, trial, hash, data }))
+        await transactionQuery.mutate(Mutators.data<TransactionData, never>({ type: "signed", uuid, trial, hash, data, params }))
         return
       }
 
@@ -929,7 +951,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
           }]
         }).then(r => r.unwrap().unwrap())
 
-        await transactionQuery.mutate(Mutators.data<TransactionData, never>({ type: "pending", uuid, trial, hash, data }))
+        await transactionQuery.mutate(Mutators.data<TransactionData, never>({ type: "pending", uuid, trial, hash, data, params }))
         return
       }
     } catch (e) {
