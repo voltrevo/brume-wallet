@@ -249,7 +249,12 @@ export namespace FgToken {
 
     export const key = BgToken.Contract.key
 
-    export function schema(chainId: number, address: string, storage: UserStorage) {
+    export function schema(chainId: Nullable<number>, address: Nullable<string>, storage: UserStorage) {
+      if (chainId == null)
+        return
+      if (address == null)
+        return
+
       const indexer = async (states: States<Data, Fail>) => {
         const { current, previous } = states
 
@@ -283,7 +288,7 @@ export namespace FgToken {
 
 }
 
-export function useToken(chainId: number, address: string) {
+export function useToken(chainId: Nullable<number>, address: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgToken.Contract.schema, [chainId, address, storage])
   useSubscribe(query, storage)

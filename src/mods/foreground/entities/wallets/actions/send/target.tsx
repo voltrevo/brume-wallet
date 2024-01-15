@@ -28,11 +28,9 @@ export function WalletSendScreenTarget(props: {}) {
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
 
-  const token = Option.unwrap(maybeToken)
-  const tokenQuery = useToken(chainData.chainId, token)
-
-  const maybeTokenData = Option.wrap(tokenQuery.current?.get())
-  const maybeTokenDef = Option.wrap(tokenByAddress[token])
+  const tokenQuery = useToken(chainData.chainId, maybeToken)
+  const maybeTokenData = Option.wrap(tokenQuery.current?.ok().get())
+  const maybeTokenDef = Option.wrap(tokenByAddress[maybeToken as any])
   const tokenData = maybeTokenData.or(maybeTokenDef).unwrapOr(chainData.token)
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
