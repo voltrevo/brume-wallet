@@ -24,6 +24,7 @@ import { useWalletDataContext } from "../../../context";
 import { useEthereumContext2 } from "../../../data";
 import { PriceResolver } from "../../../page";
 import { WalletSendTransactionScreen } from "../../eth_sendTransaction";
+import { TransactionCard } from "../../eth_sendTransaction/screen";
 
 export function WalletPeanutSendScreenNativeValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
@@ -445,6 +446,14 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
           </ShrinkableContrastButtonInInputBox>
         </div>
       </SimpleBox>}
+    {maybeTransaction0 != null && <>
+      <div className="font-medium">
+        Deposit
+      </div>
+      <div className="h-2" />
+      <TransactionCard data={maybeTransaction0} />
+      <div className="h-4" />
+    </>}
     <div className="h-4 grow" />
     {maybeTriedLink?.isOk() && <>
       <div className="po-md flex items-center bg-contrast rounded-xl">
