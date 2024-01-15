@@ -12,4 +12,5 @@ $pre$()
 export namespace TokenAbi {
   export const balanceOf = $parse$("balanceOf(address)")
   export const transfer = $parse$("transfer(address,uint256)")
+  export const approve = $parse$("approve(address,uint256)")
 }

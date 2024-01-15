@@ -92,11 +92,19 @@ export namespace FgTransaction {
 
 }
 
-export function useTransaction(uuid: Nullable<string>) {
+export function useTransactionWithReceipt(uuid: Nullable<string>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgTransaction.schema, [uuid, storage])
-  useSubscribe(query, storage)
-  return query
+
+  const transactionQuery = useQuery(FgTransaction.schema, [uuid, storage])
+  const maybeTransaction = transactionQuery.current?.ok().get()
+  useSubscribe(transactionQuery, storage)
+
+  const receiptQuery = useQuery(FgTransactionReceipt.schema, [uuid, maybeTransaction?.hash, context, storage])
+  useWait(receiptQuery, 1000)
+  useSubscribe(receiptQuery, storage)
+  useError(receiptQuery, Errors.onQueryError)
+
+  return transactionQuery
 }
 
 export namespace FgTransactionTrial {
@@ -134,7 +142,7 @@ export namespace FgTransactionReceipt {
 
   export const key = BgTransactionReceipt.key
 
-  export function schema(hash: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
+  export function schema(uuid: Nullable<string>, hash: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
     if (context == null)
       return
     if (hash == null)
@@ -143,20 +151,32 @@ export namespace FgTransactionReceipt {
     const fetcher = async (request: RpcRequestPreinit<unknown>) =>
       await fetchOrFail2<Data>(request, context)
 
+    const indexer = async (states: States<Data, Fail>) => {
+      const { current, previous } = states
+
+      const previousData = previous?.real?.current.ok()?.get()
+      const currentData = current.real?.current.ok()?.get()
+
+      if (previousData == null && currentData != null) {
+        await FgTransaction.schema(uuid, storage)?.mutate(s => {
+          const current = s.real?.current
+
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(d => ({ ...d, type: "executed", receipt: currentData }) as const))
+        })
+      }
+    }
+
     return createQuery<Key, Data, Fail>({
       key: key(hash, context.chain),
       fetcher,
+      indexer,
       storage
     })
   }
 
-}
-
-export function useTransactionReceipt(hash: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
-  const query = useQuery(FgTransactionReceipt.schema, [hash, context, storage])
-  useWait(query, 1000)
-  useSubscribe(query, storage)
-  useError(query, Errors.onQueryError)
-  return query
 }

@@ -11,7 +11,6 @@ import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
-import { useTransaction, useTransactionReceipt } from "@/mods/foreground/entities/transactions/data";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
@@ -23,6 +22,7 @@ import { UrlState } from ".";
 import { useBlockByNumber } from "../../../blocks/data";
 import { useEnsLookup } from "../../../names/data";
 import { useNativeBalance, useNativePricedBalance } from "../../../tokens/data";
+import { useTransactionWithReceipt } from "../../../transactions/data";
 import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../data";
@@ -56,10 +56,6 @@ export function WalletSendTransactionScreenValue(props: {}) {
   const trialUuidFallback = useConstant(() => crypto.randomUUID())
   const trialUuid = Option.wrap(maybeTrial).unwrapOr(trialUuidFallback)
 
-  const transactionUuid = useConstant(() => crypto.randomUUID())
-  const transactionQuery = useTransaction(transactionUuid)
-  const maybeTransaction = transactionQuery.current?.ok().get()
-
   const disableTarget = Boolean(maybeDisableTarget)
   const disableValue = Boolean(maybeDisableValue)
   const disableData = Boolean(maybeDisableData)
@@ -70,6 +66,10 @@ export function WalletSendTransactionScreenValue(props: {}) {
   const tokenData = chainData.token
 
   const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
+
+  const transactionUuid = useConstant(() => crypto.randomUUID())
+  const transactionQuery = useTransactionWithReceipt(transactionUuid, context)
+  const maybeTransaction = transactionQuery.current?.ok().get()
 
   const pendingNonceQuery = useNonce(wallet.address, context)
   const maybePendingNonce = pendingNonceQuery.current?.ok().get()
@@ -967,22 +967,6 @@ export function WalletSendTransactionScreenValue(props: {}) {
     return await signOrSend("send")
   }, [signOrSend])
 
-  const receiptQuery = useTransactionReceipt(maybeTransaction?.hash, context)
-  const maybeReceipt = receiptQuery.current?.ok().get()
-
-  useEffect(() => {
-    if (maybeReceipt == null)
-      return
-    if (maybeTransaction == null)
-      return
-
-    transactionQuery.mutate(Mutators.data<TransactionData, never>({ ...maybeTransaction, type: "executed", receipt: maybeReceipt }))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maybeTransaction, maybeReceipt])
-
-  const onTxSignCopy = useCopy(maybeTransaction?.data)
-  const onTxHashCopy = useCopy(maybeTransaction?.hash)
-
   return <>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}
@@ -1416,6 +1400,21 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
       </div>
     </div>
   </div>
+}
+
+export function TransactionCard(props: { data: TransactionData }) {
+  const { data } = props
+
+  if (data?.type === "signed")
+    return <SignedTransactionCard data={data} />
+
+  if (data?.type === "pending")
+    return <PendingTransactionCard data={data} />
+
+  if (data?.type === "executed")
+    return <ExecutedTransactionCard data={data} />
+
+  return null
 }
 
 export function PendingTransactionCard(props: { data: PendingTransactionData }) {

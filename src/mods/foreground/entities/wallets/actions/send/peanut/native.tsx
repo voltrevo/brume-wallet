@@ -7,11 +7,11 @@ import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, Screen, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
-import { useTransaction, useTransactionTrial } from "@/mods/foreground/entities/transactions/data";
+import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
 import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { Abi, Address, Fixed } from "@hazae41/cubane";
+import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Cursor } from "@hazae41/cursor";
 import { Keccak256 } from "@hazae41/keccak256";
 import { Nullable, Option, Optional } from "@hazae41/option";
@@ -211,7 +211,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   }, [])
 
   const maybeContract = useMemo(() => {
-    return Peanut.contracts[chainData.chainId]?.v4 as string | undefined
+    return Peanut.contracts[chainData.chainId]?.v4 as ZeroHexString | undefined
   }, [chainData])
 
   const password = useMemo(() => {
@@ -274,8 +274,9 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       const address = Address.compute(publicKey)
 
       const abi = PeanutAbi.makeDeposit.from(token, 0, value, 0, address)
+      const hex = Abi.encodeOrThrow(abi)
 
-      return Abi.encodeOrThrow(abi)
+      return hex
     })
   }, [maybeFinalValue, password])
 
@@ -290,13 +291,13 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const trial0Query = useTransactionTrial(trial0Uuid)
   const maybeTrial0Data = trial0Query.current?.ok().get()
 
-  const transactionQuery = useTransaction(maybeTrial0Data?.transactions[0].uuid)
-  const maybeTransaction = transactionQuery.current?.ok().get()
+  const transaction0Query = useTransactionWithReceipt(maybeTrial0Data?.transactions[0].uuid, context)
+  const maybeTransaction0 = transaction0Query.current?.ok().get()
 
   const maybeTriedLink = useMemo(() => {
-    if (maybeTransaction == null)
+    if (maybeTransaction0 == null)
       return
-    if (maybeTransaction.type !== "executed")
+    if (maybeTransaction0.type !== "executed")
       return
 
     return Result.runAndDoubleWrapSync(() => {
@@ -306,7 +307,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       using hashSlice = Keccak256.get().hashOrThrow(signatureBytes)
       const hashHex = `0x${Base16.get().encodeOrThrow(hashSlice)}`
 
-      const log = maybeTransaction.receipt.logs.find(log => log.topics[0] === hashHex)
+      const log = maybeTransaction0.receipt.logs.find(log => log.topics[0] === hashHex)
 
       if (log == null)
         throw new Error(`Could not find log`)
@@ -315,7 +316,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
 
       return `https://peanut.to/claim?c=${chainData.chainId}&i=${index}&v=v4&t=ui#p=${password}`
     })
-  }, [maybeTransaction, password, chainData.chainId])
+  }, [maybeTransaction0, password, chainData.chainId])
 
   const onLinkCopy = useCopy(maybeTriedLink?.ok().inner)
 
@@ -487,7 +488,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
         </WideShrinkableOppositeButton>
       </div>
     </>}
-    {!maybeTriedLink?.isOk() &&
+    {maybeTransaction0 == null &&
       <div className="flex items-center">
         <WideShrinkableOppositeButton
           onClick={onSendTransactionClick}>

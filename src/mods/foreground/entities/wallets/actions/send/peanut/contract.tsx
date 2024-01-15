@@ -1,3 +1,4 @@
+import { TokenAbi } from "@/libs/abi/erc20.abi";
 import { PeanutAbi } from "@/libs/abi/peanut.abi";
 import { useCopy } from "@/libs/copy/copy";
 import { chainByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
@@ -7,11 +8,11 @@ import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, Screen, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
-import { useTransaction, useTransactionTrial } from "@/mods/foreground/entities/transactions/data";
+import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
 import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { Abi, Address, Fixed } from "@hazae41/cubane";
+import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Cursor } from "@hazae41/cursor";
 import { Keccak256 } from "@hazae41/keccak256";
 import { Nullable, Option, Optional } from "@hazae41/option";
@@ -24,6 +25,7 @@ import { useWalletDataContext } from "../../../context";
 import { useEthereumContext2 } from "../../../data";
 import { PriceResolver } from "../../../page";
 import { WalletSendTransactionScreen } from "../../eth_sendTransaction";
+import { TransactionCard } from "../../eth_sendTransaction/screen";
 
 export function WalletPeanutSendScreenContractValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
@@ -32,6 +34,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
 
   const $state = usePathState<UrlState>()
   const [maybeTrial0, setTrial0] = useSearchState("trial0", $state)
+  const [maybeTrial1, setTrial1] = useSearchState("trial1", $state)
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeToken, setToken] = useSearchState("token", $state)
@@ -47,6 +50,15 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       return
     setTrial0(trial0Uuid)
   }, [maybeTrial0, setTrial0, trial0Uuid])
+
+  const trial1UuidFallback = useConstant(() => crypto.randomUUID())
+  const trial1Uuid = Option.wrap(maybeTrial1).unwrapOr(trial1UuidFallback)
+
+  useEffect(() => {
+    if (maybeTrial1 === trial1Uuid)
+      return
+    setTrial1(trial1Uuid)
+  }, [maybeTrial1, setTrial1, trial1Uuid])
 
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
@@ -217,7 +229,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   }, [])
 
   const maybeContract = useMemo(() => {
-    return Peanut.contracts[chainData.chainId]?.v4 as string | undefined
+    return Peanut.contracts[chainData.chainId]?.v4 as ZeroHexString | undefined
   }, [chainData])
 
   const password = useMemo(() => {
@@ -265,7 +277,25 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
     } catch { }
   }, [rawValue, tokenData])
 
-  const maybeTriedMaybeFinalData = useMemo(() => {
+  const maybeTriedMaybeFinalData1 = useMemo(() => {
+    if (maybeContract == null)
+      return undefined
+    if (maybeFinalValue == null)
+      return undefined
+
+    return Result.runAndDoubleWrapSync(() => {
+      const abi = TokenAbi.approve.from(maybeContract, maybeFinalValue.value)
+      const hex = Abi.encodeOrThrow(abi)
+
+      return hex
+    })
+  }, [maybeContract, maybeFinalValue])
+
+  const onSendTransaction1Click = useCallback(() => {
+    subpath.go(qurl("/eth_sendTransaction", { trial: trial1Uuid, step: "value", chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData1?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
+  }, [subpath, trial1Uuid, chainData, tokenData, maybeTriedMaybeFinalData1])
+
+  const maybeTriedMaybeFinalData0 = useMemo(() => {
     if (maybeFinalValue == null)
       return undefined
 
@@ -280,29 +310,36 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       const address = Address.compute(publicKey)
 
       const abi = PeanutAbi.makeDeposit.from(token, 1, value, 0, address)
+      const hex = Abi.encodeOrThrow(abi)
 
-      return Abi.encodeOrThrow(abi)
+      return hex
     })
   }, [maybeFinalValue, password, tokenData])
 
-  const onSendTransactionClick = useCallback(() => {
-    subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, step: "value", chain: chainData.chainId, target: maybeContract, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
-  }, [subpath, trial0Uuid, chainData, maybeContract, maybeTriedMaybeFinalData])
+  const onSendTransaction0Click = useCallback(() => {
+    subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, step: "value", chain: chainData.chainId, target: maybeContract, data: maybeTriedMaybeFinalData0?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
+  }, [subpath, trial0Uuid, chainData, maybeContract, maybeTriedMaybeFinalData0])
 
   const onClose = useCallback(() => {
     subpath.go(`/`)
   }, [subpath])
 
+  const trial1Query = useTransactionTrial(trial1Uuid)
+  const maybeTrial1Data = trial1Query.current?.ok().get()
+
+  const transaction1Query = useTransactionWithReceipt(maybeTrial1Data?.transactions[0].uuid, context)
+  const maybeTransaction1 = transaction1Query.current?.ok().get()
+
   const trial0Query = useTransactionTrial(trial0Uuid)
   const maybeTrial0Data = trial0Query.current?.ok().get()
 
-  const transactionQuery = useTransaction(maybeTrial0Data?.transactions[0].uuid)
-  const maybeTransaction = transactionQuery.current?.ok().get()
+  const transaction0Query = useTransactionWithReceipt(maybeTrial0Data?.transactions[0].uuid, context)
+  const maybeTransaction0 = transaction0Query.current?.ok().get()
 
   const maybeTriedLink = useMemo(() => {
-    if (maybeTransaction == null)
+    if (maybeTransaction0 == null)
       return
-    if (maybeTransaction.type !== "executed")
+    if (maybeTransaction0.type !== "executed")
       return
 
     return Result.runAndDoubleWrapSync(() => {
@@ -312,7 +349,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       using hashSlice = Keccak256.get().hashOrThrow(signatureBytes)
       const hashHex = `0x${Base16.get().encodeOrThrow(hashSlice)}`
 
-      const log = maybeTransaction.receipt.logs.find(log => log.topics[0] === hashHex)
+      const log = maybeTransaction0.receipt.logs.find(log => log.topics[0] === hashHex)
 
       if (log == null)
         throw new Error(`Could not find log`)
@@ -321,7 +358,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
 
       return `https://peanut.to/claim?c=${chainData.chainId}&i=${index}&v=v4&t=ui#p=${password}`
     })
-  }, [maybeTransaction, password, chainData.chainId])
+  }, [maybeTransaction0, password, chainData.chainId])
 
   const onLinkCopy = useCopy(maybeTriedLink?.ok().inner)
 
@@ -450,6 +487,23 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
           </ShrinkableContrastButtonInInputBox>
         </div>
       </SimpleBox>}
+    <div className="h-4" />
+    {maybeTransaction1 != null && <>
+      <div className="font-medium">
+        Approval
+      </div>
+      <div className="h-2" />
+      <TransactionCard data={maybeTransaction1} />
+      <div className="h-4" />
+    </>}
+    {maybeTransaction0 != null && <>
+      <div className="font-medium">
+        Deposit
+      </div>
+      <div className="h-2" />
+      <TransactionCard data={maybeTransaction0} />
+      <div className="h-4" />
+    </>}
     <div className="h-4 grow" />
     {maybeTriedLink?.isOk() && <>
       <div className="po-md flex items-center bg-contrast rounded-xl">
@@ -493,12 +547,20 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         </WideShrinkableOppositeButton>
       </div>
     </>}
-    {!maybeTriedLink?.isOk() &&
+    {maybeTransaction1 == null &&
       <div className="flex items-center">
         <WideShrinkableOppositeButton
-          onClick={onSendTransactionClick}>
+          onClick={onSendTransaction1Click}>
           <Outline.PaperAirplaneIcon className="size-5" />
-          Transact
+          Transact (1/2)
+        </WideShrinkableOppositeButton>
+      </div>}
+    {maybeTransaction1?.type === "executed" && maybeTransaction0 == null &&
+      <div className="flex items-center">
+        <WideShrinkableOppositeButton
+          onClick={onSendTransaction0Click}>
+          <Outline.PaperAirplaneIcon className="size-5" />
+          Transact (2/2)
         </WideShrinkableOppositeButton>
       </div>}
   </>

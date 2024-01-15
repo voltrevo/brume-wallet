@@ -5,7 +5,7 @@ import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, Screen, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
-import { useTransaction, useTransactionTrial } from "@/mods/foreground/entities/transactions/data";
+import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
 import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Abi, Address, Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Optional } from "@hazae41/option";
@@ -18,7 +18,7 @@ import { useWalletDataContext } from "../../../context";
 import { useEthereumContext, useEthereumContext2 } from "../../../data";
 import { PriceResolver } from "../../../page";
 import { WalletSendTransactionScreen } from "../../eth_sendTransaction";
-import { ExecutedTransactionCard, PendingTransactionCard, SignedTransactionCard } from "../../eth_sendTransaction/screen";
+import { TransactionCard } from "../../eth_sendTransaction/screen";
 
 export function WalletSendScreenContractValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
@@ -74,8 +74,6 @@ export function WalletSendScreenContractValue(props: {}) {
       return a.mul(Fixed.from(b))
     }, Fixed.unit(tokenData.decimals))
   }, [prices, tokenData])
-
-  console.log({ tokenData })
 
   const [rawValuedInput = "", setRawValuedInput] = useState<Optional<string>>(maybeValue)
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
@@ -254,8 +252,9 @@ export function WalletSendScreenContractValue(props: {}) {
       const value = maybeFinalValue.value
 
       const abi = TokenAbi.transfer.from(address, value)
+      const hex = Abi.encodeOrThrow(abi)
 
-      return Abi.encodeOrThrow(abi)
+      return hex
     })
   }, [maybeFinalTarget, maybeFinalValue])
 
@@ -270,7 +269,7 @@ export function WalletSendScreenContractValue(props: {}) {
   const trialQuery = useTransactionTrial(trial0Uuid)
   const maybeTrialData = trialQuery.current?.ok().get()
 
-  const transactionQuery = useTransaction(maybeTrialData?.transactions[0].uuid)
+  const transactionQuery = useTransactionWithReceipt(maybeTrialData?.transactions[0].uuid, context)
   const maybeTransaction = transactionQuery.current?.ok().get()
 
   return <>
@@ -400,20 +399,8 @@ export function WalletSendScreenContractValue(props: {}) {
       </SimpleBox>}
     <div className="h-4 grow" />
     {maybeTransaction != null && <>
-      {maybeTransaction.type === "pending" &&
-        <PendingTransactionCard data={maybeTransaction} />}
-      {maybeTransaction.type === "executed" &&
-        <ExecutedTransactionCard data={maybeTransaction} />}
-      {maybeTransaction.type === "signed" &&
-        <SignedTransactionCard data={maybeTransaction} />}
+      <TransactionCard data={maybeTransaction} />
       <div className="h-2" />
-      <div className="flex items-center gap-2">
-        <WideShrinkableOppositeButton
-          onClick={close}>
-          <Outline.CheckIcon className="size-5" />
-          Close
-        </WideShrinkableOppositeButton>
-      </div>
     </>}
     {maybeTransaction == null &&
       <div className="flex items-center">
@@ -421,6 +408,14 @@ export function WalletSendScreenContractValue(props: {}) {
           onClick={onSendTransactionClick}>
           <Outline.PaperAirplaneIcon className="size-5" />
           Transact
+        </WideShrinkableOppositeButton>
+      </div>}
+    {maybeTransaction != null &&
+      <div className="flex items-center gap-2">
+        <WideShrinkableOppositeButton
+          onClick={close}>
+          <Outline.CheckIcon className="size-5" />
+          Close
         </WideShrinkableOppositeButton>
       </div>}
   </>

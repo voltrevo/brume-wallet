@@ -307,13 +307,34 @@ export namespace BgTransactionReceipt {
     }
   }
 
-  export function schema(hash: ZeroHexString, ethereum: BgEthereumContext, storage: IDBStorage) {
+  export function schema(uuid: string, hash: ZeroHexString, ethereum: BgEthereumContext, storage: IDBStorage) {
     const fetcher = async (request: EthereumQueryKey<unknown>, more: FetcherMore) =>
       await BgEthereumContext.fetchOrFail<Data>(ethereum, request, more)
+
+    const indexer = async (states: States<Data, Fail>) => {
+      const { current, previous } = states
+
+      const previousData = previous?.real?.current.ok()?.get()
+      const currentData = current.real?.current.ok()?.get()
+
+      if (previousData == null && currentData != null) {
+        await BgTransaction.schema(uuid, storage)?.mutate(s => {
+          const current = s.real?.current
+
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(d => ({ ...d, type: "executed", receipt: currentData }) as const))
+        })
+      }
+    }
 
     return createQuery<Key, Data, Fail>({
       key: key(hash, ethereum.chain),
       fetcher,
+      indexer,
       storage
     })
   }
