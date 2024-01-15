@@ -2,8 +2,10 @@ import { TokenAbi } from "@/libs/abi/erc20.abi";
 import { chainByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useInputChange } from "@/libs/react/events";
+import { useConstant } from "@/libs/react/ref";
 import { Dialog, Screen, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
+import { useTransaction, useTransactionTrial } from "@/mods/foreground/entities/transactions/data";
 import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Abi, Address, Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Optional } from "@hazae41/option";
@@ -12,11 +14,11 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "rea
 import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableOppositeButton } from "..";
 import { useEnsLookup } from "../../../../names/data";
 import { useNativeBalance, useNativePricedBalance, useToken } from "../../../../tokens/data";
-import { useNonce } from "../../../../unknown/data";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext, useEthereumContext2 } from "../../../data";
 import { PriceResolver } from "../../../page";
 import { WalletSendTransactionScreen } from "../../eth_sendTransaction";
+import { ExecutedTransactionCard, PendingTransactionCard, SignedTransactionCard } from "../../eth_sendTransaction/screen";
 
 export function WalletSendScreenContractValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
@@ -24,11 +26,15 @@ export function WalletSendScreenContractValue(props: {}) {
   const subpath = useSubpath()
 
   const $state = usePathState<UrlState>()
+  const [maybeTrial, setTrial] = useSearchState("trial", $state)
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeToken, setToken] = useSearchState("token", $state)
   const [maybeTarget, setTarget] = useSearchState("target", $state)
   const [maybeValue, setValue] = useSearchState("value", $state)
+
+  const trialUuidFallback = useConstant(() => crypto.randomUUID())
+  const trialUuid = Option.wrap(maybeTrial).unwrapOr(trialUuidFallback)
 
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
@@ -42,32 +48,14 @@ export function WalletSendScreenContractValue(props: {}) {
 
   const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
 
-  const pendingNonceQuery = useNonce(wallet.address, context)
-  const maybePendingNonce = pendingNonceQuery.current?.ok().get()
-
   const [tokenPrices, setTokenPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)
       return
     return new Array(tokenData.pairs.length)
   })
 
-  const [chainPrices, setChainPrices] = useState(() => {
-    if (chainData.token.pairs == null)
-      return
-    return new Array(chainData.token.pairs.length)
-  })
-
   const onTokenPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
     setTokenPrices(prices => {
-      if (prices == null)
-        return
-      prices[index] = data
-      return [...prices]
-    })
-  }, [])
-
-  const onChainPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setChainPrices(prices => {
       if (prices == null)
         return
       prices[index] = data
@@ -268,12 +256,18 @@ export function WalletSendScreenContractValue(props: {}) {
   }, [maybeFinalTarget, maybeFinalValue])
 
   const onSendTransactionClick = useCallback(() => {
-    subpath.go(qurl("/eth_sendTransaction", { step: "value", chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true }))
-  }, [subpath, chainData, tokenData, maybeTriedMaybeFinalData])
+    subpath.go(qurl("/eth_sendTransaction", { trial: trialUuid, step: "value", chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true }))
+  }, [subpath, trialUuid, chainData, tokenData, maybeTriedMaybeFinalData])
 
   const onClose = useCallback(() => {
     subpath.go(`/`)
   }, [subpath])
+
+  const trialQuery = useTransactionTrial(trialUuid)
+  const maybeTrialData = trialQuery.current?.ok().get()
+
+  const transactionQuery = useTransaction(maybeTrialData?.transactions[0].uuid)
+  const maybeTransaction = transactionQuery.current?.ok().get()
 
   return <>
     <PathContext.Provider value={subpath}>
@@ -287,11 +281,6 @@ export function WalletSendScreenContractValue(props: {}) {
         index={i}
         address={address}
         ok={onTokenPrice} />)}
-    {chainData.token.pairs?.map((address, i) =>
-      <PriceResolver key={i}
-        index={i}
-        address={address}
-        ok={onChainPrice} />)}
     <Dialog.Title close={close}>
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
@@ -406,12 +395,29 @@ export function WalletSendScreenContractValue(props: {}) {
         </div>
       </SimpleBox>}
     <div className="h-4 grow" />
-    <div className="flex items-center">
-      <WideShrinkableOppositeButton
-        onClick={onSendTransactionClick}>
-        <Outline.PaperAirplaneIcon className="size-5" />
-        Transact
-      </WideShrinkableOppositeButton>
-    </div>
+    {maybeTransaction != null && <>
+      {maybeTransaction.type === "pending" &&
+        <PendingTransactionCard data={maybeTransaction} />}
+      {maybeTransaction.type === "executed" &&
+        <ExecutedTransactionCard data={maybeTransaction} />}
+      {maybeTransaction.type === "signed" &&
+        <SignedTransactionCard data={maybeTransaction} />}
+      <div className="h-2" />
+      <div className="flex items-center gap-2">
+        <WideShrinkableOppositeButton
+          onClick={close}>
+          <Outline.CheckIcon className="size-5" />
+          Close
+        </WideShrinkableOppositeButton>
+      </div>
+    </>}
+    {maybeTransaction == null &&
+      <div className="flex items-center">
+        <WideShrinkableOppositeButton
+          onClick={onSendTransactionClick}>
+          <Outline.PaperAirplaneIcon className="size-5" />
+          Transact
+        </WideShrinkableOppositeButton>
+      </div>}
   </>
 }

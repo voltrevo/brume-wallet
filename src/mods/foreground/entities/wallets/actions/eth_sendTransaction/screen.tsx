@@ -10,8 +10,8 @@ import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
-import { TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
-import { useTransaction, useTransactionReceipt, useTransactionTrial } from "@/mods/foreground/entities/transactions/data";
+import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
+import { useTransaction, useTransactionReceipt } from "@/mods/foreground/entities/transactions/data";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
@@ -34,7 +34,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
   const close = useCloseContext().unwrap()
 
   const $state = usePathState<UrlState>()
-  const [maybeTrialUuid, setTrialUuid] = useSearchState("uuid", $state)
+  const [maybeTrial, setTrial] = useSearchState("trial", $state)
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeTarget, setTarget] = useSearchState("target", $state)
@@ -54,9 +54,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
   const gasMode = Option.wrap(maybeGasMode).unwrapOr("normal")
 
   const trialUuidFallback = useConstant(() => crypto.randomUUID())
-  const trialUuid = Option.wrap(maybeTrialUuid).unwrapOr(trialUuidFallback)
-  const trialQuery = useTransactionTrial(trialUuid)
-  const maybeTrial = trialQuery.current?.ok().get()
+  const trialUuid = Option.wrap(maybeTrial).unwrapOr(trialUuidFallback)
 
   const transactionUuid = useConstant(() => crypto.randomUUID())
   const transactionQuery = useTransaction(transactionUuid)
@@ -927,16 +925,20 @@ export function WalletSendTransactionScreenValue(props: {}) {
       tx.signature = signature
 
       if (action === "sign") {
+        const { chainId } = chainData
+
         const uuid = transactionUuid
         const hash = tx.hash as ZeroHexString
         const data = tx.serialized as ZeroHexString
         const trial = TransactionTrialRef.create(trialUuid)
 
-        await transactionQuery.mutate(Mutators.data<TransactionData, never>({ type: "signed", uuid, trial, hash, data, params }))
+        await transactionQuery.mutate(Mutators.data<TransactionData, never>({ type: "signed", uuid, trial, chainId, hash, data, params }))
         return
       }
 
       if (action === "send") {
+        const { chainId } = chainData
+
         const uuid = transactionUuid
         const hash = tx.hash as ZeroHexString
         const data = tx.serialized as ZeroHexString
@@ -951,7 +953,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
           }]
         }).then(r => r.unwrap().unwrap())
 
-        await transactionQuery.mutate(Mutators.data<TransactionData, never>({ type: "pending", uuid, trial, hash, data, params }))
+        await transactionQuery.mutate(Mutators.data<TransactionData, never>({ type: "pending", uuid, trial, chainId, hash, data, params }))
         return
       }
     } catch (e) {
@@ -1267,30 +1269,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
     </>}
     <div className="h-4 grow" />
     {maybeTransaction?.type === "signed" && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl">
-        <div className="flex flex-col truncate">
-          <div className="flex items-center">
-            <div className="font-medium">
-              Transaction signed
-            </div>
-          </div>
-          <div className="text-contrast truncate">
-            {maybeTransaction.data}
-          </div>
-          <div className="h-2" />
-          <div className="flex items-center gap-1">
-            <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
-              onClick={onTxSignCopy.run}>
-              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-                Copy
-                {onTxSignCopy.current
-                  ? <Outline.CheckIcon className="size-4" />
-                  : <Outline.ClipboardIcon className="size-4" />}
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
+      <SignedTransactionCard data={maybeTransaction} />
       <div className="h-2" />
       {maybeTriedEip1559GasLimitKey?.isErr() && <>
         <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
@@ -1333,40 +1312,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
       </div>
     </>}
     {maybeTransaction?.type === "pending" && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl">
-        <div className="flex flex-col truncate">
-          <div className="flex items-center">
-            <Loading className="size-4 shrink-0" />
-            <div className="w-2" />
-            <div className="font-medium">
-              Transaction sent
-            </div>
-          </div>
-          <div className="text-contrast truncate">
-            {maybeTransaction.hash}
-          </div>
-          <div className="h-2" />
-          <div className="flex items-center gap-1">
-            <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
-              onClick={onTxHashCopy.run}>
-              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-                Copy
-                {onTxHashCopy.current
-                  ? <Outline.CheckIcon className="size-4" />
-                  : <Outline.ClipboardIcon className="size-4" />}
-              </div>
-            </button>
-            <a className="group px-2 bg-contrast rounded-full"
-              target="_blank" rel="noreferrer"
-              href={`${chainData.etherscan}/tx/${maybeTransaction.hash}`}>
-              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-                Open
-                <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-              </div>
-            </a>
-          </div>
-        </div>
-      </div>
+      <PendingTransactionCard data={maybeTransaction} />
       <div className="h-2" />
       <div className="flex items-center gap-2">
         <WideShrinkableOppositeButton
@@ -1377,40 +1323,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
       </div>
     </>}
     {maybeTransaction?.type === "executed" && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl">
-        <div className="flex flex-col truncate">
-          <div className="flex items-center">
-            <Outline.CheckIcon className="size-4 shrink-0" />
-            <div className="w-2" />
-            <div className="font-medium">
-              Transaction confirmed
-            </div>
-          </div>
-          <div className="text-contrast truncate">
-            {maybeTransaction.hash}
-          </div>
-          <div className="h-2" />
-          <div className="flex items-center gap-1">
-            <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
-              onClick={onTxHashCopy.run}>
-              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-                Copy
-                {onTxHashCopy.current
-                  ? <Outline.CheckIcon className="size-4" />
-                  : <Outline.ClipboardIcon className="size-4" />}
-              </div>
-            </button>
-            <a className="group px-2 bg-contrast rounded-full"
-              target="_blank" rel="noreferrer"
-              href={`${chainData.etherscan}/tx/${maybeTransaction.hash}`}>
-              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-                Open
-                <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-              </div>
-            </a>
-          </div>
-        </div>
-      </div>
+      <ExecutedTransactionCard data={maybeTransaction} />
       <div className="h-2" />
       <div className="flex items-center gap-2">
         <WideShrinkableOppositeButton
@@ -1462,4 +1375,121 @@ export function WalletSendTransactionScreenValue(props: {}) {
       </div>
     </>}
   </>
+}
+
+export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }) {
+  const { data } = props
+
+  const onCopy = useCopy(data.hash)
+
+  const chainData = chainByChainId[data.chainId]
+
+  return <div className="po-md flex items-center bg-contrast rounded-xl">
+    <div className="flex flex-col truncate">
+      <div className="flex items-center">
+        <Outline.CheckIcon className="size-4 shrink-0" />
+        <div className="w-2" />
+        <div className="font-medium">
+          Transaction confirmed
+        </div>
+      </div>
+      <div className="text-contrast truncate">
+        {data.hash}
+      </div>
+      <div className="h-2" />
+      <div className="flex items-center gap-1">
+        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+          onClick={onCopy.run}>
+          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+            Copy
+            {onCopy.current
+              ? <Outline.CheckIcon className="size-4" />
+              : <Outline.ClipboardIcon className="size-4" />}
+          </div>
+        </button>
+        <a className="group px-2 bg-contrast rounded-full"
+          target="_blank" rel="noreferrer"
+          href={`${chainData.etherscan}/tx/${data.hash}`}>
+          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+            Open
+            <Outline.ArrowTopRightOnSquareIcon className="size-4" />
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+}
+
+export function PendingTransactionCard(props: { data: PendingTransactionData }) {
+  const { data } = props
+
+  const onCopy = useCopy(data.hash)
+
+  const chainData = chainByChainId[data.chainId]
+
+  return <div className="po-md flex items-center bg-contrast rounded-xl">
+    <div className="flex flex-col truncate">
+      <div className="flex items-center">
+        <Loading className="size-4 shrink-0" />
+        <div className="w-2" />
+        <div className="font-medium">
+          Transaction sent
+        </div>
+      </div>
+      <div className="text-contrast truncate">
+        {data.hash}
+      </div>
+      <div className="h-2" />
+      <div className="flex items-center gap-1">
+        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+          onClick={onCopy.run}>
+          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+            Copy
+            {onCopy.current
+              ? <Outline.CheckIcon className="size-4" />
+              : <Outline.ClipboardIcon className="size-4" />}
+          </div>
+        </button>
+        <a className="group px-2 bg-contrast rounded-full"
+          target="_blank" rel="noreferrer"
+          href={`${chainData.etherscan}/tx/${data.hash}`}>
+          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+            Open
+            <Outline.ArrowTopRightOnSquareIcon className="size-4" />
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+}
+
+export function SignedTransactionCard(props: { data: SignedTransactionData }) {
+  const { data } = props
+
+  const onCopy = useCopy(data.data)
+
+  return <div className="po-md flex items-center bg-contrast rounded-xl">
+    <div className="flex flex-col truncate">
+      <div className="flex items-center">
+        <div className="font-medium">
+          Transaction signed
+        </div>
+      </div>
+      <div className="text-contrast truncate">
+        {data.data}
+      </div>
+      <div className="h-2" />
+      <div className="flex items-center gap-1">
+        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+          onClick={onCopy.run}>
+          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+            Copy
+            {onCopy.current
+              ? <Outline.CheckIcon className="size-4" />
+              : <Outline.ClipboardIcon className="size-4" />}
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
 }

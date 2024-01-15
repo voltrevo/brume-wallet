@@ -123,6 +123,8 @@ export interface SignedTransactionData {
 
   readonly trial: TransactionTrialRef
 
+  readonly chainId: number
+
   readonly hash: ZeroHexString
   readonly data: ZeroHexString
 
@@ -136,6 +138,8 @@ export interface PendingTransactionData {
 
   readonly trial: TransactionTrialRef
 
+  readonly chainId: number
+
   readonly hash: ZeroHexString
   readonly data: ZeroHexString
 
@@ -148,6 +152,8 @@ export interface ExecutedTransactionData {
   readonly uuid: string
 
   readonly trial: TransactionTrialRef
+
+  readonly chainId: number
 
   readonly hash: ZeroHexString
   readonly data: ZeroHexString

@@ -4,7 +4,7 @@ import { WalletSendScreenTarget } from "../send/target"
 import { WalletSendTransactionScreenValue } from "./screen"
 
 export type UrlState = {
-  readonly uuid?: string
+  readonly trial?: string
   readonly type?: string
   readonly step?: string
   readonly chain?: string

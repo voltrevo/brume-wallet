@@ -32,9 +32,13 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const subpath = useSubpath()
 
   const $state = usePathState<UrlState>()
+  const [maybeTrial, setTrial] = useSearchState("trial", $state)
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeValue, setValue] = useSearchState("value", $state)
+
+  const trialUuidFallback = useConstant(() => crypto.randomUUID())
+  const trialUuid = Option.wrap(maybeTrial).unwrapOr(trialUuidFallback)
 
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
@@ -250,22 +254,18 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     })
   }, [maybeFinalValue, triedFinalPassword])
 
-  const uuid = useConstant(() => crypto.randomUUID())
-
   const onSendTransactionClick = useCallback(() => {
-    subpath.go(qurl("/eth_sendTransaction", { uuid, step: "value", chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
-  }, [subpath, uuid, chainData, maybeContract, rawValue, maybeTriedMaybeFinalData])
+    subpath.go(qurl("/eth_sendTransaction", { trial: trialUuid, step: "value", chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true }))
+  }, [subpath, trialUuid, chainData, maybeContract, rawValue, maybeTriedMaybeFinalData])
 
   const onClose = useCallback(() => {
     subpath.go(`/`)
   }, [subpath])
 
-  const trialQuery = useTransactionTrial(uuid)
-  const maybeTrial = trialQuery.current?.ok().get()
+  const trialQuery = useTransactionTrial(trialUuid)
+  const maybeTrialData = trialQuery.current?.ok().get()
 
-  console.log(maybeTrial)
-
-  const transactionQuery = useTransaction(maybeTrial?.transactions[0].uuid)
+  const transactionQuery = useTransaction(maybeTrialData?.transactions[0].uuid)
   const maybeTransaction = transactionQuery.current?.ok().get()
 
   const maybeTriedLink = useMemo(() => {
@@ -423,50 +423,50 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
         </div>
       </SimpleBox>}
     <div className="h-4 grow" />
-    {maybeTriedLink?.isOk()
-      ? <>
-        <div className="po-md flex items-center bg-contrast rounded-xl">
-          <div className="flex flex-col truncate">
-            <div className="flex items-center">
-              <div className="font-medium">
-                Link created
-              </div>
-            </div>
-            <div className="text-contrast truncate">
-              {maybeTriedLink.get()}
-            </div>
-            <div className="h-2" />
-            <div className="flex items-center gap-1">
-              <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
-                onClick={onLinkCopy.run}>
-                <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-                  Copy
-                  {onLinkCopy.current
-                    ? <Outline.CheckIcon className="size-4" />
-                    : <Outline.ClipboardIcon className="size-4" />}
-                </div>
-              </button>
-              <a className="group px-2 bg-contrast rounded-full"
-                target="_blank" rel="noreferrer"
-                href={maybeTriedLink.get()}>
-                <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-                  Open
-                  <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-                </div>
-              </a>
+    {maybeTriedLink?.isOk() && <>
+      <div className="po-md flex items-center bg-contrast rounded-xl">
+        <div className="flex flex-col truncate">
+          <div className="flex items-center">
+            <div className="font-medium">
+              Link created
             </div>
           </div>
+          <div className="text-contrast truncate">
+            {maybeTriedLink.get()}
+          </div>
+          <div className="h-2" />
+          <div className="flex items-center gap-1">
+            <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+              onClick={onLinkCopy.run}>
+              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+                Copy
+                {onLinkCopy.current
+                  ? <Outline.CheckIcon className="size-4" />
+                  : <Outline.ClipboardIcon className="size-4" />}
+              </div>
+            </button>
+            <a className="group px-2 bg-contrast rounded-full"
+              target="_blank" rel="noreferrer"
+              href={maybeTriedLink.get()}>
+              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+                Open
+                <Outline.ArrowTopRightOnSquareIcon className="size-4" />
+              </div>
+            </a>
+          </div>
         </div>
-        <div className="h-2" />
-        <div className="flex items-center">
-          <WideShrinkableOppositeButton
-            onClick={close}>
-            <Outline.CheckIcon className="size-5" />
-            Close
-          </WideShrinkableOppositeButton>
-        </div>
-      </>
-      : <div className="flex items-center">
+      </div>
+      <div className="h-2" />
+      <div className="flex items-center">
+        <WideShrinkableOppositeButton
+          onClick={close}>
+          <Outline.CheckIcon className="size-5" />
+          Close
+        </WideShrinkableOppositeButton>
+      </div>
+    </>}
+    {!maybeTriedLink?.isOk() &&
+      <div className="flex items-center">
         <WideShrinkableOppositeButton
           onClick={onSendTransactionClick}>
           <Outline.PaperAirplaneIcon className="size-5" />
