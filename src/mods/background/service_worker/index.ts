@@ -650,12 +650,19 @@ export class Global {
       if (session == null)
         return new Err(new UnauthorizedError())
 
-      const { wallets, chain } = session
+      const { wallets } = session
 
-      const wallet = Option.unwrap(wallets[0])
-      const brume = await this.#tryGetOrTakeEthBrume(wallet.uuid).then(r => r.unwrap())
+      const { storage } = Option.unwrap(this.#user)
 
-      const context: BgEthereumContext = { chain, brume }
+      const walletRef = Option.unwrap(wallets[0])
+      const walletState = await BgWallet.schema(walletRef.uuid, storage).state
+      const walletData = Option.unwrap(walletState.real?.current.ok().get())
+
+      const chainData = session.chain
+
+      const brume = await this.#tryGetOrTakeEthBrume(walletRef.uuid).then(r => r.unwrap())
+
+      const context: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
       if (subrequest.method === "eth_requestAccounts")
         return await this.eth_requestAccounts(context, session, subrequest)
@@ -1277,10 +1284,14 @@ export class Global {
   async brume_eth_fetch2(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown> & EthereumFetchParams]>).params
 
-    const chain = Option.unwrap(chainByChainId[chainId])
+    const walletState = await BgWallet.schema(uuid, this.storage).state
+    const walletData = Option.unwrap(walletState.real?.current.ok().get())
+
+    const chainData = Option.unwrap(chainByChainId[chainId])
+
     const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.unwrap())
 
-    const context: BgEthereumContext = { chain, brume }
+    const context: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
     return await BgEthereumContext.fetchOrFail<unknown>(context, subrequest)
   }
@@ -1291,10 +1302,13 @@ export class Global {
 
       const { storage } = Option.unwrap(this.#user)
 
-      const chain = Option.unwrap(chainByChainId[chainId])
+      const walletState = await BgWallet.schema(uuid, this.storage).state
+      const walletData = Option.unwrap(walletState.real?.current.ok().get())
+
+      const chainData = Option.unwrap(chainByChainId[chainId])
 
       const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.unwrap())
-      const ethereum: BgEthereumContext = { chain, brume }
+      const ethereum: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
       const query = await this.routeOrThrow(ethereum, subrequest, storage)
 
@@ -1369,7 +1383,8 @@ export class Global {
     const { storage } = Option.unwrap(this.#user)
 
     const { topic, metadata, sessionKeyBase64, authKeyJwk, wallets, settlement } = sessionData
-    const wallet = Option.unwrap(wallets[0])
+
+    const walletRef = Option.unwrap(wallets[0])
 
     const authKey = await Ed25519.get().PrivateKey.importJwkOrThrow(authKeyJwk)
 
@@ -1400,10 +1415,15 @@ export class Global {
       if (suprequest.method !== "wc_sessionRequest")
         return new None()
       const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
-      const chain = Option.unwrap(chainByChainId[Number(chainId.split(":")[1])])
-      const brume = await this.#tryGetOrTakeEthBrume(wallet.uuid).then(r => r.unwrap())
 
-      const ethereum: BgEthereumContext = { chain, brume }
+      const walletState = await BgWallet.schema(walletRef.uuid, this.storage).state
+      const walletData = Option.unwrap(walletState.real?.current.ok().get())
+
+      const chainData = Option.unwrap(chainByChainId[Number(chainId.split(":")[1])])
+
+      const brume = await this.#tryGetOrTakeEthBrume(walletRef.uuid).then(r => r.unwrap())
+
+      const ethereum: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
       if (request.method === "eth_sendTransaction")
         return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
@@ -1436,10 +1456,10 @@ export class Global {
 
       const { user, storage } = Option.unwrap(this.#user)
 
-      const walletQuery = BgWallet.schema(walletId, storage)
-      const walletState = await walletQuery.state
-      const wallet = Option.unwrap(walletState.current?.inner)
-      const chain = Option.unwrap(chainByChainId[1])
+      const walletState = await BgWallet.schema(walletId, storage).state
+      const walletData = Option.unwrap(walletState.real?.current.ok().get())
+
+      const chainData = Option.unwrap(chainByChainId[1])
 
       const wcUrl = new URL(rawWcUrl)
       const pairParams = await Wc.tryParse(wcUrl).then(r => r.unwrap())
@@ -1448,7 +1468,7 @@ export class Global {
       const brume = await Pool.tryTakeCryptoRandom(brumes).then(r => r.unwrap().unwrap().inner.inner)
       const irn = new IrnBrume(brume)
 
-      const [session, settlement] = await Wc.tryPair(irn, pairParams, wallet.address).then(r => r.unwrap())
+      const [session, settlement] = await Wc.tryPair(irn, pairParams, walletData.address).then(r => r.unwrap())
 
       const originData: OriginData = {
         origin: `wc://${crypto.randomUUID()}`,
@@ -1468,8 +1488,8 @@ export class Global {
         origin: originData.origin,
         metadata: session.metadata,
         persist: true,
-        wallets: [WalletRef.from(wallet)],
-        chain: chain,
+        wallets: [WalletRef.from(walletData)],
+        chain: chainData,
         relay: Wc.RELAY,
         topic: session.client.topic,
         sessionKeyBase64: sessionKeyBase64,
@@ -1493,11 +1513,16 @@ export class Global {
       const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
         if (suprequest.method !== "wc_sessionRequest")
           return new None()
-        const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
-        const chain = Option.unwrap(chainByChainId[Number(chainId.split(":")[1])])
-        const brume = await this.#tryGetOrTakeEthBrume(wallet.uuid).then(r => r.unwrap())
 
-        const ethereum: BgEthereumContext = { chain, brume }
+        const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
+
+        const walletState = await BgWallet.schema(walletId, storage).state
+        const walletData = Option.unwrap(walletState.real?.current.ok().get())
+
+        const chainData = Option.unwrap(chainByChainId[Number(chainId.split(":")[1])])
+        const brume = await this.#tryGetOrTakeEthBrume(walletData.uuid).then(r => r.unwrap())
+
+        const ethereum: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
         if (request.method === "eth_sendTransaction")
           return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
