@@ -12,7 +12,7 @@ import { useTransaction, useTransactionTrial } from "@/mods/foreground/entities/
 import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane";
+import { Abi, Address, Fixed } from "@hazae41/cubane";
 import { Cursor } from "@hazae41/cursor";
 import { Keccak256 } from "@hazae41/keccak256";
 import { Nullable, Option, Optional } from "@hazae41/option";
@@ -254,17 +254,16 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       return undefined
 
     return Result.runAndDoubleWrapSync(() => {
-      const token = "0x0000000000000000000000000000000000000000"
+      const token = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
       const value = maybeFinalValue.value
 
       const passwordBytes = Bytes.fromUtf8(password)
       const hashSlice = Keccak256.get().hashOrThrow(passwordBytes)
       const privateKey = Secp256k1.get().PrivateKey.tryImport(hashSlice).unwrap()
-      const publicKeySlice = privateKey.tryGetPublicKey().unwrap().tryExportUncompressed().unwrap()
-      const publicKeyHex = Base16.get().encodeOrThrow(publicKeySlice)
-      const publicKey20 = ZeroHexString.from(publicKeyHex.slice(-40))
+      const publicKey = privateKey.tryGetPublicKey().unwrap().tryExportUncompressed().unwrap().copyAndDispose()
+      const address = Address.compute(publicKey)
 
-      const abi = PeanutAbi.makeDeposit.from(token, 0, value, 0, publicKey20)
+      const abi = PeanutAbi.makeDeposit.from(token, 0, value, 0, address)
 
       return Abi.encodeOrThrow(abi)
     })
