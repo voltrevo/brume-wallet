@@ -63,65 +63,68 @@ export namespace Circuits {
       while (true) {
         const start = Date.now()
 
-        const result = await Result.unthrow<Result<Disposer<Box<Circuit>>, Error>>(async t => {
+        const result = await Result.runAndDoubleWrap(async () => {
           const { index, signal } = params
 
-          const tor = await tors.tryGet(index % tors.capacity, signal).then(r => r.throw(t).throw(t).inner.inner)
+          using circuit = await (async () => {
+            while (true) {
+              const tor = await tors.getOrThrow(index % tors.capacity, signal).then(r => r.unwrap().inner.inner)
 
-          using circuit = await tryLoop<Box<Circuit>, Looped<Error>>(async () => {
-            return await Result.unthrow<Result<Box<Circuit>, Looped<Error>>>(async t => {
-              using circuit = new Box(await tor.tryCreate(AbortSignal.timeout(1000)).then(r => r.mapErrSync(Cancel.new).throw(t)))
+              try {
+                using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(1000)))
 
-              /**
-               * Try to extend to middle relay 3 times before giving up this circuit
-               */
-              await tryLoop(() => {
-                return Result.unthrow<Result<void, Looped<Error>>>(async t => {
-                  const head = middles[Math.floor(Math.random() * middles.length)]
-                  const body = await Consensus.Microdesc.tryFetch(circuit.inner, head).then(r => r.mapErrSync(Cancel.new).throw(t))
-                  await circuit.inner.tryExtend(body, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Retry.new).throw(t))
-
-                  return Ok.void()
-                })
-              }, { init: 0, base: 0, max: 3 }).then(r => r.mapErrSync(Retry.new).throw(t))
-
-              /**
-               * Try to extend to exit relay 3 times before giving up this circuit
-               */
-              await tryLoop(() => {
-                return Result.unthrow<Result<void, Looped<Error>>>(async t => {
-                  const head = exits[Math.floor(Math.random() * exits.length)]
-                  const body = await Consensus.Microdesc.tryFetch(circuit.inner, head).then(r => r.mapErrSync(Cancel.new).throw(t))
-                  await circuit.inner.tryExtend(body, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Retry.new).throw(t))
-
-                  return Ok.void()
-                })
-              }, { init: 0, base: 0, max: 3 }).then(r => r.mapErrSync(Retry.new).throw(t))
-
-              /**
-               * Try to open a stream to a reliable endpoint
-               */
-              using stream = await tryOpenAs(circuit.inner, "http://detectportal.firefox.com").then(r => r.mapErrSync(Retry.new).throw(t))
-
-              /**
-               * Reliability test
-               */
-              for (let i = 0; i < 3; i++) {
                 /**
-                 * Speed test
+                 * Try to extend to middle relay 3 times before giving up this circuit
                  */
-                const signal = AbortSignal.timeout(1000)
+                await tryLoop(() => {
+                  return Result.unthrow<Result<void, Looped<Error>>>(async t => {
+                    const head = middles[Math.floor(Math.random() * middles.length)]
+                    const body = await Consensus.Microdesc.tryFetch(circuit.inner, head).then(r => r.mapErrSync(Cancel.new).throw(t))
+                    await circuit.inner.tryExtend(body, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Retry.new).throw(t))
 
-                await Result.runAndDoubleWrap(async () => {
+                    return Ok.void()
+                  })
+                }, { init: 0, base: 0, max: 3 }).then(r => r.unwrap())
+
+                /**
+                 * Try to extend to exit relay 3 times before giving up this circuit
+                 */
+                await tryLoop(() => {
+                  return Result.unthrow<Result<void, Looped<Error>>>(async t => {
+                    const head = exits[Math.floor(Math.random() * exits.length)]
+                    const body = await Consensus.Microdesc.tryFetch(circuit.inner, head).then(r => r.mapErrSync(Cancel.new).throw(t))
+                    await circuit.inner.tryExtend(body, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Retry.new).throw(t))
+
+                    return Ok.void()
+                  })
+                }, { init: 0, base: 0, max: 3 }).then(r => r.unwrap())
+
+                /**
+                 * Try to open a stream to a reliable endpoint
+                 */
+                using stream = await openAsOrThrow(circuit.inner, "http://detectportal.firefox.com")
+
+                /**
+                 * Reliability test
+                 */
+                for (let i = 0; i < 3; i++) {
+                  /**
+                   * Speed test
+                   */
+                  const signal = AbortSignal.timeout(1000)
+
                   await fetch("http://detectportal.firefox.com", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())
-                }).then(r => r.mapErrSync(Retry.new).throw(t))
+                }
+
+                return circuit.moveOrThrow()
+              } catch (e: unknown) {
+                console.warn(`Retrying circuit creation`, { e })
+                continue
               }
+            }
+          })()
 
-              return new Ok(circuit.moveOrThrow())
-            })
-          }, { max: 9 }).then(r => r.throw(t))
-
-          return new Ok(createCircuitEntry(circuit.moveOrThrow(), params))
+          return createCircuitEntry(circuit.moveOrThrow(), params)
         }).then(r => r.inspectErrSync(e => console.error(`Circuit creation failed`, { e })))
 
         if (result.isOk())

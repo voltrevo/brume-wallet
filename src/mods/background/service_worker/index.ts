@@ -3,6 +3,7 @@ import "@hazae41/symbol-dispose-polyfill"
 import { Blobs } from "@/libs/blobs/blobs"
 import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
+import { Console } from "@/libs/console"
 import { chainByChainId } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Mime } from "@/libs/mime/mime"
@@ -60,6 +61,24 @@ import { BgEthereum } from "./entities/unknown/data"
 import { BgUser, User, UserData, UserInit, UserSession } from "./entities/users/data"
 import { BgWallet, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
 import { createUserStorageOrThrow } from "./storage"
+
+let onLine: Nullable<boolean> = undefined
+
+setInterval(() => {
+  if (navigator.onLine && onLine === false) {
+    self.dispatchEvent(new CustomEvent("online"))
+    onLine = navigator.onLine
+    return
+  }
+
+  if (!navigator.onLine && onLine === true) {
+    self.dispatchEvent(new CustomEvent("offline"))
+    onLine = navigator.onLine
+    return
+  }
+
+  onLine = navigator.onLine
+}, 1000)
 
 declare global {
   interface ServiceWorkerGlobalScope {
@@ -157,6 +176,22 @@ export class Global {
     readonly storage: IDBStorage
   ) {
     this.circuits = new Mutex(Circuits.pool(this.tors, consensus, { capacity: 9 }))
+
+    this.circuits.inner.events.on("created", (entry) => {
+      if (entry.isOk())
+        console.log("circuits", entry, this.circuits.inner.size, this.circuits.inner.capacity)
+      if (entry.isErr())
+        console.error("circuits", entry, this.circuits.inner.size, this.circuits.inner.capacity)
+      return new None()
+    })
+
+    this.tors.events.on("created", (entry) => {
+      if (entry.isOk())
+        console.log("tors", entry, this.tors.size, this.tors.capacity)
+      if (entry.isErr())
+        console.error("tors", entry, this.tors.size, this.tors.capacity)
+      return new None()
+    })
 
     core.onState.on(BgAppRequest.All.key, async () => {
       const state = core.getStateSync(BgAppRequest.All.key) as State<AppRequest[], never>
@@ -1609,6 +1644,7 @@ async function initOrThrow() {
   await Promise.all([initBerith(), initEligos(), initMorax(), initAlocer(), initZepar()])
 
   const gt = globalThis as any
+  gt.Console = Console
   gt.Echalote = Echalote
   gt.Cadenas = Cadenas
   gt.Fleche = Fleche
@@ -1616,8 +1652,7 @@ async function initOrThrow() {
   gt.Smux = Smux
 
   const tors = createTorPool({ capacity: 1 })
-
-  const tor = await tors.tryGetCryptoRandom().then(r => r.unwrap().unwrap().inner.inner)
+  const tor = await tors.getCryptoRandomOrThrow().then(r => r.unwrap().inner.inner)
 
   using circuit = await tor.createOrThrow(AbortSignal.timeout(5000))
   const consensus = await Consensus.fetchOrThrow(circuit)

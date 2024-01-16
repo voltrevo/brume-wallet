@@ -2,6 +2,7 @@ import "@hazae41/symbol-dispose-polyfill"
 
 import "@/styles/index.css"
 
+import { Console } from "@/libs/console"
 import { Errors } from "@/libs/errors/errors"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { Catcher, PromiseCatcher } from "@/libs/react/error"
@@ -102,6 +103,9 @@ async function initZepar() {
 
 export function Initializer(props: ChildrenProps) {
   useEffect(() => {
+    const gt = globalThis as any
+    gt.Console = Console
+
     initBerith()
     initEligos()
     initMorax()

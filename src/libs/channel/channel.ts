@@ -4,6 +4,7 @@ import { None, Some } from "@hazae41/option"
 import { CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
 import { BrowserError } from "../browser/browser"
+import { Console } from "../console"
 
 export type Port =
   | WebsitePort
@@ -78,20 +79,20 @@ export class WebsitePort {
 
   async onRequest(request: RpcRequestInit<unknown>) {
     if (request.id !== "ping")
-      console.debug(this.name, "->", request)
+      Console.debug(this.name, "->", request)
 
     const result = await this.tryRouteRequest(request)
     const response = RpcResponse.rewrap(request.id, result)
 
     if (request.id !== "ping")
-      console.debug(this.name, "<-", response, result)
+      Console.debug(this.name, "<-", response, result)
 
     this.port.postMessage(JSON.stringify(response))
   }
 
   async onResponse(response: RpcResponseInit<unknown>) {
     if (response.id !== "ping")
-      console.debug(this.name, "->", response)
+      Console.debug(this.name, "->", response)
 
     const returned = await this.events.emit("response", [response])
 
@@ -113,7 +114,7 @@ export class WebsitePort {
     const request = this.counter.prepare(init)
 
     if (request.id !== "ping")
-      console.debug(this.name, "<-", request)
+      Console.debug(this.name, "<-", request)
 
     this.port.postMessage(JSON.stringify(request))
 
@@ -195,13 +196,13 @@ export class ExtensionPort {
 
   async onRequest(request: RpcRequestInit<unknown>) {
     if (request.id !== "ping")
-      console.debug(this.name, "->", request)
+      Console.debug(this.name, "->", request)
 
     const result = await this.tryRouteRequest(request)
     const response = RpcResponse.rewrap(request.id, result)
 
     if (request.id !== "ping")
-      console.debug(this.name, "<-", response)
+      Console.debug(this.name, "<-", response)
 
     BrowserError.tryRunSync(() => {
       this.port.postMessage(JSON.stringify(response))
@@ -210,7 +211,7 @@ export class ExtensionPort {
 
   async onResponse(response: RpcResponseInit<unknown>) {
     if (response.id !== "ping")
-      console.debug(this.name, "->", response)
+      Console.debug(this.name, "->", response)
 
     const returned = await this.events.emit("response", [response])
 
@@ -237,7 +238,7 @@ export class ExtensionPort {
       const request = this.counter.prepare(init)
 
       if (request.id !== "ping")
-        console.debug(this.name, "<-", request)
+        Console.debug(this.name, "<-", request)
 
       BrowserError.tryRunSync(() => {
         this.port.postMessage(JSON.stringify(request))
