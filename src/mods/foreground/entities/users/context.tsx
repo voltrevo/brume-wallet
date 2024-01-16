@@ -16,14 +16,14 @@ export function UserGuard(props: ChildrenProps) {
   const { children } = props
 
   const currentUserQuery = useCurrentUser()
-  const currentUserData = currentUserQuery.data?.inner
+  const currentUserData = currentUserQuery.data?.get()
 
   const setCurrentUser = useCallback((user: User) => {
     currentUserQuery.mutate(Mutators.data(user))
   }, [currentUserQuery])
 
   const userQuery = useUser(currentUserData?.uuid)
-  const userData = userQuery.data?.inner
+  const userData = userQuery.data?.get()
 
   if (userData == null)
     return <UsersPage ok={setCurrentUser} />

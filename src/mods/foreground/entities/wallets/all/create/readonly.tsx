@@ -56,7 +56,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   const ensAddressQuery = useEnsLookup(maybeEnsInput, mainnet)
 
   const maybeAddress = defAddressInput.endsWith(".eth")
-    ? ensAddressQuery.data?.inner
+    ? ensAddressQuery.data?.get()
     : defAddressInput
 
   const tryAdd = useAsyncUniqueCallback(async () => {

@@ -19,7 +19,7 @@ import { WalletCreatorDialog } from "./create"
 export function WalletsPage() {
   const { go } = usePathContext().unwrap()
   const walletsQuery = useWallets()
-  const maybeWallets = walletsQuery.data?.inner
+  const maybeWallets = walletsQuery.data?.get()
 
   const creator = useBooleanHandle(false)
 

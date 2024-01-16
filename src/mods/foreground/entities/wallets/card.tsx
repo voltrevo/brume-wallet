@@ -36,8 +36,8 @@ export function WalletDataCard(props: { index?: number }) {
     return Address.from(wallet.address)!
   }, [wallet.address])
 
-  const ensOrAddress = ens.data?.inner ?? address
-  const ensOrAddressDisplay = ens.data?.inner ?? Address.format(address)
+  const ensOrAddress = ens.data?.get() ?? address
+  const ensOrAddressDisplay = ens.data?.get() ?? Address.format(address)
 
   const copyEthereumAddress = useCopy(ensOrAddress)
   const onClickCopyEthereumAddress = useMouseCancel(copyEthereumAddress.run)

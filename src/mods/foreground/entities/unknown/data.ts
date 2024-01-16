@@ -245,7 +245,7 @@ export namespace FgTotal {
 
           export function schema(coin: "usd", storage: UserStorage) {
             const indexer = async (states: States<Data, Fail>) => {
-              const values = Option.wrap(states.current.real?.data?.inner).unwrapOr({})
+              const values = Option.wrap(states.current.real?.data?.get()).unwrapOr({})
               const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
               const totalQuery = Priced.schema(coin, storage)
@@ -272,7 +272,7 @@ export namespace FgTotal {
           const indexer = async (states: States<Data, Fail>) => {
             const indexQuery = Record.schema(coin, storage)
 
-            const value = Option.wrap(states.current.real?.data?.inner).unwrapOr(new Fixed(0n, 0))
+            const value = Option.wrap(states.current.real?.data?.get()).unwrapOr(new Fixed(0n, 0))
             await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [address]: value }), new Data({})))
           }
 

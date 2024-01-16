@@ -20,7 +20,7 @@ export function WalletDataProvider(props: UUIDProps & ChildrenProps) {
   if (wallet.data == null)
     return null
 
-  return <WalletDataContext.Provider value={wallet.data.inner}>
+  return <WalletDataContext.Provider value={wallet.data.get()}>
     {children}
   </WalletDataContext.Provider>
 }

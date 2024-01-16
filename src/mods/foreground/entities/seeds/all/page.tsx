@@ -16,7 +16,7 @@ import { SeedCreatorDialog } from "./create"
 
 export function SeedsPage() {
   const seedsQuery = useSeeds()
-  const maybeSeeds = seedsQuery.data?.inner
+  const maybeSeeds = seedsQuery.data?.get()
 
   const creator = useBooleanHandle(false)
 

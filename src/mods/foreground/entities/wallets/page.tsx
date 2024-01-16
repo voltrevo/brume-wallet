@@ -230,7 +230,7 @@ function WalletDataPage() {
       <div className="h-4" />
       <div className="flex flex-col gap-4">
         <TokenRowRouter token={chainByChainId[1].token} />
-        {!edit && walletTokens.data?.inner.map(tokenSettings =>
+        {!edit && walletTokens.data?.get().map(tokenSettings =>
           <AddedTokenRow
             key={tokenSettings.uuid}
             settingsRef={tokenSettings} />)}
@@ -267,7 +267,7 @@ function WalletDataPage() {
                 {token.uuid !== chainByChainId[1].token.uuid &&
                   <UnaddedTokenRow token={token} />}
               </Fragment>)}
-            {userTokens.data?.inner.map(token =>
+            {userTokens.data?.get().map(token =>
               <UnaddedTokenRow
                 key={token.uuid}
                 token={token} />)}
@@ -310,9 +310,9 @@ function AddedTokenRow(props: { settingsRef: TokenSettings }) {
 
   if (token.type === "native" && token.chainId === 1)
     return null
-  if (!settings.data?.inner.enabled)
+  if (!settings.data?.get().enabled)
     return null
-  return <TokenRowRouter token={settings.data.inner.token} />
+  return <TokenRowRouter token={settings.data.get().token} />
 }
 
 function UnaddedTokenRow(props: { token: Token }) {
@@ -322,7 +322,7 @@ function UnaddedTokenRow(props: { token: Token }) {
 
   const settings = useTokenSettings(wallet, token)
 
-  if (settings.data?.inner.enabled && !edit)
+  if (settings.data?.get().enabled && !edit)
     return null
   return <TokenRowRouter token={token} />
 }
@@ -352,7 +352,7 @@ function ContractTokenResolver(props: { token: ContractToken }) {
   const { token } = props
 
   const tokenQuery = useToken(token.chainId, token.address)
-  const tokenData = tokenQuery.data?.inner ?? tokenByAddress[token.address]
+  const tokenData = tokenQuery.data?.get() ?? tokenByAddress[token.address]
   const chainData = chainByChainId[token.chainId]
 
   if (tokenData == null)
@@ -532,7 +532,7 @@ function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
   const wallet = useWalletDataContext().unwrap()
 
   const settings = useTokenSettings(wallet, token)
-  const checked = settings.data?.inner.enabled
+  const checked = settings.data?.get().enabled
 
   const onToggle = useInputChange(async e => {
     const enabled = e.currentTarget.checked

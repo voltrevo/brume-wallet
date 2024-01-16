@@ -60,7 +60,7 @@ export namespace FgToken {
 
           const indexer = async (states: States<Data, Fail>) => {
             const key = `${context.chain.chainId}`
-            const value = Option.wrap(states.current.real?.data?.inner).unwrapOr(new Fixed(0n, 0))
+            const value = Option.wrap(states.current.real?.data?.get()).unwrapOr(new Fixed(0n, 0))
 
             const indexQuery = FgToken.Balance.schema(address, coin, storage)
             await indexQuery?.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
@@ -112,7 +112,7 @@ export namespace FgToken {
               if (priceState?.data == null)
                 return new None()
 
-              pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
+              pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
             }
 
             return new Some(pricedBalance)
@@ -155,7 +155,7 @@ export namespace FgToken {
 
           const indexer = async (states: States<Data, Fail>) => {
             const key = `${context.chain.chainId}/${token.address}`
-            const value = Option.wrap(states.current.real?.data?.inner).unwrapOr(new Fixed(0n, 0))
+            const value = Option.wrap(states.current.real?.data?.get()).unwrapOr(new Fixed(0n, 0))
 
             const indexQuery = FgToken.Balance.schema(account, coin, storage)
             await indexQuery?.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
@@ -209,7 +209,7 @@ export namespace FgToken {
               if (priceState?.data == null)
                 return new None()
 
-              pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
+              pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
             }
 
             return new Some(pricedBalance)
@@ -258,8 +258,8 @@ export namespace FgToken {
       const indexer = async (states: States<Data, Fail>) => {
         const { current, previous } = states
 
-        const previousData = previous?.real?.data?.inner
-        const currentData = current.real?.data?.inner
+        const previousData = previous?.real?.data?.get()
+        const currentData = current.real?.data?.get()
 
         if (previousData?.uuid === currentData?.uuid)
           return

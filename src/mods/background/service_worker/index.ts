@@ -162,7 +162,7 @@ export class Global {
       const state = core.getStateSync(BgAppRequest.All.key) as State<AppRequest[], never>
 
       const badge = Option
-        .wrap(state?.data?.inner?.length)
+        .wrap(state?.data?.get()?.length)
         .filterSync(x => x > 0)
         .mapSync(String)
         .unwrapOr("")
@@ -419,7 +419,7 @@ export class Global {
 
           const sessionQuery = BgSession.schema(currentSession, storage)
           const sessionState = await sessionQuery.state
-          const sessionData = Option.unwrap(sessionState.data?.inner)
+          const sessionData = Option.unwrap(sessionState.data?.get())
 
           return new Ok(sessionData)
         }
@@ -453,11 +453,11 @@ export class Global {
         const sessionByOriginState = await sessionByOriginQuery.state
 
         if (sessionByOriginState.data != null) {
-          const sessionId = sessionByOriginState.data.inner.id
+          const sessionId = sessionByOriginState.data.get().id
 
           const sessionQuery = BgSession.schema(sessionId, storage)
           const sessionState = await sessionQuery.state
-          const sessionData = Option.unwrap(sessionState.data?.inner)
+          const sessionData = Option.unwrap(sessionState.data?.get())
 
           slot.current = sessionId
 
@@ -504,7 +504,7 @@ export class Global {
               return await Result.unthrow<Result<string, Error>>(async t => {
                 const walletQuery = BgWallet.schema(wallet.uuid, storage)
                 const walletState = await walletQuery.state
-                const walletData = Option.unwrap(walletState.data?.inner)
+                const walletData = Option.unwrap(walletState.data?.get())
 
                 return new Ok(walletData.address)
               })
@@ -586,7 +586,7 @@ export class Global {
             return await Result.unthrow<Result<string, Error>>(async t => {
               const walletQuery = BgWallet.schema(wallet.uuid, storage)
               const walletState = await walletQuery.state
-              const walletData = Option.unwrap(walletState.data?.inner)
+              const walletData = Option.unwrap(walletState.data?.get())
 
               return new Ok(walletData.address)
             })
@@ -698,7 +698,7 @@ export class Global {
       const addresses = await Promise.all(session.wallets.map(async wallet => {
         const walletQuery = BgWallet.schema(wallet.uuid, storage)
         const walletState = await walletQuery.state
-        const walletData = Option.unwrap(walletState.data?.inner)
+        const walletData = Option.unwrap(walletState.data?.get())
 
         return walletData.address
       }))
@@ -715,7 +715,7 @@ export class Global {
         return await Result.unthrow<Result<string, Error>>(async t => {
           const walletQuery = BgWallet.schema(wallet.uuid, storage)
           const walletState = await walletQuery.state
-          const walletData = Option.unwrap(walletState.data?.inner)
+          const walletData = Option.unwrap(walletState.data?.get())
 
           return new Ok(walletData.address)
         })
@@ -736,7 +736,7 @@ export class Global {
 
       const walletQuery = BgWallet.schema(walletRef.uuid, storage)
       const walletState = await walletQuery.state
-      const walletData = Option.unwrap(walletState.data?.inner)
+      const walletData = Option.unwrap(walletState.data?.get())
 
       return new Ok(walletData.address)
     })
@@ -793,7 +793,7 @@ export class Global {
         return await Result.unthrow<Result<WalletData, Error>>(async t => {
           const walletQuery = BgWallet.schema(wallet.uuid, storage)
           const walletState = await walletQuery.state
-          const walletData = Option.unwrap(walletState.data?.inner)
+          const walletData = Option.unwrap(walletState.data?.get())
 
           return new Ok(walletData)
         })
@@ -833,7 +833,7 @@ export class Global {
         return await Result.unthrow<Result<WalletData, Error>>(async t => {
           const walletQuery = BgWallet.schema(wallet.uuid, storage)
           const walletState = await walletQuery.state
-          const walletData = Option.unwrap(walletState.data?.inner)
+          const walletData = Option.unwrap(walletState.data?.get())
 
           return new Ok(walletData)
         })
@@ -869,7 +869,7 @@ export class Global {
         return await Result.unthrow<Result<WalletData, Error>>(async t => {
           const walletQuery = BgWallet.schema(wallet.uuid, storage)
           const walletState = await walletQuery.state
-          const walletData = Option.unwrap(walletState.data?.inner)
+          const walletData = Option.unwrap(walletState.data?.get())
 
           return new Ok(walletData)
         })
@@ -1020,7 +1020,7 @@ export class Global {
 
       const usersQuery = BgUser.All.schema(this.storage)
       const usersState = await usersQuery.state
-      const usersData = Option.unwrap(usersState.data?.inner)
+      const usersData = Option.unwrap(usersState.data?.get())
 
       return new Ok(usersData)
     })
@@ -1347,7 +1347,7 @@ export class Global {
     const persSessionsQuery = BgSession.All.Persistent.schema(storage)
     const persSessionsState = await persSessionsQuery.state
 
-    for (const sessionRef of Option.wrap(persSessionsState?.data?.inner).unwrapOr([]))
+    for (const sessionRef of Option.wrap(persSessionsState?.data?.get()).unwrapOr([]))
       this.#wcResolveAndReconnectOrThrow(sessionRef).catch(console.warn)
 
     return
@@ -1361,7 +1361,7 @@ export class Global {
 
     const sessionQuery = BgSession.schema(sessionRef.id, storage)
     const sessionState = await sessionQuery.state
-    const sessionDataOpt = Option.wrap(sessionState.data?.inner)
+    const sessionDataOpt = Option.wrap(sessionState.data?.get())
 
     if (sessionDataOpt.isNone())
       return

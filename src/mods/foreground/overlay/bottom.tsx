@@ -7,7 +7,7 @@ export function Bottom() {
   const { url } = usePathContext().unwrap()
 
   const requestsQuery = useAppRequests()
-  const requests = requestsQuery.data?.inner
+  const requests = requestsQuery.data?.get()
 
   return <nav className="h-16 w-full shrink-0 border-t border-t-contrast">
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">

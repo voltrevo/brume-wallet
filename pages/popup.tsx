@@ -80,13 +80,13 @@ export function TransactPage() {
   const chainId = Option.wrap(searchParams.get("chainId")).mapSync(Number).unwrap()
 
   const requestQuery = useAppRequest(id)
-  const maybeRequest = requestQuery.data?.inner
+  const maybeRequest = requestQuery.data?.get()
 
   const sessionQuery = useSession(maybeRequest?.session)
-  const maybeSession = sessionQuery.data?.inner
+  const maybeSession = sessionQuery.data?.get()
 
   const walletQuery = useWallet(walletId)
-  const maybeWallet = walletQuery.data?.inner
+  const maybeWallet = walletQuery.data?.get()
 
   const chain = Option.wrap(chainByChainId[chainId]).unwrap()
 
@@ -96,17 +96,17 @@ export function TransactPage() {
   const context = useEthereumContext(maybeSession?.wallets.at(0)?.uuid, chain)
 
   const gasPriceQuery = useGasPrice(context)
-  const maybeGasPrice = gasPriceQuery.data?.inner
+  const maybeGasPrice = gasPriceQuery.data?.get()
 
   const nonceQuery = useNonce(maybeWallet?.address, context)
-  const maybeNonce = nonceQuery.data?.inner
+  const maybeNonce = nonceQuery.data?.get()
 
   const maybeHash = Option.wrap(maybeData).mapSync(x => {
     return x.slice(0, 10) as ZeroHexString
   }).inner
 
   const signaturesQuery = useSignature(context, maybeHash)
-  const maybeSignatures = signaturesQuery.data?.inner
+  const maybeSignatures = signaturesQuery.data?.get()
 
   const maybeSignature = useAsyncReplaceMemo(async () => {
     if (maybeData == null)
@@ -325,7 +325,7 @@ export function PersonalSignPage() {
   const walletId = Option.wrap(searchParams.get("walletId")).unwrap()
 
   const walletQuery = useWallet(walletId)
-  const maybeWallet = walletQuery.data?.inner
+  const maybeWallet = walletQuery.data?.get()
 
   const userMessage = useMemo(() => {
     return message.startsWith("0x")
@@ -410,7 +410,7 @@ export function TypedSignPage() {
   const walletId = Option.wrap(searchParams.get("walletId")).unwrap()
 
   const walletQuery = useWallet(walletId)
-  const maybeWallet = walletQuery.data?.inner
+  const maybeWallet = walletQuery.data?.get()
 
   const onApprove = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -545,7 +545,7 @@ export function WalletAndChainSelectPage() {
     <PageBody>
       <SelectableWalletGrid
         create={creator.enable}
-        wallets={wallets.data?.inner}
+        wallets={wallets.data?.get()}
         ok={onWalletClick}
         selecteds={selecteds} />
       <div className="h-4" />
@@ -601,7 +601,7 @@ export function WalletAndChainSelectPage() {
 
 export function DonePage() {
   const { go } = usePathContext().unwrap()
-  const requests = useAppRequests().data?.inner
+  const requests = useAppRequests().data?.get()
 
   useEffect(() => {
     if (!requests?.length)

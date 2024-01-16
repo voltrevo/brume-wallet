@@ -25,7 +25,7 @@ function SeedDataPage() {
   const seed = useSeedDataContext()
 
   const walletsQuery = useWalletsBySeed(seed.uuid)
-  const maybeWallets = walletsQuery.data?.inner
+  const maybeWallets = walletsQuery.data?.get()
 
   const creator = useBooleanHandle(false)
 

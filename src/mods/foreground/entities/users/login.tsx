@@ -37,7 +37,7 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
 
     const response = await background.tryRequest({
       method: "brume_login",
-      params: [userQuery.data.inner.uuid, defPasswordInput]
+      params: [userQuery.data.get().uuid, defPasswordInput]
     }).then(r => r.unwrap())
 
     if (response.isErr()) {
@@ -51,11 +51,11 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
       return
     }
 
-    sessionStorage.setItem("uuid", userQuery.data.inner.uuid)
+    sessionStorage.setItem("uuid", userQuery.data.get().uuid)
     sessionStorage.setItem("password", defPasswordInput)
 
-    ok(userQuery.data.inner)
-  }, [defPasswordInput, userQuery.data?.inner.uuid, background])
+    ok(userQuery.data.get())
+  }, [defPasswordInput, userQuery.data?.get().uuid, background])
 
   const onKeyDown = useKeyboardEnter<HTMLInputElement>(e => {
     login.run()
@@ -74,11 +74,11 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
       <div className="">
         <div className="flex flex-col items-center">
           <UserAvatar className="size-16 text-2xl"
-            colorIndex={userQuery.data.inner.color}
-            name={userQuery.data.inner.name} />
+            colorIndex={userQuery.data.get().color}
+            name={userQuery.data.get().name} />
           <div className="h-1" />
           <div className="font-medium">
-            {userQuery.data.inner.name}
+            {userQuery.data.get().name}
           </div>
         </div>
         <div className="h-4" />

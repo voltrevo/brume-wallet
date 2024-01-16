@@ -25,7 +25,7 @@ export function RequestsPage() {
   const background = useBackgroundContext().unwrap()
 
   const requestsQuery = useAppRequests()
-  const maybeRequests = requestsQuery.data?.inner
+  const maybeRequests = requestsQuery.data?.get()
 
   const tryRejectAll = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -79,10 +79,10 @@ export function RequestsPage() {
 
 export function RequestRow(props: { request: AppRequest }) {
   const requestQuery = useAppRequest(props.request.id)
-  const maybeRequestData = requestQuery.data?.inner
+  const maybeRequestData = requestQuery.data?.get()
 
   const originQuery = useOrigin(maybeRequestData?.origin)
-  const maybeOriginData = originQuery.data?.inner
+  const maybeOriginData = originQuery.data?.get()
 
   const [iconDatas, setIconDatas] = useState<Nullable<BlobbyData>[]>([])
 

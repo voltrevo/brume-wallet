@@ -43,7 +43,7 @@ export function UsersPage(props: OkProps<User>) {
         <UserCreateDialog />
       </Dialog>}
     <div className="grid grow place-items-center place-content-center grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] auto-rows-[10rem]">
-      {users.data?.inner.map(user =>
+      {users.data?.get().map(user =>
         <UserOkButton
           key={user.uuid}
           user={user}
@@ -68,11 +68,11 @@ function UserOkButton(props: UserProps & OkProps<User>) {
   return <button className="flex flex-col items-center"
     onClick={onClick}>
     <UserAvatar className="size-16 text-2xl"
-      colorIndex={user.data.inner.color}
-      name={user.data.inner.name} />
+      colorIndex={user.data.get().color}
+      name={user.data.get().name} />
     <div className="h-1" />
     <div className="font-medium">
-      {user.data.inner.name}
+      {user.data.get().name}
     </div>
   </button>
 }

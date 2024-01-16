@@ -24,8 +24,8 @@ export namespace FgTransaction {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.data?.inner
-      const currentData = current.real?.data?.inner
+      const previousData = previous?.real?.data?.get()
+      const currentData = current.real?.data?.get()
 
       /**
        * Reindex transactions

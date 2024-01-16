@@ -23,10 +23,10 @@ export function SessionsPage() {
   const background = useBackgroundContext().unwrap()
 
   const tempSessionsQuery = useTemporarySessions()
-  const maybeTempSessions = tempSessionsQuery.data?.inner
+  const maybeTempSessions = tempSessionsQuery.data?.get()
 
   const persSessionsQuery = usePersistentSessions()
-  const maybePersSessions = persSessionsQuery.data?.inner
+  const maybePersSessions = persSessionsQuery.data?.get()
 
   const length = useMemo(() => {
     const temp = maybeTempSessions?.length || 0
@@ -96,13 +96,13 @@ export function SessionRow(props: { session: Session }) {
   const background = useBackgroundContext().unwrap()
 
   const sessionQuery = useSession(props.session.id)
-  const maybeSessionData = sessionQuery.data?.inner
+  const maybeSessionData = sessionQuery.data?.get()
 
   const originQuery = useOrigin(maybeSessionData?.origin)
-  const maybeOriginData = originQuery.data?.inner
+  const maybeOriginData = originQuery.data?.get()
 
   const statusQuery = useStatus(props.session.id)
-  const maybeStatusData = statusQuery.data?.inner
+  const maybeStatusData = statusQuery.data?.get()
 
   const [iconDatas, setIconDatas] = useState<Nullable<BlobbyData>[]>([])
 

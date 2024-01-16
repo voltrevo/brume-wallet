@@ -155,7 +155,7 @@ export class EthereumSeededWalletInstance {
       const storage = new UserStorage(background)
       const seedQuery = FgSeed.schema(data.seed.uuid, storage)
       const seedState = await seedQuery?.state
-      const seedData = Option.wrap(seedState?.data?.inner).ok().throw(t)
+      const seedData = Option.wrap(seedState?.data?.get()).ok().throw(t)
 
       const seed = await SeedInstance.tryFrom(seedData, background).then(r => r.throw(t))
 

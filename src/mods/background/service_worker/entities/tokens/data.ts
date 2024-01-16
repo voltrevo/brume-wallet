@@ -138,7 +138,7 @@ export namespace BgToken {
         export function schema(account: ZeroHexString, coin: "usd", ethereum: BgEthereumContext, storage: IDBStorage) {
           const indexer = async (states: States<Data, Fail>) => {
             const key = `${ethereum.chain.chainId}`
-            const value = Option.wrap(states.current.real?.data?.inner).unwrapOr(new Fixed(0n, 0))
+            const value = Option.wrap(states.current.real?.data?.get()).unwrapOr(new Fixed(0n, 0))
 
             const indexQuery = BgToken.Balance.schema(account, coin, storage)
             await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
@@ -198,7 +198,7 @@ export namespace BgToken {
               if (priceState.data == null)
                 return new None()
 
-              pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
+              pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
             }
 
             return new Some(pricedBalance)
@@ -256,7 +256,7 @@ export namespace BgToken {
         export function schema(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, coin: "usd", storage: IDBStorage) {
           const indexer = async (states: States<Data, Fail>) => {
             const key = `${ethereum.chain.chainId}/${token.address}`
-            const value = Option.wrap(states.current.real?.data?.inner).unwrapOr(new Fixed(0n, 0))
+            const value = Option.wrap(states.current.real?.data?.get()).unwrapOr(new Fixed(0n, 0))
 
             const indexQuery = BgToken.Balance.schema(account, coin, storage)
             await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
@@ -291,7 +291,7 @@ export namespace BgToken {
         const tokenQuery = Contract.schema(ethereum.chain.chainId, address, storage)
         const tokenState = await tokenQuery.state
 
-        const tokenData = Option.wrap(tokenState.data?.inner)
+        const tokenData = Option.wrap(tokenState.data?.get())
           .or(Option.wrap(tokenByAddress[address]))
           .unwrap()
 
@@ -344,7 +344,7 @@ export namespace BgToken {
               if (priceState.data == null)
                 return new None()
 
-              pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.inner))
+              pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
             }
 
             return new Some(pricedBalance)
@@ -376,8 +376,8 @@ export namespace BgToken {
       const indexer = async (states: States<Data, Fail>) => {
         const { current, previous } = states
 
-        const previousData = previous?.real?.data?.inner
-        const currentData = current.real?.data?.inner
+        const previousData = previous?.real?.data?.get()
+        const currentData = current.real?.data?.get()
 
         if (previousData?.uuid === currentData?.uuid)
           return
