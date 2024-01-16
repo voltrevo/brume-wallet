@@ -62,7 +62,9 @@ export function createTorPool(params: PoolParams) {
     })
   }, params)
 
-  addEventListener("online", () => {
+  addEventListener("online", async () => {
+    await new Promise(ok => setTimeout(ok, 1000))
+
     for (let i = 0; i < pool.capacity; i++) {
       const child = pool.tryGetSync(i)
 
