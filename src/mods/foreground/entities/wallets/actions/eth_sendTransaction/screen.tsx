@@ -1255,25 +1255,25 @@ export function WalletSendTransactionScreenValue(props: {}) {
       <div className="h-2" />
       {maybeTriedEip1559GasLimitKey?.isErr() && <>
         <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {maybeTriedEip1559GasLimitKey.get()?.message}
+          {maybeTriedEip1559GasLimitKey.getErr()?.message}
         </div>
         <div className="h-2" />
       </>}
       {maybeTriedLegacyGasLimitKey?.isErr() && <>
         <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {maybeTriedLegacyGasLimitKey.get()?.message}
+          {maybeTriedLegacyGasLimitKey.getErr()?.message}
         </div>
         <div className="h-2" />
       </>}
       {eip1559GasLimitQuery.current?.isErr() && <>
         <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {eip1559GasLimitQuery.current.get()?.message}
+          {eip1559GasLimitQuery.current.getErr()?.message}
         </div>
         <div className="h-2" />
       </>}
       {legacyGasLimitQuery.current?.isErr() && <>
         <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {legacyGasLimitQuery.current.get()?.message}
+          {legacyGasLimitQuery.current.getErr()?.message}
         </div>
         <div className="h-2" />
       </>}
@@ -1318,25 +1318,25 @@ export function WalletSendTransactionScreenValue(props: {}) {
     {maybeTransaction == null && <>
       {maybeTriedEip1559GasLimitKey?.isErr() && <>
         <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {maybeTriedEip1559GasLimitKey.get()?.message}
+          {maybeTriedEip1559GasLimitKey.getErr()?.message}
         </div>
         <div className="h-2" />
       </>}
       {maybeTriedLegacyGasLimitKey?.isErr() && <>
         <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {maybeTriedLegacyGasLimitKey.get()?.message}
+          {maybeTriedLegacyGasLimitKey.getErr()?.message}
         </div>
         <div className="h-2" />
       </>}
       {eip1559GasLimitQuery.current?.isErr() && <>
         <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {eip1559GasLimitQuery.current.get()?.message}
+          {eip1559GasLimitQuery.current.getErr()?.message}
         </div>
         <div className="h-2" />
       </>}
       {legacyGasLimitQuery.current?.isErr() && <>
         <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {legacyGasLimitQuery.current.get()?.message}
+          {legacyGasLimitQuery.current.getErr()?.message}
         </div>
         <div className="h-2" />
       </>}

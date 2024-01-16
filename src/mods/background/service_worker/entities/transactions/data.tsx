@@ -246,6 +246,29 @@ export namespace BgTransaction {
 
 export namespace BgTransactionTrial {
 
+  export namespace All {
+
+    export namespace ByAddress {
+
+      export type Key = string
+      export type Data = TransactionTrialRef[]
+      export type Fail = never
+
+      export function key(address: ZeroHexString) {
+        return `transactionTrial/v0/all/byAddress/${address}`
+      }
+
+      export function schema(address: ZeroHexString, storage: IDBStorage) {
+        return createQuery<Key, Data, Fail>({
+          key: key(address),
+          storage
+        })
+      }
+
+    }
+
+  }
+
   export type Key = string
   export type Data = TransactionTrialData
   export type Fail = never
@@ -255,6 +278,15 @@ export namespace BgTransactionTrial {
   }
 
   export function schema(uuid: string, storage: IDBStorage) {
+    const indexer = async (states: States<Data, Fail>) => {
+      const { current, previous } = states
+
+      const previousData = previous?.real?.data?.get()
+      const currentData = current.real?.data?.get()
+
+
+    }
+
     return createQuery<Key, Data, Fail>({
       key: key(uuid),
       storage
@@ -314,8 +346,8 @@ export namespace BgTransactionReceipt {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.data?.inner
+      const currentData = current.real?.data?.inner
 
       if (previousData == null && currentData != null) {
         await BgTransaction.schema(uuid, storage)?.mutate(s => {
