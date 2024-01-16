@@ -1251,7 +1251,9 @@ export function WalletSendTransactionScreenValue(props: {}) {
     </>}
     <div className="h-4 grow" />
     {maybeTransaction?.type === "signed" && <>
-      <SignedTransactionCard data={maybeTransaction} />
+      <SignedTransactionCard
+        data={maybeTransaction}
+        onSend={() => { }} />
       <div className="h-2" />
       {maybeTriedEip1559GasLimitKey?.isErr() && <>
         <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
@@ -1294,7 +1296,9 @@ export function WalletSendTransactionScreenValue(props: {}) {
       </div>
     </>}
     {maybeTransaction?.type === "pending" && <>
-      <PendingTransactionCard data={maybeTransaction} />
+      <PendingTransactionCard
+        data={maybeTransaction}
+        onRetry={() => { }} />
       <div className="h-2" />
       <div className="flex items-center gap-2">
         <WideShrinkableOppositeButton
@@ -1402,25 +1406,34 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
   </div>
 }
 
-export function TransactionCard(props: { data: TransactionData }) {
-  const { data } = props
+export function TransactionCard(props: { data: TransactionData } & { onSend: (data: TransactionData) => void } & { onRetry: (data: TransactionData) => void }) {
+  const { data, onSend, onRetry } = props
 
   if (data?.type === "signed")
-    return <SignedTransactionCard data={data} />
+    return <SignedTransactionCard
+      onSend={onSend}
+      data={data} />
 
   if (data?.type === "pending")
-    return <PendingTransactionCard data={data} />
+    return <PendingTransactionCard
+      onRetry={onRetry}
+      data={data} />
 
   if (data?.type === "executed")
-    return <ExecutedTransactionCard data={data} />
+    return <ExecutedTransactionCard
+      data={data} />
 
   return null
 }
 
-export function PendingTransactionCard(props: { data: PendingTransactionData }) {
-  const { data } = props
+export function PendingTransactionCard(props: { data: PendingTransactionData } & { onRetry: (data: TransactionData) => void }) {
+  const { data, onRetry } = props
 
   const onCopy = useCopy(data.hash)
+
+  const onRetryClick = useCallback(() => {
+    onRetry(data)
+  }, [data, onRetry])
 
   const chainData = chainByChainId[data.chainId]
 
@@ -1455,15 +1468,26 @@ export function PendingTransactionCard(props: { data: PendingTransactionData }) 
             <Outline.ArrowTopRightOnSquareIcon className="size-4" />
           </div>
         </a>
+        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+          onClick={onRetryClick}>
+          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+            Retry
+            <Outline.BoltIcon className="size-4" />
+          </div>
+        </button>
       </div>
     </div>
   </div>
 }
 
-export function SignedTransactionCard(props: { data: SignedTransactionData }) {
-  const { data } = props
+export function SignedTransactionCard(props: { data: SignedTransactionData } & { onSend: (data: TransactionData) => void }) {
+  const { data, onSend } = props
 
   const onCopy = useCopy(data.data)
+
+  const onSendClick = useCallback(() => {
+    onSend(data)
+  }, [data, onSend])
 
   return <div className="po-md flex items-center bg-contrast rounded-xl">
     <div className="flex flex-col truncate">
@@ -1484,6 +1508,13 @@ export function SignedTransactionCard(props: { data: SignedTransactionData }) {
             {onCopy.current
               ? <Outline.CheckIcon className="size-4" />
               : <Outline.ClipboardIcon className="size-4" />}
+          </div>
+        </button>
+        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+          onClick={onSendClick}>
+          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+            Send
+            <Outline.PaperAirplaneIcon className="size-4" />
           </div>
         </button>
       </div>

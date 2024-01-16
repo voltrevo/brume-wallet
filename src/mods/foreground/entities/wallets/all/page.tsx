@@ -65,7 +65,7 @@ export function WalletsPage() {
 export function ClickableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] } & { selected?: Wallet }) {
   const { wallets, ok, create } = props
 
-  return <div className="grid grow place-content-start place-items-center gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
+  return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {wallets?.map(wallet =>
       <WalletDataProvider
         key={wallet.uuid}
@@ -79,7 +79,7 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & CreateProps & { wal
 export function SelectableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] } & { selecteds: Nullable<Wallet>[] }) {
   const { wallets, ok, create, selecteds } = props
 
-  return <div className="grid grow place-content-start place-items-center gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
+  return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {wallets?.map(wallet =>
       <CheckableWalletDataCard
         key={wallet.uuid}

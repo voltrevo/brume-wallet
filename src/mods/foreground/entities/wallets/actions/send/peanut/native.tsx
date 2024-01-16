@@ -446,12 +446,16 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
           </ShrinkableContrastButtonInInputBox>
         </div>
       </SimpleBox>}
+    <div className="h-4" />
     {maybeTransaction0 != null && <>
       <div className="font-medium">
         Deposit
       </div>
       <div className="h-2" />
-      <TransactionCard data={maybeTransaction0} />
+      <TransactionCard
+        data={maybeTransaction0}
+        onSend={() => { }}
+        onRetry={() => { }} />
       <div className="h-4" />
     </>}
     <div className="h-4 grow" />

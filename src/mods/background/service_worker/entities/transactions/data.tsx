@@ -164,6 +164,29 @@ export interface ExecutedTransactionData {
 
 export namespace BgTransaction {
 
+  export namespace All {
+
+    export namespace ByAddress {
+
+      export type Key = string
+      export type Data = TransactionRef[]
+      export type Fail = never
+
+      export function key(address: ZeroHexString) {
+        return `transaction/v0/all/byAddress/${address}`
+      }
+
+      export function schema(address: ZeroHexString, storage: IDBStorage) {
+        return createQuery<Key, Data, Fail>({
+          key: key(address),
+          storage
+        })
+      }
+
+    }
+
+  }
+
   export type Key = string
   export type Data = TransactionData
   export type Fail = never
@@ -179,9 +202,6 @@ export namespace BgTransaction {
       const previousData = previous?.real?.data?.get()
       const currentData = current.real?.data?.get()
 
-      /**
-       * Reindex transactions
-       */
       if (previousData?.uuid !== currentData?.uuid) {
         if (previousData != null) {
           await BgTransactionTrial.schema(previousData.trial.uuid, storage)?.mutate(s => {
@@ -194,15 +214,23 @@ export namespace BgTransaction {
 
             return new Some(current.mapSync(d => ({ ...d, transactions: d.transactions.filter(t => t.uuid !== uuid) })))
           })
+
+          await All.ByAddress.schema(previousData.params.from, storage)?.mutate(s => {
+            const current = s.real?.current
+
+            if (current == null)
+              return new None()
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(d => d.filter(t => t.uuid !== uuid)))
+          })
         }
 
         if (currentData != null) {
           await BgTransactionTrial.schema(currentData.trial.uuid, storage).mutate(s => {
             const current = s.real?.current
 
-            /**
-             * Create a new trial
-             */
             if (current == null) {
               const uuid = currentData.trial.uuid
               const nonce = currentData.params.nonce
@@ -217,6 +245,17 @@ export namespace BgTransaction {
               return new None()
 
             return new Some(current.mapSync(d => ({ ...d, transactions: [...d.transactions, TransactionRef.from(currentData)] })))
+          })
+
+          await All.ByAddress.schema(currentData.params.from, storage)?.mutate(s => {
+            const current = s.real?.current
+
+            if (current == null)
+              return new Some(new Data([TransactionRef.from(currentData)]))
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(d => [...d, TransactionRef.from(currentData)]))
           })
         }
       }
@@ -278,15 +317,6 @@ export namespace BgTransactionTrial {
   }
 
   export function schema(uuid: string, storage: IDBStorage) {
-    const indexer = async (states: States<Data, Fail>) => {
-      const { current, previous } = states
-
-      const previousData = previous?.real?.data?.get()
-      const currentData = current.real?.data?.get()
-
-
-    }
-
     return createQuery<Key, Data, Fail>({
       key: key(uuid),
       storage

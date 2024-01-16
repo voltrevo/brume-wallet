@@ -61,7 +61,7 @@ export function SeedsPage() {
 export function ClickableSeedGrid(props: OkProps<Seed> & CreateProps & { maybeSeeds?: Seed[] }) {
   const { ok, create, maybeSeeds } = props
 
-  return <div className="grid grow place-content-start place-items-center gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
+  return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {maybeSeeds?.map(seed =>
       <SeedDataProvider
         key={seed.uuid}

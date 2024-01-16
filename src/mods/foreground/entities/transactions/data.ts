@@ -11,6 +11,30 @@ import { FgEthereumContext, fetchOrFail2 } from "../wallets/data"
 
 export namespace FgTransaction {
 
+  export namespace All {
+
+    export namespace ByAddress {
+
+      export type Key = BgTransaction.All.ByAddress.Key
+      export type Data = BgTransaction.All.ByAddress.Data
+      export type Fail = BgTransaction.All.ByAddress.Fail
+
+      export const key = BgTransaction.All.ByAddress.key
+
+      export function schema(address: Nullable<ZeroHexString>, storage: UserStorage) {
+        if (address == null)
+          return
+
+        return createQuery<Key, Data, Fail>({
+          key: key(address),
+          storage
+        })
+      }
+
+    }
+
+  }
+
   export type Key = BgTransaction.Key
   export type Data = BgTransaction.Data
   export type Fail = BgTransaction.Fail
@@ -27,9 +51,6 @@ export namespace FgTransaction {
       const previousData = previous?.real?.data?.get()
       const currentData = current.real?.data?.get()
 
-      /**
-       * Reindex transactions
-       */
       if (previousData?.uuid !== currentData?.uuid) {
         if (previousData != null) {
           await FgTransactionTrial.schema(previousData.trial.uuid, storage)?.mutate(s => {
@@ -42,15 +63,23 @@ export namespace FgTransaction {
 
             return new Some(current.mapSync(d => ({ ...d, transactions: d.transactions.filter(t => t.uuid !== uuid) })))
           })
+
+          await All.ByAddress.schema(previousData.params.from, storage)?.mutate(s => {
+            const current = s.real?.current
+
+            if (current == null)
+              return new None()
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(d => d.filter(t => t.uuid !== uuid)))
+          })
         }
 
         if (currentData != null) {
           await FgTransactionTrial.schema(currentData.trial.uuid, storage)?.mutate(s => {
             const current = s.real?.current
 
-            /**
-             * Create a new trial
-             */
             if (current == null) {
               const uuid = currentData.trial.uuid
               const nonce = currentData.params.nonce
@@ -65,6 +94,17 @@ export namespace FgTransaction {
               return new None()
 
             return new Some(current.mapSync(d => ({ ...d, transactions: [...d.transactions, TransactionRef.from(currentData)] })))
+          })
+
+          await All.ByAddress.schema(currentData.params.from, storage)?.mutate(s => {
+            const current = s.real?.current
+
+            if (current == null)
+              return new Some(new Data([TransactionRef.from(currentData)]))
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(d => [...d, TransactionRef.from(currentData)]))
           })
         }
       }
@@ -90,6 +130,13 @@ export namespace FgTransaction {
     })
   }
 
+}
+
+export function useTransactions(address: Nullable<ZeroHexString>) {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgTransaction.All.ByAddress.schema, [address, storage])
+  useSubscribe(query, storage)
+  return query
 }
 
 export function useTransactionWithReceipt(uuid: Nullable<string>, context: Nullable<FgEthereumContext>) {

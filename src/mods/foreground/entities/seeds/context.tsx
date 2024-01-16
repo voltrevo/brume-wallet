@@ -17,10 +17,10 @@ export function SeedDataProvider(props: UUIDProps & ChildrenProps) {
 
   const seed = useSeed(uuid)
 
-  if (seed.data == null)
+  if (seed.current == null)
     return null
 
-  return <SeedDataContext.Provider value={seed.data.get()}>
+  return <SeedDataContext.Provider value={seed.current.get()}>
     {children}
   </SeedDataContext.Provider>
 }

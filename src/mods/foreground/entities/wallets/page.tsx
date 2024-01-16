@@ -5,8 +5,10 @@ import { ChainData, chainByChainId, pairByAddress, tokenByAddress } from "@/libs
 import { Mutators } from "@/libs/glacier/mutators";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
-import { useInputChange, useMouse } from "@/libs/react/events";
+import { useInputChange, useKeyboardEnter, useMouse } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
+import { ChildrenProps } from "@/libs/react/props/children";
+import { ClassNameProps } from "@/libs/react/props/className";
 import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Results } from "@/libs/results/results";
@@ -88,6 +90,32 @@ export function useCompactDisplayUsd(result: Nullable<Result<Fixed.From, Error>>
   }, [result])
 }
 
+export function LinkCard(props: ChildrenProps) {
+  const { children } = props
+
+  return <a className="grow group p-4 bg-contrast rounded-xl cursor-pointer focus:outline-black focus:outline-1">
+    <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </a>
+}
+
+export function DivLikeButton(props: ChildrenProps & ClassNameProps & { onClick: () => void }) {
+  const { children, onClick, className } = props
+
+  const onEnter = useKeyboardEnter(() => {
+    onClick()
+  }, [onClick])
+
+  return <div className={className}
+    role="button"
+    onClick={onClick}
+    onKeyDown={onEnter}
+    tabIndex={0}>
+    {children}
+  </div>
+}
+
 function WalletDataPage() {
   const wallet = useWalletDataContext().unwrap()
   const background = useBackgroundContext().unwrap()
@@ -100,10 +128,6 @@ function WalletDataPage() {
   const onSubpathClose = useCallback(() => {
     subpath.go(`/`)
   }, [subpath])
-
-  const onSendClick = useCallback(() => {
-    subpath.go(`/send?step=target&chain=${mainnet?.chain.chainId}`)
-  }, [subpath, mainnet])
 
   const receiveDialog = useBooleanHandle(false)
 
@@ -195,26 +219,23 @@ function WalletDataPage() {
     </div>
 
   const Apps =
-    <div className="p-4 flex items-center justify-center flex-wrap gap-12">
-      {wallet.type !== "readonly" &&
-        <div className="flex flex-col items-center gap-2">
-          <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 !transition-transform`}
-            onClick={onSendClick}>
-            <Outline.PaperAirplaneIcon className="size-6" />
-          </button>
-          <div className="">
-            {`Send`}
-          </div>
-        </div>}
-      <div className="flex flex-col items-center gap-2">
-        <button className={`text-white bg-gradient-to-r from-${color} to-${color2} rounded-xl p-3 hovered-or-clicked-or-focused:scale-105 !transition-transform`}
-          onClick={receiveDialog.enable}>
-          <Outline.QrCodeIcon className="size-6" />
-        </button>
-        <div className="">
-          {`Receive`}
-        </div>
-      </div>
+    <div className="po-md grid place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
+      <LinkCard>
+        <Outline.BanknotesIcon className="size-4" />
+        Tokens
+      </LinkCard>
+      <LinkCard>
+        <Outline.PaperAirplaneIcon className="size-4" />
+        Transactions
+      </LinkCard>
+      <LinkCard>
+        <Outline.QrCodeIcon className="size-4" />
+        Receive
+      </LinkCard>
+      <LinkCard>
+        <Outline.TrophyIcon className="size-4" />
+        NFTs
+      </LinkCard>
     </div>
 
   const Body =

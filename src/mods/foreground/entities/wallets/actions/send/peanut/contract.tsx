@@ -493,7 +493,10 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         Approval
       </div>
       <div className="h-2" />
-      <TransactionCard data={maybeTransaction1} />
+      <TransactionCard
+        data={maybeTransaction1}
+        onSend={() => { }}
+        onRetry={() => { }} />
       <div className="h-4" />
     </>}
     {maybeTransaction0 != null && <>
@@ -501,7 +504,10 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         Deposit
       </div>
       <div className="h-2" />
-      <TransactionCard data={maybeTransaction0} />
+      <TransactionCard
+        data={maybeTransaction0}
+        onSend={() => { }}
+        onRetry={() => { }} />
       <div className="h-4" />
     </>}
     <div className="h-4 grow" />

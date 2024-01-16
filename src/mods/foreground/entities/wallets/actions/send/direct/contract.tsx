@@ -397,11 +397,19 @@ export function WalletSendScreenContractValue(props: {}) {
           </ShrinkableContrastButtonInInputBox>
         </div>
       </SimpleBox>}
-    <div className="h-4 grow" />
+    <div className="h-4" />
     {maybeTransaction != null && <>
-      <TransactionCard data={maybeTransaction} />
+      <div className="font-medium">
+        Transfer
+      </div>
       <div className="h-2" />
+      <TransactionCard
+        data={maybeTransaction}
+        onSend={() => { }}
+        onRetry={() => { }} />
+      <div className="h-4" />
     </>}
+    <div className="h-4 grow" />
     {maybeTransaction == null &&
       <div className="flex items-center">
         <WideShrinkableOppositeButton
