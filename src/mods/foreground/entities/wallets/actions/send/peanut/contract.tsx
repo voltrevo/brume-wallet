@@ -191,8 +191,8 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   const onValueMaxClick = useCallback(() => {
     if (valuedBalanceData == null)
       return
-    setValue(Fixed.from(valuedBalanceData).toString())
-  }, [valuedBalanceData, setValue])
+    setRawValued(Fixed.from(valuedBalanceData).toString())
+  }, [valuedBalanceData, setRawValued])
 
   const onPricedMaxClick = useCallback(() => {
     if (pricedBalanceData == null)
