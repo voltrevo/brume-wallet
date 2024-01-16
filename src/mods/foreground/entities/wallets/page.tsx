@@ -9,6 +9,7 @@ import { useInputChange, useKeyboardEnter, useMouse } from "@/libs/react/events"
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
+import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
 import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Results } from "@/libs/results/results";
@@ -90,14 +91,26 @@ export function useCompactDisplayUsd(result: Nullable<Result<Fixed.From, Error>>
   }, [result])
 }
 
-export function LinkCard(props: ChildrenProps) {
-  const { children } = props
+export function LinkCard(props: AnchorProps) {
+  const { children, ...rest } = props
 
-  return <a className="grow group p-4 bg-contrast rounded-xl cursor-pointer focus:outline-black focus:outline-1">
+  return <a className="grow group p-4 bg-contrast rounded-xl cursor-pointer focus:outline-black focus:outline-1"
+    {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
       {children}
     </div>
   </a>
+}
+
+export function ButtonCard(props: ButtonProps) {
+  const { children, ...rest } = props
+
+  return <button className="grow group p-4 bg-contrast rounded-xl cursor-pointer focus:outline-black focus:outline-1"
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </button>
 }
 
 export function DivLikeButton(props: ChildrenProps & ClassNameProps & { onClick: () => void }) {
@@ -228,10 +241,10 @@ function WalletDataPage() {
         <Outline.PaperAirplaneIcon className="size-4" />
         Transactions
       </LinkCard>
-      <LinkCard>
+      <ButtonCard onClick={receiveDialog.enable}>
         <Outline.QrCodeIcon className="size-4" />
         Receive
-      </LinkCard>
+      </ButtonCard>
       <LinkCard>
         <Outline.TrophyIcon className="size-4" />
         NFTs
