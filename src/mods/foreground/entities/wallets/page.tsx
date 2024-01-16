@@ -249,6 +249,14 @@ function WalletDataPage() {
         <Outline.TrophyIcon className="size-4" />
         NFTs
       </LinkCard>
+      <LinkCard>
+        <Outline.LinkIcon className="size-4" />
+        Links
+      </LinkCard>
+      <LinkCard>
+        <Outline.CheckIcon className="size-4" />
+        Approvals
+      </LinkCard>
     </div>
 
   const Body =
