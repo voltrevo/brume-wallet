@@ -1051,7 +1051,7 @@ export class Global {
       const userQuery = BgUser.schema(userSession.user.uuid, this.storage)
       const userState = await userQuery.state
 
-      return new Ok(userState.current?.inner)
+      return new Ok(userState.current?.get())
     })
   }
 
@@ -1327,7 +1327,7 @@ export class Global {
 
       const logs = await BgSettings.Logs.schema(storage).state
 
-      if (logs.real?.current?.inner !== true)
+      if (logs.real?.current?.get() !== true)
         return Ok.void()
 
       using circuit = await Pool.tryTakeCryptoRandom(this.circuits).then(r => r.unwrap().unwrap().inner.inner)

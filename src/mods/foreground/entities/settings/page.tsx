@@ -26,7 +26,7 @@ export function SettingsPage() {
         </div>
         <input className=""
           type="checkbox"
-          checked={Boolean(logs.real?.current.inner)}
+          checked={Boolean(logs.real?.current.get())}
           onChange={onLogsChange}
         />
       </label>
