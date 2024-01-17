@@ -208,7 +208,7 @@ export namespace BgWallet {
 }
 
 export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
-  version?: number
+  [key: string]: unknown
   chainId: number
 }
 

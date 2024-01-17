@@ -654,7 +654,7 @@ export class Global {
         return await res.blob()
       }).then(r => r.unwrap())
 
-      const data = await Blobs.tryReadAsDataURL(blob).then(r => r.unwrap())
+      const data = await Blobs.tryReadAsDataUrl(blob).then(r => r.unwrap())
 
       return new Ok(data)
     })
@@ -1590,7 +1590,7 @@ export class Global {
 
           Result.assert(Mime.isImage(iconBlob.type)).unwrap()
 
-          const iconData = await Blobs.tryReadAsDataURL(iconBlob).then(r => r.unwrap())
+          const iconData = await Blobs.tryReadAsDataUrl(iconBlob).then(r => r.unwrap())
 
           const blobbyQuery = BgBlobby.schema(iconUrl, storage)
           const blobbyData = { id: iconUrl, data: iconData }

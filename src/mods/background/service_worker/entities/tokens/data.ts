@@ -157,13 +157,11 @@ export namespace BgToken {
       export type Data = Fixed.From
       export type Fail = Error
 
-      export const method = "eth_getBalance"
-
       export function key(account: ZeroHexString, block: string, chain: ChainData) {
         return {
           version: 2,
           chainId: chain.chainId,
-          method: method,
+          method: "eth_getBalance",
           params: [account, block]
         }
       }

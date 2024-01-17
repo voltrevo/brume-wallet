@@ -40,10 +40,6 @@ export namespace BigInts {
       .toUnsafeFloat()
   }
 
-  export function tryParse(text: string) {
-    return Result.runAndDoubleWrapSync(() => parseOrThrow(text))
-  }
-
   export function parseOrThrow(text: string) {
     if (text.trim().length === 0)
       throw new ParseError()

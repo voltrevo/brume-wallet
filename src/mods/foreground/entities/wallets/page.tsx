@@ -15,7 +15,6 @@ import { UUIDProps } from "@/libs/react/props/uuid";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog, Screen } from "@/libs/ui/dialog/dialog";
-import { Url } from "@/libs/url/url";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
@@ -176,7 +175,7 @@ function WalletDataPage() {
         return Option.wrap(prompt("Paste a WalletConnect link here")).ok()
       }).throw(t))
 
-      const url = Url.tryParse(clipboard).setErr(new UIError("You must copy a WalletConnect link")).throw(t)
+      const url = Result.runAndDoubleWrapSync(() => new URL(clipboard)).setErr(new UIError("You must copy a WalletConnect link")).throw(t)
       await Wc.tryParse(url).then(r => r.setErr(new UIError("You must copy a WalletConnect link")).throw(t))
 
       alert(`Connecting...`)

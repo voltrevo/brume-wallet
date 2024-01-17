@@ -50,7 +50,7 @@ if (IS_FIREFOX || IS_SAFARI) {
   container.removeChild(element)
 }
 
-async function tryGetOrigin() {
+async function getOrigin() {
   const origin: NonReadonly<PreOriginData> = {
     origin: location.origin,
     title: document.title
@@ -70,7 +70,7 @@ async function tryGetOrigin() {
       if (blob.isErr())
         continue
 
-      const data = await Blobs.tryReadAsDataURL(blob.inner)
+      const data = await Blobs.tryReadAsDataUrl(blob.inner)
 
       if (data.isErr())
         continue
@@ -102,7 +102,7 @@ async function tryGetOrigin() {
       if (blob.isErr())
         return
 
-      const data = await Blobs.tryReadAsDataURL(blob.inner)
+      const data = await Blobs.tryReadAsDataUrl(blob.inner)
 
       if (data.isErr())
         return
@@ -111,7 +111,7 @@ async function tryGetOrigin() {
     })()
   }
 
-  return new Ok(origin)
+  return origin
 }
 
 new Pool<Disposer<ExtensionPort>>(async (params) => {
@@ -192,7 +192,7 @@ new Pool<Disposer<ExtensionPort>>(async (params) => {
 
     const onBackgroundRequest = async (request: RpcRequestPreinit<unknown>) => {
       if (request.method === "brume_origin")
-        return new Some(await tryGetOrigin())
+        return new Some(new Ok(await getOrigin()))
       if (request.method === "connect")
         return new Some(await onConnect(request))
       if (request.method === "accountsChanged")

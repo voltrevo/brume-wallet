@@ -1,12 +1,11 @@
 import { BrowserError, browser } from "@/libs/browser/browser";
-import { tryFetchAsJson } from "@/libs/fetch/fetch";
+import { fetchAsJsonOrThrow } from "@/libs/fetch/fetch";
 import { Outline } from "@/libs/icons/icons";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { OkProps } from "@/libs/react/props/promise";
 import { Semver } from "@/libs/semver/semver";
 import { Button } from "@/libs/ui/button";
 import { None } from "@hazae41/option";
-import { Ok, Result } from "@hazae41/result";
 import { useCallback, useEffect, useState } from "react";
 import { useBackgroundContext } from "../background/context";
 
@@ -49,25 +48,23 @@ export function Overlay(props: ChildrenProps) {
   return null
 }
 
-async function tryCheckWebsiteUpdate(): Promise<Result<boolean, Error>> {
-  return await Result.unthrow(async t => {
-    const cached = await tryFetchAsJson<{
-      version: string
-    }>("/manifest.json").then(r => r.throw(t))
+async function checkWebsiteUpdateOrThrow(): Promise<boolean> {
+  const cached = await fetchAsJsonOrThrow<{
+    version: string
+  }>("/manifest.json")
 
-    const current = await tryFetchAsJson<{
-      version: string
-    }>("/manifest.json?").then(r => r.throw(t))
+  const current = await fetchAsJsonOrThrow<{
+    version: string
+  }>("/manifest.json?")
 
-    if (current.version !== cached.version)
-      return new Ok(false) // Will be handled by SW
+  if (current.version !== cached.version)
+    return false // Will be handled by SW
 
-    const main = await tryFetchAsJson<{
-      version: string
-    }>(MAIN_PACKAGE_URL).then(r => r.throw(t))
+  const main = await fetchAsJsonOrThrow<{
+    version: string
+  }>(MAIN_PACKAGE_URL)
 
-    return new Ok(Semver.isGreater(main.version, cached.version))
-  })
+  return Semver.isGreater(main.version, cached.version)
 }
 
 export function WebsiteOverlay(props: ChildrenProps) {
@@ -96,7 +93,7 @@ export function WebsiteOverlay(props: ChildrenProps) {
   const [updatable, setUpdatable] = useState(false)
 
   useEffect(() => {
-    tryCheckWebsiteUpdate().then(r => r.inspectSync(setUpdatable).inspectErrSync(console.warn))
+    checkWebsiteUpdateOrThrow().then(setUpdatable).catch(console.warn)
   }, [])
 
   const update2 = useCallback(() => {
@@ -110,27 +107,19 @@ export function WebsiteOverlay(props: ChildrenProps) {
   </>
 }
 
-async function tryCheckDevExtensionUpdate(self: chrome.management.ExtensionInfo): Promise<Result<boolean, Error>> {
-  return await Result.unthrow(async t => {
-    const main = await tryFetchAsJson<{
-      version: string
-    }>(MAIN_PACKAGE_URL).then(r => r.throw(t))
+async function checkDevExtensionUpdateOrThrow(self: chrome.management.ExtensionInfo): Promise<boolean> {
+  const main = await fetchAsJsonOrThrow<{ version: string }>(MAIN_PACKAGE_URL)
 
-    return new Ok(Semver.isGreater(main.version, self.version))
-  })
+  return Semver.isGreater(main.version, self.version)
 }
 
-async function tryCheckExtensionUpdate(): Promise<Result<boolean, Error>> {
-  return await Result.unthrow(async t => {
-    const self = await BrowserError.tryRun(async () => {
-      return await browser.management.getSelf()
-    }).then(r => r.throw(t))
+async function checkExtensionUpdateOrThrow(): Promise<boolean> {
+  const self = await BrowserError.runOrThrow(() => browser.management.getSelf())
 
-    if (self.installType === "development")
-      return await tryCheckDevExtensionUpdate(self)
+  if (self.installType === "development")
+    return await checkDevExtensionUpdateOrThrow(self)
 
-    return new Ok(false)
-  })
+  return false
 }
 
 export function ExtensionOverlay(props: ChildrenProps) {
@@ -139,7 +128,7 @@ export function ExtensionOverlay(props: ChildrenProps) {
   const [updatable, setUpdatable] = useState(false)
 
   useEffect(() => {
-    tryCheckExtensionUpdate().then(r => r.inspectSync(setUpdatable).inspectErrSync(console.warn))
+    checkExtensionUpdateOrThrow().then(setUpdatable).catch(console.warn)
   }, [])
 
   const update = useCallback(() => {
