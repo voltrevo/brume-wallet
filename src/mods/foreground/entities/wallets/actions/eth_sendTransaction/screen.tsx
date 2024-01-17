@@ -943,7 +943,7 @@ export function WalletSendTransactionScreenValue(props: {}) {
         const trial = TransactionTrialRef.create(trialUuid)
 
         await context.background.tryRequest<ZeroHexString>({
-          method: "brume_eth_fetch2",
+          method: "brume_eth_fetch",
           params: [context.uuid, context.chain.chainId, {
             method: "eth_sendRawTransaction",
             params: [data],

@@ -984,10 +984,10 @@ export class Global {
       return new Some(await this.brume_set_user(request))
     if (request.method === "brume_subscribe")
       return new Some(await this.brume_subscribe(foreground, request))
-    if (request.method === "brume_eth_fetch2")
-      return new Some(await this.brume_eth_fetch2(foreground, request))
     if (request.method === "brume_eth_fetch")
       return new Some(await this.brume_eth_fetch(foreground, request))
+    if (request.method === "brume_eth_custom_fetch")
+      return new Some(await this.brume_eth_custom_fetch(foreground, request))
     if (request.method === "brume_log")
       return new Some(await this.brume_log(request))
     if (request.method === "brume_open")
@@ -1308,7 +1308,7 @@ export class Global {
     throw new Error(`Unknown fetcher`)
   }
 
-  async brume_eth_fetch2(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_eth_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown> & EthereumFetchParams]>).params
 
     const walletState = await BgWallet.schema(uuid, this.storage).state
@@ -1323,7 +1323,7 @@ export class Global {
     return await BgEthereumContext.fetchOrFail<unknown>(context, subrequest)
   }
 
-  async brume_eth_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_eth_custom_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     return await Result.unthrow(async t => {
       const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown> & EthereumFetchParams]>).params
 

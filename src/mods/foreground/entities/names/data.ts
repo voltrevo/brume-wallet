@@ -7,7 +7,7 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
-import { FgEthereumContext, fetchOrFail } from "../wallets/data"
+import { FgEthereumContext, customFetchOrFail } from "../wallets/data"
 
 export namespace FgEns {
 
@@ -26,7 +26,7 @@ export namespace FgEns {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await fetchOrFail<Address>(request, context)
+        await customFetchOrFail<Address>(request, context)
 
       return createQuery<Key, Data, Fail>({
         key: BgEns.Lookup.key(name),
@@ -46,7 +46,7 @@ export namespace FgEns {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await fetchOrFail<ZeroHexString>(request, context)
+        await customFetchOrFail<ZeroHexString>(request, context)
 
       return createQuery<EthereumQueryKey<unknown>, Nullable<string>, Error>({
         key: BgEns.Reverse.key(address),

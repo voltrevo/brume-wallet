@@ -7,7 +7,7 @@ import { Abi, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, FetcherMore, createQuery, useError, useFetch, useQuery, useVisible } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
-import { FgEthereumContext, fetchOrFail2 } from "../../wallets/data"
+import { FgEthereumContext, fetchOrFail } from "../../wallets/data"
 
 export namespace FgPair {
 
@@ -34,7 +34,7 @@ export namespace FgPair {
 
       const fetcher = async (request: Key, more: FetcherMore = {}) => {
         try {
-          const fetched = await fetchOrFail2<ZeroHexString>(request, context)
+          const fetched = await fetchOrFail<ZeroHexString>(request, context)
 
           if (fetched.isErr())
             return fetched
