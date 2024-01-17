@@ -17,19 +17,18 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
-import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { UrlState } from ".";
 import { useBlockByNumber } from "../../../blocks/data";
 import { useEnsLookup } from "../../../names/data";
-import { useNativeBalance, useNativePricedBalance } from "../../../tokens/data";
 import { useTransactionWithReceipt } from "../../../transactions/data";
 import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../data";
 import { PriceResolver } from "../../page";
-import { ShrinkableContrastButtonInInputBox, ShrinkableContrastButtonInTextareaBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../send";
+import { ShrinkableContrastButtonInInputBox, ShrinkableContrastButtonInTextareaBox, SimpleBox, SimpleInput, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../send";
 
-export function WalletSendTransactionScreenValue(props: {}) {
+export function WalletTransactionScreenValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
 
@@ -46,8 +45,6 @@ export function WalletSendTransactionScreenValue(props: {}) {
   const [maybeGasPrice, setGasPrice] = useSearchState("gasPrice", $state)
   const [maybeBaseFeePerGas, setBaseFeePerGas] = useSearchState("baseFeePerGas", $state)
   const [maybeMaxPriorityFeePerGas, setMaxPriorityFeePerGas] = useSearchState("maxPriorityFeePerGas", $state)
-  const [maybeDisableTarget, setDisableTarget] = useSearchState("disableTarget", $state)
-  const [maybeDisableValue, setDisableValue] = useSearchState("disableValue", $state)
   const [maybeDisableData, setDisableData] = useSearchState("disableData", $state)
   const [maybeDisableSign, setDisableSign] = useSearchState("disableSign", $state)
 
@@ -56,8 +53,6 @@ export function WalletSendTransactionScreenValue(props: {}) {
   const trialUuidFallback = useConstant(() => crypto.randomUUID())
   const trialUuid = Option.wrap(maybeTrial).unwrapOr(trialUuidFallback)
 
-  const disableTarget = Boolean(maybeDisableTarget)
-  const disableValue = Boolean(maybeDisableValue)
   const disableData = Boolean(maybeDisableData)
   const disableSign = Boolean(maybeDisableSign)
 
@@ -97,164 +92,40 @@ export function WalletSendTransactionScreenValue(props: {}) {
     }, Fixed.unit(tokenData.decimals))
   }, [prices, tokenData])
 
-  const [rawValuedInput = "", setRawValuedInput] = useState<Optional<string>>(maybeValue)
-  const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
-
-  const valuedInput = useDeferredValue(rawValuedInput)
-
-  const onValuedChange = useCallback((input: string) => {
+  const getRawPricedInput = useCallback((rawValuedInput: string) => {
     try {
-      if (input.trim().length === 0) {
-        setRawPricedInput(undefined)
-        return
-      }
+      if (rawValuedInput.trim().length === 0)
+        return undefined
 
-      if (maybePrice == null) {
-        setRawPricedInput(undefined)
-        return
-      }
+      if (maybePrice == null)
+        return undefined
 
-      const priced = Fixed.fromString(input, tokenData.decimals).mul(maybePrice)
+      const priced = Fixed.fromString(rawValuedInput, tokenData.decimals).mul(maybePrice)
 
-      if (priced.value === 0n) {
-        setRawPricedInput(undefined)
-        return
-      }
+      if (priced.value === 0n)
+        return undefined
 
-      setRawPricedInput(priced.toString())
+      return priced.toString()
     } catch (e: unknown) {
-      setRawPricedInput(undefined)
-      return
+      return undefined
     }
   }, [maybePrice, tokenData])
 
-  const onPricedChange = useCallback((input: string) => {
-    try {
-      if (input.trim().length === 0) {
-        setRawValuedInput(undefined)
-        return
-      }
+  const [rawValuedInput = ""] = useMemo(() => {
+    return [maybeValue]
+  }, [maybeValue])
 
-      if (maybePrice == null) {
-        setRawValuedInput(undefined)
-        return
-      }
-
-      const valued = Fixed.fromString(input, tokenData.decimals).div(maybePrice)
-
-      if (valued.value === 0n) {
-        setRawValuedInput(undefined)
-        return
-      }
-
-      setRawValuedInput(valued.toString())
-    } catch (e: unknown) {
-      setRawValuedInput(undefined)
-      return
-    }
-  }, [maybePrice, tokenData])
-
-  const setRawValued = useCallback((input: string) => {
-    setRawValuedInput(input)
-    onValuedChange(input)
-  }, [onValuedChange])
-
-  const setRawPriced = useCallback((input: string) => {
-    setRawPricedInput(input)
-    onPricedChange(input)
-  }, [onPricedChange])
-
-  const onValuedInputChange = useInputChange(e => {
-    setRawValued(e.target.value)
-  }, [setRawValued])
-
-  const onPricedInputChange = useInputChange(e => {
-    setRawPriced(e.target.value)
-  }, [setRawPriced])
-
-  useEffect(() => {
-    if (maybePrice == null)
-      return
-    onValuedChange(valuedInput)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maybePrice])
-
-  useEffect(() => {
-    setValue(valuedInput)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valuedInput])
-
-  const [mode, setMode] = useState<"valued" | "priced">("valued")
-
-  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
-  const pricedBalanceQuery = useNativePricedBalance(wallet.address, "usd", context)
-
-  const valuedBalanceData = valuedBalanceQuery.current?.ok().get()
-  const pricedBalanceData = pricedBalanceQuery.current?.ok().get()
-
-  const onValueMaxClick = useCallback(() => {
-    if (disableValue)
-      return
-    if (valuedBalanceData == null)
-      return
-    setRawValued(Fixed.from(valuedBalanceData).toString())
-  }, [disableValue, valuedBalanceData, setRawValued])
-
-  const onPricedMaxClick = useCallback(() => {
-    if (disableValue)
-      return
-    if (pricedBalanceData == null)
-      return
-    setRawPriced(Fixed.from(pricedBalanceData).toString())
-  }, [disableValue, pricedBalanceData, setRawPriced])
-
-  const onValuedPaste = useCallback(async () => {
-    if (disableValue)
-      return
-    setRawValued(await navigator.clipboard.readText())
-  }, [disableValue, setRawValued])
-
-  const onPricedPaste = useCallback(async () => {
-    if (disableValue)
-      return
-    setRawPriced(await navigator.clipboard.readText())
-  }, [disableValue, setRawPriced])
-
-  const onValuedClear = useCallback(async () => {
-    if (disableValue)
-      return
-    setRawValued("")
-  }, [disableValue, setRawValued])
-
-  const onPricedClear = useCallback(async () => {
-    if (disableValue)
-      return
-    setRawPriced("")
-  }, [disableValue, setRawPriced])
-
-  const onTargetFocus = useCallback(() => {
-    if (disableValue)
-      return
-    setStep("target")
-  }, [disableValue, setStep])
+  const [rawPricedInput = ""] = useMemo(() => {
+    return [getRawPricedInput(rawValuedInput)]
+  }, [getRawPricedInput, rawValuedInput])
 
   const onNonceClick = useCallback(() => {
-    if (disableValue)
-      return
     setStep("nonce")
-  }, [disableValue, setStep])
+  }, [setStep])
 
-  const onPricedClick = useCallback(() => {
-    if (disableValue)
-      return
-    setMode("priced")
-  }, [disableValue])
-
-  const onValuedClick = useCallback(() => {
-    if (disableValue)
-      return
-    setMode("valued")
-  }, [disableValue])
+  const onDecodeClick = useCallback(() => {
+    setStep("decode")
+  }, [setStep])
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
@@ -982,117 +853,38 @@ export function WalletSendTransactionScreenValue(props: {}) {
         Target
       </div>
       <div className="w-4" />
-      <SimpleInput key="target"
-        disabled={disableTarget}
+      <SimpleInput
         readOnly
-        onFocus={onTargetFocus}
         value={maybeTarget} />
     </SimpleBox>
     <div className="h-2" />
-    {mode === "valued" &&
-      <SimpleBox>
-        <div className="">
-          Value
-        </div>
-        <div className="w-4" />
-        <div className="grow flex flex-col overflow-hidden">
-          <div className="flex items-center">
-            <SimpleInput
-              autoFocus
-              disabled={disableValue}
-              value={rawValuedInput}
-              onChange={onValuedInputChange}
-              placeholder="0.0" />
-            <div className="w-1" />
-            <div className="text-contrast">
-              {tokenData.symbol}
-            </div>
-          </div>
-          <div className="flex items-center cursor-pointer"
-            role="button"
-            onClick={onPricedClick}>
-            <div className="text-contrast truncate">
-              {rawPricedInput || "0.0"}
-            </div>
-            <div className="grow" />
-            <div className="text-contrast">
-              USD
-            </div>
+    <SimpleBox>
+      <div className="">
+        Value
+      </div>
+      <div className="w-4" />
+      <div className="grow flex flex-col overflow-hidden">
+        <div className="flex items-center">
+          <SimpleInput
+            readOnly
+            value={rawValuedInput}
+            placeholder="0.0" />
+          <div className="w-1" />
+          <div className="text-contrast">
+            {tokenData.symbol}
           </div>
         </div>
-        {!disableValue && <>
-          <div className="w-2" />
-          <div className="flex items-center">
-            {rawValuedInput.length === 0
-              ? <ShrinkableNakedButtonInInputBox
-                onClick={onValuedPaste}>
-                <Outline.ClipboardIcon className="size-4" />
-              </ShrinkableNakedButtonInInputBox>
-              : <ShrinkableNakedButtonInInputBox
-                onClick={onValuedClear}>
-                <Outline.XMarkIcon className="size-4" />
-              </ShrinkableNakedButtonInInputBox>}
-            <div className="w-1" />
-            <ShrinkableContrastButtonInInputBox
-              disabled={valuedBalanceQuery.data == null}
-              onClick={onValueMaxClick}>
-              100%
-            </ShrinkableContrastButtonInInputBox>
+        <div className="flex items-center cursor-pointer">
+          <div className="text-contrast truncate">
+            {rawPricedInput || "0.0"}
           </div>
-        </>}
-      </SimpleBox>}
-    {mode === "priced" &&
-      <SimpleBox>
-        <div className="">
-          Value
-        </div>
-        <div className="w-4" />
-        <div className="grow flex flex-col overflow-hidden">
-          <div className="flex items-center">
-            <SimpleInput
-              autoFocus
-              disabled={disableValue}
-              value={rawPricedInput}
-              onChange={onPricedInputChange}
-              placeholder="0.0" />
-            <div className="w-1" />
-            <div className="text-contrast">
-              USD
-            </div>
-          </div>
-          <div className="flex items-center cursor-pointer"
-            role="button"
-            onClick={onValuedClick}>
-            <div className="text-contrast truncate">
-              {rawValuedInput || "0.0"}
-            </div>
-            <div className="grow" />
-            <div className="text-contrast">
-              {tokenData.symbol}
-            </div>
+          <div className="grow" />
+          <div className="text-contrast">
+            USD
           </div>
         </div>
-        {!disableValue && <>
-          <div className="w-2" />
-          <div className="flex items-center">
-            {rawPricedInput.length === 0
-              ? <ShrinkableNakedButtonInInputBox
-                onClick={onPricedPaste}>
-                <Outline.ClipboardIcon className="size-4" />
-              </ShrinkableNakedButtonInInputBox>
-              : <ShrinkableNakedButtonInInputBox
-                onClick={onPricedClear}>
-                <Outline.XMarkIcon className="size-4" />
-              </ShrinkableNakedButtonInInputBox>}
-            <div className="w-1" />
-            <ShrinkableContrastButtonInInputBox
-              disabled={pricedBalanceQuery.data == null}
-              onClick={onPricedMaxClick}>
-              100%
-            </ShrinkableContrastButtonInInputBox>
-          </div>
-        </>}
-      </SimpleBox>}
+      </div>
+    </SimpleBox>
     <div className="h-4" />
     <div className="font-medium">
       Advanced
@@ -1121,14 +913,15 @@ export function WalletSendTransactionScreenValue(props: {}) {
         </div>
         <div className="w-4" />
         <SimpleTextarea
-          disabled={disableData}
+          readOnly={disableData}
           rows={3}
           value={rawDataInput}
           onChange={onDataInputChange}
           placeholder="0x0" />
       </div>
       <div className="h-2" />
-      <ShrinkableContrastButtonInTextareaBox>
+      <ShrinkableContrastButtonInTextareaBox
+        onClick={onDecodeClick}>
         <Outline.MagnifyingGlassIcon className="size-4" />
         Decode
       </ShrinkableContrastButtonInTextareaBox>

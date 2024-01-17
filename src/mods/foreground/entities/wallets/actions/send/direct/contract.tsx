@@ -17,21 +17,21 @@ import { useNativeBalance, useNativePricedBalance, useToken } from "../../../../
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext, useEthereumContext2 } from "../../../data";
 import { PriceResolver } from "../../../page";
-import { WalletSendTransactionScreen } from "../../eth_sendTransaction";
-import { TransactionCard } from "../../eth_sendTransaction/screen";
+import { WalletTransactionScreen } from "../../eth_sendTransaction";
+import { TransactionCard } from "../../eth_sendTransaction/value";
 
-export function WalletSendScreenContractValue(props: {}) {
+export function WalletDirectSendScreenContractValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
   const subpath = useSubpath()
 
   const $state = usePathState<UrlState>()
-  const [maybeTrial0, setTrial0] = useSearchState("trial0", $state)
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeToken, setToken] = useSearchState("token", $state)
   const [maybeTarget, setTarget] = useSearchState("target", $state)
   const [maybeValue, setValue] = useSearchState("value", $state)
+  const [maybeTrial0, setTrial0] = useSearchState("trial0", $state)
 
   const trial0UuidFallback = useConstant(() => crypto.randomUUID())
   const trial0Uuid = Option.wrap(maybeTrial0).unwrapOr(trial0UuidFallback)
@@ -80,57 +80,51 @@ export function WalletSendScreenContractValue(props: {}) {
 
   const valuedInput = useDeferredValue(rawValuedInput)
 
-  const onValuedChange = useCallback((input: string) => {
+  const getRawPricedInput = useCallback((rawValuedInput: string) => {
     try {
-      if (input.trim().length === 0) {
-        setRawPricedInput(undefined)
-        return
-      }
+      if (rawValuedInput.trim().length === 0)
+        return undefined
 
-      if (maybePrice == null) {
-        setRawPricedInput(undefined)
-        return
-      }
+      if (maybePrice == null)
+        return undefined
 
-      const priced = Fixed.fromString(input, tokenData.decimals).mul(maybePrice)
+      const priced = Fixed.fromString(rawValuedInput, tokenData.decimals).mul(maybePrice)
 
-      if (priced.value === 0n) {
-        setRawPricedInput(undefined)
-        return
-      }
+      if (priced.value === 0n)
+        return undefined
 
-      setRawPricedInput(priced.toString())
+      return priced.toString()
     } catch (e: unknown) {
-      setRawPricedInput(undefined)
-      return
+      return undefined
     }
   }, [maybePrice, tokenData])
+
+  const getRawValuedInput = useCallback((rawPricedInput: string) => {
+    try {
+      if (rawPricedInput.trim().length === 0)
+        return undefined
+
+      if (maybePrice == null)
+        return undefined
+
+      const valued = Fixed.fromString(rawPricedInput, tokenData.decimals).div(maybePrice)
+
+      if (valued.value === 0n)
+        return undefined
+
+      return valued.toString()
+    } catch (e: unknown) {
+      return undefined
+    }
+  }, [maybePrice, tokenData])
+
+  const onValuedChange = useCallback((input: string) => {
+    setRawPricedInput(getRawPricedInput(input))
+  }, [getRawPricedInput])
 
   const onPricedChange = useCallback((input: string) => {
-    try {
-      if (input.trim().length === 0) {
-        setRawValuedInput(undefined)
-        return
-      }
-
-      if (maybePrice == null) {
-        setRawValuedInput(undefined)
-        return
-      }
-
-      const valued = Fixed.fromString(input, tokenData.decimals).div(maybePrice)
-
-      if (valued.value === 0n) {
-        setRawValuedInput(undefined)
-        return
-      }
-
-      setRawValuedInput(valued.toString())
-    } catch (e: unknown) {
-      setRawValuedInput(undefined)
-      return
-    }
-  }, [maybePrice, tokenData])
+    setRawValuedInput(getRawValuedInput(input))
+  }, [getRawValuedInput])
 
   const setRawValued = useCallback((input: string) => {
     setRawValuedInput(input)
@@ -276,7 +270,7 @@ export function WalletSendScreenContractValue(props: {}) {
     <PathContext.Provider value={subpath}>
       {subpath.url.pathname === "/eth_sendTransaction" &&
         <Screen close={onClose}>
-          <WalletSendTransactionScreen />
+          <WalletTransactionScreen />
         </Screen>}
     </PathContext.Provider>
     {tokenData.pairs?.map((address, i) =>

@@ -118,9 +118,9 @@ export function TransactPage() {
 
     const zeroHexData = ZeroHexString.from(maybeData)
 
-    return maybeSignatures.map(({ name }) => {
-      return Result.runAndWrapSync<{ name: string, decoded: string }>(() => {
-        const abi = Cubane.Abi.FunctionSignature.parseOrThrow(name)
+    return maybeSignatures.map(({ text }) => {
+      return Result.runAndWrapSync<{ text: string, decoded: string }>(() => {
+        const abi = Cubane.Abi.FunctionSignature.parseOrThrow(text)
         const { args } = Cubane.Abi.decodeOrThrow(abi.funcAndArgs, zeroHexData)
 
         function stringifyOrThrow(x: any): string {
@@ -141,7 +141,7 @@ export function TransactPage() {
 
         const decoded = args.intoOrThrow().map(stringifyOrThrow).join(", ")
 
-        return { name, decoded }
+        return { text, decoded }
       }).inspectErrSync(e => console.warn({ e })).unwrapOr(undefined)
     }).find(it => it != null)
   }, [maybeData, maybeHash, maybeSignatures])
@@ -220,7 +220,7 @@ export function TransactPage() {
         </div>}
       {maybeSignature &&
         <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
-          Function: {maybeSignature.name}
+          Function: {maybeSignature.text}
         </div>}
       {(maybeSignature || maybeData) &&
         <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">

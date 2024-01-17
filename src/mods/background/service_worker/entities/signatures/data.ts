@@ -10,49 +10,11 @@ import { Catched, Err, Ok, Result } from "@hazae41/result";
 import { BgEthereumContext } from "../../context";
 import { EthereumFetchParams, EthereumQueryKey } from "../wallets/data";
 
-export type ApiResult<T> =
-  | ApiOk<T>
-  | ApiErr
-
-export interface ApiOk<T> {
-  readonly ok: true,
-  readonly result: T
-}
-
-export interface ApiErr {
-  readonly ok: false,
-  readonly error: unknown
-}
-
-export class ApiError extends Error {
-  readonly #class = ApiError
-  readonly name = this.#class.name
-
-  constructor(options: ErrorOptions) {
-    super(`Could not fetch`, options)
-  }
-
-  static from(cause: unknown) {
-    return new ApiError({ cause })
-  }
-
-}
-
-export interface ApiData {
-  readonly event: Record<string, unknown>,
-  readonly function: Record<string, ApiFunction[]>
-}
-
-export interface ApiFunction {
-  readonly name: string
-  readonly filtered: boolean
-}
-
 export interface SignatureData {
   /**
    * Signature
    */
-  readonly name: string
+  readonly text: string
 }
 
 export async function tryFetchRaw<T>(ethereum: BgEthereumContext, url: string, init: EthereumFetchParams, more: FetcherMore = {}) {
@@ -159,20 +121,19 @@ export namespace BgSignature {
   }
 
   export function schema(ethereum: BgEthereumContext, hash: ZeroHexString, storage: IDBStorage) {
-    const fetcher = async (key: unknown, more: FetcherMore) => {
+    const fetcher = async (key: Key, more: FetcherMore) => {
       try {
-        const url = `https://sig.eth.samczsun.com/api/v1/signatures?function=${hash}`
-        const fetched = await tryFetchRaw<ApiResult<ApiData>>(ethereum, url, {}, more).then(r => r.unwrap())
+        const url = `https://sig.api.vechain.energy/${hash}`
+        const fetched = await tryFetchRaw<SignatureData[]>(ethereum, url, {}, more).then(r => r.unwrap())
 
         if (fetched.isErr())
           return fetched
 
-        const result = fetched.unwrap()
+        const signatures = fetched.get()
 
-        if (!result.ok)
-          return new Fail(ApiError.from(result.error))
+        const deduped = signatures.filter((s, i) => signatures.findIndex(t => t.text === s.text) === i)
 
-        return new Data(result.result.function[hash])
+        return new Data(deduped)
       } catch (e: unknown) {
         return new Fail(Catched.from(e))
       }

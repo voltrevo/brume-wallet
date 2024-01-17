@@ -6,12 +6,13 @@ import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Option, Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState } from ".";
+import { UrlState } from ".";
 import { useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
+import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput } from "../send";
 
-export function WalletSendScreenNonce(props: {}) {
+export function WalletTransactionScreenNonce(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
 

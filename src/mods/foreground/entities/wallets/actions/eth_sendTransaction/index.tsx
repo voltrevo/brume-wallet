@@ -1,18 +1,14 @@
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context"
-import { WalletSendScreenNonce } from "../send/nonce"
-import { WalletSendScreenTarget } from "../send/target"
-import { WalletSendTransactionScreenValue } from "./screen"
+import { WalletTransactionScreenDecode } from "./decode"
+import { WalletTransactionScreenNonce } from "./nonce"
+import { WalletTransactionScreenValue } from "./value"
 
 export type UrlState = {
   readonly trial?: string
-  readonly type?: string
   readonly step?: string
   readonly chain?: string
-  readonly token?: string
   readonly target?: string
   readonly value?: string
-  readonly valued?: string
-  readonly priced?: string
   readonly nonce?: string
   readonly data?: string
   readonly gasMode?: string
@@ -20,21 +16,19 @@ export type UrlState = {
   readonly gasPrice?: string
   readonly baseFeePerGas?: string
   readonly maxPriorityFeePerGas?: string
-  readonly disableTarget?: string
-  readonly disableValue?: string
   readonly disableData?: string
   readonly disableSign?: string
 }
 
-export function WalletSendTransactionScreen(props: {}) {
+export function WalletTransactionScreen(props: {}) {
   const $path = usePathState<UrlState>()
   const [step] = useSearchState("step", $path)
 
-  if (step === "target")
-    return <WalletSendScreenTarget />
   if (step === "value")
-    return <WalletSendTransactionScreenValue />
+    return <WalletTransactionScreenValue />
   if (step === "nonce")
-    return <WalletSendScreenNonce />
+    return <WalletTransactionScreenNonce />
+  if (step === "decode")
+    return <WalletTransactionScreenDecode />
   return null
 }
