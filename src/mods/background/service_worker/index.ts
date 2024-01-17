@@ -294,49 +294,47 @@ export class Global {
   }
 
   async tryOpenOrFocusPopup(pathname: string, mouse: Mouse, force?: boolean): Promise<Result<PopupData, Error>> {
-    return await Result.unthrow(async t => {
-      return await this.popup.lock(async (slot) => {
-        if (slot.current != null) {
-          const windowId = Option.unwrap(slot.current.window.id)
-          const tabId = Option.unwrap(slot.current.window.tabs?.[0].id)
+    return await this.popup.lock(async (slot) => {
+      if (slot.current != null) {
+        const windowId = Option.unwrap(slot.current.window.id)
+        const tabId = Option.unwrap(slot.current.window.tabs?.[0].id)
 
-          const url = force ? `popup.html#${pathname}` : undefined
+        const url = force ? `popup.html#${pathname}` : undefined
 
-          await BrowserError.tryRun(async () => {
-            return await browser.tabs.update(tabId, { url, highlighted: true })
-          }).then(r => r.unwrap())
-
-          await BrowserError.tryRun(async () => {
-            return await browser.windows.update(windowId, { focused: true })
-          }).then(r => r.unwrap())
-
-          return new Ok(slot.current)
-        }
-
-        const height = 630
-        const width = 400
-
-        const top = Math.max(mouse.y - (height / 2), 0)
-        const left = Math.max(mouse.x - (width / 2), 0)
-
-        const window = await BrowserError.tryRun(async () => {
-          return await browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left })
+        await BrowserError.tryRun(async () => {
+          return await browser.tabs.update(tabId, { url, highlighted: true })
         }).then(r => r.unwrap())
 
-        const channel = await this.tryWaitPopupHello(window).then(r => r.unwrap())
-
-        slot.current = { window, port: channel }
-
-        const onRemoved = () => {
-          slot.current = undefined
-
-          browser.windows.onRemoved.removeListener(onRemoved)
-        }
-
-        browser.windows.onRemoved.addListener(onRemoved)
+        await BrowserError.tryRun(async () => {
+          return await browser.windows.update(windowId, { focused: true })
+        }).then(r => r.unwrap())
 
         return new Ok(slot.current)
-      })
+      }
+
+      const height = 630
+      const width = 400
+
+      const top = Math.max(mouse.y - (height / 2), 0)
+      const left = Math.max(mouse.x - (width / 2), 0)
+
+      const window = await BrowserError.tryRun(async () => {
+        return await browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left })
+      }).then(r => r.unwrap())
+
+      const channel = await this.tryWaitPopupHello(window).then(r => r.unwrap())
+
+      slot.current = { window, port: channel }
+
+      const onRemoved = () => {
+        slot.current = undefined
+
+        browser.windows.onRemoved.removeListener(onRemoved)
+      }
+
+      browser.windows.onRemoved.addListener(onRemoved)
+
+      return new Ok(slot.current)
     })
   }
 
@@ -348,41 +346,37 @@ export class Global {
   }
 
   async tryRequestNoPopup<T>(request: AppRequestData): Promise<Result<RpcResponse<T>, Error>> {
-    return await Result.unthrow(async t => {
-      const requestQuery = BgAppRequest.schema(request.id)
-      await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
+    const requestQuery = BgAppRequest.schema(request.id)
+    await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
 
-      const done = new Future<Result<void, Error>>()
+    const done = new Future<Result<void, Error>>()
 
-      try {
-        return await this.tryWaitResponse(request.id, done)
-      } finally {
-        await requestQuery.delete()
-        done.resolve(Ok.void())
-      }
-    })
+    try {
+      return await this.tryWaitResponse(request.id, done)
+    } finally {
+      await requestQuery.delete()
+      done.resolve(Ok.void())
+    }
   }
 
   async tryRequestPopup<T>(request: AppRequestData, mouse: Mouse, force?: boolean): Promise<Result<RpcResponse<T>, Error>> {
-    return await Result.unthrow(async t => {
-      const requestQuery = BgAppRequest.schema(request.id)
-      await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
+    const requestQuery = BgAppRequest.schema(request.id)
+    await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
 
-      const done = new Future<Result<void, Error>>()
+    const done = new Future<Result<void, Error>>()
 
-      try {
-        const { id, method, params } = request
-        const url = qurl(`/${method}?id=${id}`, params)
+    try {
+      const { id, method, params } = request
+      const url = qurl(`/${method}?id=${id}`, params)
 
-        const popup = await this.tryOpenOrFocusPopup(url, mouse, force).then(r => r.unwrap())
-        const response = await this.tryWaitPopupResponse<T>(request.id, popup, done).then(r => r.unwrap())
+      const popup = await this.tryOpenOrFocusPopup(url, mouse, force).then(r => r.unwrap())
+      const response = await this.tryWaitPopupResponse<T>(request.id, popup, done).then(r => r.unwrap())
 
-        return new Ok(response)
-      } finally {
-        await requestQuery.delete()
-        done.resolve(Ok.void())
-      }
-    })
+      return new Ok(response)
+    } finally {
+      await requestQuery.delete()
+      done.resolve(Ok.void())
+    }
   }
 
   async tryWaitResponse<T>(id: string, done: Future<Result<void, Error>>) {
@@ -436,153 +430,68 @@ export class Global {
   }
 
   async tryGetExtensionSession(script: Port, mouse: Mouse, force: boolean): Promise<Result<Nullable<SessionData>, Error>> {
-    return await Result.unthrow(async t => {
-      let mutex = this.sessionByScript.get(script.name)
+    let mutex = this.sessionByScript.get(script.name)
 
-      if (mutex == null) {
-        mutex = new Mutex<Slot<string>>({})
-        this.sessionByScript.set(script.name, mutex)
-      }
+    if (mutex == null) {
+      mutex = new Mutex<Slot<string>>({})
+      this.sessionByScript.set(script.name, mutex)
+    }
 
-      return await mutex.lock(async slot => {
-        const currentSession = slot.current
+    return await mutex.lock(async slot => {
+      const currentSession = slot.current
 
-        if (currentSession != null) {
-          const { storage } = Option.unwrap(this.#user)
-
-          const sessionQuery = BgSession.schema(currentSession, storage)
-          const sessionState = await sessionQuery.state
-          const sessionData = Option.unwrap(sessionState.data?.get())
-
-          return new Ok(sessionData)
-        }
-
-        const preOriginData = await script.tryRequest<PreOriginData>({
-          method: "brume_origin"
-        }).then(r => r.unwrap().unwrap())
-
-        if (this.#user == null && !force)
-          return new Ok(undefined)
-
-        if (this.#user == null && force)
-          await this.tryOpenOrFocusPopup("/", mouse).then(r => r.unwrap())
-
+      if (currentSession != null) {
         const { storage } = Option.unwrap(this.#user)
 
-        const { origin, title, description } = preOriginData
-        const iconQuery = BgBlobby.schema(origin, storage)
-        const iconRef = BlobbyRef.create(origin)
+        const sessionQuery = BgSession.schema(currentSession, storage)
+        const sessionState = await sessionQuery.state
+        const sessionData = Option.unwrap(sessionState.data?.get())
 
-        if (preOriginData.icon) {
-          const iconData = { id: origin, data: preOriginData.icon }
-          await iconQuery.mutate(Mutators.data(iconData))
-        }
+        return new Ok(sessionData)
+      }
 
-        const originQuery = BgOrigin.schema(origin, storage)
-        const originData: OriginData = { origin, title, description, icons: [iconRef] }
-        await originQuery.mutate(Mutators.data(originData))
+      const preOriginData = await script.tryRequest<PreOriginData>({
+        method: "brume_origin"
+      }).then(r => r.unwrap().unwrap())
 
-        const sessionByOriginQuery = BgSession.ByOrigin.schema(origin, storage)
-        const sessionByOriginState = await sessionByOriginQuery.state
+      if (this.#user == null && !force)
+        return new Ok(undefined)
 
-        if (sessionByOriginState.data != null) {
-          const sessionId = sessionByOriginState.data.get().id
+      if (this.#user == null && force)
+        await this.tryOpenOrFocusPopup("/", mouse).then(r => r.unwrap())
 
-          const sessionQuery = BgSession.schema(sessionId, storage)
-          const sessionState = await sessionQuery.state
-          const sessionData = Option.unwrap(sessionState.data?.get())
+      const { storage } = Option.unwrap(this.#user)
 
-          slot.current = sessionId
+      const { origin, title, description } = preOriginData
+      const iconQuery = BgBlobby.schema(origin, storage)
+      const iconRef = BlobbyRef.create(origin)
 
-          let scripts = this.scriptsBySession.get(sessionId)
+      if (preOriginData.icon) {
+        const iconData = { id: origin, data: preOriginData.icon }
+        await iconQuery.mutate(Mutators.data(iconData))
+      }
 
-          if (scripts == null) {
-            scripts = new Set()
-            this.scriptsBySession.set(sessionId, scripts)
-          }
+      const originQuery = BgOrigin.schema(origin, storage)
+      const originData: OriginData = { origin, title, description, icons: [iconRef] }
+      await originQuery.mutate(Mutators.data(originData))
 
-          scripts.add(script)
+      const sessionByOriginQuery = BgSession.ByOrigin.schema(origin, storage)
+      const sessionByOriginState = await sessionByOriginQuery.state
 
-          const { id } = sessionData
-          await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
+      if (sessionByOriginState.data != null) {
+        const sessionId = sessionByOriginState.data.get().id
 
-          script.events.on("close", async () => {
-            scripts!.delete(script)
-            this.sessionByScript.delete(script.name)
+        const sessionQuery = BgSession.schema(sessionId, storage)
+        const sessionState = await sessionQuery.state
+        const sessionData = Option.unwrap(sessionState.data?.get())
 
-            if (scripts!.size === 0) {
-              const { id } = sessionData
-              await Status.schema(id).delete()
-            }
+        slot.current = sessionId
 
-            return new None()
-          })
-
-          const { chainId } = sessionData.chain
-
-          if (chainId !== 1) {
-            await script.tryRequest<void>({
-              method: "chainChanged",
-              params: [ZeroHexString.from(chainId)]
-            }).then(r => r.unwrap().unwrap())
-
-            await script.tryRequest({
-              method: "networkChanged",
-              params: [chainId.toString()]
-            }).then(r => r.unwrap().unwrap())
-          }
-
-          {
-            const addresses = Result.all(await Promise.all(sessionData.wallets.map(async wallet => {
-              return await Result.unthrow<Result<string, Error>>(async t => {
-                const walletQuery = BgWallet.schema(wallet.uuid, storage)
-                const walletState = await walletQuery.state
-                const walletData = Option.unwrap(walletState.data?.get())
-
-                return new Ok(walletData.address)
-              })
-            }))).unwrap()
-
-            await script.tryRequest({
-              method: "accountsChanged",
-              params: [addresses]
-            }).then(r => r.unwrap().unwrap())
-          }
-
-          return new Ok(sessionData)
-        }
-
-        if (!force)
-          return new Ok(undefined)
-
-        const [persistent, chainId, wallets] = await this.tryRequestPopup<[boolean, number, Wallet[]]>({
-          id: crypto.randomUUID(),
-          origin: origin,
-          method: "eth_requestAccounts",
-          params: {}
-        }, mouse, true).then(r => r.unwrap().unwrap())
-
-        const chain = Option.unwrap(chainByChainId[chainId])
-
-        const sessionData: ExSessionData = {
-          type: "ex",
-          id: crypto.randomUUID(),
-          origin: origin,
-          persist: persistent,
-          wallets: wallets.map(wallet => WalletRef.from(wallet)),
-          chain: chain
-        }
-
-        const sessionQuery = BgSession.schema(sessionData.id, storage)
-        await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
-
-        slot.current = sessionData.id
-
-        let scripts = this.scriptsBySession.get(sessionData.id)
+        let scripts = this.scriptsBySession.get(sessionId)
 
         if (scripts == null) {
           scripts = new Set()
-          this.scriptsBySession.set(sessionData.id, scripts)
+          this.scriptsBySession.set(sessionId, scripts)
         }
 
         scripts.add(script)
@@ -596,11 +505,13 @@ export class Global {
 
           if (scripts!.size === 0) {
             const { id } = sessionData
-            await Status.schema(id).delete().catch(console.warn)
+            await Status.schema(id).delete()
           }
 
           return new None()
         })
+
+        const { chainId } = sessionData.chain
 
         if (chainId !== 1) {
           await script.tryRequest<void>({
@@ -632,7 +543,88 @@ export class Global {
         }
 
         return new Ok(sessionData)
+      }
+
+      if (!force)
+        return new Ok(undefined)
+
+      const [persistent, chainId, wallets] = await this.tryRequestPopup<[boolean, number, Wallet[]]>({
+        id: crypto.randomUUID(),
+        origin: origin,
+        method: "eth_requestAccounts",
+        params: {}
+      }, mouse, true).then(r => r.unwrap().unwrap())
+
+      const chain = Option.unwrap(chainByChainId[chainId])
+
+      const sessionData: ExSessionData = {
+        type: "ex",
+        id: crypto.randomUUID(),
+        origin: origin,
+        persist: persistent,
+        wallets: wallets.map(wallet => WalletRef.from(wallet)),
+        chain: chain
+      }
+
+      const sessionQuery = BgSession.schema(sessionData.id, storage)
+      await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
+
+      slot.current = sessionData.id
+
+      let scripts = this.scriptsBySession.get(sessionData.id)
+
+      if (scripts == null) {
+        scripts = new Set()
+        this.scriptsBySession.set(sessionData.id, scripts)
+      }
+
+      scripts.add(script)
+
+      const { id } = sessionData
+      await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
+
+      script.events.on("close", async () => {
+        scripts!.delete(script)
+        this.sessionByScript.delete(script.name)
+
+        if (scripts!.size === 0) {
+          const { id } = sessionData
+          await Status.schema(id).delete().catch(console.warn)
+        }
+
+        return new None()
       })
+
+      if (chainId !== 1) {
+        await script.tryRequest<void>({
+          method: "chainChanged",
+          params: [ZeroHexString.from(chainId)]
+        }).then(r => r.unwrap().unwrap())
+
+        await script.tryRequest({
+          method: "networkChanged",
+          params: [chainId.toString()]
+        }).then(r => r.unwrap().unwrap())
+      }
+
+      {
+        const addresses = Result.all(await Promise.all(sessionData.wallets.map(async wallet => {
+          return await Result.unthrow<Result<string, Error>>(async t => {
+            const walletQuery = BgWallet.schema(wallet.uuid, storage)
+            const walletState = await walletQuery.state
+            const walletData = Option.unwrap(walletState.data?.get())
+
+            return new Ok(walletData.address)
+          })
+        }))).unwrap()
+
+        await script.tryRequest({
+          method: "accountsChanged",
+          params: [addresses]
+        }).then(r => r.unwrap().unwrap())
+      }
+
+      return new Ok(sessionData)
     })
   }
 
@@ -645,134 +637,124 @@ export class Global {
   }
 
   async brume_icon(script: Port, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const res = await Result.runAndDoubleWrap(async () => {
-        return await globalThis.fetch("/favicon.png")
-      }).then(r => r.unwrap())
+    const res = await Result.runAndDoubleWrap(async () => {
+      return await globalThis.fetch("/favicon.png")
+    }).then(r => r.unwrap())
 
-      const blob = await Result.runAndDoubleWrap(async () => {
-        return await res.blob()
-      }).then(r => r.unwrap())
+    const blob = await Result.runAndDoubleWrap(async () => {
+      return await res.blob()
+    }).then(r => r.unwrap())
 
-      const data = await Blobs.tryReadAsDataUrl(blob).then(r => r.unwrap())
+    const data = await Blobs.tryReadAsDataUrl(blob).then(r => r.unwrap())
 
-      return new Ok(data)
-    })
+    return new Ok(data)
   }
 
   async brume_run(script: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
-    return await Result.unthrow(async t => {
-      const [subrequest, mouse] = (request as RpcRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
+    const [subrequest, mouse] = (request as RpcRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
 
-      let session = await this.tryGetExtensionSession(script, mouse, false).then(r => r.unwrap())
+    let session = await this.tryGetExtensionSession(script, mouse, false).then(r => r.unwrap())
 
-      if (subrequest.method === "eth_accounts" && session == null)
-        return new Ok([])
-      if (subrequest.method === "eth_chainId" && session == null)
-        return new Ok("0x1")
-      if (subrequest.method === "eth_coinbase" && session == null)
-        return new Ok(undefined)
-      if (subrequest.method === "net_version" && session == null)
-        return new Ok("1")
+    if (subrequest.method === "eth_accounts" && session == null)
+      return new Ok([])
+    if (subrequest.method === "eth_chainId" && session == null)
+      return new Ok("0x1")
+    if (subrequest.method === "eth_coinbase" && session == null)
+      return new Ok(undefined)
+    if (subrequest.method === "net_version" && session == null)
+      return new Ok("1")
 
-      if (subrequest.method === "wallet_requestPermissions" && session == null)
-        session = await this.tryGetExtensionSession(script, mouse, true).then(r => r.unwrap())
-      if (subrequest.method === "eth_requestAccounts" && session == null)
-        session = await this.tryGetExtensionSession(script, mouse, true).then(r => r.unwrap())
+    if (subrequest.method === "wallet_requestPermissions" && session == null)
+      session = await this.tryGetExtensionSession(script, mouse, true).then(r => r.unwrap())
+    if (subrequest.method === "eth_requestAccounts" && session == null)
+      session = await this.tryGetExtensionSession(script, mouse, true).then(r => r.unwrap())
 
-      if (session == null)
-        return new Err(new UnauthorizedError())
+    if (session == null)
+      return new Err(new UnauthorizedError())
 
-      const { wallets } = session
+    const { wallets } = session
 
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const walletRef = Option.unwrap(wallets[0])
-      const walletState = await BgWallet.schema(walletRef.uuid, storage).state
-      const walletData = Option.unwrap(walletState.real?.current.ok().get())
+    const walletRef = Option.unwrap(wallets[0])
+    const walletState = await BgWallet.schema(walletRef.uuid, storage).state
+    const walletData = Option.unwrap(walletState.real?.current.ok().get())
 
-      const chainData = session.chain
+    const chainData = session.chain
 
-      const brume = await this.#tryGetOrTakeEthBrume(walletRef.uuid).then(r => r.unwrap())
+    const brume = await this.#tryGetOrTakeEthBrume(walletRef.uuid).then(r => r.unwrap())
 
-      const context: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
+    const context: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
-      if (subrequest.method === "eth_requestAccounts")
-        return await this.eth_requestAccounts(context, session, subrequest)
-      if (subrequest.method === "eth_accounts")
-        return await this.eth_accounts(context, session, subrequest)
-      if (subrequest.method === "eth_coinbase")
-        return await this.eth_coinbase(context, session, subrequest)
-      if (subrequest.method === "eth_chainId")
-        return await this.eth_chainId(context, session, subrequest)
-      if (subrequest.method === "net_version")
-        return await this.net_version(context, session, subrequest)
-      if (subrequest.method === "wallet_requestPermissions")
-        return await this.wallet_requestPermissions(context, session, subrequest)
-      if (subrequest.method === "wallet_getPermissions")
-        return await this.wallet_getPermissions(context, session, subrequest)
-      if (subrequest.method === "eth_sendTransaction")
-        return await this.eth_sendTransaction(context, session, subrequest, mouse)
-      if (subrequest.method === "personal_sign")
-        return await this.personal_sign(context, session, subrequest, mouse)
-      if (subrequest.method === "eth_signTypedData_v4")
-        return await this.eth_signTypedData_v4(context, session, subrequest, mouse)
-      if (subrequest.method === "wallet_switchEthereumChain")
-        return await this.wallet_switchEthereumChain(context, session, subrequest, mouse)
+    if (subrequest.method === "eth_requestAccounts")
+      return await this.eth_requestAccounts(context, session, subrequest)
+    if (subrequest.method === "eth_accounts")
+      return await this.eth_accounts(context, session, subrequest)
+    if (subrequest.method === "eth_coinbase")
+      return await this.eth_coinbase(context, session, subrequest)
+    if (subrequest.method === "eth_chainId")
+      return await this.eth_chainId(context, session, subrequest)
+    if (subrequest.method === "net_version")
+      return await this.net_version(context, session, subrequest)
+    if (subrequest.method === "wallet_requestPermissions")
+      return await this.wallet_requestPermissions(context, session, subrequest)
+    if (subrequest.method === "wallet_getPermissions")
+      return await this.wallet_getPermissions(context, session, subrequest)
+    if (subrequest.method === "eth_sendTransaction")
+      return await this.eth_sendTransaction(context, session, subrequest, mouse)
+    if (subrequest.method === "personal_sign")
+      return await this.personal_sign(context, session, subrequest, mouse)
+    if (subrequest.method === "eth_signTypedData_v4")
+      return await this.eth_signTypedData_v4(context, session, subrequest, mouse)
+    if (subrequest.method === "wallet_switchEthereumChain")
+      return await this.wallet_switchEthereumChain(context, session, subrequest, mouse)
 
-      return await BgEthereumContext.fetchOrFail(context, { ...subrequest, noCheck: true })
-    })
+    return await BgEthereumContext.fetchOrFail(context, { ...subrequest, noCheck: true })
   }
 
   async eth_requestAccounts(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
-    return await Result.unthrow(async t => {
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const addresses = await Promise.all(session.wallets.map(async wallet => {
+    const addresses = await Promise.all(session.wallets.map(async wallet => {
+      const walletQuery = BgWallet.schema(wallet.uuid, storage)
+      const walletState = await walletQuery.state
+      const walletData = Option.unwrap(walletState.data?.get())
+
+      return walletData.address
+    }))
+
+    return new Ok(addresses)
+  }
+
+  async eth_accounts(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
+    const { storage } = Option.unwrap(this.#user)
+
+    const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
+      return await Result.unthrow<Result<string, Error>>(async t => {
         const walletQuery = BgWallet.schema(wallet.uuid, storage)
         const walletState = await walletQuery.state
         const walletData = Option.unwrap(walletState.data?.get())
 
-        return walletData.address
-      }))
+        return new Ok(walletData.address)
+      })
+    }))).unwrap()
 
-      return new Ok(addresses)
-    })
-  }
-
-  async eth_accounts(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
-    return await Result.unthrow(async t => {
-      const { storage } = Option.unwrap(this.#user)
-
-      const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
-        return await Result.unthrow<Result<string, Error>>(async t => {
-          const walletQuery = BgWallet.schema(wallet.uuid, storage)
-          const walletState = await walletQuery.state
-          const walletData = Option.unwrap(walletState.data?.get())
-
-          return new Ok(walletData.address)
-        })
-      }))).unwrap()
-
-      return new Ok(addresses)
-    })
+    return new Ok(addresses)
   }
 
   async eth_coinbase(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<string>, Error>> {
-    return await Result.unthrow(async t => {
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const walletRef = session.wallets.at(0)
+    const walletRef = session.wallets.at(0)
 
-      if (walletRef == null)
-        return new Ok(undefined)
+    if (walletRef == null)
+      return new Ok(undefined)
 
-      const walletQuery = BgWallet.schema(walletRef.uuid, storage)
-      const walletState = await walletQuery.state
-      const walletData = Option.unwrap(walletState.data?.get())
+    const walletQuery = BgWallet.schema(walletRef.uuid, storage)
+    const walletState = await walletQuery.state
+    const walletData = Option.unwrap(walletState.data?.get())
 
-      return new Ok(walletData.address)
-    })
+    return new Ok(walletData.address)
   }
 
   async eth_chainId(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
@@ -793,168 +775,158 @@ export class Global {
   }
 
   async eth_getBalance(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
-    return await Result.unthrow(async t => {
-      const [address, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
+    const [address, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
 
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const query = BgToken.Native.Balance.schema(address, block, ethereum, storage)
+    const query = BgToken.Native.Balance.schema(address, block, ethereum, storage)
 
-      try { await query.fetch() } catch { }
+    try { await query.fetch() } catch { }
 
-      const stored = core.storeds.get(query.cacheKey)
-      const unstored = await core.unstoreOrThrow<any, unknown, any>(stored, { key: query.cacheKey })
-      const fetched = Option.unwrap(unstored.current)
+    const stored = core.storeds.get(query.cacheKey)
+    const unstored = await core.unstoreOrThrow<any, unknown, any>(stored, { key: query.cacheKey })
+    const fetched = Option.unwrap(unstored.current)
 
-      return fetched
-    })
+    return fetched
   }
 
   async eth_sendTransaction(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const [{ from, to, gas, value, data }] = (request as RpcRequestPreinit<[{
-        from: string,
-        to: string,
-        gas: string,
-        value: Nullable<string>,
-        data: Nullable<string>
-      }]>).params
+    const [{ from, to, gas, value, data }] = (request as RpcRequestPreinit<[{
+      from: string,
+      to: string,
+      gas: string,
+      value: Nullable<string>,
+      data: Nullable<string>
+    }]>).params
 
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
-        return await Result.unthrow<Result<WalletData, Error>>(async t => {
-          const walletQuery = BgWallet.schema(wallet.uuid, storage)
-          const walletState = await walletQuery.state
-          const walletData = Option.unwrap(walletState.data?.get())
+    const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
+      return await Result.unthrow<Result<WalletData, Error>>(async t => {
+        const walletQuery = BgWallet.schema(wallet.uuid, storage)
+        const walletState = await walletQuery.state
+        const walletData = Option.unwrap(walletState.data?.get())
 
-          return new Ok(walletData)
-        })
-      }))).unwrap()
+        return new Ok(walletData)
+      })
+    }))).unwrap()
 
-      /**
-       * TODO: maybe ensure two wallets can't have the same address in the same session
-       */
-      const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, from))
-      const walletId = Option.unwrap(maybeWallet?.uuid)
+    /**
+     * TODO: maybe ensure two wallets can't have the same address in the same session
+     */
+    const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, from))
+    const walletId = Option.unwrap(maybeWallet?.uuid)
 
-      const chainId = ZeroHexString.from(ethereum.chain.chainId)
+    const chainId = ZeroHexString.from(ethereum.chain.chainId)
 
-      const signature = await this.tryRequest<string>({
-        id: crypto.randomUUID(),
-        method: "eth_sendTransaction",
-        params: { from, to, gas, value, data, walletId, chainId },
-        origin: session.origin,
-        session: session.id
-      }, mouse).then(r => r.unwrap().unwrap())
+    const signature = await this.tryRequest<string>({
+      id: crypto.randomUUID(),
+      method: "eth_sendTransaction",
+      params: { from, to, gas, value, data, walletId, chainId },
+      origin: session.origin,
+      session: session.id
+    }, mouse).then(r => r.unwrap().unwrap())
 
-      return await BgEthereumContext.fetchOrFail<string>(ethereum, {
-        method: "eth_sendRawTransaction",
-        params: [signature],
-        noCheck: true
-      }, {})
-    })
+    return await BgEthereumContext.fetchOrFail<string>(ethereum, {
+      method: "eth_sendRawTransaction",
+      params: [signature],
+      noCheck: true
+    }, {})
   }
 
   async personal_sign(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const [message, address] = (request as RpcRequestPreinit<[string, string]>).params
+    const [message, address] = (request as RpcRequestPreinit<[string, string]>).params
 
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
-        return await Result.unthrow<Result<WalletData, Error>>(async t => {
-          const walletQuery = BgWallet.schema(wallet.uuid, storage)
-          const walletState = await walletQuery.state
-          const walletData = Option.unwrap(walletState.data?.get())
+    const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
+      return await Result.unthrow<Result<WalletData, Error>>(async t => {
+        const walletQuery = BgWallet.schema(wallet.uuid, storage)
+        const walletState = await walletQuery.state
+        const walletData = Option.unwrap(walletState.data?.get())
 
-          return new Ok(walletData)
-        })
-      }))).unwrap()
+        return new Ok(walletData)
+      })
+    }))).unwrap()
 
-      /**
-       * TODO: maybe ensure two wallets can't have the same address in the same session
-       */
-      const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, address))
-      const walletId = Option.unwrap(maybeWallet?.uuid)
+    /**
+     * TODO: maybe ensure two wallets can't have the same address in the same session
+     */
+    const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, address))
+    const walletId = Option.unwrap(maybeWallet?.uuid)
 
-      const chainId = ZeroHexString.from(ethereum.chain.chainId)
+    const chainId = ZeroHexString.from(ethereum.chain.chainId)
 
-      const signature = await this.tryRequest<string>({
-        id: crypto.randomUUID(),
-        method: "personal_sign",
-        params: { message, address, walletId, chainId },
-        origin: session.origin,
-        session: session.id
-      }, mouse).then(r => r.unwrap().unwrap())
+    const signature = await this.tryRequest<string>({
+      id: crypto.randomUUID(),
+      method: "personal_sign",
+      params: { message, address, walletId, chainId },
+      origin: session.origin,
+      session: session.id
+    }, mouse).then(r => r.unwrap().unwrap())
 
-      return new Ok(signature)
-    })
+    return new Ok(signature)
   }
 
   async eth_signTypedData_v4(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const [address, data] = (request as RpcRequestPreinit<[string, string]>).params
+    const [address, data] = (request as RpcRequestPreinit<[string, string]>).params
 
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
-        return await Result.unthrow<Result<WalletData, Error>>(async t => {
-          const walletQuery = BgWallet.schema(wallet.uuid, storage)
-          const walletState = await walletQuery.state
-          const walletData = Option.unwrap(walletState.data?.get())
+    const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
+      return await Result.unthrow<Result<WalletData, Error>>(async t => {
+        const walletQuery = BgWallet.schema(wallet.uuid, storage)
+        const walletState = await walletQuery.state
+        const walletData = Option.unwrap(walletState.data?.get())
 
-          return new Ok(walletData)
-        })
-      }))).unwrap()
+        return new Ok(walletData)
+      })
+    }))).unwrap()
 
-      /**
-       * TODO: maybe ensure two wallets can't have the same address in the same session
-       */
-      const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, address))
-      const walletId = Option.unwrap(maybeWallet?.uuid)
+    /**
+     * TODO: maybe ensure two wallets can't have the same address in the same session
+     */
+    const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, address))
+    const walletId = Option.unwrap(maybeWallet?.uuid)
 
-      const chainId = ZeroHexString.from(ethereum.chain.chainId)
+    const chainId = ZeroHexString.from(ethereum.chain.chainId)
 
-      const signature = await this.tryRequest<string>({
-        id: crypto.randomUUID(),
-        method: "eth_signTypedData_v4",
-        params: { data, address, walletId, chainId },
-        origin: session.origin,
-        session: session.id
-      }, mouse).then(r => r.unwrap().unwrap())
+    const signature = await this.tryRequest<string>({
+      id: crypto.randomUUID(),
+      method: "eth_signTypedData_v4",
+      params: { data, address, walletId, chainId },
+      origin: session.origin,
+      session: session.id
+    }, mouse).then(r => r.unwrap().unwrap())
 
-      return new Ok(signature)
-    })
+    return new Ok(signature)
   }
 
   async wallet_switchEthereumChain(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
+    const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
 
-      const chain = Option.unwrap(chainByChainId[parseInt(chainId, 16)])
+    const chain = Option.unwrap(chainByChainId[parseInt(chainId, 16)])
 
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const updatedSession = { ...session, chain }
+    const updatedSession = { ...session, chain }
 
-      const sessionQuery = BgSession.schema(session.id, storage)
-      await sessionQuery.mutate(Mutators.replaceData(updatedSession))
+    const sessionQuery = BgSession.schema(session.id, storage)
+    await sessionQuery.mutate(Mutators.replaceData(updatedSession))
 
-      for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([])) {
-        await script.tryRequest({
-          method: "chainChanged",
-          params: [ZeroHexString.from(chain.chainId)]
-        }).then(r => r.unwrap().unwrap())
+    for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([])) {
+      await script.tryRequest({
+        method: "chainChanged",
+        params: [ZeroHexString.from(chain.chainId)]
+      }).then(r => r.unwrap().unwrap())
 
-        await script.tryRequest({
-          method: "networkChanged",
-          params: [chain.chainId.toString()]
-        }).then(r => r.unwrap().unwrap())
-      }
+      await script.tryRequest({
+        method: "networkChanged",
+        params: [chain.chainId.toString()]
+      }).then(r => r.unwrap().unwrap())
+    }
 
-      return Ok.void()
-    })
+    return Ok.void()
   }
 
   async tryRouteForeground(foreground: Port, request: RpcRequestInit<unknown>): Promise<Option<Result<unknown, Error>>> {
@@ -1031,281 +1003,240 @@ export class Global {
   }
 
   async brume_respond(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    return Result.unthrow(async t => {
-      const [response] = (request as RpcRequestPreinit<[RpcResponseInit<unknown>]>).params
+    const [response] = (request as RpcRequestPreinit<[RpcResponseInit<unknown>]>).params
 
-      const returned = await this.events.emit("response", [response])
+    const returned = await this.events.emit("response", [response])
 
-      if (returned.isSome() && returned.inner.isErr())
-        return returned.inner
+    if (returned.isSome() && returned.inner.isErr())
+      return returned.inner
 
-      return Ok.void()
-    })
+    return Ok.void()
   }
 
   async brume_createUser(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<User[], Error>> {
-    return await Result.unthrow(async t => {
-      const [init] = (request as RpcRequestPreinit<[UserInit]>).params
+    const [init] = (request as RpcRequestPreinit<[UserInit]>).params
 
-      const userData = await BgUser.createOrThrow(init)
-      const userQuery = BgUser.schema(init.uuid, this.storage)
-      await userQuery.mutate(Mutators.data(userData))
+    const userData = await BgUser.createOrThrow(init)
+    const userQuery = BgUser.schema(init.uuid, this.storage)
+    await userQuery.mutate(Mutators.data(userData))
 
-      const usersQuery = BgUser.All.schema(this.storage)
-      const usersState = await usersQuery.state
-      const usersData = Option.unwrap(usersState.data?.get())
+    const usersQuery = BgUser.All.schema(this.storage)
+    const usersState = await usersQuery.state
+    const usersData = Option.unwrap(usersState.data?.get())
 
-      return new Ok(usersData)
-    })
+    return new Ok(usersData)
   }
 
   async brume_login(request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const [uuid, password] = (request as RpcRequestPreinit<[string, string]>).params
+    const [uuid, password] = (request as RpcRequestPreinit<[string, string]>).params
 
-      await this.setCurrentUserOrThrow(uuid, password)
+    await this.setCurrentUserOrThrow(uuid, password)
 
-      if (IS_EXTENSION) {
-        await this.setStoredPasswordOrThrow(uuid, password)
-        return Ok.void()
-      }
-
+    if (IS_EXTENSION) {
+      await this.setStoredPasswordOrThrow(uuid, password)
       return Ok.void()
-    })
+    }
+
+    return Ok.void()
   }
 
   async brume_getCurrentUser(request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<UserData>, Error>> {
-    return await Result.unthrow(async t => {
-      const userSession = this.#user
+    const userSession = this.#user
 
-      if (userSession == null)
-        return new Ok(undefined)
+    if (userSession == null)
+      return new Ok(undefined)
 
-      const userQuery = BgUser.schema(userSession.user.uuid, this.storage)
-      const userState = await userQuery.state
+    const userQuery = BgUser.schema(userSession.user.uuid, this.storage)
+    const userState = await userQuery.state
 
-      return new Ok(userState.current?.get())
-    })
+    return new Ok(userState.current?.get())
   }
 
   async brume_disconnect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const [id] = (request as RpcRequestPreinit<[string]>).params
+    const [id] = (request as RpcRequestPreinit<[string]>).params
 
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const sessionQuery = BgSession.schema(id, storage)
-      await sessionQuery.delete()
+    const sessionQuery = BgSession.schema(id, storage)
+    await sessionQuery.delete()
 
-      const wcSession = this.wcBySession.get(id)
+    const wcSession = this.wcBySession.get(id)
 
-      if (wcSession != null) {
-        await wcSession.tryClose(undefined).then(r => r.unwrap())
-        this.wcBySession.delete(id)
-      }
+    if (wcSession != null) {
+      await wcSession.tryClose(undefined).then(r => r.unwrap())
+      this.wcBySession.delete(id)
+    }
 
-      for (const script of Option.wrap(this.scriptsBySession.get(id)).unwrapOr([])) {
-        await script.tryRequest({
-          method: "accountsChanged",
-          params: [[]]
-        }).then(r => r.unwrap().unwrap())
+    for (const script of Option.wrap(this.scriptsBySession.get(id)).unwrapOr([])) {
+      await script.tryRequest({
+        method: "accountsChanged",
+        params: [[]]
+      }).then(r => r.unwrap().unwrap())
 
-        this.sessionByScript.delete(script.name)
-      }
+      this.sessionByScript.delete(script.name)
+    }
 
-      this.scriptsBySession.delete(id)
+    this.scriptsBySession.delete(id)
 
-      return Ok.void()
-    })
+    return Ok.void()
   }
 
   async brume_open(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const [pathname] = (request as RpcRequestPreinit<[string]>).params
+    const [pathname] = (request as RpcRequestPreinit<[string]>).params
 
-      await BrowserError.tryRun(async () => {
-        return await browser.tabs.create({ url: `index.html#${pathname}` })
-      }).then(r => r.unwrap())
+    await BrowserError.tryRun(async () => {
+      return await browser.tabs.create({ url: `index.html#${pathname}` })
+    }).then(r => r.unwrap())
 
-      return Ok.void()
-    })
+    return Ok.void()
   }
 
   async brume_encrypt(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<[string, string], Error>> {
-    return await Result.unthrow(async t => {
-      const [plainBase64] = (request as RpcRequestPreinit<[string]>).params
+    const [plainBase64] = (request as RpcRequestPreinit<[string]>).params
 
-      const { crypter } = Option.unwrap(this.#user)
+    const { crypter } = Option.unwrap(this.#user)
 
-      const plain = Base64.get().tryDecodePadded(plainBase64).unwrap().copyAndDispose()
-      const iv = Bytes.random(16)
-      const cipher = await crypter.encryptOrThrow(plain, iv)
+    const plain = Base64.get().tryDecodePadded(plainBase64).unwrap().copyAndDispose()
+    const iv = Bytes.random(16)
+    const cipher = await crypter.encryptOrThrow(plain, iv)
 
-      const ivBase64 = Base64.get().tryEncodePadded(iv).unwrap()
-      const cipherBase64 = Base64.get().tryEncodePadded(cipher).unwrap()
+    const ivBase64 = Base64.get().tryEncodePadded(iv).unwrap()
+    const cipherBase64 = Base64.get().tryEncodePadded(cipher).unwrap()
 
-      return new Ok([ivBase64, cipherBase64])
-    })
+    return new Ok([ivBase64, cipherBase64])
   }
 
   async brume_decrypt(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const [ivBase64, cipherBase64] = (request as RpcRequestPreinit<[string, string]>).params
+    const [ivBase64, cipherBase64] = (request as RpcRequestPreinit<[string, string]>).params
 
-      const { crypter } = Option.unwrap(this.#user)
+    const { crypter } = Option.unwrap(this.#user)
 
-      const iv = Base64.get().tryDecodePadded(ivBase64).unwrap().copyAndDispose()
-      const cipher = Base64.get().tryDecodePadded(cipherBase64).unwrap().copyAndDispose()
-      const plain = await crypter.decryptOrThrow(cipher, iv)
+    const iv = Base64.get().tryDecodePadded(ivBase64).unwrap().copyAndDispose()
+    const cipher = Base64.get().tryDecodePadded(cipherBase64).unwrap().copyAndDispose()
+    const plain = await crypter.decryptOrThrow(cipher, iv)
 
-      const plainBase64 = Base64.get().tryEncodePadded(plain).unwrap()
+    const plainBase64 = Base64.get().tryEncodePadded(plain).unwrap()
 
-      return new Ok(plainBase64)
-    })
+    return new Ok(plainBase64)
   }
 
   async brume_createSeed(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const [seed] = (request as RpcRequestPreinit<[SeedData]>).params
+    const [seed] = (request as RpcRequestPreinit<[SeedData]>).params
 
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const seedQuery = BgSeed.schema(seed.uuid, storage)
-      await seedQuery.mutate(Mutators.data(seed))
+    const seedQuery = BgSeed.schema(seed.uuid, storage)
+    await seedQuery.mutate(Mutators.data(seed))
 
-      return Ok.void()
-    })
+    return Ok.void()
   }
 
   async brume_createWallet(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const [wallet] = (request as RpcRequestPreinit<[WalletData]>).params
+    const [wallet] = (request as RpcRequestPreinit<[WalletData]>).params
 
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const walletQuery = BgWallet.schema(wallet.uuid, storage)
-      await walletQuery.mutate(Mutators.data(wallet))
+    const walletQuery = BgWallet.schema(wallet.uuid, storage)
+    await walletQuery.mutate(Mutators.data(wallet))
 
-      return Ok.void()
-    })
+    return Ok.void()
   }
 
   async #tryGetOrTakeEthBrume(uuid: string): Promise<Result<EthBrume, Error>> {
-    return await Result.unthrow(async t => {
-      return await this.brumeByUuid.lock(async brumeByUuid => {
-        const brume = brumeByUuid.get(uuid)
+    return await this.brumeByUuid.lock(async brumeByUuid => {
+      const brume = brumeByUuid.get(uuid)
 
-        if (brume == null) {
-          const brumes = Option.unwrap(this.#eths)
-          const brume = await Pool.tryTakeCryptoRandom(brumes).then(r => r.unwrap().unwrap().inner.inner)
-          brumeByUuid.set(uuid, brume)
-          return new Ok(brume)
-        }
-
+      if (brume == null) {
+        const brumes = Option.unwrap(this.#eths)
+        const brume = await Pool.tryTakeCryptoRandom(brumes).then(r => r.unwrap().unwrap().inner.inner)
+        brumeByUuid.set(uuid, brume)
         return new Ok(brume)
-      })
+      }
+
+      return new Ok(brume)
     })
   }
 
   async brume_get_global(request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
-    return await Result.unthrow(async t => {
-      const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
+    const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
-      return await core.getOrCreateMutex(cacheKey).lock(async () => {
-        const cached = core.storeds.get(cacheKey)
+    return await core.getOrCreateMutex(cacheKey).lock(async () => {
+      const cached = core.storeds.get(cacheKey)
 
-        if (cached != null)
-          return new Ok(cached)
+      if (cached != null)
+        return new Ok(cached)
 
-        const stored = await this.storage.getOrThrow(cacheKey)
-        core.storeds.set(cacheKey, stored)
-        core.unstoreds.delete(cacheKey)
-        await core.onState.emit(cacheKey, [])
+      const stored = await this.storage.getOrThrow(cacheKey)
+      core.storeds.set(cacheKey, stored)
+      core.unstoreds.delete(cacheKey)
+      await core.onState.emit(cacheKey, [])
 
-        return new Ok(stored)
-      })
+      return new Ok(stored)
     })
   }
 
   async brume_get_user(request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
-    return await Result.unthrow(async t => {
-      const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
+    const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      return await core.getOrCreateMutex(cacheKey).lock(async () => {
-        const cached = core.storeds.get(cacheKey)
+    return await core.getOrCreateMutex(cacheKey).lock(async () => {
+      const cached = core.storeds.get(cacheKey)
 
-        if (cached != null)
-          return new Ok(cached)
+      if (cached != null)
+        return new Ok(cached)
 
-        const stored = await storage.getOrThrow(cacheKey)
+      const stored = await storage.getOrThrow(cacheKey)
 
-        core.storeds.set(cacheKey, stored)
-        core.unstoreds.delete(cacheKey)
-        await core.onState.emit(cacheKey, [])
+      core.storeds.set(cacheKey, stored)
+      core.unstoreds.delete(cacheKey)
+      await core.onState.emit(cacheKey, [])
 
-        return new Ok(stored)
-      })
+      return new Ok(stored)
     })
   }
 
   async brume_set_user(request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const [cacheKey, rawState] = (request as RpcRequestPreinit<[string, Nullable<RawState>]>).params
+    const [cacheKey, rawState] = (request as RpcRequestPreinit<[string, Nullable<RawState>]>).params
 
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      if (cacheKey.startsWith("session/")) {
-        const storage2 = new SessionStorage(storage)
-        storage2.setOrThrow(cacheKey, rawState as any)
-      } else {
-        storage.setOrThrow(cacheKey, rawState)
-      }
+    if (cacheKey.startsWith("session/")) {
+      const storage2 = new SessionStorage(storage)
+      storage2.setOrThrow(cacheKey, rawState as any)
+    } else {
+      storage.setOrThrow(cacheKey, rawState)
+    }
 
-      core.storeds.set(cacheKey, rawState)
-      core.unstoreds.delete(cacheKey)
-      await core.onState.emit(cacheKey, [])
+    core.storeds.set(cacheKey, rawState)
+    core.unstoreds.delete(cacheKey)
+    await core.onState.emit(cacheKey, [])
 
-      return Ok.void()
-    })
+    return Ok.void()
   }
 
   async brume_subscribe(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
+    const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
-      const onState = async () => {
-        const stored = core.storeds.get(cacheKey)
+    const onState = async () => {
+      const stored = core.storeds.get(cacheKey)
 
-        await foreground.tryRequest({
-          method: "brume_update",
-          params: [cacheKey, stored]
-        }).then(r => r.ignore())
+      await foreground.tryRequest({
+        method: "brume_update",
+        params: [cacheKey, stored]
+      }).then(r => r.ignore())
 
-        return new None()
-      }
+      return new None()
+    }
 
-      core.onState.on(cacheKey, onState, { passive: true })
+    core.onState.on(cacheKey, onState, { passive: true })
 
-      foreground.events.on("close", () => {
-        core.onState.off(cacheKey, onState)
-        return new None()
-      })
-
-      return Ok.void()
+    foreground.events.on("close", () => {
+      core.onState.off(cacheKey, onState)
+      return new None()
     })
-  }
 
-  async routeOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<SimpleQuery<any, any, Error>> {
-    if (request.method === BgEns.Lookup.method)
-      return await BgEns.Lookup.parseOrThrow(ethereum, request, storage)
-    if (request.method === BgEns.Reverse.method)
-      return await BgEns.Reverse.parseOrThrow(ethereum, request, storage)
-    if (request.method === BgSignature.method)
-      return await BgSignature.parseOrThrow(ethereum, request, storage)
-
-    throw new Error(`Unknown fetcher`)
+    return Ok.void()
   }
 
   async brume_eth_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
@@ -1323,49 +1254,56 @@ export class Global {
     return await BgEthereumContext.fetchOrFail<unknown>(context, subrequest)
   }
 
+  async routeCustomOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<SimpleQuery<any, any, Error>> {
+    if (request.method === BgEns.Lookup.method)
+      return await BgEns.Lookup.parseOrThrow(ethereum, request, storage)
+    if (request.method === BgEns.Reverse.method)
+      return await BgEns.Reverse.parseOrThrow(ethereum, request, storage)
+    if (request.method === BgSignature.method)
+      return await BgSignature.parseOrThrow(ethereum, request, storage)
+
+    throw new Error(`Unknown fetcher`)
+  }
+
   async brume_eth_custom_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
-    return await Result.unthrow(async t => {
-      const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown> & EthereumFetchParams]>).params
+    const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown> & EthereumFetchParams]>).params
 
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const walletState = await BgWallet.schema(uuid, this.storage).state
-      const walletData = Option.unwrap(walletState.real?.current.ok().get())
+    const walletState = await BgWallet.schema(uuid, this.storage).state
+    const walletData = Option.unwrap(walletState.real?.current.ok().get())
 
-      const chainData = Option.unwrap(chainByChainId[chainId])
+    const chainData = Option.unwrap(chainByChainId[chainId])
 
-      const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.unwrap())
-      const ethereum: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
+    const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.unwrap())
+    const ethereum: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
-      const query = await this.routeOrThrow(ethereum, subrequest, storage)
+    const query = await this.routeCustomOrThrow(ethereum, subrequest, storage)
 
-      try { await query.fetch() } catch { }
+    try { await query.fetch() } catch { }
 
-      const stored = core.storeds.get(query.cacheKey)
-      const unstored = await core.unstoreOrThrow<any, unknown, Error>(stored, { key: query.cacheKey })
+    const stored = core.storeds.get(query.cacheKey)
+    const unstored = await core.unstoreOrThrow<any, unknown, Error>(stored, { key: query.cacheKey })
 
-      return Option.unwrap(unstored.current)
-    })
+    return Option.unwrap(unstored.current)
   }
 
   async brume_log(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
-    return Result.unthrow(async t => {
-      const { storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
-      const logs = await BgSettings.Logs.schema(storage).state
+    const logs = await BgSettings.Logs.schema(storage).state
 
-      if (logs.real?.current?.get() !== true)
-        return Ok.void()
-
-      using circuit = await Pool.tryTakeCryptoRandom(this.circuits).then(r => r.unwrap().unwrap().inner.inner)
-
-      const body = JSON.stringify({ tor: true, method: "eth_getBalance" })
-
-      using stream = await Circuits.openAsOrThrow(circuit, "https://proxy.brume.money")
-      await fetch("https://proxy.brume.money", { method: "POST", body, stream: stream.inner })
-
+    if (logs.real?.current?.get() !== true)
       return Ok.void()
-    })
+
+    using circuit = await Pool.tryTakeCryptoRandom(this.circuits).then(r => r.unwrap().unwrap().inner.inner)
+
+    const body = JSON.stringify({ tor: true, method: "eth_getBalance" })
+
+    using stream = await Circuits.openAsOrThrow(circuit, "https://proxy.brume.money")
+    await fetch("https://proxy.brume.money", { method: "POST", body, stream: stream.inner })
+
+    return Ok.void()
   }
 
   async #wcReconnectAllOrThrow(): Promise<void> {
@@ -1395,14 +1333,14 @@ export class Global {
     if (sessionDataOpt.inner.type !== "wc")
       return
 
-    const sessionResult = await this.#tryWcReconnectOrThrow(sessionDataOpt.inner)
+    const sessionResult = await this.#tryWcReconnect(sessionDataOpt.inner)
 
     const { id } = sessionRef
     const error = sessionResult.mapErrSync(RpcError.rewrap).err().inner
     await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id, error }))
   }
 
-  async #tryWcReconnectOrThrow(sessionData: WcSessionData): Promise<Result<WcSession, Error>> {
+  async #tryWcReconnect(sessionData: WcSessionData): Promise<Result<WcSession, Error>> {
     return await Result.runAndDoubleWrap(() => this.#wcReconnectOrThrow(sessionData))
   }
 
@@ -1478,130 +1416,128 @@ export class Global {
   }
 
   async brume_wc_connect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<WcMetadata, Error>> {
-    return await Result.unthrow(async t => {
-      const [rawWcUrl, walletId] = (request as RpcRequestPreinit<[string, string]>).params
+    const [rawWcUrl, walletId] = (request as RpcRequestPreinit<[string, string]>).params
 
-      const { user, storage } = Option.unwrap(this.#user)
+    const { user, storage } = Option.unwrap(this.#user)
+
+    const walletState = await BgWallet.schema(walletId, storage).state
+    const walletData = Option.unwrap(walletState.real?.current.ok().get())
+
+    const chainData = Option.unwrap(chainByChainId[1])
+
+    const wcUrl = new URL(rawWcUrl)
+    const pairParams = await Wc.tryParse(wcUrl).then(r => r.unwrap())
+
+    const brumes = Option.unwrap(this.#wcs)
+    const brume = await Pool.tryTakeCryptoRandom(brumes).then(r => r.unwrap().unwrap().inner.inner)
+    const irn = new IrnBrume(brume)
+
+    const [session, settlement] = await Wc.tryPair(irn, pairParams, walletData.address).then(r => r.unwrap())
+
+    const originData: OriginData = {
+      origin: `wc://${crypto.randomUUID()}`,
+      title: session.metadata.name,
+      description: session.metadata.description,
+    }
+
+    const originQuery = BgOrigin.schema(originData.origin, storage)
+    await originQuery.mutate(Mutators.data(originData))
+
+    const authKeyJwk = await session.client.irn.brume.key.tryExportJwk().then(r => r.unwrap())
+    const sessionKeyBase64 = Base64.get().tryEncodePadded(session.client.key).unwrap()
+
+    const sessionData: WcSessionData = {
+      type: "wc",
+      id: crypto.randomUUID(),
+      origin: originData.origin,
+      metadata: session.metadata,
+      persist: true,
+      wallets: [WalletRef.from(walletData)],
+      chain: chainData,
+      relay: Wc.RELAY,
+      topic: session.client.topic,
+      sessionKeyBase64: sessionKeyBase64,
+      authKeyJwk: authKeyJwk,
+      settlement: settlement.receipt
+    }
+
+    const sessionQuery = BgSession.schema(sessionData.id, storage)
+    await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
+
+    /**
+     * Service worker can die here
+     */
+    await settlement.promise
+      .then(r => r.unwrap().unwrap())
+      .then(Result.assert)
+      .then(r => r.unwrap())
+
+    await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
+
+    const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
+      if (suprequest.method !== "wc_sessionRequest")
+        return new None()
+
+      const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
 
       const walletState = await BgWallet.schema(walletId, storage).state
       const walletData = Option.unwrap(walletState.real?.current.ok().get())
 
-      const chainData = Option.unwrap(chainByChainId[1])
+      const chainData = Option.unwrap(chainByChainId[Number(chainId.split(":")[1])])
+      const brume = await this.#tryGetOrTakeEthBrume(walletData.uuid).then(r => r.unwrap())
 
-      const wcUrl = new URL(rawWcUrl)
-      const pairParams = await Wc.tryParse(wcUrl).then(r => r.unwrap())
+      const ethereum: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
-      const brumes = Option.unwrap(this.#wcs)
-      const brume = await Pool.tryTakeCryptoRandom(brumes).then(r => r.unwrap().unwrap().inner.inner)
-      const irn = new IrnBrume(brume)
+      if (request.method === "eth_sendTransaction")
+        return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
+      if (request.method === "personal_sign")
+        return new Some(await this.personal_sign(ethereum, sessionData, request))
+      if (request.method === "eth_signTypedData_v4")
+        return new Some(await this.eth_signTypedData_v4(ethereum, sessionData, request))
+      return new None()
+    }
 
-      const [session, settlement] = await Wc.tryPair(irn, pairParams, walletData.address).then(r => r.unwrap())
+    const onCloseOrError = async () => {
+      session.client.events.off("request", onRequest)
+      session.client.irn.events.off("close", onCloseOrError)
+      session.client.irn.events.off("error", onCloseOrError)
+      return new None()
+    }
 
-      const originData: OriginData = {
-        origin: `wc://${crypto.randomUUID()}`,
-        title: session.metadata.name,
-        description: session.metadata.description,
-      }
+    session.client.events.on("request", onRequest, { passive: true })
+    session.client.irn.events.on("close", onCloseOrError, { passive: true })
+    session.client.irn.events.on("error", onCloseOrError, { passive: true })
 
-      const originQuery = BgOrigin.schema(originData.origin, storage)
-      await originQuery.mutate(Mutators.data(originData))
+    this.wcBySession.set(sessionData.id, session)
 
-      const authKeyJwk = await session.client.irn.brume.key.tryExportJwk().then(r => r.unwrap())
-      const sessionKeyBase64 = Base64.get().tryEncodePadded(session.client.key).unwrap()
+    const { id } = sessionData
+    await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
 
-      const sessionData: WcSessionData = {
-        type: "wc",
-        id: crypto.randomUUID(),
-        origin: originData.origin,
-        metadata: session.metadata,
-        persist: true,
-        wallets: [WalletRef.from(walletData)],
-        chain: chainData,
-        relay: Wc.RELAY,
-        topic: session.client.topic,
-        sessionKeyBase64: sessionKeyBase64,
-        authKeyJwk: authKeyJwk,
-        settlement: settlement.receipt
-      }
+    const icons = session.metadata.icons.map<BlobbyRef>(x => ({ ref: true, id: x }))
+    await originQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icons }))))
 
-      const sessionQuery = BgSession.schema(sessionData.id, storage)
-      await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
+    for (const iconUrl of session.metadata.icons) {
+      Result.unthrow<Result<void, Error>>(async t => {
+        using circuit = await Pool.tryTakeCryptoRandom(this.circuits).then(r => r.unwrap().unwrap().inner.inner)
 
-      /**
-       * Service worker can die here
-       */
-      await settlement.promise
-        .then(r => r.unwrap().unwrap())
-        .then(Result.assert)
-        .then(r => r.unwrap())
+        console.debug(`Fetching ${iconUrl} with ${circuit.id}`)
+        using stream = await Circuits.openAsOrThrow(circuit, iconUrl)
+        const iconRes = await fetch(iconUrl, { stream: stream.inner })
+        const iconBlob = await Result.runAndDoubleWrap(() => iconRes.blob()).then(r => r.unwrap())
 
-      await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
+        Result.assert(Mime.isImage(iconBlob.type)).unwrap()
 
-      const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
-        if (suprequest.method !== "wc_sessionRequest")
-          return new None()
+        const iconData = await Blobs.tryReadAsDataUrl(iconBlob).then(r => r.unwrap())
 
-        const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
+        const blobbyQuery = BgBlobby.schema(iconUrl, storage)
+        const blobbyData = { id: iconUrl, data: iconData }
+        await blobbyQuery.mutate(Mutators.data(blobbyData))
 
-        const walletState = await BgWallet.schema(walletId, storage).state
-        const walletData = Option.unwrap(walletState.real?.current.ok().get())
+        return Ok.void()
+      }).then(r => r.inspectErrSync(console.warn)).catch(console.error)
+    }
 
-        const chainData = Option.unwrap(chainByChainId[Number(chainId.split(":")[1])])
-        const brume = await this.#tryGetOrTakeEthBrume(walletData.uuid).then(r => r.unwrap())
-
-        const ethereum: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
-
-        if (request.method === "eth_sendTransaction")
-          return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
-        if (request.method === "personal_sign")
-          return new Some(await this.personal_sign(ethereum, sessionData, request))
-        if (request.method === "eth_signTypedData_v4")
-          return new Some(await this.eth_signTypedData_v4(ethereum, sessionData, request))
-        return new None()
-      }
-
-      const onCloseOrError = async () => {
-        session.client.events.off("request", onRequest)
-        session.client.irn.events.off("close", onCloseOrError)
-        session.client.irn.events.off("error", onCloseOrError)
-        return new None()
-      }
-
-      session.client.events.on("request", onRequest, { passive: true })
-      session.client.irn.events.on("close", onCloseOrError, { passive: true })
-      session.client.irn.events.on("error", onCloseOrError, { passive: true })
-
-      this.wcBySession.set(sessionData.id, session)
-
-      const { id } = sessionData
-      await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
-
-      const icons = session.metadata.icons.map<BlobbyRef>(x => ({ ref: true, id: x }))
-      await originQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icons }))))
-
-      for (const iconUrl of session.metadata.icons) {
-        Result.unthrow<Result<void, Error>>(async t => {
-          using circuit = await Pool.tryTakeCryptoRandom(this.circuits).then(r => r.unwrap().unwrap().inner.inner)
-
-          console.debug(`Fetching ${iconUrl} with ${circuit.id}`)
-          using stream = await Circuits.openAsOrThrow(circuit, iconUrl)
-          const iconRes = await fetch(iconUrl, { stream: stream.inner })
-          const iconBlob = await Result.runAndDoubleWrap(() => iconRes.blob()).then(r => r.unwrap())
-
-          Result.assert(Mime.isImage(iconBlob.type)).unwrap()
-
-          const iconData = await Blobs.tryReadAsDataUrl(iconBlob).then(r => r.unwrap())
-
-          const blobbyQuery = BgBlobby.schema(iconUrl, storage)
-          const blobbyData = { id: iconUrl, data: iconData }
-          await blobbyQuery.mutate(Mutators.data(blobbyData))
-
-          return Ok.void()
-        }).then(r => r.inspectErrSync(console.warn)).catch(console.error)
-      }
-
-      return new Ok(session.metadata)
-    })
+    return new Ok(session.metadata)
   }
 
 }
