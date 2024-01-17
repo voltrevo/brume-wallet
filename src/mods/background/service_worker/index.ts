@@ -5,6 +5,7 @@ import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { Console } from "@/libs/console"
 import { chainByChainId } from "@/libs/ethereum/mods/chain"
+import { fetchAsBlobOrThrow } from "@/libs/fetch/fetch"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
@@ -268,18 +269,18 @@ export class Global {
     return userSession
   }
 
-  async tryWaitPopupHello(window: chrome.windows.Window) {
-    const future = new Future<Result<Port, Error>>()
+  async waitPopupHelloOrThrow(window: chrome.windows.Window) {
+    const future = new Future<Port>()
 
     const onRequest = (foreground: Port) => {
-      future.resolve(new Ok(foreground))
+      future.resolve(foreground)
       return new Some(Ok.void())
     }
 
     const onRemoved = (id: number) => {
       if (id !== window.id)
         return
-      future.resolve(new Err(new Error()))
+      future.reject(new Error())
     }
 
     try {
@@ -293,7 +294,7 @@ export class Global {
     }
   }
 
-  async tryOpenOrFocusPopup(pathname: string, mouse: Mouse, force?: boolean): Promise<Result<PopupData, Error>> {
+  async openOrFocusPopupOrThrow(pathname: string, mouse: Mouse, force?: boolean): Promise<PopupData> {
     return await this.popup.lock(async (slot) => {
       if (slot.current != null) {
         const windowId = Option.unwrap(slot.current.window.id)
@@ -301,15 +302,10 @@ export class Global {
 
         const url = force ? `popup.html#${pathname}` : undefined
 
-        await BrowserError.tryRun(async () => {
-          return await browser.tabs.update(tabId, { url, highlighted: true })
-        }).then(r => r.unwrap())
+        await BrowserError.runOrThrow(() => browser.tabs.update(tabId, { url, highlighted: true }))
+        await BrowserError.runOrThrow(() => browser.windows.update(windowId, { focused: true }))
 
-        await BrowserError.tryRun(async () => {
-          return await browser.windows.update(windowId, { focused: true })
-        }).then(r => r.unwrap())
-
-        return new Ok(slot.current)
+        return slot.current
       }
 
       const height = 630
@@ -318,11 +314,9 @@ export class Global {
       const top = Math.max(mouse.y - (height / 2), 0)
       const left = Math.max(mouse.x - (width / 2), 0)
 
-      const window = await BrowserError.tryRun(async () => {
-        return await browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left })
-      }).then(r => r.unwrap())
+      const window = await BrowserError.runOrThrow(() => browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left }))
 
-      const channel = await this.tryWaitPopupHello(window).then(r => r.unwrap())
+      const channel = await this.waitPopupHelloOrThrow(window)
 
       slot.current = { window, port: channel }
 
@@ -334,7 +328,7 @@ export class Global {
 
       browser.windows.onRemoved.addListener(onRemoved)
 
-      return new Ok(slot.current)
+      return slot.current
     })
   }
 
@@ -369,7 +363,7 @@ export class Global {
       const { id, method, params } = request
       const url = qurl(`/${method}?id=${id}`, params)
 
-      const popup = await this.tryOpenOrFocusPopup(url, mouse, force).then(r => r.unwrap())
+      const popup = await this.openOrFocusPopupOrThrow(url, mouse, force)
       const response = await this.tryWaitPopupResponse<T>(request.id, popup, done).then(r => r.unwrap())
 
       return new Ok(response)
@@ -429,7 +423,7 @@ export class Global {
     }
   }
 
-  async tryGetExtensionSession(script: Port, mouse: Mouse, force: boolean): Promise<Result<Nullable<SessionData>, Error>> {
+  async getExtensionSessionOrThrow(script: Port, mouse: Mouse, force: boolean): Promise<Nullable<SessionData>> {
     let mutex = this.sessionByScript.get(script.name)
 
     if (mutex == null) {
@@ -447,7 +441,7 @@ export class Global {
         const sessionState = await sessionQuery.state
         const sessionData = Option.unwrap(sessionState.data?.get())
 
-        return new Ok(sessionData)
+        return sessionData
       }
 
       const preOriginData = await script.tryRequest<PreOriginData>({
@@ -455,10 +449,10 @@ export class Global {
       }).then(r => r.unwrap().unwrap())
 
       if (this.#user == null && !force)
-        return new Ok(undefined)
+        return undefined
 
       if (this.#user == null && force)
-        await this.tryOpenOrFocusPopup("/", mouse).then(r => r.unwrap())
+        await this.openOrFocusPopupOrThrow("/", mouse)
 
       const { storage } = Option.unwrap(this.#user)
 
@@ -540,11 +534,11 @@ export class Global {
           }).then(r => r.unwrap().unwrap())
         }
 
-        return new Ok(sessionData)
+        return sessionData
       }
 
       if (!force)
-        return new Ok(undefined)
+        return undefined
 
       const [persistent, chainId, wallets] = await this.tryRequestPopup<[boolean, number, Wallet[]]>({
         id: crypto.randomUUID(),
@@ -620,36 +614,26 @@ export class Global {
         }).then(r => r.unwrap().unwrap())
       }
 
-      return new Ok(sessionData)
+      return sessionData
     })
   }
 
   async tryRouteContentScript(script: Port, request: RpcRequestPreinit<unknown>) {
     if (request.method === "brume_icon")
-      return new Some(await this.brume_icon(script, request))
+      return new Some(new Ok(await this.brume_icon(script, request)))
     if (request.method === "brume_run")
       return new Some(await this.brume_run(script, request))
     return new None()
   }
 
-  async brume_icon(script: Port, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
-    const res = await Result.runAndDoubleWrap(async () => {
-      return await globalThis.fetch("/favicon.png")
-    }).then(r => r.unwrap())
-
-    const blob = await Result.runAndDoubleWrap(async () => {
-      return await res.blob()
-    }).then(r => r.unwrap())
-
-    const data = await Blobs.tryReadAsDataUrl(blob).then(r => r.unwrap())
-
-    return new Ok(data)
+  async brume_icon(script: Port, request: RpcRequestPreinit<unknown>): Promise<string> {
+    return await Blobs.readAsDataUrlOrThrow(await fetchAsBlobOrThrow("/favicon.png"))
   }
 
   async brume_run(script: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     const [subrequest, mouse] = (request as RpcRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
 
-    let session = await this.tryGetExtensionSession(script, mouse, false).then(r => r.unwrap())
+    let session = await this.getExtensionSessionOrThrow(script, mouse, false)
 
     if (subrequest.method === "eth_accounts" && session == null)
       return new Ok([])
@@ -661,9 +645,9 @@ export class Global {
       return new Ok("1")
 
     if (subrequest.method === "wallet_requestPermissions" && session == null)
-      session = await this.tryGetExtensionSession(script, mouse, true).then(r => r.unwrap())
+      session = await this.getExtensionSessionOrThrow(script, mouse, true)
     if (subrequest.method === "eth_requestAccounts" && session == null)
-      session = await this.tryGetExtensionSession(script, mouse, true).then(r => r.unwrap())
+      session = await this.getExtensionSessionOrThrow(script, mouse, true)
 
     if (session == null)
       return new Err(new UnauthorizedError())
@@ -678,7 +662,7 @@ export class Global {
 
     const chainData = session.chain
 
-    const brume = await this.#tryGetOrTakeEthBrume(walletRef.uuid).then(r => r.unwrap())
+    const brume = await this.#getOrTakeEthBrumeOrThrow(walletRef.uuid)
 
     const context: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
@@ -1064,9 +1048,7 @@ export class Global {
   async brume_open(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [pathname] = (request as RpcRequestPreinit<[string]>).params
 
-    await BrowserError.tryRun(async () => {
-      return await browser.tabs.create({ url: `index.html#${pathname}` })
-    }).then(r => r.unwrap())
+    await BrowserError.runOrThrow(() => browser.tabs.create({ url: `index.html#${pathname}` }))
 
     return Ok.void()
   }
@@ -1076,12 +1058,12 @@ export class Global {
 
     const { crypter } = Option.unwrap(this.#user)
 
-    const plain = Base64.get().tryDecodePadded(plainBase64).unwrap().copyAndDispose()
+    const plain = Base64.get().decodePaddedOrThrow(plainBase64).copyAndDispose()
     const iv = Bytes.random(16)
     const cipher = await crypter.encryptOrThrow(plain, iv)
 
-    const ivBase64 = Base64.get().tryEncodePadded(iv).unwrap()
-    const cipherBase64 = Base64.get().tryEncodePadded(cipher).unwrap()
+    const ivBase64 = Base64.get().encodePaddedOrThrow(iv)
+    const cipherBase64 = Base64.get().encodePaddedOrThrow(cipher)
 
     return new Ok([ivBase64, cipherBase64])
   }
@@ -1091,11 +1073,11 @@ export class Global {
 
     const { crypter } = Option.unwrap(this.#user)
 
-    const iv = Base64.get().tryDecodePadded(ivBase64).unwrap().copyAndDispose()
-    const cipher = Base64.get().tryDecodePadded(cipherBase64).unwrap().copyAndDispose()
+    const iv = Base64.get().decodePaddedOrThrow(ivBase64).copyAndDispose()
+    const cipher = Base64.get().decodePaddedOrThrow(cipherBase64).copyAndDispose()
     const plain = await crypter.decryptOrThrow(cipher, iv)
 
-    const plainBase64 = Base64.get().tryEncodePadded(plain).unwrap()
+    const plainBase64 = Base64.get().encodePaddedOrThrow(plain)
 
     return new Ok(plainBase64)
   }
@@ -1122,18 +1104,20 @@ export class Global {
     return Ok.void()
   }
 
-  async #tryGetOrTakeEthBrume(uuid: string): Promise<Result<EthBrume, Error>> {
+  async #getOrTakeEthBrumeOrThrow(uuid: string): Promise<EthBrume> {
     return await this.brumeByUuid.lock(async brumeByUuid => {
       const brume = brumeByUuid.get(uuid)
 
       if (brume == null) {
         const brumes = Option.unwrap(this.#eths)
-        const brume = await Pool.tryTakeCryptoRandom(brumes).then(r => r.unwrap().unwrap().inner.inner)
+        const brume = await Pool.takeCryptoRandomOrThrow(brumes).then(r => r.unwrap().inner.inner)
+
         brumeByUuid.set(uuid, brume)
-        return new Ok(brume)
+
+        return brume
       }
 
-      return new Ok(brume)
+      return brume
     })
   }
 
@@ -1227,7 +1211,7 @@ export class Global {
 
     const chainData = Option.unwrap(chainByChainId[chainId])
 
-    const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.unwrap())
+    const brume = await this.#getOrTakeEthBrumeOrThrow(uuid)
 
     const context: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
@@ -1255,7 +1239,7 @@ export class Global {
 
     const chainData = Option.unwrap(chainByChainId[chainId])
 
-    const brume = await this.#tryGetOrTakeEthBrume(uuid).then(r => r.unwrap())
+    const brume = await this.#getOrTakeEthBrumeOrThrow(uuid)
     const ethereum: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
     const query = await this.routeCustomOrThrow(ethereum, subrequest, storage)
@@ -1276,7 +1260,7 @@ export class Global {
     if (logs.real?.current?.get() !== true)
       return Ok.void()
 
-    using circuit = await Pool.tryTakeCryptoRandom(this.circuits).then(r => r.unwrap().unwrap().inner.inner)
+    using circuit = await Pool.takeCryptoRandomOrThrow(this.circuits).then(r => r.unwrap().inner.inner)
 
     const body = JSON.stringify({ tor: true, method: "eth_getBalance" })
 
@@ -1366,7 +1350,7 @@ export class Global {
 
       const chainData = Option.unwrap(chainByChainId[Number(chainId.split(":")[1])])
 
-      const brume = await this.#tryGetOrTakeEthBrume(walletRef.uuid).then(r => r.unwrap())
+      const brume = await this.#getOrTakeEthBrumeOrThrow(walletRef.uuid)
 
       const ethereum: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
@@ -1409,7 +1393,7 @@ export class Global {
     const pairParams = await Wc.tryParse(wcUrl).then(r => r.unwrap())
 
     const brumes = Option.unwrap(this.#wcs)
-    const brume = await Pool.tryTakeCryptoRandom(brumes).then(r => r.unwrap().unwrap().inner.inner)
+    const brume = await Pool.takeCryptoRandomOrThrow(brumes).then(r => r.unwrap().inner.inner)
     const irn = new IrnBrume(brume)
 
     const [session, settlement] = await Wc.tryPair(irn, pairParams, walletData.address).then(r => r.unwrap())
@@ -1423,8 +1407,8 @@ export class Global {
     const originQuery = BgOrigin.schema(originData.origin, storage)
     await originQuery.mutate(Mutators.data(originData))
 
-    const authKeyJwk = await session.client.irn.brume.key.tryExportJwk().then(r => r.unwrap())
-    const sessionKeyBase64 = Base64.get().tryEncodePadded(session.client.key).unwrap()
+    const authKeyJwk = await session.client.irn.brume.key.exportJwkOrThrow()
+    const sessionKeyBase64 = Base64.get().encodePaddedOrThrow(session.client.key)
 
     const sessionData: WcSessionData = {
       type: "wc",
@@ -1464,7 +1448,7 @@ export class Global {
       const walletData = Option.unwrap(walletState.real?.current.ok().get())
 
       const chainData = Option.unwrap(chainByChainId[Number(chainId.split(":")[1])])
-      const brume = await this.#tryGetOrTakeEthBrume(walletData.uuid).then(r => r.unwrap())
+      const brume = await this.#getOrTakeEthBrumeOrThrow(walletData.uuid)
 
       const ethereum: BgEthereumContext = { chain: chainData, wallet: walletData, brume }
 
