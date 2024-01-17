@@ -56,8 +56,6 @@ import { Status, StatusData } from "./entities/sessions/status/data"
 import { BgSettings } from "./entities/settings/data"
 import { BgSignature } from "./entities/signatures/data"
 import { BgToken } from "./entities/tokens/data"
-import { BgPair } from "./entities/tokens/pairs/data"
-import { BgEthereum } from "./entities/unknown/data"
 import { BgUser, User, UserData, UserInit, UserSession } from "./entities/users/data"
 import { BgWallet, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
 import { createUserStorageOrThrow } from "./storage"
@@ -1300,10 +1298,6 @@ export class Global {
   }
 
   async routeOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<SimpleQuery<any, any, Error>> {
-    if (request.method === BgToken.Contract.Balance.method)
-      return await BgToken.Contract.Balance.parseOrThrow(ethereum, request, storage)
-    if (request.method === BgPair.Price.method)
-      return await BgPair.Price.parseOrThrow(ethereum, request, storage)
     if (request.method === BgEns.Lookup.method)
       return await BgEns.Lookup.parseOrThrow(ethereum, request, storage)
     if (request.method === BgEns.Reverse.method)
@@ -1311,9 +1305,7 @@ export class Global {
     if (request.method === BgSignature.method)
       return await BgSignature.parseOrThrow(ethereum, request, storage)
 
-    request.noCheck = true
-
-    return BgEthereum.Unknown.schema(ethereum, request, storage)
+    throw new Error(`Unknown fetcher`)
   }
 
   async brume_eth_fetch2(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {

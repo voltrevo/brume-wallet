@@ -141,7 +141,7 @@ export namespace BgSignature {
   export type Data = SignatureData[]
   export type Fail = Error
 
-  export const method = "eth_getSignature"
+  export const method = "sig_getSignatures"
 
   export function key(hash: ZeroHexString): EthereumQueryKey<unknown> {
     return {

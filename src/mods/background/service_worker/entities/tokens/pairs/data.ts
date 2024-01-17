@@ -1,9 +1,8 @@
 import { PairAbi } from "@/libs/abi/pair.abi"
-import { PairData, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain"
+import { PairData, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier"
-import { RpcRequestPreinit } from "@hazae41/jsonrpc"
-import { Option } from "@hazae41/option"
+import { Data, Fail, Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier"
+import { Catched, Result } from "@hazae41/result"
 import { BgEthereumContext } from "../../../context"
 import { EthereumQueryKey } from "../../wallets/data"
 
@@ -15,49 +14,43 @@ export namespace BgPair {
     export type Data = Fixed.From
     export type Fail = Error
 
-    export const method = "eth_getPairPrice"
-
-    export function key(pair: PairData) {
-      return {
+    export function key(pair: PairData, block: string) {
+      return Result.runAndWrapSync(() => ({
         chainId: pair.chainId,
-        method: "eth_getPairPrice",
-        params: [pair.address]
-      }
+        method: "eth_call",
+        params: [{
+          to: pair.address,
+          data: Abi.encodeOrThrow(PairAbi.getReserves.from())
+        }, block]
+      })).ok().inner
     }
 
-    export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-      const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
+    export function schema(ethereum: BgEthereumContext, pair: PairData, block: string, storage: IDBStorage) {
+      const maybeKey = key(pair, block)
 
-      const pair = Option.unwrap(pairByAddress[address])
+      if (maybeKey == null)
+        return
 
-      return schema(ethereum, pair, storage)
-    }
+      const fetcher = (request: Key, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
+        try {
+          const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, more)
 
-    export function schema(ethereum: BgEthereumContext, pair: PairData, storage: IDBStorage) {
-      const fetcher = (key: unknown, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
-        const data = Abi.encodeOrThrow(PairAbi.getReserves.from())
+          if (fetched.isErr())
+            return fetched
 
-        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
-          method: "eth_call",
-          params: [{
-            to: pair.address,
-            data: data
-          }, "pending"]
-        }, more)
+          const returns = Abi.createTuple(Abi.Uint112, Abi.Uint112, Abi.Uint32)
+          const [a, b] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
 
-        if (fetched.isErr())
-          return fetched
+          const price = computeOrThrow(pair, [a, b])
 
-        const returns = Abi.createTuple(Abi.Uint112, Abi.Uint112, Abi.Uint32)
-        const [a, b] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
-
-        const price = computeOrThrow(pair, [a, b])
-
-        return new Data(price)
+          return new Data(price)
+        } catch (e: unknown) {
+          return new Fail(Catched.from(e))
+        }
       })
 
       return createQuery<Key, Data, Fail>({
-        key: key(pair),
+        key: maybeKey,
         fetcher,
         storage
       })

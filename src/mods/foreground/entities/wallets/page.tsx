@@ -512,7 +512,7 @@ export function PriceResolver(props: { index: number } & { address: string } & O
 
   const context = useEthereumContext(wallet.uuid, chainData)
 
-  const { data } = usePairPrice(context, pairData)
+  const { data } = usePairPrice(pairData, "pending", context)
 
   useEffect(() => {
     ok([index, data?.inner])

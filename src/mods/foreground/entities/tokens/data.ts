@@ -5,12 +5,13 @@ import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { BgToken, ContractTokenData, ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data"
 import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
-import { Fixed, ZeroHexFixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, FetcherMore, States, core, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
+import { Cubane, Fixed, ZeroHexFixed, ZeroHexString } from "@hazae41/cubane"
+import { Data, Fail, FetcherMore, States, core, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
+import { Catched } from "@hazae41/result"
 import { FgTotal } from "../unknown/data"
-import { FgEthereumContext, fetchOrFail, fetchOrFail2 } from "../wallets/data"
+import { FgEthereumContext, fetchOrFail2 } from "../wallets/data"
 import { FgPair } from "./pairs/data"
 
 export namespace FgToken {
@@ -106,7 +107,7 @@ export namespace FgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainByChainId[pair.chainId]
 
-              const price = FgPair.Price.schema({ ...context, chain }, pair, storage)
+              const price = FgPair.Price.schema(pair, block, { ...context, chain }, storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)
@@ -186,8 +187,27 @@ export namespace FgToken {
         if (block == null)
           return
 
-        const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-          await fetchOrFail<Fixed.From>(request, context)
+        const maybeKey = key(address, token, block, context.chain)
+
+        if (maybeKey == null)
+          return
+
+        const fetcher = async (request: Key, more: FetcherMore = {}) => {
+          try {
+            const fetched = await fetchOrFail2<ZeroHexString>(request, context)
+
+            if (fetched.isErr())
+              return fetched
+
+            const returns = Cubane.Abi.createTuple(Cubane.Abi.Uint256)
+            const [balance] = Cubane.Abi.decodeOrThrow(returns, fetched.inner).inner
+            const fixed = new Fixed(balance.intoOrThrow(), token.decimals)
+
+            return new Data(fixed)
+          } catch (e: unknown) {
+            return new Fail(Catched.from(e))
+          }
+        }
 
         const indexer = async (states: States<Data, Fail>) => {
           if (block !== "pending")
@@ -203,7 +223,7 @@ export namespace FgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainByChainId[pair.chainId]
 
-              const price = FgPair.Price.schema({ ...context, chain }, pair, storage)
+              const price = FgPair.Price.schema(pair, block, { ...context, chain }, storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)
@@ -220,7 +240,7 @@ export namespace FgToken {
         }
 
         return createQuery<Key, Data, Fail>({
-          key: key(address, token, block, context.chain),
+          key: maybeKey,
           fetcher,
           indexer,
           storage
