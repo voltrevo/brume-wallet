@@ -56,7 +56,7 @@ $run$(async () => {
       return
 
     const page = await res.json() as Page
-    const names = page.results.map(e => e.text_signature).filter(x => x !== "transfer(address,uint256)")
+    const names = page.results.map(e => e.text_signature)
 
     const names0 = names.slice(0, 25)
     await batcher.add(names0).then(tx => tx.wait())
