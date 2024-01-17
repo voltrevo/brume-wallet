@@ -37,17 +37,21 @@ export function WalletTransactionScreenDecode(props: {}) {
     <div className="text-lg font-medium">
       Matching functions
     </div>
-    {maybeSignatures == null &&
+    {signaturesQuery.current == null &&
       <div className="grow flex flex-col items-center justify-center">
         <Loading className="size-10" />
       </div>}
-    {maybeSignatures != null && maybeSignatures.length === 0 &&
+    {signaturesQuery.current?.isErr() &&
+      <div className="grow flex flex-col items-center justify-center">
+        Could not fetch signatures :(
+      </div>}
+    {signaturesQuery.current?.isOk() && signaturesQuery.current.get().length === 0 &&
       <div className="grow flex flex-col items-center justify-center">
         No matching function found :(
       </div>}
-    {maybeSignatures != null && maybeSignatures.length > 0 &&
+    {signaturesQuery.current?.isOk() && signaturesQuery.current.get().length > 0 &&
       <div className="grow flex flex-col items-center justify-center">
-        {maybeSignatures.map(({ text }) =>
+        {signaturesQuery.current.get().map(({ text }) =>
           <div key={text} className="flex flex-col items-center bg-contrast rounded-xl font-medium">
             {text}
           </div>)}
