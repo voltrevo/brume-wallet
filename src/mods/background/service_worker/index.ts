@@ -526,15 +526,13 @@ export class Global {
         }
 
         {
-          const addresses = Result.all(await Promise.all(sessionData.wallets.map(async wallet => {
-            return await Result.unthrow<Result<string, Error>>(async t => {
-              const walletQuery = BgWallet.schema(wallet.uuid, storage)
-              const walletState = await walletQuery.state
-              const walletData = Option.unwrap(walletState.data?.get())
+          const addresses = await Promise.all(sessionData.wallets.map(async wallet => {
+            const walletQuery = BgWallet.schema(wallet.uuid, storage)
+            const walletState = await walletQuery.state
+            const walletData = Option.unwrap(walletState.data?.get())
 
-              return new Ok(walletData.address)
-            })
-          }))).unwrap()
+            return walletData.address
+          }))
 
           await script.tryRequest({
             method: "accountsChanged",
@@ -608,15 +606,13 @@ export class Global {
       }
 
       {
-        const addresses = Result.all(await Promise.all(sessionData.wallets.map(async wallet => {
-          return await Result.unthrow<Result<string, Error>>(async t => {
-            const walletQuery = BgWallet.schema(wallet.uuid, storage)
-            const walletState = await walletQuery.state
-            const walletData = Option.unwrap(walletState.data?.get())
+        const addresses = await Promise.all(sessionData.wallets.map(async wallet => {
+          const walletQuery = BgWallet.schema(wallet.uuid, storage)
+          const walletState = await walletQuery.state
+          const walletData = Option.unwrap(walletState.data?.get())
 
-            return new Ok(walletData.address)
-          })
-        }))).unwrap()
+          return walletData.address
+        }))
 
         await script.tryRequest({
           method: "accountsChanged",
@@ -729,15 +725,13 @@ export class Global {
   async eth_accounts(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string[], Error>> {
     const { storage } = Option.unwrap(this.#user)
 
-    const addresses = Result.all(await Promise.all(session.wallets.map(async wallet => {
-      return await Result.unthrow<Result<string, Error>>(async t => {
-        const walletQuery = BgWallet.schema(wallet.uuid, storage)
-        const walletState = await walletQuery.state
-        const walletData = Option.unwrap(walletState.data?.get())
+    const addresses = await Promise.all(session.wallets.map(async wallet => {
+      const walletQuery = BgWallet.schema(wallet.uuid, storage)
+      const walletState = await walletQuery.state
+      const walletData = Option.unwrap(walletState.data?.get())
 
-        return new Ok(walletData.address)
-      })
-    }))).unwrap()
+      return walletData.address
+    }))
 
     return new Ok(addresses)
   }
@@ -801,15 +795,11 @@ export class Global {
 
     const { storage } = Option.unwrap(this.#user)
 
-    const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
-      return await Result.unthrow<Result<WalletData, Error>>(async t => {
-        const walletQuery = BgWallet.schema(wallet.uuid, storage)
-        const walletState = await walletQuery.state
-        const walletData = Option.unwrap(walletState.data?.get())
-
-        return new Ok(walletData)
-      })
-    }))).unwrap()
+    const wallets = await Promise.all(session.wallets.map(async wallet => {
+      const walletQuery = BgWallet.schema(wallet.uuid, storage)
+      const walletState = await walletQuery.state
+      return Option.unwrap(walletState.data?.get())
+    }))
 
     /**
      * TODO: maybe ensure two wallets can't have the same address in the same session
@@ -839,15 +829,11 @@ export class Global {
 
     const { storage } = Option.unwrap(this.#user)
 
-    const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
-      return await Result.unthrow<Result<WalletData, Error>>(async t => {
-        const walletQuery = BgWallet.schema(wallet.uuid, storage)
-        const walletState = await walletQuery.state
-        const walletData = Option.unwrap(walletState.data?.get())
-
-        return new Ok(walletData)
-      })
-    }))).unwrap()
+    const wallets = await Promise.all(session.wallets.map(async wallet => {
+      const walletQuery = BgWallet.schema(wallet.uuid, storage)
+      const walletState = await walletQuery.state
+      return Option.unwrap(walletState.data?.get())
+    }))
 
     /**
      * TODO: maybe ensure two wallets can't have the same address in the same session
@@ -873,15 +859,11 @@ export class Global {
 
     const { storage } = Option.unwrap(this.#user)
 
-    const wallets = Result.all(await Promise.all(session.wallets.map(async wallet => {
-      return await Result.unthrow<Result<WalletData, Error>>(async t => {
-        const walletQuery = BgWallet.schema(wallet.uuid, storage)
-        const walletState = await walletQuery.state
-        const walletData = Option.unwrap(walletState.data?.get())
-
-        return new Ok(walletData)
-      })
-    }))).unwrap()
+    const wallets = await Promise.all(session.wallets.map(async wallet => {
+      const walletQuery = BgWallet.schema(wallet.uuid, storage)
+      const walletState = await walletQuery.state
+      return Option.unwrap(walletState.data?.get())
+    }))
 
     /**
      * TODO: maybe ensure two wallets can't have the same address in the same session
@@ -992,14 +974,12 @@ export class Global {
   }
 
   async popup_hello(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    return Result.unthrow(async t => {
-      const returned = await this.events.emit("popup_hello", [foreground])
+    const returned = await this.events.emit("popup_hello", [foreground])
 
-      if (returned.isSome() && returned.inner.isErr())
-        return returned.inner
+    if (returned.isSome() && returned.inner.isErr())
+      return returned.inner
 
-      return Ok.void()
-    })
+    return Ok.void()
   }
 
   async brume_respond(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
@@ -1517,24 +1497,24 @@ export class Global {
     await originQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icons }))))
 
     for (const iconUrl of session.metadata.icons) {
-      Result.unthrow<Result<void, Error>>(async t => {
-        using circuit = await Pool.tryTakeCryptoRandom(this.circuits).then(r => r.unwrap().unwrap().inner.inner)
+      (async () => {
+        using circuit = await Pool.takeCryptoRandomOrThrow(this.circuits).then(r => r.unwrap().inner.inner)
 
         console.debug(`Fetching ${iconUrl} with ${circuit.id}`)
+
         using stream = await Circuits.openAsOrThrow(circuit, iconUrl)
         const iconRes = await fetch(iconUrl, { stream: stream.inner })
-        const iconBlob = await Result.runAndDoubleWrap(() => iconRes.blob()).then(r => r.unwrap())
+        const iconBlob = await iconRes.blob()
 
-        Result.assert(Mime.isImage(iconBlob.type)).unwrap()
+        if (!Mime.isImage(iconBlob.type))
+          throw new Error()
 
-        const iconData = await Blobs.tryReadAsDataUrl(iconBlob).then(r => r.unwrap())
+        const iconData = await Blobs.readAsDataUrlOrThrow(iconBlob)
 
         const blobbyQuery = BgBlobby.schema(iconUrl, storage)
         const blobbyData = { id: iconUrl, data: iconData }
         await blobbyQuery.mutate(Mutators.data(blobbyData))
-
-        return Ok.void()
-      }).then(r => r.inspectErrSync(console.warn)).catch(console.error)
+      })().catch(console.warn)
     }
 
     return new Ok(session.metadata)
