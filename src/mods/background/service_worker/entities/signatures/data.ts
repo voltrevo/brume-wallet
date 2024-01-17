@@ -1,146 +1,52 @@
-import { Maps } from "@/libs/maps/maps";
-import { AbortSignals } from "@/libs/signals/signals";
-import { Circuits } from "@/libs/tor/circuits/circuits";
-import { ZeroHexString } from "@hazae41/cubane";
-import { fetch } from "@hazae41/fleche";
-import { Data, Fail, Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier";
-import { RpcRequestPreinit } from "@hazae41/jsonrpc";
-import { Option } from "@hazae41/option";
-import { Catched, Err, Ok, Result } from "@hazae41/result";
+import { Abi, ZeroHexString } from "@hazae41/cubane";
+import { Data, Fail, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier";
+import { Catched, Result } from "@hazae41/result";
 import { BgEthereumContext } from "../../context";
-import { EthereumFetchParams, EthereumQueryKey } from "../wallets/data";
-
-export interface SignatureData {
-  /**
-   * Signature
-   */
-  readonly text: string
-}
-
-export async function tryFetchRaw<T>(ethereum: BgEthereumContext, url: string, init: EthereumFetchParams, more: FetcherMore = {}) {
-  return await Result.runAndDoubleWrap<Fetched<T, Error>>(async () => {
-    const { signal: parentSignal } = more
-    const { brume } = ethereum
-
-    const circuits = Option.wrap(brume.circuits).ok().unwrap()
-
-    async function runWithPoolOrThrow(index: number) {
-      return await Result.unthrow<Result<T, Error>>(async t => {
-        const circuitSignal = AbortSignals.timeout(5_000, parentSignal)
-        const circuit = await circuits.tryGet(index, circuitSignal).then(r => r.unwrap().unwrap().inner)
-
-        using stream = await Circuits.openAsOrThrow(circuit.inner, url)
-
-        const fetchSignal = AbortSignals.timeout(5_000, parentSignal)
-        const res = await fetch(url, { signal: fetchSignal, stream: stream.inner })
-
-        if (!res.ok) {
-          const text = await Result.runAndDoubleWrap(() => {
-            return res.text()
-          }).then(r => r.throw(t))
-
-          return new Err(new Error(text))
-        }
-
-        const json = await Result.runAndDoubleWrap(async () => {
-          return await res.json() as T
-        }).then(r => r.throw(t))
-
-        return new Ok(json)
-      }).then(r => Fetched.rewrap(r))
-    }
-
-    const promises = Array.from({ length: circuits.capacity }, (_, i) => runWithPoolOrThrow(i))
-
-    const results = await Promise.allSettled(promises)
-
-    const fetcheds = new Map<string, Fetched<T, Error>>()
-    const counters = new Map<string, number>()
-
-    for (const result of results) {
-      if (result.status === "rejected")
-        continue
-      if (result.value.isErr())
-        continue
-      if (init?.noCheck)
-        return result.value
-      const raw = JSON.stringify(result.value.inner)
-      const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
-      counters.set(raw, previous + 1)
-      fetcheds.set(raw, result.value)
-    }
-
-    /**
-     * One truth -> return it
-     * Zero truth -> throw AggregateError
-     */
-    if (counters.size < 2)
-      return await Promise.any(promises)
-
-    console.warn(`Different results from multiple circuits for ${url}`, { fetcheds })
-
-    /**
-     * Sort truths by occurence
-     */
-    const sorteds = [...Maps.entries(counters)].sort((a, b) => b.value - a.value)
-
-    /**
-     * Two concurrent truths
-     */
-    if (sorteds[0].value === sorteds[1].value) {
-      console.warn(`Could not choose truth for ${url}`)
-      const random = Math.round(Math.random())
-      return fetcheds.get(sorteds[random].key)!
-    }
-
-    return fetcheds.get(sorteds[0].key)!
-  })
-}
+import { EthereumQueryKey } from "../wallets/data";
 
 export namespace BgSignature {
 
   export type Key = EthereumQueryKey<unknown>
-  export type Data = SignatureData[]
+  export type Data = readonly string[]
   export type Fail = Error
 
   export const method = "sig_getSignatures"
 
-  export function key(hash: ZeroHexString): EthereumQueryKey<unknown> {
-    return {
-      version: 3,
-      chainId: 1,
-      method: method,
-      params: [hash]
-    }
+  export function key(hash: ZeroHexString) {
+    return Result.runAndWrapSync(() => ({
+      chainId: 100,
+      method: "eth_call",
+      params: [{
+        to: "0xe6D819633998d87927C7310f7F7154c6e3A1a00F",
+        data: Abi.encodeOrThrow(Abi.FunctionSignature.parseOrThrow("get(bytes4)").from(hash))
+      }, "latest"]
+    })).ok().inner
   }
 
-  export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
-    const [hash] = (request as RpcRequestPreinit<[ZeroHexString]>).params
+  export function schema(hash: ZeroHexString, ethereum: BgEthereumContext, storage: IDBStorage) {
+    const maybeKey = key(hash)
 
-    return schema(ethereum, hash, storage)
-  }
+    if (maybeKey == null)
+      return
 
-  export function schema(ethereum: BgEthereumContext, hash: ZeroHexString, storage: IDBStorage) {
-    const fetcher = async (key: Key, more: FetcherMore) => {
+    const fetcher = async (request: Key, more: FetcherMore) => {
       try {
-        const url = `https://sig.api.vechain.energy/${hash}`
-        const fetched = await tryFetchRaw<SignatureData[]>(ethereum, url, {}, more).then(r => r.unwrap())
+        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request)
 
         if (fetched.isErr())
           return fetched
 
-        const signatures = fetched.get()
+        const returns = Abi.createTuple(Abi.createVector(Abi.String))
+        const [texts] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
 
-        const deduped = signatures.filter((s, i) => signatures.findIndex(t => t.text === s.text) === i)
-
-        return new Data(deduped)
+        return new Data(texts)
       } catch (e: unknown) {
         return new Fail(Catched.from(e))
       }
     }
 
     return createQuery<Key, Data, Fail>({
-      key: key(hash),
+      key: maybeKey,
       fetcher,
       storage
     })

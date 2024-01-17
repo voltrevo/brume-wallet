@@ -20,7 +20,7 @@ import { useGasPrice, useNonce } from "@/mods/foreground/entities/unknown/data";
 import { UserGuard } from "@/mods/foreground/entities/users/context";
 import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
 import { SelectableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
-import { EthereumWalletInstance, useEthereumContext, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
+import { EthereumWalletInstance, useEthereumContext, useEthereumContext2, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
 import { UserRejectedError } from "@/mods/foreground/errors/errors";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
@@ -105,7 +105,9 @@ export function TransactPage() {
     return x.slice(0, 10) as ZeroHexString
   }).inner
 
-  const signaturesQuery = useSignature(context, maybeHash)
+  const gnosis = useEthereumContext2(maybeSession?.wallets.at(0)?.uuid, chainByChainId[100]).unwrap()
+
+  const signaturesQuery = useSignature(maybeHash, gnosis)
   const maybeSignatures = signaturesQuery.data?.get()
 
   const maybeSignature = useAsyncReplaceMemo(async () => {
@@ -118,7 +120,7 @@ export function TransactPage() {
 
     const zeroHexData = ZeroHexString.from(maybeData)
 
-    return maybeSignatures.map(({ text }) => {
+    return maybeSignatures.map((text) => {
       return Result.runAndWrapSync<{ text: string, decoded: string }>(() => {
         const abi = Cubane.Abi.FunctionSignature.parseOrThrow(text)
         const { args } = Cubane.Abi.decodeOrThrow(abi.funcAndArgs, zeroHexData)

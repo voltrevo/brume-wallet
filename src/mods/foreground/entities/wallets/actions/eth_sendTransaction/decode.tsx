@@ -7,7 +7,7 @@ import { Option } from "@hazae41/option";
 import { UrlState } from ".";
 import { useSignature } from "../../../signatures/data";
 import { useWalletDataContext } from "../../context";
-import { useEthereumContext } from "../../data";
+import { useEthereumContext2 } from "../../data";
 
 export function WalletTransactionScreenDecode(props: {}) {
   const wallet = useWalletDataContext().unwrap()
@@ -21,38 +21,45 @@ export function WalletTransactionScreenDecode(props: {}) {
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]
 
-  const context = useEthereumContext(wallet.uuid, chainData)
-
   const maybeHash = Option.wrap(maybeData).mapSync(x => {
     return x.slice(0, 10) as ZeroHexString
   }).inner
 
-  const signaturesQuery = useSignature(context, maybeHash)
-  const maybeSignatures = signaturesQuery.data?.get()
+  const gnosis = useEthereumContext2(wallet.uuid, chainByChainId[100]).unwrap()
+
+  const signaturesQuery = useSignature(maybeHash, gnosis)
+  const maybeSignatures = signaturesQuery.current?.ok().get()
+  const errorSignatures = signaturesQuery.current?.err().get()
 
   return <>
     <Dialog.Title close={close}>
       Transact on {chainData.name}
     </Dialog.Title>
+    <div className="h-4" />
+    <div className="po-md bg-contrast rounded-xl text-contrast whitespace-pre-wrap break-words">
+      {maybeData || "0x0"}
+    </div>
+    <div className="h-4" />
     <div className="text-lg font-medium">
       Matching functions
     </div>
-    {signaturesQuery.current == null &&
+    <div className="h-2" />
+    {maybeSignatures == null && errorSignatures == null &&
       <div className="grow flex flex-col items-center justify-center">
         <Loading className="size-10" />
       </div>}
-    {signaturesQuery.current?.isErr() &&
+    {maybeSignatures == null && errorSignatures != null &&
       <div className="grow flex flex-col items-center justify-center">
         Could not fetch signatures :(
       </div>}
-    {signaturesQuery.current?.isOk() && signaturesQuery.current.get().length === 0 &&
+    {maybeSignatures != null && maybeSignatures.length === 0 &&
       <div className="grow flex flex-col items-center justify-center">
         No matching function found :(
       </div>}
-    {signaturesQuery.current?.isOk() && signaturesQuery.current.get().length > 0 &&
-      <div className="grow flex flex-col items-center justify-center">
-        {signaturesQuery.current.get().map(({ text }) =>
-          <div key={text} className="flex flex-col items-center bg-contrast rounded-xl font-medium">
+    {maybeSignatures != null && maybeSignatures.length > 0 &&
+      <div className="grow flex flex-col">
+        {maybeSignatures.map((text) =>
+          <div key={text} className="po-md flex items-center bg-contrast rounded-xl">
             {text}
           </div>)}
       </div>}

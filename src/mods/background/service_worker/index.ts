@@ -55,7 +55,6 @@ import { BgSeed, SeedData } from "./entities/seeds/data"
 import { BgSession, ExSessionData, SessionData, SessionRef, SessionStorage, WcSessionData } from "./entities/sessions/data"
 import { Status, StatusData } from "./entities/sessions/status/data"
 import { BgSettings } from "./entities/settings/data"
-import { BgSignature } from "./entities/signatures/data"
 import { BgToken } from "./entities/tokens/data"
 import { BgUser, User, UserData, UserInit, UserSession } from "./entities/users/data"
 import { BgWallet, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
@@ -1193,8 +1192,6 @@ export class Global {
       return await BgEns.Lookup.parseOrThrow(ethereum, request, storage)
     if (request.method === BgEns.Reverse.method)
       return await BgEns.Reverse.parseOrThrow(ethereum, request, storage)
-    if (request.method === BgSignature.method)
-      return await BgSignature.parseOrThrow(ethereum, request, storage)
 
     throw new Error(`Unknown fetcher`)
   }
