@@ -519,21 +519,6 @@ export class Global {
           }).then(r => r.unwrap().unwrap())
         }
 
-        {
-          const addresses = await Promise.all(sessionData.wallets.map(async wallet => {
-            const walletQuery = BgWallet.schema(wallet.uuid, storage)
-            const walletState = await walletQuery.state
-            const walletData = Option.unwrap(walletState.data?.get())
-
-            return walletData.address
-          }))
-
-          await script.tryRequest({
-            method: "accountsChanged",
-            params: [addresses]
-          }).then(r => r.unwrap().unwrap())
-        }
-
         return sessionData
       }
 
@@ -596,21 +581,6 @@ export class Global {
         await script.tryRequest({
           method: "networkChanged",
           params: [chainId.toString()]
-        }).then(r => r.unwrap().unwrap())
-      }
-
-      {
-        const addresses = await Promise.all(sessionData.wallets.map(async wallet => {
-          const walletQuery = BgWallet.schema(wallet.uuid, storage)
-          const walletState = await walletQuery.state
-          const walletData = Option.unwrap(walletState.data?.get())
-
-          return walletData.address
-        }))
-
-        await script.tryRequest({
-          method: "accountsChanged",
-          params: [addresses]
         }).then(r => r.unwrap().unwrap())
       }
 
