@@ -332,28 +332,28 @@ export class Global {
     })
   }
 
-  async tryRequest<T>(request: AppRequestData, mouse?: Mouse): Promise<Result<RpcResponse<T>, Error>> {
+  async requestOrThrow<T>(request: AppRequestData, mouse?: Mouse): Promise<RpcResponse<T>> {
     if (mouse != null)
-      return await this.tryRequestPopup(request, mouse)
+      return await this.requestPopupOrThrow(request, mouse)
     else
-      return await this.tryRequestNoPopup(request)
+      return await this.requestNoPopupOrThrow(request)
   }
 
-  async tryRequestNoPopup<T>(request: AppRequestData): Promise<Result<RpcResponse<T>, Error>> {
+  async requestNoPopupOrThrow<T>(request: AppRequestData): Promise<RpcResponse<T>> {
     const requestQuery = BgAppRequest.schema(request.id)
     await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
 
     const done = new Future<Result<void, Error>>()
 
     try {
-      return await this.tryWaitResponse(request.id, done)
+      return await this.waitResponseOrThrow(request.id, done)
     } finally {
       await requestQuery.delete()
       done.resolve(Ok.void())
     }
   }
 
-  async tryRequestPopup<T>(request: AppRequestData, mouse: Mouse, force?: boolean): Promise<Result<RpcResponse<T>, Error>> {
+  async requestPopupOrThrow<T>(request: AppRequestData, mouse: Mouse, force?: boolean): Promise<RpcResponse<T>> {
     const requestQuery = BgAppRequest.schema(request.id)
     await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
 
@@ -366,22 +366,22 @@ export class Global {
       const popup = await this.openOrFocusPopupOrThrow(url, mouse, force)
       const response = await this.tryWaitPopupResponse<T>(request.id, popup, done).then(r => r.unwrap())
 
-      return new Ok(response)
+      return response
     } finally {
       await requestQuery.delete()
       done.resolve(Ok.void())
     }
   }
 
-  async tryWaitResponse<T>(id: string, done: Future<Result<void, Error>>) {
-    const future = new Future<Result<RpcResponse<T>, Error>>()
+  async waitResponseOrThrow<T>(id: string, done: Future<Result<void, Error>>) {
+    const future = new Future<RpcResponse<T>>()
 
     const onResponse = async (init: RpcResponseInit<any>) => {
       if (init.id !== id)
         return new None()
 
       const response = RpcResponse.from<T>(init)
-      future.resolve(new Ok(response))
+      future.resolve(response)
       return new Some(await done.promise)
     }
 
@@ -540,12 +540,12 @@ export class Global {
       if (!force)
         return undefined
 
-      const [persistent, chainId, wallets] = await this.tryRequestPopup<[boolean, number, Wallet[]]>({
+      const [persistent, chainId, wallets] = await this.requestPopupOrThrow<[boolean, number, Wallet[]]>({
         id: crypto.randomUUID(),
         origin: origin,
         method: "eth_requestAccounts",
         params: {}
-      }, mouse, true).then(r => r.unwrap().unwrap())
+      }, mouse, true).then(r => r.unwrap())
 
       const chain = Option.unwrap(chainByChainId[chainId])
 
@@ -793,13 +793,13 @@ export class Global {
 
     const chainId = ZeroHexString.from(ethereum.chain.chainId)
 
-    const signature = await this.tryRequest<string>({
+    const signature = await this.requestOrThrow<string>({
       id: crypto.randomUUID(),
       method: "eth_sendTransaction",
       params: { from, to, gas, value, data, walletId, chainId },
       origin: session.origin,
       session: session.id
-    }, mouse).then(r => r.unwrap().unwrap())
+    }, mouse).then(r => r.unwrap())
 
     return await BgEthereumContext.fetchOrFail<string>(ethereum, {
       method: "eth_sendRawTransaction",
@@ -827,13 +827,13 @@ export class Global {
 
     const chainId = ZeroHexString.from(ethereum.chain.chainId)
 
-    const signature = await this.tryRequest<string>({
+    const signature = await this.requestOrThrow<string>({
       id: crypto.randomUUID(),
       method: "personal_sign",
       params: { message, address, walletId, chainId },
       origin: session.origin,
       session: session.id
-    }, mouse).then(r => r.unwrap().unwrap())
+    }, mouse).then(r => r.unwrap())
 
     return new Ok(signature)
   }
@@ -857,13 +857,13 @@ export class Global {
 
     const chainId = ZeroHexString.from(ethereum.chain.chainId)
 
-    const signature = await this.tryRequest<string>({
+    const signature = await this.requestOrThrow<string>({
       id: crypto.randomUUID(),
       method: "eth_signTypedData_v4",
       params: { data, address, walletId, chainId },
       origin: session.origin,
       session: session.id
-    }, mouse).then(r => r.unwrap().unwrap())
+    }, mouse).then(r => r.unwrap())
 
     return new Ok(signature)
   }
