@@ -17,7 +17,7 @@ $run$(async () => {
     "hex_signature": string,
   }
 
-  const gnosis = new ethers.JsonRpcProvider("https://gnosis.publicnode.com")
+  const gnosis = new ethers.JsonRpcProvider("https://rpc.ankr.com/gnosis")
   const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, gnosis)
 
   const abi = [
@@ -50,8 +50,13 @@ $run$(async () => {
   const safeBatcher = new ethers.Contract("0x74163cF5905c756F02A5410C1Ee94a3f91FaF996", abi, wallet)
   const unsafeBatcher = new ethers.Contract("0x018c71BCa7aF69b66fEbB0CeFD0590E4725e8e27", abi, wallet)
 
-  async function doFetch(url = "https://www.4byte.directory/api/v1/signatures/?page=589") {
-    console.log("Fetching", url)
+  let nonce = await wallet.getNonce()
+  let feeData = await gnosis.getFeeData()
+
+  let lastFeeDataTimestamp = Date.now()
+
+  async function doFetch(url = "https://www.4byte.directory/api/v1/signatures/?page=1243") {
+    console.log(`[${new Date().toLocaleString()}]`, "Fetching", url)
     const res = await fetch(url)
 
     if (!res.ok)
@@ -61,17 +66,21 @@ $run$(async () => {
     const names = page.results.map(e => e.text_signature)
 
     while (true) {
-      const feeData = await gnosis.getFeeData()
-      console.log("Gas price", feeData.gasPrice)
+      if ((Date.now() - lastFeeDataTimestamp) > (60 * 1000)) {
+        feeData = await gnosis.getFeeData()
+        lastFeeDataTimestamp = Date.now()
+      }
+
+      console.log(`[${new Date().toLocaleString()}]`, "Gas price", feeData.gasPrice)
 
       if (feeData.gasPrice == null) {
-        console.log("Can't fetch gas price")
+        console.log(`[${new Date().toLocaleString()}]`, "Can't fetch gas price")
         await new Promise(resolve => setTimeout(resolve, 60 * 1000))
         continue
       }
 
-      if (feeData.gasPrice > (2n * (10n ** 9n))) {
-        console.log("Gas price too high", feeData.gasPrice)
+      if (feeData.gasPrice > (16n * (10n ** 8n))) {
+        console.log(`[${new Date().toLocaleString()}]`, "Gas price too high", feeData.gasPrice, (16n * (10n ** 8n)))
         await new Promise(resolve => setTimeout(resolve, 60 * 1000))
         continue
       }
@@ -79,11 +88,25 @@ $run$(async () => {
       break
     }
 
-    try {
-      await unsafeBatcher.add(names).then(tx => tx.wait())
-    } catch (e) {
-      await safeBatcher.add(names).then(tx => tx.wait())
+    console.log(`[${new Date().toLocaleString()}]`, "Nonce", nonce)
+
+    while (true) {
+      try {
+        try {
+          await unsafeBatcher.add(names, { nonce })
+        } catch (e) {
+          await safeBatcher.add(names, { nonce })
+        }
+
+        break
+      } catch (e) {
+        console.warn(e)
+        await new Promise(ok => setTimeout(ok, 1000))
+        continue
+      }
     }
+
+    nonce++
 
     if (page.next == null)
       return
