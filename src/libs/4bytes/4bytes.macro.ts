@@ -1,5 +1,5 @@
 import { $run$ } from "@hazae41/saumon"
-import { ethers } from "ethers"
+import { TransactionResponse, ethers } from "ethers"
 
 $run$(async () => {
 
@@ -47,71 +47,58 @@ $run$(async () => {
     }
   ] as const
 
-  const safeBatcher = new ethers.Contract("0x74163cF5905c756F02A5410C1Ee94a3f91FaF996", abi, wallet)
-  const unsafeBatcher = new ethers.Contract("0x018c71BCa7aF69b66fEbB0CeFD0590E4725e8e27", abi, wallet)
+  const batcher = new ethers.Contract("0x43CD01f6FcA80eE204d69F5F16393cE56CBA631E", abi, wallet)
 
-  let nonce = await wallet.getNonce()
-  let feeData = await gnosis.getFeeData()
+  let nonce = 1150
 
-  let lastFeeDataTimestamp = Date.now()
+  const txs: TransactionResponse[] = []
 
-  async function doFetch(url = "https://www.4byte.directory/api/v1/signatures/?page=1243") {
-    console.log(`[${new Date().toLocaleString()}]`, "Fetching", url)
-    const res = await fetch(url)
-
-    if (!res.ok)
-      return
-
-    const page = await res.json() as Page
-    const names = page.results.map(e => e.text_signature)
-
+  async function doFetch(url = "https://www.4byte.directory/api/v1/signatures/?page=35") {
     while (true) {
-      if ((Date.now() - lastFeeDataTimestamp) > (60 * 1000)) {
-        feeData = await gnosis.getFeeData()
-        lastFeeDataTimestamp = Date.now()
-      }
+      console.log(`[${new Date().toLocaleString()}]`, "Fetching", url)
+      const res = await fetch(url)
 
-      console.log(`[${new Date().toLocaleString()}]`, "Gas price", feeData.gasPrice)
+      if (!res.ok)
+        throw new Error(await res.text())
 
-      if (feeData.gasPrice == null) {
-        console.log(`[${new Date().toLocaleString()}]`, "Can't fetch gas price")
-        await new Promise(resolve => setTimeout(resolve, 60 * 1000))
-        continue
-      }
+      const page = await res.json() as Page
+      const names = page.results.map(e => e.text_signature)
 
-      if (feeData.gasPrice > (16n * (10n ** 8n))) {
-        console.log(`[${new Date().toLocaleString()}]`, "Gas price too high", feeData.gasPrice, (16n * (10n ** 8n)))
-        await new Promise(resolve => setTimeout(resolve, 60 * 1000))
-        continue
-      }
+      if (txs.length > 10)
+        await txs.shift()!.wait()
 
-      break
-    }
+      while (true) {
+        const feeData = await gnosis.getFeeData()
 
-    console.log(`[${new Date().toLocaleString()}]`, "Nonce", nonce)
+        console.log(`[${new Date().toLocaleString()}]`, "Gas price", feeData.gasPrice)
 
-    while (true) {
-      try {
-        try {
-          await unsafeBatcher.add(names, { nonce })
-        } catch (e) {
-          await safeBatcher.add(names, { nonce })
+        if (feeData.gasPrice == null) {
+          console.log(`[${new Date().toLocaleString()}]`, "Can't fetch gas price")
+          await new Promise(resolve => setTimeout(resolve, 60 * 1000))
+          continue
+        }
+
+        if (feeData.gasPrice > (20n * (10n ** 8n))) {
+          console.log(`[${new Date().toLocaleString()}]`, "Gas price too high", feeData.gasPrice, (16n * (10n ** 8n)))
+          await new Promise(resolve => setTimeout(resolve, 60 * 1000))
+          continue
         }
 
         break
-      } catch (e) {
-        console.warn(e)
-        await new Promise(ok => setTimeout(ok, 1000))
-        continue
       }
+
+      console.log(`[${new Date().toLocaleString()}]`, "Nonce", nonce)
+      txs.push(await batcher.add(names, { nonce }))
+
+      nonce++
+
+      if (page.next == null) {
+        console.log(`[${new Date().toLocaleString()}]`, "Done")
+        return
+      }
+
+      url = page.next
     }
-
-    nonce++
-
-    if (page.next == null)
-      return
-
-    await doFetch(page.next)
   }
 
   await doFetch()
