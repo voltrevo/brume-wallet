@@ -20,8 +20,7 @@ $run$(async () => {
   const gnosis = new ethers.JsonRpcProvider("https://gnosis.publicnode.com")
   const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, gnosis)
 
-  // const batcher = new ethers.Contract("0x74163cF5905c756F02A5410C1Ee94a3f91FaF996", [ // safe
-  const batcher = new ethers.Contract("0x018c71BCa7aF69b66fEbB0CeFD0590E4725e8e27", [ // unsafe
+  const abi = [
     {
       "inputs": [
         {
@@ -46,9 +45,12 @@ $run$(async () => {
       "stateMutability": "nonpayable",
       "type": "function"
     }
-  ] as const, wallet)
+  ] as const
 
-  async function doFetch(url = "https://www.4byte.directory/api/v1/signatures/?page=536") {
+  const safeBatcher = new ethers.Contract("0x74163cF5905c756F02A5410C1Ee94a3f91FaF996", abi, wallet)
+  const unsafeBatcher = new ethers.Contract("0x018c71BCa7aF69b66fEbB0CeFD0590E4725e8e27", abi, wallet)
+
+  async function doFetch(url = "https://www.4byte.directory/api/v1/signatures/?page=589") {
     console.log("Fetching", url)
     const res = await fetch(url)
 
@@ -58,8 +60,30 @@ $run$(async () => {
     const page = await res.json() as Page
     const names = page.results.map(e => e.text_signature)
 
-    const names0 = names.slice(0, 25)
-    await batcher.add(names0).then(tx => tx.wait())
+    while (true) {
+      const feeData = await gnosis.getFeeData()
+      console.log("Gas price", feeData.gasPrice)
+
+      if (feeData.gasPrice == null) {
+        console.log("Can't fetch gas price")
+        await new Promise(resolve => setTimeout(resolve, 60 * 1000))
+        continue
+      }
+
+      if (feeData.gasPrice > (2n * (10n ** 9n))) {
+        console.log("Gas price too high", feeData.gasPrice)
+        await new Promise(resolve => setTimeout(resolve, 60 * 1000))
+        continue
+      }
+
+      break
+    }
+
+    try {
+      await unsafeBatcher.add(names).then(tx => tx.wait())
+    } catch (e) {
+      await safeBatcher.add(names).then(tx => tx.wait())
+    }
 
     if (page.next == null)
       return
