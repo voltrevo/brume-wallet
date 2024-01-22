@@ -29,7 +29,7 @@ export namespace BgEns {
         if (fetched.isErr())
           return fetched
 
-        const returns = Abi.createTuple(Abi.Address)
+        const returns = Abi.Tuple.create(Abi.Address)
         const [address] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
 
         return new Data(address)
@@ -95,7 +95,7 @@ export namespace BgEns {
         if (fetched.isErr())
           return fetched
 
-        const returns = Abi.createTuple(Abi.Address)
+        const returns = Abi.Tuple.create(Abi.Address)
         const [address] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
 
         return new Data(address)
@@ -159,7 +159,7 @@ export namespace BgEns {
         if (fetched.isErr())
           return fetched
 
-        const returns = Abi.createTuple(Abi.String)
+        const returns = Abi.Tuple.create(Abi.String)
         const [name] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
 
         if (name.length === 0)

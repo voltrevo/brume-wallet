@@ -123,7 +123,7 @@ export function TransactPage() {
     return maybeSignatures.map((text) => {
       return Result.runAndWrapSync<{ text: string, decoded: string }>(() => {
         const abi = Cubane.Abi.FunctionSignature.parseOrThrow(text)
-        const { args } = Cubane.Abi.decodeOrThrow(abi.funcAndArgs, zeroHexData)
+        const { args } = Cubane.Abi.decodeOrThrow(abi, zeroHexData)
 
         function stringifyOrThrow(x: any): string {
           if (typeof x === "string")

@@ -38,7 +38,7 @@ export namespace BgPair {
           if (fetched.isErr())
             return fetched
 
-          const returns = Abi.createTuple(Abi.Uint112, Abi.Uint112, Abi.Uint32)
+          const returns = Abi.Tuple.create(Abi.Uint112, Abi.Uint112, Abi.Uint32)
           const [a, b] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
 
           const price = computeOrThrow(pair, [a, b])

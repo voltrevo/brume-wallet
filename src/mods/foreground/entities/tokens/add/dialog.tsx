@@ -59,7 +59,7 @@ export function TokenAddDialog(props: {}) {
 
         const result = await schema.refetch().then(r => r.real?.current.throw(t))
 
-        const returns = Cubane.Abi.createTuple(Cubane.Abi.String)
+        const returns = Cubane.Abi.Tuple.create(Cubane.Abi.String)
         const [name] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
 
         return new Ok(name)
@@ -83,7 +83,7 @@ export function TokenAddDialog(props: {}) {
 
         const result = await schema.refetch().then(r => r.real?.current.throw(t))
 
-        const returns = Cubane.Abi.createTuple(Cubane.Abi.String)
+        const returns = Cubane.Abi.Tuple.create(Cubane.Abi.String)
         const [symbol] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
 
         return new Ok(symbol)
@@ -107,7 +107,7 @@ export function TokenAddDialog(props: {}) {
 
         const result = await schema.refetch().then(r => r.real?.current.throw(t))
 
-        const returns = Cubane.Abi.createTuple(Cubane.Abi.Uint8)
+        const returns = Cubane.Abi.Tuple.create(Cubane.Abi.Uint8)
         const [decimals] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
 
         return new Ok(Number(decimals))

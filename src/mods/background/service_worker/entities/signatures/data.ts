@@ -36,7 +36,7 @@ export namespace BgSignature {
         if (fetched.isErr())
           return fetched
 
-        const returns = Abi.createTuple(Abi.createVector(Abi.String))
+        const returns = Abi.Tuple.create(Abi.Vector.create(Abi.String))
         const [texts] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
 
         return new Data(texts)

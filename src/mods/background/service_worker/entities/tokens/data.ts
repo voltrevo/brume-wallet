@@ -297,7 +297,7 @@ export namespace BgToken {
             if (fetched.isErr())
               return fetched
 
-            const returns = Cubane.Abi.createTuple(Cubane.Abi.Uint256)
+            const returns = Cubane.Abi.Tuple.create(Cubane.Abi.Uint256)
             const [balance] = Cubane.Abi.decodeOrThrow(returns, fetched.inner).inner
             const fixed = new Fixed(balance.intoOrThrow(), token.decimals)
 
