@@ -12,7 +12,7 @@ import { Dialog } from "@/libs/ui/dialog/dialog";
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header";
 import { Page } from "@/libs/ui2/page/page";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
-import { BackgroundGuard, useBackgroundContext } from "@/mods/foreground/background/context";
+import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useAppRequest, useAppRequests } from "@/mods/foreground/entities/requests/data";
 import { useSession } from "@/mods/foreground/entities/sessions/data";
 import { useSignature } from "@/mods/foreground/entities/signatures/data";
@@ -40,11 +40,9 @@ export default function Popup() {
   return <main id="main" className="p-safe grow w-full flex flex-col overflow-hidden">
     <NavBar />
     <Overlay>
-      <BackgroundGuard>
-        <UserGuard>
-          <Ready />
-        </UserGuard>
-      </BackgroundGuard>
+      <UserGuard>
+        <Ready />
+      </UserGuard>
     </Overlay>
   </main>
 }
