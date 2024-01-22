@@ -57,7 +57,7 @@ export function WalletDecodeScreen(props: {}) {
       </div>}
     {triedSignatures?.isOk() && triedSignatures.get().length > 0 &&
       <div className="grow flex flex-col gap-2">
-        {triedSignatures.get().map((text) =>
+        {triedSignatures.get().toReversed().map((text) =>
           <SignatureRow key={text}
             data={maybeData}
             text={text} />)}
