@@ -6,7 +6,7 @@ import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Option, Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
-import { UrlState } from ".";
+import { WalletTransactionScreenState } from ".";
 import { useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
@@ -16,7 +16,7 @@ export function WalletTransactionScreenNonce(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
 
-  const $state = usePathState<UrlState>()
+  const $state = usePathState<WalletTransactionScreenState>()
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
   const [maybeNonce, setNonce] = useSearchState("nonce", $state)

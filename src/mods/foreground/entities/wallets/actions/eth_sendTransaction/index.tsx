@@ -2,7 +2,7 @@ import { usePathState, useSearchState } from "@/mods/foreground/router/path/cont
 import { WalletTransactionScreenNonce } from "./nonce"
 import { WalletTransactionScreenValue } from "./value"
 
-export type UrlState = {
+export type WalletTransactionScreenState = {
   readonly trial?: string
   readonly step?: string
   readonly chain?: string
@@ -20,7 +20,7 @@ export type UrlState = {
 }
 
 export function WalletTransactionScreen(props: {}) {
-  const $path = usePathState<UrlState>()
+  const $path = usePathState<WalletTransactionScreenState>()
   const [step] = useSearchState("step", $path)
 
   if (step === "value")

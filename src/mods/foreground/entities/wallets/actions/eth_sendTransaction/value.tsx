@@ -19,7 +19,7 @@ import { Nullable, Option, Optional } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
-import { UrlState } from ".";
+import { WalletTransactionScreenState } from ".";
 import { useBlockByNumber } from "../../../blocks/data";
 import { useEnsLookup } from "../../../names/data";
 import { useTransactionWithReceipt } from "../../../transactions/data";
@@ -35,7 +35,7 @@ export function WalletTransactionScreenValue(props: {}) {
   const close = useCloseContext().unwrap()
   const subpath = useSubpath()
 
-  const $state = usePathState<UrlState>()
+  const $state = usePathState<WalletTransactionScreenState>()
   const [maybeTrial, setTrial] = useSearchState("trial", $state)
   const [maybeStep, setStep] = useSearchState("step", $state)
   const [maybeChain, setChain] = useSearchState("chain", $state)
