@@ -8,10 +8,11 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, Screen, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
+import { qurl } from "@/libs/url/url";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
-import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
+import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
@@ -27,10 +28,12 @@ import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../data";
 import { PriceResolver } from "../../page";
 import { ShrinkableContrastButtonInInputBox, ShrinkableContrastButtonInTextareaBox, SimpleBox, SimpleInput, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../send";
+import { WalletDecodeScreen } from "./decode";
 
 export function WalletTransactionScreenValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
+  const subpath = useSubpath()
 
   const $state = usePathState<UrlState>()
   const [maybeTrial, setTrial] = useSearchState("trial", $state)
@@ -124,8 +127,10 @@ export function WalletTransactionScreenValue(props: {}) {
   }, [setStep])
 
   const onDecodeClick = useCallback(() => {
-    setStep("decode")
-  }, [setStep])
+    if (maybeData == null)
+      return
+    subpath.go(qurl("/decode", { data: maybeData }))
+  }, [maybeData, subpath])
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
 
@@ -838,7 +843,17 @@ export function WalletTransactionScreenValue(props: {}) {
     return await signOrSend("send")
   }, [signOrSend])
 
+  const onClose = useCallback(() => {
+    subpath.go(`/`)
+  }, [subpath])
+
   return <>
+    <PathContext.Provider value={subpath}>
+      {subpath.url.pathname === "/decode" &&
+        <Screen close={onClose}>
+          <WalletDecodeScreen />
+        </Screen>}
+    </PathContext.Provider>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}

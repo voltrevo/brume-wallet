@@ -1,5 +1,4 @@
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context"
-import { WalletTransactionScreenDecode } from "./decode"
 import { WalletTransactionScreenNonce } from "./nonce"
 import { WalletTransactionScreenValue } from "./value"
 
@@ -28,7 +27,5 @@ export function WalletTransactionScreen(props: {}) {
     return <WalletTransactionScreenValue />
   if (step === "nonce")
     return <WalletTransactionScreenNonce />
-  if (step === "decode")
-    return <WalletTransactionScreenDecode />
   return null
 }
