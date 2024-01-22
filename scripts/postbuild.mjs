@@ -3,7 +3,9 @@ import workbox from "workbox-build";
 import { walkSync } from "./libs/walkSync.mjs";
 
 {
+  rmSync("./out/404.html", { force: true, recursive: true })
   rmSync("./out/test", { force: true, recursive: true })
+  rmSync("./out/next/static/chunks/pages/test", { force: true, recursive: true })
 }
 
 /**
@@ -27,14 +29,13 @@ import { walkSync } from "./libs/walkSync.mjs";
       "**\/*.{js,css,html,ico,png,json}",
     ],
     globIgnores: [
-      "404.html",
       "chrome\/**\/*",
       "firefox\/**\/*",
       "safari\/**\/*",
     ],
     swSrc: "./out/service_worker.js",
     swDest: "./out/service_worker.js",
-    dontCacheBustURLsMatching: /^\/_next\/static\/.*/iu
+    maximumFileSizeToCacheInBytes: Number.MAX_SAFE_INTEGER,
   })
 
   const original = fs.readFileSync("./out/service_worker.js", "utf8")
