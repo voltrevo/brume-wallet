@@ -435,18 +435,15 @@ class Provider {
 
 }
 
-const provider = new Provider()
-
-// const provider = new Proxy(new Provider(), {
-//   get(target, p, receiver) {
-//     return Reflect.get(target, p, receiver)
-//   },
-// })
+/**
+ * Fix for that extension that does `Object.assign(window.ethereum, { ... })`
+ */
+const provider = { ...new Provider() }
 
 /**
- * EIP-1193
+ * EIP-1193 (legacy)
  */
-window.ethereum = { ...provider }
+window.ethereum = provider
 
 const icon = new Future<string>()
 
@@ -457,7 +454,7 @@ const onLogo = (event: CustomEvent<string>) => {
 window.addEventListener("brume:icon", onLogo, { passive: true, once: true })
 
 /**
- * EIP-6963
+ * EIP-6963 (modern)
  */
 {
   async function announce() {
