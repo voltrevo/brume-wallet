@@ -446,7 +446,7 @@ const provider = new Provider()
 /**
  * EIP-1193
  */
-window.ethereum = provider
+window.ethereum = { ...provider }
 
 const icon = new Future<string>()
 
