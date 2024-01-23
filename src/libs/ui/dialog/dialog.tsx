@@ -1,5 +1,6 @@
 import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { DarkProps } from "@/libs/react/props/dark"
+import { usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable, Option } from "@hazae41/option"
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react"
 import { flushSync } from "react-dom"
@@ -20,7 +21,7 @@ export function Screen(props: ChildrenProps & CloseProps & DarkProps) {
   const { dark, children, close } = props
 
   const [visible, setVisible] = useState(true)
-  const [mounted, setMounted] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   const hide = useCallback(() => {
     setVisible(false)
@@ -41,11 +42,13 @@ export function Screen(props: ChildrenProps & CloseProps & DarkProps) {
   }, [visible])
 
   useEffect(() => {
+    if (visible)
+      return
     if (mounted)
       return
     close()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted])
+  }, [visible, mounted])
 
   /**
    * Show HTML dialog when displayed
@@ -85,44 +88,51 @@ export function Screen(props: ChildrenProps & CloseProps & DarkProps) {
   /**
    * Only unmount when transition is finished
    */
-  if (!mounted)
+  if (!visible && !mounted)
     return null
 
   return <Portal type="div">
     <CloseContext.Provider value={hide}>
       <dialog className=""
-        ref={setDialog}
-        onAnimationEnd={onAnimationEnd}>
+        ref={setDialog}>
         <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
           aria-hidden="true"
           role="backdrop" />
-        <div className={`fixed inset-0 flex flex-col md:p-safe overflow-y-scroll ${dark ? "dark" : ""} ${visible ? "animate-slideup-in" : "animate-slideup-out"}`}
-          onMouseDown={onClickOutside}
-          onClick={Events.keep}>
-          <div className="hidden md:block h-4" />
-          <div className="grow flex flex-col md:p-2">
-            <aside className={`grow flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default p-safe md:p-0 md:rounded-2xl`}
-              role="dialog"
-              aria-modal
-              onMouseDown={Events.keep}
-              onKeyDown={onEscape}>
-              <div className="grow flex flex-col p-4">
-                {children}
-              </div>
-            </aside>
+        <div className={`fixed inset-0 flex flex-col md:p-safe ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"} ${visible ? "animate-slideup-in" : "animate-slideup-out"}`}
+          onAnimationEnd={onAnimationEnd}
+          style={{ scrollbarGutter: "stable" }}>
+          <div className={`grow flex flex-col`}
+            onMouseDown={onClickOutside}
+            onClick={Events.keep}>
+            <div className="hidden md:block h-4" />
+            <div className="grow flex flex-col md:p-2">
+              <aside className={`grow flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default p-safe md:p-0 md:rounded-2xl`}
+                role="dialog"
+                aria-modal
+                onMouseDown={Events.keep}
+                onKeyDown={onEscape}>
+                <div className="grow flex flex-col p-4">
+                  {children}
+                </div>
+              </aside>
+            </div>
+            <div className="hidden md:block h-4" />
           </div>
-          <div className="hidden md:block h-4" />
         </div>
       </dialog>
     </CloseContext.Provider>
   </Portal>
 }
 
-export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
+export function Card(props: ChildrenProps & CloseProps & DarkProps) {
+  const { url } = usePathContext().unwrap()
   const { dark, children, close } = props
 
+  const x = url.searchParams.get("x")
+  const y = url.searchParams.get("y")
+
   const [visible, setVisible] = useState(true)
-  const [mounted, setMounted] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   const hide = useCallback(() => {
     setVisible(false)
@@ -143,11 +153,13 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
   }, [visible])
 
   useEffect(() => {
+    if (visible)
+      return
     if (mounted)
       return
     close()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted])
+  }, [visible, mounted])
 
   /**
    * Show HTML dialog when displayed
@@ -163,33 +175,117 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
   /**
    * Only unmount when transition is finished
    */
-  if (!mounted)
+  if (!visible && !mounted)
     return null
 
   return <Portal type="div">
     <CloseContext.Provider value={hide}>
       <dialog className=""
-        ref={setDialog}
-        onAnimationEnd={onAnimationEnd}>
+        style={{ "--x": `${x}px`, "--y": `${y}px` } as any}
+        ref={setDialog}>
         <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
           aria-hidden="true"
           role="backdrop" />
-        <div className={`fixed inset-0 flex flex-col p-safe overflow-y-scroll ${dark ? "dark" : ""} ${visible ? "animate-slideup-in" : "animate-slideup-out"}`}
-          onMouseDown={onClickOutside}
-          onClick={Events.keep}>
-          <div className="grow" />
-          <div className="flex flex-col p-2">
-            <aside className={`flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default rounded-2xl`}
+        <div className={`fixed inset-0 p-safe flex flex-col ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"}`}
+          style={{ scrollbarGutter: "stable" }}
+          onAnimationEnd={onAnimationEnd}>
+          <div className={`grow flex flex-col justify-center items-center ${visible ? "animate-scale-xy-in" : "animate-scale-xy-out"}`}
+            onMouseDown={onClickOutside}
+            onClick={Events.keep}>
+            <aside className={`flex flex-col w-[min(90vh,90vw)] aspect-square text-default bg-default rounded-2xl`}
               role="dialog"
               aria-modal
               onMouseDown={Events.keep}
               onKeyDown={onEscape}>
-              <div className="grow flex flex-col p-4">
+              <div className="grow flex flex-col bg-contrast rounded-2xl p-4">
                 {children}
               </div>
             </aside>
           </div>
-          <div className="hidden md:block grow" />
+        </div>
+      </dialog>
+    </CloseContext.Provider>
+  </Portal>
+}
+
+
+export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
+  const { dark, children, close } = props
+
+  const [visible, setVisible] = useState(true)
+  const [mounted, setMounted] = useState(false)
+
+  const hide = useCallback(() => {
+    setVisible(false)
+  }, [])
+
+  const [dialog, setDialog] = useState<HTMLDialogElement | null>(null)
+
+  const onEscape = useKeyboardEscape(hide)
+
+  const onClickOutside = useMouse<HTMLDivElement>(e => {
+    if (e.clientX > e.currentTarget.clientWidth)
+      return
+    hide()
+  }, [hide])
+
+  const onAnimationEnd = useCallback(() => {
+    flushSync(() => setMounted(visible))
+  }, [visible])
+
+  useEffect(() => {
+    if (visible)
+      return
+    if (mounted)
+      return
+    close()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, mounted])
+
+  /**
+   * Show HTML dialog when displayed
+   */
+  useLayoutEffect(() => {
+    if (!document.body.contains(dialog))
+      return
+
+    dialog?.showModal()
+    return () => dialog?.close()
+  }, [dialog])
+
+  /**
+   * Only unmount when transition is finished
+   */
+  if (!visible && !mounted)
+    return null
+
+  return <Portal type="div">
+    <CloseContext.Provider value={hide}>
+      <dialog className=""
+        ref={setDialog}>
+        <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
+          aria-hidden="true"
+          role="backdrop" />
+        <div className={`fixed inset-0 p-safe flex flex-col ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"} ${visible ? "animate-slideup-in" : "animate-slideup-out"}`}
+          style={{ scrollbarGutter: "stable" }}
+          onAnimationEnd={onAnimationEnd}>
+          <div className={`grow flex flex-col`}
+            onMouseDown={onClickOutside}
+            onClick={Events.keep}>
+            <div className="grow" />
+            <div className="flex flex-col p-2">
+              <aside className={`flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default rounded-2xl`}
+                role="dialog"
+                aria-modal
+                onMouseDown={Events.keep}
+                onKeyDown={onEscape}>
+                <div className="grow flex flex-col p-4">
+                  {children}
+                </div>
+              </aside>
+            </div>
+            <div className="hidden md:block grow" />
+          </div>
         </div>
       </dialog>
     </CloseContext.Provider>

@@ -79,4 +79,26 @@
       transform: rotate(1deg);
     }
   }
+
+  .animate-scale-xy-in {
+    animation: scale-xy-in 3000ms ease;
+  }
+
+  .animate-scale-xy-out {
+    animation: scale-xy-out 3000ms ease;
+  }
+
+  @keyframes scale-xy-in {
+    from {
+      transform: scale(0%);
+      translate: calc(-50vw + var(--x)) calc(-50vh + var(--y));
+    }
+  }
+
+  @keyframes scale-xy-out {
+    to {
+      transform: scale(0%);
+      translate: calc(-50vw + var(--x)) calc(-50vh + var(--y));
+    }
+  }
 }
