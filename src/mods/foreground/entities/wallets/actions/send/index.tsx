@@ -88,7 +88,7 @@ export function ShrinkableContrastButtonInTextareaBox(props: ChildrenProps & But
 export function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="grow group po-md bg-opposite text-opposite rounded-xl outline-none disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="grow group po-md bg-opposite text-opposite rounded-xl outline-none focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>
@@ -98,7 +98,7 @@ export function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps)
 export function WideShrinkableContrastButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="grow group po-md bg-contrast rounded-xl outline-none disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="grow group po-md bg-contrast rounded-xl outline-none focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>

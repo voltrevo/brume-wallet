@@ -1,13 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
 import { Gradients } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
+import { Events } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { ColorIndexProps } from "@/libs/react/props/color";
-import { ButtonProps } from "@/libs/react/props/html";
+import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
 import { NameProps } from "@/libs/react/props/name";
 import { OkProps } from "@/libs/react/props/promise";
+import { TitleProps } from "@/libs/react/props/title";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { Page } from "@/libs/ui2/page/page";
@@ -42,104 +44,162 @@ export function UsersPage2(props: OkProps<User>) {
         </div>
         <div className="grow" />
         <div className="flex items-center">
-          <SmallShrinkableOppositeButton>
+          <SmallShrinkableOppositeAnchor
+            href="#login">
             <Outline.LockOpenIcon className="size-5" />
             Login
-          </SmallShrinkableOppositeButton>
+          </SmallShrinkableOppositeAnchor>
           <div className="w-2" />
-          <SmallShrinkableContrastButton>
+          <SmallShrinkableContrastAnchor
+            href="#download">
             <Outline.ArrowDownTrayIcon className="size-5" />
             Download
-          </SmallShrinkableContrastButton>
+          </SmallShrinkableContrastAnchor>
         </div>
         <div className="grow" />
         <div className="grow" />
       </div>
       <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]">
-        <div className="p-6 aspect-square bg-contrast rounded-xl flex flex-col">
-          <div className="text-6xl">
-            0 VC
-          </div>
-          <div className="h-4 grow" />
-          <div>
-            <span className="text-contrast">
-              Fully crowdfunded by the community and for the community. No grants. No VCs.
-            </span>
-            <span>{` `}</span>
-            <button className="inline">
-              Learn more.
-            </button>
-          </div>
+        <InfoCard
+          title="0 VC"
+          ok={() => { }}>
+          {`Fully crowdfunded by the community and for the community. No grants. No VCs.`}
+        </InfoCard>
+        <InfoCard
+          title="Tor"
+          ok={() => { }}>
+          {`Built-in Tor to hide your IP address from third-parties. Each account has it's own IP.`}
+        </InfoCard>
+        <InfoCard
+          title="~40"
+          ok={() => { }}>
+          {`Number of external dependencies. That's around 20x less than competitors.`}
+        </InfoCard>
+        <InfoCard
+          title="Auth"
+          ok={() => { }}>
+          {`You can use WebAuthn to authenticate and sign transactions. All your keys are stored encrypted.`}
+        </InfoCard>
+        <InfoCard
+          title="Truth"
+          ok={() => { }}>
+          {`Each request is sent to multiple servers to ensure no one lies about the blockchain state.`}
+        </InfoCard>
+        <InfoCard
+          title="MIT"
+          ok={() => { }}>
+          {`All our code is MIT-licensed reproducible open-source. You can build it yourself.`}
+        </InfoCard>
+      </div>
+      <div className="h-16" />
+      <div className="text-center text-2xl font-medium"
+        id="download">
+        Download
+      </div>
+      <div className="h-8" />
+      <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
+        <DownloadCard
+          highlighted={typeof window.chrome !== "undefined"}
+          title="Chrome-like"
+          src="https://creatorspace.imgix.net/users/clgqaevj6002ix7014jawzcvs/GnJ478BvPfYaIVXG-LwaxBcxMpYs6pAQE-IMG_0184.png?w=750&h=750"
+          href="https://chromewebstore.google.com/detail/brume-wallet/oljgnlammonjehmmfahdjgjhjclpockd">
+          Chrome, Brave, Chromium, Edge, Opera, Vivaldi
+        </DownloadCard>
+        <DownloadCard
+          highlighted={navigator.userAgent.indexOf("Firefox") != -1}
+          title="Firefox-like"
+          src="https://creatorspace.imgix.net/users/clgqaevj6002ix7014jawzcvs/hHZum76zhgqcz9FX-xzH4KkqVxCFgsF3R-Firefox_logo%25252C_2019.svg.png?w=750&h=750"
+          href="https://addons.mozilla.org/firefox/addon/brumewallet/">
+          Firefox, Waterfox, Pale Moon, Basilisk, IceCat, IceWeasel
+        </DownloadCard>
+      </div>
+      <div className="h-4" />
+      <WideShrinkableContrastAnchor
+        target="_blank" rel="noreferrer"
+        href="https://github.com/brumewallet/wallet/releases">
+        <Outline.ArrowTopRightOnSquareIcon className="size-5" />
+        All releases
+      </WideShrinkableContrastAnchor>
+      <div className="h-[50vh]" />
+    </div>
+  </div>
+}
+
+export function InfoCard(props: TitleProps & ChildrenProps & OkProps<void>) {
+  const { ok, children, title } = props
+
+  const onClick = useCallback(() => {
+    ok()
+  }, [ok])
+
+  return <div className="p-6 aspect-square bg-contrast rounded-xl flex flex-col">
+    <div className="text-6xl">
+      {title}
+    </div>
+    <div className="h-4 grow" />
+    <div className="">
+      <span className="text-contrast">
+        {children}
+      </span>
+      <span>{` `}</span>
+      <TextButton
+        onClick={onClick}>
+        Learn more.
+      </TextButton>
+    </div>
+  </div>
+}
+
+export function DownloadCard(props: TitleProps & ChildrenProps & { href: string } & { src: string } & { highlighted?: boolean }) {
+  const { href, src, children, title, highlighted = false } = props
+
+  const onClick = useCallback(() => {
+    window.open(href, "_blank", "noreferrer")
+  }, [href])
+
+  return <div className="p-6 bg-contrast rounded-xl flex flex-col data-[highlighted=false]:opacity-50 transition-opacity"
+    data-highlighted={highlighted}
+    onClick={onClick}
+    role="button">
+    <div className="flex">
+      <img className="size-24 object-contain"
+        alt={title}
+        src={src} />
+      <div className="w-8 grow" />
+      <div className="flex flex-col">
+        <div className="font-medium text-2xl">
+          {title}
         </div>
-        <div className="p-6 aspect-square bg-contrast rounded-xl flex flex-col">
-          <div className="text-6xl">
-            Tor
-          </div>
-          <div className="h-4 grow" />
-          <div>
-            <span className="text-contrast">
-              {`We use built-in Tor to hide your IP address from third-parties. Each account has it's own IP address.`}
-            </span>
-            <span>{` `}</span>
-            <button className="inline">
-              Learn more.
-            </button>
-          </div>
-        </div>
-        <div className="p-6 aspect-square bg-contrast rounded-xl flex flex-col">
-          <div className="text-6xl">
-            ~40
-          </div>
-          <div className="h-4 grow" />
-          <div>
-            <span className="text-contrast">
-              {`Number of external dependencies. That's around 20x less than competitors.`}
-            </span>
-            <span>{` `}</span>
-            <button className="inline">
-              Learn more.
-            </button>
-          </div>
-        </div>
-        <div className="p-6 aspect-square bg-contrast rounded-xl flex flex-col">
-          <div className="text-6xl">
-            Auth
-          </div>
-          <div className="h-4 grow" />
-          <div>
-            <span className="text-contrast">
-              {`You can use WebAuthn to authenticate and sign transactions. All your keys are double-encrypted.`}
-            </span>
-            <span>{` `}</span>
-            <button className="inline">
-              Learn more.
-            </button>
-          </div>
-        </div>
-        <div className="p-6 aspect-square bg-contrast rounded-xl flex flex-col">
-          <div className="text-6xl">
-            Truth
-          </div>
-          <div className="h-4 grow" />
-          <div>
-            <span className="text-contrast">
-              {`Each request is sent to multiple servers to ensure no one lies about the blockchain state.`}
-            </span>
-            <span>{` `}</span>
-            <button className="inline">
-              Learn more.
-            </button>
-          </div>
+        <div className="h-1" />
+        <div className="text-contrast">
+          {children}
         </div>
       </div>
     </div>
+    <div className="h-4 grow" />
+    <div className="flex items-center">
+      <WideShrinkableContrastAnchor
+        target="_blank" rel="noreferrer"
+        onClick={Events.keep}
+        href={href}>
+        <Outline.ArrowTopRightOnSquareIcon className="size-5" />
+        Download
+      </WideShrinkableContrastAnchor>
+    </div>
   </div>
+}
+
+export function TextButton(props: ButtonProps) {
+  return <button className="inline outline-none hover:underline focus-visible:underline disabled:opacity-50 transition-opacity"
+    {...props}>
+    Learn more.
+  </button>
 }
 
 export function SmallShrinkableOppositeButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="group po-md bg-opposite text-opposite rounded-xl outline-none disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="group po-md bg-opposite text-opposite rounded-xl outline-none focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>
@@ -149,11 +209,59 @@ export function SmallShrinkableOppositeButton(props: ChildrenProps & ButtonProps
 export function SmallShrinkableContrastButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="group po-md bg-contrast rounded-xl outline-none disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="group po-md bg-contrast rounded-xl outline-none focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>
   </button>
+}
+
+export function SmallShrinkableOppositeAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
+  const { children, "aria-disabled": disabled = false, ...rest } = props
+
+  return <a className="group po-md bg-opposite text-opposite rounded-xl outline-none focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
+    aria-disabled={disabled}
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </a >
+}
+
+export function SmallShrinkableContrastAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
+  const { children, "aria-disabled": disabled = false, ...rest } = props
+
+  return <a className="group po-md bg-contrast rounded-xl outline-none focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
+    aria-disabled={disabled}
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </a >
+}
+
+export function WideShrinkableOppositeAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
+  const { children, "aria-disabled": disabled = false, ...rest } = props
+
+  return <a className="grow basis-0 group po-md bg-opposite text-opposite rounded-xl outline-none focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
+    aria-disabled={disabled}
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </a>
+}
+
+export function WideShrinkableContrastAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
+  const { children, "aria-disabled": disabled = false, ...rest } = props
+
+  return <a className="grow basis-0 group po-md bg-contrast rounded-xl outline-none focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
+    aria-disabled={disabled}
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </a>
 }
 
 export function UsersPage(props: OkProps<User>) {
