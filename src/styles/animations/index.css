@@ -81,11 +81,11 @@
   }
 
   .animate-scale-xy-in {
-    animation: scale-xy-in 3000ms ease;
+    animation: scale-xy-in 300ms ease;
   }
 
   .animate-scale-xy-out {
-    animation: scale-xy-out 3000ms ease;
+    animation: scale-xy-out 300ms ease;
   }
 
   @keyframes scale-xy-in {

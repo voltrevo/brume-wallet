@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Gradients } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
-import { Events } from "@/libs/react/events";
+import { Events, useMouse } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
@@ -10,10 +10,10 @@ import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
 import { NameProps } from "@/libs/react/props/name";
 import { OkProps } from "@/libs/react/props/promise";
 import { TitleProps } from "@/libs/react/props/title";
-import { Dialog, Screen } from "@/libs/ui/dialog/dialog";
+import { Card, Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { Page } from "@/libs/ui2/page/page";
-import { User, UserProps } from "@/mods/background/service_worker/entities/users/data";
+import { User, UserDataProps, UserProps } from "@/mods/background/service_worker/entities/users/data";
 import { PathContext, useSubpath } from "@/mods/foreground/router/path/context";
 import { useCallback, useState } from "react";
 import { useUser, useUsers } from "../data";
@@ -21,7 +21,29 @@ import { UserLoginPage } from "../login";
 import { UserCreateDialog } from "./create";
 
 export function UsersPage2(props: OkProps<User>) {
+  const { ok } = props
+
   const subpath = useSubpath()
+
+  const onLoginClick = useMouse(e => {
+    e.preventDefault()
+
+    const x = e.clientX
+    const y = e.clientY
+
+    location.href = subpath.go(`/login?x=${x}&y=${y}`).href
+  }, [])
+
+  const on1Click = useMouse(e => {
+    e.preventDefault()
+
+    const x = e.clientX
+    const y = e.clientY
+
+    console.log(x, y)
+
+    location.href = subpath.go(`/1?x=${x}&y=${y}`).href
+  }, [])
 
   const onSubpathClose = useCallback(() => {
     location.href = subpath.go("/").href
@@ -30,9 +52,15 @@ export function UsersPage2(props: OkProps<User>) {
   return <div className="grow w-full flex flex-col overflow-y-scroll">
     <PathContext.Provider value={subpath}>
       {subpath.url.pathname === "/login" &&
-        <Screen close={onSubpathClose}>
-          Hello world
-        </Screen>}
+        <Card close={onSubpathClose}>
+          <UsersScreen />
+        </Card>}
+      {subpath.url.pathname === "/1" &&
+        <Card close={onSubpathClose}>
+          <div className="text-center text-6xl">
+            0 VC
+          </div>
+        </Card>}
     </PathContext.Provider>
     <div className="po-md border-b-contrast">
       <div className="grow w-full m-auto max-w-6xl flex items-center">
@@ -58,6 +86,7 @@ export function UsersPage2(props: OkProps<User>) {
         <div className="grow" />
         <div className="flex items-center">
           <SmallShrinkableOppositeAnchor
+            onClick={onLoginClick}
             href={subpath.go("/login").href}>
             <Outline.LockOpenIcon className="size-5" />
             Login
@@ -75,32 +104,33 @@ export function UsersPage2(props: OkProps<User>) {
       <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]">
         <InfoCard
           title="0 VC"
-          ok={() => { }}>
+          onClick={on1Click}
+          href={subpath.go("/1").href}>
           {`Fully crowdfunded by the community and for the community. No grants. No VCs.`}
         </InfoCard>
         <InfoCard
           title="Tor"
-          ok={() => { }}>
+          href={subpath.go("/2").href}>
           {`Built-in Tor to hide your IP address from third-parties. Each account has it's own IP.`}
         </InfoCard>
         <InfoCard
           title="~40"
-          ok={() => { }}>
+          href={subpath.go("/3").href}>
           {`Number of external dependencies. That's around 20x less than competitors.`}
         </InfoCard>
         <InfoCard
           title="Auth"
-          ok={() => { }}>
+          href={subpath.go("/4").href}>
           {`You can use WebAuthn to authenticate and sign transactions. All your keys are stored encrypted.`}
         </InfoCard>
         <InfoCard
           title="Truth"
-          ok={() => { }}>
+          href={subpath.go("/5").href}>
           {`Each request is sent to multiple servers to ensure no one lies about the blockchain state.`}
         </InfoCard>
         <InfoCard
           title="MIT"
-          ok={() => { }}>
+          href={subpath.go("/6").href}>
           {`All our code is MIT-licensed reproducible open-source. You can build it yourself.`}
         </InfoCard>
       </div>
@@ -138,12 +168,61 @@ export function UsersPage2(props: OkProps<User>) {
   </div>
 }
 
-export function InfoCard(props: TitleProps & ChildrenProps & OkProps<void>) {
-  const { ok, children, title } = props
+export function UsersScreen(props: {}) {
+  const close = useCloseContext().unwrap()
 
-  const onClick = useCallback(() => {
-    ok()
-  }, [ok])
+  const usersQuery = useUsers()
+  const maybeUsers = usersQuery.current?.ok().get()
+
+  return <>
+    <Dialog.Title close={close}>
+      Login
+    </Dialog.Title>
+    <div className="h-4" />
+    <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
+      {maybeUsers?.map(user =>
+        <UserCard
+          key={user.uuid}
+          user={user} />)}
+      <NewUserCard />
+    </div>
+  </>
+}
+
+export function UserCard(props: UserProps) {
+  const { user } = props
+
+  const userQuery = useUser(user.uuid)
+  const maybeUser = userQuery.current?.ok().get()
+
+  if (maybeUser == null)
+    return null
+
+  return <div className="po-md bg-contrast rounded-xl flex items-center">
+    <UserAvatar2 className="size-12 text-2xl"
+      user={maybeUser} />
+    <div className="w-4" />
+    <div className="font-medium">
+      {maybeUser.name}
+    </div>
+  </div>
+}
+
+export function NewUserCard() {
+  return <div className="po-md bg-contrast rounded-xl flex items-center">
+    <div className="rounded-full size-12 flex justify-center items-center border border-contrast border-dashed">
+      <Outline.PlusIcon className="size-6" />
+    </div>
+    <div className="w-4" />
+    <div className="font-medium">
+      New user
+    </div>
+  </div>
+
+}
+
+export function InfoCard(props: TitleProps & ChildrenProps & AnchorProps) {
+  const { children, title, ...rest } = props
 
   return <div className="p-6 aspect-square bg-contrast rounded-xl flex flex-col">
     <div className="text-6xl">
@@ -155,10 +234,9 @@ export function InfoCard(props: TitleProps & ChildrenProps & OkProps<void>) {
         {children}
       </span>
       <span>{` `}</span>
-      <TextButton
-        onClick={onClick}>
+      <TextAnchor {...rest}>
         Learn more.
-      </TextButton>
+      </TextAnchor>
     </div>
   </div>
 }
@@ -203,10 +281,22 @@ export function DownloadCard(props: TitleProps & ChildrenProps & { href: string 
 }
 
 export function TextButton(props: ButtonProps) {
+  const { children, ...rest } = props
+
   return <button className="inline outline-none hover:underline focus-visible:underline disabled:opacity-50 transition-opacity"
-    {...props}>
-    Learn more.
+    {...rest}>
+    {children}
   </button>
+}
+
+export function TextAnchor(props: AnchorProps) {
+  const { children, "aria-disabled": disabled = false, ...rest } = props
+
+  return <a className="outline-none hover:underline focus-visible:underline aria-disabled:opacity-50 transition-opacity"
+    aria-disabled={disabled}
+    {...rest}>
+    {children}
+  </a>
 }
 
 export function SmallShrinkableOppositeButton(props: ChildrenProps & ButtonProps) {
@@ -353,6 +443,16 @@ function NewUserButton(props: OkProps<unknown>) {
       New user
     </div>
   </button>
+}
+
+export function UserAvatar2(props: ClassNameProps & UserDataProps) {
+  const { user, className } = props
+
+  const [color1, color2] = Gradients.get(user.color)
+
+  return <div className={`bg-gradient-to-br from-${color1} to-${color2} rounded-full flex justify-center items-center ${className} text-white`}>
+    {user.name[0]}
+  </div>
 }
 
 export function UserAvatar(props: ClassNameProps & ColorIndexProps & NameProps) {
