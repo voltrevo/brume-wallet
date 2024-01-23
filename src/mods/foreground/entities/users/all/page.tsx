@@ -40,8 +40,6 @@ export function UsersPage2(props: OkProps<User>) {
     const x = e.clientX
     const y = e.clientY
 
-    console.log(x, y)
-
     location.href = subpath.go(`/1?x=${x}&y=${y}`).href
   }, [])
 
