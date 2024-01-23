@@ -9,7 +9,7 @@ export function SnapsPage() {
   const snapsQuery = useSnaps()
 
   const onAdd = useCallback(() => {
-    snapsQuery
+
   }, [])
 
   const Body =

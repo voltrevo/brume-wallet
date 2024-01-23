@@ -267,7 +267,7 @@ export function SwitchPage() {
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [background, id])
+  }, [background, id, go])
 
   const onReject = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
@@ -282,7 +282,7 @@ export function SwitchPage() {
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [background, id])
+  }, [background, id, go])
 
   return <Page>
     <div className="p-4 grow flex flex-col items-center justify-center">
@@ -607,6 +607,7 @@ export function DonePage() {
     if (!requests?.length)
       return
     go("/requests")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requests])
 
   return <Page>
