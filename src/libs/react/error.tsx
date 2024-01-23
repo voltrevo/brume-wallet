@@ -1,3 +1,4 @@
+import { Nullable } from "@hazae41/option"
 import { Component, useEffect, useState } from "react"
 import { ChildrenProps } from "./props/children"
 import { ErrorProps } from "./props/error"
@@ -8,7 +9,7 @@ export type CatcherProps =
   & FallbackProps<ErrorProps>
 
 export interface CatcherState {
-  error?: unknown
+  error?: Nullable<unknown>
 }
 
 export class Catcher extends Component<CatcherProps, CatcherState> {
@@ -28,9 +29,11 @@ export class Catcher extends Component<CatcherProps, CatcherState> {
 
   render() {
     const { error } = this.state
+    const { fallback: Fallback } = this.props
 
-    if (error)
-      return <this.props.fallback error={error} />
+    if (error != null)
+      return <Fallback error={error} />
+
     return this.props.children
   }
 }

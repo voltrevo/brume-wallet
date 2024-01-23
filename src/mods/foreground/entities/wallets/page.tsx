@@ -138,7 +138,7 @@ function WalletDataPage() {
   useEnsReverse(wallet.address, mainnet)
 
   const onSubpathClose = useCallback(() => {
-    subpath.go(`/`)
+    location.href = subpath.go(`/`).href
   }, [subpath])
 
   const receiveDialog = useBooleanHandle(false)
@@ -413,7 +413,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
   const onClick = useCallback(() => {
-    subpath.go(`/send?step=target&chain=${context?.chain.chainId}`)
+    location.href = subpath.go(`/send?step=target&chain=${context?.chain.chainId}`).href
   }, [subpath, context])
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
@@ -467,7 +467,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const balanceDisplay = useDisplay(balanceQuery.current)
 
   const onSendClick = useCallback(() => {
-    subpath.go(`/send?step=target&chain=${context?.chain.chainId}&token=${token.address}`)
+    location.href = subpath.go(`/send?step=target&chain=${context?.chain.chainId}&token=${token.address}`).href
   }, [subpath, context, token])
 
   const balanceUsdFixed = useContractPricedBalance(wallet.address, token, "usd", context)

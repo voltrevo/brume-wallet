@@ -6,13 +6,12 @@ import { Console } from "@/libs/console"
 import { Errors } from "@/libs/errors/errors"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { Catcher, PromiseCatcher } from "@/libs/react/error"
-import { ChildrenProps } from "@/libs/react/props/children"
 import { ErrorProps } from "@/libs/react/props/error"
-import { Button } from "@/libs/ui/button"
 import { GlobalPageHeader, PageBody } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { BackgroundProvider } from "@/mods/foreground/background/context"
-import { PathProvider } from "@/mods/foreground/router/path/context"
+import { WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send"
+import { DefaultPathProvider } from "@/mods/foreground/router/path/context"
 import { GlobalStorageProvider } from "@/mods/foreground/storage/global"
 import { UserStorageProvider } from "@/mods/foreground/storage/user"
 import { Base16 } from "@hazae41/base16"
@@ -62,15 +61,14 @@ export function Fallback(props: ErrorProps) {
       </div>
     </PageBody>
     <div className="p-4 flex items-center flex-wrap-reverse gap-2">
-      <Button.Contrast className="po-md grow"
+      <WideShrinkableContrastButton
         onClick={reset.run}>
         Clear everything and reload the page
-      </Button.Contrast>
-      <Button.Gradient className="po-md grow"
-        colorIndex={5}
+      </WideShrinkableContrastButton>
+      <WideShrinkableOppositeButton
         onClick={reload}>
         Reload the page
-      </Button.Gradient>
+      </WideShrinkableOppositeButton>
     </div>
   </Page>
 }
@@ -101,7 +99,7 @@ async function initZepar() {
   ChaCha20Poly1305.set(await ChaCha20Poly1305.fromZepar())
 }
 
-export function Initializer(props: ChildrenProps) {
+export function Initializer(props: {}) {
   useEffect(() => {
     const gt = globalThis as any
     gt.Console = Console
@@ -113,7 +111,7 @@ export function Initializer(props: ChildrenProps) {
     initZepar()
   }, [])
 
-  return <>{props.children}</>
+  return null
 }
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -124,17 +122,16 @@ export default function App({ Component, pageProps }: AppProps) {
     </Head>
     <Catcher fallback={Fallback}>
       <PromiseCatcher>
-        <Initializer>
+        <Initializer />
+        <DefaultPathProvider>
           <BackgroundProvider>
             <GlobalStorageProvider>
               <UserStorageProvider>
-                <PathProvider>
-                  <Component {...pageProps} />
-                </PathProvider>
+                <Component {...pageProps} />
               </UserStorageProvider>
             </GlobalStorageProvider>
           </BackgroundProvider>
-        </Initializer>
+        </DefaultPathProvider>
       </PromiseCatcher>
     </Catcher>
   </>

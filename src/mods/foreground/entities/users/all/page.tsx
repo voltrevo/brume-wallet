@@ -10,17 +10,30 @@ import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
 import { NameProps } from "@/libs/react/props/name";
 import { OkProps } from "@/libs/react/props/promise";
 import { TitleProps } from "@/libs/react/props/title";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, Screen } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { Page } from "@/libs/ui2/page/page";
 import { User, UserProps } from "@/mods/background/service_worker/entities/users/data";
+import { PathContext, useSubpath } from "@/mods/foreground/router/path/context";
 import { useCallback, useState } from "react";
 import { useUser, useUsers } from "../data";
 import { UserLoginPage } from "../login";
 import { UserCreateDialog } from "./create";
 
 export function UsersPage2(props: OkProps<User>) {
+  const subpath = useSubpath()
+
+  const onSubpathClose = useCallback(() => {
+    location.href = subpath.go("/").href
+  }, [subpath])
+
   return <div className="grow w-full flex flex-col overflow-y-scroll">
+    <PathContext.Provider value={subpath}>
+      {subpath.url.pathname === "/login" &&
+        <Screen close={onSubpathClose}>
+          Hello world
+        </Screen>}
+    </PathContext.Provider>
     <div className="po-md border-b-contrast">
       <div className="grow w-full m-auto max-w-6xl flex items-center">
         <img className="size-8"
@@ -45,13 +58,13 @@ export function UsersPage2(props: OkProps<User>) {
         <div className="grow" />
         <div className="flex items-center">
           <SmallShrinkableOppositeAnchor
-            href="#login">
+            href={subpath.go("/login").href}>
             <Outline.LockOpenIcon className="size-5" />
             Login
           </SmallShrinkableOppositeAnchor>
           <div className="w-2" />
           <SmallShrinkableContrastAnchor
-            href="#download">
+            href={subpath.go("/download").href}>
             <Outline.ArrowDownTrayIcon className="size-5" />
             Download
           </SmallShrinkableContrastAnchor>
@@ -93,7 +106,7 @@ export function UsersPage2(props: OkProps<User>) {
       </div>
       <div className="h-16" />
       <div className="text-center text-2xl font-medium"
-        id="download">
+        id={subpath.go("/download").hash.slice(1)}>
         Download
       </div>
       <div className="h-8" />

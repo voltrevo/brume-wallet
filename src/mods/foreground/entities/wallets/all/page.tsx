@@ -17,15 +17,15 @@ import { WalletProps, useWallets } from "../data"
 import { WalletCreatorDialog } from "./create"
 
 export function WalletsPage() {
-  const { go } = usePathContext().unwrap()
+  const path = usePathContext().unwrap()
   const walletsQuery = useWallets()
   const maybeWallets = walletsQuery.data?.get()
 
   const creator = useBooleanHandle(false)
 
   const onWalletClick = useCallback((wallet: Wallet) => {
-    go(`/wallet/${wallet.uuid}`)
-  }, [go])
+    location.href = path.go(`/wallet/${wallet.uuid}`).href
+  }, [path])
 
   const Body =
     <PageBody>

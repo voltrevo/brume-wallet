@@ -172,7 +172,7 @@ export function TransactPage() {
         params: [new RpcOk(id, tx.serialized)]
       }).then(r => r.throw(t).throw(t))
 
-      go("/done")
+      location.href = go("/done").href
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -185,7 +185,7 @@ export function TransactPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      go("/done")
+      location.href = go("/done").href
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -263,7 +263,7 @@ export function SwitchPage() {
         params: [new RpcOk(id, undefined)]
       }).then(r => r.throw(t).throw(t))
 
-      go("/done")
+      location.href = go("/done").href
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -278,7 +278,7 @@ export function SwitchPage() {
 
       await new Promise(ok => setTimeout(ok, 250))
 
-      go("/done")
+      location.href = go("/done").href
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -345,7 +345,7 @@ export function PersonalSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      go("/done")
+      location.href = go("/done").href
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -358,7 +358,7 @@ export function PersonalSignPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      go("/done")
+      location.href = go("/done").href
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -426,7 +426,7 @@ export function TypedSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      go("/done")
+      location.href = go("/done").href
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -439,7 +439,7 @@ export function TypedSignPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      go("/done")
+      location.href = go("/done").href
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -522,7 +522,7 @@ export function WalletAndChainSelectPage() {
         params: [new RpcOk(id, [persistent, chain, selecteds])]
       }).then(r => r.throw(t).throw(t))
 
-      go("/done")
+      location.href = go("/done").href
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -535,7 +535,7 @@ export function WalletAndChainSelectPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      go("/done")
+      location.href = go("/done").href
 
       return Ok.void()
     }).then(Results.logAndAlert)

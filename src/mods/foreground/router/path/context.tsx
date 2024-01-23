@@ -3,13 +3,21 @@ import { State } from "@/libs/react/state";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-export interface Path {
+export interface PathHandle {
+  /**
+   * The relative URL
+   */
   readonly url: URL
-  go(pathname: string): void
+
+  /**
+   * The absolute url if we go to the given path
+   * @param path 
+   */
+  go(path: string): URL
 }
 
 export const PathContext =
-  createContext<Nullable<Path>>(undefined)
+  createContext<Nullable<PathHandle>>(undefined)
 
 export function usePathContext() {
   return Option.wrap(useContext(PathContext))
@@ -17,8 +25,8 @@ export function usePathContext() {
 
 export namespace Paths {
 
-  export function spoof(parent = new URL(location.href)) {
-    return new URL(parent.hash.slice(1), parent.origin)
+  export function spoof(url: URL) {
+    return new URL(url.hash.slice(1), url.origin)
   }
 
   export function path(url: URL) {
@@ -31,23 +39,28 @@ export namespace Paths {
 
 }
 
-export function PathProvider(props: ChildrenProps) {
-  const { go } = Paths
+export function DefaultPathProvider(props: ChildrenProps) {
   const { children } = props
 
-  const [url, setUrl] = useState<URL>(() => Paths.spoof())
+  const [url, setUrl] = useState<URL>()
 
   useEffect(() => {
-    const onHashChange = () => setUrl(Paths.spoof())
+    const onHashChange = () => setUrl(Paths.spoof(new URL(location.href)))
+
+    setUrl(Paths.spoof(new URL(location.href)))
 
     addEventListener("hashchange", onHashChange, { passive: true })
     return () => removeEventListener("hashchange", onHashChange)
   }, [])
 
+  const go = useCallback((path: string) => {
+    return new URL(`#${path}`, location.href)
+  }, [])
+
   const handle = useMemo(() => {
     if (url == null)
       return
-    return { url, go }
+    return { url, go } satisfies PathHandle
   }, [url, go])
 
   if (handle == null)
@@ -58,7 +71,7 @@ export function PathProvider(props: ChildrenProps) {
   </PathContext.Provider>
 }
 
-export function useSubpath() {
+export function useSubpath(): PathHandle {
   const parent = usePathContext().unwrap()
 
   const [url, setUrl] = useState<URL>(() => Paths.spoof(parent.url))
@@ -68,15 +81,12 @@ export function useSubpath() {
   }, [parent])
 
   const go = useCallback((path: string) => {
-    parent.url.hash = `#${path}`
-    parent.go(Paths.path(parent.url))
+    return parent.go(Paths.path(new URL(`#${path}`, parent.url.href)))
   }, [parent])
 
-  const handle = useMemo(() => {
-    return { url, go }
+  return useMemo(() => {
+    return { url, go } satisfies PathHandle
   }, [url, go])
-
-  return handle
 }
 
 export function usePathState<T extends Record<string, Optional<string>>>() {
