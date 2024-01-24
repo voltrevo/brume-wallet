@@ -186,7 +186,7 @@ export function Card(props: ChildrenProps & CloseProps & DarkProps) {
         <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
           aria-hidden="true"
           role="backdrop" />
-        <div className={`fixed inset-0 p-safe flex flex-col ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"} ${visible ? "animate-slideup-in md:animate-scale-xy-in" : "animate-slideup-out md:animate-scale-xy-out"}`}
+        <div className={`fixed inset-0 pt-safe md:p-safe flex flex-col ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"} ${visible ? "animate-slideup-in md:animate-scale-xy-in" : "animate-slideup-out md:animate-scale-xy-out"}`}
           style={{ scrollbarGutter: "stable" }}
           onAnimationEnd={onAnimationEnd}
           onMouseDown={onClickOutside}
@@ -198,11 +198,13 @@ export function Card(props: ChildrenProps & CloseProps & DarkProps) {
               aria-modal
               onMouseDown={Events.keep}
               onKeyDown={onEscape}>
-              <div className="md:hidden p-4 bg-contrast rounded-t-3xl flex items-center justify-center">
-                <div className="w-16 h-2 bg-backdrop rounded-full" />
-              </div>
-              <div className="grow flex flex-col bg-contrast md:rounded-3xl p-6">
-                {children}
+              <div className="grow flex flex-col bg-contrast rounded-t-3xl md:rounded-3xl pb-safe md:pb-0 ">
+                <div className="md:hidden p-4 flex items-center justify-center">
+                  <div className="w-16 h-2 bg-backdrop rounded-full" />
+                </div>
+                <div className="grow flex flex-col p-6">
+                  {children}
+                </div>
               </div>
             </aside>
             <div className="hidden md:block md:grow md:h-8" />
