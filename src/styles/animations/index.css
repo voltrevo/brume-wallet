@@ -1,18 +1,18 @@
 @layer utilities {
   .animate-opacity-in {
-    animation: opacity-in 300ms ease;
+    animation: opacity-in 300ms ease-out;
   }
 
   .animate-scale-in {
-    animation: scale-in 300ms ease;
+    animation: scale-in 300ms ease-out;
   }
 
   .animate-slideup-in {
-    animation: slideup-in 300ms ease;
+    animation: slideup-in 300ms ease-out;
   }
 
   .animate-opacity-scale-in {
-    animation: opacity-in 300ms ease, scale 300ms ease;
+    animation: opacity-in 300ms ease-out, scale 300ms ease-out;
   }
 
   @keyframes opacity-in {
@@ -34,19 +34,19 @@
   }
 
   .animate-opacity-out {
-    animation: opacity-out 300ms ease;
+    animation: opacity-out 300ms ease-in;
   }
 
   .animate-scale-out {
-    animation: scale-out 300ms ease;
+    animation: scale-out 300ms ease-in;
   }
 
   .animate-slideup-out {
-    animation: slideup-out 300ms ease;
+    animation: slideup-out 300ms ease-in;
   }
 
   .animate-opacity-scale-out {
-    animation: opacity-out 300ms ease, scale 300ms ease;
+    animation: opacity-out 300ms ease-in, scale 300ms ease-in;
   }
 
   @keyframes opacity-out {
@@ -81,11 +81,11 @@
   }
 
   .animate-scale-xy-in {
-    animation: scale-xy-in 300ms ease;
+    animation: scale-xy-in 300ms ease-out;
   }
 
   .animate-scale-xy-out {
-    animation: scale-xy-out 300ms ease;
+    animation: scale-xy-out 300ms ease-in;
   }
 
   @keyframes scale-xy-in {

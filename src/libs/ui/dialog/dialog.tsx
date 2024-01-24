@@ -2,7 +2,7 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { DarkProps } from "@/libs/react/props/dark"
 import { usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable, Option } from "@hazae41/option"
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react"
+import { UIEvent, createContext, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react"
 import { flushSync } from "react-dom"
 import { Outline } from "../../icons/icons"
 import { Events, useKeyboardEscape, useMouse } from "../../react/events"
@@ -172,6 +172,12 @@ export function Card(props: ChildrenProps & CloseProps & DarkProps) {
     return () => dialog?.close()
   }, [dialog])
 
+  const onScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
+    if (e.currentTarget.scrollTop > -80)
+      return
+    hide()
+  }, [hide])
+
   /**
    * Only unmount when transition is finished
    */
@@ -190,6 +196,7 @@ export function Card(props: ChildrenProps & CloseProps & DarkProps) {
           style={{ scrollbarGutter: "stable" }}
           onAnimationEnd={onAnimationEnd}
           onMouseDown={onClickOutside}
+          onScroll={onScroll}
           onClick={Events.keep}>
           <div className={`grow flex flex-col items-center`}>
             <div className="h-[50vh] grow md:h-8" />
