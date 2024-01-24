@@ -186,21 +186,26 @@ export function Card(props: ChildrenProps & CloseProps & DarkProps) {
         <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
           aria-hidden="true"
           role="backdrop" />
-        <div className={`fixed inset-0 p-safe flex flex-col ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"}`}
+        <div className={`fixed inset-0 p-safe flex flex-col ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"} ${visible ? "animate-slideup-in md:animate-scale-xy-in" : "animate-slideup-out md:animate-scale-xy-out"}`}
           style={{ scrollbarGutter: "stable" }}
-          onAnimationEnd={onAnimationEnd}>
-          <div className={`grow flex flex-col justify-center items-center ${visible ? "animate-scale-xy-in" : "animate-scale-xy-out"}`}
-            onMouseDown={onClickOutside}
-            onClick={Events.keep}>
-            <aside className={`flex flex-col w-[min(90vh,90vw)] aspect-square text-default bg-default rounded-3xl`}
+          onAnimationEnd={onAnimationEnd}
+          onMouseDown={onClickOutside}
+          onClick={Events.keep}>
+          <div className={`grow flex flex-col items-center`}>
+            <div className="h-[50vh] grow md:h-8" />
+            <aside className={`flex flex-col w-full md:w-[min(90vh,90vw)] md:aspect-square text-default bg-default rounded-t-3xl md:rounded-3xl`}
               role="dialog"
               aria-modal
               onMouseDown={Events.keep}
               onKeyDown={onEscape}>
-              <div className="grow flex flex-col bg-contrast rounded-3xl p-6">
+              <div className="md:hidden p-4 bg-contrast rounded-t-3xl flex items-center justify-center">
+                <div className="w-16 h-2 bg-backdrop rounded-full" />
+              </div>
+              <div className="grow flex flex-col bg-contrast md:rounded-3xl p-6">
                 {children}
               </div>
             </aside>
+            <div className="hidden md:block md:grow md:h-8" />
           </div>
         </div>
       </dialog>
@@ -268,23 +273,23 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
           role="backdrop" />
         <div className={`fixed inset-0 p-safe flex flex-col ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"} ${visible ? "animate-slideup-in" : "animate-slideup-out"}`}
           style={{ scrollbarGutter: "stable" }}
-          onAnimationEnd={onAnimationEnd}>
-          <div className={`grow flex flex-col`}
-            onMouseDown={onClickOutside}
-            onClick={Events.keep}>
-            <div className="grow" />
-            <div className="flex flex-col p-2">
-              <aside className={`flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default rounded-2xl`}
-                role="dialog"
-                aria-modal
-                onMouseDown={Events.keep}
-                onKeyDown={onEscape}>
-                <div className="grow flex flex-col p-4">
-                  {children}
-                </div>
-              </aside>
-            </div>
-            <div className="hidden md:block grow" />
+          onAnimationEnd={onAnimationEnd}
+          onMouseDown={onClickOutside}
+          onClick={Events.keep}>
+          <div className={`grow flex flex-col`}>
+            <div className="h-[50vh] grow" />
+            <aside className="grow flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default rounded-t-3xl"
+              role="dialog"
+              aria-modal
+              onMouseDown={Events.keep}
+              onKeyDown={onEscape}>
+              <div className="p-4 bg-contrast rounded-t-3xl flex items-center justify-center">
+                <div className="w-16 h-2 bg-backdrop rounded-full" />
+              </div>
+              <div className="grow flex flex-col bg-contrast p-6">
+                {children}
+              </div>
+            </aside>
           </div>
         </div>
       </dialog>
