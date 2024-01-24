@@ -143,6 +143,13 @@ export function UsersPage2(props: OkProps<User>) {
             All releases
           </WideShrinkableContrastAnchor>
           <div className="h-[50vh]" />
+          <div className="text-center p-4">
+            <TextAnchor
+              target="_blank" rel="noreferrer"
+              href="https://ethbrno.cz">
+              Made by cypherpunks
+            </TextAnchor>
+          </div>
         </div>
       </div>}
   </>
