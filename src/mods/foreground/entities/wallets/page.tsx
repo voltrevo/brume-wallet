@@ -14,7 +14,7 @@ import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog, Screen } from "@/libs/ui/dialog/dialog";
+import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
@@ -319,15 +319,15 @@ function WalletDataPage() {
   return <Page>
     <PathContext.Provider value={subpath}>
       {subpath.url.pathname === "/send" && wallet.type !== "readonly" &&
-        <Screen close={onSubpathClose}>
+        <Dialog close={onSubpathClose}>
           <WalletSendScreen />
-        </Screen>}
+        </Dialog>}
     </PathContext.Provider>
     {receiveDialog.current &&
-      <Screen dark
+      <Dialog dark
         close={receiveDialog.disable}>
         <WalletDataReceiveScreen />
-      </Screen>}
+      </Dialog>}
     {Header}
     {Card}
     {Apps}

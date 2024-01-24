@@ -3,6 +3,7 @@ const TerserPlugin = require('terser-webpack-plugin')
 const { copyFileSync, rmSync } = require("fs")
 const Log = require("next/dist/build/output/log")
 const path = require("path")
+const withMDX = require('@next/mdx')()
 
 /**
  * @type {Promise<void> | undefined}
@@ -16,6 +17,7 @@ const nextConfig = {
   reactStrictMode: false, // TODO
   swcMinify: true,
   output: "export",
+  pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
   generateBuildId: async () => {
     return "brume"
   },
@@ -138,4 +140,4 @@ async function compileInjectedScript(config, options) {
   })
 }
 
-module.exports = nextConfig
+module.exports = withMDX(nextConfig)

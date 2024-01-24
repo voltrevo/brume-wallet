@@ -3,7 +3,7 @@ import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Dialog, Screen, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { qurl } from "@/libs/url/url";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData } from "@/mods/background/service_worker/entities/transactions/data";
@@ -251,9 +251,9 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   return <>
     <PathContext.Provider value={subpath}>
       {subpath.url.pathname === "/eth_sendTransaction" &&
-        <Screen close={onClose}>
+        <Dialog close={onClose}>
           <WalletTransactionScreen />
-        </Screen>}
+        </Dialog>}
     </PathContext.Provider>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}

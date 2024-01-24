@@ -8,7 +8,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Dialog, Screen, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { qurl } from "@/libs/url/url";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
@@ -850,9 +850,9 @@ export function WalletTransactionScreenValue(props: {}) {
   return <>
     <PathContext.Provider value={subpath}>
       {subpath.url.pathname === "/decode" &&
-        <Screen close={onClose}>
+        <Dialog close={onClose}>
           <WalletDecodeScreen />
-        </Screen>}
+        </Dialog>}
     </PathContext.Provider>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}

@@ -4,7 +4,6 @@ import { usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable, Option } from "@hazae41/option"
 import { UIEvent, createContext, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react"
 import { flushSync } from "react-dom"
-import { Outline } from "../../icons/icons"
 import { Events, useKeyboardEscape, useMouse } from "../../react/events"
 import { ChildrenProps } from "../../react/props/children"
 import { CloseProps } from "../../react/props/close"
@@ -17,8 +16,12 @@ export function useCloseContext() {
   return Option.wrap(useContext(CloseContext))
 }
 
-export function Screen(props: ChildrenProps & CloseProps & DarkProps) {
+export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
+  const { url } = usePathContext().unwrap()
   const { dark, children, close } = props
+
+  const x = url.searchParams.get("x")
+  const y = url.searchParams.get("y")
 
   const [visible, setVisible] = useState(true)
   const [mounted, setMounted] = useState(false)
@@ -85,93 +88,6 @@ export function Screen(props: ChildrenProps & CloseProps & DarkProps) {
     return () => color.setAttribute("content", original)
   }, [visible, dark])
 
-  /**
-   * Only unmount when transition is finished
-   */
-  if (!visible && !mounted)
-    return null
-
-  return <Portal type="div">
-    <CloseContext.Provider value={hide}>
-      <dialog className=""
-        ref={setDialog}>
-        <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
-          aria-hidden="true"
-          role="backdrop" />
-        <div className={`fixed inset-0 flex flex-col md:p-safe ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"} ${visible ? "animate-slideup-in" : "animate-slideup-out"}`}
-          onAnimationEnd={onAnimationEnd}
-          style={{ scrollbarGutter: "stable" }}>
-          <div className={`grow flex flex-col`}
-            onMouseDown={onClickOutside}
-            onClick={Events.keep}>
-            <div className="hidden md:block h-4" />
-            <div className="grow flex flex-col md:p-2">
-              <aside className={`grow flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default p-safe md:p-0 md:rounded-2xl`}
-                role="dialog"
-                aria-modal
-                onMouseDown={Events.keep}
-                onKeyDown={onEscape}>
-                <div className="grow flex flex-col p-4">
-                  {children}
-                </div>
-              </aside>
-            </div>
-            <div className="hidden md:block h-4" />
-          </div>
-        </div>
-      </dialog>
-    </CloseContext.Provider>
-  </Portal>
-}
-
-export function Card(props: ChildrenProps & CloseProps & DarkProps) {
-  const { url } = usePathContext().unwrap()
-  const { dark, children, close } = props
-
-  const x = url.searchParams.get("x")
-  const y = url.searchParams.get("y")
-
-  const [visible, setVisible] = useState(true)
-  const [mounted, setMounted] = useState(false)
-
-  const hide = useCallback(() => {
-    setVisible(false)
-  }, [])
-
-  const [dialog, setDialog] = useState<HTMLDialogElement | null>(null)
-
-  const onEscape = useKeyboardEscape(hide)
-
-  const onClickOutside = useMouse<HTMLDivElement>(e => {
-    if (e.clientX > e.currentTarget.clientWidth)
-      return
-    hide()
-  }, [hide])
-
-  const onAnimationEnd = useCallback(() => {
-    flushSync(() => setMounted(visible))
-  }, [visible])
-
-  useEffect(() => {
-    if (visible)
-      return
-    if (mounted)
-      return
-    close()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, mounted])
-
-  /**
-   * Show HTML dialog when displayed
-   */
-  useLayoutEffect(() => {
-    if (!document.body.contains(dialog))
-      return
-
-    dialog?.showModal()
-    return () => dialog?.close()
-  }, [dialog])
-
   const onScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
     if (e.currentTarget.scrollTop > -60)
       return
@@ -222,106 +138,15 @@ export function Card(props: ChildrenProps & CloseProps & DarkProps) {
   </Portal>
 }
 
-
-export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
-  const { dark, children, close } = props
-
-  const [visible, setVisible] = useState(true)
-  const [mounted, setMounted] = useState(false)
-
-  const hide = useCallback(() => {
-    setVisible(false)
-  }, [])
-
-  const [dialog, setDialog] = useState<HTMLDialogElement | null>(null)
-
-  const onEscape = useKeyboardEscape(hide)
-
-  const onClickOutside = useMouse<HTMLDivElement>(e => {
-    if (e.clientX > e.currentTarget.clientWidth)
-      return
-    hide()
-  }, [hide])
-
-  const onAnimationEnd = useCallback(() => {
-    flushSync(() => setMounted(visible))
-  }, [visible])
-
-  useEffect(() => {
-    if (visible)
-      return
-    if (mounted)
-      return
-    close()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, mounted])
-
-  /**
-   * Show HTML dialog when displayed
-   */
-  useLayoutEffect(() => {
-    if (!document.body.contains(dialog))
-      return
-
-    dialog?.showModal()
-    return () => dialog?.close()
-  }, [dialog])
-
-  /**
-   * Only unmount when transition is finished
-   */
-  if (!visible && !mounted)
-    return null
-
-  return <Portal type="div">
-    <CloseContext.Provider value={hide}>
-      <dialog className=""
-        ref={setDialog}>
-        <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
-          aria-hidden="true"
-          role="backdrop" />
-        <div className={`fixed inset-0 p-safe flex flex-col ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"} ${visible ? "animate-slideup-in" : "animate-slideup-out"}`}
-          style={{ scrollbarGutter: "stable" }}
-          onAnimationEnd={onAnimationEnd}
-          onMouseDown={onClickOutside}
-          onClick={Events.keep}>
-          <div className={`grow flex flex-col`}>
-            <div className="h-[50vh] grow" />
-            <aside className="grow flex flex-col w-full mx-auto min-w-0 max-w-3xl text-default bg-default rounded-t-3xl"
-              role="dialog"
-              aria-modal
-              onMouseDown={Events.keep}
-              onKeyDown={onEscape}>
-              <div className="p-4 bg-contrast rounded-t-3xl flex items-center justify-center">
-                <div className="w-16 h-2 bg-backdrop rounded-full" />
-              </div>
-              <div className="grow flex flex-col bg-contrast p-6">
-                {children}
-              </div>
-            </aside>
-          </div>
-        </div>
-      </dialog>
-    </CloseContext.Provider>
-  </Portal>
-}
-
 export namespace Dialog {
 
   export function Title(props: ChildrenProps & CloseProps) {
-    const { children, close } = props
+    const { children } = props
 
     return <h1 className="flex items-center">
       <div className="text-xl font-medium">
         {children}
       </div>
-      <div className="grow" />
-      <button className={`${Button.Base.className} size-8 hovered-or-clicked-or-focused:scale-105 !transition`}
-        onClick={close}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.XMarkIcon className="size-5" />
-        </div>
-      </button>
     </h1>
   }
 

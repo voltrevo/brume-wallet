@@ -5,7 +5,7 @@ import { Outline } from "@/libs/icons/icons";
 import { Peanut } from "@/libs/peanut";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Dialog, Screen, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
 import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
@@ -318,9 +318,9 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   return <>
     <PathContext.Provider value={subpath}>
       {subpath.url.pathname === "/eth_sendTransaction" &&
-        <Screen close={onClose}>
+        <Dialog close={onClose}>
           <WalletTransactionScreen />
-        </Screen>}
+        </Dialog>}
     </PathContext.Provider>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}

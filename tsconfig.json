@@ -34,7 +34,7 @@
   "include": [
     "./pages/**/*",
     "./src/**/*",
-    "./_storybook/**/*"
+    "./mdx-components.tsx"
   ],
   "exclude": [
     "node_modules"
