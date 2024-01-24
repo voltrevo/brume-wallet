@@ -25,7 +25,10 @@ export function UsersPage2(props: OkProps<User>) {
 
   const subpath = useSubpath()
 
-  const onLoginClick = useMouse(e => {
+  const onLoginMouseDown = useMouse(e => {
+    if (e.button !== 0)
+      return
+
     e.preventDefault()
 
     const x = e.clientX
@@ -65,7 +68,7 @@ export function UsersPage2(props: OkProps<User>) {
             <div className="grow" />
             <div className="flex items-center">
               <SmallShrinkableOppositeAnchor
-                onClick={onLoginClick}
+                onMouseDown={onLoginMouseDown}
                 href={subpath.go("/login").href}>
                 <Outline.LockOpenIcon className="size-5" />
                 Login
@@ -204,7 +207,10 @@ export function InfoCard(props: TitleProps & ChildrenProps & AnchorProps & { hre
   const { children, title, href, ...rest } = props
   const subpath = useSubpath()
 
-  const onClick = useMouse(e => {
+  const onMouseDown = useMouse(e => {
+    if (e.button !== 0)
+      return
+
     e.preventDefault()
 
     const x = e.clientX
@@ -246,7 +252,7 @@ export function InfoCard(props: TitleProps & ChildrenProps & AnchorProps & { hre
         <span>{` `}</span>
         <TextAnchor
           href={subpath.go(href).href}
-          onClick={onClick}
+          onMouseDown={onMouseDown}
           {...rest}>
           Learn more.
         </TextAnchor>
