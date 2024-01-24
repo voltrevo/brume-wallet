@@ -192,12 +192,12 @@ export function Card(props: ChildrenProps & CloseProps & DarkProps) {
           <div className={`grow flex flex-col justify-center items-center ${visible ? "animate-scale-xy-in" : "animate-scale-xy-out"}`}
             onMouseDown={onClickOutside}
             onClick={Events.keep}>
-            <aside className={`flex flex-col w-[min(90vh,90vw)] aspect-square text-default bg-default rounded-2xl`}
+            <aside className={`flex flex-col w-[min(90vh,90vw)] aspect-square text-default bg-default rounded-3xl`}
               role="dialog"
               aria-modal
               onMouseDown={Events.keep}
               onKeyDown={onEscape}>
-              <div className="grow flex flex-col bg-contrast rounded-2xl p-4">
+              <div className="grow flex flex-col bg-contrast rounded-3xl p-6">
                 {children}
               </div>
             </aside>
