@@ -173,7 +173,7 @@ export function Card(props: ChildrenProps & CloseProps & DarkProps) {
   }, [dialog])
 
   const onScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
-    if (e.currentTarget.scrollTop > -80)
+    if (e.currentTarget.scrollTop > -60)
       return
     hide()
   }, [hide])

@@ -90,6 +90,7 @@
 
   @keyframes scale-xy-in {
     from {
+      opacity: 0%;
       transform: scale(0%);
       translate: calc(-50vw + var(--x)) calc(-50vh + var(--y));
     }
@@ -97,6 +98,7 @@
 
   @keyframes scale-xy-out {
     to {
+      opacity: 0%;
       transform: scale(0%);
       translate: calc(-50vw + var(--x)) calc(-50vh + var(--y));
     }
