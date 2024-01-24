@@ -102,7 +102,7 @@ export function usePathState<T extends Record<string, Optional<string>>>() {
     if (state == null)
       return
     const filtered = Object.fromEntries(Object.entries(state).filter(([_, value]) => value != null) as [keyof T, string][])
-    go(`${url.pathname}?${new URLSearchParams(filtered).toString()}${url.hash}`)
+    location.href = go(`${url.pathname}?${new URLSearchParams(filtered).toString()}${url.hash}`).href
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state])
 

@@ -89,9 +89,21 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
   }, [visible, dark])
 
   const onScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
-    if (e.currentTarget.scrollTop > -60)
+    /**
+     * Swipe down to close
+     */
+    if (e.currentTarget.scrollTop < -60) {
+      hide()
       return
-    hide()
+    }
+
+    /**
+     * Prevent overscroll on bottom
+     */
+    if (e.currentTarget.scrollTop > 60)
+      e.currentTarget.classList.add("overscroll-y-none")
+    else
+      e.currentTarget.classList.remove("overscroll-y-none")
   }, [hide])
 
   /**
@@ -116,7 +128,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
           onClick={Events.keep}>
           <div className={`grow flex flex-col items-center`}>
             <div className="h-[50vh] grow md:h-8" />
-            <aside className={`flex flex-col w-full md:w-[min(90vh,90vw)] md:aspect-square text-default bg-default rounded-t-3xl md:rounded-3xl`}
+            <aside className={`flex flex-col w-full md:w-[min(90dvh,90dvw)] md:aspect-square text-default bg-default rounded-t-3xl md:rounded-3xl`}
               role="dialog"
               aria-modal
               onMouseDown={Events.keep}
@@ -125,7 +137,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
                 <div className="md:hidden p-4 flex items-center justify-center">
                   <div className="w-16 h-2 bg-backdrop rounded-full" />
                 </div>
-                <div className="grow flex flex-col p-6">
+                <div className="grow flex flex-col p-6 basis-[100dvh] md:basis-0">
                   {children}
                 </div>
               </div>
