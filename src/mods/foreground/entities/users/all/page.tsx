@@ -47,123 +47,132 @@ export function UsersPage2(props: OkProps<User>) {
     location.href = subpath.go("/").href
   }, [subpath])
 
-  return <div className="grow w-full flex flex-col overflow-y-scroll">
+  return <>
     <PathContext.Provider value={subpath}>
       {subpath.url.pathname === "/login" &&
-        <Card close={onSubpathClose}>
-          <UsersScreen />
-        </Card>}
+        <UsersPage ok={ok} />}
       {subpath.url.pathname === "/1" &&
         <Card close={onSubpathClose}>
           <div className="text-center text-6xl">
             0 VC
           </div>
+          <div className="h-4" />
+          <div className="text-contrast">
+            Fully crowdfunded by the community and for the community. No grants. No VCs.
+          </div>
+          <div className="h-8" />
+          <div className="whitespace-pre-wrap">
+            {`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce non vulputate lorem. Integer turpis urna, elementum ac odio id, eleifend fringilla nisl. Aliquam vulputate, lacus eget congue porta, dolor lacus auctor ex, nec egestas dolor sem quis lorem. Nam tincidunt egestas est at porta. Maecenas in ultrices libero. Sed maximus purus lacus, eget pulvinar lacus tempor sit amet. Sed sit amet sagittis quam. Maecenas eget rutrum quam, quis venenatis ipsum. Cras cursus iaculis maximus. Donec convallis tempus orci, a consectetur eros cursus non. Sed tristique convallis eros, mattis luctus justo tincidunt non. Vivamus facilisis ex ipsum, a viverra libero vehicula ac. Vestibulum at eleifend eros, vel aliquet tellus. Vestibulum faucibus dignissim turpis. Nam in magna mauris. Nunc nulla metus, commodo vel euismod eu, tincidunt ut leo. Cras sit amet convallis dolor. Nunc vel nulla vel nisl tristique consequat. In sollicitudin eget ligula quis porttitor. Sed vel blandit quam. Ut fermentum nulla vel tortor placerat consequat. Donec ornare in dui sit amet dapibus. Morbi sit amet nulla vel lacus vestibulum dignissim. Fusce euismod, neque at porta interdum, mauris est hendrerit mauris, ut convallis nulla purus id mi. Suspendisse in facilisis augue. In in luctus velit. Nulla rutrum urna quis congue luctus. Ut sed sem leo. Quisque tellus magna, dapibus et est a, faucibus varius est. Vestibulum eu metus molestie odio interdum tincidunt. Aliquam in tincidunt lectus, at rutrum elit. Aenean malesuada nibh quis auctor sagittis. Phasellus aliquet nunc quis tempor placerat. Maecenas porttitor ante et orci faucibus molestie. In nisi diam, malesuada vitae varius non, luctus eu lacus. Ut ut sodales massa. Nunc eu turpis sed enim viverra ullamcorper sit amet a orci. Quisque tincidunt posuere sem, et bibendum dui porta ut. Vestibulum nunc ex, tincidunt ac vestibulum id, tincidunt non lacus. Nam molestie ante felis, et pretium massa condimentum vel. Donec feugiat ut nulla non eleifend. Fusce commodo nisi et aliquam pharetra. Aenean sagittis iaculis finibus. Donec fringilla ornare finibus. Cras fermentum viverra tellus, volutpat dignissim erat maximus sed. Curabitur bibendum, libero quis convallis imperdiet, leo felis consectetur nunc, eu pretium sem urna sed quam. Aenean lectus tortor, pretium quis semper eget, posuere at nisl. In eget mi lacus. Nulla facilisi. Vestibulum lobortis urna sed ex venenatis, quis lobortis orci varius. Proin ultricies consectetur laoreet. Vivamus elit neque, scelerisque egestas augue eget, congue ornare odio. Nam sed augue ex. Aliquam fermentum, felis et bibendum rutrum, neque lacus tempor quam, at condimentum diam sem a ante. Vestibulum accumsan justo ac scelerisque dictum. Curabitur molestie, odio quis rutrum viverra, odio sapien tempor arcu, et accumsan libero lacus ut ex. Nullam placerat fermentum justo, a tempus risus facilisis vitae. Etiam fringilla, ante in dictum finibus, elit ligula mattis diam, et scelerisque libero metus nec ligula. Nulla nec leo dictum nulla ultrices pulvinar. Fusce porta pretium dui, nec tempor enim. Proin ut sagittis est. Suspendisse vel nunc et nulla pellentesque faucibus hendrerit eu elit.`}
+          </div>
         </Card>}
     </PathContext.Provider>
-    <div className="po-md border-b-contrast">
-      <div className="grow w-full m-auto max-w-6xl flex items-center">
-        <img className="size-8"
-          alt="Brume Wallet"
-          src="/favicon.png" />
-        <div className="w-2" />
-        <div className="font-medium">
-          Wallet
+    {subpath.url.pathname === "/" &&
+      <div className="grow w-full flex flex-col overflow-y-scroll">
+        <div className="po-md border-b-contrast">
+          <div className="grow w-full m-auto max-w-6xl flex items-center">
+            <img className="size-8"
+              alt="Brume Wallet"
+              src="/favicon.png" />
+            <div className="w-2" />
+            <div className="font-medium">
+              Wallet
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-    <div className="p-4 grow w-full m-auto max-w-3xl flex flex-col">
-      <div className="h-[32rem] shrink-0 grow flex flex-col items-center">
-        <div className="grow" />
-        <h1 className="text-center text-6xl font-medium">
-          The private Ethereum wallet
-        </h1>
-        <div className="h-4" />
-        <div className="text-center text-contrast text-2xl">
-          Meet the only Ethereum wallet with maximum privacy and security.
-        </div>
-        <div className="grow" />
-        <div className="flex items-center">
-          <SmallShrinkableOppositeAnchor
-            onClick={onLoginClick}
-            href={subpath.go("/login").href}>
-            <Outline.LockOpenIcon className="size-5" />
-            Login
-          </SmallShrinkableOppositeAnchor>
-          <div className="w-2" />
-          <SmallShrinkableContrastAnchor
-            href={subpath.go("/download").href}>
-            <Outline.ArrowDownTrayIcon className="size-5" />
+        <div className="p-4 grow w-full m-auto max-w-3xl flex flex-col">
+          <div className="h-[32rem] shrink-0 grow flex flex-col items-center">
+            <div className="grow" />
+            <h1 className="text-center text-6xl font-medium">
+              The private Ethereum wallet
+            </h1>
+            <div className="h-4" />
+            <div className="text-center text-contrast text-2xl">
+              Meet the only Ethereum wallet with maximum privacy and security.
+            </div>
+            <div className="grow" />
+            <div className="flex items-center">
+              <SmallShrinkableOppositeAnchor
+                onClick={onLoginClick}
+                href={subpath.go("/login").href}>
+                <Outline.LockOpenIcon className="size-5" />
+                Login
+              </SmallShrinkableOppositeAnchor>
+              <div className="w-2" />
+              <SmallShrinkableContrastAnchor
+                href={subpath.go("/download").href}>
+                <Outline.ArrowDownTrayIcon className="size-5" />
+                Download
+              </SmallShrinkableContrastAnchor>
+            </div>
+            <div className="grow" />
+            <div className="grow" />
+          </div>
+          <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]">
+            <InfoCard
+              title="0 VC"
+              onClick={on1Click}
+              href={subpath.go("/1").href}>
+              {`Fully crowdfunded by the community and for the community. No grants. No VCs.`}
+            </InfoCard>
+            <InfoCard
+              title="Tor"
+              href={subpath.go("/2").href}>
+              {`Built-in Tor to hide your IP address from third-parties. Each account has it's own IP.`}
+            </InfoCard>
+            <InfoCard
+              title="~40"
+              href={subpath.go("/3").href}>
+              {`Number of external dependencies. That's around 20x less than competitors.`}
+            </InfoCard>
+            <InfoCard
+              title="Auth"
+              href={subpath.go("/4").href}>
+              {`You can use WebAuthn to authenticate and sign transactions. All your keys are stored encrypted.`}
+            </InfoCard>
+            <InfoCard
+              title="Truth"
+              href={subpath.go("/5").href}>
+              {`Each request is sent to multiple servers to ensure no one lies about the blockchain state.`}
+            </InfoCard>
+            <InfoCard
+              title="MIT"
+              href={subpath.go("/6").href}>
+              {`All our code is MIT-licensed reproducible open-source. You can build it yourself.`}
+            </InfoCard>
+          </div>
+          <div className="h-16" />
+          <div className="text-center text-2xl font-medium"
+            id={subpath.go("/download").hash.slice(1)}>
             Download
-          </SmallShrinkableContrastAnchor>
+          </div>
+          <div className="h-8" />
+          <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
+            <DownloadCard
+              highlighted={typeof window.chrome !== "undefined"}
+              title="Chrome-like"
+              src="https://creatorspace.imgix.net/users/clgqaevj6002ix7014jawzcvs/GnJ478BvPfYaIVXG-LwaxBcxMpYs6pAQE-IMG_0184.png?w=750&h=750"
+              href="https://chromewebstore.google.com/detail/brume-wallet/oljgnlammonjehmmfahdjgjhjclpockd">
+              Chrome, Brave, Chromium, Edge, Opera, Vivaldi
+            </DownloadCard>
+            <DownloadCard
+              highlighted={navigator.userAgent.indexOf("Firefox") != -1}
+              title="Firefox-like"
+              src="https://creatorspace.imgix.net/users/clgqaevj6002ix7014jawzcvs/hHZum76zhgqcz9FX-xzH4KkqVxCFgsF3R-Firefox_logo%25252C_2019.svg.png?w=750&h=750"
+              href="https://addons.mozilla.org/firefox/addon/brumewallet/">
+              Firefox, Waterfox, Pale Moon, Basilisk, IceCat, IceWeasel
+            </DownloadCard>
+          </div>
+          <div className="h-4" />
+          <WideShrinkableContrastAnchor
+            target="_blank" rel="noreferrer"
+            href="https://github.com/brumewallet/wallet/releases">
+            <Outline.ArrowTopRightOnSquareIcon className="size-5" />
+            All releases
+          </WideShrinkableContrastAnchor>
+          <div className="h-[50vh]" />
         </div>
-        <div className="grow" />
-        <div className="grow" />
-      </div>
-      <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]">
-        <InfoCard
-          title="0 VC"
-          onClick={on1Click}
-          href={subpath.go("/1").href}>
-          {`Fully crowdfunded by the community and for the community. No grants. No VCs.`}
-        </InfoCard>
-        <InfoCard
-          title="Tor"
-          href={subpath.go("/2").href}>
-          {`Built-in Tor to hide your IP address from third-parties. Each account has it's own IP.`}
-        </InfoCard>
-        <InfoCard
-          title="~40"
-          href={subpath.go("/3").href}>
-          {`Number of external dependencies. That's around 20x less than competitors.`}
-        </InfoCard>
-        <InfoCard
-          title="Auth"
-          href={subpath.go("/4").href}>
-          {`You can use WebAuthn to authenticate and sign transactions. All your keys are stored encrypted.`}
-        </InfoCard>
-        <InfoCard
-          title="Truth"
-          href={subpath.go("/5").href}>
-          {`Each request is sent to multiple servers to ensure no one lies about the blockchain state.`}
-        </InfoCard>
-        <InfoCard
-          title="MIT"
-          href={subpath.go("/6").href}>
-          {`All our code is MIT-licensed reproducible open-source. You can build it yourself.`}
-        </InfoCard>
-      </div>
-      <div className="h-16" />
-      <div className="text-center text-2xl font-medium"
-        id={subpath.go("/download").hash.slice(1)}>
-        Download
-      </div>
-      <div className="h-8" />
-      <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
-        <DownloadCard
-          highlighted={typeof window.chrome !== "undefined"}
-          title="Chrome-like"
-          src="https://creatorspace.imgix.net/users/clgqaevj6002ix7014jawzcvs/GnJ478BvPfYaIVXG-LwaxBcxMpYs6pAQE-IMG_0184.png?w=750&h=750"
-          href="https://chromewebstore.google.com/detail/brume-wallet/oljgnlammonjehmmfahdjgjhjclpockd">
-          Chrome, Brave, Chromium, Edge, Opera, Vivaldi
-        </DownloadCard>
-        <DownloadCard
-          highlighted={navigator.userAgent.indexOf("Firefox") != -1}
-          title="Firefox-like"
-          src="https://creatorspace.imgix.net/users/clgqaevj6002ix7014jawzcvs/hHZum76zhgqcz9FX-xzH4KkqVxCFgsF3R-Firefox_logo%25252C_2019.svg.png?w=750&h=750"
-          href="https://addons.mozilla.org/firefox/addon/brumewallet/">
-          Firefox, Waterfox, Pale Moon, Basilisk, IceCat, IceWeasel
-        </DownloadCard>
-      </div>
-      <div className="h-4" />
-      <WideShrinkableContrastAnchor
-        target="_blank" rel="noreferrer"
-        href="https://github.com/brumewallet/wallet/releases">
-        <Outline.ArrowTopRightOnSquareIcon className="size-5" />
-        All releases
-      </WideShrinkableContrastAnchor>
-      <div className="h-[50vh]" />
-    </div>
-  </div>
+      </div>}
+  </>
 }
 
 export function UsersScreen(props: {}) {

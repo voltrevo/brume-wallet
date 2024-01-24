@@ -3,7 +3,7 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { User, UserData } from "@/mods/background/service_worker/entities/users/data";
 import { Nullable, Option } from "@hazae41/option";
 import { createContext, useCallback, useContext } from "react";
-import { UsersPage } from "./all/page";
+import { UsersPage2 } from "./all/page";
 import { useCurrentUser, useUser } from "./data";
 
 export const UserContext = createContext<Nullable<UserData>>(undefined)
@@ -26,7 +26,7 @@ export function UserGuard(props: ChildrenProps) {
   const userData = userQuery.data?.get()
 
   if (userData == null)
-    return <UsersPage ok={setCurrentUser} />
+    return <UsersPage2 ok={setCurrentUser} />
 
   return <UserContext.Provider value={userData}>
     {children}
