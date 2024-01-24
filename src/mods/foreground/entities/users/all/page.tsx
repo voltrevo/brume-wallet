@@ -96,24 +96,64 @@ export function UsersPage2(props: OkProps<User>) {
               title="~50"
               href="/3"
               subtitle={`Number of external dependencies. That's around 20x less than competitors.`}>
-              <div className="w-full">
-                <div className={`rounded-full bg-contrast h-12 px-4 w-[60.25%] flex items-center`}>
-                  MetaMask
+              {/* <div className="whitespace-pre-wrap">
+                {`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce non vulputate lorem. Integer turpis urna, elementum ac odio id, eleifend fringilla nisl. Aliquam vulputate, lacus eget congue porta, dolor lacus auctor ex, nec egestas dolor sem quis lorem. Nam tincidunt egestas est at porta. Maecenas in ultrices libero. Sed maximus purus lacus, eget pulvinar lacus tempor sit amet.`}
+              </div>
+              <div className="h-4" /> */}
+              <div className="p-4 bg-contrast rounded-xl">
+                <div className="font-medium text-xl">
+                  Number of external dependencies
                 </div>
-                <div className="h-2" />
-                <div className={`rounded-full bg-contrast h-12 px-4 w-[95.8%] flex items-center`}>
-                  Rabby
+                <div className="text-contrast">
+                  Took from package.json — Less is better
                 </div>
-                <div className="h-2" />
-                <div className={`rounded-full bg-contrast h-12 px-4 w-[64.8%] flex items-center`}>
-                  Rainbow
-                </div>
-                <div className="h-2" />
-                <div className="w-full flex items-center gap-4">
-                  <div className={`rounded-full bg-opposite text-opposite h-12 px-4 w-[4.25%]`} />
-                  {`Brume`}
+                <div className="h-4" />
+                <div className="w-full">
+                  <div className={`rounded-xl bg-contrast h-12 px-4 w-[60.25%] flex items-center gap-2`}>
+                    <div className="">
+                      MetaMask
+                    </div>
+                    <div className="text-contrast">
+                      ~725
+                    </div>
+                  </div>
+                  <div className="h-2" />
+                  <div className={`rounded-xl bg-contrast h-12 px-4 w-[95.8%] flex items-center gap-2`}>
+                    <div className="">
+                      Rabby
+                    </div>
+                    <div className="text-contrast">
+                      ~1150
+                    </div>
+                  </div>
+                  <div className="h-2" />
+                  <div className={`rounded-xl bg-contrast h-12 px-4 w-[64.8%] flex items-center gap-2`}>
+                    <div className="">
+                      Rainbow
+                    </div>
+                    <div className="text-contrast">
+                      ~780
+                    </div>
+                  </div>
+                  <div className="h-2" />
+                  <div className="w-full flex items-center">
+                    <div className={`rounded-xl bg-opposite text-opposite h-12 px-4 w-[4.25%]`} />
+                    <div className="w-4" />
+                    <div className="flex items-center gap-2">
+                      <div className="">
+                        Brume
+                      </div>
+                      <div className="text-contrast">
+                        ~50
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
+              {/* <div className="h-4" />
+              <div className="whitespace-pre-wrap">
+                {`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce non vulputate lorem. Integer turpis urna, elementum ac odio id, eleifend fringilla nisl. Aliquam vulputate, lacus eget congue porta, dolor lacus auctor ex, nec egestas dolor sem quis lorem. Nam tincidunt egestas est at porta. Maecenas in ultrices libero. Sed maximus purus lacus, eget pulvinar lacus tempor sit amet.`}
+              </div> */}
             </InfoCard>
             <InfoCard
               title="Auth"
