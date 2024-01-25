@@ -109,7 +109,6 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
           </SmallShrinkableOppositeButton>
         </div>
       </div>
-
     </div>
   </Page>
 }

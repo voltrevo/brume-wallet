@@ -332,7 +332,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     </Dialog.Title>
     <div className="h-4" />
     <SimpleLabel>
-      <div className="">
+      <div className="shrink-0">
         Target
       </div>
       <div className="w-4" />
@@ -344,7 +344,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     <div className="h-2" />
     {mode === "valued" &&
       <SimpleLabel>
-        <div className="">
+        <div className="shrink-0">
           Value
         </div>
         <div className="w-4" />
@@ -393,7 +393,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       </SimpleLabel>}
     {mode === "priced" &&
       <SimpleLabel>
-        <div className="">
+        <div className="shrink-0">
           Value
         </div>
         <div className="w-4" />

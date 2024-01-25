@@ -65,7 +65,7 @@ export function WalletTransactionScreenNonce(props: {}) {
     </Dialog.Title>
     <div className="h-4" />
     <SimpleLabel>
-      <div className="">
+      <div className="shrink-0">
         Nonce
       </div>
       <div className="w-4" />

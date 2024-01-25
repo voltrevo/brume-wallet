@@ -283,7 +283,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     </Dialog.Title>
     <div className="h-4" />
     <SimpleLabel>
-      <div className="">
+      <div className="shrink-0">
         Target
       </div>
       <div className="w-4" />
@@ -295,7 +295,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     <div className="h-2" />
     {mode === "valued" &&
       <SimpleLabel>
-        <div className="">
+        <div className="shrink-0">
           Value
         </div>
         <div className="w-4" />
@@ -344,7 +344,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
       </SimpleLabel>}
     {mode === "priced" &&
       <SimpleLabel>
-        <div className="">
+        <div className="shrink-0">
           Value
         </div>
         <div className="w-4" />

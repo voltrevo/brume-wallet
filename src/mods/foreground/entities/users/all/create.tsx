@@ -77,7 +77,7 @@ export function UserCreateDialog(props: {}) {
 
   const NameInput =
     <SimpleLabel>
-      <div className="">
+      <div className="shrink-0">
         Name
       </div>
       <div className="w-4" />
@@ -89,7 +89,7 @@ export function UserCreateDialog(props: {}) {
 
   const PasswordInput =
     <SimpleLabel>
-      <div className="">
+      <div className="shrink-0">
         Password
       </div>
       <div className="w-4" />
@@ -102,8 +102,8 @@ export function UserCreateDialog(props: {}) {
 
   const PasswordInput2 =
     <SimpleLabel>
-      <div className="">
-        Confirm password
+      <div className="shrink-0">
+        Password
       </div>
       <div className="w-4" />
       <SimpleInput

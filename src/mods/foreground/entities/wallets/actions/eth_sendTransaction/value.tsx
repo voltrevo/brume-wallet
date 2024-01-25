@@ -864,7 +864,7 @@ export function WalletTransactionScreenValue(props: {}) {
     </Dialog.Title>
     <div className="h-4" />
     <SimpleLabel>
-      <div className="">
+      <div className="shrink-0">
         Target
       </div>
       <div className="w-4" />
@@ -874,7 +874,7 @@ export function WalletTransactionScreenValue(props: {}) {
     </SimpleLabel>
     <div className="h-2" />
     <SimpleLabel>
-      <div className="">
+      <div className="shrink-0">
         Value
       </div>
       <div className="w-4" />
@@ -906,7 +906,7 @@ export function WalletTransactionScreenValue(props: {}) {
     </div>
     <div className="h-2" />
     <SimpleLabel>
-      <div className="">
+      <div className="shrink-0">
         Nonce
       </div>
       <div className="w-4" />
@@ -923,7 +923,7 @@ export function WalletTransactionScreenValue(props: {}) {
     <div className="h-2" />
     <div className="po-md flex flex-col bg-contrast rounded-xl">
       <div className="flex items-start">
-        <div className="">
+        <div className="shrink-0">
           Data
         </div>
         <div className="w-4" />
@@ -947,7 +947,7 @@ export function WalletTransactionScreenValue(props: {}) {
     </div>
     <div className="h-2" />
     <SimpleLabel>
-      <div className="">
+      <div className="shrink-0">
         Gas
       </div>
       <div className="w-4" />
@@ -989,7 +989,7 @@ export function WalletTransactionScreenValue(props: {}) {
     {gasMode === "custom" && maybeIsEip1559 === false && <>
       <div className="h-2" />
       <SimpleLabel>
-        <div className="">
+        <div className="shrink-0">
           Gas Limit
         </div>
         <div className="w-4" />
@@ -1000,7 +1000,7 @@ export function WalletTransactionScreenValue(props: {}) {
       </SimpleLabel>
       <div className="h-2" />
       <SimpleLabel>
-        <div className="">
+        <div className="shrink-0">
           Gas Price
         </div>
         <div className="w-4" />
@@ -1013,7 +1013,7 @@ export function WalletTransactionScreenValue(props: {}) {
     {gasMode === "custom" && maybeIsEip1559 === true && <>
       <div className="h-2" />
       <SimpleLabel>
-        <div className="">
+        <div className="shrink-0">
           Gas Limit
         </div>
         <div className="w-4" />
@@ -1024,7 +1024,7 @@ export function WalletTransactionScreenValue(props: {}) {
       </SimpleLabel>
       <div className="h-2" />
       <SimpleLabel>
-        <div className="">
+        <div className="shrink-0">
           Base Fee Per Gas
         </div>
         <div className="w-4" />
@@ -1035,7 +1035,7 @@ export function WalletTransactionScreenValue(props: {}) {
       </SimpleLabel>
       <div className="h-2" />
       <SimpleLabel>
-        <div className="">
+        <div className="shrink-0">
           Max Priority Fee Per Gas
         </div>
         <div className="w-4" />
