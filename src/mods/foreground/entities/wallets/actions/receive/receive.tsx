@@ -1,27 +1,30 @@
 /* eslint-disable @next/next/no-img-element */
 import { useCopy } from "@/libs/copy/copy";
 import { Outline } from "@/libs/icons/icons";
-import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Address } from "@hazae41/cubane";
 import { Result } from "@hazae41/result";
 import createQR from "@paulmillr/qr";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useWalletDataContext } from "../../context";
 import { WideShrinkableOppositeButton } from "../send";
 
 export function WalletDataReceiveScreen(props: {}) {
-  const close = useCloseContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
 
   const address = useMemo(() => {
     return Address.from(wallet.address)!
   }, [wallet.address])
+  const [url, setUrl] = useState<string>()
 
-  const url = useMemo(() => {
+  useEffect(() => {
     const bytes = createQR(address, "gif", { ecc: "medium", scale: 10 })
     const blob = new Blob([bytes], { type: "image/gif" })
+    const url = URL.createObjectURL(blob)
 
-    return URL.createObjectURL(blob)
+    setUrl(url)
+
+    return () => URL.revokeObjectURL(url)
   }, [address])
 
   const onCopyClick = useCopy(address)
