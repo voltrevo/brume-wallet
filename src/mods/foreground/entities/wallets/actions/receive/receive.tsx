@@ -33,7 +33,7 @@ export function WalletDataReceiveScreen(props: {}) {
   }, [address])
 
   return <>
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       Receive
     </Dialog.Title>
     <div className="grow flex flex-col items-center justify-center">

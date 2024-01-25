@@ -34,7 +34,7 @@ export function WalletCreatorDialog(props: {}) {
         close={onClose}>
         <StandaloneWalletCreatorDialog />
       </Dialog>}
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       New wallet
     </Dialog.Title>
     <div className="h-2" />

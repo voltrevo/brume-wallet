@@ -119,7 +119,7 @@ export function UserCreateDialog(props: {}) {
     </WideShrinkableOppositeButton>
 
   return <>
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       New user
     </Dialog.Title>
     <div className="h-2" />

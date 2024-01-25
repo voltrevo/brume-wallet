@@ -278,7 +278,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
         index={i}
         address={address}
         ok={onPrice} />)}
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />

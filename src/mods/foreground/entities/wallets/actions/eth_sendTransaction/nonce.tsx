@@ -60,7 +60,7 @@ export function WalletTransactionScreenNonce(props: {}) {
   }, [setNonce, setStep])
 
   return <>
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />

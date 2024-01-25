@@ -149,7 +149,7 @@ export function UsersScreen(props: {}) {
   const maybeUsers = usersQuery.current?.ok().get()
 
   return <>
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       Login
     </Dialog.Title>
     <div className="h-4" />

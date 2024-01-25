@@ -210,7 +210,7 @@ export function SeededWalletCreatorDialog(props: {}) {
     </Button.Gradient>
 
   return <>
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       New wallet
     </Dialog.Title>
     <div className="h-2" />

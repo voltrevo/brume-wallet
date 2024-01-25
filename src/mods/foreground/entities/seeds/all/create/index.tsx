@@ -51,7 +51,7 @@ export function SeedCreatorDialog(props: {}) {
         close={onClose}>
         <LedgerSeedCreatorDialog />
       </Dialog>}
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       New seed
     </Dialog.Title>
     <div className="h-2" />

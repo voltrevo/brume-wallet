@@ -87,7 +87,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
     </Button.Gradient>
 
   return <>
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       New seed
     </Dialog.Title>
     <div className="h-2" />

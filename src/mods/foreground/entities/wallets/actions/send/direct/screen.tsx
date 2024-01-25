@@ -260,7 +260,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
         index={i}
         address={address}
         ok={onPrice} />)}
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       Transact on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />

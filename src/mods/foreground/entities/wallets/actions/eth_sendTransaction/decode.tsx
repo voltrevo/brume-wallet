@@ -31,7 +31,7 @@ export function WalletDecodeScreen(props: {}) {
     return null
 
   return <>
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       Decode transaction data
     </Dialog.Title>
     <div className="h-4" />

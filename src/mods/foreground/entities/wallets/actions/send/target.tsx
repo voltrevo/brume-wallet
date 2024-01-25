@@ -105,7 +105,7 @@ export function WalletSendScreenTarget(props: {}) {
   }, [setType, setStep, setTarget])
 
   return <>
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />

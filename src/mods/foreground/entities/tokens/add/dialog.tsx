@@ -140,7 +140,7 @@ export function TokenAddDialog(props: {}) {
   }, [defAddress])
 
   return <>
-    <Dialog.Title close={close}>
+    <Dialog.Title>
       New token
     </Dialog.Title>
     <div className="h-2" />

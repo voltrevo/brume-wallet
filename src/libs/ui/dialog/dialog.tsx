@@ -221,7 +221,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
 
 export namespace Dialog {
 
-  export function Title(props: ChildrenProps & CloseProps) {
+  export function Title(props: ChildrenProps) {
     const { children } = props
 
     return <h1 className="flex items-center">
@@ -238,7 +238,7 @@ export namespace Dialog {
       {open.current &&
         <Dialog
           close={open.disable}>
-          <Dialog.Title close={open.disable}>
+          <Dialog.Title>
             Hello world
           </Dialog.Title>
           Hello world
@@ -271,7 +271,7 @@ export namespace Dialog {
       {open.current &&
         <Dialog
           close={open.disable}>
-          <Dialog.Title close={open.disable}>
+          <Dialog.Title>
             Hello world
           </Dialog.Title>
           Hello world
