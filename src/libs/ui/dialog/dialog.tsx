@@ -2,9 +2,9 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { DarkProps } from "@/libs/react/props/dark"
 import { usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable, Option } from "@hazae41/option"
-import { UIEvent, createContext, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react"
+import { KeyboardEvent, SyntheticEvent, UIEvent, createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
-import { Events, useKeyboardEscape, useMouse } from "../../react/events"
+import { Events, useMouse } from "../../react/events"
 import { ChildrenProps } from "../../react/props/children"
 import { CloseProps } from "../../react/props/close"
 import { Button } from "../button"
@@ -23,27 +23,89 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
   const x = url.searchParams.get("x")
   const y = url.searchParams.get("y")
 
-  const [visible, setVisible] = useState(true)
-  const [mounted, setMounted] = useState(false)
+  const previous = useRef(document.activeElement)
 
-  const hide = useCallback(() => {
-    setVisible(false)
+  /**
+   * Restore focus on unmount
+   */
+  useEffect(() => () => {
+    if (previous.current == null)
+      return
+    if (!(previous.current instanceof HTMLElement))
+      return
+    previous.current.focus()
   }, [])
 
   const [dialog, setDialog] = useState<HTMLDialogElement | null>(null)
 
-  const onEscape = useKeyboardEscape(hide)
-
-  const onClickOutside = useMouse<HTMLDivElement>(e => {
-    if (e.clientX > e.currentTarget.clientWidth)
+  /**
+   * Forcefully open HTML dialog on mount
+   */
+  useLayoutEffect(() => {
+    if (!document.body.contains(dialog))
       return
+    dialog?.showModal()
+  }, [dialog])
+
+  /**
+   * Pre-animation state
+   */
+  const [visible, setVisible] = useState(true)
+
+  /**
+   * Post-animation state
+   */
+  const [mounted, setMounted] = useState(false)
+
+  /**
+   * Smoothly close the dialog
+   */
+  const hide = useCallback(() => {
+    setVisible(false)
+  }, [])
+
+  /**
+   * Smoothly close the dialog on escape
+   */
+  const onEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key !== "Escape")
+      return
+
+    e.preventDefault()
+
     hide()
   }, [hide])
 
+  /**
+   * Smoothly close the dialog on outside click
+   */
+  const onClickOutside = useMouse<HTMLDivElement>(e => {
+    if (e.clientX > e.currentTarget.clientWidth)
+      return
+
+    e.preventDefault()
+
+    hide()
+  }, [hide])
+
+  /**
+   * When the dialog could not be closed smoothly
+   * @example Safari on escape
+   */
+  const onClose = useCallback((e: SyntheticEvent) => {
+    close()
+  }, [close])
+
+  /**
+   * Sync mounted state with visible state on animation end
+   */
   const onAnimationEnd = useCallback(() => {
     flushSync(() => setMounted(visible))
   }, [visible])
 
+  /**
+   * Unmount this component from parent when both visible and mounted are false
+   */
   useEffect(() => {
     if (visible)
       return
@@ -52,17 +114,6 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
     close()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, mounted])
-
-  /**
-   * Show HTML dialog when displayed
-   */
-  useLayoutEffect(() => {
-    if (!document.body.contains(dialog))
-      return
-
-    dialog?.showModal()
-    return () => dialog?.close()
-  }, [dialog])
 
   /**
    * Set theme-color based on dark prop
@@ -134,6 +185,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
       <dialog className=""
         style={{ "--x": `${x}px`, "--y": `${y}px` } as any}
         onKeyDown={onEscape}
+        onClose={onClose}
         ref={setDialog}>
         <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
           aria-hidden="true"
