@@ -67,9 +67,9 @@ export function UserCreateDialog(props: {}) {
   }, [uuid, finalNameInput, color, emoji, defPasswordInput, background, users.mutate, close])
 
   const error = useMemo(() => {
-    if (!defPasswordInput)
+    if (defPasswordInput.length < 3)
       return "Password is required"
-    if (!defConfirmPasswordInput)
+    if (defConfirmPasswordInput.length < 3)
       return "Confirm the password"
     if (defPasswordInput !== defConfirmPasswordInput)
       return "Passwords are not the same"

@@ -1,14 +1,14 @@
+import { Color } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { PromiseProps } from "@/libs/react/props/promise";
-import { Button } from "@/libs/ui/button";
-import { Input } from "@/libs/ui/input";
 import { User, UserProps } from "@/mods/background/service_worker/entities/users/data";
 import { useCallback, useDeferredValue, useRef, useState } from "react";
 import { Page } from "../../../../libs/ui2/page/page";
 import { useBackgroundContext } from "../../background/context";
-import { UserAvatar } from "./all/page";
+import { SimpleLabel } from "../wallets/actions/send";
+import { SmallShrinkableContrastButton, SmallShrinkableOppositeButton, UserAvatar2 } from "./all/page";
 import { useUser } from "./data";
 
 export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
@@ -32,7 +32,7 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
   const login = useAsyncUniqueCallback(async () => {
     if (userQuery.data == null)
       return
-    if (defPasswordInput?.length < 3)
+    if (defPasswordInput.length < 3)
       return
 
     const response = await background.tryRequest({
@@ -73,40 +73,40 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
     <div className="grow flex justify-center items-center">
       <div className="">
         <div className="flex flex-col items-center">
-          <UserAvatar className="size-16 text-2xl"
-            colorIndex={userQuery.data.get().color}
+          <UserAvatar2 className="size-16 text-2xl"
+            color={Color.get(userQuery.data.get().color)}
             name={userQuery.data.get().name} />
-          <div className="h-1" />
+          <div className="h-2" />
           <div className="font-medium">
             {userQuery.data.get().name}
           </div>
         </div>
         <div className="h-4" />
-        <Input.Contrast className="data-[invalid=true]:border-red-500 data-[invalid=true]:text-red-500"
-          xref={passwordInputRef}
-          type="password" autoFocus
-          value={rawPasswordInput}
-          onChange={onPasswordInputChange}
-          disabled={login.loading}
-          data-invalid={invalid}
-          placeholder="Password"
-          onKeyDown={onKeyDown} />
+        <SimpleLabel>
+          <input className="bg-transparent outline-none min-w-0 disabled:text-contrast data-[invalid=true]:border-red-500 data-[invalid=true]:text-red-500"
+            ref={passwordInputRef}
+            type="password"
+            value={rawPasswordInput}
+            onChange={onPasswordInputChange}
+            disabled={login.loading}
+            data-invalid={invalid}
+            placeholder="Password"
+            onKeyDown={onKeyDown}
+            autoFocus />
+        </SimpleLabel>
         <div className="h-2" />
         <div className="flex items-center gap-2">
-          <Button.Contrast className="grow po-sm hovered-or-clicked-or-focused:scale-105 !transition-transform"
+          <SmallShrinkableContrastButton
             onClick={err}>
-            <div className={`${Button.Shrinker.className}`}>
-              <Outline.ChevronLeftIcon className="size-5" />
-              Cancel
-            </div>
-          </Button.Contrast>
-          <Button.Opposite className="grow po-sm hovered-or-clicked-or-focused:scale-105 !transition-transform"
+            <Outline.ChevronLeftIcon className="size-5" />
+            Cancel
+          </SmallShrinkableContrastButton>
+          <SmallShrinkableOppositeButton
+            disabled={defPasswordInput.length < 3 || login.loading}
             onClick={onLogin}>
-            <div className={`${Button.Shrinker.className}`}>
-              <Outline.LockOpenIcon className="size-5" />
-              Unlock
-            </div>
-          </Button.Opposite>
+            <Outline.LockOpenIcon className="size-5" />
+            Unlock
+          </SmallShrinkableOppositeButton>
         </div>
       </div>
 
