@@ -11,7 +11,7 @@ import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/fo
 import { Address, Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableOppositeButton } from "..";
+import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableOppositeButton } from "..";
 import { useEnsLookup } from "../../../../names/data";
 import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "../../../../transactions/data";
@@ -264,7 +264,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
       Transact on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleBox>
+    <SimpleLabel>
       <div className="">
         Target
       </div>
@@ -273,10 +273,10 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
         readOnly
         onFocus={onTargetFocus}
         value={maybeTarget} />
-    </SimpleBox>
+    </SimpleLabel>
     <div className="h-2" />
     {mode === "valued" &&
-      <SimpleBox>
+      <SimpleLabel>
         <div className="">
           Value
         </div>
@@ -323,9 +323,9 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
             100%
           </ShrinkableContrastButtonInInputBox>
         </div>
-      </SimpleBox>}
+      </SimpleLabel>}
     {mode === "priced" &&
-      <SimpleBox>
+      <SimpleLabel>
         <div className="">
           Value
         </div>
@@ -372,7 +372,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
             100%
           </ShrinkableContrastButtonInInputBox>
         </div>
-      </SimpleBox>}
+      </SimpleLabel>}
     <div className="h-4" />
     {maybeTransaction != null && <>
       <div className="font-medium">

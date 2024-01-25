@@ -11,7 +11,7 @@ import { Abi, Address, Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { Result } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableOppositeButton } from "..";
+import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableOppositeButton } from "..";
 import { useEnsLookup } from "../../../../names/data";
 import { useNativeBalance, useNativePricedBalance, useToken } from "../../../../tokens/data";
 import { useWalletDataContext } from "../../../context";
@@ -282,7 +282,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleBox>
+    <SimpleLabel>
       <div className="">
         Target
       </div>
@@ -291,10 +291,10 @@ export function WalletDirectSendScreenContractValue(props: {}) {
         readOnly
         onFocus={onTargetFocus}
         value={maybeTarget} />
-    </SimpleBox>
+    </SimpleLabel>
     <div className="h-2" />
     {mode === "valued" &&
-      <SimpleBox>
+      <SimpleLabel>
         <div className="">
           Value
         </div>
@@ -341,9 +341,9 @@ export function WalletDirectSendScreenContractValue(props: {}) {
             100%
           </ShrinkableContrastButtonInInputBox>
         </div>
-      </SimpleBox>}
+      </SimpleLabel>}
     {mode === "priced" &&
-      <SimpleBox>
+      <SimpleLabel>
         <div className="">
           Value
         </div>
@@ -390,7 +390,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
             100%
           </ShrinkableContrastButtonInInputBox>
         </div>
-      </SimpleBox>}
+      </SimpleLabel>}
     <div className="h-4" />
     {maybeTransaction != null && <>
       <div className="font-medium">

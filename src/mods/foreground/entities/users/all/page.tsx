@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Gradients } from "@/libs/colors/colors";
+import { Color, Gradient, Gradients } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { Events, useMouse } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
@@ -13,7 +13,7 @@ import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { Page } from "@/libs/ui2/page/page";
-import { User, UserDataProps, UserProps } from "@/mods/background/service_worker/entities/users/data";
+import { User, UserProps } from "@/mods/background/service_worker/entities/users/data";
 import { OneDisplay } from "@/mods/foreground/landing/1/1";
 import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
 import { PathContext, useSubpath } from "@/mods/foreground/router/path/context";
@@ -174,7 +174,8 @@ export function UserCard(props: UserProps) {
 
   return <div className="po-md bg-contrast rounded-xl flex items-center">
     <UserAvatar2 className="size-12 text-2xl"
-      user={maybeUser} />
+      color={Color.get(maybeUser.color)}
+      name={maybeUser.name} />
     <div className="w-4" />
     <div className="font-medium">
       {maybeUser.name}
@@ -450,7 +451,7 @@ function UserOkButton(props: UserProps & OkProps<User>) {
     <UserAvatar className="size-16 text-2xl"
       colorIndex={user.data.get().color}
       name={user.data.get().name} />
-    <div className="h-1" />
+    <div className="h-2" />
     <div className="font-medium">
       {user.data.get().name}
     </div>
@@ -465,20 +466,20 @@ function NewUserButton(props: OkProps<unknown>) {
     <div className="rounded-full size-16 flex justify-center items-center border border-contrast border-dashed">
       <Outline.PlusIcon className="size-6" />
     </div>
-    <div className="h-1" />
+    <div className="h-2" />
     <div className="font-medium">
       New user
     </div>
   </button>
 }
 
-export function UserAvatar2(props: ClassNameProps & UserDataProps) {
-  const { user, className } = props
+export function UserAvatar2(props: ClassNameProps & { name: string } & { color: Color }) {
+  const { color, name, className } = props
 
-  const [color1, color2] = Gradients.get(user.color)
+  const [color1, color2] = Gradient.get(color)
 
-  return <div className={`bg-gradient-to-br from-${color1} to-${color2} rounded-full flex justify-center items-center ${className} text-white`}>
-    {user.name[0]}
+  return <div className={`bg-gradient-to-br from-${color1}-400 dark:from-${color1}-500 to-${color2}-400 dark:to-${color2}-500 rounded-full flex justify-center items-center ${className} text-white`}>
+    {name[0]}
   </div>
 }
 

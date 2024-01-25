@@ -40,20 +40,12 @@ export function WalletSendScreen(props: {}) {
   return null
 }
 
-export function SimpleBox(props: ChildrenProps) {
+export function SimpleLabel(props: ChildrenProps) {
   const { children } = props
 
-  return <div className="po-md flex items-start bg-contrast rounded-xl">
+  return <label className="po-md flex items-start bg-contrast rounded-xl">
     {children}
-  </div>
-}
-
-export function WideBox(props: ChildrenProps) {
-  const { children } = props
-
-  return <div className="grow po-md flex items-start bg-contrast rounded-xl">
-    {children}
-  </div>
+  </label>
 }
 
 export function SimpleInput(props: InputProps) {

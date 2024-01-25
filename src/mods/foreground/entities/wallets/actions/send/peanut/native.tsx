@@ -18,7 +18,7 @@ import { Nullable, Option, Optional } from "@hazae41/option";
 import { Result } from "@hazae41/result";
 import { Secp256k1 } from "@hazae41/secp256k1";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableOppositeButton } from "..";
+import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableOppositeButton } from "..";
 import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/data";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext2 } from "../../../data";
@@ -331,7 +331,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleBox>
+    <SimpleLabel>
       <div className="">
         Target
       </div>
@@ -340,10 +340,10 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
         readOnly
         onFocus={onTargetFocus}
         value="Peanut" />
-    </SimpleBox>
+    </SimpleLabel>
     <div className="h-2" />
     {mode === "valued" &&
-      <SimpleBox>
+      <SimpleLabel>
         <div className="">
           Value
         </div>
@@ -390,9 +390,9 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
             100%
           </ShrinkableContrastButtonInInputBox>
         </div>
-      </SimpleBox>}
+      </SimpleLabel>}
     {mode === "priced" &&
-      <SimpleBox>
+      <SimpleLabel>
         <div className="">
           Value
         </div>
@@ -439,7 +439,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
             100%
           </ShrinkableContrastButtonInInputBox>
         </div>
-      </SimpleBox>}
+      </SimpleLabel>}
     <div className="h-4" />
     {maybeTransaction0 != null && <>
       <div className="font-medium">

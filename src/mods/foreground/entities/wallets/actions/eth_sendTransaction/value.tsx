@@ -27,7 +27,7 @@ import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "
 import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../data";
 import { PriceResolver } from "../../page";
-import { ShrinkableContrastButtonInInputBox, ShrinkableContrastButtonInTextareaBox, SimpleBox, SimpleInput, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../send";
+import { ShrinkableContrastButtonInInputBox, ShrinkableContrastButtonInTextareaBox, SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../send";
 import { WalletDecodeScreen } from "./decode";
 
 export function WalletTransactionScreenValue(props: {}) {
@@ -863,7 +863,7 @@ export function WalletTransactionScreenValue(props: {}) {
       Transact on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleBox>
+    <SimpleLabel>
       <div className="">
         Target
       </div>
@@ -871,9 +871,9 @@ export function WalletTransactionScreenValue(props: {}) {
       <SimpleInput
         readOnly
         value={maybeTarget} />
-    </SimpleBox>
+    </SimpleLabel>
     <div className="h-2" />
-    <SimpleBox>
+    <SimpleLabel>
       <div className="">
         Value
       </div>
@@ -899,13 +899,13 @@ export function WalletTransactionScreenValue(props: {}) {
           </div>
         </div>
       </div>
-    </SimpleBox>
+    </SimpleLabel>
     <div className="h-4" />
     <div className="font-medium">
       Advanced
     </div>
     <div className="h-2" />
-    <SimpleBox>
+    <SimpleLabel>
       <div className="">
         Nonce
       </div>
@@ -919,7 +919,7 @@ export function WalletTransactionScreenValue(props: {}) {
         onClick={onNonceClick}>
         Select
       </ShrinkableContrastButtonInInputBox>
-    </SimpleBox>
+    </SimpleLabel>
     <div className="h-2" />
     <div className="po-md flex flex-col bg-contrast rounded-xl">
       <div className="flex items-start">
@@ -946,7 +946,7 @@ export function WalletTransactionScreenValue(props: {}) {
       Gas
     </div>
     <div className="h-2" />
-    <SimpleBox>
+    <SimpleLabel>
       <div className="">
         Gas
       </div>
@@ -985,10 +985,10 @@ export function WalletTransactionScreenValue(props: {}) {
             Custom
           </option>
         </select>}
-    </SimpleBox>
+    </SimpleLabel>
     {gasMode === "custom" && maybeIsEip1559 === false && <>
       <div className="h-2" />
-      <SimpleBox>
+      <SimpleLabel>
         <div className="">
           Gas Limit
         </div>
@@ -997,9 +997,9 @@ export function WalletTransactionScreenValue(props: {}) {
           value={rawGasLimitInput}
           onChange={onGasLimitInputChange}
           placeholder={maybeFetchedGasLimit?.toString()} />
-      </SimpleBox>
+      </SimpleLabel>
       <div className="h-2" />
-      <SimpleBox>
+      <SimpleLabel>
         <div className="">
           Gas Price
         </div>
@@ -1008,11 +1008,11 @@ export function WalletTransactionScreenValue(props: {}) {
           value={rawGasPriceInput}
           onChange={onGasPriceInputChange}
           placeholder={maybeFetchedGasPrice?.toString()} />
-      </SimpleBox>
+      </SimpleLabel>
     </>}
     {gasMode === "custom" && maybeIsEip1559 === true && <>
       <div className="h-2" />
-      <SimpleBox>
+      <SimpleLabel>
         <div className="">
           Gas Limit
         </div>
@@ -1021,9 +1021,9 @@ export function WalletTransactionScreenValue(props: {}) {
           value={rawGasLimitInput}
           onChange={onGasLimitInputChange}
           placeholder={maybeFetchedGasLimit?.toString()} />
-      </SimpleBox>
+      </SimpleLabel>
       <div className="h-2" />
-      <SimpleBox>
+      <SimpleLabel>
         <div className="">
           Base Fee Per Gas
         </div>
@@ -1032,9 +1032,9 @@ export function WalletTransactionScreenValue(props: {}) {
           value={rawBaseFeePerGasInput}
           onChange={onBaseFeePerGasInputChange}
           placeholder={maybeFetchedBaseFeePerGas?.toString()} />
-      </SimpleBox>
+      </SimpleLabel>
       <div className="h-2" />
-      <SimpleBox>
+      <SimpleLabel>
         <div className="">
           Max Priority Fee Per Gas
         </div>
@@ -1043,7 +1043,7 @@ export function WalletTransactionScreenValue(props: {}) {
           value={rawMaxPriorityFeePerGasInput}
           onChange={onMaxPriorityFeePerGasInputChange}
           placeholder={maybeFetchedMaxPriorityFeePerGas?.toString()} />
-      </SimpleBox>
+      </SimpleLabel>
     </>}
     {maybeIsEip1559 === false && maybeFinalLegacyGasCost != null && <>
       <div className="h-2" />

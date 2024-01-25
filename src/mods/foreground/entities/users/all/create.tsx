@@ -1,4 +1,4 @@
-import { Colors } from "@/libs/colors/colors";
+import { Color } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
 import { Mutators } from "@/libs/glacier/mutators";
 import { Outline } from "@/libs/icons/icons";
@@ -10,9 +10,9 @@ import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { User, UserInit } from "@/mods/background/service_worker/entities/users/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useDeferredValue, useMemo, useState } from "react";
-import { SimpleBox, SimpleInput, WideBox, WideShrinkableGradientButton } from "../../wallets/actions/send";
+import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../wallets/actions/send";
 import { useUsers } from "../data";
-import { UserAvatar } from "./page";
+import { UserAvatar2 } from "./page";
 
 export function UserCreateDialog(props: {}) {
   const close = useCloseContext().unwrap()
@@ -23,12 +23,16 @@ export function UserCreateDialog(props: {}) {
   const uuid = useConstant(() => crypto.randomUUID())
 
   const modhash = useModhash(uuid)
-  const color = Colors.mod(modhash)
+  const color = Color.get(modhash)
   const emoji = Emojis.get(modhash)
 
   const [rawNameInput = "", setRawNameInput] = useState<string>()
 
   const defNameInput = useDeferredValue(rawNameInput)
+
+  const finalNameInput = useMemo(() => {
+    return defNameInput || "John Doe"
+  }, [defNameInput])
 
   const onNameInputChange = useInputChange(e => {
     setRawNameInput(e.currentTarget.value)
@@ -50,12 +54,8 @@ export function UserCreateDialog(props: {}) {
     setRawConfirmPasswordInput(e.currentTarget.value)
   }, [])
 
-  const isSamePassword = useMemo(() => {
-    return defPasswordInput === defConfirmPasswordInput
-  }, [defPasswordInput, defConfirmPasswordInput])
-
   const onClick = useAsyncUniqueCallback(async () => {
-    const user: UserInit = { uuid, name: defNameInput, color, emoji, password: defPasswordInput }
+    const user: UserInit = { uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, password: defPasswordInput }
 
     const usersData = await background
       .tryRequest<User[]>({ method: "brume_createUser", params: [user] })
@@ -64,55 +64,58 @@ export function UserCreateDialog(props: {}) {
     users.mutate(Mutators.data(usersData))
 
     close()
-  }, [uuid, defNameInput, color, emoji, defPasswordInput, background, users.mutate, close])
+  }, [uuid, finalNameInput, color, emoji, defPasswordInput, background, users.mutate, close])
 
   const error = useMemo(() => {
-    if (!defNameInput)
-      return "Name is required"
     if (!defPasswordInput)
       return "Password is required"
     if (!defConfirmPasswordInput)
       return "Confirm the password"
-    if (!isSamePassword)
+    if (defPasswordInput !== defConfirmPasswordInput)
       return "Passwords are not the same"
-  }, [defConfirmPasswordInput, defNameInput, defPasswordInput, isSamePassword])
+  }, [defConfirmPasswordInput, defPasswordInput])
 
   const NameInput =
-    <div className="flex items-center gap-2">
-      <div className="shrink-0">
-        <UserAvatar className="size-12 text-2xl"
-          colorIndex={color}
-          name={defNameInput} />
+    <SimpleLabel>
+      <div className="">
+        Name
       </div>
-      <WideBox>
-        <SimpleInput
-          placeholder="Enter a name"
-          value={rawNameInput}
-          onChange={onNameInputChange} />
-      </WideBox>
-    </div>
+      <div className="w-4" />
+      <SimpleInput
+        placeholder="John Doe"
+        value={rawNameInput}
+        onChange={onNameInputChange} />
+    </SimpleLabel>
 
   const PasswordInput =
-    <SimpleBox>
+    <SimpleLabel>
+      <div className="">
+        Password
+      </div>
+      <div className="w-4" />
       <SimpleInput
         type="password"
-        placeholder="Enter a password"
+        placeholder=""
         value={rawPasswordInput}
         onChange={onPasswordInputChange} />
-    </SimpleBox>
+    </SimpleLabel>
 
   const PasswordInput2 =
-    <SimpleBox>
+    <SimpleLabel>
+      <div className="">
+        Confirm password
+      </div>
+      <div className="w-4" />
       <SimpleInput
         type="password"
-        placeholder="Confirm the password"
+        placeholder=""
         value={rawConfirmPasswordInput}
         onChange={onConfirmPasswordInputChange} />
-    </SimpleBox>
+    </SimpleLabel>
 
   const DoneButton =
     <WideShrinkableGradientButton
-      color="emerald"
+      color={color}
       disabled={error != null}
       onClick={onClick.run}>
       <Outline.PlusIcon className="size-5" />
@@ -123,13 +126,23 @@ export function UserCreateDialog(props: {}) {
     <Dialog.Title>
       New user
     </Dialog.Title>
+    <div className="h-4" />
+    <div className="grow flex flex-col items-center justify-center">
+      <UserAvatar2 className="size-16 text-2xl"
+        name={finalNameInput}
+        color={color} />
+      <div className="h-2" />
+      <div className="font-medium">
+        {finalNameInput}
+      </div>
+    </div>
     <div className="h-2" />
     {NameInput}
-    <div className="h-4" />
+    <div className="h-2" />
     {PasswordInput}
     <div className="h-2" />
     {PasswordInput2}
-    <div className="h-4 grow" />
+    <div className="h-4" />
     <div className="flex items-center">
       {DoneButton}
     </div>

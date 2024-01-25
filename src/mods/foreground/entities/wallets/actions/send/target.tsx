@@ -8,7 +8,7 @@ import { usePathState, useSearchState } from "@/mods/foreground/router/path/cont
 import { Address } from "@hazae41/cubane";
 import { Option, Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput, UrlState, WideShrinkableContrastButton } from ".";
+import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableContrastButton } from ".";
 import { useEnsLookup } from "../../../names/data";
 import { useToken } from "../../../tokens/data";
 import { useWalletDataContext } from "../../context";
@@ -109,7 +109,7 @@ export function WalletSendScreenTarget(props: {}) {
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleBox>
+    <SimpleLabel>
       <div className="">
         Target
       </div>
@@ -137,7 +137,7 @@ export function WalletSendScreenTarget(props: {}) {
           OK
         </ShrinkableContrastButtonInInputBox>
       </div>
-    </SimpleBox>
+    </SimpleLabel>
     <div className="h-2" />
     <div className="flex items-center">
       <WideShrinkableContrastButton

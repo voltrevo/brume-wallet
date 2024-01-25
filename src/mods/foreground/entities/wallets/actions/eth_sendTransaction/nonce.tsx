@@ -10,7 +10,7 @@ import { WalletTransactionScreenState } from ".";
 import { useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleBox, SimpleInput } from "../send";
+import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleInput, SimpleLabel } from "../send";
 
 export function WalletTransactionScreenNonce(props: {}) {
   const wallet = useWalletDataContext().unwrap()
@@ -64,7 +64,7 @@ export function WalletTransactionScreenNonce(props: {}) {
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleBox>
+    <SimpleLabel>
       <div className="">
         Nonce
       </div>
@@ -92,7 +92,7 @@ export function WalletTransactionScreenNonce(props: {}) {
           OK
         </ShrinkableContrastButtonInInputBox>
       </div>
-    </SimpleBox>
+    </SimpleLabel>
     <div className="h-4" />
     <div className="text-lg font-medium">
       Pending transactions
