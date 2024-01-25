@@ -6,12 +6,11 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Button } from "@/libs/ui/button";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
-import { Input } from "@/libs/ui/input";
 import { User, UserInit } from "@/mods/background/service_worker/entities/users/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useDeferredValue, useMemo, useState } from "react";
+import { SimpleBox, SimpleInput, WideBox, WideShrinkableOppositeButton } from "../../wallets/actions/send";
 import { useUsers } from "../data";
 import { UserAvatar } from "./page";
 
@@ -67,43 +66,57 @@ export function UserCreateDialog(props: {}) {
     close()
   }, [uuid, defNameInput, color, emoji, defPasswordInput, background, users.mutate, close])
 
+  const error = useMemo(() => {
+    if (!defNameInput)
+      return "Name is required"
+    if (!defPasswordInput)
+      return "Password is required"
+    if (!defConfirmPasswordInput)
+      return "Confirm the password"
+    if (!isSamePassword)
+      return "Passwords are not the same"
+  }, [defConfirmPasswordInput, defNameInput, defPasswordInput, isSamePassword])
+
   const NameInput =
-    <div className="flex items-stretch gap-2">
+    <div className="flex items-center gap-2">
       <div className="shrink-0">
         <UserAvatar className="size-12 text-2xl"
           colorIndex={color}
           name={defNameInput} />
       </div>
-      <Input.Contrast className="w-full"
-        placeholder="Enter a name"
-        value={rawNameInput}
-        onChange={onNameInputChange} />
+      <WideBox>
+        <SimpleInput
+          placeholder="Enter a name"
+          value={rawNameInput}
+          onChange={onNameInputChange} />
+      </WideBox>
     </div>
 
   const PasswordInput =
-    <Input.Contrast className="w-full"
-      type="password"
-      placeholder="Enter a password"
-      value={rawPasswordInput}
-      onChange={onPasswordInputChange} />
+    <SimpleBox>
+      <SimpleInput
+        type="password"
+        placeholder="Enter a password"
+        value={rawPasswordInput}
+        onChange={onPasswordInputChange} />
+    </SimpleBox>
 
   const PasswordInput2 =
-    <Input.Contrast className="w-full"
-      type="password"
-      placeholder="Confirm the password"
-      value={rawConfirmPasswordInput}
-      onChange={onConfirmPasswordInputChange} />
+    <SimpleBox>
+      <SimpleInput
+        type="password"
+        placeholder="Confirm the password"
+        value={rawConfirmPasswordInput}
+        onChange={onConfirmPasswordInputChange} />
+    </SimpleBox>
 
   const DoneButton =
-    <Button.Gradient className="w-full po-md"
-      colorIndex={color}
-      disabled={!defNameInput || !defPasswordInput || !defConfirmPasswordInput || !isSamePassword}
+    <WideShrinkableOppositeButton
+      disabled={error != null}
       onClick={onClick.run}>
-      <div className={`${Button.Shrinker.className}`}>
-        <Outline.PlusIcon className="size-5" />
-        Add
-      </div>
-    </Button.Gradient>
+      <Outline.PlusIcon className="size-5" />
+      {error || "Add"}
+    </WideShrinkableOppositeButton>
 
   return <>
     <Dialog.Title close={close}>
@@ -115,7 +128,9 @@ export function UserCreateDialog(props: {}) {
     {PasswordInput}
     <div className="h-2" />
     {PasswordInput2}
-    <div className="h-4" />
-    {DoneButton}
+    <div className="h-4 grow" />
+    <div className="flex items-center">
+      {DoneButton}
+    </div>
   </>
 }

@@ -9,6 +9,11 @@
     @apply dark:border-white;
   }
 
+  .border-double-contrast {
+    @apply border-black border-opacity-[0.0005];
+    @apply dark:border-white dark:border-opacity-[0.0005];
+  }
+
   .border-contrast {
     @apply border-black border-opacity-10;
     @apply dark:border-white dark:border-opacity-10;

@@ -14,11 +14,6 @@
     @apply dark:bg-white dark:bg-opacity-5;
   }
 
-  .bg-high-contrast {
-    @apply bg-black bg-opacity-10;
-    @apply dark:bg-white dark:bg-opacity-10;
-  }
-
   .bg-backdrop {
     @apply bg-neutral-500 bg-opacity-50;
     @apply dark:bg-neutral-500 dark:bg-opacity-50;

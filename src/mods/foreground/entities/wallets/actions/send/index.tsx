@@ -47,6 +47,14 @@ export function SimpleBox(props: ChildrenProps) {
   </div>
 }
 
+export function WideBox(props: ChildrenProps) {
+  const { children } = props
+
+  return <div className="grow po-md flex items-start bg-contrast rounded-xl">
+    {children}
+  </div>
+}
+
 export function SimpleInput(props: InputProps) {
   return <input className="grow bg-transparent outline-none min-w-0 disabled:text-contrast" {...props} />
 }
@@ -88,7 +96,7 @@ export function ShrinkableContrastButtonInTextareaBox(props: ChildrenProps & But
 export function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="grow group po-md bg-opposite text-opposite rounded-xl outline-none focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="grow group po-md bg-opposite border border-opposite text-opposite rounded-xl outline-none enabled:hover:bg-default enabled:hover:text-default focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>
@@ -98,7 +106,7 @@ export function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps)
 export function WideShrinkableContrastButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="grow group po-md bg-contrast rounded-xl outline-none focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="grow group po-md bg-contrast border border-double-contrast rounded-xl outline-none enabled:hover:border-opposite focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>

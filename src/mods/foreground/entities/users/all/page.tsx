@@ -27,18 +27,6 @@ export function UsersPage2(props: OkProps<User>) {
 
   const subpath = useSubpath()
 
-  const onLoginMouseDown = useMouse(e => {
-    if (e.button !== 0)
-      return
-
-    e.preventDefault()
-
-    const x = e.clientX
-    const y = e.clientY
-
-    location.href = subpath.go(`/login?x=${x}&y=${y}`).href
-  }, [])
-
   return <>
     {subpath.url.pathname === "/login" &&
       <UsersPage ok={ok} />}
@@ -68,7 +56,6 @@ export function UsersPage2(props: OkProps<User>) {
             <div className="grow" />
             <div className="flex items-center">
               <SmallShrinkableOppositeAnchor
-                onMouseDown={onLoginMouseDown}
                 href={subpath.go("/login").href}>
                 <Outline.LockOpenIcon className="size-5" />
                 Login
@@ -342,7 +329,7 @@ export function TextAnchor(props: AnchorProps) {
 export function SmallShrinkableOppositeButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="group po-md bg-opposite text-opposite rounded-xl outline-none focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="group po-md bg-opposite border border-opposite text-opposite rounded-xl outline-none enabled:hover:bg-default enabled:hover:text-default focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>
@@ -352,7 +339,7 @@ export function SmallShrinkableOppositeButton(props: ChildrenProps & ButtonProps
 export function SmallShrinkableContrastButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="group po-md bg-contrast rounded-xl outline-none focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="group po-md bg-contrast border border-double-contrast rounded-xl outline-none enabled:hover:border-opposite focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>
@@ -362,7 +349,7 @@ export function SmallShrinkableContrastButton(props: ChildrenProps & ButtonProps
 export function SmallShrinkableOppositeAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
   const { children, "aria-disabled": disabled = false, ...rest } = props
 
-  return <a className="group po-md bg-opposite text-opposite rounded-xl outline-none focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
+  return <a className="group po-md bg-opposite border border-opposite text-opposite rounded-xl outline-none aria-[disabled=false]:hover:bg-default aria-[disabled=false]:hover:text-default focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
     aria-disabled={disabled}
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
@@ -374,7 +361,7 @@ export function SmallShrinkableOppositeAnchor(props: ChildrenProps & AnchorProps
 export function SmallShrinkableContrastAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
   const { children, "aria-disabled": disabled = false, ...rest } = props
 
-  return <a className="group po-md bg-contrast rounded-xl outline-none focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
+  return <a className="group po-md bg-contrast border border-double-contrast rounded-xl outline-none aria-[disabled=false]:hover:border-opposite focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
     aria-disabled={disabled}
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
@@ -386,7 +373,7 @@ export function SmallShrinkableContrastAnchor(props: ChildrenProps & AnchorProps
 export function WideShrinkableOppositeAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
   const { children, "aria-disabled": disabled = false, ...rest } = props
 
-  return <a className="grow basis-0 group po-md bg-opposite text-opposite rounded-xl outline-none focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
+  return <a className="grow basis-0 group po-md bg-opposite border border-opposite text-opposite rounded-xl outline-none aria-[disabled=false]:hover:bg-default aria-[disabled=false]:hover:text-default focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
     aria-disabled={disabled}
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
@@ -398,7 +385,7 @@ export function WideShrinkableOppositeAnchor(props: ChildrenProps & AnchorProps 
 export function WideShrinkableContrastAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
   const { children, "aria-disabled": disabled = false, ...rest } = props
 
-  return <a className="grow basis-0 group po-md bg-contrast rounded-xl outline-none focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
+  return <a className="grow basis-0 group po-md bg-contrast border border-double-contrast rounded-xl outline-none aria-[disabled=false]:hover:border-opposite focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
     aria-disabled={disabled}
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
