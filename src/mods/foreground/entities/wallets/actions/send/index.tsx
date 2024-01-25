@@ -56,17 +56,20 @@ export function WideBox(props: ChildrenProps) {
 }
 
 export function SimpleInput(props: InputProps) {
-  return <input className="grow bg-transparent outline-none min-w-0 disabled:text-contrast" {...props} />
+  return <input className="grow bg-transparent outline-none min-w-0 disabled:text-contrast"
+    {...props} />
 }
 
 export function SimpleTextarea(props: TextareaProps) {
-  return <textarea className="grow bg-transparent outline-none min-w-0 disabled:text-contrast" {...props} />
+  return <textarea className="grow bg-transparent outline-none min-w-0 disabled:text-contrast"
+    {...props} />
 }
 
 export function ShrinkableNakedButtonInInputBox(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="group rounded-full outline-none disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="group rounded-full outline-none disabled:opacity-50 transition-opacity"
+    {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>
@@ -76,7 +79,8 @@ export function ShrinkableNakedButtonInInputBox(props: ChildrenProps & ButtonPro
 export function ShrinkableContrastButtonInInputBox(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+    {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>
@@ -86,7 +90,8 @@ export function ShrinkableContrastButtonInInputBox(props: ChildrenProps & Button
 export function ShrinkableContrastButtonInTextareaBox(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="group po-sm bg-contrast rounded-xl outline-none disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="group po-sm bg-contrast rounded-xl outline-none disabled:opacity-50 transition-opacity"
+    {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>
@@ -96,7 +101,19 @@ export function ShrinkableContrastButtonInTextareaBox(props: ChildrenProps & But
 export function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="grow group po-md bg-opposite border border-opposite text-opposite rounded-xl outline-none enabled:hover:bg-default enabled:hover:text-default focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="grow group po-md bg-opposite text-opposite rounded-xl outline-none enabled:hover:bg-opposite-hover focus-visible:outline-opposite disabled:opacity-50 transition-opacity"
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </button>
+}
+
+export function WideShrinkableColorButton(props: ChildrenProps & ButtonProps & { color: string }) {
+  const { children, color, ...rest } = props
+
+  return <button className={`grow group po-md bg-${color} text-opposite rounded-xl outline-none enabled:hover:bg-${color}/90 focus-visible:outline-${color} disabled:opacity-50 transition-opacity`}
+    {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>
@@ -106,7 +123,8 @@ export function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps)
 export function WideShrinkableContrastButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="grow group po-md bg-contrast border border-double-contrast rounded-xl outline-none enabled:hover:border-opposite focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
+  return <button className="grow group po-md bg-contrast rounded-xl outline-none enabled:hover:bg-contrast-hover focus-visible:outline-contrast disabled:opacity-50 transition-opacity"
+    {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>
