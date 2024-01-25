@@ -138,7 +138,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
         <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
           aria-hidden="true"
           role="backdrop" />
-        <div className={`fixed inset-0 pt-safe md:p-safe flex flex-col ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"} ${visible ? "animate-slideup-in md:animate-scale-xy-in" : "animate-slideup-out md:animate-scale-xy-out"}`}
+        <div className={`fixed inset-0 md:p-safe flex flex-col ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"} ${visible ? "animate-slideup-in md:animate-scale-xy-in" : "animate-slideup-out md:animate-scale-xy-out"}`}
           style={{ scrollbarGutter: "stable" }}
           onAnimationEnd={onAnimationEnd}
           onMouseDown={onClickOutside}
@@ -150,11 +150,11 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
               role="dialog"
               aria-modal
               onMouseDown={Events.keep}>
-              <div className="grow flex flex-col bg-contrast rounded-t-3xl md:rounded-3xl">
-                <div className="md:hidden p-4 flex items-center justify-center">
-                  <div className="w-16 h-2 bg-backdrop rounded-full" />
-                </div>
-                <div className="grow flex flex-col p-6 basis-[100dvh] md:basis-0">
+              <div className="md:hidden p-4 flex items-center justify-center">
+                <div className="w-16 h-2 bg-backdrop rounded-full" />
+              </div>
+              <div className="grow flex flex-col p-6 basis-[100dvh] md:basis-0">
+                <div className="grow flex flex-col p-safe md:p-0">
                   {children}
                 </div>
               </div>
@@ -173,7 +173,7 @@ export namespace Dialog {
     const { children } = props
 
     return <h1 className="flex items-center">
-      <div className="text-xl font-medium">
+      <div className="text-2xl font-medium">
         {children}
       </div>
     </h1>

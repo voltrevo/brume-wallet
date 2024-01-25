@@ -1,12 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 import { useCopy } from "@/libs/copy/copy";
-import { Button } from "@/libs/ui/button";
+import { Outline } from "@/libs/icons/icons";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Address } from "@hazae41/cubane";
 import { Result } from "@hazae41/result";
 import createQR from "@paulmillr/qr";
 import { useCallback, useMemo } from "react";
 import { useWalletDataContext } from "../../context";
+import { WideShrinkableOppositeButton } from "../send";
 
 export function WalletDataReceiveScreen(props: {}) {
   const close = useCloseContext().unwrap()
@@ -36,10 +37,10 @@ export function WalletDataReceiveScreen(props: {}) {
       Receive
     </Dialog.Title>
     <div className="grow flex flex-col items-center justify-center">
-      <div className="text-xl font-medium">
+      <div className="text-2xl font-medium">
         {wallet.name}
       </div>
-      <button className="text-contrast text-center cursor-pointer"
+      <button className="text-contrast text-center outline-none"
         onClick={onCopyClick.run}>
         {onCopyClick.current
           ? "Copied"
@@ -57,9 +58,12 @@ export function WalletDataReceiveScreen(props: {}) {
       </div>
     </div>
     {typeof navigator.share === "function" &&
-      <button className={`${Button.Base.className} ${Button.Contrast.className} bg-high-contrast po-md`}
-        onClick={onShareClick}>
-        Share
-      </button>}
+      <div className="flex items-center">
+        <WideShrinkableOppositeButton
+          onClick={onShareClick}>
+          <Outline.ShareIcon className="size-5" />
+          Share
+        </WideShrinkableOppositeButton>
+      </div>}
   </>
 }
