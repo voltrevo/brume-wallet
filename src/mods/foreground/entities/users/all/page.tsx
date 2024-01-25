@@ -17,7 +17,7 @@ import { User, UserDataProps, UserProps } from "@/mods/background/service_worker
 import { OneDisplay } from "@/mods/foreground/landing/1/1";
 import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
 import { PathContext, useSubpath } from "@/mods/foreground/router/path/context";
-import { useCallback, useState } from "react";
+import { KeyboardEvent, useCallback, useState } from "react";
 import { useUser, useUsers } from "../data";
 import { UserLoginPage } from "../login";
 import { UserCreateDialog } from "./create";
@@ -212,7 +212,7 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
   const { children, title, subtitle, href, ...rest } = props
   const subpath = useSubpath()
 
-  const onMouseDown = useMouse(e => {
+  const onClick = useMouse(e => {
     if (e.button !== 0)
       return
 
@@ -222,7 +222,19 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
     const y = e.clientY
 
     location.href = subpath.go(`${href}?x=${x}&y=${y}`).href
-  }, [])
+  }, [href, subpath])
+
+  const onEnter = useCallback((e: KeyboardEvent) => {
+    if (e.key !== "Enter")
+      return
+
+    e.preventDefault()
+
+    const x = e.currentTarget.getBoundingClientRect().x + (e.currentTarget.getBoundingClientRect().width / 2)
+    const y = e.currentTarget.getBoundingClientRect().y + (e.currentTarget.getBoundingClientRect().height / 2)
+
+    location.href = subpath.go(`${href}?x=${x}&y=${y}`).href
+  }, [href, subpath])
 
   const onSubpathClose = useCallback(() => {
     location.href = subpath.go("/").href
@@ -259,7 +271,8 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
         <span>{` `}</span>
         <TextAnchor
           href={subpath.go(href).href}
-          onMouseDown={onMouseDown}
+          onClick={onClick}
+          onKeyDown={onEnter}
           {...rest}>
           Learn more.
         </TextAnchor>

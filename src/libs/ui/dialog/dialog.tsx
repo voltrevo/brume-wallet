@@ -88,7 +88,22 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
     return () => color.setAttribute("content", original)
   }, [visible, dark])
 
+  const [viewportWidth, setViewportWidth] = useState(() => Math.max(document.documentElement.clientWidth, window.innerWidth))
+
+  useEffect(() => {
+    const onResize = () => setViewportWidth(Math.max(document.documentElement.clientWidth, window.innerWidth))
+
+    window.addEventListener("resize", onResize)
+    return () => window.removeEventListener("resize", onResize)
+  }, [])
+
   const onScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
+    /**
+     * Only on mobile
+     */
+    if (viewportWidth > 768)
+      return
+
     /**
      * Swipe down to close
      */
@@ -104,7 +119,9 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
       e.currentTarget.classList.add("overscroll-y-none")
     else
       e.currentTarget.classList.remove("overscroll-y-none")
-  }, [hide])
+
+    return
+  }, [hide, viewportWidth])
 
   /**
    * Only unmount when transition is finished
@@ -116,6 +133,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
     <CloseContext.Provider value={hide}>
       <dialog className=""
         style={{ "--x": `${x}px`, "--y": `${y}px` } as any}
+        onKeyDown={onEscape}
         ref={setDialog}>
         <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
           aria-hidden="true"
@@ -131,9 +149,8 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
             <aside className={`flex flex-col w-full md:w-[min(90dvh,90dvw)] md:aspect-square text-default bg-default rounded-t-3xl md:rounded-3xl`}
               role="dialog"
               aria-modal
-              onMouseDown={Events.keep}
-              onKeyDown={onEscape}>
-              <div className="grow flex flex-col bg-contrast rounded-t-3xl md:rounded-3xl pb-safe md:pb-0 ">
+              onMouseDown={Events.keep}>
+              <div className="grow flex flex-col bg-contrast rounded-t-3xl md:rounded-3xl">
                 <div className="md:hidden p-4 flex items-center justify-center">
                   <div className="w-16 h-2 bg-backdrop rounded-full" />
                 </div>
