@@ -10,7 +10,7 @@ import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { User, UserInit } from "@/mods/background/service_worker/entities/users/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useDeferredValue, useMemo, useState } from "react";
-import { SimpleBox, SimpleInput, WideBox, WideShrinkableOppositeButton } from "../../wallets/actions/send";
+import { SimpleBox, SimpleInput, WideBox, WideShrinkableGradientButton } from "../../wallets/actions/send";
 import { useUsers } from "../data";
 import { UserAvatar } from "./page";
 
@@ -111,12 +111,13 @@ export function UserCreateDialog(props: {}) {
     </SimpleBox>
 
   const DoneButton =
-    <WideShrinkableOppositeButton
+    <WideShrinkableGradientButton
+      color="emerald"
       disabled={error != null}
       onClick={onClick.run}>
       <Outline.PlusIcon className="size-5" />
       {error || "Add"}
-    </WideShrinkableOppositeButton>
+    </WideShrinkableGradientButton>
 
   return <>
     <Dialog.Title>

@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import { Color, Gradient } from "@/libs/colors/colors";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
@@ -109,10 +110,12 @@ export function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps)
   </button>
 }
 
-export function WideShrinkableColorButton(props: ChildrenProps & ButtonProps & { color: string }) {
+export function WideShrinkableGradientButton(props: ChildrenProps & ButtonProps & { color: Color }) {
   const { children, color, ...rest } = props
 
-  return <button className={`grow group po-md bg-${color} text-opposite rounded-xl outline-none enabled:hover:bg-${color}/90 focus-visible:outline-${color} disabled:opacity-50 transition-opacity`}
+  const [color1, color2] = Gradient.get(color)
+
+  return <button className={`grow group po-md bg-gradient-to-r from-${color1}-400 to-${color2}-400 dark:from-${color1}-500 dark:to-${color2}-500 text-white rounded-xl outline-none enabled:hover:bg-${color}-400/90 focus-visible:outline-${color}-400 dark:enabled:hover:bg-${color}-500/90 dark:focus-visible:outline-${color}-500 disabled:opacity-50 transition-opacity`}
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
