@@ -198,8 +198,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
           onClick={Events.keep}>
           <div className={`grow flex flex-col items-center w-full md:max-w-3xl md:m-auto`}>
             <div className="h-[50vh] grow md:h-8" />
-            <aside className={`grow flex flex-col w-full md:aspect-square text-default bg-default rounded-t-3xl md:rounded-3xl`}
-              role="dialog"
+            <div className={`grow flex flex-col w-full md:aspect-square text-default bg-default rounded-t-3xl md:rounded-3xl`}
               aria-modal
               onMouseDown={Events.keep}>
               <div className="md:hidden p-4 flex items-center justify-center">
@@ -210,7 +209,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
                   {children}
                 </div>
               </div>
-            </aside>
+            </div>
             <div className="hidden md:block md:grow md:h-8" />
           </div>
         </div>
