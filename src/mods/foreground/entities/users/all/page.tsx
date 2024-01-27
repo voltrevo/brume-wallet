@@ -72,7 +72,7 @@ export function UsersPage2(props: OkProps<User>) {
             <InfoCard
               title="0 VC"
               href="/1"
-              subtitle={`Fully crowdfunded by the community and for the community. No grants. No VCs.`}>
+              subtitle={`Fully crowdfunded by the community for the community. No grants. No VCs.`}>
               <OneDisplay />
             </InfoCard>
             <InfoCard
