@@ -61,7 +61,7 @@ export function WalletDataReceiveScreen(props: {}) {
       </div>
     </div>
     {typeof navigator.share === "function" &&
-      <div className="flex items-center">
+      <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton
           onClick={onShareClick}>
           <Outline.ShareIcon className="size-5" />

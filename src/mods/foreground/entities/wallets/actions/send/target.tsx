@@ -139,7 +139,7 @@ export function WalletSendScreenTarget(props: {}) {
       </div>
     </SimpleLabel>
     <div className="h-2" />
-    <div className="flex items-center">
+    <div className="flex items-center flex-wrap-reverse gap-2">
       <WideShrinkableContrastButton
         onClick={onPeanutClick}>
         <Outline.LinkIcon className="size-4" />

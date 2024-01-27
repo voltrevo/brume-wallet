@@ -387,7 +387,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     </>}
     <div className="h-4 grow" />
     {maybeTransaction == null &&
-      <div className="flex items-center">
+      <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton
           onClick={onSendTransactionClick}>
           <Outline.PaperAirplaneIcon className="size-5" />
@@ -395,7 +395,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
         </WideShrinkableOppositeButton>
       </div>}
     {maybeTransaction != null &&
-      <div className="flex items-center gap-2">
+      <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton
           onClick={close}>
           <Outline.CheckIcon className="size-5" />

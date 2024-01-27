@@ -130,7 +130,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
     {NameInput}
     <div className="h-8" />
     {AddressInput}
-    <div className="h-8" />
+    <div className="h-8 grow" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       {AddButon}
     </div>

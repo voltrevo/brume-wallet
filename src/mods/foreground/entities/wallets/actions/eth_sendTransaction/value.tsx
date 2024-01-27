@@ -1088,7 +1088,7 @@ export function WalletTransactionScreenValue(props: {}) {
         </div>
         <div className="h-2" />
       </>}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center flex-wrap-reverse gap-2">
         {!disableSign &&
           <WideShrinkableContrastButton
             disabled={onSignClick.loading}
@@ -1109,7 +1109,7 @@ export function WalletTransactionScreenValue(props: {}) {
         data={maybeTransaction}
         onRetry={() => { }} />
       <div className="h-2" />
-      <div className="flex items-center gap-2">
+      <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton
           onClick={close}>
           <Outline.CheckIcon className="size-5" />
@@ -1120,7 +1120,7 @@ export function WalletTransactionScreenValue(props: {}) {
     {maybeTransaction?.type === "executed" && <>
       <ExecutedTransactionCard data={maybeTransaction} />
       <div className="h-2" />
-      <div className="flex items-center gap-2">
+      <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton
           onClick={close}>
           <Outline.CheckIcon className="size-5" />
@@ -1153,7 +1153,7 @@ export function WalletTransactionScreenValue(props: {}) {
         </div>
         <div className="h-2" />
       </>}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center flex-wrap-reverse gap-2">
         {!disableSign &&
           <WideShrinkableContrastButton
             disabled={onSignClick.loading}

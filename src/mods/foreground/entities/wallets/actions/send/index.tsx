@@ -94,7 +94,7 @@ export function ShrinkableContrastButtonInTextareaBox(props: ChildrenProps & But
 export function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="grow group po-md bg-opposite text-opposite rounded-xl outline-none enabled:hover:bg-opposite-hover focus-visible:outline-opposite disabled:opacity-50 transition-opacity"
+  return <button className="flex-1 group po-md bg-opposite text-opposite rounded-xl outline-none enabled:hover:bg-opposite-hover focus-visible:outline-opposite disabled:opacity-50 transition-opacity"
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
@@ -107,7 +107,7 @@ export function WideShrinkableGradientButton(props: ChildrenProps & ButtonProps 
 
   const [color1, color2] = Gradient.get(color)
 
-  return <button className={`grow group po-md bg-gradient-to-r from-${color1}-400 to-${color2}-400 dark:from-${color1}-500 dark:to-${color2}-500 text-white rounded-xl outline-none enabled:hover:bg-${color}-400/90 focus-visible:outline-${color}-400 dark:enabled:hover:bg-${color}-500/90 dark:focus-visible:outline-${color}-500 disabled:opacity-50 transition-opacity`}
+  return <button className={`flex-1 group po-md bg-gradient-to-r from-${color1}-400 to-${color2}-400 dark:from-${color1}-500 dark:to-${color2}-500 text-white rounded-xl outline-none enabled:hover:bg-${color}-400/90 focus-visible:outline-${color}-400 dark:enabled:hover:bg-${color}-500/90 dark:focus-visible:outline-${color}-500 disabled:opacity-50 transition-opacity`}
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
@@ -118,7 +118,7 @@ export function WideShrinkableGradientButton(props: ChildrenProps & ButtonProps 
 export function WideShrinkableContrastButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="grow group po-md bg-contrast rounded-xl outline-none enabled:hover:bg-contrast-hover focus-visible:outline-contrast disabled:opacity-50 transition-opacity"
+  return <button className="flex-1 group po-md bg-contrast rounded-xl outline-none enabled:hover:bg-contrast-hover focus-visible:outline-contrast disabled:opacity-50 transition-opacity"
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}

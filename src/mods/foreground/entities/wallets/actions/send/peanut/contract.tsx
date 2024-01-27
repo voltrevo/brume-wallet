@@ -538,7 +538,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         </div>
       </div>
       <div className="h-2" />
-      <div className="flex items-center">
+      <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton
           onClick={close}>
           <Outline.CheckIcon className="size-5" />
@@ -547,7 +547,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       </div>
     </>}
     {maybeTransaction1 == null &&
-      <div className="flex items-center">
+      <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton
           onClick={onSendTransaction1Click}>
           <Outline.PaperAirplaneIcon className="size-5" />
@@ -555,7 +555,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         </WideShrinkableOppositeButton>
       </div>}
     {maybeTransaction1?.type === "executed" && maybeTransaction0 == null &&
-      <div className="flex items-center">
+      <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton
           onClick={onSendTransaction0Click}>
           <Outline.PaperAirplaneIcon className="size-5" />

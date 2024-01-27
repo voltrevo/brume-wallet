@@ -487,7 +487,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
         </div>
       </div>
       <div className="h-2" />
-      <div className="flex items-center">
+      <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton
           onClick={close}>
           <Outline.CheckIcon className="size-5" />
@@ -496,7 +496,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       </div>
     </>}
     {maybeTransaction0 == null &&
-      <div className="flex items-center">
+      <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton
           onClick={onSendTransactionClick}>
           <Outline.PaperAirplaneIcon className="size-5" />

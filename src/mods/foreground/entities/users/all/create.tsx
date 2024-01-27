@@ -143,7 +143,7 @@ export function UserCreateDialog(props: {}) {
     <div className="h-2" />
     {PasswordInput2}
     <div className="h-4" />
-    <div className="flex items-center">
+    <div className="flex items-center flex-wrap-reverse gap-2">
       {DoneButton}
     </div>
   </>

@@ -255,10 +255,11 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     {NameInput}
     <div className="h-8" />
     {KeyInput}
+    <div className="h-2" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       {GenerateButton}
     </div>
-    <div className="h-8" />
+    <div className="h-8 grow" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       {AddUnauthButton}
       {id == null

@@ -59,17 +59,18 @@ export function Fallback(props: ErrorProps) {
       <div className="text-contrast">
         {Errors.toString(error)}
       </div>
+      <div className="h-4 grow" />
+      <div className="flex items-center flex-wrap-reverse gap-2">
+        <WideShrinkableContrastButton
+          onClick={reset.run}>
+          Clear everything and reload the page
+        </WideShrinkableContrastButton>
+        <WideShrinkableOppositeButton
+          onClick={reload}>
+          Reload the page
+        </WideShrinkableOppositeButton>
+      </div>
     </PageBody>
-    <div className="p-4 flex items-center flex-wrap-reverse gap-2">
-      <WideShrinkableContrastButton
-        onClick={reset.run}>
-        Clear everything and reload the page
-      </WideShrinkableContrastButton>
-      <WideShrinkableOppositeButton
-        onClick={reload}>
-        Reload the page
-      </WideShrinkableOppositeButton>
-    </div>
   </Page>
 }
 
