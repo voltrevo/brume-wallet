@@ -19,9 +19,8 @@ export function WalletCreatorDialog(props: {}) {
   }, [])
 
   const onClose = useCallback(() => {
-    setType(undefined)
-  }, [])
-
+    close()
+  }, [close])
 
   return <>
     {type === "readonly" &&
