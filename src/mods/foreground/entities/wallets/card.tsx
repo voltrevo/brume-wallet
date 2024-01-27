@@ -3,6 +3,8 @@ import { useCopy } from "@/libs/copy/copy"
 import { chainByChainId } from "@/libs/ethereum/mods/chain"
 import { Outline } from "@/libs/icons/icons"
 import { useMouseCancel } from "@/libs/react/events"
+import { ChildrenProps } from "@/libs/react/props/children"
+import { ButtonProps } from "@/libs/react/props/html"
 import { Button } from "@/libs/ui/button"
 import { Address, ZeroHexString } from "@hazae41/cubane"
 import { useMemo } from "react"
@@ -45,14 +47,10 @@ export function SimpleWalletCard(props: { uuid: string } & { name: string } & { 
   </div>
 }
 
-export function RawWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number }) {
-  const { uuid, address, name, emoji, color, index } = props
+export function RawWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { ok?: () => void }) {
+  const { uuid, address, name, emoji, color, index, ok } = props
 
   const [color1, color2] = Gradient.get(color)
-
-  const onClickEllipsis = useMouseCancel(e => {
-    // TODO
-  }, [])
 
   const finalAddress = useMemo(() => {
     return Address.fromOrThrow(address)
@@ -81,13 +79,12 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
           emoji={emoji} />
       </div>
       <div className="w-2 grow" />
-      {index == null &&
-        <button className={`${Button.Base.className} ${Button.White.className} text-${color1}`}
-          onClick={onClickEllipsis}>
-          <div className={`${Button.Shrinker.className}`}>
-            <Outline.EllipsisHorizontalIcon className="size-5" />
-          </div>
-        </button>}
+      {index == null && ok != null &&
+        <CircularWhiteButtonInColoredCard
+          color={color}
+          onClick={ok}>
+          <Outline.EllipsisHorizontalIcon className="size-5" />
+        </CircularWhiteButtonInColoredCard>}
       {index != null && index !== -1 &&
         <div className={`border-2 border-white flex items-center justify-center rounded-full overflow-hidden`}>
           <div className={`bg-blue-600 flex items-center justify-center size-5 text-white font-medium`}>
@@ -130,4 +127,14 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
     {Name}
     {AddressDisplay}
   </div>
+}
+
+export function CircularWhiteButtonInColoredCard(props: ButtonProps & ChildrenProps & { color: Color }) {
+  const { children, color } = props
+
+  return <button className={`group bg-white text-${color}-400 dark:text-color-500 rounded-full outline-none hover:bg-white/90 focus-visible:outline-white  disabled:opacity-50  transition-opacity`}>
+    <div className={`${Button.Shrinker.className}`}>
+      {children}
+    </div>
+  </button>
 }
