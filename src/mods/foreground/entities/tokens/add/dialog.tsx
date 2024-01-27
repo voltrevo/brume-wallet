@@ -143,7 +143,7 @@ export function TokenAddDialog(props: {}) {
     <Dialog.Title>
       New token
     </Dialog.Title>
-    <div className="h-2" />
+    <div className="h-4" />
     <div className="flex flex-wrap items-center overflow-hidden gap-2">
       {Object.values(chainByChainId).map(x =>
         <button key={x.chainId}

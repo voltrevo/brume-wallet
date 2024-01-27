@@ -55,8 +55,7 @@ export function HomePage() {
           Coming soon...
         </div>
       </div>
-      <div className="h-8" />
-      <div className="grow" />
+      <div className="h-4 grow" />
       {persisted === false && background.isWebsite() && <>
         <div className="text-lg font-medium">
           Alerts

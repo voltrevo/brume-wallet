@@ -90,9 +90,9 @@ export function LedgerSeedCreatorDialog(props: {}) {
     <Dialog.Title>
       New seed
     </Dialog.Title>
-    <div className="h-2" />
+    <div className="h-4" />
     {NameInput}
-    <div className="h-8" />
+    <div className="h-4 grow" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       {AddButton}
     </div>

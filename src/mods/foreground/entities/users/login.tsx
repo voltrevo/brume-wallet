@@ -8,7 +8,7 @@ import { useCallback, useDeferredValue, useRef, useState } from "react";
 import { Page } from "../../../../libs/ui2/page/page";
 import { useBackgroundContext } from "../../background/context";
 import { SimpleLabel } from "../wallets/actions/send";
-import { SmallShrinkableContrastButton, SmallShrinkableOppositeButton, UserAvatar2 } from "./all/page";
+import { SmallShrinkableContrastButton, SmallShrinkableOppositeButton, UserAvatar } from "./all/page";
 import { useUser } from "./data";
 
 export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
@@ -73,7 +73,7 @@ export function UserLoginPage(props: UserProps & PromiseProps<User, any>) {
     <div className="grow flex justify-center items-center">
       <div className="">
         <div className="flex flex-col items-center">
-          <UserAvatar2 className="size-16 text-2xl"
+          <UserAvatar className="size-16 text-2xl"
             color={Color.get(userQuery.data.get().color)}
             name={userQuery.data.get().name} />
           <div className="h-2" />

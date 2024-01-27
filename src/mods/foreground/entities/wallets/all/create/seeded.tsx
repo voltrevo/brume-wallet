@@ -213,7 +213,7 @@ export function SeededWalletCreatorDialog(props: {}) {
     <Dialog.Title>
       New wallet
     </Dialog.Title>
-    <div className="h-2" />
+    <div className="h-4" />
     {NameInput}
     <div className="h-4" />
     <div className="font-medium">
@@ -277,7 +277,7 @@ export function SeededWalletCreatorDialog(props: {}) {
         </div>
       </>}
     </>}
-    <div className="h-8" />
+    <div className="h-4 grow" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       {AddButon}
     </div>

@@ -1,13 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
-import { Color, Gradient, Gradients } from "@/libs/colors/colors";
+import { Color, Gradient } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { Events, useMouse } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
-import { ColorIndexProps } from "@/libs/react/props/color";
 import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
-import { NameProps } from "@/libs/react/props/name";
 import { OkProps } from "@/libs/react/props/promise";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
@@ -173,7 +171,7 @@ export function UserCard(props: UserProps) {
     return null
 
   return <div className="po-md bg-contrast rounded-xl flex items-center">
-    <UserAvatar2 className="size-12 text-2xl"
+    <UserAvatar className="size-12 text-2xl"
       color={Color.get(maybeUser.color)}
       name={maybeUser.name} />
     <div className="w-4" />
@@ -375,7 +373,7 @@ export function SmallShrinkableContrastAnchor(props: ChildrenProps & AnchorProps
 export function WideShrinkableOppositeAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
   const { children, "aria-disabled": disabled = false, ...rest } = props
 
-  return <a className="flex-1 group po-md bg-opposite border border-opposite text-opposite rounded-xl outline-none aria-[disabled=false]:hover:bg-opposite-hover focus-visible:outline-contrast aria-disabled:opacity-50 transition-opacity"
+  return <a className="flex-1 group po-md bg-opposite border border-opposite text-opposite rounded-xl outline-none whitespace-nowrap aria-[disabled=false]:hover:bg-opposite-hover focus-visible:outline-contrast aria-disabled:opacity-50 transition-opacity"
     aria-disabled={disabled}
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
@@ -387,7 +385,7 @@ export function WideShrinkableOppositeAnchor(props: ChildrenProps & AnchorProps 
 export function WideShrinkableContrastAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
   const { children, "aria-disabled": disabled = false, ...rest } = props
 
-  return <a className="flex-1 group po-md bg-contrast rounded-xl outline-none aria-[disabled=false]:hover:bg-contrast-hover focus-visible:outline-contrast aria-disabled:opacity-50 transition-opacity"
+  return <a className="flex-1 group po-md bg-contrast rounded-xl outline-none whitespace-nowrap aria-[disabled=false]:hover:bg-contrast-hover focus-visible:outline-contrast aria-disabled:opacity-50 transition-opacity"
     aria-disabled={disabled}
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
@@ -450,7 +448,7 @@ function UserOkButton(props: UserProps & OkProps<User>) {
   return <button className="flex flex-col items-center"
     onClick={onClick}>
     <UserAvatar className="size-16 text-2xl"
-      colorIndex={user.data.get().color}
+      color={Color.get(user.data.get().color)}
       name={user.data.get().name} />
     <div className="h-2" />
     <div className="font-medium">
@@ -474,22 +472,12 @@ function NewUserButton(props: OkProps<unknown>) {
   </button>
 }
 
-export function UserAvatar2(props: ClassNameProps & { name: string } & { color: Color }) {
+export function UserAvatar(props: ClassNameProps & { name: string } & { color: Color }) {
   const { color, name, className } = props
 
   const [color1, color2] = Gradient.get(color)
 
   return <div className={`bg-gradient-to-br from-${color1}-400 dark:from-${color1}-500 to-${color2}-400 dark:to-${color2}-500 rounded-full flex justify-center items-center ${className} text-white`}>
-    {name[0]}
-  </div>
-}
-
-export function UserAvatar(props: ClassNameProps & ColorIndexProps & NameProps) {
-  const { colorIndex: color, name, className } = props
-
-  const [color1, color2] = Gradients.get(color)
-
-  return <div className={`bg-gradient-to-br from-${color1} to-${color2} rounded-full flex justify-center items-center ${className} text-white`}>
     {name[0]}
   </div>
 }

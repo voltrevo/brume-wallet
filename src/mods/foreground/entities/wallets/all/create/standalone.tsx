@@ -1,4 +1,4 @@
-import { Colors } from "@/libs/colors/colors";
+import { Color } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
@@ -7,10 +7,7 @@ import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
-import { Button } from "@/libs/ui/button";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
-import { Input } from "@/libs/ui/input";
-import { Textarea } from "@/libs/ui/textarea";
 import { WebAuthnStorage, WebAuthnStorageError } from "@/libs/webauthn/webauthn";
 import { WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -21,7 +18,7 @@ import { Address, ZeroHexString } from "@hazae41/cubane";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { WalletAvatar } from "../../avatar";
+import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableGradientButton } from "../../actions/send";
 
 export function StandaloneWalletCreatorDialog(props: {}) {
   const close = useCloseContext().unwrap()
@@ -30,7 +27,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
   const uuid = useConstant(() => crypto.randomUUID())
 
   const modhash = useModhash(uuid)
-  const color = Colors.mod(modhash)
+  const color = Color.get(modhash)
   const emoji = Emojis.get(modhash)
 
   const [rawNameInput = "", setRawNameInput] = useState<string>()
@@ -75,7 +72,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
       // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
 
-      const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: defNameInput, color, emoji, address, privateKey: zeroHexKey }
+      const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: defNameInput, color: Color.all.indexOf(color), emoji, address, privateKey: zeroHexKey }
 
       await background.tryRequest<void>({
         method: "brume_createWallet",
@@ -165,7 +162,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       const idBase64 = Base64.get().tryEncodePadded(id).throw(t)
       const privateKey = { ivBase64, idBase64 }
 
-      const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: defNameInput, color, emoji, address, privateKey }
+      const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: defNameInput, color: Color.all.indexOf(color), emoji, address, privateKey }
 
       await background.tryRequest<void>({
         method: "brume_createWallet",
@@ -179,33 +176,37 @@ export function StandaloneWalletCreatorDialog(props: {}) {
   }, [defNameInput, zeroHexKey, id, triedEncryptedPrivateKey, uuid, color, emoji, background, close])
 
   const NameInput =
-    <div className="flex items-stretch gap-2">
+    <SimpleLabel>
       <div className="shrink-0">
-        <WalletAvatar className="size-12 text-2xl"
-          colorIndex={color}
-          emoji={emoji} />
+        Name
       </div>
-      <Input.Contrast className="w-full"
-        placeholder="Enter a name"
+      <div className="w-4" />
+      <SimpleInput
+        placeholder="Holder"
         value={rawNameInput}
         onChange={onNameInputChange} />
-    </div>
+    </SimpleLabel>
 
   const KeyInput =
-    <Textarea.Contrast className="w-full resize-none"
-      placeholder="Enter your private key"
-      value={rawKeyInput}
-      onChange={onKeyInputChange}
-      rows={4} />
-
-  const GenerateButton =
-    <Button.Contrast className="flex-1 whitespace-nowrap po-md"
-      onClick={doGenerate.run}>
-      <div className={`${Button.Shrinker.className}`}>
-        <Outline.KeyIcon className="size-5" />
-        Generate a private key
+    <div className="po-md flex flex-col bg-contrast rounded-xl">
+      <div className="flex items-start">
+        <div className="shrink-0">
+          Private key
+        </div>
+        <div className="w-4" />
+        <SimpleTextarea
+          placeholder="0x"
+          value={rawKeyInput}
+          onChange={onKeyInputChange}
+          rows={3} />
       </div>
-    </Button.Contrast>
+      <div className="h-2" />
+      <WideShrinkableContrastButton
+        onClick={doGenerate.run}>
+        <Outline.KeyIcon className="size-5" />
+        Generate
+      </WideShrinkableContrastButton>
+    </div>
 
   const canAdd = useMemo(() => {
     if (!defNameInput)
@@ -216,50 +217,40 @@ export function StandaloneWalletCreatorDialog(props: {}) {
   }, [defNameInput, zeroHexKey])
 
   const AddUnauthButton =
-    <Button.Contrast className="flex-1 whitespace-nowrap po-md"
+    <WideShrinkableContrastButton
       disabled={!canAdd}
       onClick={tryAddUnauthenticated.run}>
-      <div className={`${Button.Shrinker.className}`}>
-        <Outline.PlusIcon className="size-5" />
-        Add without authentication
-      </div>
-    </Button.Contrast>
+      <Outline.PlusIcon className="size-5" />
+      Add without authentication
+    </WideShrinkableContrastButton>
 
   const AddAuthButton1 =
-    <Button.Gradient className="flex-1 whitespace-nowrap po-md"
-      colorIndex={color}
+    <WideShrinkableGradientButton
+      color={color}
       disabled={!canAdd}
       onClick={tryAddAuthenticated1.run}>
-      <div className={`${Button.Shrinker.className}`}>
-        <Outline.LockClosedIcon className="size-5" />
-        Add with authentication
-      </div>
-    </Button.Gradient>
+      <Outline.LockClosedIcon className="size-5" />
+      Add with authentication
+    </WideShrinkableGradientButton>
 
   const AddAuthButton2 =
-    <Button.Gradient className="flex-1 whitespace-nowrap po-md"
-      colorIndex={color}
+    <WideShrinkableGradientButton
+      color={color}
       disabled={!canAdd}
       onClick={tryAddAuthenticated2.run}>
-      <div className={`${Button.Shrinker.className}`}>
-        <Outline.LockClosedIcon className="size-5" />
-        Add with authentication (1/2)
-      </div>
-    </Button.Gradient>
+      <Outline.LockClosedIcon className="size-5" />
+      Add with authentication (1/2)
+    </WideShrinkableGradientButton>
 
   return <>
     <Dialog.Title>
       New wallet
     </Dialog.Title>
-    <div className="h-2" />
+    <div className="h-4" />
     {NameInput}
-    <div className="h-8" />
+    <div className="h-4" />
     {KeyInput}
-    <div className="h-2" />
-    <div className="flex items-center flex-wrap-reverse gap-2">
-      {GenerateButton}
-    </div>
-    <div className="h-8 grow" />
+    <div className="h-4 grow" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       {AddUnauthButton}
       {id == null

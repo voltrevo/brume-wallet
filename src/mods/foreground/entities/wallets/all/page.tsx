@@ -11,7 +11,7 @@ import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable } from "@hazae41/option"
 import { useCallback } from "react"
-import { WalletDataCard } from "../card"
+import { RawWalletDataCard } from "../card"
 import { WalletDataProvider, useWalletDataContext } from "../context"
 import { WalletProps, useWallets } from "../data"
 import { WalletCreatorDialog } from "./create"
@@ -104,7 +104,7 @@ export function CheckableWalletDataCard(props: WalletProps & OkProps<Wallet> & {
     onClick={onClick}>
     <WalletDataProvider
       uuid={wallet.uuid}>
-      <WalletDataCard index={index} />
+      <RawWalletDataCard index={index} />
     </WalletDataProvider>
   </div>
 }
@@ -120,7 +120,7 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
   return <div className={`w-full aspect-video rounded-xl overflow-hidden cursor-pointer hovered-or-clicked-or-focused:scale-105 !transition-transform`}
     role="button"
     onClick={onClick}>
-    <WalletDataCard />
+    <RawWalletDataCard />
   </div>
 
 }

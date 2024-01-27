@@ -37,7 +37,7 @@ export function WalletCreatorDialog(props: {}) {
     <Dialog.Title>
       New wallet
     </Dialog.Title>
-    <div className="h-2" />
+    <div className="h-4" />
     <div className="w-full flex items-center gap-2">
       <Button.Contrast className="flex-1 whitespace-nowrap p-4 rounded-xl"
         onClick={onWatchonlyClick}>

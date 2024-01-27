@@ -12,7 +12,7 @@ import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useDeferredValue, useMemo, useState } from "react";
 import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../wallets/actions/send";
 import { useUsers } from "../data";
-import { UserAvatar2 } from "./page";
+import { UserAvatar } from "./page";
 
 export function UserCreateDialog(props: {}) {
   const close = useCloseContext().unwrap()
@@ -128,7 +128,7 @@ export function UserCreateDialog(props: {}) {
     </Dialog.Title>
     <div className="h-4" />
     <div className="grow flex flex-col items-center justify-center">
-      <UserAvatar2 className="size-16 text-2xl"
+      <UserAvatar className="size-16 text-2xl"
         name={finalNameInput}
         color={color} />
       <div className="h-2" />

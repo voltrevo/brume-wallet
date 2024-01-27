@@ -39,6 +39,7 @@ export function WalletDataReceiveScreen(props: {}) {
     <Dialog.Title>
       Receive
     </Dialog.Title>
+    <div className="h-4" />
     <div className="grow flex flex-col items-center justify-center">
       <div className="text-2xl font-medium">
         {wallet.name}

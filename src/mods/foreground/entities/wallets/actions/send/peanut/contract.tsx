@@ -376,7 +376,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         Target
       </div>
       <div className="w-4" />
-      <SimpleInput key="target"
+      <SimpleInput
         readOnly
         onFocus={onTargetFocus}
         value="Peanut" />

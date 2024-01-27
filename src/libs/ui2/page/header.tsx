@@ -1,3 +1,4 @@
+import { Color } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { OptionalBackProps } from "@/libs/react/props/back";
 import { ChildrenProps } from "@/libs/react/props/children";
@@ -42,7 +43,7 @@ export function UserPageHeader(props: TitleProps & ChildrenProps & OptionalBackP
     </div>}
     <button onClick={() => alert("This feature is not implemented yet")}>
       <UserAvatar className="size-7 text-lg"
-        colorIndex={userData.color}
+        color={Color.get(userData.color)}
         name={userData.name} />
     </button>
     <div className="w-2" />

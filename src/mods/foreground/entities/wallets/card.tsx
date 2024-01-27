@@ -1,10 +1,10 @@
-import { Gradients } from "@/libs/colors/colors"
+import { Color, Gradient } from "@/libs/colors/colors"
 import { useCopy } from "@/libs/copy/copy"
 import { chainByChainId } from "@/libs/ethereum/mods/chain"
 import { Outline } from "@/libs/icons/icons"
 import { useMouseCancel } from "@/libs/react/events"
 import { Button } from "@/libs/ui/button"
-import { Address } from "@hazae41/cubane"
+import { Address, ZeroHexString } from "@hazae41/cubane"
 import { useMemo } from "react"
 import { useEnsReverseNoFetch } from "../names/data"
 import { useTotalWalletPricedBalance } from "../unknown/data"
@@ -13,47 +13,76 @@ import { useWalletDataContext } from "./context"
 import { useEthereumContext } from "./data"
 import { useCompactDisplayUsd } from "./page"
 
-export function SimpleWalletDataCard() {
-  return <div className="w-full aspect-video rounded-xl overflow-hidden">
-    <WalletDataCard />
-  </div>
-}
-
-export function WalletDataCard(props: { index?: number }) {
+export function SimpleWalletDataCard(props: { index?: number }) {
   const wallet = useWalletDataContext().unwrap()
   const { index } = props
 
-  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
-  const ens = useEnsReverseNoFetch(wallet.address, mainnet)
+  return <SimpleWalletCard
+    uuid={wallet.uuid}
+    address={wallet.address}
+    name={wallet.name}
+    emoji={wallet.emoji}
+    color={Color.get(wallet.color)}
+    index={index} />
+}
 
-  const [color, color2] = Gradients.get(wallet.color)
+export function RawWalletDataCard(props: { index?: number }) {
+  const wallet = useWalletDataContext().unwrap()
+  const { index } = props
+
+  return <RawWalletCard
+    uuid={wallet.uuid}
+    address={wallet.address}
+    name={wallet.name}
+    emoji={wallet.emoji}
+    color={Color.get(wallet.color)}
+    index={index} />
+}
+
+export function SimpleWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number }) {
+  return <div className="w-full aspect-video rounded-xl overflow-hidden">
+    <RawWalletCard {...props} />
+  </div>
+}
+
+export function RawWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number }) {
+  const { uuid, address, name, emoji, color, index } = props
+
+  const [color1, color2] = Gradient.get(color)
 
   const onClickEllipsis = useMouseCancel(e => {
     // TODO
   }, [])
 
-  const address = useMemo(() => {
-    return Address.from(wallet.address)!
-  }, [wallet.address])
+  const finalAddress = useMemo(() => {
+    return Address.fromOrThrow(address)
+  }, [address])
 
-  const ensOrAddress = ens.data?.get() ?? address
-  const ensOrAddressDisplay = ens.data?.get() ?? Address.format(address)
+  const addressDisplay = useMemo(() => {
+    return Address.format(finalAddress)
+  }, [finalAddress])
 
-  const copyEthereumAddress = useCopy(ensOrAddress)
+  const mainnet = useEthereumContext(uuid, chainByChainId[1])
+  const ens = useEnsReverseNoFetch(finalAddress, mainnet)
+
+  const ensOrFinalAddress = ens.data?.get() ?? finalAddress
+  const ensOrAddressDisplay = ens.data?.get() ?? addressDisplay
+
+  const copyEthereumAddress = useCopy(ensOrFinalAddress)
   const onClickCopyEthereumAddress = useMouseCancel(copyEthereumAddress.run)
 
-  const totalBalanceQuery = useTotalWalletPricedBalance(wallet.address, "usd")
+  const totalBalanceQuery = useTotalWalletPricedBalance(finalAddress, "usd")
   const totalBalanceDisplay = useCompactDisplayUsd(totalBalanceQuery.current)
 
   const First =
     <div className="flex items-center">
       <div className="shrink-0">
         <WalletIcon className="text-xl"
-          emoji={wallet.emoji} />
+          emoji={emoji} />
       </div>
       <div className="w-2 grow" />
       {index == null &&
-        <button className={`${Button.Base.className} ${Button.White.className} text-${color}`}
+        <button className={`${Button.Base.className} ${Button.White.className} text-${color1}`}
           onClick={onClickEllipsis}>
           <div className={`${Button.Shrinker.className}`}>
             <Outline.EllipsisHorizontalIcon className="size-5" />
@@ -74,7 +103,7 @@ export function WalletDataCard(props: { index?: number }) {
   const Name =
     <div className="flex items-center text-white font-medium">
       <div className="truncate">
-        {wallet.name}
+        {name}
       </div>
       <div className="w-2 grow" />
       <div className="font-base text-white-high-contrast">
@@ -95,7 +124,7 @@ export function WalletDataCard(props: { index?: number }) {
       </div>
     </div>
 
-  return <div className={`po-md w-full h-full flex flex-col text-white bg-gradient-to-br from-${color} to-${color2}`}>
+  return <div className={`po-md w-full h-full flex flex-col text-white bg-gradient-to-br from-${color1}-400 to-${color2}-400 dark:from-${color1}-500 dark:to-${color2}-500`}>
     {First}
     <div className="grow" />
     {Name}

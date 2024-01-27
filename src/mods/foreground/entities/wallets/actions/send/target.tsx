@@ -114,7 +114,7 @@ export function WalletSendScreenTarget(props: {}) {
         Target
       </div>
       <div className="w-4" />
-      <SimpleInput key="target"
+      <SimpleInput
         autoFocus
         value={rawTargetInput}
         onChange={onTargetInputChange}
