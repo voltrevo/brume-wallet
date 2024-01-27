@@ -20,8 +20,8 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
   const { url } = usePathContext().unwrap()
   const { dark, children, close, hesitant } = props
 
-  const x = url.searchParams.get("x")
-  const y = url.searchParams.get("y")
+  const maybeX = url.searchParams.get("x")
+  const maybeY = url.searchParams.get("y")
 
   const previous = useRef(document.activeElement)
 
@@ -171,8 +171,6 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
     else
       e.currentTarget.classList.remove("overscroll-y-none")
 
-
-
     return
   }, [hide, viewportWidth])
 
@@ -185,7 +183,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
   return <Portal type="div">
     <CloseContext.Provider value={hide}>
       <dialog className=""
-        style={{ "--x": `${x}px`, "--y": `${y}px` } as any}
+        style={{ "--x": `${maybeX}px`, "--y": `${maybeY}px` } as any}
         onKeyDown={onEscape}
         onClose={onClose}
         ref={setDialog}>
