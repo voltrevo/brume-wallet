@@ -141,7 +141,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
       New wallet
     </Dialog.Title>
     <div className="h-4" />
-    <div className="grow flex flex-col items-center justify-center">
+    <div className="flex-1 flex flex-col items-center justify-center">
       <div className="w-full max-w-sm">
         {maybeAddress != null &&
           <SimpleWalletCard
@@ -155,12 +155,15 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
       </div>
     </div>
     <div className="h-2" />
-    {NameInput}
-    <div className="h-2" />
-    {AddressInput}
-    <div className="h-4" />
-    <div className="flex items-center flex-wrap-reverse gap-2">
-      {AddButon}
+    <div className="flex-1 flex flex-col">
+      <div className="grow" />
+      {NameInput}
+      <div className="h-2" />
+      {AddressInput}
+      <div className="h-4" />
+      <div className="flex items-center flex-wrap-reverse gap-2">
+        {AddButon}
+      </div>
     </div>
   </>
 }

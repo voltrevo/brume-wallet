@@ -259,7 +259,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       New wallet
     </Dialog.Title>
     <div className="h-4" />
-    <div className="grow flex flex-col items-center justify-center">
+    <div className="flex-1 flex flex-col items-center justify-center">
       <div className="w-full max-w-sm">
         {triedAddress.isOk() &&
           <SimpleWalletCard
@@ -273,19 +273,21 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       </div>
     </div>
     <div className="h-2" />
-    {NameInput}
-    <div className="h-2" />
-    {KeyInput}
-    <div className="h-4" />
-    <div className="flex items-center flex-wrap-reverse gap-2">
-      {AddUnauthButton}
-      {id == null
-        ? AddAuthButton1
-        : AddAuthButton2}
+    <div className="flex-1 flex flex-col">
+      <div className="grow" />
+      {NameInput}
+      <div className="h-2" />
+      {KeyInput}
+      <div className="h-4" />
+      <div className="flex items-center flex-wrap-reverse gap-2">
+        {AddUnauthButton}
+        {id == null
+          ? AddAuthButton1
+          : AddAuthButton2}
+      </div>
     </div>
   </>
 }
-
 
 export function EmptyWalletCard(props: {}) {
   return <div className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-clicked-or-focused:scale-105 !transition-transform" />

@@ -1,13 +1,11 @@
 import { Outline } from "@/libs/icons/icons";
-import { Button } from "@/libs/ui/button";
-import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { Dialog } from "@/libs/ui/dialog/dialog";
 import { useCallback, useState } from "react";
+import { WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../../actions/send";
 import { ReadonlyWalletCreatorDialog } from "./readonly";
-import { StandaloneWalletCreatorDialog } from "./standalone";
+import { EmptyWalletCard, StandaloneWalletCreatorDialog } from "./standalone";
 
 export function WalletCreatorDialog(props: {}) {
-  const close = useCloseContext().unwrap()
-
   const [type, setType] = useState<"readonly" | "privateKey">()
 
   const onWatchonlyClick = useCallback(() => {
@@ -18,40 +16,38 @@ export function WalletCreatorDialog(props: {}) {
     setType("privateKey")
   }, [])
 
-  const onClose = useCallback(() => {
-    close()
-  }, [close])
-
   return <>
     {type === "readonly" &&
-      <Dialog
-        close={onClose}>
-        <ReadonlyWalletCreatorDialog />
-      </Dialog>}
+      <ReadonlyWalletCreatorDialog />}
     {type === "privateKey" &&
-      <Dialog
-        close={onClose}>
-        <StandaloneWalletCreatorDialog />
-      </Dialog>}
-    <Dialog.Title>
-      New wallet
-    </Dialog.Title>
-    <div className="h-4" />
-    <div className="w-full flex items-center gap-2">
-      <Button.Contrast className="flex-1 whitespace-nowrap p-4 rounded-xl"
-        onClick={onWatchonlyClick}>
-        <div className={`${Button.Shrinker.className} flex-col`}>
-          <Outline.EyeIcon className="size-6" />
-          <span>Watch-only</span>
+      <StandaloneWalletCreatorDialog />}
+    {type == null && <>
+      <Dialog.Title>
+        New wallet
+      </Dialog.Title>
+      <div className="h-4" />
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="w-full max-w-sm">
+          <EmptyWalletCard />
         </div>
-      </Button.Contrast>
-      <Button.Contrast className="flex-1 whitespace-nowrap p-4 rounded-xl"
-        onClick={onPrivateKeyClick}>
-        <div className={`${Button.Shrinker.className} flex-col`}>
-          <Outline.WalletIcon className="size-6" />
-          <span>Private key</span>
+      </div>
+      <div className="h-2" />
+      <div className="flex-1 flex flex-col">
+        <div className="grow" />
+        <div className="h-4" />
+        <div className="flex items-center flex-wrap-reverse gap-2">
+          <WideShrinkableContrastButton
+            onClick={onWatchonlyClick}>
+            <Outline.EyeIcon className="size-5" />
+            <span>Watch-only</span>
+          </WideShrinkableContrastButton>
+          <WideShrinkableOppositeButton
+            onClick={onPrivateKeyClick}>
+            <Outline.WalletIcon className="size-5" />
+            <span>Private key</span>
+          </WideShrinkableOppositeButton>
         </div>
-      </Button.Contrast>
-    </div>
+      </div>
+    </>}
   </>
 }
