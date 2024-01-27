@@ -936,6 +936,7 @@ export function WalletTransactionScreenValue(props: {}) {
       </div>
       <div className="h-2" />
       <ShrinkableContrastButtonInTextareaBox
+        disabled={maybeData == null}
         onClick={onDecodeClick}>
         <Outline.MagnifyingGlassIcon className="size-4" />
         Decode
