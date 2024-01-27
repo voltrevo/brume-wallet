@@ -1,12 +1,9 @@
 import { Color } from "@/libs/colors/colors";
-import { Emojis } from "@/libs/emojis/emojis";
 import { UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
-import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
-import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
@@ -21,17 +18,12 @@ import { SimpleWalletCard } from "../../card";
 import { useEthereumContext } from "../../data";
 import { EmptyWalletCard } from "./standalone";
 
-export function ReadonlyWalletCreatorDialog(props: {}) {
+export function ReadonlyWalletCreatorDialog(props: { uuid: string } & { color: Color } & { emoji: string }) {
   const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
-
-  const uuid = useConstant(() => crypto.randomUUID())
+  const { uuid, color, emoji } = props
 
   const mainnet = useEthereumContext(uuid, chainByChainId[1])
-
-  const modhash = useModhash(uuid)
-  const color = Color.get(modhash)
-  const emoji = Emojis.get(modhash)
 
   const [rawNameInput = "", setRawNameInput] = useState<string>()
 
