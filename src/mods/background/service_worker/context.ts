@@ -7,11 +7,10 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Option } from "@hazae41/option"
 import { Catched, Panic } from "@hazae41/result"
 import { EthBrume } from "./entities/brumes/data"
-import { EthereumFetchParams, WalletData } from "./entities/wallets/data"
+import { EthereumFetchParams } from "./entities/wallets/data"
 
 export interface BgEthereumContext {
   readonly chain: ChainData
-  readonly wallet: WalletData
   readonly brume: EthBrume
 }
 

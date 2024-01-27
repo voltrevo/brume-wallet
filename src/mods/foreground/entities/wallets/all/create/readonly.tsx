@@ -1,4 +1,4 @@
-import { Colors } from "@/libs/colors/colors";
+import { Color } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
 import { UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
@@ -8,10 +8,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
-import { Button } from "@/libs/ui/button";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
-import { Input } from "@/libs/ui/input";
-import { Textarea } from "@/libs/ui/textarea";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Address, ZeroHexString } from "@hazae41/cubane";
@@ -19,8 +16,10 @@ import { Option } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useEnsLookup } from "../../../names/data";
-import { WalletAvatar } from "../../avatar";
+import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableGradientButton } from "../../actions/send";
+import { SimpleWalletCard } from "../../card";
 import { useEthereumContext } from "../../data";
+import { EmptyWalletCard } from "./standalone";
 
 export function ReadonlyWalletCreatorDialog(props: {}) {
   const close = useCloseContext().unwrap()
@@ -31,7 +30,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   const mainnet = useEthereumContext(uuid, chainByChainId[1])
 
   const modhash = useModhash(uuid)
-  const color = Colors.mod(modhash)
+  const color = Color.get(modhash)
   const emoji = Emojis.get(modhash)
 
   const [rawNameInput = "", setRawNameInput] = useState<string>()
@@ -42,6 +41,10 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
     setRawNameInput(e.currentTarget.value)
   }, [])
 
+  const finalNameInput = useMemo(() => {
+    return defNameInput || "Vitalik"
+  }, [defNameInput])
+
   const [rawAddressInput = "", setRawAddressInput] = useState<string>()
 
   const defAddressInput = useDeferredValue(rawAddressInput)
@@ -50,25 +53,33 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
     setRawAddressInput(e.currentTarget.value)
   }, [])
 
-  const maybeEnsInput = defAddressInput.endsWith(".eth")
-    ? defAddressInput
-    : undefined
-  const ensAddressQuery = useEnsLookup(maybeEnsInput, mainnet)
+  const maybeEnsKey = useMemo(() => {
+    if (!defAddressInput.endsWith(".eth"))
+      return
+    return defAddressInput
+  }, [defAddressInput])
 
-  const maybeAddress = defAddressInput.endsWith(".eth")
-    ? ensAddressQuery.data?.get()
-    : defAddressInput
+  const ensAddressQuery = useEnsLookup(maybeEnsKey, mainnet)
+  const maybeEnsAddress = ensAddressQuery.current?.ok().get()
+
+  const maybeAddress = useMemo(() => {
+    if (maybeEnsAddress != null)
+      return maybeEnsAddress
+    if (ZeroHexString.is(defAddressInput))
+      return defAddressInput
+    return undefined
+  }, [defAddressInput, maybeEnsAddress])
 
   const tryAdd = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!defNameInput)
+      if (!finalNameInput)
         return new Err(new Panic())
 
       const address = Option.wrap(maybeAddress).okOrElseSync(() => {
         return new UIError(`Could not fetch or parse address`)
       }).mapSync(x => Address.from(x) as ZeroHexString).throw(t)
 
-      const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: defNameInput, color, emoji, address }
+      const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address }
 
       await background.tryRequest<Wallet[]>({
         method: "brume_createWallet",
@@ -79,58 +90,75 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [defNameInput, maybeAddress, uuid, color, emoji, background, close])
+  }, [finalNameInput, maybeAddress, uuid, color, emoji, background, close])
 
   const addDisabled = useMemo(() => {
     if (tryAdd.loading)
       return "Loading..."
-    if (!defNameInput)
+    if (!finalNameInput)
       return "Please enter a name"
     if (!defAddressInput)
       return "Please enter an address"
     return undefined
-  }, [tryAdd.loading, defNameInput, defAddressInput])
+  }, [tryAdd.loading, finalNameInput, defAddressInput])
 
   const NameInput =
-    <div className="flex items-stretch gap-2">
+    <SimpleLabel>
       <div className="shrink-0">
-        <WalletAvatar className="size-12 text-2xl"
-          colorIndex={color}
-          emoji={emoji} />
+        Name
       </div>
-      <Input.Contrast className="w-full"
-        placeholder="Enter a name"
+      <div className="w-4" />
+      <SimpleInput
+        placeholder="Vitalik"
         value={rawNameInput}
         onChange={onNameInputChange} />
-    </div>
+    </SimpleLabel>
 
   const AddressInput =
-    <Textarea.Contrast className="w-full resize-none"
-      placeholder="vitalik.eth"
-      value={rawAddressInput}
-      onChange={onAddressInputChange}
-      rows={4} />
+    <SimpleLabel>
+      <div className="shrink-0">
+        Address
+      </div>
+      <div className="w-4" />
+      <SimpleTextarea
+        placeholder="vitalik.eth"
+        value={rawAddressInput}
+        onChange={onAddressInputChange}
+        rows={4} />
+    </SimpleLabel>
 
   const AddButon =
-    <Button.Gradient className="grow po-md"
-      colorIndex={color}
+    <WideShrinkableGradientButton
+      color={color}
       disabled={Boolean(addDisabled)}
       onClick={tryAdd.run}>
-      <div className={`${Button.Shrinker.className}`}>
-        <Outline.PlusIcon className="size-5" />
-        {addDisabled || "Add"}
-      </div>
-    </Button.Gradient>
+      <Outline.PlusIcon className="size-5" />
+      {addDisabled || "Add"}
+    </WideShrinkableGradientButton>
 
   return <>
     <Dialog.Title>
       New wallet
     </Dialog.Title>
     <div className="h-4" />
+    <div className="grow flex flex-col items-center justify-center">
+      <div className="w-full max-w-sm">
+        {maybeAddress != null &&
+          <SimpleWalletCard
+            uuid={uuid}
+            name={finalNameInput}
+            emoji={emoji}
+            address={maybeAddress}
+            color={color} />}
+        {maybeAddress == null &&
+          <EmptyWalletCard />}
+      </div>
+    </div>
+    <div className="h-2" />
     {NameInput}
-    <div className="h-8" />
+    <div className="h-2" />
     {AddressInput}
-    <div className="h-4 grow" />
+    <div className="h-4" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       {AddButon}
     </div>
