@@ -952,7 +952,7 @@ export function WalletTransactionScreenValue(props: {}) {
       </div>
       <div className="w-4" />
       {maybeIsEip1559 === true &&
-        <select className="w-full my-0.5 bg-transparent outline-none"
+        <select className="w-full my-0.5 bg-transparent outline-none overflow-ellipsis overflow-x-hidden"
           value={gasMode}
           onChange={onGasModeChange}>
           <option value="urgent">
@@ -969,7 +969,7 @@ export function WalletTransactionScreenValue(props: {}) {
           </option>
         </select>}
       {maybeIsEip1559 === false &&
-        <select className="w-full my-0.5 bg-transparent outline-none"
+        <select className="w-full my-0.5 bg-transparent outline-none overflow-ellipsis overflow-x-hidden"
           value={gasMode}
           onChange={onGasModeChange}>
           <option value="urgent">

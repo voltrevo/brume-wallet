@@ -220,7 +220,7 @@ export function SeededWalletCreatorDialog(props: {}) {
       Choose an account type
     </div>
     <div className="h-2" />
-    <select className=""
+    <select className="overflow-ellipsis overflow-x-hidden"
       value={coin}
       onChange={onCoinChange}>
       <option value="eth">
