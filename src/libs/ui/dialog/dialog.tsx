@@ -16,9 +16,9 @@ export function useCloseContext() {
   return Option.wrap(useContext(CloseContext))
 }
 
-export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
+export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitant?: boolean }) {
   const { url } = usePathContext().unwrap()
-  const { dark, children, close } = props
+  const { dark, children, close, hesitant } = props
 
   const x = url.searchParams.get("x")
   const y = url.searchParams.get("y")
@@ -171,6 +171,8 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
     else
       e.currentTarget.classList.remove("overscroll-y-none")
 
+
+
     return
   }, [hide, viewportWidth])
 
@@ -197,6 +199,9 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
           onScroll={onScroll}
           onClick={Events.keep}>
           <div className={`grow flex flex-col items-center w-full md:max-w-3xl md:m-auto`}>
+            {hesitant &&
+              <input className="h-0 -z-10 opacity-0 md:hidden"
+                aria-hidden />}
             <div className="h-[50vh] grow md:h-8" />
             <div className={`grow flex flex-col w-full md:aspect-square text-default bg-default rounded-t-3xl md:rounded-3xl`}
               aria-modal
@@ -204,9 +209,14 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps) {
               <div className="md:hidden p-4 flex items-center justify-center">
                 <div className="w-16 h-2 bg-backdrop rounded-full" />
               </div>
-              <div className="grow flex flex-col p-6 basis-[100dvh] md:basis-0">
-                <div className="grow flex flex-col p-safe md:p-0">
-                  {children}
+              <div className="relative grow flex flex-col basis-[100dvh] md:basis-0">
+                {!hesitant &&
+                  <input className="absolute h-[100dvh] -z-10 opacity-0 md:hidden"
+                    aria-hidden />}
+                <div className="grow flex flex-col p-6">
+                  <div className="grow flex flex-col p-safe md:p-0">
+                    {children}
+                  </div>
                 </div>
               </div>
             </div>

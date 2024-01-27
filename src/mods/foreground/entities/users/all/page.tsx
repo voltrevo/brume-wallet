@@ -231,7 +231,8 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
   return <>
     <PathContext.Provider value={subpath}>
       {subpath.url.pathname === href &&
-        <Dialog close={onSubpathClose}>
+        <Dialog hesitant
+          close={onSubpathClose}>
           <div className="text-6xl">
             {title}
           </div>
