@@ -32,6 +32,7 @@ import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
 import { usePairPrice } from "../tokens/pairs/data";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
+import { WalletRenameDialog } from "./actions/rename";
 import { WalletSendScreen } from "./actions/send";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
@@ -213,10 +214,14 @@ function WalletDataPage() {
       </div>
     </UserPageHeader>
 
+  const onRenameClick = useCallback(() => {
+    location.href = subpath.go(`/rename`).href
+  }, [subpath])
+
   const Card =
     <div className="p-4 flex justify-center">
       <div className="w-full max-w-sm">
-        <SimpleWalletDataCard />
+        <SimpleWalletDataCard ok={onRenameClick} />
         {wallet.type === "readonly" && <>
           <div className="h-2" />
           <div className="po-sm bg-contrast text-contrast rounded-xl flex items-center justify-center">
@@ -318,9 +323,13 @@ function WalletDataPage() {
 
   return <Page>
     <PathContext.Provider value={subpath}>
-      {subpath.url.pathname === "/send" && wallet.type !== "readonly" &&
+      {subpath.url.pathname === "/send" &&
         <Dialog close={onSubpathClose}>
           <WalletSendScreen />
+        </Dialog>}
+      {subpath.url.pathname === "/rename" &&
+        <Dialog close={onSubpathClose}>
+          <WalletRenameDialog />
         </Dialog>}
     </PathContext.Provider>
     {receiveDialog.current &&
@@ -413,8 +422,10 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
   const onClick = useCallback(() => {
+    if (wallet.type === "readonly")
+      return
     location.href = subpath.go(`/send?step=target&chain=${context?.chain.chainId}`).href
-  }, [subpath, context])
+  }, [wallet, subpath, context])
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
@@ -467,8 +478,10 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const balanceDisplay = useDisplay(balanceQuery.current)
 
   const onSendClick = useCallback(() => {
+    if (wallet.type === "readonly")
+      return
     location.href = subpath.go(`/send?step=target&chain=${context?.chain.chainId}&token=${token.address}`).href
-  }, [subpath, context, token])
+  }, [wallet, subpath, context, token])
 
   const balanceUsdFixed = useContractPricedBalance(wallet.address, token, "usd", context)
   const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)

@@ -5,7 +5,7 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { useCallback, useState } from "react";
-import { WideShrinkableGradientButton } from "../../actions/send";
+import { WideShrinkableContrastButton } from "../../actions/send";
 import { ReadonlyWalletCreatorDialog } from "./readonly";
 import { EmptyWalletCard, StandaloneWalletCreatorDialog } from "./standalone";
 
@@ -51,18 +51,18 @@ export function WalletCreatorDialog(props: {}) {
       <div className="flex-1 flex flex-col">
         <div className="h-4 grow" />
         <div className="flex items-center flex-wrap-reverse gap-2">
-          <WideShrinkableGradientButton
+          <WideShrinkableContrastButton
             onClick={onWatchonlyClick}
             color={color}>
             <Outline.EyeIcon className="size-5" />
             <span>Watch-only</span>
-          </WideShrinkableGradientButton>
-          <WideShrinkableGradientButton
+          </WideShrinkableContrastButton>
+          <WideShrinkableContrastButton
             onClick={onPrivateKeyClick}
             color={color}>
             <Outline.WalletIcon className="size-5" />
             <span>Private key</span>
-          </WideShrinkableGradientButton>
+          </WideShrinkableContrastButton>
         </div>
       </div>
     </>}

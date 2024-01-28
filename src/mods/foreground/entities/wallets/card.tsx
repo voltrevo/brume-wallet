@@ -7,7 +7,7 @@ import { ChildrenProps } from "@/libs/react/props/children"
 import { ButtonProps } from "@/libs/react/props/html"
 import { Button } from "@/libs/ui/button"
 import { Address, ZeroHexString } from "@hazae41/cubane"
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { useEnsReverseNoFetch } from "../names/data"
 import { useTotalWalletPricedBalance } from "../unknown/data"
 import { WalletIcon } from "./avatar"
@@ -15,9 +15,9 @@ import { useWalletDataContext } from "./context"
 import { useEthereumContext } from "./data"
 import { useCompactDisplayUsd } from "./page"
 
-export function SimpleWalletDataCard(props: { index?: number }) {
+export function SimpleWalletDataCard(props: { index?: number } & { ok?: () => void }) {
   const wallet = useWalletDataContext().unwrap()
-  const { index } = props
+  const { index, ok } = props
 
   return <SimpleWalletCard
     uuid={wallet.uuid}
@@ -25,12 +25,13 @@ export function SimpleWalletDataCard(props: { index?: number }) {
     name={wallet.name}
     emoji={wallet.emoji}
     color={Color.get(wallet.color)}
-    index={index} />
+    index={index}
+    ok={ok} />
 }
 
-export function RawWalletDataCard(props: { index?: number }) {
+export function RawWalletDataCard(props: { index?: number } & { ok?: () => void }) {
   const wallet = useWalletDataContext().unwrap()
-  const { index } = props
+  const { index, ok } = props
 
   return <RawWalletCard
     uuid={wallet.uuid}
@@ -38,10 +39,11 @@ export function RawWalletDataCard(props: { index?: number }) {
     name={wallet.name}
     emoji={wallet.emoji}
     color={Color.get(wallet.color)}
-    index={index} />
+    index={index}
+    ok={ok} />
 }
 
-export function SimpleWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number }) {
+export function SimpleWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { ok?: () => void }) {
   return <div className="w-full aspect-video rounded-xl overflow-hidden">
     <RawWalletCard {...props} />
   </div>
@@ -72,6 +74,10 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
   const totalBalanceQuery = useTotalWalletPricedBalance(finalAddress, "usd")
   const totalBalanceDisplay = useCompactDisplayUsd(totalBalanceQuery.current)
 
+  const onEllipsisClick = useCallback(() => {
+    ok?.()
+  }, [ok])
+
   const First =
     <div className="flex items-center">
       <div className="shrink-0">
@@ -82,7 +88,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
       {index == null && ok != null &&
         <CircularWhiteButtonInColoredCard
           color={color}
-          onClick={ok}>
+          onClick={onEllipsisClick}>
           <Outline.EllipsisHorizontalIcon className="size-5" />
         </CircularWhiteButtonInColoredCard>}
       {index != null && index !== -1 &&
@@ -130,9 +136,10 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
 }
 
 export function CircularWhiteButtonInColoredCard(props: ButtonProps & ChildrenProps & { color: Color }) {
-  const { children, color } = props
+  const { children, color, ...rest } = props
 
-  return <button className={`group bg-white text-${color}-400 dark:text-color-500 rounded-full outline-none hover:bg-white/90 focus-visible:outline-white  disabled:opacity-50  transition-opacity`}>
+  return <button className={`group bg-white text-${color}-400 dark:text-color-500 rounded-full outline-none hover:bg-white/90 focus-visible:outline-white  disabled:opacity-50  transition-opacity`}
+    {...rest}>
     <div className={`${Button.Shrinker.className}`}>
       {children}
     </div>
