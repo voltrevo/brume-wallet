@@ -214,14 +214,10 @@ function WalletDataPage() {
       </div>
     </UserPageHeader>
 
-  const onRenameClick = useCallback(() => {
-    location.href = subpath.go(`/rename`).href
-  }, [subpath])
-
   const Card =
     <div className="p-4 flex justify-center">
       <div className="w-full max-w-sm">
-        <SimpleWalletDataCard ok={onRenameClick} />
+        <SimpleWalletDataCard href="/rename" />
         {wallet.type === "readonly" && <>
           <div className="h-2" />
           <div className="po-sm bg-contrast text-contrast rounded-xl flex items-center justify-center">

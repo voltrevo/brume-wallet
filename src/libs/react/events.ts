@@ -79,6 +79,12 @@ export function useTextAreaChange<T = HTMLTextAreaElement>(
   return useCallback(callback, deps)
 }
 
+/**
+ * @deprecated
+ * @param callback 
+ * @param deps 
+ * @returns 
+ */
 export function useMouse<T = HTMLElement>(
   callback: (e: MouseEvent<T>) => void,
   deps: DependencyList = [callback]

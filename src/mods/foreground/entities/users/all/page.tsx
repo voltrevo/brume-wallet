@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Color, Gradient } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
-import { Events, useMouse } from "@/libs/react/events";
+import { Events } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
@@ -15,7 +15,7 @@ import { User, UserProps } from "@/mods/background/service_worker/entities/users
 import { OneDisplay } from "@/mods/foreground/landing/1/1";
 import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
 import { PathContext, useSubpath } from "@/mods/foreground/router/path/context";
-import { KeyboardEvent, useCallback, useState } from "react";
+import { KeyboardEvent, MouseEvent, useCallback, useState } from "react";
 import { useUser, useUsers } from "../data";
 import { UserLoginPage } from "../login";
 import { UserCreateDialog } from "./create";
@@ -194,11 +194,10 @@ export function NewUserCard() {
 
 }
 
-export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & AnchorProps & { href: string }) {
-  const { children, title, subtitle, href, ...rest } = props
+export function useGenius(subhref?: string) {
   const subpath = useSubpath()
 
-  const onClick = useMouse(e => {
+  const onClick = useCallback((e: MouseEvent) => {
     if (e.button !== 0)
       return
 
@@ -207,8 +206,8 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
     const x = e.clientX
     const y = e.clientY
 
-    location.href = subpath.go(`${href}?x=${x}&y=${y}`).href
-  }, [href, subpath])
+    location.href = subpath.go(`${subhref}?x=${x}&y=${y}`).href
+  }, [subhref, subpath])
 
   const onEnter = useCallback((e: KeyboardEvent) => {
     if (e.key !== "Enter")
@@ -219,8 +218,17 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
     const x = e.currentTarget.getBoundingClientRect().x + (e.currentTarget.getBoundingClientRect().width / 2)
     const y = e.currentTarget.getBoundingClientRect().y + (e.currentTarget.getBoundingClientRect().height / 2)
 
-    location.href = subpath.go(`${href}?x=${x}&y=${y}`).href
-  }, [href, subpath])
+    location.href = subpath.go(`${subhref}?x=${x}&y=${y}`).href
+  }, [subhref, subpath])
+
+  return { onClick, onEnter }
+}
+
+export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & AnchorProps & { href: string }) {
+  const { children, title, subtitle, href, ...rest } = props
+  const subpath = useSubpath()
+
+  const { onClick, onEnter } = useGenius(href)
 
   const onSubpathClose = useCallback(() => {
     location.href = subpath.go("/").href

@@ -1,7 +1,7 @@
 import { Color, Gradient } from "@/libs/colors/colors"
 import { Outline } from "@/libs/icons/icons"
 import { WalletIcon } from "../wallets/avatar"
-import { CircularWhiteButtonInColoredCard } from "../wallets/card"
+import { CircularWhiteAnchorInColoredCard } from "../wallets/card"
 import { useSeedDataContext } from "./context"
 
 export function SeedDataCard(props: { ok?: () => void }) {
@@ -19,11 +19,11 @@ export function SeedDataCard(props: { ok?: () => void }) {
       </div>
       <div className="w-2 grow" />
       {ok != null &&
-        <CircularWhiteButtonInColoredCard
+        <CircularWhiteAnchorInColoredCard
           color={color}
           onClick={ok}>
           <Outline.EllipsisHorizontalIcon className="size-5" />
-        </CircularWhiteButtonInColoredCard>}
+        </CircularWhiteAnchorInColoredCard>}
     </div>
 
   const Name =

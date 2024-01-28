@@ -4,20 +4,21 @@ import { chainByChainId } from "@/libs/ethereum/mods/chain"
 import { Outline } from "@/libs/icons/icons"
 import { useMouseCancel } from "@/libs/react/events"
 import { ChildrenProps } from "@/libs/react/props/children"
-import { ButtonProps } from "@/libs/react/props/html"
-import { Button } from "@/libs/ui/button"
+import { AnchorProps } from "@/libs/react/props/html"
 import { Address, ZeroHexString } from "@hazae41/cubane"
-import { useCallback, useMemo } from "react"
+import { useMemo } from "react"
+import { useSubpath } from "../../router/path/context"
 import { useEnsReverseNoFetch } from "../names/data"
 import { useTotalWalletPricedBalance } from "../unknown/data"
+import { useGenius } from "../users/all/page"
 import { WalletIcon } from "./avatar"
 import { useWalletDataContext } from "./context"
 import { useEthereumContext } from "./data"
 import { useCompactDisplayUsd } from "./page"
 
-export function SimpleWalletDataCard(props: { index?: number } & { ok?: () => void }) {
+export function SimpleWalletDataCard(props: { index?: number } & { href?: string }) {
   const wallet = useWalletDataContext().unwrap()
-  const { index, ok } = props
+  const { index, href } = props
 
   return <SimpleWalletCard
     uuid={wallet.uuid}
@@ -26,12 +27,12 @@ export function SimpleWalletDataCard(props: { index?: number } & { ok?: () => vo
     emoji={wallet.emoji}
     color={Color.get(wallet.color)}
     index={index}
-    ok={ok} />
+    href={href} />
 }
 
-export function RawWalletDataCard(props: { index?: number } & { ok?: () => void }) {
+export function RawWalletDataCard(props: { index?: number } & { href?: string }) {
   const wallet = useWalletDataContext().unwrap()
-  const { index, ok } = props
+  const { index, href } = props
 
   return <RawWalletCard
     uuid={wallet.uuid}
@@ -40,17 +41,18 @@ export function RawWalletDataCard(props: { index?: number } & { ok?: () => void 
     emoji={wallet.emoji}
     color={Color.get(wallet.color)}
     index={index}
-    ok={ok} />
+    href={href} />
 }
 
-export function SimpleWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { ok?: () => void }) {
+export function SimpleWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { href?: string }) {
   return <div className="w-full aspect-video rounded-xl overflow-hidden">
     <RawWalletCard {...props} />
   </div>
 }
 
-export function RawWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { ok?: () => void }) {
-  const { uuid, address, name, emoji, color, index, ok } = props
+export function RawWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { href?: string }) {
+  const { uuid, address, name, emoji, color, index, href } = props
+  const subpath = useSubpath()
 
   const [color1, color2] = Gradient.get(color)
 
@@ -74,9 +76,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
   const totalBalanceQuery = useTotalWalletPricedBalance(finalAddress, "usd")
   const totalBalanceDisplay = useCompactDisplayUsd(totalBalanceQuery.current)
 
-  const onEllipsisClick = useCallback(() => {
-    ok?.()
-  }, [ok])
+  const { onClick, onEnter } = useGenius(href)
 
   const First =
     <div className="flex items-center">
@@ -85,12 +85,14 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
           emoji={emoji} />
       </div>
       <div className="w-2 grow" />
-      {index == null && ok != null &&
-        <CircularWhiteButtonInColoredCard
+      {index == null && href != null &&
+        <CircularWhiteAnchorInColoredCard
           color={color}
-          onClick={onEllipsisClick}>
+          href={subpath.go(href).href}
+          onClick={onClick}
+          onKeyDown={onEnter}>
           <Outline.EllipsisHorizontalIcon className="size-5" />
-        </CircularWhiteButtonInColoredCard>}
+        </CircularWhiteAnchorInColoredCard>}
       {index != null && index !== -1 &&
         <div className={`border-2 border-white flex items-center justify-center rounded-full overflow-hidden`}>
           <div className={`bg-blue-600 flex items-center justify-center size-5 text-white font-medium`}>
@@ -135,13 +137,13 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
   </div>
 }
 
-export function CircularWhiteButtonInColoredCard(props: ButtonProps & ChildrenProps & { color: Color }) {
+export function CircularWhiteAnchorInColoredCard(props: AnchorProps & ChildrenProps & { color: Color }) {
   const { children, color, ...rest } = props
 
-  return <button className={`group bg-white text-${color}-400 dark:text-color-500 rounded-full outline-none hover:bg-white/90 focus-visible:outline-white  disabled:opacity-50  transition-opacity`}
+  return <a className={`group bg-white text-${color}-400 dark:text-color-500 rounded-full outline-none aria-[disabled=false]:hover:bg-white/90 focus-visible:outline-white aria-disabled:opacity-50 transition-opacity`}
     {...rest}>
-    <div className={`${Button.Shrinker.className}`}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
       {children}
     </div>
-  </button>
+  </a>
 }
