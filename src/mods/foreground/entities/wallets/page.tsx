@@ -15,6 +15,7 @@ import { UUIDProps } from "@/libs/react/props/uuid";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Menu } from "@/libs/ui2/menu/menu";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
@@ -32,7 +33,6 @@ import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
 import { usePairPrice } from "../tokens/pairs/data";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
-import { WalletRenameDialog } from "./actions/rename";
 import { WalletSendScreen } from "./actions/send";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
@@ -139,7 +139,7 @@ function WalletDataPage() {
   useEnsReverse(wallet.address, mainnet)
 
   const onSubpathClose = useCallback(() => {
-    location.href = subpath.go(`/`).href
+    location.replace(subpath.go(`/`).href)
   }, [subpath])
 
   const receiveDialog = useBooleanHandle(false)
@@ -324,9 +324,10 @@ function WalletDataPage() {
           <WalletSendScreen />
         </Dialog>}
       {subpath.url.pathname === "/rename" &&
-        <Dialog close={onSubpathClose}>
-          <WalletRenameDialog />
-        </Dialog>}
+        <Menu close={onSubpathClose}>
+          Hello world
+          {/* <WalletRenameDialog /> */}
+        </Menu>}
     </PathContext.Provider>
     {receiveDialog.current &&
       <Dialog dark
@@ -420,7 +421,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const onClick = useCallback(() => {
     if (wallet.type === "readonly")
       return
-    location.href = subpath.go(`/send?step=target&chain=${context?.chain.chainId}`).href
+    location.replace(subpath.go(`/send?step=target&chain=${context?.chain.chainId}`).href)
   }, [wallet, subpath, context])
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
@@ -476,7 +477,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const onSendClick = useCallback(() => {
     if (wallet.type === "readonly")
       return
-    location.href = subpath.go(`/send?step=target&chain=${context?.chain.chainId}&token=${token.address}`).href
+    location.replace(subpath.go(`/send?step=target&chain=${context?.chain.chainId}&token=${token.address}`).href)
   }, [wallet, subpath, context, token])
 
   const balanceUsdFixed = useContractPricedBalance(wallet.address, token, "usd", context)

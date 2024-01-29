@@ -206,10 +206,10 @@ export function useGenius(subhref?: string) {
     const x = e.clientX
     const y = e.clientY
 
-    location.href = subpath.go(`${subhref}?x=${x}&y=${y}`).href
+    location.replace(subpath.go(`${subhref}?x=${x}&y=${y}`).href)
   }, [subhref, subpath])
 
-  const onEnter = useCallback((e: KeyboardEvent) => {
+  const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key !== "Enter")
       return
 
@@ -218,10 +218,19 @@ export function useGenius(subhref?: string) {
     const x = e.currentTarget.getBoundingClientRect().x + (e.currentTarget.getBoundingClientRect().width / 2)
     const y = e.currentTarget.getBoundingClientRect().y + (e.currentTarget.getBoundingClientRect().height / 2)
 
-    location.href = subpath.go(`${subhref}?x=${x}&y=${y}`).href
+    location.replace(subpath.go(`${subhref}?x=${x}&y=${y}`).href)
   }, [subhref, subpath])
 
-  return { onClick, onEnter }
+  const onContextMenu = useCallback((e: MouseEvent) => {
+    e.preventDefault()
+
+    const x = e.clientX
+    const y = e.clientY
+
+    location.replace(subpath.go(`${subhref}?x=${x}&y=${y}`).href)
+  }, [subhref, subpath])
+
+  return { onClick, onEnter: onKeyDown, onContext: onContextMenu }
 }
 
 export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & AnchorProps & { href: string }) {
@@ -231,7 +240,7 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
   const { onClick, onEnter } = useGenius(href)
 
   const onSubpathClose = useCallback(() => {
-    location.href = subpath.go("/").href
+    location.replace(subpath.go("/").href)
   }, [subpath])
 
   return <>

@@ -129,7 +129,7 @@ export function WalletTransactionScreenValue(props: {}) {
   const onDecodeClick = useCallback(() => {
     if (maybeData == null)
       return
-    location.href = subpath.go(qurl("/decode", { data: maybeData })).href
+    location.replace(subpath.go(qurl("/decode", { data: maybeData })).href)
   }, [maybeData, subpath])
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
@@ -844,7 +844,7 @@ export function WalletTransactionScreenValue(props: {}) {
   }, [signOrSend])
 
   const onClose = useCallback(() => {
-    location.href = subpath.go(`/`).href
+    location.replace(subpath.go(`/`).href)
   }, [subpath])
 
   return <>

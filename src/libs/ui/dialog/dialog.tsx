@@ -2,9 +2,9 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { DarkProps } from "@/libs/react/props/dark"
 import { usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable, Option } from "@hazae41/option"
-import { KeyboardEvent, SyntheticEvent, UIEvent, createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { KeyboardEvent, MouseEvent, SyntheticEvent, UIEvent, createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
-import { Events, useMouse } from "../../react/events"
+import { Events } from "../../react/events"
 import { ChildrenProps } from "../../react/props/children"
 import { CloseProps } from "../../react/props/close"
 import { Button } from "../button"
@@ -79,7 +79,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
   /**
    * Smoothly close the dialog on outside click
    */
-  const onClickOutside = useMouse<HTMLDivElement>(e => {
+  const onClickOutside = useCallback((e: MouseEvent) => {
     if (e.clientX > e.currentTarget.clientWidth)
       return
 
@@ -87,6 +87,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
 
     hide()
   }, [hide])
+
 
   /**
    * When the dialog could not be closed smoothly
@@ -139,20 +140,11 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
     return () => color.setAttribute("content", original)
   }, [visible, dark])
 
-  const [viewportWidth, setViewportWidth] = useState(() => Math.max(document.documentElement.clientWidth, window.innerWidth))
-
-  useEffect(() => {
-    const onResize = () => setViewportWidth(Math.max(document.documentElement.clientWidth, window.innerWidth))
-
-    window.addEventListener("resize", onResize)
-    return () => window.removeEventListener("resize", onResize)
-  }, [])
-
-  const onScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
+  const onScroll = useCallback((e: UIEvent) => {
     /**
      * Only on mobile
      */
-    if (viewportWidth > 768)
+    if (window.innerWidth > 768)
       return
 
     /**
@@ -172,7 +164,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
       e.currentTarget.classList.remove("overscroll-y-none")
 
     return
-  }, [hide, viewportWidth])
+  }, [hide])
 
   /**
    * Only unmount when transition is finished

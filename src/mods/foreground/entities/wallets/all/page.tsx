@@ -24,7 +24,7 @@ export function WalletsPage() {
   const creator = useBooleanHandle(false)
 
   const onWalletClick = useCallback((wallet: Wallet) => {
-    location.href = path.go(`/wallet/${wallet.uuid}`).href
+    location.assign(path.go(`/wallet/${wallet.uuid}`).href)
   }, [path])
 
   const Body =

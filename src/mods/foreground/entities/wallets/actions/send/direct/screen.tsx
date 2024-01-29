@@ -235,11 +235,11 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   }, [rawValue, tokenData])
 
   const onSendTransactionClick = useCallback(() => {
-    location.href = subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, step: "value", chain: chainData.chainId, target: maybeFinalTarget, value: maybeFinalValue?.toString(), disableTarget: true, disableValue: true })).href
+    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, step: "value", chain: chainData.chainId, target: maybeFinalTarget, value: maybeFinalValue?.toString(), disableTarget: true, disableValue: true })).href)
   }, [subpath, trial0Uuid, chainData.chainId, maybeFinalValue, maybeFinalTarget])
 
   const onClose = useCallback(() => {
-    location.href = subpath.go(`/`).href
+    location.replace(subpath.go(`/`).href)
   }, [subpath])
 
   const trialQuery = useTransactionTrial(trial0Uuid)

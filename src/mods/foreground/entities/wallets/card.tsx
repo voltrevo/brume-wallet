@@ -76,7 +76,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
   const totalBalanceQuery = useTotalWalletPricedBalance(finalAddress, "usd")
   const totalBalanceDisplay = useCompactDisplayUsd(totalBalanceQuery.current)
 
-  const { onClick, onEnter } = useGenius(href)
+  const { onClick, onEnter, onContext } = useGenius(href)
 
   const First =
     <div className="flex items-center">
@@ -129,7 +129,8 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
       </div>
     </div>
 
-  return <div className={`po-md w-full h-full flex flex-col text-white bg-gradient-to-br from-${color1}-400 to-${color2}-400 dark:from-${color1}-500 dark:to-${color2}-500`}>
+  return <div className={`po-md w-full h-full flex flex-col text-white bg-gradient-to-br from-${color1}-400 to-${color2}-400 dark:from-${color1}-500 dark:to-${color2}-500`}
+    onContextMenu={onContext}>
     {First}
     <div className="grow" />
     {Name}
