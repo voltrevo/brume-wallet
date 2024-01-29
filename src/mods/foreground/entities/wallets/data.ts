@@ -163,7 +163,7 @@ export class EthereumSeededWalletInstance {
     })
   }
 
-  async tryGetPrivateKey(background: Background): Promise<Result<string, Error>> {
+  async tryGetPrivateKey(background: Background): Promise<Result<ZeroHexString, Error>> {
     return await this.seed.tryGetPrivateKey(this.data.path, background)
   }
 
@@ -191,7 +191,7 @@ export class EthereumUnauthPrivateKeyWalletInstance {
     return new Ok(new EthereumUnauthPrivateKeyWalletInstance(data))
   }
 
-  async tryGetPrivateKey(background: Background): Promise<Result<string, Error>> {
+  async tryGetPrivateKey(background: Background): Promise<Result<ZeroHexString, Error>> {
     return new Ok(this.data.privateKey)
   }
 
@@ -245,7 +245,7 @@ export class EthereumAuthPrivateKeyWalletInstance {
     return new Ok(new EthereumAuthPrivateKeyWalletInstance(data))
   }
 
-  async tryGetPrivateKey(background: Background): Promise<Result<string, Error>> {
+  async tryGetPrivateKey(background: Background): Promise<Result<ZeroHexString, Error>> {
     return await Result.unthrow(async t => {
       const { idBase64, ivBase64 } = this.data.privateKey
 
@@ -259,7 +259,7 @@ export class EthereumAuthPrivateKeyWalletInstance {
       }).then(r => r.throw(t).throw(t))
 
       using privateKeyMemory = Base64.get().tryDecodePadded(privateKeyBase64).throw(t)
-      return new Ok(`0x${Base16.get().tryEncode(privateKeyMemory).throw(t)}`)
+      return new Ok(`0x${Base16.get().tryEncode(privateKeyMemory).throw(t)}` as ZeroHexString)
     })
   }
 

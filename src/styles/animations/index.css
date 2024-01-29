@@ -128,4 +128,24 @@
     }
   }
 
+  @keyframes flip-in {
+    to {
+      transform: rotateY(180deg);
+    }
+  }
+
+  @keyframes flip-out {
+    from {
+      transform: rotateY(180deg);
+    }
+  }
+
+  .animate-flip-in {
+    animation: flip-in 300ms ease-out;
+  }
+
+  .animate-flip-out {
+    animation: flip-out 300ms ease-in;
+  }
+
 }

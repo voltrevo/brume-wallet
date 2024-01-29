@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { Colors, Gradients } from "@/libs/colors/colors";
-import { UIError } from "@/libs/errors/errors";
+import { Errors, UIError } from "@/libs/errors/errors";
 import { ChainData, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Mutators } from "@/libs/glacier/mutators";
 import { Outline } from "@/libs/icons/icons";
@@ -12,16 +12,17 @@ import { ClassNameProps } from "@/libs/react/props/className";
 import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
 import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
+import { State } from "@/libs/react/state";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog, Dialog2 } from "@/libs/ui/dialog/dialog";
+import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Menu } from "@/libs/ui2/menu/menu";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
 import { TokenSettings, TokenSettingsData } from "@/mods/background/service_worker/entities/wallets/tokens/data";
-import { Fixed } from "@hazae41/cubane";
-import { Nullable, Option, Some } from "@hazae41/option";
+import { Fixed, ZeroHexString } from "@hazae41/cubane";
+import { Nullable, Option, Optional, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Fragment, MouseEvent, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
@@ -35,10 +36,10 @@ import { usePairPrice } from "../tokens/pairs/data";
 import { useGenius } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
-import { WalletSendScreen, WideShrinkableMenuAnchor } from "./actions/send";
+import { WalletSendScreen, WideShrinkableMenuAnchor, WideShrinkableMenuButton } from "./actions/send";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
-import { useEthereumContext, useEthereumContext2 } from "./data";
+import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "./data";
 import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
 
 export function WalletPage(props: UUIDProps) {
@@ -190,6 +191,9 @@ function WalletDataPage() {
     }).then(Results.logAndAlert)
   }, [wallet, background])
 
+  const $privateKey = useState<Optional<ZeroHexString>>()
+  const [privateKey] = $privateKey
+
   const Header =
     <UserPageHeader
       title="Wallet"
@@ -215,7 +219,9 @@ function WalletDataPage() {
   const Card =
     <div className="p-4 flex justify-center">
       <div className="w-full max-w-sm">
-        <SimpleWalletDataCard href="/menu" />
+        <SimpleWalletDataCard
+          $privateKey={$privateKey}
+          href="/menu" />
         {wallet.type === "readonly" && <>
           <div className="h-2" />
           <div className="po-sm bg-contrast text-contrast rounded-xl flex items-center justify-center">
@@ -324,7 +330,7 @@ function WalletDataPage() {
       {subpath.url.pathname === "/edit" &&
         <WalletEditDialog />}
       {subpath.url.pathname === "/menu" &&
-        <WalletMenu />}
+        <WalletMenu $privateKey={$privateKey} />}
     </SubpathProvider>
     {receiveDialog.current &&
       <Dialog dark
@@ -338,9 +344,31 @@ function WalletDataPage() {
   </Page>
 }
 
-export function WalletMenu() {
+export function WalletMenu(props: { $privateKey: State<Optional<ZeroHexString>> }) {
   const path = usePathContext().unwrap()
+  const wallet = useWalletDataContext().unwrap()
+  const background = useBackgroundContext().unwrap()
+  const close = useCloseContext().unwrap()
+  const { $privateKey } = props
+
+  const [privateKey, setPrivateKey] = $privateKey
+
   const edit = useGenius(path, "/edit")
+
+  const onPrivateKeyShowClick = useCallback(() => Errors.runAndLogAndAlert(async () => {
+    const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.unwrap())
+    const privateKey = await instance.tryGetPrivateKey(background).then(r => r.unwrap())
+
+    setPrivateKey(privateKey)
+
+    close()
+  }), [background, close, setPrivateKey, wallet])
+
+  const onPrivateKeyHideClick = useCallback(async () => {
+    setPrivateKey(undefined)
+
+    close()
+  }, [close, setPrivateKey])
 
   return <Menu>
     <div className="flex flex-col text-left gap-2">
@@ -351,6 +379,18 @@ export function WalletMenu() {
         <Outline.PencilIcon className="size-4" />
         Edit
       </WideShrinkableMenuAnchor>
+      {!privateKey &&
+        <WideShrinkableMenuButton
+          onClick={onPrivateKeyShowClick}>
+          <Outline.EyeIcon className="size-4" />
+          Flip
+        </WideShrinkableMenuButton>}
+      {privateKey &&
+        <WideShrinkableMenuButton
+          onClick={onPrivateKeyHideClick}>
+          <Outline.EyeSlashIcon className="size-4" />
+          Unflip
+        </WideShrinkableMenuButton>}
     </div>
   </Menu>
 }

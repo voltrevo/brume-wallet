@@ -43,7 +43,7 @@ export class UnauthMnemonicSeedInstance {
     return new Ok(this.data.mnemonic)
   }
 
-  async tryGetPrivateKey(path: string, background: Background): Promise<Result<string, Error>> {
+  async tryGetPrivateKey(path: string, background: Background): Promise<Result<ZeroHexString, Error>> {
     return await Result.unthrow(async t => {
       const mnemonic = await this.tryGetMnemonic(background).then(r => r.throw(t))
       const masterSeed = await mnemonicToSeed(mnemonic)
@@ -53,7 +53,7 @@ export class UnauthMnemonicSeedInstance {
 
       const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
 
-      return new Ok(`0x${Base16.get().tryEncode(privateKeyBytes).throw(t)}`)
+      return new Ok(`0x${Base16.get().tryEncode(privateKeyBytes).throw(t)}` as ZeroHexString)
     })
   }
 
@@ -122,7 +122,7 @@ export class AuthMnemonicSeedInstance {
     })
   }
 
-  async tryGetPrivateKey(path: string, background: Background): Promise<Result<string, Error>> {
+  async tryGetPrivateKey(path: string, background: Background): Promise<Result<ZeroHexString, Error>> {
     return await Result.unthrow(async t => {
       const mnemonic = await this.tryGetMnemonic(background).then(r => r.throw(t))
       const masterSeed = await mnemonicToSeed(mnemonic)
@@ -132,7 +132,7 @@ export class AuthMnemonicSeedInstance {
 
       const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
 
-      return new Ok(`0x${Base16.get().tryEncode(privateKeyBytes).throw(t)}`)
+      return new Ok(`0x${Base16.get().tryEncode(privateKeyBytes).throw(t)}` as ZeroHexString)
     })
   }
 
@@ -186,7 +186,7 @@ export class LedgerSeedInstance {
     return new Err(new Unimplemented())
   }
 
-  async tryGetPrivateKey(path: string, background: Background): Promise<Result<string, Error>> {
+  async tryGetPrivateKey(path: string, background: Background): Promise<Result<ZeroHexString, Error>> {
     return new Err(new Unimplemented())
   }
 

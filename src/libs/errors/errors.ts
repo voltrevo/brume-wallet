@@ -38,4 +38,20 @@ export namespace Errors {
     alert(error)
   }
 
+  export async function runAndLogAndAlert<T>(callback: () => Promise<T>) {
+    try {
+      return await callback()
+    } catch (e: unknown) {
+      logAndAlert(e)
+    }
+  }
+
+  export function runAndLogAndAlertSync<T>(callback: () => T) {
+    try {
+      return callback()
+    } catch (e: unknown) {
+      logAndAlert(e)
+    }
+  }
+
 }

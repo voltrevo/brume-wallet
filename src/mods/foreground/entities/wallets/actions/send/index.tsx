@@ -127,9 +127,10 @@ export function WideShrinkableMenuButton(props: ChildrenProps & ButtonProps) {
 }
 
 export function WideShrinkableMenuAnchor(props: ChildrenProps & AnchorProps) {
-  const { children, ...rest } = props
+  const { children, "aria-disabled": disabled = false, ...rest } = props
 
   return <a className="flex-1 group po-md rounded-xl outline-none whitespace-nowrap aria-[disabled=false]:hover:bg-contrast focus-visible:bg-contrast aria-disabled:opacity-50 transition-opacity"
+    aria-disabled={disabled}
     {...rest}>
     <div className="h-full w-full flex items-center justify-start gap-4 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
       {children}

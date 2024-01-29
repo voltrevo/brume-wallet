@@ -74,7 +74,7 @@ export interface EthereumUnauthPrivateKeyWalletData {
 
   readonly address: ZeroHexString
 
-  readonly privateKey: string
+  readonly privateKey: ZeroHexString
 }
 
 export interface EthereumAuthPrivateKeyWalletData {
