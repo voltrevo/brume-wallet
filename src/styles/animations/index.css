@@ -141,11 +141,11 @@
   }
 
   .animate-flip-in {
-    animation: flip-in 300ms ease-out;
+    animation: flip-in 900ms ease-out;
   }
 
   .animate-flip-out {
-    animation: flip-out 300ms ease-in;
+    animation: flip-out 900ms ease-in;
   }
 
 }

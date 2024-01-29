@@ -152,7 +152,7 @@ export function Menu(props: ChildrenProps & DarkProps) {
         <div className={`fixed inset-0 ${dark ? "dark" : ""}`}
           onMouseDown={onClickOutside}
           onClick={Events.keep}>
-          <div className={`absolute flex flex-col min-w-48 max-w-xl text-default bg-default border rounded-2xl drop-shadow-xl p-2 ${visible ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
+          <div className={`absolute flex flex-col min-w-48 max-w-xl text-default bg-default rounded-2xl drop-shadow-xl p-2 ${visible ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
             style={{ translate: `${maybeL}px ${maybeT}px` }}
             ref={setMenu}
             aria-modal
