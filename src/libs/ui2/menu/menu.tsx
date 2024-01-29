@@ -111,9 +111,18 @@ export function Menu(props: ChildrenProps & DarkProps) {
 
   const [menu, setMenu] = useState<Nullable<HTMLElement>>(null)
 
+  const [maybeW, setMaybeW] = useState<Nullable<number>>(null)
+  const [maybeH, setMaybeH] = useState<Nullable<number>>(null)
+  const [maybeL, setMaybeL] = useState<Nullable<number>>(null)
+  const [maybeT, setMaybeT] = useState<Nullable<number>>(null)
+
   useLayoutEffect(() => {
     if (menu == null)
       return
+
+    setMaybeW(menu.offsetWidth)
+    setMaybeH(menu.offsetHeight)
+
     if (maybeX == null)
       return
     if (maybeY == null)
@@ -122,13 +131,8 @@ export function Menu(props: ChildrenProps & DarkProps) {
     const x = Number(maybeX)
     const y = Number(maybeY)
 
-    menu.style.left = x + menu.offsetWidth > window.innerWidth
-      ? `${Math.max(x - menu.offsetWidth, 0)}px`
-      : `${x}px`;
-
-    menu.style.top = y + menu.offsetHeight > window.innerHeight
-      ? `${Math.max(y - menu.offsetHeight, 0)}px`
-      : `${y}px`;
+    setMaybeL(((x + menu.offsetWidth) > window.innerWidth) ? Math.max(x - menu.offsetWidth, 0) : x)
+    setMaybeT(((y + menu.offsetHeight) > window.innerHeight) ? Math.max(y - menu.offsetHeight, 0) : y)
   }, [maybeX, maybeY, menu])
 
   /**
@@ -140,14 +144,15 @@ export function Menu(props: ChildrenProps & DarkProps) {
   return <Portal type="div">
     <CloseContext.Provider value={hide}>
       <dialog className=""
-        style={{ "--x": `${maybeX}px`, "--y": `${maybeY}px` } as any}
+        style={{ "--x": `${maybeX}px`, "--y": `${maybeY}px`, "--w": `${maybeW}px`, "--h": `${maybeH}px` } as any}
         onKeyDown={onEscape}
         onClose={onClose}
         ref={setDialog}>
         <div className={`fixed inset-0 ${dark ? "dark" : ""}`}
           onMouseDown={onClickOutside}
           onClick={Events.keep}>
-          <div className={`absolute flex flex-col w-48 text-default bg-default border rounded-2xl drop-shadow-xl p-2 ${visible ? "animate-scale-in" : "animate-scale-out"}`}
+          <div className={`absolute flex flex-col w-48 text-default bg-default border rounded-2xl drop-shadow-xl p-2 ${visible ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
+            style={{ translate: `${maybeL}px ${maybeT}px` }}
             ref={setMenu}
             aria-modal
             onAnimationEnd={onAnimationEnd}

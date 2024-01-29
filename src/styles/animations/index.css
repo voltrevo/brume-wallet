@@ -103,4 +103,29 @@
       translate: calc(-50vw + var(--x)) calc(-50vh + var(--y));
     }
   }
+
+  .animate-scale-xywh-in {
+    animation: scale-xywh-in 300ms ease-out;
+  }
+
+  .animate-scale-xywh-out {
+    animation: scale-xywh-out 300ms ease-in;
+  }
+
+  @keyframes scale-xywh-in {
+    from {
+      opacity: 0%;
+      transform: scale(0%);
+      translate: calc(var(--x) - (0.5 * var(--w))) calc(var(--y) - (0.5 * var(--h)));
+    }
+  }
+
+  @keyframes scale-xywh-out {
+    to {
+      opacity: 0%;
+      transform: scale(0%);
+      translate: calc(var(--x) - (0.5 * var(--w))) calc(var(--y) - (0.5 * var(--h)));
+    }
+  }
+
 }
