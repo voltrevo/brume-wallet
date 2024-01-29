@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Color, Gradient } from "@/libs/colors/colors";
 import { ChildrenProps } from "@/libs/react/props/children";
-import { ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
+import { AnchorProps, ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { WalletDirectSendScreenContractValue } from "./direct/contract";
 import { WalletDirectSendScreenNativeValue } from "./direct/screen";
@@ -113,4 +113,26 @@ export function WideShrinkableContrastButton(props: ChildrenProps & ButtonProps)
       {children}
     </div>
   </button>
+}
+
+export function WideShrinkableMenuButton(props: ChildrenProps & ButtonProps) {
+  const { children, ...rest } = props
+
+  return <button className="flex-1 group po-md rounded-xl outline-none whitespace-nowrap enabled:hover:bg-contrast focus-visible:bg-contrast disabled:opacity-50 transition-opacity"
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-start gap-4 group-enabled:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </button>
+}
+
+export function WideShrinkableMenuAnchor(props: ChildrenProps & AnchorProps) {
+  const { children, ...rest } = props
+
+  return <a className="flex-1 group po-md rounded-xl outline-none whitespace-nowrap aria-[disabled=false]:hover:bg-contrast focus-visible:bg-contrast aria-disabled:opacity-50 transition-opacity"
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-start gap-4 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </a>
 }

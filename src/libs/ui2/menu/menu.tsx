@@ -1,18 +1,18 @@
 import { Events } from "@/libs/react/events"
 import { ChildrenProps } from "@/libs/react/props/children"
-import { CloseProps } from "@/libs/react/props/close"
 import { DarkProps } from "@/libs/react/props/dark"
 import { ButtonProps } from "@/libs/react/props/html"
-import { CloseContext } from "@/libs/ui/dialog/dialog"
+import { CloseContext, useCloseContext } from "@/libs/ui/dialog/dialog"
 import { Portal } from "@/libs/ui/portal/portal"
 import { usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable } from "@hazae41/option"
 import { KeyboardEvent, MouseEvent, SyntheticEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 
-export function Menu(props: ChildrenProps & CloseProps & DarkProps) {
+export function Menu(props: ChildrenProps & DarkProps) {
   const { url } = usePathContext().unwrap()
-  const { close, dark, children } = props
+  const close = useCloseContext().unwrap()
+  const { dark, children } = props
 
   const maybeX = url.searchParams.get("x")
   const maybeY = url.searchParams.get("y")
@@ -147,7 +147,7 @@ export function Menu(props: ChildrenProps & CloseProps & DarkProps) {
         <div className={`fixed inset-0 ${dark ? "dark" : ""}`}
           onMouseDown={onClickOutside}
           onClick={Events.keep}>
-          <div className={`absolute flex flex-col max-w-xl text-default bg-default border p-4 rounded-2xl drop-shadow-xl ${visible ? "animate-scale-in" : "animate-scale-out"}`}
+          <div className={`absolute flex flex-col w-48 text-default bg-default border rounded-2xl drop-shadow-xl p-2 ${visible ? "animate-scale-in" : "animate-scale-out"}`}
             ref={setMenu}
             aria-modal
             onAnimationEnd={onAnimationEnd}

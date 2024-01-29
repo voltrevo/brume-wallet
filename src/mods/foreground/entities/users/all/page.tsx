@@ -14,8 +14,8 @@ import { Page } from "@/libs/ui2/page/page";
 import { User, UserProps } from "@/mods/background/service_worker/entities/users/data";
 import { OneDisplay } from "@/mods/foreground/landing/1/1";
 import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
-import { PathContext, useSubpath } from "@/mods/foreground/router/path/context";
-import { KeyboardEvent, MouseEvent, useCallback, useState } from "react";
+import { PathContext, PathHandle, useSubpath } from "@/mods/foreground/router/path/context";
+import { KeyboardEvent, MouseEvent, useCallback, useMemo, useState } from "react";
 import { useUser, useUsers } from "../data";
 import { UserLoginPage } from "../login";
 import { UserCreateDialog } from "./create";
@@ -194,8 +194,13 @@ export function NewUserCard() {
 
 }
 
-export function useGenius(subhref?: string) {
-  const subpath = useSubpath()
+export function useGenius(subpath: PathHandle, subhref?: string) {
+
+  const href = useMemo(() => {
+    if (subhref == null)
+      return
+    return subpath.go(subhref).href
+  }, [subhref, subpath])
 
   const onClick = useCallback((e: MouseEvent) => {
     if (e.button !== 0)
@@ -230,14 +235,13 @@ export function useGenius(subhref?: string) {
     location.replace(subpath.go(`${subhref}?x=${x}&y=${y}`).href)
   }, [subhref, subpath])
 
-  return { onClick, onEnter: onKeyDown, onContext: onContextMenu }
+  return { onClick, onKeyDown, onContextMenu, href }
 }
 
 export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & AnchorProps & { href: string }) {
   const { children, title, subtitle, href, ...rest } = props
   const subpath = useSubpath()
-
-  const { onClick, onEnter } = useGenius(href)
+  const genius = useGenius(subpath, href)
 
   const onSubpathClose = useCallback(() => {
     location.replace(subpath.go("/").href)
@@ -274,9 +278,9 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
         </span>
         <span>{` `}</span>
         <TextAnchor
-          href={subpath.go(href).href}
-          onClick={onClick}
-          onKeyDown={onEnter}
+          onClick={genius.onClick}
+          onKeyDown={genius.onKeyDown}
+          href={genius.href}
           {...rest}>
           Learn more.
         </TextAnchor>

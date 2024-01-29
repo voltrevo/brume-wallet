@@ -76,7 +76,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
   const totalBalanceQuery = useTotalWalletPricedBalance(finalAddress, "usd")
   const totalBalanceDisplay = useCompactDisplayUsd(totalBalanceQuery.current)
 
-  const { onClick, onEnter, onContext } = useGenius(href)
+  const genius = useGenius(subpath, href)
 
   const First =
     <div className="flex items-center">
@@ -87,10 +87,10 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
       <div className="w-2 grow" />
       {index == null && href != null &&
         <CircularWhiteAnchorInColoredCard
-          color={color}
-          href={subpath.go(href).href}
-          onClick={onClick}
-          onKeyDown={onEnter}>
+          onKeyDown={genius.onKeyDown}
+          onClick={genius.onClick}
+          href={genius.href}
+          color={color}>
           <Outline.EllipsisHorizontalIcon className="size-5" />
         </CircularWhiteAnchorInColoredCard>}
       {index != null && index !== -1 &&
@@ -130,7 +130,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
     </div>
 
   return <div className={`po-md w-full h-full flex flex-col text-white bg-gradient-to-br from-${color1}-400 to-${color2}-400 dark:from-${color1}-500 dark:to-${color2}-500`}
-    onContextMenu={onContext}>
+    onContextMenu={genius.onContextMenu}>
     {First}
     <div className="grow" />
     {Name}
@@ -143,8 +143,8 @@ export function CircularWhiteAnchorInColoredCard(props: AnchorProps & ChildrenPr
 
   return <a className={`group bg-white text-${color}-400 dark:text-color-500 rounded-full outline-none aria-[disabled=false]:hover:bg-white/90 focus-visible:outline-white aria-disabled:opacity-50 transition-opacity`}
     {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
+    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled = false]: group - active: scale - 90 transition - transform">
       {children}
-    </div>
-  </a>
+    </div >
+  </a >
 }

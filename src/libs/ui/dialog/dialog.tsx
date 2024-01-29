@@ -16,6 +16,18 @@ export function useCloseContext() {
   return Option.wrap(useContext(CloseContext))
 }
 
+export function Dialog2(props: ChildrenProps & DarkProps & { hesitant?: boolean }) {
+  const close = useCloseContext().unwrap()
+  const { dark, children, hesitant } = props
+
+  return <Dialog
+    hesitant={hesitant}
+    close={close}
+    dark={dark}>
+    {children}
+  </Dialog>
+}
+
 export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitant?: boolean }) {
   const { url } = usePathContext().unwrap()
   const { dark, children, close, hesitant } = props

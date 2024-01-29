@@ -14,7 +14,7 @@ import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, Dialog2 } from "@/libs/ui/dialog/dialog";
 import { Menu } from "@/libs/ui2/menu/menu";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
@@ -27,13 +27,15 @@ import { Fragment, MouseEvent, createContext, useCallback, useContext, useEffect
 import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
 import { Page } from "../../../../libs/ui2/page/page";
 import { useBackgroundContext } from "../../background/context";
-import { PathContext, Paths, useSubpath } from "../../router/path/context";
+import { Paths, SubpathProvider, usePathContext, useSubpath } from "../../router/path/context";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
 import { usePairPrice } from "../tokens/pairs/data";
+import { useGenius } from "../users/all/page";
+import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
-import { WalletSendScreen } from "./actions/send";
+import { WalletSendScreen, WideShrinkableMenuAnchor } from "./actions/send";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
 import { useEthereumContext, useEthereumContext2 } from "./data";
@@ -138,10 +140,6 @@ function WalletDataPage() {
 
   useEnsReverse(wallet.address, mainnet)
 
-  const onSubpathClose = useCallback(() => {
-    location.replace(subpath.go(`/`).href)
-  }, [subpath])
-
   const receiveDialog = useBooleanHandle(false)
 
   const [color, color2] = Gradients.get(wallet.color)
@@ -217,7 +215,7 @@ function WalletDataPage() {
   const Card =
     <div className="p-4 flex justify-center">
       <div className="w-full max-w-sm">
-        <SimpleWalletDataCard href="/rename" />
+        <SimpleWalletDataCard href="/menu" />
         {wallet.type === "readonly" && <>
           <div className="h-2" />
           <div className="po-sm bg-contrast text-contrast rounded-xl flex items-center justify-center">
@@ -318,17 +316,16 @@ function WalletDataPage() {
     </PageBody>
 
   return <Page>
-    <PathContext.Provider value={subpath}>
+    <SubpathProvider>
       {subpath.url.pathname === "/send" &&
-        <Dialog close={onSubpathClose}>
+        <Dialog2>
           <WalletSendScreen />
-        </Dialog>}
-      {subpath.url.pathname === "/rename" &&
-        <Menu close={onSubpathClose}>
-          Hello world
-          {/* <WalletRenameDialog /> */}
-        </Menu>}
-    </PathContext.Provider>
+        </Dialog2>}
+      {subpath.url.pathname === "/edit" &&
+        <WalletEditDialog />}
+      {subpath.url.pathname === "/menu" &&
+        <WalletMenu />}
+    </SubpathProvider>
     {receiveDialog.current &&
       <Dialog dark
         close={receiveDialog.disable}>
@@ -340,6 +337,24 @@ function WalletDataPage() {
     {Body}
   </Page>
 }
+
+export function WalletMenu() {
+  const path = usePathContext().unwrap()
+  const edit = useGenius(path, "/edit")
+
+  return <Menu>
+    <div className="flex flex-col text-left gap-2">
+      <WideShrinkableMenuAnchor
+        onClick={edit.onClick}
+        onKeyDown={edit.onKeyDown}
+        href={edit.href}>
+        <Outline.PencilIcon className="size-4" />
+        Edit
+      </WideShrinkableMenuAnchor>
+    </div>
+  </Menu>
+}
+
 
 const TokensEditContext = createContext(false)
 

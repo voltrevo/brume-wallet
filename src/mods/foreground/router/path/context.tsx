@@ -1,5 +1,6 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { State } from "@/libs/react/state";
+import { CloseContext } from "@/libs/ui/dialog/dialog";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
@@ -68,6 +69,20 @@ export function DefaultPathProvider(props: ChildrenProps) {
 
   return <PathContext.Provider value={handle}>
     {children}
+  </PathContext.Provider>
+}
+
+export function SubpathProvider(props: ChildrenProps) {
+  const subpath = useSubpath()
+
+  const onClose = useCallback(() => {
+    location.replace(subpath.go("/").href)
+  }, [subpath])
+
+  return <PathContext.Provider value={subpath}>
+    <CloseContext.Provider value={onClose}>
+      {props.children}
+    </CloseContext.Provider>
   </PathContext.Provider>
 }
 

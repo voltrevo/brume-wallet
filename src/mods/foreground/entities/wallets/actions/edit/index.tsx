@@ -3,7 +3,7 @@ import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { None, Some } from "@hazae41/option";
 import { useDeferredValue, useMemo, useState } from "react";
 import { SimpleWalletCard } from "../../card";
@@ -11,7 +11,7 @@ import { useWalletDataContext } from "../../context";
 import { useWallet } from "../../data";
 import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../send";
 
-export function WalletRenameDialog(props: {}) {
+export function WalletEditDialog(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
 
@@ -70,9 +70,9 @@ export function WalletRenameDialog(props: {}) {
       Save
     </WideShrinkableGradientButton>
 
-  return <>
+  return <Dialog2>
     <Dialog.Title>
-      Rename
+      Edit
     </Dialog.Title>
     <div className="h-4" />
     <div className="flex-1 flex flex-col items-center justify-center">
@@ -94,5 +94,5 @@ export function WalletRenameDialog(props: {}) {
         {SaveButton}
       </div>
     </div>
-  </>
+  </Dialog2>
 }
