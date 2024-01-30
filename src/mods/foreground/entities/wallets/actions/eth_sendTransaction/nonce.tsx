@@ -10,7 +10,7 @@ import { WalletTransactionScreenState } from ".";
 import { useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleInput, SimpleLabel } from "../send";
+import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel } from "../send";
 
 export function WalletTransactionScreenNonce(props: {}) {
   const wallet = useWalletDataContext().unwrap()
@@ -78,14 +78,14 @@ export function WalletTransactionScreenNonce(props: {}) {
       <div className="w-1" />
       <div className="flex items-center">
         {rawNonceInput.length === 0
-          ? <ShrinkableNakedButtonInInputBox
+          ? <RoundedShrinkableNakedButton
             onClick={onPaste}>
             <Outline.ClipboardIcon className="size-4" />
-          </ShrinkableNakedButtonInInputBox>
-          : <ShrinkableNakedButtonInInputBox
+          </RoundedShrinkableNakedButton>
+          : <RoundedShrinkableNakedButton
             onClick={onClear}>
             <Outline.XMarkIcon className="size-4" />
-          </ShrinkableNakedButtonInInputBox>}
+          </RoundedShrinkableNakedButton>}
         <div className="w-1" />
         <ShrinkableContrastButtonInInputBox
           onClick={onSubmit}>

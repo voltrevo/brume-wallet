@@ -8,7 +8,7 @@ import { usePathState, useSearchState } from "@/mods/foreground/router/path/cont
 import { Address } from "@hazae41/cubane";
 import { Option, Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableContrastButton } from ".";
+import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableContrastButton } from ".";
 import { useEnsLookup } from "../../../names/data";
 import { useToken } from "../../../tokens/data";
 import { useWalletDataContext } from "../../context";
@@ -123,14 +123,14 @@ export function WalletSendScreenTarget(props: {}) {
       <div className="w-1" />
       <div className="flex items-center">
         {rawTargetInput.length === 0
-          ? <ShrinkableNakedButtonInInputBox
+          ? <RoundedShrinkableNakedButton
             onClick={onPaste}>
             <Outline.ClipboardIcon className="size-4" />
-          </ShrinkableNakedButtonInInputBox>
-          : <ShrinkableNakedButtonInInputBox
+          </RoundedShrinkableNakedButton>
+          : <RoundedShrinkableNakedButton
             onClick={onClear}>
             <Outline.XMarkIcon className="size-4" />
-          </ShrinkableNakedButtonInInputBox>}
+          </RoundedShrinkableNakedButton>}
         <div className="w-1" />
         <ShrinkableContrastButtonInInputBox
           onClick={onSubmit}>

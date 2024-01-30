@@ -58,15 +58,27 @@ export function SimpleTextarea(props: TextareaProps) {
     {...props} />
 }
 
-export function ShrinkableNakedButtonInInputBox(props: ChildrenProps & ButtonProps) {
+export function RoundedShrinkableNakedButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
-  return <button className="group rounded-full outline-none disabled:opacity-50 transition-opacity"
+  return <button className="group rounded-full outline-none enabled:hover:bg-contrast focus-visible:bg-contrast disabled:opacity-50 transition-opacity"
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}
     </div>
   </button>
+}
+
+export function RoundedShrinkableNakedAnchor(props: ChildrenProps & AnchorProps) {
+  const { children, "aria-disabled": disabled = false, ...rest } = props
+
+  return <a className="group rounded-full outline-none aria-[disabled=false]:hover:bg-contrast focus-visible:bg-contrast aria-disabled:opacity-50 transition-opacity"
+    aria-disabled={disabled}
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </a>
 }
 
 export function ShrinkableContrastButtonInInputBox(props: ChildrenProps & ButtonProps) {
@@ -115,7 +127,7 @@ export function WideShrinkableContrastButton(props: ChildrenProps & ButtonProps)
   </button>
 }
 
-export function WideShrinkableMenuButton(props: ChildrenProps & ButtonProps) {
+export function WideShrinkableNakedMenuButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
   return <button className="flex-1 group po-md rounded-xl outline-none whitespace-nowrap enabled:hover:bg-contrast focus-visible:bg-contrast disabled:opacity-50 transition-opacity"
@@ -126,7 +138,7 @@ export function WideShrinkableMenuButton(props: ChildrenProps & ButtonProps) {
   </button>
 }
 
-export function WideShrinkableMenuAnchor(props: ChildrenProps & AnchorProps) {
+export function WideShrinkableNakedMenuAnchor(props: ChildrenProps & AnchorProps) {
   const { children, "aria-disabled": disabled = false, ...rest } = props
 
   return <a className="flex-1 group po-md rounded-xl outline-none whitespace-nowrap aria-[disabled=false]:hover:bg-contrast focus-visible:bg-contrast aria-disabled:opacity-50 transition-opacity"

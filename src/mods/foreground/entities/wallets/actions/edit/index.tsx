@@ -3,7 +3,7 @@ import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { None, Some } from "@hazae41/option";
 import { useDeferredValue, useMemo, useState } from "react";
 import { SimpleWalletCard } from "../../card";
@@ -70,7 +70,7 @@ export function WalletEditDialog(props: {}) {
       Save
     </WideShrinkableGradientButton>
 
-  return <Dialog2>
+  return <>
     <Dialog.Title>
       Edit
     </Dialog.Title>
@@ -94,5 +94,5 @@ export function WalletEditDialog(props: {}) {
         {SaveButton}
       </div>
     </div>
-  </Dialog2>
+  </>
 }

@@ -18,14 +18,14 @@ import { useSession } from "@/mods/foreground/entities/sessions/data";
 import { useSignature } from "@/mods/foreground/entities/signatures/data";
 import { useGasPrice, useNonce } from "@/mods/foreground/entities/unknown/data";
 import { UserGuard } from "@/mods/foreground/entities/users/context";
-import { WalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create";
+import { WalletCreatorMenu } from "@/mods/foreground/entities/wallets/all/create";
 import { SelectableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
 import { UserRejectedError } from "@/mods/foreground/errors/errors";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
-import { usePathContext } from "@/mods/foreground/router/path/context";
+import { usePathContext, useSubpath } from "@/mods/foreground/router/path/context";
 import { Router } from "@/mods/foreground/router/router";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
@@ -482,11 +482,11 @@ export function TypedSignPage() {
 }
 
 export function WalletAndChainSelectPage() {
-  const { url, go } = usePathContext().unwrap()
-  const { searchParams } = url
+  const path = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
+  const subpath = useSubpath()
 
-  const id = Option.wrap(searchParams.get("id")).unwrap()
+  const id = Option.wrap(path.url.searchParams.get("id")).unwrap()
 
   const wallets = useWallets()
 
@@ -522,7 +522,7 @@ export function WalletAndChainSelectPage() {
         params: [new RpcOk(id, [persistent, chain, selecteds])]
       }).then(r => r.throw(t).throw(t))
 
-      location.replace(go("/done").href)
+      location.replace(path.go("/done").href)
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -535,7 +535,7 @@ export function WalletAndChainSelectPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      location.replace(go("/done").href)
+      location.replace(path.go("/done").href)
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -574,7 +574,7 @@ export function WalletAndChainSelectPage() {
     {creator.current &&
       <Dialog
         close={creator.disable}>
-        <WalletCreatorDialog />
+        <WalletCreatorMenu />
       </Dialog>}
     {Header}
     {Body}

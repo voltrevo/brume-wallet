@@ -1,27 +1,32 @@
 /* eslint-disable @next/next/no-img-element */
 import { Outline } from "@/libs/icons/icons"
-import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
 import { Button } from "@/libs/ui/button"
-import { Dialog } from "@/libs/ui/dialog/dialog"
+import { Dialog2 } from "@/libs/ui/dialog/dialog"
+import { Menu } from "@/libs/ui2/menu/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
-import { usePathContext } from "@/mods/foreground/router/path/context"
+import { SubpathProvider, usePathContext, useSubpath2 } from "@/mods/foreground/router/path/context"
 import { Nullable } from "@hazae41/option"
 import { useCallback } from "react"
+import { useGenius } from "../../users/all/page"
+import { RoundedShrinkableNakedAnchor } from "../actions/send"
 import { RawWalletDataCard } from "../card"
 import { WalletDataProvider, useWalletDataContext } from "../context"
 import { WalletProps, useWallets } from "../data"
-import { WalletCreatorDialog } from "./create"
+import { WalletCreatorMenu } from "./create"
+import { ReadonlyWalletCreatorDialog } from "./create/readonly"
+import { StandaloneWalletCreatorDialog } from "./create/standalone"
 
 export function WalletsPage() {
   const path = usePathContext().unwrap()
   const walletsQuery = useWallets()
   const maybeWallets = walletsQuery.data?.get()
 
-  const creator = useBooleanHandle(false)
+  const subpath = useSubpath2(path)
+  const creator = useGenius(subpath, "/create")
 
   const onWalletClick = useCallback((wallet: Wallet) => {
     location.assign(path.go(`/wallet/${wallet.uuid}`).href)
@@ -31,18 +36,19 @@ export function WalletsPage() {
     <PageBody>
       <ClickableWalletGrid
         ok={onWalletClick}
-        create={creator.enable}
         wallets={maybeWallets} />
     </PageBody>
 
   const Header = <>
     <UserPageHeader title="Wallets">
-      <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
-        onClick={creator.enable}>
+      <RoundedShrinkableNakedAnchor
+        onKeyDown={creator.onKeyDown}
+        onClick={creator.onClick}
+        href={creator.href}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.PlusIcon className="size-5" />
         </div>
-      </Button.Base>
+      </RoundedShrinkableNakedAnchor>
     </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">
@@ -52,18 +58,27 @@ export function WalletsPage() {
   </>
 
   return <Page>
-    {creator.current &&
-      <Dialog
-        close={creator.disable}>
-        <WalletCreatorDialog />
-      </Dialog>}
+    <SubpathProvider>
+      {subpath.url.pathname === "/create" &&
+        <Menu>
+          <WalletCreatorMenu />
+        </Menu>}
+      {subpath.url.pathname === "/standalone" &&
+        <Dialog2>
+          <StandaloneWalletCreatorDialog />
+        </Dialog2>}
+      {subpath.url.pathname === "/readonly" &&
+        <Dialog2>
+          <ReadonlyWalletCreatorDialog />
+        </Dialog2>}
+    </SubpathProvider>
     {Header}
     {Body}
   </Page>
 }
 
-export function ClickableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] } & { selected?: Wallet }) {
-  const { wallets, ok, create } = props
+export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet[] } & { selected?: Wallet }) {
+  const { wallets, ok } = props
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {wallets?.map(wallet =>
@@ -72,12 +87,12 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & CreateProps & { wal
         uuid={wallet.uuid}>
         <ClickableWalletDataCard ok={ok} />
       </WalletDataProvider>)}
-    <NewWalletCard ok={create} />
+    <NewWalletAnchorCard />
   </div>
 }
 
 export function SelectableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] } & { selecteds: Nullable<Wallet>[] }) {
-  const { wallets, ok, create, selecteds } = props
+  const { wallets, ok, selecteds } = props
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {wallets?.map(wallet =>
@@ -86,7 +101,7 @@ export function SelectableWalletGrid(props: OkProps<Wallet> & CreateProps & { wa
         wallet={wallet}
         index={selecteds.indexOf(wallet)}
         ok={ok} />)}
-    <NewWalletCard ok={create} />
+    <NewWalletAnchorCard />
   </div>
 }
 
@@ -125,14 +140,20 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
 
 }
 
-export function NewWalletCard(props: OkProps<unknown>) {
-  const { ok } = props
+export function NewWalletAnchorCard(props: {}) {
+  const path = usePathContext().unwrap()
 
-  return <button className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-clicked-or-focused:scale-105 !transition-transform"
-    onClick={ok}>
+  const subpath = useSubpath2(path)
+  const creator = useGenius(subpath, "/create")
+
+  return <a className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed active:scale-90 transition-transform"
+    onContextMenu={creator.onContextMenu}
+    onKeyDown={creator.onKeyDown}
+    onClick={creator.onClick}
+    href={creator.href}>
     <Outline.PlusIcon className="size-5" />
     <div className="font-medium">
       New wallet
     </div>
-  </button>
+  </a>
 }

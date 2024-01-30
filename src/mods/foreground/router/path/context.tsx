@@ -73,7 +73,8 @@ export function DefaultPathProvider(props: ChildrenProps) {
 }
 
 export function SubpathProvider(props: ChildrenProps) {
-  const subpath = useSubpath()
+  const path = usePathContext().unwrap()
+  const subpath = useSubpath2(path)
 
   const onClose = useCallback(() => {
     location.replace(subpath.go("/").href)
@@ -86,9 +87,7 @@ export function SubpathProvider(props: ChildrenProps) {
   </PathContext.Provider>
 }
 
-export function useSubpath(): PathHandle {
-  const parent = usePathContext().unwrap()
-
+export function useSubpath2(parent: PathHandle): PathHandle {
   const [url, setUrl] = useState<URL>(() => Paths.spoof(parent.url))
 
   useEffect(() => {
@@ -102,6 +101,12 @@ export function useSubpath(): PathHandle {
   return useMemo(() => {
     return { url, go } satisfies PathHandle
   }, [url, go])
+}
+
+export function useSubpath(): PathHandle {
+  const parent = usePathContext().unwrap()
+
+  return useSubpath2(parent)
 }
 
 export function usePathState<T extends Record<string, Optional<string>>>() {

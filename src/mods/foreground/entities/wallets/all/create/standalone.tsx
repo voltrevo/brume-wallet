@@ -1,8 +1,11 @@
 import { Color } from "@/libs/colors/colors";
+import { Emojis } from "@/libs/emojis/emojis";
 import { Outline } from "@/libs/icons/icons";
+import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
+import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { WebAuthnStorage, WebAuthnStorageError } from "@/libs/webauthn/webauthn";
@@ -18,10 +21,15 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableGradientButton } from "../../actions/send";
 import { SimpleWalletCard } from "../../card";
 
-export function StandaloneWalletCreatorDialog(props: { uuid: string } & { color: Color } & { emoji: string }) {
+export function StandaloneWalletCreatorDialog(props: {}) {
   const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
-  const { uuid, color, emoji } = props
+
+  const uuid = useConstant(() => crypto.randomUUID())
+
+  const modhash = useModhash(uuid)
+  const color = Color.get(modhash)
+  const emoji = Emojis.get(modhash)
 
   const [rawNameInput = "", setRawNameInput] = useState<string>()
 

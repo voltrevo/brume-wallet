@@ -19,7 +19,7 @@ import { Nullable, Option, Optional } from "@hazae41/option";
 import { Result } from "@hazae41/result";
 import { Secp256k1 } from "@hazae41/secp256k1";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { ShrinkableContrastButtonInInputBox, ShrinkableNakedButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableOppositeButton } from "..";
+import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableOppositeButton } from "..";
 import { useNativeBalance, useNativePricedBalance, useToken } from "../../../../tokens/data";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext2 } from "../../../data";
@@ -415,14 +415,14 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         <div className="w-2" />
         <div className="flex items-center">
           {rawValuedInput.length === 0
-            ? <ShrinkableNakedButtonInInputBox
+            ? <RoundedShrinkableNakedButton
               onClick={onValuedPaste}>
               <Outline.ClipboardIcon className="size-4" />
-            </ShrinkableNakedButtonInInputBox>
-            : <ShrinkableNakedButtonInInputBox
+            </RoundedShrinkableNakedButton>
+            : <RoundedShrinkableNakedButton
               onClick={onValuedClear}>
               <Outline.XMarkIcon className="size-4" />
-            </ShrinkableNakedButtonInInputBox>}
+            </RoundedShrinkableNakedButton>}
           <div className="w-1" />
           <ShrinkableContrastButtonInInputBox
             disabled={valuedBalanceQuery.data == null}
@@ -464,14 +464,14 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         <div className="w-2" />
         <div className="flex items-center">
           {rawPricedInput.length === 0
-            ? <ShrinkableNakedButtonInInputBox
+            ? <RoundedShrinkableNakedButton
               onClick={onPricedPaste}>
               <Outline.ClipboardIcon className="size-4" />
-            </ShrinkableNakedButtonInInputBox>
-            : <ShrinkableNakedButtonInInputBox
+            </RoundedShrinkableNakedButton>
+            : <RoundedShrinkableNakedButton
               onClick={onPricedClear}>
               <Outline.XMarkIcon className="size-4" />
-            </ShrinkableNakedButtonInInputBox>}
+            </RoundedShrinkableNakedButton>}
           <div className="w-1" />
           <ShrinkableContrastButtonInInputBox
             disabled={pricedBalanceQuery.data == null}

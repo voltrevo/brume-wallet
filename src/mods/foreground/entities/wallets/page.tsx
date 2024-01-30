@@ -36,7 +36,7 @@ import { usePairPrice } from "../tokens/pairs/data";
 import { useGenius } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
-import { WalletSendScreen, WideShrinkableMenuAnchor, WideShrinkableMenuButton } from "./actions/send";
+import { WalletSendScreen, WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "./actions/send";
 import { SimpleWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "./data";
@@ -328,9 +328,13 @@ function WalletDataPage() {
           <WalletSendScreen />
         </Dialog2>}
       {subpath.url.pathname === "/edit" &&
-        <WalletEditDialog />}
+        <Dialog2>
+          <WalletEditDialog />
+        </Dialog2>}
       {subpath.url.pathname === "/menu" &&
-        <WalletMenu $privateKey={$privateKey} />}
+        <Menu>
+          <WalletMenu $privateKey={$privateKey} />
+        </Menu>}
     </SubpathProvider>
     {receiveDialog.current &&
       <Dialog dark
@@ -370,29 +374,27 @@ export function WalletMenu(props: { $privateKey: State<Optional<ZeroHexString>> 
     close()
   }, [close, setPrivateKey])
 
-  return <Menu>
-    <div className="flex flex-col text-left gap-2">
-      <WideShrinkableMenuAnchor
-        onClick={edit.onClick}
-        onKeyDown={edit.onKeyDown}
-        href={edit.href}>
-        <Outline.PencilIcon className="size-4" />
-        Edit
-      </WideShrinkableMenuAnchor>
-      {!privateKey &&
-        <WideShrinkableMenuButton
-          onClick={onPrivateKeyShowClick}>
-          <Outline.EyeIcon className="size-4" />
-          Flip
-        </WideShrinkableMenuButton>}
-      {privateKey &&
-        <WideShrinkableMenuButton
-          onClick={onPrivateKeyHideClick}>
-          <Outline.EyeSlashIcon className="size-4" />
-          Unflip
-        </WideShrinkableMenuButton>}
-    </div>
-  </Menu>
+  return <div className="flex flex-col text-left gap-2">
+    <WideShrinkableNakedMenuAnchor
+      onClick={edit.onClick}
+      onKeyDown={edit.onKeyDown}
+      href={edit.href}>
+      <Outline.PencilIcon className="size-4" />
+      Edit
+    </WideShrinkableNakedMenuAnchor>
+    {!privateKey &&
+      <WideShrinkableNakedMenuButton
+        onClick={onPrivateKeyShowClick}>
+        <Outline.EyeIcon className="size-4" />
+        Flip
+      </WideShrinkableNakedMenuButton>}
+    {privateKey &&
+      <WideShrinkableNakedMenuButton
+        onClick={onPrivateKeyHideClick}>
+        <Outline.EyeSlashIcon className="size-4" />
+        Unflip
+      </WideShrinkableNakedMenuButton>}
+  </div>
 }
 
 
