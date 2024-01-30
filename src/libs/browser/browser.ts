@@ -7,7 +7,9 @@ declare module globalThis {
   const chrome: Chrome
 }
 
-export const browser = globalThis.browser ?? globalThis.chrome
+export const browser = null
+  ?? globalThis.browser
+  ?? globalThis.chrome
 
 export class BrowserError extends Error {
   readonly #class = BrowserError

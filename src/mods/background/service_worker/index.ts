@@ -37,7 +37,7 @@ import { Mutex } from "@hazae41/mutex"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
 import { SuperEventTarget } from "@hazae41/plume"
-import { Err, Ok, Panic, Result } from "@hazae41/result"
+import { Err, Ok, Result } from "@hazae41/result"
 import { Ripemd160 } from "@hazae41/ripemd160"
 import { Secp256k1 } from "@hazae41/secp256k1"
 import { Sha1 } from "@hazae41/sha1"
@@ -1555,7 +1555,7 @@ if (IS_WEBSITE) {
       return void onSkipWaiting(event)
     if (event.data === "HELLO_WORLD")
       return void onHelloWorld(event)
-    throw Panic.from(new Error(`Invalid message`))
+    throw new Error(`Invalid message`)
   })
 }
 
@@ -1588,6 +1588,8 @@ if (IS_EXTENSION) {
   }
 
   browser.runtime.onConnect.addListener(port => {
+    if (port.sender?.id !== browser.runtime.id)
+      return
     if (port.name === "foreground")
       return void onForeground(port)
     return void onContentScript(port)
