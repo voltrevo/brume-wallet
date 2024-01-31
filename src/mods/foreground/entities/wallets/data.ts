@@ -84,6 +84,9 @@ export namespace FgWallet {
       const previousData = previous?.data
       const currentData = current.data
 
+      // console.log(core.storeds.get(key(uuid)))
+      // console.log(core.unstoreds.get(key(uuid)))
+
       if (previousData != null && (previousData.inner.uuid !== currentData?.inner.uuid || previousData.inner.trashed !== currentData?.inner.trashed) && !previousData.inner.trashed) {
         await All.schema(storage).mutate(s => {
           const current = s.current

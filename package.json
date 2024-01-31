@@ -47,7 +47,7 @@
     "@hazae41/eligos": "^1.0.6",
     "@hazae41/fleche": "^1.2.12",
     "@hazae41/future": "^1.0.3",
-    "@hazae41/glacier": "^2.0.8",
+    "@hazae41/glacier": "^2.0.10",
     "@hazae41/jsonrpc": "^1.0.3",
     "@hazae41/kcp": "^0.2.40",
     "@hazae41/keccak256": "^1.0.8",
@@ -81,8 +81,8 @@
     "@hazae41/saumon": "^0.2.7",
     "@mdx-js/loader": "^3.0.0",
     "@next/mdx": "^14.1.0",
-    "@types/chrome": "^0.0.258",
-    "@types/node": "20.11.5",
+    "@types/chrome": "^0.0.259",
+    "@types/node": "20.11.13",
     "@types/react": "18.2.48",
     "@types/react-dom": "18.2.18",
     "@types/w3c-web-usb": "^1.0.10",
@@ -96,7 +96,7 @@
     "ts-loader": "^9.5.1",
     "tslib": "^2.6.2",
     "typescript": "5.3.3",
-    "webpack": "^5.89.0",
+    "webpack": "^5.90.0",
     "workbox-build": "^7.0.0"
   }
 }
