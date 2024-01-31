@@ -1,13 +1,12 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
-import { Mutators } from "@/libs/glacier/mutators"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletRef } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fetched, States, createQuery, useQuery } from "@hazae41/glacier"
+import { Fetched, States, createQuery, useQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
-import { Nullable, Option } from "@hazae41/option"
+import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
 import { Transaction, ethers } from "ethers"
 import { useMemo } from "react"
@@ -25,6 +24,20 @@ export interface WalletProps {
 export namespace FgWallet {
 
   export namespace All {
+
+    export namespace Trashed {
+
+      export type Key = BgWallet.All.Trashed.Key
+      export type Data = BgWallet.All.Trashed.Data
+      export type Fail = BgWallet.All.Trashed.Fail
+
+      export const key = BgWallet.All.Trashed.key
+
+      export function schema(storage: UserStorage) {
+        return createQuery<Key, Data, Fail>({ key, storage })
+      }
+
+    }
 
     export namespace BySeed {
 
@@ -66,35 +79,91 @@ export namespace FgWallet {
       return
 
     const indexer = async (states: States<Data, Fail>) => {
-      const { current, previous = current } = states
+      const { current, previous } = states
 
-      const previousData = previous.real?.data
-      const currentData = current.real?.data
+      const previousData = previous?.data
+      const currentData = current.data
 
-      await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
-        if (previousData?.inner.uuid === currentData?.inner.uuid)
-          return d
-        if (previousData != null)
-          d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
-        if (currentData != null)
-          d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
-        return d
-      }))
+      if (previousData != null && (previousData.inner.uuid !== currentData?.inner.uuid || previousData.inner.trashed !== currentData?.inner.trashed) && !previousData.inner.trashed) {
+        await All.schema(storage).mutate(s => {
+          const current = s.current
 
-      if (currentData?.inner.type === "seeded") {
-        const { seed } = currentData.inner
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
 
-        const walletsBySeedQuery = All.BySeed.schema(seed.uuid, storage)
+          return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid)))
+        })
 
-        await walletsBySeedQuery?.mutate(Mutators.mapData((d = new Data([])) => {
-          if (previousData?.inner.uuid === currentData?.inner.uuid)
-            return d
-          if (previousData != null)
-            d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
-          if (currentData != null)
-            d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
-          return d
-        }))
+        if (previousData.inner.type === "seeded") {
+          const { seed } = previousData.inner
+
+          await All.BySeed.schema(seed.uuid, storage)?.mutate(s => {
+            const current = s.current
+
+            if (current == null)
+              return new None()
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid)))
+          })
+        }
+      }
+
+      if (previousData != null && (previousData.inner.uuid !== currentData?.inner.uuid || previousData.inner.trashed !== currentData?.inner.trashed) && previousData.inner.trashed) {
+        await All.Trashed.schema(storage).mutate(s => {
+          const current = s.current
+
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid)))
+        })
+      }
+
+      if (currentData != null && (currentData.inner.uuid !== previousData?.inner.uuid || currentData.inner.trashed !== previousData?.inner.trashed) && !currentData.inner.trashed) {
+        await All.schema(storage).mutate(s => {
+          const current = s.current
+
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(p => [...p, WalletRef.from(currentData.inner)]))
+        })
+
+        if (currentData.inner.type === "seeded") {
+          const { seed } = currentData.inner
+
+          await All.BySeed.schema(seed.uuid, storage)?.mutate(s => {
+            const current = s.current
+
+            if (current == null)
+              return new None()
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(p => [...p, WalletRef.from(currentData.inner)]))
+          })
+        }
+      }
+
+      if (currentData != null && (currentData.inner.uuid !== previousData?.inner.uuid || currentData.inner.trashed !== previousData?.inner.trashed) && currentData.inner.trashed) {
+        await All.Trashed.schema(storage).mutate(s => {
+          const current = s.current
+
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(p => [...p, WalletRef.from(currentData.inner)]))
+        })
       }
     }
 

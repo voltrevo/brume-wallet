@@ -1,7 +1,7 @@
-import { Mutators } from "@/libs/glacier/mutators"
 import { ZeroHexString } from "@hazae41/cubane"
-import { Data, IDBStorage, States, createQuery } from "@hazae41/glacier"
+import { IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
+import { None, Some } from "@hazae41/option"
 import { SeedRef } from "../seeds/data"
 
 export type Wallet =
@@ -43,7 +43,6 @@ export type EthereumWalletData =
 export type EthereumSignableWalletData =
   | EthereumPrivateKeyWalletData
   | EthereumSeededWalletData
-  | EthereumTrezorWalletData
 
 export type EthereumPrivateKeyWalletData =
   | EthereumUnauthPrivateKeyWalletData
@@ -60,6 +59,8 @@ export interface EthereumReadonlyWalletData {
   readonly emoji: string
 
   readonly address: ZeroHexString
+
+  readonly trashed?: boolean
 }
 
 export interface EthereumUnauthPrivateKeyWalletData {
@@ -75,6 +76,8 @@ export interface EthereumUnauthPrivateKeyWalletData {
   readonly address: ZeroHexString
 
   readonly privateKey: ZeroHexString
+
+  readonly trashed?: boolean
 }
 
 export interface EthereumAuthPrivateKeyWalletData {
@@ -93,6 +96,8 @@ export interface EthereumAuthPrivateKeyWalletData {
     readonly ivBase64: string,
     readonly idBase64: string
   }
+
+  readonly trashed?: boolean
 }
 
 export interface EthereumSeededWalletData {
@@ -109,26 +114,29 @@ export interface EthereumSeededWalletData {
 
   readonly seed: SeedRef
   readonly path: string
-}
 
-export interface EthereumTrezorWalletData {
-  readonly coin: "ethereum"
-  readonly type: "trezor"
-
-  readonly uuid: string
-  readonly name: string,
-
-  readonly color: number,
-  readonly emoji: string
-
-  readonly address: ZeroHexString
-
-  readonly path: string
+  readonly trashed?: boolean
 }
 
 export namespace BgWallet {
 
   export namespace All {
+
+    export namespace Trashed {
+
+      export type Key = string
+      export type Data = Wallet[]
+      export type Fail = never
+
+      export const key = `trashedWallets`
+
+      export type Schema = ReturnType<typeof schema>
+
+      export function schema(storage: IDBStorage) {
+        return createQuery<Key, Data, Fail>({ key, storage })
+      }
+
+    }
 
     export namespace BySeed {
 
@@ -170,35 +178,91 @@ export namespace BgWallet {
 
   export function schema(uuid: string, storage: IDBStorage) {
     const indexer = async (states: States<Data, Fail>) => {
-      const { current, previous = current } = states
+      const { current, previous } = states
 
-      const previousData = previous.real?.data
-      const currentData = current.real?.data
+      const previousData = previous?.data
+      const currentData = current.data
 
-      await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
-        if (previousData?.inner.uuid === currentData?.inner.uuid)
-          return d
-        if (previousData != null)
-          d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
-        if (currentData != null)
-          d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
-        return d
-      }))
+      if (previousData != null && (previousData.inner.uuid !== currentData?.inner.uuid || previousData.inner.trashed !== currentData?.inner.trashed) && !previousData.inner.trashed) {
+        await All.schema(storage).mutate(s => {
+          const current = s.current
 
-      if (currentData?.inner.type === "seeded") {
-        const { seed } = currentData.inner
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
 
-        const walletsBySeedQuery = All.BySeed.schema(seed.uuid, storage)
+          return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid)))
+        })
 
-        await walletsBySeedQuery.mutate(Mutators.mapData((d = new Data([])) => {
-          if (previousData?.inner.uuid === currentData?.inner.uuid)
-            return d
-          if (previousData != null)
-            d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
-          if (currentData != null)
-            d = d.mapSync(p => [...p, WalletRef.from(currentData.inner)])
-          return d
-        }))
+        if (previousData.inner.type === "seeded") {
+          const { seed } = previousData.inner
+
+          await All.BySeed.schema(seed.uuid, storage)?.mutate(s => {
+            const current = s.current
+
+            if (current == null)
+              return new None()
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid)))
+          })
+        }
+      }
+
+      if (previousData != null && (previousData.inner.uuid !== currentData?.inner.uuid || previousData.inner.trashed !== currentData?.inner.trashed) && previousData.inner.trashed) {
+        await All.Trashed.schema(storage).mutate(s => {
+          const current = s.current
+
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid)))
+        })
+      }
+
+      if (currentData != null && (currentData.inner.uuid !== previousData?.inner.uuid || currentData.inner.trashed !== previousData?.inner.trashed) && !currentData.inner.trashed) {
+        await All.schema(storage).mutate(s => {
+          const current = s.current
+
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(p => [...p, WalletRef.from(currentData.inner)]))
+        })
+
+        if (currentData.inner.type === "seeded") {
+          const { seed } = currentData.inner
+
+          await All.BySeed.schema(seed.uuid, storage)?.mutate(s => {
+            const current = s.current
+
+            if (current == null)
+              return new None()
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(p => [...p, WalletRef.from(currentData.inner)]))
+          })
+        }
+      }
+
+      if (currentData != null && (currentData.inner.uuid !== previousData?.inner.uuid || currentData.inner.trashed !== previousData?.inner.trashed) && currentData.inner.trashed) {
+        await All.Trashed.schema(storage).mutate(s => {
+          const current = s.current
+
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(p => [...p, WalletRef.from(currentData.inner)]))
+        })
       }
     }
 
