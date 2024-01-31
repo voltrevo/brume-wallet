@@ -45,7 +45,7 @@ export function WalletsPage() {
           <WideShrinkableContrastAnchor
             href="#/wallets/trash">
             <Outline.TrashIcon className="size-5" />
-            Trash
+            Trash ({maybeTrashedWallets.length})
           </WideShrinkableContrastAnchor>
         </div>}
     </PageBody>
