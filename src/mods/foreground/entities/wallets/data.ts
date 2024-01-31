@@ -4,7 +4,7 @@ import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, Ethere
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, ZeroHexString } from "@hazae41/cubane"
-import { Fetched, States, createQuery, useQuery } from "@hazae41/glacier"
+import { Data, Fetched, States, createQuery, useQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
@@ -130,7 +130,7 @@ export namespace FgWallet {
           const current = s.current
 
           if (current == null)
-            return new None()
+            return new Some(new Data([WalletRef.from(currentData.inner)]))
           if (current.isErr())
             return new None()
 
@@ -144,7 +144,7 @@ export namespace FgWallet {
             const current = s.current
 
             if (current == null)
-              return new None()
+              return new Some(new Data([WalletRef.from(currentData.inner)]))
             if (current.isErr())
               return new None()
 
@@ -158,7 +158,7 @@ export namespace FgWallet {
           const current = s.current
 
           if (current == null)
-            return new None()
+            return new Some(new Data([WalletRef.from(currentData.inner)]))
           if (current.isErr())
             return new None()
 
@@ -182,6 +182,13 @@ export function useWallet(uuid: Nullable<string>) {
 export function useWallets() {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgWallet.All.schema, [storage])
+  useSubscribe(query, storage)
+  return query
+}
+
+export function useTrashedWallets() {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgWallet.All.Trashed.schema, [storage])
   useSubscribe(query, storage)
   return query
 }

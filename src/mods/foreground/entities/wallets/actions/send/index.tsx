@@ -81,6 +81,29 @@ export function RoundedShrinkableNakedAnchor(props: ChildrenProps & AnchorProps)
   </a>
 }
 
+export function PaddedRoundedShrinkableNakedButton(props: ChildrenProps & ButtonProps) {
+  const { children, ...rest } = props
+
+  return <button className="group rounded-full p-2 outline-none enabled:hover:bg-contrast focus-visible:bg-contrast disabled:opacity-50 transition-opacity"
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </button>
+}
+
+export function PaddedRoundedShrinkableNakedAnchor(props: ChildrenProps & AnchorProps) {
+  const { children, "aria-disabled": disabled = false, ...rest } = props
+
+  return <a className="group rounded-full p-2 outline-none aria-[disabled=false]:hover:bg-contrast focus-visible:bg-contrast aria-disabled:opacity-50 transition-opacity"
+    aria-disabled={disabled}
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </a>
+}
+
 export function ShrinkableContrastButtonInInputBox(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 

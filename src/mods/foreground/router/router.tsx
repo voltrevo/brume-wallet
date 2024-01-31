@@ -6,6 +6,7 @@ import { SessionsPage } from "../entities/sessions/all/page"
 import { SettingsPage } from "../entities/settings/page"
 import { SnapsPage } from "../entities/snaps/all/page"
 import { WalletsPage } from "../entities/wallets/all/page"
+import { TrashedWalletsPage } from "../entities/wallets/all/trash/page"
 import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
 import { HomePage } from "../home/page"
@@ -24,6 +25,9 @@ export function Router() {
 
   if (matches = url.pathname.match(/^\/wallets(\/)?$/))
     return <WalletsPage />
+
+  if (matches = url.pathname.match(/^\/wallets(\/)trash(\/)?$/))
+    return <TrashedWalletsPage />
 
   if (matches = url.pathname.match(/^\/seeds(\/)?$/))
     return <SeedsPage />

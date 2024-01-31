@@ -1,5 +1,5 @@
 import { ZeroHexString } from "@hazae41/cubane"
-import { IDBStorage, States, createQuery } from "@hazae41/glacier"
+import { Data, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
 import { SeedRef } from "../seeds/data"
@@ -229,7 +229,7 @@ export namespace BgWallet {
           const current = s.current
 
           if (current == null)
-            return new None()
+            return new Some(new Data([WalletRef.from(currentData.inner)]))
           if (current.isErr())
             return new None()
 
@@ -243,7 +243,7 @@ export namespace BgWallet {
             const current = s.current
 
             if (current == null)
-              return new None()
+              return new Some(new Data([WalletRef.from(currentData.inner)]))
             if (current.isErr())
               return new None()
 
@@ -257,7 +257,7 @@ export namespace BgWallet {
           const current = s.current
 
           if (current == null)
-            return new None()
+            return new Some(new Data([WalletRef.from(currentData.inner)]))
           if (current.isErr())
             return new None()
 

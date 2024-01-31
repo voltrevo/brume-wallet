@@ -2,7 +2,6 @@
 import { Outline } from "@/libs/icons/icons"
 import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
-import { Button } from "@/libs/ui/button"
 import { Dialog2 } from "@/libs/ui/dialog/dialog"
 import { Menu } from "@/libs/ui2/menu/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
@@ -11,19 +10,23 @@ import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { SubpathProvider, usePathContext, useSubpath2 } from "@/mods/foreground/router/path/context"
 import { Nullable } from "@hazae41/option"
 import { useCallback } from "react"
-import { useGenius } from "../../users/all/page"
-import { RoundedShrinkableNakedAnchor } from "../actions/send"
+import { WideShrinkableContrastAnchor, useGenius } from "../../users/all/page"
+import { PaddedRoundedShrinkableNakedAnchor } from "../actions/send"
 import { RawWalletDataCard } from "../card"
 import { WalletDataProvider, useWalletDataContext } from "../context"
-import { WalletProps, useWallets } from "../data"
+import { WalletProps, useTrashedWallets, useWallets } from "../data"
 import { WalletCreatorMenu } from "./create"
 import { ReadonlyWalletCreatorDialog } from "./create/readonly"
 import { StandaloneWalletCreatorDialog } from "./create/standalone"
 
 export function WalletsPage() {
   const path = usePathContext().unwrap()
+
   const walletsQuery = useWallets()
-  const maybeWallets = walletsQuery.data?.get()
+  const maybeWallets = walletsQuery.current?.ok().get()
+
+  const trashedWalletsQuery = useTrashedWallets()
+  const maybeTrashedWallets = trashedWalletsQuery.current?.ok().get()
 
   const subpath = useSubpath2(path)
   const creator = useGenius(subpath, "/create")
@@ -37,18 +40,24 @@ export function WalletsPage() {
       <ClickableWalletGrid
         ok={onWalletClick}
         wallets={maybeWallets} />
+      {maybeTrashedWallets != null && maybeTrashedWallets.length > 0 &&
+        <div className="flex items-center flex-wrap-reverse gap-2">
+          <WideShrinkableContrastAnchor
+            href="#/wallets/trash">
+            <Outline.TrashIcon className="size-5" />
+            Trash
+          </WideShrinkableContrastAnchor>
+        </div>}
     </PageBody>
 
   const Header = <>
     <UserPageHeader title="Wallets">
-      <RoundedShrinkableNakedAnchor
+      <PaddedRoundedShrinkableNakedAnchor
         onKeyDown={creator.onKeyDown}
         onClick={creator.onClick}
         href={creator.href}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.PlusIcon className="size-5" />
-        </div>
-      </RoundedShrinkableNakedAnchor>
+        <Outline.PlusIcon className="size-5" />
+      </PaddedRoundedShrinkableNakedAnchor>
     </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">
@@ -77,8 +86,8 @@ export function WalletsPage() {
   </Page>
 }
 
-export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet[] } & { selected?: Wallet }) {
-  const { wallets, ok } = props
+export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet[] } & { selected?: Wallet } & { disableNew?: boolean }) {
+  const { wallets, ok, disableNew } = props
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {wallets?.map(wallet =>
@@ -87,12 +96,13 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet[
         uuid={wallet.uuid}>
         <ClickableWalletDataCard ok={ok} />
       </WalletDataProvider>)}
-    <NewWalletAnchorCard />
+    {!disableNew &&
+      <NewWalletAnchorCard />}
   </div>
 }
 
-export function SelectableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] } & { selecteds: Nullable<Wallet>[] }) {
-  const { wallets, ok, selecteds } = props
+export function SelectableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] } & { selecteds: Nullable<Wallet>[] } & { disableNew?: boolean }) {
+  const { wallets, ok, selecteds, disableNew } = props
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {wallets?.map(wallet =>
@@ -101,7 +111,8 @@ export function SelectableWalletGrid(props: OkProps<Wallet> & CreateProps & { wa
         wallet={wallet}
         index={selecteds.indexOf(wallet)}
         ok={ok} />)}
-    <NewWalletAnchorCard />
+    {!disableNew &&
+      <NewWalletAnchorCard />}
   </div>
 }
 

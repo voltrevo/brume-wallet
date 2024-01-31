@@ -384,13 +384,26 @@ export function WalletMenu(props: { $privateKey: State<Optional<ZeroHexString>> 
         return new None()
       if (current.isErr())
         return new None()
-
-      return new Some(current.mapSync(w => ({ ...w, trashed: true })).setTimes({ ...current, expiration: 30 * 24 * 60 * 60 * 1000 }))
+      // Date.now() + 30 * 24 * 60 * 60 * 1000
+      return new Some(current.mapSync(w => ({ ...w, trashed: true })).setTimes({ ...current, expiration: undefined }))
     })
 
     close()
+  }), [close, walletQuery])
 
-    location.replace("#/wallets")
+  const onUntrashClick = useCallback(() => Errors.runAndLogAndAlert(async () => {
+    await walletQuery.mutate(s => {
+      const current = s.real?.current
+
+      if (current == null)
+        return new None()
+      if (current.isErr())
+        return new None()
+
+      return new Some(current.mapSync(w => ({ ...w, trashed: undefined })).setTimes({ ...current, expiration: undefined }))
+    })
+
+    close()
   }), [close, walletQuery])
 
   return <div className="flex flex-col text-left gap-2">
@@ -413,11 +426,18 @@ export function WalletMenu(props: { $privateKey: State<Optional<ZeroHexString>> 
         <Outline.EyeSlashIcon className="size-4" />
         Unflip
       </WideShrinkableNakedMenuButton>}
-    <WideShrinkableNakedMenuButton
-      onClick={onTrashClick}>
-      <Outline.TrashIcon className="size-4" />
-      Trash
-    </WideShrinkableNakedMenuButton>
+    {!wallet.trashed &&
+      <WideShrinkableNakedMenuButton
+        onClick={onTrashClick}>
+        <Outline.TrashIcon className="size-4" />
+        Trash
+      </WideShrinkableNakedMenuButton>}
+    {wallet.trashed &&
+      <WideShrinkableNakedMenuButton
+        onClick={onUntrashClick}>
+        <Outline.TrashIcon className="size-4" />
+        Untrash
+      </WideShrinkableNakedMenuButton>}
   </div>
 }
 
