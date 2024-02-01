@@ -49,7 +49,7 @@ export function HomePage() {
         {totalPricedBalanceDisplay}
       </div>
       <div className="h-4" />
-      <div className="po-md border border-contrast h-[300px] rounded-xl flex flex-col items-center justify-center">
+      <div className="p-4 bg-contrast h-[300px] rounded-xl flex flex-col items-center justify-center">
         <img src="/favicon.png" alt="logo" className="h-24 w-auto" />
         <div className="">
           Coming soon...
@@ -61,7 +61,7 @@ export function HomePage() {
           Alerts
         </div>
         <div className="h-2" />
-        <div className="po-md border border-contrast rounded-xl">
+        <div className="p-4 bg-contrast rounded-xl">
           <h3 className="text-lg font-medium">
             Your storage is not persistent yet
           </h3>
