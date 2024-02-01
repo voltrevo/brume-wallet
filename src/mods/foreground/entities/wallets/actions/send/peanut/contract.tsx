@@ -314,10 +314,6 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
     location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeContract, data: maybeTriedMaybeFinalData0?.ok().get(), disableData: true, disableSign: true })).href)
   }, [subpath, trial0Uuid, chainData, maybeContract, maybeTriedMaybeFinalData0])
 
-  const onClose = useCallback(() => {
-    location.replace(subpath.go(`/`).href)
-  }, [subpath])
-
   const trial1Query = useTransactionTrial(trial1Uuid)
   const maybeTrial1Data = trial1Query.current?.ok().get()
 
