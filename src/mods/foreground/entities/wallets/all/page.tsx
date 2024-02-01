@@ -40,6 +40,7 @@ export function WalletsPage() {
       <ClickableWalletGrid
         ok={onWalletClick}
         wallets={maybeWallets} />
+      <div className="h-4" />
       {maybeTrashedWallets != null && maybeTrashedWallets.length > 0 &&
         <div className="flex items-center flex-wrap-reverse gap-2">
           <WideShrinkableContrastAnchor
