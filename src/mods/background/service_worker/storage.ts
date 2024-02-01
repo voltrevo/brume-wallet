@@ -66,12 +66,55 @@ export async function createUserStorageOrThrow(user: UserData, password: string)
     }
   }
 
+  async function onCollect(e: { storageKey: string }) {
+    const { storageKey } = e
+
+    const raw = await storage.getStoredOrThrow(storageKey)
+
+    if (raw?.version !== 3) {
+      storage.deleteStoredOrThrow(storageKey)
+      return
+    }
+
+    if (typeof raw.key !== "string") {
+      storage.deleteStoredOrThrow(storageKey)
+      return
+    }
+
+    if (raw.key.startsWith("wallet/")) {
+      const [, uuid] = raw.key.split("/")
+
+      const walletQuery = BgWallet.schema(uuid, storage)
+      const walletState = await walletQuery.state
+      const walletResult = walletState.current
+
+      if (walletResult == null)
+        return
+
+      if (walletResult.isOk()) {
+        /**
+         * Safely delete the wallet
+         */
+        await walletQuery.delete()
+        console.log(`Deleted wallet ${uuid}`)
+        return
+      }
+
+      storage.deleteStoredOrThrow(storageKey)
+      return
+    }
+
+    storage.deleteStoredOrThrow(storageKey)
+    return
+  }
+
   const storage = IDBStorage.createOrThrow({
     name: user.uuid,
     version: 2,
     keySerializer,
     valueSerializer,
-    onUpgrade
+    onUpgrade,
+    onCollect
   })
 
   return { storage, hasher, crypter }
