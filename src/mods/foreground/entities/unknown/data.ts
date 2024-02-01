@@ -9,7 +9,7 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { None, Nullable, Some } from "@hazae41/option";
 import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
-import { FgEthereumContext, FgWallet, fetchOrFail } from "../wallets/data";
+import { FgEthereumContext, fetchOrFail } from "../wallets/data";
 
 export namespace FgEthereum {
 
@@ -246,10 +246,14 @@ export namespace FgTotal {
             const indexer = async (states: States<Data, Fail>) => {
               const { current } = states
 
-              const currentData = current?.data?.get()
+              const [currentData = {}] = [current?.data?.get()]
 
-              const values = Object.values(currentData ?? {})
-              const total = values.reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
+              const total = Object.values(currentData).reduce<Fixed>((x, y) => {
+                if (y.count === 0)
+                  return x
+
+                return Fixed.from(y.value).add(x)
+              }, new Fixed(0n, 0))
 
               await Priced.schema(coin, storage).mutate(() => new Some(new Data(total)))
             }
@@ -272,24 +276,21 @@ export namespace FgTotal {
           const indexer = async (states: States<Data, Fail>) => {
             const { current } = states
 
-            const currentData = current?.data?.get()
-
-            const walletsState = await FgWallet.All.ByAddress.schema(account, storage)?.state
-            const maybeWallets = walletsState?.current?.ok().get()
-
-            const value = maybeWallets != null && maybeWallets.length > 0 && currentData != null
-              ? currentData
-              : new Fixed(0n, 0)
+            const [currentData = new Fixed(0n, 0)] = [current?.data?.get()]
 
             await Record.schema(coin, storage)?.mutate(s => {
               const { current } = s
 
+              const [{ count = 0 } = {}] = [current?.ok().get()?.[account]]
+
+              const inner = { count, value: currentData }
+
               if (current == null)
-                return new Some(new Data({}))
+                return new Some(new Data({ [account]: inner }))
               if (current.isErr())
                 return new None()
 
-              return new Some(current.mapSync(c => ({ ...c, [account]: value })))
+              return new Some(current.mapSync(c => ({ ...c, [account]: inner })))
             })
           }
 

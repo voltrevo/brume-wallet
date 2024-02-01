@@ -30,24 +30,20 @@ export function WalletEditDialog(props: {}) {
     return defNameInput || "Holder"
   }, [defNameInput])
 
-  const save = useAsyncUniqueCallback(async () => {
-    try {
-      await query.mutate((s) => {
-        const current = s.real?.current
+  const save = useAsyncUniqueCallback(async () => Errors.runAndLogAndAlert(async () => {
+    await query.mutate((s) => {
+      const current = s.real?.current
 
-        if (current == null)
-          return new None()
-        if (current.isErr())
-          return new None()
+      if (current == null)
+        return new None()
+      if (current.isErr())
+        return new None()
 
-        return new Some(current.mapSync(w => ({ ...w, name: finalNameInput })))
-      })
+      return new Some(current.mapSync(w => ({ ...w, name: finalNameInput })))
+    })
 
-      close()
-    } catch (e: unknown) {
-      Errors.logAndAlert(e)
-    }
-  }, [query, finalNameInput])
+    close()
+  }), [query, finalNameInput])
 
   const NameInput =
     <SimpleLabel>

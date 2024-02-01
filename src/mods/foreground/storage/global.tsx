@@ -46,6 +46,8 @@ export class GlobalStorage implements Storage {
   }
 
   async getOrThrow(cacheKey: string) {
+    await this.#subscribeOrThrow(cacheKey)
+
     return await this.background.tryRequest<RawState>({
       method: "brume_get_global",
       params: [cacheKey]
@@ -53,40 +55,31 @@ export class GlobalStorage implements Storage {
   }
 
   async #subscribeOrThrow(cacheKey: string): Promise<void> {
-    await this.background.tryRequest<void>({
-      method: "brume_subscribe",
-      params: [cacheKey]
-    }).then(r => r.unwrap().unwrap())
-
-    this.background.events.on("request", async (request) => {
-      if (request.method !== "brume_update")
-        return new None()
-
-      const [cacheKey2, stored] = (request as RpcRequestPreinit<[string, Nullable<RawState>]>).params
-
-      if (cacheKey2 !== cacheKey)
-        return new None()
-
-      core.storeds.set(cacheKey, stored)
-      core.unstoreds.delete(cacheKey)
-      await core.onState.emit(cacheKey, [])
-
-      return new Some(Ok.void())
-    })
-
-    const stored = await this.getOrThrow(cacheKey)
-
-    core.storeds.set(cacheKey, stored)
-    core.unstoreds.delete(cacheKey)
-    await core.onState.emit(cacheKey, [])
-  }
-
-  async subscribeOrThrow(cacheKey: string): Promise<void> {
     return this.keys.lock(async (keys) => {
       if (keys.has(cacheKey))
         return
 
-      await this.#subscribeOrThrow(cacheKey)
+      await this.background.tryRequest<void>({
+        method: "brume_subscribe",
+        params: [cacheKey]
+      }).then(r => r.unwrap().unwrap())
+
+      this.background.events.on("request", async (request) => {
+        if (request.method !== "brume_update")
+          return new None()
+
+        const [cacheKey2, stored] = (request as RpcRequestPreinit<[string, Nullable<RawState>]>).params
+
+        if (cacheKey2 !== cacheKey)
+          return new None()
+
+        core.storeds.set(cacheKey, stored)
+        core.unstoreds.delete(cacheKey)
+        await core.onState.emit(cacheKey, [])
+
+        return new Some(Ok.void())
+      })
+
       keys.add(cacheKey)
     })
   }

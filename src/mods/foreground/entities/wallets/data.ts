@@ -3,7 +3,7 @@ import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletRef } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
-import { Abi, ZeroHexString } from "@hazae41/cubane"
+import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fetched, States, createQuery, useQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
@@ -16,6 +16,7 @@ import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { SeedInstance } from "../seeds/all/helpers"
 import { FgSeed } from "../seeds/data"
+import { FgTotal } from "../unknown/data"
 
 export interface WalletProps {
   readonly wallet: Wallet
@@ -64,11 +65,36 @@ export namespace FgWallet {
 
       export const key = BgWallet.All.ByAddress.key
 
-      export function schema(uuid: Nullable<string>, storage: UserStorage) {
-        if (uuid == null)
+      export function schema(account: Nullable<string>, storage: UserStorage) {
+        if (account == null)
           return
 
-        return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
+        const indexer = async (states: States<Data, Fail>) => {
+          const { current } = states
+
+          const [currentData = []] = [current?.data?.get()]
+
+          await FgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutate(s => {
+            const current = s.current
+
+            const [{ value = new Fixed(0n, 0) } = {}] = [current?.ok().get()?.[account]]
+
+            const inner = { value, count: currentData.length }
+
+            if (current == null)
+              return new Some(new Data({ [account]: inner }))
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(c => ({ ...c, [account]: inner })))
+          })
+        }
+
+        return createQuery<Key, Data, Fail>({
+          key: key(account),
+          indexer,
+          storage
+        })
       }
 
     }

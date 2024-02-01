@@ -1,8 +1,9 @@
-import { ZeroHexString } from "@hazae41/cubane"
+import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
 import { SeedRef } from "../seeds/data"
+import { BgTotal } from "../unknown/data"
 
 export type Wallet =
   | WalletRef
@@ -164,17 +165,35 @@ export namespace BgWallet {
         return `walletsByAddress/${address}`
       }
 
-      export function schema(address: ZeroHexString, storage: IDBStorage) {
+      export function schema(account: ZeroHexString, storage: IDBStorage) {
         const indexer = async (states: States<Data, Fail>) => {
           const { current } = states
 
-          const currentData = current?.data?.get()
+          const [currentData = []] = [current?.data?.get()]
 
+          console.log("walletsByAddress", account, currentData)
 
+          await BgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutate(s => {
+            const current = s.current
 
+            const [{ value = new Fixed(0n, 0) } = {}] = [current?.ok().get()?.[account]]
+
+            const inner = { value, count: currentData.length }
+
+            if (current == null)
+              return new Some(new Data({ [account]: inner }))
+            if (current.isErr())
+              return new None()
+
+            return new Some(current.mapSync(c => ({ ...c, [account]: inner })))
+          })
         }
 
-        return createQuery<Key, Data, Fail>({ key: key(address), storage })
+        return createQuery<Key, Data, Fail>({
+          key: key(account),
+          indexer,
+          storage
+        })
       }
 
     }

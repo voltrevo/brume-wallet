@@ -3,7 +3,7 @@ import { Data, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/gla
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
 import { BgEthereumContext } from "../../context"
-import { BgWallet, EthereumFetchParams, EthereumQueryKey } from "../wallets/data"
+import { EthereumFetchParams, EthereumQueryKey } from "../wallets/data"
 
 export namespace BgEthereum {
 
@@ -43,22 +43,32 @@ export namespace BgTotal {
 
         export namespace Record {
 
+          export interface Subdata {
+            readonly count: number
+            readonly value: Fixed.From
+          }
+
           export type Key = string
-          export type Data = Record<string, Fixed.From>
+          export type Data = Record<string, Subdata>
           export type Fail = never
 
           export function key(coin: "usd") {
-            return `totalPricedBalanceByWallet/${coin}`
+            return `totalPricedBalanceByWallet/v2/${coin}`
           }
 
           export function schema(coin: "usd", storage: IDBStorage) {
             const indexer = async (states: States<Data, Fail>) => {
               const { current } = states
 
-              const currentData = current?.data?.get()
+              const [data = {}] = [current?.data?.get()]
 
-              const values = Object.values(currentData ?? {})
-              const total = values.reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
+              const total = Object.values(data).reduce<Fixed>((x, y) => {
+                if (y.count === 0)
+                  return x
+                return Fixed.from(y.value).add(x)
+              }, new Fixed(0n, 0))
+
+              console.log("data", data, "total", total)
 
               await Priced.schema(coin, storage).mutate(() => new Some(new Data(total)))
             }
@@ -80,24 +90,21 @@ export namespace BgTotal {
           const indexer = async (states: States<Data, Fail>) => {
             const { current } = states
 
-            const currentData = current?.data?.get()
-
-            const walletsState = await BgWallet.All.ByAddress.schema(account, storage)?.state
-            const maybeWallets = walletsState?.current?.ok().get()
-
-            const value = maybeWallets != null && maybeWallets.length > 0 && currentData != null
-              ? currentData
-              : new Fixed(0n, 0)
+            const [data = new Fixed(0n, 0)] = [current?.data?.get()]
 
             await Record.schema(coin, storage)?.mutate(s => {
               const { current } = s
 
+              const [{ count = 0 } = {}] = [current?.ok().get()?.[account]]
+
+              const inner = { count, value: data }
+
               if (current == null)
-                return new Some(new Data({}))
+                return new Some(new Data({ [account]: inner }))
               if (current.isErr())
                 return new None()
 
-              return new Some(current.mapSync(c => ({ ...c, [account]: value })))
+              return new Some(current.mapSync(c => ({ ...c, [account]: inner })))
             })
           }
 

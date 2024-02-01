@@ -60,23 +60,20 @@ export namespace FgToken {
             return
 
           const indexer = async (states: States<Data, Fail>) => {
-            const { previous, current } = states
-
-            const previousData = previous?.data?.get()
-            const currentData = current?.data?.get()
+            const { current } = states
 
             const key = `${context.chain.chainId}`
-            const value = currentData ?? new Fixed(0n, 0)
+            const [data = new Fixed(0n, 0)] = [current?.data?.get()]
 
             await FgToken.Balance.schema(account, coin, storage)?.mutate(s => {
               const { current } = s
 
               if (current == null)
-                return new Some(new Data({}))
+                return new Some(new Data({ [key]: data }))
               if (current.isErr())
                 return new None()
 
-              return new Some(current.mapSync(c => ({ ...c, [key]: value })))
+              return new Some(current.mapSync(c => ({ ...c, [key]: data })))
             })
           }
 
@@ -168,23 +165,20 @@ export namespace FgToken {
             return
 
           const indexer = async (states: States<Data, Fail>) => {
-            const { previous, current } = states
-
-            const previousData = previous?.data?.get()
-            const currentData = current?.data?.get()
+            const { current } = states
 
             const key = `${context.chain.chainId}/${token.address}`
-            const value = currentData ?? new Fixed(0n, 0)
+            const [data = new Fixed(0n, 0)] = [current?.data?.get()]
 
             await FgToken.Balance.schema(account, coin, storage)?.mutate(s => {
               const { current } = s
 
               if (current == null)
-                return new Some(new Data({}))
+                return new Some(new Data({ [key]: data }))
               if (current.isErr())
                 return new None()
 
-              return new Some(current.mapSync(c => ({ ...c, [key]: value })))
+              return new Some(current.mapSync(c => ({ ...c, [key]: data })))
             })
           }
 
