@@ -4,7 +4,7 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { AnchorProps, ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { WalletDirectSendScreenContractValue } from "./direct/contract";
-import { WalletDirectSendScreenNativeValue } from "./direct/screen";
+import { WalletDirectSendScreenNativeValue } from "./direct/native";
 import { WalletPeanutSendScreenContractValue } from "./peanut/contract";
 import { WalletPeanutSendScreenNativeValue } from "./peanut/native";
 import { WalletSendScreenTarget } from "./target";
