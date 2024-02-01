@@ -35,7 +35,7 @@ export namespace Paths {
   }
 
   export function go(path: string) {
-    location.hash = `#${path}`
+    location.replace(`#${path}`)
   }
 
 }

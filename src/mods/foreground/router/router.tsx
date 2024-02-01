@@ -23,6 +23,9 @@ export function Router() {
   if (matches = url.pathname.match(/^\/$/))
     return <HomePage />
 
+  if (matches = url.pathname.match(/^\/home(\/)?$/))
+    return <HomePage />
+
   if (matches = url.pathname.match(/^\/wallets(\/)?$/))
     return <WalletsPage />
 

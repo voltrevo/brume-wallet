@@ -1,9 +1,9 @@
-import { Mutators } from "@/libs/glacier/mutators";
 import { ChildrenProps } from "@/libs/react/props/children";
-import { User, UserData } from "@/mods/background/service_worker/entities/users/data";
+import { UserData } from "@/mods/background/service_worker/entities/users/data";
 import { Nullable, Option } from "@hazae41/option";
-import { createContext, useCallback, useContext } from "react";
-import { UsersPage2 } from "./all/page";
+import { createContext, useContext } from "react";
+import { usePathContext } from "../../router/path/context";
+import { LandingPage } from "./all/page";
 import { useCurrentUser, useUser } from "./data";
 
 export const UserContext = createContext<Nullable<UserData>>(undefined)
@@ -13,22 +13,25 @@ export function useUserContext() {
 }
 
 export function UserGuard(props: ChildrenProps) {
+  const path = usePathContext().unwrap()
   const { children } = props
 
   const currentUserQuery = useCurrentUser()
-  const currentUserData = currentUserQuery.data?.get()
+  const maybeCurrentUser = currentUserQuery.data?.get()
 
-  const setCurrentUser = useCallback((user: User) => {
-    currentUserQuery.mutate(Mutators.data(user))
-  }, [currentUserQuery])
+  const userQuery = useUser(maybeCurrentUser?.uuid)
+  const maybeUser = userQuery.data?.get()
 
-  const userQuery = useUser(currentUserData?.uuid)
-  const userData = userQuery.data?.get()
+  if (path.url.pathname === "/")
+    return <LandingPage />
 
-  if (userData == null)
-    return <UsersPage2 ok={setCurrentUser} />
+  if (maybeCurrentUser == null)
+    return <LandingPage />
 
-  return <UserContext.Provider value={userData}>
+  if (maybeUser == null)
+    return null
+
+  return <UserContext.Provider value={maybeUser}>
     {children}
   </UserContext.Provider>
 }

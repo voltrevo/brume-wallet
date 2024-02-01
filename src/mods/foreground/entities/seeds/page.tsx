@@ -6,7 +6,6 @@ import { useCallback } from "react";
 import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
 import { Page } from "../../../../libs/ui2/page/page";
 import { Paths, SubpathProvider, usePathContext, useSubpath } from "../../router/path/context";
-import { useGenius } from "../users/all/page";
 import { SeededWalletCreatorDialog } from "../wallets/all/create/seeded";
 import { ClickableWalletGrid } from "../wallets/all/page";
 import { useWalletsBySeed } from "../wallets/data";
@@ -29,7 +28,6 @@ function SeedDataPage() {
   const maybeWallets = walletsQuery.data?.get()
 
   const subpath = useSubpath(path)
-  const creator = useGenius(subpath, "/create")
 
   const onBackClick = useCallback(() => {
     Paths.go("/seeds")

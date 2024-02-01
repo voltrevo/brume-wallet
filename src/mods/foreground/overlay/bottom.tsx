@@ -12,8 +12,8 @@ export function Bottom() {
   return <nav className="h-16 w-full shrink-0 border-t border-t-contrast">
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">
       <a className={`group grow text-contrast data-[selected=true]:text-default`}
-        data-selected={url.pathname === "/"}
-        href="#/">
+        data-selected={url.pathname === "/home"}
+        href="#/home">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.HomeIcon className="size-6" />
         </div>

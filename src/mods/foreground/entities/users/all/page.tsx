@@ -5,9 +5,9 @@ import { Events } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
-import { OkProps } from "@/libs/react/props/promise";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
 import { Dialog2 } from "@/libs/ui/dialog/dialog";
+import { Loading } from "@/libs/ui/loading/loading";
 import { Menu } from "@/libs/ui2/menu/menu";
 import { qurl } from "@/libs/url/url";
 import { User } from "@/mods/background/service_worker/entities/users/data";
@@ -20,13 +20,16 @@ import { SixDisplay } from "@/mods/foreground/landing/6/6";
 import { PathHandle, SubpathProvider, usePathContext, useSubpath } from "@/mods/foreground/router/path/context";
 import { KeyboardEvent, MouseEvent, useCallback, useMemo } from "react";
 import { WideShrinkableNakedMenuAnchor } from "../../wallets/actions/send";
-import { useUser, useUsers } from "../data";
+import { useCurrentUser, useUser, useUsers } from "../data";
 import { UserLoginDialog } from "../login";
 import { UserCreateDialog } from "./create";
 
-export function UsersPage2(props: OkProps<User>) {
+export function LandingPage() {
   const path = usePathContext().unwrap()
-  const { ok } = props
+
+  const currentUserQuery = useCurrentUser()
+  const currentUserLoading = !currentUserQuery.ready
+  const maybeCurrentUser = currentUserQuery.data?.get()
 
   const subpath = useSubpath(path)
   const users = useGenius(subpath, "/users")
@@ -35,7 +38,7 @@ export function UsersPage2(props: OkProps<User>) {
     <SubpathProvider>
       {subpath.url.pathname === "/users/login" &&
         <Dialog2>
-          <UserLoginDialog ok={ok} />
+          <UserLoginDialog />
         </Dialog2>}
       {subpath.url.pathname === "/users/create" &&
         <Dialog2>
@@ -70,13 +73,28 @@ export function UsersPage2(props: OkProps<User>) {
           </div>
           <div className="grow" />
           <div className="flex items-center">
-            <SmallShrinkableOppositeAnchor
-              onKeyDown={users.onKeyDown}
-              onClick={users.onClick}
-              href={users.href}>
-              <Outline.LockOpenIcon className="size-5" />
-              Login
-            </SmallShrinkableOppositeAnchor>
+            {currentUserLoading &&
+              <SmallShrinkableOppositeAnchor
+                onKeyDown={users.onKeyDown}
+                onClick={users.onClick}
+                href={users.href}>
+                <Loading className="size-5" />
+                Loading
+              </SmallShrinkableOppositeAnchor>}
+            {!currentUserLoading && maybeCurrentUser == null &&
+              <SmallShrinkableOppositeAnchor
+                onKeyDown={users.onKeyDown}
+                onClick={users.onClick}
+                href={users.href}>
+                <Outline.LockOpenIcon className="size-5" />
+                Login
+              </SmallShrinkableOppositeAnchor>}
+            {!currentUserLoading && maybeCurrentUser != null &&
+              <SmallShrinkableOppositeAnchor
+                href="#/home">
+                <Outline.HomeIcon className="size-5" />
+                Home
+              </SmallShrinkableOppositeAnchor>}
             <div className="w-2" />
             <SmallShrinkableContrastAnchor
               href={subpath.go("/download").href}>

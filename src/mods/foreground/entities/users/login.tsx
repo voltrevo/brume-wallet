@@ -1,27 +1,29 @@
 import { Color } from "@/libs/colors/colors";
+import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { OkProps } from "@/libs/react/props/promise";
 import { useCloseContext } from "@/libs/ui/dialog/dialog";
-import { User } from "@/mods/background/service_worker/entities/users/data";
+import { Data } from "@hazae41/glacier";
+import { Some } from "@hazae41/option";
 import { KeyboardEvent, useCallback, useDeferredValue, useRef, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
 import { usePathState, useSearchState } from "../../router/path/context";
 import { SimpleLabel, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../wallets/actions/send";
 import { UserAvatar } from "./all/page";
-import { useUser } from "./data";
+import { useCurrentUser, useUser } from "./data";
 
-export function UserLoginDialog(props: OkProps<User>) {
+export function UserLoginDialog() {
   const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
-  const { ok } = props
 
   const $state = usePathState<{ user: string }>()
   const [maybeUserId] = useSearchState("user", $state)
 
   const userQuery = useUser(maybeUserId)
   const maybeUser = userQuery.current?.ok().get()
+
+  const currentUserQuery = useCurrentUser()
 
   const passwordInputRef = useRef<HTMLInputElement>(null)
 
@@ -35,15 +37,15 @@ export function UserLoginDialog(props: OkProps<User>) {
 
   const [invalid, setInvalid] = useState(false)
 
-  const login = useAsyncUniqueCallback(async () => {
-    if (userQuery.data == null)
+  const login = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (maybeUser == null)
       return
     if (defPasswordInput.length < 3)
       return
 
     const response = await background.tryRequest({
       method: "brume_login",
-      params: [userQuery.data.get().uuid, defPasswordInput]
+      params: [maybeUser.uuid, defPasswordInput]
     }).then(r => r.unwrap())
 
     if (response.isErr()) {
@@ -57,11 +59,13 @@ export function UserLoginDialog(props: OkProps<User>) {
       return
     }
 
-    sessionStorage.setItem("uuid", userQuery.data.get().uuid)
+    sessionStorage.setItem("uuid", maybeUser.uuid)
     sessionStorage.setItem("password", defPasswordInput)
 
-    ok(userQuery.data.get())
-  }, [defPasswordInput, userQuery.data?.get().uuid, background])
+    await currentUserQuery.mutate(() => new Some(new Data(maybeUser)))
+
+    location.replace("#/home")
+  }), [defPasswordInput, userQuery.data?.get().uuid, background])
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key !== "Enter")
