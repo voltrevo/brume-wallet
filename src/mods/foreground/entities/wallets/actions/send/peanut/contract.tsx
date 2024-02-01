@@ -286,7 +286,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   }, [maybeContract, maybeFinalValue])
 
   const onSendTransaction1Click = useCallback(() => {
-    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial1Uuid, step: "value", chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData1?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true })).href)
+    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial1Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData1?.ok().get(), disableData: true, disableSign: true })).href)
   }, [subpath, trial1Uuid, chainData, tokenData, maybeTriedMaybeFinalData1])
 
   const maybeTriedMaybeFinalData0 = useMemo(() => {
@@ -311,7 +311,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   }, [maybeFinalValue, password, tokenData])
 
   const onSendTransaction0Click = useCallback(() => {
-    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, step: "value", chain: chainData.chainId, target: maybeContract, data: maybeTriedMaybeFinalData0?.ok().get(), disableTarget: true, disableValue: true, disableData: true, disableSign: true })).href)
+    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeContract, data: maybeTriedMaybeFinalData0?.ok().get(), disableData: true, disableSign: true })).href)
   }, [subpath, trial0Uuid, chainData, maybeContract, maybeTriedMaybeFinalData0])
 
   const onClose = useCallback(() => {
