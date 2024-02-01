@@ -7,7 +7,7 @@ import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { qurl } from "@/libs/url/url";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData } from "@/mods/background/service_worker/entities/transactions/data";
-import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
+import { PathContext, usePathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Address, Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
@@ -21,9 +21,11 @@ import { PriceResolver } from "../../../page";
 import { WalletTransactionScreen } from "../../eth_sendTransaction";
 
 export function WalletDirectSendScreenNativeValue(props: {}) {
+  const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
-  const subpath = useSubpath()
+
+  const subpath = useSubpath(path)
 
   const $state = usePathState<UrlState>()
   const [maybeStep, setStep] = useSearchState("step", $state)

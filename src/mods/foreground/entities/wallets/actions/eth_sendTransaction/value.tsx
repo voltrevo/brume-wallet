@@ -12,7 +12,7 @@ import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { qurl } from "@/libs/url/url";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
-import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
+import { PathContext, usePathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
@@ -31,9 +31,11 @@ import { ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, SimpleTex
 import { WalletDecodeScreen } from "./decode";
 
 export function WalletTransactionScreenValue(props: {}) {
+  const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
-  const subpath = useSubpath()
+
+  const subpath = useSubpath(path)
 
   const $state = usePathState<WalletTransactionScreenState>()
   const [maybeTrial, setTrial] = useSearchState("trial", $state)

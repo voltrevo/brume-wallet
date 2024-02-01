@@ -10,7 +10,7 @@ import { Address, ZeroHexString } from "@hazae41/cubane"
 import { Optional } from "@hazae41/option"
 import { useCallback, useMemo, useState } from "react"
 import { flushSync } from "react-dom"
-import { useSubpath } from "../../router/path/context"
+import { usePathContext, useSubpath } from "../../router/path/context"
 import { useEnsReverseNoFetch } from "../names/data"
 import { useTotalWalletPricedBalance } from "../unknown/data"
 import { useGenius } from "../users/all/page"
@@ -56,8 +56,10 @@ export function SimpleWalletCard(props: { uuid: string } & { name: string } & { 
 }
 
 export function RawWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { href?: string } & { $privateKey?: State<Optional<ZeroHexString>> }) {
+  const path = usePathContext().unwrap()
   const { uuid, address, name, emoji, color, index, href, $privateKey } = props
-  const subpath = useSubpath()
+
+  const subpath = useSubpath(path)
 
   const [color1, color2] = Gradient.get(color)
 

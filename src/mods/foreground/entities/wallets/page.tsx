@@ -133,9 +133,11 @@ export function DivLikeButton(props: ChildrenProps & ClassNameProps & { onClick:
 }
 
 function WalletDataPage() {
+  const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const background = useBackgroundContext().unwrap()
-  const subpath = useSubpath()
+
+  const subpath = useSubpath(path)
 
   const mainnet = useEthereumContext2(wallet.uuid, chainByChainId[1]).unwrap()
 
@@ -512,10 +514,12 @@ function ContractTokenResolver(props: { token: ContractToken }) {
 }
 
 function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }) {
-  const { token, chain } = props
+  const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const edit = useTokensEditContext().unwrap()
-  const subpath = useSubpath()
+  const { token, chain } = props
+
+  const subpath = useSubpath(path)
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
@@ -563,10 +567,12 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 }
 
 function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainData }) {
-  const { token, chain } = props
+  const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const edit = useTokensEditContext().unwrap()
-  const subpath = useSubpath()
+  const { token, chain } = props
+
+  const subpath = useSubpath(path)
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 

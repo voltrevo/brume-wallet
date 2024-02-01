@@ -25,7 +25,7 @@ import { UserRejectedError } from "@/mods/foreground/errors/errors";
 import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
-import { usePathContext, useSubpath } from "@/mods/foreground/router/path/context";
+import { usePathContext } from "@/mods/foreground/router/path/context";
 import { Router } from "@/mods/foreground/router/router";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
@@ -484,7 +484,6 @@ export function TypedSignPage() {
 export function WalletAndChainSelectPage() {
   const path = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
-  const subpath = useSubpath()
 
   const id = Option.wrap(path.url.searchParams.get("id")).unwrap()
 

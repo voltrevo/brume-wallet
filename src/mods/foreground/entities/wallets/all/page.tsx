@@ -7,7 +7,7 @@ import { Menu } from "@/libs/ui2/menu/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
-import { SubpathProvider, usePathContext, useSubpath2 } from "@/mods/foreground/router/path/context"
+import { SubpathProvider, usePathContext, useSubpath } from "@/mods/foreground/router/path/context"
 import { Nullable } from "@hazae41/option"
 import { useCallback } from "react"
 import { WideShrinkableContrastAnchor, useGenius } from "../../users/all/page"
@@ -28,7 +28,7 @@ export function WalletsPage() {
   const trashedWalletsQuery = useTrashedWallets()
   const maybeTrashedWallets = trashedWalletsQuery.current?.ok().get()
 
-  const subpath = useSubpath2(path)
+  const subpath = useSubpath(path)
   const creator = useGenius(subpath, "/create")
 
   const onWalletClick = useCallback((wallet: Wallet) => {
@@ -155,7 +155,7 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
 export function NewWalletAnchorCard(props: {}) {
   const path = usePathContext().unwrap()
 
-  const subpath = useSubpath2(path)
+  const subpath = useSubpath(path)
   const creator = useGenius(subpath, "/create")
 
   return <a className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed active:scale-90 transition-transform"

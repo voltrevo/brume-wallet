@@ -8,7 +8,7 @@ import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
-import { PathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
+import { PathContext, usePathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
@@ -27,9 +27,11 @@ import { WalletTransactionScreen } from "../../eth_sendTransaction";
 import { TransactionCard } from "../../eth_sendTransaction/value";
 
 export function WalletPeanutSendScreenNativeValue(props: {}) {
+  const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
-  const subpath = useSubpath()
+
+  const subpath = useSubpath(path)
 
   const $state = usePathState<UrlState>()
   const [maybeStep, setStep] = useSearchState("step", $state)

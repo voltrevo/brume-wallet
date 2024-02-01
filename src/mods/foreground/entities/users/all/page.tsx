@@ -14,16 +14,17 @@ import { Page } from "@/libs/ui2/page/page";
 import { User, UserProps } from "@/mods/background/service_worker/entities/users/data";
 import { OneDisplay } from "@/mods/foreground/landing/1/1";
 import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
-import { PathContext, PathHandle, useSubpath } from "@/mods/foreground/router/path/context";
+import { PathContext, PathHandle, usePathContext, useSubpath } from "@/mods/foreground/router/path/context";
 import { KeyboardEvent, MouseEvent, useCallback, useMemo, useState } from "react";
 import { useUser, useUsers } from "../data";
 import { UserLoginPage } from "../login";
 import { UserCreateDialog } from "./create";
 
 export function UsersPage2(props: OkProps<User>) {
+  const path = usePathContext().unwrap()
   const { ok } = props
 
-  const subpath = useSubpath()
+  const subpath = useSubpath(path)
 
   return <>
     {subpath.url.pathname === "/login" &&
@@ -239,8 +240,10 @@ export function useGenius(subpath: PathHandle, subhref?: string) {
 }
 
 export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & AnchorProps & { href: string }) {
+  const path = usePathContext().unwrap()
   const { children, title, subtitle, href, ...rest } = props
-  const subpath = useSubpath()
+
+  const subpath = useSubpath(path)
   const genius = useGenius(subpath, href)
 
   const onSubpathClose = useCallback(() => {
