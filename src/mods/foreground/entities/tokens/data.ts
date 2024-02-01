@@ -53,22 +53,35 @@ export namespace FgToken {
 
         export const key = BgToken.Native.Balance.Priced.key
 
-        export function schema(address: Nullable<ZeroHexString>, coin: "usd", context: Nullable<FgEthereumContext>, storage: UserStorage) {
+        export function schema(account: Nullable<ZeroHexString>, coin: "usd", context: Nullable<FgEthereumContext>, storage: UserStorage) {
           if (context == null)
             return
-          if (address == null)
+          if (account == null)
             return
 
           const indexer = async (states: States<Data, Fail>) => {
-            const key = `${context.chain.chainId}`
-            const value = Option.wrap(states.current.real?.data?.get()).unwrapOr(new Fixed(0n, 0))
+            const { previous, current } = states
 
-            const indexQuery = FgToken.Balance.schema(address, coin, storage)
-            await indexQuery?.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
+            const previousData = previous?.data?.get()
+            const currentData = current?.data?.get()
+
+            const key = `${context.chain.chainId}`
+            const value = currentData ?? new Fixed(0n, 0)
+
+            await FgToken.Balance.schema(account, coin, storage)?.mutate(s => {
+              const { current } = s
+
+              if (current == null)
+                return new Some(new Data({}))
+              if (current.isErr())
+                return new None()
+
+              return new Some(current.mapSync(c => ({ ...c, [key]: value })))
+            })
           }
 
           return createQuery<Key, Data, Fail>({
-            key: key(address, coin, context.chain),
+            key: key(account, coin, context.chain),
             indexer,
             storage
           })
@@ -155,11 +168,24 @@ export namespace FgToken {
             return
 
           const indexer = async (states: States<Data, Fail>) => {
-            const key = `${context.chain.chainId}/${token.address}`
-            const value = Option.wrap(states.current.real?.data?.get()).unwrapOr(new Fixed(0n, 0))
+            const { previous, current } = states
 
-            const indexQuery = FgToken.Balance.schema(account, coin, storage)
-            await indexQuery?.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
+            const previousData = previous?.data?.get()
+            const currentData = current?.data?.get()
+
+            const key = `${context.chain.chainId}/${token.address}`
+            const value = currentData ?? new Fixed(0n, 0)
+
+            await FgToken.Balance.schema(account, coin, storage)?.mutate(s => {
+              const { current } = s
+
+              if (current == null)
+                return new Some(new Data({}))
+              if (current.isErr())
+                return new None()
+
+              return new Some(current.mapSync(c => ({ ...c, [key]: value })))
+            })
           }
 
           return createQuery<Key, Data, Fail>({

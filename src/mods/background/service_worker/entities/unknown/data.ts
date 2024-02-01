@@ -1,10 +1,9 @@
-import { Mutators } from "@/libs/glacier/mutators"
-import { Fixed } from "@hazae41/cubane"
+import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
-import { Option } from "@hazae41/option"
+import { None, Some } from "@hazae41/option"
 import { BgEthereumContext } from "../../context"
-import { EthereumFetchParams, EthereumQueryKey } from "../wallets/data"
+import { BgWallet, EthereumFetchParams, EthereumQueryKey } from "../wallets/data"
 
 export namespace BgEthereum {
 
@@ -54,11 +53,14 @@ export namespace BgTotal {
 
           export function schema(coin: "usd", storage: IDBStorage) {
             const indexer = async (states: States<Data, Fail>) => {
-              const values = Option.wrap(states.current.real?.data?.get()).unwrapOr({})
-              const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
+              const { current } = states
 
-              const totalQuery = Priced.schema(coin, storage)
-              await totalQuery.mutate(Mutators.data<Fixed.From, never>(total))
+              const currentData = current?.data?.get()
+
+              const values = Object.values(currentData ?? {})
+              const total = values.reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
+
+              await Priced.schema(coin, storage).mutate(() => new Some(new Data(total)))
             }
 
             return createQuery<Key, Data, Fail>({ key: key(coin), indexer, storage })
@@ -74,16 +76,33 @@ export namespace BgTotal {
           return `totalWalletPricedBalance/${address}/${coin}`
         }
 
-        export function schema(address: string, coin: "usd", storage: IDBStorage) {
+        export function schema(account: ZeroHexString, coin: "usd", storage: IDBStorage) {
           const indexer = async (states: States<Data, Fail>) => {
-            const indexQuery = Record.schema(coin, storage)
+            const { current } = states
 
-            const value = Option.wrap(states.current.real?.data?.get()).unwrapOr(new Fixed(0n, 0))
-            await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [address]: value }), new Data({})))
+            const currentData = current?.data?.get()
+
+            const walletsState = await BgWallet.All.ByAddress.schema(account, storage)?.state
+            const maybeWallets = walletsState?.current?.ok().get()
+
+            const value = maybeWallets != null && maybeWallets.length > 0 && currentData != null
+              ? currentData
+              : new Fixed(0n, 0)
+
+            await Record.schema(coin, storage)?.mutate(s => {
+              const { current } = s
+
+              if (current == null)
+                return new Some(new Data({}))
+              if (current.isErr())
+                return new None()
+
+              return new Some(current.mapSync(c => ({ ...c, [account]: value })))
+            })
           }
 
           return createQuery<Key, Data, Fail>({
-            key: key(address, coin),
+            key: key(account, coin),
             indexer,
             storage
           })

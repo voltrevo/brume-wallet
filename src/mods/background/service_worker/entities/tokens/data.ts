@@ -135,17 +135,30 @@ export namespace BgToken {
           }
         }
 
-        export function schema(account: ZeroHexString, coin: "usd", ethereum: BgEthereumContext, storage: IDBStorage) {
+        export function schema(account: ZeroHexString, coin: "usd", context: BgEthereumContext, storage: IDBStorage) {
           const indexer = async (states: States<Data, Fail>) => {
-            const key = `${ethereum.chain.chainId}`
-            const value = Option.wrap(states.current.real?.data?.get()).unwrapOr(new Fixed(0n, 0))
+            const { previous, current } = states
 
-            const indexQuery = BgToken.Balance.schema(account, coin, storage)
-            await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
+            const previousData = previous?.data?.get()
+            const currentData = current?.data?.get()
+
+            const key = `${context.chain.chainId}`
+            const value = currentData ?? new Fixed(0n, 0)
+
+            await BgToken.Balance.schema(account, coin, storage)?.mutate(s => {
+              const { current } = s
+
+              if (current == null)
+                return new Some(new Data({}))
+              if (current.isErr())
+                return new None()
+
+              return new Some(current.mapSync(c => ({ ...c, [key]: value })))
+            })
           }
 
           return createQuery<Key, Data, Fail>({
-            key: key(account, coin, ethereum.chain),
+            key: key(account, coin, context.chain),
             indexer,
             storage
           })
@@ -251,17 +264,29 @@ export namespace BgToken {
           }
         }
 
-        export function schema(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, coin: "usd", storage: IDBStorage) {
+        export function schema(account: ZeroHexString, token: ContractTokenData, coin: "usd", context: BgEthereumContext, storage: IDBStorage) {
           const indexer = async (states: States<Data, Fail>) => {
-            const key = `${ethereum.chain.chainId}/${token.address}`
-            const value = Option.wrap(states.current.real?.data?.get()).unwrapOr(new Fixed(0n, 0))
+            const { current } = states
 
-            const indexQuery = BgToken.Balance.schema(account, coin, storage)
-            await indexQuery.mutate(Mutators.mapInnerData(p => ({ ...p, [key]: value }), new Data({})))
+            const currentData = current?.data?.get()
+
+            const key = `${context.chain.chainId}/${token.address}`
+            const value = currentData ?? new Fixed(0n, 0)
+
+            await BgToken.Balance.schema(account, coin, storage)?.mutate(s => {
+              const { current } = s
+
+              if (current == null)
+                return new Some(new Data({}))
+              if (current.isErr())
+                return new None()
+
+              return new Some(current.mapSync(c => ({ ...c, [key]: value })))
+            })
           }
 
           return createQuery<Key, Data, Fail>({
-            key: key(account, token, coin, ethereum.chain),
+            key: key(account, token, coin, context.chain),
             indexer,
             storage
           })
@@ -284,7 +309,7 @@ export namespace BgToken {
         })).ok().inner
       }
 
-      export function schema(ethereum: BgEthereumContext, account: ZeroHexString, token: ContractTokenData, block: string, storage: IDBStorage) {
+      export function schema(account: ZeroHexString, token: ContractTokenData, block: string, ethereum: BgEthereumContext, storage: IDBStorage) {
         const maybeKey = key(account, token, block, ethereum.chain)
 
         if (maybeKey == null)
@@ -333,7 +358,7 @@ export namespace BgToken {
             return new Some(pricedBalance)
           }).then(o => o.unwrapOr(new Fixed(0n, 0)))
 
-          const pricedBalanceQuery = Priced.schema(ethereum, account, token, "usd", storage)
+          const pricedBalanceQuery = Priced.schema(account, token, "usd", ethereum, storage)
           await pricedBalanceQuery.mutate(Mutators.set<Fixed.From, never>(new Data(pricedBalance)))
         }
 

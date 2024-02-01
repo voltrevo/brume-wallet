@@ -165,6 +165,15 @@ export namespace BgWallet {
       }
 
       export function schema(address: ZeroHexString, storage: IDBStorage) {
+        const indexer = async (states: States<Data, Fail>) => {
+          const { current } = states
+
+          const currentData = current?.data?.get()
+
+
+
+        }
+
         return createQuery<Key, Data, Fail>({ key: key(address), storage })
       }
 

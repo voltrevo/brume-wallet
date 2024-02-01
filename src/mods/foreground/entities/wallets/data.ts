@@ -98,8 +98,8 @@ export namespace FgWallet {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.data?.inner
-      const currentData = current.data?.inner
+      const previousData = previous?.data?.get()
+      const currentData = current.data?.get()
 
       if (previousData != null && (previousData.uuid !== currentData?.uuid || previousData.trashed !== currentData?.trashed) && !previousData.trashed) {
         await All.schema(storage).mutate(s => {
