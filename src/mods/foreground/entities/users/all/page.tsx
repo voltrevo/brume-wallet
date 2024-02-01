@@ -2,22 +2,22 @@
 import { Color, Gradient } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { Events } from "@/libs/react/events";
-import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
 import { OkProps } from "@/libs/react/props/promise";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
-import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
-import { Loading } from "@/libs/ui/loading/loading";
-import { Page } from "@/libs/ui2/page/page";
-import { User, UserProps } from "@/mods/background/service_worker/entities/users/data";
+import { Dialog2 } from "@/libs/ui/dialog/dialog";
+import { Menu } from "@/libs/ui2/menu/menu";
+import { qurl } from "@/libs/url/url";
+import { User } from "@/mods/background/service_worker/entities/users/data";
 import { OneDisplay } from "@/mods/foreground/landing/1/1";
 import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
 import { PathHandle, SubpathProvider, usePathContext, useSubpath } from "@/mods/foreground/router/path/context";
-import { KeyboardEvent, MouseEvent, useCallback, useMemo, useState } from "react";
+import { KeyboardEvent, MouseEvent, useCallback, useMemo } from "react";
+import { WideShrinkableNakedMenuAnchor } from "../../wallets/actions/send";
 import { useUser, useUsers } from "../data";
-import { UserLoginPage } from "../login";
+import { UserLoginDialog } from "../login";
 import { UserCreateDialog } from "./create";
 
 export function UsersPage2(props: OkProps<User>) {
@@ -25,174 +25,181 @@ export function UsersPage2(props: OkProps<User>) {
   const { ok } = props
 
   const subpath = useSubpath(path)
+  const users = useGenius(subpath, "/users")
 
   return <>
-    {subpath.url.pathname === "/login" &&
-      <UsersPage ok={ok} />}
-    {subpath.url.pathname !== "/login" &&
-      <div className="grow w-full flex flex-col overflow-y-scroll">
-        <div className="po-md border-b-contrast">
-          <div className="grow w-full m-auto max-w-6xl flex items-center">
-            <img className="size-8"
-              alt="Brume Wallet"
-              src="/favicon.png" />
-            <div className="w-2" />
-            <div className="font-medium">
-              Wallet
-            </div>
+    <SubpathProvider>
+      {subpath.url.pathname === "/users/login" &&
+        <Dialog2>
+          <UserLoginDialog ok={ok} />
+        </Dialog2>}
+      {subpath.url.pathname === "/users/create" &&
+        <Dialog2>
+          <UserCreateDialog />
+        </Dialog2>}
+      {subpath.url.pathname === "/users" &&
+        <Menu>
+          <UsersMenu />
+        </Menu>}
+    </SubpathProvider>
+    <div className="grow w-full flex flex-col overflow-y-scroll">
+      <div className="po-md border-b-contrast">
+        <div className="grow w-full m-auto max-w-6xl flex items-center">
+          <img className="size-8"
+            alt="Brume Wallet"
+            src="/favicon.png" />
+          <div className="w-2" />
+          <div className="font-medium">
+            Wallet
           </div>
         </div>
-        <div className="p-4 grow w-full m-auto max-w-3xl flex flex-col">
-          <div className="h-[32rem] shrink-0 grow flex flex-col items-center">
-            <div className="grow" />
-            <h1 className="text-center text-6xl font-medium">
-              The private Ethereum wallet
-            </h1>
-            <div className="h-4" />
-            <div className="text-center text-contrast text-2xl">
-              Meet the only Ethereum wallet with maximum privacy and security.
-            </div>
-            <div className="grow" />
-            <div className="flex items-center">
-              <SmallShrinkableOppositeAnchor
-                href={subpath.go("/login").href}>
-                <Outline.LockOpenIcon className="size-5" />
-                Login
-              </SmallShrinkableOppositeAnchor>
-              <div className="w-2" />
-              <SmallShrinkableContrastAnchor
-                href={subpath.go("/download").href}>
-                <Outline.ArrowDownTrayIcon className="size-5" />
-                Download
-              </SmallShrinkableContrastAnchor>
-            </div>
-            <div className="grow" />
-            <div className="grow" />
-          </div>
-          <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]">
-            <InfoCard
-              title="0 VC"
-              href="/1"
-              subtitle={`Fully crowdfunded by the community for the community. No grants. No VCs.`}>
-              <OneDisplay />
-            </InfoCard>
-            <InfoCard
-              title="Tor"
-              href="/2"
-              subtitle={`Built-in Tor to hide your IP address from third-parties. Each account has it's own IP.`} />
-            <InfoCard
-              title="~50"
-              href="/3"
-              subtitle={`Number of external dependencies. That's around 20x less than competitors.`}>
-              <ThreeDisplay />
-            </InfoCard>
-            <InfoCard
-              title="Auth"
-              href="/4"
-              subtitle={`You can use WebAuthn to authenticate and sign transactions. All your keys are stored encrypted.`} />
-            <InfoCard
-              title="Truth"
-              href="/5"
-              subtitle={`Each request is sent to multiple servers to ensure no one lies about the blockchain state.`} />
-            <InfoCard
-              title="MIT"
-              href="/6"
-              subtitle={`All our code is MIT-licensed reproducible open-source. You can build it yourself.`} />
-          </div>
-          <div className="h-16" />
-          <div className="text-center text-2xl font-medium"
-            id={subpath.go("/download").hash.slice(1)}>
-            Download
-          </div>
-          <div className="h-8" />
-          <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
-            <DownloadCard
-              highlighted={typeof window.chrome !== "undefined"}
-              title="Chrome-like"
-              src="/assets/browsers/chrome.png"
-              href="https://chromewebstore.google.com/detail/brume-wallet/oljgnlammonjehmmfahdjgjhjclpockd">
-              Chrome, Brave, Chromium, Edge, Opera, Vivaldi
-            </DownloadCard>
-            <DownloadCard
-              highlighted={navigator.userAgent.indexOf("Firefox") != -1}
-              title="Firefox-like"
-              src="/assets/browsers/firefox.png"
-              href="https://addons.mozilla.org/firefox/addon/brumewallet/">
-              Firefox, Waterfox, Pale Moon, Basilisk, IceCat, IceWeasel
-            </DownloadCard>
-          </div>
+      </div>
+      <div className="p-4 grow w-full m-auto max-w-3xl flex flex-col">
+        <div className="h-[32rem] shrink-0 grow flex flex-col items-center">
+          <div className="grow" />
+          <h1 className="text-center text-6xl font-medium">
+            The private Ethereum wallet
+          </h1>
           <div className="h-4" />
-          <WideShrinkableContrastAnchor
-            target="_blank" rel="noreferrer"
-            href="https://github.com/brumewallet/wallet/releases">
-            <Outline.ArrowTopRightOnSquareIcon className="size-5" />
-            All releases
-          </WideShrinkableContrastAnchor>
-          <div className="h-[50vh]" />
-          <div className="text-center p-4">
-            <TextAnchor
-              target="_blank" rel="noreferrer"
-              href="https://ethbrno.cz">
-              Made by cypherpunks
-            </TextAnchor>
+          <div className="text-center text-contrast text-2xl">
+            Meet the only Ethereum wallet with maximum privacy and security.
           </div>
+          <div className="grow" />
+          <div className="flex items-center">
+            <SmallShrinkableOppositeAnchor
+              onKeyDown={users.onKeyDown}
+              onClick={users.onClick}
+              href={users.href}>
+              <Outline.LockOpenIcon className="size-5" />
+              Login
+            </SmallShrinkableOppositeAnchor>
+            <div className="w-2" />
+            <SmallShrinkableContrastAnchor
+              href={subpath.go("/download").href}>
+              <Outline.ArrowDownTrayIcon className="size-5" />
+              Download
+            </SmallShrinkableContrastAnchor>
+          </div>
+          <div className="grow" />
+          <div className="grow" />
         </div>
-      </div>}
+        <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]">
+          <InfoCard
+            title="0 VC"
+            href="/1"
+            subtitle={`Fully crowdfunded by the community for the community. No grants. No VCs.`}>
+            <OneDisplay />
+          </InfoCard>
+          <InfoCard
+            title="Tor"
+            href="/2"
+            subtitle={`Built-in Tor to hide your IP address from third-parties. Each account has it's own IP.`} />
+          <InfoCard
+            title="~50"
+            href="/3"
+            subtitle={`Number of external dependencies. That's around 20x less than competitors.`}>
+            <ThreeDisplay />
+          </InfoCard>
+          <InfoCard
+            title="Auth"
+            href="/4"
+            subtitle={`You can use WebAuthn to authenticate and sign transactions. All your keys are stored encrypted.`} />
+          <InfoCard
+            title="Truth"
+            href="/5"
+            subtitle={`Each request is sent to multiple servers to ensure no one lies about the blockchain state.`} />
+          <InfoCard
+            title="MIT"
+            href="/6"
+            subtitle={`All our code is MIT-licensed reproducible open-source. You can build it yourself.`} />
+        </div>
+        <div className="h-16" />
+        <div className="text-center text-2xl font-medium"
+          id={subpath.go("/download").hash.slice(1)}>
+          Download
+        </div>
+        <div className="h-8" />
+        <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
+          <DownloadCard
+            highlighted={typeof window.chrome !== "undefined"}
+            title="Chrome-like"
+            src="/assets/browsers/chrome.png"
+            href="https://chromewebstore.google.com/detail/brume-wallet/oljgnlammonjehmmfahdjgjhjclpockd">
+            Chrome, Brave, Chromium, Edge, Opera, Vivaldi
+          </DownloadCard>
+          <DownloadCard
+            highlighted={navigator.userAgent.indexOf("Firefox") != -1}
+            title="Firefox-like"
+            src="/assets/browsers/firefox.png"
+            href="https://addons.mozilla.org/firefox/addon/brumewallet/">
+            Firefox, Waterfox, Pale Moon, Basilisk, IceCat, IceWeasel
+          </DownloadCard>
+        </div>
+        <div className="h-4" />
+        <WideShrinkableContrastAnchor
+          target="_blank" rel="noreferrer"
+          href="https://github.com/brumewallet/wallet/releases">
+          <Outline.ArrowTopRightOnSquareIcon className="size-5" />
+          All releases
+        </WideShrinkableContrastAnchor>
+        <div className="h-[50vh]" />
+        <div className="text-center p-4">
+          <TextAnchor
+            target="_blank" rel="noreferrer"
+            href="https://ethbrno.cz">
+            Made by cypherpunks
+          </TextAnchor>
+        </div>
+      </div>
+    </div>
   </>
 }
 
-export function UsersScreen(props: {}) {
-  const close = useCloseContext().unwrap()
+export function UsersMenu() {
+  const path = usePathContext().unwrap()
 
   const usersQuery = useUsers()
   const maybeUsers = usersQuery.current?.ok().get()
 
-  return <>
-    <Dialog.Title>
-      Login
-    </Dialog.Title>
-    <div className="h-4" />
-    <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
-      {maybeUsers?.map(user =>
-        <UserCard
-          key={user.uuid}
-          user={user} />)}
-      <NewUserCard />
-    </div>
-  </>
+  const create = useGenius(path, "/users/create")
+
+  return <div className="flex flex-col text-left gap-2">
+    {maybeUsers?.map(user =>
+      <UsersMenuRow
+        key={user.uuid}
+        user={user} />)}
+    <WideShrinkableNakedMenuAnchor
+      onClick={create.onClick}
+      onKeyDown={create.onKeyDown}
+      href={create.href}>
+      <div className="rounded-full size-7 flex justify-center items-center border border-contrast border-dashed">
+        <Outline.PlusIcon className="size-4" />
+      </div>
+      New user
+    </WideShrinkableNakedMenuAnchor>
+  </div>
 }
 
-export function UserCard(props: UserProps) {
-  const { user } = props
+export function UsersMenuRow(props: { user: User }) {
+  const path = usePathContext().unwrap()
 
-  const userQuery = useUser(user.uuid)
+  const userQuery = useUser(props.user.uuid)
   const maybeUser = userQuery.current?.ok().get()
+
+  const open = useGenius(path, qurl("/users/login", { user: props.user.uuid }))
 
   if (maybeUser == null)
     return null
 
-  return <div className="po-md bg-contrast rounded-xl flex items-center">
-    <UserAvatar className="size-12 text-2xl"
+  return <WideShrinkableNakedMenuAnchor
+    onClick={open.onClick}
+    onKeyDown={open.onKeyDown}
+    href={open.href}>
+    <UserAvatar className="size-7 text-lg"
       color={Color.get(maybeUser.color)}
       name={maybeUser.name} />
-    <div className="w-4" />
-    <div className="font-medium">
-      {maybeUser.name}
-    </div>
-  </div>
-}
-
-export function NewUserCard() {
-  return <div className="po-md bg-contrast rounded-xl flex items-center">
-    <div className="rounded-full size-12 flex justify-center items-center border border-contrast border-dashed">
-      <Outline.PlusIcon className="size-6" />
-    </div>
-    <div className="w-4" />
-    <div className="font-medium">
-      New user
-    </div>
-  </div>
-
+    {maybeUser.name}
+  </WideShrinkableNakedMenuAnchor>
 }
 
 export function useGenius(subpath: PathHandle, subhref?: string) {
@@ -206,17 +213,21 @@ export function useGenius(subpath: PathHandle, subhref?: string) {
   const onClick = useCallback((e: MouseEvent) => {
     if (e.button !== 0)
       return
+    if (subhref == null)
+      return
 
     e.preventDefault()
 
     const x = e.clientX
     const y = e.clientY
 
-    location.replace(subpath.go(`${subhref}?x=${x}&y=${y}`).href)
+    location.replace(subpath.go(qurl(subhref, { x, y })).href)
   }, [subhref, subpath])
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key !== "Enter")
+      return
+    if (subhref == null)
       return
 
     e.preventDefault()
@@ -224,16 +235,19 @@ export function useGenius(subpath: PathHandle, subhref?: string) {
     const x = e.currentTarget.getBoundingClientRect().x + (e.currentTarget.getBoundingClientRect().width / 2)
     const y = e.currentTarget.getBoundingClientRect().y + (e.currentTarget.getBoundingClientRect().height / 2)
 
-    location.replace(subpath.go(`${subhref}?x=${x}&y=${y}`).href)
+    location.replace(subpath.go(qurl(subhref, { x, y })).href)
   }, [subhref, subpath])
 
   const onContextMenu = useCallback((e: MouseEvent) => {
+    if (subhref == null)
+      return
+
     e.preventDefault()
 
     const x = e.clientX
     const y = e.clientY
 
-    location.replace(subpath.go(`${subhref}?x=${x}&y=${y}`).href)
+    location.replace(subpath.go(qurl(subhref, { x, y })).href)
   }, [subhref, subpath])
 
   return { onClick, onKeyDown, onContextMenu, href }
@@ -411,84 +425,6 @@ export function WideShrinkableContrastAnchor(props: ChildrenProps & AnchorProps 
       {children}
     </div>
   </a>
-}
-
-export function UsersPage(props: OkProps<User>) {
-  const { ok } = props
-
-  const [user, setUser] = useState<User>()
-
-  const clear = useCallback(() => setUser(undefined), [])
-
-  const users = useUsers()
-
-  const createDialog = useBooleanHandle(false)
-
-  if (user != null)
-    return <UserLoginPage
-      user={user}
-      ok={ok}
-      err={clear} />
-
-  if (!users.ready)
-    return <div className="grow flex items-center justify-center">
-      <Loading className="size-10" />
-    </div>
-
-  return <Page>
-    {createDialog.current &&
-      <Dialog
-        close={createDialog.disable}>
-        <UserCreateDialog />
-      </Dialog>}
-    <div className="grid grow place-items-center place-content-center grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] auto-rows-[10rem]">
-      {users.data?.get().map(user =>
-        <UserOkButton
-          key={user.uuid}
-          user={user}
-          ok={setUser} />)}
-      <NewUserButton ok={createDialog.enable} />
-    </div>
-  </Page>
-}
-
-function UserOkButton(props: UserProps & OkProps<User>) {
-  const { ok } = props
-
-  const user = useUser(props.user.uuid)
-
-  const onClick = useCallback(() => {
-    ok(props.user)
-  }, [props.user, ok])
-
-  if (user.data == null)
-    return null
-
-  return <button className="flex flex-col items-center"
-    onClick={onClick}>
-    <UserAvatar className="size-16 text-2xl"
-      color={Color.get(user.data.get().color)}
-      name={user.data.get().name} />
-    <div className="h-2" />
-    <div className="font-medium">
-      {user.data.get().name}
-    </div>
-  </button>
-}
-
-function NewUserButton(props: OkProps<unknown>) {
-  const { ok } = props
-
-  return <button className="flex flex-col items-center"
-    onClick={ok}>
-    <div className="rounded-full size-16 flex justify-center items-center border border-contrast border-dashed">
-      <Outline.PlusIcon className="size-6" />
-    </div>
-    <div className="h-2" />
-    <div className="font-medium">
-      New user
-    </div>
-  </button>
 }
 
 export function UserAvatar(props: ClassNameProps & { name: string } & { color: Color }) {

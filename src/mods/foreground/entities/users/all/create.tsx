@@ -1,6 +1,6 @@
 import { Color } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
-import { Mutators } from "@/libs/glacier/mutators";
+import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -9,7 +9,9 @@ import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { User, UserInit } from "@/mods/background/service_worker/entities/users/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
-import { useDeferredValue, useMemo, useState } from "react";
+import { Data } from "@hazae41/glacier";
+import { Some } from "@hazae41/option";
+import { KeyboardEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../wallets/actions/send";
 import { useUsers } from "../data";
 import { UserAvatar } from "./page";
@@ -54,17 +56,25 @@ export function UserCreateDialog(props: {}) {
     setRawConfirmPasswordInput(e.currentTarget.value)
   }, [])
 
-  const onClick = useAsyncUniqueCallback(async () => {
+  const onClick = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const user: UserInit = { uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, password: defPasswordInput }
 
     const usersData = await background
       .tryRequest<User[]>({ method: "brume_createUser", params: [user] })
       .then(r => r.unwrap().unwrap())
 
-    users.mutate(Mutators.data(usersData))
+    await users.mutate(() => new Some(new Data(usersData)))
 
     close()
-  }, [uuid, finalNameInput, color, emoji, defPasswordInput, background, users.mutate, close])
+  }), [uuid, finalNameInput, color, emoji, defPasswordInput, background, users.mutate, close])
+
+  const onKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key !== "Enter")
+      return
+    e.preventDefault()
+
+    onClick.run()
+  }, [onClick])
 
   const error = useMemo(() => {
     if (defPasswordInput.length < 3)
@@ -110,14 +120,15 @@ export function UserCreateDialog(props: {}) {
         type="password"
         placeholder=""
         value={rawConfirmPasswordInput}
-        onChange={onConfirmPasswordInputChange} />
+        onChange={onConfirmPasswordInputChange}
+        onKeyDown={onKeyDown} />
     </SimpleLabel>
 
   const DoneButton =
     <WideShrinkableGradientButton
-      color={color}
       disabled={error != null}
-      onClick={onClick.run}>
+      onClick={onClick.run}
+      color={color}>
       <Outline.PlusIcon className="size-5" />
       {error || "Add"}
     </WideShrinkableGradientButton>
