@@ -2,7 +2,6 @@ import { Mutators } from "@/libs/glacier/mutators";
 import { AppRequestRef, BgAppRequest } from "@/mods/background/service_worker/entities/requests/data";
 import { Data, States, createQuery, useQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
-import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
 
 export namespace FgAppRequest {
@@ -56,13 +55,13 @@ export namespace FgAppRequest {
 export function useAppRequest(id: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgAppRequest.schema, [id, storage])
-  useSubscribe(query, storage)
+
   return query
 }
 
 export function useAppRequests() {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgAppRequest.All.schema, [storage])
-  useSubscribe(query, storage)
+
   return query
 }

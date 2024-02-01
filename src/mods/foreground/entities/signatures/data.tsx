@@ -4,7 +4,6 @@ import { Abi, ZeroHexString } from "@hazae41/cubane";
 import { Data, Fail, createQuery, useError, useFetch, useQuery, useVisible } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 import { Catched } from "@hazae41/result";
-import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
 import { FgEthereumContext, fetchOrFail } from "../wallets/data";
 
@@ -57,7 +56,7 @@ export function useSignature(hash: Nullable<ZeroHexString>, ethereum: Nullable<F
   const query = useQuery(FgSignature.schema, [hash, ethereum, storage])
   useFetch(query)
   useVisible(query)
-  useSubscribe(query, storage)
+
   useError(query, Errors.onQueryError)
   return query
 }

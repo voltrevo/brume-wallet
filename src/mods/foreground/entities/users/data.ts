@@ -3,7 +3,6 @@ import { BgUser, UserRef } from "@/mods/background/service_worker/entities/users
 import { Data, States, createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { GlobalStorage, useGlobalStorageContext } from "../../storage/global"
-import { useSubscribe } from "../../storage/storage"
 
 export namespace FgUser {
 
@@ -70,20 +69,20 @@ export namespace FgUser {
 export function useUsers() {
   const storage = useGlobalStorageContext().unwrap()
   const query = useQuery(FgUser.All.schema, [storage])
-  useSubscribe(query, storage)
+
   return query
 }
 
 export function useUser(uuid: Nullable<string>) {
   const storage = useGlobalStorageContext().unwrap()
   const query = useQuery(FgUser.schema, [uuid, storage])
-  useSubscribe(query, storage)
+
   return query
 }
 
 export function useCurrentUser() {
   const storage = useGlobalStorageContext().unwrap()
   const query = useQuery(FgUser.Current.schema, [storage])
-  useSubscribe(query, storage)
+
   return query
 }

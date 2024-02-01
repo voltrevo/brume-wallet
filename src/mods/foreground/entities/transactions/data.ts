@@ -5,7 +5,6 @@ import { ZeroHexString } from "@hazae41/cubane"
 import { Data, States, createQuery, useError, useQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Some } from "@hazae41/option"
-import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { FgEthereumContext, fetchOrFail } from "../wallets/data"
 
@@ -135,7 +134,7 @@ export namespace FgTransaction {
 export function useTransactions(address: Nullable<ZeroHexString>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgTransaction.All.ByAddress.schema, [address, storage])
-  useSubscribe(query, storage)
+
   return query
 }
 
@@ -144,11 +143,9 @@ export function useTransactionWithReceipt(uuid: Nullable<string>, context: Nulla
 
   const transactionQuery = useQuery(FgTransaction.schema, [uuid, storage])
   const maybeTransaction = transactionQuery.current?.ok().get()
-  useSubscribe(transactionQuery, storage)
 
   const receiptQuery = useQuery(FgTransactionReceipt.schema, [uuid, maybeTransaction?.hash, context, storage])
   useWait(receiptQuery, 1000)
-  useSubscribe(receiptQuery, storage)
   useError(receiptQuery, Errors.onQueryError)
 
   return transactionQuery
@@ -177,7 +174,7 @@ export namespace FgTransactionTrial {
 export function useTransactionTrial(uuid: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgTransactionTrial.schema, [uuid, storage])
-  useSubscribe(query, storage)
+
   return query
 }
 

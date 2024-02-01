@@ -2,7 +2,6 @@ import { Mutators } from "@/libs/glacier/mutators";
 import { BgSeed, SeedRef } from "@/mods/background/service_worker/entities/seeds/data";
 import { Data, States, createQuery, useQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
-import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
 
 export namespace FgSeed {
@@ -56,13 +55,13 @@ export namespace FgSeed {
 export function useSeed(uuid: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgSeed.schema, [uuid, storage])
-  useSubscribe(query, storage)
+
   return query
 }
 
 export function useSeeds() {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgSeed.All.schema, [storage])
-  useSubscribe(query, storage)
+
   return query
 }

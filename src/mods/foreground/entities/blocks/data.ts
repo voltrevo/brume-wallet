@@ -5,7 +5,6 @@ import { ZeroHexString } from "@hazae41/cubane"
 import { createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
-import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { FgEthereumContext, fetchOrFail } from "../wallets/data"
 
@@ -56,7 +55,7 @@ export function useBlockByNumber(number: Nullable<string>, ethereum: Nullable<Fg
   useFetch(query)
   useVisible(query)
   useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
+
   useError(query, Errors.onQueryError)
   return query
 }

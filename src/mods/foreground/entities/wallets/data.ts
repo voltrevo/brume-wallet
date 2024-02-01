@@ -12,7 +12,6 @@ import { Transaction, ethers } from "ethers"
 import { useMemo } from "react"
 import { Background } from "../../background/background"
 import { useBackgroundContext } from "../../background/context"
-import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { SeedInstance } from "../seeds/all/helpers"
 import { FgSeed } from "../seeds/data"
@@ -240,28 +239,28 @@ export namespace FgWallet {
 export function useWallet(uuid: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgWallet.schema, [uuid, storage])
-  useSubscribe(query, storage)
+
   return query
 }
 
 export function useWallets() {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgWallet.All.schema, [storage])
-  useSubscribe(query, storage)
+
   return query
 }
 
 export function useTrashedWallets() {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgWallet.All.Trashed.schema, [storage])
-  useSubscribe(query, storage)
+
   return query
 }
 
 export function useWalletsBySeed(uuid: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgWallet.All.BySeed.schema, [uuid, storage])
-  useSubscribe(query, storage)
+
   return query
 }
 

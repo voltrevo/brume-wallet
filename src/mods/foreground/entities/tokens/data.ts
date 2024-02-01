@@ -3,7 +3,6 @@ import { chainByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { BgToken, ContractTokenData, ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data"
-import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
 import { Cubane, Fixed, ZeroHexFixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, FetcherMore, States, core, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
@@ -331,14 +330,14 @@ export namespace FgToken {
 export function useToken(chainId: Nullable<number>, address: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgToken.Contract.schema, [chainId, address, storage])
-  useSubscribe(query, storage)
+
   return query
 }
 
 export function useTokens() {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgToken.Contract.All.schema, [storage])
-  useSubscribe(query, storage)
+
   return query
 }
 
@@ -348,7 +347,7 @@ export function useNativeBalance(address: Nullable<ZeroHexString>, block: Nullab
   useFetch(query)
   useVisible(query)
   useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
+
   useError(query, Errors.onQueryError)
 
   useEffectButNotFirstTime(() => {
@@ -369,7 +368,7 @@ export function useContractBalance(address: Nullable<ZeroHexString>, token: Null
   useFetch(query)
   useVisible(query)
   useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
+
   useError(query, Errors.onQueryError)
 
   useEffectButNotFirstTime(() => {
@@ -387,13 +386,13 @@ export function useContractBalance(address: Nullable<ZeroHexString>, token: Null
 export function useNativePricedBalance(address: Nullable<ZeroHexString>, coin: "usd", context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgToken.Native.Balance.Priced.schema, [address, coin, context, storage])
-  useSubscribe(query, storage)
+
   return query
 }
 
 export function useContractPricedBalance(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, coin: "usd", context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgToken.Contract.Balance.Priced.schema, [address, token, coin, context, storage])
-  useSubscribe(query, storage)
+
   return query
 }

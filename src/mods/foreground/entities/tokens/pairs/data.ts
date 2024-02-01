@@ -1,7 +1,6 @@
 import { Errors } from "@/libs/errors/errors"
 import { PairData } from "@/libs/ethereum/mods/chain"
 import { BgPair } from "@/mods/background/service_worker/entities/tokens/pairs/data"
-import { useSubscribe } from "@/mods/foreground/storage/storage"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
 import { Abi, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, FetcherMore, createQuery, useError, useFetch, useQuery, useVisible } from "@hazae41/glacier"
@@ -66,7 +65,7 @@ export function usePairPrice(pair: Nullable<PairData>, block: Nullable<string>, 
   const query = useQuery(FgPair.Price.schema, [pair, block, context, storage])
   useFetch(query)
   useVisible(query)
-  useSubscribe(query, storage)
+
   useError(query, Errors.onQueryError)
   return query
 }

@@ -5,7 +5,6 @@ import { Address, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, useError, useFetch, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
-import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { FgEthereumContext, customFetchOrFail } from "../wallets/data"
 
@@ -64,7 +63,7 @@ export function useEnsLookup(name: Nullable<string>, ethereum: Nullable<FgEthere
   const query = useQuery(FgEns.Lookup.schema, [name, ethereum, storage])
   useFetch(query)
   useVisible(query)
-  useSubscribe(query, storage)
+
   useError(query, Errors.onQueryError)
   return query
 }
@@ -74,7 +73,7 @@ export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullab
   const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
   useFetch(query)
   useVisible(query)
-  useSubscribe(query, storage)
+
   useError(query, Errors.onQueryError)
   return query
 }
@@ -88,6 +87,6 @@ export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullab
 export function useEnsReverseNoFetch(address: Nullable<ZeroHexString>, ethereum: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
-  useSubscribe(query, storage)
+
   return query
 }

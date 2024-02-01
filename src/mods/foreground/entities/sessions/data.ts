@@ -2,7 +2,6 @@ import { Mutators } from "@/libs/glacier/mutators"
 import { BgSession, SessionRef } from "@/mods/background/service_worker/entities/sessions/data"
 import { Data, States, createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { useSubscribe } from "../../storage/storage"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 
 export namespace FgSession {
@@ -166,6 +165,6 @@ export namespace FgSession {
 export function useSession(id: Nullable<string>) {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgSession.shema, [id, storage])
-  useSubscribe(query, storage)
+
   return query
 }

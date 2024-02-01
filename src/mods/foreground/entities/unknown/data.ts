@@ -7,7 +7,6 @@ import { Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Data, FetcherMore, States, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { None, Nullable, Some } from "@hazae41/option";
-import { useSubscribe } from "../../storage/storage";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
 import { FgEthereumContext, fetchOrFail } from "../wallets/data";
 
@@ -177,7 +176,7 @@ export function useUnknown(request: Nullable<RpcRequestPreinit<unknown> & Ethere
   const query = useQuery(FgEthereum.Unknown.schema, [request, context, storage])
   useFetch(query)
   useVisible(query)
-  useSubscribe(query, storage)
+
   useError(query, Errors.onQueryError)
   return query
 }
@@ -188,7 +187,7 @@ export function useEstimateGas(request: Nullable<RpcRequestPreinit<[unknown, unk
   useFetch(query)
   useVisible(query)
   useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
+
   useError(query, Errors.onQueryError)
   return query
 }
@@ -199,7 +198,7 @@ export function useMaxPriorityFeePerGas(context: Nullable<FgEthereumContext>) {
   useFetch(query)
   useVisible(query)
   useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
+
   useError(query, Errors.onQueryError)
   return query
 }
@@ -210,7 +209,7 @@ export function useGasPrice(context: Nullable<FgEthereumContext>) {
   useFetch(query)
   useVisible(query)
   useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
+
   useError(query, Errors.onQueryError)
   return query
 }
@@ -221,7 +220,7 @@ export function useNonce(address: Nullable<ZeroHexString>, context: Nullable<FgE
   useFetch(query)
   useVisible(query)
   useInterval(query, 10 * 1000)
-  useSubscribe(query, storage)
+
   useError(query, Errors.onQueryError)
   return query
 }
@@ -321,13 +320,13 @@ export namespace FgTotal {
 export function useTotalPricedBalance(coin: "usd") {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgTotal.Balance.Priced.schema, [coin, storage])
-  useSubscribe(query, storage)
+
   return query
 }
 
 export function useTotalWalletPricedBalance(address: Nullable<ZeroHexString>, coin: "usd") {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgTotal.Balance.Priced.ByAddress.schema, [address, coin, storage])
-  useSubscribe(query, storage)
+
   return query
 }
