@@ -28,7 +28,7 @@ import { WalletAvatar } from "../../avatar";
 export function SeededWalletCreatorDialog(props: {}) {
   const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
-  const seedData = useSeedDataContext()
+  const seedData = useSeedDataContext().unwrap()
 
   const uuid = useConstant(() => crypto.randomUUID())
 

@@ -5,7 +5,7 @@ import { CircularWhiteAnchorInColoredCard } from "../wallets/card"
 import { useSeedDataContext } from "./context"
 
 export function SeedDataCard(props: { ok?: () => void }) {
-  const seed = useSeedDataContext()
+  const seed = useSeedDataContext().unwrap()
   const { ok } = props
 
   const color = Color.get(seed.color)

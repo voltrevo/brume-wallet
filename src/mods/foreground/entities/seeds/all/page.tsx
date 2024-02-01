@@ -73,7 +73,7 @@ export function ClickableSeedGrid(props: OkProps<Seed> & CreateProps & { maybeSe
 }
 
 export function ClickableSeedDataCard(props: OkProps<Seed>) {
-  const seed = useSeedDataContext()
+  const seed = useSeedDataContext().unwrap()
   const { ok } = props
 
   const onClick = useCallback(() => {

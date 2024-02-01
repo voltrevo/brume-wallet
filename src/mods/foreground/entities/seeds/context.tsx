@@ -9,7 +9,7 @@ export const SeedDataContext =
   createContext<Nullable<SeedData>>(undefined)
 
 export function useSeedDataContext() {
-  return Option.unwrap(useContext(SeedDataContext))
+  return Option.wrap(useContext(SeedDataContext))
 }
 
 export function SeedDataProvider(props: UUIDProps & ChildrenProps) {

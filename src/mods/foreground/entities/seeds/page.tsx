@@ -1,12 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
-import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { UUIDProps } from "@/libs/react/props/uuid";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog2 } from "@/libs/ui/dialog/dialog";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useCallback } from "react";
 import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
 import { Page } from "../../../../libs/ui2/page/page";
-import { Paths } from "../../router/path/context";
+import { Paths, SubpathProvider, usePathContext, useSubpath2 } from "../../router/path/context";
+import { useGenius } from "../users/all/page";
 import { SeededWalletCreatorDialog } from "../wallets/all/create/seeded";
 import { ClickableWalletGrid } from "../wallets/all/page";
 import { useWalletsBySeed } from "../wallets/data";
@@ -22,12 +22,14 @@ export function SeedPage(props: UUIDProps) {
 }
 
 function SeedDataPage() {
-  const seed = useSeedDataContext()
+  const path = usePathContext().unwrap()
+  const seed = useSeedDataContext().unwrap()
 
   const walletsQuery = useWalletsBySeed(seed.uuid)
   const maybeWallets = walletsQuery.data?.get()
 
-  const creator = useBooleanHandle(false)
+  const subpath = useSubpath2(path)
+  const creator = useGenius(subpath, "/create")
 
   const onBackClick = useCallback(() => {
     Paths.go("/seeds")
@@ -57,11 +59,12 @@ function SeedDataPage() {
     </PageBody>
 
   return <Page>
-    {creator.current &&
-      <Dialog
-        close={creator.disable}>
-        <SeededWalletCreatorDialog />
-      </Dialog>}
+    <SubpathProvider>
+      {subpath.url.pathname === "/create" &&
+        <Dialog2>
+          <SeededWalletCreatorDialog />
+        </Dialog2>}
+    </SubpathProvider>
     {Header}
     {Card}
     {Body}
