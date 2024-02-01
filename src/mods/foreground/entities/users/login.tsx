@@ -64,7 +64,7 @@ export function UserLoginDialog() {
 
     await currentUserQuery.mutate(() => new Some(new Data(maybeUser)))
 
-    location.replace("#/home")
+    location.assign("#/home")
   }), [defPasswordInput, userQuery.data?.get().uuid, background])
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
