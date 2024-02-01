@@ -385,7 +385,7 @@ export function WalletMenu(props: { $privateKey: State<Optional<ZeroHexString>> 
       if (current.isErr())
         return new None()
 
-      return new Some(current.mapSync(w => ({ ...w, trashed: true })).setTimes({ ...current, expiration: Date.now() + 15 * 1000 }))
+      return new Some(current.mapSync(w => ({ ...w, trashed: true })).setTimes({ ...current, expiration: Date.now() + 30 * 24 * 60 * 15 * 1000 }))
     })
 
     close()
