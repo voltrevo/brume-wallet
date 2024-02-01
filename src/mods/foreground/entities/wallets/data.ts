@@ -56,6 +56,23 @@ export namespace FgWallet {
 
     }
 
+    export namespace ByAddress {
+
+      export type Key = BgWallet.All.ByAddress.Key
+      export type Data = BgWallet.All.ByAddress.Data
+      export type Fail = BgWallet.All.ByAddress.Fail
+
+      export const key = BgWallet.All.ByAddress.key
+
+      export function schema(uuid: Nullable<string>, storage: UserStorage) {
+        if (uuid == null)
+          return
+
+        return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
+      }
+
+    }
+
     export type Key = BgWallet.All.Key
     export type Data = BgWallet.All.Data
     export type Fail = BgWallet.All.Fail
@@ -81,13 +98,10 @@ export namespace FgWallet {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.data
-      const currentData = current.data
+      const previousData = previous?.data?.inner
+      const currentData = current.data?.inner
 
-      // console.log(core.storeds.get(key(uuid)))
-      // console.log(core.unstoreds.get(key(uuid)))
-
-      if (previousData != null && (previousData.inner.uuid !== currentData?.inner.uuid || previousData.inner.trashed !== currentData?.inner.trashed) && !previousData.inner.trashed) {
+      if (previousData != null && (previousData.uuid !== currentData?.uuid || previousData.trashed !== currentData?.trashed) && !previousData.trashed) {
         await All.schema(storage).mutate(s => {
           const current = s.current
 
@@ -96,11 +110,22 @@ export namespace FgWallet {
           if (current.isErr())
             return new None()
 
-          return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid)))
+          return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.uuid)))
         })
 
-        if (previousData.inner.type === "seeded") {
-          const { seed } = previousData.inner
+        await All.ByAddress.schema(previousData.address, storage)?.mutate(s => {
+          const current = s.current
+
+          if (current == null)
+            return new None()
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.uuid)))
+        })
+
+        if (previousData.type === "seeded") {
+          const { seed } = previousData
 
           await All.BySeed.schema(seed.uuid, storage)?.mutate(s => {
             const current = s.current
@@ -110,12 +135,12 @@ export namespace FgWallet {
             if (current.isErr())
               return new None()
 
-            return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid)))
+            return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.uuid)))
           })
         }
       }
 
-      if (previousData != null && (previousData.inner.uuid !== currentData?.inner.uuid || previousData.inner.trashed !== currentData?.inner.trashed) && previousData.inner.trashed) {
+      if (previousData != null && (previousData.uuid !== currentData?.uuid || previousData.trashed !== currentData?.trashed) && previousData.trashed) {
         await All.Trashed.schema(storage).mutate(s => {
           const current = s.current
 
@@ -124,48 +149,59 @@ export namespace FgWallet {
           if (current.isErr())
             return new None()
 
-          return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid)))
+          return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.uuid)))
         })
       }
 
-      if (currentData != null && (currentData.inner.uuid !== previousData?.inner.uuid || currentData.inner.trashed !== previousData?.inner.trashed) && !currentData.inner.trashed) {
+      if (currentData != null && (currentData.uuid !== previousData?.uuid || currentData.trashed !== previousData?.trashed) && !currentData.trashed) {
         await All.schema(storage).mutate(s => {
           const current = s.current
 
           if (current == null)
-            return new Some(new Data([WalletRef.from(currentData.inner)]))
+            return new Some(new Data([WalletRef.from(currentData)]))
           if (current.isErr())
             return new None()
 
-          return new Some(current.mapSync(p => [...p, WalletRef.from(currentData.inner)]))
+          return new Some(current.mapSync(p => [...p, WalletRef.from(currentData)]))
         })
 
-        if (currentData.inner.type === "seeded") {
-          const { seed } = currentData.inner
+        await All.ByAddress.schema(currentData.address, storage)?.mutate(s => {
+          const current = s.current
+
+          if (current == null)
+            return new Some(new Data([WalletRef.from(currentData)]))
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(p => [...p, WalletRef.from(currentData)]))
+        })
+
+        if (currentData.type === "seeded") {
+          const { seed } = currentData
 
           await All.BySeed.schema(seed.uuid, storage)?.mutate(s => {
             const current = s.current
 
             if (current == null)
-              return new Some(new Data([WalletRef.from(currentData.inner)]))
+              return new Some(new Data([WalletRef.from(currentData)]))
             if (current.isErr())
               return new None()
 
-            return new Some(current.mapSync(p => [...p, WalletRef.from(currentData.inner)]))
+            return new Some(current.mapSync(p => [...p, WalletRef.from(currentData)]))
           })
         }
       }
 
-      if (currentData != null && (currentData.inner.uuid !== previousData?.inner.uuid || currentData.inner.trashed !== previousData?.inner.trashed) && currentData.inner.trashed) {
+      if (currentData != null && (currentData.uuid !== previousData?.uuid || currentData.trashed !== previousData?.trashed) && currentData.trashed) {
         await All.Trashed.schema(storage).mutate(s => {
           const current = s.current
 
           if (current == null)
-            return new Some(new Data([WalletRef.from(currentData.inner)]))
+            return new Some(new Data([WalletRef.from(currentData)]))
           if (current.isErr())
             return new None()
 
-          return new Some(current.mapSync(p => [...p, WalletRef.from(currentData.inner)]))
+          return new Some(current.mapSync(p => [...p, WalletRef.from(currentData)]))
         })
       }
     }
