@@ -9,7 +9,7 @@ import { useInputChange, useKeyboardEnter, useMouse } from "@/libs/react/events"
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
-import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
+import { AnchorProps } from "@/libs/react/props/html";
 import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { State } from "@/libs/react/state";
@@ -94,7 +94,7 @@ export function useCompactDisplayUsd(result: Nullable<Result<Fixed.From, Error>>
   }, [result])
 }
 
-export function LinkCard(props: AnchorProps) {
+export function AnchorCard(props: AnchorProps) {
   const { children, ...rest } = props
 
   return <a className="grow group p-4 bg-contrast rounded-xl cursor-pointer focus:outline-black focus:outline-1"
@@ -103,17 +103,6 @@ export function LinkCard(props: AnchorProps) {
       {children}
     </div>
   </a>
-}
-
-export function ButtonCard(props: ButtonProps) {
-  const { children, ...rest } = props
-
-  return <button className="grow group p-4 bg-contrast rounded-xl cursor-pointer focus:outline-black focus:outline-1"
-    {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
-      {children}
-    </div>
-  </button>
 }
 
 export function DivLikeButton(props: ChildrenProps & ClassNameProps & { onClick: () => void }) {
@@ -142,8 +131,6 @@ function WalletDataPage() {
   const mainnet = useEthereumContext2(wallet.uuid, chainByChainId[1]).unwrap()
 
   useEnsReverse(wallet.address, mainnet)
-
-  const receiveDialog = useBooleanHandle(false)
 
   const [color, color2] = Gradients.get(wallet.color)
 
@@ -193,6 +180,8 @@ function WalletDataPage() {
     }).then(Results.logAndAlert)
   }, [wallet, background])
 
+  const receive = useGenius(subpath, "/receive")
+
   const $privateKey = useState<Optional<ZeroHexString>>()
   const [privateKey] = $privateKey
 
@@ -239,30 +228,33 @@ function WalletDataPage() {
 
   const Apps =
     <div className="po-md grid place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
-      <LinkCard>
+      <AnchorCard>
         <Outline.BanknotesIcon className="size-4" />
         Tokens
-      </LinkCard>
-      <LinkCard>
+      </AnchorCard>
+      <AnchorCard>
         <Outline.PaperAirplaneIcon className="size-4" />
         Transactions
-      </LinkCard>
-      <ButtonCard onClick={receiveDialog.enable}>
+      </AnchorCard>
+      <AnchorCard
+        onKeyDown={receive.onKeyDown}
+        onClick={receive.onClick}
+        href={receive.href}>
         <Outline.QrCodeIcon className="size-4" />
         Receive
-      </ButtonCard>
-      <LinkCard>
+      </AnchorCard>
+      <AnchorCard>
         <Outline.TrophyIcon className="size-4" />
         NFTs
-      </LinkCard>
-      <LinkCard>
+      </AnchorCard>
+      <AnchorCard>
         <Outline.LinkIcon className="size-4" />
         Links
-      </LinkCard>
-      <LinkCard>
+      </AnchorCard>
+      <AnchorCard>
         <Outline.CheckIcon className="size-4" />
         Approvals
-      </LinkCard>
+      </AnchorCard>
     </div>
 
   const Body =
@@ -333,16 +325,15 @@ function WalletDataPage() {
         <Dialog2>
           <WalletEditDialog />
         </Dialog2>}
+      {subpath.url.pathname === "/receive" &&
+        <Dialog2 dark>
+          <WalletDataReceiveScreen />
+        </Dialog2>}
       {subpath.url.pathname === "/menu" &&
         <Menu>
           <WalletMenu $privateKey={$privateKey} />
         </Menu>}
     </SubpathProvider>
-    {receiveDialog.current &&
-      <Dialog dark
-        close={receiveDialog.disable}>
-        <WalletDataReceiveScreen />
-      </Dialog>}
     {Header}
     {Card}
     {Apps}

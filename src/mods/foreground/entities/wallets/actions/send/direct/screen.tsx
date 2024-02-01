@@ -3,11 +3,11 @@ import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { qurl } from "@/libs/url/url";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData } from "@/mods/background/service_worker/entities/transactions/data";
-import { PathContext, usePathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
+import { SubpathProvider, usePathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Address, Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
@@ -18,7 +18,7 @@ import { useTransactionTrial, useTransactionWithReceipt } from "../../../../tran
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext, useEthereumContext2 } from "../../../data";
 import { PriceResolver } from "../../../page";
-import { WalletTransactionScreen } from "../../eth_sendTransaction";
+import { WalletTransactionDialog } from "../../eth_sendTransaction";
 
 export function WalletDirectSendScreenNativeValue(props: {}) {
   const path = usePathContext().unwrap()
@@ -240,10 +240,6 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, step: "value", chain: chainData.chainId, target: maybeFinalTarget, value: maybeFinalValue?.toString(), disableTarget: true, disableValue: true })).href)
   }, [subpath, trial0Uuid, chainData.chainId, maybeFinalValue, maybeFinalTarget])
 
-  const onClose = useCallback(() => {
-    location.replace(subpath.go(`/`).href)
-  }, [subpath])
-
   const trialQuery = useTransactionTrial(trial0Uuid)
   const maybeTrialData = trialQuery.current?.ok().get()
 
@@ -251,12 +247,12 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   const maybeTransaction = transactionQuery.current?.ok().get()
 
   return <>
-    <PathContext.Provider value={subpath}>
+    <SubpathProvider>
       {subpath.url.pathname === "/eth_sendTransaction" &&
-        <Dialog close={onClose}>
-          <WalletTransactionScreen />
-        </Dialog>}
-    </PathContext.Provider>
+        <Dialog2>
+          <WalletTransactionDialog />
+        </Dialog2>}
+    </SubpathProvider>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}

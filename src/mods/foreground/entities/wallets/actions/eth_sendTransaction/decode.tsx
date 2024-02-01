@@ -1,5 +1,5 @@
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
-import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
@@ -11,9 +11,8 @@ import { useSignature } from "../../../signatures/data";
 import { useWalletDataContext } from "../../context";
 import { useEthereumContext2 } from "../../data";
 
-export function WalletDecodeScreen(props: {}) {
+export function WalletDecodeDialog(props: {}) {
   const wallet = useWalletDataContext().unwrap()
-  const close = useCloseContext().unwrap()
 
   const $state = usePathState<{ data: ZeroHexString }>()
   const [maybeData, setData] = useSearchState("data", $state)

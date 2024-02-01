@@ -8,13 +8,13 @@ import { ClassNameProps } from "@/libs/react/props/className";
 import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
 import { OkProps } from "@/libs/react/props/promise";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
-import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { Page } from "@/libs/ui2/page/page";
 import { User, UserProps } from "@/mods/background/service_worker/entities/users/data";
 import { OneDisplay } from "@/mods/foreground/landing/1/1";
 import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
-import { PathContext, PathHandle, usePathContext, useSubpath } from "@/mods/foreground/router/path/context";
+import { PathHandle, SubpathProvider, usePathContext, useSubpath } from "@/mods/foreground/router/path/context";
 import { KeyboardEvent, MouseEvent, useCallback, useMemo, useState } from "react";
 import { useUser, useUsers } from "../data";
 import { UserLoginPage } from "../login";
@@ -246,15 +246,10 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
   const subpath = useSubpath(path)
   const genius = useGenius(subpath, href)
 
-  const onSubpathClose = useCallback(() => {
-    location.replace(subpath.go("/").href)
-  }, [subpath])
-
   return <>
-    <PathContext.Provider value={subpath}>
+    <SubpathProvider>
       {subpath.url.pathname === href &&
-        <Dialog hesitant
-          close={onSubpathClose}>
+        <Dialog2 hesitant>
           <div className="text-6xl">
             {title}
           </div>
@@ -268,8 +263,8 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
               {`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce non vulputate lorem. Integer turpis urna, elementum ac odio id, eleifend fringilla nisl. Aliquam vulputate, lacus eget congue porta, dolor lacus auctor ex, nec egestas dolor sem quis lorem. Nam tincidunt egestas est at porta. Maecenas in ultrices libero. Sed maximus purus lacus, eget pulvinar lacus tempor sit amet. Sed sit amet sagittis quam. Maecenas eget rutrum quam, quis venenatis ipsum. Cras cursus iaculis maximus. Donec convallis tempus orci, a consectetur eros cursus non. Sed tristique convallis eros, mattis luctus justo tincidunt non. Vivamus facilisis ex ipsum, a viverra libero vehicula ac. Vestibulum at eleifend eros, vel aliquet tellus. Vestibulum faucibus dignissim turpis. Nam in magna mauris. Nunc nulla metus, commodo vel euismod eu, tincidunt ut leo. Cras sit amet convallis dolor. Nunc vel nulla vel nisl tristique consequat. In sollicitudin eget ligula quis porttitor. Sed vel blandit quam. Ut fermentum nulla vel tortor placerat consequat. Donec ornare in dui sit amet dapibus. Morbi sit amet nulla vel lacus vestibulum dignissim. Fusce euismod, neque at porta interdum, mauris est hendrerit mauris, ut convallis nulla purus id mi. Suspendisse in facilisis augue. In in luctus velit. Nulla rutrum urna quis congue luctus. Ut sed sem leo. Quisque tellus magna, dapibus et est a, faucibus varius est. Vestibulum eu metus molestie odio interdum tincidunt. Aliquam in tincidunt lectus, at rutrum elit. Aenean malesuada nibh quis auctor sagittis. Phasellus aliquet nunc quis tempor placerat. Maecenas porttitor ante et orci faucibus molestie. In nisi diam, malesuada vitae varius non, luctus eu lacus. Ut ut sodales massa. Nunc eu turpis sed enim viverra ullamcorper sit amet a orci. Quisque tincidunt posuere sem, et bibendum dui porta ut. Vestibulum nunc ex, tincidunt ac vestibulum id, tincidunt non lacus. Nam molestie ante felis, et pretium massa condimentum vel. Donec feugiat ut nulla non eleifend. Fusce commodo nisi et aliquam pharetra. Aenean sagittis iaculis finibus. Donec fringilla ornare finibus. Cras fermentum viverra tellus, volutpat dignissim erat maximus sed. Curabitur bibendum, libero quis convallis imperdiet, leo felis consectetur nunc, eu pretium sem urna sed quam. Aenean lectus tortor, pretium quis semper eget, posuere at nisl. In eget mi lacus. Nulla facilisi. Vestibulum lobortis urna sed ex venenatis, quis lobortis orci varius. Proin ultricies consectetur laoreet. Vivamus elit neque, scelerisque egestas augue eget, congue ornare odio. Nam sed augue ex. Aliquam fermentum, felis et bibendum rutrum, neque lacus tempor quam, at condimentum diam sem a ante. Vestibulum accumsan justo ac scelerisque dictum. Curabitur molestie, odio quis rutrum viverra, odio sapien tempor arcu, et accumsan libero lacus ut ex. Nullam placerat fermentum justo, a tempus risus facilisis vitae. Etiam fringilla, ante in dictum finibus, elit ligula mattis diam, et scelerisque libero metus nec ligula. Nulla nec leo dictum nulla ultrices pulvinar. Fusce porta pretium dui, nec tempor enim. Proin ut sagittis est. Suspendisse vel nunc et nulla pellentesque faucibus hendrerit eu elit.`}
             </div>}
           {children != null && children}
-        </Dialog>}
-    </PathContext.Provider>
+        </Dialog2>}
+    </SubpathProvider>
     <div className="p-6 aspect-square bg-contrast rounded-xl flex flex-col">
       <div className="text-6xl">
         {title}

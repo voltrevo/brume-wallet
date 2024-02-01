@@ -5,10 +5,10 @@ import { Outline } from "@/libs/icons/icons";
 import { Peanut } from "@/libs/peanut";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
-import { PathContext, usePathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
+import { SubpathProvider, usePathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
@@ -23,8 +23,7 @@ import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/dat
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext2 } from "../../../data";
 import { PriceResolver } from "../../../page";
-import { WalletTransactionScreen } from "../../eth_sendTransaction";
-import { TransactionCard } from "../../eth_sendTransaction/value";
+import { TransactionCard, WalletTransactionDialog } from "../../eth_sendTransaction";
 
 export function WalletPeanutSendScreenNativeValue(props: {}) {
   const path = usePathContext().unwrap()
@@ -318,12 +317,12 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const onLinkCopy = useCopy(maybeTriedLink?.ok().inner)
 
   return <>
-    <PathContext.Provider value={subpath}>
+    <SubpathProvider>
       {subpath.url.pathname === "/eth_sendTransaction" &&
-        <Dialog close={onClose}>
-          <WalletTransactionScreen />
-        </Dialog>}
-    </PathContext.Provider>
+        <Dialog2>
+          <WalletTransactionDialog />
+        </Dialog2>}
+    </SubpathProvider>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}
