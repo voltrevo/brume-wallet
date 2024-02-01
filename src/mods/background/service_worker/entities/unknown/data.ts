@@ -68,8 +68,6 @@ export namespace BgTotal {
                 return Fixed.from(y.value).add(x)
               }, new Fixed(0n, 0))
 
-              console.log("data", data, "total", total)
-
               await Priced.schema(coin, storage).mutate(() => new Some(new Data(total)))
             }
 

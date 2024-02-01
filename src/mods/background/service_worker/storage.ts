@@ -1,8 +1,10 @@
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
-import { AesGcmCoder, AsyncJson, AsyncPipeBicoder, HmacEncoder, IDBStorage, RawState } from "@hazae41/glacier"
+import { AesGcmCoder, AsyncJson, AsyncPipeBicoder, Data, HmacEncoder, IDBStorage, RawState } from "@hazae41/glacier"
+import { None, Some } from "@hazae41/option"
 import { Pbdkf2Params } from "./entities/users/crypto"
 import { UserData } from "./entities/users/data"
+import { BgWallet } from "./entities/wallets/data"
 
 export interface UserStorageResult {
   readonly storage: IDBStorage
@@ -38,7 +40,39 @@ export async function createUserStorageOrThrow(user: UserData, password: string)
   const keySerializer = hasher
   const valueSerializer = new AsyncPipeBicoder<RawState, string, string>(AsyncJson, crypter)
 
-  const storage = IDBStorage.createOrThrow({ name: user.uuid, keySerializer, valueSerializer })
+  async function onUpgrade(e: IDBVersionChangeEvent) {
+    if (e.newVersion === 2) {
+      const walletsState = await BgWallet.All.schema(storage).state
+      const [walletsData = []] = [walletsState.data?.get()]
+
+      for (const walletRef of walletsData) {
+        const walletState = await BgWallet.schema(walletRef.uuid, storage).state
+        const walletData = walletState.data?.get()
+
+        if (walletData == null)
+          continue
+
+        await BgWallet.All.ByAddress.schema(walletData.address, storage).mutate(s => {
+          const current = s.real?.current
+
+          if (current == null)
+            return new Some(new Data([walletRef]))
+          if (current.isErr())
+            return new None()
+
+          return new Some(current.mapSync(d => [...d, walletRef]))
+        })
+      }
+    }
+  }
+
+  const storage = IDBStorage.createOrThrow({
+    name: user.uuid,
+    version: 2,
+    keySerializer,
+    valueSerializer,
+    onUpgrade
+  })
 
   return { storage, hasher, crypter }
 }

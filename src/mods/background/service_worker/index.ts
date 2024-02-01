@@ -1097,7 +1097,9 @@ export class Global {
       const stored = await this.storage.getOrThrow(cacheKey)
       core.storeds.set(cacheKey, stored)
       core.unstoreds.delete(cacheKey)
-      await core.onState.emit(cacheKey, [])
+
+      await core.onState.emit("*", [cacheKey])
+      await core.onState.emit(cacheKey, [cacheKey])
 
       return new Ok(stored)
     })
@@ -1118,7 +1120,9 @@ export class Global {
 
       core.storeds.set(cacheKey, stored)
       core.unstoreds.delete(cacheKey)
-      await core.onState.emit(cacheKey, [])
+
+      await core.onState.emit("*", [cacheKey])
+      await core.onState.emit(cacheKey, [cacheKey])
 
       return new Ok(stored)
     })
@@ -1138,7 +1142,9 @@ export class Global {
 
     core.storeds.set(cacheKey, rawState)
     core.unstoreds.delete(cacheKey)
-    await core.onState.emit(cacheKey, [])
+
+    await core.onState.emit("*", [cacheKey])
+    await core.onState.emit(cacheKey, [cacheKey])
 
     return Ok.void()
   }

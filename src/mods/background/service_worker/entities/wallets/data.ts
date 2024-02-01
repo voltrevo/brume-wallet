@@ -171,8 +171,6 @@ export namespace BgWallet {
 
           const [currentData = []] = [current?.data?.get()]
 
-          console.log("walletsByAddress", account, currentData)
-
           await BgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutate(s => {
             const current = s.current
 

@@ -75,7 +75,9 @@ export class GlobalStorage implements Storage {
 
         core.storeds.set(cacheKey, stored)
         core.unstoreds.delete(cacheKey)
-        await core.onState.emit(cacheKey, [])
+
+        await core.onState.emit("*", [cacheKey])
+        await core.onState.emit(cacheKey, [cacheKey])
 
         return new Some(Ok.void())
       })
