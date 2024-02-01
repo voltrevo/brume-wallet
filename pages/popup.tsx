@@ -22,7 +22,6 @@ import { WalletCreatorMenu } from "@/mods/foreground/entities/wallets/all/create
 import { SelectableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
 import { UserRejectedError } from "@/mods/foreground/errors/errors";
-import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { usePathContext } from "@/mods/foreground/router/path/context";
@@ -56,14 +55,7 @@ export function Ready() {
       .then(r => r.unwrap().unwrap())
   }, [background])
 
-  return <>
-    <div className="grow w-full flex flex-col overflow-y-scroll">
-      <div className="grow w-full m-auto max-w-3xl flex flex-col">
-        <Router />
-      </div>
-    </div>
-    <Bottom />
-  </>
+  return <Router />
 }
 
 export function TransactPage() {

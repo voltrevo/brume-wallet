@@ -2,7 +2,6 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { UserData } from "@/mods/background/service_worker/entities/users/data";
 import { Nullable, Option } from "@hazae41/option";
 import { createContext, useContext } from "react";
-import { usePathContext } from "../../router/path/context";
 import { LandingPage } from "./all/page";
 import { useCurrentUser, useUser } from "./data";
 
@@ -13,7 +12,6 @@ export function useUserContext() {
 }
 
 export function UserGuard(props: ChildrenProps) {
-  const path = usePathContext().unwrap()
   const { children } = props
 
   const currentUserQuery = useCurrentUser()
@@ -21,9 +19,6 @@ export function UserGuard(props: ChildrenProps) {
 
   const userQuery = useUser(maybeCurrentUser?.uuid)
   const maybeUser = userQuery.data?.get()
-
-  if (path.url.pathname === "/")
-    return <LandingPage />
 
   if (maybeCurrentUser == null)
     return <LandingPage />

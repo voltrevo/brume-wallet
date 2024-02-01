@@ -1,6 +1,4 @@
 import { useBackgroundContext } from "@/mods/foreground/background/context";
-import { UserGuard } from "@/mods/foreground/entities/users/context";
-import { Bottom } from "@/mods/foreground/overlay/bottom";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Router } from "@/mods/foreground/router/router";
@@ -38,14 +36,7 @@ export default function Action() {
   return <main id="main" className="grow w-full flex flex-col overflow-hidden">
     <NavBar />
     <Overlay>
-      <UserGuard>
-        <div className="grow w-full flex flex-col overflow-y-scroll">
-          <div className="grow w-full m-auto max-w-3xl flex flex-col">
-            <Router />
-          </div>
-        </div>
-        <Bottom />
-      </UserGuard>
+      <Router />
     </Overlay>
-  </main>
+  </main >
 }
