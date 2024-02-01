@@ -75,9 +75,7 @@ export function LandingPage() {
           <div className="flex items-center">
             {currentUserLoading &&
               <SmallShrinkableOppositeAnchor
-                onKeyDown={users.onKeyDown}
-                onClick={users.onClick}
-                href={users.href}>
+                aria-disabled>
                 <Loading className="size-5" />
                 Loading
               </SmallShrinkableOppositeAnchor>}
