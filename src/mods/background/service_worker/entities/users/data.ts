@@ -100,18 +100,18 @@ export namespace BgUser {
 
   export function schema(uuid: string, storage: IDBStorage) {
     const indexer = async (states: States<Data, Fail>) => {
-      const { current, previous = current } = states
+      const { current, previous } = states
 
-      const previousData = previous.real?.data
-      const currentData = current.real?.data
+      const previousData = previous?.real?.current.ok()?.get()
+      const currentData = current.real?.current.ok()?.get()
 
       await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
-        if (previousData?.inner.uuid === currentData?.inner.uuid)
+        if (previousData?.uuid === currentData?.uuid)
           return d
         if (previousData != null)
-          d = d.mapSync(p => p.filter(x => x.uuid !== previousData.inner.uuid))
+          d = d.mapSync(p => p.filter(x => x.uuid !== previousData.uuid))
         if (currentData != null)
-          d = d.mapSync(p => [...p, UserRef.from(currentData.inner)])
+          d = d.mapSync(p => [...p, UserRef.from(currentData)])
         return d
       }))
     }

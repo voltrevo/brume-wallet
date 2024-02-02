@@ -59,20 +59,23 @@ export namespace FgToken {
             return
 
           const indexer = async (states: States<Data, Fail>) => {
-            const { current } = states
+            const { current, previous } = states
+
+            const previousData = previous?.real?.current.ok()?.get()
+            const currentData = current.real?.current.ok()?.get()
 
             const key = `${context.chain.chainId}`
-            const [data = new Fixed(0n, 0)] = [current?.data?.get()]
+            const [value = new Fixed(0n, 0)] = [currentData]
 
             await FgToken.Balance.schema(account, coin, storage)?.mutate(s => {
               const { current } = s
 
               if (current == null)
-                return new Some(new Data({ [key]: data }))
+                return new Some(new Data({ [key]: value }))
               if (current.isErr())
                 return new None()
 
-              return new Some(current.mapSync(c => ({ ...c, [key]: data })))
+              return new Some(current.mapSync(c => ({ ...c, [key]: value })))
             })
           }
 
@@ -164,20 +167,23 @@ export namespace FgToken {
             return
 
           const indexer = async (states: States<Data, Fail>) => {
-            const { current } = states
+            const { current, previous } = states
+
+            const previousData = previous?.real?.current.ok()?.get()
+            const currentData = current.real?.current.ok()?.get()
 
             const key = `${context.chain.chainId}/${token.address}`
-            const [data = new Fixed(0n, 0)] = [current?.data?.get()]
+            const [value = new Fixed(0n, 0)] = [currentData]
 
             await FgToken.Balance.schema(account, coin, storage)?.mutate(s => {
               const { current } = s
 
               if (current == null)
-                return new Some(new Data({ [key]: data }))
+                return new Some(new Data({ [key]: value }))
               if (current.isErr())
                 return new None()
 
-              return new Some(current.mapSync(c => ({ ...c, [key]: data })))
+              return new Some(current.mapSync(c => ({ ...c, [key]: value })))
             })
           }
 
@@ -297,8 +303,8 @@ export namespace FgToken {
       const indexer = async (states: States<Data, Fail>) => {
         const { current, previous } = states
 
-        const previousData = previous?.real?.data?.get()
-        const currentData = current.real?.data?.get()
+        const previousData = previous?.real?.current.ok()?.get()
+        const currentData = current.real?.current.ok()?.get()
 
         if (previousData?.uuid === currentData?.uuid)
           return

@@ -243,11 +243,14 @@ export namespace FgTotal {
 
           export function schema(coin: "usd", storage: UserStorage) {
             const indexer = async (states: States<Data, Fail>) => {
-              const { current } = states
+              const { current, previous } = states
 
-              const [currentData = {}] = [current?.data?.get()]
+              const previousData = previous?.real?.current.ok()?.get()
+              const currentData = current.real?.current.ok()?.get()
 
-              const total = Object.values(currentData).reduce<Fixed>((x, y) => {
+              const [record = {}] = [currentData]
+
+              const total = Object.values(record).reduce<Fixed>((x, y) => {
                 if (y.count === 0)
                   return x
 
@@ -273,16 +276,19 @@ export namespace FgTotal {
             return
 
           const indexer = async (states: States<Data, Fail>) => {
-            const { current } = states
+            const { current, previous } = states
 
-            const [currentData = new Fixed(0n, 0)] = [current?.data?.get()]
+            const previousData = previous?.real?.current.ok()?.get()
+            const currentData = current.real?.current.ok()?.get()
+
+            const [value = new Fixed(0n, 0)] = [currentData]
 
             await Record.schema(coin, storage)?.mutate(s => {
               const { current } = s
 
               const [{ count = 0 } = {}] = [current?.ok().get()?.[account]]
 
-              const inner = { count, value: currentData }
+              const inner = { count, value }
 
               if (current == null)
                 return new Some(new Data({ [account]: inner }))

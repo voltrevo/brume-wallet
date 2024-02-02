@@ -40,8 +40,8 @@ export namespace FgTokenSettings {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.data?.get()
-      const currentData = current.real?.data?.get()
+      const previousData = previous?.real?.current.ok()?.get()
+      const currentData = current.real?.current.ok()?.get()
 
       if (previousData?.uuid === currentData?.uuid)
         return

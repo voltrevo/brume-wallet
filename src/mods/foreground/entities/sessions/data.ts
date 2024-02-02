@@ -97,61 +97,61 @@ export namespace FgSession {
       return
 
     const indexer = async (states: States<Data, Fail>) => {
-      const { current, previous = current } = states
+      const { current, previous } = states
 
-      const previousData = previous.real?.data
-      const currentData = current.real?.data
+      const previousData = previous?.real?.current.ok()?.get()
+      const currentData = current.real?.current.ok()?.get()
 
       if (previousData != null) {
-        if (previousData.inner.persist) {
-          const sessionByOrigin = ByOrigin.schema(previousData.inner.origin, storage)
+        if (previousData.persist) {
+          const sessionByOrigin = ByOrigin.schema(previousData.origin, storage)
           await sessionByOrigin.delete()
         }
 
-        const sessionsQuery = previousData.inner.persist
+        const sessionsQuery = previousData.persist
           ? All.Persistent.schema(storage)
           : All.Temporary.schema(storage)
 
         await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
-          return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
+          return d.mapSync(p => p.filter(x => x.id !== previousData.id))
         }))
 
-        const previousWallets = new Set(previousData.inner.wallets)
+        const previousWallets = new Set(previousData.wallets)
 
         for (const wallet of previousWallets) {
-          const sessionsByWalletQuery = previousData.inner.persist
+          const sessionsByWalletQuery = previousData.persist
             ? All.Persistent.ByWallet.schema(wallet.uuid, storage)
             : All.Temporary.ByWallet.schema(wallet.uuid, storage)
 
           await sessionsByWalletQuery?.mutate(Mutators.mapData((d = new Data([])) => {
-            return d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
+            return d.mapSync(p => p.filter(x => x.id !== previousData.id))
           }))
         }
       }
 
       if (currentData != null) {
-        if (currentData.inner.persist) {
-          const sessionByOrigin = ByOrigin.schema(currentData.inner.origin, storage)
-          await sessionByOrigin.mutate(Mutators.data<ByOrigin.Data, ByOrigin.Fail>(SessionRef.from(currentData.inner)))
+        if (currentData.persist) {
+          const sessionByOrigin = ByOrigin.schema(currentData.origin, storage)
+          await sessionByOrigin.mutate(Mutators.data<ByOrigin.Data, ByOrigin.Fail>(SessionRef.from(currentData)))
         }
 
-        const sessionsQuery = currentData.inner.persist
+        const sessionsQuery = currentData.persist
           ? All.Persistent.schema(storage)
           : All.Temporary.schema(storage)
 
         await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
-          return d = d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
+          return d = d.mapSync(p => [...p, SessionRef.from(currentData)])
         }))
 
-        const currentWallets = new Set(currentData.inner.wallets)
+        const currentWallets = new Set(currentData.wallets)
 
         for (const wallet of currentWallets) {
-          const sessionsByWalletQuery = currentData.inner.persist
+          const sessionsByWalletQuery = currentData.persist
             ? All.Persistent.ByWallet.schema(wallet.uuid, storage)
             : All.Temporary.ByWallet.schema(wallet.uuid, storage)
 
           await sessionsByWalletQuery?.mutate(Mutators.mapData((d = new Data([])) => {
-            return d.mapSync(p => [...p, SessionRef.from(currentData.inner)])
+            return d.mapSync(p => [...p, SessionRef.from(currentData)])
           }))
         }
       }

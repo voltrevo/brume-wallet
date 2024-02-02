@@ -137,20 +137,23 @@ export namespace BgToken {
 
         export function schema(account: ZeroHexString, coin: "usd", context: BgEthereumContext, storage: IDBStorage) {
           const indexer = async (states: States<Data, Fail>) => {
-            const { current } = states
+            const { current, previous } = states
+
+            const previousData = previous?.real?.current.ok()?.get()
+            const currentData = current.real?.current.ok()?.get()
 
             const key = `${context.chain.chainId}`
-            const [data = new Fixed(0n, 0)] = [current?.data?.get()]
+            const [value = new Fixed(0n, 0)] = [currentData]
 
             await BgToken.Balance.schema(account, coin, storage)?.mutate(s => {
               const { current } = s
 
               if (current == null)
-                return new Some(new Data({ [key]: data }))
+                return new Some(new Data({ [key]: value }))
               if (current.isErr())
                 return new None()
 
-              return new Some(current.mapSync(c => ({ ...c, [key]: data })))
+              return new Some(current.mapSync(c => ({ ...c, [key]: value })))
             })
           }
 
@@ -263,20 +266,23 @@ export namespace BgToken {
 
         export function schema(account: ZeroHexString, token: ContractTokenData, coin: "usd", context: BgEthereumContext, storage: IDBStorage) {
           const indexer = async (states: States<Data, Fail>) => {
-            const { current } = states
+            const { current, previous } = states
+
+            const previousData = previous?.real?.current.ok()?.get()
+            const currentData = current.real?.current.ok()?.get()
 
             const key = `${context.chain.chainId}/${token.address}`
-            const [data = new Fixed(0n, 0)] = [current?.data?.get()]
+            const [value = new Fixed(0n, 0)] = [currentData]
 
             await BgToken.Balance.schema(account, coin, storage)?.mutate(s => {
               const { current } = s
 
               if (current == null)
-                return new Some(new Data({ [key]: data }))
+                return new Some(new Data({ [key]: value }))
               if (current.isErr())
                 return new None()
 
-              return new Some(current.mapSync(c => ({ ...c, [key]: data })))
+              return new Some(current.mapSync(c => ({ ...c, [key]: value })))
             })
           }
 
@@ -379,8 +385,8 @@ export namespace BgToken {
       const indexer = async (states: States<Data, Fail>) => {
         const { current, previous } = states
 
-        const previousData = previous?.real?.data?.get()
-        const currentData = current.real?.data?.get()
+        const previousData = previous?.real?.current.ok()?.get()
+        const currentData = current.real?.current.ok()?.get()
 
         if (previousData?.uuid === currentData?.uuid)
           return

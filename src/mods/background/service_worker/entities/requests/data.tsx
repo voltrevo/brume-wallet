@@ -53,18 +53,18 @@ export namespace BgAppRequest {
 
   export function schema(id: string) {
     const indexer = async (states: States<Data, Fail>) => {
-      const { current, previous = current } = states
+      const { current, previous } = states
 
-      const previousData = previous.real?.data
-      const currentData = current.real?.data
+      const previousData = previous?.real?.current.ok()?.get()
+      const currentData = current.real?.current.ok()?.get()
 
       await BgAppRequest.All.schema().mutate(Mutators.mapData((d = new Data([])) => {
-        if (previousData?.inner.id === currentData?.inner.id)
+        if (previousData?.id === currentData?.id)
           return d
         if (previousData != null)
-          d = d.mapSync(p => p.filter(x => x.id !== previousData.inner.id))
+          d = d.mapSync(p => p.filter(x => x.id !== previousData.id))
         if (currentData != null)
-          d = d.mapSync(p => [...p, AppRequestRef.from(currentData.inner)])
+          d = d.mapSync(p => [...p, AppRequestRef.from(currentData)])
         return d
       }))
     }

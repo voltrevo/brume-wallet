@@ -167,16 +167,19 @@ export namespace BgWallet {
 
       export function schema(account: ZeroHexString, storage: IDBStorage) {
         const indexer = async (states: States<Data, Fail>) => {
-          const { current } = states
+          const { current, previous } = states
 
-          const [currentData = []] = [current?.data?.get()]
+          const previousData = previous?.real?.current.ok()?.get()
+          const currentData = current.real?.current.ok()?.get()
+
+          const [array = []] = [currentData]
 
           await BgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutate(s => {
             const current = s.current
 
             const [{ value = new Fixed(0n, 0) } = {}] = [current?.ok().get()?.[account]]
 
-            const inner = { value, count: currentData.length }
+            const inner = { value, count: array.length }
 
             if (current == null)
               return new Some(new Data({ [account]: inner }))
@@ -222,8 +225,8 @@ export namespace BgWallet {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.data?.inner
-      const currentData = current.data?.inner
+      const previousData = previous?.real?.current.ok()?.get()
+      const currentData = current.real?.current.ok()?.get()
 
       if (previousData != null && (previousData.uuid !== currentData?.uuid || previousData.trashed !== currentData?.trashed) && !previousData.trashed) {
         await All.schema(storage).mutate(s => {
