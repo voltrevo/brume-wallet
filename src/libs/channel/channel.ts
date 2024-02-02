@@ -5,6 +5,7 @@ import { CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plum
 import { Err, Ok, Result } from "@hazae41/result"
 import { BrowserError } from "../browser/browser"
 import { Console } from "../console"
+import { AbortSignals } from "../signals/signals"
 
 export type Port =
   | WebsitePort
@@ -111,6 +112,10 @@ export class WebsitePort {
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
+    return Result.runAndDoubleWrap(() => this.requestOrThrow<T>(init))
+  }
+
+  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = AbortSignals.never()): Promise<RpcResponse<T>> {
     const request = this.counter.prepare(init)
 
     if (request.id !== "ping")
@@ -118,14 +123,14 @@ export class WebsitePort {
 
     this.port.postMessage(JSON.stringify(request))
 
-    return Plume.tryWaitOrCloseOrError(this.events, "response", (future: Future<Ok<RpcResponse<T>>>, init: RpcResponseInit<any>) => {
+    return Plume.waitOrCloseOrErrorOrSignal(this.events, "response", (future: Future<RpcResponse<T>>, init: RpcResponseInit<any>) => {
       if (init.id !== request.id)
         return new None()
 
       const response = RpcResponse.from<T>(init)
-      future.resolve(new Ok(response))
+      future.resolve(response)
       return new Some(undefined)
-    })
+    }, signal)
   }
 
   async tryPingOrSignal<T>(signal: AbortSignal): Promise<Result<RpcResponse<T>, Error>> {
@@ -234,24 +239,24 @@ export class ExtensionPort {
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return await Result.unthrow(async t => {
-      const request = this.counter.prepare(init)
+    return Result.runAndDoubleWrap(() => this.requestOrThrow<T>(init))
+  }
 
-      if (request.id !== "ping")
-        Console.debug(this.name, "<-", request)
+  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = AbortSignals.never()): Promise<RpcResponse<T>> {
+    const request = this.counter.prepare(init)
 
-      BrowserError.tryRunSync(() => {
-        this.port.postMessage(JSON.stringify(request))
-      }).throw(t)
+    if (request.id !== "ping")
+      Console.debug(this.name, "<-", request)
 
-      return Plume.tryWaitOrCloseOrError(this.events, "response", (future: Future<Ok<RpcResponse<T>>>, init: RpcResponseInit<any>) => {
-        if (init.id !== request.id)
-          return new None()
-        const response = RpcResponse.from<T>(init)
-        future.resolve(new Ok(response))
-        return new Some(undefined)
-      })
-    })
+    BrowserError.runOrThrowSync(() => this.port.postMessage(JSON.stringify(request)))
+
+    return Plume.waitOrCloseOrErrorOrSignal(this.events, "response", (future: Future<RpcResponse<T>>, init: RpcResponseInit<any>) => {
+      if (init.id !== request.id)
+        return new None()
+      const response = RpcResponse.from<T>(init)
+      future.resolve(response)
+      return new Some(undefined)
+    }, signal)
   }
 
 }

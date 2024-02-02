@@ -7,7 +7,7 @@ import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from 
 import { None, Some } from "@hazae41/option"
 import { Pool, Retry, tryLoop } from "@hazae41/piscine"
 import { Plume, SuperEventTarget } from "@hazae41/plume"
-import { Err, Ok, Result } from "@hazae41/result"
+import { Ok, Result } from "@hazae41/result"
 
 export type Background =
   | WebsiteBackground
@@ -62,7 +62,7 @@ export class WebsiteBackground {
 
 }
 
-export async function tryGetServiceWorker(background: WebsiteBackground) {
+export async function getServiceWorkerOrThrow(background: WebsiteBackground): Promise<ServiceWorkerRegistration> {
   /**
    * Safari may kill the service worker and not restart it
    * This will manual start a new one
@@ -113,20 +113,20 @@ export async function tryGetServiceWorker(background: WebsiteBackground) {
     const { active, installing } = registration
 
     if (active != null)
-      return new Ok(registration)
+      return registration
     if (installing == null)
-      return new Err(new Error(`Registration installing is null`))
+      throw new Error(`registration.installing is null`)
 
-    const future = new Future<Result<ServiceWorkerRegistration, Error>>()
+    const future = new Future<ServiceWorkerRegistration>()
 
     const onStateChange = () => {
       if (installing.state !== "activated")
         return
-      future.resolve(new Ok(registration))
+      future.resolve(registration)
     }
 
-    const onError = () => {
-      future.resolve(new Err(new Error()))
+    const onError = (e: ErrorEvent) => {
+      future.reject(e.error)
     }
 
     try {
@@ -146,10 +146,14 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
     return await Result.unthrow(async t => {
       const { pool, index } = params
 
-      const registration = await tryGetServiceWorker(background).then(r => r.throw(t))
+      console.log(`Connecting to service worker...`)
+
+      const start = Date.now()
+
+      const registration = await getServiceWorkerOrThrow(background)
 
       if (registration.active == null)
-        return new Err(new Error(`Active is null`))
+        throw new Error(`registration.active is null`)
 
       const raw = new MessageChannel()
 
@@ -225,6 +229,8 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
         router.inner.events.off("response", onResponse)
         router.inner.events.off("close", onClose)
       }
+
+      console.log(`Connected to service worker in ${Date.now() - start}ms`)
 
       return new Ok(new Disposer(inner, onEntryClean))
     })

@@ -1,7 +1,6 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { RawState, Storage, core } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
-import { Mutex } from "@hazae41/mutex";
 import { None, Nullable, Option, Some } from "@hazae41/option";
 import { Ok } from "@hazae41/result";
 import { createContext, useContext, useMemo } from "react";
@@ -31,7 +30,7 @@ export function UserStorageProvider(props: ChildrenProps) {
 export class UserStorage implements Storage {
   readonly async: true = true
 
-  readonly keys = new Mutex(new Set<string>())
+  readonly keys = new Set<string>()
 
   constructor(
     readonly background: Background
@@ -39,14 +38,32 @@ export class UserStorage implements Storage {
     background.ports.events.on("created", e => {
       if (e.isErr())
         return new None()
-      for (const key of this.keys.inner)
-        this.#subscribeOrThrow(key)
+      for (const key of this.keys)
+        this.getOrThrow(key).catch(console.warn)
       return new None()
     })
   }
 
   async getOrThrow(cacheKey: string) {
-    await this.#subscribeOrThrow(cacheKey)
+    this.keys.add(cacheKey)
+
+    this.background.events.on("request", async (request) => {
+      if (request.method !== "brume_update")
+        return new None()
+
+      const [cacheKey2, stored] = (request as RpcRequestPreinit<[string, Nullable<RawState>]>).params
+
+      if (cacheKey2 !== cacheKey)
+        return new None()
+
+      core.storeds.set(cacheKey, stored)
+      core.unstoreds.delete(cacheKey)
+
+      await core.onState.emit("*", [cacheKey])
+      await core.onState.emit(cacheKey, [cacheKey])
+
+      return new Some(Ok.void())
+    })
 
     return await this.background.tryRequest<RawState>({
       method: "brume_get_user",
@@ -59,38 +76,6 @@ export class UserStorage implements Storage {
       method: "brume_set_user",
       params: [cacheKey, value]
     }).then(r => r.unwrap().unwrap())
-  }
-
-  async #subscribeOrThrow(cacheKey: string): Promise<void> {
-    return this.keys.lock(async (keys) => {
-      if (keys.has(cacheKey))
-        return
-
-      await this.background.tryRequest<void>({
-        method: "brume_subscribe",
-        params: [cacheKey]
-      }).then(r => r.unwrap().unwrap())
-
-      this.background.events.on("request", async (request) => {
-        if (request.method !== "brume_update")
-          return new None()
-
-        const [cacheKey2, stored] = (request as RpcRequestPreinit<[string, Nullable<RawState>]>).params
-
-        if (cacheKey2 !== cacheKey)
-          return new None()
-
-        core.storeds.set(cacheKey, stored)
-        core.unstoreds.delete(cacheKey)
-
-        await core.onState.emit("*", [cacheKey])
-        await core.onState.emit(cacheKey, [cacheKey])
-
-        return new Some(Ok.void())
-      })
-
-      keys.add(cacheKey)
-    })
   }
 
 }

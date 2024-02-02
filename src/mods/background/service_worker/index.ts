@@ -873,18 +873,14 @@ export class Global {
       return new Some(await this.brume_createSeed(foreground, request))
     if (request.method === "brume_createWallet")
       return new Some(await this.brume_createWallet(foreground, request))
-    // if (request.method === "brume_removeWallet")
-    //   return new Some(await this.brume_removeWallet(foreground, request))
     if (request.method === "brume_disconnect")
       return new Some(await this.brume_disconnect(foreground, request))
     if (request.method === "brume_get_global")
-      return new Some(await this.brume_get_global(request))
+      return new Some(await this.brume_get_global(foreground, request))
     if (request.method === "brume_get_user")
-      return new Some(await this.brume_get_user(request))
+      return new Some(await this.brume_get_user(foreground, request))
     if (request.method === "brume_set_user")
       return new Some(await this.brume_set_user(request))
-    if (request.method === "brume_subscribe")
-      return new Some(await this.brume_subscribe(foreground, request))
     if (request.method === "brume_eth_fetch")
       return new Some(await this.brume_eth_fetch(foreground, request))
     if (request.method === "brume_eth_custom_fetch")
@@ -1080,14 +1076,14 @@ export class Global {
     })
   }
 
-  async brume_get_global(request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
+  async brume_get_global(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
     const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
-    return await core.getOrCreateMutex(cacheKey).lock(async () => {
+    const state = await core.getOrCreateMutex(cacheKey).lock(async () => {
       const cached = core.storeds.get(cacheKey)
 
       if (cached != null)
-        return new Ok(cached)
+        return cached
 
       const stored = await this.storage.getOrThrow(cacheKey)
       core.storeds.set(cacheKey, stored)
@@ -1096,20 +1092,40 @@ export class Global {
       await core.onState.emit("*", [cacheKey])
       await core.onState.emit(cacheKey, [cacheKey])
 
-      return new Ok(stored)
+      return stored
     })
+
+    const onState = async () => {
+      const stored = core.storeds.get(cacheKey)
+
+      foreground.requestOrThrow<void>({
+        method: "brume_update",
+        params: [cacheKey, stored]
+      }).then(r => r.unwrap()).catch(console.warn)
+
+      return new None()
+    }
+
+    core.onState.on(cacheKey, onState, { passive: true })
+
+    foreground.events.on("close", () => {
+      core.onState.off(cacheKey, onState)
+      return new None()
+    })
+
+    return new Ok(state)
   }
 
-  async brume_get_user(request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
+  async brume_get_user(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
     const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
     const { storage } = Option.unwrap(this.#user)
 
-    return await core.getOrCreateMutex(cacheKey).lock(async () => {
+    const state = await core.getOrCreateMutex(cacheKey).lock(async () => {
       const cached = core.storeds.get(cacheKey)
 
       if (cached != null)
-        return new Ok(cached)
+        return cached
 
       const stored = await storage.getOrThrow(cacheKey)
 
@@ -1119,8 +1135,28 @@ export class Global {
       await core.onState.emit("*", [cacheKey])
       await core.onState.emit(cacheKey, [cacheKey])
 
-      return new Ok(stored)
+      return stored
     })
+
+    const onState = async () => {
+      const stored = core.storeds.get(cacheKey)
+
+      foreground.requestOrThrow<void>({
+        method: "brume_update",
+        params: [cacheKey, stored]
+      }).then(r => r.unwrap()).catch(console.warn)
+
+      return new None()
+    }
+
+    core.onState.on(cacheKey, onState, { passive: true })
+
+    foreground.events.on("close", () => {
+      core.onState.off(cacheKey, onState)
+      return new None()
+    })
+
+    return new Ok(state)
   }
 
   async brume_set_user(request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
@@ -1140,30 +1176,6 @@ export class Global {
 
     await core.onState.emit("*", [cacheKey])
     await core.onState.emit(cacheKey, [cacheKey])
-
-    return Ok.void()
-  }
-
-  async brume_subscribe(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
-
-    const onState = async () => {
-      const stored = core.storeds.get(cacheKey)
-
-      await foreground.tryRequest({
-        method: "brume_update",
-        params: [cacheKey, stored]
-      }).then(r => r.ignore())
-
-      return new None()
-    }
-
-    core.onState.on(cacheKey, onState, { passive: true })
-
-    foreground.events.on("close", () => {
-      core.onState.off(cacheKey, onState)
-      return new None()
-    })
 
     return Ok.void()
   }
