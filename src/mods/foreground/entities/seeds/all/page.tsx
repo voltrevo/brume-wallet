@@ -1,24 +1,30 @@
 import { Outline } from "@/libs/icons/icons"
-import { useBooleanHandle } from "@/libs/react/handles/boolean"
-import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
-import { Button } from "@/libs/ui/button"
-import { Dialog } from "@/libs/ui/dialog/dialog"
+import { Dialog2 } from "@/libs/ui/dialog/dialog"
+import { Menu } from "@/libs/ui2/menu/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
-import { Paths } from "@/mods/foreground/router/path/context"
+import { Paths, SubpathProvider, usePathContext, useSubpath } from "@/mods/foreground/router/path/context"
 import { useCallback } from "react"
+import { useGenius } from "../../users/all/page"
+import { PaddedRoundedShrinkableNakedAnchor } from "../../wallets/actions/send"
+import { NewRectangularAnchorCard } from "../../wallets/all/page"
 import { SeedDataCard } from "../card"
 import { SeedDataProvider, useSeedDataContext } from "../context"
 import { useSeeds } from "../data"
-import { SeedCreatorDialog } from "./create"
+import { SeedCreatorMenu } from "./create"
+import { LedgerSeedCreatorDialog } from "./create/ledger"
+import { StandaloneSeedCreatorDialog } from "./create/standalone"
 
 export function SeedsPage() {
+  const path = usePathContext().unwrap()
+
   const seedsQuery = useSeeds()
   const maybeSeeds = seedsQuery.data?.get()
 
-  const creator = useBooleanHandle(false)
+  const subpath = useSubpath(path)
+  const creator = useGenius(subpath, "/create")
 
   const onSeedClick = useCallback((seed: Seed) => {
     Paths.go(`/seed/${seed.uuid}`)
@@ -28,18 +34,17 @@ export function SeedsPage() {
     <PageBody>
       <ClickableSeedGrid
         ok={onSeedClick}
-        create={creator.enable}
         maybeSeeds={maybeSeeds} />
     </PageBody>
 
   const Header = <>
     <UserPageHeader title="Seeds">
-      <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
-        onClick={creator.enable}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.PlusIcon className="size-5" />
-        </div>
-      </Button.Base>
+      <PaddedRoundedShrinkableNakedAnchor
+        onKeyDown={creator.onKeyDown}
+        onClick={creator.onClick}
+        href={creator.href}>
+        <Outline.PlusIcon className="size-5" />
+      </PaddedRoundedShrinkableNakedAnchor>
     </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">
@@ -48,18 +53,27 @@ export function SeedsPage() {
     </div>
   </>
   return <Page>
-    {creator.current &&
-      <Dialog
-        close={creator.disable}>
-        <SeedCreatorDialog />
-      </Dialog>}
+    <SubpathProvider>
+      {subpath.url.pathname === "/create" &&
+        <Menu>
+          <SeedCreatorMenu />
+        </Menu>}
+      {subpath.url.pathname === "/create/mnemonic" &&
+        <Dialog2>
+          <StandaloneSeedCreatorDialog />
+        </Dialog2>}
+      {subpath.url.pathname === "/create/hardware" &&
+        <Dialog2>
+          <LedgerSeedCreatorDialog />
+        </Dialog2>}
+    </SubpathProvider>
     {Header}
     {Body}
   </Page>
 }
 
-export function ClickableSeedGrid(props: OkProps<Seed> & CreateProps & { maybeSeeds?: Seed[] }) {
-  const { ok, create, maybeSeeds } = props
+export function ClickableSeedGrid(props: OkProps<Seed> & { maybeSeeds?: Seed[] } & { disableNew?: boolean }) {
+  const { ok, maybeSeeds, disableNew } = props
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {maybeSeeds?.map(seed =>
@@ -68,7 +82,10 @@ export function ClickableSeedGrid(props: OkProps<Seed> & CreateProps & { maybeSe
         uuid={seed.uuid}>
         <ClickableSeedDataCard ok={ok} />
       </SeedDataProvider>)}
-    <NewSeedCard ok={create} />
+    {!disableNew &&
+      <NewRectangularAnchorCard>
+        New seed
+      </NewRectangularAnchorCard>}
   </div>
 }
 
@@ -83,17 +100,5 @@ export function ClickableSeedDataCard(props: OkProps<Seed>) {
   return <button className="w-full hovered-or-clicked-or-focused:scale-105 !transition-transform"
     onClick={onClick}>
     <SeedDataCard />
-  </button>
-}
-
-export function NewSeedCard(props: OkProps<unknown>) {
-  const { ok } = props
-
-  return <button className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-clicked-or-focused:scale-105 !transition-transform"
-    onClick={ok}>
-    <Outline.PlusIcon className="size-5" />
-    <div className="font-medium">
-      New seed
-    </div>
   </button>
 }

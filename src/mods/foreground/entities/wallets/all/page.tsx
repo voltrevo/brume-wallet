@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { Outline } from "@/libs/icons/icons"
+import { ChildrenProps } from "@/libs/react/props/children"
 import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
 import { Dialog2 } from "@/libs/ui/dialog/dialog"
@@ -73,11 +74,11 @@ export function WalletsPage() {
         <Menu>
           <WalletCreatorMenu />
         </Menu>}
-      {subpath.url.pathname === "/standalone" &&
+      {subpath.url.pathname === "/create/standalone" &&
         <Dialog2>
           <StandaloneWalletCreatorDialog />
         </Dialog2>}
-      {subpath.url.pathname === "/readonly" &&
+      {subpath.url.pathname === "/create/readonly" &&
         <Dialog2>
           <ReadonlyWalletCreatorDialog />
         </Dialog2>}
@@ -98,7 +99,9 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet[
         <ClickableWalletDataCard ok={ok} />
       </WalletDataProvider>)}
     {!disableNew &&
-      <NewWalletAnchorCard />}
+      <NewRectangularAnchorCard>
+        New wallet
+      </NewRectangularAnchorCard>}
   </div>
 }
 
@@ -113,7 +116,9 @@ export function SelectableWalletGrid(props: OkProps<Wallet> & CreateProps & { wa
         index={selecteds.indexOf(wallet)}
         ok={ok} />)}
     {!disableNew &&
-      <NewWalletAnchorCard />}
+      <NewRectangularAnchorCard>
+        New wallet
+      </NewRectangularAnchorCard>}
   </div>
 }
 
@@ -152,8 +157,9 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
 
 }
 
-export function NewWalletAnchorCard(props: {}) {
+export function NewRectangularAnchorCard(props: ChildrenProps) {
   const path = usePathContext().unwrap()
+  const { children } = props
 
   const subpath = useSubpath(path)
   const creator = useGenius(subpath, "/create")
@@ -165,7 +171,7 @@ export function NewWalletAnchorCard(props: {}) {
     href={creator.href}>
     <Outline.PlusIcon className="size-5" />
     <div className="font-medium">
-      New wallet
+      {children}
     </div>
   </a>
 }

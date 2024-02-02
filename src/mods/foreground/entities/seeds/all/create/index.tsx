@@ -1,75 +1,43 @@
+import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
-import { Results } from "@/libs/results/results";
-import { Button } from "@/libs/ui/button";
-import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { usePathContext } from "@/mods/foreground/router/path/context";
-import { Ok, Result } from "@hazae41/result";
-import { useCallback, useState } from "react";
-import { LedgerSeedCreatorDialog } from "./ledger";
-import { StandaloneSeedCreatorDialog } from "./standalone";
+import { MouseEvent, useCallback } from "react";
+import { useGenius } from "../../../users/all/page";
+import { WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "../../../wallets/actions/send";
 
-export function SeedCreatorDialog(props: {}) {
-  const close = useCloseContext().unwrap()
-  const { url } = usePathContext().unwrap()
+export function SeedCreatorMenu(props: {}) {
+  const path = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
-  const [type, setType] = useState<"mnemonic" | "ledger">()
+  const mnemonic = useGenius(path, "/create/mnemonic")
+  const hardware = useGenius(path, "/create/hardware")
 
-  const onLedgerClick = useCallback(async () => {
-    return Result.unthrow<Result<void, Error>>(async t => {
-      if (location.pathname !== "/" && location.pathname !== "/index.html") {
-        await background.tryRequest({
-          method: "brume_open",
-          params: [url.pathname]
-        }).then(r => r.throw(t).throw(t))
+  const onHardwareClick = useCallback((e: MouseEvent) => Errors.runAndLogAndAlert(async () => {
+    if (location.pathname !== "/" && location.pathname !== "/index.html") {
+      await background.tryRequest({
+        method: "brume_open",
+        params: [location.pathname]
+      }).then(r => r.unwrap().unwrap())
 
-        return Ok.void()
-      }
+      return
+    }
 
-      setType("ledger")
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [url, background])
+    hardware.onClick(e)
+  }), [background, hardware])
 
-  const onMnemonicClick = useCallback(() => {
-    setType("mnemonic")
-  }, [])
-
-  const onClose = useCallback(() => {
-    setType(undefined)
-  }, [])
-
-  return <>
-    {type === "mnemonic" &&
-      <Dialog
-        close={onClose}>
-        <StandaloneSeedCreatorDialog />
-      </Dialog>}
-    {type === "ledger" &&
-      <Dialog
-        close={onClose}>
-        <LedgerSeedCreatorDialog />
-      </Dialog>}
-    <Dialog.Title>
-      New seed
-    </Dialog.Title>
-    <div className="h-4" />
-    <div className="w-full flex items-center gap-2">
-      <Button.Contrast className="flex-1 whitespace-nowrap p-4 rounded-xl"
-        onClick={onMnemonicClick}>
-        <div className={`${Button.Shrinker.className} flex-col`}>
-          <Outline.DocumentTextIcon className="size-6" />
-          <span>Mnemonic phrase</span>
-        </div>
-      </Button.Contrast>
-      <Button.Contrast className="flex-1 whitespace-nowrap p-4 rounded-xl"
-        onClick={onLedgerClick}>
-        <div className={`${Button.Shrinker.className} flex-col`}>
-          <Outline.SwatchIcon className="size-6" />
-          <span>Ledger</span>
-        </div>
-      </Button.Contrast>
-    </div>
-  </>
+  return <div className="flex flex-col text-left gap-2">
+    <WideShrinkableNakedMenuAnchor
+      onClick={mnemonic.onClick}
+      onKeyDown={mnemonic.onKeyDown}
+      href={mnemonic.href}>
+      <Outline.DocumentTextIcon className="size-4" />
+      Mnemonic
+    </WideShrinkableNakedMenuAnchor>
+    <WideShrinkableNakedMenuButton
+      onClick={onHardwareClick}>
+      <Outline.SwatchIcon className="size-4" />
+      Hardware
+    </WideShrinkableNakedMenuButton>
+  </div>
 }
