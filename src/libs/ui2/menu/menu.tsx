@@ -54,9 +54,14 @@ export function Menu(props: ChildrenProps & DarkProps) {
   /**
    * Smoothly close the dialog
    */
-  const hide = useCallback(() => {
+  const hide = useCallback((force?: boolean) => {
+    if (force) {
+      close()
+      return
+    }
+
     setVisible(false)
-  }, [])
+  }, [close])
 
   /**
    * Smoothly close the dialog on escape

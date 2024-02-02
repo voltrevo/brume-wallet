@@ -352,6 +352,10 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
 
   const onLinkCopy = useCopy(maybeTriedLink?.ok().inner)
 
+  const onClose = useCallback(() => {
+    close()
+  }, [close])
+
   return <>
     <SubpathProvider>
       {subpath.url.pathname === "/eth_sendTransaction" &&
@@ -537,7 +541,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       <div className="h-2" />
       <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton
-          onClick={close}>
+          onClick={onClose}>
           <Outline.CheckIcon className="size-5" />
           Close
         </WideShrinkableOppositeButton>

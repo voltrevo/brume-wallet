@@ -263,6 +263,10 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   const transactionQuery = useTransactionWithReceipt(maybeTrialData?.transactions[0].uuid, context)
   const maybeTransaction = transactionQuery.current?.ok().get()
 
+  const onClose = useCallback(() => {
+    close()
+  }, [close])
+
   return <>
     <SubpathProvider>
       {subpath.url.pathname === "/eth_sendTransaction" &&
@@ -412,7 +416,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     {maybeTransaction != null &&
       <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton
-          onClick={close}>
+          onClick={onClose}>
           <Outline.CheckIcon className="size-5" />
           Close
         </WideShrinkableOppositeButton>

@@ -64,6 +64,8 @@ export function UserLoginDialog() {
 
     await currentUserQuery.mutate(() => new Some(new Data(maybeUser)))
 
+    close(true)
+
     location.assign("#/home")
   }), [defPasswordInput, userQuery.data?.get().uuid, background])
 
@@ -74,6 +76,10 @@ export function UserLoginDialog() {
 
     login.run()
   }, [login])
+
+  const onCancel = useCallback(() => {
+    close()
+  }, [close])
 
   const onLogin = useCallback(() => {
     login.run()
@@ -111,7 +117,7 @@ export function UserLoginDialog() {
         <div className="h-2" />
         <div className="flex items-center flex-wrap-reverse gap-2">
           <WideShrinkableContrastButton
-            onClick={close}>
+            onClick={onCancel}>
             <Outline.ChevronLeftIcon className="size-5" />
             Cancel
           </WideShrinkableContrastButton>

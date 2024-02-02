@@ -10,7 +10,7 @@ import { CloseProps } from "../../react/props/close"
 import { Button } from "../button"
 import { Portal } from "../portal/portal"
 
-export const CloseContext = createContext<Nullable<() => void>>(undefined)
+export const CloseContext = createContext<Nullable<(force?: boolean) => void>>(undefined)
 
 export function useCloseContext() {
   return Option.wrap(useContext(CloseContext))
@@ -72,9 +72,14 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
   /**
    * Smoothly close the dialog
    */
-  const hide = useCallback(() => {
+  const hide = useCallback((force?: boolean) => {
+    if (force) {
+      close()
+      return
+    }
+
     setVisible(false)
-  }, [])
+  }, [close])
 
   /**
    * Smoothly close the dialog on escape
