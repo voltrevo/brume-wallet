@@ -188,7 +188,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
           placeholder="candy climb cloth fetch crack miss gift direct then fork prevent already increase slam code"
           value={rawPhraseInput}
           onChange={onPhraseInputChange}
-          rows={3} />
+          rows={5} />
       </div>
       <div className="h-2" />
       <div className="flex items-center flex-wrap-reverse gap-2">
