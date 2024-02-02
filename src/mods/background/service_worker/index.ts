@@ -169,11 +169,10 @@ export class Global {
   readonly popup = new Mutex<Slot<PopupData>>({})
 
   constructor(
-    readonly consensus: Consensus,
-    readonly tors: Pool<TorClientDuplex>,
+    readonly tors: Pool<readonly [TorClientDuplex, Consensus]>,
     readonly storage: IDBStorage
   ) {
-    this.circuits = new Mutex(Circuits.pool(this.tors, consensus, { capacity: 9 }))
+    this.circuits = new Mutex(Circuits.pool(this.tors, { capacity: 9 }))
 
     this.circuits.inner.events.on("created", (entry) => {
       if (entry.isOk())
@@ -1488,6 +1487,8 @@ async function initZepar() {
 }
 
 async function initOrThrow() {
+  const start = Date.now()
+
   await Promise.all([initBerith(), initEligos(), initMorax(), initAlocer(), initZepar()])
 
   const gt = globalThis as any
@@ -1499,15 +1500,13 @@ async function initOrThrow() {
   gt.Smux = Smux
 
   const tors = createTorPool({ capacity: 1 })
-  const tor = await tors.getCryptoRandomOrThrow().then(r => r.unwrap().inner.inner)
-
-  using circuit = await tor.createOrThrow(AbortSignal.timeout(5000))
-  const consensus = await Consensus.fetchOrThrow(circuit)
 
   const storage = IDBStorage.createOrThrow({ name: "memory" })
-  const global = new Global(consensus, tors, storage)
+  const global = new Global(tors, storage)
 
   await global.initOrThrow()
+
+  console.log(`Started in ${Date.now() - start}ms`)
 
   return global
 }

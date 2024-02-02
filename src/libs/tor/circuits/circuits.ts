@@ -41,22 +41,11 @@ export namespace Circuits {
 
   /**
    * Create a pool of Circuits modulo a pool of Tor clients
-   * @param tors 
+   * @param torsAndConsensus 
    * @param params 
    * @returns 
    */
-  export function pool(tors: Pool<TorClientDuplex>, consensus: Consensus, params: PoolParams) {
-    const middles = consensus.microdescs.filter(it => true
-      && it.flags.includes("Fast")
-      && it.flags.includes("Stable")
-      && it.flags.includes("V2Dir"))
-
-    const exits = consensus.microdescs.filter(it => true
-      && it.flags.includes("Fast")
-      && it.flags.includes("Stable")
-      && it.flags.includes("Exit")
-      && !it.flags.includes("BadExit"))
-
+  export function pool(torsAndConsensus: Pool<readonly [TorClientDuplex, Consensus]>, params: PoolParams) {
     let update = Date.now()
 
     const pool = new Pool<Circuit>(async (params) => {
@@ -68,7 +57,18 @@ export namespace Circuits {
 
           using circuit = await (async () => {
             while (true) {
-              const tor = await tors.getOrThrow(index % tors.capacity, signal).then(r => r.unwrap().inner.inner)
+              const [tor, consensus] = await torsAndConsensus.getOrThrow(index % torsAndConsensus.capacity, signal).then(r => r.unwrap().inner.inner)
+
+              const middles = consensus.microdescs.filter(it => true
+                && it.flags.includes("Fast")
+                && it.flags.includes("Stable")
+                && it.flags.includes("V2Dir"))
+
+              const exits = consensus.microdescs.filter(it => true
+                && it.flags.includes("Fast")
+                && it.flags.includes("Stable")
+                && it.flags.includes("Exit")
+                && !it.flags.includes("BadExit"))
 
               try {
                 using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(1000)))
@@ -137,7 +137,7 @@ export namespace Circuits {
       }
     }, params)
 
-    tors.events.on("started", async i => {
+    torsAndConsensus.events.on("started", async i => {
       update = Date.now()
 
       for (let i = 0; i < pool.capacity; i++) {
