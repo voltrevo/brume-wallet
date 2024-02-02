@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { Outline } from "@/libs/icons/icons"
 import { ChildrenProps } from "@/libs/react/props/children"
-import { CreateProps } from "@/libs/react/props/create"
 import { OkProps } from "@/libs/react/props/promise"
 import { Dialog2 } from "@/libs/ui/dialog/dialog"
 import { Menu } from "@/libs/ui2/menu/menu"
@@ -14,7 +13,7 @@ import { useCallback } from "react"
 import { WideShrinkableContrastAnchor, useGenius } from "../../users/all/page"
 import { PaddedRoundedShrinkableNakedAnchor } from "../actions/send"
 import { RawWalletDataCard } from "../card"
-import { WalletDataProvider, useWalletDataContext } from "../context"
+import { WalletDataProvider } from "../context"
 import { WalletProps, useTrashedWallets, useWallets } from "../data"
 import { WalletCreatorMenu } from "./create"
 import { ReadonlyWalletCreatorDialog } from "./create/readonly"
@@ -93,11 +92,10 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet[
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {wallets?.map(wallet =>
-      <WalletDataProvider
+      <ClickableWalletDataCard
         key={wallet.uuid}
-        uuid={wallet.uuid}>
-        <ClickableWalletDataCard ok={ok} />
-      </WalletDataProvider>)}
+        wallet={wallet}
+        ok={ok} />)}
     {!disableNew &&
       <NewRectangularAnchorCard>
         New wallet
@@ -105,7 +103,7 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet[
   </div>
 }
 
-export function SelectableWalletGrid(props: OkProps<Wallet> & CreateProps & { wallets?: Wallet[] } & { selecteds: Nullable<Wallet>[] } & { disableNew?: boolean }) {
+export function SelectableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet[] } & { selecteds: Nullable<Wallet>[] } & { disableNew?: boolean }) {
   const { wallets, ok, selecteds, disableNew } = props
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
@@ -134,16 +132,14 @@ export function CheckableWalletDataCard(props: WalletProps & OkProps<Wallet> & {
     role="checkbox"
     aria-checked={checked}
     onClick={onClick}>
-    <WalletDataProvider
-      uuid={wallet.uuid}>
+    <WalletDataProvider uuid={wallet.uuid}>
       <RawWalletDataCard index={index} />
     </WalletDataProvider>
   </div>
 }
 
-export function ClickableWalletDataCard(props: OkProps<Wallet>) {
-  const wallet = useWalletDataContext().unwrap()
-  const { ok } = props
+export function ClickableWalletDataCard(props: WalletProps & OkProps<Wallet>) {
+  const { wallet, ok } = props
 
   const onClick = useCallback(() => {
     ok(wallet)
@@ -152,7 +148,9 @@ export function ClickableWalletDataCard(props: OkProps<Wallet>) {
   return <div className={`w-full aspect-video rounded-xl overflow-hidden cursor-pointer hovered-or-clicked-or-focused:scale-105 !transition-transform`}
     role="button"
     onClick={onClick}>
-    <RawWalletDataCard />
+    <WalletDataProvider uuid={wallet.uuid}>
+      <RawWalletDataCard />
+    </WalletDataProvider>
   </div>
 
 }

@@ -19,7 +19,7 @@ import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableGradientButton } from "../../actions/send";
-import { SimpleWalletCard } from "../../card";
+import { RawWalletCard } from "../../card";
 
 export function StandaloneWalletCreatorDialog(props: {}) {
   const close = useCloseContext().unwrap()
@@ -262,12 +262,14 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     <div className="flex-1 flex flex-col items-center justify-center">
       <div className="w-full max-w-sm">
         {triedAddress.isOk() &&
-          <SimpleWalletCard
-            uuid={uuid}
-            name={finalNameInput}
-            emoji={emoji}
-            address={triedAddress.get()}
-            color={color} />}
+          <div className="w-full aspect-video rounded-xl">
+            <RawWalletCard
+              uuid={uuid}
+              name={finalNameInput}
+              emoji={emoji}
+              address={triedAddress.get()}
+              color={color} />
+          </div>}
         {triedAddress.isErr() &&
           <EmptyWalletCard />}
       </div>

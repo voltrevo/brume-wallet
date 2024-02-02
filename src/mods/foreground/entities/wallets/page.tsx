@@ -37,7 +37,7 @@ import { useGenius } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
 import { WalletSendScreen, WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "./actions/send";
-import { SimpleWalletDataCard } from "./card";
+import { RawWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2, useWallet } from "./data";
 import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
@@ -210,9 +210,11 @@ function WalletDataPage() {
   const Card =
     <div className="p-4 flex justify-center">
       <div className="w-full max-w-sm">
-        <SimpleWalletDataCard
-          $privateKey={$privateKey}
-          href="/menu" />
+        <div className="w-full aspect-video rounded-xl">
+          <RawWalletDataCard
+            $privateKey={$privateKey}
+            href="/menu" />
+        </div>
         {wallet.type === "readonly" && <>
           <div className="h-2" />
           <div className="po-sm bg-contrast text-contrast rounded-xl flex items-center justify-center">

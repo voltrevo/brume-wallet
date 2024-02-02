@@ -6,7 +6,7 @@ import { useInputChange } from "@/libs/react/events";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { None, Some } from "@hazae41/option";
 import { useDeferredValue, useMemo, useState } from "react";
-import { SimpleWalletCard } from "../../card";
+import { RawWalletCard } from "../../card";
 import { useWalletDataContext } from "../../context";
 import { useWallet } from "../../data";
 import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../send";
@@ -73,12 +73,14 @@ export function WalletEditDialog(props: {}) {
     <div className="h-4" />
     <div className="flex-1 flex flex-col items-center justify-center">
       <div className="w-full max-w-sm">
-        <SimpleWalletCard
-          uuid={wallet.uuid}
-          name={finalNameInput}
-          emoji={wallet.emoji}
-          address={wallet.address}
-          color={color} />
+        <div className="w-full aspect-video rounded-xl">
+          <RawWalletCard
+            uuid={wallet.uuid}
+            name={finalNameInput}
+            emoji={wallet.emoji}
+            address={wallet.address}
+            color={color} />
+        </div>
       </div>
     </div>
     <div className="h-2" />

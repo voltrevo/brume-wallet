@@ -535,7 +535,6 @@ export function WalletAndChainSelectPage() {
   const Body =
     <PageBody>
       <SelectableWalletGrid
-        create={creator.enable}
         wallets={wallets.data?.get()}
         ok={onWalletClick}
         selecteds={selecteds} />

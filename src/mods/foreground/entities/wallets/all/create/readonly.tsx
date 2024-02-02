@@ -17,7 +17,7 @@ import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useEnsLookup } from "../../../names/data";
 import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableGradientButton } from "../../actions/send";
-import { SimpleWalletCard } from "../../card";
+import { RawWalletCard } from "../../card";
 import { useEthereumContext } from "../../data";
 import { EmptyWalletCard } from "./standalone";
 
@@ -144,12 +144,14 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
     <div className="flex-1 flex flex-col items-center justify-center">
       <div className="w-full max-w-sm">
         {maybeAddress != null &&
-          <SimpleWalletCard
-            uuid={uuid}
-            name={finalNameInput}
-            emoji={emoji}
-            address={maybeAddress}
-            color={color} />}
+          <div className="w-full aspect-video rounded-xl">
+            <RawWalletCard
+              uuid={uuid}
+              name={finalNameInput}
+              emoji={emoji}
+              address={maybeAddress}
+              color={color} />
+          </div>}
         {maybeAddress == null &&
           <EmptyWalletCard />}
       </div>

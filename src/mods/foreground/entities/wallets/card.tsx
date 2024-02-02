@@ -19,21 +19,6 @@ import { useWalletDataContext } from "./context"
 import { useEthereumContext } from "./data"
 import { useCompactDisplayUsd } from "./page"
 
-export function SimpleWalletDataCard(props: { index?: number } & { href?: string } & { $privateKey?: State<Optional<ZeroHexString>> }) {
-  const wallet = useWalletDataContext().unwrap()
-  const { index, href, $privateKey } = props
-
-  return <SimpleWalletCard
-    uuid={wallet.uuid}
-    address={wallet.address}
-    name={wallet.name}
-    emoji={wallet.emoji}
-    color={Color.get(wallet.color)}
-    $privateKey={$privateKey}
-    index={index}
-    href={href} />
-}
-
 export function RawWalletDataCard(props: { index?: number } & { href?: string } & { $privateKey?: State<Optional<ZeroHexString>> }) {
   const wallet = useWalletDataContext().unwrap()
   const { index, href, $privateKey } = props
@@ -47,12 +32,6 @@ export function RawWalletDataCard(props: { index?: number } & { href?: string } 
     $privateKey={$privateKey}
     index={index}
     href={href} />
-}
-
-export function SimpleWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { href?: string } & { $privateKey?: State<Optional<ZeroHexString>> }) {
-  return <div className="w-full aspect-video rounded-xl">
-    <RawWalletCard {...props} />
-  </div>
 }
 
 export function RawWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { href?: string } & { $privateKey?: State<Optional<ZeroHexString>> }) {
