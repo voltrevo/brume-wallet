@@ -9,7 +9,7 @@ import { Paths, SubpathProvider, usePathContext, useSubpath } from "../../router
 import { SeededWalletCreatorDialog } from "../wallets/all/create/seeded";
 import { ClickableWalletGrid } from "../wallets/all/page";
 import { useWalletsBySeed } from "../wallets/data";
-import { SeedDataCard } from "./card";
+import { RawSeedDataCard } from "./card";
 import { SeedDataProvider, useSeedDataContext, } from "./context";
 
 export function SeedPage(props: UUIDProps) {
@@ -45,7 +45,9 @@ function SeedDataPage() {
   const Card =
     <div className="p-4 flex justify-center">
       <div className="w-full max-w-sm">
-        <SeedDataCard />
+        <div className="w-full aspect-video rounded-xl">
+          <RawSeedDataCard />
+        </div>
       </div>
     </div>
 

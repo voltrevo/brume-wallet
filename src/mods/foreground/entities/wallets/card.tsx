@@ -5,23 +5,20 @@ import { Outline } from "@/libs/icons/icons"
 import { Events, useMouseCancel } from "@/libs/react/events"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { AnchorProps, ButtonProps } from "@/libs/react/props/html"
-import { State } from "@/libs/react/state"
 import { Address, ZeroHexString } from "@hazae41/cubane"
-import { Optional } from "@hazae41/option"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { flushSync } from "react-dom"
 import { usePathContext, useSubpath } from "../../router/path/context"
 import { useEnsReverseNoFetch } from "../names/data"
 import { useTotalWalletPricedBalance } from "../unknown/data"
 import { useGenius } from "../users/all/page"
-import { WalletIcon } from "./avatar"
 import { useWalletDataContext } from "./context"
 import { useEthereumContext } from "./data"
 import { useCompactDisplayUsd } from "./page"
 
-export function RawWalletDataCard(props: { index?: number } & { href?: string } & { $privateKey?: State<Optional<ZeroHexString>> }) {
+export function RawWalletDataCard(props: { index?: number } & { href?: string } & { privateKey?: string } & { flip?: boolean } & { unflip?: () => void }) {
   const wallet = useWalletDataContext().unwrap()
-  const { index, href, $privateKey } = props
+  const { index, href, privateKey, flip, unflip } = props
 
   return <RawWalletCard
     uuid={wallet.uuid}
@@ -29,16 +26,19 @@ export function RawWalletDataCard(props: { index?: number } & { href?: string } 
     name={wallet.name}
     emoji={wallet.emoji}
     color={Color.get(wallet.color)}
-    $privateKey={$privateKey}
+    privateKey={privateKey}
+    flip={flip}
+    unflip={unflip}
     index={index}
     href={href} />
 }
 
-export function RawWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { href?: string } & { $privateKey?: State<Optional<ZeroHexString>> }) {
+export function RawWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { href?: string } & { privateKey?: string } & { flip?: boolean } & { unflip?: () => void }) {
   const path = usePathContext().unwrap()
-  const { uuid, address, name, emoji, color, index, href, $privateKey } = props
+  const { uuid, address, name, emoji, color, index, href, privateKey, flip, unflip } = props
 
   const subpath = useSubpath(path)
+  const genius = useGenius(subpath, href)
 
   const [color1, color2] = Gradient.get(color)
 
@@ -62,20 +62,30 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
   const totalBalanceQuery = useTotalWalletPricedBalance(finalAddress, "usd")
   const totalBalanceDisplay = useCompactDisplayUsd(totalBalanceQuery.current)
 
-  const [[privateKey, setPrivateKey] = []] = [$privateKey]
-  const [privateKey2, setPrivateKey2] = useState<Optional<ZeroHexString>>()
+  const [preflip = false, setPreflip] = useState(flip)
+  const [postflip, setPostflip] = useState(false)
 
-  const onTransitionEnd = useCallback(() => {
-    flushSync(() => setPrivateKey2?.(privateKey))
-  }, [privateKey])
+  const onFlipTransitionEnd = useCallback(() => {
+    flushSync(() => setPostflip(preflip))
+  }, [preflip])
 
-  const genius = useGenius(subpath, href)
+  useEffect(() => {
+    setPreflip(flip)
+  }, [flip])
+
+  useEffect(() => {
+    if (preflip)
+      return
+    if (postflip)
+      return
+    unflip?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preflip, postflip])
 
   const First =
     <div className="flex items-center">
-      <div className="shrink-0">
-        <WalletIcon className="text-xl"
-          emoji={emoji} />
+      <div className="shrink-0 text-xl">
+        {emoji}
       </div>
       <div className="w-2 grow" />
       {index == null && href != null &&
@@ -124,9 +134,9 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
 
   return <div className="w-full h-full"
     style={{ perspective: "1000px" }}>
-    <div className={`relative z-10 w-full h-full text-white bg-gradient-to-br from-${color1}-400 to-${color2}-400 dark:from-${color1}-500 dark:to-${color2}-500 rounded-xl ${privateKey && !privateKey2 ? "animate-flip-in" : ""} ${!privateKey && privateKey2 ? "animate-flip-out" : ""}`}
-      style={{ transform: privateKey && privateKey2 ? `rotateY(180deg)` : "", transformStyle: "preserve-3d" }}
-      onAnimationEnd={onTransitionEnd}>
+    <div className={`relative z-10 w-full h-full text-white bg-gradient-to-br from-${color1}-400 to-${color2}-400 dark:from-${color1}-500 dark:to-${color2}-500 rounded-xl ${preflip && !postflip ? "animate-flip-in" : ""} ${!preflip && postflip ? "animate-flip-out" : ""}`}
+      style={{ transform: preflip && postflip ? `rotateY(180deg)` : "", transformStyle: "preserve-3d" }}
+      onAnimationEnd={onFlipTransitionEnd}>
       <div className="po-md absolute w-full h-full flex flex-col"
         style={{ backfaceVisibility: "hidden" }}
         onContextMenu={genius.onContextMenu}>
@@ -141,7 +151,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
         <div className="flex items-center">
           <div className="w-2 grow" />
           <CircularWhiteButtonInColoredCard
-            onClick={() => setPrivateKey?.(undefined)}
+            onClick={() => setPreflip?.(false)}
             color={color}>
             <Outline.ArrowLeftIcon className="size-4" />
           </CircularWhiteButtonInColoredCard>
@@ -152,7 +162,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
         </div>
         <div className="text-white-high-contrast break-all"
           onContextMenu={Events.keep}>
-          {privateKey || privateKey2}
+          {privateKey}
         </div>
       </div>
     </div>

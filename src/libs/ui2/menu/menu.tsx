@@ -41,15 +41,8 @@ export function Menu(props: ChildrenProps & DarkProps) {
     dialog?.showModal()
   }, [dialog])
 
-  /**
-   * Pre-animation state
-   */
-  const [visible, setVisible] = useState(true)
-
-  /**
-   * Post-animation state
-   */
-  const [mounted, setMounted] = useState(false)
+  const [premount, setPremount] = useState(true)
+  const [postmount, setPostmount] = useState(false)
 
   /**
    * Smoothly close the dialog
@@ -60,7 +53,7 @@ export function Menu(props: ChildrenProps & DarkProps) {
       return
     }
 
-    setVisible(false)
+    setPremount(false)
   }, [close])
 
   /**
@@ -99,20 +92,20 @@ export function Menu(props: ChildrenProps & DarkProps) {
    * Sync mounted state with visible state on animation end
    */
   const onAnimationEnd = useCallback(() => {
-    flushSync(() => setMounted(visible))
-  }, [visible])
+    flushSync(() => setPostmount(premount))
+  }, [premount])
 
   /**
    * Unmount this component from parent when both visible and mounted are false
    */
   useEffect(() => {
-    if (visible)
+    if (premount)
       return
-    if (mounted)
+    if (postmount)
       return
     close()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, mounted])
+  }, [premount, postmount])
 
   const [menu, setMenu] = useState<Nullable<HTMLElement>>(null)
 
@@ -144,7 +137,7 @@ export function Menu(props: ChildrenProps & DarkProps) {
   /**
    * Only unmount when transition is finished
    */
-  if (!visible && !mounted)
+  if (!premount && !postmount)
     return null
 
   return <Portal type="div">
@@ -157,7 +150,7 @@ export function Menu(props: ChildrenProps & DarkProps) {
         <div className={`fixed inset-0 ${dark ? "dark" : ""}`}
           onMouseDown={onClickOutside}
           onClick={Events.keep}>
-          <div className={`absolute flex flex-col min-w-48 max-w-xl text-default bg-default border border-contrast rounded-2xl p-2 ${visible ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
+          <div className={`absolute flex flex-col min-w-48 max-w-xl text-default bg-default border border-contrast rounded-2xl p-2 ${premount ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
             style={{ translate: `${maybeL}px ${maybeT}px` }}
             ref={setMenu}
             aria-modal

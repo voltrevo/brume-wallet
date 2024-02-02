@@ -182,8 +182,15 @@ function WalletDataPage() {
 
   const receive = useGenius(subpath, "/receive")
 
+  const $flip = useState(false)
+  const [flip] = $flip
+
   const $privateKey = useState<Optional<ZeroHexString>>()
-  const [privateKey] = $privateKey
+  const [privateKey, setPrivateKey] = $privateKey
+
+  const onUnflip = useCallback(() => {
+    setPrivateKey(undefined)
+  }, [setPrivateKey])
 
   const Header =
     <UserPageHeader
@@ -212,7 +219,9 @@ function WalletDataPage() {
       <div className="w-full max-w-sm">
         <div className="w-full aspect-video rounded-xl">
           <RawWalletDataCard
-            $privateKey={$privateKey}
+            privateKey={privateKey}
+            flip={flip}
+            unflip={onUnflip}
             href="/menu" />
         </div>
         {wallet.type === "readonly" && <>
@@ -333,7 +342,9 @@ function WalletDataPage() {
         </Dialog2>}
       {subpath.url.pathname === "/menu" &&
         <Menu>
-          <WalletMenu $privateKey={$privateKey} />
+          <WalletMenu
+            $privateKey={$privateKey}
+            $flip={$flip} />
         </Menu>}
     </SubpathProvider>
     {Header}
@@ -343,13 +354,17 @@ function WalletDataPage() {
   </Page>
 }
 
-export function WalletMenu(props: { $privateKey: State<Optional<ZeroHexString>> }) {
+export function WalletMenu(props: {
+  $flip: State<boolean>,
+  $privateKey: State<Optional<ZeroHexString>>
+}) {
   const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const background = useBackgroundContext().unwrap()
   const close = useCloseContext().unwrap()
-  const { $privateKey } = props
+  const { $flip, $privateKey } = props
 
+  const [flip, setFlip] = $flip
   const [privateKey, setPrivateKey] = $privateKey
 
   const edit = useGenius(path, "/edit")
@@ -359,15 +374,16 @@ export function WalletMenu(props: { $privateKey: State<Optional<ZeroHexString>> 
     const privateKey = await instance.tryGetPrivateKey(background).then(r => r.unwrap())
 
     setPrivateKey(privateKey)
+    setFlip(true)
 
     close()
-  }), [background, close, setPrivateKey, wallet])
+  }), [background, close, setFlip, setPrivateKey, wallet])
 
   const onPrivateKeyHideClick = useCallback(async () => {
-    setPrivateKey(undefined)
+    setFlip(false)
 
     close()
-  }, [close, setPrivateKey])
+  }, [close, setFlip])
 
   const walletQuery = useWallet(wallet.uuid)
 

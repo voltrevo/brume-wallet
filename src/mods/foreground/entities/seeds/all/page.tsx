@@ -10,8 +10,8 @@ import { useCallback } from "react"
 import { useGenius } from "../../users/all/page"
 import { PaddedRoundedShrinkableNakedAnchor } from "../../wallets/actions/send"
 import { NewRectangularAnchorCard } from "../../wallets/all/page"
-import { SeedDataCard } from "../card"
-import { SeedDataProvider, useSeedDataContext } from "../context"
+import { RawSeedDataCard } from "../card"
+import { SeedDataProvider } from "../context"
 import { useSeeds } from "../data"
 import { SeedCreatorMenu } from "./create"
 import { LedgerSeedCreatorDialog } from "./create/ledger"
@@ -77,11 +77,10 @@ export function ClickableSeedGrid(props: OkProps<Seed> & { maybeSeeds?: Seed[] }
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {maybeSeeds?.map(seed =>
-      <SeedDataProvider
+      <ClickableSeedCard
         key={seed.uuid}
-        uuid={seed.uuid}>
-        <ClickableSeedDataCard ok={ok} />
-      </SeedDataProvider>)}
+        seed={seed}
+        ok={ok} />)}
     {!disableNew &&
       <NewRectangularAnchorCard>
         New seed
@@ -89,16 +88,18 @@ export function ClickableSeedGrid(props: OkProps<Seed> & { maybeSeeds?: Seed[] }
   </div>
 }
 
-export function ClickableSeedDataCard(props: OkProps<Seed>) {
-  const seed = useSeedDataContext().unwrap()
-  const { ok } = props
+export function ClickableSeedCard(props: { seed: Seed } & OkProps<Seed>) {
+  const { seed, ok } = props
 
   const onClick = useCallback(() => {
     ok(seed)
   }, [ok, seed])
 
-  return <button className="w-full hovered-or-clicked-or-focused:scale-105 !transition-transform"
+  return <div className={`w-full aspect-video rounded-xl overflow-hidden cursor-pointer hovered-or-clicked-or-focused:scale-105 !transition-transform`}
+    role="button"
     onClick={onClick}>
-    <SeedDataCard />
-  </button>
+    <SeedDataProvider uuid={seed.uuid}>
+      <RawSeedDataCard />
+    </SeedDataProvider>
+  </div>
 }

@@ -92,7 +92,7 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet[
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {wallets?.map(wallet =>
-      <ClickableWalletDataCard
+      <ClickableWalletCard
         key={wallet.uuid}
         wallet={wallet}
         ok={ok} />)}
@@ -108,7 +108,7 @@ export function SelectableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {wallets?.map(wallet =>
-      <CheckableWalletDataCard
+      <CheckableWalletCard
         key={wallet.uuid}
         wallet={wallet}
         index={selecteds.indexOf(wallet)}
@@ -120,7 +120,7 @@ export function SelectableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet
   </div>
 }
 
-export function CheckableWalletDataCard(props: WalletProps & OkProps<Wallet> & { index: number }) {
+export function CheckableWalletCard(props: WalletProps & OkProps<Wallet> & { index: number }) {
   const { wallet, ok, index } = props
   const checked = index !== -1
 
@@ -138,7 +138,7 @@ export function CheckableWalletDataCard(props: WalletProps & OkProps<Wallet> & {
   </div>
 }
 
-export function ClickableWalletDataCard(props: WalletProps & OkProps<Wallet>) {
+export function ClickableWalletCard(props: WalletProps & OkProps<Wallet>) {
   const { wallet, ok } = props
 
   const onClick = useCallback(() => {

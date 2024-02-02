@@ -59,15 +59,8 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
     dialog?.showModal()
   }, [dialog])
 
-  /**
-   * Pre-animation state
-   */
-  const [visible, setVisible] = useState(true)
-
-  /**
-   * Post-animation state
-   */
-  const [mounted, setMounted] = useState(false)
+  const [premount, setPremount] = useState(true)
+  const [postmount, setPostmount] = useState(false)
 
   /**
    * Smoothly close the dialog
@@ -78,7 +71,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
       return
     }
 
-    setVisible(false)
+    setPremount(false)
   }, [close])
 
   /**
@@ -105,7 +98,6 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
     hide()
   }, [hide])
 
-
   /**
    * When the dialog could not be closed smoothly
    * @example Safari on escape
@@ -118,26 +110,26 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
    * Sync mounted state with visible state on animation end
    */
   const onAnimationEnd = useCallback(() => {
-    flushSync(() => setMounted(visible))
-  }, [visible])
+    flushSync(() => setPostmount(premount))
+  }, [premount])
 
   /**
    * Unmount this component from parent when both visible and mounted are false
    */
   useEffect(() => {
-    if (visible)
+    if (premount)
       return
-    if (mounted)
+    if (postmount)
       return
     close()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, mounted])
+  }, [premount, postmount])
 
   /**
    * Set theme-color based on dark prop
    */
   useLayoutEffect(() => {
-    if (!visible)
+    if (!premount)
       return
     if (!dark)
       return
@@ -155,7 +147,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
     color.setAttribute("content", "#000000")
 
     return () => color.setAttribute("content", original)
-  }, [visible, dark])
+  }, [premount, dark])
 
   const onScroll = useCallback((e: UIEvent) => {
     /**
@@ -186,7 +178,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
   /**
    * Only unmount when transition is finished
    */
-  if (!visible && !mounted)
+  if (!premount && !postmount)
     return null
 
   return <Portal type="div">
@@ -196,10 +188,10 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
         onKeyDown={onEscape}
         onClose={onClose}
         ref={setDialog}>
-        <div className={`fixed inset-0 bg-backdrop ${visible ? "animate-opacity-in" : "animate-opacity-out"}`}
+        <div className={`fixed inset-0 bg-backdrop ${premount ? "animate-opacity-in" : "animate-opacity-out"}`}
           aria-hidden="true"
           role="backdrop" />
-        <div className={`fixed inset-0 md:p-safe flex flex-col ${dark ? "dark" : ""} ${mounted && visible ? "overflow-y-scroll" : "overflow-y-hidden"} ${visible ? "animate-slideup-in md:animate-scale-xy-in" : "animate-slideup-out md:animate-scale-xy-out"}`}
+        <div className={`fixed inset-0 md:p-safe flex flex-col ${dark ? "dark" : ""} ${postmount && premount ? "overflow-y-scroll" : "overflow-y-hidden"} ${premount ? "animate-slideup-in md:animate-scale-xy-in" : "animate-slideup-out md:animate-scale-xy-out"}`}
           style={{ scrollbarGutter: "stable" }}
           onAnimationEnd={onAnimationEnd}
           onMouseDown={onClickOutside}
