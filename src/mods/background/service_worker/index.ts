@@ -29,7 +29,7 @@ import { Circuit, Consensus, Echalote, TorClientDuplex } from "@hazae41/echalote
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche, fetch } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
-import { IDBStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier"
+import { Data, IDBStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier"
 import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { Kcp } from "@hazae41/kcp"
 import { Keccak256 } from "@hazae41/keccak256"
@@ -941,18 +941,14 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_createUser(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<User[], Error>> {
+  async brume_createUser(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [init] = (request as RpcRequestPreinit<[UserInit]>).params
 
     const userData = await BgUser.createOrThrow(init)
     const userQuery = BgUser.schema(init.uuid, this.storage)
-    await userQuery.mutate(Mutators.data(userData))
+    await userQuery.mutate(() => new Some(new Data(userData)))
 
-    const usersQuery = BgUser.All.schema(this.storage)
-    const usersState = await usersQuery.state
-    const usersData = Option.unwrap(usersState.data?.get())
-
-    return new Ok(usersData)
+    return Ok.void()
   }
 
   async brume_login(request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {

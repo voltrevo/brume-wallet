@@ -7,13 +7,13 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
-import { User, UserInit } from "@/mods/background/service_worker/entities/users/data";
+import { User, UserInit, UserRef } from "@/mods/background/service_worker/entities/users/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { KeyboardEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../wallets/actions/send";
-import { useUsers } from "../data";
+import { useCurrentUser, useUsers } from "../data";
 import { UserAvatar } from "./page";
 
 export function UserCreateDialog(props: {}) {
@@ -21,6 +21,8 @@ export function UserCreateDialog(props: {}) {
   const background = useBackgroundContext().unwrap()
 
   const users = useUsers()
+
+  const currentUserQuery = useCurrentUser()
 
   const uuid = useConstant(() => crypto.randomUUID())
 
@@ -59,13 +61,23 @@ export function UserCreateDialog(props: {}) {
   const onClick = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const user: UserInit = { uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, password: defPasswordInput }
 
-    const usersData = await background
+    await background
       .tryRequest<User[]>({ method: "brume_createUser", params: [user] })
       .then(r => r.unwrap().unwrap())
 
-    await users.mutate(() => new Some(new Data(usersData)))
+    await background.tryRequest({
+      method: "brume_login",
+      params: [user.uuid, defPasswordInput]
+    }).then(r => r.unwrap().unwrap())
 
-    close()
+    sessionStorage.setItem("uuid", user.uuid)
+    sessionStorage.setItem("password", defPasswordInput)
+
+    await currentUserQuery.mutate(() => new Some(new Data(UserRef.create(user.uuid))))
+
+    close(true)
+
+    location.assign("#/home")
   }), [uuid, finalNameInput, color, emoji, defPasswordInput, background, users.mutate, close])
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {

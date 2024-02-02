@@ -23,8 +23,12 @@ export interface UserRef {
 
 export namespace UserRef {
 
+  export function create(uuid: string): UserRef {
+    return { ref: true, uuid }
+  }
+
   export function from(user: User): UserRef {
-    return { ref: true, uuid: user.uuid }
+    return create(user.uuid)
   }
 
 }

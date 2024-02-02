@@ -4,6 +4,7 @@ import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useCloseContext } from "@/libs/ui/dialog/dialog";
+import { UserRef } from "@/mods/background/service_worker/entities/users/data";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { KeyboardEvent, useCallback, useDeferredValue, useRef, useState } from "react";
@@ -40,12 +41,14 @@ export function UserLoginDialog() {
   const login = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     if (maybeUser == null)
       return
+    const user = maybeUser
+
     if (defPasswordInput.length < 3)
       return
 
     const response = await background.tryRequest({
       method: "brume_login",
-      params: [maybeUser.uuid, defPasswordInput]
+      params: [user.uuid, defPasswordInput]
     }).then(r => r.unwrap())
 
     if (response.isErr()) {
@@ -59,15 +62,15 @@ export function UserLoginDialog() {
       return
     }
 
-    sessionStorage.setItem("uuid", maybeUser.uuid)
+    sessionStorage.setItem("uuid", user.uuid)
     sessionStorage.setItem("password", defPasswordInput)
 
-    await currentUserQuery.mutate(() => new Some(new Data(maybeUser)))
+    await currentUserQuery.mutate(() => new Some(new Data(UserRef.create(user.uuid))))
 
     close(true)
 
     location.assign("#/home")
-  }), [defPasswordInput, userQuery.data?.get().uuid, background])
+  }), [defPasswordInput, maybeUser, background])
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key !== "Enter")
