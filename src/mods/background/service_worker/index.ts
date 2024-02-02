@@ -244,6 +244,9 @@ export class Global {
     if (password == null)
       return undefined
 
+    if (this.#user != null)
+      return this.#user
+
     const userQuery = BgUser.schema(uuid, this.storage)
     const userState = await userQuery.state
     const userData = Option.unwrap(userState.current?.get())
@@ -253,7 +256,7 @@ export class Global {
     const { storage, hasher, crypter } = await createUserStorageOrThrow(userData, password)
 
     const currentUserQuery = BgUser.Current.schema(storage)
-    await currentUserQuery.mutate(Mutators.data<User, never>(user))
+    await currentUserQuery.mutate(() => new Some(new Data(user)))
 
     const userSession: UserSession = { user, storage, hasher, crypter }
 
