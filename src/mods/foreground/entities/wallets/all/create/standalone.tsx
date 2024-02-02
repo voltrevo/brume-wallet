@@ -271,7 +271,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
               color={color} />
           </div>}
         {triedAddress.isErr() &&
-          <EmptyWalletCard />}
+          <EmptyRectangularCard />}
       </div>
     </div>
     <div className="h-2" />
@@ -291,6 +291,6 @@ export function StandaloneWalletCreatorDialog(props: {}) {
   </>
 }
 
-export function EmptyWalletCard(props: {}) {
+export function EmptyRectangularCard(props: {}) {
   return <div className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-clicked-or-focused:scale-105 !transition-transform" />
 }

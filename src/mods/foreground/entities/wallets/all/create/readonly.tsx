@@ -19,7 +19,7 @@ import { useEnsLookup } from "../../../names/data";
 import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableGradientButton } from "../../actions/send";
 import { RawWalletCard } from "../../card";
 import { useEthereumContext } from "../../data";
-import { EmptyWalletCard } from "./standalone";
+import { EmptyRectangularCard } from "./standalone";
 
 export function ReadonlyWalletCreatorDialog(props: {}) {
   const close = useCloseContext().unwrap()
@@ -153,7 +153,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
               color={color} />
           </div>}
         {maybeAddress == null &&
-          <EmptyWalletCard />}
+          <EmptyRectangularCard />}
       </div>
     </div>
     <div className="h-2" />
