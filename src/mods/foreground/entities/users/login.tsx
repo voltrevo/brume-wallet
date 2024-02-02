@@ -128,7 +128,7 @@ export function UserLoginDialog() {
             disabled={defPasswordInput.length < 3 || login.loading}
             onClick={onLogin}>
             <Outline.LockOpenIcon className="size-5" />
-            Unlock
+            Login
           </WideShrinkableOppositeButton>
         </div>
       </div>
