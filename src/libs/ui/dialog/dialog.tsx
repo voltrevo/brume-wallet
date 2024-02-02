@@ -210,13 +210,13 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
               <input className="h-0 -z-10 opacity-0 md:hidden"
                 aria-hidden />}
             <div className="h-[50vh] grow md:h-8" />
-            <div className={`grow flex flex-col w-full md:aspect-square text-default bg-default rounded-t-3xl md:rounded-3xl`}
+            <div className={`grow flex flex-col w-full md:w-[max(min(100dvh-4rem-var(--safe-area-inset-top,env(safe-area-inset-top))-var(--safe-area-inset-bottom,env(safe-area-inset-bottom)),48rem),28rem)] md:aspect-square text-default bg-default rounded-t-3xl md:rounded-3xl`}
               aria-modal
               onMouseDown={Events.keep}>
               <div className="md:hidden p-4 flex items-center justify-center">
                 <div className="w-16 h-2 bg-backdrop rounded-full" />
               </div>
-              <div className="relative grow flex flex-col basis-[100dvh] md:basis-0">
+              <div className="relative grow flex flex-col basis-[100dvh] md:basis-auto">
                 {!hesitant &&
                   <input className="absolute h-[100dvh] -z-10 opacity-0 md:hidden"
                     aria-hidden />}
