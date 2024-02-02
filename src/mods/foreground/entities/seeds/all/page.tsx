@@ -14,8 +14,8 @@ import { RawSeedDataCard } from "../card"
 import { SeedDataProvider } from "../context"
 import { useSeeds } from "../data"
 import { SeedCreatorMenu } from "./create"
-import { LedgerSeedCreatorDialog } from "./create/ledger"
-import { StandaloneSeedCreatorDialog } from "./create/standalone"
+import { LedgerSeedCreatorDialog } from "./create/hardware"
+import { StandaloneSeedCreatorDialog } from "./create/mnemonic"
 
 export function SeedsPage() {
   const path = usePathContext().unwrap()
