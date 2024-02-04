@@ -1,12 +1,10 @@
 import { UIError } from "@/libs/errors/errors";
-import { ChainData, chainByChainId } from "@/libs/ethereum/mods/chain";
+import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { Results } from "@/libs/results/results";
-import { Button } from "@/libs/ui/button";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
-import { Input } from "@/libs/ui/input";
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useUserStorageContext } from "@/mods/foreground/storage/user";
@@ -14,8 +12,9 @@ import { Cubane, ZeroHexString } from "@hazae41/cubane";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
-import { useDeferredValue, useMemo, useState } from "react";
+import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { FgEthereum } from "../../unknown/data";
+import { SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "../../wallets/actions/send";
 import { useWalletDataContext } from "../../wallets/context";
 import { useToken } from "../data";
 
@@ -25,7 +24,12 @@ export function TokenAddDialog(props: {}) {
   const background = useBackgroundContext().unwrap()
   const storage = useUserStorageContext().unwrap()
 
-  const [chain, setChain] = useState<ChainData>(chainByChainId[1])
+  const [rawChainId, setRawChainId] = useState<string>("1")
+  const defChainId = useDeferredValue(rawChainId)
+
+  const onChainIdChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
+    setRawChainId(e.currentTarget.value)
+  }, [])
 
   const [rawAddress = "", setRawAddress] = useState<string>()
   const defAddress = useDeferredValue(rawAddress)
@@ -34,6 +38,7 @@ export function TokenAddDialog(props: {}) {
     setRawAddress(e.currentTarget.value)
   }, [])
 
+  const chain = chainByChainId[Number(defChainId)]
   const token = useToken(chain.chainId, defAddress)
 
   const onAddClick = useAsyncUniqueCallback(async () => {
@@ -144,31 +149,39 @@ export function TokenAddDialog(props: {}) {
       New token
     </Dialog.Title>
     <div className="h-4" />
-    <div className="flex flex-wrap items-center overflow-hidden gap-2">
-      {Object.values(chainByChainId).map(x =>
-        <button key={x.chainId}
-          className={`${Button.Base.className} po-sm border border-contrast shrink-0 data-[selected=true]:border-opposite transition-colors`}
-          onClick={() => setChain(x)}
-          data-selected={chain === x}>
-          <div className={`${Button.Shrinker.className}`}>
+    <SimpleLabel>
+      <div className="shrink-0">
+        Chain
+      </div>
+      <div className="w-4" />
+      <select className="w-full bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
+        value={rawChainId}
+        onChange={onChainIdChange}>
+        {Object.values(chainByChainId).map(x =>
+          <option key={x.chainId} value={x.chainId.toString()}>
             {x.name}
-          </div>
-        </button>)}
-    </div>
+          </option>)}
+      </select>
+    </SimpleLabel>
     <div className="h-2" />
-    <Input.Contrast className="w-full"
-      placeholder="Contract address"
-      value={rawAddress}
-      onChange={onAddressChange} />
-    <div className="h-4" />
-    <Button.Gradient className="w-full po-md"
-      colorIndex={wallet.color}
-      disabled={Boolean(addDisabled)}
-      onClick={onAddClick.run}>
-      <div className={`${Button.Shrinker.className}`}>
+    <SimpleLabel>
+      <div className="shrink-0">
+        Address
+      </div>
+      <div className="w-4" />
+      <SimpleInput
+        placeholder="0x..."
+        value={rawAddress}
+        onChange={onAddressChange} />
+    </SimpleLabel>
+    <div className="h-4 grow" />
+    <div className="flex items-center flex-wrap-reverse gap-2">
+      <WideShrinkableOppositeButton
+        disabled={Boolean(addDisabled)}
+        onClick={onAddClick.run}>
         <Outline.PlusIcon className="size-5" />
         {addDisabled || "Send"}
-      </div>
-    </Button.Gradient>
+      </WideShrinkableOppositeButton>
+    </div>
   </>
 }

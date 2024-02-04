@@ -33,7 +33,7 @@ import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
 import { usePairPrice } from "../tokens/pairs/data";
-import { useGenius } from "../users/all/page";
+import { SmallShrinkableContrastButton, useGenius } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
 import { WalletSendScreen, WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "./actions/send";
@@ -288,26 +288,28 @@ function WalletDataPage() {
       </div>
       <div className="h-4" />
       <div className="flex items-center gap-2">
-        <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 !transition`}
+        <SmallShrinkableContrastButton
           onClick={() => setAll(!all)}>
-          <div className={`${Button.Shrinker.className}`}>
-            {all ? "Show less" : "Show more"}
-          </div>
-        </button>
+          {all
+            ? <Outline.ChevronUpIcon className="size-5" />
+            : <Outline.ChevronDownIcon className="size-5" />}
+          {all ? "Show less" : "Show more"}
+        </SmallShrinkableContrastButton>
         <div className="grow" />
-        {all &&
-          <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 !transition`}
+        {all && <>
+          <SmallShrinkableContrastButton
             onClick={() => setEdit(!edit)}>
-            <div className={`${Button.Shrinker.className}`}>
-              {edit ? "Done" : "Edit"}
-            </div>
-          </button>}
-        <button className={`${Button.Base.className} po-sm bg-gradient-to-r from-${color} to-${color2} text-white self-center hovered-or-clicked-or-focused:scale-105 !transition`}
-          onClick={add.enable}>
-          <div className={`${Button.Shrinker.className}`}>
+            {edit
+              ? <Outline.CheckIcon className="size-5" />
+              : <Outline.PencilIcon className="size-5" />}
+            {edit ? "Done" : "Edit"}
+          </SmallShrinkableContrastButton>
+          <SmallShrinkableContrastButton
+            onClick={add.enable}>
+            <Outline.PlusIcon className="size-5" />
             {"Add"}
-          </div>
-        </button>
+          </SmallShrinkableContrastButton>
+        </>}
       </div>
       <div className="h-4" />
       {all &&

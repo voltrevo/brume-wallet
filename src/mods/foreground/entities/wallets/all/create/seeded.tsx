@@ -55,10 +55,10 @@ export function SeededWalletCreatorDialog(props: {}) {
     setRawPathInput(e.currentTarget.value)
   }, [])
 
-  const [coin, setCoin] = useState<string>("eth")
+  const [rawDerivation, setRawDerivation] = useState<string>("eth-metamask")
 
-  const onCoinChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
-    setCoin(e.currentTarget.value)
+  const onDerivationChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
+    setRawDerivation(e.currentTarget.value)
   }, [])
 
   const [rawIndexInput = "", setRawIndexInput] = useState<string>("0")
@@ -70,20 +70,20 @@ export function SeededWalletCreatorDialog(props: {}) {
   }, [])
 
   useEffect(() => {
-    if (coin === "custom")
+    if (rawDerivation === "custom")
       return setRawPathInput(undefined)
 
     const i = Number(defIndexInput).toFixed()
 
-    if (coin === "eth-metamask")
+    if (rawDerivation === "eth-metamask")
       return setRawPathInput(`m/44'/60'/0'/0/${i}`)
-    if (coin === "eth-ledger")
+    if (rawDerivation === "eth-ledger")
       return setRawPathInput(`m/44'/60'/${i}'/0/0`)
-    if (coin === "etc-metamask")
+    if (rawDerivation === "etc-metamask")
       return setRawPathInput(`m/44'/61'/0'/0/${i}`)
-    if (coin === "etc-ledger")
+    if (rawDerivation === "etc-ledger")
       return setRawPathInput(`m/44'/61'/${i}'/0/0`)
-  }, [coin, defIndexInput])
+  }, [rawDerivation, defIndexInput])
 
   const canAdd = useMemo(() => {
     if (!finalNameInput)
@@ -235,8 +235,8 @@ export function SeededWalletCreatorDialog(props: {}) {
         </div>
         <div className="w-4" />
         <select className="w-full bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
-          value={coin}
-          onChange={onCoinChange}>
+          value={rawDerivation}
+          onChange={onDerivationChange}>
           <option value="eth-metamask">
             {`Ethereum — MetaMask-like — m/44'/60'/0'/0/x`}
           </option>
@@ -254,11 +254,11 @@ export function SeededWalletCreatorDialog(props: {}) {
           </option>
         </select>
       </SimpleLabel>
-      {coin === "custom" && <>
+      {rawDerivation === "custom" && <>
         <div className="h-2" />
         {PathInput}
       </>}
-      {coin !== "custom" && <>
+      {rawDerivation !== "custom" && <>
         <div className="h-2" />
         {IndexInput}
       </>}
