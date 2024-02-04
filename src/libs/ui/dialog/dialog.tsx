@@ -1,4 +1,3 @@
-import { useBooleanHandle } from "@/libs/react/handles/boolean"
 import { DarkProps } from "@/libs/react/props/dark"
 import { usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable, Option } from "@hazae41/option"
@@ -7,7 +6,6 @@ import { flushSync } from "react-dom"
 import { Events } from "../../react/events"
 import { ChildrenProps } from "../../react/props/children"
 import { CloseProps } from "../../react/props/close"
-import { Button } from "../button"
 import { Portal } from "../portal/portal"
 
 export const CloseContext = createContext<Nullable<(force?: boolean) => void>>(undefined)
@@ -237,72 +235,6 @@ export namespace Dialog {
         {children}
       </div>
     </h1>
-  }
-
-  export function Test() {
-    const open = useBooleanHandle(false)
-
-    return <div className="p-1">
-      {open.current &&
-        <Dialog
-          close={open.disable}>
-          <Dialog.Title>
-            Hello world
-          </Dialog.Title>
-          Hello world
-          <div className="h-2" />
-          <div className="flex items-center gap-2">
-            <Button.Base className="w-full po-md"
-              onClick={open.disable}>
-              <div className={`${Button.Shrinker.className}`}>
-                Click me
-              </div>
-            </Button.Base>
-            <Button.Opposite className="w-full po-md"
-              onClick={open.disable}>
-              <div className={`${Button.Shrinker.className}`}>
-                Click me
-              </div>
-            </Button.Opposite>
-          </div>
-        </Dialog>}
-      <button onClick={open.enable}>
-        Click me
-      </button>
-    </div>
-  }
-
-  export function Test2() {
-    const open = useBooleanHandle(false)
-
-    return <div className="p-1">
-      {open.current &&
-        <Dialog
-          close={open.disable}>
-          <Dialog.Title>
-            Hello world
-          </Dialog.Title>
-          Hello world
-          <div className="h-2" />
-          <div className="flex items-center gap-2">
-            <button className="w-full po-md"
-              onClick={open.disable}>
-              <div className={`${Button.Shrinker.className}`}>
-                Click me
-              </div>
-            </button>
-            <button className="w-full po-md"
-              onClick={open.disable}>
-              <div className={`${Button.Shrinker.className}`}>
-                Click me
-              </div>
-            </button>
-          </div>
-        </Dialog>}
-      <button onClick={open.enable}>
-        Click me
-      </button>
-    </div>
   }
 
 }
