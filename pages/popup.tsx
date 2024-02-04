@@ -350,10 +350,10 @@ export function PersonalSignPage() {
   }), [background, id, path])
 
   return <Page>
-    <UserPageHeader title="Sign" />
+    <UserPageHeader title="Sign message" />
     <div className="po-md flex items-center">
       <div className="text-contrast">
-        Do you want to sign the following message?
+        Do you want to sign the following message? Some applications may ask you to sign a message to prove you own a specific address or to approve a specific action without doing a transaction.
       </div>
     </div>
     <PageBody>
@@ -419,10 +419,10 @@ export function TypedSignPage() {
   }), [background, id])
 
   return <Page>
-    <UserPageHeader title="Sign" />
+    <UserPageHeader title="Sign message" />
     <div className="po-md flex items-center">
       <div className="text-contrast">
-        Do you want to sign the following message?
+        Do you want to sign the following message? Some applications may ask you to sign a message to prove you own a specific address or to approve a specific action without doing a transaction.
       </div>
     </div>
     <PageBody>
