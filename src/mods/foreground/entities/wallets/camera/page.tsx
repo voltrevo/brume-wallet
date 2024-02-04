@@ -2,9 +2,7 @@
 import { Errors } from "@/libs/errors/errors"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { UUIDProps } from "@/libs/react/props/uuid"
-import { Results } from "@/libs/results/results"
 import { WcMetadata } from "@/libs/wconn/mods/wc/wc"
-import { Ok, Result } from "@hazae41/result"
 import { Decoder } from "@nuintun/qrcode"
 import { DecoderResult } from "@nuintun/qrcode/types/qrcode/decoder/Reader"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -103,23 +101,19 @@ export function WalletDataCameraPage() {
       .catch(Errors.logAndAlert)
   }, [onStream])
 
-  const tryConnect = useAsyncUniqueCallback(async (uri: string) => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      alert(`Connecting...`)
+  const connectOrAlert = useAsyncUniqueCallback((uri: string) => Errors.runAndLogAndAlert(async () => {
+    alert(`Connecting...`)
 
-      const metadata = await background.tryRequest<WcMetadata>({
-        method: "brume_wc_connect",
-        params: [uri, wallet.uuid]
-      }).then(r => r.throw(t).throw(t))
+    const metadata = await background.tryRequest<WcMetadata>({
+      method: "brume_wc_connect",
+      params: [uri, wallet.uuid]
+    }).then(r => r.unwrap().unwrap())
 
-      alert(`Connected to ${metadata.name}`)
-
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, wallet])
+    alert(`Connected to ${metadata.name}`)
+  }), [background, wallet])
 
   useEffect(() => {
-    if (text) tryConnect.run(text)
+    if (text) connectOrAlert.run(text)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text])
 

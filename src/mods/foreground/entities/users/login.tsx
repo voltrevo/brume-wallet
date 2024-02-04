@@ -38,7 +38,7 @@ export function UserLoginDialog() {
 
   const [invalid, setInvalid] = useState(false)
 
-  const login = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const loginOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     if (maybeUser == null)
       return
     const user = maybeUser
@@ -77,17 +77,17 @@ export function UserLoginDialog() {
       return
     e.preventDefault()
 
-    login.run()
-  }, [login])
+    loginOrAlert.run()
+  }, [loginOrAlert])
 
   const onCancel = useCallback(() => {
     close()
   }, [close])
 
   const onLogin = useCallback(() => {
-    login.run()
+    loginOrAlert.run()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [login.run])
+  }, [loginOrAlert.run])
 
   if (maybeUser == null)
     return null
@@ -111,7 +111,7 @@ export function UserLoginDialog() {
             type="password"
             value={rawPasswordInput}
             onChange={onPasswordInputChange}
-            disabled={login.loading}
+            disabled={loginOrAlert.loading}
             data-invalid={invalid}
             placeholder="Password"
             onKeyDown={onKeyDown}
@@ -125,7 +125,7 @@ export function UserLoginDialog() {
             Cancel
           </WideShrinkableContrastButton>
           <WideShrinkableOppositeButton
-            disabled={defPasswordInput.length < 3 || login.loading}
+            disabled={defPasswordInput.length < 3 || loginOrAlert.loading}
             onClick={onLogin}>
             <Outline.LockOpenIcon className="size-5" />
             Login

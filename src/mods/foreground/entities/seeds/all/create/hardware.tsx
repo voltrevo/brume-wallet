@@ -1,18 +1,18 @@
 /* eslint-disable @next/next/no-img-element */
 import { Color } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
+import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { Ledger } from "@/libs/ledger";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Results } from "@/libs/results/results";
 import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { SeedData } from "@/mods/background/service_worker/entities/seeds/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { HashSubpathProvider, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context";
-import { Err, Ok, Panic, Result } from "@hazae41/result";
+import { Err, Panic } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useGenius } from "../../../users/all/page";
 import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../../wallets/actions/send";
@@ -44,27 +44,23 @@ export function LedgerSeedCreatorDialog(props: {}) {
     return defNameInput || "Holder"
   }, [defNameInput])
 
-  const tryAdd = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!finalNameInput)
-        return new Err(new Panic())
+  const addOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (!finalNameInput)
+      return new Err(new Panic())
 
-      const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
+    const device = await Ledger.USB.tryConnect().then(r => r.unwrap())
 
-      const { address } = await Ledger.Ethereum.tryGetAddress(device, "44'/60'/0'/0/0").then(r => r.throw(t))
+    const { address } = await Ledger.Ethereum.tryGetAddress(device, "44'/60'/0'/0/0").then(r => r.unwrap())
 
-      const seed: SeedData = { type: "ledger", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address }
+    const seed: SeedData = { type: "ledger", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address }
 
-      await background.tryRequest<void>({
-        method: "brume_createSeed",
-        params: [seed]
-      }).then(r => r.throw(t).throw(t))
+    await background.tryRequest<void>({
+      method: "brume_createSeed",
+      params: [seed]
+    }).then(r => r.unwrap().unwrap())
 
-      close()
-
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [finalNameInput, uuid, color, emoji, background, close])
+    close()
+  }), [finalNameInput, uuid, color, emoji, background, close])
 
   const NameInput =
     <SimpleLabel>
@@ -88,7 +84,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
     <WideShrinkableGradientButton
       color={color}
       disabled={!canAdd}
-      onClick={tryAdd.run}>
+      onClick={addOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
       Add
     </WideShrinkableGradientButton>

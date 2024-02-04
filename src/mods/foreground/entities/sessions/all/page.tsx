@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
+import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { OkProps } from "@/libs/react/props/promise"
-import { Results } from "@/libs/results/results"
 import { Button } from "@/libs/ui/button"
 import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
@@ -11,7 +11,7 @@ import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/da
 import { Session } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { Nullable, Option } from "@hazae41/option"
-import { Ok, Result } from "@hazae41/result"
+import { Ok } from "@hazae41/result"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useBlobby } from "../../blobbys/data"
 import { useOrigin } from "../../origins/data"
@@ -34,26 +34,24 @@ export function SessionsPage() {
     return temp + pers
   }, [maybeTempSessions, maybePersSessions])
 
-  const tryDisconnectAll = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!confirm(`Do you want to disconnect all sessions?`))
-        return Ok.void()
+  const disconnectAllOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (!confirm(`Do you want to disconnect all sessions?`))
+      return
 
-      for (const session of Option.wrap(maybeTempSessions).unwrapOr([]))
-        await background.tryRequest({
-          method: "brume_disconnect",
-          params: [session.id]
-        }).then(r => r.throw(t).throw(t))
+    for (const session of Option.wrap(maybeTempSessions).unwrapOr([]))
+      await background.tryRequest({
+        method: "brume_disconnect",
+        params: [session.id]
+      }).then(r => r.unwrap().unwrap())
 
-      for (const session of Option.wrap(maybePersSessions).unwrapOr([]))
-        await background.tryRequest({
-          method: "brume_disconnect",
-          params: [session.id]
-        }).then(r => r.throw(t).throw(t))
+    for (const session of Option.wrap(maybePersSessions).unwrapOr([]))
+      await background.tryRequest({
+        method: "brume_disconnect",
+        params: [session.id]
+      }).then(r => r.unwrap().unwrap())
 
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, maybePersSessions])
+    return
+  }), [background, maybePersSessions])
 
   const Body =
     <PageBody>
@@ -72,8 +70,8 @@ export function SessionsPage() {
   const Header = <>
     <UserPageHeader title="Sessions">
       <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
-        disabled={tryDisconnectAll.loading || !length}
-        onClick={tryDisconnectAll.run}>
+        disabled={disconnectAllOrAlert.loading || !length}
+        onClick={disconnectAllOrAlert.run}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.TrashIcon className="size-5" />
         </div>
@@ -113,27 +111,23 @@ export function SessionRow(props: { session: Session }) {
     })
   }, [])
 
-  const tryDisconnect = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (maybeSessionData == null)
-        return Ok.void()
-      if (!confirm(`Do you want to disconnect this session?`))
-        return Ok.void()
-
-      await background.tryRequest({
-        method: "brume_disconnect",
-        params: [maybeSessionData.id]
-      }).then(r => r.throw(t).throw(t))
-
+  const disconnectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (maybeSessionData == null)
       return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, maybeSessionData])
+    if (!confirm(`Do you want to disconnect this session?`))
+      return Ok.void()
+
+    await background.tryRequest({
+      method: "brume_disconnect",
+      params: [maybeSessionData.id]
+    }).then(r => r.unwrap().unwrap())
+  }), [background, maybeSessionData])
 
   if (maybeOriginData == null)
     return null
 
   return <div role="button" className="po-md rounded-xl flex items-center gap-4"
-    onClick={tryDisconnect.run}>
+    onClick={disconnectOrAlert.run}>
     {maybeOriginData.icons?.map((x, i) =>
       <IndexedBlobbyLoader
         key={x.id}

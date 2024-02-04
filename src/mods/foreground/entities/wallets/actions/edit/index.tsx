@@ -30,7 +30,7 @@ export function WalletEditDialog(props: {}) {
     return defNameInput || "Holder"
   }, [defNameInput])
 
-  const save = useAsyncUniqueCallback(async () => Errors.runAndLogAndAlert(async () => {
+  const saveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     await query.mutate((s) => {
       const current = s.real?.current
 
@@ -60,8 +60,8 @@ export function WalletEditDialog(props: {}) {
   const SaveButton =
     <WideShrinkableGradientButton
       color={color}
-      disabled={save.loading}
-      onClick={save.run}>
+      disabled={saveOrAlert.loading}
+      onClick={saveOrAlert.run}>
       <Outline.CheckIcon className="size-5" />
       Save
     </WideShrinkableGradientButton>

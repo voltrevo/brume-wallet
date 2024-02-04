@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
+import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { OkProps } from "@/libs/react/props/promise"
-import { Results } from "@/libs/results/results"
 import { Button } from "@/libs/ui/button"
 import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
@@ -15,7 +15,7 @@ import { UserRejectedError } from "@/mods/foreground/errors/errors"
 import { Paths } from "@/mods/foreground/router/path/context"
 import { RpcErr } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
-import { Err, Ok, Result } from "@hazae41/result"
+import { Err } from "@hazae41/result"
 import { useCallback, useEffect, useState } from "react"
 import { useBlobby } from "../../blobbys/data"
 import { useOrigin } from "../../origins/data"
@@ -27,22 +27,20 @@ export function RequestsPage() {
   const requestsQuery = useAppRequests()
   const maybeRequests = requestsQuery.data?.get()
 
-  const tryRejectAll = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (maybeRequests == null)
-        return Ok.void()
-      if (!confirm(`Do you want to reject all requests?`))
-        return Ok.void()
+  const rejectAllOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (maybeRequests == null)
+      return
+    if (!confirm(`Do you want to reject all requests?`))
+      return
 
-      for (const { id } of maybeRequests)
-        await background.tryRequest({
-          method: "brume_respond",
-          params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-        }).then(r => r.throw(t).throw(t))
+    for (const { id } of maybeRequests)
+      await background.tryRequest({
+        method: "brume_respond",
+        params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
+      }).then(r => r.unwrap().unwrap())
 
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, maybeRequests])
+    return
+  }), [background, maybeRequests])
 
   const Body =
     <PageBody>
@@ -57,8 +55,8 @@ export function RequestsPage() {
   const Header = <>
     <UserPageHeader title="Requests">
       <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
-        disabled={tryRejectAll.loading || !Boolean(maybeRequests?.length)}
-        onClick={tryRejectAll.run}>
+        disabled={rejectAllOrAlert.loading || !Boolean(maybeRequests?.length)}
+        onClick={rejectAllOrAlert.run}>
         <div className={`${Button.Shrinker.className}`}>
           <Outline.TrashIcon className="size-5" />
         </div>

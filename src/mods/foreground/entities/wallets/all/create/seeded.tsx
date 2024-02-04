@@ -1,20 +1,19 @@
 import { Color } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
-import { UIError } from "@/libs/errors/errors";
+import { Errors, UIError } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { Ledger } from "@/libs/ledger";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Results } from "@/libs/results/results";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { SeedRef } from "@/mods/background/service_worker/entities/seeds/data";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Address, ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
-import { Err, Ok, Panic, Result } from "@hazae41/result";
+import { Panic, Result } from "@hazae41/result";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { HDKey } from "@scure/bip32";
 import { mnemonicToSeed } from "@scure/bip39";
@@ -93,79 +92,76 @@ export function SeededWalletCreatorDialog(props: {}) {
     return true
   }, [finalNameInput, defPathInput])
 
-  const tryAdd = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!finalNameInput)
-        return new Err(new Panic())
+  const addOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (!finalNameInput)
+      throw new Panic()
 
-      if (seedData.type === "ledger") {
-        const device = await Ledger.USB.tryConnect().then(r => r.mapErrSync(cause => {
-          return new UIError(`Could not connect to the device`, { cause })
-        }).throw(t))
+    if (seedData.type === "ledger") {
+      const device = await Ledger.USB.tryConnect().then(r => r.mapErrSync(cause => {
+        return new UIError(`Could not connect to the device`, { cause })
+      }).unwrap())
 
-        const { address } = await Ledger.Ethereum.tryGetAddress(device, defPathInput.slice(2)).then(r => r.mapErrSync(cause => {
-          return new UIError(`Could not get the address of the device`, { cause })
-        }).throw(t))
+      const { address } = await Ledger.Ethereum.tryGetAddress(device, defPathInput.slice(2)).then(r => r.mapErrSync(cause => {
+        return new UIError(`Could not get the address of the device`, { cause })
+      }).unwrap())
 
-        if (!ZeroHexString.is(address))
-          return new Err(new UIError(`Could not get the address of the device`))
+      if (!ZeroHexString.is(address))
+        throw new UIError(`Could not get the address of the device`)
 
-        const seed = SeedRef.from(seedData)
+      const seed = SeedRef.from(seedData)
 
-        const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, seed, path: defPathInput }
+      const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, seed, path: defPathInput }
 
-        await background.tryRequest<Wallet[]>({
-          method: "brume_createWallet",
-          params: [wallet]
-        }).then(r => r.mapErrSync(cause => {
-          return new UIError(`Could not communicate with the backend`, { cause })
-        }).throw(t).mapErrSync(cause => {
-          return new UIError(`Could not create the wallet`, { cause })
-        }).throw(t))
-      } else {
-        const instance = await SeedInstance.tryFrom(seedData, background).then(r => r.get())
+      await background.tryRequest<Wallet[]>({
+        method: "brume_createWallet",
+        params: [wallet]
+      }).then(r => r.mapErrSync(cause => {
+        return new UIError(`Could not communicate with the backend`, { cause })
+      }).unwrap().mapErrSync(cause => {
+        return new UIError(`Could not create the wallet`, { cause })
+      }).unwrap())
 
-        const mnemonic = await instance.tryGetMnemonic(background).then(r => r.mapErrSync(cause => {
-          return new UIError(`Could not get mnemonic`, { cause })
-        }).throw(t))
+    } else {
+      const instance = await SeedInstance.tryFrom(seedData, background).then(r => r.get())
 
-        const masterSeed = await Result.runAndDoubleWrap(async () => {
-          return await mnemonicToSeed(mnemonic)
-        }).then(r => r.throw(t))
+      const mnemonic = await instance.tryGetMnemonic(background).then(r => r.mapErrSync(cause => {
+        return new UIError(`Could not get mnemonic`, { cause })
+      }).unwrap())
 
-        const root = Result.runAndDoubleWrapSync(() => {
-          return HDKey.fromMasterSeed(masterSeed)
-        }).throw(t)
+      const masterSeed = await Result.runAndWrap(async () => {
+        return await mnemonicToSeed(mnemonic)
+      }).then(r => r.unwrap())
 
-        const child = Result.runAndWrapSync(() => {
-          return root.derive(defPathInput)
-        }).mapErrSync((cause) => {
-          return new UIError(`Invalid derivation path`, { cause })
-        }).throw(t)
+      const root = Result.runAndWrapSync(() => {
+        return HDKey.fromMasterSeed(masterSeed)
+      }).unwrap()
 
-        const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
-        const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
+      const child = Result.runAndWrapSync(() => {
+        return root.derive(defPathInput)
+      }).mapErrSync((cause) => {
+        return new UIError(`Invalid derivation path`, { cause })
+      }).unwrap()
 
-        const address = Address.compute(uncompressedPublicKeyBytes)
-        const seed = SeedRef.from(seedData)
+      const privateKeyBytes = Option.unwrap(child.privateKey)
+      const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
 
-        const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, seed, path: defPathInput }
+      const address = Address.compute(uncompressedPublicKeyBytes)
+      const seed = SeedRef.from(seedData)
 
-        await background.tryRequest<Wallet[]>({
-          method: "brume_createWallet",
-          params: [wallet]
-        }).then(r => r.mapErrSync(cause => {
-          return new UIError(`Could not communicate with the backend`, { cause })
-        }).throw(t).mapErrSync(cause => {
-          return new UIError(`Could not create the wallet`, { cause })
-        }).throw(t))
-      }
+      const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, seed, path: defPathInput }
 
-      close()
+      await background.tryRequest<Wallet[]>({
+        method: "brume_createWallet",
+        params: [wallet]
+      }).then(r => r.mapErrSync(cause => {
+        return new UIError(`Could not communicate with the backend`, { cause })
+      }).unwrap().mapErrSync(cause => {
+        return new UIError(`Could not create the wallet`, { cause })
+      }).unwrap())
+    }
 
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [finalNameInput, defPathInput, seedData, defPathInput, uuid, color, emoji, background, close])
+    close()
+  }), [finalNameInput, defPathInput, seedData, defPathInput, uuid, color, emoji, background, close])
 
   const NameInput =
     <SimpleLabel>
@@ -209,7 +205,7 @@ export function SeededWalletCreatorDialog(props: {}) {
     <WideShrinkableGradientButton
       color={color}
       disabled={!finalNameInput || !canAdd}
-      onClick={tryAdd.run}>
+      onClick={addOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
       Add
     </WideShrinkableGradientButton>

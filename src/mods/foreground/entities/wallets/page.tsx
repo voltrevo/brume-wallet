@@ -5,6 +5,7 @@ import { ChainData, chainByChainId, pairByAddress, tokenByAddress } from "@/libs
 import { Mutators } from "@/libs/glacier/mutators";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
+import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useKeyboardEnter, useMouse } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ChildrenProps } from "@/libs/react/props/children";
@@ -13,7 +14,6 @@ import { AnchorProps } from "@/libs/react/props/html";
 import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { State } from "@/libs/react/state";
-import { Results } from "@/libs/results/results";
 import { Button } from "@/libs/ui/button";
 import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Menu } from "@/libs/ui2/menu/menu";
@@ -23,7 +23,7 @@ import { WalletRef } from "@/mods/background/service_worker/entities/wallets/dat
 import { TokenSettings, TokenSettingsData } from "@/mods/background/service_worker/entities/wallets/tokens/data";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
 import { None, Nullable, Option, Optional, Some } from "@hazae41/option";
-import { Ok, Result } from "@hazae41/result";
+import { Result } from "@hazae41/result";
 import { Fragment, MouseEvent, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
 import { Page } from "../../../../libs/ui2/page/page";
@@ -156,29 +156,32 @@ function WalletDataPage() {
     Paths.go(`/wallet/${wallet.uuid}/camera`)
   }, [wallet])
 
-  const onLinkClick = useCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      const clipboard = await Result.runAndWrap(async () => {
-        return await navigator.clipboard.readText()
-      }).then(r => r.orElseSync(() => {
-        return Option.wrap(prompt("Paste a WalletConnect link here")).ok()
-      }).throw(t))
+  const connectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    const clipboard = await Result.runAndWrap(async () => {
+      return await navigator.clipboard.readText()
+    }).then(r => r.orElseSync(() => {
+      return Option.wrap(prompt("Paste a WalletConnect link here")).ok()
+    }).unwrap())
 
-      const url = Result.runAndDoubleWrapSync(() => new URL(clipboard)).setErr(new UIError("You must copy a WalletConnect link")).throw(t)
-      await Wc.tryParse(url).then(r => r.setErr(new UIError("You must copy a WalletConnect link")).throw(t))
+    const url = Result.runAndDoubleWrapSync(() => {
+      return new URL(clipboard)
+    }).mapErrSync(() => {
+      return new UIError("You must copy a WalletConnect link")
+    }).unwrap()
 
-      alert(`Connecting...`)
+    await Wc.tryParse(url).then(r => r.mapErrSync(() => {
+      return new UIError("You must copy a WalletConnect link")
+    }).unwrap())
 
-      const metadata = await background.tryRequest<WcMetadata>({
-        method: "brume_wc_connect",
-        params: [clipboard, wallet.uuid]
-      }).then(r => r.throw(t).throw(t))
+    alert(`Connecting...`)
 
-      alert(`Connected to ${metadata.name}`)
+    const metadata = await background.tryRequest<WcMetadata>({
+      method: "brume_wc_connect",
+      params: [clipboard, wallet.uuid]
+    }).then(r => r.unwrap().unwrap())
 
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [wallet, background])
+    alert(`Connected to ${metadata.name}`)
+  }), [wallet, background])
 
   const receive = useGenius(subpath, "/receive")
 
@@ -205,7 +208,7 @@ function WalletDataPage() {
             </div>
           </Button.Base>
           <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
-            onClick={onLinkClick}>
+            onClick={connectOrAlert.run}>
             <div className={`${Button.Shrinker.className}`}>
               <Outline.LinkIcon className="size-5" />
             </div>
@@ -371,7 +374,7 @@ export function WalletMenu(props: {
 
   const edit = useGenius(path, "/edit")
 
-  const onPrivateKeyShowClick = useCallback(() => Errors.runAndLogAndAlert(async () => {
+  const flipOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.unwrap())
     const privateKey = await instance.tryGetPrivateKey(background).then(r => r.unwrap())
 
@@ -381,7 +384,7 @@ export function WalletMenu(props: {
     close()
   }), [background, close, setFlip, setPrivateKey, wallet])
 
-  const onPrivateKeyHideClick = useCallback(async () => {
+  const onUnflipClick = useCallback(async () => {
     setFlip(false)
 
     close()
@@ -389,7 +392,7 @@ export function WalletMenu(props: {
 
   const walletQuery = useWallet(wallet.uuid)
 
-  const onTrashClick = useCallback(() => Errors.runAndLogAndAlert(async () => {
+  const trashOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     await walletQuery.mutate(s => {
       const current = s.real?.current
 
@@ -404,7 +407,7 @@ export function WalletMenu(props: {
     close()
   }), [close, walletQuery])
 
-  const onUntrashClick = useCallback(() => Errors.runAndLogAndAlert(async () => {
+  const untrashOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     await walletQuery.mutate(s => {
       const current = s.real?.current
 
@@ -429,25 +432,28 @@ export function WalletMenu(props: {
     </WideShrinkableNakedMenuAnchor>
     {!privateKey &&
       <WideShrinkableNakedMenuButton
-        onClick={onPrivateKeyShowClick}>
+        disabled={flipOrAlert.loading}
+        onClick={flipOrAlert.run}>
         <Outline.EyeIcon className="size-4" />
         Flip
       </WideShrinkableNakedMenuButton>}
     {privateKey &&
       <WideShrinkableNakedMenuButton
-        onClick={onPrivateKeyHideClick}>
+        onClick={onUnflipClick}>
         <Outline.EyeSlashIcon className="size-4" />
         Unflip
       </WideShrinkableNakedMenuButton>}
     {!wallet.trashed &&
       <WideShrinkableNakedMenuButton
-        onClick={onTrashClick}>
+        disabled={trashOrAlert.loading}
+        onClick={trashOrAlert.run}>
         <Outline.TrashIcon className="size-4" />
         Trash
       </WideShrinkableNakedMenuButton>}
     {wallet.trashed &&
       <WideShrinkableNakedMenuButton
-        onClick={onUntrashClick}>
+        disabled={untrashOrAlert.loading}
+        onClick={untrashOrAlert.run}>
         <Outline.TrashIcon className="size-4" />
         Untrash
       </WideShrinkableNakedMenuButton>}

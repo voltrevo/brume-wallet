@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
+import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
@@ -22,7 +23,7 @@ export function TrashedWalletsPage() {
     location.assign(path.go(`/wallet/${wallet.uuid}`))
   }, [path])
 
-  const onTrashClick = useCallback(() => Errors.runAndLogAndAlert(async () => {
+  const trashAllOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     if (!confirm("Are you sure you want to delete all wallets in the trash?"))
       return
 
@@ -43,7 +44,8 @@ export function TrashedWalletsPage() {
   const Header = <>
     <UserPageHeader title="Trash">
       <PaddedRoundedShrinkableNakedButton
-        onClick={onTrashClick}>
+        disabled={trashAllOrAlert.loading}
+        onClick={trashAllOrAlert.run}>
         <Outline.TrashIcon className="size-5" />
       </PaddedRoundedShrinkableNakedButton>
     </UserPageHeader>

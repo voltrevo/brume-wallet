@@ -58,7 +58,7 @@ export function UserCreateDialog(props: {}) {
     setRawConfirmPasswordInput(e.currentTarget.value)
   }, [])
 
-  const onClick = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const createOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const user: UserInit = { uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, password: defPasswordInput }
 
     await background
@@ -85,8 +85,8 @@ export function UserCreateDialog(props: {}) {
       return
     e.preventDefault()
 
-    onClick.run()
-  }, [onClick])
+    createOrAlert.run()
+  }, [createOrAlert])
 
   const error = useMemo(() => {
     if (defPasswordInput.length < 3)
@@ -139,7 +139,7 @@ export function UserCreateDialog(props: {}) {
   const DoneButton =
     <WideShrinkableGradientButton
       disabled={error != null}
-      onClick={onClick.run}
+      onClick={createOrAlert.run}
       color={color}>
       <Outline.PlusIcon className="size-5" />
       {error || "Add"}

@@ -1,8 +1,9 @@
 import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
+import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { usePathContext } from "@/mods/foreground/router/path/context";
-import { MouseEvent, useCallback } from "react";
+import { MouseEvent } from "react";
 import { useGenius } from "../../../users/all/page";
 import { WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "../../../wallets/actions/send";
 
@@ -13,7 +14,7 @@ export function SeedCreatorMenu(props: {}) {
   const mnemonic = useGenius(path, "/create/mnemonic")
   const hardware = useGenius(path, "/create/hardware")
 
-  const onHardwareClick = useCallback((e: MouseEvent) => Errors.runAndLogAndAlert(async () => {
+  const goHardwareOrAlert = useAsyncUniqueCallback((e: MouseEvent) => Errors.runAndLogAndAlert(async () => {
     if (location.pathname !== "/" && location.pathname !== "/index.html") {
       await background.tryRequest({
         method: "brume_open",
@@ -35,7 +36,8 @@ export function SeedCreatorMenu(props: {}) {
       Mnemonic
     </WideShrinkableNakedMenuAnchor>
     <WideShrinkableNakedMenuButton
-      onClick={onHardwareClick}>
+      disabled={goHardwareOrAlert.loading}
+      onClick={goHardwareOrAlert.run}>
       <Outline.SwatchIcon className="size-4" />
       Hardware
     </WideShrinkableNakedMenuButton>

@@ -1,9 +1,8 @@
-import { UIError } from "@/libs/errors/errors";
+import { Errors, UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { Results } from "@/libs/results/results";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -11,7 +10,7 @@ import { useUserStorageContext } from "@/mods/foreground/storage/user";
 import { Cubane, ZeroHexString } from "@hazae41/cubane";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
-import { Err, Ok, Panic, Result } from "@hazae41/result";
+import { Ok, Panic, Result } from "@hazae41/result";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { FgEthereum } from "../../unknown/data";
 import { SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "../../wallets/actions/send";
@@ -41,102 +40,98 @@ export function TokenAddDialog(props: {}) {
   const chain = chainByChainId[Number(defChainId)]
   const token = useToken(chain.chainId, defAddress)
 
-  const onAddClick = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!ZeroHexString.is(defAddress))
-        return new Err(new UIError(`Invalid address`))
+  const addOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (!ZeroHexString.is(defAddress))
+      throw new UIError(`Invalid address`)
 
-      const name = await Result.unthrow<Result<string, Error>>(async t => {
-        const context = { uuid: wallet.uuid, background, chain }
-        const signature = Cubane.Abi.FunctionSignature.tryParse("name()").throw(t)
-        const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
+    const name = await Result.unthrow<Result<string, Error>>(async t => {
+      const context = { uuid: wallet.uuid, background, chain }
+      const signature = Cubane.Abi.FunctionSignature.tryParse("name()").throw(t)
+      const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
 
-        const schema = FgEthereum.Unknown.schema<ZeroHexString>({
-          method: "eth_call",
-          params: [{
-            to: defAddress,
-            data: data
-          }, "pending"]
-        }, context, storage)
+      const schema = FgEthereum.Unknown.schema<ZeroHexString>({
+        method: "eth_call",
+        params: [{
+          to: defAddress,
+          data: data
+        }, "pending"]
+      }, context, storage)
 
-        if (schema == null)
-          throw new Panic()
+      if (schema == null)
+        throw new Panic()
 
-        const result = await schema.refetch().then(r => r.real?.current.throw(t))
+      const result = await schema.refetch().then(r => r.real?.current.throw(t))
 
-        const returns = Cubane.Abi.Tuple.create(Cubane.Abi.String)
-        const [name] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
+      const returns = Cubane.Abi.Tuple.create(Cubane.Abi.String)
+      const [name] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
 
-        return new Ok(name)
-      }).then(r => r.throw(t))
+      return new Ok(name)
+    }).then(r => r.unwrap())
 
-      const symbol = await Result.unthrow<Result<string, Error>>(async t => {
-        const context = { uuid: wallet.uuid, background, chain }
-        const signature = Cubane.Abi.FunctionSignature.tryParse("symbol()").throw(t)
-        const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
+    const symbol = await Result.unthrow<Result<string, Error>>(async t => {
+      const context = { uuid: wallet.uuid, background, chain }
+      const signature = Cubane.Abi.FunctionSignature.tryParse("symbol()").throw(t)
+      const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
 
-        const schema = FgEthereum.Unknown.schema<ZeroHexString>({
-          method: "eth_call",
-          params: [{
-            to: defAddress,
-            data: data
-          }, "pending"]
-        }, context, storage)
+      const schema = FgEthereum.Unknown.schema<ZeroHexString>({
+        method: "eth_call",
+        params: [{
+          to: defAddress,
+          data: data
+        }, "pending"]
+      }, context, storage)
 
-        if (schema == null)
-          throw new Panic()
+      if (schema == null)
+        throw new Panic()
 
-        const result = await schema.refetch().then(r => r.real?.current.throw(t))
+      const result = await schema.refetch().then(r => r.real?.current.throw(t))
 
-        const returns = Cubane.Abi.Tuple.create(Cubane.Abi.String)
-        const [symbol] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
+      const returns = Cubane.Abi.Tuple.create(Cubane.Abi.String)
+      const [symbol] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
 
-        return new Ok(symbol)
-      }).then(r => r.throw(t))
+      return new Ok(symbol)
+    }).then(r => r.unwrap())
 
-      const decimals = await Result.unthrow<Result<number, Error>>(async t => {
-        const context = { uuid: wallet.uuid, background, chain }
-        const signature = Cubane.Abi.FunctionSignature.tryParse("decimals()").throw(t)
-        const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
+    const decimals = await Result.unthrow<Result<number, Error>>(async t => {
+      const context = { uuid: wallet.uuid, background, chain }
+      const signature = Cubane.Abi.FunctionSignature.tryParse("decimals()").throw(t)
+      const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
 
-        const schema = FgEthereum.Unknown.schema<ZeroHexString>({
-          method: "eth_call",
-          params: [{
-            to: defAddress,
-            data: data
-          }, "pending"]
-        }, context, storage)
+      const schema = FgEthereum.Unknown.schema<ZeroHexString>({
+        method: "eth_call",
+        params: [{
+          to: defAddress,
+          data: data
+        }, "pending"]
+      }, context, storage)
 
-        if (schema == null)
-          throw new Panic()
+      if (schema == null)
+        throw new Panic()
 
-        const result = await schema.refetch().then(r => r.real?.current.throw(t))
+      const result = await schema.refetch().then(r => r.real?.current.throw(t))
 
-        const returns = Cubane.Abi.Tuple.create(Cubane.Abi.Uint8)
-        const [decimals] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
+      const returns = Cubane.Abi.Tuple.create(Cubane.Abi.Uint8)
+      const [decimals] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
 
-        return new Ok(Number(decimals))
-      }).then(r => r.throw(t))
+      return new Ok(Number(decimals))
+    }).then(r => r.unwrap())
 
-      await token.mutate(s => {
-        const data = new Data<ContractTokenData>({
-          uuid: crypto.randomUUID(),
-          type: "contract",
-          chainId: chain.chainId,
-          address: defAddress,
-          name: name,
-          symbol: symbol,
-          decimals: decimals
-        })
-
-        return new Some(data)
+    await token.mutate(s => {
+      const data = new Data<ContractTokenData>({
+        uuid: crypto.randomUUID(),
+        type: "contract",
+        chainId: chain.chainId,
+        address: defAddress,
+        name: name,
+        symbol: symbol,
+        decimals: decimals
       })
 
-      close()
+      return new Some(data)
+    })
 
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, close, chain, defAddress])
+    close()
+  }), [background, close, chain, defAddress])
 
   const addDisabled = useMemo(() => {
     if (!defAddress)
@@ -178,7 +173,7 @@ export function TokenAddDialog(props: {}) {
     <div className="flex items-center flex-wrap-reverse gap-2">
       <WideShrinkableOppositeButton
         disabled={Boolean(addDisabled)}
-        onClick={onAddClick.run}>
+        onClick={addOrAlert.run}>
         <Outline.PlusIcon className="size-5" />
         {addDisabled || "Send"}
       </WideShrinkableOppositeButton>
