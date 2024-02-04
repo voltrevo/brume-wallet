@@ -1,12 +1,12 @@
 import { Color } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
+import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { useConstant } from "@/libs/react/ref";
-import { Results } from "@/libs/results/results";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { WebAuthnStorage, WebAuthnStorageError } from "@/libs/webauthn/webauthn";
 import { WalletData } from "@/mods/background/service_worker/entities/wallets/data";
@@ -15,9 +15,10 @@ import { Base16 } from "@hazae41/base16";
 import { Base64 } from "@hazae41/base64";
 import { Bytes } from "@hazae41/bytes";
 import { Address, ZeroHexString } from "@hazae41/cubane";
-import { Err, Ok, Panic, Result } from "@hazae41/result";
+import { Panic, Result } from "@hazae41/result";
+import { Secp256k1 } from "@hazae41/secp256k1";
 import { secp256k1 } from "@noble/curves/secp256k1";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableGradientButton } from "../../actions/send";
 import { RawWalletCard } from "../../card";
 
@@ -52,69 +53,56 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     setRawKeyInput(e.currentTarget.value)
   }, [])
 
-  const doGenerate = useAsyncUniqueCallback(async () => {
-    const bytes = secp256k1.utils.randomPrivateKey()
-    setRawKeyInput(`0x${Base16.get().tryEncode(bytes).unwrap()}`)
-  }, [])
+  const generateOrAlert = useCallback(() => Errors.runAndLogAndAlertSync(() => {
+    using memory = Secp256k1.get().PrivateKey.tryRandom().unwrap().tryExport().unwrap()
+
+    setRawKeyInput(`0x${Base16.get().encodeOrThrow(memory)}`)
+  }), [])
 
   const triedAddress = useMemo(() => Result.runAndDoubleWrapSync(() => {
-    const privateKeyBytes = Base16.get().padStartAndDecodeOrThrow(zeroHexKey.slice(2)).copyAndDispose()
-    const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
+    using privateKeyMemory = Base16.get().padStartAndDecodeOrThrow(zeroHexKey.slice(2))
+    using privateKey = Secp256k1.get().PrivateKey.tryImport(privateKeyMemory).unwrap()
+    using publicKey = privateKey.tryGetPublicKey().unwrap()
+    using uncompressedPublicKeyMemory = publicKey.tryExportUncompressed().unwrap()
 
-    return Address.compute(uncompressedPublicKeyBytes)
+    return Address.compute(uncompressedPublicKeyMemory.bytes)
   }), [zeroHexKey])
 
-  const tryAddUnauthenticated = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!finalNameInput)
-        return new Err(new Panic())
-      if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
-        return new Err(new Panic())
-      if (!confirm("Did you backup your private key?"))
-        return Ok.void()
+  const addUnauthenticatedOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (!finalNameInput)
+      throw new Panic()
+    if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
+      throw new Panic()
+    if (!confirm("Did you backup your private key?"))
+      return
 
-      const privateKeyBytes = Base16.get().tryPadStartAndDecode(zeroHexKey.slice(2)).throw(t).copyAndDispose()
+    const address = triedAddress.unwrap()
+    const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, privateKey: zeroHexKey }
 
-      // TODO: use adapter
-      const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
-      // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
+    await background.tryRequest<void>({
+      method: "brume_createWallet",
+      params: [wallet]
+    }).then(r => r.unwrap().unwrap())
 
-      const address = Address.compute(uncompressedPublicKeyBytes)
+    close()
+  }), [finalNameInput, zeroHexKey, uuid, color, emoji, background, close])
 
-      // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
-      // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
+  const triedEncryptedPrivateKey = useAsyncReplaceMemo(() => Result.runAndDoubleWrap(async () => {
+    if (!finalNameInput)
+      throw new Panic()
+    if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
+      throw new Panic()
 
-      const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, privateKey: zeroHexKey }
+    using privateKeyMemory = Base16.get().padStartAndDecodeOrThrow(zeroHexKey.slice(2))
+    const privateKeyBase64 = Base64.get().encodePaddedOrThrow(privateKeyMemory)
 
-      await background.tryRequest<void>({
-        method: "brume_createWallet",
-        params: [wallet]
-      }).then(r => r.throw(t).throw(t))
+    const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
+      method: "brume_encrypt",
+      params: [privateKeyBase64]
+    }).then(r => r.unwrap().unwrap())
 
-      close()
-
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [finalNameInput, zeroHexKey, uuid, color, emoji, background, close])
-
-  const triedEncryptedPrivateKey = useAsyncReplaceMemo(async () => {
-    return await Result.unthrow<Result<[string, string], Error>>(async t => {
-      if (!finalNameInput)
-        return new Err(new Panic())
-      if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
-        return new Err(new Panic())
-
-      using privateKeyMemory = Base16.get().tryPadStartAndDecode(zeroHexKey.slice(2)).throw(t)
-      const privateKeyBase64 = Base64.get().tryEncodePadded(privateKeyMemory).throw(t)
-
-      const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
-        method: "brume_encrypt",
-        params: [privateKeyBase64]
-      }).then(r => r.throw(t).throw(t))
-
-      return new Ok([ivBase64, cipherBase64])
-    })
-  }, [finalNameInput, zeroHexKey, background])
+    return [ivBase64, cipherBase64]
+  }), [finalNameInput, zeroHexKey, background])
 
   const [id, setId] = useState<Uint8Array>()
 
@@ -122,70 +110,49 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     setId(undefined)
   }, [zeroHexKey])
 
-  const tryAddAuthenticated1 = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!finalNameInput)
-        return new Err(new Panic())
-      if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
-        return new Err(new Panic())
-      if (triedEncryptedPrivateKey == null)
-        return new Err(new Panic())
-      if (!confirm("Did you backup your private key?"))
-        return Ok.void()
+  const addAuthenticatedOrAlert1 = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (!finalNameInput)
+      throw new Panic()
+    if (triedEncryptedPrivateKey == null)
+      throw new Panic()
+    if (!confirm("Did you backup your private key?"))
+      return
 
-      const [_, cipherBase64] = triedEncryptedPrivateKey.throw(t)
-      const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
-      const id = await WebAuthnStorage.tryCreate(finalNameInput, cipher).then(r => r.throw(t))
+    const [_, cipherBase64] = triedEncryptedPrivateKey.unwrap()
+    const cipher = Base64.get().decodePaddedOrThrow(cipherBase64).copyAndDispose()
+    const id = await WebAuthnStorage.createOrThrow(finalNameInput, cipher)
 
-      setId(id)
+    setId(id)
+  }), [finalNameInput, triedEncryptedPrivateKey])
 
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [finalNameInput, zeroHexKey, triedEncryptedPrivateKey, uuid, color, emoji, background])
+  const addAuthenticatedOrAlert2 = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (id == null)
+      throw new Panic()
+    if (!finalNameInput)
+      throw new Panic()
+    if (triedEncryptedPrivateKey == null)
+      throw new Panic()
 
-  const tryAddAuthenticated2 = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!finalNameInput)
-        return new Err(new Panic())
-      if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
-        return new Err(new Panic())
-      if (id == null)
-        return new Err(new Panic())
-      if (triedEncryptedPrivateKey == null)
-        return new Err(new Panic())
+    const address = triedAddress.unwrap()
+    const [ivBase64, cipherBase64] = triedEncryptedPrivateKey.unwrap()
+    const cipher = Base64.get().decodePaddedOrThrow(cipherBase64).copyAndDispose()
+    const cipher2 = await WebAuthnStorage.getOrThrow(id)
 
-      const privateKeyBytes = Base16.get().tryPadStartAndDecode(zeroHexKey.slice(2)).throw(t).copyAndDispose()
+    if (!Bytes.equals(cipher, cipher2))
+      throw new WebAuthnStorageError()
 
-      const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
-      // const compressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true)
+    const idBase64 = Base64.get().encodePaddedOrThrow(id)
+    const privateKey = { ivBase64, idBase64 }
 
-      const address = Address.compute(uncompressedPublicKeyBytes)
+    const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, privateKey }
 
-      // const uncompressedBitcoinAddress = await Bitcoin.Address.from(uncompressedPublicKeyBytes)
-      // const compressedBitcoinAddress = await Bitcoin.Address.from(compressedPublicKeyBytes)
+    await background.tryRequest<void>({
+      method: "brume_createWallet",
+      params: [wallet]
+    }).then(r => r.unwrap().unwrap())
 
-      const [ivBase64, cipherBase64] = triedEncryptedPrivateKey.throw(t)
-      const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
-      const cipher2 = await WebAuthnStorage.tryGet(id).then(r => r.throw(t))
-
-      if (!Bytes.equals(cipher, cipher2))
-        return new Err(new WebAuthnStorageError())
-
-      const idBase64 = Base64.get().tryEncodePadded(id).throw(t)
-      const privateKey = { ivBase64, idBase64 }
-
-      const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, privateKey }
-
-      await background.tryRequest<void>({
-        method: "brume_createWallet",
-        params: [wallet]
-      }).then(r => r.throw(t).throw(t))
-
-      close()
-
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [finalNameInput, zeroHexKey, id, triedEncryptedPrivateKey, uuid, color, emoji, background, close])
+    close()
+  }), [id, finalNameInput, triedAddress, triedEncryptedPrivateKey, uuid, color, emoji, background, close])
 
   const NameInput =
     <SimpleLabel>
@@ -214,7 +181,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       </div>
       <div className="h-2" />
       <WideShrinkableContrastButton
-        onClick={doGenerate.run}>
+        onClick={generateOrAlert}>
         <Outline.KeyIcon className="size-5" />
         Generate
       </WideShrinkableContrastButton>
@@ -231,7 +198,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
   const AddUnauthButton =
     <WideShrinkableContrastButton
       disabled={!canAdd}
-      onClick={tryAddUnauthenticated.run}>
+      onClick={addUnauthenticatedOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
       Add without authentication
     </WideShrinkableContrastButton>
@@ -240,7 +207,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     <WideShrinkableGradientButton
       color={color}
       disabled={!canAdd}
-      onClick={tryAddAuthenticated1.run}>
+      onClick={addAuthenticatedOrAlert1.run}>
       <Outline.LockClosedIcon className="size-5" />
       Add with authentication
     </WideShrinkableGradientButton>
@@ -249,7 +216,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     <WideShrinkableGradientButton
       color={color}
       disabled={!canAdd}
-      onClick={tryAddAuthenticated2.run}>
+      onClick={addAuthenticatedOrAlert2.run}>
       <Outline.LockClosedIcon className="size-5" />
       Add with authentication (1/2)
     </WideShrinkableGradientButton>
