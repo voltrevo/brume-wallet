@@ -3,7 +3,6 @@ import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { OkProps } from "@/libs/react/props/promise"
-import { Button } from "@/libs/ui/button"
 import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
@@ -19,6 +18,7 @@ import { Err } from "@hazae41/result"
 import { useCallback, useEffect, useState } from "react"
 import { useBlobby } from "../../blobbys/data"
 import { useOrigin } from "../../origins/data"
+import { PaddedRoundedShrinkableNakedButton } from "../../wallets/actions/send"
 import { useAppRequest, useAppRequests } from "../data"
 
 export function RequestsPage() {
@@ -54,13 +54,11 @@ export function RequestsPage() {
 
   const Header = <>
     <UserPageHeader title="Requests">
-      <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
+      <PaddedRoundedShrinkableNakedButton
         disabled={rejectAllOrAlert.loading || !Boolean(maybeRequests?.length)}
         onClick={rejectAllOrAlert.run}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.TrashIcon className="size-5" />
-        </div>
-      </Button.Base>
+        <Outline.TrashIcon className="size-5" />
+      </PaddedRoundedShrinkableNakedButton>
     </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">

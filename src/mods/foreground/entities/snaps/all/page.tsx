@@ -1,8 +1,8 @@
 import { Outline } from "@/libs/icons/icons"
-import { Button } from "@/libs/ui/button"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { useCallback } from "react"
+import { PaddedRoundedShrinkableNakedButton } from "../../wallets/actions/send"
 import { useSnaps } from "../data"
 
 export function SnapsPage() {
@@ -19,12 +19,10 @@ export function SnapsPage() {
 
   const Header = <>
     <UserPageHeader title="Plugins">
-      <button className={`${Button.Base.className} size-8 hovered-or-clicked-or-focused:scale-105 !transition`}
+      <PaddedRoundedShrinkableNakedButton
         onClick={onAdd}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.PlusIcon className="size-5" />
-        </div>
-      </button>
+        <Outline.PlusIcon className="size-5" />
+      </PaddedRoundedShrinkableNakedButton>
     </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">

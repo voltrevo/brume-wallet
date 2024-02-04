@@ -1,5 +1,5 @@
 import { BigIntToHex, BigInts } from "@/libs/bigints/bigints";
-import { UIError } from "@/libs/errors/errors";
+import { Errors, UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -18,6 +18,7 @@ import { useSession } from "@/mods/foreground/entities/sessions/data";
 import { useSignature } from "@/mods/foreground/entities/signatures/data";
 import { useGasPrice, useNonce } from "@/mods/foreground/entities/unknown/data";
 import { UserGuard } from "@/mods/foreground/entities/users/context";
+import { PaddedRoundedShrinkableNakedButton, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send";
 import { WalletCreatorMenu } from "@/mods/foreground/entities/wallets/all/create";
 import { SelectableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
@@ -308,168 +309,142 @@ export function SwitchPage() {
 }
 
 export function PersonalSignPage() {
-  const { url, go } = usePathContext().unwrap()
-  const { searchParams } = url
+  const path = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
-  const id = Option.wrap(searchParams.get("id")).unwrap()
-  const message = Option.wrap(searchParams.get("message")).unwrap()
-  const walletId = Option.wrap(searchParams.get("walletId")).unwrap()
+  const id = Option.unwrap(path.url.searchParams.get("id"))
+  const message = Option.unwrap(path.url.searchParams.get("message"))
+  const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
 
   const walletQuery = useWallet(walletId)
   const maybeWallet = walletQuery.data?.get()
 
-  const userMessage = useMemo(() => {
+  const triedUserMessage = useMemo(() => Result.runAndWrapSync(() => {
     return message.startsWith("0x")
-      ? Bytes.toUtf8(Base16.get().tryPadStartAndDecode(message.slice(2)).unwrap().copyAndDispose())
+      ? Bytes.toUtf8(Base16.get().padStartAndDecodeOrThrow(message.slice(2)).copyAndDispose())
       : message
-  }, [message])
+  }), [message])
 
-  const onApprove = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      const wallet = Option.wrap(maybeWallet).ok().throw(t)
+  const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    const wallet = Option.unwrap(maybeWallet)
+    const message = triedUserMessage.unwrap()
 
-      const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.throw(t))
-      const signature = await instance.trySignPersonalMessage(userMessage, background).then(r => r.throw(t))
+    const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.unwrap())
+    const signature = await instance.trySignPersonalMessage(message, background).then(r => r.unwrap())
 
-      await background.tryRequest({
-        method: "brume_respond",
-        params: [new RpcOk(id, signature)]
-      }).then(r => r.throw(t).throw(t))
+    await background.tryRequest({
+      method: "brume_respond",
+      params: [new RpcOk(id, signature)]
+    }).then(r => r.unwrap().unwrap())
 
-      location.replace(go("/done"))
+    location.replace(path.go("/done"))
+  }), [maybeWallet, triedUserMessage, background, id, path])
 
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, id, maybeWallet, userMessage])
+  const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    await background.tryRequest({
+      method: "brume_respond",
+      params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
+    }).then(r => r.unwrap().unwrap())
 
-  const onReject = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      await background.tryRequest({
-        method: "brume_respond",
-        params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-      }).then(r => r.throw(t).throw(t))
-
-      location.replace(go("/done"))
-
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, id])
+    location.replace(path.go("/done"))
+  }), [background, id, path])
 
   return <Page>
-    <div className="p-4 grow flex flex-col items-center justify-center">
-      <div className="text-center text-xl font-medium">
-        Sign message
-      </div>
-      <div className="w-full max-w-[230px] text-center text-contrast">
+    <UserPageHeader title="Sign" />
+    <div className="po-md flex items-center">
+      <div className="text-contrast">
         Do you want to sign the following message?
       </div>
     </div>
-    <div className="w-full p-4 grow">
-      <div className="h-full w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap break-words">
-        {userMessage}
+    <PageBody>
+      <div className="grow p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
+        {triedUserMessage.unwrapOr("Could not decode message")}
       </div>
-    </div>
-    <div className="p-4 w-full flex items-center gap-2">
-      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
-        onClick={onReject.run}
-        disabled={onReject.loading}>
-        <div className={`${Button.Shrinker.className}`}>
+      <div className="h-4 grow" />
+      <div className="flex items-center flex-wrap-reverse gap-2">
+        <WideShrinkableContrastButton
+          onClick={rejectOrAlert.run}
+          disabled={rejectOrAlert.loading}>
           <Outline.XMarkIcon className="size-5" />
-          No, reject it
-        </div>
-      </Button.Contrast>
-      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
-        onClick={onApprove.run}
-        disabled={onApprove.loading}
-        colorIndex={5}>
-        <div className={`${Button.Shrinker.className}`}>
+          Reject
+        </WideShrinkableContrastButton>
+        <WideShrinkableOppositeButton
+          onClick={approveOrAlert.run}
+          disabled={approveOrAlert.loading}>
           <Outline.CheckIcon className="size-5" />
-          Yes, approve it
-        </div>
-      </Button.Gradient>
-    </div>
+          Approve
+        </WideShrinkableOppositeButton>
+      </div>
+    </PageBody>
   </Page>
 }
 
 export function TypedSignPage() {
-  const { url, go } = usePathContext().unwrap()
-  const { searchParams } = url
+  const path = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
-  const id = Option.wrap(searchParams.get("id")).unwrap()
-  const data = Option.wrap(searchParams.get("data")).unwrap()
-  const walletId = Option.wrap(searchParams.get("walletId")).unwrap()
+  const id = Option.unwrap(path.url.searchParams.get("id"))
+  const data = Option.unwrap(path.url.searchParams.get("data"))
+  const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
 
   const walletQuery = useWallet(walletId)
-  const maybeWallet = walletQuery.data?.get()
+  const maybeWallet = walletQuery.current?.ok().get()
 
-  const onApprove = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      const wallet = Option.wrap(maybeWallet).ok().throw(t)
+  const triedParsedData = useMemo(() => Result.runAndWrapSync(() => {
+    return JSON.parse(data) as Abi.Typed.TypedData
+  }), [data])
 
-      const typed = JSON.parse(data) as Abi.Typed.TypedData
+  const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    const wallet = Option.unwrap(maybeWallet)
+    const data = triedParsedData.unwrap()
 
-      const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.throw(t))
-      const signature = await instance.trySignEIP712HashedMessage(typed, background).then(r => r.throw(t))
+    const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.unwrap())
+    const signature = await instance.trySignEIP712HashedMessage(data, background).then(r => r.unwrap())
 
-      await background.tryRequest({
-        method: "brume_respond",
-        params: [new RpcOk(id, signature)]
-      }).then(r => r.throw(t).throw(t))
+    await background.tryRequest({
+      method: "brume_respond",
+      params: [new RpcOk(id, signature)]
+    }).then(r => r.unwrap().unwrap())
 
-      location.replace(go("/done"))
+    location.replace(path.go("/done"))
+  }), [maybeWallet, data, background, id, path])
 
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, id, maybeWallet, data])
+  const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    await background.tryRequest({
+      method: "brume_respond",
+      params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
+    }).then(r => r.unwrap().unwrap())
 
-  const onReject = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      await background.tryRequest({
-        method: "brume_respond",
-        params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-      }).then(r => r.throw(t).throw(t))
-
-      location.replace(go("/done"))
-
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, id])
+    location.replace(path.go("/done"))
+  }), [background, id])
 
   return <Page>
-    <div className="p-4 grow flex flex-col items-center justify-center">
-      <div className="text-center text-xl font-medium">
-        Sign message
-      </div>
-      <div className="w-full max-w-[230px] text-center text-contrast">
+    <UserPageHeader title="Sign" />
+    <div className="po-md flex items-center">
+      <div className="text-contrast">
         Do you want to sign the following message?
       </div>
     </div>
-    <div className="w-full p-4 grow">
-      <div className="h-full w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap break-words">
-        {JSON.stringify(JSON.parse(data))}
+    <PageBody>
+      <div className="grow p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
+        {triedParsedData.mapSync(JSON.stringify).unwrapOr("Could not decode message")}
       </div>
-    </div>
-    <div className="p-4 w-full flex items-center gap-2">
-      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
-        onClick={onReject.run}
-        disabled={onReject.loading}>
-        <div className={`${Button.Shrinker.className}`}>
+      <div className="h-4 grow" />
+      <div className="flex items-center flex-wrap-reverse gap-2">
+        <WideShrinkableContrastButton
+          onClick={rejectOrAlert.run}
+          disabled={rejectOrAlert.loading}>
           <Outline.XMarkIcon className="size-5" />
-          No, reject it
-        </div>
-      </Button.Contrast>
-      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
-        onClick={onApprove.run}
-        disabled={onApprove.loading}
-        colorIndex={5}>
-        <div className={`${Button.Shrinker.className}`}>
+          Reject
+        </WideShrinkableContrastButton>
+        <WideShrinkableOppositeButton
+          onClick={approveOrAlert.run}
+          disabled={approveOrAlert.loading}>
           <Outline.CheckIcon className="size-5" />
-          Yes, approve it
-        </div>
-      </Button.Gradient>
-    </div>
+          Approve
+        </WideShrinkableOppositeButton>
+      </div>
+    </PageBody>
   </Page>
 }
 
@@ -477,7 +452,7 @@ export function WalletAndChainSelectPage() {
   const path = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
-  const id = Option.wrap(path.url.searchParams.get("id")).unwrap()
+  const id = Option.unwrap(path.url.searchParams.get("id"))
 
   const wallets = useWallets()
 
@@ -490,7 +465,6 @@ export function WalletAndChainSelectPage() {
   }, [])
 
   const [selecteds, setSelecteds] = useState<Nullable<Wallet>[]>([])
-  const [chain, setChain] = useState<number>(1)
 
   const onWalletClick = useCallback((wallet: Wallet) => {
     const clone = new Set(selecteds)
@@ -503,34 +477,34 @@ export function WalletAndChainSelectPage() {
     setSelecteds([...clone])
   }, [selecteds])
 
-  const onApprove = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (selecteds.length === 0)
-        return new Err(new UIError(`No wallet selected`))
+  const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (selecteds.length === 0)
+      throw new UIError(`No wallet selected`)
 
-      await background.tryRequest({
-        method: "brume_respond",
-        params: [new RpcOk(id, [persistent, chain, selecteds])]
-      }).then(r => r.throw(t).throw(t))
+    await background.tryRequest({
+      method: "brume_respond",
+      params: [new RpcOk(id, [persistent, 1, selecteds])]
+    }).then(r => r.unwrap().unwrap())
 
-      location.replace(path.go("/done"))
+    location.replace(path.go("/done"))
+  }), [selecteds, persistent, background, id, path])
 
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, id, selecteds, chain, persistent])
+  const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    await background.tryRequest({
+      method: "brume_respond",
+      params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
+    }).then(r => r.unwrap().unwrap())
 
-  const onReject = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      await background.tryRequest({
-        method: "brume_respond",
-        params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-      }).then(r => r.throw(t).throw(t))
+    location.replace(path.go("/done"))
+  }), [background, id, path])
 
-      location.replace(path.go("/done"))
-
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, id])
+  const Header =
+    <UserPageHeader title="Connect">
+      <PaddedRoundedShrinkableNakedButton
+        onClick={creator.enable}>
+        <Outline.PlusIcon className="size-5" />
+      </PaddedRoundedShrinkableNakedButton>
+    </UserPageHeader>
 
   const Body =
     <PageBody>
@@ -539,26 +513,32 @@ export function WalletAndChainSelectPage() {
         ok={onWalletClick}
         selecteds={selecteds} />
       <div className="h-4" />
-      <label className="flex items-center justify-between">
-        <div className="">
-          Keep me connected
+      <label className="po-md flex items-center bg-contrast rounded-xl">
+        <div className="shrink-0">
+          Stay connected
         </div>
-        <input className=""
+        <div className="w-4 grow" />
+        <input className="bg-transparent outline-none min-w-0 disabled:text-contrast"
           type="checkbox"
           checked={persistent}
           onChange={onPersistentChange} />
       </label>
+      <div className="h-4 grow" />
+      <div className="flex items-center flex-wrap-reverse gap-2">
+        <WideShrinkableContrastButton
+          onClick={rejectOrAlert.run}
+          disabled={rejectOrAlert.loading}>
+          <Outline.XMarkIcon className="size-5" />
+          Reject
+        </WideShrinkableContrastButton>
+        <WideShrinkableOppositeButton
+          onClick={approveOrAlert.run}
+          disabled={approveOrAlert.loading}>
+          <Outline.CheckIcon className="size-5" />
+          Approve
+        </WideShrinkableOppositeButton>
+      </div>
     </PageBody>
-
-  const Header =
-    <UserPageHeader title="Select wallets">
-      <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
-        onClick={creator.enable}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.PlusIcon className="size-5" />
-        </div>
-      </Button.Base>
-    </UserPageHeader>
 
   return <Page>
     {creator.current &&
@@ -568,30 +548,12 @@ export function WalletAndChainSelectPage() {
       </Dialog>}
     {Header}
     {Body}
-    <div className="p-4 w-full flex items-center gap-2">
-      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
-        onClick={onReject.run}
-        disabled={onReject.loading}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.XMarkIcon className="size-5" />
-          No, reject it
-        </div>
-      </Button.Contrast>
-      <button className={`${Button.Base.className} ${Button.Gradient.className(5)} grow po-md hovered-or-clicked-or-focused:scale-105 !transition`}
-        onClick={onApprove.run}
-        disabled={onApprove.loading}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.CheckIcon className="size-5" />
-          Yes, approve it
-        </div>
-      </button>
-    </div>
   </Page>
 }
 
 export function DonePage() {
   const path = usePathContext().unwrap()
-  const requests = useAppRequests().data?.get()
+  const requests = useAppRequests().current?.ok().get()
 
   useEffect(() => {
     if (!requests?.length)

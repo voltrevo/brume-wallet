@@ -15,6 +15,7 @@ import { Ok } from "@hazae41/result"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useBlobby } from "../../blobbys/data"
 import { useOrigin } from "../../origins/data"
+import { PaddedRoundedShrinkableNakedButton } from "../../wallets/actions/send"
 import { useSession } from "../data"
 import { useStatus } from "../status/data"
 import { usePersistentSessions, useTemporarySessions } from "./data"
@@ -69,13 +70,11 @@ export function SessionsPage() {
 
   const Header = <>
     <UserPageHeader title="Sessions">
-      <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
+      <PaddedRoundedShrinkableNakedButton
         disabled={disconnectAllOrAlert.loading || !length}
         onClick={disconnectAllOrAlert.run}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.TrashIcon className="size-5" />
-        </div>
-      </Button.Base>
+        <Outline.TrashIcon className="size-5" />
+      </PaddedRoundedShrinkableNakedButton>
     </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">

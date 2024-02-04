@@ -14,7 +14,6 @@ import { AnchorProps } from "@/libs/react/props/html";
 import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { State } from "@/libs/react/state";
-import { Button } from "@/libs/ui/button";
 import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Menu } from "@/libs/ui2/menu/menu";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
@@ -36,7 +35,7 @@ import { usePairPrice } from "../tokens/pairs/data";
 import { SmallShrinkableContrastButton, useGenius } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
-import { WalletSendScreen, WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "./actions/send";
+import { PaddedRoundedShrinkableNakedButton, WalletSendScreen, WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "./actions/send";
 import { RawWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2, useWallet } from "./data";
@@ -199,20 +198,16 @@ function WalletDataPage() {
     <UserPageHeader
       title="Wallet"
       back={onBackClick}>
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         {background.isWebsite() && <>
-          <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
+          <PaddedRoundedShrinkableNakedButton
             onClick={onCameraClick}>
-            <div className={`${Button.Shrinker.className}`}>
-              <Outline.QrCodeIcon className="size-5" />
-            </div>
-          </Button.Base>
-          <Button.Base className="size-8 hovered-or-clicked-or-focused:scale-105 !transition"
+            <Outline.QrCodeIcon className="size-5" />
+          </PaddedRoundedShrinkableNakedButton>
+          <PaddedRoundedShrinkableNakedButton
             onClick={connectOrAlert.run}>
-            <div className={`${Button.Shrinker.className}`}>
-              <Outline.LinkIcon className="size-5" />
-            </div>
-          </Button.Base>
+            <Outline.LinkIcon className="size-5" />
+          </PaddedRoundedShrinkableNakedButton>
         </>}
       </div>
     </UserPageHeader>
