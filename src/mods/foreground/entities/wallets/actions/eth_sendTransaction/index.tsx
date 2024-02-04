@@ -974,7 +974,7 @@ export function WalletTransactionDialog(props: {}) {
       </div>
       <div className="w-4" />
       {maybeIsEip1559 === true &&
-        <select className="w-full bg-transparent outline-none overflow-ellipsis overflow-x-hidden"
+        <select className="w-full bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
           value={gasMode}
           onChange={onGasModeChange}>
           <option value="urgent">
@@ -991,7 +991,7 @@ export function WalletTransactionDialog(props: {}) {
           </option>
         </select>}
       {maybeIsEip1559 === false &&
-        <select className="w-full bg-transparent outline-none overflow-ellipsis overflow-x-hidden"
+        <select className="w-full bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
           value={gasMode}
           onChange={onGasModeChange}>
           <option value="urgent">

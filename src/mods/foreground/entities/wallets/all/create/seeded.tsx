@@ -1,4 +1,4 @@
-import { Colors } from "@/libs/colors/colors";
+import { Color } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
 import { UIError } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
@@ -8,9 +8,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Results } from "@/libs/results/results";
-import { Button } from "@/libs/ui/button";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
-import { Input } from "@/libs/ui/input";
 import { SeedRef } from "@/mods/background/service_worker/entities/seeds/data";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -23,7 +21,8 @@ import { mnemonicToSeed } from "@scure/bip39";
 import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { SeedInstance } from "../../../seeds/all/helpers";
 import { useSeedDataContext } from "../../../seeds/context";
-import { WalletAvatar } from "../../avatar";
+import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../actions/send";
+import { EmptyRectangularCard } from "./standalone";
 
 export function SeededWalletCreatorDialog(props: {}) {
   const close = useCloseContext().unwrap()
@@ -33,7 +32,7 @@ export function SeededWalletCreatorDialog(props: {}) {
   const uuid = useConstant(() => crypto.randomUUID())
 
   const modhash = useModhash(uuid)
-  const color = Colors.mod(modhash)
+  const color = Color.get(modhash)
   const emoji = Emojis.get(modhash)
 
   const [rawNameInput = "", setRawNameInput] = useState<string>()
@@ -44,7 +43,11 @@ export function SeededWalletCreatorDialog(props: {}) {
     setRawNameInput(e.currentTarget.value)
   }, [])
 
-  const [rawPathInput = "", setRawPathInput] = useState<string>("m/44'/60'/0'/0/0")
+  const finalNameInput = useMemo(() => {
+    return defNameInput || "Holder"
+  }, [defNameInput])
+
+  const [rawPathInput = "", setRawPathInput] = useState<string>()
 
   const defPathInput = useDeferredValue(rawPathInput)
 
@@ -58,48 +61,41 @@ export function SeededWalletCreatorDialog(props: {}) {
     setCoin(e.currentTarget.value)
   }, [])
 
-  const [app, setApp] = useState<string>("metamask")
-
-  const onAppChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
-    setApp(e.currentTarget.value)
-  }, [])
-
   const [rawIndexInput = "", setRawIndexInput] = useState<string>("0")
 
   const defIndexInput = useDeferredValue(rawIndexInput)
 
   const onIndexInputChange = useInputChange(e => {
     setRawIndexInput(e.currentTarget.value)
-  }, [coin, app])
+  }, [])
 
   useEffect(() => {
     if (coin === "custom")
-      return setRawPathInput("m/44'/60'/0'/0/0")
+      return setRawPathInput(undefined)
 
-    const rawCoin = coin === "eth" ? "60" : "61"
+    const i = Number(defIndexInput).toFixed()
 
-    if (app === "custom")
-      return setRawPathInput(`m/44'/${rawCoin}'/0'/0/0`)
-
-    const rawInput = Number(defIndexInput).toFixed()
-
-    if (app === "ledger")
-      return setRawPathInput(`m/44'/${rawCoin}'/${rawInput}'/0/0`)
-    if (app === "metamask")
-      return setRawPathInput(`m/44'/${rawCoin}'/0'/0/${rawInput}`)
-  }, [coin, app, defIndexInput])
+    if (coin === "eth-metamask")
+      return setRawPathInput(`m/44'/60'/0'/0/${i}`)
+    if (coin === "eth-ledger")
+      return setRawPathInput(`m/44'/60'/${i}'/0/0`)
+    if (coin === "etc-metamask")
+      return setRawPathInput(`m/44'/61'/0'/0/${i}`)
+    if (coin === "etc-ledger")
+      return setRawPathInput(`m/44'/61'/${i}'/0/0`)
+  }, [coin, defIndexInput])
 
   const canAdd = useMemo(() => {
-    if (!defNameInput)
+    if (!finalNameInput)
       return false
     if (!defPathInput)
       return false
     return true
-  }, [defNameInput, defPathInput])
+  }, [finalNameInput, defPathInput])
 
   const tryAdd = useAsyncUniqueCallback(async () => {
     return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!defNameInput)
+      if (!finalNameInput)
         return new Err(new Panic())
 
       if (seedData.type === "ledger") {
@@ -116,7 +112,7 @@ export function SeededWalletCreatorDialog(props: {}) {
 
         const seed = SeedRef.from(seedData)
 
-        const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: defNameInput, color, emoji, address, seed, path: defPathInput }
+        const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, seed, path: defPathInput }
 
         await background.tryRequest<Wallet[]>({
           method: "brume_createWallet",
@@ -153,7 +149,7 @@ export function SeededWalletCreatorDialog(props: {}) {
         const address = Address.compute(uncompressedPublicKeyBytes)
         const seed = SeedRef.from(seedData)
 
-        const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: defNameInput, color, emoji, address, seed, path: defPathInput }
+        const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, seed, path: defPathInput }
 
         await background.tryRequest<Wallet[]>({
           method: "brume_createWallet",
@@ -169,117 +165,107 @@ export function SeededWalletCreatorDialog(props: {}) {
 
       return Ok.void()
     }).then(Results.logAndAlert)
-  }, [defNameInput, defPathInput, seedData, defPathInput, uuid, color, emoji, background, close])
+  }, [finalNameInput, defPathInput, seedData, defPathInput, uuid, color, emoji, background, close])
 
   const NameInput =
-    <div className="flex items-stretch gap-2">
+    <SimpleLabel>
       <div className="shrink-0">
-        <WalletAvatar className="size-12 text-2xl"
-          colorIndex={color}
-          emoji={emoji} />
+        Name
       </div>
-      <Input.Contrast className="w-full"
-        placeholder="Enter a name"
+      <div className="w-4" />
+      <SimpleInput
+        placeholder="Holder"
         value={rawNameInput}
         onChange={onNameInputChange} />
-    </div>
+    </SimpleLabel>
 
   const PathInput =
-    <Input.Contrast className="w-full"
-      placeholder="m/44'/60'/0'/0/0"
-      value={rawPathInput}
-      onChange={onPathInputChange} />
+    <SimpleLabel>
+      <div className="shrink-0">
+        Path
+      </div>
+      <div className="w-4" />
+      <SimpleInput
+        placeholder="m/44'/60'/0'/0/0"
+        value={rawPathInput}
+        onChange={onPathInputChange} />
+    </SimpleLabel>
 
   const IndexInput =
-    <Input.Contrast className="w-full"
-      placeholder="0"
-      type="number"
-      min={0}
-      value={rawIndexInput}
-      onChange={onIndexInputChange} />
+    <SimpleLabel>
+      <div className="shrink-0">
+        Index
+      </div>
+      <div className="w-4" />
+      <SimpleInput
+        placeholder="0"
+        type="number"
+        min={0}
+        value={rawIndexInput}
+        onChange={onIndexInputChange} />
+    </SimpleLabel>
 
   const AddButon =
-    <Button.Gradient className="grow po-md"
-      colorIndex={color}
-      disabled={!defNameInput || !canAdd}
+    <WideShrinkableGradientButton
+      color={color}
+      disabled={!finalNameInput || !canAdd}
       onClick={tryAdd.run}>
-      <div className={`${Button.Shrinker.className}`}>
-        <Outline.PlusIcon className="size-5" />
-        Add
-      </div>
-    </Button.Gradient>
+      <Outline.PlusIcon className="size-5" />
+      Add
+    </WideShrinkableGradientButton>
 
   return <>
     <Dialog.Title>
       New wallet
     </Dialog.Title>
     <div className="h-4" />
-    {NameInput}
-    <div className="h-4" />
-    <div className="font-medium">
-      Choose an account type
+    <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="w-full max-w-sm">
+        <EmptyRectangularCard />
+      </div>
     </div>
     <div className="h-2" />
-    <select className="overflow-ellipsis overflow-x-hidden"
-      value={coin}
-      onChange={onCoinChange}>
-      <option value="eth">
-        Ethereum
-      </option>
-      <option value="etc">
-        Ethereum Classic
-      </option>
-      <option value="custom">
-        Other
-      </option>
-    </select>
-    {coin === "custom" && <>
-      <div className="h-4" />
-      <div className="font-medium">
-        Choose a derivation path
-      </div>
+    <div className="flex-1 flex flex-col">
+      <div className="grow" />
+      {NameInput}
       <div className="h-2" />
-      {PathInput}
-    </>}
-    {coin !== "custom" && <>
-      <div className="h-2" />
-      <select
-        value={app}
-        onChange={onAppChange}>
-        <option value="metamask">
-          MetaMask
-        </option>
-        <option value="ledger">
-          Ledger Live
-        </option>
-        <option value="custom">
-          Other
-        </option>
-      </select>
-      {app === "custom" && <>
-        <div className="h-4" />
-        <div className="font-medium">
-          Choose a derivation path
+      <SimpleLabel>
+        <div className="shrink-0">
+          Account
         </div>
+        <div className="w-4" />
+        <select className="w-full bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
+          value={coin}
+          onChange={onCoinChange}>
+          <option value="eth-metamask">
+            {`Ethereum — MetaMask-like — m/44'/60'/0'/0/x`}
+          </option>
+          <option value="eth-ledger">
+            {`Ethereum — Ledger-like - m/44'/60'/x'/0/0`}
+          </option>
+          <option value="etc-metamask">
+            {`Ethereum Classic — MetaMask-like — m/44'/61'/0'/0/x`}
+          </option>
+          <option value="etc-metamask">
+            {`Ethereum Classic — Ledger-like - m/44'/61'/x'/0/0`}
+          </option>
+          <option value="custom">
+            Custom
+          </option>
+        </select>
+      </SimpleLabel>
+      {coin === "custom" && <>
         <div className="h-2" />
         {PathInput}
       </>}
-      {app !== "custom" && <>
-        <div className="h-4" />
-        <div className="font-medium">
-          Choose an account index
-        </div>
+      {coin !== "custom" && <>
         <div className="h-2" />
         {IndexInput}
-        <div className="h-2" />
-        <div className="text-contrast">
-          Your derivation path will be {rawPathInput}
-        </div>
       </>}
-    </>}
-    <div className="h-4 grow" />
-    <div className="flex items-center flex-wrap-reverse gap-2">
-      {AddButon}
+      <div className="h-4" />
+      <div className="flex items-center flex-wrap-reverse gap-2">
+        {AddButon}
+      </div>
     </div>
   </>
 }
