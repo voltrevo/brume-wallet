@@ -87,7 +87,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     close()
   }), [finalNameInput, zeroHexKey, uuid, color, emoji, background, close])
 
-  const triedEncryptedPrivateKey = useAsyncReplaceMemo(() => Result.runAndDoubleWrap(async () => {
+  const triedEncryptedPrivateKey = useAsyncReplaceMemo(() => Result.runAndWrap(async () => {
     if (!finalNameInput)
       throw new Panic()
     if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
@@ -134,11 +134,13 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       throw new Panic()
 
     const address = triedAddress.unwrap()
-    const [ivBase64, cipherBase64] = triedEncryptedPrivateKey.unwrap()
-    const cipher = Base64.get().decodePaddedOrThrow(cipherBase64).copyAndDispose()
-    const cipher2 = await WebAuthnStorage.getOrThrow(id)
 
-    if (!Bytes.equals(cipher, cipher2))
+    const [ivBase64, cipherBase64] = triedEncryptedPrivateKey.unwrap()
+
+    using cipherMemory = Base64.get().decodePaddedOrThrow(cipherBase64)
+    const cipherBytes = await WebAuthnStorage.getOrThrow(id)
+
+    if (!Bytes.equals(cipherMemory.bytes, cipherBytes))
       throw new WebAuthnStorageError()
 
     const idBase64 = Base64.get().encodePaddedOrThrow(id)

@@ -1,22 +1,22 @@
 import { Color } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
+import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { useConstant } from "@/libs/react/ref";
-import { Results } from "@/libs/results/results";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { WebAuthnStorage, WebAuthnStorageError } from "@/libs/webauthn/webauthn";
 import { SeedData } from "@/mods/background/service_worker/entities/seeds/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Base64 } from "@hazae41/base64";
 import { Bytes } from "@hazae41/bytes";
-import { Err, Ok, Panic, Result } from "@hazae41/result";
+import { Err, Panic, Result } from "@hazae41/result";
 import { generateMnemonic, mnemonicToEntropy, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableGradientButton } from "../../../wallets/actions/send";
 import { RawSeedCard } from "../../card";
 
@@ -50,58 +50,48 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     setRawPhraseInput(e.currentTarget.value)
   }, [])
 
-  const doGenerate12 = useAsyncUniqueCallback(async () => {
+  const generate12OrAlert = useCallback(() => Errors.runAndLogAndAlertSync(() => {
     setRawPhraseInput(generateMnemonic(wordlist, 128))
-  }, [])
+  }), [])
 
-  const doGenerate24 = useAsyncUniqueCallback(async () => {
+  const generate24OrAlert = useCallback(() => Errors.runAndLogAndAlertSync(() => {
     setRawPhraseInput(generateMnemonic(wordlist, 256))
-  }, [])
+  }), [])
 
-  const tryAddUnauthenticated = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!finalNameInput)
-        return new Err(new Panic())
-      if (!defPhraseInput)
-        return new Err(new Panic())
-      if (!confirm("Did you backup your seed phrase?"))
-        return Ok.void()
+  const addUnauthenticatedOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (!finalNameInput)
+      throw new Panic()
+    if (!defPhraseInput)
+      throw new Panic()
+    if (!confirm("Did you backup your seed phrase?"))
+      return
 
-      const seed: SeedData = { type: "mnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, mnemonic: defPhraseInput }
+    const seed: SeedData = { type: "mnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, mnemonic: defPhraseInput }
 
-      await background.tryRequest<void>({
-        method: "brume_createSeed",
-        params: [seed]
-      }).then(r => r.throw(t).throw(t))
+    await background.tryRequest<void>({
+      method: "brume_createSeed",
+      params: [seed]
+    }).then(r => r.unwrap().unwrap())
 
-      close()
+    close()
+  }), [finalNameInput, defPhraseInput, uuid, color, emoji, background, close])
 
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [finalNameInput, defPhraseInput, uuid, color, emoji, background, close])
+  const triedEncryptedPhrase = useAsyncReplaceMemo(() => Result.runAndWrap(async () => {
+    if (!finalNameInput)
+      throw new Panic()
+    if (!defPhraseInput)
+      throw new Panic()
 
-  const triedEncryptedPhrase = useAsyncReplaceMemo(async () => {
-    return await Result.unthrow<Result<[string, string], Error>>(async t => {
-      if (!finalNameInput)
-        return new Err(new Panic())
-      if (!defPhraseInput)
-        return new Err(new Panic())
+    const entropyBytes = mnemonicToEntropy(defPhraseInput, wordlist)
+    const entropyBase64 = Base64.get().encodePaddedOrThrow(entropyBytes)
 
-      try {
-        const entropyBytes = mnemonicToEntropy(defPhraseInput, wordlist)
-        const entropyBase64 = Base64.get().tryEncodePadded(entropyBytes).throw(t)
+    const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
+      method: "brume_encrypt",
+      params: [entropyBase64]
+    }).then(r => r.unwrap().unwrap())
 
-        const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
-          method: "brume_encrypt",
-          params: [entropyBase64]
-        }).then(r => r.throw(t).throw(t))
-
-        return new Ok([ivBase64, cipherBase64])
-      } catch (e: unknown) {
-        return new Err(new Panic())
-      }
-    })
-  }, [finalNameInput, defPhraseInput, background])
+    return [ivBase64, cipherBase64]
+  }), [finalNameInput, defPhraseInput, background])
 
   const [id, setId] = useState<Uint8Array>()
 
@@ -109,61 +99,49 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     setId(undefined)
   }, [defPhraseInput])
 
-  const tryAddAuthenticated1 = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!finalNameInput)
-        return new Err(new Panic())
-      if (!defPhraseInput)
-        return new Err(new Panic())
-      if (triedEncryptedPhrase == null)
-        return new Err(new Panic())
-      if (!confirm("Did you backup your seed phrase?"))
-        return Ok.void()
+  const addAuthenticatedOrAlert1 = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (!finalNameInput)
+      throw new Panic()
+    if (triedEncryptedPhrase == null)
+      throw new Panic()
+    if (!confirm("Did you backup your seed phrase?"))
+      return
 
-      const [_, cipherBase64] = triedEncryptedPhrase.throw(t)
-      const cipher = Base64.get().tryDecodePadded(cipherBase64).throw(t).copyAndDispose()
-      const id = await WebAuthnStorage.tryCreate(finalNameInput, cipher).then(r => r.throw(t))
+    const [_, cipherBase64] = triedEncryptedPhrase.unwrap()
+    const cipher = Base64.get().decodePaddedOrThrow(cipherBase64).copyAndDispose()
+    const id = await WebAuthnStorage.createOrThrow(finalNameInput, cipher)
 
-      setId(id)
+    setId(id)
+  }), [finalNameInput, triedEncryptedPhrase])
 
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [finalNameInput, defPhraseInput, triedEncryptedPhrase, uuid, color, emoji, background])
+  const addAuthenticatedOrAlert2 = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    if (id == null)
+      throw new Panic()
+    if (!finalNameInput)
+      throw new Panic()
+    if (triedEncryptedPhrase == null)
+      throw new Panic()
 
-  const tryAddAuthenticated2 = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      if (!finalNameInput)
-        return new Err(new Panic())
-      if (!defPhraseInput)
-        return new Err(new Panic())
-      if (id == null)
-        return new Err(new Panic())
-      if (triedEncryptedPhrase == null)
-        return new Err(new Panic())
+    const [ivBase64, cipherBase64] = triedEncryptedPhrase.unwrap()
 
-      const [ivBase64, cipherBase64] = triedEncryptedPhrase.throw(t)
+    using cipherMemory = Base64.get().decodePaddedOrThrow(cipherBase64)
+    const cipherBytes = await WebAuthnStorage.getOrThrow(id)
 
-      using cipherSlice = Base64.get().tryDecodePadded(cipherBase64).throw(t)
-      const cipherBytes2 = await WebAuthnStorage.tryGet(id).then(r => r.throw(t))
+    if (!Bytes.equals(cipherMemory.bytes, cipherBytes))
+      return new Err(new WebAuthnStorageError())
 
-      if (!Bytes.equals(cipherSlice.bytes, cipherBytes2))
-        return new Err(new WebAuthnStorageError())
+    const idBase64 = Base64.get().encodePaddedOrThrow(id)
+    const mnemonic = { ivBase64, idBase64 }
 
-      const idBase64 = Base64.get().tryEncodePadded(id).throw(t)
-      const mnemonic = { ivBase64, idBase64 }
+    const seed: SeedData = { type: "authMnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, mnemonic }
 
-      const seed: SeedData = { type: "authMnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, mnemonic }
+    await background.tryRequest<void>({
+      method: "brume_createSeed",
+      params: [seed]
+    }).then(r => r.unwrap().unwrap())
 
-      await background.tryRequest<void>({
-        method: "brume_createSeed",
-        params: [seed]
-      }).then(r => r.throw(t).throw(t))
-
-      close()
-
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [finalNameInput, defPhraseInput, id, triedEncryptedPhrase, uuid, color, emoji, background, close])
+    close()
+  }), [id, finalNameInput, triedEncryptedPhrase, uuid, color, emoji, background, close])
 
   const NameInput =
     <SimpleLabel>
@@ -193,12 +171,12 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       <div className="h-2" />
       <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableContrastButton
-          onClick={doGenerate12.run}>
+          onClick={generate12OrAlert}>
           <Outline.KeyIcon className="size-5" />
           Generate 12 words
         </WideShrinkableContrastButton>
         <WideShrinkableContrastButton
-          onClick={doGenerate24.run}>
+          onClick={generate24OrAlert}>
           <Outline.KeyIcon className="size-5" />
           Generate 24 words
         </WideShrinkableContrastButton>
@@ -216,7 +194,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
   const AddUnauthButton =
     <WideShrinkableContrastButton
       disabled={!canAdd}
-      onClick={tryAddUnauthenticated.run}>
+      onClick={addUnauthenticatedOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
       Add without authentication
     </WideShrinkableContrastButton>
@@ -225,7 +203,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     <WideShrinkableGradientButton
       color={color}
       disabled={!canAdd}
-      onClick={tryAddAuthenticated1.run}>
+      onClick={addAuthenticatedOrAlert1.run}>
       <Outline.LockClosedIcon className="size-5" />
       Add with authentication
     </WideShrinkableGradientButton>
@@ -234,7 +212,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     <WideShrinkableGradientButton
       color={color}
       disabled={!canAdd}
-      onClick={tryAddAuthenticated2.run}>
+      onClick={addAuthenticatedOrAlert2.run}>
       <Outline.LockClosedIcon className="size-5" />
       Add with authentication (1/2)
     </WideShrinkableGradientButton>
