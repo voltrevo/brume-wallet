@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Colors, Gradients } from "@/libs/colors/colors";
+import { Color, Gradients } from "@/libs/colors/colors";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { ChainData, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Mutators } from "@/libs/glacier/mutators";
@@ -658,11 +658,13 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
   const tokenId = token.type === "native"
     ? token.chainId + token.symbol
     : token.chainId + token.address + token.symbol
-  const modtoken = Colors.get(useModhash(`${tokenId}`))
+
+  const modhash = useModhash(tokenId)
+  const color = Color.get(modhash)
 
   return <button className="po-sm group flex items-center text-left"
     onClick={onClick}>
-    <div className={`relative h-12 w-12 flex items-center justify-center bg-${modtoken} text-white rounded-full`}>
+    <div className={`relative h-12 w-12 flex items-center justify-center bg-${color}-400 dark:bg-${color}-500 text-white rounded-full`}>
       <div className=""
         style={{ fontSize: `${Math.min((20 - (2 * token.symbol.length)), 16)}px` }}>
         {token.symbol}
@@ -723,7 +725,9 @@ function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
   const tokenId = token.type === "native"
     ? token.chainId + token.symbol
     : token.chainId + token.address + token.symbol
-  const modtoken = Colors.get(useModhash(`${tokenId}`))
+
+  const modhash = useModhash(tokenId)
+  const color = Color.get(modhash)
 
   return <label className={`po-sm group flex items-center`}>
     <input className="appearance-none"
@@ -738,7 +742,7 @@ function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
       </div>
     </div>
     <div className="w-4" />
-    <div className={`relative h-12 w-12 flex items-center justify-center bg-${modtoken} text-white rounded-full`}>
+    <div className={`relative h-12 w-12 flex items-center justify-center bg-${color}-400 dark:bg-${color}-500 text-white rounded-full`}>
       <div className=""
         style={{ fontSize: `${Math.min((20 - (2 * token.symbol.length)), 16)}px` }}>
         {token.symbol}

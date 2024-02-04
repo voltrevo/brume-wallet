@@ -16,12 +16,12 @@
 
   .bg-contrast {
     @apply bg-black/5;
-    @apply dark:bg-white/5;
+    @apply dark:bg-white/[0.075];
   }
 
   .bg-contrast-hover {
     @apply bg-black/10;
-    @apply dark:bg-white/10;
+    @apply dark:bg-white/15;
   }
 
   .bg-backdrop {
