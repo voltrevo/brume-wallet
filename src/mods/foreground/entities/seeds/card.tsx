@@ -2,7 +2,7 @@ import { Color, Gradient } from "@/libs/colors/colors"
 import { Outline } from "@/libs/icons/icons"
 import { useCallback, useEffect, useState } from "react"
 import { flushSync } from "react-dom"
-import { usePathContext, useSubpath } from "../../router/path/context"
+import { useHashSubpath, usePathContext } from "../../router/path/context"
 import { useGenius } from "../users/all/page"
 import { CircularWhiteAnchorInColoredCard, CircularWhiteButtonInColoredCard } from "../wallets/card"
 import { useSeedDataContext } from "./context"
@@ -25,7 +25,7 @@ export function RawSeedCard(props: { name: string } & { emoji: string } & { colo
   const path = usePathContext().unwrap()
   const { name, emoji, color, href, index, flip, unflip } = props
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
   const genius = useGenius(subpath, href)
 
   const [color1, color2] = Gradient.get(color)

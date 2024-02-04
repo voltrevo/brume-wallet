@@ -11,7 +11,7 @@ import { GlobalPageHeader, PageBody } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { BackgroundProvider } from "@/mods/foreground/background/context"
 import { WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send"
-import { DefaultPathProvider } from "@/mods/foreground/router/path/context"
+import { HashPathProvider } from "@/mods/foreground/router/path/context"
 import { GlobalStorageProvider } from "@/mods/foreground/storage/global"
 import { UserStorageProvider } from "@/mods/foreground/storage/user"
 import { Base16 } from "@hazae41/base16"
@@ -124,7 +124,7 @@ export default function App({ Component, pageProps }: AppProps) {
     <Catcher fallback={Fallback}>
       <PromiseCatcher>
         <Initializer />
-        <DefaultPathProvider>
+        <HashPathProvider>
           <BackgroundProvider>
             <GlobalStorageProvider>
               <UserStorageProvider>
@@ -132,7 +132,7 @@ export default function App({ Component, pageProps }: AppProps) {
               </UserStorageProvider>
             </GlobalStorageProvider>
           </BackgroundProvider>
-        </DefaultPathProvider>
+        </HashPathProvider>
       </PromiseCatcher>
     </Catcher>
   </>

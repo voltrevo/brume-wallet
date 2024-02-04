@@ -9,7 +9,7 @@ import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { KeyboardEvent, useCallback, useDeferredValue, useRef, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
-import { usePathState, useSearchState } from "../../router/path/context";
+import { useKeyValueState, usePathState } from "../../router/path/context";
 import { SimpleLabel, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../wallets/actions/send";
 import { UserAvatar } from "./all/page";
 import { useCurrentUser, useUser } from "./data";
@@ -19,7 +19,7 @@ export function UserLoginDialog() {
   const background = useBackgroundContext().unwrap()
 
   const $state = usePathState<{ user: string }>()
-  const [maybeUserId] = useSearchState("user", $state)
+  const [maybeUserId] = useKeyValueState("user", $state)
 
   const userQuery = useUser(maybeUserId)
   const maybeUser = userQuery.current?.ok().get()

@@ -7,7 +7,7 @@ import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { qurl } from "@/libs/url/url";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData } from "@/mods/background/service_worker/entities/transactions/data";
-import { SubpathProvider, usePathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
+import { HashSubpathProvider, useHashSubpath, useKeyValueState, usePathContext, usePathState } from "@/mods/foreground/router/path/context";
 import { Address, Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
@@ -25,14 +25,14 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
 
   const $state = usePathState<UrlState>()
-  const [maybeStep, setStep] = useSearchState("step", $state)
-  const [maybeChain, setChain] = useSearchState("chain", $state)
-  const [maybeTarget, setTarget] = useSearchState("target", $state)
-  const [maybeValue, setValue] = useSearchState("value", $state)
-  const [maybeTrial0, setTrial0] = useSearchState("trial0", $state)
+  const [maybeStep, setStep] = useKeyValueState("step", $state)
+  const [maybeChain, setChain] = useKeyValueState("chain", $state)
+  const [maybeTarget, setTarget] = useKeyValueState("target", $state)
+  const [maybeValue, setValue] = useKeyValueState("value", $state)
+  const [maybeTrial0, setTrial0] = useKeyValueState("trial0", $state)
 
   const trial0UuidFallback = useConstant(() => crypto.randomUUID())
   const trial0Uuid = Option.wrap(maybeTrial0).unwrapOr(trial0UuidFallback)
@@ -237,7 +237,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   }, [rawValue, tokenData])
 
   const onSendTransactionClick = useCallback(() => {
-    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeFinalTarget, value: maybeFinalValue?.toString() })).href)
+    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeFinalTarget, value: maybeFinalValue?.toString() })))
   }, [subpath, trial0Uuid, chainData.chainId, maybeFinalValue, maybeFinalTarget])
 
   const trialQuery = useTransactionTrial(trial0Uuid)
@@ -251,12 +251,12 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   }, [close])
 
   return <>
-    <SubpathProvider>
+    <HashSubpathProvider>
       {subpath.url.pathname === "/eth_sendTransaction" &&
         <Dialog2>
           <WalletTransactionDialog />
         </Dialog2>}
-    </SubpathProvider>
+    </HashSubpathProvider>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}

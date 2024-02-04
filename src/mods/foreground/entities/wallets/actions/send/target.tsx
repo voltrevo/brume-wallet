@@ -4,7 +4,7 @@ import { Outline } from "@/libs/icons/icons";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
-import { usePathState, useSearchState } from "@/mods/foreground/router/path/context";
+import { useKeyValueState, usePathState } from "@/mods/foreground/router/path/context";
 import { Address } from "@hazae41/cubane";
 import { Option, Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
@@ -19,11 +19,11 @@ export function WalletSendScreenTarget(props: {}) {
   const close = useCloseContext().unwrap()
 
   const $state = usePathState<UrlState>()
-  const [maybeStep, setStep] = useSearchState("step", $state)
-  const [maybeChain, setChain] = useSearchState("chain", $state)
-  const [maybeTarget, setTarget] = useSearchState("target", $state)
-  const [maybeType, setType] = useSearchState("type", $state)
-  const [maybeToken, setToken] = useSearchState("token", $state)
+  const [maybeStep, setStep] = useKeyValueState("step", $state)
+  const [maybeChain, setChain] = useKeyValueState("chain", $state)
+  const [maybeTarget, setTarget] = useKeyValueState("target", $state)
+  const [maybeType, setType] = useKeyValueState("type", $state)
+  const [maybeToken, setToken] = useKeyValueState("token", $state)
 
   const chain = Option.unwrap(maybeChain)
   const chainData = chainByChainId[Number(chain)]

@@ -19,7 +19,7 @@ export function TrashedWalletsPage() {
   const maybeWallets = walletsQuery.current?.ok().get()
 
   const onWalletClick = useCallback((wallet: Wallet) => {
-    location.assign(path.go(`/wallet/${wallet.uuid}`).href)
+    location.assign(path.go(`/wallet/${wallet.uuid}`))
   }, [path])
 
   const onTrashClick = useCallback(() => Errors.runAndLogAndAlert(async () => {

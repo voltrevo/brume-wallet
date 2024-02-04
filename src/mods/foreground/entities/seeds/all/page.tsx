@@ -5,7 +5,7 @@ import { Menu } from "@/libs/ui2/menu/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
-import { Paths, SubpathProvider, usePathContext, useSubpath } from "@/mods/foreground/router/path/context"
+import { HashSubpathProvider, Paths, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context"
 import { useCallback } from "react"
 import { useGenius } from "../../users/all/page"
 import { PaddedRoundedShrinkableNakedAnchor } from "../../wallets/actions/send"
@@ -23,7 +23,7 @@ export function SeedsPage() {
   const seedsQuery = useSeeds()
   const maybeSeeds = seedsQuery.data?.get()
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
   const creator = useGenius(subpath, "/create")
 
   const onSeedClick = useCallback((seed: Seed) => {
@@ -53,7 +53,7 @@ export function SeedsPage() {
     </div>
   </>
   return <Page>
-    <SubpathProvider>
+    <HashSubpathProvider>
       {subpath.url.pathname === "/create" &&
         <Menu>
           <SeedCreatorMenu />
@@ -66,7 +66,7 @@ export function SeedsPage() {
         <Dialog2>
           <LedgerSeedCreatorDialog />
         </Dialog2>}
-    </SubpathProvider>
+    </HashSubpathProvider>
     {Header}
     {Body}
   </Page>

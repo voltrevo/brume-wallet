@@ -164,7 +164,7 @@ export function TransactPage() {
         params: [new RpcOk(id, tx.serialized)]
       }).then(r => r.throw(t).throw(t))
 
-      location.replace(go("/done").href)
+      location.replace(go("/done"))
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -177,7 +177,7 @@ export function TransactPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      location.replace(go("/done").href)
+      location.replace(go("/done"))
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -255,7 +255,7 @@ export function SwitchPage() {
         params: [new RpcOk(id, undefined)]
       }).then(r => r.throw(t).throw(t))
 
-      location.replace(go("/done").href)
+      location.replace(go("/done"))
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -270,7 +270,7 @@ export function SwitchPage() {
 
       await new Promise(ok => setTimeout(ok, 250))
 
-      location.replace(go("/done").href)
+      location.replace(go("/done"))
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -337,7 +337,7 @@ export function PersonalSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      location.replace(go("/done").href)
+      location.replace(go("/done"))
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -350,7 +350,7 @@ export function PersonalSignPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      location.replace(go("/done").href)
+      location.replace(go("/done"))
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -418,7 +418,7 @@ export function TypedSignPage() {
         params: [new RpcOk(id, signature)]
       }).then(r => r.throw(t).throw(t))
 
-      location.replace(go("/done").href)
+      location.replace(go("/done"))
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -431,7 +431,7 @@ export function TypedSignPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      location.replace(go("/done").href)
+      location.replace(go("/done"))
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -513,7 +513,7 @@ export function WalletAndChainSelectPage() {
         params: [new RpcOk(id, [persistent, chain, selecteds])]
       }).then(r => r.throw(t).throw(t))
 
-      location.replace(path.go("/done").href)
+      location.replace(path.go("/done"))
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -526,7 +526,7 @@ export function WalletAndChainSelectPage() {
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
       }).then(r => r.throw(t).throw(t))
 
-      location.replace(path.go("/done").href)
+      location.replace(path.go("/done"))
 
       return Ok.void()
     }).then(Results.logAndAlert)
@@ -590,13 +590,13 @@ export function WalletAndChainSelectPage() {
 }
 
 export function DonePage() {
-  const { go } = usePathContext().unwrap()
+  const path = usePathContext().unwrap()
   const requests = useAppRequests().data?.get()
 
   useEffect(() => {
     if (!requests?.length)
       return
-    go("/requests")
+    location.replace(path.go("/requests"))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requests])
 
@@ -606,7 +606,7 @@ export function DonePage() {
         Done
       </div>
       <div className="w-full max-w-[230px] text-center text-contrast">
-        You can now close this window or continue using it
+        You can now close this window or continue to use it
       </div>
     </div>
   </Page>

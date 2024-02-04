@@ -7,7 +7,7 @@ import { Menu } from "@/libs/ui2/menu/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
-import { SubpathProvider, usePathContext, useSubpath } from "@/mods/foreground/router/path/context"
+import { HashSubpathProvider, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable } from "@hazae41/option"
 import { useCallback } from "react"
 import { WideShrinkableContrastAnchor, useGenius } from "../../users/all/page"
@@ -28,11 +28,11 @@ export function WalletsPage() {
   const trashedWalletsQuery = useTrashedWallets()
   const maybeTrashedWallets = trashedWalletsQuery.current?.ok().get()
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
   const creator = useGenius(subpath, "/create")
 
   const onWalletClick = useCallback((wallet: Wallet) => {
-    location.assign(path.go(`/wallet/${wallet.uuid}`).href)
+    location.assign(path.go(`/wallet/${wallet.uuid}`))
   }, [path])
 
   const Body =
@@ -68,7 +68,7 @@ export function WalletsPage() {
   </>
 
   return <Page>
-    <SubpathProvider>
+    <HashSubpathProvider>
       {subpath.url.pathname === "/create" &&
         <Menu>
           <WalletCreatorMenu />
@@ -81,7 +81,7 @@ export function WalletsPage() {
         <Dialog2>
           <ReadonlyWalletCreatorDialog />
         </Dialog2>}
-    </SubpathProvider>
+    </HashSubpathProvider>
     {Header}
     {Body}
   </Page>
@@ -159,7 +159,7 @@ export function NewRectangularAnchorCard(props: ChildrenProps) {
   const path = usePathContext().unwrap()
   const { children } = props
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
   const creator = useGenius(subpath, "/create")
 
   return <a className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed active:scale-90 transition-transform"

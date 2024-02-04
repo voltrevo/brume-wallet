@@ -17,7 +17,7 @@ import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
 import { FourDisplay } from "@/mods/foreground/landing/4/4";
 import { FiveDisplay } from "@/mods/foreground/landing/5/5";
 import { SixDisplay } from "@/mods/foreground/landing/6/6";
-import { PathHandle, SubpathProvider, usePathContext, useSubpath } from "@/mods/foreground/router/path/context";
+import { HashSubpathProvider, PathHandle, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context";
 import { KeyboardEvent, MouseEvent, useCallback, useMemo } from "react";
 import { WideShrinkableNakedMenuAnchor } from "../../wallets/actions/send";
 import { useCurrentUser, useUser, useUsers } from "../data";
@@ -31,11 +31,11 @@ export function LandingPage() {
   const currentUserLoading = !currentUserQuery.ready
   const maybeCurrentUser = currentUserQuery.data?.get()
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
   const users = useGenius(subpath, "/users")
 
   return <>
-    <SubpathProvider>
+    <HashSubpathProvider>
       {subpath.url.pathname === "/users/login" &&
         <Dialog2>
           <UserLoginDialog />
@@ -48,7 +48,7 @@ export function LandingPage() {
         <Menu>
           <UsersMenu />
         </Menu>}
-    </SubpathProvider>
+    </HashSubpathProvider>
     <div className="grow w-full flex flex-col overflow-y-scroll">
       <div className="po-md border-b-contrast">
         <div className="grow w-full m-auto max-w-6xl flex items-center">
@@ -249,7 +249,7 @@ export function useGenius(subpath: PathHandle, subhref?: string) {
     const x = e.clientX
     const y = e.clientY
 
-    location.replace(subpath.go(qurl(subhref, { x, y })).href)
+    location.replace(subpath.go(qurl(subhref, { x, y })))
   }, [subhref, subpath])
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
@@ -263,7 +263,7 @@ export function useGenius(subpath: PathHandle, subhref?: string) {
     const x = e.currentTarget.getBoundingClientRect().x + (e.currentTarget.getBoundingClientRect().width / 2)
     const y = e.currentTarget.getBoundingClientRect().y + (e.currentTarget.getBoundingClientRect().height / 2)
 
-    location.replace(subpath.go(qurl(subhref, { x, y })).href)
+    location.replace(subpath.go(qurl(subhref, { x, y })))
   }, [subhref, subpath])
 
   const onContextMenu = useCallback((e: MouseEvent) => {
@@ -275,7 +275,7 @@ export function useGenius(subpath: PathHandle, subhref?: string) {
     const x = e.clientX
     const y = e.clientY
 
-    location.replace(subpath.go(qurl(subhref, { x, y })).href)
+    location.replace(subpath.go(qurl(subhref, { x, y })))
   }, [subhref, subpath])
 
   return { onClick, onKeyDown, onContextMenu, href }
@@ -285,11 +285,11 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
   const path = usePathContext().unwrap()
   const { children, title, subtitle, href, ...rest } = props
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
   const genius = useGenius(subpath, href)
 
   return <>
-    <SubpathProvider>
+    <HashSubpathProvider>
       {subpath.url.pathname === href &&
         <Dialog2 hesitant>
           <div className="text-6xl">
@@ -302,7 +302,7 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
           <div className="h-8" />
           {children}
         </Dialog2>}
-    </SubpathProvider>
+    </HashSubpathProvider>
     <div className="p-6 aspect-square bg-contrast rounded-xl flex flex-col">
       <div className="text-6xl">
         {title}

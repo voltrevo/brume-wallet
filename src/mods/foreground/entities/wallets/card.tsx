@@ -8,7 +8,7 @@ import { AnchorProps, ButtonProps } from "@/libs/react/props/html"
 import { Address, ZeroHexString } from "@hazae41/cubane"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { flushSync } from "react-dom"
-import { usePathContext, useSubpath } from "../../router/path/context"
+import { useHashSubpath, usePathContext } from "../../router/path/context"
 import { useEnsReverseNoFetch } from "../names/data"
 import { useTotalWalletPricedBalance } from "../unknown/data"
 import { useGenius } from "../users/all/page"
@@ -37,7 +37,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
   const path = usePathContext().unwrap()
   const { uuid, address, name, emoji, color, index, href, privateKey, flip, unflip } = props
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
   const genius = useGenius(subpath, href)
 
   const [color1, color2] = Gradient.get(color)

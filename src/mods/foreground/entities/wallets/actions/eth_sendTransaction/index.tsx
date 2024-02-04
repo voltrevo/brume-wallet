@@ -12,7 +12,7 @@ import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { qurl } from "@/libs/url/url";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
-import { SubpathProvider, usePathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
+import { HashSubpathProvider, useHashSubpath, useKeyValueState, usePathContext, usePathState } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional } from "@hazae41/option";
@@ -51,22 +51,22 @@ export function WalletTransactionDialog(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
 
   const $state = usePathState<WalletTransactionScreenState>()
-  const [maybeTrial, setTrial] = useSearchState("trial", $state)
-  const [maybeChain, setChain] = useSearchState("chain", $state)
-  const [maybeTarget, setTarget] = useSearchState("target", $state)
-  const [maybeValue, setValue] = useSearchState("value", $state)
-  const [maybeNonce, setNonce] = useSearchState("nonce", $state)
-  const [maybeData, setData] = useSearchState("data", $state)
-  const [maybeGasMode, setGasMode] = useSearchState("gasMode", $state)
-  const [maybeGasLimit, setGasLimit] = useSearchState("gasLimit", $state)
-  const [maybeGasPrice, setGasPrice] = useSearchState("gasPrice", $state)
-  const [maybeBaseFeePerGas, setBaseFeePerGas] = useSearchState("baseFeePerGas", $state)
-  const [maybeMaxPriorityFeePerGas, setMaxPriorityFeePerGas] = useSearchState("maxPriorityFeePerGas", $state)
-  const [maybeDisableData, setDisableData] = useSearchState("disableData", $state)
-  const [maybeDisableSign, setDisableSign] = useSearchState("disableSign", $state)
+  const [maybeTrial, setTrial] = useKeyValueState("trial", $state)
+  const [maybeChain, setChain] = useKeyValueState("chain", $state)
+  const [maybeTarget, setTarget] = useKeyValueState("target", $state)
+  const [maybeValue, setValue] = useKeyValueState("value", $state)
+  const [maybeNonce, setNonce] = useKeyValueState("nonce", $state)
+  const [maybeData, setData] = useKeyValueState("data", $state)
+  const [maybeGasMode, setGasMode] = useKeyValueState("gasMode", $state)
+  const [maybeGasLimit, setGasLimit] = useKeyValueState("gasLimit", $state)
+  const [maybeGasPrice, setGasPrice] = useKeyValueState("gasPrice", $state)
+  const [maybeBaseFeePerGas, setBaseFeePerGas] = useKeyValueState("baseFeePerGas", $state)
+  const [maybeMaxPriorityFeePerGas, setMaxPriorityFeePerGas] = useKeyValueState("maxPriorityFeePerGas", $state)
+  const [maybeDisableData, setDisableData] = useKeyValueState("disableData", $state)
+  const [maybeDisableSign, setDisableSign] = useKeyValueState("disableSign", $state)
 
   const gasMode = Option.wrap(maybeGasMode).unwrapOr("normal")
 
@@ -140,13 +140,13 @@ export function WalletTransactionDialog(props: {}) {
   }, [getRawPricedInput, rawValuedInput])
 
   const onNonceClick = useCallback(() => {
-    location.replace(subpath.go(qurl("/nonce", {})).href)
+    location.replace(subpath.go(qurl("/nonce", {})))
   }, [subpath])
 
   const onDecodeClick = useCallback(() => {
     if (maybeData == null)
       return
-    location.replace(subpath.go(qurl("/decode", { data: maybeData })).href)
+    location.replace(subpath.go(qurl("/decode", { data: maybeData })))
   }, [maybeData, subpath])
 
   const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
@@ -865,7 +865,7 @@ export function WalletTransactionDialog(props: {}) {
   }, [close])
 
   return <>
-    <SubpathProvider>
+    <HashSubpathProvider>
       {subpath.url.pathname === "/decode" &&
         <Dialog2>
           <WalletDecodeDialog />
@@ -874,7 +874,7 @@ export function WalletTransactionDialog(props: {}) {
         <Dialog2>
           <WalletNonceDialog ok={() => { }} />
         </Dialog2>}
-    </SubpathProvider>
+    </HashSubpathProvider>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}

@@ -9,7 +9,7 @@ import { useConstant } from "@/libs/react/ref";
 import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
-import { SubpathProvider, usePathContext, usePathState, useSearchState, useSubpath } from "@/mods/foreground/router/path/context";
+import { HashSubpathProvider, useHashSubpath, useKeyValueState, usePathContext, usePathState } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
@@ -31,16 +31,16 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
 
   const $state = usePathState<UrlState>()
-  const [maybeStep, setStep] = useSearchState("step", $state)
-  const [maybeChain, setChain] = useSearchState("chain", $state)
-  const [maybeToken, setToken] = useSearchState("token", $state)
-  const [maybeValue, setValue] = useSearchState("value", $state)
-  const [maybePassword, setPassword] = useSearchState("password", $state)
-  const [maybeTrial0, setTrial0] = useSearchState("trial0", $state)
-  const [maybeTrial1, setTrial1] = useSearchState("trial1", $state)
+  const [maybeStep, setStep] = useKeyValueState("step", $state)
+  const [maybeChain, setChain] = useKeyValueState("chain", $state)
+  const [maybeToken, setToken] = useKeyValueState("token", $state)
+  const [maybeValue, setValue] = useKeyValueState("value", $state)
+  const [maybePassword, setPassword] = useKeyValueState("password", $state)
+  const [maybeTrial0, setTrial0] = useKeyValueState("trial0", $state)
+  const [maybeTrial1, setTrial1] = useKeyValueState("trial1", $state)
 
   const trial0UuidFallback = useConstant(() => crypto.randomUUID())
   const trial0Uuid = Option.wrap(maybeTrial0).unwrapOr(trial0UuidFallback)
@@ -286,7 +286,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   }, [maybeContract, maybeFinalValue])
 
   const onSendTransaction1Click = useCallback(() => {
-    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial1Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData1?.ok().get(), disableData: true, disableSign: true })).href)
+    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial1Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData1?.ok().get(), disableData: true, disableSign: true })))
   }, [subpath, trial1Uuid, chainData, tokenData, maybeTriedMaybeFinalData1])
 
   const maybeTriedMaybeFinalData0 = useMemo(() => {
@@ -311,7 +311,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   }, [maybeFinalValue, password, tokenData])
 
   const onSendTransaction0Click = useCallback(() => {
-    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeContract, data: maybeTriedMaybeFinalData0?.ok().get(), disableData: true, disableSign: true })).href)
+    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeContract, data: maybeTriedMaybeFinalData0?.ok().get(), disableData: true, disableSign: true })))
   }, [subpath, trial0Uuid, chainData, maybeContract, maybeTriedMaybeFinalData0])
 
   const trial1Query = useTransactionTrial(trial1Uuid)
@@ -357,12 +357,12 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   }, [close])
 
   return <>
-    <SubpathProvider>
+    <HashSubpathProvider>
       {subpath.url.pathname === "/eth_sendTransaction" &&
         <Dialog2>
           <WalletTransactionDialog />
         </Dialog2>}
-    </SubpathProvider>
+    </HashSubpathProvider>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}

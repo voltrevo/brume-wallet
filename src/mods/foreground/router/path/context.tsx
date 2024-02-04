@@ -26,8 +26,22 @@ export function usePathContext() {
 
 export namespace Paths {
 
-  export function spoof(url: URL) {
-    return new URL(url.hash.slice(1), url.origin)
+  export function hash(url: URL) {
+    const hash = url.hash.slice(1)
+
+    if (hash)
+      return new URL(hash, url.origin)
+
+    return new URL(url.origin)
+  }
+
+  export function search(url: URL, key: string) {
+    const value = url.searchParams.get(key)
+
+    if (value)
+      return new URL(value, url.origin)
+
+    return new URL(url.origin)
   }
 
   export function path(url: URL) {
@@ -40,15 +54,15 @@ export namespace Paths {
 
 }
 
-export function DefaultPathProvider(props: ChildrenProps) {
+export function HashPathProvider(props: ChildrenProps) {
   const { children } = props
 
   const [url, setUrl] = useState<URL>()
 
   useEffect(() => {
-    const onHashChange = () => setUrl(Paths.spoof(new URL(location.href)))
+    const onHashChange = () => setUrl(Paths.hash(new URL(location.href)))
 
-    setUrl(Paths.spoof(new URL(location.href)))
+    setUrl(Paths.hash(new URL(location.href)))
 
     addEventListener("hashchange", onHashChange, { passive: true })
     return () => removeEventListener("hashchange", onHashChange)
@@ -72,12 +86,12 @@ export function DefaultPathProvider(props: ChildrenProps) {
   </PathContext.Provider>
 }
 
-export function SubpathProvider(props: ChildrenProps) {
+export function HashSubpathProvider(props: ChildrenProps) {
   const path = usePathContext().unwrap()
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
 
   const onClose = useCallback(() => {
-    location.replace(subpath.go("/").href)
+    location.replace(subpath.go("/"))
   }, [subpath])
 
   return <PathContext.Provider value={subpath}>
@@ -87,15 +101,17 @@ export function SubpathProvider(props: ChildrenProps) {
   </PathContext.Provider>
 }
 
-export function useSubpath(parent: PathHandle): PathHandle {
-  const [url, setUrl] = useState<URL>(() => Paths.spoof(parent.url))
+export function useHashSubpath(parent: PathHandle): PathHandle {
+  const [url, setUrl] = useState<URL>(() => Paths.hash(parent.url))
 
   useEffect(() => {
-    setUrl(Paths.spoof(parent.url))
+    setUrl(Paths.hash(parent.url))
   }, [parent])
 
   const go = useCallback((path: string) => {
-    return parent.go(Paths.path(new URL(`#${path}`, parent.url.href)))
+    const url = new URL(parent.url.href)
+    url.hash = path
+    return parent.go(Paths.path(url))
   }, [parent])
 
   return useMemo(() => {
@@ -103,27 +119,47 @@ export function useSubpath(parent: PathHandle): PathHandle {
   }, [url, go])
 }
 
-export function usePathState<T extends Record<string, Optional<string>>>() {
-  const { url, go } = usePathContext().unwrap()
-
-  const [state, setState] = useState<T>(() => Object.fromEntries(url.searchParams.entries()) as T)
+export function useSearchSubpath(parent: PathHandle, key: string): PathHandle {
+  const [url, setUrl] = useState<URL>(() => Paths.hash(parent.url))
 
   useEffect(() => {
-    setState(Object.fromEntries(url.searchParams.entries()) as T)
-  }, [url])
+    setUrl(Paths.search(parent.url, key))
+  }, [key, parent])
+
+  const go = useCallback((path: string) => {
+    const url = new URL(parent.url.href)
+    url.searchParams.set(key, path)
+    return parent.go(Paths.path(url))
+  }, [key, parent])
+
+  return useMemo(() => {
+    return { url, go } satisfies PathHandle
+  }, [url, go])
+}
+
+export function usePathState<T extends Record<string, Optional<string>>>() {
+  const path = usePathContext().unwrap()
+
+  const [state, setState] = useState<T>(() => Object.fromEntries(path.url.searchParams) as T)
+
+  useEffect(() => {
+    setState(Object.fromEntries(path.url.searchParams) as T)
+  }, [path])
 
   useEffect(() => {
     if (state == null)
       return
-    const filtered = Object.fromEntries(Object.entries(state).filter(([_, value]) => value != null) as [keyof T, string][])
-    location.replace(go(`${url.pathname}?${new URLSearchParams(filtered).toString()}${url.hash}`).href)
+
+    const url = new URL(path.url.href)
+    url.search = new URLSearchParams(Object.entries(state).filter(([, value]) => value != null) as any).toString()
+    location.replace(path.go(Paths.path(url)))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state])
 
   return [state, setState] as const
 }
 
-export function useSearchState<T extends Record<string, Optional<string>>>(key: keyof T, $parent: State<T>) {
+export function useKeyValueState<T extends Record<string, Optional<string>>>(key: keyof T, $parent: State<T>) {
   const [parent, setParent] = $parent
 
   const state = parent[key]

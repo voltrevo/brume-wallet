@@ -11,7 +11,7 @@ import { Results } from "@/libs/results/results";
 import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { SeedData } from "@/mods/background/service_worker/entities/seeds/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
-import { SubpathProvider, usePathContext, useSubpath } from "@/mods/foreground/router/path/context";
+import { HashSubpathProvider, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context";
 import { Err, Ok, Panic, Result } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useGenius } from "../../../users/all/page";
@@ -23,7 +23,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
   const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
   const connect = useGenius(subpath, "/connect")
 
   const uuid = useConstant(() => crypto.randomUUID())
@@ -94,12 +94,12 @@ export function LedgerSeedCreatorDialog(props: {}) {
     </WideShrinkableGradientButton>
 
   return <>
-    <SubpathProvider>
+    <HashSubpathProvider>
       {subpath.url.pathname === "/connect" &&
         <Dialog2>
           <HardwareSelectDialog />
         </Dialog2>}
-    </SubpathProvider>
+    </HashSubpathProvider>
     <Dialog.Title>
       New seed
     </Dialog.Title>

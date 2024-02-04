@@ -5,7 +5,7 @@ import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useCallback } from "react";
 import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
 import { Page } from "../../../../libs/ui2/page/page";
-import { Paths, SubpathProvider, usePathContext, useSubpath } from "../../router/path/context";
+import { HashSubpathProvider, Paths, useHashSubpath, usePathContext } from "../../router/path/context";
 import { SeededWalletCreatorDialog } from "../wallets/all/create/seeded";
 import { ClickableWalletGrid } from "../wallets/all/page";
 import { useWalletsBySeed } from "../wallets/data";
@@ -27,7 +27,7 @@ function SeedDataPage() {
   const walletsQuery = useWalletsBySeed(seed.uuid)
   const maybeWallets = walletsQuery.data?.get()
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
 
   const onBackClick = useCallback(() => {
     Paths.go("/seeds")
@@ -59,12 +59,12 @@ function SeedDataPage() {
     </PageBody>
 
   return <Page>
-    <SubpathProvider>
+    <HashSubpathProvider>
       {subpath.url.pathname === "/create" &&
         <Dialog2>
           <SeededWalletCreatorDialog />
         </Dialog2>}
-    </SubpathProvider>
+    </HashSubpathProvider>
     {Header}
     {Card}
     {Body}

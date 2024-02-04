@@ -28,7 +28,7 @@ import { Fragment, MouseEvent, createContext, useCallback, useContext, useEffect
 import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
 import { Page } from "../../../../libs/ui2/page/page";
 import { useBackgroundContext } from "../../background/context";
-import { Paths, SubpathProvider, usePathContext, useSubpath } from "../../router/path/context";
+import { HashSubpathProvider, Paths, useHashSubpath, usePathContext } from "../../router/path/context";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
@@ -126,7 +126,7 @@ function WalletDataPage() {
   const wallet = useWalletDataContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
 
   const mainnet = useEthereumContext2(wallet.uuid, chainByChainId[1]).unwrap()
 
@@ -329,7 +329,7 @@ function WalletDataPage() {
     </PageBody>
 
   return <Page>
-    <SubpathProvider>
+    <HashSubpathProvider>
       {subpath.url.pathname === "/send" &&
         <Dialog2>
           <WalletSendScreen />
@@ -348,7 +348,7 @@ function WalletDataPage() {
             $privateKey={$privateKey}
             $flip={$flip} />
         </Menu>}
-    </SubpathProvider>
+    </HashSubpathProvider>
     {Header}
     {Card}
     {Apps}
@@ -530,14 +530,14 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const edit = useTokensEditContext().unwrap()
   const { token, chain } = props
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
   const onClick = useCallback(() => {
     if (wallet.type === "readonly")
       return
-    location.replace(subpath.go(`/send?step=target&chain=${context?.chain.chainId}`).href)
+    location.replace(subpath.go(`/send?step=target&chain=${context?.chain.chainId}`))
   }, [wallet, subpath, context])
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
@@ -583,7 +583,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const edit = useTokensEditContext().unwrap()
   const { token, chain } = props
 
-  const subpath = useSubpath(path)
+  const subpath = useHashSubpath(path)
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
@@ -595,7 +595,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const onSendClick = useCallback(() => {
     if (wallet.type === "readonly")
       return
-    location.replace(subpath.go(`/send?step=target&chain=${context?.chain.chainId}&token=${token.address}`).href)
+    location.replace(subpath.go(`/send?step=target&chain=${context?.chain.chainId}&token=${token.address}`))
   }, [wallet, subpath, context, token])
 
   const balanceUsdFixed = useContractPricedBalance(wallet.address, token, "usd", context)
