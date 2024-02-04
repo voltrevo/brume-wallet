@@ -231,7 +231,7 @@ export function SeededWalletCreatorDialog(props: {}) {
       <div className="h-2" />
       <SimpleLabel>
         <div className="shrink-0">
-          Account
+          Derivation
         </div>
         <div className="w-4" />
         <select className="w-full bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
