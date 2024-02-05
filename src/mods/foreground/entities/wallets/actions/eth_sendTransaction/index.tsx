@@ -2,7 +2,6 @@ import { BigIntToHex } from "@/libs/bigints/bigints";
 import { useCopy } from "@/libs/copy/copy";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
-import { Mutators } from "@/libs/glacier/mutators";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
@@ -14,8 +13,9 @@ import { qurl } from "@/libs/url/url";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
 import { HashSubpathProvider, useHashSubpath, useKeyValueState, usePathContext, usePathState } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
+import { Data } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
-import { Nullable, Option, Optional } from "@hazae41/option";
+import { Nullable, Option, Optional, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
@@ -84,7 +84,6 @@ export function WalletTransactionDialog(props: {}) {
 
   const transactionUuid = useConstant(() => crypto.randomUUID())
   const transactionQuery = useTransactionWithReceipt(transactionUuid, context)
-  const maybeTransaction = transactionQuery.current?.ok().get()
 
   const pendingNonceQuery = useNonce(wallet.address, context)
   const maybePendingNonce = pendingNonceQuery.current?.ok().get()
@@ -692,149 +691,145 @@ export function WalletTransactionDialog(props: {}) {
   const fastMaxPriorityFeePerGasDisplay = useGasDisplay(maybeFastMaxPriorityFeePerGas)
   const urgentMaxPriorityFeePerGasDisplay = useGasDisplay(maybeUrgentMaxPriorityFeePerGas)
 
-  const signOrSend = useCallback(async (action: "sign" | "send") => {
-    try {
-      if (maybeIsEip1559 == null)
-        return
+  const signOrSendOrAlert = useCallback((action: "sign" | "send") => Errors.runAndLogAndAlert(async () => {
+    if (maybeIsEip1559 == null)
+      return
 
-      const maybeTarget = Option.wrap(maybeFinalTarget).mapSync(Address.fromOrThrow).get()
+    const maybeTarget = Option.wrap(maybeFinalTarget).mapSync(Address.fromOrThrow).get()
 
-      const value = Option.wrap(maybeFinalValue).okOrElseSync(() => {
-        return new UIError(`Could not parse value`)
+    const value = Option.wrap(maybeFinalValue).okOrElseSync(() => {
+      return new UIError(`Could not parse value`)
+    }).unwrap()
+
+    const nonce = Option.wrap(maybeFinalNonce).okOrElseSync(() => {
+      return new UIError(`Could not parse or fetch nonce`)
+    }).unwrap()
+
+    const data = Option.wrap(maybeTriedMaybeFinalData).andThenSync(x => x.ok()).okOrElseSync(() => {
+      return new UIError(`Could not parse or encode data`)
+    }).unwrap()
+
+    const gasLimit = Option.wrap(maybeFinalGasLimit).okOrElseSync(() => {
+      return new UIError(`Could not fetch gasLimit`)
+    }).unwrap()
+
+    let tx: ethers.Transaction
+    let params: TransactionParametersData
+
+    /**
+     * EIP-1559
+     */
+    if (maybeIsEip1559) {
+      const maxFeePerGas = Option.wrap(maybeFinalMaxFeePerGas).okOrElseSync(() => {
+        return new UIError(`Could not fetch baseFeePerGas`)
       }).unwrap()
 
-      const nonce = Option.wrap(maybeFinalNonce).okOrElseSync(() => {
-        return new UIError(`Could not parse or fetch nonce`)
+      const maxPriorityFeePerGas = Option.wrap(maybeFinalMaxPriorityFeePerGas).okOrElseSync(() => {
+        return new UIError(`Could not fetch maxPriorityFeePerGas`)
       }).unwrap()
 
-      const data = Option.wrap(maybeTriedMaybeFinalData).andThenSync(x => x.ok()).okOrElseSync(() => {
-        return new UIError(`Could not parse or encode data`)
-      }).unwrap()
+      tx = Transaction.from({
+        to: maybeTarget,
+        gasLimit: gasLimit,
+        chainId: chainData.chainId,
+        maxFeePerGas: maxFeePerGas,
+        maxPriorityFeePerGas: maxPriorityFeePerGas,
+        nonce: Number(nonce),
+        value: value.value,
+        data: data
+      })
 
-      const gasLimit = Option.wrap(maybeFinalGasLimit).okOrElseSync(() => {
-        return new UIError(`Could not fetch gasLimit`)
-      }).unwrap()
-
-      let tx: ethers.Transaction
-      let params: TransactionParametersData
-
-      /**
-       * EIP-1559
-       */
-      if (maybeIsEip1559) {
-        const maxFeePerGas = Option.wrap(maybeFinalMaxFeePerGas).okOrElseSync(() => {
-          return new UIError(`Could not fetch baseFeePerGas`)
-        }).unwrap()
-
-        const maxPriorityFeePerGas = Option.wrap(maybeFinalMaxPriorityFeePerGas).okOrElseSync(() => {
-          return new UIError(`Could not fetch maxPriorityFeePerGas`)
-        }).unwrap()
-
-        tx = Transaction.from({
-          to: maybeTarget,
-          gasLimit: gasLimit,
-          chainId: chainData.chainId,
-          maxFeePerGas: maxFeePerGas,
-          maxPriorityFeePerGas: maxPriorityFeePerGas,
-          nonce: Number(nonce),
-          value: value.value,
-          data: data
-        })
-
-        params = {
-          from: wallet.address,
-          to: maybeTarget,
-          gas: ZeroHexString.from(gasLimit),
-          maxFeePerGas: ZeroHexString.from(maxFeePerGas),
-          maxPriorityFeePerGas: ZeroHexString.from(maxPriorityFeePerGas),
-          value: ZeroHexString.from(value.value),
-          nonce: ZeroHexString.from(nonce),
-          data: data
-        }
+      params = {
+        from: wallet.address,
+        to: maybeTarget,
+        gas: ZeroHexString.from(gasLimit),
+        maxFeePerGas: ZeroHexString.from(maxFeePerGas),
+        maxPriorityFeePerGas: ZeroHexString.from(maxPriorityFeePerGas),
+        value: ZeroHexString.from(value.value),
+        nonce: ZeroHexString.from(nonce),
+        data: data
       }
-
-      /**
-       * Not EIP-1559
-       */
-      else {
-        const gasPrice = Option.wrap(maybeFinalGasPrice).okOrElseSync(() => {
-          return new UIError(`Could not fetch gasPrice`)
-        }).unwrap()
-
-        tx = Transaction.from({
-          to: maybeTarget,
-          gasLimit: gasLimit,
-          chainId: chainData.chainId,
-          gasPrice: gasPrice,
-          nonce: Number(nonce),
-          value: value.value,
-          data: data
-        })
-
-        params = {
-          from: wallet.address,
-          to: maybeTarget,
-          gas: ZeroHexString.from(gasLimit),
-          gasPrice: ZeroHexString.from(gasPrice),
-          value: ZeroHexString.from(value.value),
-          nonce: ZeroHexString.from(nonce),
-          data: data
-        }
-      }
-
-      const instance = await EthereumWalletInstance.tryFrom(wallet, context.background).then(r => r.unwrap())
-      const signature = await instance.trySignTransaction(tx, context.background).then(r => r.unwrap())
-
-      tx.signature = signature
-
-      if (action === "sign") {
-        const { chainId } = chainData
-
-        const uuid = transactionUuid
-        const hash = tx.hash as ZeroHexString
-        const data = tx.serialized as ZeroHexString
-        const trial = TransactionTrialRef.create(trialUuid)
-
-        await transactionQuery.mutate(Mutators.data<TransactionData, never>({ type: "signed", uuid, trial, chainId, hash, data, params }))
-        return
-      }
-
-      if (action === "send") {
-        const { chainId } = chainData
-
-        const uuid = transactionUuid
-        const hash = tx.hash as ZeroHexString
-        const data = tx.serialized as ZeroHexString
-        const trial = TransactionTrialRef.create(trialUuid)
-
-        await context.background.tryRequest<ZeroHexString>({
-          method: "brume_eth_fetch",
-          params: [context.uuid, context.chain.chainId, {
-            method: "eth_sendRawTransaction",
-            params: [data],
-            noCheck: true
-          }]
-        }).then(r => r.unwrap().unwrap())
-
-        await transactionQuery.mutate(Mutators.data<TransactionData, never>({ type: "pending", uuid, trial, chainId, hash, data, params }))
-        return
-      }
-    } catch (e) {
-      Errors.logAndAlert(e)
     }
-  }, [wallet, context, trialUuid, transactionUuid, transactionQuery, chainData, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeTriedMaybeFinalData, maybeIsEip1559, maybeFinalGasLimit, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, maybeFinalGasPrice])
+
+    /**
+     * Not EIP-1559
+     */
+    else {
+      const gasPrice = Option.wrap(maybeFinalGasPrice).okOrElseSync(() => {
+        return new UIError(`Could not fetch gasPrice`)
+      }).unwrap()
+
+      tx = Transaction.from({
+        to: maybeTarget,
+        gasLimit: gasLimit,
+        chainId: chainData.chainId,
+        gasPrice: gasPrice,
+        nonce: Number(nonce),
+        value: value.value,
+        data: data
+      })
+
+      params = {
+        from: wallet.address,
+        to: maybeTarget,
+        gas: ZeroHexString.from(gasLimit),
+        gasPrice: ZeroHexString.from(gasPrice),
+        value: ZeroHexString.from(value.value),
+        nonce: ZeroHexString.from(nonce),
+        data: data
+      }
+    }
+
+    const instance = await EthereumWalletInstance.tryFrom(wallet, context.background).then(r => r.unwrap())
+    const signature = await instance.trySignTransaction(tx, context.background).then(r => r.unwrap())
+
+    tx.signature = signature
+
+    if (action === "sign") {
+      const { chainId } = chainData
+
+      const uuid = transactionUuid
+      const hash = tx.hash as ZeroHexString
+      const data = tx.serialized as ZeroHexString
+      const trial = TransactionTrialRef.create(trialUuid)
+
+      await transactionQuery.mutate(() => new Some(new Data({ type: "signed", uuid, trial, chainId, hash, data, params } as const)))
+
+      close()
+      return
+    }
+
+    if (action === "send") {
+      const { chainId } = chainData
+
+      const uuid = transactionUuid
+      const hash = tx.hash as ZeroHexString
+      const data = tx.serialized as ZeroHexString
+      const trial = TransactionTrialRef.create(trialUuid)
+
+      await context.background.tryRequest<ZeroHexString>({
+        method: "brume_eth_fetch",
+        params: [context.uuid, context.chain.chainId, {
+          method: "eth_sendRawTransaction",
+          params: [data],
+          noCheck: true
+        }]
+      }).then(r => r.unwrap().unwrap())
+
+      await transactionQuery.mutate(() => new Some(new Data({ type: "pending", uuid, trial, chainId, hash, data, params } as const)))
+
+      close()
+      return
+    }
+  }), [maybeIsEip1559, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeTriedMaybeFinalData, maybeFinalGasLimit, wallet, context.background, context.uuid, context.chain.chainId, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas, chainData, maybeFinalGasPrice, transactionUuid, trialUuid, transactionQuery, close])
 
   const onSignClick = useAsyncUniqueCallback(async () => {
-    return await signOrSend("sign")
-  }, [signOrSend])
+    return await signOrSendOrAlert("sign")
+  }, [signOrSendOrAlert])
 
   const onSendClick = useAsyncUniqueCallback(async () => {
-    return await signOrSend("send")
-  }, [signOrSend])
-
-  const onClose = useCallback(() => {
-    close()
-  }, [close])
+    return await signOrSendOrAlert("send")
+  }, [signOrSendOrAlert])
 
   return <>
     <HashSubpathProvider>
@@ -1045,123 +1040,58 @@ export function WalletTransactionDialog(props: {}) {
         This transaction is expected to cost {finalLegacyGasCostDisplay}
       </div>
     </>}
-    {maybeIsEip1559 === true && maybeFinalMinEip1559GasCost != null && maybeFinalMaxEip1559GasCost != null && <>
+    {maybeIsEip1559 === true && maybeFinalMaxEip1559GasCost != null && maybeFinalMinEip1559GasCost == null && <>
+      <div className="h-2" />
+      <div className="text-contrast">
+        This transaction can cost up to {finalMaxEip1559GasCostDisplay}
+      </div>
+    </>}
+    {maybeIsEip1559 === true && maybeFinalMaxEip1559GasCost != null && maybeFinalMinEip1559GasCost != null && <>
       <div className="h-2" />
       <div className="text-contrast">
         This transaction is expected to cost {finalMinEip1559GasCostDisplay} but can cost up to {finalMaxEip1559GasCostDisplay}
       </div>
     </>}
     <div className="h-4 grow" />
-    {maybeTransaction?.type === "signed" && <>
-      <SignedTransactionCard
-        data={maybeTransaction}
-        onSend={() => { }} />
+    {maybeTriedEip1559GasLimitKey?.isErr() && <>
+      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+        {maybeTriedEip1559GasLimitKey.getErr()?.message}
+      </div>
       <div className="h-2" />
-      {maybeTriedEip1559GasLimitKey?.isErr() && <>
-        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {maybeTriedEip1559GasLimitKey.getErr()?.message}
-        </div>
-        <div className="h-2" />
-      </>}
-      {maybeTriedLegacyGasLimitKey?.isErr() && <>
-        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {maybeTriedLegacyGasLimitKey.getErr()?.message}
-        </div>
-        <div className="h-2" />
-      </>}
-      {eip1559GasLimitQuery.current?.isErr() && <>
-        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {eip1559GasLimitQuery.current.getErr()?.message}
-        </div>
-        <div className="h-2" />
-      </>}
-      {legacyGasLimitQuery.current?.isErr() && <>
-        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {legacyGasLimitQuery.current.getErr()?.message}
-        </div>
-        <div className="h-2" />
-      </>}
-      <div className="flex items-center flex-wrap-reverse gap-2">
-        {!disableSign &&
-          <WideShrinkableContrastButton
-            disabled={onSignClick.loading}
-            onClick={onSignClick.run}>
-            <Outline.PencilIcon className="size-5" />
-            Sign
-          </WideShrinkableContrastButton>}
-        <WideShrinkableOppositeButton
-          disabled={onSendClick.loading}
-          onClick={onSendClick.run}>
-          <Outline.PaperAirplaneIcon className="size-5" />
-          Send
-        </WideShrinkableOppositeButton>
-      </div>
     </>}
-    {maybeTransaction?.type === "pending" && <>
-      <PendingTransactionCard
-        data={maybeTransaction}
-        onRetry={() => { }} />
+    {maybeTriedLegacyGasLimitKey?.isErr() && <>
+      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+        {maybeTriedLegacyGasLimitKey.getErr()?.message}
+      </div>
       <div className="h-2" />
-      <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableOppositeButton
-          onClick={onClose}>
-          <Outline.CheckIcon className="size-5" />
-          Close
-        </WideShrinkableOppositeButton>
-      </div>
     </>}
-    {maybeTransaction?.type === "executed" && <>
-      <ExecutedTransactionCard data={maybeTransaction} />
+    {eip1559GasLimitQuery.current?.isErr() && <>
+      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+        {eip1559GasLimitQuery.current.getErr()?.message}
+      </div>
       <div className="h-2" />
-      <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableOppositeButton
-          onClick={onClose}>
-          <Outline.CheckIcon className="size-5" />
-          Close
-        </WideShrinkableOppositeButton>
-      </div>
     </>}
-    {maybeTransaction == null && <>
-      {maybeTriedEip1559GasLimitKey?.isErr() && <>
-        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {maybeTriedEip1559GasLimitKey.getErr()?.message}
-        </div>
-        <div className="h-2" />
-      </>}
-      {maybeTriedLegacyGasLimitKey?.isErr() && <>
-        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {maybeTriedLegacyGasLimitKey.getErr()?.message}
-        </div>
-        <div className="h-2" />
-      </>}
-      {eip1559GasLimitQuery.current?.isErr() && <>
-        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {eip1559GasLimitQuery.current.getErr()?.message}
-        </div>
-        <div className="h-2" />
-      </>}
-      {legacyGasLimitQuery.current?.isErr() && <>
-        <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
-          {legacyGasLimitQuery.current.getErr()?.message}
-        </div>
-        <div className="h-2" />
-      </>}
-      <div className="flex items-center flex-wrap-reverse gap-2">
-        {!disableSign &&
-          <WideShrinkableContrastButton
-            disabled={onSignClick.loading}
-            onClick={onSignClick.run}>
-            <Outline.PencilIcon className="size-5" />
-            Sign
-          </WideShrinkableContrastButton>}
-        <WideShrinkableOppositeButton
-          disabled={onSendClick.loading}
-          onClick={onSendClick.run}>
-          <Outline.PaperAirplaneIcon className="size-5" />
-          Send
-        </WideShrinkableOppositeButton>
+    {legacyGasLimitQuery.current?.isErr() && <>
+      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+        {legacyGasLimitQuery.current.getErr()?.message}
       </div>
+      <div className="h-2" />
     </>}
+    <div className="flex items-center flex-wrap-reverse gap-2">
+      {!disableSign &&
+        <WideShrinkableContrastButton
+          disabled={onSignClick.loading}
+          onClick={onSignClick.run}>
+          <Outline.PencilIcon className="size-5" />
+          Sign
+        </WideShrinkableContrastButton>}
+      <WideShrinkableOppositeButton
+        disabled={onSendClick.loading}
+        onClick={onSendClick.run}>
+        <Outline.PaperAirplaneIcon className="size-5" />
+        Send
+      </WideShrinkableOppositeButton>
+    </div>
   </>
 }
 

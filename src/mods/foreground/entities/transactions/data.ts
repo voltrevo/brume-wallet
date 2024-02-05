@@ -143,6 +143,7 @@ export function useTransactionWithReceipt(uuid: Nullable<string>, context: Nulla
 
   const transactionQuery = useQuery(FgTransaction.schema, [uuid, storage])
   const maybeTransaction = transactionQuery.current?.ok().get()
+  useError(transactionQuery, Errors.onQueryError)
 
   const receiptQuery = useQuery(FgTransactionReceipt.schema, [uuid, maybeTransaction?.hash, context, storage])
   useWait(receiptQuery, 1000)

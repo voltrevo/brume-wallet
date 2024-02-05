@@ -1,5 +1,4 @@
 import { DependencyList, useCallback } from "react"
-import { Errors } from "../errors/errors"
 import { useRefState } from "./ref"
 
 /**
@@ -18,10 +17,7 @@ export function useAsyncUniqueCallback<A extends unknown[], R>(
     if (promiseRef.current) return
 
     const promise = callback(...args)
-
-    promise
-      .catch(Errors.logAndAlert)
-      .finally(() => setPromise(undefined))
+    promise.finally(() => setPromise(undefined))
 
     setPromise(promise)
     return promise

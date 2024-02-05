@@ -193,10 +193,6 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     setStep("target")
   }, [setStep])
 
-  const onNonceClick = useCallback(() => {
-    setStep("nonce")
-  }, [setStep])
-
   const onPricedClick = useCallback(() => {
     setMode("priced")
   }, [])

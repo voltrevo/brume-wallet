@@ -2,7 +2,7 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { State } from "@/libs/react/state";
 import { CloseContext } from "@/libs/ui/dialog/dialog";
 import { Nullable, Option, Optional } from "@hazae41/option";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { SetStateAction, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 export interface PathHandle {
   /**
@@ -57,12 +57,18 @@ export namespace Paths {
 export function HashPathProvider(props: ChildrenProps) {
   const { children } = props
 
-  const [url, setUrl] = useState<URL>()
+  const [raw, setRaw] = useState<string>()
+
+  const url = useMemo(() => {
+    if (raw == null)
+      return
+    return Paths.hash(new URL(raw))
+  }, [raw])
 
   useEffect(() => {
-    const onHashChange = () => setUrl(Paths.hash(new URL(location.href)))
+    const onHashChange = () => setRaw(location.href)
 
-    setUrl(Paths.hash(new URL(location.href)))
+    setRaw(location.href)
 
     addEventListener("hashchange", onHashChange, { passive: true })
     return () => removeEventListener("hashchange", onHashChange)
@@ -102,10 +108,8 @@ export function HashSubpathProvider(props: ChildrenProps) {
 }
 
 export function useHashSubpath(parent: PathHandle): PathHandle {
-  const [url, setUrl] = useState<URL>(() => Paths.hash(parent.url))
-
-  useEffect(() => {
-    setUrl(Paths.hash(parent.url))
+  const url = useMemo(() => {
+    return Paths.hash(parent.url)
   }, [parent])
 
   const go = useCallback((path: string) => {
@@ -120,10 +124,8 @@ export function useHashSubpath(parent: PathHandle): PathHandle {
 }
 
 export function useSearchSubpath(parent: PathHandle, key: string): PathHandle {
-  const [url, setUrl] = useState<URL>(() => Paths.hash(parent.url))
-
-  useEffect(() => {
-    setUrl(Paths.search(parent.url, key))
+  const url = useMemo(() => {
+    return Paths.search(parent.url, key)
   }, [key, parent])
 
   const go = useCallback((path: string) => {
@@ -140,21 +142,24 @@ export function useSearchSubpath(parent: PathHandle, key: string): PathHandle {
 export function usePathState<T extends Record<string, Optional<string>>>() {
   const path = usePathContext().unwrap()
 
-  const [state, setState] = useState<T>(() => Object.fromEntries(path.url.searchParams) as T)
-
-  useEffect(() => {
-    setState(Object.fromEntries(path.url.searchParams) as T)
+  const state = useMemo(() => {
+    return Object.fromEntries(path.url.searchParams) as T
   }, [path])
 
-  useEffect(() => {
-    if (state == null)
-      return
+  const setState = useCallback((action: SetStateAction<T>) => {
+    const next = typeof action === "function"
+      ? action(state)
+      : action
 
     const url = new URL(path.url.href)
-    url.search = new URLSearchParams(Object.entries(state).filter(([, value]) => value != null) as any).toString()
+    const entries = Object.entries(next).filter(([_, value]) => value != null)
+    url.search = new URLSearchParams(entries as any).toString()
+
+    if (path.url.href === url.href)
+      return
+
     location.replace(path.go(Paths.path(url)))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state])
+  }, [state, path])
 
   return [state, setState] as const
 }

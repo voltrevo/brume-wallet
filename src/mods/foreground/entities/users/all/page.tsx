@@ -63,7 +63,7 @@ export function EmptyLandingPage(props: { next?: string }) {
         </div>
       </div>
       <div className="p-4 grow w-full m-auto max-w-3xl flex flex-col">
-        <div className="h-[min(32rem,100%)] shrink-0 grow flex flex-col items-center">
+        <div className="h-[min(32rem,90dvh)] shrink-0 grow flex flex-col items-center">
           <div className="grow" />
           <h1 className="text-center text-6xl font-medium">
             Welcome back<span className="text-contrast">, anon</span>
@@ -138,7 +138,7 @@ export function FullLandingPage(props: { next?: string }) {
         </div>
       </div>
       <div className="p-4 grow w-full m-auto max-w-3xl flex flex-col">
-        <div className="h-[min(32rem,100%)] shrink-0 grow flex flex-col items-center">
+        <div className="h-[min(32rem,90dvh)] shrink-0 grow flex flex-col items-center">
           <div className="grow" />
           <h1 className="text-center text-6xl font-medium">
             The private Ethereum wallet

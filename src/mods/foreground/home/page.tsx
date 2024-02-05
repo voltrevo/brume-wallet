@@ -38,29 +38,22 @@ export function HomePage() {
 
   const Body =
     <PageBody>
-      <div className="text-center text-4xl font-medium">
-        {`Hi, ${userData.name}`}
+      <div className="h-[min(32rem,90dvh)] shrink-0 grow flex flex-col">
+        <div className="grow" />
+        <h1 className="text-center text-6xl font-medium">
+          Welcome back<span className="text-contrast">, {userData.name}</span>
+        </h1>
+        <div className="grow" />
+        <div className="grow" />
       </div>
-      <div className="h-8" />
       <div className="text-lg font-medium">
         Total balance
       </div>
       <div className="text-2xl font-bold">
         {totalPricedBalanceDisplay}
       </div>
-      <div className="h-4" />
-      <div className="p-4 bg-contrast h-[300px] rounded-xl flex flex-col items-center justify-center">
-        <img src="/favicon.png" alt="logo" className="h-24 w-auto" />
-        <div className="">
-          Coming soon...
-        </div>
-      </div>
-      <div className="h-4 grow" />
-      {persisted === false && background.isWebsite() && <>
-        <div className="text-lg font-medium">
-          Alerts
-        </div>
-        <div className="h-2" />
+      {persisted === false && background.isWebsite() || true && <>
+        <div className="h-4" />
         <div className="p-4 bg-contrast rounded-xl">
           <h3 className="text-lg font-medium">
             Your storage is not persistent yet
@@ -71,7 +64,14 @@ export function HomePage() {
           <div className="h-2" />
         </div>
       </>}
-    </PageBody >
+      <div className="h-4" />
+      <div className="p-4 bg-contrast shrink-0 h-[300px] rounded-xl flex flex-col items-center justify-center">
+        <img src="/favicon.png" alt="logo" className="h-24 w-auto" />
+        <div className="">
+          Coming soon...
+        </div>
+      </div>
+    </PageBody>
 
   const Header =
     <UserPageHeader title="Home" />

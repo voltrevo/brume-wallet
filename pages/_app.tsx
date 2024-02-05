@@ -36,7 +36,7 @@ export function Fallback(props: ErrorProps) {
     location.reload()
   }, [])
 
-  const reset = useAsyncUniqueCallback(async () => {
+  const reset = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     if (!confirm(`You will lose all your wallets if you didn't made backups, are you sure?`))
       return
 
@@ -48,7 +48,7 @@ export function Fallback(props: ErrorProps) {
 
     localStorage.clear()
     location.reload()
-  }, [])
+  }), [])
 
   return <Page>
     <GlobalPageHeader title="Error" />
