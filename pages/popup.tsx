@@ -350,13 +350,19 @@ export function PersonalSignPage() {
   }), [background, id, path])
 
   return <Page>
-    <UserPageHeader title="Sign message" />
-    <div className="po-md flex items-center">
-      <div className="text-contrast">
-        Do you want to sign the following message? Some applications may ask you to sign a message to prove you own a specific address or to approve a specific action without doing a transaction.
-      </div>
-    </div>
     <PageBody>
+      <Dialog.Title>
+        Sign message
+      </Dialog.Title>
+      <div className="h-2" />
+      <div className="text-contrast">
+        Do you want to sign the following message?
+      </div>
+      <div className="h-2" />
+      <div className="text-contrast">
+        Some applications may ask you to sign a message to prove you own a specific address or to approve a specific action without doing a transaction.
+      </div>
+      <div className="h-4" />
       <div className="grow p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
         {triedUserMessage.unwrapOr("Could not decode message")}
       </div>
@@ -419,13 +425,19 @@ export function TypedSignPage() {
   }), [background, id])
 
   return <Page>
-    <UserPageHeader title="Sign message" />
-    <div className="po-md flex items-center">
-      <div className="text-contrast">
-        Do you want to sign the following message? Some applications may ask you to sign a message to prove you own a specific address or to approve a specific action without doing a transaction.
-      </div>
-    </div>
     <PageBody>
+      <Dialog.Title>
+        Sign message
+      </Dialog.Title>
+      <div className="h-2" />
+      <div className="text-contrast">
+        Do you want to sign the following message?
+      </div>
+      <div className="h-2" />
+      <div className="text-contrast">
+        Some applications may ask you to sign a message to prove you own a specific address or to approve a specific action without doing a transaction.
+      </div>
+      <div className="h-4" />
       <div className="grow p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
         {triedParsedData.mapSync(JSON.stringify).unwrapOr("Could not decode message")}
       </div>

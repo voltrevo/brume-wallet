@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "macro": "saumon build -r ./src ./pages",
+    "watch": "npm-watch",
     "build": "npm run build:!before && npm run build:!website && npm run build:!chrome && npm run build:!safari && npm run build:!firefox && npm run build:!after",
-    "build:!before": "rimraf ./dist && next build && mv ./out/_next ./out/next && node ./scripts/postbuild.mjs && mkdir ./dist",
+    "build:!before": "next build && mv ./out/_next ./out/next && node ./scripts/postbuild.mjs && rimraf ./dist && mkdir ./dist",
     "build:!website": "mkdir ./dist/website && cp -R ./out/* ./dist/website && cd ./dist/website && rimraf ./firefox ./chrome ./safari",
     "build:!chrome": "mkdir ./dist/chrome && cp -R ./out/* ./dist/chrome && cd ./dist/chrome && mv ./chrome/* . && rimraf ./firefox ./chrome ./safari",
     "build:!firefox": "mkdir ./dist/firefox && cp -R ./out/* ./dist/firefox && cd ./dist/firefox && mv ./firefox/* . && rimraf ./firefox ./chrome ./safari",
@@ -90,6 +91,7 @@
     "eslint": "8.56.0",
     "eslint-config-next": "14.1.0",
     "ipfs-http-client": "^60.0.1",
+    "npm-watch": "^0.11.0",
     "postcss": "^8.4.33",
     "serve": "^14.2.1",
     "tailwindcss": "^3.4.1",
@@ -98,5 +100,8 @@
     "typescript": "5.3.3",
     "webpack": "^5.90.0",
     "workbox-build": "^7.0.0"
+  },
+  "watch": {
+    "build": "{src,pages}/*"
   }
 }
