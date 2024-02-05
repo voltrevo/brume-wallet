@@ -438,13 +438,27 @@ class Provider {
 /**
  * Fix for that extension that does `Object.assign(window.ethereum, { ... })`
  */
-const provider = { ...new Provider() }
+const inner = new Provider()
+
+const provider = new Proxy({}, {
+  get(target, property, receiver) {
+    return property in target
+      ? Reflect.get(target, property, receiver)
+      : Reflect.get(inner, property, receiver)
+  },
+  set(target, property, value, receiver) {
+    return Reflect.set(target, property, value, receiver)
+  }
+})
 
 /**
  * EIP-1193 (legacy)
  */
 window.ethereum = provider
 
+/**
+ * EIP-6963 (modern)
+ */
 const icon = new Future<string>()
 
 const onLogo = (event: CustomEvent<string>) => {
@@ -453,29 +467,24 @@ const onLogo = (event: CustomEvent<string>) => {
 
 window.addEventListener("brume:icon", onLogo, { passive: true, once: true })
 
-/**
- * EIP-6963 (modern)
- */
-{
-  async function announce() {
-    const info: EIP6963ProviderInfo = Object.freeze({
-      uuid: "e750a98c-ff2d-4fc4-b6e2-faf4d13d1add",
-      name: "Brume Wallet",
-      icon: await icon.promise,
-      rdns: "money.brume"
-    })
+async function announce() {
+  const info: EIP6963ProviderInfo = Object.freeze({
+    uuid: "e750a98c-ff2d-4fc4-b6e2-faf4d13d1add",
+    name: "Brume Wallet",
+    icon: await icon.promise,
+    rdns: "money.brume"
+  })
 
-    const detail: EIP6963ProviderDetail = Object.freeze({ info, provider })
-    const event = new CustomEvent("eip6963:announceProvider", { detail })
+  const detail: EIP6963ProviderDetail = Object.freeze({ info, provider })
+  const event = new CustomEvent("eip6963:announceProvider", { detail })
 
-    window.dispatchEvent(event)
-  }
-
-  function onAnnounceRequest(event: EIP6963RequestProviderEvent) {
-    announce()
-  }
-
-  window.addEventListener("eip6963:requestProvider", onAnnounceRequest, { passive: true })
-
-  announce();
+  window.dispatchEvent(event)
 }
+
+function onAnnounceRequest(event: EIP6963RequestProviderEvent) {
+  announce()
+}
+
+window.addEventListener("eip6963:requestProvider", onAnnounceRequest, { passive: true })
+
+announce()

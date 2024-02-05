@@ -174,21 +174,21 @@ export class Global {
   ) {
     this.circuits = new Mutex(Circuits.pool(this.tors, { capacity: 9 }))
 
-    this.circuits.inner.events.on("created", (entry) => {
-      if (entry.isOk())
-        console.log("circuits", entry, this.circuits.inner.size, this.circuits.inner.capacity)
-      if (entry.isErr())
-        console.error("circuits", entry, this.circuits.inner.size, this.circuits.inner.capacity)
-      return new None()
-    })
+    // this.circuits.inner.events.on("created", (entry) => {
+    //   if (entry.isOk())
+    //     console.log("circuits", entry, this.circuits.inner.size, this.circuits.inner.capacity)
+    //   if (entry.isErr())
+    //     console.error("circuits", entry, this.circuits.inner.size, this.circuits.inner.capacity)
+    //   return new None()
+    // })
 
-    this.tors.events.on("created", (entry) => {
-      if (entry.isOk())
-        console.log("tors", entry, this.tors.size, this.tors.capacity)
-      if (entry.isErr())
-        console.error("tors", entry, this.tors.size, this.tors.capacity)
-      return new None()
-    })
+    // this.tors.events.on("created", (entry) => {
+    //   if (entry.isOk())
+    //     console.log("tors", entry, this.tors.size, this.tors.capacity)
+    //   if (entry.isErr())
+    //     console.error("tors", entry, this.tors.size, this.tors.capacity)
+    //   return new None()
+    // })
 
     core.onState.on(BgAppRequest.All.key, async () => {
       const state = core.getStateSync(BgAppRequest.All.key) as State<AppRequest[], never>

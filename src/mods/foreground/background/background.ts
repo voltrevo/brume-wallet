@@ -146,8 +146,6 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
     return await Result.unthrow(async t => {
       const { pool, index } = params
 
-      console.log(`Connecting to service worker...`)
-
       const start = Date.now()
 
       const registration = await getServiceWorkerOrThrow(background)
@@ -229,8 +227,6 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
         router.inner.events.off("response", onResponse)
         router.inner.events.off("close", onClose)
       }
-
-      console.log(`Connected to service worker in ${Date.now() - start}ms`)
 
       return new Ok(new Disposer(inner, onEntryClean))
     })

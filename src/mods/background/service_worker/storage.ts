@@ -96,7 +96,6 @@ export async function createUserStorageOrThrow(user: UserData, password: string)
          * Safely delete the wallet
          */
         await walletQuery.delete()
-        console.log(`Deleted wallet ${uuid}`)
         return
       }
 
