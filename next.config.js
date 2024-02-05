@@ -86,7 +86,7 @@ async function compileServiceWorker(config, options) {
       filename: "service_worker.js"
     },
     optimization: {
-      minimize: false,
+      minimize: true,
       minimizer: [new TerserPlugin()]
     }
   })
@@ -110,7 +110,7 @@ async function compileContentScript(config, options) {
       filename: "content_script.js"
     },
     optimization: {
-      minimize: false,
+      minimize: true,
       minimizer: [new TerserPlugin()]
     }
   })
@@ -134,7 +134,7 @@ async function compileInjectedScript(config, options) {
       filename: "injected_script.js"
     },
     optimization: {
-      minimize: false,
+      minimize: true,
       minimizer: [new TerserPlugin()]
     }
   })
