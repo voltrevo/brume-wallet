@@ -22,7 +22,7 @@ const nextConfig = {
     return "brume"
   },
   webpack(config, options) {
-    config.optimization.minimize = false
+    config.optimization.minimize = true
 
     config.module.rules.push({
       test: /\.tsx?$/,
