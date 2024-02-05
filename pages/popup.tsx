@@ -112,6 +112,12 @@ export function TransactPage() {
     location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: id, chain: chainId, target: maybeTo, value: maybeValue, nonce: maybeNonce, data: maybeData, gas: maybeGas, gasMode: "custom", gasPrice: maybeGasPrice, maxFeePerGas: maybeMaxFeePerGas, maxPriorityFeePerGas: maybeMaxPriorityFeePerGas, disableData: true, disableSign: true })))
   }, [subpath, id, chainId, maybeTo, maybeValue, maybeNonce, maybeData, maybeGas, maybeGasPrice, maybeMaxFeePerGas, maybeMaxPriorityFeePerGas])
 
+  useEffect(() => {
+    if (maybeTransaction == null)
+      return
+    approveOrAlert.run()
+  }, [maybeTransaction, approveOrAlert])
+
   return <WalletDataContext.Provider value={maybeWallet}>
     <Page>
       <HashSubpathProvider>
@@ -140,19 +146,11 @@ export function TransactPage() {
             <Outline.XMarkIcon className="size-5" />
             Reject
           </WideShrinkableContrastButton>
-          {maybeTransaction == null &&
-            <WideShrinkableOppositeButton
-              onClick={onSendTransactionClick}>
-              <Outline.CheckIcon className="size-5" />
-              Transact
-            </WideShrinkableOppositeButton>}
-          {maybeTransaction != null &&
-            <WideShrinkableOppositeButton
-              onClick={approveOrAlert.run}
-              disabled={approveOrAlert.loading}>
-              <Outline.CheckIcon className="size-5" />
-              Approve
-            </WideShrinkableOppositeButton>}
+          <WideShrinkableOppositeButton
+            onClick={onSendTransactionClick}>
+            <Outline.CheckIcon className="size-5" />
+            Transact
+          </WideShrinkableOppositeButton>
         </div>
       </PageBody>
     </Page>
