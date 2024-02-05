@@ -30,7 +30,10 @@ export function EmptyLandingPage(props: { next?: string }) {
 
   const currentUserQuery = useCurrentUser()
   const currentUserLoading = !currentUserQuery.ready
-  const maybeCurrentUser = currentUserQuery.data?.get()
+  const maybeCurrentUser = currentUserQuery.current?.ok().get()
+
+  const userQuery = useUser(maybeCurrentUser?.uuid)
+  const maybeUser = userQuery.current?.ok().get()
 
   const subpath = useHashSubpath(path)
   const users = useGenius(subpath, "/users")
@@ -66,7 +69,7 @@ export function EmptyLandingPage(props: { next?: string }) {
         <div className="h-[min(32rem,90dvh)] shrink-0 grow flex flex-col items-center">
           <div className="grow" />
           <h1 className="text-center text-6xl font-medium">
-            Welcome back<span className="text-contrast">, anon</span>
+            Welcome back<span className="text-contrast">, {maybeUser?.name || "anon"}</span>
           </h1>
           <div className="grow" />
           <div className="flex items-center">
