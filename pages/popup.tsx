@@ -12,6 +12,7 @@ import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useAppRequests } from "@/mods/foreground/entities/requests/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
+import { SmallShrinkableOppositeAnchor } from "@/mods/foreground/entities/users/all/page";
 import { UserGuard } from "@/mods/foreground/entities/users/context";
 import { WalletTransactionDialog } from "@/mods/foreground/entities/wallets/actions/eth_sendTransaction";
 import { PaddedRoundedShrinkableNakedButton, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send";
@@ -426,13 +427,22 @@ export function DonePage() {
   }, [requests])
 
   return <Page>
-    <div className="p-4 grow flex flex-col items-center justify-center">
-      <div className="text-center text-xl font-medium">
+    <PageBody>
+      <Dialog.Title>
         Done
-      </div>
-      <div className="w-full max-w-[230px] text-center text-contrast">
+      </Dialog.Title>
+      <div className="h-2" />
+      <div className="text-contrast">
         You can now close this window or continue to use it
       </div>
-    </div>
+      <div className="h-4" />
+      <div className="grow flex flex-col items-center justify-center">
+        <SmallShrinkableOppositeAnchor
+          href="#/home">
+          <Outline.HomeIcon className="size-5" />
+          Home
+        </SmallShrinkableOppositeAnchor>
+      </div>
+    </PageBody>
   </Page>
 }
