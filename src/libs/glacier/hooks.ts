@@ -21,13 +21,11 @@ export function useWait<K, D, F>(query: ReactQuery<K, D, F>, interval: number) {
       return
     if (!interval)
       return
-    if (data != null)
+    if (data?.get() != null)
       return
 
-    const f = () => {
-      console.log("fetching", query.key)
-      fetch().catch(console.warn)
-    }
+    const f = () => fetch().catch(console.warn)
+
     const i = setInterval(f, interval)
     return () => clearInterval(i)
     // eslint-disable-next-line react-hooks/exhaustive-deps

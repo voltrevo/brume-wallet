@@ -50,6 +50,8 @@ export namespace FgTransaction {
       const previousData = previous?.real?.current.ok()?.get()
       const currentData = current.real?.current.ok()?.get()
 
+      console.log("reindexing transaction", previousData, currentData)
+
       if (previousData?.uuid !== currentData?.uuid) {
         if (previousData != null) {
           await FgTransactionTrial.schema(previousData.trial.uuid, storage)?.mutate(s => {
@@ -111,6 +113,8 @@ export namespace FgTransaction {
       if (currentData?.type === "executed") {
         await FgTransactionTrial.schema(currentData.trial.uuid, storage)?.mutate(s => {
           const current = s.real?.current
+
+          console.log("current", current)
 
           if (current == null)
             return new None()
@@ -205,6 +209,8 @@ export namespace FgTransactionReceipt {
       if (previousData == null && currentData != null) {
         await FgTransaction.schema(uuid, storage)?.mutate(s => {
           const current = s.real?.current
+
+          console.log("transaction", current)
 
           if (current == null)
             return new None()

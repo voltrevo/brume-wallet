@@ -357,7 +357,7 @@ export interface LogData {
 export namespace BgTransactionReceipt {
 
   export type Key = EthereumQueryKey<unknown>
-  export type Data = TransactionReceiptData
+  export type Data = Nullable<TransactionReceiptData>
   export type Fail = Error
 
   export function key(hash: ZeroHexString, chain: ChainData) {
