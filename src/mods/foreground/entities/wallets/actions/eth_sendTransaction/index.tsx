@@ -37,10 +37,10 @@ export type WalletTransactionScreenState = {
   readonly value?: string
   readonly nonce?: string
   readonly data?: string
+  readonly gas?: string
   readonly gasMode?: string
-  readonly gasLimit?: string
   readonly gasPrice?: string
-  readonly baseFeePerGas?: string
+  readonly maxFeePerGas?: string
   readonly maxPriorityFeePerGas?: string
   readonly disableData?: string
   readonly disableSign?: string
@@ -60,10 +60,10 @@ export function WalletTransactionDialog(props: {}) {
   const [maybeValue, setValue] = useKeyValueState("value", $state)
   const [maybeNonce, setNonce] = useKeyValueState("nonce", $state)
   const [maybeData, setData] = useKeyValueState("data", $state)
+  const [maybeGas, setGas] = useKeyValueState("gas", $state)
   const [maybeGasMode, setGasMode] = useKeyValueState("gasMode", $state)
-  const [maybeGasLimit, setGasLimit] = useKeyValueState("gasLimit", $state)
   const [maybeGasPrice, setGasPrice] = useKeyValueState("gasPrice", $state)
-  const [maybeBaseFeePerGas, setBaseFeePerGas] = useKeyValueState("baseFeePerGas", $state)
+  const [maybeMaxFeePerGas, setMaxFeePerGas] = useKeyValueState("maxFeePerGas", $state)
   const [maybeMaxPriorityFeePerGas, setMaxPriorityFeePerGas] = useKeyValueState("maxPriorityFeePerGas", $state)
   const [maybeDisableData, setDisableData] = useKeyValueState("disableData", $state)
   const [maybeDisableSign, setDisableSign] = useKeyValueState("disableSign", $state)
@@ -251,7 +251,7 @@ export function WalletTransactionDialog(props: {}) {
     return maybePendingBlock?.baseFeePerGas != null
   }, [maybePendingBlock])
 
-  const [rawGasLimitInput = "", setRawGasLimitInput] = useState<Optional<string>>(maybeGasLimit)
+  const [rawGasLimitInput = "", setRawGasLimitInput] = useState<Optional<string>>(maybeGas)
 
   const onGasLimitInputChange = useInputChange(e => {
     setRawGasLimitInput(e.target.value)
@@ -260,7 +260,7 @@ export function WalletTransactionDialog(props: {}) {
   const gasLimitInput = useDeferredValue(rawGasLimitInput)
 
   useEffectButNotFirstTime(() => {
-    setGasLimit(gasLimitInput)
+    setGas(gasLimitInput)
   }, [gasLimitInput])
 
   const [rawGasPriceInput = "", setRawGasPriceInput] = useState<Optional<string>>(maybeGasPrice)
@@ -275,17 +275,17 @@ export function WalletTransactionDialog(props: {}) {
     setGasPrice(gasPriceInput)
   }, [gasPriceInput])
 
-  const [rawBaseFeePerGasInput = "", setRawBaseFeePerGasInput] = useState<Optional<string>>(maybeBaseFeePerGas)
+  const [rawMaxFeePerGasInput = "", setRawMaxFeePerGasInput] = useState<Optional<string>>(maybeMaxFeePerGas)
 
-  const onBaseFeePerGasInputChange = useInputChange(e => {
-    setRawBaseFeePerGasInput(e.target.value)
+  const onMaxFeePerGasInputChange = useInputChange(e => {
+    setRawMaxFeePerGasInput(e.target.value)
   }, [])
 
-  const baseFeePerGasInput = useDeferredValue(rawBaseFeePerGasInput)
+  const maxFeePerGasInput = useDeferredValue(rawMaxFeePerGasInput)
 
   useEffectButNotFirstTime(() => {
-    setBaseFeePerGas(baseFeePerGasInput)
-  }, [baseFeePerGasInput])
+    setMaxFeePerGas(maxFeePerGasInput)
+  }, [maxFeePerGasInput])
 
   const [rawMaxPriorityFeePerGasInput = "", setRawMaxPriorityFeePerGasInput] = useState<Optional<string>>(maybeMaxPriorityFeePerGas)
 
@@ -319,14 +319,6 @@ export function WalletTransactionDialog(props: {}) {
   const maybeUrgentBaseFeePerGas = useMaybeMemo((baseFeePerGas) => {
     return baseFeePerGas + (2n * (10n ** 9n))
   }, [maybeFetchedBaseFeePerGas])
-
-  const maybeCustomBaseFeePerGas = useMemo(() => {
-    try {
-      return maybeBaseFeePerGas?.trim().length
-        ? BigInt(maybeBaseFeePerGas.trim())
-        : maybeNormalBaseFeePerGas
-    } catch { }
-  }, [maybeBaseFeePerGas, maybeNormalBaseFeePerGas])
 
   const maybeNormalMaxPriorityFeePerGas = useMaybeMemo((maxPriorityFeePerGas) => {
     return maxPriorityFeePerGas / 4n
@@ -392,14 +384,6 @@ export function WalletTransactionDialog(props: {}) {
     return maybeUrgentBaseFeePerGas + maybeUrgentMaxPriorityFeePerGas
   }, [maybeUrgentBaseFeePerGas, maybeUrgentMaxPriorityFeePerGas])
 
-  const maybeCustomMinFeePerGas = useMemo(() => {
-    if (maybeCustomBaseFeePerGas == null)
-      return undefined
-    if (maybeCustomMaxPriorityFeePerGas == null)
-      return undefined
-    return maybeCustomBaseFeePerGas + maybeCustomMaxPriorityFeePerGas
-  }, [maybeCustomBaseFeePerGas, maybeCustomMaxPriorityFeePerGas])
-
   const maybeNormalMaxFeePerGas = useMemo(() => {
     if (maybeNormalBaseFeePerGas == null)
       return undefined
@@ -425,12 +409,12 @@ export function WalletTransactionDialog(props: {}) {
   }, [maybeUrgentBaseFeePerGas, maybeUrgentMaxPriorityFeePerGas])
 
   const maybeCustomMaxFeePerGas = useMemo(() => {
-    if (maybeCustomBaseFeePerGas == null)
-      return undefined
-    if (maybeCustomMaxPriorityFeePerGas == null)
-      return undefined
-    return (maybeCustomBaseFeePerGas * 2n) + maybeCustomMaxPriorityFeePerGas
-  }, [maybeCustomBaseFeePerGas, maybeCustomMaxPriorityFeePerGas])
+    try {
+      return maybeMaxFeePerGas?.trim().length
+        ? BigInt(maybeMaxFeePerGas.trim())
+        : maybeNormalMaxFeePerGas
+    } catch { }
+  }, [maybeMaxFeePerGas, maybeNormalMaxFeePerGas])
 
   function useMode<T>(normal: Nullable<T>, fast: Nullable<T>, urgent: Nullable<T>, custom: Nullable<T>) {
     return useMemo(() => {
@@ -555,11 +539,11 @@ export function WalletTransactionDialog(props: {}) {
 
   const maybeCustomGasLimit = useMemo(() => {
     try {
-      return maybeGasLimit?.trim().length
-        ? BigInt(maybeGasLimit.trim())
+      return maybeGas?.trim().length
+        ? BigInt(maybeGas.trim())
         : maybeFetchedGasLimit
     } catch { }
-  }, [maybeGasLimit, maybeFetchedGasLimit])
+  }, [maybeGas, maybeFetchedGasLimit])
 
   const maybeFinalGasLimit = useMemo(() => {
     if (gasMode === "custom")
@@ -637,16 +621,6 @@ export function WalletTransactionDialog(props: {}) {
     return new Fixed(maybeEip1559GasLimit * maybeUrgentMinFeePerGas, 18).mul(maybePrice)
   }, [maybeEip1559GasLimit, maybeUrgentMinFeePerGas, maybePrice])
 
-  const maybeCustomMinEip1559GasCost = useMemo(() => {
-    if (maybeCustomGasLimit == null)
-      return undefined
-    if (maybeCustomMinFeePerGas == null)
-      return undefined
-    if (maybePrice == null)
-      return undefined
-    return new Fixed(maybeCustomGasLimit * maybeCustomMinFeePerGas, 18).mul(maybePrice)
-  }, [maybeCustomGasLimit, maybeCustomMinFeePerGas, maybePrice])
-
   const maybeNormalMaxEip1559GasCost = useMemo(() => {
     if (maybeEip1559GasLimit == null)
       return undefined
@@ -688,7 +662,7 @@ export function WalletTransactionDialog(props: {}) {
   }, [maybeCustomGasLimit, maybeCustomMaxFeePerGas, maybePrice])
 
   const maybeFinalLegacyGasCost = useMode(maybeNormalLegacyGasCost, maybeFastLegacyGasCost, maybeUrgentLegacyGasCost, maybeCustomLegacyGasCost)
-  const maybeFinalMinEip1559GasCost = useMode(maybeNormalMinEip1559GasCost, maybeFastMinEip1559GasCost, maybeUrgentMinEip1559GasCost, maybeCustomMinEip1559GasCost)
+  const maybeFinalMinEip1559GasCost = useMode(maybeNormalMinEip1559GasCost, maybeFastMinEip1559GasCost, maybeUrgentMinEip1559GasCost, undefined)
   const maybeFinalMaxEip1559GasCost = useMode(maybeNormalMaxEip1559GasCost, maybeFastMaxEip1559GasCost, maybeUrgentMaxEip1559GasCost, maybeCustomMaxEip1559GasCost)
 
   const normalLegacyGasCostDisplay = useCompactUsdDisplay(maybeNormalLegacyGasCost)
@@ -723,9 +697,7 @@ export function WalletTransactionDialog(props: {}) {
       if (maybeIsEip1559 == null)
         return
 
-      const target = Option.wrap(maybeFinalTarget).okOrElseSync(() => {
-        return new UIError(`Could not parse or fetch address`)
-      }).unwrap()
+      const maybeTarget = Option.wrap(maybeFinalTarget).mapSync(Address.fromOrThrow).get()
 
       const value = Option.wrap(maybeFinalValue).okOrElseSync(() => {
         return new UIError(`Could not parse value`)
@@ -759,7 +731,7 @@ export function WalletTransactionDialog(props: {}) {
         }).unwrap()
 
         tx = Transaction.from({
-          to: Address.fromOrThrow(target),
+          to: maybeTarget,
           gasLimit: gasLimit,
           chainId: chainData.chainId,
           maxFeePerGas: maxFeePerGas,
@@ -771,7 +743,7 @@ export function WalletTransactionDialog(props: {}) {
 
         params = {
           from: wallet.address,
-          to: Address.fromOrThrow(target),
+          to: maybeTarget,
           gas: ZeroHexString.from(gasLimit),
           maxFeePerGas: ZeroHexString.from(maxFeePerGas),
           maxPriorityFeePerGas: ZeroHexString.from(maxPriorityFeePerGas),
@@ -790,7 +762,7 @@ export function WalletTransactionDialog(props: {}) {
         }).unwrap()
 
         tx = Transaction.from({
-          to: Address.from(target),
+          to: maybeTarget,
           gasLimit: gasLimit,
           chainId: chainData.chainId,
           gasPrice: gasPrice,
@@ -801,7 +773,7 @@ export function WalletTransactionDialog(props: {}) {
 
         params = {
           from: wallet.address,
-          to: Address.fromOrThrow(target),
+          to: maybeTarget,
           gas: ZeroHexString.from(gasLimit),
           gasPrice: ZeroHexString.from(gasPrice),
           value: ZeroHexString.from(value.value),
@@ -1047,12 +1019,12 @@ export function WalletTransactionDialog(props: {}) {
       <div className="h-2" />
       <SimpleLabel>
         <div className="shrink-0">
-          Base Fee Per Gas
+          Max Fee Per Gas
         </div>
         <div className="w-4" />
         <SimpleInput
-          value={rawBaseFeePerGasInput}
-          onChange={onBaseFeePerGasInputChange}
+          value={rawMaxFeePerGasInput}
+          onChange={onMaxFeePerGasInputChange}
           placeholder={maybeFetchedBaseFeePerGas?.toString()} />
       </SimpleLabel>
       <div className="h-2" />

@@ -735,12 +735,16 @@ export class Global {
   }
 
   async eth_sendTransaction(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {
-    const [{ from, to, gas, value, data }] = (request as RpcRequestPreinit<[{
+    const [{ from, to, gas, value, nonce, data, gasPrice, maxFeePerGas, maxPriorityFeePerGas }] = (request as RpcRequestPreinit<[{
       from: string,
-      to: string,
-      gas: string,
+      to: Nullable<string>,
+      gas: Nullable<string>,
       value: Nullable<string>,
-      data: Nullable<string>
+      nonce: Nullable<string>,
+      data: Nullable<string>,
+      gasPrice: Nullable<string>,
+      maxFeePerGas: Nullable<string>,
+      maxPriorityFeePerGas: Nullable<string>,
     }]>).params
 
     const { storage } = Option.unwrap(this.#user)
@@ -759,19 +763,15 @@ export class Global {
 
     const chainId = ZeroHexString.from(ethereum.chain.chainId)
 
-    const signature = await this.requestOrThrow<string>({
+    const hash = await this.requestOrThrow<string>({
       id: crypto.randomUUID(),
       method: "eth_sendTransaction",
-      params: { from, to, gas, value, data, walletId, chainId },
+      params: { walletId, chainId, from, to, gas, value, nonce, data, gasPrice, maxFeePerGas, maxPriorityFeePerGas },
       origin: session.origin,
       session: session.id
     }, mouse).then(r => r.unwrap())
 
-    return await BgEthereumContext.fetchOrFail<string>(ethereum, {
-      method: "eth_sendRawTransaction",
-      params: [signature],
-      noCheck: true
-    }, {})
+    return new Ok(hash)
   }
 
   async personal_sign(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<Result<string, Error>> {

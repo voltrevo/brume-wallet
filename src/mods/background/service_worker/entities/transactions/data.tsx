@@ -1,7 +1,7 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { ZeroHexString } from "@hazae41/cubane"
 import { Data, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
-import { None, Some } from "@hazae41/option"
+import { None, Nullable, Some } from "@hazae41/option"
 import { BgEthereumContext } from "../../context"
 import { EthereumQueryKey } from "../wallets/data"
 
@@ -92,7 +92,7 @@ export type TransactionParametersData =
 
 export interface LegacyTransactionParametersData {
   readonly from: ZeroHexString
-  readonly to: ZeroHexString
+  readonly to?: Nullable<ZeroHexString>
   readonly value: ZeroHexString
   readonly gas: ZeroHexString
   readonly gasPrice: ZeroHexString
@@ -102,7 +102,7 @@ export interface LegacyTransactionParametersData {
 
 export interface Eip1559TransactionParametersData {
   readonly from: ZeroHexString
-  readonly to: ZeroHexString
+  readonly to?: Nullable<ZeroHexString>
   readonly value: ZeroHexString
   readonly maxFeePerGas: ZeroHexString
   readonly maxPriorityFeePerGas: ZeroHexString

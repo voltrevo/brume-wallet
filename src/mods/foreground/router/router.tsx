@@ -1,5 +1,5 @@
 import { ChildrenProps } from "@/libs/react/props/children"
-import { DonePage, PersonalSignPage, SwitchPage, TransactPage, TypedSignPage, WalletAndChainSelectPage } from "pages/popup"
+import { DonePage, PersonalSignPage, TransactPage, TypedSignPage, WalletAndChainSelectPage } from "pages/popup"
 import { useBackgroundContext } from "../background/context"
 import { RequestsPage } from "../entities/requests/all/page"
 import { SeedsPage } from "../entities/seeds/all/page"
@@ -105,11 +105,6 @@ export function Router() {
   if (matches = url.pathname.match(/^\/eth_sendTransaction(\/)?$/))
     return <Layout>
       <TransactPage />
-    </Layout>
-
-  if (matches = url.pathname.match(/^\/wallet_switchEthereumChain(\/)?$/))
-    return <Layout>
-      <SwitchPage />
     </Layout>
 
   if (matches = url.pathname.match(/^\/personal_sign(\/)?$/))

@@ -1,39 +1,35 @@
-import { BigIntToHex, BigInts } from "@/libs/bigints/bigints";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
-import { useAsyncReplaceMemo } from "@/libs/react/memo";
-import { Results } from "@/libs/results/results";
-import { Button } from "@/libs/ui/button";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog, Dialog2 } from "@/libs/ui/dialog/dialog";
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header";
 import { Page } from "@/libs/ui2/page/page";
+import { qurl } from "@/libs/url/url";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
-import { useAppRequest, useAppRequests } from "@/mods/foreground/entities/requests/data";
-import { useSession } from "@/mods/foreground/entities/sessions/data";
-import { useSignature } from "@/mods/foreground/entities/signatures/data";
-import { useGasPrice, useNonce } from "@/mods/foreground/entities/unknown/data";
+import { useAppRequests } from "@/mods/foreground/entities/requests/data";
+import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
 import { UserGuard } from "@/mods/foreground/entities/users/context";
+import { WalletTransactionDialog } from "@/mods/foreground/entities/wallets/actions/eth_sendTransaction";
 import { PaddedRoundedShrinkableNakedButton, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send";
 import { WalletCreatorMenu } from "@/mods/foreground/entities/wallets/all/create";
 import { SelectableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
-import { EthereumWalletInstance, useEthereumContext, useEthereumContext2, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
+import { WalletDataContext } from "@/mods/foreground/entities/wallets/context";
+import { EthereumWalletInstance, useEthereumContext2, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
 import { UserRejectedError } from "@/mods/foreground/errors/errors";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
-import { usePathContext } from "@/mods/foreground/router/path/context";
+import { HashSubpathProvider, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context";
 import { Router } from "@/mods/foreground/router/router";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { Abi, Cubane, ZeroHexString } from "@hazae41/cubane";
+import { Abi } from "@hazae41/cubane";
 import { RpcErr, RpcOk } from "@hazae41/jsonrpc";
 import { Nullable, Option } from "@hazae41/option";
-import { Err, Ok, Result } from "@hazae41/result";
-import { Transaction } from "ethers";
+import { Err, Result } from "@hazae41/result";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
@@ -60,252 +56,106 @@ export function Ready() {
 }
 
 export function TransactPage() {
-  const { url, go } = usePathContext().unwrap()
-  const { searchParams } = url
+  const path = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
-  const id = Option.wrap(searchParams.get("id")).unwrap()
-  const to = Option.wrap(searchParams.get("to")).unwrap()
-  const gas = Option.wrap(searchParams.get("gas")).unwrap()
-  const walletId = Option.wrap(searchParams.get("walletId")).unwrap()
-  const chainId = Option.wrap(searchParams.get("chainId")).mapSync(Number).unwrap()
+  const subpath = useHashSubpath(path)
 
-  const requestQuery = useAppRequest(id)
-  const maybeRequest = requestQuery.data?.get()
+  const id = Option.unwrap(path.url.searchParams.get("id"))
 
-  const sessionQuery = useSession(maybeRequest?.session)
-  const maybeSession = sessionQuery.data?.get()
-
+  const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
   const walletQuery = useWallet(walletId)
-  const maybeWallet = walletQuery.data?.get()
+  const maybeWallet = walletQuery.current?.ok().get()
 
-  const chain = Option.wrap(chainByChainId[chainId]).unwrap()
+  const chainId = Option.unwrap(path.url.searchParams.get("chainId"))
+  const chainData = Option.unwrap(chainByChainId[Number(chainId)])
 
-  const value = searchParams.get("value")
-  const maybeData = searchParams.get("data")
+  const maybeContext = useEthereumContext2(maybeWallet?.uuid, chainData).get()
 
-  const context = useEthereumContext(maybeSession?.wallets.at(0)?.uuid, chain)
+  const maybeTo = path.url.searchParams.get("to")
+  const maybeGas = path.url.searchParams.get("gas")
+  const maybeValue = path.url.searchParams.get("value")
+  const maybeNonce = path.url.searchParams.get("nonce")
+  const maybeData = path.url.searchParams.get("data")
+  const maybeGasPrice = path.url.searchParams.get("gasPrice")
+  const maybeMaxFeePerGas = path.url.searchParams.get("maxFeePerGas")
+  const maybeMaxPriorityFeePerGas = path.url.searchParams.get("maxPriorityFeePerGas")
 
-  const gasPriceQuery = useGasPrice(context)
-  const maybeGasPrice = gasPriceQuery.data?.get()
+  const trialQuery = useTransactionTrial(id)
+  const maybeTrialData = trialQuery.current?.ok().get()
 
-  const nonceQuery = useNonce(maybeWallet?.address, context)
-  const maybeNonce = nonceQuery.data?.get()
+  const transactionQuery = useTransactionWithReceipt(maybeTrialData?.transactions[0].uuid, maybeContext)
+  const maybeTransaction = transactionQuery.current?.ok().get()
 
-  const maybeHash = Option.wrap(maybeData).mapSync(x => {
-    return x.slice(0, 10) as ZeroHexString
-  }).inner
+  const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    const transaction = Option.unwrap(maybeTransaction)
 
-  const gnosis = useEthereumContext2(maybeSession?.wallets.at(0)?.uuid, chainByChainId[100]).unwrap()
+    await background.tryRequest({
+      method: "brume_respond",
+      params: [new RpcOk(id, transaction.hash)]
+    }).then(r => r.unwrap().unwrap())
 
-  const signaturesQuery = useSignature(maybeHash, gnosis)
-  const maybeSignatures = signaturesQuery.data?.get()
+    location.replace(path.go("/done"))
+  }), [background, id, path, maybeTransaction])
 
-  const maybeSignature = useAsyncReplaceMemo(async () => {
-    if (maybeData == null)
-      return
-    if (maybeHash == null)
-      return
-    if (maybeSignatures == null)
-      return
+  const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    await background.tryRequest({
+      method: "brume_respond",
+      params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
+    }).then(r => r.unwrap().unwrap())
 
-    const zeroHexData = ZeroHexString.from(maybeData)
+    location.replace(path.go("/done"))
+  }), [background, id, path])
 
-    return maybeSignatures.map((text) => {
-      return Result.runAndWrapSync<{ text: string, decoded: string }>(() => {
-        const abi = Cubane.Abi.FunctionSignature.parseOrThrow(text)
-        const { args } = Cubane.Abi.decodeOrThrow(abi, zeroHexData)
+  const onSendTransactionClick = useCallback(() => {
+    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: id, chain: chainId, target: maybeTo, value: maybeValue, nonce: maybeNonce, data: maybeData, gas: maybeGas, gasMode: "custom", gasPrice: maybeGasPrice, maxFeePerGas: maybeMaxFeePerGas, maxPriorityFeePerGas: maybeMaxPriorityFeePerGas, disableData: true, disableSign: true })))
+  }, [subpath, id, chainId, maybeTo, maybeValue, maybeNonce, maybeData, maybeGas, maybeGasPrice, maybeMaxFeePerGas, maybeMaxPriorityFeePerGas])
 
-        function stringifyOrThrow(x: any): string {
-          if (typeof x === "string")
-            return x
-          if (typeof x === "boolean")
-            return String(x)
-          if (typeof x === "number")
-            return String(x)
-          if (typeof x === "bigint")
-            return String(x)
-          if (x instanceof Uint8Array)
-            return ZeroHexString.from(Base16.get().encodeOrThrow(x))
-          if (Array.isArray(x))
-            return `(${x.map(stringifyOrThrow).join(", ")})`
-          return "unknown"
-        }
-
-        const decoded = args.intoOrThrow().map(stringifyOrThrow).join(", ")
-
-        return { text, decoded }
-      }).inspectErrSync(e => console.warn({ e })).unwrapOr(undefined)
-    }).find(it => it != null)
-  }, [maybeData, maybeHash, maybeSignatures])
-
-  const onApprove = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      const wallet = Option.wrap(maybeWallet).ok().throw(t)
-      const gasPrice = Option.wrap(maybeGasPrice).ok().throw(t)
-      const nonce = Option.wrap(maybeNonce).ok().throw(t)
-
-      const tx = Result.runAndDoubleWrapSync(() => {
-        return Transaction.from({
-          data: maybeData,
-          to: to,
-          gasLimit: gas,
-          chainId: chain.chainId,
-          gasPrice: gasPrice,
-          nonce: Number(nonce),
-          value: value
-        })
-      }).throw(t)
-
-      const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.throw(t))
-      tx.signature = await instance.trySignTransaction(tx, background).then(r => r.throw(t))
-
-      await background.tryRequest({
-        method: "brume_respond",
-        params: [new RpcOk(id, tx.serialized)]
-      }).then(r => r.throw(t).throw(t))
-
-      location.replace(go("/done"))
-
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, id, maybeWallet, maybeGasPrice, maybeNonce, chain])
-
-  const onReject = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      await background.tryRequest({
-        method: "brume_respond",
-        params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-      }).then(r => r.throw(t).throw(t))
-
-      location.replace(go("/done"))
-
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, id])
-
-  const loading = useMemo(() => {
-    if (onApprove.loading)
-      return true
-    if (gasPriceQuery.data == null)
-      return true
-    if (nonceQuery.data == null)
-      return true
-    return false
-  }, [onApprove.loading, gasPriceQuery.data, nonceQuery.data])
-
-  return <Page>
-    <div className="p-4 grow flex flex-col items-center justify-center">
-      <div className="text-center text-xl font-medium">
-        Transaction
-      </div>
-      <div className="w-full max-w-[230px] text-center text-contrast">
-        Do you want to approve this transaction?
-      </div>
-    </div>
-    <div className="w-full p-4 grow flex flex-col">
-      <div className="w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap break-words">
-        To: {to}
-      </div>
-      {value &&
-        <div className="w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
-          Value: {BigIntToHex.tryDecode(ZeroHexString.from(value)).mapSync(x => BigInts.float(x, 18)).ok().unwrapOr("Error")}
-        </div>}
-      {maybeSignature &&
-        <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
-          Function: {maybeSignature.text}
-        </div>}
-      {(maybeSignature || maybeData) &&
-        <div className="grow w-full p-4 border border-contrast rounded-xl whitespace-pre-wrap mt-2 break-words">
-          Data: {maybeSignature?.decoded ?? maybeData}
-        </div>}
-    </div>
-    <div className="p-4 w-full flex items-center gap-2">
-      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
-        onClick={onReject.run}
-        disabled={onReject.loading}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.XMarkIcon className="size-5" />
-          No, reject it
+  return <WalletDataContext.Provider value={maybeWallet}>
+    <Page>
+      <HashSubpathProvider>
+        {subpath.url.pathname === "/eth_sendTransaction" &&
+          <Dialog2>
+            <WalletTransactionDialog />
+          </Dialog2>}
+      </HashSubpathProvider>
+      <PageBody>
+        <Dialog.Title>
+          Transaction
+        </Dialog.Title>
+        <div className="h-2" />
+        <div className="text-contrast">
+          Do you want to send the following transaction?
         </div>
-      </Button.Contrast>
-      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
-        onClick={onApprove.run}
-        disabled={loading}
-        colorIndex={5}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.CheckIcon className="size-5" />
-          Yes, approve it
+        <div className="h-4" />
+        <div className="grow p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
+          {JSON.stringify({ to: maybeTo, gas: maybeGas, value: maybeValue, data: maybeData, nonce: maybeNonce, gasPrice: maybeGasPrice, maxFeePerGas: maybeMaxFeePerGas, maxPriorityFeePerGas: maybeMaxPriorityFeePerGas }, undefined, 2)}
         </div>
-      </Button.Gradient>
-    </div>
-  </Page>
-}
-
-export function SwitchPage() {
-  const { url, go } = usePathContext().unwrap()
-  const { searchParams } = url
-  const background = useBackgroundContext().unwrap()
-
-  const id = Option.wrap(searchParams.get("id")).unwrap()
-
-  const onApprove = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      await background.tryRequest({
-        method: "brume_respond",
-        params: [new RpcOk(id, undefined)]
-      }).then(r => r.throw(t).throw(t))
-
-      location.replace(go("/done"))
-
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, id, go])
-
-  const onReject = useAsyncUniqueCallback(async () => {
-    return await Result.unthrow<Result<void, Error>>(async t => {
-      await background.tryRequest({
-        method: "brume_respond",
-        params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-      }).then(r => r.throw(t).throw(t))
-
-      await new Promise(ok => setTimeout(ok, 250))
-
-      location.replace(go("/done"))
-
-      return Ok.void()
-    }).then(Results.logAndAlert)
-  }, [background, id, go])
-
-  return <Page>
-    <div className="p-4 grow flex flex-col items-center justify-center">
-      <div className="text-center text-xl font-medium">
-        Switch chain
-      </div>
-      <div className="w-full max-w-[230px] text-center text-contrast">
-        Do you want to switch the Ethereum chain?
-      </div>
-    </div>
-    <div className="p-4 w-full flex items-center gap-2">
-      <Button.Contrast className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
-        onClick={onReject.run}
-        disabled={onReject.loading}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.XMarkIcon className="size-5" />
-          No, reject it
+        <div className="h-4 grow" />
+        <div className="flex items-center flex-wrap-reverse gap-2">
+          <WideShrinkableContrastButton
+            onClick={rejectOrAlert.run}
+            disabled={rejectOrAlert.loading}>
+            <Outline.XMarkIcon className="size-5" />
+            Reject
+          </WideShrinkableContrastButton>
+          {maybeTransaction == null &&
+            <WideShrinkableOppositeButton
+              onClick={onSendTransactionClick}>
+              <Outline.CheckIcon className="size-5" />
+              Transact
+            </WideShrinkableOppositeButton>}
+          {maybeTransaction != null &&
+            <WideShrinkableOppositeButton
+              onClick={approveOrAlert.run}
+              disabled={approveOrAlert.loading}>
+              <Outline.CheckIcon className="size-5" />
+              Approve
+            </WideShrinkableOppositeButton>}
         </div>
-      </Button.Contrast>
-      <Button.Gradient className="grow po-md hovered-or-clicked-or-focused:scale-105 !transition"
-        onClick={onApprove.run}
-        disabled={onApprove.loading}
-        colorIndex={5}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.CheckIcon className="size-5" />
-          Yes, approve it
-        </div>
-      </Button.Gradient>
-    </div>
-  </Page>
+      </PageBody>
+    </Page>
+  </WalletDataContext.Provider>
 }
 
 export function PersonalSignPage() {
@@ -313,11 +163,12 @@ export function PersonalSignPage() {
   const background = useBackgroundContext().unwrap()
 
   const id = Option.unwrap(path.url.searchParams.get("id"))
-  const message = Option.unwrap(path.url.searchParams.get("message"))
-  const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
 
+  const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
   const walletQuery = useWallet(walletId)
-  const maybeWallet = walletQuery.data?.get()
+  const maybeWallet = walletQuery.current?.ok().get()
+
+  const message = Option.unwrap(path.url.searchParams.get("message"))
 
   const triedUserMessage = useMemo(() => Result.runAndWrapSync(() => {
     return message.startsWith("0x")
@@ -338,7 +189,7 @@ export function PersonalSignPage() {
     }).then(r => r.unwrap().unwrap())
 
     location.replace(path.go("/done"))
-  }), [maybeWallet, triedUserMessage, background, id, path])
+  }), [background, id, path, maybeWallet, triedUserMessage])
 
   const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     await background.tryRequest({
@@ -352,7 +203,7 @@ export function PersonalSignPage() {
   return <Page>
     <PageBody>
       <Dialog.Title>
-        Sign message
+        Signature
       </Dialog.Title>
       <div className="h-2" />
       <div className="text-contrast">
@@ -390,11 +241,12 @@ export function TypedSignPage() {
   const background = useBackgroundContext().unwrap()
 
   const id = Option.unwrap(path.url.searchParams.get("id"))
-  const data = Option.unwrap(path.url.searchParams.get("data"))
-  const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
 
+  const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
   const walletQuery = useWallet(walletId)
   const maybeWallet = walletQuery.current?.ok().get()
+
+  const data = Option.unwrap(path.url.searchParams.get("data"))
 
   const triedParsedData = useMemo(() => Result.runAndWrapSync(() => {
     return JSON.parse(data) as Abi.Typed.TypedData
@@ -413,7 +265,7 @@ export function TypedSignPage() {
     }).then(r => r.unwrap().unwrap())
 
     location.replace(path.go("/done"))
-  }), [maybeWallet, data, background, id, path])
+  }), [background, id, path, maybeWallet, triedParsedData])
 
   const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     await background.tryRequest({
@@ -422,12 +274,12 @@ export function TypedSignPage() {
     }).then(r => r.unwrap().unwrap())
 
     location.replace(path.go("/done"))
-  }), [background, id])
+  }), [background, id, path])
 
   return <Page>
     <PageBody>
       <Dialog.Title>
-        Sign message
+        Signature
       </Dialog.Title>
       <div className="h-2" />
       <div className="text-contrast">
@@ -439,7 +291,7 @@ export function TypedSignPage() {
       </div>
       <div className="h-4" />
       <div className="grow p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
-        {triedParsedData.mapSync(JSON.stringify).unwrapOr("Could not decode message")}
+        {triedParsedData.mapSync(x => JSON.stringify(x, undefined, 2)).unwrapOr("Could not decode message")}
       </div>
       <div className="h-4 grow" />
       <div className="flex items-center flex-wrap-reverse gap-2">
@@ -499,7 +351,7 @@ export function WalletAndChainSelectPage() {
     }).then(r => r.unwrap().unwrap())
 
     location.replace(path.go("/done"))
-  }), [selecteds, persistent, background, id, path])
+  }), [background, id, path, selecteds, persistent])
 
   const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     await background.tryRequest({
@@ -535,7 +387,7 @@ export function WalletAndChainSelectPage() {
           checked={persistent}
           onChange={onPersistentChange} />
       </label>
-      <div className="h-4 grow" />
+      <div className="h-4" />
       <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableContrastButton
           onClick={rejectOrAlert.run}
