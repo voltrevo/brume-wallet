@@ -35,7 +35,7 @@ import { usePairPrice } from "../tokens/pairs/data";
 import { SmallShrinkableContrastButton, useGenius } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
-import { PaddedRoundedShrinkableNakedButton, WalletSendScreen, WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "./actions/send";
+import { PaddedRoundedShrinkableNakedAnchor, WalletSendScreen, WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "./actions/send";
 import { RawWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2, useWallet } from "./data";
@@ -149,37 +149,7 @@ function WalletDataPage() {
     Paths.go("/wallets")
   }, [])
 
-  const onCameraClick = useCallback(() => {
-    Paths.go(`/wallet/${wallet.uuid}/camera`)
-  }, [wallet])
-
-  const connectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    const clipboard = await Result.runAndWrap(async () => {
-      return await navigator.clipboard.readText()
-    }).then(r => r.orElseSync(() => {
-      return Option.wrap(prompt("Paste a WalletConnect link here")).ok()
-    }).unwrap())
-
-    const url = Result.runAndDoubleWrapSync(() => {
-      return new URL(clipboard)
-    }).mapErrSync(() => {
-      return new UIError("You must copy a WalletConnect link")
-    }).unwrap()
-
-    await Wc.tryParse(url).then(r => r.mapErrSync(() => {
-      return new UIError("You must copy a WalletConnect link")
-    }).unwrap())
-
-    alert(`Connecting...`)
-
-    const metadata = await background.tryRequest<WcMetadata>({
-      method: "brume_wc_connect",
-      params: [clipboard, wallet.uuid]
-    }).then(r => r.unwrap().unwrap())
-
-    alert(`Connected to ${metadata.name}`)
-  }), [wallet, background])
-
+  const connect = useGenius(subpath, "/connect")
   const receive = useGenius(subpath, "/receive")
 
   const $flip = useState(false)
@@ -197,16 +167,15 @@ function WalletDataPage() {
       title="Wallet"
       back={onBackClick}>
       <div className="flex items-center gap-2">
-        {background.isWebsite() && <>
-          <PaddedRoundedShrinkableNakedButton
-            onClick={onCameraClick}>
-            <Outline.QrCodeIcon className="size-5" />
-          </PaddedRoundedShrinkableNakedButton>
-          <PaddedRoundedShrinkableNakedButton
-            onClick={connectOrAlert.run}>
-            <Outline.LinkIcon className="size-5" />
-          </PaddedRoundedShrinkableNakedButton>
-        </>}
+        {background.isWebsite() &&
+          <PaddedRoundedShrinkableNakedAnchor
+            onKeyDown={connect.onKeyDown}
+            onClick={connect.onClick}
+            href={connect.href}>
+            <img className="size-5"
+              alt="WalletConnect"
+              src="/assets/wc.svg" />
+          </PaddedRoundedShrinkableNakedAnchor>}
       </div>
     </UserPageHeader>
 
@@ -326,6 +295,10 @@ function WalletDataPage() {
 
   return <Page>
     <HashSubpathProvider>
+      {subpath.url.pathname === "/connect" &&
+        <Menu>
+          <WalletConnectMenu />
+        </Menu>}
       {subpath.url.pathname === "/send" &&
         <Dialog2>
           <WalletSendScreen />
@@ -453,6 +426,52 @@ export function WalletMenu(props: {
   </div>
 }
 
+
+export function WalletConnectMenu() {
+  const wallet = useWalletDataContext().unwrap()
+  const background = useBackgroundContext().unwrap()
+
+  const connectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    const clipboard = await Result.runAndWrap(async () => {
+      return await navigator.clipboard.readText()
+    }).then(r => r.orElseSync(() => {
+      return Option.wrap(prompt("Paste a WalletConnect link here")).ok()
+    }).unwrap())
+
+    const url = Result.runAndDoubleWrapSync(() => {
+      return new URL(clipboard)
+    }).mapErrSync(() => {
+      return new UIError("You must copy a WalletConnect link")
+    }).unwrap()
+
+    await Wc.tryParse(url).then(r => r.mapErrSync(() => {
+      return new UIError("You must copy a WalletConnect link")
+    }).unwrap())
+
+    alert(`Connecting...`)
+
+    const metadata = await background.tryRequest<WcMetadata>({
+      method: "brume_wc_connect",
+      params: [clipboard, wallet.uuid]
+    }).then(r => r.unwrap().unwrap())
+
+    alert(`Connected to ${metadata.name}`)
+  }), [wallet, background])
+
+  return <div className="flex flex-col text-left gap-2">
+    <WideShrinkableNakedMenuAnchor
+      href={`#/wallet/${wallet.uuid}/camera`}>
+      <Outline.QrCodeIcon className="size-4" />
+      Scan
+    </WideShrinkableNakedMenuAnchor>
+    <WideShrinkableNakedMenuButton
+      disabled={connectOrAlert.loading}
+      onClick={connectOrAlert.run}>
+      <Outline.LinkIcon className="size-4" />
+      Paste
+    </WideShrinkableNakedMenuButton>
+  </div>
+}
 
 const TokensEditContext = createContext(false)
 
