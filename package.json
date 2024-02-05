@@ -1,6 +1,6 @@
 {
   "name": "@brumewallet/wallet",
-  "version": "0.4.18",
+  "version": "0.5.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -103,7 +103,10 @@
   },
   "watch": {
     "build": {
-      "patterns": ["src", "pages"],
+      "patterns": [
+        "src",
+        "pages"
+      ],
       "extensions": "js,jsx,ts,tsx,md,mdx,css,json",
       "delay": 2500
     }
