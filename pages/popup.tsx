@@ -72,6 +72,7 @@ export function TransactPage() {
 
   const maybeContext = useEthereumContext2(maybeWallet?.uuid, chainData).get()
 
+  const from = Option.unwrap(path.url.searchParams.get("from"))
   const maybeTo = path.url.searchParams.get("to")
   const maybeGas = path.url.searchParams.get("gas")
   const maybeValue = path.url.searchParams.get("value")
@@ -129,7 +130,7 @@ export function TransactPage() {
         </div>
         <div className="h-4" />
         <div className="grow p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
-          {JSON.stringify({ to: maybeTo, gas: maybeGas, value: maybeValue, data: maybeData, nonce: maybeNonce, gasPrice: maybeGasPrice, maxFeePerGas: maybeMaxFeePerGas, maxPriorityFeePerGas: maybeMaxPriorityFeePerGas }, undefined, 2)}
+          {JSON.stringify({ from, to: maybeTo, gas: maybeGas, value: maybeValue, data: maybeData, nonce: maybeNonce, gasPrice: maybeGasPrice, maxFeePerGas: maybeMaxFeePerGas, maxPriorityFeePerGas: maybeMaxPriorityFeePerGas }, undefined, 2)}
         </div>
         <div className="h-4 grow" />
         <div className="flex items-center flex-wrap-reverse gap-2">
