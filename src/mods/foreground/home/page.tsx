@@ -44,7 +44,7 @@ export function HomePage() {
           Welcome back<span className="text-contrast">, {userData.name}</span>
         </h1>
         <div className="grow" />
-        {persisted === false && background.isWebsite() || true && <>
+        {persisted === false && background.isWebsite() && <>
           <div className="h-4" />
           <div className="p-4 bg-contrast rounded-xl max-w-xs">
             <h3 className="text-lg font-medium">
