@@ -38,11 +38,25 @@ export function HomePage() {
 
   const Body =
     <PageBody>
-      <div className="h-[min(32rem,90dvh)] shrink-0 grow flex flex-col">
+      <div className="h-[min(32rem,90dvh)] shrink-0 grow flex flex-col items-center">
         <div className="grow" />
         <h1 className="text-center text-6xl font-medium">
           Welcome back<span className="text-contrast">, {userData.name}</span>
         </h1>
+        <div className="grow" />
+        {persisted === false && background.isWebsite() || true && <>
+          <div className="h-4" />
+          <div className="p-4 bg-contrast rounded-xl max-w-xs">
+            <h3 className="text-lg font-medium">
+              Your storage is not persistent yet
+            </h3>
+            <p className="text-contrast">
+              Please add this website to your favorites or to your home screen
+            </p>
+            <div className="h-2" />
+          </div>
+          <div className="h-4" />
+        </>}
         <div className="grow" />
         <div className="grow" />
       </div>
@@ -52,18 +66,6 @@ export function HomePage() {
       <div className="text-2xl font-bold">
         {totalPricedBalanceDisplay}
       </div>
-      {persisted === false && background.isWebsite() || true && <>
-        <div className="h-4" />
-        <div className="p-4 bg-contrast rounded-xl">
-          <h3 className="text-lg font-medium">
-            Your storage is not persistent yet
-          </h3>
-          <p className="text-contrast">
-            Please add this website to your favorites or to your home screen in order to enable persistent storage
-          </p>
-          <div className="h-2" />
-        </div>
-      </>}
       <div className="h-4" />
       <div className="p-4 bg-contrast shrink-0 h-[300px] rounded-xl flex flex-col items-center justify-center">
         <img src="/favicon.png" alt="logo" className="h-24 w-auto" />
