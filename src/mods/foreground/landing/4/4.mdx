@@ -1,1 +1,19 @@
-Coming soon...
+## What is this?
+
+<div className="h-2"/>
+
+You can use WebAuthn to secure your keys with an authentication from your device (e.g. FaceID and TouchID on Apple devices). This is entirely opt-in but strongly recommended if your device supports it. This can prevent phishing and phone-left-on-the-table attacks by preventing any transaction or signature from being made without authentication.
+
+<div className="h-4"/>
+
+## How does it work?
+
+<div className="h-2"/>
+
+Your keys will be encrypted with your password and then protected by authentication. This means that if your password is compromised, your keys are still safe. And if your authentication is compromised, your keys are still encrypted by your user password and by a random nonce only found on your device.
+
+## Are my keys sent to anyone?
+
+<div className="h-2"/>
+
+Your keys may be sent double-encrypted to the servers of your device manufacturer (e.g. Apple, Google, etc.) for backup and recovery purposes. They are never sent to us or any other third-party. Our app takes extra steps to prevent your manufacturer from seeing these keys as they are encrypted by your user password and by a random nonce only found on your device.
