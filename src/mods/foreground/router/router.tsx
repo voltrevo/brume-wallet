@@ -1,12 +1,13 @@
 import { ChildrenProps } from "@/libs/react/props/children"
 import { DonePage, PersonalSignPage, SwitchPage, TransactPage, TypedSignPage, WalletAndChainSelectPage } from "pages/popup"
+import { useBackgroundContext } from "../background/context"
 import { RequestsPage } from "../entities/requests/all/page"
 import { SeedsPage } from "../entities/seeds/all/page"
 import { SeedPage } from "../entities/seeds/page"
 import { SessionsPage } from "../entities/sessions/all/page"
 import { SettingsPage } from "../entities/settings/page"
 import { SnapsPage } from "../entities/snaps/all/page"
-import { LandingPage } from "../entities/users/all/page"
+import { EmptyLandingPage, FullLandingPage } from "../entities/users/all/page"
 import { UserGuard } from "../entities/users/context"
 import { WalletsPage } from "../entities/wallets/all/page"
 import { TrashedWalletsPage } from "../entities/wallets/all/trash/page"
@@ -31,11 +32,15 @@ export function Layout(props: ChildrenProps) {
 
 export function Router() {
   const { url } = usePathContext().unwrap()
+  const background = useBackgroundContext().unwrap()
 
   let matches: RegExpMatchArray | null
 
-  if (matches = url.pathname.match(/^(\/)?$/))
-    return <LandingPage />
+  if ((matches = url.pathname.match(/^(\/)?$/)) && background.isWebsite())
+    return <FullLandingPage next="#/home" />
+
+  if ((matches = url.pathname.match(/^(\/)?$/)) && background.isExtension())
+    return <EmptyLandingPage next="#/home" />
 
   if (matches = url.pathname.match(/^\/home(\/)?$/))
     return <Layout>
@@ -122,5 +127,5 @@ export function Router() {
       <DonePage />
     </Layout>
 
-  return <LandingPage />
+  return <FullLandingPage />
 }

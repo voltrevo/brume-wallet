@@ -13,14 +13,13 @@ import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { KeyboardEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../wallets/actions/send";
-import { useCurrentUser, useUsers } from "../data";
+import { useCurrentUser } from "../data";
 import { UserAvatar } from "./page";
 
-export function UserCreateDialog(props: {}) {
+export function UserCreateDialog(props: { next?: string }) {
   const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
-
-  const users = useUsers()
+  const { next } = props
 
   const currentUserQuery = useCurrentUser()
 
@@ -77,8 +76,11 @@ export function UserCreateDialog(props: {}) {
 
     close(true)
 
-    location.assign("#/home")
-  }), [uuid, finalNameInput, color, emoji, defPasswordInput, background, users.mutate, close])
+    if (next != null)
+      location.assign(next)
+
+    return
+  }), [uuid, finalNameInput, color, emoji, defPasswordInput, background, close, next])
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key !== "Enter")

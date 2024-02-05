@@ -2,7 +2,7 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { UserData } from "@/mods/background/service_worker/entities/users/data";
 import { Nullable, Option } from "@hazae41/option";
 import { createContext, useContext } from "react";
-import { LandingPage } from "./all/page";
+import { EmptyLandingPage } from "./all/page";
 import { useCurrentUser, useUser } from "./data";
 
 export const UserContext = createContext<Nullable<UserData>>(undefined)
@@ -21,7 +21,7 @@ export function UserGuard(props: ChildrenProps) {
   const maybeUser = userQuery.data?.get()
 
   if (maybeCurrentUser == null)
-    return <LandingPage />
+    return <EmptyLandingPage />
 
   if (maybeUser == null)
     return null

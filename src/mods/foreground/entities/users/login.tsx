@@ -14,9 +14,10 @@ import { SimpleLabel, WideShrinkableContrastButton, WideShrinkableOppositeButton
 import { UserAvatar } from "./all/page";
 import { useCurrentUser, useUser } from "./data";
 
-export function UserLoginDialog() {
+export function UserLoginDialog(props: { next?: string }) {
   const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
+  const { next } = props
 
   const $state = usePathState<{ user: string }>()
   const [maybeUserId] = useKeyValueState("user", $state)
@@ -69,8 +70,11 @@ export function UserLoginDialog() {
 
     close(true)
 
-    location.assign("#/home")
-  }), [defPasswordInput, maybeUser, background])
+    if (next != null)
+      location.assign(next)
+
+    return
+  }), [defPasswordInput, maybeUser, background, close, next])
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key !== "Enter")

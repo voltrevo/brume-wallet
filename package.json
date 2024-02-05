@@ -102,6 +102,10 @@
     "workbox-build": "^7.0.0"
   },
   "watch": {
-    "build": "{src,pages}/*"
+    "build": {
+      "patterns": ["src", "pages"],
+      "extensions": "js,jsx,ts,tsx,md,mdx,css,json",
+      "delay": 2500
+    }
   }
 }

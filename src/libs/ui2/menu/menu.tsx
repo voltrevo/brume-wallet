@@ -109,11 +109,11 @@ export function Menu(props: ChildrenProps & DarkProps) {
 
   const [menu, setMenu] = useState<Nullable<HTMLElement>>(null)
 
-  const [maybeW, setMaybeW] = useState<Nullable<number>>(null)
-  const [maybeH, setMaybeH] = useState<Nullable<number>>(null)
+  const [maybeW, setMaybeW] = useState(0)
+  const [maybeH, setMaybeH] = useState(0)
 
-  const [maybeL, setMaybeL] = useState<Nullable<number>>(null)
-  const [maybeT, setMaybeT] = useState<Nullable<number>>(null)
+  const [maybeL, setMaybeL] = useState(0)
+  const [maybeT, setMaybeT] = useState(0)
 
   useLayoutEffect(() => {
     if (menu == null)

@@ -24,8 +24,9 @@ import { useCurrentUser, useUser, useUsers } from "../data";
 import { UserLoginDialog } from "../login";
 import { UserCreateDialog } from "./create";
 
-export function LandingPage() {
+export function EmptyLandingPage(props: { next?: string }) {
   const path = usePathContext().unwrap()
+  const { next } = props
 
   const currentUserQuery = useCurrentUser()
   const currentUserLoading = !currentUserQuery.ready
@@ -38,11 +39,11 @@ export function LandingPage() {
     <HashSubpathProvider>
       {subpath.url.pathname === "/users/login" &&
         <Dialog2>
-          <UserLoginDialog />
+          <UserLoginDialog next={next} />
         </Dialog2>}
       {subpath.url.pathname === "/users/create" &&
         <Dialog2>
-          <UserCreateDialog />
+          <UserCreateDialog next={next} />
         </Dialog2>}
       {subpath.url.pathname === "/users" &&
         <Menu>
@@ -62,7 +63,82 @@ export function LandingPage() {
         </div>
       </div>
       <div className="p-4 grow w-full m-auto max-w-3xl flex flex-col">
-        <div className="h-[32rem] shrink-0 grow flex flex-col items-center">
+        <div className="h-[min(32rem,100%)] shrink-0 grow flex flex-col items-center">
+          <div className="grow" />
+          <h1 className="text-center text-6xl font-medium">
+            Welcome back
+          </h1>
+          <div className="grow" />
+          <div className="flex items-center">
+            {currentUserLoading &&
+              <SmallShrinkableOppositeAnchor
+                aria-disabled>
+                <Loading className="size-5" />
+                Loading
+              </SmallShrinkableOppositeAnchor>}
+            {!currentUserLoading && maybeCurrentUser == null &&
+              <SmallShrinkableOppositeAnchor
+                onKeyDown={users.onKeyDown}
+                onClick={users.onClick}
+                href={users.href}>
+                <Outline.LockOpenIcon className="size-5" />
+                Login
+              </SmallShrinkableOppositeAnchor>}
+            {!currentUserLoading && maybeCurrentUser != null &&
+              <SmallShrinkableOppositeAnchor
+                href="#/home">
+                <Outline.HomeIcon className="size-5" />
+                Home
+              </SmallShrinkableOppositeAnchor>}
+          </div>
+          <div className="grow" />
+          <div className="grow" />
+        </div>
+      </div>
+    </div>
+  </>
+}
+
+export function FullLandingPage(props: { next?: string }) {
+  const path = usePathContext().unwrap()
+  const { next } = props
+
+  const currentUserQuery = useCurrentUser()
+  const currentUserLoading = !currentUserQuery.ready
+  const maybeCurrentUser = currentUserQuery.data?.get()
+
+  const subpath = useHashSubpath(path)
+  const users = useGenius(subpath, "/users")
+
+  return <>
+    <HashSubpathProvider>
+      {subpath.url.pathname === "/users/login" &&
+        <Dialog2>
+          <UserLoginDialog next={next} />
+        </Dialog2>}
+      {subpath.url.pathname === "/users/create" &&
+        <Dialog2>
+          <UserCreateDialog next={next} />
+        </Dialog2>}
+      {subpath.url.pathname === "/users" &&
+        <Menu>
+          <UsersMenu />
+        </Menu>}
+    </HashSubpathProvider>
+    <div className="grow w-full flex flex-col overflow-y-scroll">
+      <div className="po-md border-b-contrast">
+        <div className="grow w-full m-auto max-w-6xl flex items-center">
+          <img className="size-8"
+            alt="Brume Wallet"
+            src="/favicon.png" />
+          <div className="w-2" />
+          <div className="font-medium">
+            Wallet
+          </div>
+        </div>
+      </div>
+      <div className="p-4 grow w-full m-auto max-w-3xl flex flex-col">
+        <div className="h-[min(32rem,100%)] shrink-0 grow flex flex-col items-center">
           <div className="grow" />
           <h1 className="text-center text-6xl font-medium">
             The private Ethereum wallet
