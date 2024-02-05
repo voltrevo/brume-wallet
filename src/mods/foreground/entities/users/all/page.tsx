@@ -66,7 +66,7 @@ export function EmptyLandingPage(props: { next?: string }) {
         <div className="h-[min(32rem,100%)] shrink-0 grow flex flex-col items-center">
           <div className="grow" />
           <h1 className="text-center text-6xl font-medium">
-            Welcome back
+            Welcome back<span className="text-contrast">, anon</span>
           </h1>
           <div className="grow" />
           <div className="flex items-center">

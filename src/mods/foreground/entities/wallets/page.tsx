@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Color, Gradients } from "@/libs/colors/colors";
+import { Color } from "@/libs/colors/colors";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { ChainData, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Mutators } from "@/libs/glacier/mutators";
@@ -130,8 +130,6 @@ function WalletDataPage() {
   const mainnet = useEthereumContext2(wallet.uuid, chainByChainId[1]).unwrap()
 
   useEnsReverse(wallet.address, mainnet)
-
-  const [color, color2] = Gradients.get(wallet.color)
 
   const [all, setAll] = useState(false)
   const [edit, setEdit] = useState(false)
