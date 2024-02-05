@@ -55,13 +55,13 @@ export function Bottom() {
           </div>
         </div>
       </a>
-      <a className="group grow text-contrast data-[selected=true]:text-default"
+      {/* <a className="group grow text-contrast data-[selected=true]:text-default"
         data-selected={url.pathname === "/plugins"}
         href="#/plugins">
         <div className={`${Anchor.Shrinker.className}`}>
           <Outline.PuzzlePieceIcon className="size-6" />
         </div>
-      </a>
+      </a> */}
       <a className="group grow text-contrast data-[selected=true]:text-default"
         data-selected={url.pathname === "/settings"}
         href="#/settings">
