@@ -430,6 +430,7 @@ export function WalletMenu(props: {
 export function WalletConnectMenu() {
   const wallet = useWalletDataContext().unwrap()
   const background = useBackgroundContext().unwrap()
+  const close = useCloseContext().unwrap()
 
   const connectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const clipboard = await Result.runAndWrap(async () => {
@@ -456,7 +457,9 @@ export function WalletConnectMenu() {
     }).then(r => r.unwrap().unwrap())
 
     alert(`Connected to ${metadata.name}`)
-  }), [wallet, background])
+
+    close()
+  }), [wallet, background, close])
 
   return <div className="flex flex-col text-left gap-2">
     <WideShrinkableNakedMenuAnchor
