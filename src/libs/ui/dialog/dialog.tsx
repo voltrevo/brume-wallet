@@ -147,6 +147,16 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
     return () => color.setAttribute("content", original)
   }, [premount, dark])
 
+  const touch = useRef(false)
+
+  const onTouchStart = useCallback(() => {
+    touch.current = true
+  }, [])
+
+  const onTouchEnd = useCallback(() => {
+    touch.current = false
+  }, [])
+
   const onScroll = useCallback((e: UIEvent) => {
     /**
      * Only on mobile
@@ -162,10 +172,15 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
       return
     }
 
+    if (!touch.current && e.currentTarget.scrollTop === 0 && /(android)/i.test(navigator.userAgent)) {
+      e.currentTarget.scrollTop = 1
+      return
+    }
+
     /**
      * Swipe down to close on Android
      */
-    if (e.currentTarget.scrollTop === 0 && /(android)/i.test(navigator.userAgent)) {
+    if (touch.current && e.currentTarget.scrollTop === 0 && /(android)/i.test(navigator.userAgent)) {
       hide()
       return
     }
@@ -207,6 +222,8 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
           onAnimationEnd={onAnimationEnd}
           onMouseDown={onClickOutside}
           onScroll={onScroll}
+          onTouchMove={onTouchStart}
+          onTouchEnd={onTouchEnd}
           onClick={Events.keep}>
           <div className={`grow flex flex-col items-center w-full md:max-w-3xl md:m-auto`}>
             {hesitant &&
