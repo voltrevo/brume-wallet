@@ -5,34 +5,36 @@ declare const IS_SAFARI: boolean
 declare const IS_ANDROID: boolean
 declare const IS_IOS: boolean
 
+const IS_DEV = process.env.NODE_ENV === "development"
+
 export function isWebsite() {
-  return IS_WEBSITE
+  return IS_DEV || (IS_WEBSITE)
 }
 
 export function isExtension() {
-  return IS_CHROME || IS_FIREFOX || IS_SAFARI
+  return !IS_DEV && (IS_CHROME || IS_FIREFOX || IS_SAFARI)
 }
 
 export function isMobile() {
-  return IS_ANDROID || IS_IOS
+  return !IS_DEV && (IS_ANDROID || IS_IOS)
 }
 
 export function isChromeExt() {
-  return IS_CHROME
+  return !IS_DEV && (IS_CHROME)
 }
 
 export function isFirefoxExt() {
-  return IS_FIREFOX
+  return !IS_DEV && (IS_FIREFOX)
 }
 
 export function isSafariExt() {
-  return IS_SAFARI
+  return !IS_DEV && (IS_SAFARI)
 }
 
 export function isAndroidApp() {
-  return IS_ANDROID
+  return !IS_DEV && (IS_ANDROID)
 }
 
 export function isIosApp() {
-  return IS_IOS
+  return !IS_DEV && (IS_IOS)
 }

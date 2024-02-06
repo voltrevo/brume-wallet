@@ -198,6 +198,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
           <div className={`grow flex flex-col items-center w-full md:max-w-3xl md:m-auto`}>
             {hesitant &&
               <input className="h-0 -z-10 opacity-0 md:hidden"
+                readOnly
                 aria-hidden />}
             <div className="h-[50vh] grow md:h-8" />
             <div className={`grow flex flex-col w-full md:w-[max(min(100dvh-4rem-var(--safe-area-inset-top,env(safe-area-inset-top))-var(--safe-area-inset-bottom,env(safe-area-inset-bottom)),48rem),28rem)] md:aspect-square text-default bg-default rounded-t-3xl md:rounded-3xl`}
@@ -209,6 +210,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
               <div className="relative grow flex flex-col basis-[100dvh] md:basis-auto">
                 {!hesitant &&
                   <input className="absolute h-[100dvh] -z-10 opacity-0 md:hidden"
+                    readOnly
                     aria-hidden />}
                 <div className="grow flex flex-col p-6">
                   <div className="grow flex flex-col p-safe md:p-0">
