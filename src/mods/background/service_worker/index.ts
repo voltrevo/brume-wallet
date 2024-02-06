@@ -9,7 +9,7 @@ import { fetchAsBlobOrThrow } from "@/libs/fetch/fetch"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
-import { isExtension, isFirefoxExt, isWebsite } from "@/libs/platform/platform"
+import { isAndroidApp, isExtension, isFirefoxExt, isWebsite } from "@/libs/platform/platform"
 import { Strings } from "@/libs/strings/strings"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool } from "@/libs/tor/tors/tors"
@@ -87,17 +87,21 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope
 
-if (!isExtension() && self.__WB_PRODUCTION) {
+if (isWebsite() && self.__WB_PRODUCTION) {
   clientsClaim()
 
-  if (isWebsite())
-    precacheAndRoute(self.__WB_MANIFEST)
+  precacheAndRoute(self.__WB_MANIFEST)
 
   self.addEventListener("message", (event) => {
     if (event.data !== "SKIP_WAITING")
       return
     self.skipWaiting()
   })
+}
+
+if (isAndroidApp()) {
+  clientsClaim()
+  self.skipWaiting()
 }
 
 export interface PasswordData {

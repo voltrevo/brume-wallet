@@ -1,7 +1,7 @@
 import { BrowserError, browser } from "@/libs/browser/browser";
 import { fetchAsJsonOrThrow } from "@/libs/fetch/fetch";
 import { Outline } from "@/libs/icons/icons";
-import { isExtension } from "@/libs/platform/platform";
+import { isAndroidApp, isExtension, isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { OkProps } from "@/libs/react/props/promise";
 import { Semver } from "@/libs/semver/semver";
@@ -35,15 +35,20 @@ export function UpdateBanner(props: OkProps<unknown>) {
 export function Overlay(props: ChildrenProps) {
   const { children } = props
 
+  if (isWebsite())
+    return <WebsiteOverlay>
+      {children}
+    </WebsiteOverlay>
+
   if (isExtension())
     return <ExtensionOverlay>
       {children}
     </ExtensionOverlay>
 
-  if (!isExtension())
-    return <WebsiteOverlay>
+  if (isAndroidApp())
+    return <AndroidOverlay>
       {children}
-    </WebsiteOverlay>
+    </AndroidOverlay>
 
   return null
 }
@@ -126,6 +131,25 @@ export function ExtensionOverlay(props: ChildrenProps) {
 
   useEffect(() => {
     checkExtensionUpdateOrThrow().then(setUpdatable).catch(console.warn)
+  }, [])
+
+  const update = useCallback(() => {
+    open("https://github.com/brumewallet/wallet/releases", "_blank", "noreferrer")
+  }, [])
+
+  return <>
+    {updatable && <UpdateBanner ok={update} />}
+    {children}
+  </>
+}
+
+export function AndroidOverlay(props: ChildrenProps) {
+  const { children } = props
+
+  const [updatable, setUpdatable] = useState(false)
+
+  useEffect(() => {
+    // TODO 
   }, [])
 
   const update = useCallback(() => {

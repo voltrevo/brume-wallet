@@ -137,8 +137,6 @@ export function createServiceWorkerPortPool(background: WebsiteBackground): Pool
   return new Pool<Disposer<WebsitePort>>(async (params) => {
     const { pool, index } = params
 
-    const start = Date.now()
-
     const registration = await getServiceWorkerOrThrow(background)
 
     if (registration.active == null)
