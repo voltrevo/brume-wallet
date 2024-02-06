@@ -62,7 +62,6 @@ export function HashPathProvider(props: ChildrenProps) {
   const url = useMemo(() => {
     if (raw == null)
       return
-    console.log("hash", raw)
     return Paths.hash(new URL(raw))
   }, [raw])
 
