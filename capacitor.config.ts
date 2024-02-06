@@ -5,10 +5,10 @@ const config: CapacitorConfig = {
   appName: "Brume Wallet",
   webDir: "dist/website",
   ios: {
-    path: "dist/ios"
+    path: "apps/ios"
   },
   android: {
-    path: "dist/android"
+    path: "apps/android"
   },
   server: {
     androidScheme: "https",

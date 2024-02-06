@@ -95,7 +95,10 @@ const IS_SAFARI_EXTENSION = location.protocol === "safari-web-extension:"
 
 if (IS_WEBSITE && self.__WB_PRODUCTION) {
   clientsClaim()
-  precacheAndRoute(self.__WB_MANIFEST)
+
+  try {
+    precacheAndRoute(self.__WB_MANIFEST)
+  } catch (e) { console.warn(e) }
 
   self.addEventListener("message", (event) => {
     if (event.data !== "SKIP_WAITING")
@@ -1522,6 +1525,7 @@ async function initOrThrow() {
   await global.initOrThrow()
 
   console.log(`Started in ${Date.now() - start}ms`)
+  setInterval(() => console.log(`Hello world`), 1000)
 
   return global
 }

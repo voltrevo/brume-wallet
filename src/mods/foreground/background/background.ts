@@ -143,10 +143,12 @@ export async function getServiceWorkerOrThrow(background: WebsiteBackground): Pr
 
 export function createWebsitePortPool(background: WebsiteBackground): Pool<Disposer<WebsitePort>> {
   return new Pool<Disposer<WebsitePort>>(async (params) => {
-    return await Result.unthrow(async t => {
+    try {
       const { pool, index } = params
 
       const start = Date.now()
+
+      console.log(`WebsitePortPool[${index}] start`)
 
       const registration = await getServiceWorkerOrThrow(background)
 
@@ -184,7 +186,7 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
 
         future.resolve(Ok.void())
         return new Some(Ok.void())
-      }, AbortSignal.timeout(60_000)).then(r => r.throw(t))
+      }, AbortSignal.timeout(60_000)).then(r => r.unwrap())
 
       router.inner.runPingLoop()
 
@@ -195,7 +197,7 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
         await router.inner.tryRequest({
           method: "brume_login",
           params: [uuid, password]
-        }).then(r => r.throw(t))
+        }).then(r => r.unwrap().unwrap())
 
       const onClose = async () => {
         /**
@@ -228,8 +230,13 @@ export function createWebsitePortPool(background: WebsiteBackground): Pool<Dispo
         router.inner.events.off("close", onClose)
       }
 
+      console.log(`WebsitePortPool[${index}] took ${Date.now() - start}ms`)
+
       return new Ok(new Disposer(inner, onEntryClean))
-    })
+    } catch (e: unknown) {
+      console.error(e)
+      throw e
+    }
   }, { capacity: 1 })
 }
 
