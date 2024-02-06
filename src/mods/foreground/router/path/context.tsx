@@ -2,7 +2,7 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { State } from "@/libs/react/state";
 import { CloseContext } from "@/libs/ui/dialog/dialog";
 import { Nullable, Option, Optional } from "@hazae41/option";
-import { SetStateAction, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 export interface PathHandle {
   /**
@@ -62,6 +62,7 @@ export function HashPathProvider(props: ChildrenProps) {
   const url = useMemo(() => {
     if (raw == null)
       return
+    console.log("hash", raw)
     return Paths.hash(new URL(raw))
   }, [raw])
 
@@ -142,26 +143,38 @@ export function useSearchSubpath(parent: PathHandle, key: string): PathHandle {
 export function usePathState<T extends Record<string, Optional<string>>>() {
   const path = usePathContext().unwrap()
 
-  const state = useMemo(() => {
+  const current = useMemo(() => {
     return Object.fromEntries(path.url.searchParams) as T
   }, [path])
 
-  const setState = useCallback((action: SetStateAction<T>) => {
-    const next = typeof action === "function"
-      ? action(state)
-      : action
+  const [pending, setPending] = useState<T>(current)
+
+  /**
+   * Immediatly update the pending state when the current state changes
+   */
+  useMemo(() => {
+    setPending(current)
+  }, [current])
+
+  /**
+   * Lazily update the current state when the pending state differs
+   */
+  useEffect(() => {
+    if (pending === current)
+      return
 
     const url = new URL(path.url.href)
-    const entries = Object.entries(next).filter(([_, value]) => value != null)
+    const entries = Object.entries(pending).filter(([_, value]) => value != null)
     url.search = new URLSearchParams(entries as any).toString()
 
     if (path.url.href === url.href)
       return
 
     location.replace(path.go(Paths.path(url)))
-  }, [state, path])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pending])
 
-  return [state, setState] as const
+  return [current, setPending] as const
 }
 
 export function useKeyValueState<T extends Record<string, Optional<string>>>(key: keyof T, $parent: State<T>) {
