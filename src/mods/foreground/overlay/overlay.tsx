@@ -1,12 +1,14 @@
 import { BrowserError, browser } from "@/libs/browser/browser";
 import { fetchAsJsonOrThrow } from "@/libs/fetch/fetch";
 import { Outline } from "@/libs/icons/icons";
+import { isExtension } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { OkProps } from "@/libs/react/props/promise";
 import { Semver } from "@/libs/semver/semver";
 import { Button } from "@/libs/ui/button";
 import { None } from "@hazae41/option";
 import { useCallback, useEffect, useState } from "react";
+import { WebsiteBackground } from "../background/background";
 import { useBackgroundContext } from "../background/context";
 
 const MAIN_PACKAGE_URL = "https://raw.githubusercontent.com/brumewallet/wallet/main/package.json"
@@ -33,14 +35,12 @@ export function UpdateBanner(props: OkProps<unknown>) {
 export function Overlay(props: ChildrenProps) {
   const { children } = props
 
-  const background = useBackgroundContext().unwrap()
-
-  if (background.isExtension())
+  if (isExtension())
     return <ExtensionOverlay>
       {children}
     </ExtensionOverlay>
 
-  if (background.isWebsite())
+  if (!isExtension())
     return <WebsiteOverlay>
       {children}
     </WebsiteOverlay>
@@ -70,14 +70,11 @@ async function checkWebsiteUpdateOrThrow(): Promise<boolean> {
 export function WebsiteOverlay(props: ChildrenProps) {
   const { children } = props
 
-  const background = useBackgroundContext().unwrap()
+  const background = useBackgroundContext().unwrap() as WebsiteBackground
 
   const [updating, setUpdating] = useState<ServiceWorker>()
 
   useEffect(() => {
-    if (!background.isWebsite())
-      return
-
     const onUpdate = (sw: ServiceWorker) => {
       setUpdating(sw)
       return new None()

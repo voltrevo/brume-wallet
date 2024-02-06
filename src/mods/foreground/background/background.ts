@@ -24,7 +24,7 @@ export class MessageError extends Error {
 }
 
 export class WebsiteBackground {
-  readonly ports = createWebsitePortPool(this)
+  readonly ports = createServiceWorkerPortPool(this)
 
   readonly events = new SuperEventTarget<{
     "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
@@ -34,14 +34,6 @@ export class WebsiteBackground {
   readonly sw = new SuperEventTarget<{
     "update": (sw: ServiceWorker) => void
   }>()
-
-  isWebsite(): this is WebsiteBackground {
-    return true
-  }
-
-  isExtension(): false {
-    return false
-  }
 
   async onRequest(port: Port, request: RpcRequestInit<unknown>) {
     return await this.events.emit("request", [request])
@@ -141,102 +133,95 @@ export async function getServiceWorkerOrThrow(background: WebsiteBackground): Pr
   }
 }
 
-export function createWebsitePortPool(background: WebsiteBackground): Pool<Disposer<WebsitePort>> {
+export function createServiceWorkerPortPool(background: WebsiteBackground): Pool<Disposer<WebsitePort>> {
   return new Pool<Disposer<WebsitePort>>(async (params) => {
-    try {
-      const { pool, index } = params
+    const { pool, index } = params
 
-      const start = Date.now()
+    const start = Date.now()
 
-      console.log(`WebsitePortPool[${index}] start`)
+    const registration = await getServiceWorkerOrThrow(background)
 
-      const registration = await getServiceWorkerOrThrow(background)
+    if (registration.active == null)
+      throw new Error(`registration.active is null`)
 
-      if (registration.active == null)
-        throw new Error(`registration.active is null`)
+    const raw = new MessageChannel()
 
-      const raw = new MessageChannel()
-
-      const onRawClean = () => {
-        raw.port1.close()
-        raw.port2.close()
-      }
-
-      using prechannel = new Box(new Disposer(raw, onRawClean))
-      using prerouter = new Box(new WebsitePort("background", raw.port1))
-
-      const channel = prechannel.moveOrThrow()
-      const router = prerouter.moveOrThrow()
-
-      const onInnerClean = () => {
-        using postchannel = channel
-        using postrouter = router
-      }
-
-      using preinner = new Box(new Disposer(router.inner, onInnerClean))
-
-      raw.port1.start()
-      raw.port2.start()
-
-      registration.active.postMessage("HELLO_WORLD", [raw.port2])
-
-      await Plume.tryWaitOrSignal(router.inner.events, "request", async (future: Future<Ok<void>>, init: RpcRequestInit<any>) => {
-        if (init.method !== "brume_hello")
-          return new None()
-
-        future.resolve(Ok.void())
-        return new Some(Ok.void())
-      }, AbortSignal.timeout(60_000)).then(r => r.unwrap())
-
-      router.inner.runPingLoop()
-
-      const uuid = sessionStorage.getItem("uuid")
-      const password = sessionStorage.getItem("password")
-
-      if (uuid && password)
-        await router.inner.tryRequest({
-          method: "brume_login",
-          params: [uuid, password]
-        }).then(r => r.unwrap().unwrap())
-
-      const onClose = async () => {
-        /**
-         * Safari may kill the service worker and not restart it
-         * This will force unregister the old one
-         */
-        await registration.unregister()
-
-        pool.restart(index)
-        return new None()
-      }
-
-      const onRequest = (request: RpcRequestInit<unknown>) =>
-        background.onRequest(router.inner, request)
-
-      const onResponse = (response: RpcResponseInit<unknown>) =>
-        background.onResponse(router.inner, response)
-
-      router.inner.events.on("request", onRequest, { passive: true })
-      router.inner.events.on("response", onResponse, { passive: true })
-      router.inner.events.on("close", onClose, { passive: true })
-
-      const inner = preinner.moveOrThrow()
-
-      const onEntryClean = () => {
-        using postinner = inner
-
-        router.inner.events.off("request", onRequest)
-        router.inner.events.off("response", onResponse)
-        router.inner.events.off("close", onClose)
-      }
-
-      console.log(`WebsitePortPool[${index}] took ${Date.now() - start}ms`)
-
-      return new Ok(new Disposer(inner, onEntryClean))
-    } catch (e: unknown) {
-      console.error(e)
-      throw e
+    const onRawClean = () => {
+      raw.port1.close()
+      raw.port2.close()
     }
+
+    using prechannel = new Box(new Disposer(raw, onRawClean))
+    using prerouter = new Box(new WebsitePort("background", raw.port1))
+
+    const channel = prechannel.moveOrThrow()
+    const router = prerouter.moveOrThrow()
+
+    const onInnerClean = () => {
+      using postchannel = channel
+      using postrouter = router
+    }
+
+    using preinner = new Box(new Disposer(router.inner, onInnerClean))
+
+    raw.port1.start()
+    raw.port2.start()
+
+    registration.active.postMessage("HELLO_WORLD", [raw.port2])
+
+    await Plume.tryWaitOrSignal(router.inner.events, "request", async (future: Future<Ok<void>>, init: RpcRequestInit<any>) => {
+      if (init.method !== "brume_hello")
+        return new None()
+
+      future.resolve(Ok.void())
+      return new Some(Ok.void())
+    }, AbortSignal.timeout(60_000)).then(r => r.unwrap())
+
+    router.inner.runPingLoop()
+
+    const uuid = sessionStorage.getItem("uuid")
+    const password = sessionStorage.getItem("password")
+
+    if (uuid && password)
+      await router.inner.tryRequest({
+        method: "brume_login",
+        params: [uuid, password]
+      }).then(r => r.unwrap().unwrap())
+
+    const onClose = async () => {
+      /**
+       * Safari may kill the service worker and not restart it
+       * This will force unregister the old one
+       */
+      await registration.unregister()
+
+      pool.restart(index)
+      return new None()
+    }
+
+    const onRequest = (request: RpcRequestInit<unknown>) =>
+      background.onRequest(router.inner, request)
+
+    const onResponse = (response: RpcResponseInit<unknown>) =>
+      background.onResponse(router.inner, response)
+
+    router.inner.events.on("request", onRequest, { passive: true })
+    router.inner.events.on("response", onResponse, { passive: true })
+    router.inner.events.on("close", onClose, { passive: true })
+
+    const inner = preinner.moveOrThrow()
+
+    const onEntryClean = () => {
+      using postinner = inner
+
+      router.inner.events.off("request", onRequest)
+      router.inner.events.off("response", onResponse)
+      router.inner.events.off("close", onClose)
+    }
+
+    console.log(`WebsitePortPool[${index}] took ${Date.now() - start}ms`)
+
+    return new Ok(new Disposer(inner, onEntryClean))
   }, { capacity: 1 })
 }
 
@@ -247,14 +232,6 @@ export class ExtensionBackground {
     "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
-
-  isWebsite(): false {
-    return false
-  }
-
-  isExtension(): this is ExtensionBackground {
-    return true
-  }
 
   async onRequest(port: Port, request: RpcRequestInit<unknown>) {
     return await this.events.emit("request", [request])

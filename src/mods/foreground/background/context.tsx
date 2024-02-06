@@ -1,3 +1,4 @@
+import { isExtension } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { useConstant } from "@/libs/react/ref";
 import { Option } from "@hazae41/option";
@@ -14,23 +15,26 @@ export function useBackgroundContext() {
 export function BackgroundProvider(props: ChildrenProps) {
   const { children } = props
 
-  const [extension, setExtension] = useState<boolean>()
+  const [client, setClient] = useState(false)
 
   useEffect(() => {
-    setExtension(location.protocol.endsWith("extension:"))
+    setClient(true)
   }, [])
 
-  if (extension == null)
+  if (!client)
     return null
 
-  if (extension)
+  if (isExtension())
     return <ExtensionBackgroundProvider>
       {children}
     </ExtensionBackgroundProvider>
 
-  return <WebsiteBackgroundProvider>
-    {children}
-  </WebsiteBackgroundProvider>
+  if (!isExtension())
+    return <WebsiteBackgroundProvider>
+      {children}
+    </WebsiteBackgroundProvider>
+
+  return null
 }
 
 export function WebsiteBackgroundProvider(props: ChildrenProps) {

@@ -1,4 +1,5 @@
 import fs from "fs";
+import { walkSync } from "./libs/walkSync.mjs";
 
 const thepackage = JSON.parse(fs.readFileSync("./package.json", "utf8"))
 
@@ -8,6 +9,22 @@ if (fs.existsSync("./dist/website")) {
     const replaced = original.replaceAll("VERSION", thepackage.version)
 
     fs.writeFileSync("./dist/website/manifest.json", replaced, "utf8")
+  }
+
+  for (const filePath of walkSync("./dist/website")) {
+    if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
+      const original = fs.readFileSync(filePath, "utf8")
+
+      const replaced = original
+        .replaceAll("IS_WEBSITE", "true")
+        .replaceAll("IS_CHROME", "false")
+        .replaceAll("IS_FIREFOX", "false")
+        .replaceAll("IS_SAFARI", "false")
+        .replaceAll("IS_ANDROID", "false")
+        .replaceAll("IS_IOS", "false")
+
+      fs.writeFileSync(filePath, replaced, "utf8")
+    }
   }
 }
 
@@ -21,15 +38,21 @@ if (fs.existsSync("./dist/chrome")) {
 
     fs.writeFileSync("./dist/chrome/manifest.json", replaced, "utf8")
   }
-  {
-    const original = fs.readFileSync("./dist/chrome/content_script.js", "utf8")
 
-    const replaced = original
-      .replaceAll("IS_CHROME", "true")
-      .replaceAll("IS_FIREFOX", "false")
-      .replaceAll("IS_SAFARI", "false")
+  for (const filePath of walkSync("./dist/chrome")) {
+    if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
+      const original = fs.readFileSync(filePath, "utf8")
 
-    fs.writeFileSync("./dist/chrome/content_script.js", replaced, "utf8")
+      const replaced = original
+        .replaceAll("IS_WEBSITE", "false")
+        .replaceAll("IS_CHROME", "true")
+        .replaceAll("IS_FIREFOX", "false")
+        .replaceAll("IS_SAFARI", "false")
+        .replaceAll("IS_ANDROID", "false")
+        .replaceAll("IS_IOS", "false")
+
+      fs.writeFileSync(filePath, replaced, "utf8")
+    }
   }
 }
 
@@ -43,15 +66,21 @@ if (fs.existsSync("./dist/firefox")) {
 
     fs.writeFileSync("./dist/firefox/manifest.json", replaced, "utf8")
   }
-  {
-    const original = fs.readFileSync("./dist/firefox/content_script.js", "utf8")
 
-    const replaced = original
-      .replaceAll("IS_CHROME", "false")
-      .replaceAll("IS_FIREFOX", "true")
-      .replaceAll("IS_SAFARI", "false")
+  for (const filePath of walkSync("./dist/firefox")) {
+    if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
+      const original = fs.readFileSync(filePath, "utf8")
 
-    fs.writeFileSync("./dist/firefox/content_script.js", replaced, "utf8")
+      const replaced = original
+        .replaceAll("IS_WEBSITE", "false")
+        .replaceAll("IS_CHROME", "false")
+        .replaceAll("IS_FIREFOX", "true")
+        .replaceAll("IS_SAFARI", "false")
+        .replaceAll("IS_ANDROID", "false")
+        .replaceAll("IS_IOS", "false")
+
+      fs.writeFileSync(filePath, replaced, "utf8")
+    }
   }
 }
 
@@ -65,14 +94,48 @@ if (fs.existsSync("./dist/safari")) {
 
     fs.writeFileSync("./dist/safari/manifest.json", replaced, "utf8")
   }
+
+  for (const filePath of walkSync("./dist/safari")) {
+    if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
+      const original = fs.readFileSync(filePath, "utf8")
+
+      const replaced = original
+        .replaceAll("IS_WEBSITE", "false")
+        .replaceAll("IS_CHROME", "false")
+        .replaceAll("IS_FIREFOX", "false")
+        .replaceAll("IS_SAFARI", "true")
+        .replaceAll("IS_ANDROID", "false")
+        .replaceAll("IS_IOS", "false")
+
+      fs.writeFileSync(filePath, replaced, "utf8")
+    }
+  }
+}
+
+/**
+ * Setup global variables for Android
+ */
+if (fs.existsSync("./dist/android")) {
   {
-    const original = fs.readFileSync("./dist/safari/content_script.js", "utf8")
+    const original = fs.readFileSync("./dist/android/manifest.json", "utf8")
+    const replaced = original.replaceAll("VERSION", thepackage.version)
 
-    const replaced = original
-      .replaceAll("IS_CHROME", "false")
-      .replaceAll("IS_FIREFOX", "false")
-      .replaceAll("IS_SAFARI", "true")
+    fs.writeFileSync("./dist/android/manifest.json", replaced, "utf8")
+  }
 
-    fs.writeFileSync("./dist/safari/content_script.js", replaced, "utf8")
+  for (const filePath of walkSync("./dist/android")) {
+    if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
+      const original = fs.readFileSync(filePath, "utf8")
+
+      const replaced = original
+        .replaceAll("IS_WEBSITE", "false")
+        .replaceAll("IS_CHROME", "false")
+        .replaceAll("IS_FIREFOX", "false")
+        .replaceAll("IS_SAFARI", "false")
+        .replaceAll("IS_ANDROID", "true")
+        .replaceAll("IS_IOS", "false")
+
+      fs.writeFileSync(filePath, replaced, "utf8")
+    }
   }
 }

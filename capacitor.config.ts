@@ -3,7 +3,7 @@ import { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "eth.brume.wallet",
   appName: "Brume Wallet",
-  webDir: "dist/website",
+  webDir: "dist/android",
   ios: {
     path: "apps/ios"
   },

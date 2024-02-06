@@ -9,6 +9,7 @@ import { fetchAsBlobOrThrow } from "@/libs/fetch/fetch"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
+import { isExtension, isFirefoxExt, isWebsite } from "@/libs/platform/platform"
 import { Strings } from "@/libs/strings/strings"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool } from "@/libs/tor/tors/tors"
@@ -86,19 +87,11 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope
 
-const IS_EXTENSION = location.protocol.endsWith("extension:")
-const IS_WEBSITE = !IS_EXTENSION
-
-const IS_CHROME_EXTENSION = location.protocol === "chrome-extension:"
-const IS_FIREFOX_EXTENSION = location.protocol === "moz-extension:"
-const IS_SAFARI_EXTENSION = location.protocol === "safari-web-extension:"
-
-if (IS_WEBSITE && self.__WB_PRODUCTION) {
+if (!isExtension() && self.__WB_PRODUCTION) {
   clientsClaim()
 
-  try {
+  if (isWebsite())
     precacheAndRoute(self.__WB_MANIFEST)
-  } catch (e) { console.warn(e) }
 
   self.addEventListener("message", (event) => {
     if (event.data !== "SKIP_WAITING")
@@ -213,7 +206,7 @@ export class Global {
   }
 
   async getStoredPasswordOrThrow(): Promise<PasswordData> {
-    if (IS_FIREFOX_EXTENSION) {
+    if (isFirefoxExt()) {
       const uuid = sessionStorage.getItem("uuid") ?? undefined
       const password = sessionStorage.getItem("password") ?? undefined
 
@@ -224,7 +217,7 @@ export class Global {
   }
 
   async setStoredPasswordOrThrow(uuid: string, password: string) {
-    if (IS_FIREFOX_EXTENSION) {
+    if (isFirefoxExt()) {
       sessionStorage.setItem("uuid", uuid)
       sessionStorage.setItem("password", password)
 
@@ -235,7 +228,7 @@ export class Global {
   }
 
   async initOrThrow(): Promise<void> {
-    if (IS_EXTENSION) {
+    if (isExtension()) {
       const { uuid, password } = await this.getStoredPasswordOrThrow()
       await this.setCurrentUserOrThrow(uuid, password)
     }
@@ -957,7 +950,7 @@ export class Global {
 
     await this.setCurrentUserOrThrow(uuid, password)
 
-    if (IS_EXTENSION) {
+    if (isExtension()) {
       await this.setStoredPasswordOrThrow(uuid, password)
       return Ok.void()
     }
@@ -1532,7 +1525,7 @@ async function initOrThrow() {
 
 const init = Result.runAndDoubleWrap(() => initOrThrow())
 
-if (IS_WEBSITE) {
+if (!isExtension()) {
 
   const onSkipWaiting = (event: ExtendableMessageEvent) =>
     self.skipWaiting()
@@ -1579,7 +1572,7 @@ if (IS_WEBSITE) {
   })
 }
 
-if (IS_EXTENSION) {
+if (isExtension()) {
 
   const onContentScript = (port: chrome.runtime.Port) => {
     const script = new ExtensionPort(crypto.randomUUID(), port)

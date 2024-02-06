@@ -5,6 +5,7 @@ import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionPort } from "@/libs/channel/channel"
 import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch"
 import { Mouse } from "@/libs/mouse/mouse"
+import { isFirefoxExt, isSafariExt } from "@/libs/platform/platform"
 import { NonReadonly } from "@/libs/types/readonly"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/cleaner"
@@ -15,10 +16,6 @@ import { Ok, Result } from "@hazae41/result"
 import { PreOriginData } from "../service_worker/entities/origins/data"
 
 declare const self: ServiceWorkerGlobalScope
-
-declare const IS_FIREFOX: boolean
-declare const IS_SAFARI: boolean
-declare const IS_CHROME: boolean
 
 declare global {
   interface DedicatedWorkerGlobalScopeEventMap {
@@ -36,7 +33,7 @@ addEventListener("mousemove", (e: MouseEvent) => {
   mouse.y = e.screenY
 }, { passive: true })
 
-if (IS_FIREFOX || IS_SAFARI) {
+if (isFirefoxExt() || isSafariExt()) {
   const container = document.documentElement
 
   const scriptBody = atob("INJECTED_SCRIPT")

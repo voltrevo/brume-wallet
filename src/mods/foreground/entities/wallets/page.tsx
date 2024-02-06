@@ -5,6 +5,7 @@ import { ChainData, chainByChainId, pairByAddress, tokenByAddress } from "@/libs
 import { Mutators } from "@/libs/glacier/mutators";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
+import { isExtension } from "@/libs/platform/platform";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useKeyboardEnter, useMouse } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
@@ -167,7 +168,7 @@ function WalletDataPage() {
       title="Wallet"
       back={onBackClick}>
       <div className="flex items-center gap-2">
-        {background.isWebsite() &&
+        {!isExtension() &&
           <PaddedRoundedShrinkableNakedAnchor
             onKeyDown={connect.onKeyDown}
             onClick={connect.onClick}

@@ -1,6 +1,6 @@
+import { isWebsite } from "@/libs/platform/platform"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { DonePage, PersonalSignPage, TransactPage, TypedSignPage, WalletAndChainSelectPage } from "pages/popup"
-import { useBackgroundContext } from "../background/context"
 import { RequestsPage } from "../entities/requests/all/page"
 import { SeedsPage } from "../entities/seeds/all/page"
 import { SeedPage } from "../entities/seeds/page"
@@ -32,14 +32,13 @@ export function Layout(props: ChildrenProps) {
 
 export function Router() {
   const { url } = usePathContext().unwrap()
-  const background = useBackgroundContext().unwrap()
 
   let matches: RegExpMatchArray | null
 
-  if ((matches = url.pathname.match(/^(\/)?$/)) && background.isWebsite())
+  if ((matches = url.pathname.match(/^(\/)?$/)) && isWebsite())
     return <FullLandingPage next="#/home" />
 
-  if ((matches = url.pathname.match(/^(\/)?$/)) && background.isExtension())
+  if ((matches = url.pathname.match(/^(\/)?$/)) && !isWebsite())
     return <EmptyLandingPage next="#/home" />
 
   if (matches = url.pathname.match(/^\/home(\/)?$/))

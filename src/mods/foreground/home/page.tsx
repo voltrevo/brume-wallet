@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import { isWebsite } from "@/libs/platform/platform"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
@@ -25,10 +26,11 @@ export function HomePage() {
   }, [])
 
   useEffect(() => {
+    if (!isWebsite())
+      return
+
     getPersisted()
 
-    if (background.isExtension())
-      return
     if (navigator.userAgent.toLowerCase().includes("firefox"))
       return
 
@@ -44,7 +46,7 @@ export function HomePage() {
           Welcome back<span className="text-contrast">, {userData.name}</span>
         </h1>
         <div className="grow" />
-        {persisted === false && background.isWebsite() && <>
+        {persisted === false && <>
           <div className="h-4" />
           <div className="p-4 bg-contrast rounded-xl max-w-xs">
             <h3 className="text-lg font-medium">
