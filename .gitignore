@@ -45,3 +45,5 @@ xcode
 
 /src/android
 /src/ios
+
+.DS_Store
