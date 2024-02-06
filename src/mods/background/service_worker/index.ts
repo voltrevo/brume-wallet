@@ -99,6 +99,11 @@ if (isWebsite() && self.__WB_PRODUCTION) {
   })
 }
 
+if (isWebsite() && !self.__WB_PRODUCTION) {
+  clientsClaim()
+  self.skipWaiting()
+}
+
 if (isAndroidApp()) {
   clientsClaim()
   self.skipWaiting()
