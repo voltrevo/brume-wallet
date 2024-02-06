@@ -1,5 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/web-manifest.json",
+  "id": "66446bbe-b67f-4ef6-b42b-4dc0ba2ee66c",
 	"name": "Brume Wallet",
   "version": "VERSION",
 	"short_name": "Brume Wallet",
@@ -9,17 +10,22 @@
 	"theme_color": "#bb78ff",
 	"background_color": "#bb78ff",
 	"lang": "en",
+  "dir": "ltr",
 	"orientation": "any",
 	"categories": [
     "finance",
 		"social",
 		"entertainment"
 	],
+  "launch_handler": {
+    "client_mode": "auto"
+  },
 	"icons": [
 		{
 			"src": "/round.png",
 			"sizes": "512x512",
-			"type": "image/png"
+			"type": "image/png",
+      "purpose": "any"
 		},
 		{
 			"src": "/square.png",
@@ -28,5 +34,6 @@
 			"purpose": "maskable"
 		}
 	],
-	"shortcuts": []
+	"shortcuts": [],
+  "screenshots" : []
 }
