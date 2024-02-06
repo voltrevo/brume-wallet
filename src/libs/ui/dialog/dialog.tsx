@@ -1,7 +1,7 @@
 import { DarkProps } from "@/libs/react/props/dark"
 import { usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable, Option } from "@hazae41/option"
-import { KeyboardEvent, MouseEvent, SyntheticEvent, UIEvent, createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { AnimationEvent, KeyboardEvent, MouseEvent, SyntheticEvent, UIEvent, createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 import { Events } from "../../react/events"
 import { ChildrenProps } from "../../react/props/children"
@@ -107,8 +107,13 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
   /**
    * Sync mounted state with visible state on animation end
    */
-  const onAnimationEnd = useCallback(() => {
+  const onAnimationEnd = useCallback((e: AnimationEvent) => {
     flushSync(() => setPostmount(premount))
+
+    if (e.currentTarget.scrollTop === 0 && /(android)/i.test(navigator.userAgent)) {
+      e.currentTarget.scrollTop = 1
+      return
+    }
   }, [premount])
 
   /**
