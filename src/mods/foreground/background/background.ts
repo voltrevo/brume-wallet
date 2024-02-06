@@ -219,8 +219,6 @@ export function createServiceWorkerPortPool(background: WebsiteBackground): Pool
       router.inner.events.off("close", onClose)
     }
 
-    console.log(`WebsitePortPool[${index}] took ${Date.now() - start}ms`)
-
     return new Ok(new Disposer(inner, onEntryClean))
   }, { capacity: 1 })
 }
