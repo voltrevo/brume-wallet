@@ -183,38 +183,36 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       </div>
     </div>
 
-  const canAdd = useMemo(() => {
-    if (!finalNameInput)
-      return false
+  const disabled = useMemo(() => {
     if (!validateMnemonic(defPhraseInput, wordlist))
-      return false
-    return true
-  }, [finalNameInput, defPhraseInput])
+      return "Please enter a valid seed phrase"
+    return
+  }, [defPhraseInput])
 
   const AddUnauthButton =
     <WideShrinkableContrastButton
-      disabled={!canAdd}
+      disabled={Boolean(disabled) || addUnauthenticatedOrAlert.loading}
       onClick={addUnauthenticatedOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
-      Add without authentication
+      {disabled || "Add without authentication"}
     </WideShrinkableContrastButton>
 
   const AddAuthButton1 =
     <WideShrinkableGradientButton
       color={color}
-      disabled={!canAdd}
+      disabled={Boolean(disabled) || addAuthenticatedOrAlert1.loading}
       onClick={addAuthenticatedOrAlert1.run}>
       <Outline.LockClosedIcon className="size-5" />
-      Add with authentication
+      {disabled || "Add with authentication"}
     </WideShrinkableGradientButton>
 
   const AddAuthButton2 =
     <WideShrinkableGradientButton
       color={color}
-      disabled={!canAdd}
+      disabled={Boolean(disabled) || addAuthenticatedOrAlert2.loading}
       onClick={addAuthenticatedOrAlert2.run}>
       <Outline.LockClosedIcon className="size-5" />
-      Add with authentication (1/2)
+      {disabled || "Add with authentication (1/2)"}
     </WideShrinkableGradientButton>
 
   return <>
