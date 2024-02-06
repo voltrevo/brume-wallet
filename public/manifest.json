@@ -21,17 +21,17 @@
     "client_mode": "auto"
   },
 	"icons": [
+    {
+			"src": "/square.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
 		{
 			"src": "/round.png",
 			"sizes": "512x512",
 			"type": "image/png",
       "purpose": "any"
-		},
-		{
-			"src": "/square.png",
-			"sizes": "512x512",
-			"type": "image/png",
-			"purpose": "maskable"
 		}
 	],
 	"shortcuts": [],
