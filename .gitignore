@@ -42,3 +42,6 @@ xcode
 
 # ignore jetbrains IDEs files
 .idea
+
+/src/android
+/src/ios
