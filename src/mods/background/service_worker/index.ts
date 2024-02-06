@@ -1518,7 +1518,6 @@ async function initOrThrow() {
   await global.initOrThrow()
 
   console.log(`Started in ${Date.now() - start}ms`)
-  setInterval(() => console.log(`Hello world`), 1000)
 
   return global
 }
