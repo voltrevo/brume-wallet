@@ -26,7 +26,7 @@ import { walkSync } from "./libs/walkSync.mjs";
   workbox.injectManifest({
     globDirectory: "./out",
     globPatterns: [
-      "**\/*.{js,css,html,ico,png,svg,jpg,json}",
+      "**\/*.{js,css,html,ico,png,svg,jpg,jpeg,json}",
     ],
     globIgnores: [
       "chrome\/**\/*",
