@@ -155,7 +155,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
       return
 
     /**
-     * Swipe down to close
+     * Swipe down to close on iOS
      */
     if (e.currentTarget.scrollTop < -60) {
       hide()
@@ -163,12 +163,25 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
     }
 
     /**
+     * Swipe down to close on Android
+     */
+    if (e.currentTarget.scrollTop === 0 && /(android)/i.test(navigator.userAgent)) {
+      hide()
+      return
+    }
+
+    /**
      * Prevent overscroll on bottom
      */
-    if (e.currentTarget.scrollTop > 60)
+    if (e.currentTarget.scrollTop > 60) {
       e.currentTarget.classList.add("overscroll-y-none")
-    else
+      return
+    }
+
+    if (e.currentTarget.scrollTop < 60) {
       e.currentTarget.classList.remove("overscroll-y-none")
+      return
+    }
 
     return
   }, [hide])
