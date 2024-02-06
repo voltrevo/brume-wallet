@@ -110,6 +110,9 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
   const onAnimationEnd = useCallback((e: AnimationEvent) => {
     flushSync(() => setPostmount(premount))
 
+    /**
+     * Prepare swipe down to close on Android
+     */
     if (e.currentTarget.scrollTop === 0 && /(android)/i.test(navigator.userAgent)) {
       e.currentTarget.scrollTop = 1
       return
@@ -177,6 +180,9 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
       return
     }
 
+    /**
+     * Prevent swipe down to close on Android
+     */
     if (!touch.current && e.currentTarget.scrollTop === 0 && /(android)/i.test(navigator.userAgent)) {
       e.currentTarget.scrollTop = 1
       return
