@@ -43,7 +43,6 @@ xcode
 # ignore jetbrains IDEs files
 .idea
 
-/apps/android
 /apps/ios
 
 .DS_Store
