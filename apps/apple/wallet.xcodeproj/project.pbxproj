@@ -176,24 +176,24 @@
 		C7C5EB222B7421CD005E8F8A = {
 			isa = PBXGroup;
 			children = (
-				C7C5EB272B7421CD005E8F8A /* Shared (App) */,
-				C7C5EB302B7421CE005E8F8A /* Shared (Extension) */,
-				C7C5EB382B7421CE005E8F8A /* iOS (App) */,
-				C7C5EB492B7421CE005E8F8A /* macOS (App) */,
-				C7C5EB592B7421CE005E8F8A /* iOS (Extension) */,
-				C7C5EB632B7421CE005E8F8A /* macOS (Extension) */,
+				C7C5EB272B7421CD005E8F8A /* all-app */,
+				C7C5EB302B7421CE005E8F8A /* all-ext */,
+				C7C5EB382B7421CE005E8F8A /* ios-app */,
+				C7C5EB492B7421CE005E8F8A /* mac-app */,
+				C7C5EB592B7421CE005E8F8A /* ios-ext */,
+				C7C5EB632B7421CE005E8F8A /* mac-ext */,
 				C7C5EB372B7421CE005E8F8A /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		C7C5EB272B7421CD005E8F8A /* Shared (App) */ = {
+		C7C5EB272B7421CD005E8F8A /* all-app */ = {
 			isa = PBXGroup;
 			children = (
 				C7C5EB2E2B7421CD005E8F8A /* ViewController.swift */,
 				C7C5EB2F2B7421CE005E8F8A /* Assets.xcassets */,
 				C7C5EB282B7421CD005E8F8A /* Resources */,
 			);
-			path = "Shared (App)";
+			path = "all-app";
 			sourceTree = "<group>";
 		};
 		C7C5EB282B7421CD005E8F8A /* Resources */ = {
@@ -207,13 +207,13 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		C7C5EB302B7421CE005E8F8A /* Shared (Extension) */ = {
+		C7C5EB302B7421CE005E8F8A /* all-ext */ = {
 			isa = PBXGroup;
 			children = (
 				C7C5EB842B7421CE005E8F8A /* Resources */,
 				C7C5EB312B7421CE005E8F8A /* SafariWebExtensionHandler.swift */,
 			);
-			path = "Shared (Extension)";
+			path = "all-ext";
 			sourceTree = "<group>";
 		};
 		C7C5EB372B7421CE005E8F8A /* Products */ = {
@@ -227,7 +227,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		C7C5EB382B7421CE005E8F8A /* iOS (App) */ = {
+		C7C5EB382B7421CE005E8F8A /* ios-app */ = {
 			isa = PBXGroup;
 			children = (
 				C7C5EB392B7421CE005E8F8A /* AppDelegate.swift */,
@@ -236,10 +236,10 @@
 				C7C5EB402B7421CE005E8F8A /* Main.storyboard */,
 				C7C5EB432B7421CE005E8F8A /* Info.plist */,
 			);
-			path = "iOS (App)";
+			path = "ios-app";
 			sourceTree = "<group>";
 		};
-		C7C5EB492B7421CE005E8F8A /* macOS (App) */ = {
+		C7C5EB492B7421CE005E8F8A /* mac-app */ = {
 			isa = PBXGroup;
 			children = (
 				C7C5EB4A2B7421CE005E8F8A /* AppDelegate.swift */,
@@ -247,24 +247,24 @@
 				C7C5EB4F2B7421CE005E8F8A /* Info.plist */,
 				C7C5EB502B7421CE005E8F8A /* Brume Wallet.entitlements */,
 			);
-			path = "macOS (App)";
+			path = "mac-app";
 			sourceTree = "<group>";
 		};
-		C7C5EB592B7421CE005E8F8A /* iOS (Extension) */ = {
+		C7C5EB592B7421CE005E8F8A /* ios-ext */ = {
 			isa = PBXGroup;
 			children = (
 				C7C5EB5A2B7421CE005E8F8A /* Info.plist */,
 			);
-			path = "iOS (Extension)";
+			path = "ios-ext";
 			sourceTree = "<group>";
 		};
-		C7C5EB632B7421CE005E8F8A /* macOS (Extension) */ = {
+		C7C5EB632B7421CE005E8F8A /* mac-ext */ = {
 			isa = PBXGroup;
 			children = (
 				C7C5EB642B7421CE005E8F8A /* Info.plist */,
 				C7C5EB652B7421CE005E8F8A /* Brume Wallet.entitlements */,
 			);
-			path = "macOS (Extension)";
+			path = "mac-ext";
 			sourceTree = "<group>";
 		};
 		C7C5EB842B7421CE005E8F8A /* Resources */ = {
@@ -388,7 +388,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C7C5EB262B7421CD005E8F8A /* Build configuration list for PBXProject "Brume Wallet" */;
+			buildConfigurationList = C7C5EB262B7421CD005E8F8A /* Build configuration list for PBXProject "wallet" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -953,7 +953,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C7C5EB262B7421CD005E8F8A /* Build configuration list for PBXProject "Brume Wallet" */ = {
+		C7C5EB262B7421CD005E8F8A /* Build configuration list for PBXProject "wallet" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C7C5EB742B7421CE005E8F8A /* Debug */,

@@ -25,6 +25,7 @@
     "version": "npm run build && npm run zip && git update-index --no-assume-unchanged ./dist/chrome.zip ./dist/firefox.zip ./dist/safari.zip ./dist/website.zip && git add --force ./dist/*.zip",
     "postversion": "git update-index --assume-unchanged ./dist/chrome.zip ./dist/firefox.zip ./dist/safari.zip ./dist/website.zip",
     "clean": "rimraf ./node_modules ./.next ./out ./dist ./website ./chrome ./firefox ./safari ./package-lock.json",
+    "sync": "npx cap sync && rm -rf ./apps/apple/all-ext/Resources && cp -R ./dist/safari ./apps/apple/all-ext/Resources",
     "lint": "next lint",
     "start": "serve ./dist/website"
   },
