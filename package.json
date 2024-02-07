@@ -24,7 +24,7 @@
     "preversion": "find . -name '.DS_Store' -delete",
     "version": "npm run build && npm run zip && git update-index --no-assume-unchanged ./dist/chrome.zip ./dist/firefox.zip ./dist/safari.zip ./dist/website.zip && git add --force ./dist/*.zip",
     "postversion": "git update-index --assume-unchanged ./dist/chrome.zip ./dist/firefox.zip ./dist/safari.zip ./dist/website.zip",
-    "xcode": "xcrun safari-web-extension-converter ./dist/safari --project-location xcode --app-name brume-wallet",
+    "xcode": "xcrun safari-web-extension-converter ./dist/safari --project-location ./apps/ios --app-name 'Brume Wallet' --bundle-identifier 'eth.brume.wallet' --no-open",
     "clean": "rimraf ./node_modules ./.next ./out ./dist ./website ./chrome ./firefox ./safari ./package-lock.json",
     "lint": "next lint",
     "start": "serve ./dist/website"
