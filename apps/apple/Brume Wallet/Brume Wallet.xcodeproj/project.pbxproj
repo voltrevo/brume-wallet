@@ -1,0 +1,1004 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C7C5EB3A2B7421CE005E8F8A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C5EB392B7421CE005E8F8A /* AppDelegate.swift */; };
+		C7C5EB3C2B7421CE005E8F8A /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C5EB3B2B7421CE005E8F8A /* SceneDelegate.swift */; };
+		C7C5EB3F2B7421CE005E8F8A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB3D2B7421CE005E8F8A /* LaunchScreen.storyboard */; };
+		C7C5EB422B7421CE005E8F8A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB402B7421CE005E8F8A /* Main.storyboard */; };
+		C7C5EB4B2B7421CE005E8F8A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C5EB4A2B7421CE005E8F8A /* AppDelegate.swift */; };
+		C7C5EB4E2B7421CE005E8F8A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB4C2B7421CE005E8F8A /* Main.storyboard */; };
+		C7C5EB562B7421CE005E8F8A /* Brume Wallet Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C7C5EB552B7421CE005E8F8A /* Brume Wallet Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C7C5EB602B7421CE005E8F8A /* Brume Wallet Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C7C5EB5F2B7421CE005E8F8A /* Brume Wallet Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C7C5EB662B7421CE005E8F8A /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB292B7421CD005E8F8A /* Main.html */; };
+		C7C5EB672B7421CE005E8F8A /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB292B7421CD005E8F8A /* Main.html */; };
+		C7C5EB682B7421CE005E8F8A /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB2B2B7421CD005E8F8A /* Icon.png */; };
+		C7C5EB692B7421CE005E8F8A /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB2B2B7421CD005E8F8A /* Icon.png */; };
+		C7C5EB6A2B7421CE005E8F8A /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB2C2B7421CD005E8F8A /* Style.css */; };
+		C7C5EB6B2B7421CE005E8F8A /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB2C2B7421CD005E8F8A /* Style.css */; };
+		C7C5EB6C2B7421CE005E8F8A /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB2D2B7421CD005E8F8A /* Script.js */; };
+		C7C5EB6D2B7421CE005E8F8A /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB2D2B7421CD005E8F8A /* Script.js */; };
+		C7C5EB6E2B7421CE005E8F8A /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C5EB2E2B7421CD005E8F8A /* ViewController.swift */; };
+		C7C5EB6F2B7421CE005E8F8A /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C5EB2E2B7421CD005E8F8A /* ViewController.swift */; };
+		C7C5EB702B7421CE005E8F8A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB2F2B7421CE005E8F8A /* Assets.xcassets */; };
+		C7C5EB712B7421CE005E8F8A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB2F2B7421CE005E8F8A /* Assets.xcassets */; };
+		C7C5EB722B7421CE005E8F8A /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C5EB312B7421CE005E8F8A /* SafariWebExtensionHandler.swift */; };
+		C7C5EB732B7421CE005E8F8A /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C5EB312B7421CE005E8F8A /* SafariWebExtensionHandler.swift */; };
+		C7C5EB932B7421CE005E8F8A /* next in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB852B7421CE005E8F8A /* next */; };
+		C7C5EB942B7421CE005E8F8A /* favicon.ico in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB862B7421CE005E8F8A /* favicon.ico */; };
+		C7C5EB952B7421CE005E8F8A /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB872B7421CE005E8F8A /* index.html */; };
+		C7C5EB962B7421CE005E8F8A /* round.png in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB882B7421CE005E8F8A /* round.png */; };
+		C7C5EB972B7421CE005E8F8A /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB892B7421CE005E8F8A /* popup.html */; };
+		C7C5EB982B7421CE005E8F8A /* themer.js in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB8A2B7421CE005E8F8A /* themer.js */; };
+		C7C5EB992B7421CE005E8F8A /* favicon.png in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB8B2B7421CE005E8F8A /* favicon.png */; };
+		C7C5EB9A2B7421CE005E8F8A /* injected_script.js in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB8C2B7421CE005E8F8A /* injected_script.js */; };
+		C7C5EB9B2B7421CE005E8F8A /* content_script.js in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB8D2B7421CE005E8F8A /* content_script.js */; };
+		C7C5EB9C2B7421CE005E8F8A /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB8E2B7421CE005E8F8A /* manifest.json */; };
+		C7C5EB9D2B7421CF005E8F8A /* action.html in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB8F2B7421CE005E8F8A /* action.html */; };
+		C7C5EB9E2B7421CF005E8F8A /* assets in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB902B7421CE005E8F8A /* assets */; };
+		C7C5EB9F2B7421CF005E8F8A /* square.png in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB912B7421CE005E8F8A /* square.png */; };
+		C7C5EBA02B7421CF005E8F8A /* service_worker.js in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB922B7421CE005E8F8A /* service_worker.js */; };
+		C7C5EBA12B7421CF005E8F8A /* next in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB852B7421CE005E8F8A /* next */; };
+		C7C5EBA22B7421CF005E8F8A /* favicon.ico in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB862B7421CE005E8F8A /* favicon.ico */; };
+		C7C5EBA32B7421CF005E8F8A /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB872B7421CE005E8F8A /* index.html */; };
+		C7C5EBA42B7421CF005E8F8A /* round.png in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB882B7421CE005E8F8A /* round.png */; };
+		C7C5EBA52B7421CF005E8F8A /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB892B7421CE005E8F8A /* popup.html */; };
+		C7C5EBA62B7421CF005E8F8A /* themer.js in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB8A2B7421CE005E8F8A /* themer.js */; };
+		C7C5EBA72B7421CF005E8F8A /* favicon.png in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB8B2B7421CE005E8F8A /* favicon.png */; };
+		C7C5EBA82B7421CF005E8F8A /* injected_script.js in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB8C2B7421CE005E8F8A /* injected_script.js */; };
+		C7C5EBA92B7421CF005E8F8A /* content_script.js in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB8D2B7421CE005E8F8A /* content_script.js */; };
+		C7C5EBAA2B7421CF005E8F8A /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB8E2B7421CE005E8F8A /* manifest.json */; };
+		C7C5EBAB2B7421CF005E8F8A /* action.html in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB8F2B7421CE005E8F8A /* action.html */; };
+		C7C5EBAC2B7421CF005E8F8A /* assets in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB902B7421CE005E8F8A /* assets */; };
+		C7C5EBAD2B7421CF005E8F8A /* square.png in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB912B7421CE005E8F8A /* square.png */; };
+		C7C5EBAE2B7421CF005E8F8A /* service_worker.js in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB922B7421CE005E8F8A /* service_worker.js */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C7C5EB572B7421CE005E8F8A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C7C5EB232B7421CD005E8F8A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C7C5EB542B7421CE005E8F8A;
+			remoteInfo = "Brume Wallet Extension (iOS)";
+		};
+		C7C5EB612B7421CE005E8F8A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C7C5EB232B7421CD005E8F8A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C7C5EB5E2B7421CE005E8F8A;
+			remoteInfo = "Brume Wallet Extension (macOS)";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C7C5EB792B7421CE005E8F8A /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C7C5EB562B7421CE005E8F8A /* Brume Wallet Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7C5EB802B7421CE005E8F8A /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C7C5EB602B7421CE005E8F8A /* Brume Wallet Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		C7C5EB2A2B7421CD005E8F8A /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = ../Base.lproj/Main.html; sourceTree = "<group>"; };
+		C7C5EB2B2B7421CD005E8F8A /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		C7C5EB2C2B7421CD005E8F8A /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		C7C5EB2D2B7421CD005E8F8A /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		C7C5EB2E2B7421CD005E8F8A /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		C7C5EB2F2B7421CE005E8F8A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C7C5EB312B7421CE005E8F8A /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		C7C5EB362B7421CE005E8F8A /* Brume Wallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Brume Wallet.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7C5EB392B7421CE005E8F8A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C7C5EB3B2B7421CE005E8F8A /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		C7C5EB3E2B7421CE005E8F8A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		C7C5EB412B7421CE005E8F8A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		C7C5EB432B7421CE005E8F8A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C7C5EB482B7421CE005E8F8A /* Brume Wallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Brume Wallet.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7C5EB4A2B7421CE005E8F8A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C7C5EB4D2B7421CE005E8F8A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		C7C5EB4F2B7421CE005E8F8A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C7C5EB502B7421CE005E8F8A /* Brume Wallet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Brume Wallet.entitlements"; sourceTree = "<group>"; };
+		C7C5EB552B7421CE005E8F8A /* Brume Wallet Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Brume Wallet Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7C5EB5A2B7421CE005E8F8A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C7C5EB5F2B7421CE005E8F8A /* Brume Wallet Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Brume Wallet Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7C5EB642B7421CE005E8F8A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C7C5EB652B7421CE005E8F8A /* Brume Wallet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Brume Wallet.entitlements"; sourceTree = "<group>"; };
+		C7C5EB852B7421CE005E8F8A /* next */ = {isa = PBXFileReference; lastKnownFileType = folder; name = next; path = Resources/next; sourceTree = "<group>"; };
+		C7C5EB862B7421CE005E8F8A /* favicon.ico */ = {isa = PBXFileReference; lastKnownFileType = image.ico; name = favicon.ico; path = Resources/favicon.ico; sourceTree = "<group>"; };
+		C7C5EB872B7421CE005E8F8A /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = index.html; path = Resources/index.html; sourceTree = "<group>"; };
+		C7C5EB882B7421CE005E8F8A /* round.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = round.png; path = Resources/round.png; sourceTree = "<group>"; };
+		C7C5EB892B7421CE005E8F8A /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = Resources/popup.html; sourceTree = "<group>"; };
+		C7C5EB8A2B7421CE005E8F8A /* themer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = themer.js; path = Resources/themer.js; sourceTree = "<group>"; };
+		C7C5EB8B2B7421CE005E8F8A /* favicon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = favicon.png; path = Resources/favicon.png; sourceTree = "<group>"; };
+		C7C5EB8C2B7421CE005E8F8A /* injected_script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = injected_script.js; path = Resources/injected_script.js; sourceTree = "<group>"; };
+		C7C5EB8D2B7421CE005E8F8A /* content_script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content_script.js; path = Resources/content_script.js; sourceTree = "<group>"; };
+		C7C5EB8E2B7421CE005E8F8A /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = Resources/manifest.json; sourceTree = "<group>"; };
+		C7C5EB8F2B7421CE005E8F8A /* action.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = action.html; path = Resources/action.html; sourceTree = "<group>"; };
+		C7C5EB902B7421CE005E8F8A /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = Resources/assets; sourceTree = "<group>"; };
+		C7C5EB912B7421CE005E8F8A /* square.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = square.png; path = Resources/square.png; sourceTree = "<group>"; };
+		C7C5EB922B7421CE005E8F8A /* service_worker.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = service_worker.js; path = Resources/service_worker.js; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C7C5EB332B7421CE005E8F8A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7C5EB452B7421CE005E8F8A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7C5EB522B7421CE005E8F8A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7C5EB5C2B7421CE005E8F8A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C7C5EB222B7421CD005E8F8A = {
+			isa = PBXGroup;
+			children = (
+				C7C5EB272B7421CD005E8F8A /* Shared (App) */,
+				C7C5EB302B7421CE005E8F8A /* Shared (Extension) */,
+				C7C5EB382B7421CE005E8F8A /* iOS (App) */,
+				C7C5EB492B7421CE005E8F8A /* macOS (App) */,
+				C7C5EB592B7421CE005E8F8A /* iOS (Extension) */,
+				C7C5EB632B7421CE005E8F8A /* macOS (Extension) */,
+				C7C5EB372B7421CE005E8F8A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C7C5EB272B7421CD005E8F8A /* Shared (App) */ = {
+			isa = PBXGroup;
+			children = (
+				C7C5EB2E2B7421CD005E8F8A /* ViewController.swift */,
+				C7C5EB2F2B7421CE005E8F8A /* Assets.xcassets */,
+				C7C5EB282B7421CD005E8F8A /* Resources */,
+			);
+			path = "Shared (App)";
+			sourceTree = "<group>";
+		};
+		C7C5EB282B7421CD005E8F8A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				C7C5EB292B7421CD005E8F8A /* Main.html */,
+				C7C5EB2B2B7421CD005E8F8A /* Icon.png */,
+				C7C5EB2C2B7421CD005E8F8A /* Style.css */,
+				C7C5EB2D2B7421CD005E8F8A /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		C7C5EB302B7421CE005E8F8A /* Shared (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				C7C5EB842B7421CE005E8F8A /* Resources */,
+				C7C5EB312B7421CE005E8F8A /* SafariWebExtensionHandler.swift */,
+			);
+			path = "Shared (Extension)";
+			sourceTree = "<group>";
+		};
+		C7C5EB372B7421CE005E8F8A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C7C5EB362B7421CE005E8F8A /* Brume Wallet.app */,
+				C7C5EB482B7421CE005E8F8A /* Brume Wallet.app */,
+				C7C5EB552B7421CE005E8F8A /* Brume Wallet Extension.appex */,
+				C7C5EB5F2B7421CE005E8F8A /* Brume Wallet Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C7C5EB382B7421CE005E8F8A /* iOS (App) */ = {
+			isa = PBXGroup;
+			children = (
+				C7C5EB392B7421CE005E8F8A /* AppDelegate.swift */,
+				C7C5EB3B2B7421CE005E8F8A /* SceneDelegate.swift */,
+				C7C5EB3D2B7421CE005E8F8A /* LaunchScreen.storyboard */,
+				C7C5EB402B7421CE005E8F8A /* Main.storyboard */,
+				C7C5EB432B7421CE005E8F8A /* Info.plist */,
+			);
+			path = "iOS (App)";
+			sourceTree = "<group>";
+		};
+		C7C5EB492B7421CE005E8F8A /* macOS (App) */ = {
+			isa = PBXGroup;
+			children = (
+				C7C5EB4A2B7421CE005E8F8A /* AppDelegate.swift */,
+				C7C5EB4C2B7421CE005E8F8A /* Main.storyboard */,
+				C7C5EB4F2B7421CE005E8F8A /* Info.plist */,
+				C7C5EB502B7421CE005E8F8A /* Brume Wallet.entitlements */,
+			);
+			path = "macOS (App)";
+			sourceTree = "<group>";
+		};
+		C7C5EB592B7421CE005E8F8A /* iOS (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				C7C5EB5A2B7421CE005E8F8A /* Info.plist */,
+			);
+			path = "iOS (Extension)";
+			sourceTree = "<group>";
+		};
+		C7C5EB632B7421CE005E8F8A /* macOS (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				C7C5EB642B7421CE005E8F8A /* Info.plist */,
+				C7C5EB652B7421CE005E8F8A /* Brume Wallet.entitlements */,
+			);
+			path = "macOS (Extension)";
+			sourceTree = "<group>";
+		};
+		C7C5EB842B7421CE005E8F8A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				C7C5EB852B7421CE005E8F8A /* next */,
+				C7C5EB862B7421CE005E8F8A /* favicon.ico */,
+				C7C5EB872B7421CE005E8F8A /* index.html */,
+				C7C5EB882B7421CE005E8F8A /* round.png */,
+				C7C5EB892B7421CE005E8F8A /* popup.html */,
+				C7C5EB8A2B7421CE005E8F8A /* themer.js */,
+				C7C5EB8B2B7421CE005E8F8A /* favicon.png */,
+				C7C5EB8C2B7421CE005E8F8A /* injected_script.js */,
+				C7C5EB8D2B7421CE005E8F8A /* content_script.js */,
+				C7C5EB8E2B7421CE005E8F8A /* manifest.json */,
+				C7C5EB8F2B7421CE005E8F8A /* action.html */,
+				C7C5EB902B7421CE005E8F8A /* assets */,
+				C7C5EB912B7421CE005E8F8A /* square.png */,
+				C7C5EB922B7421CE005E8F8A /* service_worker.js */,
+			);
+			name = Resources;
+			path = "Shared (Extension)";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C7C5EB352B7421CE005E8F8A /* Brume Wallet (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C7C5EB7A2B7421CE005E8F8A /* Build configuration list for PBXNativeTarget "Brume Wallet (iOS)" */;
+			buildPhases = (
+				C7C5EB322B7421CE005E8F8A /* Sources */,
+				C7C5EB332B7421CE005E8F8A /* Frameworks */,
+				C7C5EB342B7421CE005E8F8A /* Resources */,
+				C7C5EB792B7421CE005E8F8A /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C7C5EB582B7421CE005E8F8A /* PBXTargetDependency */,
+			);
+			name = "Brume Wallet (iOS)";
+			productName = "Brume Wallet (iOS)";
+			productReference = C7C5EB362B7421CE005E8F8A /* Brume Wallet.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C7C5EB472B7421CE005E8F8A /* Brume Wallet (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C7C5EB812B7421CE005E8F8A /* Build configuration list for PBXNativeTarget "Brume Wallet (macOS)" */;
+			buildPhases = (
+				C7C5EB442B7421CE005E8F8A /* Sources */,
+				C7C5EB452B7421CE005E8F8A /* Frameworks */,
+				C7C5EB462B7421CE005E8F8A /* Resources */,
+				C7C5EB802B7421CE005E8F8A /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C7C5EB622B7421CE005E8F8A /* PBXTargetDependency */,
+			);
+			name = "Brume Wallet (macOS)";
+			productName = "Brume Wallet (macOS)";
+			productReference = C7C5EB482B7421CE005E8F8A /* Brume Wallet.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C7C5EB542B7421CE005E8F8A /* Brume Wallet Extension (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C7C5EB762B7421CE005E8F8A /* Build configuration list for PBXNativeTarget "Brume Wallet Extension (iOS)" */;
+			buildPhases = (
+				C7C5EB512B7421CE005E8F8A /* Sources */,
+				C7C5EB522B7421CE005E8F8A /* Frameworks */,
+				C7C5EB532B7421CE005E8F8A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Brume Wallet Extension (iOS)";
+			productName = "Brume Wallet Extension (iOS)";
+			productReference = C7C5EB552B7421CE005E8F8A /* Brume Wallet Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		C7C5EB5E2B7421CE005E8F8A /* Brume Wallet Extension (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C7C5EB7D2B7421CE005E8F8A /* Build configuration list for PBXNativeTarget "Brume Wallet Extension (macOS)" */;
+			buildPhases = (
+				C7C5EB5B2B7421CE005E8F8A /* Sources */,
+				C7C5EB5C2B7421CE005E8F8A /* Frameworks */,
+				C7C5EB5D2B7421CE005E8F8A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Brume Wallet Extension (macOS)";
+			productName = "Brume Wallet Extension (macOS)";
+			productReference = C7C5EB5F2B7421CE005E8F8A /* Brume Wallet Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C7C5EB232B7421CD005E8F8A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1520;
+				LastUpgradeCheck = 1520;
+				TargetAttributes = {
+					C7C5EB352B7421CE005E8F8A = {
+						CreatedOnToolsVersion = 15.2;
+					};
+					C7C5EB472B7421CE005E8F8A = {
+						CreatedOnToolsVersion = 15.2;
+					};
+					C7C5EB542B7421CE005E8F8A = {
+						CreatedOnToolsVersion = 15.2;
+					};
+					C7C5EB5E2B7421CE005E8F8A = {
+						CreatedOnToolsVersion = 15.2;
+					};
+				};
+			};
+			buildConfigurationList = C7C5EB262B7421CD005E8F8A /* Build configuration list for PBXProject "Brume Wallet" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = C7C5EB222B7421CD005E8F8A;
+			productRefGroup = C7C5EB372B7421CE005E8F8A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C7C5EB352B7421CE005E8F8A /* Brume Wallet (iOS) */,
+				C7C5EB472B7421CE005E8F8A /* Brume Wallet (macOS) */,
+				C7C5EB542B7421CE005E8F8A /* Brume Wallet Extension (iOS) */,
+				C7C5EB5E2B7421CE005E8F8A /* Brume Wallet Extension (macOS) */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C7C5EB342B7421CE005E8F8A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C7C5EB682B7421CE005E8F8A /* Icon.png in Resources */,
+				C7C5EB3F2B7421CE005E8F8A /* LaunchScreen.storyboard in Resources */,
+				C7C5EB662B7421CE005E8F8A /* Main.html in Resources */,
+				C7C5EB6C2B7421CE005E8F8A /* Script.js in Resources */,
+				C7C5EB702B7421CE005E8F8A /* Assets.xcassets in Resources */,
+				C7C5EB422B7421CE005E8F8A /* Main.storyboard in Resources */,
+				C7C5EB6A2B7421CE005E8F8A /* Style.css in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7C5EB462B7421CE005E8F8A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C7C5EB692B7421CE005E8F8A /* Icon.png in Resources */,
+				C7C5EB6B2B7421CE005E8F8A /* Style.css in Resources */,
+				C7C5EB4E2B7421CE005E8F8A /* Main.storyboard in Resources */,
+				C7C5EB6D2B7421CE005E8F8A /* Script.js in Resources */,
+				C7C5EB712B7421CE005E8F8A /* Assets.xcassets in Resources */,
+				C7C5EB672B7421CE005E8F8A /* Main.html in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7C5EB532B7421CE005E8F8A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C7C5EBA42B7421CF005E8F8A /* round.png in Resources */,
+				C7C5EBA52B7421CF005E8F8A /* popup.html in Resources */,
+				C7C5EBAA2B7421CF005E8F8A /* manifest.json in Resources */,
+				C7C5EBA32B7421CF005E8F8A /* index.html in Resources */,
+				C7C5EBA72B7421CF005E8F8A /* favicon.png in Resources */,
+				C7C5EBA22B7421CF005E8F8A /* favicon.ico in Resources */,
+				C7C5EBA12B7421CF005E8F8A /* next in Resources */,
+				C7C5EBA62B7421CF005E8F8A /* themer.js in Resources */,
+				C7C5EBAE2B7421CF005E8F8A /* service_worker.js in Resources */,
+				C7C5EBAD2B7421CF005E8F8A /* square.png in Resources */,
+				C7C5EBA82B7421CF005E8F8A /* injected_script.js in Resources */,
+				C7C5EBAC2B7421CF005E8F8A /* assets in Resources */,
+				C7C5EBA92B7421CF005E8F8A /* content_script.js in Resources */,
+				C7C5EBAB2B7421CF005E8F8A /* action.html in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7C5EB5D2B7421CE005E8F8A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C7C5EB962B7421CE005E8F8A /* round.png in Resources */,
+				C7C5EB972B7421CE005E8F8A /* popup.html in Resources */,
+				C7C5EB9C2B7421CE005E8F8A /* manifest.json in Resources */,
+				C7C5EB952B7421CE005E8F8A /* index.html in Resources */,
+				C7C5EB992B7421CE005E8F8A /* favicon.png in Resources */,
+				C7C5EB942B7421CE005E8F8A /* favicon.ico in Resources */,
+				C7C5EB932B7421CE005E8F8A /* next in Resources */,
+				C7C5EB982B7421CE005E8F8A /* themer.js in Resources */,
+				C7C5EBA02B7421CF005E8F8A /* service_worker.js in Resources */,
+				C7C5EB9F2B7421CF005E8F8A /* square.png in Resources */,
+				C7C5EB9A2B7421CE005E8F8A /* injected_script.js in Resources */,
+				C7C5EB9E2B7421CF005E8F8A /* assets in Resources */,
+				C7C5EB9B2B7421CE005E8F8A /* content_script.js in Resources */,
+				C7C5EB9D2B7421CF005E8F8A /* action.html in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C7C5EB322B7421CE005E8F8A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C7C5EB6E2B7421CE005E8F8A /* ViewController.swift in Sources */,
+				C7C5EB3A2B7421CE005E8F8A /* AppDelegate.swift in Sources */,
+				C7C5EB3C2B7421CE005E8F8A /* SceneDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7C5EB442B7421CE005E8F8A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C7C5EB6F2B7421CE005E8F8A /* ViewController.swift in Sources */,
+				C7C5EB4B2B7421CE005E8F8A /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7C5EB512B7421CE005E8F8A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C7C5EB722B7421CE005E8F8A /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7C5EB5B2B7421CE005E8F8A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C7C5EB732B7421CE005E8F8A /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C7C5EB582B7421CE005E8F8A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C7C5EB542B7421CE005E8F8A /* Brume Wallet Extension (iOS) */;
+			targetProxy = C7C5EB572B7421CE005E8F8A /* PBXContainerItemProxy */;
+		};
+		C7C5EB622B7421CE005E8F8A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C7C5EB5E2B7421CE005E8F8A /* Brume Wallet Extension (macOS) */;
+			targetProxy = C7C5EB612B7421CE005E8F8A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		C7C5EB292B7421CD005E8F8A /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C7C5EB2A2B7421CD005E8F8A /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		C7C5EB3D2B7421CE005E8F8A /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C7C5EB3E2B7421CE005E8F8A /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		C7C5EB402B7421CE005E8F8A /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C7C5EB412B7421CE005E8F8A /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		C7C5EB4C2B7421CE005E8F8A /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C7C5EB4D2B7421CE005E8F8A /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		C7C5EB742B7421CE005E8F8A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		C7C5EB752B7421CE005E8F8A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		C7C5EB772B7421CE005E8F8A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet.Extension";
+				PRODUCT_NAME = "Brume Wallet Extension";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C7C5EB782B7421CE005E8F8A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet.Extension";
+				PRODUCT_NAME = "Brume Wallet Extension";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C7C5EB7B2B7421CE005E8F8A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet";
+				PRODUCT_NAME = "Brume Wallet";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C7C5EB7C2B7421CE005E8F8A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet";
+				PRODUCT_NAME = "Brume Wallet";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C7C5EB7E2B7421CE005E8F8A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "macOS (Extension)/Brume Wallet.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet.Extension";
+				PRODUCT_NAME = "Brume Wallet Extension";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C7C5EB7F2B7421CE005E8F8A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "macOS (Extension)/Brume Wallet.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet.Extension";
+				PRODUCT_NAME = "Brume Wallet Extension";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		C7C5EB822B7421CE005E8F8A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "macOS (App)/Brume Wallet.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet";
+				PRODUCT_NAME = "Brume Wallet";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C7C5EB832B7421CE005E8F8A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "macOS (App)/Brume Wallet.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet";
+				PRODUCT_NAME = "Brume Wallet";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C7C5EB262B7421CD005E8F8A /* Build configuration list for PBXProject "Brume Wallet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C7C5EB742B7421CE005E8F8A /* Debug */,
+				C7C5EB752B7421CE005E8F8A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C7C5EB762B7421CE005E8F8A /* Build configuration list for PBXNativeTarget "Brume Wallet Extension (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C7C5EB772B7421CE005E8F8A /* Debug */,
+				C7C5EB782B7421CE005E8F8A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C7C5EB7A2B7421CE005E8F8A /* Build configuration list for PBXNativeTarget "Brume Wallet (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C7C5EB7B2B7421CE005E8F8A /* Debug */,
+				C7C5EB7C2B7421CE005E8F8A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C7C5EB7D2B7421CE005E8F8A /* Build configuration list for PBXNativeTarget "Brume Wallet Extension (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C7C5EB7E2B7421CE005E8F8A /* Debug */,
+				C7C5EB7F2B7421CE005E8F8A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C7C5EB812B7421CE005E8F8A /* Build configuration list for PBXNativeTarget "Brume Wallet (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C7C5EB822B7421CE005E8F8A /* Debug */,
+				C7C5EB832B7421CE005E8F8A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C7C5EB232B7421CD005E8F8A /* Project object */;
+}

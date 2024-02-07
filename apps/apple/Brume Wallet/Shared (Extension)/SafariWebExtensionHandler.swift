@@ -1,3 +1,10 @@
+//
+//  SafariWebExtensionHandler.swift
+//  Shared (Extension)
+//
+//  Created by Hugo on 07/02/2024.
+//
+
 import SafariServices
 import os.log
 
