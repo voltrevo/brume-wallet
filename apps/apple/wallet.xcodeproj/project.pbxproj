@@ -286,7 +286,7 @@
 				C7C5EB922B7421CE005E8F8A /* service_worker.js */,
 			);
 			name = Resources;
-			path = "Shared (Extension)";
+			path = "all-ext";
 			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */
@@ -687,8 +687,9 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28VHR75NMY;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_FILE = "ios-ext/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet Extension";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -702,7 +703,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet.Extension";
+				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet.extension;
 				PRODUCT_NAME = "Brume Wallet Extension";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -717,8 +718,9 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28VHR75NMY;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_FILE = "ios-ext/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet Extension";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -732,7 +734,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet.Extension";
+				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet.extension;
 				PRODUCT_NAME = "Brume Wallet Extension";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -751,8 +753,9 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28VHR75NMY;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_FILE = "ios-app/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -771,7 +774,7 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet";
+				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet;
 				PRODUCT_NAME = "Brume Wallet";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -788,8 +791,9 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28VHR75NMY;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_FILE = "ios-app/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -808,7 +812,7 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet";
+				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet;
 				PRODUCT_NAME = "Brume Wallet";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -821,12 +825,14 @@
 		C7C5EB7E2B7421CE005E8F8A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "macOS (Extension)/Brume Wallet.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "mac-ext/Brume Wallet.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28VHR75NMY;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_FILE = "mac-ext/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet Extension";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -840,7 +846,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet.Extension";
+				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet.extension;
 				PRODUCT_NAME = "Brume Wallet Extension";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -852,12 +858,14 @@
 		C7C5EB7F2B7421CE005E8F8A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "macOS (Extension)/Brume Wallet.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "mac-ext/Brume Wallet.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28VHR75NMY;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_FILE = "mac-ext/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet Extension";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -871,7 +879,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet.Extension";
+				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet.extension;
 				PRODUCT_NAME = "Brume Wallet Extension";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -886,12 +894,13 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "macOS (App)/Brume Wallet.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "mac-app/Brume Wallet.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28VHR75NMY;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "macOS (App)/Info.plist";
+				INFOPLIST_FILE = "mac-app/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -907,7 +916,7 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet";
+				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet;
 				PRODUCT_NAME = "Brume Wallet";
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -921,12 +930,13 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "macOS (App)/Brume Wallet.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "mac-app/Brume Wallet.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28VHR75NMY;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "macOS (App)/Info.plist";
+				INFOPLIST_FILE = "mac-app/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Brume Wallet";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -942,7 +952,7 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "eth.brume.Brume-Wallet";
+				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet;
 				PRODUCT_NAME = "Brume Wallet";
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
