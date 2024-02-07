@@ -9,7 +9,7 @@ import { fetchAsBlobOrThrow } from "@/libs/fetch/fetch"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
-import { isAndroidApp, isExtension, isFirefoxExt, isWebsite } from "@/libs/platform/platform"
+import { isAndroidApp, isAppleApp, isExtension, isFirefoxExt, isWebsite } from "@/libs/platform/platform"
 import { Strings } from "@/libs/strings/strings"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createTorPool } from "@/libs/tor/tors/tors"
@@ -1533,7 +1533,7 @@ async function initOrThrow() {
 
 const init = Result.runAndDoubleWrap(() => initOrThrow())
 
-if (!isExtension()) {
+if (isWebsite() || isAndroidApp()) {
 
   const onSkipWaiting = (event: ExtendableMessageEvent) =>
     self.skipWaiting()
@@ -1574,6 +1574,47 @@ if (!isExtension()) {
   self.addEventListener("message", (event) => {
     if (event.data === "SKIP_WAITING")
       return void onSkipWaiting(event)
+    if (event.data === "HELLO_WORLD")
+      return void onHelloWorld(event)
+    throw new Error(`Invalid message`)
+  })
+}
+
+if (isAppleApp()) {
+  const onHelloWorld = (event: ExtendableMessageEvent) => {
+    const raw = event.ports[0]
+
+    const router = new WebsitePort("foreground", raw)
+
+    const onRequest = async (request: RpcRequestInit<unknown>) => {
+      const inited = await init
+
+      if (inited.isErr())
+        return new Some(inited)
+
+      return await inited.get().tryRouteForeground(router, request)
+    }
+
+    router.events.on("request", onRequest, { passive: true })
+
+    const onClose = () => {
+      using _ = router
+
+      router.events.off("request", onRequest)
+      router.port.close()
+
+      return new None()
+    }
+
+    router.events.on("close", onClose, { passive: true })
+
+    raw.start()
+
+    router.tryRequest({ method: "brume_hello" }).then(r => r.ignore())
+    router.runPingLoop()
+  }
+
+  self.addEventListener("message", (event) => {
     if (event.data === "HELLO_WORLD")
       return void onHelloWorld(event)
     throw new Error(`Invalid message`)

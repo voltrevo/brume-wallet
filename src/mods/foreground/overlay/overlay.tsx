@@ -1,14 +1,14 @@
 import { BrowserError, browser } from "@/libs/browser/browser";
 import { fetchAsJsonOrThrow } from "@/libs/fetch/fetch";
 import { Outline } from "@/libs/icons/icons";
-import { isAndroidApp, isExtension, isWebsite } from "@/libs/platform/platform";
+import { isExtension, isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { OkProps } from "@/libs/react/props/promise";
 import { Semver } from "@/libs/semver/semver";
 import { Button } from "@/libs/ui/button";
 import { None } from "@hazae41/option";
 import { useCallback, useEffect, useState } from "react";
-import { WebsiteBackground } from "../background/background";
+import { ServiceWorkerBackground } from "../background/background";
 import { useBackgroundContext } from "../background/context";
 
 const MAIN_PACKAGE_URL = "https://raw.githubusercontent.com/brumewallet/wallet/main/package.json"
@@ -45,12 +45,9 @@ export function Overlay(props: ChildrenProps) {
       {children}
     </ExtensionOverlay>
 
-  if (isAndroidApp())
-    return <AndroidOverlay>
-      {children}
-    </AndroidOverlay>
-
-  return null
+  return <OtherOverlay>
+    {children}
+  </OtherOverlay>
 }
 
 async function checkWebsiteUpdateOrThrow(): Promise<boolean> {
@@ -75,7 +72,7 @@ async function checkWebsiteUpdateOrThrow(): Promise<boolean> {
 export function WebsiteOverlay(props: ChildrenProps) {
   const { children } = props
 
-  const background = useBackgroundContext().unwrap() as WebsiteBackground
+  const background = useBackgroundContext().unwrap() as ServiceWorkerBackground
 
   const [updating, setUpdating] = useState<ServiceWorker>()
 
@@ -85,7 +82,7 @@ export function WebsiteOverlay(props: ChildrenProps) {
       return new None()
     }
 
-    return background.sw.on("update", onUpdate)
+    return background.serviceWorker.on("update", onUpdate)
   }, [background])
 
   const update = useCallback(() => {
@@ -143,7 +140,7 @@ export function ExtensionOverlay(props: ChildrenProps) {
   </>
 }
 
-export function AndroidOverlay(props: ChildrenProps) {
+export function OtherOverlay(props: ChildrenProps) {
   const { children } = props
 
   const [updatable, setUpdatable] = useState(false)

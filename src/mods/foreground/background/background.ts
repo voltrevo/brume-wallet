@@ -10,20 +10,11 @@ import { Plume, SuperEventTarget } from "@hazae41/plume"
 import { Ok, Result } from "@hazae41/result"
 
 export type Background =
-  | WebsiteBackground
+  | ServiceWorkerBackground
+  | WorkerBackground
   | ExtensionBackground
 
-export class MessageError extends Error {
-  readonly #class = MessageError
-  readonly name = this.#class.name
-
-  constructor() {
-    super(`Message error`)
-  }
-
-}
-
-export class WebsiteBackground {
+export class ServiceWorkerBackground {
   readonly ports = createServiceWorkerPortPool(this)
 
   readonly events = new SuperEventTarget<{
@@ -31,7 +22,7 @@ export class WebsiteBackground {
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
-  readonly sw = new SuperEventTarget<{
+  readonly serviceWorker = new SuperEventTarget<{
     "update": (sw: ServiceWorker) => void
   }>()
 
@@ -44,17 +35,18 @@ export class WebsiteBackground {
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return await Result.unthrow<Result<RpcResponse<T>, Error>>(async t => {
-      const port = await this.ports.tryGet(0).then(r => r.throw(t).throw(t).inner.inner.inner)
-      const response = await port.tryRequest<T>(init).then(r => r.throw(t))
+    return await Result.runAndDoubleWrap(() => this.requestOrThrow(init))
+  }
 
-      return new Ok(response)
-    })
+  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
+    const port = await this.ports.getOrThrow(0).then(r => r.unwrap().inner.inner.inner)
+
+    return await port.requestOrThrow<T>(init)
   }
 
 }
 
-export async function getServiceWorkerOrThrow(background: WebsiteBackground): Promise<ServiceWorkerRegistration> {
+export async function getServiceWorkerOrThrow(background: ServiceWorkerBackground): Promise<ServiceWorkerRegistration> {
   /**
    * Safari may kill the service worker and not restart it
    * This will manual start a new one
@@ -68,7 +60,7 @@ export async function getServiceWorkerOrThrow(background: WebsiteBackground): Pr
     const ready = await navigator.serviceWorker.ready
 
     if (ready.waiting != null)
-      await background.sw.emit("update", [ready.waiting])
+      await background.serviceWorker.emit("update", [ready.waiting])
 
     ready.addEventListener("updatefound", () => {
       const { installing } = ready
@@ -81,7 +73,7 @@ export async function getServiceWorkerOrThrow(background: WebsiteBackground): Pr
           return
         if (navigator.serviceWorker.controller == null)
           return
-        await background.sw.emit("update", [installing])
+        await background.serviceWorker.emit("update", [installing])
         installing.removeEventListener("statechange", onStateChange)
       }
 
@@ -133,7 +125,7 @@ export async function getServiceWorkerOrThrow(background: WebsiteBackground): Pr
   }
 }
 
-export function createServiceWorkerPortPool(background: WebsiteBackground): Pool<Disposer<WebsitePort>> {
+export function createServiceWorkerPortPool(background: ServiceWorkerBackground): Pool<Disposer<WebsitePort>> {
   return new Pool<Disposer<WebsitePort>>(async (params) => {
     const { pool, index } = params
 
@@ -221,6 +213,114 @@ export function createServiceWorkerPortPool(background: WebsiteBackground): Pool
   }, { capacity: 1 })
 }
 
+export class WorkerBackground {
+  readonly ports = createWorkerPortPool(this)
+
+  readonly events = new SuperEventTarget<{
+    "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
+    "response": (response: RpcResponseInit<unknown>) => void
+  }>()
+
+  async onRequest(port: Port, request: RpcRequestInit<unknown>) {
+    return await this.events.emit("request", [request])
+  }
+
+  async onResponse(port: Port, response: RpcResponseInit<unknown>) {
+    return await this.events.emit("response", [response])
+  }
+
+  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
+    return await Result.runAndDoubleWrap(() => this.requestOrThrow(init))
+  }
+
+  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
+    const port = await this.ports.getOrThrow(0).then(r => r.unwrap().inner.inner.inner)
+
+    return await port.requestOrThrow<T>(init)
+  }
+
+}
+
+export function createWorkerPortPool(background: WorkerBackground): Pool<Disposer<WebsitePort>> {
+  return new Pool<Disposer<WebsitePort>>(async (params) => {
+    const { pool, index } = params
+
+    const worker = new Worker("/service_worker.js")
+
+    const raw = new MessageChannel()
+
+    const onRawClean = () => {
+      raw.port1.close()
+      raw.port2.close()
+    }
+
+    using prechannel = new Box(new Disposer(raw, onRawClean))
+    using prerouter = new Box(new WebsitePort("background", raw.port1))
+
+    const channel = prechannel.moveOrThrow()
+    const router = prerouter.moveOrThrow()
+
+    const onInnerClean = () => {
+      using postchannel = channel
+      using postrouter = router
+    }
+
+    using preinner = new Box(new Disposer(router.inner, onInnerClean))
+
+    raw.port1.start()
+    raw.port2.start()
+
+    worker.postMessage("HELLO_WORLD", [raw.port2])
+
+    await Plume.tryWaitOrSignal(router.inner.events, "request", async (future: Future<Ok<void>>, init: RpcRequestInit<any>) => {
+      if (init.method !== "brume_hello")
+        return new None()
+
+      future.resolve(Ok.void())
+      return new Some(Ok.void())
+    }, AbortSignal.timeout(60_000)).then(r => r.unwrap())
+
+    router.inner.runPingLoop()
+
+    const uuid = sessionStorage.getItem("uuid")
+    const password = sessionStorage.getItem("password")
+
+    if (uuid && password)
+      await router.inner.tryRequest({
+        method: "brume_login",
+        params: [uuid, password]
+      }).then(r => r.unwrap().unwrap())
+
+    const onClose = async () => {
+      worker.terminate()
+      pool.restart(index)
+      return new None()
+    }
+
+    const onRequest = (request: RpcRequestInit<unknown>) =>
+      background.onRequest(router.inner, request)
+
+    const onResponse = (response: RpcResponseInit<unknown>) =>
+      background.onResponse(router.inner, response)
+
+    router.inner.events.on("request", onRequest, { passive: true })
+    router.inner.events.on("response", onResponse, { passive: true })
+    router.inner.events.on("close", onClose, { passive: true })
+
+    const inner = preinner.moveOrThrow()
+
+    const onEntryClean = () => {
+      using postinner = inner
+
+      router.inner.events.off("request", onRequest)
+      router.inner.events.off("response", onResponse)
+      router.inner.events.off("close", onClose)
+    }
+
+    return new Ok(new Disposer(inner, onEntryClean))
+  }, { capacity: 1 })
+}
+
 export class ExtensionBackground {
   readonly ports = createExtensionChannelPool(this)
 
@@ -237,19 +337,20 @@ export class ExtensionBackground {
     return await this.events.emit("response", [response])
   }
 
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return await Result.unthrow<Result<RpcResponse<T>, Error>>(async t => {
-      const port = await this.ports.tryGet(0).then(r => r.throw(t).throw(t).inner.inner.inner)
-      const response = await port.tryRequest<T>(init).then(r => r.throw(t))
+  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
+    const port = await this.ports.getOrThrow(0).then(r => r.unwrap().inner.inner.inner)
 
-      return new Ok(response)
-    })
+    return await port.requestOrThrow<T>(init)
+  }
+
+  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
+    return await Result.runAndDoubleWrap(() => this.requestOrThrow(init))
   }
 
 }
 
-export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<Port>> {
-  return new Pool<Disposer<Port>>(async (params) => {
+export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<ExtensionPort>> {
+  return new Pool<Disposer<ExtensionPort>>(async (params) => {
     return await Result.unthrow(async t => {
       const { index, pool } = params
 

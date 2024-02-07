@@ -13,9 +13,6 @@
   "permissions": [
     "storage"
   ],
-  "content_security_policy": {
-    "extension_pages": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data: blob:; connect-src 'self' data: https://raw.githubusercontent.com wss://snowflake.torproject.net;"
-  },
   "background": {
     "type": "module",
     "service_worker": "service_worker.js"
@@ -32,5 +29,8 @@
       "run_at": "document_start",
       "all_frames": true
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data: blob:; connect-src 'self' data: https://raw.githubusercontent.com wss://snowflake.torproject.net;"
+  }
 }

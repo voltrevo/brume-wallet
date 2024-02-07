@@ -21,7 +21,7 @@ if (fs.existsSync("./dist/website")) {
         .replaceAll("IS_FIREFOX", "false")
         .replaceAll("IS_SAFARI", "false")
         .replaceAll("IS_ANDROID", "false")
-        .replaceAll("IS_IOS", "false")
+        .replaceAll("IS_APPLE", "false")
 
       fs.writeFileSync(filePath, replaced, "utf8")
     }
@@ -49,7 +49,7 @@ if (fs.existsSync("./dist/chrome")) {
         .replaceAll("IS_FIREFOX", "false")
         .replaceAll("IS_SAFARI", "false")
         .replaceAll("IS_ANDROID", "false")
-        .replaceAll("IS_IOS", "false")
+        .replaceAll("IS_APPLE", "false")
 
       fs.writeFileSync(filePath, replaced, "utf8")
     }
@@ -77,7 +77,7 @@ if (fs.existsSync("./dist/firefox")) {
         .replaceAll("IS_FIREFOX", "true")
         .replaceAll("IS_SAFARI", "false")
         .replaceAll("IS_ANDROID", "false")
-        .replaceAll("IS_IOS", "false")
+        .replaceAll("IS_APPLE", "false")
 
       fs.writeFileSync(filePath, replaced, "utf8")
     }
@@ -105,7 +105,7 @@ if (fs.existsSync("./dist/safari")) {
         .replaceAll("IS_FIREFOX", "false")
         .replaceAll("IS_SAFARI", "true")
         .replaceAll("IS_ANDROID", "false")
-        .replaceAll("IS_IOS", "false")
+        .replaceAll("IS_APPLE", "false")
 
       fs.writeFileSync(filePath, replaced, "utf8")
     }
@@ -133,7 +133,35 @@ if (fs.existsSync("./dist/android")) {
         .replaceAll("IS_FIREFOX", "false")
         .replaceAll("IS_SAFARI", "false")
         .replaceAll("IS_ANDROID", "true")
-        .replaceAll("IS_IOS", "false")
+        .replaceAll("IS_APPLE", "false")
+
+      fs.writeFileSync(filePath, replaced, "utf8")
+    }
+  }
+}
+
+/**
+ * Setup global variables for Apple
+ */
+if (fs.existsSync("./dist/apple")) {
+  {
+    const original = fs.readFileSync("./dist/apple/manifest.json", "utf8")
+    const replaced = original.replaceAll("VERSION", thepackage.version)
+
+    fs.writeFileSync("./dist/apple/manifest.json", replaced, "utf8")
+  }
+
+  for (const filePath of walkSync("./dist/apple")) {
+    if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
+      const original = fs.readFileSync(filePath, "utf8")
+
+      const replaced = original
+        .replaceAll("IS_WEBSITE", "false")
+        .replaceAll("IS_CHROME", "false")
+        .replaceAll("IS_FIREFOX", "false")
+        .replaceAll("IS_SAFARI", "false")
+        .replaceAll("IS_ANDROID", "false")
+        .replaceAll("IS_APPLE", "true")
 
       fs.writeFileSync(filePath, replaced, "utf8")
     }

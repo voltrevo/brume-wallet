@@ -1,9 +1,9 @@
-import { isExtension } from "@/libs/platform/platform";
+import { isAndroidApp, isAppleApp, isExtension, isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { useConstant } from "@/libs/react/ref";
 import { Option } from "@hazae41/option";
 import { createContext, useContext, useEffect, useState } from "react";
-import { Background, ExtensionBackground, WebsiteBackground } from "./background";
+import { Background, ExtensionBackground, ServiceWorkerBackground, WorkerBackground } from "./background";
 
 export const BackgroundContext =
   createContext<Background | undefined>(undefined)
@@ -29,18 +29,33 @@ export function BackgroundProvider(props: ChildrenProps) {
       {children}
     </ExtensionBackgroundProvider>
 
-  if (!isExtension())
-    return <WebsiteBackgroundProvider>
+  if (isWebsite() || isAndroidApp())
+    return <ServiceWorkerBackgroundProvider>
       {children}
-    </WebsiteBackgroundProvider>
+    </ServiceWorkerBackgroundProvider>
+
+  if (isAppleApp())
+    return <WorkerBackgroundProvider>
+      {children}
+    </WorkerBackgroundProvider>
 
   return null
 }
 
-export function WebsiteBackgroundProvider(props: ChildrenProps) {
+export function ServiceWorkerBackgroundProvider(props: ChildrenProps) {
   const { children } = props
 
-  const background = useConstant(() => new WebsiteBackground())
+  const background = useConstant(() => new ServiceWorkerBackground())
+
+  return <BackgroundContext.Provider value={background}>
+    {children}
+  </BackgroundContext.Provider>
+}
+
+export function WorkerBackgroundProvider(props: ChildrenProps) {
+  const { children } = props
+
+  const background = useConstant(() => new WorkerBackground())
 
   return <BackgroundContext.Provider value={background}>
     {children}
