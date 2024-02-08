@@ -1,7 +1,7 @@
 import { WebSocketStream } from "@/libs/streams/websocket"
 import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
-import { Disposer } from "@hazae41/cleaner"
+import { Disposer } from "@hazae41/disposer"
 import { Consensus, TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote"
 import { None } from "@hazae41/option"
 import { Pool, PoolParams } from "@hazae41/piscine"

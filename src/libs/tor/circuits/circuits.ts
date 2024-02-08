@@ -1,12 +1,33 @@
 import { Box } from "@hazae41/box"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
-import { Disposer } from "@hazae41/cleaner"
-import { Circuit, Consensus, TorClientDuplex, createCircuitEntry } from "@hazae41/echalote"
+import { Disposer } from "@hazae41/disposer"
+import { Circuit, Consensus, TorClientDuplex } from "@hazae41/echalote"
 import { fetch } from "@hazae41/fleche"
 import { Mutex } from "@hazae41/mutex"
 import { None } from "@hazae41/option"
-import { Cancel, Looped, Pool, PoolParams, Retry, tryLoop } from "@hazae41/piscine"
+import { Cancel, Looped, Pool, PoolCreatorParams, PoolParams, Retry, tryLoop } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
+
+export function createCircuitEntry(circuit: Box<Circuit>, params: PoolCreatorParams<Circuit>) {
+  const { pool, index } = params
+
+  const onCloseOrError = async (reason?: unknown) => {
+    pool.restart(index)
+    return new None()
+  }
+
+  circuit.inner.events.on("close", onCloseOrError, { passive: true })
+  circuit.inner.events.on("error", onCloseOrError, { passive: true })
+
+  const onEntryClean = () => {
+    using postcircuit = circuit
+
+    circuit.inner.events.off("close", onCloseOrError)
+    circuit.inner.events.off("error", onCloseOrError)
+  }
+
+  return new Disposer(circuit, onEntryClean)
+}
 
 export namespace Circuits {
 

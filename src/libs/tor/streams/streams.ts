@@ -1,6 +1,6 @@
 import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
-import { Disposer } from "@hazae41/cleaner"
+import { Disposer } from "@hazae41/disposer"
 import { Circuit } from "@hazae41/echalote"
 import { Mutex } from "@hazae41/mutex"
 import { None } from "@hazae41/option"

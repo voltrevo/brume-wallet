@@ -1,7 +1,7 @@
 import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
 import { Box } from "@hazae41/box"
-import { Disposer } from "@hazae41/cleaner"
+import { Disposer } from "@hazae41/disposer"
 import { Future } from "@hazae41/future"
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"

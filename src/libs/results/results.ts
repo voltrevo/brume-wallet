@@ -1,4 +1,4 @@
-import { Disposer } from "@hazae41/cleaner";
+import { Disposer } from "@hazae41/disposer";
 import { Result } from "@hazae41/result";
 import { Errors } from "../errors/errors";
 
