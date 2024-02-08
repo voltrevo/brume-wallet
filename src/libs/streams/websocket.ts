@@ -1,19 +1,6 @@
 import { Opaque, Writable } from "@hazae41/binary"
 import { SuperReadableStream, SuperWritableStream } from "@hazae41/cascade"
 
-export async function createWebSocketStream(url: string) {
-  const websocket = new WebSocket(url)
-
-  websocket.binaryType = "arraybuffer"
-
-  await new Promise((ok, err) => {
-    websocket.addEventListener("open", ok)
-    websocket.addEventListener("error", err)
-  })
-
-  return WebSocketStream.fromOrThrow(websocket, { shouldCloseOnAbort: true, shouldCloseOnCancel: true })
-}
-
 async function closeOrThrow(websocket: WebSocket) {
   if (websocket.readyState !== WebSocket.OPEN)
     return
