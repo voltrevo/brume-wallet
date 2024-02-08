@@ -4,7 +4,7 @@ import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Consensus, TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote"
 import { None } from "@hazae41/option"
-import { Pool, PoolParams } from "@hazae41/piscine"
+import { Pool, PoolCreatorParams, PoolParams } from "@hazae41/piscine"
 import { Ok } from "@hazae41/result"
 
 export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque, Writable> }): Promise<TorClientDuplex> {
@@ -24,6 +24,50 @@ export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque
   return tor
 }
 
+export function createTorAndConsensusEntry(preTorAndConsensus: Box<Disposer<readonly [TorClientDuplex, Consensus]>>, params: PoolCreatorParams<Disposer<readonly [TorClientDuplex, Consensus]>>) {
+  const { pool, index } = params
+
+  const rawTorAndConsensus = preTorAndConsensus.getOrThrow()
+
+  using _ = preTorAndConsensus
+
+  const onCloseOrError = async (reason?: unknown) => {
+    pool.restart(index)
+    return new None()
+  }
+
+  using preOnCloseDisposer = new Box(new Disposer({}, rawTorAndConsensus.inner[0].events.on("close", onCloseOrError, { passive: true })))
+  using preOnErrorDisposer = new Box(new Disposer({}, rawTorAndConsensus.inner[0].events.on("error", onCloseOrError, { passive: true })))
+
+  const onOffline = () => {
+    /**
+     * Close Tor and thus call onCloseOrError
+     */
+    rawTorAndConsensus.inner[0].close()
+  }
+
+  addEventListener("offline", onOffline, { passive: true })
+  const onOfflineClean = () => removeEventListener("offline", onOffline)
+  using preOnOfflineDisposer = new Box(new Disposer({}, onOfflineClean))
+
+  /**
+   * Move all resources
+   */
+  const torAndConsensus = preTorAndConsensus.moveOrThrow()
+  const onCloseDisposer = preOnCloseDisposer.moveOrThrow()
+  const onErrorDisposer = preOnErrorDisposer.moveOrThrow()
+  const onOfflineDisposer = preOnOfflineDisposer.moveOrThrow()
+
+  const onEntryClean = () => {
+    using _0 = torAndConsensus
+    using _1 = onCloseDisposer
+    using _2 = onErrorDisposer
+    using _3 = onOfflineDisposer
+  }
+
+  return new Disposer(torAndConsensus, onEntryClean)
+}
+
 export function createTorPool(params: PoolParams & { socket?: WebSocket }) {
   const pool = new Pool<Disposer<readonly [TorClientDuplex, Consensus]>>(async (subparams) => {
     const { socket = new WebSocket("wss://snowflake.torproject.net/") } = params
@@ -35,12 +79,18 @@ export function createTorPool(params: PoolParams & { socket?: WebSocket }) {
       socket.addEventListener("error", err)
     })
 
-    const raw = WebSocketStream.fromOrThrow(socket, { shouldCloseOnAbort: true, shouldCloseOnCancel: true })
-    using preTor = new Box(await createTorOrThrow(raw))
+    const stream = WebSocketStream.fromOrThrow(socket, {
+      shouldCloseOnAbort: true,
+      shouldCloseOnCancel: true
+    })
 
-    using circuit = await preTor.getOrThrow().createOrThrow(AbortSignal.timeout(5000))
-    const consensus = await Consensus.fetchOrThrow(circuit)
+    using preTor = new Box(await createTorOrThrow(stream))
+    using tmpCircuit = await preTor.getOrThrow().createOrThrow(AbortSignal.timeout(5000))
+    const consensus = await Consensus.fetchOrThrow(tmpCircuit)
 
+    /**
+     * Move Tor into a new struct with [TorClientDuplex, Consensus]
+     */
     const tor = preTor.unwrapOrThrow()
 
     const onTorAndConsensusClean = () => {
@@ -49,40 +99,11 @@ export function createTorPool(params: PoolParams & { socket?: WebSocket }) {
 
     using preTorAndConsensus = new Box(new Disposer([tor, consensus] as const, onTorAndConsensusClean))
 
-    const { pool, index } = subparams
+    /**
+     * NOOP
+     */
 
-    const onCloseOrError = async (reason?: unknown) => {
-      pool.restart(index)
-      return new None()
-    }
-
-    preTorAndConsensus.getOrThrow().inner[0].events.on("close", onCloseOrError, { passive: true })
-    using preCloseCleaner = new Box(new Disposer(preTorAndConsensus.getOrThrow().inner, ([tor]) => tor.events.off("close", onCloseOrError)))
-
-    preTorAndConsensus.getOrThrow().inner[0].events.on("error", onCloseOrError, { passive: true })
-    using preErrorCleaner = new Box(new Disposer(preTorAndConsensus.getOrThrow().inner, ([tor]) => tor.events.off("error", onCloseOrError)))
-
-    const onOffline = () => {
-      preTorAndConsensus.inner.inner[0].close()
-    }
-
-    addEventListener("offline", onOffline, { passive: true })
-    using preOfflineCleaner = new Box(new Disposer({}, () => removeEventListener("offline", onOffline)))
-
-    const torAndConsensus = preTorAndConsensus.moveOrThrow()
-
-    const closeCleaner = preCloseCleaner.moveOrThrow()
-    const errorCleaner = preErrorCleaner.moveOrThrow()
-    const offlineCleaner = preOfflineCleaner.moveOrThrow()
-
-    const onEntryClean = () => {
-      using _0 = torAndConsensus
-      using _1 = closeCleaner
-      using _2 = errorCleaner
-      using _3 = offlineCleaner
-    }
-
-    return new Ok(new Disposer(torAndConsensus, onEntryClean))
+    return new Ok(createTorAndConsensusEntry(preTorAndConsensus.moveOrThrow(), subparams))
   }, params)
 
   addEventListener("online", async () => {

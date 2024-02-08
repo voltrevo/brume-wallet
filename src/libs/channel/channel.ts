@@ -7,11 +7,11 @@ import { BrowserError } from "../browser/browser"
 import { Console } from "../console"
 import { AbortSignals } from "../signals/signals"
 
-export type Port =
-  | WebsitePort
-  | ExtensionPort
+export type Router =
+  | WebsiteRouter
+  | ExtensionRouter
 
-export class WebsitePort {
+export class WebsiteRouter {
   readonly counter = new RpcCounter()
   readonly uuid = crypto.randomUUID()
 
@@ -150,7 +150,7 @@ export class WebsitePort {
 
 }
 
-export class ExtensionPort {
+export class ExtensionRouter {
   readonly counter = new RpcCounter()
   readonly uuid = crypto.randomUUID()
 

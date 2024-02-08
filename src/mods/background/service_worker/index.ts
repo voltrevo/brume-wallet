@@ -2,7 +2,7 @@ import "@hazae41/symbol-dispose-polyfill"
 
 import { Blobs } from "@/libs/blobs/blobs"
 import { BrowserError, browser } from "@/libs/browser/browser"
-import { ExtensionPort, Port, WebsitePort } from "@/libs/channel/channel"
+import { ExtensionRouter, Router, WebsiteRouter } from "@/libs/channel/channel"
 import { Console } from "@/libs/console"
 import { chainByChainId } from "@/libs/ethereum/mods/chain"
 import { fetchAsBlobOrThrow } from "@/libs/fetch/fetch"
@@ -117,7 +117,7 @@ export interface PasswordData {
 
 export interface PopupData {
   window: chrome.windows.Window,
-  port: Port
+  port: Router
 }
 
 export interface Slot<T> {
@@ -149,7 +149,7 @@ interface Permission {
 export class Global {
 
   readonly events = new SuperEventTarget<{
-    "popup_hello": (foreground: Port) => Result<void, Error>
+    "popup_hello": (foreground: Router) => Result<void, Error>
     "response": (response: RpcResponseInit<unknown>) => Result<void, Error>
   }>()
 
@@ -163,7 +163,7 @@ export class Global {
 
   readonly brumeByUuid = new Mutex(new Map<string, EthBrume>())
 
-  readonly scriptsBySession = new Map<string, Set<Port>>()
+  readonly scriptsBySession = new Map<string, Set<Router>>()
 
   readonly sessionByScript = new Map<string, Mutex<Slot<string>>>()
 
@@ -277,9 +277,9 @@ export class Global {
   }
 
   async waitPopupHelloOrThrow(window: chrome.windows.Window) {
-    const future = new Future<Port>()
+    const future = new Future<Router>()
 
-    const onRequest = (foreground: Port) => {
+    const onRequest = (foreground: Router) => {
       future.resolve(foreground)
       return new Some(Ok.void())
     }
@@ -430,7 +430,7 @@ export class Global {
     }
   }
 
-  async getExtensionSessionOrThrow(script: Port, mouse: Mouse, force: boolean): Promise<Nullable<SessionData>> {
+  async getExtensionSessionOrThrow(script: Router, mouse: Mouse, force: boolean): Promise<Nullable<SessionData>> {
     let mutex = this.sessionByScript.get(script.name)
 
     if (mutex == null) {
@@ -595,7 +595,7 @@ export class Global {
     })
   }
 
-  async tryRouteContentScript(script: Port, request: RpcRequestPreinit<unknown>) {
+  async tryRouteContentScript(script: Router, request: RpcRequestPreinit<unknown>) {
     if (request.method === "brume_icon")
       return new Some(new Ok(await this.brume_icon(script, request)))
     if (request.method === "brume_run")
@@ -603,11 +603,11 @@ export class Global {
     return new None()
   }
 
-  async brume_icon(script: Port, request: RpcRequestPreinit<unknown>): Promise<string> {
+  async brume_icon(script: Router, request: RpcRequestPreinit<unknown>): Promise<string> {
     return await Blobs.readAsDataUrlOrThrow(await fetchAsBlobOrThrow("/favicon.png"))
   }
 
-  async brume_run(script: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_run(script: Router, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     const [subrequest, mouse] = (request as RpcRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
 
     let session = await this.getExtensionSessionOrThrow(script, mouse, false)
@@ -867,7 +867,7 @@ export class Global {
     return Ok.void()
   }
 
-  async tryRouteForeground(foreground: Port, request: RpcRequestInit<unknown>): Promise<Option<Result<unknown, Error>>> {
+  async tryRouteForeground(foreground: Router, request: RpcRequestInit<unknown>): Promise<Option<Result<unknown, Error>>> {
     if (request.method === "brume_getPath")
       return new Some(await this.brume_getPath(request))
     if (request.method === "brume_setPath")
@@ -925,7 +925,7 @@ export class Global {
     return Ok.void()
   }
 
-  async popup_hello(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async popup_hello(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const returned = await this.events.emit("popup_hello", [foreground])
 
     if (returned.isSome() && returned.inner.isErr())
@@ -934,7 +934,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_respond(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_respond(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [response] = (request as RpcRequestPreinit<[RpcResponseInit<unknown>]>).params
 
     const returned = await this.events.emit("response", [response])
@@ -945,7 +945,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_createUser(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_createUser(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [init] = (request as RpcRequestPreinit<[UserInit]>).params
 
     const userData = await BgUser.createOrThrow(init)
@@ -980,7 +980,7 @@ export class Global {
     return new Ok(userState.current?.get())
   }
 
-  async brume_disconnect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_disconnect(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [id] = (request as RpcRequestPreinit<[string]>).params
 
     const { storage } = Option.unwrap(this.#user)
@@ -1009,7 +1009,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_open(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_open(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [pathname] = (request as RpcRequestPreinit<[string]>).params
 
     await BrowserError.runOrThrow(() => browser.tabs.create({ url: `index.html#${pathname}` }))
@@ -1017,7 +1017,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_encrypt(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<[string, string], Error>> {
+  async brume_encrypt(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<[string, string], Error>> {
     const [plainBase64] = (request as RpcRequestPreinit<[string]>).params
 
     const { crypter } = Option.unwrap(this.#user)
@@ -1032,7 +1032,7 @@ export class Global {
     return new Ok([ivBase64, cipherBase64])
   }
 
-  async brume_decrypt(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+  async brume_decrypt(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     const [ivBase64, cipherBase64] = (request as RpcRequestPreinit<[string, string]>).params
 
     const { crypter } = Option.unwrap(this.#user)
@@ -1046,7 +1046,7 @@ export class Global {
     return new Ok(plainBase64)
   }
 
-  async brume_createSeed(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_createSeed(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [seed] = (request as RpcRequestPreinit<[SeedData]>).params
 
     const { storage } = Option.unwrap(this.#user)
@@ -1057,7 +1057,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_createWallet(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_createWallet(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [wallet] = (request as RpcRequestPreinit<[WalletData]>).params
 
     const { storage } = Option.unwrap(this.#user)
@@ -1085,7 +1085,7 @@ export class Global {
     })
   }
 
-  async brume_get_global(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
+  async brume_get_global(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
     const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
     const state = await core.getOrCreateMutex(cacheKey).lock(async () => {
@@ -1125,7 +1125,7 @@ export class Global {
     return new Ok(state)
   }
 
-  async brume_get_user(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
+  async brume_get_user(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
     const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
     const { storage } = Option.unwrap(this.#user)
@@ -1189,7 +1189,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_eth_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_eth_fetch(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown> & EthereumFetchParams]>).params
 
     const chainData = Option.unwrap(chainByChainId[chainId])
@@ -1210,7 +1210,7 @@ export class Global {
     throw new Error(`Unknown fetcher`)
   }
 
-  async brume_eth_custom_fetch(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_eth_custom_fetch(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown> & EthereumFetchParams]>).params
 
     const { storage } = Option.unwrap(this.#user)
@@ -1354,7 +1354,7 @@ export class Global {
     return session
   }
 
-  async brume_wc_connect(foreground: Port, request: RpcRequestPreinit<unknown>): Promise<Result<WcMetadata, Error>> {
+  async brume_wc_connect(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<WcMetadata, Error>> {
     const [rawWcUrl, walletId] = (request as RpcRequestPreinit<[string, string]>).params
 
     const { user, storage } = Option.unwrap(this.#user)
@@ -1542,7 +1542,7 @@ if (isWebsite() || isAndroidApp()) {
   const onHelloWorld = (event: ExtendableMessageEvent) => {
     const raw = event.ports[0]
 
-    const router = new WebsitePort("foreground", raw)
+    const router = new WebsiteRouter("foreground", raw)
 
     const onRequest = async (request: RpcRequestInit<unknown>) => {
       const inited = await init
@@ -1585,7 +1585,7 @@ if (isAppleApp()) {
   const onHelloWorld = (event: ExtendableMessageEvent) => {
     const raw = event.ports[0]
 
-    const router = new WebsitePort("foreground", raw)
+    const router = new WebsiteRouter("foreground", raw)
 
     const onRequest = async (request: RpcRequestInit<unknown>) => {
       const inited = await init
@@ -1625,7 +1625,7 @@ if (isAppleApp()) {
 if (isExtension()) {
 
   const onContentScript = (port: chrome.runtime.Port) => {
-    const script = new ExtensionPort(crypto.randomUUID(), port)
+    const script = new ExtensionRouter(crypto.randomUUID(), port)
 
     script.events.on("request", async (request) => {
       const inited = await init
@@ -1638,7 +1638,7 @@ if (isExtension()) {
   }
 
   const onForeground = (port: chrome.runtime.Port) => {
-    const channel = new ExtensionPort("foreground", port)
+    const channel = new ExtensionRouter("foreground", port)
 
     channel.events.on("request", async (request) => {
       const inited = await init

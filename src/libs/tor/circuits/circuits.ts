@@ -8,22 +8,32 @@ import { None } from "@hazae41/option"
 import { Cancel, Looped, Pool, PoolCreatorParams, PoolParams, Retry, tryLoop } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
 
-export function createCircuitEntry(circuit: Box<Circuit>, params: PoolCreatorParams<Circuit>) {
+export function createCircuitEntry(preCircuit: Box<Circuit>, params: PoolCreatorParams<Circuit>) {
   const { pool, index } = params
+
+  const rawCircuit = preCircuit.getOrThrow()
+
+  using _ = preCircuit
 
   const onCloseOrError = async (reason?: unknown) => {
     pool.restart(index)
     return new None()
   }
 
-  circuit.inner.events.on("close", onCloseOrError, { passive: true })
-  circuit.inner.events.on("error", onCloseOrError, { passive: true })
+  using preOnCloseDisposer = new Box(new Disposer(undefined, rawCircuit.events.on("close", onCloseOrError, { passive: true })))
+  using preOnErrorDisposer = new Box(new Disposer(undefined, rawCircuit.events.on("error", onCloseOrError, { passive: true })))
+
+  /**
+   * Move all resources
+   */
+  const circuit = preCircuit.moveOrThrow()
+  const onCloseDisposer = preOnCloseDisposer.moveOrThrow()
+  const onErrorDisposer = preOnErrorDisposer.moveOrThrow()
 
   const onEntryClean = () => {
-    using postcircuit = circuit
-
-    circuit.inner.events.off("close", onCloseOrError)
-    circuit.inner.events.off("error", onCloseOrError)
+    using _0 = circuit
+    using _1 = onCloseDisposer
+    using _2 = onErrorDisposer
   }
 
   return new Disposer(circuit, onEntryClean)
@@ -144,6 +154,10 @@ export namespace Circuits {
               }
             }
           })()
+
+          /**
+           * NOOP
+           */
 
           return createCircuitEntry(circuit.moveOrThrow(), params)
         }).then(r => r.inspectErrSync(e => console.error(`Circuit creation failed`, { e })))
