@@ -28,6 +28,13 @@ export function createTorPool(params: PoolParams & { socket?: WebSocket }) {
   const pool = new Pool<Disposer<readonly [TorClientDuplex, Consensus]>>(async (subparams) => {
     const { socket = new WebSocket("wss://snowflake.torproject.net/") } = params
 
+    socket.binaryType = "arraybuffer"
+
+    await new Promise((ok, err) => {
+      socket.addEventListener("open", ok)
+      socket.addEventListener("error", err)
+    })
+
     const raw = WebSocketStream.fromOrThrow(socket, { shouldCloseOnAbort: true, shouldCloseOnCancel: true })
     using preTor = new Box(await createTorOrThrow(raw))
 
