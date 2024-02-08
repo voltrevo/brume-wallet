@@ -104,10 +104,10 @@ export function WalletDataCameraPage() {
   const connectOrAlert = useAsyncUniqueCallback((uri: string) => Errors.runAndLogAndAlert(async () => {
     alert(`Connecting...`)
 
-    const metadata = await background.tryRequest<WcMetadata>({
+    const metadata = await background.requestOrThrow<WcMetadata>({
       method: "brume_wc_connect",
       params: [uri, wallet.uuid]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     alert(`Connected to ${metadata.name}`)
   }), [background, wallet])

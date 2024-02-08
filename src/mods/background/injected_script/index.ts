@@ -141,7 +141,7 @@ class Provider {
     /**
      * Force update of `isConnected`, `selectedAddress`, `chainId` `networkVersion`
      */
-    this.tryRequest({ id: null, method: "eth_accounts" }).then(r => r.ignore())
+    this.requestAndWrap({ id: null, method: "eth_accounts" }).then(r => r.ignore())
   }
 
   get isBrume() {
@@ -252,7 +252,7 @@ class Provider {
     return await this.request({ id: null, method: "eth_requestAccounts" })
   }
 
-  async tryRequest(reqinit: RpcRequestInit<unknown>) {
+  async requestAndWrap(reqinit: RpcRequestInit<unknown>) {
     const request = this._counter.prepare(reqinit)
 
     const future = new Future<RpcResponse<unknown>>()
@@ -282,7 +282,7 @@ class Provider {
   }
 
   async request(init: RpcRequestInit<unknown>) {
-    const result = await this.tryRequest(init)
+    const result = await this.requestAndWrap(init)
 
     if (result.isErr())
       throw result.inner
@@ -290,11 +290,11 @@ class Provider {
   }
 
   async requestBatch(inits: RpcRequestInit<unknown>[]) {
-    return await Promise.all(inits.map(init => this.tryRequest(init)))
+    return await Promise.all(inits.map(init => this.requestAndWrap(init)))
   }
 
   async _send(init: RpcRequestInit<unknown>, callback: (err: unknown, ok: unknown) => void) {
-    const response = await this.tryRequest(init)
+    const response = await this.requestAndWrap(init)
 
     if (response.isErr())
       callback(response.inner, response)

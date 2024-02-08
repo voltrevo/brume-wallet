@@ -452,10 +452,10 @@ export function WalletConnectMenu() {
 
     alert(`Connecting...`)
 
-    const metadata = await background.tryRequest<WcMetadata>({
+    const metadata = await background.requestOrThrow<WcMetadata>({
       method: "brume_wc_connect",
       params: [clipboard, wallet.uuid]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     alert(`Connected to ${metadata.name}`)
 

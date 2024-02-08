@@ -16,10 +16,10 @@ export function SeedCreatorMenu(props: {}) {
 
   const goHardwareOrAlert = useAsyncUniqueCallback((e: MouseEvent) => Errors.runAndLogAndAlert(async () => {
     if (location.pathname !== "/" && location.pathname !== "/index.html") {
-      await background.tryRequest({
+      await background.requestOrThrow({
         method: "brume_open",
         params: [location.pathname]
-      }).then(r => r.unwrap().unwrap())
+      }).then(r => r.unwrap())
 
       return
     }

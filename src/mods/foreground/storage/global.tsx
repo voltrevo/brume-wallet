@@ -65,10 +65,10 @@ export class GlobalStorage implements Storage {
       return new Some(Ok.void())
     })
 
-    return await this.background.tryRequest<RawState>({
+    return await this.background.requestOrThrow<RawState>({
       method: "brume_get_global",
       params: [cacheKey]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
   }
 
 }

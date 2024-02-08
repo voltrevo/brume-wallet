@@ -79,10 +79,10 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
 
     const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address }
 
-    await background.tryRequest<Wallet[]>({
+    await background.requestOrThrow<Wallet[]>({
       method: "brume_createWallet",
       params: [wallet]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     close()
   }), [finalNameInput, maybeAddress, uuid, color, emoji, background, close])

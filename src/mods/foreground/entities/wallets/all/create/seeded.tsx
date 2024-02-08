@@ -112,12 +112,10 @@ export function SeededWalletCreatorDialog(props: {}) {
 
       const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, seed, path: defPathInput }
 
-      await background.tryRequest<Wallet[]>({
+      await background.requestOrThrow<Wallet[]>({
         method: "brume_createWallet",
         params: [wallet]
       }).then(r => r.mapErrSync(cause => {
-        return new UIError(`Could not communicate with the backend`, { cause })
-      }).unwrap().mapErrSync(cause => {
         return new UIError(`Could not create the wallet`, { cause })
       }).unwrap())
 
@@ -150,12 +148,10 @@ export function SeededWalletCreatorDialog(props: {}) {
 
       const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, seed, path: defPathInput }
 
-      await background.tryRequest<Wallet[]>({
+      await background.requestOrThrow<Wallet[]>({
         method: "brume_createWallet",
         params: [wallet]
       }).then(r => r.mapErrSync(cause => {
-        return new UIError(`Could not communicate with the backend`, { cause })
-      }).unwrap().mapErrSync(cause => {
         return new UIError(`Could not create the wallet`, { cause })
       }).unwrap())
     }

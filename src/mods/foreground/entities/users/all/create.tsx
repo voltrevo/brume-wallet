@@ -60,14 +60,15 @@ export function UserCreateDialog(props: { next?: string }) {
   const createOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const user: UserInit = { uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, password: defPasswordInput }
 
-    await background
-      .tryRequest<User[]>({ method: "brume_createUser", params: [user] })
-      .then(r => r.unwrap().unwrap())
+    await background.requestOrThrow<User[]>({
+      method: "brume_createUser",
+      params: [user]
+    }).then(r => r.unwrap())
 
-    await background.tryRequest({
+    await background.requestOrThrow({
       method: "brume_login",
       params: [user.uuid, defPasswordInput]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     sessionStorage.setItem("uuid", user.uuid)
     sessionStorage.setItem("password", defPasswordInput)

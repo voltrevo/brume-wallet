@@ -79,10 +79,10 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     const address = triedAddress.unwrap()
     const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, privateKey: zeroHexKey }
 
-    await background.tryRequest<void>({
+    await background.requestOrThrow<void>({
       method: "brume_createWallet",
       params: [wallet]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     close()
   }), [finalNameInput, zeroHexKey, uuid, color, emoji, background, close])
@@ -96,10 +96,10 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     using privateKeyMemory = Base16.get().padStartAndDecodeOrThrow(zeroHexKey.slice(2))
     const privateKeyBase64 = Base64.get().encodePaddedOrThrow(privateKeyMemory)
 
-    const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
+    const [ivBase64, cipherBase64] = await background.requestOrThrow<[string, string]>({
       method: "brume_encrypt",
       params: [privateKeyBase64]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     return [ivBase64, cipherBase64]
   }), [finalNameInput, zeroHexKey, background])
@@ -148,10 +148,10 @@ export function StandaloneWalletCreatorDialog(props: {}) {
 
     const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, privateKey }
 
-    await background.tryRequest<void>({
+    await background.requestOrThrow<void>({
       method: "brume_createWallet",
       params: [wallet]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     close()
   }), [id, finalNameInput, triedAddress, triedEncryptedPrivateKey, uuid, color, emoji, background, close])

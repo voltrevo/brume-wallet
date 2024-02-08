@@ -34,10 +34,10 @@ export function RequestsPage() {
       return
 
     for (const { id } of maybeRequests)
-      await background.tryRequest({
+      await background.requestOrThrow({
         method: "brume_respond",
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-      }).then(r => r.unwrap().unwrap())
+      }).then(r => r.unwrap())
 
     return
   }), [background, maybeRequests])

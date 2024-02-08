@@ -396,10 +396,10 @@ export class EthereumAuthPrivateKeyWalletInstance {
       const cipher = await WebAuthnStorage.tryGet(id).then(r => r.throw(t))
       const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
 
-      const privateKeyBase64 = await background.tryRequest<string>({
+      const privateKeyBase64 = await background.requestOrThrow<string>({
         method: "brume_decrypt",
         params: [ivBase64, cipherBase64]
-      }).then(r => r.throw(t).throw(t))
+      }).then(r => r.throw(t))
 
       using privateKeyMemory = Base64.get().tryDecodePadded(privateKeyBase64).throw(t)
       return new Ok(`0x${Base16.get().tryEncode(privateKeyMemory).throw(t)}` as ZeroHexString)
@@ -487,17 +487,17 @@ export function useEthereumContext2(uuid: Nullable<string>, chain: Nullable<Chai
 export async function customFetchOrFail<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, ethereum: FgEthereumContext): Promise<Fetched<T, Error>> {
   const { uuid, background, chain } = ethereum
 
-  return await background.tryRequest<T>({
+  return await background.requestOrThrow<T>({
     method: "brume_eth_custom_fetch",
     params: [uuid, chain.chainId, request]
-  }).then(r => Fetched.rewrap(r.unwrap()))
+  }).then(r => Fetched.rewrap(r))
 }
 
 export async function fetchOrFail<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, ethereum: FgEthereumContext): Promise<Fetched<T, Error>> {
   const { uuid, background, chain } = ethereum
 
-  return await background.tryRequest<T>({
+  return await background.requestOrThrow<T>({
     method: "brume_eth_fetch",
     params: [uuid, chain.chainId, request]
-  }).then(r => Fetched.rewrap(r.unwrap()))
+  }).then(r => Fetched.rewrap(r))
 }

@@ -68,10 +68,10 @@ export function StandaloneSeedCreatorDialog(props: {}) {
 
     const seed: SeedData = { type: "mnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, mnemonic: defPhraseInput }
 
-    await background.tryRequest<void>({
+    await background.requestOrThrow<void>({
       method: "brume_createSeed",
       params: [seed]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     close()
   }), [finalNameInput, defPhraseInput, uuid, color, emoji, background, close])
@@ -85,10 +85,10 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     const entropyBytes = mnemonicToEntropy(defPhraseInput, wordlist)
     const entropyBase64 = Base64.get().encodePaddedOrThrow(entropyBytes)
 
-    const [ivBase64, cipherBase64] = await background.tryRequest<[string, string]>({
+    const [ivBase64, cipherBase64] = await background.requestOrThrow<[string, string]>({
       method: "brume_encrypt",
       params: [entropyBase64]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     return [ivBase64, cipherBase64]
   }), [finalNameInput, defPhraseInput, background])
@@ -135,10 +135,10 @@ export function StandaloneSeedCreatorDialog(props: {}) {
 
     const seed: SeedData = { type: "authMnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, mnemonic }
 
-    await background.tryRequest<void>({
+    await background.requestOrThrow<void>({
       method: "brume_createSeed",
       params: [seed]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     close()
   }), [id, finalNameInput, triedEncryptedPhrase, uuid, color, emoji, background, close])

@@ -111,10 +111,10 @@ export class AuthMnemonicSeedInstance {
       const cipher = await WebAuthnStorage.tryGet(id).then(r => r.throw(t))
       const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
 
-      const entropyBase64 = await background.tryRequest<string>({
+      const entropyBase64 = await background.requestOrThrow<string>({
         method: "brume_decrypt",
         params: [ivBase64, cipherBase64]
-      }).then(r => r.throw(t).throw(t))
+      }).then(r => r.throw(t))
 
       const entropy = Base64.get().tryDecodePadded(entropyBase64).throw(t).copyAndDispose()
 

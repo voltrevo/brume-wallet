@@ -250,10 +250,6 @@ export class CryptoClient {
     })
   }
 
-  async tryRequestAndWait<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return await this.tryRequest<T>(init).then(r => r.andThen(x => x.promise))
-  }
-
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<WcReceiptAndPromise<T>, Error>> {
     return Result.unthrow(async t => {
       const request = SafeRpc.prepare(init)

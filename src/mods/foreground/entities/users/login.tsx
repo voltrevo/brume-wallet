@@ -47,10 +47,10 @@ export function UserLoginDialog(props: { next?: string }) {
     if (defPasswordInput.length < 3)
       return
 
-    const response = await background.tryRequest({
+    const response = await background.requestOrThrow({
       method: "brume_login",
       params: [user.uuid, defPasswordInput]
-    }).then(r => r.unwrap())
+    }).then(r => r.ignore())
 
     if (response.isErr()) {
       setInvalid(true)

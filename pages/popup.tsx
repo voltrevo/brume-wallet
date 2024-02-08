@@ -48,9 +48,9 @@ export function Ready() {
   const background = useBackgroundContext().unwrap()
 
   useEffect(() => {
-    background
-      .tryRequest<void>({ method: "popup_hello" })
-      .then(r => r.unwrap().unwrap())
+    background.requestOrThrow<void>({
+      method: "popup_hello"
+    }).then(r => r.unwrap())
   }, [background])
 
   return <Router />
@@ -92,19 +92,19 @@ export function TransactPage() {
   const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const transaction = Option.unwrap(maybeTransaction)
 
-    await background.tryRequest({
+    await background.requestOrThrow({
       method: "brume_respond",
       params: [new RpcOk(id, transaction.hash)]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     location.replace(path.go("/done"))
   }), [background, id, path, maybeTransaction])
 
   const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    await background.tryRequest({
+    await background.requestOrThrow({
       method: "brume_respond",
       params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     location.replace(path.go("/done"))
   }), [background, id, path])
@@ -183,19 +183,19 @@ export function PersonalSignPage() {
     const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.unwrap())
     const signature = await instance.trySignPersonalMessage(message, background).then(r => r.unwrap())
 
-    await background.tryRequest({
+    await background.requestOrThrow({
       method: "brume_respond",
       params: [new RpcOk(id, signature)]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     location.replace(path.go("/done"))
   }), [background, id, path, maybeWallet, triedUserMessage])
 
   const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    await background.tryRequest({
+    await background.requestOrThrow({
       method: "brume_respond",
       params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     location.replace(path.go("/done"))
   }), [background, id, path])
@@ -259,19 +259,19 @@ export function TypedSignPage() {
     const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.unwrap())
     const signature = await instance.trySignEIP712HashedMessage(data, background).then(r => r.unwrap())
 
-    await background.tryRequest({
+    await background.requestOrThrow({
       method: "brume_respond",
       params: [new RpcOk(id, signature)]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     location.replace(path.go("/done"))
   }), [background, id, path, maybeWallet, triedParsedData])
 
   const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    await background.tryRequest({
+    await background.requestOrThrow({
       method: "brume_respond",
       params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     location.replace(path.go("/done"))
   }), [background, id, path])
@@ -345,19 +345,19 @@ export function WalletAndChainSelectPage() {
     if (selecteds.length === 0)
       throw new UIError(`No wallet selected`)
 
-    await background.tryRequest({
+    await background.requestOrThrow({
       method: "brume_respond",
       params: [new RpcOk(id, [persistent, 1, selecteds])]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     location.replace(path.go("/done"))
   }), [background, id, path, selecteds, persistent])
 
   const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    await background.tryRequest({
+    await background.requestOrThrow({
       method: "brume_respond",
       params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     location.replace(path.go("/done"))
   }), [background, id, path])

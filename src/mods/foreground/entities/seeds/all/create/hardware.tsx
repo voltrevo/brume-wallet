@@ -54,10 +54,10 @@ export function LedgerSeedCreatorDialog(props: {}) {
 
     const seed: SeedData = { type: "ledger", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address }
 
-    await background.tryRequest<void>({
+    await background.requestOrThrow<void>({
       method: "brume_createSeed",
       params: [seed]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     close()
   }), [finalNameInput, uuid, color, emoji, background, close])

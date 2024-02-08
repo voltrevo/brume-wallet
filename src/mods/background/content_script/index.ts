@@ -139,7 +139,7 @@ new Pool<Disposer<ExtensionRouter>>(async (params) => {
     const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
 
     const result = await router.inner.tryRequest({ method: "brume_run", params: [request, mouse] })
-    const response = RpcResponse.rewrap(request.id, result.andThenSync(r => r))
+    const response = RpcResponse.rewrap(request.id, result.flatten())
 
     const detail = JSON.stringify(response)
     const output = new CustomEvent("ethereum:response", { detail })

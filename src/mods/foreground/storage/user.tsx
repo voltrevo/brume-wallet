@@ -65,17 +65,17 @@ export class UserStorage implements Storage {
       return new Some(Ok.void())
     })
 
-    return await this.background.tryRequest<RawState>({
+    return await this.background.requestOrThrow<RawState>({
       method: "brume_get_user",
       params: [cacheKey]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
   }
 
   async setOrThrow(cacheKey: string, value: Nullable<RawState>): Promise<void> {
-    return await this.background.tryRequest<void>({
+    return await this.background.requestOrThrow<void>({
       method: "brume_set_user",
       params: [cacheKey, value]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
   }
 
 }

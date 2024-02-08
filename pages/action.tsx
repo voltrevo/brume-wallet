@@ -19,15 +19,14 @@ export default function Action() {
   }, [])
 
   useEffect(() => {
-    background
-      .tryRequest<string>({ method: "brume_getPath" })
-      .then(r => r.unwrap().unwrap())
-      .then(p => location.hash = p)
+    background.requestOrThrow<string>({
+      method: "brume_getPath"
+    }).then(r => location.hash = r.unwrap())
 
-    const onHashChange = () => background.tryRequest<void>({
+    const onHashChange = () => background.requestOrThrow<void>({
       method: "brume_setPath",
       params: [location.hash]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
 
     addEventListener("hashchange", onHashChange, { passive: true })
     return () => removeEventListener("hashchange", onHashChange)

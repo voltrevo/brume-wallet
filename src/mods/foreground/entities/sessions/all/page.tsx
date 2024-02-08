@@ -40,16 +40,16 @@ export function SessionsPage() {
       return
 
     for (const session of Option.wrap(maybeTempSessions).unwrapOr([]))
-      await background.tryRequest({
+      await background.requestOrThrow({
         method: "brume_disconnect",
         params: [session.id]
-      }).then(r => r.unwrap().unwrap())
+      }).then(r => r.unwrap())
 
     for (const session of Option.wrap(maybePersSessions).unwrapOr([]))
-      await background.tryRequest({
+      await background.requestOrThrow({
         method: "brume_disconnect",
         params: [session.id]
-      }).then(r => r.unwrap().unwrap())
+      }).then(r => r.unwrap())
 
     return
   }), [background, maybePersSessions])
@@ -116,10 +116,10 @@ export function SessionRow(props: { session: Session }) {
     if (!confirm(`Do you want to disconnect this session?`))
       return Ok.void()
 
-    await background.tryRequest({
+    await background.requestOrThrow({
       method: "brume_disconnect",
       params: [maybeSessionData.id]
-    }).then(r => r.unwrap().unwrap())
+    }).then(r => r.unwrap())
   }), [background, maybeSessionData])
 
   if (maybeOriginData == null)

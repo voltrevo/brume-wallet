@@ -451,9 +451,9 @@ export class Global {
         return sessionData
       }
 
-      const preOriginData = await script.tryRequest<PreOriginData>({
+      const preOriginData = await script.requestOrThrow<PreOriginData>({
         method: "brume_origin"
-      }).then(r => r.unwrap().unwrap())
+      }).then(r => r.unwrap())
 
       if (this.#user == null && !force)
         return undefined
@@ -515,15 +515,15 @@ export class Global {
         const { chainId } = sessionData.chain
 
         if (chainId !== 1) {
-          await script.tryRequest<void>({
+          await script.requestOrThrow<void>({
             method: "chainChanged",
             params: [ZeroHexString.from(chainId)]
-          }).then(r => r.unwrap().unwrap())
+          }).then(r => r.unwrap())
 
-          await script.tryRequest({
+          await script.requestOrThrow({
             method: "networkChanged",
             params: [chainId.toString()]
-          }).then(r => r.unwrap().unwrap())
+          }).then(r => r.unwrap())
         }
 
         return sessionData
@@ -580,15 +580,15 @@ export class Global {
       })
 
       if (chainId !== 1) {
-        await script.tryRequest<void>({
+        await script.requestOrThrow<void>({
           method: "chainChanged",
           params: [ZeroHexString.from(chainId)]
-        }).then(r => r.unwrap().unwrap())
+        }).then(r => r.unwrap())
 
-        await script.tryRequest({
+        await script.requestOrThrow({
           method: "networkChanged",
           params: [chainId.toString()]
-        }).then(r => r.unwrap().unwrap())
+        }).then(r => r.unwrap())
       }
 
       return sessionData
@@ -853,15 +853,15 @@ export class Global {
     await sessionQuery.mutate(Mutators.replaceData(updatedSession))
 
     for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([])) {
-      await script.tryRequest({
+      await script.requestOrThrow({
         method: "chainChanged",
         params: [ZeroHexString.from(chain.chainId)]
-      }).then(r => r.unwrap().unwrap())
+      }).then(r => r.unwrap())
 
-      await script.tryRequest({
+      await script.requestOrThrow({
         method: "networkChanged",
         params: [chain.chainId.toString()]
-      }).then(r => r.unwrap().unwrap())
+      }).then(r => r.unwrap())
     }
 
     return Ok.void()
@@ -996,10 +996,10 @@ export class Global {
     }
 
     for (const script of Option.wrap(this.scriptsBySession.get(id)).unwrapOr([])) {
-      await script.tryRequest({
+      await script.requestOrThrow({
         method: "accountsChanged",
         params: [[]]
-      }).then(r => r.unwrap().unwrap())
+      }).then(r => r.unwrap())
 
       this.sessionByScript.delete(script.name)
     }
@@ -1568,7 +1568,10 @@ if (isWebsite() || isAndroidApp()) {
 
     raw.start()
 
-    router.tryRequest({ method: "brume_hello" }).then(r => r.ignore())
+    router.tryRequest({
+      method: "brume_hello"
+    }).then(r => r.ignore())
+
     router.runPingLoop()
   }
 
@@ -1611,7 +1614,10 @@ if (isAppleApp()) {
 
     raw.start()
 
-    router.tryRequest({ method: "brume_hello" }).then(r => r.ignore())
+    router.tryRequest({
+      method: "brume_hello"
+    }).then(r => r.ignore())
+
     router.runPingLoop()
   }
 

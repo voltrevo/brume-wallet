@@ -807,14 +807,14 @@ export function WalletTransactionDialog(props: {}) {
       const data = tx.serialized as ZeroHexString
       const trial = TransactionTrialRef.create(trialUuid)
 
-      await context.background.tryRequest<ZeroHexString>({
+      await context.background.requestOrThrow<ZeroHexString>({
         method: "brume_eth_fetch",
         params: [context.uuid, context.chain.chainId, {
           method: "eth_sendRawTransaction",
           params: [data],
           noCheck: true
         }]
-      }).then(r => r.unwrap().unwrap())
+      }).then(r => r.unwrap())
 
       await transactionQuery.mutate(() => new Some(new Data({ type: "pending", uuid, trial, chainId, hash, data, params } as const)))
 
