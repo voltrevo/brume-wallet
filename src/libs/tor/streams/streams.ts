@@ -75,12 +75,12 @@ export namespace Streams {
         })
 
         if (result.isOk())
-          return result
+          return result.get()
 
         if (start < update)
           continue
 
-        return result
+        throw result.getErr()
       }
     }, params)
 

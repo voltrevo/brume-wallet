@@ -1295,7 +1295,7 @@ export class Global {
 
     const authKey = await Ed25519.get().PrivateKey.importJwkOrThrow(authKeyJwk)
 
-    const brume = await WcBrume.tryCreate(this.circuits, authKey).then(r => r.unwrap())
+    const brume = await WcBrume.createOrThrow(this.circuits, authKey)
     const irn = new IrnBrume(brume)
 
     const rawSessionKey = Base64.get().decodePaddedOrThrow(sessionKeyBase64).copyAndDispose()

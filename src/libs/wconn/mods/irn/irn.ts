@@ -94,12 +94,12 @@ export class IrnBrume {
         }).then(Results.log)
 
         if (result.isOk())
-          return result
+          return result.get()
 
         if (start < update)
           continue
 
-        return result
+        throw result.getErr()
       }
     }, { capacity: 1 })
 
@@ -232,12 +232,12 @@ export class IrnSockets {
         }).then(Results.log)
 
         if (result.isOk())
-          return result
+          return result.get()
 
         if (start < update)
           continue
 
-        return result
+        throw result.getErr()
       }
     }, { capacity: 1 })
 

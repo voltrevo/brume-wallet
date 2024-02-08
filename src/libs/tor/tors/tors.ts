@@ -5,7 +5,6 @@ import { Disposer } from "@hazae41/disposer"
 import { Consensus, TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote"
 import { None } from "@hazae41/option"
 import { Pool, PoolCreatorParams, PoolParams } from "@hazae41/piscine"
-import { Ok } from "@hazae41/result"
 
 export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque, Writable> }): Promise<TorClientDuplex> {
   const tcp = await createSnowflakeStream(raw)
@@ -103,7 +102,7 @@ export function createTorPool(params: PoolParams & { socket?: WebSocket }) {
      * NOOP
      */
 
-    return new Ok(createTorAndConsensusEntry(preTorAndConsensus.moveOrThrow(), subparams))
+    return createTorAndConsensusEntry(preTorAndConsensus.moveOrThrow(), subparams)
   }, params)
 
   addEventListener("online", async () => {

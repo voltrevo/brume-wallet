@@ -15,7 +15,7 @@ import { RpcCounter } from "@hazae41/jsonrpc"
 import { Mutex } from "@hazae41/mutex"
 import { None } from "@hazae41/option"
 import { Pool, PoolParams } from "@hazae41/piscine"
-import { Err, Ok, Result } from "@hazae41/result"
+import { Ok, Result } from "@hazae41/result"
 
 export interface WcBrume {
   readonly key: Ed25519.PrivateKey
@@ -85,38 +85,34 @@ export class UrlConnection {
 
 export namespace WcBrume {
 
-  export async function tryCreate(circuits: Mutex<Pool<Circuit>>, key: Ed25519.PrivateKey): Promise<Result<WcBrume, Error>> {
-    return await Result.unthrow(async t => {
-      const relay = Wc.RELAY
-      const auth = await Jwt.trySign(key, relay).then(r => r.throw(t))
-      const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
-      const url = `${relay}/?auth=${auth}&projectId=${projectId}`
+  export async function createOrThrow(circuits: Mutex<Pool<Circuit>>, key: Ed25519.PrivateKey): Promise<WcBrume> {
+    const relay = Wc.RELAY
+    const auth = await Jwt.trySign(key, relay).then(r => r.unwrap())
+    const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
+    const url = `${relay}/?auth=${auth}&projectId=${projectId}`
 
-      const subcircuits = Circuits.subpool(circuits, { capacity: 2 })
-      const subsockets = WebSocketConnection.createPools(subcircuits, [url])
+    const subcircuits = Circuits.subpool(circuits, { capacity: 2 })
+    const subsockets = WebSocketConnection.createPools(subcircuits, [url])
 
-      return new Ok({ key, circuits: subcircuits, sockets: subsockets })
-    })
+    return { key, circuits: subcircuits, sockets: subsockets }
   }
 
   export function createPool(circuits: Mutex<Pool<Circuit>>, params: PoolParams) {
     return new Pool<WcBrume>(async (params) => {
-      return await Result.unthrow<Result<Disposer<Box<WcBrume>>, Error>>(async t => {
-        const key = await Ed25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
-        const brume = new Box(await tryCreate(circuits, key).then(r => r.throw(t)))
+      const key = await Ed25519.get().PrivateKey.randomOrThrow()
+      const brume = new Box(await createOrThrow(circuits, key))
 
-        /**
-         * Wait for at least one ready circuit (or skip if all are errored)
-         */
-        await brume.inner.circuits.tryGetRandom().then(r => r.ignore())
+      /**
+       * Wait for at least one ready circuit (or skip if all are errored)
+       */
+      await brume.inner.circuits.tryGetRandom().then(r => r.ignore())
 
-        /**
-         * Wait for at least one ready socket pool (or skip if all are errored)
-         */
-        await brume.inner.sockets.tryGetRandom().then(r => r.ignore())
+      /**
+       * Wait for at least one ready socket pool (or skip if all are errored)
+       */
+      await brume.inner.sockets.tryGetRandom().then(r => r.ignore())
 
-        return new Ok(new Disposer(brume, () => { }))
-      })
+      return new Disposer(brume, () => { })
     }, params)
   }
 }
@@ -139,7 +135,7 @@ export namespace EthBrume {
        */
       await brume.inner.circuits.tryGetRandom().then(r => r.ignore())
 
-      return new Ok(new Disposer(brume, () => { }))
+      return new Disposer(brume, () => { })
     }, params)
   }
 
@@ -154,43 +150,41 @@ export namespace WebSocketConnection {
    * @param signal 
    * @returns 
    */
-  export async function tryCreate(circuit: Circuit, url: URL, signal?: AbortSignal): Promise<Result<WebSocketConnection, Error>> {
-    return await Result.unthrow(async t => {
-      const signal2 = AbortSignals.timeout(15_000, signal)
+  export async function createOrThrow(circuit: Circuit, url: URL, signal?: AbortSignal): Promise<WebSocketConnection> {
+    const signal2 = AbortSignals.timeout(15_000, signal)
 
-      if (url.protocol === "wss:") {
-        const tcp = await circuit.tryOpen(url.hostname, 443).then(r => r.throw(t))
+    if (url.protocol === "wss:") {
+      const tcp = await circuit.openOrThrow(url.hostname, 443)
 
-        const ciphers = [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, Ciphers.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384]
-        const tls = new TlsClientDuplex({ ciphers, host_name: url.hostname })
+      const ciphers = [Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, Ciphers.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384]
+      const tls = new TlsClientDuplex({ ciphers, host_name: url.hostname })
 
-        tcp.outer.readable.pipeTo(tls.inner.writable).catch(() => { })
-        tls.inner.readable.pipeTo(tcp.outer.writable).catch(() => { })
+      tcp.outer.readable.pipeTo(tls.inner.writable).catch(() => { })
+      tls.inner.readable.pipeTo(tcp.outer.writable).catch(() => { })
 
-        const socket = new Fleche.WebSocket(url)
+      const socket = new Fleche.WebSocket(url)
 
-        tls.outer.readable.pipeTo(socket.inner.writable).catch(() => { })
-        socket.inner.readable.pipeTo(tls.outer.writable).catch(() => { })
+      tls.outer.readable.pipeTo(socket.inner.writable).catch(() => { })
+      socket.inner.readable.pipeTo(tls.outer.writable).catch(() => { })
 
-        await Sockets.tryWaitOpen(socket, signal2).then(r => r.throw(t))
+      await Sockets.tryWaitOpen(socket, signal2).then(r => r.unwrap())
 
-        return new Ok(new WebSocketConnection(circuit, socket))
-      }
+      return new WebSocketConnection(circuit, socket)
+    }
 
-      if (url.protocol === "ws:") {
-        const tcp = await circuit.tryOpen(url.hostname, 80).then(r => r.throw(t))
-        const socket = new Fleche.WebSocket(url)
+    if (url.protocol === "ws:") {
+      const tcp = await circuit.openOrThrow(url.hostname, 80)
+      const socket = new Fleche.WebSocket(url)
 
-        tcp.outer.readable.pipeTo(socket.inner.writable).catch(() => { })
-        socket.inner.readable.pipeTo(tcp.outer.writable).catch(() => { })
+      tcp.outer.readable.pipeTo(socket.inner.writable).catch(() => { })
+      socket.inner.readable.pipeTo(tcp.outer.writable).catch(() => { })
 
-        await Sockets.tryWaitOpen(socket, signal2).then(r => r.throw(t))
+      await Sockets.tryWaitOpen(socket, signal2).then(r => r.unwrap())
 
-        return new Ok(new WebSocketConnection(circuit, socket))
-      }
+      return new WebSocketConnection(circuit, socket)
+    }
 
-      return new Err(new Error(`Unknown protocol ${url.protocol}`))
-    })
+    throw new Error(`Unknown protocol ${url.protocol}`)
   }
 
   /**
@@ -201,30 +195,28 @@ export namespace WebSocketConnection {
    */
   export function createPool(circuit: Circuit, urls: readonly string[]) {
     return new Pool<WebSocketConnection>(async (params) => {
-      return await Result.unthrow<Result<Disposer<Box<WebSocketConnection>>, Error>>(async t => {
-        const { pool, index, signal } = params
+      const { pool, index, signal } = params
 
-        const url = new URL(urls[index])
-        const raw = await WebSocketConnection.tryCreate(circuit, url, signal).then(r => r.throw(t))
+      const url = new URL(urls[index])
+      const raw = await WebSocketConnection.createOrThrow(circuit, url, signal)
 
-        const onCloseOrError = async () => {
-          pool.restart(index)
-        }
+      const onCloseOrError = async () => {
+        pool.restart(index)
+      }
 
-        raw.socket.addEventListener("close", onCloseOrError, { passive: true })
-        raw.socket.addEventListener("error", onCloseOrError, { passive: true })
+      raw.socket.addEventListener("close", onCloseOrError, { passive: true })
+      raw.socket.addEventListener("error", onCloseOrError, { passive: true })
 
-        const box = new Box(raw)
+      const box = new Box(raw)
 
-        const onEntryClean = () => {
-          using _ = box
+      const onEntryClean = () => {
+        using _ = box
 
-          raw.socket.removeEventListener("close", onCloseOrError)
-          raw.socket.removeEventListener("error", onCloseOrError)
-        }
+        raw.socket.removeEventListener("close", onCloseOrError)
+        raw.socket.removeEventListener("error", onCloseOrError)
+      }
 
-        return new Ok(new Disposer(box, onEntryClean))
-      })
+      return new Disposer(box, onEntryClean)
     }, { capacity: urls.length })
   }
 
@@ -269,12 +261,12 @@ export namespace WebSocketConnection {
         })
 
         if (result.isOk())
-          return result
+          return result.get()
 
         if (start < update)
           continue
 
-        return result
+        throw result.getErr()
       }
     }, { capacity: subcircuits.capacity })
 
@@ -325,40 +317,38 @@ export namespace RpcConnections {
    */
   export function create(circuit: Circuit, urls: readonly string[]) {
     return new Pool<RpcConnection>(async (params) => {
-      return await Result.unthrow<Result<Disposer<Box<RpcConnection>>, Error>>(async t => {
-        const { pool, index, signal } = params
+      const { pool, index, signal } = params
 
-        const url = new URL(urls[index])
+      const url = new URL(urls[index])
 
-        if (url.protocol === "http:" || url.protocol === "https:") {
-          const box = new Box(new RpcConnection(new UrlConnection(circuit, url)))
-
-          const onEntryClean = () => {
-            using _ = box
-          }
-
-          return new Ok(new Disposer(box, onEntryClean))
-        }
-
-        const raw = await WebSocketConnection.tryCreate(circuit, url, signal).then(r => r.throw(t))
-        const box = new Box(new RpcConnection(raw))
-
-        const onCloseOrError = async () => {
-          pool.restart(index)
-        }
-
-        raw.socket.addEventListener("close", onCloseOrError, { passive: true })
-        raw.socket.addEventListener("error", onCloseOrError, { passive: true })
+      if (url.protocol === "http:" || url.protocol === "https:") {
+        const box = new Box(new RpcConnection(new UrlConnection(circuit, url)))
 
         const onEntryClean = () => {
           using _ = box
-
-          raw.socket.removeEventListener("close", onCloseOrError)
-          raw.socket.removeEventListener("error", onCloseOrError)
         }
 
-        return new Ok(new Disposer(box, onEntryClean))
-      })
+        return new Disposer(box, onEntryClean)
+      }
+
+      const raw = await WebSocketConnection.createOrThrow(circuit, url, signal)
+      const box = new Box(new RpcConnection(raw))
+
+      const onCloseOrError = async () => {
+        pool.restart(index)
+      }
+
+      raw.socket.addEventListener("close", onCloseOrError, { passive: true })
+      raw.socket.addEventListener("error", onCloseOrError, { passive: true })
+
+      const onEntryClean = () => {
+        using _ = box
+
+        raw.socket.removeEventListener("close", onCloseOrError)
+        raw.socket.removeEventListener("error", onCloseOrError)
+      }
+
+      return new Disposer(box, onEntryClean)
     }, { capacity: urls.length })
   }
 
@@ -407,12 +397,12 @@ export namespace RpcCircuits {
         })
 
         if (result.isOk())
-          return result
+          return result.get()
 
         if (start < update)
           continue
 
-        return result
+        throw result.getErr()
       }
     }, { capacity: subcircuits.capacity })
 

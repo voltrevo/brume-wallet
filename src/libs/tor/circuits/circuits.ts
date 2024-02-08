@@ -163,12 +163,12 @@ export namespace Circuits {
         }).then(r => r.inspectErrSync(e => console.error(`Circuit creation failed`, { e })))
 
         if (result.isOk())
-          return result
+          return result.get()
 
         if (start < update)
           continue
 
-        return result
+        throw result.getErr()
       }
     }, params)
 
@@ -212,12 +212,12 @@ export namespace Circuits {
         })
 
         if (result.isOk())
-          return result
+          return result.get()
 
         if (start < update)
           continue
 
-        return result
+        throw result.getErr()
       }
     }, params)
 

@@ -1,5 +1,6 @@
 import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionRouter, Router, WebsiteRouter } from "@/libs/channel/channel"
+import { AbortSignals } from "@/libs/signals/signals"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Future } from "@hazae41/future"
@@ -129,9 +130,11 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
   return new Pool<Disposer<WebsiteRouter>>(async (params) => {
     const { pool, index } = params
 
-    const registration = await getServiceWorkerOrThrow(background)
+    using preRegistration = new Box(new Disposer(await getServiceWorkerOrThrow(background), r => r.unregister()))
 
-    if (registration.active == null)
+    const { active } = preRegistration.getOrThrow().get()
+
+    if (active == null)
       throw new Error(`registration.active is null`)
 
     const raw = new MessageChannel()
@@ -141,75 +144,70 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
       raw.port2.close()
     }
 
-    using prechannel = new Box(new Disposer(raw, onRawClean))
-    using prerouter = new Box(new WebsiteRouter("background", raw.port1))
+    using preChannel = new Box(new Disposer(raw, onRawClean))
+    using preRouter = new Box(new WebsiteRouter("background", raw.port1))
 
-    const channel = prechannel.moveOrThrow()
-    const router = prerouter.moveOrThrow()
+    const registration = preRegistration.unwrapOrThrow()
+    const channel = preChannel.unwrapOrThrow()
+    const router = preRouter.unwrapOrThrow()
 
-    const onInnerClean = () => {
-      using postchannel = channel
-      using postrouter = router
+    const onWrapperClean = () => {
+      using _0 = registration
+      using _1 = channel
+      using _2 = router
     }
 
-    using preinner = new Box(new Disposer(router.inner, onInnerClean))
+    using preWrapper = new Box(new Disposer(router, onWrapperClean))
 
     raw.port1.start()
     raw.port2.start()
 
-    registration.active.postMessage("HELLO_WORLD", [raw.port2])
+    active.postMessage("HELLO_WORLD", [raw.port2])
 
-    await Plume.tryWaitOrSignal(router.inner.events, "request", async (future: Future<Ok<void>>, init: RpcRequestInit<any>) => {
+    await Plume.waitOrSignal(router.events, "request", async (future: Future<void>, init: RpcRequestInit<any>) => {
       if (init.method !== "brume_hello")
         return new None()
 
-      future.resolve(Ok.void())
+      future.resolve()
       return new Some(Ok.void())
-    }, AbortSignal.timeout(60_000)).then(r => r.unwrap())
+    }, AbortSignals.never())
 
-    router.inner.runPingLoop()
+    router.runPingLoop()
 
     const uuid = sessionStorage.getItem("uuid")
     const password = sessionStorage.getItem("password")
 
     if (uuid && password)
-      await router.inner.tryRequest({
+      await router.requestOrThrow({
         method: "brume_login",
         params: [uuid, password]
-      }).then(r => r.unwrap().unwrap())
+      }).then(r => r.unwrap())
 
     const onClose = async () => {
-      /**
-       * Safari may kill the service worker and not restart it
-       * This will force unregister the old one
-       */
-      await registration.unregister()
-
       pool.restart(index)
       return new None()
     }
 
-    const onRequest = (request: RpcRequestInit<unknown>) =>
-      background.onRequest(router.inner, request)
+    const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
+    const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
 
-    const onResponse = (response: RpcResponseInit<unknown>) =>
-      background.onResponse(router.inner, response)
+    using preOnRequestDisposer = new Box(new Disposer({}, router.events.on("request", onRequest, { passive: true })))
+    using preOnResponseDisposer = new Box(new Disposer({}, router.events.on("response", onResponse, { passive: true })))
+    using preOnCloseDisposer = new Box(new Disposer({}, router.events.on("close", onClose, { passive: true })))
 
-    router.inner.events.on("request", onRequest, { passive: true })
-    router.inner.events.on("response", onResponse, { passive: true })
-    router.inner.events.on("close", onClose, { passive: true })
-
-    const inner = preinner.moveOrThrow()
+    const wrapper = preWrapper.moveOrThrow()
+    const onRequestDisposer = preOnRequestDisposer.moveOrThrow()
+    const onResponseDisposer = preOnResponseDisposer.moveOrThrow()
+    const onCloseDisposer = preOnCloseDisposer.moveOrThrow()
 
     const onEntryClean = () => {
-      using postinner = inner
-
-      router.inner.events.off("request", onRequest)
-      router.inner.events.off("response", onResponse)
-      router.inner.events.off("close", onClose)
+      using _0 = wrapper
+      using _1 = onRequestDisposer
+      using _2 = onResponseDisposer
+      using _3 = onCloseDisposer
     }
 
-    return new Ok(new Disposer(inner, onEntryClean))
+    return new Disposer(wrapper, onEntryClean)
   }, { capacity: 1 })
 }
 
@@ -245,8 +243,6 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
   return new Pool<Disposer<WebsiteRouter>>(async (params) => {
     const { pool, index } = params
 
-    const worker = new Worker("/service_worker.js")
-
     const raw = new MessageChannel()
 
     const onRawClean = () => {
@@ -254,70 +250,71 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
       raw.port2.close()
     }
 
-    using prechannel = new Box(new Disposer(raw, onRawClean))
-    using prerouter = new Box(new WebsiteRouter("background", raw.port1))
+    using preWorker = new Box(new Disposer(new Worker("/service_worker.js"), w => w.terminate()))
+    using preChannel = new Box(new Disposer(raw, onRawClean))
+    using preRouter = new Box(new WebsiteRouter("background", raw.port1))
 
-    const channel = prechannel.moveOrThrow()
-    const router = prerouter.moveOrThrow()
+    const worker = preWorker.unwrapOrThrow()
+    const channel = preChannel.unwrapOrThrow()
+    const router = preRouter.unwrapOrThrow()
 
-    const onInnerClean = () => {
-      using postchannel = channel
-      using postrouter = router
+    const onWrapperClean = () => {
+      using _0 = worker
+      using _1 = channel
+      using _2 = router
     }
 
-    using preinner = new Box(new Disposer(router.inner, onInnerClean))
+    using preWrapper = new Box(new Disposer(router, onWrapperClean))
 
     raw.port1.start()
     raw.port2.start()
 
-    worker.postMessage("HELLO_WORLD", [raw.port2])
+    worker.get().postMessage("HELLO_WORLD", [raw.port2])
 
-    await Plume.tryWaitOrSignal(router.inner.events, "request", async (future: Future<Ok<void>>, init: RpcRequestInit<any>) => {
+    await Plume.waitOrSignal(router.events, "request", async (future: Future<void>, init: RpcRequestInit<any>) => {
       if (init.method !== "brume_hello")
         return new None()
 
-      future.resolve(Ok.void())
+      future.resolve()
       return new Some(Ok.void())
-    }, AbortSignal.timeout(60_000)).then(r => r.unwrap())
+    }, AbortSignals.never())
 
-    router.inner.runPingLoop()
+    router.runPingLoop()
 
     const uuid = sessionStorage.getItem("uuid")
     const password = sessionStorage.getItem("password")
 
-    if (uuid && password)
-      await router.inner.tryRequest({
+    if (uuid != null && password != null)
+      await router.requestOrThrow({
         method: "brume_login",
         params: [uuid, password]
-      }).then(r => r.unwrap().unwrap())
+      }).then(r => r.unwrap())
 
     const onClose = async () => {
-      worker.terminate()
       pool.restart(index)
       return new None()
     }
 
-    const onRequest = (request: RpcRequestInit<unknown>) =>
-      background.onRequest(router.inner, request)
+    const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
+    const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
 
-    const onResponse = (response: RpcResponseInit<unknown>) =>
-      background.onResponse(router.inner, response)
+    using preOnRequestDisposer = new Box(new Disposer({}, router.events.on("request", onRequest, { passive: true })))
+    using preOnResponseDisposer = new Box(new Disposer({}, router.events.on("response", onResponse, { passive: true })))
+    using preOnCloseDisposer = new Box(new Disposer({}, router.events.on("close", onClose, { passive: true })))
 
-    router.inner.events.on("request", onRequest, { passive: true })
-    router.inner.events.on("response", onResponse, { passive: true })
-    router.inner.events.on("close", onClose, { passive: true })
-
-    const inner = preinner.moveOrThrow()
+    const wrapper = preWrapper.moveOrThrow()
+    const onRequestDisposer = preOnRequestDisposer.moveOrThrow()
+    const onResponseDisposer = preOnResponseDisposer.moveOrThrow()
+    const onCloseDisposer = preOnCloseDisposer.moveOrThrow()
 
     const onEntryClean = () => {
-      using postinner = inner
-
-      router.inner.events.off("request", onRequest)
-      router.inner.events.off("response", onResponse)
-      router.inner.events.off("close", onClose)
+      using _0 = wrapper
+      using _1 = onRequestDisposer
+      using _2 = onResponseDisposer
+      using _3 = onCloseDisposer
     }
 
-    return new Ok(new Disposer(inner, onEntryClean))
+    return new Disposer(wrapper, onEntryClean)
   }, { capacity: 1 })
 }
 
@@ -351,56 +348,53 @@ export class ExtensionBackground {
 
 export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<ExtensionRouter>> {
   return new Pool<Disposer<ExtensionRouter>>(async (params) => {
-    return await Result.unthrow(async t => {
-      const { index, pool } = params
+    const { index, pool } = params
 
-      const raw = await tryLoop(async () => {
-        return BrowserError.tryRunSync(() => {
-          const port = browser.runtime.connect({ name: "foreground" })
-          port.onDisconnect.addListener(() => void chrome.runtime.lastError)
-          return port
-        }).mapErrSync(Retry.new)
-      }).then(r => r.throw(t))
+    const raw = await tryLoop(async () => {
+      return BrowserError.tryRunSync(() => {
+        const port = browser.runtime.connect({ name: "foreground" })
+        port.onDisconnect.addListener(() => void chrome.runtime.lastError)
+        return port
+      }).mapErrSync(Retry.new)
+    }).then(r => r.unwrap())
 
-      using preport = new Box(new Disposer(raw, () => raw.disconnect()))
-      using prerouter = new Box(new ExtensionRouter("background", raw))
+    using preChannel = new Box(new Disposer(raw, () => raw.disconnect()))
+    using preRouter = new Box(new ExtensionRouter("background", raw))
 
-      const port = preport.moveOrThrow()
-      const router = prerouter.moveOrThrow()
+    const channel = preChannel.unwrapOrThrow()
+    const router = preRouter.unwrapOrThrow()
 
-      const onInnerClean = () => {
-        using postport = port
-        using postrouter = router
-      }
+    const onInnerClean = () => {
+      using _0 = channel
+      using _1 = router
+    }
 
-      using preinner = new Box(new Disposer(router.inner, onInnerClean))
+    using preWrapper = new Box(new Disposer(router, onInnerClean))
 
-      const onClose = async () => {
-        pool.restart(index)
-        return new None()
-      }
+    const onClose = async () => {
+      pool.restart(index)
+      return new None()
+    }
 
-      const onRequest = (request: RpcRequestInit<unknown>) =>
-        background.onRequest(router.inner, request)
+    const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
+    const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
 
-      const onResponse = (response: RpcResponseInit<unknown>) =>
-        background.onResponse(router.inner, response)
+    using preOnRequestDisposer = new Box(new Disposer({}, router.events.on("request", onRequest, { passive: true })))
+    using preOnResponseDisposer = new Box(new Disposer({}, router.events.on("response", onResponse, { passive: true })))
+    using preOnCloseDisposer = new Box(new Disposer({}, router.events.on("close", onClose, { passive: true })))
 
-      router.inner.events.on("request", onRequest, { passive: true })
-      router.inner.events.on("response", onResponse, { passive: true })
-      router.inner.events.on("close", onClose, { passive: true })
+    const wrapper = preWrapper.moveOrThrow()
+    const onRequestDisposer = preOnRequestDisposer.moveOrThrow()
+    const onResponseDisposer = preOnResponseDisposer.moveOrThrow()
+    const onCloseDisposer = preOnCloseDisposer.moveOrThrow()
 
-      const inner = preinner.moveOrThrow()
+    const onEntryClean = () => {
+      using _0 = wrapper
+      using _1 = onRequestDisposer
+      using _2 = onResponseDisposer
+      using _3 = onCloseDisposer
+    }
 
-      const onEntryClean = () => {
-        using postinner = inner
-
-        router.inner.events.off("request", onRequest)
-        router.inner.events.off("response", onResponse)
-        router.inner.events.off("close", onClose)
-      }
-
-      return new Ok(new Disposer(inner, onEntryClean))
-    })
+    return new Disposer(wrapper, onEntryClean)
   }, { capacity: 1 })
 }
