@@ -45,7 +45,7 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function pool(torsAndConsensus: Pool<readonly [TorClientDuplex, Consensus]>, params: PoolParams) {
+  export function pool(torsAndConsensus: Pool<Disposer<readonly [TorClientDuplex, Consensus]>>, params: PoolParams) {
     let update = Date.now()
 
     const pool = new Pool<Circuit>(async (params) => {
@@ -57,7 +57,7 @@ export namespace Circuits {
 
           using circuit = await (async () => {
             while (true) {
-              const [tor, consensus] = await torsAndConsensus.getOrThrow(index % torsAndConsensus.capacity, signal).then(r => r.unwrap().inner.inner)
+              const [tor, consensus] = await torsAndConsensus.getOrThrow(index % torsAndConsensus.capacity, signal).then(r => r.unwrap().inner.inner.inner)
 
               const middles = consensus.microdescs.filter(it => true
                 && it.flags.includes("Fast")

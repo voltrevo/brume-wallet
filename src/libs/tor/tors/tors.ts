@@ -1,70 +1,81 @@
+import { WebSocketStream } from "@/libs/streams/websocket"
+import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/cleaner"
-import { Consensus, TorClientDuplex, createWebSocketSnowflakeStream } from "@hazae41/echalote"
+import { Consensus, TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote"
 import { None } from "@hazae41/option"
 import { Pool, PoolParams } from "@hazae41/piscine"
-import { Ok, Result } from "@hazae41/result"
+import { Ok } from "@hazae41/result"
 
-export async function tryCreateTor(): Promise<Result<TorClientDuplex, Error>> {
-  return await Result.unthrow(async t => {
-    const tcp = await createWebSocketSnowflakeStream("wss://snowflake.torproject.net/")
-    const tor = new TorClientDuplex()
+export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque, Writable> }): Promise<TorClientDuplex> {
+  const tcp = await createSnowflakeStream(raw)
+  const tor = new TorClientDuplex()
 
-    tcp.outer.readable
-      .pipeTo(tor.inner.writable)
-      .catch(console.error)
+  tcp.outer.readable
+    .pipeTo(tor.inner.writable)
+    .catch(console.error)
 
-    tor.inner.readable
-      .pipeTo(tcp.outer.writable)
-      .catch(console.error)
+  tor.inner.readable
+    .pipeTo(tcp.outer.writable)
+    .catch(console.error)
 
-    await tor.tryWait().then(r => r.throw(t))
+  await tor.waitOrThrow()
 
-    return new Ok(tor)
-  })
+  return tor
 }
 
-export function createTorPool(params: PoolParams) {
-  const pool = new Pool<readonly [TorClientDuplex, Consensus]>(async (params) => {
-    return await Result.unthrow(async t => {
-      using tor = new Box(await tryCreateTor().then(r => r.throw(t)))
+export function createTorPool(params: PoolParams & { socket?: WebSocket }) {
+  const pool = new Pool<Disposer<readonly [TorClientDuplex, Consensus]>>(async (subparams) => {
+    const { socket = new WebSocket("wss://snowflake.torproject.net/") } = params
 
-      using circuit = await tor.inner.createOrThrow(AbortSignal.timeout(5000))
-      const consensus = await Consensus.fetchOrThrow(circuit)
+    const raw = WebSocketStream.fromOrThrow(socket, { shouldCloseOnAbort: true, shouldCloseOnCancel: true })
+    using preTor = new Box(await createTorOrThrow(raw))
 
-      using torAndConsensus = new Box([tor.unwrapOrThrow(), consensus] as const)
+    using circuit = await preTor.getOrThrow().createOrThrow(AbortSignal.timeout(5000))
+    const consensus = await Consensus.fetchOrThrow(circuit)
 
-      function createTorAndConsensusEntry(torAndConsensus: Box<readonly [TorClientDuplex, Consensus]>) {
-        const { pool, index } = params
+    const tor = preTor.unwrapOrThrow()
 
-        const onCloseOrError = async (reason?: unknown) => {
-          pool.restart(index)
-          return new None()
-        }
+    const onTorAndConsensusClean = () => {
+      using _ = tor
+    }
 
-        torAndConsensus.inner[0].events.on("close", onCloseOrError, { passive: true })
-        torAndConsensus.inner[0].events.on("error", onCloseOrError, { passive: true })
+    using preTorAndConsensus = new Box(new Disposer([tor, consensus] as const, onTorAndConsensusClean))
 
-        const onOffline = () => {
-          torAndConsensus.inner[0].close()
-        }
+    const { pool, index } = subparams
 
-        addEventListener("offline", onOffline, { passive: true })
+    const onCloseOrError = async (reason?: unknown) => {
+      pool.restart(index)
+      return new None()
+    }
 
-        const onClean = () => {
-          using postTorAndConsensus = torAndConsensus
+    preTorAndConsensus.getOrThrow().inner[0].events.on("close", onCloseOrError, { passive: true })
+    using preCloseCleaner = new Box(new Disposer(preTorAndConsensus.getOrThrow().inner, ([tor]) => tor.events.off("close", onCloseOrError)))
 
-          torAndConsensus.inner[0].events.off("close", onCloseOrError)
-          torAndConsensus.inner[0].events.off("error", onCloseOrError)
+    preTorAndConsensus.getOrThrow().inner[0].events.on("error", onCloseOrError, { passive: true })
+    using preErrorCleaner = new Box(new Disposer(preTorAndConsensus.getOrThrow().inner, ([tor]) => tor.events.off("error", onCloseOrError)))
 
-          removeEventListener("offline", onOffline)
-        }
+    const onOffline = () => {
+      preTorAndConsensus.inner.inner[0].close()
+    }
 
-        return new Disposer(torAndConsensus, onClean)
-      }
+    addEventListener("offline", onOffline, { passive: true })
+    using preOfflineCleaner = new Box(new Disposer({}, () => removeEventListener("offline", onOffline)))
 
-      return new Ok(createTorAndConsensusEntry(torAndConsensus.moveOrThrow()))
-    })
+    const torAndConsensus = preTorAndConsensus.moveOrThrow()
+
+    const closeCleaner = preCloseCleaner.moveOrThrow()
+    const errorCleaner = preErrorCleaner.moveOrThrow()
+    const offlineCleaner = preOfflineCleaner.moveOrThrow()
+
+    const onEntryClean = () => {
+      using _0 = torAndConsensus
+      using _1 = closeCleaner
+      using _2 = errorCleaner
+      using _3 = offlineCleaner
+    }
+
+    return new Ok(new Disposer(torAndConsensus, onEntryClean))
   }, params)
 
   addEventListener("online", async () => {

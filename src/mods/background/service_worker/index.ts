@@ -25,6 +25,7 @@ import { Base64Url } from "@hazae41/base64url"
 import { Bytes } from "@hazae41/bytes"
 import { Cadenas } from "@hazae41/cadenas"
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305"
+import { Disposer } from "@hazae41/cleaner"
 import { ZeroHexString } from "@hazae41/cubane"
 import { Circuit, Consensus, Echalote, TorClientDuplex } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
@@ -174,7 +175,7 @@ export class Global {
   readonly popup = new Mutex<Slot<PopupData>>({})
 
   constructor(
-    readonly tors: Pool<readonly [TorClientDuplex, Consensus]>,
+    readonly tors: Pool<Disposer<readonly [TorClientDuplex, Consensus]>>,
     readonly storage: IDBStorage
   ) {
     this.circuits = new Mutex(Circuits.pool(this.tors, { capacity: 9 }))
