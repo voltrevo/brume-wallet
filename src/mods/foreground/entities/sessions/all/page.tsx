@@ -11,7 +11,6 @@ import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/da
 import { Session } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { Nullable, Option } from "@hazae41/option"
-import { Ok } from "@hazae41/result"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useBlobby } from "../../blobbys/data"
 import { useOrigin } from "../../origins/data"
@@ -36,7 +35,7 @@ export function SessionsPage() {
   }, [maybeTempSessions, maybePersSessions])
 
   const disconnectAllOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    if (!confirm(`Do you want to disconnect all sessions?`))
+    if (confirm(`Do you want to disconnect all sessions?`) === false)
       return
 
     for (const session of Option.wrap(maybeTempSessions).unwrapOr([]))
@@ -112,9 +111,9 @@ export function SessionRow(props: { session: Session }) {
 
   const disconnectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     if (maybeSessionData == null)
-      return Ok.void()
-    if (!confirm(`Do you want to disconnect this session?`))
-      return Ok.void()
+      return
+    if (confirm(`Do you want to disconnect this session?`) === false)
+      return
 
     await background.requestOrThrow({
       method: "brume_disconnect",

@@ -37,7 +37,7 @@ export function Fallback(props: ErrorProps) {
   }, [])
 
   const reset = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    if (!confirm(`You will lose all your wallets if you didn't made backups, are you sure?`))
+    if (confirm(`You will lose all your wallets if you didn't made backups, are you sure?`) === false)
       return
 
     const databases = await indexedDB.databases()

@@ -24,7 +24,7 @@ export function TrashedWalletsPage() {
   }, [path])
 
   const trashAllOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    if (!confirm("Are you sure you want to delete all wallets in the trash?"))
+    if (confirm("Are you sure you want to delete all wallets in the trash?") === false)
       return
 
     for (const wallet of maybeWallets ?? [])

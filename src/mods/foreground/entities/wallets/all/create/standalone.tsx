@@ -73,8 +73,8 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       throw new Panic()
     if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
       throw new Panic()
-    if (!confirm("Did you backup your private key?"))
-      return
+    // if (confirm("Did you backup your private key?") === false)
+    //   return
 
     const address = triedAddress.unwrap()
     const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, privateKey: zeroHexKey }
@@ -115,7 +115,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       throw new Panic()
     if (triedEncryptedPrivateKey == null)
       throw new Panic()
-    if (!confirm("Did you backup your private key?"))
+    if (confirm("Did you backup your private key?") === false)
       return
 
     const [_, cipherBase64] = triedEncryptedPrivateKey.unwrap()

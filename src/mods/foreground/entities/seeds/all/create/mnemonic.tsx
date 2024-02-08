@@ -63,7 +63,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       throw new Panic()
     if (!defPhraseInput)
       throw new Panic()
-    if (!confirm("Did you backup your seed phrase?"))
+    if (confirm("Did you backup your seed phrase?") === false)
       return
 
     const seed: SeedData = { type: "mnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, mnemonic: defPhraseInput }
@@ -104,7 +104,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       throw new Panic()
     if (triedEncryptedPhrase == null)
       throw new Panic()
-    if (!confirm("Did you backup your seed phrase?"))
+    if (confirm("Did you backup your seed phrase?") === false)
       return
 
     const [_, cipherBase64] = triedEncryptedPhrase.unwrap()

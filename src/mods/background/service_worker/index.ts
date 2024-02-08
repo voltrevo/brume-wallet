@@ -2,7 +2,7 @@ import "@hazae41/symbol-dispose-polyfill"
 
 import { Blobs } from "@/libs/blobs/blobs"
 import { BrowserError, browser } from "@/libs/browser/browser"
-import { ExtensionRouter, Router, WebsiteRouter } from "@/libs/channel/channel"
+import { ExtensionRpcRouter, RpcRouter, WebsiteRpcRouter } from "@/libs/channel/channel"
 import { Console } from "@/libs/console"
 import { chainByChainId } from "@/libs/ethereum/mods/chain"
 import { fetchAsBlobOrThrow } from "@/libs/fetch/fetch"
@@ -12,7 +12,7 @@ import { Mouse } from "@/libs/mouse/mouse"
 import { isAndroidApp, isAppleApp, isExtension, isFirefoxExt, isWebsite } from "@/libs/platform/platform"
 import { Strings } from "@/libs/strings/strings"
 import { Circuits } from "@/libs/tor/circuits/circuits"
-import { createTorPool } from "@/libs/tor/tors/tors"
+import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors"
 import { qurl } from "@/libs/url/url"
 import { CryptoClient } from "@/libs/wconn/mods/crypto/client"
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn"
@@ -26,8 +26,7 @@ import { Bytes } from "@hazae41/bytes"
 import { Cadenas } from "@hazae41/cadenas"
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305"
 import { ZeroHexString } from "@hazae41/cubane"
-import { Disposer } from "@hazae41/disposer"
-import { Circuit, Consensus, Echalote, TorClientDuplex } from "@hazae41/echalote"
+import { Circuit, Echalote } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche, fetch } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
@@ -116,8 +115,8 @@ export interface PasswordData {
 }
 
 export interface PopupData {
-  window: chrome.windows.Window,
-  port: Router
+  tab: chrome.tabs.Tab,
+  port: RpcRouter
 }
 
 export interface Slot<T> {
@@ -149,7 +148,8 @@ interface Permission {
 export class Global {
 
   readonly events = new SuperEventTarget<{
-    "popup_hello": (foreground: Router) => Result<void, Error>
+    "action_hello": (foreground: RpcRouter) => Result<void, Error>
+    "popup_hello": (foreground: RpcRouter) => Result<void, Error>
     "response": (response: RpcResponseInit<unknown>) => Result<void, Error>
   }>()
 
@@ -163,7 +163,7 @@ export class Global {
 
   readonly brumeByUuid = new Mutex(new Map<string, EthBrume>())
 
-  readonly scriptsBySession = new Map<string, Set<Router>>()
+  readonly scriptsBySession = new Map<string, Set<RpcRouter>>()
 
   readonly sessionByScript = new Map<string, Mutex<Slot<string>>>()
 
@@ -175,26 +175,13 @@ export class Global {
   readonly popup = new Mutex<Slot<PopupData>>({})
 
   constructor(
-    readonly tors: Pool<Disposer<readonly [TorClientDuplex, Consensus]>>,
     readonly storage: IDBStorage
   ) {
-    this.circuits = new Mutex(Circuits.pool(this.tors, { capacity: 9 }))
+    const sockets = createNativeWebSocketPool({ capacity: 1 })
+    const tors = createTorPool(sockets, { capacity: 1 })
+    const circuits = Circuits.pool(tors, { capacity: 9 })
 
-    // this.circuits.inner.events.on("created", (entry) => {
-    //   if (entry.isOk())
-    //     console.log("circuits", entry, this.circuits.inner.size, this.circuits.inner.capacity)
-    //   if (entry.isErr())
-    //     console.error("circuits", entry, this.circuits.inner.size, this.circuits.inner.capacity)
-    //   return new None()
-    // })
-
-    // this.tors.events.on("created", (entry) => {
-    //   if (entry.isOk())
-    //     console.log("tors", entry, this.tors.size, this.tors.capacity)
-    //   if (entry.isErr())
-    //     console.error("tors", entry, this.tors.size, this.tors.capacity)
-    //   return new None()
-    // })
+    this.circuits = new Mutex(circuits)
 
     core.onState.on(BgAppRequest.All.key, async () => {
       const state = core.getStateSync(BgAppRequest.All.key) as State<AppRequest[], never>
@@ -276,41 +263,41 @@ export class Global {
     return userSession
   }
 
-  async waitPopupHelloOrThrow(window: chrome.windows.Window) {
-    const future = new Future<Router>()
+  async waitPopupHelloOrThrow(tab: chrome.tabs.Tab) {
+    const future = new Future<RpcRouter>()
 
-    const onRequest = (foreground: Router) => {
+    const onRequest = (foreground: RpcRouter) => {
       future.resolve(foreground)
       return new Some(Ok.void())
     }
 
     const onRemoved = (id: number) => {
-      if (id !== window.id)
+      if (id !== tab.id)
         return
       future.reject(new Error())
     }
 
     try {
       this.events.on("popup_hello", onRequest, { passive: true })
-      browser.windows.onRemoved.addListener(onRemoved)
+      browser.tabs.onRemoved.addListener(onRemoved)
 
       return await future.promise
     } finally {
       this.events.off("popup_hello", onRequest)
-      browser.windows.onRemoved.removeListener(onRemoved)
+      browser.tabs.onRemoved.removeListener(onRemoved)
     }
   }
 
   async openOrFocusPopupOrThrow(pathname: string, mouse: Mouse, force?: boolean): Promise<PopupData> {
     return await this.popup.lock(async (slot) => {
       if (slot.current != null) {
-        const windowId = Option.unwrap(slot.current.window.id)
-        const tabId = Option.unwrap(slot.current.window.tabs?.[0].id)
+        const tabId = Option.unwrap(slot.current.tab.id)
+        const windowId = Option.unwrap(slot.current.tab.windowId)
 
         const url = force ? `popup.html#${pathname}` : undefined
 
-        await BrowserError.runOrThrow(() => browser.tabs.update(tabId, { url, highlighted: true }))
-        await BrowserError.runOrThrow(() => browser.windows.update(windowId, { focused: true }))
+        await BrowserError.tryRun(() => browser.tabs.update(tabId, { url, highlighted: true })).then(r => r.ignore())
+        await BrowserError.tryRun(() => browser.windows.update(windowId, { focused: true })).then(r => r.ignore())
 
         return slot.current
       }
@@ -321,19 +308,27 @@ export class Global {
       const top = Math.max(mouse.y - (height / 2), 0)
       const left = Math.max(mouse.x - (width / 2), 0)
 
-      const window = await BrowserError.runOrThrow(() => browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left }))
+      const tab = "create" in browser.windows
+        ? await BrowserError.runOrThrow(() => browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left }).then(w => w.tabs?.[0]))
+        : await BrowserError.runOrThrow(() => browser.tabs.create({ url: `popup.html#${pathname}`, active: true }))
 
-      const channel = await this.waitPopupHelloOrThrow(window)
+      if (tab == null)
+        throw new Error("Failed to create tab")
 
-      slot.current = { window, port: channel }
+      const channel = await this.waitPopupHelloOrThrow(tab)
 
-      const onRemoved = () => {
+      slot.current = { tab, port: channel }
+
+      const onRemoved = (tabId: number) => {
+        if (tabId !== tab.id)
+          return
+
         slot.current = undefined
 
-        browser.windows.onRemoved.removeListener(onRemoved)
+        browser.tabs.onRemoved.removeListener(onRemoved)
       }
 
-      browser.windows.onRemoved.addListener(onRemoved)
+      browser.tabs.onRemoved.addListener(onRemoved)
 
       return slot.current
     })
@@ -414,23 +409,23 @@ export class Global {
     }
 
     const onRemoved = (id: number) => {
-      if (id !== popup.window.id)
+      if (id !== popup.tab.id)
         return
       future.resolve(new Err(new Error()))
     }
 
     try {
       this.events.on("response", onResponse, { passive: true })
-      browser.windows.onRemoved.addListener(onRemoved)
+      browser.tabs.onRemoved.addListener(onRemoved)
 
       return await future.promise
     } finally {
       this.events.off("response", onResponse)
-      browser.windows.onRemoved.removeListener(onRemoved)
+      browser.tabs.onRemoved.removeListener(onRemoved)
     }
   }
 
-  async getExtensionSessionOrThrow(script: Router, mouse: Mouse, force: boolean): Promise<Nullable<SessionData>> {
+  async getExtensionSessionOrThrow(script: RpcRouter, mouse: Mouse, force: boolean): Promise<Nullable<SessionData>> {
     let mutex = this.sessionByScript.get(script.name)
 
     if (mutex == null) {
@@ -595,7 +590,7 @@ export class Global {
     })
   }
 
-  async tryRouteContentScript(script: Router, request: RpcRequestPreinit<unknown>) {
+  async tryRouteContentScript(script: RpcRouter, request: RpcRequestPreinit<unknown>) {
     if (request.method === "brume_icon")
       return new Some(new Ok(await this.brume_icon(script, request)))
     if (request.method === "brume_run")
@@ -603,11 +598,11 @@ export class Global {
     return new None()
   }
 
-  async brume_icon(script: Router, request: RpcRequestPreinit<unknown>): Promise<string> {
+  async brume_icon(script: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<string> {
     return await Blobs.readAsDataUrlOrThrow(await fetchAsBlobOrThrow("/favicon.png"))
   }
 
-  async brume_run(script: Router, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_run(script: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     const [subrequest, mouse] = (request as RpcRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
 
     let session = await this.getExtensionSessionOrThrow(script, mouse, false)
@@ -867,7 +862,7 @@ export class Global {
     return Ok.void()
   }
 
-  async tryRouteForeground(foreground: Router, request: RpcRequestInit<unknown>): Promise<Option<Result<unknown, Error>>> {
+  async tryRouteForeground(foreground: RpcRouter, request: RpcRequestInit<unknown>): Promise<Option<Result<unknown, Error>>> {
     if (request.method === "brume_getPath")
       return new Some(await this.brume_getPath(request))
     if (request.method === "brume_setPath")
@@ -925,7 +920,7 @@ export class Global {
     return Ok.void()
   }
 
-  async popup_hello(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async popup_hello(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const returned = await this.events.emit("popup_hello", [foreground])
 
     if (returned.isSome() && returned.inner.isErr())
@@ -934,7 +929,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_respond(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_respond(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [response] = (request as RpcRequestPreinit<[RpcResponseInit<unknown>]>).params
 
     const returned = await this.events.emit("response", [response])
@@ -945,7 +940,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_createUser(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_createUser(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [init] = (request as RpcRequestPreinit<[UserInit]>).params
 
     const userData = await BgUser.createOrThrow(init)
@@ -980,7 +975,7 @@ export class Global {
     return new Ok(userState.current?.get())
   }
 
-  async brume_disconnect(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_disconnect(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [id] = (request as RpcRequestPreinit<[string]>).params
 
     const { storage } = Option.unwrap(this.#user)
@@ -1009,7 +1004,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_open(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_open(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [pathname] = (request as RpcRequestPreinit<[string]>).params
 
     await BrowserError.runOrThrow(() => browser.tabs.create({ url: `index.html#${pathname}` }))
@@ -1017,7 +1012,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_encrypt(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<[string, string], Error>> {
+  async brume_encrypt(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<[string, string], Error>> {
     const [plainBase64] = (request as RpcRequestPreinit<[string]>).params
 
     const { crypter } = Option.unwrap(this.#user)
@@ -1032,7 +1027,7 @@ export class Global {
     return new Ok([ivBase64, cipherBase64])
   }
 
-  async brume_decrypt(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+  async brume_decrypt(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
     const [ivBase64, cipherBase64] = (request as RpcRequestPreinit<[string, string]>).params
 
     const { crypter } = Option.unwrap(this.#user)
@@ -1046,7 +1041,7 @@ export class Global {
     return new Ok(plainBase64)
   }
 
-  async brume_createSeed(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_createSeed(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [seed] = (request as RpcRequestPreinit<[SeedData]>).params
 
     const { storage } = Option.unwrap(this.#user)
@@ -1057,7 +1052,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_createWallet(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+  async brume_createWallet(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [wallet] = (request as RpcRequestPreinit<[WalletData]>).params
 
     const { storage } = Option.unwrap(this.#user)
@@ -1085,7 +1080,7 @@ export class Global {
     })
   }
 
-  async brume_get_global(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
+  async brume_get_global(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
     const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
     const state = await core.getOrCreateMutex(cacheKey).lock(async () => {
@@ -1125,7 +1120,7 @@ export class Global {
     return new Ok(state)
   }
 
-  async brume_get_user(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
+  async brume_get_user(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<Nullable<RawState>, Error>> {
     const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
     const { storage } = Option.unwrap(this.#user)
@@ -1189,7 +1184,7 @@ export class Global {
     return Ok.void()
   }
 
-  async brume_eth_fetch(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_eth_fetch(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown> & EthereumFetchParams]>).params
 
     const chainData = Option.unwrap(chainByChainId[chainId])
@@ -1210,7 +1205,7 @@ export class Global {
     throw new Error(`Unknown fetcher`)
   }
 
-  async brume_eth_custom_fetch(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async brume_eth_custom_fetch(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown> & EthereumFetchParams]>).params
 
     const { storage } = Option.unwrap(this.#user)
@@ -1354,7 +1349,7 @@ export class Global {
     return session
   }
 
-  async brume_wc_connect(foreground: Router, request: RpcRequestPreinit<unknown>): Promise<Result<WcMetadata, Error>> {
+  async brume_wc_connect(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<WcMetadata, Error>> {
     const [rawWcUrl, walletId] = (request as RpcRequestPreinit<[string, string]>).params
 
     const { user, storage } = Option.unwrap(this.#user)
@@ -1507,9 +1502,9 @@ async function initZepar() {
   ChaCha20Poly1305.set(await ChaCha20Poly1305.fromZepar())
 }
 
-async function initOrThrow() {
-  const start = Date.now()
+const init = Result.runAndDoubleWrap(() => initOrThrow())
 
+async function initOrThrow() {
   await Promise.all([initBerith(), initEligos(), initMorax(), initAlocer(), initZepar()])
 
   const gt = globalThis as any
@@ -1520,10 +1515,10 @@ async function initOrThrow() {
   gt.Kcp = Kcp
   gt.Smux = Smux
 
-  const tors = createTorPool({ capacity: 1 })
+  const start = Date.now()
 
   const storage = IDBStorage.createOrThrow({ name: "memory" })
-  const global = new Global(tors, storage)
+  const global = new Global(storage)
 
   await global.initOrThrow()
 
@@ -1531,8 +1526,6 @@ async function initOrThrow() {
 
   return global
 }
-
-const init = Result.runAndDoubleWrap(() => initOrThrow())
 
 if (isWebsite() || isAndroidApp()) {
 
@@ -1542,7 +1535,7 @@ if (isWebsite() || isAndroidApp()) {
   const onHelloWorld = (event: ExtendableMessageEvent) => {
     const raw = event.ports[0]
 
-    const router = new WebsiteRouter("foreground", raw)
+    const router = new WebsiteRpcRouter("foreground", raw)
 
     const onRequest = async (request: RpcRequestInit<unknown>) => {
       const inited = await init
@@ -1588,7 +1581,7 @@ if (isAppleApp()) {
   const onHelloWorld = (event: ExtendableMessageEvent) => {
     const raw = event.ports[0]
 
-    const router = new WebsiteRouter("foreground", raw)
+    const router = new WebsiteRpcRouter("foreground", raw)
 
     const onRequest = async (request: RpcRequestInit<unknown>) => {
       const inited = await init
@@ -1631,7 +1624,7 @@ if (isAppleApp()) {
 if (isExtension()) {
 
   const onContentScript = (port: chrome.runtime.Port) => {
-    const script = new ExtensionRouter(crypto.randomUUID(), port)
+    const script = new ExtensionRpcRouter(crypto.randomUUID(), port)
 
     script.events.on("request", async (request) => {
       const inited = await init
@@ -1644,15 +1637,15 @@ if (isExtension()) {
   }
 
   const onForeground = (port: chrome.runtime.Port) => {
-    const channel = new ExtensionRouter("foreground", port)
+    const router = new ExtensionRpcRouter("foreground", port)
 
-    channel.events.on("request", async (request) => {
+    router.events.on("request", async (request) => {
       const inited = await init
 
       if (inited.isErr())
         return new Some(inited)
 
-      return await inited.get().tryRouteForeground(channel, request)
+      return await inited.get().tryRouteForeground(router, request)
     })
   }
 

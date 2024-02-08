@@ -1,21 +1,20 @@
 import { Opaque, Writable } from "@hazae41/binary"
 import { SuperReadableStream, SuperWritableStream } from "@hazae41/cascade"
+import { None } from "@hazae41/option"
+import { SuperEventTarget } from "@hazae41/plume"
 
-async function closeOrThrow(websocket: WebSocket) {
-  if (websocket.readyState !== WebSocket.OPEN)
-    return
+export type SuperWebSocketEvents = {
+  open: (e: Event) => void
+  close: (e: CloseEvent) => void
+  error: (e: Event) => void
+  message: (e: MessageEvent) => void
+}
 
-  await new Promise<void>((ok, err) => {
-    const onClose = (e: CloseEvent) => {
-      if (e.wasClean)
-        ok()
-      else
-        err(e)
-    }
+export interface WebSocketProxy {
+  readonly events: SuperEventTarget<SuperWebSocketEvents>
 
-    websocket.addEventListener("close", onClose, { passive: true, once: true })
-    websocket.close()
-  })
+  send(data: ArrayBuffer): void
+  close(): void
 }
 
 export type WebSocketStreamParams =
@@ -32,8 +31,8 @@ export class WebSocketStream {
    * A WebSocket stream
    * @description https://streams.spec.whatwg.org/#example-both
    */
-  private constructor(
-    readonly socket: WebSocket,
+  constructor(
+    readonly socket: WebSocketProxy,
     readonly params: WebSocketStreamParams = {}
   ) {
     this.reader = new SuperReadableStream(new WebSocketSource(socket, params))
@@ -43,15 +42,6 @@ export class WebSocketStream {
       readable: this.reader.start(),
       writable: this.writer.start()
     }
-  }
-
-  static fromOrThrow(socket: WebSocket, params?: WebSocketStreamParams) {
-    if (socket.readyState !== WebSocket.OPEN)
-      throw new Error(`WebSocket is not open`)
-    if (socket.binaryType !== "arraybuffer")
-      throw new Error(`WebSocket binaryType is not arraybuffer`)
-
-    return new WebSocketStream(socket, params)
   }
 
 }
@@ -66,61 +56,57 @@ export interface WebSocketSourceParams {
 
 export class WebSocketSource implements UnderlyingDefaultSource<Opaque> {
 
+  #onClean?: () => void
+
   constructor(
-    readonly websocket: WebSocket,
+    readonly websocket: WebSocketProxy,
     readonly params: WebSocketSourceParams = {}
   ) { }
 
-  #onMessage?: (e: MessageEvent<ArrayBuffer>) => void
-  #onClose?: (e: CloseEvent) => void
-  #onError?: (e: Event) => void
-
-  #onClean() {
-    this.websocket.removeEventListener("message", this.#onMessage!)
-    this.websocket.removeEventListener("close", this.#onClose!)
-    this.websocket.removeEventListener("error", this.#onError!)
-  }
-
   async start(controller: ReadableStreamDefaultController<Opaque>) {
 
-    this.#onMessage = (msgEvent: MessageEvent<ArrayBuffer>) => {
+    const onMessage = async (msgEvent: MessageEvent<ArrayBuffer>) => {
       const bytes = new Uint8Array(msgEvent.data)
       // console.debug("ws <-", bytes, Bytes.toUtf8(bytes))
 
-      try {
-        controller.enqueue(new Opaque(bytes))
-      } catch (e: unknown) { }
+      try { controller.enqueue(new Opaque(bytes)) } catch { }
+
+      return new None()
     }
 
-    this.#onError = (event: Event) => {
+    const onError = (event: Event) => {
       const error = new Error(`Errored`, { cause: event })
 
-      try {
-        controller.error(error)
-      } catch (e: unknown) { }
+      try { controller.error(error) } catch { }
 
-      this.#onClean()
+      this.#onClean?.()
+      return new None()
     }
 
-    this.#onClose = (event: CloseEvent) => {
-      try {
-        controller.close()
-      } catch (e: unknown) { }
+    const onClose = (event: CloseEvent) => {
+      try { controller.close() } catch { }
 
-      this.#onClean()
+      this.#onClean?.()
+      return new None()
     }
 
-    this.websocket.addEventListener("message", this.#onMessage, { passive: true })
+    this.websocket.events.on("message", onMessage)
+    this.websocket.events.on("error", onError)
+    this.websocket.events.on("close", onClose)
 
-    this.websocket.addEventListener("error", this.#onError, { passive: true, once: true })
-    this.websocket.addEventListener("close", this.#onClose, { passive: true, once: true })
+    this.#onClean = () => {
+      this.#onClean = undefined
+
+      this.websocket.events.off("message", onMessage)
+      this.websocket.events.off("error", onError)
+      this.websocket.events.off("close", onClose)
+    }
   }
 
   async cancel() {
     if (this.params.shouldCloseOnCancel)
-      await closeOrThrow(this.websocket)
-
-    this.#onClean()
+      try { this.websocket.close() } catch { }
+    this.#onClean?.()
   }
 
 }
@@ -142,63 +128,60 @@ export interface WebSocketSinkParams {
 
 export class WebSocketSink implements UnderlyingSink<Writable> {
 
+  #onClean?: () => void
+
   constructor(
-    readonly websocket: WebSocket,
+    readonly websocket: WebSocketProxy,
     readonly params: WebSocketSinkParams = {}
   ) { }
 
-  #onClose?: (e: CloseEvent) => void
-  #onError?: (e: Event) => void
-
-  #onClean() {
-    this.websocket.removeEventListener("close", this.#onClose!)
-    this.websocket.removeEventListener("error", this.#onError!)
-  }
-
   async start(controller: WritableStreamDefaultController) {
 
-    this.#onClose = (closeEvent: CloseEvent) => {
+    const onClose = (closeEvent: CloseEvent) => {
       const error = new Error(`Closed`, { cause: closeEvent })
 
-      try {
-        controller.error(error)
-      } catch (e: unknown) { }
+      try { controller.error(error) } catch { }
 
-      this.#onClean()
+      this.#onClean?.()
+      return new None()
     }
 
-    this.#onError = (event: Event) => {
+    const onError = (event: Event) => {
       const error = new Error(`Errored`, { cause: event })
 
-      try {
-        controller.error(error)
-      } catch (e: unknown) { }
+      try { controller.error(error) } catch { }
 
-      this.#onClean()
+      this.#onClean?.()
+      return new None()
     }
 
-    this.websocket.addEventListener("error", this.#onError, { passive: true, once: true })
-    this.websocket.addEventListener("close", this.#onClose, { passive: true, once: true })
+    this.websocket.events.on("close", onClose)
+    this.websocket.events.on("error", onError)
+
+    this.#onClean = () => {
+      this.#onClean = undefined
+
+      this.websocket.events.off("close", onClose)
+      this.websocket.events.off("error", onError)
+    }
   }
 
   async write(chunk: Writable) {
     const bytes = Writable.writeToBytesOrThrow(chunk)
     // console.debug("ws ->", bytes, Bytes.toUtf8(bytes))
-    this.websocket.send(bytes)
+    try { this.websocket.send(bytes) } catch { }
   }
 
   async abort(reason?: unknown) {
     if (this.params.shouldCloseOnAbort)
-      await closeOrThrow(this.websocket)
-
-    this.#onClean()
+      try { this.websocket.close() } catch { }
+    this.#onClean?.()
   }
 
   async close() {
     if (this.params.shouldCloseOnClose)
-      await closeOrThrow(this.websocket)
-
-    this.#onClean()
+      try { this.websocket.close() } catch { }
+    this.#onClean?.()
   }
 
 }

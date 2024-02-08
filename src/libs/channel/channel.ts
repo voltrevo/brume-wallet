@@ -7,11 +7,11 @@ import { BrowserError } from "../browser/browser"
 import { Console } from "../console"
 import { AbortSignals } from "../signals/signals"
 
-export type Router =
-  | WebsiteRouter
-  | ExtensionRouter
+export type RpcRouter =
+  | WebsiteRpcRouter
+  | ExtensionRpcRouter
 
-export class WebsiteRouter {
+export class WebsiteRpcRouter {
   readonly counter = new RpcCounter()
   readonly uuid = crypto.randomUUID()
 
@@ -150,7 +150,7 @@ export class WebsiteRouter {
 
 }
 
-export class ExtensionRouter {
+export class ExtensionRpcRouter {
   readonly counter = new RpcCounter()
   readonly uuid = crypto.randomUUID()
 
@@ -195,6 +195,7 @@ export class ExtensionRouter {
 
       return new Err(new RpcInvalidRequestError())
     } catch (e: unknown) {
+      console.error({ e })
       return new Err(new RpcInternalError())
     }
   }

@@ -1,5 +1,5 @@
 import { BrowserError, browser } from "@/libs/browser/browser"
-import { ExtensionRouter, Router, WebsiteRouter } from "@/libs/channel/channel"
+import { ExtensionRpcRouter, RpcRouter, WebsiteRpcRouter } from "@/libs/channel/channel"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
@@ -27,11 +27,11 @@ export class ServiceWorkerBackground {
     "update": (sw: ServiceWorker) => void
   }>()
 
-  async onRequest(port: Router, request: RpcRequestInit<unknown>) {
+  async onRequest(port: RpcRouter, request: RpcRequestInit<unknown>) {
     return await this.events.emit("request", [request])
   }
 
-  async onResponse(port: Router, response: RpcResponseInit<unknown>) {
+  async onResponse(port: RpcRouter, response: RpcResponseInit<unknown>) {
     return await this.events.emit("response", [response])
   }
 
@@ -126,8 +126,8 @@ export async function getServiceWorkerOrThrow(background: ServiceWorkerBackgroun
   }
 }
 
-export function createServiceWorkerPortPool(background: ServiceWorkerBackground): Pool<Disposer<WebsiteRouter>> {
-  return new Pool<Disposer<WebsiteRouter>>(async (params) => {
+export function createServiceWorkerPortPool(background: ServiceWorkerBackground): Pool<Disposer<WebsiteRpcRouter>> {
+  return new Pool<Disposer<WebsiteRpcRouter>>(async (params) => {
     const { pool, index } = params
 
     using preRegistration = new Box(new Disposer(await getServiceWorkerOrThrow(background), r => r.unregister()))
@@ -145,7 +145,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
     }
 
     using preChannel = new Box(new Disposer(raw, onRawClean))
-    using preRouter = new Box(new WebsiteRouter("background", raw.port1))
+    using preRouter = new Box(new WebsiteRpcRouter("background", raw.port1))
 
     const registration = preRegistration.unwrapOrThrow()
     const channel = preChannel.unwrapOrThrow()
@@ -219,11 +219,11 @@ export class WorkerBackground {
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
-  async onRequest(port: Router, request: RpcRequestInit<unknown>) {
+  async onRequest(port: RpcRouter, request: RpcRequestInit<unknown>) {
     return await this.events.emit("request", [request])
   }
 
-  async onResponse(port: Router, response: RpcResponseInit<unknown>) {
+  async onResponse(port: RpcRouter, response: RpcResponseInit<unknown>) {
     return await this.events.emit("response", [response])
   }
 
@@ -239,8 +239,8 @@ export class WorkerBackground {
 
 }
 
-export function createWorkerPortPool(background: WorkerBackground): Pool<Disposer<WebsiteRouter>> {
-  return new Pool<Disposer<WebsiteRouter>>(async (params) => {
+export function createWorkerPortPool(background: WorkerBackground): Pool<Disposer<WebsiteRpcRouter>> {
+  return new Pool<Disposer<WebsiteRpcRouter>>(async (params) => {
     const { pool, index } = params
 
     const raw = new MessageChannel()
@@ -252,7 +252,7 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
 
     using preWorker = new Box(new Disposer(new Worker("/service_worker.js"), w => w.terminate()))
     using preChannel = new Box(new Disposer(raw, onRawClean))
-    using preRouter = new Box(new WebsiteRouter("background", raw.port1))
+    using preRouter = new Box(new WebsiteRpcRouter("background", raw.port1))
 
     const worker = preWorker.unwrapOrThrow()
     const channel = preChannel.unwrapOrThrow()
@@ -326,11 +326,11 @@ export class ExtensionBackground {
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
-  async onRequest(port: Router, request: RpcRequestInit<unknown>) {
+  async onRequest(port: RpcRouter, request: RpcRequestInit<unknown>) {
     return await this.events.emit("request", [request])
   }
 
-  async onResponse(port: Router, response: RpcResponseInit<unknown>) {
+  async onResponse(port: RpcRouter, response: RpcResponseInit<unknown>) {
     return await this.events.emit("response", [response])
   }
 
@@ -346,8 +346,8 @@ export class ExtensionBackground {
 
 }
 
-export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<ExtensionRouter>> {
-  return new Pool<Disposer<ExtensionRouter>>(async (params) => {
+export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<ExtensionRpcRouter>> {
+  return new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
     const { index, pool } = params
 
     const raw = await tryLoop(async () => {
@@ -359,7 +359,7 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
     }).then(r => r.unwrap())
 
     using preChannel = new Box(new Disposer(raw, () => raw.disconnect()))
-    using preRouter = new Box(new ExtensionRouter("background", raw))
+    using preRouter = new Box(new ExtensionRpcRouter("background", raw))
 
     const channel = preChannel.unwrapOrThrow()
     const router = preRouter.unwrapOrThrow()

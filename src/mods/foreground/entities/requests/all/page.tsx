@@ -30,7 +30,7 @@ export function RequestsPage() {
   const rejectAllOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     if (maybeRequests == null)
       return
-    if (!confirm(`Do you want to reject all requests?`))
+    if (confirm(`Do you want to reject all requests?`) === false)
       return
 
     for (const { id } of maybeRequests)

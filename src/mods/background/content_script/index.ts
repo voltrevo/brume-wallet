@@ -2,7 +2,7 @@ import "@hazae41/symbol-dispose-polyfill"
 
 import { Blobs } from "@/libs/blobs/blobs"
 import { BrowserError, browser } from "@/libs/browser/browser"
-import { ExtensionRouter } from "@/libs/channel/channel"
+import { ExtensionRpcRouter } from "@/libs/channel/channel"
 import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch"
 import { Mouse } from "@/libs/mouse/mouse"
 import { isFirefoxExt, isSafariExt } from "@/libs/platform/platform"
@@ -111,7 +111,7 @@ async function getOrigin() {
   return origin
 }
 
-new Pool<Disposer<ExtensionRouter>>(async (params) => {
+new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
   const { index, pool } = params
 
   await new Promise(ok => setTimeout(ok, 1))
@@ -123,7 +123,7 @@ new Pool<Disposer<ExtensionRouter>>(async (params) => {
   })
 
   using preChannel = new Box(new Disposer(raw, () => raw.disconnect()))
-  using preRouter = new Box(new ExtensionRouter("background", preChannel.inner.inner))
+  using preRouter = new Box(new ExtensionRpcRouter("background", preChannel.inner.inner))
 
   const port = preChannel.moveOrThrow()
   const router = preRouter.moveOrThrow()
