@@ -3,8 +3,8 @@ import { chainByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { Dialog, Dialog2 } from "@/libs/ui/dialog/dialog";
+import { Menu } from "@/libs/ui2/menu/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header";
 import { Page } from "@/libs/ui2/page/page";
 import { qurl } from "@/libs/url/url";
@@ -12,11 +12,13 @@ import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useAppRequests } from "@/mods/foreground/entities/requests/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
-import { SmallShrinkableOppositeAnchor } from "@/mods/foreground/entities/users/all/page";
+import { SmallShrinkableOppositeAnchor, useGenius } from "@/mods/foreground/entities/users/all/page";
 import { UserGuard } from "@/mods/foreground/entities/users/context";
 import { WalletTransactionDialog } from "@/mods/foreground/entities/wallets/actions/eth_sendTransaction";
-import { PaddedRoundedShrinkableNakedButton, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send";
+import { PaddedRoundedShrinkableNakedAnchor, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send";
 import { WalletCreatorMenu } from "@/mods/foreground/entities/wallets/all/create";
+import { ReadonlyWalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create/readonly";
+import { StandaloneWalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create/standalone";
 import { SelectableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { WalletDataContext } from "@/mods/foreground/entities/wallets/context";
 import { EthereumWalletInstance, useEthereumContext2, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
@@ -316,11 +318,12 @@ export function WalletAndChainSelectPage() {
   const path = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
+  const subpath = useHashSubpath(path)
+  const creator = useGenius(subpath, "/create")
+
   const id = Option.unwrap(path.url.searchParams.get("id"))
 
   const wallets = useWallets()
-
-  const creator = useBooleanHandle(false)
 
   const [persistent, setPersistent] = useState(true)
 
@@ -364,10 +367,12 @@ export function WalletAndChainSelectPage() {
 
   const Header =
     <UserPageHeader title="Connect">
-      <PaddedRoundedShrinkableNakedButton
-        onClick={creator.enable}>
+      <PaddedRoundedShrinkableNakedAnchor
+        onKeyDown={creator.onKeyDown}
+        onClick={creator.onClick}
+        href={creator.href}>
         <Outline.PlusIcon className="size-5" />
-      </PaddedRoundedShrinkableNakedButton>
+      </PaddedRoundedShrinkableNakedAnchor>
     </UserPageHeader>
 
   const Body =
@@ -405,11 +410,20 @@ export function WalletAndChainSelectPage() {
     </PageBody>
 
   return <Page>
-    {creator.current &&
-      <Dialog
-        close={creator.disable}>
-        <WalletCreatorMenu />
-      </Dialog>}
+    <HashSubpathProvider>
+      {subpath.url.pathname === "/create" &&
+        <Menu>
+          <WalletCreatorMenu />
+        </Menu>}
+      {subpath.url.pathname === "/create/standalone" &&
+        <Dialog2>
+          <StandaloneWalletCreatorDialog />
+        </Dialog2>}
+      {subpath.url.pathname === "/create/readonly" &&
+        <Dialog2>
+          <ReadonlyWalletCreatorDialog />
+        </Dialog2>}
+    </HashSubpathProvider>
     {Header}
     {Body}
   </Page>
