@@ -1,3 +1,4 @@
+import { isSafariExt } from "@/libs/platform/platform";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
@@ -8,6 +9,9 @@ export default function Action() {
   const background = useBackgroundContext().unwrap()
 
   useEffect(() => {
+    if (isSafariExt())
+      return
+
     /**
      * Chromium
      */
@@ -32,7 +36,7 @@ export default function Action() {
     return () => removeEventListener("hashchange", onHashChange)
   }, [background])
 
-  return <main id="main" className="grow w-full flex flex-col overflow-hidden">
+  return <main id="main" className="p-safe grow w-full flex flex-col overflow-hidden">
     <NavBar />
     <Overlay>
       <Router />

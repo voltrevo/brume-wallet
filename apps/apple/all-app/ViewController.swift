@@ -24,11 +24,13 @@ class ViewController: PlatformViewController, WKNavigationDelegate, WKScriptMess
         self.webView.scrollView.isScrollEnabled = false
 #endif
         
-        if #available(iOS 16.4, *) {
+        if #available(iOS 16.4, macOS 13.3, *) {
             self.webView.isInspectable = true
         }
         
-        self.webView.configuration.limitsNavigationsToAppBoundDomains = true
+        if #available(macOS 11, *) {
+            self.webView.configuration.limitsNavigationsToAppBoundDomains = true
+        }
 
         self.webView.configuration.userContentController.add(self, name: "controller")
 
