@@ -348,53 +348,67 @@ export class ExtensionBackground {
 
 export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<ExtensionRpcRouter>> {
   return new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
-    const { index, pool } = params
+    for (let i = 0; true; i++) {
+      try {
+        const { index, pool } = params
 
-    const raw = await tryLoop(async () => {
-      return BrowserError.tryRunSync(() => {
-        const port = browser.runtime.connect({ name: "foreground" })
-        port.onDisconnect.addListener(() => void chrome.runtime.lastError)
-        return port
-      }).mapErrSync(Retry.new)
-    }).then(r => r.unwrap())
+        const raw = await tryLoop(async () => {
+          return BrowserError.tryRunSync(() => {
+            const port = browser.runtime.connect({ name: "foreground" })
+            port.onDisconnect.addListener(() => void chrome.runtime.lastError)
+            return port
+          }).mapErrSync(Retry.new)
+        }).then(r => r.unwrap())
 
-    using preChannel = new Box(new Disposer(raw, () => raw.disconnect()))
-    using preRouter = new Box(new ExtensionRpcRouter("background", raw))
+        using preChannel = new Box(new Disposer(raw, () => raw.disconnect()))
+        using preRouter = new Box(new ExtensionRpcRouter("background", raw))
 
-    const channel = preChannel.unwrapOrThrow()
-    const router = preRouter.unwrapOrThrow()
+        const channel = preChannel.unwrapOrThrow()
+        const router = preRouter.unwrapOrThrow()
 
-    const onInnerClean = () => {
-      using _0 = channel
-      using _1 = router
+        const onInnerClean = () => {
+          using _0 = channel
+          using _1 = router
+        }
+
+        using preWrapper = new Box(new Disposer(router, onInnerClean))
+
+        const onClose = async () => {
+          pool.restart(index)
+          return new None()
+        }
+
+        const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
+        const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
+
+        using preOnRequestDisposer = new Box(new Disposer({}, router.events.on("request", onRequest, { passive: true })))
+        using preOnResponseDisposer = new Box(new Disposer({}, router.events.on("response", onResponse, { passive: true })))
+        using preOnCloseDisposer = new Box(new Disposer({}, router.events.on("close", onClose, { passive: true })))
+
+        const wrapper = preWrapper.moveOrThrow()
+        const onRequestDisposer = preOnRequestDisposer.moveOrThrow()
+        const onResponseDisposer = preOnResponseDisposer.moveOrThrow()
+        const onCloseDisposer = preOnCloseDisposer.moveOrThrow()
+
+        const onEntryClean = () => {
+          using _0 = wrapper
+          using _1 = onRequestDisposer
+          using _2 = onResponseDisposer
+          using _3 = onCloseDisposer
+        }
+
+        using preEntry = new Box(new Disposer(wrapper, onEntryClean))
+
+        await router.requestOrThrow<string>({
+          method: "brume_ping"
+        }, AbortSignal.timeout(1000)).then(r => r.unwrap())
+
+        return preEntry.unwrapOrThrow()
+      } catch (e: unknown) {
+        if (i < 10)
+          continue
+        throw e
+      }
     }
-
-    using preWrapper = new Box(new Disposer(router, onInnerClean))
-
-    const onClose = async () => {
-      pool.restart(index)
-      return new None()
-    }
-
-    const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
-    const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
-
-    using preOnRequestDisposer = new Box(new Disposer({}, router.events.on("request", onRequest, { passive: true })))
-    using preOnResponseDisposer = new Box(new Disposer({}, router.events.on("response", onResponse, { passive: true })))
-    using preOnCloseDisposer = new Box(new Disposer({}, router.events.on("close", onClose, { passive: true })))
-
-    const wrapper = preWrapper.moveOrThrow()
-    const onRequestDisposer = preOnRequestDisposer.moveOrThrow()
-    const onResponseDisposer = preOnResponseDisposer.moveOrThrow()
-    const onCloseDisposer = preOnCloseDisposer.moveOrThrow()
-
-    const onEntryClean = () => {
-      using _0 = wrapper
-      using _1 = onRequestDisposer
-      using _2 = onResponseDisposer
-      using _3 = onCloseDisposer
-    }
-
-    return new Disposer(wrapper, onEntryClean)
   }, { capacity: 1 })
 }

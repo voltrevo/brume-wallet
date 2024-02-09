@@ -1624,15 +1624,15 @@ if (isAppleApp()) {
 if (isExtension()) {
 
   const onContentScript = (port: chrome.runtime.Port) => {
-    const script = new ExtensionRpcRouter(crypto.randomUUID(), port)
+    const router = new ExtensionRpcRouter(crypto.randomUUID(), port)
 
-    script.events.on("request", async (request) => {
+    router.events.on("request", async (request) => {
       const inited = await init
 
       if (inited.isErr())
         return new Some(inited)
 
-      return await inited.get().tryRouteContentScript(script, request)
+      return await inited.get().tryRouteContentScript(router, request)
     })
   }
 

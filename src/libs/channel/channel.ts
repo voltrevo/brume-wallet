@@ -45,17 +45,21 @@ export class WebsiteRpcRouter {
     let count = 0
 
     while (true) {
-      await new Promise(ok => setTimeout(ok, 1000))
+      try {
+        await new Promise(ok => setTimeout(ok, 1000))
 
-      const signal = AbortSignal.timeout(1000)
-      const result = await this.tryPingOrSignal(signal).then(r => r.flatten())
+        await this.requestOrThrow({
+          method: "brume_ping"
+        }, AbortSignal.timeout(1000)).then(r => r.unwrap())
 
-      if (result.isErr())
-        count++
-      else
         count = 0
+        continue
+      } catch (e: unknown) {
+        if (count < 2) {
+          count++
+          continue
+        }
 
-      if (count === 2) {
         await this.events.emit("close", [undefined])
         return
       }
@@ -111,8 +115,8 @@ export class WebsiteRpcRouter {
     return await this.onResponse(data)
   }
 
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return Result.runAndDoubleWrap(() => this.requestOrThrow<T>(init))
+  async tryRequest<T>(init: RpcRequestPreinit<unknown>, signal = AbortSignals.never()): Promise<Result<RpcResponse<T>, Error>> {
+    return Result.runAndDoubleWrap(() => this.requestOrThrow<T>(init, signal))
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = AbortSignals.never()): Promise<RpcResponse<T>> {
@@ -129,21 +133,6 @@ export class WebsiteRpcRouter {
 
       const response = RpcResponse.from<T>(init)
       future.resolve(response)
-      return new Some(undefined)
-    }, signal)
-  }
-
-  async tryPingOrSignal<T>(signal: AbortSignal): Promise<Result<RpcResponse<T>, Error>> {
-    const request = { id: "ping", method: "brume_ping" }
-
-    this.port.postMessage(JSON.stringify(request))
-
-    return Plume.tryWaitOrCloseOrErrorOrSignal(this.events, "response", (future: Future<Ok<RpcResponse<T>>>, init: RpcResponseInit<any>) => {
-      if (init.id !== request.id)
-        return new None()
-
-      const response = RpcResponse.from<T>(init)
-      future.resolve(new Ok(response))
       return new Some(undefined)
     }, signal)
   }
