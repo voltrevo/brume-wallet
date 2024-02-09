@@ -27,7 +27,7 @@ export default function Action() {
       method: "brume_getPath"
     }).then(r => location.hash = r.unwrap())
 
-    const onHashChange = () => background.requestOrThrow<void>({
+    const onHashChange = () => void background.requestOrThrow<void>({
       method: "brume_setPath",
       params: [location.hash]
     }).then(r => r.unwrap())
