@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
+import { isSafariExt } from "@/libs/platform/platform"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
@@ -24,7 +25,7 @@ export function TrashedWalletsPage() {
   }, [path])
 
   const trashAllOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    if (confirm("Are you sure you want to delete all wallets in the trash?") === false)
+    if (!isSafariExt() && confirm("Are you sure you want to delete all wallets in the trash?") === false)
       return
 
     for (const wallet of maybeWallets ?? [])

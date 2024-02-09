@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
+import { isSafariExt } from "@/libs/platform/platform"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { OkProps } from "@/libs/react/props/promise"
 import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
@@ -30,7 +31,7 @@ export function RequestsPage() {
   const rejectAllOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     if (maybeRequests == null)
       return
-    if (confirm(`Do you want to reject all requests?`) === false)
+    if (!isSafariExt() && confirm(`Do you want to reject all requests?`) === false)
       return
 
     for (const { id } of maybeRequests)

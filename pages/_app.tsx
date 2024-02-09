@@ -4,6 +4,7 @@ import "@/styles/index.css"
 
 import { Console } from "@/libs/console"
 import { Errors } from "@/libs/errors/errors"
+import { isSafariExt } from "@/libs/platform/platform"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { Catcher, PromiseCatcher } from "@/libs/react/error"
 import { ErrorProps } from "@/libs/react/props/error"
@@ -37,7 +38,7 @@ export function Fallback(props: ErrorProps) {
   }, [])
 
   const reset = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    if (confirm(`You will lose all your wallets if you didn't made backups, are you sure?`) === false)
+    if (!isSafariExt() && confirm(`You will lose all your wallets if you didn't made backups, are you sure?`) === false)
       return
 
     const databases = await indexedDB.databases()

@@ -3,6 +3,7 @@ import { Emojis } from "@/libs/emojis/emojis";
 import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
+import { isSafariExt } from "@/libs/platform/platform";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
@@ -63,7 +64,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       throw new Panic()
     if (!defPhraseInput)
       throw new Panic()
-    if (confirm("Did you backup your seed phrase?") === false)
+    if (!isSafariExt() && confirm("Did you backup your seed phrase?") === false)
       return
 
     const seed: SeedData = { type: "mnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, mnemonic: defPhraseInput }
@@ -104,7 +105,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       throw new Panic()
     if (triedEncryptedPhrase == null)
       throw new Panic()
-    if (confirm("Did you backup your seed phrase?") === false)
+    if (!isSafariExt() && confirm("Did you backup your seed phrase?") === false)
       return
 
     const [_, cipherBase64] = triedEncryptedPhrase.unwrap()
