@@ -9,13 +9,13 @@ export default function Action() {
   const background = useBackgroundContext().unwrap()
 
   useEffect(() => {
-    if (isSafariExt())
+    if (isSafariExt() && /iPhone|iPod/.test(navigator.platform))
       return
 
     /**
      * Chromium
      */
-    document.documentElement.classList.add("h-[600px", "w-[400px]")
+    document.documentElement.classList.add("h-[600px]", "w-[400px]")
     /**
      * Firefox
      */
