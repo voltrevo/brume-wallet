@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      browser.runtime.getBackgroundPage();
+
+      const here = new URL(location.href);
+      const next = here.searchParams.get("url");
+
+      location.replace(next);
+    </script>
+  </head>
+</html>

@@ -363,6 +363,10 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
     using preChannel = new Box(new Disposer(raw, () => raw.disconnect()))
     using preRouter = new Box(new ExtensionRpcRouter("background", raw))
 
+    await preRouter.getOrThrow().requestOrThrow<string>({
+      method: "brume_ping"
+    }, AbortSignal.timeout(1000)).then(r => r.unwrap())
+
     const channel = preChannel.unwrapOrThrow()
     const router = preRouter.unwrapOrThrow()
 
@@ -397,12 +401,6 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
       using _3 = onCloseDisposer
     }
 
-    using preEntry = new Box(new Disposer(wrapper, onEntryClean))
-
-    await router.requestOrThrow<string>({
-      method: "brume_ping"
-    }, AbortSignal.timeout(1000)).then(r => r.unwrap())
-
-    return preEntry.unwrapOrThrow()
+    return new Disposer(wrapper, onEntryClean)
   }, { capacity: 1 })
 }
