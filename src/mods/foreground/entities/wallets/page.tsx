@@ -28,7 +28,7 @@ import { Fragment, MouseEvent, createContext, useCallback, useContext, useEffect
 import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
 import { Page } from "../../../../libs/ui2/page/page";
 import { useBackgroundContext } from "../../background/context";
-import { HashSubpathProvider, Paths, useHashSubpath, usePathContext } from "../../router/path/context";
+import { HashSubpathProvider, useHashSubpath, usePathContext } from "../../router/path/context";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
@@ -147,7 +147,7 @@ function WalletDataPage() {
   }, [])
 
   const onBackClick = useCallback(() => {
-    Paths.go("/wallets")
+    location.assign("#/wallets")
   }, [])
 
   const connect = useGenius(subpath, "/connect")

@@ -365,7 +365,7 @@ export class Global {
       const { id, method, params } = request
       const url = qurl(`/${method}?id=${id}`, params)
 
-      const popup = await this.openOrFocusPopupOrThrow(url, mouse, force)
+      const popup = await this.openOrFocusPopupOrThrow(url.href, mouse, force)
       const response = await this.tryWaitPopupResponse<T>(request.id, popup, done).then(r => r.unwrap())
 
       return response

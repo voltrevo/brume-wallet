@@ -293,7 +293,7 @@ export function UsersMenuRow(props: { user: User }) {
   const userQuery = useUser(props.user.uuid)
   const maybeUser = userQuery.current?.ok().get()
 
-  const open = useGenius(path, qurl("/users/login", { user: props.user.uuid }))
+  const open = useGenius(path, qurl("/users/login", { user: props.user.uuid }).href)
 
   if (maybeUser == null)
     return null

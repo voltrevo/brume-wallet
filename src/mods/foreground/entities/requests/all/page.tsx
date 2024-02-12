@@ -12,7 +12,6 @@ import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/da
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { UserRejectedError } from "@/mods/foreground/errors/errors"
-import { Paths } from "@/mods/foreground/router/path/context"
 import { RpcErr } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { Err } from "@hazae41/result"
@@ -95,7 +94,7 @@ export function RequestRow(props: { request: AppRequest }) {
       return
 
     const { id, method, params } = maybeRequestData
-    Paths.go(qurl(`/${method}?id=${id}`, params))
+    location.assign(qurl(`#/${method}?id=${id}`, params))
   }, [maybeRequestData])
 
   if (maybeOriginData == null)

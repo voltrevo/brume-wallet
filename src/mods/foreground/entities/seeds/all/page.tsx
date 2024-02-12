@@ -5,7 +5,7 @@ import { Menu } from "@/libs/ui2/menu/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { Seed } from "@/mods/background/service_worker/entities/seeds/data"
-import { HashSubpathProvider, Paths, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context"
+import { HashSubpathProvider, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context"
 import { useCallback } from "react"
 import { useGenius } from "../../users/all/page"
 import { PaddedRoundedShrinkableNakedAnchor } from "../../wallets/actions/send"
@@ -27,7 +27,7 @@ export function SeedsPage() {
   const creator = useGenius(subpath, "/create")
 
   const onSeedClick = useCallback((seed: Seed) => {
-    Paths.go(`/seed/${seed.uuid}`)
+    location.assign(`#/seed/${seed.uuid}`)
   }, [])
 
   const Body =

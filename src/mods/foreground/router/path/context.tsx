@@ -14,7 +14,7 @@ export interface PathHandle {
    * The absolute url if we go to the given path
    * @param path 
    */
-  go(path: string): URL
+  go(pathOrUrl: string | URL): URL
 }
 
 export const PathContext =
@@ -26,7 +26,8 @@ export function usePathContext() {
 
 export namespace Paths {
 
-  export function hash(url: URL) {
+  export function hash(pathOrUrl: string | URL) {
+    const url = new URL(pathOrUrl, location.href)
     const hash = url.hash.slice(1)
 
     if (hash)
@@ -35,7 +36,8 @@ export namespace Paths {
     return new URL(url.origin)
   }
 
-  export function search(url: URL, key: string) {
+  export function search(pathOrUrl: string | URL, key: string) {
+    const url = new URL(pathOrUrl, location.href)
     const value = url.searchParams.get(key)
 
     if (value)
@@ -44,12 +46,9 @@ export namespace Paths {
     return new URL(url.origin)
   }
 
-  export function path(url: URL) {
+  export function path(pathOrUrl: string | URL) {
+    const url = new URL(pathOrUrl, location.href)
     return url.pathname + url.search + url.hash
-  }
-
-  export function go(path: string) {
-    location.assign(`#${path}`)
   }
 
 }
@@ -62,20 +61,20 @@ export function HashPathProvider(props: ChildrenProps) {
   const url = useMemo(() => {
     if (raw == null)
       return
-    return Paths.hash(new URL(raw))
+    return Paths.hash(raw)
   }, [raw])
 
   useEffect(() => {
-    const onHashChange = () => setRaw(location.href)
-
     setRaw(location.href)
+
+    const onHashChange = () => setRaw(location.href)
 
     addEventListener("hashchange", onHashChange, { passive: true })
     return () => removeEventListener("hashchange", onHashChange)
   }, [])
 
-  const go = useCallback((path: string) => {
-    return new URL(`#${path}`, location.href)
+  const go = useCallback((pathOrUrl: string | URL) => {
+    return new URL(`#${Paths.path(pathOrUrl)}`, location.href)
   }, [])
 
   const handle = useMemo(() => {
@@ -112,10 +111,10 @@ export function useHashSubpath(parent: PathHandle): PathHandle {
     return Paths.hash(parent.url)
   }, [parent])
 
-  const go = useCallback((path: string) => {
-    const url = new URL(parent.url.href)
-    url.hash = path
-    return parent.go(Paths.path(url))
+  const go = useCallback((pathOrUrl: string | URL) => {
+    const next = new URL(parent.url.href, location.href)
+    next.hash = Paths.path(pathOrUrl)
+    return parent.go(next)
   }, [parent])
 
   return useMemo(() => {
@@ -128,10 +127,10 @@ export function useSearchSubpath(parent: PathHandle, key: string): PathHandle {
     return Paths.search(parent.url, key)
   }, [key, parent])
 
-  const go = useCallback((path: string) => {
-    const url = new URL(parent.url.href)
-    url.searchParams.set(key, path)
-    return parent.go(Paths.path(url))
+  const go = useCallback((pathOrUrl: string) => {
+    const next = new URL(parent.url.href, location.href)
+    next.searchParams.set(key, Paths.path(pathOrUrl))
+    return parent.go(next)
   }, [key, parent])
 
   return useMemo(() => {
@@ -169,7 +168,7 @@ export function usePathState<T extends Record<string, Optional<string>>>() {
     if (path.url.href === url.href)
       return
 
-    location.replace(path.go(Paths.path(url)))
+    location.replace(path.go(url))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pending])
 
