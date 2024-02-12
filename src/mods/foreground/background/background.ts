@@ -1,15 +1,15 @@
 import { BrowserError, browser } from "@/libs/browser/browser"
-import { ExtensionRpcRouter, RpcRouter, WebsiteRpcRouter } from "@/libs/channel/channel"
+import { ExtensionRpcRouter, MessageRpcRouter, RpcRouter } from "@/libs/channel/channel"
 import { isSafariExt } from "@/libs/platform/platform"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Future } from "@hazae41/future"
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
-import { None, Some } from "@hazae41/option"
+import { None } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
-import { Plume, SuperEventTarget } from "@hazae41/plume"
-import { Ok, Result } from "@hazae41/result"
+import { SuperEventTarget } from "@hazae41/plume"
+import { Result } from "@hazae41/result"
 
 export type Background =
   | ServiceWorkerBackground
@@ -127,8 +127,8 @@ export async function getServiceWorkerOrThrow(background: ServiceWorkerBackgroun
   }
 }
 
-export function createServiceWorkerPortPool(background: ServiceWorkerBackground): Pool<Disposer<WebsiteRpcRouter>> {
-  return new Pool<Disposer<WebsiteRpcRouter>>(async (params) => {
+export function createServiceWorkerPortPool(background: ServiceWorkerBackground): Pool<Disposer<MessageRpcRouter>> {
+  return new Pool<Disposer<MessageRpcRouter>>(async (params) => {
     const { pool, index } = params
 
     using preRegistration = new Box(new Disposer(await getServiceWorkerOrThrow(background), r => r.unregister()))
@@ -138,15 +138,15 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
     if (active == null)
       throw new Error(`registration.active is null`)
 
-    const raw = new MessageChannel()
+    const rawChannel = new MessageChannel()
 
     const onRawClean = () => {
-      raw.port1.close()
-      raw.port2.close()
+      rawChannel.port1.close()
+      rawChannel.port2.close()
     }
 
-    using preChannel = new Box(new Disposer(raw, onRawClean))
-    using preRouter = new Box(new WebsiteRpcRouter("background", raw.port1))
+    using preChannel = new Box(new Disposer(rawChannel, onRawClean))
+    using preRouter = new Box(new MessageRpcRouter("background", rawChannel.port1))
 
     const registration = preRegistration.unwrapOrThrow()
     const channel = preChannel.unwrapOrThrow()
@@ -160,18 +160,12 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
 
     using preWrapper = new Box(new Disposer(router, onWrapperClean))
 
-    raw.port1.start()
-    raw.port2.start()
+    rawChannel.port1.start()
+    rawChannel.port2.start()
 
-    active.postMessage("HELLO_WORLD", [raw.port2])
+    active.postMessage("HELLO_WORLD", [rawChannel.port2])
 
-    await Plume.waitOrSignal(router.events, "request", async (future: Future<void>, init: RpcRequestInit<any>) => {
-      if (init.method !== "brume_hello")
-        return new None()
-
-      future.resolve()
-      return new Some(Ok.void())
-    }, AbortSignals.never())
+    await preRouter.getOrThrow().waitHelloOrThrow(AbortSignals.timeout(1000))
 
     router.runPingLoop()
 
@@ -240,20 +234,20 @@ export class WorkerBackground {
 
 }
 
-export function createWorkerPortPool(background: WorkerBackground): Pool<Disposer<WebsiteRpcRouter>> {
-  return new Pool<Disposer<WebsiteRpcRouter>>(async (params) => {
+export function createWorkerPortPool(background: WorkerBackground): Pool<Disposer<MessageRpcRouter>> {
+  return new Pool<Disposer<MessageRpcRouter>>(async (params) => {
     const { pool, index } = params
 
-    const raw = new MessageChannel()
+    const rawChannel = new MessageChannel()
 
     const onRawClean = () => {
-      raw.port1.close()
-      raw.port2.close()
+      rawChannel.port1.close()
+      rawChannel.port2.close()
     }
 
     using preWorker = new Box(new Disposer(new Worker("/service_worker.js"), w => w.terminate()))
-    using preChannel = new Box(new Disposer(raw, onRawClean))
-    using preRouter = new Box(new WebsiteRpcRouter("background", raw.port1))
+    using preChannel = new Box(new Disposer(rawChannel, onRawClean))
+    using preRouter = new Box(new MessageRpcRouter("background", rawChannel.port1))
 
     const worker = preWorker.unwrapOrThrow()
     const channel = preChannel.unwrapOrThrow()
@@ -267,18 +261,12 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
 
     using preWrapper = new Box(new Disposer(router, onWrapperClean))
 
-    raw.port1.start()
-    raw.port2.start()
+    rawChannel.port1.start()
+    rawChannel.port2.start()
 
-    worker.get().postMessage("HELLO_WORLD", [raw.port2])
+    worker.get().postMessage("HELLO_WORLD", [rawChannel.port2])
 
-    await Plume.waitOrSignal(router.events, "request", async (future: Future<void>, init: RpcRequestInit<any>) => {
-      if (init.method !== "brume_hello")
-        return new None()
-
-      future.resolve()
-      return new Some(Ok.void())
-    }, AbortSignals.never())
+    await preRouter.getOrThrow().waitHelloOrThrow(AbortSignals.timeout(1000))
 
     router.runPingLoop()
 
@@ -354,24 +342,22 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
     if (isSafariExt())
       await BrowserError.runOrThrow(() => (browser.runtime.getBackgroundPage as any)())
 
-    const raw = BrowserError.runOrThrowSync(() => {
+    const rawPort = BrowserError.runOrThrowSync(() => {
       const port = browser.runtime.connect({ name: "foreground" })
       port.onDisconnect.addListener(() => void chrome.runtime.lastError)
       return port
     })
 
-    using preChannel = new Box(new Disposer(raw, () => raw.disconnect()))
-    using preRouter = new Box(new ExtensionRpcRouter("background", raw))
+    using prePort = new Box(new Disposer(rawPort, () => rawPort.disconnect()))
+    using preRouter = new Box(new ExtensionRpcRouter("background", rawPort))
 
-    await preRouter.getOrThrow().requestOrThrow<string>({
-      method: "brume_ping"
-    }, AbortSignal.timeout(1000)).then(r => r.unwrap())
+    await preRouter.getOrThrow().waitHelloOrThrow(AbortSignals.timeout(1000))
 
-    const channel = preChannel.unwrapOrThrow()
+    const port = prePort.unwrapOrThrow()
     const router = preRouter.unwrapOrThrow()
 
     const onInnerClean = () => {
-      using _0 = channel
+      using _0 = port
       using _1 = router
     }
 

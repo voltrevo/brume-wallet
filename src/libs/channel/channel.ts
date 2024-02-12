@@ -1,17 +1,17 @@
 import { Future } from "@hazae41/future"
 import { RpcCounter, RpcInternalError, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
-import { CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
+import { AbortedError, CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
 import { BrowserError } from "../browser/browser"
 import { Console } from "../console"
 import { AbortSignals } from "../signals/signals"
 
 export type RpcRouter =
-  | WebsiteRpcRouter
+  | MessageRpcRouter
   | ExtensionRpcRouter
 
-export class WebsiteRpcRouter {
+export class MessageRpcRouter {
   readonly counter = new RpcCounter()
   readonly uuid = crypto.randomUUID()
 
@@ -49,6 +49,7 @@ export class WebsiteRpcRouter {
         await new Promise(ok => setTimeout(ok, 1000))
 
         await this.requestOrThrow({
+          id: "ping",
           method: "brume_ping"
         }, AbortSignal.timeout(1000)).then(r => r.unwrap())
 
@@ -68,16 +69,19 @@ export class WebsiteRpcRouter {
 
   async tryRouteRequest(request: RpcRequestInit<unknown>) {
     try {
-      if (request.method === "brume_ping")
-        return Ok.void()
-
       const returned = await this.events.emit("request", [request])
 
       if (returned.isSome())
         return returned.inner
 
+      if (request.method === "brume_hello")
+        return Ok.void()
+      if (request.method === "brume_ping")
+        return Ok.void()
+
       return new Err(new RpcInvalidRequestError())
     } catch (e: unknown) {
+      console.error(e, { e })
       return new Err(new RpcInternalError())
     }
   }
@@ -137,6 +141,21 @@ export class WebsiteRpcRouter {
     }, signal)
   }
 
+  async waitHelloOrThrow(signal = AbortSignals.never()) {
+    const active = this.requestOrThrow<void>({ method: "brume_hello" }).then(r => r.unwrap())
+
+    using passive = this.events.wait("request", (future: Future<void>, init) => {
+      if (init.method !== "brume_hello")
+        return new None()
+
+      future.resolve()
+      return new Some(Ok.void())
+    })
+
+    using abort = AbortedError.waitOrThrow(signal)
+    return await Promise.race([active, passive.get(), abort.get()])
+  }
+
 }
 
 export class ExtensionRpcRouter {
@@ -174,17 +193,19 @@ export class ExtensionRpcRouter {
 
   async tryRouteRequest(request: RpcRequestInit<unknown>) {
     try {
-      if (request.method === "brume_ping")
-        return Ok.void()
-
       const returned = await this.events.emit("request", [request])
 
       if (returned.isSome())
         return returned.inner
 
+      if (request.method === "brume_hello")
+        return Ok.void()
+      if (request.method === "brume_ping")
+        return Ok.void()
+
       return new Err(new RpcInvalidRequestError())
     } catch (e: unknown) {
-      console.error({ e })
+      console.error(e, { e })
       return new Err(new RpcInternalError())
     }
   }
@@ -247,6 +268,21 @@ export class ExtensionRpcRouter {
       future.resolve(response)
       return new Some(undefined)
     }, signal)
+  }
+
+  async waitHelloOrThrow(signal = AbortSignals.never()) {
+    const active = this.requestOrThrow<void>({ method: "brume_hello" }).then(r => r.unwrap())
+
+    using passive = this.events.wait("request", (future: Future<void>, init) => {
+      if (init.method !== "brume_hello")
+        return new None()
+
+      future.resolve()
+      return new Some(Ok.void())
+    })
+
+    using abort = AbortedError.waitOrThrow(signal)
+    return await Promise.race([active, passive.get(), abort.get()])
   }
 
 }
