@@ -93,48 +93,6 @@ async function main() {
     self.skipWaiting()
   }
 
-  if (isSafariExt() && typeof document !== "undefined") {
-    const worker = new Worker("/service_worker.js")
-
-    const onContentScript = async (port: chrome.runtime.Port) => {
-      const rawChannel = new MessageChannel()
-
-      rawChannel.port1.start()
-      rawChannel.port2.start()
-
-      worker.postMessage(crypto.randomUUID(), [rawChannel.port2])
-
-      rawChannel.port1.addEventListener("message", e => port.postMessage(e.data))
-      port.onMessage.addListener(e => rawChannel.port1.postMessage(e))
-
-      console.log("Waiting")
-    }
-
-    const onForeground = async (port: chrome.runtime.Port) => {
-      const rawChannel = new MessageChannel()
-
-      rawChannel.port1.start()
-      rawChannel.port2.start()
-
-      worker.postMessage("HELLO_WORLD", [rawChannel.port2])
-
-      rawChannel.port1.addEventListener("message", e => port.postMessage(e.data))
-      port.onMessage.addListener(e => rawChannel.port1.postMessage(e))
-
-      console.log("Waiting")
-    }
-
-    browser.runtime.onConnect.addListener(port => {
-      if (port.sender?.id !== browser.runtime.id)
-        return
-      if (port.name === "foreground")
-        return void onForeground(port)
-      return void onContentScript(port)
-    })
-
-    return
-  }
-
   interface PasswordData {
     uuid?: string
     password?: string
@@ -236,7 +194,7 @@ async function main() {
         return { uuid, password }
       }
 
-      if (isChromeExt()) {
+      if (isChromeExt() || isSafariExt()) {
         const { uuid, password } = await BrowserError.runOrThrow(() => browser.storage.session.get(["uuid", "password"]))
 
         return { uuid, password }
@@ -253,7 +211,7 @@ async function main() {
         return
       }
 
-      if (isChromeExt()) {
+      if (isChromeExt() || isSafariExt()) {
         await BrowserError.runOrThrow(() => browser.storage.session.set({ uuid, password }))
         return
       }
@@ -994,12 +952,7 @@ async function main() {
       const [uuid, password] = (request as RpcRequestPreinit<[string, string]>).params
 
       await this.setCurrentUserOrThrow(uuid, password)
-
-      if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
-        await this.setStoredPasswordOrThrow(uuid, password)
-        return Ok.void()
-      }
-
+      await this.setStoredPasswordOrThrow(uuid, password)
       return Ok.void()
     }
 
@@ -1657,7 +1610,7 @@ async function main() {
     })
   }
 
-  if (isChromeExt() || isFirefoxExt()) {
+  if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
     const onContentScript = async (port: chrome.runtime.Port) => {
       const router = new ExtensionRpcRouter(crypto.randomUUID(), port)
 
@@ -1694,88 +1647,6 @@ async function main() {
       if (port.name === "foreground")
         return void onForeground(port)
       return void onContentScript(port)
-    })
-  }
-
-  if (isSafariExt() && typeof document === "undefined") {
-    Console.debugging = true
-
-    const onForeground = async (event: ExtendableMessageEvent) => {
-      const port = event.ports[0]
-
-      const router = new MessageRpcRouter("foreground", port)
-
-      const onRequest = async (request: RpcRequestInit<unknown>) => {
-        const inited = await init
-
-        if (inited.isErr())
-          return new Some(inited)
-
-        return await inited.get().tryRouteForeground(router, request)
-      }
-
-      router.events.on("request", onRequest, { passive: true })
-
-      const onClose = () => {
-        using _ = router
-
-        router.events.off("request", onRequest)
-        router.port.close()
-
-        return new None()
-      }
-
-      router.events.on("close", onClose, { passive: true })
-
-      port.start()
-
-      await router.waitHelloOrThrow(AbortSignals.timeout(1000))
-
-      router.runPingLoop()
-    }
-
-    const onContentScript = async (event: ExtendableMessageEvent) => {
-      const raw = event.ports[0]
-
-      const router = new MessageRpcRouter(event.data, raw)
-
-      const onRequest = async (request: RpcRequestInit<unknown>) => {
-        const inited = await init
-
-        if (inited.isErr()) {
-          console.log({ e: inited.getErr() })
-          return new Some(inited)
-        }
-
-        return await inited.get().tryRouteContentScript(router, request)
-      }
-
-      router.events.on("request", onRequest, { passive: true })
-
-      const onClose = () => {
-        using _ = router
-
-        router.events.off("request", onRequest)
-        router.port.close()
-
-        return new None()
-      }
-
-      router.events.on("close", onClose, { passive: true })
-
-      raw.start()
-
-      await router.waitHelloOrThrow(AbortSignals.timeout(1000))
-
-      console.log("Sent hello on worker")
-
-      router.runPingLoop()
-    }
-
-    self.addEventListener("message", (event) => {
-      if (event.data === "HELLO_WORLD")
-        return void onForeground(event)
-      return void onContentScript(event)
     })
   }
 

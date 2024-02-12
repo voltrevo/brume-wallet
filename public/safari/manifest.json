@@ -1,9 +1,9 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Brume Wallet",
   "description": "The private wallet",
   "version": "VERSION",
-  "browser_action": {
+  "action": {
     "default_title": "Brume Wallet",
     "default_popup": "action.html"
   },
@@ -13,10 +13,12 @@
   "permissions": [
     "storage"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'none';"
+  },
   "background": {
-    "type":"module",
-    "persistent": false,
-    "scripts": ["service_worker.js"]
+    "type": "module",
+    "service_worker": "service_worker.js"
   },
   "content_scripts": [
     {
@@ -30,6 +32,5 @@
       "run_at": "document_start",
       "all_frames": true
     }
-  ],
-  "content_security_policy": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-93+ZD1pnvn2ZeAo2LkCIsgePJ48n2Tv4GQJDt0uyBIo='; img-src 'self' data: blob:; connect-src 'self' data: https://raw.githubusercontent.com wss://snowflake.torproject.net;"
+  ]
 }

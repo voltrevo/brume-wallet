@@ -1,6 +1,5 @@
 import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionRpcRouter, MessageRpcRouter, RpcRouter } from "@/libs/channel/channel"
-import { isSafariExt } from "@/libs/platform/platform"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
@@ -338,9 +337,6 @@ export class ExtensionBackground {
 export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<ExtensionRpcRouter>> {
   return new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
     const { index, pool } = params
-
-    if (isSafariExt())
-      await BrowserError.runOrThrow(() => (browser.runtime.getBackgroundPage as any)())
 
     const rawPort = BrowserError.runOrThrowSync(() => {
       const port = browser.runtime.connect({ name: "foreground" })
