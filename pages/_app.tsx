@@ -76,29 +76,29 @@ export function Fallback(props: ErrorProps) {
 }
 
 async function initBerith() {
-  Ed25519.set(await Ed25519.fromSafeOrBerith())
-  X25519.set(await X25519.fromSafeOrBerith())
+  Ed25519.set(await Ed25519.fromSafeOrNoble())
+  X25519.set(await X25519.fromNativeOrNoble())
 }
 
 async function initEligos() {
-  Secp256k1.set(await Secp256k1.fromEligos())
+  Secp256k1.set(Secp256k1.fromNoble())
 }
 
 async function initMorax() {
-  Keccak256.set(await Keccak256.fromMorax())
-  Sha1.set(await Sha1.fromMorax())
-  Ripemd160.set(await Ripemd160.fromMorax())
+  Keccak256.set(Keccak256.fromNoble())
+  Sha1.set(await Sha1.fromNoble())
+  Ripemd160.set(Ripemd160.fromNoble())
 }
 
 async function initAlocer() {
-  Base16.set(await Base16.fromBufferOrAlocer())
-  Base64.set(await Base64.fromBufferOrAlocer())
-  Base64Url.set(await Base64Url.fromBufferOrAlocer())
-  Base58.set(await Base58.fromAlocer())
+  Base16.set(await Base16.fromBufferOrScure())
+  Base64.set(await Base64.fromBufferOrScure())
+  Base64Url.set(await Base64Url.fromBufferOrScure())
+  Base58.set(await Base58.fromScure())
 }
 
 async function initZepar() {
-  ChaCha20Poly1305.set(await ChaCha20Poly1305.fromZepar())
+  ChaCha20Poly1305.set(await ChaCha20Poly1305.fromNoble())
 }
 
 export function Initializer(props: {}) {
