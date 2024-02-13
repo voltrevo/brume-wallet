@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Color, Gradient } from "@/libs/colors/colors";
+import { Color } from "@/libs/colors/colors";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { AnchorProps, ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
 import { useKeyValueState, usePathState } from "@/mods/foreground/router/path/context";
@@ -129,9 +129,7 @@ export function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps)
 export function WideShrinkableGradientButton(props: ChildrenProps & ButtonProps & { color: Color }) {
   const { children, color, ...rest } = props
 
-  const [color1, color2] = Gradient.get(color)
-
-  return <button className={`flex-1 group po-md bg-gradient-to-r from-${color1}-400 to-${color2}-400 dark:from-${color1}-500 dark:to-${color2}-500 text-white rounded-xl outline-none whitespace-nowrap enabled:hover:bg-${color}-400/90 focus-visible:outline-${color}-400 dark:enabled:hover:bg-${color}-500/90 dark:focus-visible:outline-${color}-500 disabled:opacity-50 transition-opacity`}
+  return <button className={`flex-1 group po-md bg-${color}-400 dark:bg-${color}-500 text-white rounded-xl outline-none whitespace-nowrap enabled:hover:bg-${color}-400/90 focus-visible:outline-${color}-400 dark:enabled:hover:bg-${color}-500/90 dark:focus-visible:outline-${color}-500 disabled:opacity-50 transition-opacity`}
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
       {children}

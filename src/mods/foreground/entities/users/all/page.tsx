@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Color, Gradient } from "@/libs/colors/colors";
+import { Color } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { Events } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
@@ -533,9 +533,7 @@ export function WideShrinkableContrastAnchor(props: ChildrenProps & AnchorProps 
 export function UserAvatar(props: ClassNameProps & { name: string } & { color: Color }) {
   const { color, name, className } = props
 
-  const [color1, color2] = Gradient.get(color)
-
-  return <div className={`bg-gradient-to-br from-${color1}-400 dark:from-${color1}-500 to-${color2}-400 dark:to-${color2}-500 rounded-full flex justify-center items-center ${className} text-white`}>
+  return <div className={`bg-${color}-400 dark:bg-${color}-500 rounded-full flex justify-center items-center ${className} text-white`}>
     {name[0]}
   </div>
 }

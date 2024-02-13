@@ -1,4 +1,4 @@
-import { Color, Gradient } from "@/libs/colors/colors"
+import { Color } from "@/libs/colors/colors"
 import { useCopy } from "@/libs/copy/copy"
 import { chainByChainId } from "@/libs/ethereum/mods/chain"
 import { Outline } from "@/libs/icons/icons"
@@ -39,8 +39,6 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
 
   const subpath = useHashSubpath(path)
   const genius = useGenius(subpath, href)
-
-  const [color1, color2] = Gradient.get(color)
 
   const finalAddress = useMemo(() => {
     return Address.fromOrThrow(address)
@@ -134,7 +132,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
 
   return <div className="w-full h-full"
     style={{ perspective: "1000px" }}>
-    <div className={`relative z-10 w-full h-full text-white bg-gradient-to-br from-${color1}-400 to-${color2}-400 dark:from-${color1}-500 dark:to-${color2}-500 rounded-xl ${preflip && !postflip ? "animate-flip-in" : ""} ${!preflip && postflip ? "animate-flip-out" : ""}`}
+    <div className={`relative z-10 w-full h-full text-white bg-${color}-400 dark:bg-${color}-500 rounded-xl ${preflip && !postflip ? "animate-flip-in" : ""} ${!preflip && postflip ? "animate-flip-out" : ""}`}
       style={{ transform: preflip && postflip ? `rotateY(180deg)` : "", transformStyle: "preserve-3d" }}
       onAnimationEnd={onFlipTransitionEnd}>
       <div className="po-md absolute w-full h-full flex flex-col"

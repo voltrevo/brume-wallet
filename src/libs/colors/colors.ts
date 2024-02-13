@@ -20,31 +20,3 @@ export namespace Color {
   }
 
 }
-
-export namespace Gradient {
-
-  const all = {
-    "red": "red",
-    "orange": "amber",
-    "amber": "yellow",
-    "yellow": "yellow",
-    "lime": "lime",
-    "green": "emerald",
-    "emerald": "teal",
-    "teal": "cyan",
-    "cyan": "sky",
-    "sky": "blue",
-    "blue": "indigo",
-    "indigo": "violet",
-    "violet": "purple",
-    "purple": "fuchsia",
-    "fuchsia": "pink",
-    "pink": "rose",
-    "rose": "red"
-  }
-
-  export function get(color: Color) {
-    return [color, all[color]]
-  }
-
-}
