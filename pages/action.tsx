@@ -36,7 +36,7 @@ export default function Action() {
     return () => removeEventListener("hashchange", onHashChange)
   }, [background])
 
-  return <main id="main" className="p-safe grow w-full flex flex-col overflow-hidden">
+  return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden">
     <NavBar />
     <Overlay>
       <Router />

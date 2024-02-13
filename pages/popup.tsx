@@ -36,7 +36,7 @@ import { Err, Result } from "@hazae41/result";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
-  return <main id="main" className="p-safe grow w-full flex flex-col overflow-hidden">
+  return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden">
     <NavBar />
     <Overlay>
       <UserGuard>
