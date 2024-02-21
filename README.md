@@ -11,7 +11,7 @@ The private Ethereum wallet with built-in Tor
 - Almost the same features as MetaMask
 - Supply-chain hardened
 
-## Getting started
+## Usage
 
 You can use Brume Wallet on a website, as a browser extension, and as an mobile application
 
