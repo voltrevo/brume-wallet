@@ -24,7 +24,6 @@ jobs:
     # Compare unzipped committed zip files and built folders
     - run: "diff -r ./unzipped/chrome ./dist/chrome"
     - run: "diff -r ./unzipped/firefox ./dist/firefox"
-    - run: "diff -r ./unzipped/safari ./dist/safari"
     - run: "diff -r ./unzipped/website ./dist/website"
     # Clean ./unzipped
     - run: "rm -rf ./unzipped"
