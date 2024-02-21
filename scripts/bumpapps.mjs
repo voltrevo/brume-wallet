@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "fs";
 const version = JSON.parse(readFileSync("./package.json", "utf8")).version;
 const versionCode = Number(version.replaceAll(".", "")).toString()
 
-const previous = readFileSync("./dist/version.txt", "utf8");
+const previous = readFileSync("./version.txt", "utf8");
 const previousCode = Number(previous.replaceAll(".", "")).toString()
 
 /**
