@@ -37,7 +37,7 @@ jobs:
     - run: "git restore ./dist/safari.zip"
     - run: "git restore ./dist/android.apk"
     - run: "git restore ./dist/macos.zip"
-    - run: "git restore ./dist/ios-and-ipad.ipa"
+    - run: "git restore ./dist/ios-and-ipados.ipa"
     # Compare other files
     - run: "git status --porcelain"
     - run: "[[ -z $(git status --porcelain) ]]"

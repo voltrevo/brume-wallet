@@ -119,7 +119,7 @@ git restore ./dist/website.zip
 git restore ./dist/safari.zip
 git restore ./dist/android.apk
 git restore ./dist/macos.zip
-git restore ./dist/ios-and-ipad.ipa
+git restore ./dist/ios-and-ipados.ipa
 
 # Compare other files
 [[ -z $(git status --porcelain) ]]
