@@ -13,7 +13,6 @@ import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useAppRequests } from "@/mods/foreground/entities/requests/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
 import { SmallShrinkableOppositeAnchor, useGenius } from "@/mods/foreground/entities/users/all/page";
-import { UserGuard } from "@/mods/foreground/entities/users/context";
 import { WalletTransactionDialog } from "@/mods/foreground/entities/wallets/actions/eth_sendTransaction";
 import { PaddedRoundedShrinkableNakedAnchor, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send";
 import { WalletCreatorMenu } from "@/mods/foreground/entities/wallets/all/create";
@@ -36,17 +35,6 @@ import { Err, Result } from "@hazae41/result";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function Popup() {
-  return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden">
-    <NavBar />
-    <Overlay>
-      <UserGuard>
-        <Ready />
-      </UserGuard>
-    </Overlay>
-  </main>
-}
-
-export function Ready() {
   const background = useBackgroundContext().unwrap()
 
   useEffect(() => {
@@ -55,7 +43,29 @@ export function Ready() {
     }).then(r => r.unwrap())
   }, [background])
 
-  return <Router />
+  useEffect(() => {
+    if (location.hash !== "#/home")
+      return
+
+    background.requestOrThrow<string>({
+      method: "brume_getPath"
+    }).then(r => location.hash = r.unwrap())
+
+    const onHashChange = () => void background.requestOrThrow<void>({
+      method: "brume_setPath",
+      params: [location.hash]
+    }).then(r => r.unwrap())
+
+    addEventListener("hashchange", onHashChange, { passive: true })
+    return () => removeEventListener("hashchange", onHashChange)
+  }, [background])
+
+  return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden">
+    <NavBar />
+    <Overlay>
+      <Router />
+    </Overlay>
+  </main>
 }
 
 export function TransactPage() {
