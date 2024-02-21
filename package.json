@@ -22,7 +22,7 @@
     "zip:chrome": "cd ./dist/chrome && zip -r -X ../chrome.zip .",
     "zip:firefox": "cd ./dist/firefox && zip -r -X ../firefox.zip .",
     "zip:macos": "cd './dist/Brume Wallet.app' && zip -r -X ../macos.zip .",
-    "preversion": "find . -name '.DS_Store' -delete && echo $npm_package_version > ./dist/previous.txt",
+    "preversion": "find . -name '.DS_Store' -delete && echo $npm_package_version > ./dist/version.txt",
     "version:!bumpapps": "node ./scripts/bumpapps.mjs",
     "version:!android": "cp ./apps/android/app/release/app-release.apk ./dist/android.apk",
     "version:!ios-and-ipados": "cp './dist/ios/Brume Wallet.ipa' ./dist/ios-and-ipados.ipa",
