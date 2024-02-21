@@ -228,7 +228,7 @@ export function FullLandingPage(props: { next?: string }) {
         <div className="h-8" />
         <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
           <DownloadCard
-            highlighted={typeof window.chrome !== "undefined"}
+            highlighted={navigator.userAgent.includes("Chrome") && !navigator.userAgent.includes("Android")}
             icon={Outline.ArrowTopRightOnSquareIcon}
             title="Chrome-like"
             src="/assets/browsers/chrome.png"
@@ -236,7 +236,7 @@ export function FullLandingPage(props: { next?: string }) {
             Chrome, Brave, Chromium, Edge, Opera, Vivaldi
           </DownloadCard>
           <DownloadCard
-            highlighted={navigator.userAgent.indexOf("Firefox") != -1}
+            highlighted={navigator.userAgent.includes("Firefox") && !navigator.userAgent.includes("Android")}
             icon={Outline.ArrowTopRightOnSquareIcon}
             title="Firefox-like"
             src="/assets/browsers/firefox.png"
@@ -244,7 +244,7 @@ export function FullLandingPage(props: { next?: string }) {
             Firefox, Waterfox, Pale Moon, Basilisk, IceCat, IceWeasel
           </DownloadCard>
           <DownloadCard
-            highlighted={navigator.userAgent.indexOf("Safari") != -1}
+            highlighted={navigator.userAgent.includes("Safari") && !navigator.userAgent.includes("Chrome") && !navigator.userAgent.includes("Android")}
             icon={Outline.ArrowTopRightOnSquareIcon}
             title="Safari"
             src="/assets/browsers/safari.svg"
@@ -252,7 +252,7 @@ export function FullLandingPage(props: { next?: string }) {
             iOS, iPadOS, macOS
           </DownloadCard>
           <DownloadCard
-            highlighted={navigator.userAgent.indexOf("Android") != -1}
+            highlighted={navigator.userAgent.includes("Android")}
             icon={Outline.ArrowDownTrayIcon}
             title="Android"
             src="/assets/browsers/android.svg"
