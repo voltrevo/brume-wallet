@@ -909,6 +909,8 @@ class Global {
       return new Some(await this.brume_wc_connect(foreground, request))
     if (request.method === "brume_wc_status")
       return new Some(await this.brume_wc_connect(foreground, request))
+    if (request.method === "popup_open")
+      return new Some(await this.popup_open(foreground, request))
     if (request.method === "popup_hello")
       return new Some(await this.popup_hello(foreground, request))
     if (request.method === "brume_respond")
@@ -925,6 +927,11 @@ class Global {
 
     this.#path = path
 
+    return Ok.void()
+  }
+
+  async popup_open(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+    await this.openOrFocusPopupOrThrow("/home", { x: 0, y: 0 })
     return Ok.void()
   }
 
@@ -1684,7 +1691,7 @@ if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
     })
   }
 
-  if (isFirefoxExt() || isSafariExt()) {
+  if (isFirefoxExt()) {
     browser.browserAction.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       const inited = await init
 
