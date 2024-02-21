@@ -23,7 +23,7 @@ You can use Brume Wallet on a website, as a browser extension, and as an mobile 
 
 - [Chrome Store](https://chrome.google.com/webstore/detail/brume-wallet/oljgnlammonjehmmfahdjgjhjclpockd)
 
-#### Firefox-like extension (store)
+### Firefox-like extension (store)
 
 - [Firefox Store](https://addons.mozilla.org/firefox/addon/brumewallet/)
 
