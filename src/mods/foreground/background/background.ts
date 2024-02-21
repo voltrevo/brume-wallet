@@ -164,7 +164,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
 
     active.postMessage("HELLO_WORLD", [rawChannel.port2])
 
-    await preRouter.getOrThrow().waitHelloOrThrow(AbortSignals.timeout(1000))
+    await router.waitHelloOrThrow(AbortSignals.timeout(1000))
 
     router.runPingLoop()
 
@@ -265,7 +265,7 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
 
     worker.get().postMessage("HELLO_WORLD", [rawChannel.port2])
 
-    await preRouter.getOrThrow().waitHelloOrThrow(AbortSignals.timeout(1000))
+    await router.waitHelloOrThrow(AbortSignals.timeout(1000))
 
     router.runPingLoop()
 
