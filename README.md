@@ -4,7 +4,7 @@ The private Ethereum wallet with built-in Tor
 
 ## Usage
 
-You can use Brume Wallet on a website, as a browser extension, and as an mobile application
+You can use Brume Wallet on a website, as a browser extension, and as a mobile application
 
 ### Website
 
