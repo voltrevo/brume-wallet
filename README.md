@@ -2,15 +2,6 @@
 
 The private Ethereum wallet with built-in Tor
 
-## TLDR
-- Anonymous requests using Tor (the dark net)
-- Built for strong zero-cost privacy and security
-- Available as an extension and on a website
-- Won EthBrno 2022 hackathon (+ design award)
-- Made by two French cypherpunks
-- Almost the same features as MetaMask
-- Supply-chain hardened
-
 ## Usage
 
 You can use Brume Wallet on a website, as a browser extension, and as an mobile application
@@ -124,12 +115,18 @@ git restore ./dist/chrome.zip
 git restore ./dist/firefox.zip
 git restore ./dist/website.zip
 
+# Restore deleted build files
+git restore ./dist/safari.zip
+git restore ./dist/android.apk
+git restore ./dist/macos.zip
+git restore ./dist/ios-and-ipad.ipa
+
 # Compare other files
 [[ -z $(git status --porcelain) ]]
 echo $?
 ```
 
-## Secure by design
+## Security design
 
 ### Encrypted storage
 
