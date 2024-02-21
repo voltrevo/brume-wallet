@@ -43,14 +43,23 @@ export default function Popup() {
     }).then(r => r.unwrap())
   }, [background])
 
-  useEffect(() => {
-    if (location.hash !== "#/home")
+  const [loading, setLoading] = useState(false)
+
+  useMemo(() => {
+    if (location.hash !== "")
       return
 
     background.requestOrThrow<string>({
       method: "brume_getPath"
-    }).then(r => location.hash = r.unwrap())
+    }).then(r => {
+      location.hash = r.unwrap()
+      setLoading(false)
+    })
 
+    setLoading(true)
+  }, [background])
+
+  useEffect(() => {
     const onHashChange = () => void background.requestOrThrow<void>({
       method: "brume_setPath",
       params: [location.hash]
@@ -59,6 +68,9 @@ export default function Popup() {
     addEventListener("hashchange", onHashChange, { passive: true })
     return () => removeEventListener("hashchange", onHashChange)
   }, [background])
+
+  if (loading)
+    return null
 
   return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden">
     <NavBar />

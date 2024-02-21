@@ -28,7 +28,7 @@ import { Sha1 } from "@hazae41/sha1"
 import { X25519 } from "@hazae41/x25519"
 import type { AppProps } from 'next/app'
 import Head from "next/head"
-import { useCallback, useEffect } from "react"
+import { useCallback, useEffect, useMemo } from "react"
 
 export function Fallback(props: ErrorProps) {
   const { error } = props
@@ -117,6 +117,26 @@ export function Initializer(props: {}) {
 }
 
 export default function App({ Component, pageProps }: AppProps) {
+  const goto = useMemo(() => {
+    if ("location" in globalThis === false)
+      return
+
+    const url = new URL(location.href)
+    const goto = url.searchParams.get("_")
+
+    if (!goto)
+      return
+
+    url.hash = decodeURIComponent(goto)
+    url.search = ""
+
+    location.replace(url)
+    return goto
+  }, [])
+
+  if (goto != null)
+    return null
+
   return <>
     <Head>
       <title>Brume Wallet</title>
