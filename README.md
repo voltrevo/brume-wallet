@@ -113,7 +113,6 @@ You can check the comparison yourself by running the following
 mkdir ./unzipped
 unzip ./dist/chrome.zip -d ./unzipped/chrome
 unzip ./dist/firefox.zip -d ./unzipped/firefox
-unzip ./dist/safari.zip -d ./unzipped/safari
 unzip ./dist/website.zip -d ./unzipped/website
 
 # Build folders into ./dist
@@ -122,7 +121,6 @@ npm ci && npm run build
 # Compare unzipped committed zip files and built folders
 diff -r ./unzipped/chrome ./dist/chrome
 diff -r ./unzipped/firefox ./dist/firefox
-diff -r ./unzipped/safari ./dist/safari
 diff -r ./unzipped/website ./dist/website
 
 # Clean ./unzipped
@@ -131,7 +129,6 @@ rm -rf ./unzipped
 # Restore built zip files
 git restore ./dist/chrome.zip
 git restore ./dist/firefox.zip
-git restore ./dist/safari.zip
 git restore ./dist/website.zip
 
 # Compare other files

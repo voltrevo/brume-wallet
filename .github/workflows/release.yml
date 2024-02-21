@@ -18,7 +18,6 @@ jobs:
     - run: "mkdir ./unzipped"
     - run: "unzip ./dist/chrome.zip -d ./unzipped/chrome"
     - run: "unzip ./dist/firefox.zip -d ./unzipped/firefox"
-    - run: "unzip ./dist/safari.zip -d ./unzipped/safari"
     - run: "unzip ./dist/website.zip -d ./unzipped/website"
     # Build folders into ./dist
     - run: "npm ci && npm run build"
@@ -32,7 +31,6 @@ jobs:
     # Restore built zip files
     - run: "git restore ./dist/chrome.zip"
     - run: "git restore ./dist/firefox.zip"
-    - run: "git restore ./dist/safari.zip"
     - run: "git restore ./dist/website.zip"
     # Compare other files
     - run: "[[ -z $(git status --porcelain) ]]"
