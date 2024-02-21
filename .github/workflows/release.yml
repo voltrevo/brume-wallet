@@ -33,5 +33,11 @@ jobs:
     - run: "git restore ./dist/chrome.zip"
     - run: "git restore ./dist/firefox.zip"
     - run: "git restore ./dist/website.zip"
-    # Compare other files (not failing)
+    # Restore deleted build files
+    - run: "git restore ./dist/safari.zip"
+    - run: "git restore ./dist/android.apk"
+    - run: "git restore ./dist/macos.zip"
+    - run: "git restore ./dist/ios-and-ipad.ipa"
+    # Compare other files
     - run: "git status --porcelain"
+    - run: "[[ -z $(git status --porcelain) ]]"
