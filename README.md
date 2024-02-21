@@ -11,74 +11,67 @@ The private Ethereum wallet with built-in Tor
 - Almost the same features as MetaMask
 - Supply-chain hardened
 
-## How do I know that my current wallet leaks my IP address?
-
-- Add our proxy to your networks on your current wallet
-
-Network name: `Brume Proxy`
-
-New RPC URL: `https://proxy.haz.workers.dev`
-
-Chain ID: `1`
-
-Currency Symbol: `ETH`
-
-- Go on the logs website https://logs.brume.money/
-
 ## Getting started
 
-You can use Brume Wallet as an extension and on a website
+You can use Brume Wallet on a website, as a browser extension, and as an mobile application
 
-### Using the website
+### Website
 
-- Click here https://wallet.brume.money
+- [Go to wallet.brume.money](https://wallet.brume.money)
 
-### Installing the extension
+### Chrome-like extension (store)
 
-#### Chrome / Brave / Chromium
+- [Chrome Store](https://chrome.google.com/webstore/detail/brume-wallet/oljgnlammonjehmmfahdjgjhjclpockd)
 
-- [Click here](https://chrome.google.com/webstore/detail/brume-wallet/oljgnlammonjehmmfahdjgjhjclpockd)
+#### Firefox-like extension (store)
 
-#### Firefox
+- [Firefox Store](https://addons.mozilla.org/firefox/addon/brumewallet/)
 
-- [Click here](https://addons.mozilla.org/firefox/addon/brumewallet/)
+### Safari extension on iOS and iPadOS (store)
 
-#### Chrome (permanent developer mode)
+- [App Store](https://apps.apple.com/app/brume-wallet/id6477162492)
 
-- Download and extract the `chrome.zip` file on the [release page](https://github.com/brumewallet/wallet/releases)
-- Open Chrome, open settings
-- Left panel, bottom, click `Extensions`
+### Safari extension on macOS (signed .app)
+
+- [Download .app](https://github.com/brumewallet/wallet/raw/main/dist/macos.zip)
+
+### Android application (signed .apk)
+
+- [Download .apk](https://github.com/brumewallet/wallet/raw/main/dist/android.apk)
+
+### Safari extension on iOS and iPadOS (signed .ipa)
+
+- [Download .ipa](https://github.com/brumewallet/wallet/raw/main/dist/ios-and-ipados.ipa)
+
+### Website (reproducible cloud-hosting)
+
+- Clone the repository on your GitHub account
+- Host it on a cloud provider with `npm run build:vercel` as build command and `out` as build output
+
+### Website (reproducible self-hosting)
+
+- [Download .zip](https://github.com/brumewallet/wallet/raw/main/dist/website.zip)
+- Extract `website.zip` in a new folder
+- Serve using `npx serve`
+
+### Chrome / Brave / Chromium extension (reproducible self-installation)
+
+- [Download .zip](https://github.com/brumewallet/wallet/raw/main/dist/chrome.zip)
+- Extract `chrome.zip` in a new folder
+- Open Chrome, open settings, left panel, bottom, click `Extensions`
 - Top bar, right, enable `Developer mode`
-- Click `Load unpacked`
-- Select the folder where `chrome.zip` was extracted
+- Click `Load unpacked`, select the folder where `chrome.zip` was extracted
 
-#### Firefox (temporary developer mode)
+### Firefox extension (reproducible temporary self-installation)
 
-- Download and extract the `firefox.zip` file on the [release page](https://github.com/brumewallet/wallet/releases)
+- [Download .zip](https://github.com/brumewallet/wallet/raw/main/dist/firefox.zip)
+- Extract `firefox.zip` in a new folder
 - Open Firefox, navigate to `about:debugging`
 - Left panel, click `This Firefox`
 - `Temporary Extensions`, click `Load Temporary Add-on`
 - Navigate to the Brume Wallet folder
 - Open the folder where `firefox.zip` was extracted
 - Select the `manifest.json` file
-
-#### Safari (temporary developer mode)
-
-- Get a mac
-- Install Xcode
-- Enable `Developer mode` in Safari
-- [Build the extension](#reproducible-building)
-- Run `npm run xcode`
-- Enter `y` to everything and/or ignore warnings
-
-*Xcode will start*
-
-- Top bar, center, left, select `brume-wallet (macOS)`
-- Top bar, left, click the play button to build the extension
-- Open Safari
-- Reach macOS toolbar, click `Development`, click `Allow unsigned extensions` at the very bottom
-- Reach macOS toolbar, click `Safari`, click `Settings`
-- Top bar, click `Extensions`, find `Brume Wallet`, enable it
 
 ## Reproducible building
 
