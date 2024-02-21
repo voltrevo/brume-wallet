@@ -54,7 +54,7 @@ You can use Brume Wallet on a website, as a browser extension, and as an mobile 
 - Extract `website.zip` in a new folder
 - Serve using `npx serve`
 
-### Chrome / Brave / Chromium extension (reproducible self-installation)
+### Chrome-like extension (reproducible self-installation)
 
 - [Download .zip](https://github.com/brumewallet/wallet/raw/main/dist/chrome.zip)
 - Extract `chrome.zip` in a new folder
@@ -62,7 +62,7 @@ You can use Brume Wallet on a website, as a browser extension, and as an mobile 
 - Top bar, right, enable `Developer mode`
 - Click `Load unpacked`, select the folder where `chrome.zip` was extracted
 
-### Firefox extension (reproducible temporary self-installation)
+### Firefox-like extension (reproducible temporary self-installation)
 
 - [Download .zip](https://github.com/brumewallet/wallet/raw/main/dist/firefox.zip)
 - Extract `firefox.zip` in a new folder
