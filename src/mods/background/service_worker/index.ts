@@ -9,7 +9,7 @@ import { fetchAsBlobOrThrow } from "@/libs/fetch/fetch"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
-import { isAndroidApp, isAppleApp, isChromeExt, isFirefoxExt, isSafariExt, isWebsite } from "@/libs/platform/platform"
+import { isAndroidApp, isAppleApp, isChromeExt, isFirefoxExt, isIpad, isSafariExt, isWebsite } from "@/libs/platform/platform"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Strings } from "@/libs/strings/strings"
 import { Circuits } from "@/libs/tor/circuits/circuits"
@@ -19,6 +19,7 @@ import { CryptoClient } from "@/libs/wconn/mods/crypto/client"
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn"
 import { Wc, WcMetadata, WcSession, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
 import { UnauthorizedError } from "@/mods/foreground/errors/errors"
+import { Paths } from "@/mods/foreground/router/path/context"
 import { Base16 } from "@hazae41/base16"
 import { Base58 } from "@hazae41/base58"
 import { Base64 } from "@hazae41/base64"
@@ -335,8 +336,8 @@ class Global {
   async requestOrThrow<T>(request: AppRequestData, mouse?: Mouse): Promise<RpcResponse<T>> {
     if (mouse != null)
       return await this.requestPopupOrThrow(request, mouse)
-    else
-      return await this.requestNoPopupOrThrow(request)
+
+    return await this.requestNoPopupOrThrow(request)
   }
 
   async requestNoPopupOrThrow<T>(request: AppRequestData): Promise<RpcResponse<T>> {
@@ -353,7 +354,7 @@ class Global {
     }
   }
 
-  async requestPopupOrThrow<T>(request: AppRequestData, mouse: Mouse, force?: boolean): Promise<RpcResponse<T>> {
+  async requestPopupOrThrow<T>(request: AppRequestData, mouse: Mouse): Promise<RpcResponse<T>> {
     const requestQuery = BgAppRequest.schema(request.id)
     await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
 
@@ -363,13 +364,47 @@ class Global {
       const { id, method, params } = request
       const url = qurl(`/${method}?id=${id}`, params)
 
-      const popup = await this.openOrFocusPopupOrThrow(url.href, mouse, force)
+      if (isSafariExt() && isIpad()) {
+        this.#path = `#${Paths.path(url)}`
+
+        await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
+        const response = await this.waitResponseOrThrow<T>(request.id, done)
+
+        return response
+      }
+
+      const popup = await this.openOrFocusPopupOrThrow(url.href, mouse)
       const response = await this.waitPopupResponseOrThrow<T>(request.id, popup, done)
 
       return response
     } finally {
       await requestQuery.delete()
       done.resolve(Ok.void())
+    }
+  }
+
+  async waitPopupLoginOrThrow(popup: PopupData) {
+    const future = new Future<void>()
+
+    const onLogin = async () => {
+      future.resolve()
+      return new None()
+    }
+
+    const onRemoved = (id: number) => {
+      if (id !== popup.tab.id)
+        return
+      future.reject(new Error())
+    }
+
+    try {
+      this.events.on("login", onLogin, { passive: true })
+      browser.tabs.onRemoved.addListener(onRemoved)
+
+      return await future.promise
+    } finally {
+      this.events.off("login", onLogin)
+      browser.tabs.onRemoved.removeListener(onRemoved)
     }
   }
 
@@ -454,14 +489,21 @@ class Global {
         return undefined
 
       if (this.#user == null && force) {
-        await this.openOrFocusPopupOrThrow("/home", mouse)
+        if (isSafariExt() && isIpad()) {
+          this.#path = `#/home`
 
-        using login = this.events.wait("login", (future: Future<void>) => {
-          future.resolve()
-          return new None()
-        })
+          await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
 
-        await login.get()
+          using login = this.events.wait("login", (future: Future<void>) => {
+            future.resolve()
+            return new None()
+          })
+
+          await login.get()
+        } else {
+          const popup = await this.openOrFocusPopupOrThrow("/home", mouse)
+          await this.waitPopupLoginOrThrow(popup)
+        }
       }
 
       const { storage } = Option.unwrap(this.#user)
@@ -540,7 +582,7 @@ class Global {
         origin: origin,
         method: "eth_requestAccounts",
         params: {}
-      }, mouse, true).then(r => r.unwrap())
+      }, mouse).then(r => r.unwrap())
 
       const chain = Option.unwrap(chainByChainId[chainId])
 
@@ -909,8 +951,6 @@ class Global {
       return new Some(await this.brume_wc_connect(foreground, request))
     if (request.method === "brume_wc_status")
       return new Some(await this.brume_wc_connect(foreground, request))
-    if (request.method === "popup_open")
-      return new Some(await this.popup_open(foreground, request))
     if (request.method === "popup_hello")
       return new Some(await this.popup_hello(foreground, request))
     if (request.method === "brume_respond")
@@ -927,11 +967,6 @@ class Global {
 
     this.#path = path
 
-    return Ok.void()
-  }
-
-  async popup_open(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    await this.openOrFocusPopupOrThrow("/home", { x: 0, y: 0 })
     return Ok.void()
   }
 
@@ -1684,8 +1719,8 @@ if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
       if (window.top == null)
         return
 
-      const x = window.left + window.width - 200
-      const y = window.top + 100
+      const x = window.left + window.width - 220
+      const y = window.top + 360
 
       await inited.get().openOrFocusPopupOrThrow("/home", { x, y })
     })
@@ -1709,8 +1744,37 @@ if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
       if (window.top == null)
         return
 
-      const x = window.left + window.width - 200
-      const y = window.top + 100
+      const x = window.left + window.width - 220
+      const y = window.top + 360
+
+      await inited.get().openOrFocusPopupOrThrow("/home", { x, y })
+    })
+  }
+
+  if (isSafariExt() && isIpad()) {
+    browser.browserAction.setPopup({ popup: "action.html" })
+  }
+
+  if (isSafariExt() && !isIpad()) {
+    browser.browserAction.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
+      const inited = await init
+
+      if (inited.isErr())
+        return
+
+      const window = await BrowserError.runOrThrow(() => browser.windows.getCurrent())
+
+      if (window.width == null)
+        return
+      if (window.height == null)
+        return
+      if (window.left == null)
+        return
+      if (window.top == null)
+        return
+
+      const x = window.left + 220
+      const y = window.top + 360
 
       await inited.get().openOrFocusPopupOrThrow("/home", { x, y })
     })

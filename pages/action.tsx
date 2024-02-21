@@ -8,18 +8,11 @@ export default function Action() {
   const background = useBackgroundContext().unwrap()
 
   useEffect(() => {
-    if (/iPad/i.test(navigator.userAgent))
-      return
-
-    background.requestOrThrow<string>({
-      method: "popup_open"
-    }).then(r => r.unwrap())
-  }, [background])
+    document.documentElement.classList.add("h-[600px]", "w-[400px]")
+    document.body.classList.add("h-[600px]", "w-[400px]")
+  }, [])
 
   useEffect(() => {
-    if (!/iPad/i.test(navigator.userAgent))
-      return
-
     background.requestOrThrow<string>({
       method: "brume_getPath"
     }).then(r => location.hash = r.unwrap())
@@ -32,9 +25,6 @@ export default function Action() {
     addEventListener("hashchange", onHashChange, { passive: true })
     return () => removeEventListener("hashchange", onHashChange)
   }, [background])
-
-  if (!/iPad/i.test(navigator.userAgent))
-    return
 
   return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden">
     <NavBar />

@@ -12,6 +12,7 @@ import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/da
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { UserRejectedError } from "@/mods/foreground/errors/errors"
+import { Paths } from "@/mods/foreground/router/path/context"
 import { RpcErr } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { Err } from "@hazae41/result"
@@ -89,19 +90,15 @@ export function RequestRow(props: { request: AppRequest }) {
     })
   }, [])
 
-  const open = useCallback(async () => {
-    if (maybeRequestData == null)
-      return
-
-    const { id, method, params } = maybeRequestData
-    location.assign(qurl(`#/${method}?id=${id}`, params))
-  }, [maybeRequestData])
-
+  if (maybeRequestData == null)
+    return null
   if (maybeOriginData == null)
     return null
 
-  return <div role="button" className="po-md rounded-xl flex items-center gap-4"
-    onClick={open}>
+  const { id, method, params } = maybeRequestData
+
+  return <a className="po-md rounded-xl flex items-center gap-4"
+    href={`#${Paths.path(qurl(`/${method}?id=${id}`, params))}`}>
     {maybeOriginData.icons?.map((x, i) =>
       <IndexedBlobbyLoader
         key={x.id}
@@ -123,7 +120,7 @@ export function RequestRow(props: { request: AppRequest }) {
         {maybeOriginData.origin}
       </div>
     </div>
-  </div>
+  </a>
 }
 
 function IndexedBlobbyLoader(props: OkProps<[number, Nullable<BlobbyData>]> & { id: string, index: number }) {

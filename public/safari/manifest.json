@@ -3,10 +3,7 @@
   "name": "Brume Wallet",
   "description": "The private wallet",
   "version": "VERSION",
-  "browser_action": {
-    "default_title": "Brume Wallet",
-    "default_popup": "action.html"
-  },
+  "browser_action": {},
   "icons": {
     "512": "favicon.png"
   },

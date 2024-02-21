@@ -34,3 +34,7 @@ export function isAndroidApp() {
 export function isAppleApp() {
   return !IS_DEV && (IS_APPLE)
 }
+
+export function isIpad() {
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 0
+}
