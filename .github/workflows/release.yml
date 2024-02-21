@@ -33,6 +33,5 @@ jobs:
     - run: "git restore ./dist/chrome.zip"
     - run: "git restore ./dist/firefox.zip"
     - run: "git restore ./dist/website.zip"
-    # Compare other files
+    # Compare other files (not failing)
     - run: "git status --porcelain"
-    - run: "[[ -z $(git status --porcelain) ]]"

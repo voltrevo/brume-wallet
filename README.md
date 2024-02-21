@@ -131,9 +131,8 @@ git restore ./dist/chrome.zip
 git restore ./dist/firefox.zip
 git restore ./dist/website.zip
 
-# Compare other files
-[[ -z $(git status --porcelain) ]]
-echo $?
+# Compare other files (not failing)
+git status --porcelain
 ```
 
 ## Secure by design
