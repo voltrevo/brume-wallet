@@ -308,8 +308,8 @@ class Global {
       const left = Math.max(mouse.x - (width / 2), 0)
 
       const tab = "create" in browser.windows
-        ? await BrowserError.runOrThrow(() => browser.windows.create({ type: "popup", url: `popup.html#${pathname}`, state: "normal", height, width, top, left }).then(w => w.tabs?.[0]))
-        : await BrowserError.runOrThrow(() => browser.tabs.create({ url: `popup.html#${pathname}`, active: true }))
+        ? await BrowserError.runOrThrow(() => browser.windows.create({ type: "popup", url: `popup.html?_=${encodeURIComponent(pathname)}`, state: "normal", height, width, top, left }).then(w => w.tabs?.[0]))
+        : await BrowserError.runOrThrow(() => browser.tabs.create({ url: `popup.html?_=${encodeURIComponent(pathname)}`, active: true }))
 
       if (tab == null)
         throw new Error("Failed to create tab")
@@ -490,8 +490,6 @@ class Global {
 
       if (this.#user == null && force) {
         if (isSafariExt() && isIpad()) {
-          this.#path = `#/home`
-
           await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
 
           using login = this.events.wait("login", (future: Future<void>) => {
@@ -501,7 +499,7 @@ class Global {
 
           await login.get()
         } else {
-          const popup = await this.openOrFocusPopupOrThrow("/home", mouse)
+          const popup = await this.openOrFocusPopupOrThrow("", mouse)
           await this.waitPopupLoginOrThrow(popup)
         }
       }
@@ -941,8 +939,6 @@ class Global {
       return new Some(await this.brume_eth_custom_fetch(foreground, request))
     if (request.method === "brume_log")
       return new Some(await this.brume_log(request))
-    if (request.method === "brume_open")
-      return new Some(await this.brume_open(foreground, request))
     if (request.method === "brume_encrypt")
       return new Some(await this.brume_encrypt(foreground, request))
     if (request.method === "brume_decrypt")
@@ -1045,14 +1041,6 @@ class Global {
     }
 
     this.scriptsBySession.delete(id)
-
-    return Ok.void()
-  }
-
-  async brume_open(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    const [pathname] = (request as RpcRequestPreinit<[string]>).params
-
-    await BrowserError.runOrThrow(() => browser.tabs.create({ url: `index.html#${pathname}` }))
 
     return Ok.void()
   }
@@ -1722,7 +1710,7 @@ if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
       const x = window.left + window.width - 220
       const y = window.top + 360
 
-      await inited.get().openOrFocusPopupOrThrow("/home", { x, y })
+      await inited.get().openOrFocusPopupOrThrow("", { x, y })
     })
   }
 
@@ -1747,7 +1735,7 @@ if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
       const x = window.left + window.width - 220
       const y = window.top + 360
 
-      await inited.get().openOrFocusPopupOrThrow("/home", { x, y })
+      await inited.get().openOrFocusPopupOrThrow("", { x, y })
     })
   }
 
@@ -1776,7 +1764,7 @@ if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
       const x = window.left + 220
       const y = window.top + 360
 
-      await inited.get().openOrFocusPopupOrThrow("/home", { x, y })
+      await inited.get().openOrFocusPopupOrThrow("", { x, y })
     })
   }
 }

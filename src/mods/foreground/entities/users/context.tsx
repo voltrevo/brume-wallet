@@ -20,6 +20,9 @@ export function UserGuard(props: ChildrenProps) {
   const userQuery = useUser(maybeCurrentUser?.uuid)
   const maybeUser = userQuery.data?.get()
 
+  if (!currentUserQuery.ready)
+    return null
+
   if (maybeCurrentUser == null)
     return <EmptyLandingPage />
 
