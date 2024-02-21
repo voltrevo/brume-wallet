@@ -229,6 +229,7 @@ export function FullLandingPage(props: { next?: string }) {
         <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
           <DownloadCard
             highlighted={typeof window.chrome !== "undefined"}
+            icon={Outline.ArrowTopRightOnSquareIcon}
             title="Chrome-like"
             src="/assets/browsers/chrome.png"
             href="https://chromewebstore.google.com/detail/brume-wallet/oljgnlammonjehmmfahdjgjhjclpockd">
@@ -236,10 +237,27 @@ export function FullLandingPage(props: { next?: string }) {
           </DownloadCard>
           <DownloadCard
             highlighted={navigator.userAgent.indexOf("Firefox") != -1}
+            icon={Outline.ArrowTopRightOnSquareIcon}
             title="Firefox-like"
             src="/assets/browsers/firefox.png"
             href="https://addons.mozilla.org/firefox/addon/brumewallet/">
             Firefox, Waterfox, Pale Moon, Basilisk, IceCat, IceWeasel
+          </DownloadCard>
+          <DownloadCard
+            highlighted={navigator.userAgent.indexOf("Safari") != -1}
+            icon={Outline.ArrowTopRightOnSquareIcon}
+            title="Safari"
+            src="/assets/browsers/safari.svg"
+            href="https://apps.apple.com/app/brume-wallet/id6477162492">
+            iOS, iPadOS, macOS
+          </DownloadCard>
+          <DownloadCard
+            highlighted={navigator.userAgent.indexOf("Android") != -1}
+            icon={Outline.ArrowDownTrayIcon}
+            title="Android"
+            src="/assets/browsers/android.svg"
+            href="https://github.com/brumewallet/wallet/raw/main/dist/android.apk">
+            Google, Samsung, Huawei, Xiaomi, Oppo, Vivo
           </DownloadCard>
         </div>
         <div className="h-4" />
@@ -404,8 +422,8 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
   </>
 }
 
-export function DownloadCard(props: TitleProps & ChildrenProps & { href: string } & { src: string } & { highlighted?: boolean }) {
-  const { href, src, children, title, highlighted = false } = props
+export function DownloadCard(props: TitleProps & ChildrenProps & { href: string } & { src: string } & { highlighted?: boolean } & { icon: any }) {
+  const { href, src, children, title, highlighted = false, icon: Icon } = props
 
   const onClick = useCallback(() => {
     window.open(href, "_blank", "noreferrer")
@@ -419,7 +437,7 @@ export function DownloadCard(props: TitleProps & ChildrenProps & { href: string 
       <img className="size-24 object-contain"
         alt={title}
         src={src} />
-      <div className="w-8 grow" />
+      <div className="w-8" />
       <div className="flex flex-col">
         <div className="font-medium text-2xl">
           {title}
@@ -436,7 +454,7 @@ export function DownloadCard(props: TitleProps & ChildrenProps & { href: string 
         target="_blank" rel="noreferrer"
         onClick={Events.keep}
         href={href}>
-        <Outline.ArrowTopRightOnSquareIcon className="size-5" />
+        <Icon className="size-5" />
         Download
       </WideShrinkableContrastAnchor>
     </div>
