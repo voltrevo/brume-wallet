@@ -22,15 +22,15 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 
 - [Apple TestFlight](https://testflight.apple.com/join/WtNNiY98)
 
-### Safari extension on macOS only (signed .app)
-
-- [Download .zip](https://github.com/brumewallet/wallet/raw/main/dist/macos.zip)
-
 ### Android application (signed .apk)
 
 - [Download .apk](https://github.com/brumewallet/wallet/raw/main/dist/android.apk)
 
-### Safari extension on iOS and iPadOS (signed .ipa)
+### Safari extension on macOS only (signed .app)
+
+- [Download .zip](https://github.com/brumewallet/wallet/raw/main/dist/macos.zip)
+
+### Safari extension on iOS only (signed .ipa)
 
 - [Download .ipa](https://github.com/brumewallet/wallet/raw/main/dist/ios-and-ipados.ipa)
 
