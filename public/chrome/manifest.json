@@ -11,7 +11,7 @@
     "storage"
   ],
   "content_security_policy": {
-    "extension_pages": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data: blob:; connect-src 'self' data: https://raw.githubusercontent.com wss://snowflake.torproject.net;"
+    "extension_pages": "default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data: blob:; connect-src 'self' data: https://raw.githubusercontent.com wss://snowflake.torproject.net;"
   },
   "background": {
     "type": "module",

@@ -28,5 +28,5 @@
       "all_frames": true
     }
   ],
-  "content_security_policy": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-93+ZD1pnvn2ZeAo2LkCIsgePJ48n2Tv4GQJDt0uyBIo='; img-src 'self' data: blob:; connect-src 'self' data: https://raw.githubusercontent.com wss://snowflake.torproject.net;"
+  "content_security_policy": "default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'wasm-unsafe-eval' 'sha256-93+ZD1pnvn2ZeAo2LkCIsgePJ48n2Tv4GQJDt0uyBIo='; img-src 'self' data: blob:; connect-src 'self' data: https://raw.githubusercontent.com wss://snowflake.torproject.net;"
 }

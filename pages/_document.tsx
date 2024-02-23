@@ -6,7 +6,7 @@ export default function Document() {
     <Html lang="en">
       <Head>
         {process.env.NODE_ENV === "production"
-          ? <meta key="content-security-policy" httpEquiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data: blob:; connect-src 'self' data: https://raw.githubusercontent.com wss://snowflake.torproject.net;" />
+          ? <meta key="content-security-policy" httpEquiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data: blob:; connect-src 'self' data: https://raw.githubusercontent.com wss://snowflake.torproject.net;" />
           : <meta key="content-security-policy" httpEquiv="Content-Security-Policy" />}
         <meta key="application-name" name="application-name" content="Brume Wallet" />
         <meta key="description" name="description" content="The private wallet" />
