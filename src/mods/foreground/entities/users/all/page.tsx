@@ -248,7 +248,7 @@ export function FullLandingPage(props: { next?: string }) {
             icon={Outline.ArrowTopRightOnSquareIcon}
             title="Safari"
             src="/assets/browsers/safari.svg"
-            href="https://apps.apple.com/app/brume-wallet/id6477162492">
+            href="https://testflight.apple.com/join/WtNNiY98">
             iOS, iPadOS, macOS
           </DownloadCard>
           <DownloadCard
