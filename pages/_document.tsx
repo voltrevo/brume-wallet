@@ -19,6 +19,7 @@ export default function Document() {
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/square.png" />
+        <meta name="referrer" content="no-referrer" />
         <script id="themer" src="/themer.js" />
       </Head>
       <body>
