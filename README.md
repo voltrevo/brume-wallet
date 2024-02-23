@@ -18,13 +18,13 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 
 - [Firefox Store](https://addons.mozilla.org/firefox/addon/brumewallet/)
 
-### Safari extension on iOS and iPadOS (store)
+### Safari extension on iOS and macOS (store)
 
-- [App Store](https://apps.apple.com/app/brume-wallet/id6477162492)
+- [Apple TestFlight](https://testflight.apple.com/join/WtNNiY98)
 
-### Safari extension on macOS (signed .app)
+### Safari extension on macOS only (signed .app)
 
-- [Download .app](https://github.com/brumewallet/wallet/raw/main/dist/macos.zip)
+- [Download .zip](https://github.com/brumewallet/wallet/raw/main/dist/macos.zip)
 
 ### Android application (signed .apk)
 
