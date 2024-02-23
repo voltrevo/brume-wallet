@@ -263,9 +263,9 @@ export function FullLandingPage(props: { next?: string }) {
         <div className="h-4" />
         <WideShrinkableContrastAnchor
           target="_blank" rel="noreferrer"
-          href="https://github.com/brumewallet/wallet/releases">
+          href="https://github.com/brumewallet/wallet#usage">
           <Outline.ArrowTopRightOnSquareIcon className="size-5" />
-          All releases
+          More downloads
         </WideShrinkableContrastAnchor>
         <div className="h-[50vh]" />
         <div className="text-center p-4">
