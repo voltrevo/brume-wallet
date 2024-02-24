@@ -15,15 +15,15 @@ export function isExtension() {
   return !IS_DEV && (IS_CHROME || IS_FIREFOX || IS_SAFARI)
 }
 
-export function isChromeExt() {
+export function isChromeExtension() {
   return !IS_DEV && (IS_CHROME)
 }
 
-export function isFirefoxExt() {
+export function isFirefoxExtension() {
   return !IS_DEV && (IS_FIREFOX)
 }
 
-export function isSafariExt() {
+export function isSafariExtension() {
   return !IS_DEV && (IS_SAFARI)
 }
 

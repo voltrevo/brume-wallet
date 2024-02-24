@@ -5,7 +5,7 @@ import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionRpcRouter } from "@/libs/channel/channel"
 import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch"
 import { Mouse } from "@/libs/mouse/mouse"
-import { isFirefoxExt, isSafariExt } from "@/libs/platform/platform"
+import { isFirefoxExtension, isSafariExtension } from "@/libs/platform/platform"
 import { AbortSignals } from "@/libs/signals/signals"
 import { NonReadonly } from "@/libs/types/readonly"
 import { qurl } from "@/libs/url/url"
@@ -39,7 +39,7 @@ async function main() {
     mouse.y = e.screenY
   }, { passive: true })
 
-  if (isFirefoxExt() || isSafariExt()) {
+  if (isFirefoxExtension() || isSafariExtension()) {
     const container = document.documentElement
 
     const scriptBody = atob("INJECTED_SCRIPT")
@@ -126,7 +126,7 @@ async function main() {
       await new Promise(ok => setTimeout(ok, 1))
 
       const raw = BrowserError.runOrThrowSync(() => {
-        const port = browser.runtime.connect({ name: location.origin })
+        const port = browser.runtime.connect({ name: "content_script" })
         port.onDisconnect.addListener(() => void chrome.runtime.lastError)
         return port
       })

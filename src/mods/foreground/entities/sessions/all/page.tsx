@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
-import { isSafariExt } from "@/libs/platform/platform"
+import { isSafariExtension } from "@/libs/platform/platform"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { OkProps } from "@/libs/react/props/promise"
 import { Button } from "@/libs/ui/button"
@@ -36,7 +36,7 @@ export function SessionsPage() {
   }, [maybeTempSessions, maybePersSessions])
 
   const disconnectAllOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    if (!isSafariExt() && confirm(`Do you want to disconnect all sessions?`) === false)
+    if (!isSafariExtension() && confirm(`Do you want to disconnect all sessions?`) === false)
       return
 
     for (const session of Option.wrap(maybeTempSessions).unwrapOr([]))
@@ -113,7 +113,7 @@ export function SessionRow(props: { session: Session }) {
   const disconnectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     if (maybeSessionData == null)
       return
-    if (!isSafariExt() && confirm(`Do you want to disconnect this session?`) === false)
+    if (!isSafariExtension() && confirm(`Do you want to disconnect this session?`) === false)
       return
 
     await background.requestOrThrow({

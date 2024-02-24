@@ -3,7 +3,7 @@ import { Emojis } from "@/libs/emojis/emojis";
 import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
-import { isSafariExt } from "@/libs/platform/platform";
+import { isSafariExtension } from "@/libs/platform/platform";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
@@ -74,7 +74,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       throw new Panic()
     if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
       throw new Panic()
-    if (!isSafariExt() && confirm("Did you backup your private key?") === false)
+    if (!isSafariExtension() && confirm("Did you backup your private key?") === false)
       return
 
     const address = triedAddress.unwrap()
@@ -116,7 +116,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       throw new Panic()
     if (triedEncryptedPrivateKey == null)
       throw new Panic()
-    if (!isSafariExt() && confirm("Did you backup your private key?") === false)
+    if (!isSafariExtension() && confirm("Did you backup your private key?") === false)
       return
 
     const [_, cipherBase64] = triedEncryptedPrivateKey.unwrap()

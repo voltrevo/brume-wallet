@@ -162,7 +162,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
     rawChannel.port1.start()
     rawChannel.port2.start()
 
-    active.postMessage("HELLO_WORLD", [rawChannel.port2])
+    active.postMessage("FOREGROUND", [rawChannel.port2])
 
     await router.waitHelloOrThrow(AbortSignals.timeout(1000))
 
@@ -263,7 +263,7 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
     rawChannel.port1.start()
     rawChannel.port2.start()
 
-    worker.get().postMessage("HELLO_WORLD", [rawChannel.port2])
+    worker.get().postMessage("FOREGROUND", [rawChannel.port2])
 
     await router.waitHelloOrThrow(AbortSignals.timeout(1000))
 

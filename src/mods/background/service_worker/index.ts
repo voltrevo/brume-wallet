@@ -9,7 +9,7 @@ import { fetchAsBlobOrThrow } from "@/libs/fetch/fetch"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
-import { isAndroidApp, isAppleApp, isChromeExt, isExtension, isFirefoxExt, isIpad, isSafariExt, isWebsite } from "@/libs/platform/platform"
+import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExtension, isIpad, isSafariExtension, isWebsite } from "@/libs/platform/platform"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Strings } from "@/libs/strings/strings"
 import { Circuits } from "@/libs/tor/circuits/circuits"
@@ -343,7 +343,7 @@ class Global {
       const { id, method, params } = request
       const url = qurl(`/${method}?id=${id}`, params)
 
-      if (isSafariExt() && isIpad()) {
+      if (isSafariExtension() && isIpad()) {
         this.#path = `#${Paths.path(url)}`
 
         await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
@@ -468,7 +468,7 @@ class Global {
         return undefined
 
       if (this.#user == null && force) {
-        if (isSafariExt() && isIpad()) {
+        if (isSafariExtension() && isIpad()) {
           await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
 
           using login = this.events.wait("login", (future: Future<void>) => {
@@ -1540,14 +1540,16 @@ async function initOrThrow() {
 }
 
 if (isWebsite() || isAndroidApp()) {
-
   const onSkipWaiting = (event: ExtendableMessageEvent) =>
     self.skipWaiting()
+
+  const routers = new Map<string, RpcRouter>()
 
   const onForeground = async (event: ExtendableMessageEvent) => {
     const port = event.ports[0]
 
-    const router = new MessageRpcRouter("foreground", port)
+    const name = `foreground-${crypto.randomUUID().slice(0, 8)}`
+    const router = new MessageRpcRouter(name, port)
 
     const onRequest = async (request: RpcRequestInit<unknown>) => {
       const inited = await init
@@ -1581,7 +1583,7 @@ if (isWebsite() || isAndroidApp()) {
   self.addEventListener("message", (event) => {
     if (event.data === "SKIP_WAITING")
       return void onSkipWaiting(event)
-    if (event.data === "HELLO_WORLD")
+    if (event.data === "FOREGROUND")
       return void onForeground(event)
     throw new Error(`Invalid message`)
   })
@@ -1591,7 +1593,8 @@ if (isAppleApp()) {
   const onForeground = async (event: ExtendableMessageEvent) => {
     const port = event.ports[0]
 
-    const router = new MessageRpcRouter("foreground", port)
+    const name = `foreground-${crypto.randomUUID().slice(0, 8)}`
+    const router = new MessageRpcRouter(name, port)
 
     const onRequest = async (request: RpcRequestInit<unknown>) => {
       const inited = await init
@@ -1623,15 +1626,16 @@ if (isAppleApp()) {
   }
 
   self.addEventListener("message", (event) => {
-    if (event.data === "HELLO_WORLD")
+    if (event.data === "FOREGROUND")
       return void onForeground(event)
     throw new Error(`Invalid message`)
   })
 }
 
-if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
+if (isExtension()) {
   const onContentScript = async (port: chrome.runtime.Port) => {
-    const router = new ExtensionRpcRouter(crypto.randomUUID(), port)
+    const name = `content_script-${crypto.randomUUID().slice(0, 8)}`
+    const router = new ExtensionRpcRouter(name, port)
 
     router.events.on("request", async (request) => {
       const inited = await init
@@ -1646,7 +1650,8 @@ if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
   }
 
   const onForeground = async (port: chrome.runtime.Port) => {
-    const router = new ExtensionRpcRouter("foreground", port)
+    const name = `foreground-${crypto.randomUUID().slice(0, 8)}`
+    const router = new ExtensionRpcRouter(name, port)
 
     router.events.on("request", async (request) => {
       const inited = await init
@@ -1665,10 +1670,12 @@ if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
       return
     if (port.name === "foreground")
       return void onForeground(port)
-    return void onContentScript(port)
+    if (port.name === "content_script")
+      return void onContentScript(port)
+    return
   })
 
-  if (isChromeExt()) {
+  if (isChromeExtension()) {
     browser.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       const inited = await init
 
@@ -1693,7 +1700,7 @@ if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
     })
   }
 
-  if (isFirefoxExt()) {
+  if (isFirefoxExtension()) {
     browser.browserAction.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       const inited = await init
 
@@ -1718,11 +1725,11 @@ if (isChromeExt() || isFirefoxExt() || isSafariExt()) {
     })
   }
 
-  if (isSafariExt() && isIpad()) {
+  if (isSafariExtension() && isIpad()) {
     browser.browserAction.setPopup({ popup: "action.html" })
   }
 
-  if (isSafariExt() && !isIpad()) {
+  if (isSafariExtension() && !isIpad()) {
     browser.browserAction.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       const inited = await init
 
