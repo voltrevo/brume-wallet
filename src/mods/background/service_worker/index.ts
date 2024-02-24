@@ -9,7 +9,7 @@ import { fetchAsBlobOrThrow } from "@/libs/fetch/fetch"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Mime } from "@/libs/mime/mime"
 import { Mouse } from "@/libs/mouse/mouse"
-import { isAndroidApp, isAppleApp, isChromeExt, isFirefoxExt, isIpad, isSafariExt, isWebsite } from "@/libs/platform/platform"
+import { isAndroidApp, isAppleApp, isChromeExt, isExtension, isFirefoxExt, isIpad, isSafariExt, isWebsite } from "@/libs/platform/platform"
 import { AbortSignals } from "@/libs/signals/signals"
 import { Strings } from "@/libs/strings/strings"
 import { Circuits } from "@/libs/tor/circuits/circuits"
@@ -187,36 +187,15 @@ class Global {
   }
 
   async getStoredPasswordOrThrow(): Promise<Nullable<PasswordData>> {
-    if (isFirefoxExt()) {
-      const uuid = sessionStorage.getItem("uuid") ?? undefined
-      const password = sessionStorage.getItem("password") ?? undefined
-
-      return { uuid, password }
-    }
-
-    if (isChromeExt() || isSafariExt()) {
-      const { uuid, password } = await BrowserError.runOrThrow(() => browser.storage.session.get(["uuid", "password"]))
-
-      return { uuid, password }
-    }
-
-    return
+    if (!isExtension())
+      return
+    return await BrowserError.runOrThrow(() => browser.storage.session.get(["uuid", "password"]))
   }
 
   async setStoredPasswordOrThrow(uuid: string, password: string) {
-    if (isFirefoxExt()) {
-      sessionStorage.setItem("uuid", uuid)
-      sessionStorage.setItem("password", password)
-
+    if (!isExtension())
       return
-    }
-
-    if (isChromeExt() || isSafariExt()) {
-      await BrowserError.runOrThrow(() => browser.storage.session.set({ uuid, password }))
-      return
-    }
-
-    return
+    await BrowserError.runOrThrow(() => browser.storage.session.set({ uuid, password }))
   }
 
   async initOrThrow(): Promise<void> {
