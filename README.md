@@ -170,6 +170,4 @@ Keep in mind that the zero risk doesn't exist, and a highly motivated attacker c
 
 2. Owning the JSON-RPC server, and logging all wallet addresses that used Tor
 
-(Or owning the exit node, since we don't currently check TLS certificates from the JSON-RPC server, the exit node could send your packets to its own JSON-RPC server (Fixed soon))
-
 3. Correlating IP addresses logs with wallet addresses logs, and if both sides are small enough, linking a particular IP address to a particular wallet address
