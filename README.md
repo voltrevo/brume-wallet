@@ -20,7 +20,7 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 
 ### Safari extension on iOS and macOS (store)
 
-- [Apple TestFlight](https://testflight.apple.com/join/WtNNiY98)
+- [Apple TestFlight](https://testflight.apple.com/join/WtNNiY98) or [AltStore](https://raw.githubusercontent.com/brumewallet/wallet/main/altstore.json)
 
 ### Android application (signed .apk)
 
