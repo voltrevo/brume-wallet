@@ -28,14 +28,14 @@ export function SeedCreatorMenu(props: {}) {
       <Outline.DocumentTextIcon className="size-4" />
       Mnemonic
     </WideShrinkableNakedMenuAnchor>
-    {location.pathname !== "/" && location.pathname !== "/index.html" &&
+    {(location.pathname !== "/" && location.pathname !== "/index.html") &&
       <WideShrinkableNakedMenuButton
         disabled={openHardwareOrAlert.loading}
         onClick={openHardwareOrAlert.run}>
         <Outline.SwatchIcon className="size-4" />
         Hardware
       </WideShrinkableNakedMenuButton>}
-    {location.pathname === "/" || location.pathname === "/index.html" &&
+    {(location.pathname === "/" || location.pathname === "/index.html") &&
       <WideShrinkableNakedMenuAnchor
         onClick={hardware.onClick}
         onKeyDown={hardware.onKeyDown}
