@@ -1543,8 +1543,6 @@ if (isWebsite() || isAndroidApp()) {
   const onSkipWaiting = (event: ExtendableMessageEvent) =>
     self.skipWaiting()
 
-  const routers = new Map<string, RpcRouter>()
-
   const onForeground = async (event: ExtendableMessageEvent) => {
     const port = event.ports[0]
 
