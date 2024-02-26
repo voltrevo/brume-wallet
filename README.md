@@ -32,7 +32,9 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 
 ### Safari extension on iOS only (alternative store)
 
-- [AltStore Source](https://raw.githubusercontent.com/brumewallet/wallet/main/altstore.json)
+- Copy the link to the [AltStore](https://altstore.io) source
+
+`https://raw.githubusercontent.com/brumewallet/wallet/main/altstore.json`
 
 ### Safari extension on iOS only (signed .ipa)
 
