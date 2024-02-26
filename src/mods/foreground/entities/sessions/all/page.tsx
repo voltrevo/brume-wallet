@@ -197,13 +197,15 @@ export function SessionMenu(props: { sessionData: SessionData }) {
     }).then(r => r.unwrap())
   }), [background, sessionData])
 
-  return <div className="flex flex-col text-left gap-2">
+  return <div className="flex flex-col text-left gap-2 w-[160px]">
     <WideShrinkableNakedMenuAnchor
       onClick={chains.onClick}
       onKeyDown={chains.onKeyDown}
       href={chains.href}>
-      <Outline.LinkIcon className="size-4" />
-      Switch chain
+      <Outline.LinkIcon className="shrink-0 size-4" />
+      <div className="truncate">
+        {sessionData.chain.name}
+      </div>
     </WideShrinkableNakedMenuAnchor>
     <WideShrinkableNakedMenuButton
       disabled={disconnectOrAlert.loading}
@@ -217,7 +219,7 @@ export function SessionMenu(props: { sessionData: SessionData }) {
 export function ChainsMenu(props: { sessionData: SessionData }) {
   const { sessionData } = props
 
-  return <div className="flex flex-col text-left gap-2 w-[200px]">
+  return <div className="flex flex-col text-left gap-2 w-[160px]">
     {Object.values(chainByChainId).map(chain =>
       <ChainRow
         key={chain.chainId}

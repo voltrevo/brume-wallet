@@ -150,13 +150,13 @@ export function Menu(props: ChildrenProps & DarkProps) {
         <div className={`fixed inset-0 ${dark ? "dark" : ""}`}
           onMouseDown={onClickOutside}
           onClick={Events.keep}>
-          <div className={`absolute flex flex-col min-w-48 max-w-xl text-default bg-default border border-contrast rounded-2xl p-1 ${premount ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
+          <div className={`absolute flex flex-col min-w-32 max-w-xl text-default bg-default border border-contrast rounded-2xl p-1 ${premount ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
             style={{ translate: `${maybeL}px ${maybeT}px` }}
             ref={setMenu}
             aria-modal
             onAnimationEnd={onAnimationEnd}
             onMouseDown={Events.keep}>
-            <div className="max-h-[320px] overflow-y-scroll">
+            <div className="p-1 max-h-[160px] overflow-y-auto">
               {children}
             </div>
           </div>
