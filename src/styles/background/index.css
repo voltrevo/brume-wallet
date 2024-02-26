@@ -4,21 +4,6 @@
     @apply dark:bg-black;
   }
 
-  ::-webkit-scrollbar {
-    @apply bg-white;
-    @apply dark:bg-black;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-black/5 rounded-[10px] border-[3px] border-solid border-white;
-    @apply dark:bg-white/[0.075] dark:rounded-[10px] dark:border-[3px] dark:border-solid dark:border-black;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-black/10 rounded-[10px] border-[3px] border-solid border-white;
-    @apply dark:bg-white/15 dark:rounded-[10px] dark:border-[3px] dark:border-solid dark:border-black;
-  }
-
   .bg-opposite {
     @apply bg-black;
     @apply dark:bg-white;
