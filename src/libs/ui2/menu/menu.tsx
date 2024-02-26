@@ -140,7 +140,7 @@ export function Menu(props: ChildrenProps & DarkProps) {
   if (!premount && !postmount)
     return null
 
-  return <Portal type="div">
+  return <Portal>
     <CloseContext.Provider value={hide}>
       <dialog className=""
         style={{ "--x": `${maybeX}px`, "--y": `${maybeY}px`, "--w": `${maybeW}px`, "--h": `${maybeH}px` } as any}
@@ -150,13 +150,15 @@ export function Menu(props: ChildrenProps & DarkProps) {
         <div className={`fixed inset-0 ${dark ? "dark" : ""}`}
           onMouseDown={onClickOutside}
           onClick={Events.keep}>
-          <div className={`absolute flex flex-col min-w-48 max-w-xl text-default bg-default border border-contrast rounded-2xl p-2 ${premount ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
+          <div className={`absolute flex flex-col min-w-48 max-w-xl text-default bg-default border border-contrast rounded-2xl p-1 ${premount ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
             style={{ translate: `${maybeL}px ${maybeT}px` }}
             ref={setMenu}
             aria-modal
             onAnimationEnd={onAnimationEnd}
             onMouseDown={Events.keep}>
-            {children}
+            <div className="max-h-[250px] overflow-y-scroll">
+              {children}
+            </div>
           </div>
         </div>
       </dialog>

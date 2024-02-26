@@ -865,7 +865,7 @@ class Global {
   async wallet_switchEthereumChain(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
     const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
 
-    const chain = Option.unwrap(chainByChainId[parseInt(chainId, 16)])
+    const chain = Option.unwrap(chainByChainId[Number(chainId)])
 
     const { storage } = Option.unwrap(this.#user)
 
@@ -898,12 +898,12 @@ class Global {
       return new Some(await this.brume_login(request))
     if (request.method === "brume_createUser")
       return new Some(await this.brume_createUser(foreground, request))
-    // if (request.method === "brume_removeUser")
-    //   return new Some(await this.brume_removeUser(foreground, request))
     if (request.method === "brume_createSeed")
       return new Some(await this.brume_createSeed(foreground, request))
     if (request.method === "brume_createWallet")
       return new Some(await this.brume_createWallet(foreground, request))
+    if (request.method === "brume_switchEthereumChain")
+      return new Some(await this.brume_switchEthereumChain(foreground, request))
     if (request.method === "brume_disconnect")
       return new Some(await this.brume_disconnect(foreground, request))
     if (request.method === "brume_get_global")
@@ -993,6 +993,35 @@ class Global {
     const userState = await userQuery.state
 
     return new Ok(userState.current?.get())
+  }
+
+
+  async brume_switchEthereumChain(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
+    const [sessionId, chainId] = (request as RpcRequestPreinit<[string, string]>).params
+
+    const { storage } = Option.unwrap(this.#user)
+
+    const chain = Option.unwrap(chainByChainId[Number(chainId)])
+
+    const sessionQuery = BgSession.schema(sessionId, storage)
+    const sessionState = await sessionQuery.state
+    const sessionData = Option.unwrap(sessionState.data?.get())
+
+    await sessionQuery.mutate(() => new Some(new Data({ ...sessionData, chain })))
+
+    for (const script of Option.wrap(this.scriptsBySession.get(sessionId)).unwrapOr([])) {
+      await script.requestOrThrow({
+        method: "chainChanged",
+        params: [ZeroHexString.from(chain.chainId)]
+      }).then(r => r.unwrap())
+
+      await script.requestOrThrow({
+        method: "networkChanged",
+        params: [chain.chainId.toString()]
+      }).then(r => r.unwrap())
+    }
+
+    return Ok.void()
   }
 
   async brume_disconnect(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {

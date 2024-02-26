@@ -1,21 +1,25 @@
 /* eslint-disable @next/next/no-img-element */
 import { Errors } from "@/libs/errors/errors"
+import { ChainData, chainByChainId } from "@/libs/ethereum/mods/chain"
 import { Outline } from "@/libs/icons/icons"
 import { isSafariExtension } from "@/libs/platform/platform"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { OkProps } from "@/libs/react/props/promise"
-import { Button } from "@/libs/ui/button"
+import { useCloseContext } from "@/libs/ui/dialog/dialog"
 import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
+import { Menu } from "@/libs/ui2/menu/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/data"
-import { Session } from "@/mods/background/service_worker/entities/sessions/data"
+import { Session, SessionData } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
+import { HashSubpathProvider, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable, Option } from "@hazae41/option"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useBlobby } from "../../blobbys/data"
 import { useOrigin } from "../../origins/data"
-import { PaddedRoundedShrinkableNakedButton } from "../../wallets/actions/send"
+import { useGenius } from "../../users/all/page"
+import { PaddedRoundedShrinkableNakedAnchor, PaddedRoundedShrinkableNakedButton, WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "../../wallets/actions/send"
 import { useSession } from "../data"
 import { useStatus } from "../status/data"
 import { usePersistentSessions, useTemporarySessions } from "./data"
@@ -90,15 +94,19 @@ export function SessionsPage() {
 }
 
 export function SessionRow(props: { session: Session }) {
-  const background = useBackgroundContext().unwrap()
+  const { session } = props
+  const path = usePathContext().unwrap()
 
-  const sessionQuery = useSession(props.session.id)
+  const subpath = useHashSubpath(path)
+  const menu = useGenius(subpath, `/${session.id}/menu`)
+
+  const sessionQuery = useSession(session.id)
   const maybeSessionData = sessionQuery.data?.get()
 
   const originQuery = useOrigin(maybeSessionData?.origin)
   const maybeOriginData = originQuery.data?.get()
 
-  const statusQuery = useStatus(props.session.id)
+  const statusQuery = useStatus(session.id)
   const maybeStatusData = statusQuery.data?.get()
 
   const [iconDatas, setIconDatas] = useState<Nullable<BlobbyData>[]>([])
@@ -110,23 +118,25 @@ export function SessionRow(props: { session: Session }) {
     })
   }, [])
 
-  const disconnectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    if (maybeSessionData == null)
-      return
-    if (!isSafariExtension() && confirm(`Do you want to disconnect this session?`) === false)
-      return
-
-    await background.requestOrThrow({
-      method: "brume_disconnect",
-      params: [maybeSessionData.id]
-    }).then(r => r.unwrap())
-  }), [background, maybeSessionData])
-
+  if (maybeSessionData == null)
+    return null
   if (maybeOriginData == null)
     return null
 
   return <div role="button" className="po-md rounded-xl flex items-center gap-4"
-    onClick={disconnectOrAlert.run}>
+    onContextMenu={menu.onContextMenu}
+    onKeyDown={menu.onKeyDown}
+    onClick={menu.onClick}>
+    <HashSubpathProvider>
+      {subpath.url.pathname === `/${session.id}/menu` &&
+        <Menu>
+          <SessionMenu sessionData={maybeSessionData} />
+        </Menu>}
+      {subpath.url.pathname === `/${session.id}/chains` &&
+        <Menu>
+          <ChainsMenu sessionData={maybeSessionData} />
+        </Menu>}
+    </HashSubpathProvider>
     {maybeOriginData.icons?.map((x, i) =>
       <IndexedBlobbyLoader
         key={x.id}
@@ -155,11 +165,9 @@ export function SessionRow(props: { session: Session }) {
         {maybeOriginData.origin}
       </div>
     </div>
-    <Button.Base>
-      <div className={`${Button.Shrinker.className}`}>
-        <Outline.EllipsisVerticalIcon className="size-5" />
-      </div>
-    </Button.Base>
+    <PaddedRoundedShrinkableNakedAnchor>
+      <Outline.EllipsisVerticalIcon className="size-5" />
+    </PaddedRoundedShrinkableNakedAnchor>
   </div>
 }
 
@@ -173,4 +181,70 @@ function IndexedBlobbyLoader(props: OkProps<[number, Nullable<BlobbyData>]> & { 
   }, [index, data, ok])
 
   return null
+}
+
+export function SessionMenu(props: { sessionData: SessionData }) {
+  const { sessionData } = props
+  const path = usePathContext().unwrap()
+  const background = useBackgroundContext().unwrap()
+
+  const chains = useGenius(path, `/${sessionData.id}/chains`)
+
+  const disconnectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    await background.requestOrThrow({
+      method: "brume_disconnect",
+      params: [sessionData.id]
+    }).then(r => r.unwrap())
+  }), [background, sessionData])
+
+  return <div className="flex flex-col text-left gap-2">
+    <WideShrinkableNakedMenuAnchor
+      onClick={chains.onClick}
+      onKeyDown={chains.onKeyDown}
+      href={chains.href}>
+      <Outline.LinkIcon className="size-4" />
+      Switch chain
+    </WideShrinkableNakedMenuAnchor>
+    <WideShrinkableNakedMenuButton
+      disabled={disconnectOrAlert.loading}
+      onClick={disconnectOrAlert.run}>
+      <Outline.XMarkIcon className="size-4" />
+      Disconnect
+    </WideShrinkableNakedMenuButton>
+  </div>
+}
+
+export function ChainsMenu(props: { sessionData: SessionData }) {
+  const { sessionData } = props
+
+  return <div className="flex flex-col text-left gap-2">
+    {Object.values(chainByChainId).map(chain =>
+      <ChainRow
+        key={chain.chainId}
+        sessionData={sessionData}
+        chainData={chain} />)}
+  </div>
+}
+
+export function ChainRow(props: { sessionData: SessionData, chainData: ChainData }) {
+  const { sessionData, chainData } = props
+  const close = useCloseContext().unwrap()
+  const background = useBackgroundContext().unwrap()
+
+  const switchOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    await background.requestOrThrow({
+      method: "brume_switchEthereumChain",
+      params: [sessionData.id, chainData.chainId]
+    }).then(r => r.unwrap())
+
+    close()
+  }), [background, sessionData, chainData, close])
+
+  return <WideShrinkableNakedMenuButton
+    disabled={switchOrAlert.loading}
+    onClick={switchOrAlert.run}>
+    {sessionData.chain.chainId === chainData.chainId &&
+      <Outline.CheckIcon className="size-4" />}
+    {chainData.name}
+  </WideShrinkableNakedMenuButton>
 }

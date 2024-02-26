@@ -1,42 +1,61 @@
-import { useLazyMemo } from "@/libs/react/memo"
+import { Events } from "@/libs/react/events"
 import { ChildrenProps } from "@/libs/react/props/children"
-import { NullableElementProps } from "@/libs/react/props/element"
-import { useEffect } from "react"
 import { createPortal } from "react-dom"
-import { TypeProps } from "../../react/props/type"
 
-export function Portal(props: TypeProps & NullableElementProps<"container"> & ChildrenProps) {
-  const {
-    children,
-    type,
-    container = document.getElementById("__next")
-  } = props
+export function Portal(props: ChildrenProps) {
+  const { children } = props
 
-  const element = useLazyMemo(() => {
-    return document.createElement(type)
-  }, [type])
+  const element = <Keeper>{children}</Keeper>
+  const container = document.getElementById("__next")!
 
-  useEffect(() => {
-    if (element == null)
-      return
-    if (container == null)
-      return
+  return <>{createPortal(element, container)}</>
+}
 
-    container.appendChild(element)
-    return () => void container.removeChild(element)
-  }, [element, container])
+export function Keeper(props: ChildrenProps) {
+  const { children } = props
 
-  if (element == null)
-    return null
+  return <div
+    onClick={Events.keep}
+    onContextMenu={Events.keep}
+    onDoubleClick={Events.keep}
 
-  return <>{createPortal(children, element)}</>
+    onDrag={Events.keep}
+    onDragEnd={Events.keep}
+    onDragEnter={Events.keep}
+    onDragExit={Events.keep}
+    onDragLeave={Events.keep}
+    onDragOver={Events.keep}
+    onDragStart={Events.keep}
+    onDrop={Events.keep}
+
+    onMouseDown={Events.keep}
+    onMouseEnter={Events.keep}
+    onMouseLeave={Events.keep}
+    onMouseMove={Events.keep}
+    onMouseOver={Events.keep}
+    onMouseOut={Events.keep}
+    onMouseUp={Events.keep}
+
+    onKeyDown={Events.keep}
+    onKeyUp={Events.keep}
+
+    onFocus={Events.keep}
+    onBlur={Events.keep}
+
+    onChange={Events.keep}
+    onInput={Events.keep}
+
+    onInvalid={Events.keep}
+    onSubmit={Events.keep}>
+    {children}
+  </div>
 }
 
 export namespace Portal {
 
   export function Test() {
     return <div className="p-1">
-      <Portal type="div" container={document.getElementById("__next")}>
+      <Portal>
         Hello world
       </Portal>
       <div className="">

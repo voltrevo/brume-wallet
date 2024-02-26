@@ -218,7 +218,7 @@ export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitan
   if (!premount && !postmount)
     return null
 
-  return <Portal type="div">
+  return <Portal>
     <CloseContext.Provider value={hide}>
       <dialog className=""
         style={{ "--x": `${maybeX}px`, "--y": `${maybeY}px` } as any}
