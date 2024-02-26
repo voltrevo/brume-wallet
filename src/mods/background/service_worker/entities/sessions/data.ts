@@ -170,6 +170,9 @@ export namespace BgSession {
       const previousData = previous?.real?.current.ok()?.get()
       const currentData = current.real?.current.ok()?.get()
 
+      if (previousData?.id === currentData?.id)
+        return
+
       if (previousData != null) {
         if (previousData.persist) {
           const sessionByOrigin = ByOrigin.schema(previousData.origin, storage)

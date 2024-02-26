@@ -217,7 +217,7 @@ export function SessionMenu(props: { sessionData: SessionData }) {
 export function ChainsMenu(props: { sessionData: SessionData }) {
   const { sessionData } = props
 
-  return <div className="flex flex-col text-left gap-2">
+  return <div className="flex flex-col text-left gap-2 w-[200px]">
     {Object.values(chainByChainId).map(chain =>
       <ChainRow
         key={chain.chainId}
@@ -244,7 +244,9 @@ export function ChainRow(props: { sessionData: SessionData, chainData: ChainData
     disabled={switchOrAlert.loading}
     onClick={switchOrAlert.run}>
     {sessionData.chain.chainId === chainData.chainId &&
-      <Outline.CheckIcon className="size-4" />}
-    {chainData.name}
+      <Outline.CheckIcon className="shrink-0 size-4" />}
+    <div className="truncate">
+      {chainData.name}
+    </div>
   </WideShrinkableNakedMenuButton>
 }

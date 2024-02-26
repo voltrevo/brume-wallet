@@ -156,7 +156,7 @@ export function Menu(props: ChildrenProps & DarkProps) {
             aria-modal
             onAnimationEnd={onAnimationEnd}
             onMouseDown={Events.keep}>
-            <div className="max-h-[250px] overflow-y-scroll">
+            <div className="max-h-[320px] overflow-y-scroll">
               {children}
             </div>
           </div>
