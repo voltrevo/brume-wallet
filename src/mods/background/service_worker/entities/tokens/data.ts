@@ -193,7 +193,7 @@ export namespace BgToken {
           if (block !== "pending")
             return
 
-          const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
+          const pricedBalance = await Option.wrap(states.current.real?.current.ok().get()).andThen(async balance => {
             if (context.chain.token.pairs == null)
               return new None()
 
@@ -212,11 +212,11 @@ export namespace BgToken {
               pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
             }
 
-            return new Some(pricedBalance)
-          }).then(o => o.unwrapOr(new Fixed(0n, 0)))
+            return new Some(new Data(pricedBalance))
+          }).then(o => o.get())
 
           const pricedBalanceQuery = Priced.schema(account, "usd", context, storage)
-          await pricedBalanceQuery.mutate(Mutators.set<Fixed.From, never>(new Data(pricedBalance)))
+          await pricedBalanceQuery.mutate(() => new Some(pricedBalance))
         }
 
         return createQuery<Key, Data, Fail>({
@@ -295,9 +295,9 @@ export namespace BgToken {
 
       }
 
-      export type Key = EthereumQueryKey<unknown>
-      export type Data = Fixed.From
-      export type Fail = Error
+      export type K = EthereumQueryKey<unknown>
+      export type D = Fixed.From
+      export type F = Error
 
       export function key(account: ZeroHexString, token: ContractTokenData, block: string, chain: ChainData) {
         return Result.runAndWrapSync(() => ({
@@ -316,7 +316,7 @@ export namespace BgToken {
         if (maybeKey == null)
           return undefined
 
-        const fetcher = async (request: Key, more: FetcherMore) => {
+        const fetcher = async (request: K, more: FetcherMore) => {
           try {
             const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, more)
 
@@ -333,11 +333,11 @@ export namespace BgToken {
           }
         }
 
-        const indexer = async (states: States<Data, Fail>) => {
+        const indexer = async (states: States<D, F>) => {
           if (block !== "pending")
             return
 
-          const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
+          const pricedBalance = await Option.wrap(states.current.real?.current.ok().get()).andThen(async balance => {
             if (token.pairs == null)
               return new None()
 
@@ -356,14 +356,14 @@ export namespace BgToken {
               pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
             }
 
-            return new Some(pricedBalance)
-          }).then(o => o.unwrapOr(new Fixed(0n, 0)))
+            return new Some(new Data(pricedBalance))
+          }).then(o => o.get())
 
           const pricedBalanceQuery = Priced.schema(account, token, "usd", ethereum, storage)
-          await pricedBalanceQuery.mutate(Mutators.set<Fixed.From, never>(new Data(pricedBalance)))
+          await pricedBalanceQuery.mutate(() => new Some(pricedBalance))
         }
 
-        return createQuery<Key, Data, Fail>({
+        return createQuery<K, D, F>({
           key: maybeKey,
           fetcher,
           indexer,
@@ -373,16 +373,16 @@ export namespace BgToken {
 
     }
 
-    export type Key = string
-    export type Data = ContractTokenData
-    export type Fail = never
+    export type K = string
+    export type D = ContractTokenData
+    export type F = never
 
     export function key(chainId: number, address: string) {
       return `contractToken/${chainId}/${address}`
     }
 
     export function schema(chainId: number, address: string, storage: IDBStorage) {
-      const indexer = async (states: States<Data, Fail>) => {
+      const indexer = async (states: States<D, F>) => {
         const { current, previous } = states
 
         const previousData = previous?.real?.current.ok()?.get()
@@ -404,7 +404,7 @@ export namespace BgToken {
         }
       }
 
-      return createQuery<Key, Data, Fail>({
+      return createQuery<K, D, F>({
         key: key(chainId, address),
         indexer,
         storage

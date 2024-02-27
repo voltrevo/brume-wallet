@@ -62,7 +62,23 @@ export function useDisplay(result: Nullable<Result<Fixed.From, Error>>) {
   }, [result])
 }
 
-export function useDisplayUsd(result: Nullable<Result<Fixed.From, Error>>) {
+export function useDisplayUsdOrNull(result: Nullable<Result<Fixed.From, Error>>) {
+  return useMemo(() => {
+    if (result == null)
+      return
+    if (result.isErr())
+      return
+    const number = Number(Fixed.from(result.unwrap()).move(2).toString())
+
+    return number.toLocaleString(undefined, {
+      style: "currency",
+      currency: "USD",
+      notation: "standard"
+    })
+  }, [result])
+}
+
+export function useDisplayUsdOrZeroOrError(result: Nullable<Result<Fixed.From, Error>>) {
   return useMemo(() => {
     if (result == null)
       return "0.00"
@@ -78,7 +94,7 @@ export function useDisplayUsd(result: Nullable<Result<Fixed.From, Error>>) {
   }, [result])
 }
 
-export function useCompactDisplayUsd(result: Nullable<Result<Fixed.From, Error>>) {
+export function useCompactDisplayUsdOrZeroOrError(result: Nullable<Result<Fixed.From, Error>>) {
   return useMemo(() => {
     if (result == null)
       return "0.00"
@@ -568,7 +584,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const balanceDisplay = useDisplay(balanceQuery.current)
 
   const balanceUsdFixed = useNativePricedBalance(wallet.address, "usd", context)
-  const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
+  const balanceUsdDisplay = useDisplayUsdOrNull(balanceUsdFixed.current)
 
   const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
     setPrices(prices => {
@@ -621,7 +637,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   }, [wallet, subpath, context, token])
 
   const balanceUsdFixed = useContractPricedBalance(wallet.address, token, "usd", context)
-  const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
+  const balanceUsdDisplay = useDisplayUsdOrNull(balanceUsdFixed.current)
 
   const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
     setPrices(prices => {
@@ -670,7 +686,7 @@ export function PriceResolver(props: { index: number } & { address: string } & O
   return null
 }
 
-function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay: string } & OkProps<MouseEvent<HTMLElement>>) {
+function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay?: string } & OkProps<MouseEvent<HTMLElement>>) {
   const { ok, token, chain, balanceDisplay, balanceUsdDisplay } = props
 
   const onClick = useMouse(e => {
@@ -709,9 +725,10 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
             {chain.name}
           </span>
         </div>
-        <div className="">
-          {balanceUsdDisplay}
-        </div>
+        {balanceUsdDisplay != null &&
+          <div className="">
+            {balanceUsdDisplay}
+          </div>}
       </div>
       <div className="text-contrast">
         {balanceDisplay} {token.symbol}
@@ -720,7 +737,7 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
   </button>
 }
 
-function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay: string }) {
+function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay?: string }) {
   const { token, chain, balanceDisplay, balanceUsdDisplay } = props
   const wallet = useWalletDataContext().unwrap()
 
@@ -787,9 +804,10 @@ function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
             {chain.name}
           </span>
         </div>
-        <div className="">
-          {balanceUsdDisplay}
-        </div>
+        {balanceUsdDisplay != null &&
+          <div className="">
+            {balanceUsdDisplay}
+          </div>}
       </div>
       <div className="text-contrast">
         {balanceDisplay} {token.symbol}

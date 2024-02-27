@@ -109,7 +109,7 @@ export namespace FgToken {
           if (block !== "pending")
             return
 
-          const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
+          const pricedBalance = await Option.wrap(states.current.real?.current.ok().get()).andThen(async balance => {
             if (context.chain.token.pairs == null)
               return new None()
 
@@ -128,11 +128,11 @@ export namespace FgToken {
               pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
             }
 
-            return new Some(pricedBalance)
-          }).then(o => o.unwrapOr(new Fixed(0n, 0)))
+            return new Some(new Data(pricedBalance))
+          }).then(o => o.get())
 
           const pricedBalanceQuery = Priced.schema(address, "usd", context, storage)
-          await pricedBalanceQuery?.mutate(Mutators.set<Fixed.From, never>(new Data(pricedBalance)))
+          await pricedBalanceQuery?.mutate(() => new Some(pricedBalance))
         }
 
         return createQuery<Key, Data, Fail>({
@@ -196,9 +196,9 @@ export namespace FgToken {
 
       }
 
-      export type Key = BgToken.Contract.Balance.Key
-      export type Data = BgToken.Contract.Balance.Data
-      export type Fail = BgToken.Contract.Balance.Fail
+      export type K = BgToken.Contract.Balance.K
+      export type D = BgToken.Contract.Balance.D
+      export type F = BgToken.Contract.Balance.F
 
       export const key = BgToken.Contract.Balance.key
 
@@ -217,7 +217,7 @@ export namespace FgToken {
         if (maybeKey == null)
           return
 
-        const fetcher = async (request: Key, more: FetcherMore = {}) => {
+        const fetcher = async (request: K, more: FetcherMore = {}) => {
           try {
             const fetched = await fetchOrFail<ZeroHexString>(request, context)
 
@@ -234,11 +234,11 @@ export namespace FgToken {
           }
         }
 
-        const indexer = async (states: States<Data, Fail>) => {
+        const indexer = async (states: States<D, F>) => {
           if (block !== "pending")
             return
 
-          const pricedBalance = await Option.wrap(states.current.real?.data?.get()).andThen(async balance => {
+          const pricedBalanceData = await Option.wrap(states.current.real?.current.ok()?.get()).andThen(async balance => {
             if (token.pairs == null)
               return new None()
 
@@ -257,14 +257,14 @@ export namespace FgToken {
               pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
             }
 
-            return new Some(pricedBalance)
-          }).then(o => o.unwrapOr(new Fixed(0n, 0)))
+            return new Some(new Data(pricedBalance))
+          }).then(o => o.get())
 
           const pricedBalanceQuery = Priced.schema(address, token, "usd", context, storage)
-          await pricedBalanceQuery?.mutate(Mutators.set<Fixed.From, never>(new Data(pricedBalance)))
+          await pricedBalanceQuery?.mutate(() => new Some(pricedBalanceData))
         }
 
-        return createQuery<Key, Data, Fail>({
+        return createQuery<K, D, F>({
           key: maybeKey,
           fetcher,
           indexer,
@@ -288,9 +288,9 @@ export namespace FgToken {
 
     }
 
-    export type Key = BgToken.Contract.Key
-    export type Data = BgToken.Contract.Data
-    export type Fail = BgToken.Contract.Fail
+    export type K = BgToken.Contract.K
+    export type D = BgToken.Contract.D
+    export type F = BgToken.Contract.F
 
     export const key = BgToken.Contract.key
 
@@ -300,7 +300,7 @@ export namespace FgToken {
       if (address == null)
         return
 
-      const indexer = async (states: States<Data, Fail>) => {
+      const indexer = async (states: States<D, F>) => {
         const { current, previous } = states
 
         const previousData = previous?.real?.current.ok()?.get()
@@ -322,7 +322,7 @@ export namespace FgToken {
         }
       }
 
-      return createQuery<Key, Data, Fail>({
+      return createQuery<K, D, F>({
         key: key(chainId, address),
         indexer,
         storage

@@ -6,14 +6,14 @@ import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { useCallback, useEffect, useState } from "react"
 import { useTotalPricedBalance } from "../entities/unknown/data"
 import { useUserContext } from "../entities/users/context"
-import { useDisplayUsd } from "../entities/wallets/page"
+import { useDisplayUsdOrZeroOrError } from "../entities/wallets/page"
 
 export function HomePage() {
   const userData = useUserContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
   const totalPricedBalanceQuery = useTotalPricedBalance("usd")
-  const totalPricedBalanceDisplay = useDisplayUsd(totalPricedBalanceQuery.current)
+  const totalPricedBalanceDisplay = useDisplayUsdOrZeroOrError(totalPricedBalanceQuery.current)
 
   useEffect(() => {
     background.requestOrThrow({
