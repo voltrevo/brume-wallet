@@ -73,7 +73,7 @@ export const chainByChainId: Chains = {
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
     },
     icon() {
-      return <img className="w-6 h-6"
+      return <img className="w-6 h-6 rounded-full"
         src="/assets/chains/optimism.svg"
         alt="Optimism" />
     },
@@ -93,7 +93,7 @@ export const chainByChainId: Chains = {
       pairs: ["0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae"]
     },
     icon() {
-      return <img className="w-6 h-6"
+      return <img className="w-6 h-6 rounded-full"
         src="/assets/chains/binance.svg"
         alt="Binance" />
     },
@@ -190,6 +190,25 @@ export const chainByChainId: Chains = {
       </div>
     },
   },
+  5000: {
+    name: "Mantle",
+    chainId: 5000,
+    urls: ["wss://mantle-rpc.publicnode.com"],
+    etherscan: "https://explorer.mantle.xyz",
+    token: {
+      uuid: "e55bb9b6-8ac8-47a1-ac7e-9736c3bbc078",
+      type: "native",
+      name: "Mantle",
+      chainId: 5000,
+      symbol: "MNT",
+      decimals: 18
+    },
+    icon() {
+      return <img className="w-6 h-6 rounded-full"
+        src="/assets/chains/mantle.svg"
+        alt="Mantle" />
+    },
+  },
   7700: {
     name: "Canto",
     chainId: 7700,
@@ -272,7 +291,7 @@ export const chainByChainId: Chains = {
       pairs: ["0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422"]
     },
     icon() {
-      return <img className="w-6 h-6"
+      return <img className="w-6 h-6 rounded-full"
         src="/assets/chains/celo.svg"
         alt="Celo" />
     },
@@ -292,7 +311,7 @@ export const chainByChainId: Chains = {
       pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
     },
     icon() {
-      return <img className="w-6 h-6"
+      return <img className="w-6 h-6 rounded-full"
         src="/assets/chains/avalanche.png"
         alt="Avalanche" />
     },
