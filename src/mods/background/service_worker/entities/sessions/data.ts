@@ -43,7 +43,6 @@ export interface WcSessionData {
   readonly type: "wc"
   readonly origin: string
   readonly persist: true
-  readonly chain: ChainData
   readonly wallets: [Wallet]
   readonly metadata: WcMetadata
   readonly relay: string

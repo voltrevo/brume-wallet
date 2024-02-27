@@ -11,7 +11,7 @@ import { Menu } from "@/libs/ui2/menu/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
 import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/data"
-import { Session, SessionData } from "@/mods/background/service_worker/entities/sessions/data"
+import { ExSessionData, Session, SessionData } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { HashSubpathProvider, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context"
 import { Nullable, Option } from "@hazae41/option"
@@ -132,7 +132,7 @@ export function SessionRow(props: { session: Session }) {
         <Menu>
           <SessionMenu sessionData={maybeSessionData} />
         </Menu>}
-      {subpath.url.pathname === `/${session.id}/chains` &&
+      {subpath.url.pathname === `/${session.id}/chains` && maybeSessionData.type !== "wc" &&
         <Menu>
           <ChainsMenu sessionData={maybeSessionData} />
         </Menu>}
@@ -198,15 +198,16 @@ export function SessionMenu(props: { sessionData: SessionData }) {
   }), [background, sessionData])
 
   return <div className="flex flex-col text-left gap-2 w-[160px] overflow-x-hidden">
-    <WideShrinkableNakedMenuAnchor
-      onClick={chains.onClick}
-      onKeyDown={chains.onKeyDown}
-      href={chains.href}>
-      <Outline.LinkIcon className="shrink-0 size-4" />
-      <div className="truncate">
-        {sessionData.chain.name}
-      </div>
-    </WideShrinkableNakedMenuAnchor>
+    {sessionData.type !== "wc" &&
+      <WideShrinkableNakedMenuAnchor
+        onClick={chains.onClick}
+        onKeyDown={chains.onKeyDown}
+        href={chains.href}>
+        <Outline.LinkIcon className="shrink-0 size-4" />
+        <div className="truncate">
+          {sessionData.chain.name}
+        </div>
+      </WideShrinkableNakedMenuAnchor>}
     <WideShrinkableNakedMenuButton
       disabled={disconnectOrAlert.loading}
       onClick={disconnectOrAlert.run}>
@@ -216,7 +217,7 @@ export function SessionMenu(props: { sessionData: SessionData }) {
   </div>
 }
 
-export function ChainsMenu(props: { sessionData: SessionData }) {
+export function ChainsMenu(props: { sessionData: ExSessionData }) {
   const { sessionData } = props
 
   return <div className="flex flex-col text-left gap-2 w-[160px] overflow-x-hidden">
@@ -228,7 +229,7 @@ export function ChainsMenu(props: { sessionData: SessionData }) {
   </div>
 }
 
-export function ChainRow(props: { sessionData: SessionData, chainData: ChainData }) {
+export function ChainRow(props: { sessionData: ExSessionData, chainData: ChainData }) {
   const { sessionData, chainData } = props
   const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()

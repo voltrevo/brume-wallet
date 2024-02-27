@@ -508,6 +508,9 @@ class Global {
         const sessionState = await sessionQuery.state
         const sessionData = Option.unwrap(sessionState.data?.get())
 
+        if (sessionData.type === "wc")
+          throw new Error("Unexpected WalletConnect session")
+
         slot.current = sessionId
 
         let scripts = this.scriptsBySession.get(sessionId)
@@ -650,6 +653,8 @@ class Global {
 
     if (session == null)
       return new Err(new UnauthorizedError())
+    if (session.type === "wc")
+      throw new Error("Unexpected WalletConnect session")
 
     const { wallets } = session
 
@@ -730,10 +735,16 @@ class Global {
   }
 
   async eth_chainId(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+    if (session.type === "wc")
+      throw new Error("Unexpected WalletConnect session")
+
     return new Ok(ZeroHexString.from(session.chain.chainId))
   }
 
   async net_version(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
+    if (session.type === "wc")
+      throw new Error("Unexpected WalletConnect session")
+
     return new Ok(session.chain.chainId.toString())
   }
 
@@ -865,14 +876,18 @@ class Global {
   async wallet_switchEthereumChain(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<Result<void, Error>> {
     const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
 
-    const chain = Option.unwrap(chainByChainId[Number(chainId)])
-
     const { storage } = Option.unwrap(this.#user)
 
-    const updatedSession = { ...session, chain }
+    const chain = Option.unwrap(chainByChainId[Number(chainId)])
 
     const sessionQuery = BgSession.schema(session.id, storage)
-    await sessionQuery.mutate(Mutators.replaceData(updatedSession))
+    const sessionState = await sessionQuery.state
+    const sessionData = Option.unwrap(sessionState.data?.get())
+
+    if (sessionData.type === "wc")
+      throw new Error("Unexpected WalletConnect session")
+
+    await sessionQuery.mutate(() => new Some(new Data({ ...sessionData, chain })))
 
     for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([])) {
       await script.requestOrThrow({
@@ -1006,6 +1021,9 @@ class Global {
     const sessionQuery = BgSession.schema(sessionId, storage)
     const sessionState = await sessionQuery.state
     const sessionData = Option.unwrap(sessionState.data?.get())
+
+    if (sessionData.type === "wc")
+      throw new Error("Unexpected WalletConnect session")
 
     await sessionQuery.mutate(() => new Some(new Data({ ...sessionData, chain })))
 
@@ -1393,12 +1411,10 @@ class Global {
   async brume_wc_connect(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<WcMetadata, Error>> {
     const [rawWcUrl, walletId] = (request as RpcRequestPreinit<[string, string]>).params
 
-    const { user, storage } = Option.unwrap(this.#user)
+    const { storage } = Option.unwrap(this.#user)
 
     const walletState = await BgWallet.schema(walletId, storage).state
     const walletData = Option.unwrap(walletState.real?.current.ok().get())
-
-    const chainData = Option.unwrap(chainByChainId[1])
 
     const wcUrl = new URL(rawWcUrl)
     const pairParams = await Wc.tryParse(wcUrl).then(r => r.unwrap())
@@ -1428,7 +1444,6 @@ class Global {
       metadata: session.metadata,
       persist: true,
       wallets: [WalletRef.from(walletData)],
-      chain: chainData,
       relay: Wc.RELAY,
       topic: session.client.topic,
       sessionKeyBase64: sessionKeyBase64,
