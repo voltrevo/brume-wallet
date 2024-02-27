@@ -13,24 +13,19 @@
       "developerName": "hazae41",
       "subtitle": "The private Ethereum wallet",
       "localizedDescription": "The private Ethereum wallet",
-      "iconURL": "https://picsum.photos/seed/eth.brume.wallet/512/512",
-      "tintColor": "A2845E",
+      "iconURL": "https://raw.githubusercontent.com/brumewallet/wallet/main/public/appicon.png",
+      "tintColor": "FFFFFF",
       "category": null,
       "screenshots": [
         {
-          "imageURL": "https://picsum.photos/seed/eth.brume.wallet_1/1284/2778",
+          "imageURL": "https://raw.githubusercontent.com/brumewallet/wallet/main/fastlane/metadata/apple/en-US/images/phoneScreenshots/1.png",
           "width": 1284,
           "height": 2778
         },
         {
+          "imageURL": "https://raw.githubusercontent.com/brumewallet/wallet/main/fastlane/metadata/apple/en-US/images/phoneScreenshots/2.png",
           "width": 1284,
-          "imageURL": "https://picsum.photos/seed/eth.brume.wallet_2/1284/2778",
           "height": 2778
-        },
-        {
-          "width": 1284,
-          "height": 2778,
-          "imageURL": "https://picsum.photos/seed/eth.brume.wallet_3/1284/2778"
         }
       ],
       "versions": [
