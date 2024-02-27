@@ -63,7 +63,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
   const [preflip = false, setPreflip] = useState(flip)
   const [postflip, setPostflip] = useState(false)
 
-  const onFlipTransitionEnd = useCallback(() => {
+  const onAnimationEnd = useCallback(() => {
     flushSync(() => setPostflip(preflip))
   }, [preflip])
 
@@ -134,7 +134,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
     style={{ perspective: "1000px" }}>
     <div className={`relative z-10 w-full h-full text-white bg-${color}-400 dark:bg-${color}-500 rounded-xl ${preflip && !postflip ? "animate-flip-in" : ""} ${!preflip && postflip ? "animate-flip-out" : ""}`}
       style={{ transform: preflip && postflip ? `rotateY(180deg)` : "", transformStyle: "preserve-3d" }}
-      onAnimationEnd={onFlipTransitionEnd}>
+      onAnimationEnd={onAnimationEnd}>
       <div className="po-md absolute w-full h-full flex flex-col"
         style={{ backfaceVisibility: "hidden" }}
         onContextMenu={genius.onContextMenu}>

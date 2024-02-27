@@ -170,14 +170,15 @@ function WalletDataPage() {
   const receive = useGenius(subpath, "/receive")
 
   const $flip = useState(false)
-  const [flip] = $flip
+  const [flip, setFlip] = $flip
 
   const $privateKey = useState<Optional<ZeroHexString>>()
   const [privateKey, setPrivateKey] = $privateKey
 
   const onUnflip = useCallback(() => {
     setPrivateKey(undefined)
-  }, [setPrivateKey])
+    setFlip(false)
+  }, [setFlip, setPrivateKey])
 
   const Header =
     <UserPageHeader
