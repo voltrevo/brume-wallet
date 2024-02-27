@@ -6,7 +6,7 @@ const versionCode = Number(version.replaceAll(".", "")).toString()
 {
   const json = JSON.parse(readFileSync("./altstore.json", "utf8"));
 
-  json.apps[0].versions.push({
+  json.apps[0].versions.unshift({
     "version": version,
     "date": new Date().toISOString(),
     "localizedDescription": "Improvements and fixes. See GitHub for more details.",
