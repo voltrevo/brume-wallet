@@ -1625,9 +1625,9 @@ if (isWebsite() || isAndroidApp()) {
   self.addEventListener("message", (event) => {
     if (event.data === "SKIP_WAITING")
       return void onSkipWaiting(event)
-    if (event.data === "FOREGROUND")
+    if (event.data === "FOREGROUND->BACKGROUND")
       return void onForeground(event)
-    throw new Error(`Invalid message`)
+    return
   })
 }
 
@@ -1668,9 +1668,9 @@ if (isAppleApp()) {
   }
 
   self.addEventListener("message", (event) => {
-    if (event.data === "FOREGROUND")
+    if (event.data === "FOREGROUND->BACKGROUND")
       return void onForeground(event)
-    throw new Error(`Invalid message`)
+    return
   })
 }
 
@@ -1707,17 +1707,34 @@ if (isExtension()) {
     await router.waitHelloOrThrow(AbortSignals.timeout(1000))
   }
 
+  const onOffscreen = async (port: chrome.runtime.Port) => {
+    const name = `offscreen-${crypto.randomUUID().slice(0, 8)}`
+    const router = new ExtensionRpcRouter(name, port)
+
+    console.log(name, "connected")
+
+    await router.waitHelloOrThrow(AbortSignals.timeout(1000))
+  }
+
   browser.runtime.onConnect.addListener(port => {
     if (port.sender?.id !== browser.runtime.id)
       return
-    if (port.name === "foreground")
+    if (port.name === "foreground->background")
       return void onForeground(port)
-    if (port.name === "content_script")
+    if (port.name === "content_script->background")
       return void onContentScript(port)
+    if (port.name === "offscreen->background")
+      return void onOffscreen(port)
     return
   })
 
   if (isChromeExtension()) {
+    await BrowserError.runOrThrow(() => browser.offscreen.createDocument({
+      url: "/offscreen.html",
+      reasons: [chrome.offscreen.Reason.WORKERS],
+      justification: "We need to run workers"
+    }))
+
     browser.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       const inited = await init
 

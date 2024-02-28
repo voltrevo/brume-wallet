@@ -126,7 +126,7 @@ async function main() {
       await new Promise(ok => setTimeout(ok, 1))
 
       const raw = BrowserError.runOrThrowSync(() => {
-        const port = browser.runtime.connect({ name: "content_script" })
+        const port = browser.runtime.connect({ name: "content_script->background" })
         port.onDisconnect.addListener(() => void chrome.runtime.lastError)
         return port
       })
@@ -135,8 +135,6 @@ async function main() {
       using preRouter = new Box(new ExtensionRpcRouter("background", preChannel.inner.inner))
 
       await preRouter.getOrThrow().waitHelloOrThrow(AbortSignals.timeout(1000))
-
-      console.log("Got hello on page")
 
       connected = true
 
@@ -249,6 +247,8 @@ async function main() {
 
       return preEntry.unwrapOrThrow()
     } catch (e: unknown) {
+      if (!isSafariExtension())
+        throw e
       if (connected)
         throw e
 

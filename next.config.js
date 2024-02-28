@@ -1,5 +1,4 @@
 const webpack = require("webpack")
-const TerserPlugin = require("terser-webpack-plugin")
 const { copyFileSync, rmSync } = require("fs")
 const Log = require("next/dist/build/output/log")
 const path = require("path")
@@ -22,7 +21,7 @@ const nextConfig = {
     return "brume"
   },
   webpack(config, options) {
-    config.optimization.minimize = true
+    config.optimization.minimize = false
 
     config.module.rules.push({
       test: /\.tsx?$/,
@@ -37,7 +36,8 @@ const nextConfig = {
     promise = Promise.all([
       compileServiceWorker(config, options),
       compileContentScript(config, options),
-      compileInjectedScript(config, options)
+      compileInjectedScript(config, options),
+      compileOffscreen(config, options)
     ])
 
     return config
@@ -86,8 +86,8 @@ async function compileServiceWorker(config, options) {
       filename: "service_worker.js"
     },
     optimization: {
-      minimize: true,
-      minimizer: [new TerserPlugin()]
+      minimize: false,
+      minimizer: []
     }
   })
 }
@@ -110,8 +110,8 @@ async function compileContentScript(config, options) {
       filename: "content_script.js"
     },
     optimization: {
-      minimize: true,
-      minimizer: [new TerserPlugin()]
+      minimize: false,
+      minimizer: []
     }
   })
 }
@@ -134,8 +134,32 @@ async function compileInjectedScript(config, options) {
       filename: "injected_script.js"
     },
     optimization: {
-      minimize: true,
-      minimizer: [new TerserPlugin()]
+      minimize: false,
+      minimizer: []
+    }
+  })
+}
+
+/**
+ * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
+ */
+async function compileOffscreen(config, options) {
+  await compile("offscreen", {
+    devtool: false,
+    target: "web",
+    mode: config.mode,
+    resolve: config.resolve,
+    resolveLoader: config.resolveLoader,
+    module: config.module,
+    plugins: config.plugins,
+    entry: "./src/mods/background/offscreen/index.ts",
+    output: {
+      path: path.join(process.cwd(), ".webpack"),
+      filename: "offscreen.js"
+    },
+    optimization: {
+      minimize: false,
+      minimizer: []
     }
   })
 }

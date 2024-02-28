@@ -162,7 +162,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
     rawChannel.port1.start()
     rawChannel.port2.start()
 
-    active.postMessage("FOREGROUND", [rawChannel.port2])
+    active.postMessage("FOREGROUND->BACKGROUND", [rawChannel.port2])
 
     await router.waitHelloOrThrow(AbortSignals.timeout(1000))
 
@@ -263,7 +263,7 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
     rawChannel.port1.start()
     rawChannel.port2.start()
 
-    worker.get().postMessage("FOREGROUND", [rawChannel.port2])
+    worker.get().postMessage("FOREGROUND->BACKGROUND", [rawChannel.port2])
 
     await router.waitHelloOrThrow(AbortSignals.timeout(1000))
 
@@ -345,7 +345,7 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
     }).catch(() => { })
 
     const rawPort = BrowserError.runOrThrowSync(() => {
-      const port = browser.runtime.connect({ name: "foreground" })
+      const port = browser.runtime.connect({ name: "foreground->background" })
       port.onDisconnect.addListener(() => void chrome.runtime.lastError)
       return port
     })
