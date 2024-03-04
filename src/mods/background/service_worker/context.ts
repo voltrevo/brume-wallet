@@ -36,28 +36,22 @@ export namespace BgEthereumContext {
 
           if (connection.isURL()) {
             const { url, circuit } = connection
+
             const signal = AbortSignals.timeout(10_000, parentSignal)
+            const response = await TorRpc.fetchWithCircuitOrThrow<T>(url, { ...request, circuit, signal })
 
-            const result = await TorRpc.tryFetchWithCircuit<T>(url, { ...request, circuit, signal })
-
-            if (result.isErr())
-              console.debug(`Could not fetch ${init.method} from ${url.href} using ${circuit.id}`, { result })
-
-            return Fetched.rewrap(result.unwrap())
+            return Fetched.rewrap(response)
           }
 
           if (connection.isWebSocket()) {
-            await connection.cooldown
+            const { socket, cooldown } = connection
 
-            const { socket, circuit } = connection
+            await cooldown
+
             const signal = AbortSignals.timeout(10_000, parentSignal)
+            const response = await TorRpc.fetchWithSocketOrThrow<T>(socket, request, signal)
 
-            const result = await TorRpc.tryFetchWithSocket<T>(socket, request, signal)
-
-            if (result.isErr())
-              console.debug(`Could not fetch ${init.method} from ${socket.url} using ${circuit.id}`, { result })
-
-            return Fetched.rewrap(result.unwrap())
+            return Fetched.rewrap(response)
           }
 
           throw new Panic()
@@ -159,3 +153,4 @@ export namespace BgEthereumContext {
   }
 
 }
+

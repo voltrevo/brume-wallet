@@ -11,6 +11,7 @@ import { qurl } from "@/libs/url/url";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useAppRequests } from "@/mods/foreground/entities/requests/data";
+import { useSimulation } from "@/mods/foreground/entities/simulations/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
 import { SmallShrinkableOppositeAnchor, useGenius } from "@/mods/foreground/entities/users/all/page";
 import { WalletTransactionDialog } from "@/mods/foreground/entities/wallets/actions/eth_sendTransaction";
@@ -28,7 +29,7 @@ import { HashSubpathProvider, useHashSubpath, usePathContext } from "@/mods/fore
 import { Router } from "@/mods/foreground/router/router";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { Abi } from "@hazae41/cubane";
+import { Abi, Address } from "@hazae41/cubane";
 import { RpcErr, RpcOk } from "@hazae41/jsonrpc";
 import { Nullable, Option } from "@hazae41/option";
 import { Err, Result } from "@hazae41/result";
@@ -113,6 +114,23 @@ export function TransactPage() {
   const transactionQuery = useTransactionWithReceipt(maybeTrialData?.transactions[0].uuid, maybeContext)
   const maybeTransaction = transactionQuery.current?.ok().get()
 
+  const preTx = useMemo(() => {
+    return {
+      from: from,
+      to: maybeTo,
+      gas: maybeGas,
+      value: maybeValue,
+      data: maybeData,
+      nonce: maybeNonce,
+      gasPrice: maybeGasPrice,
+      maxFeePerGas: maybeMaxFeePerGas,
+      maxPriorityFeePerGas: maybeMaxPriorityFeePerGas
+    }
+  }, [from, maybeTo, maybeValue, maybeNonce, maybeData, maybeGas, maybeGasPrice, maybeMaxFeePerGas, maybeMaxPriorityFeePerGas])
+
+  const simulationQuery = useSimulation(preTx, "pending", maybeContext)
+  const maybeSimulation = simulationQuery.current?.ok().get()
+
   const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const transaction = Option.unwrap(maybeTransaction)
 
@@ -160,9 +178,26 @@ export function TransactPage() {
           Do you want to send the following transaction?
         </div>
         <div className="h-4" />
-        <div className="grow p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
-          {JSON.stringify({ from, to: maybeTo, gas: maybeGas, value: maybeValue, data: maybeData, nonce: maybeNonce, gasPrice: maybeGasPrice, maxFeePerGas: maybeMaxFeePerGas, maxPriorityFeePerGas: maybeMaxPriorityFeePerGas }, undefined, 2)}
+        <div className="p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
+          {JSON.stringify(preTx, undefined, 2)}
         </div>
+        {maybeSimulation != null && <>
+          <div className="h-4" />
+          <div className="p-4 bg-contrast rounded-xl flex flex-col gap-2">
+            {maybeSimulation.logs.map((log, i) =>
+              <div className="p-2 bg-contrast rounded-xl flex flex-col gap-2"
+                key={i}>
+                <div className="whitespace-pre-wrap break-words">
+                  {log.name} ({Address.tryFrom(log.raw.address).mapSync(Address.format).ok().get()})
+                </div>
+                {log.inputs.map((input, j) =>
+                  <div className="p-2 bg-contrast rounded-xl whitespace-pre-wrap break-words"
+                    key={j}>
+                    {input.type} {input.name} {JSON.stringify(input.value)}
+                  </div>)}
+              </div>)}
+          </div>
+        </>}
         <div className="h-4 grow" />
         <div className="flex items-center flex-wrap-reverse gap-2">
           <WideShrinkableContrastButton

@@ -1,6 +1,5 @@
 import { Errors } from "@/libs/errors/errors"
 import { BgEns } from "@/mods/background/service_worker/entities/names/data"
-import { EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data"
 import { Address, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, useError, useFetch, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
@@ -28,7 +27,7 @@ export namespace FgEns {
         await customFetchOrFail<Address>(request, context)
 
       return createQuery<Key, Data, Fail>({
-        key: BgEns.Lookup.key(name),
+        key: key(name),
         fetcher,
         storage
       })
@@ -37,6 +36,12 @@ export namespace FgEns {
   }
 
   export namespace Reverse {
+
+    export type Key = BgEns.Reverse.Key
+    export type Data = BgEns.Reverse.Data
+    export type Fail = BgEns.Reverse.Fail
+
+    export const key = BgEns.Reverse.key
 
     export function schema(address: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
       if (context == null)
@@ -47,8 +52,8 @@ export namespace FgEns {
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await customFetchOrFail<ZeroHexString>(request, context)
 
-      return createQuery<EthereumQueryKey<unknown>, Nullable<string>, Error>({
-        key: BgEns.Reverse.key(address),
+      return createQuery<Key, Data, Fail>({
+        key: key(address),
         fetcher,
         storage
       })
