@@ -10,6 +10,7 @@ import { useConstant } from "@/libs/react/ref";
 import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { qurl } from "@/libs/url/url";
+import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
 import { HashSubpathProvider, useHashSubpath, useKeyValueState, usePathContext, usePathState } from "@/mods/foreground/router/path/context";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
@@ -70,7 +71,7 @@ export function WalletTransactionDialog(props: {}) {
 
   const gasMode = Option.wrap(maybeGasMode).unwrapOr("normal")
 
-  const trialUuidFallback = useConstant(() => crypto.randomUUID())
+  const trialUuidFallback = useConstant(() => randomUUID())
   const trialUuid = Option.wrap(maybeTrial).unwrapOr(trialUuidFallback)
 
   const disableData = Boolean(maybeDisableData)
@@ -82,7 +83,7 @@ export function WalletTransactionDialog(props: {}) {
 
   const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
 
-  const transactionUuid = useConstant(() => crypto.randomUUID())
+  const transactionUuid = useConstant(() => randomUUID())
   const transactionQuery = useTransactionWithReceipt(transactionUuid, context)
 
   const pendingNonceQuery = useNonce(wallet.address, context)

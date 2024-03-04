@@ -17,6 +17,7 @@ import { UUIDProps } from "@/libs/react/props/uuid";
 import { State } from "@/libs/react/state";
 import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { Menu } from "@/libs/ui2/menu/menu";
+import { randomUUID } from "@/libs/uuid/uuid";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
@@ -750,7 +751,7 @@ function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
 
     await settings.mutate(s => {
       const data = Mutators.Datas.mapOrNew((d = {
-        uuid: crypto.randomUUID(),
+        uuid: randomUUID(),
         token: TokenRef.from(token),
         wallet: WalletRef.from(wallet),
         enabled

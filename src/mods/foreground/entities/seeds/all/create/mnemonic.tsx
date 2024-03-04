@@ -9,6 +9,7 @@ import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { randomUUID } from "@/libs/uuid/uuid";
 import { WebAuthnStorage, WebAuthnStorageError } from "@/libs/webauthn/webauthn";
 import { SeedData } from "@/mods/background/service_worker/entities/seeds/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -25,7 +26,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
   const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
-  const uuid = useConstant(() => crypto.randomUUID())
+  const uuid = useConstant(() => randomUUID())
 
   const modhash = useModhash(uuid)
   const color = Color.get(modhash)

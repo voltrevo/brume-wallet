@@ -8,6 +8,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { randomUUID } from "@/libs/uuid/uuid";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Address, ZeroHexString } from "@hazae41/cubane";
@@ -24,7 +25,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
-  const uuid = useConstant(() => crypto.randomUUID())
+  const uuid = useConstant(() => randomUUID())
 
   const modhash = useModhash(uuid)
   const color = Color.get(modhash)

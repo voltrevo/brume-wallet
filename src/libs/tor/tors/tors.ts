@@ -1,5 +1,6 @@
 import { RpcRouter } from "@/libs/channel/channel"
 import { SuperWebSocketEvents, WebSocketStream } from "@/libs/streams/websocket"
+import { randomUUID } from "@/libs/uuid/uuid"
 import { Base64 } from "@hazae41/base64"
 import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
@@ -222,7 +223,7 @@ export function createPageWebSocketPool(router: RpcRouter, params: PoolParams) {
   const pool = new Pool<RpcWebSocketProxy>(async (subparams) => {
     const { index, pool } = subparams
 
-    const uuid = crypto.randomUUID()
+    const uuid = randomUUID()
 
     await router.requestOrThrow({
       method: "ws_create",

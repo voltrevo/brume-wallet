@@ -15,6 +15,7 @@ import { Strings } from "@/libs/strings/strings"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors"
 import { qurl } from "@/libs/url/url"
+import { randomUUID } from "@/libs/uuid/uuid"
 import { CryptoClient } from "@/libs/wconn/mods/crypto/client"
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn"
 import { Wc, WcMetadata, WcSession, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
@@ -558,7 +559,7 @@ class Global {
         return undefined
 
       const [persistent, chainId, wallets] = await this.requestPopupOrThrow<[boolean, number, Wallet[]]>({
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         origin: origin,
         method: "eth_requestAccounts",
         params: {}
@@ -568,7 +569,7 @@ class Global {
 
       const sessionData: ExSessionData = {
         type: "ex",
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         origin: origin,
         persist: persistent,
         wallets: wallets.map(wallet => WalletRef.from(wallet)),
@@ -803,7 +804,7 @@ class Global {
     const chainId = ZeroHexString.from(ethereum.chain.chainId)
 
     const hash = await this.requestOrThrow<string>({
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       method: "eth_sendTransaction",
       params: { walletId, chainId, from, to, gas, value, nonce, data, gasPrice, maxFeePerGas, maxPriorityFeePerGas },
       origin: session.origin,
@@ -833,7 +834,7 @@ class Global {
     const chainId = ZeroHexString.from(ethereum.chain.chainId)
 
     const signature = await this.requestOrThrow<string>({
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       method: "personal_sign",
       params: { message, address, walletId, chainId },
       origin: session.origin,
@@ -863,7 +864,7 @@ class Global {
     const chainId = ZeroHexString.from(ethereum.chain.chainId)
 
     const signature = await this.requestOrThrow<string>({
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       method: "eth_signTypedData_v4",
       params: { data, address, walletId, chainId },
       origin: session.origin,
@@ -1426,7 +1427,7 @@ class Global {
     const [session, settlement] = await Wc.tryPair(irn, pairParams, walletData.address).then(r => r.unwrap())
 
     const originData: OriginData = {
-      origin: `wc://${crypto.randomUUID()}`,
+      origin: `wc://${randomUUID()}`,
       title: session.metadata.name,
       description: session.metadata.description,
     }
@@ -1439,7 +1440,7 @@ class Global {
 
     const sessionData: WcSessionData = {
       type: "wc",
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       origin: originData.origin,
       metadata: session.metadata,
       persist: true,
@@ -1590,7 +1591,7 @@ if (isWebsite() || isAndroidApp()) {
   const onForeground = async (event: ExtendableMessageEvent) => {
     const port = event.ports[0]
 
-    const name = `foreground-${crypto.randomUUID().slice(0, 8)}`
+    const name = `foreground-${randomUUID().slice(0, 8)}`
     const router = new MessageRpcRouter(name, port)
 
     const onRequest = async (request: RpcRequestInit<unknown>) => {
@@ -1635,7 +1636,7 @@ if (isAppleApp()) {
   const onForeground = async (event: ExtendableMessageEvent) => {
     const port = event.ports[0]
 
-    const name = `foreground-${crypto.randomUUID().slice(0, 8)}`
+    const name = `foreground-${randomUUID().slice(0, 8)}`
     const router = new MessageRpcRouter(name, port)
 
     const onRequest = async (request: RpcRequestInit<unknown>) => {
@@ -1676,7 +1677,7 @@ if (isAppleApp()) {
 
 if (isExtension()) {
   const onContentScript = async (port: chrome.runtime.Port) => {
-    const name = `content_script-${crypto.randomUUID().slice(0, 8)}`
+    const name = `content_script-${randomUUID().slice(0, 8)}`
     const router = new ExtensionRpcRouter(name, port)
 
     router.events.on("request", async (request) => {
@@ -1692,7 +1693,7 @@ if (isExtension()) {
   }
 
   const onForeground = async (port: chrome.runtime.Port) => {
-    const name = `foreground-${crypto.randomUUID().slice(0, 8)}`
+    const name = `foreground-${randomUUID().slice(0, 8)}`
     const router = new ExtensionRpcRouter(name, port)
 
     router.events.on("request", async (request) => {
@@ -1708,7 +1709,7 @@ if (isExtension()) {
   }
 
   const onOffscreen = async (port: chrome.runtime.Port) => {
-    const name = `offscreen-${crypto.randomUUID().slice(0, 8)}`
+    const name = `offscreen-${randomUUID().slice(0, 8)}`
     const router = new ExtensionRpcRouter(name, port)
 
     console.log(name, "connected")

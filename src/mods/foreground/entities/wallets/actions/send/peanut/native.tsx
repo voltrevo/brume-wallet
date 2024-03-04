@@ -7,6 +7,7 @@ import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
+import { randomUUID } from "@/libs/uuid/uuid";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
 import { HashSubpathProvider, useHashSubpath, useKeyValueState, usePathContext, usePathState } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
@@ -39,7 +40,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const [maybePassword, setPassword] = useKeyValueState("password", $state)
   const [maybeTrial0, setTrial0] = useKeyValueState("trial0", $state)
 
-  const trial0UuidFallback = useConstant(() => crypto.randomUUID())
+  const trial0UuidFallback = useConstant(() => randomUUID())
   const trial0Uuid = Option.wrap(maybeTrial0).unwrapOr(trial0UuidFallback)
 
   useEffect(() => {

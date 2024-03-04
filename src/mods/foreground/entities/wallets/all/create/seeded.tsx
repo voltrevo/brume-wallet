@@ -8,6 +8,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { randomUUID } from "@/libs/uuid/uuid";
 import { SeedRef } from "@/mods/background/service_worker/entities/seeds/data";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -28,7 +29,7 @@ export function SeededWalletCreatorDialog(props: {}) {
   const background = useBackgroundContext().unwrap()
   const seedData = useSeedDataContext().unwrap()
 
-  const uuid = useConstant(() => crypto.randomUUID())
+  const uuid = useConstant(() => randomUUID())
 
   const modhash = useModhash(uuid)
   const color = Color.get(modhash)

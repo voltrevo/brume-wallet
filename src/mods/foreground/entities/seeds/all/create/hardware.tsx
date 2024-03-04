@@ -9,6 +9,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { randomUUID } from "@/libs/uuid/uuid";
 import { SeedData } from "@/mods/background/service_worker/entities/seeds/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { HashSubpathProvider, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context";
@@ -26,7 +27,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
   const subpath = useHashSubpath(path)
   const connect = useGenius(subpath, "/connect")
 
-  const uuid = useConstant(() => crypto.randomUUID())
+  const uuid = useConstant(() => randomUUID())
 
   const modhash = useModhash(uuid)
   const color = Color.get(modhash)

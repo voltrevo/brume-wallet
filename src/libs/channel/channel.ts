@@ -6,6 +6,7 @@ import { Err, Ok, Result } from "@hazae41/result"
 import { BrowserError } from "../browser/browser"
 import { Console } from "../console"
 import { AbortSignals } from "../signals/signals"
+import { randomUUID } from "../uuid/uuid"
 
 export type RpcRouter =
   | MessageRpcRouter
@@ -13,7 +14,7 @@ export type RpcRouter =
 
 export class MessageRpcRouter {
   readonly counter = new RpcCounter()
-  readonly uuid = crypto.randomUUID()
+  readonly uuid = randomUUID()
 
   readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
     "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
@@ -160,7 +161,7 @@ export class MessageRpcRouter {
 
 export class ExtensionRpcRouter {
   readonly counter = new RpcCounter()
-  readonly uuid = crypto.randomUUID()
+  readonly uuid = randomUUID()
 
   readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
     "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>

@@ -4,6 +4,7 @@ import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { randomUUID } from "@/libs/uuid/uuid";
 import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useUserStorageContext } from "@/mods/foreground/storage/user";
@@ -118,7 +119,7 @@ export function TokenAddDialog(props: {}) {
 
     await token.mutate(s => {
       const data = new Data<ContractTokenData>({
-        uuid: crypto.randomUUID(),
+        uuid: randomUUID(),
         type: "contract",
         chainId: chain.chainId,
         address: defAddress,

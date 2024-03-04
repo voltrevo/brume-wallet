@@ -7,6 +7,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
+import { randomUUID } from "@/libs/uuid/uuid";
 import { User, UserInit, UserRef } from "@/mods/background/service_worker/entities/users/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Data } from "@hazae41/glacier";
@@ -23,7 +24,7 @@ export function UserCreateDialog(props: { next?: string }) {
 
   const currentUserQuery = useCurrentUser()
 
-  const uuid = useConstant(() => crypto.randomUUID())
+  const uuid = useConstant(() => randomUUID())
 
   const modhash = useModhash(uuid)
   const color = Color.get(modhash)
