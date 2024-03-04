@@ -251,9 +251,9 @@ async function main() {
         throw e
       if (connected)
         throw e
-      if (sessionStorage.getItem("brume:background"))
+      if (sessionStorage.getItem("brume:opened"))
         throw e
-      sessionStorage.setItem("brume:background", "true")
+      sessionStorage.setItem("brume:opened", "true")
 
       const opener = BrowserError.runOrThrowSync(() => browser.runtime.getURL("/opener.html"))
       const opened = qurl(opener, { url: location.href })
