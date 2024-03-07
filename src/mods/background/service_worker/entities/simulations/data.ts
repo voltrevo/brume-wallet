@@ -3,6 +3,7 @@ import { NetworkParams } from "@/libs/network/network"
 import { TorRpc } from "@/libs/rpc/rpc"
 import { AbortSignals } from "@/libs/signals/signals"
 import { randomUUID } from "@/libs/uuid/uuid"
+import { Arrays } from "@hazae41/arrays"
 import { ZeroHexString } from "@hazae41/cubane"
 import { Fail, Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier"
 import { RpcCounter, RpcRequestPreinit } from "@hazae41/jsonrpc"
@@ -100,26 +101,63 @@ export namespace BgSimulation {
         const circuit = await circuits.tryGet(index, circuitSignal).then(r => r.unwrap().unwrap().inner.inner)
 
         const session = randomUUID()
-        const counter = new RpcCounter()
 
-        const url = new URL(`https://json-rpc.node0.hazae41.me/?session=${session}`)
+        const url = new URL(`https://signal.node0.hazae41.me`)
+        url.searchParams.set("session", session)
 
-        const signal = AbortSignals.timeout(10_000, parentSignal)
+        const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
+          circuit,
+          signal: AbortSignals.timeout(10_000, parentSignal),
+          ...new RpcCounter().prepare({ method: "net_get" }),
+        }).then(r => r.unwrap())
 
-        const request0 = counter.prepare({ method: "net_get" })
-        const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, { ...request0, circuit, signal }).then(r => r.unwrap())
         const secret = await generateOrThrow(params)
 
-        const request1 = counter.prepare({ method: "net_tip", params: [secret] })
-        await TorRpc.fetchWithCircuitOrThrow<T>(url, { ...request1, circuit, signal }).then(r => r.unwrap())
+        await TorRpc.fetchWithCircuitOrThrow<void>(url, {
+          circuit,
+          signal: AbortSignals.timeout(10_000, parentSignal),
+          ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
+        }).then(r => r.unwrap())
 
-        const request = new RpcCounter().prepare(init)
-        const response = await TorRpc.fetchWithCircuitOrThrow<T>(url, { ...request, circuit, signal })
+        const nodes = await TorRpc.fetchWithCircuitOrThrow<{ location: string }[]>(url, {
+          circuit,
+          signal: AbortSignals.timeout(10_000, parentSignal),
+          ...new RpcCounter().prepare({ method: "net_search", params: [{}, { protocols: [`https:json-rpc:(pay-by-char|tenderly:${ethereum.chain.chainId})`] }] })
+        }).then(r => r.unwrap())
 
-        return Fetched.rewrap(response)
+        const node = Arrays.cryptoRandom(nodes)
+
+        if (node == null)
+          throw new Error(`No node found for ${ethereum.chain.name}`)
+
+        {
+          const url = new URL(`${node.location}`)
+          url.searchParams.set("session", session)
+
+          const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
+            circuit,
+            signal: AbortSignals.timeout(10_000, parentSignal),
+            ...new RpcCounter().prepare({ method: "net_get" }),
+          }).then(r => r.unwrap())
+
+          const secret = await generateOrThrow(params)
+
+          await TorRpc.fetchWithCircuitOrThrow<void>(url, {
+            circuit,
+            signal: AbortSignals.timeout(10_000, parentSignal),
+            ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
+          }).then(r => r.unwrap())
+
+          return await TorRpc.fetchWithCircuitOrThrow<T>(url, {
+            circuit,
+            signal: AbortSignals.timeout(10_000, parentSignal),
+            ...new RpcCounter().prepare(init)
+          }).then(r => Fetched.rewrap(r))
+        }
       }
 
-      const promises = Array.from({ length: circuits.capacity }, (_, i) => runWithCircuitOrThrow(i))
+      const random = await circuits.getCryptoRandomOrThrow()
+      const promises = [runWithCircuitOrThrow(random.index)]
 
       const results = await Promise.allSettled(promises)
 
@@ -186,9 +224,6 @@ export namespace BgSimulation {
   }
 
   export function schema(ethereum: BgEthereumContext, tx: unknown, block: string, storage: IDBStorage) {
-    if (ethereum.chain.chainId !== 1)
-      throw new Error(`Unsupported chain ${ethereum.chain.name}`)
-
     const fetcher = async (request: EthereumQueryKey<unknown> & EthereumFetchParams, more: FetcherMore) =>
       await fetchOrFail<SimulationData>(ethereum, request, more).then(r => r.inspectErrSync(e => console.error({ e },)))
 

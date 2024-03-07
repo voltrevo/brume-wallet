@@ -15,7 +15,7 @@ import { useSimulation } from "@/mods/foreground/entities/simulations/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
 import { SmallShrinkableOppositeAnchor, useGenius } from "@/mods/foreground/entities/users/all/page";
 import { WalletTransactionDialog } from "@/mods/foreground/entities/wallets/actions/eth_sendTransaction";
-import { PaddedRoundedShrinkableNakedAnchor, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send";
+import { PaddedRoundedShrinkableNakedAnchor, SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send";
 import { WalletCreatorMenu } from "@/mods/foreground/entities/wallets/all/create";
 import { ReadonlyWalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create/readonly";
 import { StandaloneWalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create/standalone";
@@ -29,7 +29,7 @@ import { HashSubpathProvider, useHashSubpath, usePathContext } from "@/mods/fore
 import { Router } from "@/mods/foreground/router/router";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { Abi, Address } from "@hazae41/cubane";
+import { Abi } from "@hazae41/cubane";
 import { RpcErr, RpcOk } from "@hazae41/jsonrpc";
 import { Nullable, Option } from "@hazae41/option";
 import { Err, Result } from "@hazae41/result";
@@ -178,26 +178,104 @@ export function TransactPage() {
           Do you want to send the following transaction?
         </div>
         <div className="h-4" />
-        <div className="p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
-          {JSON.stringify(preTx, undefined, 2)}
+        <div className="font-medium">
+          Transaction
         </div>
-        {maybeSimulation != null && <>
-          <div className="h-4" />
-          <div className="p-4 bg-contrast rounded-xl flex flex-col gap-2">
-            {maybeSimulation.logs.map((log, i) =>
-              <div className="p-2 bg-contrast rounded-xl flex flex-col gap-2"
-                key={i}>
-                <div className="whitespace-pre-wrap break-words">
-                  {log.name} ({Address.tryFrom(log.raw.address).mapSync(Address.format).ok().get()})
-                </div>
-                {log.inputs.map((input, j) =>
-                  <div className="p-2 bg-contrast rounded-xl whitespace-pre-wrap break-words"
-                    key={j}>
-                    {input.type} {input.name} {JSON.stringify(input.value)}
-                  </div>)}
-              </div>)}
-          </div>
+        {preTx.from && <>
+          <div className="h-2" />
+          <SimpleLabel>
+            <div className="shrink-0">
+              From
+            </div>
+            <div className="w-4" />
+            <SimpleInput
+              readOnly
+              value={preTx.from} />
+          </SimpleLabel>
         </>}
+        {preTx.to && <>
+          <div className="h-2" />
+          <SimpleLabel>
+            <div className="shrink-0">
+              To
+            </div>
+            <div className="w-4" />
+            <SimpleInput
+              readOnly
+              value={preTx.to} />
+          </SimpleLabel>
+        </>}
+        {preTx.value && <>
+          <div className="h-2" />
+          <SimpleLabel>
+            <div className="shrink-0">
+              Value
+            </div>
+            <div className="w-4" />
+            <SimpleInput
+              readOnly
+              value={preTx.value} />
+          </SimpleLabel>
+        </>}
+        {preTx.nonce && <>
+          <div className="h-2" />
+          <SimpleLabel>
+            <div className="shrink-0">
+              Nonce
+            </div>
+            <div className="w-4" />
+            <SimpleInput
+              readOnly
+              value={preTx.nonce} />
+          </SimpleLabel>
+        </>}
+        {preTx.data && <>
+          <div className="h-2" />
+          <SimpleLabel>
+            <div className="shrink-0">
+              Data
+            </div>
+            <div className="w-4" />
+            <SimpleTextarea
+              readOnly
+              rows={3}
+              value={preTx.data} />
+          </SimpleLabel>
+        </>}
+        <div className="h-4" />
+        <div className="font-medium">
+          Simulation
+        </div>
+        <div className="text-contrast">
+          The simulation logs are a preview of the transaction execution on the blockchain.
+        </div>
+        <div className="h-2" />
+        {maybeSimulation != null &&
+          <div className="flex flex-col gap-2">
+            {maybeSimulation.logs.map((log, i) =>
+              <div className="p-2 bg-contrast rounded-xl"
+                key={i}>
+                <div className="font-medium">
+                  {log.name}
+                </div>
+                <div className="text-contrast truncate">
+                  {log.raw.address}
+                </div>
+                <div className="h-2" />
+                <div className="flex flex-col gap-2">
+                  {log.inputs.map((input, j) =>
+                    <div className="p-2 bg-contrast rounded-xl"
+                      key={j}>
+                      <div className="font-medium">
+                        {input.name} {input.type}
+                      </div>
+                      <div className="text-contrast truncate">
+                        {typeof input.value === "string" ? input.value : JSON.stringify(input.value)}
+                      </div>
+                    </div>)}
+                </div>
+              </div>)}
+          </div>}
         <div className="h-4 grow" />
         <div className="flex items-center flex-wrap-reverse gap-2">
           <WideShrinkableContrastButton
