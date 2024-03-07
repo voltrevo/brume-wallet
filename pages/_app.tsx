@@ -54,7 +54,7 @@ export function Fallback(props: ErrorProps) {
   return <Page>
     <GlobalPageHeader title="Error" />
     <PageBody>
-      <div className="text-red-500">
+      <div className="text-red-400 dark:text-red-500">
         An unexpected error occured
       </div>
       <div className="text-contrast">

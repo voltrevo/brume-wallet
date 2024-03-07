@@ -129,7 +129,7 @@ export function TransactPage() {
   }, [from, maybeTo, maybeValue, maybeNonce, maybeData, maybeGas, maybeGasPrice, maybeMaxFeePerGas, maybeMaxPriorityFeePerGas])
 
   const simulationQuery = useSimulation(preTx, "pending", maybeContext)
-  const maybeSimulation = simulationQuery.current?.ok().get()
+  const currentSimulation = simulationQuery.current
 
   const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const transaction = Option.unwrap(maybeTransaction)
@@ -250,9 +250,17 @@ export function TransactPage() {
           The simulation logs are a preview of the transaction execution on the blockchain.
         </div>
         <div className="h-2" />
-        {maybeSimulation != null &&
+        {currentSimulation == null &&
+          <div className="text-contrast">
+            Loading...
+          </div>}
+        {currentSimulation?.isErr() &&
+          <div className="text-red-400 dark:text-red-500">
+            {currentSimulation.getErr().message}
+          </div>}
+        {currentSimulation?.isOk() &&
           <div className="flex flex-col gap-2">
-            {maybeSimulation.logs.map((log, i) =>
+            {currentSimulation.get().logs.map((log, i) =>
               <div className="p-2 bg-contrast rounded-xl"
                 key={i}>
                 <div className="font-medium">

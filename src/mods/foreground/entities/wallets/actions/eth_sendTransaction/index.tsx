@@ -1055,25 +1055,25 @@ export function WalletTransactionDialog(props: {}) {
     </>}
     <div className="h-4 grow" />
     {maybeTriedEip1559GasLimitKey?.isErr() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+      <div className="po-md flex items-center bg-contrast rounded-xl text-red-400 dark:text-red-500">
         {maybeTriedEip1559GasLimitKey.getErr()?.message}
       </div>
       <div className="h-2" />
     </>}
     {maybeTriedLegacyGasLimitKey?.isErr() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+      <div className="po-md flex items-center bg-contrast rounded-xl text-red-400 dark:text-red-500">
         {maybeTriedLegacyGasLimitKey.getErr()?.message}
       </div>
       <div className="h-2" />
     </>}
     {eip1559GasLimitQuery.current?.isErr() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+      <div className="po-md flex items-center bg-contrast rounded-xl text-red-400 dark:text-red-500">
         {eip1559GasLimitQuery.current.getErr()?.message}
       </div>
       <div className="h-2" />
     </>}
     {legacyGasLimitQuery.current?.isErr() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl text-red-500">
+      <div className="po-md flex items-center bg-contrast rounded-xl text-red-400 dark:text-red-500">
         {legacyGasLimitQuery.current.getErr()?.message}
       </div>
       <div className="h-2" />
