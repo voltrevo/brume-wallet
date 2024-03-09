@@ -21,7 +21,7 @@ import { walkSync } from "./libs/walkSync.mjs";
   for await (const file of importer(source, blockstore, { wrapWithDirectory: true }))
     last = file
 
-  await writeFile("./dist/.ipfs.md", `https://test.ipfs.nftstorage.link/`)
+  await writeFile("./dist/.ipfs.md", `https://${last.cid.toString()}.ipfs.nftstorage.link/`)
 }
 
 {
@@ -37,5 +37,5 @@ import { walkSync } from "./libs/walkSync.mjs";
   for await (const file of importer(source, blockstore, { wrapWithDirectory: true }))
     last = file
 
-  await writeFile("./dist/.website.ipfs.md", `https://test.ipfs.nftstorage.link/`)
+  await writeFile("./dist/.website.ipfs.md", `https://${last.cid.toString()}.ipfs.nftstorage.link/`)
 }
