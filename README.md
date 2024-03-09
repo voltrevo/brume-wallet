@@ -105,13 +105,15 @@ https://github.com/brumewallet/wallet/actions/workflows/release.yml
 You can check the comparison yourself by running the following
 
 ```bash
-# Unzip committed zip files into ./unzipped
+# Create ./unzipped
 mkdir ./unzipped
+
+# Unzip committed zip files into ./unzipped
 unzip ./dist/chrome.zip -d ./unzipped/chrome
 unzip ./dist/firefox.zip -d ./unzipped/firefox
 unzip ./dist/website.zip -d ./unzipped/website
 
-# Build folders into ./dist
+# Rebuild
 npm ci && npm run build
 
 # Compare unzipped committed zip files and built folders
@@ -119,23 +121,17 @@ diff -r ./unzipped/chrome ./dist/chrome
 diff -r ./unzipped/firefox ./dist/firefox
 diff -r ./unzipped/website ./dist/website
 
-# Clean ./unzipped
+# Delete ./unzipped
 rm -rf ./unzipped
 
-# Restore built zip files
-git restore ./dist/chrome.zip
-git restore ./dist/firefox.zip
-git restore ./dist/website.zip
+# Restore build files
+git restore ./dist/
 
-# Restore deleted build files
-git restore ./dist/safari.zip
-git restore ./dist/android.apk
-git restore ./dist/macos.zip
-git restore ./dist/ios-and-ipados.ipa
+# Recompute IPFS hashes
+node ./scripts/ipfs.mjs
 
-# Compare other files
-[[ -z $(git status --porcelain) ]]
-echo $?
+# Compare all files
+[[ -z $(git status --porcelain) ]] && echo "OK" || echo "NOT OK"
 ```
 
 ## Security design
