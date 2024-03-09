@@ -113,10 +113,6 @@ unzip ./dist/chrome.zip -d ./tmp/chrome
 unzip ./dist/firefox.zip -d ./tmp/firefox
 unzip ./dist/website.zip -d ./tmp/website
 
-# Copy committed IPFS hashes into ./tmp
-cp ./dist/.ipfs.md ./tmp/.ipfs.md
-cp ./dist/.website.ipfs.md ./tmp/.website.ipfs.md
-
 # Rebuild
 npm ci && npm run build
 
@@ -125,15 +121,18 @@ diff -r ./tmp/chrome ./dist/chrome
 diff -r ./tmp/firefox ./dist/firefox
 diff -r ./tmp/website ./dist/website
 
-# Compare IPFS hashes
-diff ./tmp/.ipfs.md ./dist/.ipfs.md
-diff ./tmp/.website.ipfs.md ./dist/.website.ipfs.md
-
 # Delete ./tmp
 rm -rf ./tmp
 
 # Restore build files
 git restore ./dist/
+
+# Recompute IPFS hashes
+node ./scripts/ipfs.mjs
+
+# Display IPFS hashes
+cat ./dist/.ipfs.md
+cat ./dist/.website.ipfs.md
 
 # Compare all files
 [[ -z $(git status --porcelain) ]] && echo "OK" || echo "NOT OK"

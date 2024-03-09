@@ -22,10 +22,6 @@ jobs:
     - run: "unzip ./dist/firefox.zip -d ./tmp/firefox"
     - run: "unzip ./dist/website.zip -d ./tmp/website"
 
-    # Copy committed IPFS hashes into ./tmp
-    - run: "cp ./dist/.ipfs.md ./tmp/.ipfs.md"
-    - run: "cp ./dist/.website.ipfs.md ./tmp/.website.ipfs.md"
-
     # Rebuild
     - run: "npm ci && npm run build"
 
@@ -34,16 +30,19 @@ jobs:
     - run: "diff -r ./tmp/firefox ./dist/firefox"
     - run: "diff -r ./tmp/website ./dist/website"
 
-    # Compare IPFS hashes
-    - run: "diff ./tmp/.ipfs.md ./dist/.ipfs.md"
-    - run: "diff ./tmp/.website.ipfs.md ./dist/.website.ipfs.md"
-
     # Delete ./tmp
     - run: "rm -rf ./tmp"
     
     # Restore build files
     - run: "git restore ./dist"
 
-    # Compare other files
+    # Recompute IPFS hashes
+    - run: "node ./scripts/ipfs.mjs"
+
+    # Display IPFS hashes
+    - run: "cat ./dist/.ipfs.md"
+    - run: "cat ./dist/.website.ipfs.md"
+
+    # Compare all files
     - run: "git status --porcelain"
     - run: "[[ -z $(git status --porcelain) ]]"
