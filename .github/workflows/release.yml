@@ -31,6 +31,8 @@ jobs:
     - run: "git restore ./dist"
     # Recompute IPFS hashes
     - run: "node ./scripts/ipfs.mjs"
+    - run: "cat ./dist/.ipfs.md"
+    - run: "cat ./dist/.website.ipfs.md"
     # Compare all files
     - run: "git status --porcelain"
     - run: "[[ -z $(git status --porcelain) ]]"
