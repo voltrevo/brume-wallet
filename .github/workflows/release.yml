@@ -13,32 +13,24 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 20.x
-    # Unzip committed zip files into ./unzipped
+    # Create ./unzipped
     - run: "mkdir ./unzipped"
+    # Unzip committed zip files into ./unzipped
     - run: "unzip ./dist/chrome.zip -d ./unzipped/chrome"
     - run: "unzip ./dist/firefox.zip -d ./unzipped/firefox"
     - run: "unzip ./dist/website.zip -d ./unzipped/website"
-    # Build folders into ./dist
+    # Rebuild
     - run: "npm ci && npm run build"
     # Compare unzipped committed zip files and built folders
     - run: "diff -r ./unzipped/chrome ./dist/chrome"
     - run: "diff -r ./unzipped/firefox ./dist/firefox"
     - run: "diff -r ./unzipped/website ./dist/website"
-    # Clean ./unzipped
+    # Delete ./unzipped
     - run: "rm -rf ./unzipped"
-    # Restore built zip files
-    - run: "git restore ./dist/chrome.zip"
-    - run: "git restore ./dist/firefox.zip"
-    - run: "git restore ./dist/website.zip"
-    # Restore deleted build files
-    - run: "git restore ./dist/safari.zip"
-    - run: "git restore ./dist/android.apk"
-    - run: "git restore ./dist/macos.zip"
-    - run: "git restore ./dist/ios-and-ipados.ipa"
-    # Compute IPFS hashes
+    # Restore build files
+    - run: "git restore ./dist"
+    # Recompute IPFS hashes
     - run: "node ./scripts/ipfs.mjs"
-    - run: "git add -f ./dist/.ipfs.md"
-    - run: "git add -f ./dist/.website.ipfs.md"
-    # Compare other files
+    # Compare all files
     - run: "git status --porcelain"
     - run: "[[ -z $(git status --porcelain) ]]"
