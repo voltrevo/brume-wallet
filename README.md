@@ -113,14 +113,14 @@ unzip ./dist/chrome.zip -d ./tmp/chrome
 unzip ./dist/firefox.zip -d ./tmp/firefox
 unzip ./dist/website.zip -d ./tmp/website
 
-# Copy IPFS hashes into ./tmp
+# Copy committed IPFS hashes into ./tmp
 cp ./dist/.ipfs.md ./tmp/.ipfs.md
 cp ./dist/.website.ipfs.md ./tmp/.website.ipfs.md
 
 # Rebuild
 npm ci && npm run build
 
-# Compare zip content
+# Compare unzipped content
 diff -r ./tmp/chrome ./dist/chrome
 diff -r ./tmp/firefox ./dist/firefox
 diff -r ./tmp/website ./dist/website

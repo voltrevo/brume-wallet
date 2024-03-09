@@ -13,7 +13,7 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 20.x
-        
+
     # Create ./tmp
     - run: "mkdir ./tmp"
 
@@ -22,14 +22,14 @@ jobs:
     - run: "unzip ./dist/firefox.zip -d ./tmp/firefox"
     - run: "unzip ./dist/website.zip -d ./tmp/website"
 
-    # Copy IPFS hashes into ./tmp
+    # Copy committed IPFS hashes into ./tmp
     - run: "cp ./dist/.ipfs.md ./tmp/.ipfs.md"
     - run: "cp ./dist/.website.ipfs.md ./tmp/.website.ipfs.md"
 
     # Rebuild
     - run: "npm ci && npm run build"
 
-    # Compare zip content
+    # Compare unzipped content
     - run: "diff -r ./tmp/chrome ./dist/chrome"
     - run: "diff -r ./tmp/firefox ./dist/firefox"
     - run: "diff -r ./tmp/website ./dist/website"
