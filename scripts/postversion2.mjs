@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 import { openAsBlob, readFileSync, statSync, writeFileSync } from "fs";
 import path, { dirname } from "path";
-import { walkSync } from "../../libs/walkSync.mjs";
+import { walkSync } from "./libs/walkSync.mjs";
 
 config({ path: dirname(new URL(import.meta.url).pathname) + "/.env.local" })
 
@@ -27,8 +27,8 @@ const versionCode = Number(version.replaceAll(".", "")).toString()
 {
   const body = new FormData()
 
-  body.append("file", await openAsBlob("./dist/chrome.zip"), "chrome.zip");
   body.append("file", await openAsBlob("./dist/website.zip"), "website.zip");
+  body.append("file", await openAsBlob("./dist/chrome.zip"), "chrome.zip");
   body.append("file", await openAsBlob("./dist/firefox.zip"), "firefox.zip");
   body.append("file", await openAsBlob("./dist/android.apk"), "android.apk");
   body.append("file", await openAsBlob("./dist/ios-and-ipados.ipa"), "ios-and-ipados.ipa");

@@ -1,7 +1,4 @@
-on:
-  push:
-    tags:
-    - '*'
+on: [push]
 
 name: release
 
@@ -38,6 +35,10 @@ jobs:
     - run: "git restore ./dist/android.apk"
     - run: "git restore ./dist/macos.zip"
     - run: "git restore ./dist/ios-and-ipados.ipa"
+    # Compute IPFS hashes
+    - run: "node ./scripts/ipfs.js"
+    - run: "git add -f ./dist/.ipfs.md"
+    - run: "git add -f ./dist/.website.ipfs.md"
     # Compare other files
     - run: "git status --porcelain"
     - run: "[[ -z $(git status --porcelain) ]]"
