@@ -105,34 +105,35 @@ https://github.com/brumewallet/wallet/actions/workflows/release.yml
 You can check the comparison yourself by running the following
 
 ```bash
-# Create ./unzipped
-mkdir ./unzipped
+# Create ./tmp
+mkdir ./tmp
 
-# Unzip committed zip files into ./unzipped
-unzip ./dist/chrome.zip -d ./unzipped/chrome
-unzip ./dist/firefox.zip -d ./unzipped/firefox
-unzip ./dist/website.zip -d ./unzipped/website
+# Unzip committed zip files into ./tmp
+unzip ./dist/chrome.zip -d ./tmp/chrome
+unzip ./dist/firefox.zip -d ./tmp/firefox
+unzip ./dist/website.zip -d ./tmp/website
+
+# Copy IPFS hashes into ./tmp
+cp ./dist/.ipfs.md ./tmp/.ipfs.md
+cp ./dist/.website.ipfs.md ./tmp/.website.ipfs.md
 
 # Rebuild
 npm ci && npm run build
 
-# Compare unzipped committed zip files and built folders
-diff -r ./unzipped/chrome ./dist/chrome
-diff -r ./unzipped/firefox ./dist/firefox
-diff -r ./unzipped/website ./dist/website
+# Compare zip content
+diff -r ./tmp/chrome ./dist/chrome
+diff -r ./tmp/firefox ./dist/firefox
+diff -r ./tmp/website ./dist/website
 
-# Delete ./unzipped
-rm -rf ./unzipped
+# Compare IPFS hashes
+diff ./tmp/.ipfs.md ./dist/.ipfs.md
+diff ./tmp/.website.ipfs.md ./dist/.website.ipfs.md
+
+# Delete ./tmp
+rm -rf ./tmp
 
 # Restore build files
 git restore ./dist/
-
-# Recompute IPFS hashes
-node ./scripts/ipfs.mjs
-
-# Display IPFS hashes
-cat ./dist/.ipfs.md
-cat ./dist/.website.ipfs.md
 
 # Compare all files
 [[ -z $(git status --porcelain) ]] && echo "OK" || echo "NOT OK"

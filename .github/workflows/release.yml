@@ -13,27 +13,37 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 20.x
-    # Create ./unzipped
-    - run: "mkdir ./unzipped"
-    # Unzip committed zip files into ./unzipped
-    - run: "unzip ./dist/chrome.zip -d ./unzipped/chrome"
-    - run: "unzip ./dist/firefox.zip -d ./unzipped/firefox"
-    - run: "unzip ./dist/website.zip -d ./unzipped/website"
+        
+    # Create ./tmp
+    - run: "mkdir ./tmp"
+
+    # Unzip committed zip files into ./tmp
+    - run: "unzip ./dist/chrome.zip -d ./tmp/chrome"
+    - run: "unzip ./dist/firefox.zip -d ./tmp/firefox"
+    - run: "unzip ./dist/website.zip -d ./tmp/website"
+
+    # Copy IPFS hashes into ./tmp
+    - run: "cp ./dist/.ipfs.md ./tmp/.ipfs.md"
+    - run: "cp ./dist/.website.ipfs.md ./tmp/.website.ipfs.md"
+
     # Rebuild
     - run: "npm ci && npm run build"
-    # Compare unzipped committed zip files and built folders
-    - run: "diff -r ./unzipped/chrome ./dist/chrome"
-    - run: "diff -r ./unzipped/firefox ./dist/firefox"
-    - run: "diff -r ./unzipped/website ./dist/website"
-    # Delete ./unzipped
-    - run: "rm -rf ./unzipped"
+
+    # Compare zip content
+    - run: "diff -r ./tmp/chrome ./dist/chrome"
+    - run: "diff -r ./tmp/firefox ./dist/firefox"
+    - run: "diff -r ./tmp/website ./dist/website"
+
+    # Compare IPFS hashes
+    - run: "diff ./tmp/.ipfs.md ./dist/.ipfs.md"
+    - run: "diff ./tmp/.website.ipfs.md ./dist/.website.ipfs.md"
+
+    # Delete ./tmp
+    - run: "rm -rf ./tmp"
+    
     # Restore build files
     - run: "git restore ./dist"
-    # Recompute IPFS hashes
-    - run: "node ./scripts/ipfs.mjs"
-    # Display IPFS hashes
-    - run: "cat ./dist/.ipfs.md"
-    - run: "cat ./dist/.website.ipfs.md"
-    # Compare all files
+
+    # Compare other files
     - run: "git status --porcelain"
     - run: "[[ -z $(git status --porcelain) ]]"
