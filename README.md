@@ -10,7 +10,7 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 
 - [Go to wallet.brume.money](https://wallet.brume.money)
 
-### Website (version-pinned uncensorable ipfs)
+### Website (ipfs)
 
 - [Go to latest version](https://github.com/brumewallet/wallet/blob/main/dist/.website.ipfs.md)
 
@@ -73,6 +73,8 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 - Navigate to the Brume Wallet folder
 - Open the folder where `firefox.zip` was extracted
 - Select the `manifest.json` file
+
+### [All builds (ipfs)](https://github.com/brumewallet/wallet/blob/main/dist/.ipfs.md)
 
 ## Reproducible building
 
