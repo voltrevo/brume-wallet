@@ -6,9 +6,13 @@ The private Ethereum wallet with built-in Tor
 
 You can use Brume Wallet on a website, as a browser extension, and as a mobile application
 
-### Website
+### Website (official)
 
 - [Go to wallet.brume.money](https://wallet.brume.money)
+
+### Website (version-pinned)
+
+- [Go to IPFS](https://github.com/brumewallet/wallet/raw/main/dist/.website.ipfs.md)
 
 ### Chrome-like extension (official store)
 
@@ -162,7 +166,7 @@ We try our best to avoid supply-chain attacks from external packages
 - All JavaScript cryptography packages are from [Paul Miller](https://github.com/paulmillr) and are audited
 - We count each individual maintainer in our dependency graph as a risk
 - We use runtime protection techniques such as object-capability model
-- (Soon) We upload each release on IPFS and publish the hash on Ethereum
+- We upload each release on IPFS and (soon) publish the hash on Ethereum
 
 ### Safe Tor and TLS protocols
 
