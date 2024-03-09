@@ -189,7 +189,7 @@ if (fs.existsSync("./dist/apple")) {
   for await (const file of importer(source, blockstore, { wrapWithDirectory: true }))
     last = file
 
-  await writeFile("./dist/.ipfs.md", `https://${last.cid.toString()}.ipfs.nftstorage.link/`)
+  await writeFile("./dist/.ipfs.md", `https://${last.cid.toString()}.ipfs.cf-ipfs.com/`)
 }
 
 {
@@ -205,5 +205,5 @@ if (fs.existsSync("./dist/apple")) {
   for await (const file of importer(source, blockstore, { wrapWithDirectory: true }))
     last = file
 
-  await writeFile("./dist/.website.ipfs.md", `https://${last.cid.toString()}.ipfs.nftstorage.link/`)
+  await writeFile("./dist/.website.ipfs.md", `https://${last.cid.toString()}.ipfs.cf-ipfs.com/`)
 }

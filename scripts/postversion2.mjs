@@ -45,7 +45,7 @@ const versionCode = Number(version.replaceAll(".", "")).toString()
   if (!result.ok)
     throw new Error(result.error.message)
 
-  writeFileSync("./dist/.ipfs.md", `https://${result.value.cid}.ipfs.nftstorage.link/`)
+  writeFileSync("./dist/.ipfs.md", `https://${result.value.cid}.ipfs.cf-ipfs.com/`)
 }
 
 {
@@ -66,5 +66,5 @@ const versionCode = Number(version.replaceAll(".", "")).toString()
   if (!result.ok)
     throw new Error(result.error.message)
 
-  writeFileSync("./dist/.website.ipfs.md", `https://${result.value.cid}.ipfs.nftstorage.link/`)
+  writeFileSync("./dist/.website.ipfs.md", `https://${result.value.cid}.ipfs.cf-ipfs.com/`)
 }
