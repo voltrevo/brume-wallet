@@ -129,6 +129,8 @@ git restore ./dist/
 
 # Recompute IPFS hashes
 node ./scripts/ipfs.mjs
+
+# Display IPFS hashes
 cat ./dist/.ipfs.md
 cat ./dist/.website.ipfs.md
 

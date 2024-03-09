@@ -31,6 +31,7 @@ jobs:
     - run: "git restore ./dist"
     # Recompute IPFS hashes
     - run: "node ./scripts/ipfs.mjs"
+    # Display IPFS hashes
     - run: "cat ./dist/.ipfs.md"
     - run: "cat ./dist/.website.ipfs.md"
     # Compare all files
