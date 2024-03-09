@@ -129,6 +129,8 @@ git restore ./dist/
 
 # Recompute IPFS hashes
 node ./scripts/ipfs.mjs
+cat ./dist/.ipfs.md
+cat ./dist/.website.ipfs.md
 
 # Compare all files
 [[ -z $(git status --porcelain) ]] && echo "OK" || echo "NOT OK"
