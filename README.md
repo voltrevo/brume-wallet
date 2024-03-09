@@ -10,9 +10,9 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 
 - [Go to wallet.brume.money](https://wallet.brume.money)
 
-### Website (version-pinned)
+### Website (version-pinned uncensorable ipfs)
 
-- [Go to IPFS](https://github.com/brumewallet/wallet/raw/main/dist/.website.ipfs.md)
+- [Go to latest version](https://github.com/brumewallet/wallet/blob/main/dist/.website.ipfs.md)
 
 ### Chrome-like extension (official store)
 
