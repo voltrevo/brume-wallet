@@ -28,11 +28,11 @@ export class ServiceWorkerBackground {
   }>()
 
   async onRequest(port: RpcRouter, request: RpcRequestInit<unknown>) {
-    return await this.events.emit("request", [request])
+    return await this.events.emit("request", request)
   }
 
   async onResponse(port: RpcRouter, response: RpcResponseInit<unknown>) {
-    return await this.events.emit("response", [response])
+    return await this.events.emit("response", response)
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
@@ -61,7 +61,7 @@ export async function getServiceWorkerOrThrow(background: ServiceWorkerBackgroun
     const ready = await navigator.serviceWorker.ready
 
     if (ready.waiting != null)
-      await background.serviceWorker.emit("update", [ready.waiting])
+      await background.serviceWorker.emit("update", ready.waiting)
 
     ready.addEventListener("updatefound", () => {
       const { installing } = ready
@@ -74,7 +74,7 @@ export async function getServiceWorkerOrThrow(background: ServiceWorkerBackgroun
           return
         if (navigator.serviceWorker.controller == null)
           return
-        await background.serviceWorker.emit("update", [installing])
+        await background.serviceWorker.emit("update", installing)
         installing.removeEventListener("statechange", onStateChange)
       }
 
@@ -214,11 +214,11 @@ export class WorkerBackground {
   }>()
 
   async onRequest(port: RpcRouter, request: RpcRequestInit<unknown>) {
-    return await this.events.emit("request", [request])
+    return await this.events.emit("request", request)
   }
 
   async onResponse(port: RpcRouter, response: RpcResponseInit<unknown>) {
-    return await this.events.emit("response", [response])
+    return await this.events.emit("response", response)
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
@@ -315,11 +315,11 @@ export class ExtensionBackground {
   }>()
 
   async onRequest(port: RpcRouter, request: RpcRequestInit<unknown>) {
-    return await this.events.emit("request", [request])
+    return await this.events.emit("request", request)
   }
 
   async onResponse(port: RpcRouter, response: RpcResponseInit<unknown>) {
-    return await this.events.emit("response", [response])
+    return await this.events.emit("response", response)
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {

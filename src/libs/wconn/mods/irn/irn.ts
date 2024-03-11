@@ -72,7 +72,7 @@ export class IrnBrume {
             await irn.trySubscribe(topic).then(r => r.throw(t))
 
           const onRequest = async (request: RpcRequestPreinit<unknown>) => {
-            return await this.events.emit("request", [request])
+            return await this.events.emit("request", request)
           }
 
           const onCloseOrError = async () => {
@@ -206,7 +206,7 @@ export class IrnSockets {
             await preirn.inner.trySubscribe(topic).then(r => r.throw(t))
 
           const onRequest = async (request: RpcRequestPreinit<unknown>) => {
-            return await this.events.emit("request", [request])
+            return await this.events.emit("request", request)
           }
 
           const onCloseOrError = async () => {
@@ -350,7 +350,7 @@ export class IrnClient {
 
   async #tryRouteRequest(request: RpcRequestPreinit<unknown>) {
     try {
-      const returned = await this.events.emit("request", [request])
+      const returned = await this.events.emit("request", request)
 
       if (returned.isSome())
         return returned.inner
@@ -381,7 +381,7 @@ export class IrnClient {
         params: payload
       }, AbortSignal.timeout(5000)).then(r => r.throw(t).throw(t))
 
-      return Result.assert(result)
+      return Result.assert(result).mapErrSync(() => new Error("Failed to publish"))
     })
   }
 

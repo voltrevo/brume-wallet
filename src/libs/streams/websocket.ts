@@ -39,8 +39,8 @@ export class WebSocketStream {
     this.writer = new SuperWritableStream(new WebSocketSink(socket, params))
 
     this.outer = {
-      readable: this.reader.start(),
-      writable: this.writer.start()
+      readable: this.reader.substream,
+      writable: this.writer.substream
     }
   }
 

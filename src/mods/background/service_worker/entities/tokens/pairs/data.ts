@@ -45,7 +45,7 @@ export namespace BgPair {
 
           return new Data(price)
         } catch (e: unknown) {
-          return new Fail(Catched.from(e))
+          return new Fail(Catched.wrap(e))
         }
       })
 

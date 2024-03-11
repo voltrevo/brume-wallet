@@ -218,7 +218,7 @@ export class CryptoClient {
   }
 
   async #tryRouteRequest(request: RpcRequestPreinit<unknown>) {
-    const returned = await this.events.emit("request", [request])
+    const returned = await this.events.emit("request", request)
 
     if (returned.isSome())
       return returned.inner
@@ -228,7 +228,7 @@ export class CryptoClient {
 
   async #onResponse(response: RpcResponseInit<unknown>) {
     // console.log("relay response", "->", response)
-    const returned = await this.events.emit("response", [response])
+    const returned = await this.events.emit("response", response)
 
     if (returned.isSome())
       return Ok.void()

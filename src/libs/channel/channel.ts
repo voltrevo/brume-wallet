@@ -1,7 +1,7 @@
 import { Future } from "@hazae41/future"
 import { RpcCounter, RpcInternalError, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
-import { AbortedError, CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
+import { CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
 import { BrowserError } from "../browser/browser"
 import { Console } from "../console"
@@ -70,7 +70,7 @@ export class MessageRpcRouter {
 
   async tryRouteRequest(request: RpcRequestInit<unknown>) {
     try {
-      const returned = await this.events.emit("request", [request])
+      const returned = await this.events.emit("request", request)
 
       if (returned.isSome())
         return returned.inner
@@ -104,7 +104,7 @@ export class MessageRpcRouter {
     if (response.id !== "ping")
       Console.debug(this.name, "->", response)
 
-    const returned = await this.events.emit("response", [response])
+    const returned = await this.events.emit("response", response)
 
     if (returned.isSome())
       return returned.inner
@@ -153,7 +153,7 @@ export class MessageRpcRouter {
       return new Some(Ok.void())
     })
 
-    using abort = AbortedError.waitOrThrow(signal)
+    using abort = Plume.AbortSignals.waitOrThrow(signal)
     return await Promise.race([active, passive.get(), abort.get()])
   }
 
@@ -194,7 +194,7 @@ export class ExtensionRpcRouter {
 
   async tryRouteRequest(request: RpcRequestInit<unknown>) {
     try {
-      const returned = await this.events.emit("request", [request])
+      const returned = await this.events.emit("request", request)
 
       if (returned.isSome())
         return returned.inner
@@ -230,7 +230,7 @@ export class ExtensionRpcRouter {
     if (response.id !== "ping")
       Console.debug(this.name, "->", response)
 
-    const returned = await this.events.emit("response", [response])
+    const returned = await this.events.emit("response", response)
 
     if (returned.isSome())
       return returned.inner
@@ -282,7 +282,7 @@ export class ExtensionRpcRouter {
       return new Some(Ok.void())
     })
 
-    using abort = AbortedError.waitOrThrow(signal)
+    using abort = Plume.AbortSignals.waitOrThrow(signal)
     return await Promise.race([active, passive.get(), abort.get()])
   }
 

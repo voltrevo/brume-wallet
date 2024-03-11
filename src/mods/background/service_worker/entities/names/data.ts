@@ -34,7 +34,7 @@ export namespace BgEns {
 
         return new Data(address)
       } catch (e: unknown) {
-        return new Fail(Catched.from(e))
+        return new Fail(Catched.wrap(e))
       }
     }
 
@@ -100,7 +100,7 @@ export namespace BgEns {
 
         return new Data(address)
       } catch (e: unknown) {
-        return new Fail(Catched.from(e))
+        return new Fail(Catched.wrap(e))
       }
     }
 
@@ -167,7 +167,7 @@ export namespace BgEns {
 
         return new Data(name)
       } catch (e: unknown) {
-        return new Fail(Catched.from(e))
+        return new Fail(Catched.wrap(e))
       }
     }
 

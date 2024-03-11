@@ -41,7 +41,7 @@ export namespace BgSignature {
 
         return new Data(texts)
       } catch (e: unknown) {
-        return new Fail(Catched.from(e))
+        return new Fail(Catched.wrap(e))
       }
     }
 

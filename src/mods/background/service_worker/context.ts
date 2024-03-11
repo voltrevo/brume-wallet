@@ -148,7 +148,7 @@ export namespace BgEthereumContext {
 
       return fetcheds.get(sorteds[0].key)!
     } catch (e: unknown) {
-      return new Fail(Catched.from(e))
+      return new Fail(Catched.wrap(e))
     }
   }
 

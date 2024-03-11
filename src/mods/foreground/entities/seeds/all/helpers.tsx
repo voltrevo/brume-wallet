@@ -8,7 +8,7 @@ import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
 import { Abi, ZeroHexString } from "@hazae41/cubane"
 import { Option } from "@hazae41/option"
-import { Err, Ok, Panic, Result, Unimplemented } from "@hazae41/result"
+import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { HDKey } from "@scure/bip32"
 import { entropyToMnemonic, mnemonicToSeed } from "@scure/bip39"
 import { wordlist } from "@scure/bip39/wordlists/english"
@@ -183,11 +183,11 @@ export class LedgerSeedInstance {
   ) { }
 
   async tryGetMnemonic(background: Background): Promise<Result<string, Error>> {
-    return new Err(new Unimplemented())
+    return new Err(new Error(`Unimplemented`))
   }
 
   async tryGetPrivateKey(path: string, background: Background): Promise<Result<ZeroHexString, Error>> {
-    return new Err(new Unimplemented())
+    return new Err(new Error(`Unimplemented`))
   }
 
   async trySignPersonalMessage(path: string, message: string, background: Background): Promise<Result<string, Error>> {

@@ -234,7 +234,7 @@ class Global {
 
     this.#user = userSession
 
-    await this.events.emit("login", [])
+    await this.events.emit("login")
     await this.#wcReconnectAllOrThrow()
 
     this.#wcs = new Mutex(WcBrume.createPool(this.circuits, { capacity: 1 }))
@@ -963,7 +963,7 @@ class Global {
   }
 
   async popup_hello(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
-    const returned = await this.events.emit("popup_hello", [foreground])
+    const returned = await this.events.emit("popup_hello", foreground)
 
     if (returned.isSome() && returned.inner.isErr())
       return returned.inner
@@ -974,7 +974,7 @@ class Global {
   async brume_respond(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<void, Error>> {
     const [response] = (request as RpcRequestPreinit<[RpcResponseInit<unknown>]>).params
 
-    const returned = await this.events.emit("response", [response])
+    const returned = await this.events.emit("response", response)
 
     if (returned.isSome() && returned.inner.isErr())
       return returned.inner
@@ -1154,8 +1154,8 @@ class Global {
       core.storeds.set(cacheKey, stored)
       core.unstoreds.delete(cacheKey)
 
-      await core.onState.emit("*", [cacheKey])
-      await core.onState.emit(cacheKey, [cacheKey])
+      await core.onState.emit("*", cacheKey)
+      await core.onState.emit(cacheKey, cacheKey)
 
       return stored
     })
@@ -1197,8 +1197,8 @@ class Global {
       core.storeds.set(cacheKey, stored)
       core.unstoreds.delete(cacheKey)
 
-      await core.onState.emit("*", [cacheKey])
-      await core.onState.emit(cacheKey, [cacheKey])
+      await core.onState.emit("*", cacheKey)
+      await core.onState.emit(cacheKey, cacheKey)
 
       return stored
     })
@@ -1239,8 +1239,8 @@ class Global {
     core.storeds.set(cacheKey, rawState)
     core.unstoreds.delete(cacheKey)
 
-    await core.onState.emit("*", [cacheKey])
-    await core.onState.emit(cacheKey, [cacheKey])
+    await core.onState.emit("*", cacheKey)
+    await core.onState.emit(cacheKey, cacheKey)
 
     return Ok.void()
   }
