@@ -3,6 +3,7 @@ import { RpcCounter, RpcInternalError, RpcInvalidRequestError, RpcRequestInit, R
 import { None, Some } from "@hazae41/option"
 import { CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
+import { Signals } from "@hazae41/signals"
 import { BrowserError } from "../browser/browser"
 import { Console } from "../console"
 import { AbortSignals } from "../signals/signals"
@@ -153,7 +154,8 @@ export class MessageRpcRouter {
       return new Some(Ok.void())
     })
 
-    using abort = Plume.AbortSignals.waitOrThrow(signal)
+    using abort = Signals.rejectOnAbort(signal)
+
     return await Promise.race([active, passive.get(), abort.get()])
   }
 
@@ -282,7 +284,8 @@ export class ExtensionRpcRouter {
       return new Some(Ok.void())
     })
 
-    using abort = Plume.AbortSignals.waitOrThrow(signal)
+    using abort = Signals.rejectOnAbort(signal)
+
     return await Promise.race([active, passive.get(), abort.get()])
   }
 
