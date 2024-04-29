@@ -282,13 +282,6 @@ function WalletDataPage() {
         <div className="grow" />
         {all && <>
           <SmallShrinkableContrastButton
-            onClick={() => setEdit(!edit)}>
-            {edit
-              ? <Outline.CheckIcon className="size-5" />
-              : <Outline.PencilIcon className="size-5" />}
-            {edit ? "Done" : "Edit"}
-          </SmallShrinkableContrastButton>
-          <SmallShrinkableContrastButton
             onClick={add.enable}>
             <Outline.PlusIcon className="size-5" />
             {"Add"}
@@ -335,10 +328,6 @@ function WalletDataPage() {
           <WalletMenu
             $privateKey={$privateKey}
             $flip={$flip} />
-        </Menu>}
-      {subpath.url.pathname === "/token" &&
-        <Menu>
-          <NativeTokenMenu />
         </Menu>}
     </HashSubpathProvider>
     {Header}
@@ -567,13 +556,24 @@ function ContractTokenResolver(props: { token: ContractToken }) {
     chain={chainData} />
 }
 
-function NativeTokenMenu(props: {}) {
+function NativeTokenMenu(props: { token: NativeTokenData }) {
+  const wallet = useWalletDataContext().unwrap()
+  const path = usePathContext().unwrap()
+  const { token } = props
+
+  const send = useGenius(path, `/send?step=target&chain=${token.chainId}`)
+
   return <div className="flex flex-col text-left gap-2">
-    <WideShrinkableNakedMenuAnchor>
+    <WideShrinkableNakedMenuAnchor
+      aria-disabled={wallet.type === "readonly"}
+      onClick={send.onClick}
+      onKeyDown={send.onKeyDown}
+      href={send.href}>
       <Outline.PaperAirplaneIcon className="size-4" />
       Send
     </WideShrinkableNakedMenuAnchor>
-    <WideShrinkableNakedMenuAnchor>
+    <WideShrinkableNakedMenuAnchor
+      aria-disabled>
       <Outline.BanknotesIcon className="size-4" />
       Faucet
     </WideShrinkableNakedMenuAnchor>
@@ -587,7 +587,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const { token, chain } = props
 
   const subpath = useHashSubpath(path)
-  const menu = useGenius(subpath, `/token?chain=${chain.chainId}`)
+  const menu = useGenius(subpath, `/token/${token.chainId}`)
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
@@ -607,6 +607,12 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   }, [])
 
   return <>
+    <HashSubpathProvider>
+      {subpath.url.pathname === `/token/${token.chainId}` &&
+        <Menu>
+          <NativeTokenMenu token={token} />
+        </Menu>}
+    </HashSubpathProvider>
     {chain.token.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}
@@ -630,6 +636,30 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   </>
 }
 
+function ContractTokenMenu(props: { token: ContractTokenData }) {
+  const wallet = useWalletDataContext().unwrap()
+  const path = usePathContext().unwrap()
+  const { token } = props
+
+  const send = useGenius(path, `/send?step=target&chain=${token.chainId}&token=${token.address}`)
+
+  return <div className="flex flex-col text-left gap-2">
+    <WideShrinkableNakedMenuAnchor
+      aria-disabled={wallet.type === "readonly"}
+      onClick={send.onClick}
+      onKeyDown={send.onKeyDown}
+      href={send.href}>
+      <Outline.PaperAirplaneIcon className="size-4" />
+      Send
+    </WideShrinkableNakedMenuAnchor>
+    <WideShrinkableNakedMenuAnchor
+      aria-disabled>
+      <Outline.BanknotesIcon className="size-4" />
+      Faucet
+    </WideShrinkableNakedMenuAnchor>
+  </div>
+}
+
 function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainData }) {
   const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
@@ -637,7 +667,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const { token, chain } = props
 
   const subpath = useHashSubpath(path)
-  const menu = useGenius(subpath, `/token?chain=${chain.chainId}&token=${token.address}`)
+  const menu = useGenius(subpath, `/token/${token.uuid}`)
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
@@ -657,6 +687,12 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   }, [])
 
   return <>
+    <HashSubpathProvider>
+      {subpath.url.pathname === `/token/${token.uuid}` &&
+        <Menu>
+          <ContractTokenMenu token={token} />
+        </Menu>}
+    </HashSubpathProvider>
     {token.pairs?.map((address, i) =>
       <PriceResolver key={i}
         index={i}
