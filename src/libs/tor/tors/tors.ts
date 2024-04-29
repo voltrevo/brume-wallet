@@ -1,4 +1,4 @@
-import { } from "@/libs/streams/websocket"
+import { WebSocketDuplex } from "@/libs/streams/websocket"
 import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
@@ -8,7 +8,7 @@ import { Pool, PoolCreatorParams, PoolParams } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
 
 export function createNativeWebSocketPool(params: PoolParams) {
-  const pool = new Pool<WebSocket>(async (subparams) => {
+  const pool = new Pool<Disposer<WebSocket>>(async (subparams) => {
     const { index, pool } = subparams
 
     const socket = new WebSocket("wss://snowflake.torproject.net/")
@@ -22,13 +22,15 @@ export function createNativeWebSocketPool(params: PoolParams) {
 
     using preProxy = new Box(new Disposer(socket, () => socket.close()))
 
-    const onCloseOrError = async (reason?: unknown) => {
+    const onCloseOrError = (reason?: unknown) => {
       pool.restart(index)
-      return new None()
     }
 
-    using preOnCloseDisposer = new Box(new Disposer({}, preProxy.inner.events.on("close", onCloseOrError, { passive: true })))
-    using preOnErrorDisposer = new Box(new Disposer({}, preProxy.inner.events.on("error", onCloseOrError, { passive: true })))
+    preProxy.inner.inner.addEventListener("close", onCloseOrError, { passive: true })
+    using preOnCloseDisposer = new Box(new Disposer({}, () => preProxy.inner.inner.removeEventListener("close", onCloseOrError)))
+
+    preProxy.inner.inner.addEventListener("error", onCloseOrError, { passive: true })
+    using preOnErrorDisposer = new Box(new Disposer({}, () => preProxy.inner.inner.removeEventListener("error", onCloseOrError)))
 
     const onOffline = () => {
       /**
@@ -123,7 +125,7 @@ export function createTorAndConsensusEntry(preTorAndConsensus: Box<Disposer<read
   return new Disposer(torAndConsensus, onEntryClean)
 }
 
-export function createTorPool(sockets: Pool<NativeWebSocketProxy>, params: PoolParams) {
+export function createTorPool(sockets: Pool<Disposer<WebSocket>>, params: PoolParams) {
   let update = Date.now()
 
   const pool = new Pool<Disposer<readonly [TorClientDuplex, Consensus]>>(async (subparams) => {
@@ -134,7 +136,7 @@ export function createTorPool(sockets: Pool<NativeWebSocketProxy>, params: PoolP
         const { index, signal } = subparams
 
         using preSocket = await sockets.getOrThrow(index % sockets.capacity, signal).then(r => r.unwrap().inner)
-        const stream = new WebSocketStream(preSocket.getOrThrow(), { shouldCloseOnAbort: true, shouldCloseOnCancel: true })
+        const stream = new WebSocketDuplex(preSocket.getOrThrow().get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
 
         using preTor = new Box(await createTorOrThrow(stream))
         using tmpCircuit = await preTor.getOrThrow().createOrThrow(AbortSignal.timeout(5000))
