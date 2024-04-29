@@ -3,11 +3,11 @@ import { Color } from "@/libs/colors/colors";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { ChainData, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Mutators } from "@/libs/glacier/mutators";
-import { Outline } from "@/libs/icons/icons";
+import { Outline, Solid } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { isExtension } from "@/libs/platform/platform";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
-import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
+import { useKeyboardEnter } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
@@ -25,7 +25,7 @@ import { TokenSettings, TokenSettingsData } from "@/mods/background/service_work
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
 import { None, Nullable, Option, Optional, Some } from "@hazae41/option";
 import { Result } from "@hazae41/result";
-import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
 import { Page } from "../../../../libs/ui2/page/page";
 import { useBackgroundContext } from "../../background/context";
@@ -290,19 +290,17 @@ function WalletDataPage() {
       </div>
       <div className="h-4" />
       {all &&
-        <TokensEditContext.Provider value={edit}>
-          <div className="flex flex-col gap-4">
-            {allTokens.map(token =>
-              <Fragment key={token.uuid}>
-                {token.uuid !== chainByChainId[1].token.uuid &&
-                  <UnaddedTokenRow token={token} />}
-              </Fragment>)}
-            {userTokens.data?.get().map(token =>
-              <UnaddedTokenRow
-                key={token.uuid}
-                token={token} />)}
-          </div>
-        </TokensEditContext.Provider>}
+        <div className="flex flex-col gap-4">
+          {allTokens.map(token =>
+            <Fragment key={token.uuid}>
+              {token.uuid !== chainByChainId[1].token.uuid &&
+                <UnaddedTokenRow token={token} />}
+            </Fragment>)}
+          {userTokens.data?.get().map(token =>
+            <UnaddedTokenRow
+              key={token.uuid}
+              token={token} />)}
+        </div>}
     </PageBody>
 
   return <Page>
@@ -487,12 +485,6 @@ export function WalletConnectMenu() {
   </div>
 }
 
-const TokensEditContext = createContext(false)
-
-function useTokensEditContext() {
-  return Option.wrap(useContext(TokensEditContext))
-}
-
 function AddedTokenRow(props: { settingsRef: TokenSettings }) {
   const wallet = useWalletDataContext().unwrap()
 
@@ -509,13 +501,12 @@ function AddedTokenRow(props: { settingsRef: TokenSettings }) {
 }
 
 function UnaddedTokenRow(props: { token: Token }) {
-  const edit = useTokensEditContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const { token } = props
 
   const settings = useTokenSettings(wallet, token)
 
-  if (settings.data?.get().enabled && !edit)
+  if (settings.data?.get().enabled)
     return null
   return <TokenRowRouter token={token} />
 }
@@ -583,7 +574,6 @@ function NativeTokenMenu(props: { token: NativeTokenData }) {
 function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }) {
   const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
-  const edit = useTokensEditContext().unwrap()
   const { token, chain } = props
 
   const subpath = useHashSubpath(path)
@@ -618,32 +608,53 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
         index={i}
         address={address}
         ok={onPrice} />)}
-    {!edit &&
-      <ClickableTokenRow
-        href={menu.href}
-        onClick={menu.onClick}
-        onContextMenu={menu.onContextMenu}
-        token={token}
-        chain={chain}
-        balanceDisplay={balanceDisplay}
-        balanceUsdDisplay={balanceUsdDisplay} />}
-    {edit &&
-      <CheckableTokenRow
-        token={token}
-        chain={chain}
-        balanceDisplay={balanceDisplay}
-        balanceUsdDisplay={balanceUsdDisplay} />}
+    <ClickableTokenRow
+      href={menu.href}
+      onClick={menu.onClick}
+      onContextMenu={menu.onContextMenu}
+      token={token}
+      chain={chain}
+      balanceDisplay={balanceDisplay}
+      balanceUsdDisplay={balanceUsdDisplay} />
   </>
 }
 
 function ContractTokenMenu(props: { token: ContractTokenData }) {
+  const close = useCloseContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const path = usePathContext().unwrap()
   const { token } = props
 
   const send = useGenius(path, `/send?step=target&chain=${token.chainId}&token=${token.address}`)
 
+  const settings = useTokenSettings(wallet, token)
+  const favorite = settings.data?.get().enabled
+
+  const onToggle = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    const enabled = !favorite
+
+    await settings.mutate(s => {
+      const data = Mutators.Datas.mapOrNew((d = {
+        uuid: randomUUID(),
+        token: TokenRef.from(token),
+        wallet: WalletRef.from(wallet),
+        enabled
+      }): TokenSettingsData => {
+        return { ...d, enabled }
+      }, s.real?.data)
+
+      return new Some(data)
+    })
+
+    close(true)
+  }), [favorite, settings, token, wallet, close])
+
   return <div className="flex flex-col text-left gap-2">
+    <WideShrinkableNakedMenuButton
+      onClick={onToggle.run}>
+      {favorite ? <Solid.StarIcon className="size-4" /> : <Outline.StarIcon className="size-4" />}
+      {favorite ? "Unfavorite" : "Favorite"}
+    </WideShrinkableNakedMenuButton>
     <WideShrinkableNakedMenuAnchor
       aria-disabled={wallet.type === "readonly"}
       onClick={send.onClick}
@@ -663,7 +674,6 @@ function ContractTokenMenu(props: { token: ContractTokenData }) {
 function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainData }) {
   const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
-  const edit = useTokensEditContext().unwrap()
   const { token, chain } = props
 
   const subpath = useHashSubpath(path)
@@ -698,21 +708,14 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
         index={i}
         address={address}
         ok={onPrice} />)}
-    {!edit &&
-      <ClickableTokenRow
-        href={menu.href}
-        onClick={menu.onClick}
-        onContextMenu={menu.onContextMenu}
-        token={token}
-        chain={chain}
-        balanceDisplay={balanceDisplay}
-        balanceUsdDisplay={balanceUsdDisplay} />}
-    {edit &&
-      <CheckableTokenRow
-        token={token}
-        chain={chain}
-        balanceDisplay={balanceDisplay}
-        balanceUsdDisplay={balanceUsdDisplay} />}
+    <ClickableTokenRow
+      href={menu.href}
+      onClick={menu.onClick}
+      onContextMenu={menu.onContextMenu}
+      token={token}
+      chain={chain}
+      balanceDisplay={balanceDisplay}
+      balanceUsdDisplay={balanceUsdDisplay} />
   </>
 }
 
@@ -779,83 +782,4 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
       </div>
     </div>
   </a>
-}
-
-function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay?: string }) {
-  const { token, chain, balanceDisplay, balanceUsdDisplay } = props
-  const wallet = useWalletDataContext().unwrap()
-
-  const settings = useTokenSettings(wallet, token)
-  const checked = settings.data?.get().enabled
-
-  const onToggle = useInputChange(async e => {
-    const enabled = e.currentTarget.checked
-
-    await settings.mutate(s => {
-      const data = Mutators.Datas.mapOrNew((d = {
-        uuid: randomUUID(),
-        token: TokenRef.from(token),
-        wallet: WalletRef.from(wallet),
-        enabled
-      }): TokenSettingsData => {
-        return { ...d, enabled }
-      }, s.real?.data)
-
-      return new Some(data)
-    })
-  }, [])
-
-  const tokenId = token.type === "native"
-    ? token.chainId + token.symbol
-    : token.chainId + token.address + token.symbol
-
-  const modhash = useModhash(tokenId)
-  const color = Color.get(modhash)
-
-  return <label className={`po-sm group flex items-center`}>
-    <input className="appearance-none"
-      type="checkbox"
-      checked={checked}
-      onChange={onToggle} />
-    <div className="h-6 w-6 border border-contrast rounded-full aria-checked:bg-blue-500 flex items-center justify-center transition-colors"
-      aria-checked={checked}>
-      <div className="text-white invisible aria-checked:visible"
-        aria-checked={checked}>
-        {`✓`}
-      </div>
-    </div>
-    <div className="w-4" />
-    <div className={`relative h-12 w-12 flex items-center justify-center bg-${color}-400 dark:bg-${color}-500 text-white rounded-full`}>
-      <div className=""
-        style={{ fontSize: `${Math.min((20 - (2 * token.symbol.length)), 16)}px` }}>
-        {token.symbol}
-      </div>
-      <div className="absolute -bottom-2 -left-2">
-        {chain.icon()}
-      </div>
-    </div>
-    <div className="w-4" />
-    <div className="grow">
-      <div className="flex items-center">
-        <div className="grow flex items-center gap-1">
-          <span className="">
-            {token.name}
-          </span>
-          <span className="text-contrast">
-            on
-          </span>
-          <span className="">
-            {chain.name}
-          </span>
-        </div>
-        {balanceUsdDisplay != null &&
-          <div className="">
-            {balanceUsdDisplay}
-          </div>}
-      </div>
-      <div className="text-contrast">
-        {balanceDisplay} {token.symbol}
-      </div>
-    </div>
-  </label>
 }
