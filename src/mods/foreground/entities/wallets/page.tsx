@@ -7,7 +7,7 @@ import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { isExtension } from "@/libs/platform/platform";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
-import { useInputChange, useKeyboardEnter, useMouse } from "@/libs/react/events";
+import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
@@ -25,7 +25,7 @@ import { TokenSettings, TokenSettingsData } from "@/mods/background/service_work
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
 import { None, Nullable, Option, Optional, Some } from "@hazae41/option";
 import { Result } from "@hazae41/result";
-import { Fragment, MouseEvent, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
 import { Page } from "../../../../libs/ui2/page/page";
 import { useBackgroundContext } from "../../background/context";
@@ -336,6 +336,10 @@ function WalletDataPage() {
             $privateKey={$privateKey}
             $flip={$flip} />
         </Menu>}
+      {subpath.url.pathname === "/token" &&
+        <Menu>
+          <NativeTokenMenu />
+        </Menu>}
     </HashSubpathProvider>
     {Header}
     {Card}
@@ -444,7 +448,6 @@ export function WalletMenu(props: {
       </WideShrinkableNakedMenuButton>}
   </div>
 }
-
 
 export function WalletConnectMenu() {
   const wallet = useWalletDataContext().unwrap()
@@ -564,6 +567,19 @@ function ContractTokenResolver(props: { token: ContractToken }) {
     chain={chainData} />
 }
 
+function NativeTokenMenu(props: {}) {
+  return <div className="flex flex-col text-left gap-2">
+    <WideShrinkableNakedMenuAnchor>
+      <Outline.PaperAirplaneIcon className="size-4" />
+      Send
+    </WideShrinkableNakedMenuAnchor>
+    <WideShrinkableNakedMenuAnchor>
+      <Outline.BanknotesIcon className="size-4" />
+      Faucet
+    </WideShrinkableNakedMenuAnchor>
+  </div>
+}
+
 function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }) {
   const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
@@ -571,14 +587,9 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const { token, chain } = props
 
   const subpath = useHashSubpath(path)
+  const menu = useGenius(subpath, `/token?chain=${chain.chainId}`)
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
-
-  const onClick = useCallback(() => {
-    if (wallet.type === "readonly")
-      return
-    location.replace(subpath.go(`/send?step=target&chain=${context?.chain.chainId}`))
-  }, [wallet, subpath, context])
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
@@ -603,7 +614,9 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
         ok={onPrice} />)}
     {!edit &&
       <ClickableTokenRow
-        ok={onClick}
+        href={menu.href}
+        onClick={menu.onClick}
+        onContextMenu={menu.onContextMenu}
         token={token}
         chain={chain}
         balanceDisplay={balanceDisplay}
@@ -624,6 +637,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const { token, chain } = props
 
   const subpath = useHashSubpath(path)
+  const menu = useGenius(subpath, `/token?chain=${chain.chainId}&token=${token.address}`)
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
@@ -631,12 +645,6 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const balanceQuery = useContractBalance(wallet.address, token, "pending", context, prices)
   const balanceDisplay = useDisplay(balanceQuery.current)
-
-  const onSendClick = useCallback(() => {
-    if (wallet.type === "readonly")
-      return
-    location.replace(subpath.go(`/send?step=target&chain=${context?.chain.chainId}&token=${token.address}`))
-  }, [wallet, subpath, context, token])
 
   const balanceUsdFixed = useContractPricedBalance(wallet.address, token, "usd", context)
   const balanceUsdDisplay = useDisplayUsdOrNull(balanceUsdFixed.current)
@@ -656,7 +664,9 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
         ok={onPrice} />)}
     {!edit &&
       <ClickableTokenRow
-        ok={onSendClick}
+        href={menu.href}
+        onClick={menu.onClick}
+        onContextMenu={menu.onContextMenu}
         token={token}
         chain={chain}
         balanceDisplay={balanceDisplay}
@@ -688,12 +698,8 @@ export function PriceResolver(props: { index: number } & { address: string } & O
   return null
 }
 
-function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay?: string } & OkProps<MouseEvent<HTMLElement>>) {
-  const { ok, token, chain, balanceDisplay, balanceUsdDisplay } = props
-
-  const onClick = useMouse(e => {
-    ok(e)
-  }, [ok])
+function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay?: string } & AnchorProps) {
+  const { token, chain, balanceDisplay, balanceUsdDisplay, ...others } = props
 
   const tokenId = token.type === "native"
     ? token.chainId + token.symbol
@@ -702,8 +708,8 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
   const modhash = useModhash(tokenId)
   const color = Color.get(modhash)
 
-  return <button className="po-sm group flex items-center text-left"
-    onClick={onClick}>
+  return <a className="po-sm group flex items-center text-left"
+    {...others}>
     <div className={`relative h-12 w-12 flex items-center justify-center bg-${color}-400 dark:bg-${color}-500 text-white rounded-full`}>
       <div className=""
         style={{ fontSize: `${Math.min((20 - (2 * token.symbol.length)), 16)}px` }}>
@@ -736,7 +742,7 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
         {balanceDisplay} {token.symbol}
       </div>
     </div>
-  </button>
+  </a>
 }
 
 function CheckableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay?: string }) {

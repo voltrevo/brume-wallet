@@ -19,7 +19,7 @@ export const chainByChainId: Chains = {
   1: {
     name: "Ethereum",
     chainId: 1,
-    urls: ["wss://ethereum.publicnode.com", "wss://mainnet.gateway.tenderly.co"],
+    urls: ["wss://ethereum-rpc.publicnode.com", "wss://mainnet.gateway.tenderly.co"],
     etherscan: "https://etherscan.io",
     token: {
       uuid: "664000af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -42,7 +42,7 @@ export const chainByChainId: Chains = {
   5: {
     name: "Goerli (testnet)",
     chainId: 5,
-    urls: ["wss://ethereum-goerli.publicnode.com"],
+    urls: ["wss://ethereum-goerli-rpc.publicnode.com"],
     etherscan: "https://goerli.etherscan.io",
     token: {
       uuid: "664001af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -61,7 +61,7 @@ export const chainByChainId: Chains = {
   10: {
     name: "Optimism",
     chainId: 10,
-    urls: ["wss://optimism.publicnode.com"],
+    urls: ["wss://optimism-rpc.publicnode.com"],
     etherscan: "https://optimistic.etherscan.io",
     token: {
       uuid: "664002af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -81,7 +81,7 @@ export const chainByChainId: Chains = {
   56: {
     name: "Binance",
     chainId: 56,
-    urls: ["wss://bsc.publicnode.com"],
+    urls: ["wss://bsc-rpc.publicnode.com"],
     etherscan: "https://bscscan.com",
     token: {
       uuid: "664003af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -124,7 +124,7 @@ export const chainByChainId: Chains = {
   100: {
     name: "Gnosis",
     chainId: 100,
-    urls: ["wss://gnosis.publicnode.com"],
+    urls: ["wss://gnosis-rpc.publicnode.com"],
     etherscan: "https://gnosisscan.io",
     token: {
       uuid: "664005af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -147,7 +147,7 @@ export const chainByChainId: Chains = {
   137: {
     name: "Polygon Bor",
     chainId: 137,
-    urls: ["wss://polygon-bor.publicnode.com"],
+    urls: ["wss://polygon-bor-rpc.publicnode.com"],
     etherscan: "https://polygonscan.com",
     token: {
       uuid: "664006af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -233,7 +233,7 @@ export const chainByChainId: Chains = {
   8453: {
     name: "Base",
     chainId: 8453,
-    urls: ["wss://base.publicnode.com"],
+    urls: ["wss://base-rpc.publicnode.com"],
     etherscan: "https://basescan.org",
     token: {
       uuid: "664008af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -256,7 +256,7 @@ export const chainByChainId: Chains = {
   42161: {
     name: "Arbitrum One",
     chainId: 42161,
-    urls: ["wss://arbitrum-one.publicnode.com"],
+    urls: ["wss://arbitrum-one-rpc.publicnode.com"],
     etherscan: "https://arbiscan.io",
     token: {
       uuid: "664009af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -299,7 +299,7 @@ export const chainByChainId: Chains = {
   43114: {
     name: "Avalanche C-Chain",
     chainId: 43114,
-    urls: ["wss://avalanche-c-chain.publicnode.com"],
+    urls: ["wss://avalanche-c-chain-rpc.publicnode.com"],
     etherscan: "https://snowtrace.io",
     token: {
       uuid: "664011af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -339,7 +339,7 @@ export const chainByChainId: Chains = {
   11155111: {
     name: "Sepolia (testnet)",
     chainId: 11155111,
-    urls: ["wss://ethereum-sepolia.publicnode.com"],
+    urls: ["wss://ethereum-sepolia-rpc.publicnode.com"],
     etherscan: "https://sepolia.etherscan.io",
     token: {
       uuid: "664013af-5c47-4b6e-ab3e-c0c130e23b3c",

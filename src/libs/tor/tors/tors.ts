@@ -1,59 +1,14 @@
-import { SuperWebSocketEvents, WebSocketStream } from "@/libs/streams/websocket"
+import { } from "@/libs/streams/websocket"
 import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Consensus, TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote"
 import { None } from "@hazae41/option"
 import { Pool, PoolCreatorParams, PoolParams } from "@hazae41/piscine"
-import { SuperEventTarget } from "@hazae41/plume"
 import { Result } from "@hazae41/result"
 
-export class NativeWebSocketProxy {
-  readonly events = new SuperEventTarget<SuperWebSocketEvents>()
-
-  #onClean?: () => void
-
-  constructor(
-    readonly socket: WebSocket
-  ) {
-    const onOpen = (e: Event) => this.events.emit("open", e)
-    const onClose = (e: CloseEvent) => this.events.emit("close", e)
-    const onError = (e: Event) => this.events.emit("error", e)
-    const onMessage = (e: MessageEvent) => this.events.emit("message", e)
-
-    socket.addEventListener("open", onOpen)
-    socket.addEventListener("close", onClose)
-    socket.addEventListener("error", onError)
-    socket.addEventListener("message", onMessage)
-
-    this.#onClean = () => {
-      this.#onClean = undefined
-
-      socket.removeEventListener("open", onOpen)
-      socket.removeEventListener("close", onClose)
-      socket.removeEventListener("error", onError)
-      socket.removeEventListener("message", onMessage)
-
-      try { socket.close() } catch { }
-    }
-  }
-
-  [Symbol.dispose]() {
-    this.#onClean?.()
-  }
-
-  send(data: ArrayBuffer) {
-    this.socket.send(data)
-  }
-
-  close() {
-    this.socket.close()
-  }
-
-}
-
 export function createNativeWebSocketPool(params: PoolParams) {
-  const pool = new Pool<NativeWebSocketProxy>(async (subparams) => {
+  const pool = new Pool<WebSocket>(async (subparams) => {
     const { index, pool } = subparams
 
     const socket = new WebSocket("wss://snowflake.torproject.net/")
@@ -65,7 +20,7 @@ export function createNativeWebSocketPool(params: PoolParams) {
       socket.addEventListener("error", err)
     })
 
-    using preProxy = new Box(new NativeWebSocketProxy(socket))
+    using preProxy = new Box(new Disposer(socket, () => socket.close()))
 
     const onCloseOrError = async (reason?: unknown) => {
       pool.restart(index)
@@ -79,7 +34,7 @@ export function createNativeWebSocketPool(params: PoolParams) {
       /**
        * Close socket and thus call onCloseOrError
        */
-      preProxy.inner.close()
+      preProxy.inner.get().close()
     }
 
     addEventListener("offline", onOffline, { passive: true })

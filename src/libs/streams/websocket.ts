@@ -1,187 +1,114 @@
 import { Opaque, Writable } from "@hazae41/binary"
-import { SuperReadableStream, SuperWritableStream } from "@hazae41/cascade"
-import { None } from "@hazae41/option"
-import { SuperEventTarget } from "@hazae41/plume"
+import { HalfDuplex } from "@hazae41/cascade"
+import { Future } from "@hazae41/future"
 
-export type SuperWebSocketEvents = {
-  open: (e: Event) => void
-  close: (e: CloseEvent) => void
-  error: (e: Event) => void
-  message: (e: MessageEvent) => void
-}
-
-export interface WebSocketProxy {
-  readonly events: SuperEventTarget<SuperWebSocketEvents>
-
-  send(data: ArrayBuffer): void
-  close(): void
-}
-
-export type WebSocketStreamParams =
-  & WebSocketSourceParams
-  & WebSocketSinkParams
-
-export class WebSocketStream {
-  readonly reader: SuperReadableStream<Opaque>
-  readonly writer: SuperWritableStream<Writable>
-
-  readonly outer: ReadableWritablePair<Opaque, Writable>
-
+export interface WebSocketDuplexParams {
   /**
-   * A WebSocket stream
-   * @description https://streams.spec.whatwg.org/#example-both
-   */
-  constructor(
-    readonly socket: WebSocketProxy,
-    readonly params: WebSocketStreamParams = {}
-  ) {
-    this.reader = new SuperReadableStream(new WebSocketSource(socket, params))
-    this.writer = new SuperWritableStream(new WebSocketSink(socket, params))
-
-    this.outer = {
-      readable: this.reader.substream,
-      writable: this.writer.substream
-    }
-  }
-
-}
-
-export interface WebSocketSourceParams {
-  /**
-   * Whether the socket should be closed when the stream is cancelled
-   * @description You don't want to reuse the socket
-   */
-  readonly shouldCloseOnCancel?: boolean
-}
-
-export class WebSocketSource implements UnderlyingDefaultSource<Opaque> {
-
-  #onClean?: () => void
-
-  constructor(
-    readonly websocket: WebSocketProxy,
-    readonly params: WebSocketSourceParams = {}
-  ) { }
-
-  async start(controller: ReadableStreamDefaultController<Opaque>) {
-
-    const onMessage = async (msgEvent: MessageEvent<ArrayBuffer>) => {
-      const bytes = new Uint8Array(msgEvent.data)
-      // console.debug("ws <-", bytes, Bytes.toUtf8(bytes))
-
-      try { controller.enqueue(new Opaque(bytes)) } catch { }
-
-      return new None()
-    }
-
-    const onError = (event: Event) => {
-      const error = new Error(`Errored`, { cause: event })
-
-      try { controller.error(error) } catch { }
-
-      this.#onClean?.()
-      return new None()
-    }
-
-    const onClose = (event: CloseEvent) => {
-      try { controller.close() } catch { }
-
-      this.#onClean?.()
-      return new None()
-    }
-
-    this.websocket.events.on("message", onMessage)
-    this.websocket.events.on("error", onError)
-    this.websocket.events.on("close", onClose)
-
-    this.#onClean = () => {
-      this.#onClean = undefined
-
-      this.websocket.events.off("message", onMessage)
-      this.websocket.events.off("error", onError)
-      this.websocket.events.off("close", onClose)
-    }
-  }
-
-  async cancel() {
-    if (this.params.shouldCloseOnCancel)
-      try { this.websocket.close() } catch { }
-    this.#onClean?.()
-  }
-
-}
-
-export interface WebSocketSinkParams {
-  /**
-   * Whether the socket should be closed when the stream is closed
+   * Whether the socket should be closed when the duplex is closed
    * @description You don't want to reuse the socket
    * @description You're not using request-response
    */
   readonly shouldCloseOnClose?: boolean
 
   /**
-   * Whether the socket should be closed when the stream is aborted
+   * Whether the socket should be closed when the duplex is errored
    * @description You don't want to reuse the socket
    */
-  readonly shouldCloseOnAbort?: boolean
+  readonly shouldCloseOnError?: boolean
 }
 
-export class WebSocketSink implements UnderlyingSink<Writable> {
+export class WebSocketDuplex {
 
-  #onClean?: () => void
+  readonly duplex: HalfDuplex<Opaque, Writable>
 
   constructor(
-    readonly websocket: WebSocketProxy,
-    readonly params: WebSocketSinkParams = {}
-  ) { }
+    readonly socket: WebSocket,
+    readonly params: WebSocketDuplexParams = {}
+  ) {
+    const { shouldCloseOnError, shouldCloseOnClose } = params
 
-  async start(controller: WritableStreamDefaultController) {
+    this.duplex = new HalfDuplex<Opaque, Writable>({
+      output: {
+        write(message) {
+          socket.send(Writable.writeToBytesOrThrow(message))
+        },
+      },
+      close() {
+        if (!shouldCloseOnClose)
+          return
 
-    const onClose = (closeEvent: CloseEvent) => {
-      const error = new Error(`Closed`, { cause: closeEvent })
+        try {
+          socket.close()
+        } catch { }
+      },
+      error() {
+        if (!shouldCloseOnError)
+          return
 
-      try { controller.error(error) } catch { }
+        try {
+          socket.close()
+        } catch { }
+      }
+    })
 
-      this.#onClean?.()
-      return new None()
-    }
+    socket.addEventListener("close", () => this.duplex.close())
+    socket.addEventListener("error", e => this.duplex.error(e))
 
-    const onError = (event: Event) => {
-      const error = new Error(`Errored`, { cause: event })
+    socket.addEventListener("message", async (e: MessageEvent<string | ArrayBuffer>) => {
+      if (typeof e.data === "string")
+        return
 
-      try { controller.error(error) } catch { }
+      const bytes = new Uint8Array(e.data)
+      const opaque = new Opaque(bytes)
 
-      this.#onClean?.()
-      return new None()
-    }
-
-    this.websocket.events.on("close", onClose)
-    this.websocket.events.on("error", onError)
-
-    this.#onClean = () => {
-      this.#onClean = undefined
-
-      this.websocket.events.off("close", onClose)
-      this.websocket.events.off("error", onError)
-    }
+      this.duplex.input.enqueue(opaque)
+    })
   }
 
-  async write(chunk: Writable) {
-    const bytes = Writable.writeToBytesOrThrow(chunk)
-    // console.debug("ws ->", bytes, Bytes.toUtf8(bytes))
-    try { this.websocket.send(bytes) } catch { }
+  [Symbol.dispose]() {
+    this.close()
   }
 
-  async abort(reason?: unknown) {
-    if (this.params.shouldCloseOnAbort)
-      try { this.websocket.close() } catch { }
-    this.#onClean?.()
+  get outer() {
+    return this.duplex.outer
   }
 
-  async close() {
-    if (this.params.shouldCloseOnClose)
-      try { this.websocket.close() } catch { }
-    this.#onClean?.()
+  get closing() {
+    return this.duplex.closing
   }
 
+  get closed() {
+    return this.duplex.closed
+  }
+
+  error(reason?: unknown) {
+    this.duplex.error(reason)
+  }
+
+  close() {
+    this.duplex.close()
+  }
+
+}
+
+export async function createWebSocketDuplex(url: string) {
+  const socket = new WebSocket(url)
+  socket.binaryType = "arraybuffer"
+
+  const future = new Future<void>()
+
+  const onOpen = () => future.resolve()
+  const onError = (e: Event) => future.reject(e)
+
+  try {
+    socket.addEventListener("open", onOpen, { passive: true })
+    socket.addEventListener("error", onError, { passive: true })
+
+    await future.promise
+
+    return new WebSocketDuplex(socket)
+  } finally {
+    socket.removeEventListener("open", onOpen)
+    socket.removeEventListener("error", onError)
+  }
 }
