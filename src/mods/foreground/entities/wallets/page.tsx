@@ -548,13 +548,41 @@ function ContractTokenResolver(props: { token: ContractToken }) {
 }
 
 function NativeTokenMenu(props: { token: NativeTokenData }) {
+  const close = useCloseContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const path = usePathContext().unwrap()
   const { token } = props
 
   const send = useGenius(path, `/send?step=target&chain=${token.chainId}`)
 
+  const settings = useTokenSettings(wallet, token)
+  const favorite = settings.data?.get().enabled
+
+  const onToggle = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+    const enabled = !favorite
+
+    await settings.mutate(s => {
+      const data = Mutators.Datas.mapOrNew((d = {
+        uuid: randomUUID(),
+        token: TokenRef.from(token),
+        wallet: WalletRef.from(wallet),
+        enabled
+      }): TokenSettingsData => {
+        return { ...d, enabled }
+      }, s.real?.data)
+
+      return new Some(data)
+    })
+
+    close(true)
+  }), [favorite, settings, token, wallet, close])
+
   return <div className="flex flex-col text-left gap-2">
+    <WideShrinkableNakedMenuButton
+      onClick={onToggle.run}>
+      {favorite ? <Solid.StarIcon className="size-4" /> : <Outline.StarIcon className="size-4" />}
+      {favorite ? "Unfavorite" : "Favorite"}
+    </WideShrinkableNakedMenuButton>
     <WideShrinkableNakedMenuAnchor
       aria-disabled={wallet.type === "readonly"}
       onClick={send.onClick}
