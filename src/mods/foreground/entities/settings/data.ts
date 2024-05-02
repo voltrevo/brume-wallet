@@ -17,11 +17,33 @@ export namespace FgSettings {
     }
 
   }
+
+  export namespace Chain {
+
+    export type Key = BgSettings.Chain.Key
+    export type Data = BgSettings.Chain.Data
+    export type Fail = BgSettings.Chain.Fail
+
+    export const key = BgSettings.Chain.key
+
+    export function schema(storage: UserStorage) {
+      return createQuery<Key, Data, Fail>({ key, storage })
+    }
+
+  }
+
 }
 
 export function useLogs() {
   const storage = useUserStorageContext().unwrap()
   const query = useQuery(FgSettings.Logs.schema, [storage])
+
+  return query
+}
+
+export function useChain() {
+  const storage = useUserStorageContext().unwrap()
+  const query = useQuery(FgSettings.Chain.schema, [storage])
 
   return query
 }

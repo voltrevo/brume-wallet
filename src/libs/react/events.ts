@@ -1,4 +1,4 @@
-import { ChangeEvent, ClipboardEvent, DependencyList, KeyboardEvent, MouseEvent, SyntheticEvent, TouchEvent, useCallback } from "react"
+import { ChangeEvent, ClipboardEvent, DependencyList, KeyboardEvent, MouseEvent, SyntheticEvent, useCallback } from "react"
 
 export namespace Events {
 
@@ -55,14 +55,12 @@ export namespace Events {
 
 }
 
-export function useSynthetic<T = HTMLElement>(
-  callback: (e: SyntheticEvent<T>) => void,
-  deps: DependencyList = [callback]
-) {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useCallback(callback, deps)
-}
-
+/**
+ * @deprecated TODO
+ * @param callback 
+ * @param deps 
+ * @returns 
+ */
 export function useInputChange<T = HTMLInputElement>(
   callback: (e: ChangeEvent<T>) => void,
   deps: DependencyList = [callback]
@@ -71,6 +69,12 @@ export function useInputChange<T = HTMLInputElement>(
   return useCallback(callback, deps)
 }
 
+/**
+ * @deprecated TODO
+ * @param callback 
+ * @param deps 
+ * @returns 
+ */
 export function useTextAreaChange<T = HTMLTextAreaElement>(
   callback: (e: ChangeEvent<T>) => void,
   deps: DependencyList = [callback]
@@ -80,27 +84,11 @@ export function useTextAreaChange<T = HTMLTextAreaElement>(
 }
 
 /**
- * @deprecated
+ * @deprecated TODO
  * @param callback 
  * @param deps 
  * @returns 
  */
-export function useMouse<T = HTMLElement>(
-  callback: (e: MouseEvent<T>) => void,
-  deps: DependencyList = [callback]
-) {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useCallback(callback, deps)
-}
-
-export function useTouch<T = HTMLElement>(
-  callback: (e: TouchEvent<T>) => void,
-  deps: DependencyList = [callback]
-) {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useCallback(callback, deps)
-}
-
 export function useMouseCancel<T = HTMLElement>(
   callback: (e: MouseEvent<T>) => void,
   deps: DependencyList = [callback]
@@ -113,6 +101,12 @@ export function useMouseCancel<T = HTMLElement>(
   }, deps)
 }
 
+/**
+ * @deprecated TODO
+ * @param callback 
+ * @param deps 
+ * @returns 
+ */
 export function useKeyboard<T = HTMLElement>(
   callback: (e: KeyboardEvent<T>) => void,
   deps: DependencyList = [callback]
@@ -121,24 +115,18 @@ export function useKeyboard<T = HTMLElement>(
   return useCallback(callback, deps)
 }
 
+/**
+ * @deprecated TODO
+ * @param callback 
+ * @param deps 
+ * @returns 
+ */
 export function useKeyboardEnter<T = HTMLElement>(
   callback: (e: KeyboardEvent<T>) => void,
   deps: DependencyList = [callback]
 ) {
   return useKeyboard((e: KeyboardEvent<T>) => {
     if (e.key !== "Enter") return
-    e.preventDefault()
-    e.stopPropagation()
-    callback(e)
-  }, deps)
-}
-
-export function useKeyboardEscape<T = HTMLElement>(
-  callback: (e: KeyboardEvent<T>) => void,
-  deps: DependencyList = [callback]
-) {
-  return useKeyboard((e: KeyboardEvent<T>) => {
-    if (e.key !== "Escape") return
     e.preventDefault()
     e.stopPropagation()
     callback(e)

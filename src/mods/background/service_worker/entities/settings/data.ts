@@ -16,4 +16,18 @@ export namespace BgSettings {
 
   }
 
+  export namespace Chain {
+
+    export type Key = string
+    export type Data = number
+    export type Fail = never
+
+    export const key = `settings/chain`
+
+    export function schema(storage: IDBStorage) {
+      return createQuery<Key, Data, Fail>({ key, storage })
+    }
+
+  }
+
 }
