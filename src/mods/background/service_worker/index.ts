@@ -134,13 +134,14 @@ interface Permission {
 class Global {
 
   readonly events = new SuperEventTarget<{
-    "login": () => void
     "popup_hello": (foreground: RpcRouter) => Result<void, Error>
     "response": (response: RpcResponseInit<unknown>) => Result<void, Error>
   }>()
 
   #user?: UserSession
   #path: string = "/"
+
+  readonly resolveOnUser = new Future<UserSession>()
 
   readonly circuits: Mutex<Pool<Circuit>>
 
@@ -234,7 +235,7 @@ class Global {
 
     this.#user = userSession
 
-    await this.events.emit("login")
+    this.resolveOnUser.resolve(userSession)
     await this.#wcReconnectAllOrThrow()
 
     this.#wcs = new Mutex(WcBrume.createPool(this.circuits, { capacity: 1 }))
@@ -364,27 +365,33 @@ class Global {
     }
   }
 
-  async waitPopupLoginOrThrow(popup: PopupData) {
-    const future = new Future<void>()
+  async getOrWaitUserOrThrow(mouse: Mouse) {
+    if (this.#user != null)
+      return this.#user
 
-    const onLogin = async () => {
-      future.resolve()
-      return new None()
+    if (isSafariExtension() && isIpad()) {
+      await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
+      return await this.resolveOnUser.promise
+    } else {
+      const popup = await this.openOrFocusPopupOrThrow("", mouse)
+      return await this.waitUserOrPopupRemovalOrThrow(popup)
     }
+  }
+
+  async waitUserOrPopupRemovalOrThrow(popup: PopupData) {
+    const rejectOnRemove = new Future<never>()
 
     const onRemoved = (id: number) => {
       if (id !== popup.tab.id)
         return
-      future.reject(new Error())
+      rejectOnRemove.reject(new Error())
     }
 
     try {
-      this.events.on("login", onLogin, { passive: true })
       browser.tabs.onRemoved.addListener(onRemoved)
 
-      return await future.promise
+      return await Promise.race([this.resolveOnUser.promise, rejectOnRemove.promise])
     } finally {
-      this.events.off("login", onLogin)
       browser.tabs.onRemoved.removeListener(onRemoved)
     }
   }
@@ -463,25 +470,6 @@ class Global {
           throw new Error("Unexpected WalletConnect session")
 
         return sessionData
-      }
-
-      if (this.#user == null && !force)
-        return undefined
-
-      if (this.#user == null && force) {
-        if (isSafariExtension() && isIpad()) {
-          await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
-
-          using login = this.events.wait("login", (future: Future<void>) => {
-            future.resolve()
-            return new None()
-          })
-
-          await login.get()
-        } else {
-          const popup = await this.openOrFocusPopupOrThrow("", mouse)
-          await this.waitPopupLoginOrThrow(popup)
-        }
       }
 
       const { storage } = Option.unwrap(this.#user)
@@ -640,6 +628,19 @@ class Global {
   async brume_run(script: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     const [subrequest, mouse] = (request as RpcRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
 
+    let user = this.#user
+
+    if (subrequest.method === "eth_accounts" && user == null)
+      return new Ok([])
+    if (subrequest.method === "eth_chainId" && user == null)
+      return new Ok("0x1")
+    if (subrequest.method === "eth_coinbase" && user == null)
+      return new Ok(undefined)
+    if (subrequest.method === "net_version" && user == null)
+      return new Ok("1")
+
+    user = await this.getOrWaitUserOrThrow(mouse)
+
     let session = await this.getExtensionSessionOrThrow(script, mouse, false)
 
     if (subrequest.method === "eth_accounts" && session == null)
@@ -651,10 +652,7 @@ class Global {
     if (subrequest.method === "net_version" && session == null)
       return new Ok("1")
 
-    if (subrequest.method === "wallet_requestPermissions" && session == null)
-      session = await this.getExtensionSessionOrThrow(script, mouse, true)
-    if (subrequest.method === "eth_requestAccounts" && session == null)
-      session = await this.getExtensionSessionOrThrow(script, mouse, true)
+    session = await this.getExtensionSessionOrThrow(script, mouse, true)
 
     if (session == null)
       return new Err(new UnauthorizedError())
