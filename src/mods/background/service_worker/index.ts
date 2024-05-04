@@ -465,10 +465,6 @@ class Global {
         return sessionData
       }
 
-      const preOriginData = await script.requestOrThrow<PreOriginData>({
-        method: "brume_origin"
-      }).then(r => r.unwrap())
-
       if (this.#user == null && !force)
         return undefined
 
@@ -489,6 +485,10 @@ class Global {
       }
 
       const { storage } = Option.unwrap(this.#user)
+
+      const preOriginData = await script.requestOrThrow<PreOriginData>({
+        method: "brume_origin"
+      }).then(r => r.unwrap())
 
       const { origin, title, description } = preOriginData
       const iconQuery = BgBlobby.schema(origin, storage)
