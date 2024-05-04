@@ -1,6 +1,6 @@
 import { Color } from "@/libs/colors/colors"
 import { useCopy } from "@/libs/copy/copy"
-import { chainByChainId } from "@/libs/ethereum/mods/chain"
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain"
 import { Outline } from "@/libs/icons/icons"
 import { Events, useMouseCancel } from "@/libs/react/events"
 import { ChildrenProps } from "@/libs/react/props/children"
@@ -48,7 +48,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
     return Address.format(finalAddress)
   }, [finalAddress])
 
-  const mainnet = useEthereumContext(uuid, chainByChainId[1])
+  const mainnet = useEthereumContext(uuid, chainDataByChainId[1])
   const ens = useEnsReverseNoFetch(finalAddress, mainnet)
 
   const ensOrFinalAddress = ens.data?.get() ?? finalAddress

@@ -1,5 +1,5 @@
 import { Errors, UIError } from "@/libs/errors/errors";
-import { chainByChainId } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
@@ -38,7 +38,7 @@ export function TokenAddDialog(props: {}) {
     setRawAddress(e.currentTarget.value)
   }, [])
 
-  const chain = chainByChainId[Number(defChainId)]
+  const chain = chainDataByChainId[Number(defChainId)]
   const token = useToken(chain.chainId, defAddress)
 
   const addOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
@@ -153,7 +153,7 @@ export function TokenAddDialog(props: {}) {
       <select className="text-right bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
         value={rawChainId}
         onChange={onChainIdChange}>
-        {Object.values(chainByChainId).map(x =>
+        {Object.values(chainDataByChainId).map(x =>
           <option key={x.chainId} value={x.chainId.toString()}>
             {x.name}
           </option>)}

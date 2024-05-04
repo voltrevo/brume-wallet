@@ -1,5 +1,5 @@
 import { TokenAbi } from "@/libs/abi/erc20.abi";
-import { chainByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
@@ -45,7 +45,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   }, [maybeTrial0, setTrial0, trial0Uuid])
 
   const chain = Option.unwrap(maybeChain)
-  const chainData = chainByChainId[Number(chain)]
+  const chainData = chainDataByChainId[Number(chain)]
 
   const tokenQuery = useToken(chainData.chainId, maybeToken)
   const maybeTokenData = Option.wrap(tokenQuery.current?.ok().get())
@@ -206,7 +206,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     setMode("valued")
   }, [])
 
-  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
+  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1])
 
   const maybeEnsQueryKey = maybeTarget?.endsWith(".eth")
     ? maybeTarget

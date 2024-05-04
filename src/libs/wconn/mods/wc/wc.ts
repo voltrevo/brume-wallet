@@ -1,4 +1,4 @@
-import { chainByChainId } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { Future } from "@hazae41/future";
@@ -187,10 +187,10 @@ export namespace Wc {
 
         const namespaces = {
           eip155: {
-            chains: Object.values(chainByChainId).map(chain => `eip155:${chain.chainId}`),
+            chains: Object.values(chainDataByChainId).map(chain => `eip155:${chain.chainId}`),
             methods: ["eth_sendTransaction", "personal_sign", "eth_signTypedData", "eth_signTypedData_v4"],
             events: ["chainChanged", "accountsChanged"],
-            accounts: Object.values(chainByChainId).map(chain => `eip155:${chain.chainId}:${address}`)
+            accounts: Object.values(chainDataByChainId).map(chain => `eip155:${chain.chainId}:${address}`)
           }
         }
 

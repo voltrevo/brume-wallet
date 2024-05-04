@@ -1,5 +1,5 @@
 import { Errors } from "@/libs/errors/errors";
-import { chainByChainId } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { TextAnchor } from "@/libs/ui/anchor/anchor";
 import { Data } from "@hazae41/glacier";
@@ -38,7 +38,7 @@ export function SettingsPage() {
         <select className="text-right bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
           value={chain.real?.current.get()}
           onChange={onChainChange.run}>
-          {Object.values(chainByChainId).map(x =>
+          {Object.values(chainDataByChainId).map(x =>
             <option key={x.chainId} value={x.chainId}>
               {x.name}
             </option>)}

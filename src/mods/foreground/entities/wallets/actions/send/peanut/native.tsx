@@ -1,6 +1,6 @@
 import { PeanutAbi } from "@/libs/abi/peanut.abi";
 import { useCopy } from "@/libs/copy/copy";
-import { chainByChainId } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { Peanut } from "@/libs/peanut";
 import { useInputChange } from "@/libs/react/events";
@@ -50,7 +50,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   }, [maybeTrial0, setTrial0, trial0Uuid])
 
   const chain = Option.unwrap(maybeChain)
-  const chainData = chainByChainId[Number(chain)]
+  const chainData = chainDataByChainId[Number(chain)]
   const tokenData = chainData.token
 
   const context = useEthereumContext2(wallet.uuid, chainData).unwrap()

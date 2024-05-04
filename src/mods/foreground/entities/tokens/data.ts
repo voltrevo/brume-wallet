@@ -1,5 +1,5 @@
 import { Errors } from "@/libs/errors/errors"
-import { chainByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
+import { chainDataByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { BgToken, ContractTokenData, ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data"
@@ -117,7 +117,7 @@ export namespace FgToken {
 
             for (const pairAddress of context.chain.token.pairs) {
               const pair = pairByAddress[pairAddress]
-              const chain = chainByChainId[pair.chainId]
+              const chain = chainDataByChainId[pair.chainId]
 
               const price = FgPair.Price.schema(pair, block, { ...context, chain }, storage)
               const priceState = await price?.state
@@ -246,7 +246,7 @@ export namespace FgToken {
 
             for (const pairAddress of token.pairs) {
               const pair = pairByAddress[pairAddress]
-              const chain = chainByChainId[pair.chainId]
+              const chain = chainDataByChainId[pair.chainId]
 
               const price = FgPair.Price.schema(pair, block, { ...context, chain }, storage)
               const priceState = await price?.state

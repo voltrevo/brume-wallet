@@ -1,5 +1,5 @@
 import { Errors, UIError } from "@/libs/errors/errors";
-import { chainByChainId } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
@@ -94,7 +94,7 @@ export function TransactPage() {
   const maybeWallet = walletQuery.current?.ok().get()
 
   const chainId = Option.unwrap(path.url.searchParams.get("chainId"))
-  const chainData = Option.unwrap(chainByChainId[Number(chainId)])
+  const chainData = Option.unwrap(chainDataByChainId[Number(chainId)])
 
   const maybeContext = useEthereumContext2(maybeWallet?.uuid, chainData).get()
 

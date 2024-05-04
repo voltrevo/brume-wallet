@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Color } from "@/libs/colors/colors";
 import { Errors, UIError } from "@/libs/errors/errors";
-import { ChainData, chainByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { ChainData, chainDataByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Mutators } from "@/libs/glacier/mutators";
 import { Outline, Solid } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
@@ -145,7 +145,7 @@ function WalletDataPage() {
 
   const subpath = useHashSubpath(path)
 
-  const mainnet = useEthereumContext2(wallet.uuid, chainByChainId[1]).unwrap()
+  const mainnet = useEthereumContext2(wallet.uuid, chainDataByChainId[1]).unwrap()
 
   useEnsReverse(wallet.address, mainnet)
 
@@ -157,7 +157,7 @@ function WalletDataPage() {
   const userTokens = useTokens()
 
   const allTokens = useMemo<TokenData[]>(() => {
-    const natives = Object.values(chainByChainId).map(x => x.token)
+    const natives = Object.values(chainDataByChainId).map(x => x.token)
     const contracts = Object.values(tokenByAddress)
     const all = [...natives, ...contracts]
     return all.sort((a, b) => a.chainId - b.chainId)
@@ -264,7 +264,7 @@ function WalletDataPage() {
       </div>
       <div className="h-4" />
       <div className="flex flex-col gap-4">
-        <TokenRowRouter token={chainByChainId[1].token} />
+        <TokenRowRouter token={chainDataByChainId[1].token} />
         {!edit && walletTokens.data?.get().map(tokenSettings =>
           <AddedTokenRow
             key={tokenSettings.uuid}
@@ -293,7 +293,7 @@ function WalletDataPage() {
         <div className="flex flex-col gap-4">
           {allTokens.map(token =>
             <Fragment key={token.uuid}>
-              {token.uuid !== chainByChainId[1].token.uuid &&
+              {token.uuid !== chainDataByChainId[1].token.uuid &&
                 <UnaddedTokenRow token={token} />}
             </Fragment>)}
           {userTokens.data?.get().map(token =>
@@ -524,7 +524,7 @@ function TokenRowRouter(props: { token: Token }) {
 function NativeTokenResolver(props: { token: NativeToken }) {
   const { token } = props
 
-  const chainData = chainByChainId[token.chainId]
+  const chainData = chainDataByChainId[token.chainId]
   const tokenData = chainData.token
 
   return <NativeTokenRow
@@ -537,7 +537,7 @@ function ContractTokenResolver(props: { token: ContractToken }) {
 
   const tokenQuery = useToken(token.chainId, token.address)
   const tokenData = tokenQuery.data?.get() ?? tokenByAddress[token.address]
-  const chainData = chainByChainId[token.chainId]
+  const chainData = chainDataByChainId[token.chainId]
 
   if (tokenData == null)
     return null
@@ -752,7 +752,7 @@ export function PriceResolver(props: { index: number } & { address: string } & O
   const wallet = useWalletDataContext().unwrap()
 
   const pairData = pairByAddress[address]
-  const chainData = chainByChainId[pairData.chainId]
+  const chainData = chainDataByChainId[pairData.chainId]
 
   const context = useEthereumContext(wallet.uuid, chainData)
 

@@ -15,7 +15,7 @@ export interface ChainData {
   readonly icon: () => JSX.Element
 }
 
-export const chainByChainId: Chains = {
+export const chainDataByChainId: Chains = {
   1: {
     name: "Ethereum",
     chainId: 1,

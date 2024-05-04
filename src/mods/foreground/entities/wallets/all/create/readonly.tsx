@@ -1,7 +1,7 @@
 import { Color } from "@/libs/colors/colors";
 import { Emojis } from "@/libs/emojis/emojis";
 import { Errors, UIError } from "@/libs/errors/errors";
-import { chainByChainId } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -31,7 +31,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   const color = Color.get(modhash)
   const emoji = Emojis.get(modhash)
 
-  const mainnet = useEthereumContext(uuid, chainByChainId[1])
+  const mainnet = useEthereumContext(uuid, chainDataByChainId[1])
 
   const [rawNameInput = "", setRawNameInput] = useState<string>()
 

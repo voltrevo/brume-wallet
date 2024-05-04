@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { chainByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
@@ -26,14 +26,14 @@ export function WalletSendScreenTarget(props: {}) {
   const [maybeToken, setToken] = useKeyValueState("token", $state)
 
   const chain = Option.unwrap(maybeChain)
-  const chainData = chainByChainId[Number(chain)]
+  const chainData = chainDataByChainId[Number(chain)]
 
   const tokenQuery = useToken(chainData.chainId, maybeToken)
   const maybeTokenData = Option.wrap(tokenQuery.current?.ok().get())
   const maybeTokenDef = Option.wrap(tokenByAddress[maybeToken as any])
   const tokenData = maybeTokenData.or(maybeTokenDef).unwrapOr(chainData.token)
 
-  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
+  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1])
 
   const [rawTargetInput = "", setRawTargetInput] = useState<Optional<string>>(maybeTarget)
 

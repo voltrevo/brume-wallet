@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { Errors } from "@/libs/errors/errors"
-import { ChainData, chainByChainId } from "@/libs/ethereum/mods/chain"
+import { ChainData, chainDataByChainId } from "@/libs/ethereum/mods/chain"
 import { Outline } from "@/libs/icons/icons"
 import { isSafariExtension } from "@/libs/platform/platform"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
@@ -221,7 +221,7 @@ export function ChainsMenu(props: { sessionData: ExSessionData }) {
   const { sessionData } = props
 
   return <div className="flex flex-col text-left gap-2 w-[160px] overflow-x-hidden">
-    {Object.values(chainByChainId).map(chain =>
+    {Object.values(chainDataByChainId).map(chain =>
       <ChainRow
         key={chain.chainId}
         sessionData={sessionData}

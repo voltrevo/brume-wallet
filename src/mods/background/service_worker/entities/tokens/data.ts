@@ -1,5 +1,5 @@
 import { TokenAbi } from "@/libs/abi/erc20.abi"
-import { ChainData, chainByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
+import { ChainData, chainDataByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Cubane, Fixed, ZeroHexFixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
@@ -201,7 +201,7 @@ export namespace BgToken {
 
             for (const pairAddress of context.chain.token.pairs) {
               const pair = pairByAddress[pairAddress]
-              const chain = chainByChainId[pair.chainId]
+              const chain = chainDataByChainId[pair.chainId]
 
               const price = BgPair.Price.schema({ ...context, chain }, pair, block, storage)
               const priceState = await price?.state
@@ -345,7 +345,7 @@ export namespace BgToken {
 
             for (const pairAddress of token.pairs) {
               const pair = pairByAddress[pairAddress]
-              const chain = chainByChainId[pair.chainId]
+              const chain = chainDataByChainId[pair.chainId]
 
               const price = BgPair.Price.schema({ ...ethereum, chain }, pair, block, storage)
               const priceState = await price?.state

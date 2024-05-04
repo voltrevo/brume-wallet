@@ -648,19 +648,18 @@ class Global {
 
     const userChainState = await BgSettings.Chain.schema(storage).state
     const userChainId = Option.unwrap(userChainState.data?.get())
-    const userChainData = chainDataByChainId[userChainId]
-
+    const userChainData = Option.unwrap(chainDataByChainId[userChainId])
 
     let session = await this.getExtensionSessionOrThrow(script, mouse, false)
 
     if (subrequest.method === "eth_accounts" && session == null)
       return new Ok([])
     if (subrequest.method === "eth_chainId" && session == null)
-      return new Ok("0x1")
+      return new Ok(ZeroHexString.from(userChainData.chainId))
     if (subrequest.method === "eth_coinbase" && session == null)
       return new Ok(undefined)
     if (subrequest.method === "net_version" && session == null)
-      return new Ok("1")
+      return new Ok(userChainData.chainId.toString())
 
     session = await this.getExtensionSessionOrThrow(script, mouse, true)
 

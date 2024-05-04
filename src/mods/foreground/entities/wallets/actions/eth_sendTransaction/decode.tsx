@@ -1,4 +1,4 @@
-import { chainByChainId } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { useKeyValueState, usePathState } from "@/mods/foreground/router/path/context";
@@ -21,7 +21,7 @@ export function WalletDecodeDialog(props: {}) {
     return x.slice(0, 10) as ZeroHexString
   }).inner
 
-  const gnosis = useEthereumContext2(wallet.uuid, chainByChainId[100]).unwrap()
+  const gnosis = useEthereumContext2(wallet.uuid, chainDataByChainId[100]).unwrap()
 
   const signaturesQuery = useSignature(maybeHash, gnosis)
   const triedSignatures = signaturesQuery.current

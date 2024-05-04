@@ -1,7 +1,7 @@
 import { TokenAbi } from "@/libs/abi/erc20.abi";
 import { PeanutAbi } from "@/libs/abi/peanut.abi";
 import { useCopy } from "@/libs/copy/copy";
-import { chainByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { Peanut } from "@/libs/peanut";
 import { useInputChange } from "@/libs/react/events";
@@ -62,7 +62,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   }, [maybeTrial1, setTrial1, trial1Uuid])
 
   const chain = Option.unwrap(maybeChain)
-  const chainData = chainByChainId[Number(chain)]
+  const chainData = chainDataByChainId[Number(chain)]
 
   const tokenQuery = useToken(chainData.chainId, maybeToken)
   const maybeTokenData = Option.wrap(tokenQuery.current?.ok().get())

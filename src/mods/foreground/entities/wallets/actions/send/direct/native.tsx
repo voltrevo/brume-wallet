@@ -1,5 +1,5 @@
 import { useCopy } from "@/libs/copy/copy";
-import { chainByChainId } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
@@ -45,7 +45,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   }, [maybeTrial0, setTrial0, trial0Uuid])
 
   const chain = Option.unwrap(maybeChain)
-  const chainData = chainByChainId[Number(chain)]
+  const chainData = chainDataByChainId[Number(chain)]
   const tokenData = chainData.token
 
   const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
@@ -202,7 +202,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     setMode("valued")
   }, [])
 
-  const mainnet = useEthereumContext(wallet.uuid, chainByChainId[1])
+  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1])
 
   const maybeEnsQueryKey = maybeTarget?.endsWith(".eth")
     ? maybeTarget
@@ -409,7 +409,7 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
 
   const onCopy = useCopy(data.hash)
 
-  const chainData = chainByChainId[data.chainId]
+  const chainData = chainDataByChainId[data.chainId]
 
   return <div className="po-md flex items-center bg-contrast rounded-xl">
     <div className="flex flex-col truncate">
@@ -476,7 +476,7 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
     onRetry(data)
   }, [data, onRetry])
 
-  const chainData = chainByChainId[data.chainId]
+  const chainData = chainDataByChainId[data.chainId]
 
   return <div className="po-md flex items-center bg-contrast rounded-xl">
     <div className="flex flex-col truncate">
