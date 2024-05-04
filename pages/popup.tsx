@@ -493,7 +493,7 @@ export function WalletAndChainSelectPage() {
 
     await background.requestOrThrow({
       method: "brume_respond",
-      params: [new RpcOk(id, [persistent, 1, selecteds])]
+      params: [new RpcOk(id, [persistent, selecteds])]
     }).then(r => r.unwrap())
 
     location.replace(path.go("/done"))

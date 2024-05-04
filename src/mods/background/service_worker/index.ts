@@ -530,9 +530,13 @@ class Global {
           return new None()
         })
 
+        const userChainState = await BgSettings.Chain.schema(storage).state
+        const userChainId = Option.wrap(userChainState.data?.get()).unwrapOr(1)
+        const userChainData = Option.unwrap(chainDataByChainId[userChainId])
+
         const { chainId } = sessionData.chain
 
-        if (chainId !== 1) {
+        if (userChainData.chainId !== chainId) {
           await script.requestOrThrow<void>({
             method: "chainChanged",
             params: [ZeroHexString.from(chainId)]
@@ -550,14 +554,16 @@ class Global {
       if (!force)
         return undefined
 
-      const [persistent, chainId, wallets] = await this.requestPopupOrThrow<[boolean, number, Wallet[]]>({
+      const userChainState = await BgSettings.Chain.schema(storage).state
+      const userChainId = Option.wrap(userChainState.data?.get()).unwrapOr(1)
+      const userChainData = Option.unwrap(chainDataByChainId[userChainId])
+
+      const [persistent, wallets] = await this.requestPopupOrThrow<[boolean, Wallet[]]>({
         id: randomUUID(),
         origin: origin,
         method: "eth_requestAccounts",
         params: {}
       }, mouse).then(r => r.unwrap())
-
-      const chain = Option.unwrap(chainDataByChainId[chainId])
 
       const sessionData: ExSessionData = {
         type: "ex",
@@ -565,7 +571,7 @@ class Global {
         origin: origin,
         persist: persistent,
         wallets: wallets.map(wallet => WalletRef.from(wallet)),
-        chain: chain
+        chain: userChainData
       }
 
       const sessionQuery = BgSession.schema(sessionData.id, storage)
@@ -597,18 +603,6 @@ class Global {
         return new None()
       })
 
-      if (chainId !== 1) {
-        await script.requestOrThrow<void>({
-          method: "chainChanged",
-          params: [ZeroHexString.from(chainId)]
-        }).then(r => r.unwrap())
-
-        await script.requestOrThrow({
-          method: "networkChanged",
-          params: [chainId.toString()]
-        }).then(r => r.unwrap())
-      }
-
       return sessionData
     })
   }
@@ -628,26 +622,10 @@ class Global {
   async brume_run(script: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     const [subrequest, mouse] = (request as RpcRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
 
-    let user = this.#user
-
-    if (subrequest.method === "eth_accounts" && user == null)
-      return new Ok([])
-    if (subrequest.method === "eth_chainId" && user == null)
-      return new Ok("0x1")
-    if (subrequest.method === "eth_coinbase" && user == null)
-      return new Ok(undefined)
-    if (subrequest.method === "net_version" && user == null)
-      return new Ok("1")
-
-    user = await this.getOrWaitUserOrThrow(mouse)
-
-    if (user == null)
-      return new Err(new UnauthorizedError())
-
-    const { storage } = user
+    const { storage } = await this.getOrWaitUserOrThrow(mouse)
 
     const userChainState = await BgSettings.Chain.schema(storage).state
-    const userChainId = Option.unwrap(userChainState.data?.get())
+    const userChainId = Option.wrap(userChainState.data?.get()).unwrapOr(1)
     const userChainData = Option.unwrap(chainDataByChainId[userChainId])
 
     let session = await this.getExtensionSessionOrThrow(script, mouse, false)
