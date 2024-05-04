@@ -441,7 +441,7 @@ class Global {
     }
   }
 
-  async getExtensionSessionOrThrow(script: RpcRouter, mouse: Mouse, force: boolean): Promise<Nullable<SessionData>> {
+  async getExtensionSessionOrThrow(script: RpcRouter, mouse: Mouse, force: boolean): Promise<Nullable<ExSessionData>> {
     let mutex = this.sessionByScript.get(script.name)
 
     if (mutex == null) {
@@ -458,6 +458,9 @@ class Global {
         const sessionQuery = BgSession.schema(currentSession, storage)
         const sessionState = await sessionQuery.state
         const sessionData = Option.unwrap(sessionState.data?.get())
+
+        if (sessionData.type === "wc")
+          throw new Error("Unexpected WalletConnect session")
 
         return sessionData
       }
@@ -655,8 +658,6 @@ class Global {
 
     if (session == null)
       return new Err(new UnauthorizedError())
-    if (session.type === "wc")
-      throw new Error("Unexpected WalletConnect session")
 
     const { wallets } = session
 
