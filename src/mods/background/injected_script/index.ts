@@ -141,7 +141,8 @@ class Provider {
     /**
      * Force update of `isConnected`, `selectedAddress`, `chainId` `networkVersion`
      */
-    this.requestAndWrap({ id: null, method: "eth_accounts" }).then(r => r.ignore())
+    // TODO: fix 
+    // this.requestAndWrap({ id: null, method: "eth_accounts" }).then(r => r.ignore())
   }
 
   get isBrume() {
