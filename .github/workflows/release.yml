@@ -28,13 +28,13 @@ jobs:
 
     # Debug
     - uses: actions/upload-artifact@v3
-        with:
-          name: dist
-          path: ./dist/chrome/next/static/chunks/pages/_app-c09359bc4e5ca074.js
+      with:
+        name: dist
+        path: ./dist/chrome/next/static/chunks/pages/_app-c09359bc4e5ca074.js
     - uses: actions/upload-artifact@v3
-        with:
-          name: tmp
-          path: ./tmp/chrome/next/static/chunks/pages/_app-52f2c901f01c5d91.js
+      with:
+        name: tmp
+        path: ./tmp/chrome/next/static/chunks/pages/_app-52f2c901f01c5d91.js
 
     # Compare unzipped content
     - run: "diff -r ./tmp/chrome ./dist/chrome"
