@@ -12,10 +12,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        node-version: 22.0.0
+        node-version: 20.13.0
     - uses: actions/setup-node@v3
       with:
-        node-version: 22.0.0
+        node-version: 20.13.0
 
     # Create ./tmp
     - run: "mkdir ./tmp"
