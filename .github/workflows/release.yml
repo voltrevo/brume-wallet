@@ -26,6 +26,10 @@ jobs:
     # Rebuild
     - run: "npm ci && npm run build"
 
+    # Debug
+    - run: "cat ./dist/chrome/next/static/chunks/pages/_app-c09359bc4e5ca074.js"
+    - run: "cat ./tmp/chrome/next/static/chunks/pages/_app-52f2c901f01c5d91.js"
+
     # Compare unzipped content
     - run: "diff -r ./tmp/chrome ./dist/chrome"
     - run: "diff -r ./tmp/firefox ./dist/firefox"
