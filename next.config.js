@@ -1,5 +1,6 @@
 const webpack = require("webpack")
 const { copyFileSync, rmSync } = require("fs")
+const TerserPlugin = require("terser-webpack-plugin")
 const Log = require("next/dist/build/output/log")
 const path = require("path")
 const withMDX = require("@next/mdx")()
@@ -21,7 +22,7 @@ const nextConfig = {
     return "brume"
   },
   webpack(config, options) {
-    config.optimization.minimize = false
+    config.optimization.minimize = true
 
     config.module.rules.push({
       test: /\.tsx?$/,
@@ -86,8 +87,8 @@ async function compileServiceWorker(config, options) {
       filename: "service_worker.js"
     },
     optimization: {
-      minimize: false,
-      minimizer: []
+      minimize: true,
+      minimizer: [new TerserPlugin()]
     }
   })
 }
@@ -110,8 +111,8 @@ async function compileContentScript(config, options) {
       filename: "content_script.js"
     },
     optimization: {
-      minimize: false,
-      minimizer: []
+      minimize: true,
+      minimizer: [new TerserPlugin()]
     }
   })
 }
@@ -134,8 +135,8 @@ async function compileInjectedScript(config, options) {
       filename: "injected_script.js"
     },
     optimization: {
-      minimize: false,
-      minimizer: []
+      minimize: true,
+      minimizer: [new TerserPlugin()]
     }
   })
 }
@@ -158,8 +159,8 @@ async function compileOffscreen(config, options) {
       filename: "offscreen.js"
     },
     optimization: {
-      minimize: false,
-      minimizer: []
+      minimize: true,
+      minimizer: [new TerserPlugin()]
     }
   })
 }
