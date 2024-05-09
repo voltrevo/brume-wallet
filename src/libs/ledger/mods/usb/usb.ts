@@ -1,8 +1,7 @@
 import { ApduRequest, ApduRequestInit, ApduResponse } from "@hazae41/apdu"
 import { Opaque, Readable, Writable } from "@hazae41/binary"
 import { Bytes } from "@hazae41/bytes"
-import { Err, Ok, Result } from "@hazae41/result"
-import { HIDContainer, HIDFrame } from "../hid/frame"
+import { HIDContainer, HIDFrame } from "../hid"
 
 export const VENDOR_ID = 0x2c97
 export const PACKET_SIZE = 64
@@ -112,57 +111,35 @@ export class DeviceTransferInError extends Error {
   }
 }
 
-export async function tryRequest(): Promise<Result<USBDevice, Error>> {
-  return await Result.unthrow(async t => {
-    const devices = await Result.runAndWrap(async () => {
-      return await navigator.usb.getDevices()
-    }).then(r => r.mapErrSync(DeviceNotFoundError.from).throw(t))
+export async function requestOrThrow() {
+  const devices = await navigator.usb.getDevices()
+  const device = devices.find(x => x.vendorId === VENDOR_ID)
 
-    const device = devices.find(x => x.vendorId === VENDOR_ID)
+  if (device != null)
+    return device
 
-    if (device != null)
-      return new Ok(device)
-
-    const device2 = await Result.runAndWrap(async () => {
-      return await navigator.usb.requestDevice({ filters: [{ vendorId: VENDOR_ID }] })
-    }).then(r => r.mapErrSync(DeviceNotFoundError.from).throw(t))
-
-    return new Ok(device2)
-  })
+  return await navigator.usb.requestDevice({ filters: [{ vendorId: VENDOR_ID }] })
 }
 
-export async function tryConnect(): Promise<Result<LedgerUSBDevice, Error>> {
-  return await Result.unthrow(async t => {
-    const device = await tryRequest().then(r => r.throw(t))
+export async function connectOrThrow(device: USBDevice) {
+  await device.open()
 
-    await Result.runAndWrap(async () => {
-      return await device.open()
-    }).then(r => r.mapErrSync(DeviceOpenError.from).throw(t))
+  if (device.configuration == null)
+    await device.selectConfiguration(1)
 
-    if (device.configuration == null)
-      await Result.runAndWrap(async () => {
-        return await device.selectConfiguration(1)
-      }).then(r => r.mapErrSync(DeviceConfigError.from).throw(t))
+  await device.reset()
 
-    await Result.runAndWrap(async () => {
-      return await device.reset()
-    }).then(r => r.mapErrSync(DeviceResetError.from).inspectErrSync(console.warn))
+  const iface = device.configurations[0].interfaces.find(({ alternates }) => alternates.some(x => x.interfaceClass === 255))
 
-    const iface = device.configurations[0].interfaces.find(({ alternates }) =>
-      alternates.some(x => x.interfaceClass === 255))
+  if (iface == null)
+    throw new DeviceInterfaceNotFoundError()
 
-    if (iface == null)
-      return new Err(new DeviceInterfaceNotFoundError())
+  await device.claimInterface(iface.interfaceNumber)
 
-    await Result.runAndWrap(async () => {
-      return await device.claimInterface(iface.interfaceNumber)
-    }).then(r => r.mapErrSync(DeviceInterfaceClaimError.from).throw(t))
-
-    return new Ok(new LedgerUSBDevice(device, iface))
-  })
+  return new USBConnector(device, iface)
 }
 
-export class LedgerUSBDevice {
+export class USBConnector {
   readonly #channel = Math.floor(Math.random() * 0xffff)
 
   constructor(

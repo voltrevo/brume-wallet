@@ -49,9 +49,10 @@ export function LedgerSeedCreatorDialog(props: {}) {
     if (!finalNameInput)
       return new Err(new Panic())
 
-    const device = await Ledger.USB.tryConnect().then(r => r.unwrap())
+    const device = await Ledger.USB.requestOrThrow()
+    const connector = await Ledger.USB.connectOrThrow(device)
 
-    const { address } = await Ledger.Ethereum.tryGetAddress(device, "44'/60'/0'/0/0").then(r => r.unwrap())
+    const { address } = await Ledger.Ethereum.tryGetAddress(connector, "44'/60'/0'/0/0").then(r => r.unwrap())
 
     const seed: SeedData = { type: "ledger", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address }
 

@@ -98,11 +98,19 @@ export function SeededWalletCreatorDialog(props: {}) {
       throw new Panic()
 
     if (seedData.type === "ledger") {
-      const device = await Ledger.USB.tryConnect().then(r => r.mapErrSync(cause => {
+      const device = await Result.runAndWrap(async () => {
+        return await Ledger.USB.requestOrThrow()
+      }).then(r => r.mapErrSync(cause => {
+        return new UIError(`Could not find device`, { cause })
+      }).unwrap())
+
+      const connector = await Result.runAndWrap(async () => {
+        return await Ledger.USB.connectOrThrow(device)
+      }).then(r => r.mapErrSync(cause => {
         return new UIError(`Could not connect to the device`, { cause })
       }).unwrap())
 
-      const { address } = await Ledger.Ethereum.tryGetAddress(device, defPathInput.slice(2)).then(r => r.mapErrSync(cause => {
+      const { address } = await Ledger.Ethereum.tryGetAddress(connector, defPathInput.slice(2)).then(r => r.mapErrSync(cause => {
         return new UIError(`Could not get the address of the device`, { cause })
       }).unwrap())
 

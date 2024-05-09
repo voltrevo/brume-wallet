@@ -192,8 +192,9 @@ export class LedgerSeedInstance {
 
   async trySignPersonalMessage(path: string, message: string, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
-      const signature = await Ledger.Ethereum.trySignPersonalMessage(device, path.slice(2), Bytes.fromUtf8(message)).then(r => r.throw(t))
+      const device = await Ledger.USB.requestOrThrow()
+      const connector = await Ledger.USB.connectOrThrow(device)
+      const signature = await Ledger.Ethereum.trySignPersonalMessage(connector, path.slice(2), Bytes.fromUtf8(message)).then(r => r.throw(t))
 
       return Signature.tryFrom(signature)
     })
@@ -201,8 +202,9 @@ export class LedgerSeedInstance {
 
   async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<ZeroHexString, Error>> {
     return await Result.unthrow(async t => {
-      const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
-      const signature = await Ledger.Ethereum.trySignTransaction(device, path.slice(2), transaction).then(r => r.throw(t))
+      const device = await Ledger.USB.requestOrThrow()
+      const connector = await Ledger.USB.connectOrThrow(device)
+      const signature = await Ledger.Ethereum.trySignTransaction(connector, path.slice(2), transaction).then(r => r.throw(t))
 
       return Signature.tryFrom(signature)
     })
@@ -210,7 +212,8 @@ export class LedgerSeedInstance {
 
   async trySignEIP712HashedMessage(path: string, data: Abi.Typed.TypedData, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const device = await Ledger.USB.tryConnect().then(r => r.throw(t))
+      const device = await Ledger.USB.requestOrThrow()
+      const connector = await Ledger.USB.connectOrThrow(device)
 
       delete (data.types as any)["EIP712Domain"]
 
@@ -226,7 +229,7 @@ export class LedgerSeedInstance {
         return Base16.get().tryPadStartAndDecode(encoder.hashStruct(data.primaryType, data.message).slice(2)).unwrap().copyAndDispose()
       }).throw(t) as Bytes<32>
 
-      const signature = await Ledger.Ethereum.trySignEIP712HashedMessage(device, path.slice(2), domain, message).then(r => r.throw(t))
+      const signature = await Ledger.Ethereum.trySignEIP712HashedMessage(connector, path.slice(2), domain, message).then(r => r.throw(t))
 
       return Signature.tryFrom(signature)
     })

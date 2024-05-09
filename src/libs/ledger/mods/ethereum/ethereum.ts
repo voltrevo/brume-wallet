@@ -8,7 +8,7 @@ import { Cursor } from "@hazae41/cursor";
 import { Result } from "@hazae41/result";
 import { Transaction } from "ethers";
 import { Paths } from "../common/binary/paths";
-import { LedgerUSBDevice } from "../usb";
+import { USBConnector } from "../usb";
 
 export interface AppConfig {
   readonly arbitraryDataEnabled: boolean,
@@ -22,11 +22,11 @@ export interface AppConfig {
   readonly version: string
 }
 
-export async function tryGetAppConfig(device: LedgerUSBDevice): Promise<Result<AppConfig, Error>> {
+export async function tryGetAppConfig(device: USBConnector): Promise<Result<AppConfig, Error>> {
   return await Result.runAndDoubleWrap(() => getAppConfigOrThrow(device))
 }
 
-export async function getAppConfigOrThrow(device: LedgerUSBDevice): Promise<AppConfig> {
+export async function getAppConfigOrThrow(device: USBConnector): Promise<AppConfig> {
   const request = { cla: 0xe0, ins: 0x06, p1: 0x00, p2: 0x00, fragment: new Empty() }
   const response = await device.requestOrThrow(request).then(r => r.unwrap().bytes)
 
@@ -63,7 +63,7 @@ export interface GetAddressResult {
  * @param path 
  * @returns 
  */
-export async function tryGetAddress(device: LedgerUSBDevice, path: string): Promise<Result<GetAddressResult, Error>> {
+export async function tryGetAddress(device: USBConnector, path: string): Promise<Result<GetAddressResult, Error>> {
   return await Result.runAndDoubleWrap(() => getAddressOrThrow(device, path))
 }
 
@@ -73,7 +73,7 @@ export async function tryGetAddress(device: LedgerUSBDevice, path: string): Prom
  * @param path 
  * @returns 
  */
-export async function getAddressOrThrow(device: LedgerUSBDevice, path: string): Promise<GetAddressResult> {
+export async function getAddressOrThrow(device: USBConnector, path: string): Promise<GetAddressResult> {
   const paths = Paths.from(path)
 
   const bytes = Writable.writeToBytesOrThrow(paths)
@@ -100,7 +100,7 @@ export async function getAddressOrThrow(device: LedgerUSBDevice, path: string): 
  * @param path 
  * @returns 
  */
-export async function tryVerifyAndGetAddress(device: LedgerUSBDevice, path: string): Promise<Result<GetAddressResult, Error>> {
+export async function tryVerifyAndGetAddress(device: USBConnector, path: string): Promise<Result<GetAddressResult, Error>> {
   return await Result.runAndDoubleWrap(() => verifyAndGetAddressOrThrow(device, path))
 }
 
@@ -110,7 +110,7 @@ export async function tryVerifyAndGetAddress(device: LedgerUSBDevice, path: stri
  * @param path 
  * @returns 
  */
-export async function verifyAndGetAddressOrThrow(device: LedgerUSBDevice, path: string): Promise<GetAddressResult> {
+export async function verifyAndGetAddressOrThrow(device: USBConnector, path: string): Promise<GetAddressResult> {
   const paths = Paths.from(path)
 
   const bytes = Writable.writeToBytesOrThrow(paths)
@@ -131,11 +131,11 @@ export async function verifyAndGetAddressOrThrow(device: LedgerUSBDevice, path: 
   return { uncompressedPublicKey, address, chaincode }
 }
 
-export async function trySignPersonalMessage(device: LedgerUSBDevice, path: string, message: Uint8Array): Promise<Result<SignatureInit, Error>> {
+export async function trySignPersonalMessage(device: USBConnector, path: string, message: Uint8Array): Promise<Result<SignatureInit, Error>> {
   return await Result.runAndDoubleWrap(() => signPersonalMessageOrThrow(device, path, message))
 }
 
-export async function signPersonalMessageOrThrow(device: LedgerUSBDevice, path: string, message: Uint8Array): Promise<SignatureInit> {
+export async function signPersonalMessageOrThrow(device: USBConnector, path: string, message: Uint8Array): Promise<SignatureInit> {
   const paths = Paths.from(path)
 
   const reader = new Cursor(message)
@@ -210,11 +210,11 @@ export function readLegacyUnprotectedOrThrow(bytes: Uint8Array) {
   return Writable.writeToBytesOrThrow(Rlp.fromPrimitive([nonce, gasprice, startgas, to, value, data]))
 }
 
-export async function trySignTransaction(device: LedgerUSBDevice, path: string, transaction: Transaction): Promise<Result<SignatureInit, Error>> {
+export async function trySignTransaction(device: USBConnector, path: string, transaction: Transaction): Promise<Result<SignatureInit, Error>> {
   return await Result.runAndDoubleWrap(() => signTransactionOrThrow(device, path, transaction))
 }
 
-export async function signTransactionOrThrow(device: LedgerUSBDevice, path: string, transaction: Transaction): Promise<SignatureInit> {
+export async function signTransactionOrThrow(device: USBConnector, path: string, transaction: Transaction): Promise<SignatureInit> {
   const paths = Paths.from(path)
 
   using slice = Base16.get().padStartAndDecodeOrThrow(transaction.unsignedSerialized.slice(2))
@@ -280,11 +280,11 @@ export async function signTransactionOrThrow(device: LedgerUSBDevice, path: stri
   return { v, r, s }
 }
 
-export async function trySignEIP712HashedMessage(device: LedgerUSBDevice, path: string, domain: Uint8Array<32>, message: Uint8Array<32>): Promise<Result<SignatureInit, Error>> {
+export async function trySignEIP712HashedMessage(device: USBConnector, path: string, domain: Uint8Array<32>, message: Uint8Array<32>): Promise<Result<SignatureInit, Error>> {
   return await Result.runAndDoubleWrap(() => signEIP712HashedMessageOrThrow(device, path, domain, message))
 }
 
-export async function signEIP712HashedMessageOrThrow(device: LedgerUSBDevice, path: string, domain: Uint8Array<32>, message: Uint8Array<32>): Promise<SignatureInit> {
+export async function signEIP712HashedMessageOrThrow(device: USBConnector, path: string, domain: Uint8Array<32>, message: Uint8Array<32>): Promise<SignatureInit> {
   const paths = Paths.from(path)
 
   const writer = new Cursor(new Uint8Array(paths.sizeOrThrow() + 32 + 32))
