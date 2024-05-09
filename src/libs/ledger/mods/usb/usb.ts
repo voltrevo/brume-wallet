@@ -45,9 +45,14 @@ export class DeviceTransferInError extends Error {
   }
 }
 
-export async function requestOrThrow() {
+export async function getDevicesOrThrow() {
   const devices = await navigator.usb.getDevices()
-  const device = devices.find(x => x.vendorId === VENDOR_ID)
+  return devices.filter(x => x.vendorId === VENDOR_ID)
+}
+
+export async function getOrRequestDeviceOrThrow() {
+  const devices = await getDevicesOrThrow()
+  const device = devices[0]
 
   if (device != null)
     return device

@@ -99,7 +99,7 @@ export function SeededWalletCreatorDialog(props: {}) {
 
     if (seedData.type === "ledger") {
       const device = await Result.runAndWrap(async () => {
-        return await Ledger.USB.requestOrThrow()
+        return await Ledger.USB.getOrRequestDeviceOrThrow()
       }).then(r => r.mapErrSync(cause => {
         return new UIError(`Could not find device`, { cause })
       }).unwrap())

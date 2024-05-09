@@ -192,7 +192,7 @@ export class LedgerSeedInstance {
 
   async trySignPersonalMessage(path: string, message: string, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const device = await Ledger.USB.requestOrThrow()
+      const device = await Ledger.USB.getOrRequestDeviceOrThrow()
       const connector = await Ledger.USB.connectOrThrow(device)
       const signature = await Ledger.Ethereum.trySignPersonalMessage(connector, path.slice(2), Bytes.fromUtf8(message)).then(r => r.throw(t))
 
@@ -202,7 +202,7 @@ export class LedgerSeedInstance {
 
   async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<ZeroHexString, Error>> {
     return await Result.unthrow(async t => {
-      const device = await Ledger.USB.requestOrThrow()
+      const device = await Ledger.USB.getOrRequestDeviceOrThrow()
       const connector = await Ledger.USB.connectOrThrow(device)
       const signature = await Ledger.Ethereum.trySignTransaction(connector, path.slice(2), transaction).then(r => r.throw(t))
 
@@ -212,7 +212,7 @@ export class LedgerSeedInstance {
 
   async trySignEIP712HashedMessage(path: string, data: Abi.Typed.TypedData, background: Background): Promise<Result<string, Error>> {
     return await Result.unthrow(async t => {
-      const device = await Ledger.USB.requestOrThrow()
+      const device = await Ledger.USB.getOrRequestDeviceOrThrow()
       const connector = await Ledger.USB.connectOrThrow(device)
 
       delete (data.types as any)["EIP712Domain"]
