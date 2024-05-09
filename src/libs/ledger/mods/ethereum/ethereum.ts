@@ -10,20 +10,23 @@ import { Transaction } from "ethers";
 import { Paths } from "../common/binary/paths";
 import { LedgerUSBDevice } from "../usb";
 
-export interface AppConfigResult {
+export interface AppConfig {
   readonly arbitraryDataEnabled: boolean,
+
   readonly erc20ProvisioningNecessary: boolean,
+
   readonly starkEnabled: boolean,
+
   readonly starkv2Supported: boolean,
 
   readonly version: string
 }
 
-export async function tryGetAppConfig(device: LedgerUSBDevice): Promise<Result<AppConfigResult, Error>> {
+export async function tryGetAppConfig(device: LedgerUSBDevice): Promise<Result<AppConfig, Error>> {
   return await Result.runAndDoubleWrap(() => getAppConfigOrThrow(device))
 }
 
-export async function getAppConfigOrThrow(device: LedgerUSBDevice): Promise<AppConfigResult> {
+export async function getAppConfigOrThrow(device: LedgerUSBDevice): Promise<AppConfig> {
   const request = { cla: 0xe0, ins: 0x06, p1: 0x00, p2: 0x00, fragment: new Empty() }
   const response = await device.requestOrThrow(request).then(r => r.unwrap().bytes)
 
