@@ -1,5 +1,4 @@
 import { Signature } from "@/libs/ethereum/mods/signature"
-import { Ledger } from "@/libs/ledger"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { AuthMnemonicSeedData, LedgerSeedData, SeedData, UnauthMnemonicSeedData } from "@/mods/background/service_worker/entities/seeds/data"
 import { Background } from "@/mods/foreground/background/background"
@@ -7,6 +6,7 @@ import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
 import { Abi, ZeroHexString } from "@hazae41/cubane"
+import { Ledger } from "@hazae41/ledger"
 import { Option } from "@hazae41/option"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
 import { HDKey } from "@scure/bip32"
@@ -204,7 +204,9 @@ export class LedgerSeedInstance {
     return await Result.unthrow(async t => {
       const device = await Ledger.USB.getOrRequestDeviceOrThrow()
       const connector = await Ledger.USB.connectOrThrow(device)
-      const signature = await Ledger.Ethereum.trySignTransaction(connector, path.slice(2), transaction).then(r => r.throw(t))
+
+      using slice = Base16.get().padStartAndDecodeOrThrow(transaction.unsignedSerialized.slice(2))
+      const signature = await Ledger.Ethereum.trySignTransaction(connector, path.slice(2), slice.bytes).then(r => r.throw(t))
 
       return Signature.tryFrom(signature)
     })
