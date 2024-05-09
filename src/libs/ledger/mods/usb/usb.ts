@@ -1,8 +1,7 @@
+import { ApduRequest, ApduRequestInit, ApduResponse } from "@hazae41/apdu"
 import { Opaque, Readable, Writable } from "@hazae41/binary"
 import { Bytes } from "@hazae41/bytes"
 import { Err, Ok, Result } from "@hazae41/result"
-import { ApduRequest, ApduRequestInit } from "../../libs/apdu/request"
-import { ApduResponse } from "../../libs/apdu/response"
 import { HIDContainer, HIDFrame } from "../../libs/hid/frame"
 
 export const VENDOR_ID = 0x2c97
