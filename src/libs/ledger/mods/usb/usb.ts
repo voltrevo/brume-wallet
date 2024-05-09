@@ -6,59 +6,6 @@ import { HIDContainer, HIDFrame } from "../hid"
 export const VENDOR_ID = 0x2c97
 export const PACKET_SIZE = 64
 
-export class DeviceNotFoundError extends Error {
-  readonly #class = DeviceNotFoundError
-  readonly name = this.#class.name
-
-  constructor(options?: ErrorOptions) {
-    super(`Could not find device`, options)
-  }
-
-  static from(cause: unknown) {
-    return new DeviceNotFoundError({ cause })
-  }
-}
-
-export class DeviceOpenError extends Error {
-  readonly #class = DeviceOpenError
-  readonly name = this.#class.name
-
-  constructor(options?: ErrorOptions) {
-    super(`Could not open device`, options)
-  }
-
-  static from(cause: unknown) {
-    return new DeviceOpenError({ cause })
-  }
-}
-
-
-export class DeviceConfigError extends Error {
-  readonly #class = DeviceConfigError
-  readonly name = this.#class.name
-
-  constructor(options?: ErrorOptions) {
-    super(`Could not configure device`, options)
-  }
-
-  static from(cause: unknown) {
-    return new DeviceConfigError({ cause })
-  }
-}
-
-export class DeviceResetError extends Error {
-  readonly #class = DeviceResetError
-  readonly name = this.#class.name
-
-  constructor(options?: ErrorOptions) {
-    super(`Could not reset device`, options)
-  }
-
-  static from(cause: unknown) {
-    return new DeviceResetError({ cause })
-  }
-}
-
 export class DeviceInterfaceNotFoundError extends Error {
   readonly #class = DeviceInterfaceNotFoundError
   readonly name = this.#class.name
@@ -69,19 +16,6 @@ export class DeviceInterfaceNotFoundError extends Error {
 
   static from(cause: unknown) {
     return new DeviceInterfaceNotFoundError({ cause })
-  }
-}
-
-export class DeviceInterfaceClaimError extends Error {
-  readonly #class = DeviceInterfaceClaimError
-  readonly name = this.#class.name
-
-  constructor(options?: ErrorOptions) {
-    super(`Could not claim device interface`, options)
-  }
-
-  static from(cause: unknown) {
-    return new DeviceInterfaceClaimError({ cause })
   }
 }
 
