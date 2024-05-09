@@ -1,11 +1,10 @@
-import { Signature } from "@/libs/ethereum/mods/signature"
 import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { AuthMnemonicSeedData, LedgerSeedData, SeedData, UnauthMnemonicSeedData } from "@/mods/background/service_worker/entities/seeds/data"
 import { Background } from "@/mods/foreground/background/background"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
-import { Abi, ZeroHexString } from "@hazae41/cubane"
+import { Abi, ZeroHexSignature, ZeroHexString } from "@hazae41/cubane"
 import { Ledger } from "@hazae41/ledger"
 import { Option } from "@hazae41/option"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
@@ -196,7 +195,7 @@ export class LedgerSeedInstance {
       const connector = await Ledger.USB.connectOrThrow(device)
       const signature = await Ledger.Ethereum.trySignPersonalMessage(connector, path.slice(2), Bytes.fromUtf8(message)).then(r => r.throw(t))
 
-      return Signature.tryFrom(signature)
+      return new Ok(ZeroHexSignature.fromOrThrow(signature).value)
     })
   }
 
@@ -208,7 +207,7 @@ export class LedgerSeedInstance {
       using slice = Base16.get().padStartAndDecodeOrThrow(transaction.unsignedSerialized.slice(2))
       const signature = await Ledger.Ethereum.trySignTransaction(connector, path.slice(2), slice.bytes).then(r => r.throw(t))
 
-      return Signature.tryFrom(signature)
+      return new Ok(ZeroHexSignature.fromOrThrow(signature).value)
     })
   }
 
@@ -233,7 +232,7 @@ export class LedgerSeedInstance {
 
       const signature = await Ledger.Ethereum.trySignEIP712HashedMessage(connector, path.slice(2), domain, message).then(r => r.throw(t))
 
-      return Signature.tryFrom(signature)
+      return new Ok(ZeroHexSignature.fromOrThrow(signature).value)
     })
   }
 
