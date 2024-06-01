@@ -253,9 +253,8 @@ class Provider {
     return await this.request({ id: null, method: "eth_requestAccounts" })
   }
 
-  async requestAndWrap(reqinit: RpcRequestInit<unknown>) {
+  async _request(reqinit: RpcRequestInit<unknown>) {
     const request = this._counter.prepare(reqinit)
-
     const future = new Future<RpcResponse<unknown>>()
 
     const onResponse = (e: CustomEvent<string>) => {
@@ -283,19 +282,20 @@ class Provider {
   }
 
   async request(init: RpcRequestInit<unknown>) {
-    const result = await this.requestAndWrap(init)
+    const result = await this._request(init)
 
     if (result.isErr())
-      throw result.inner
-    return result.inner
+      throw result.getErr()
+
+    return result.get()
   }
 
   async requestBatch(inits: RpcRequestInit<unknown>[]) {
-    return await Promise.all(inits.map(init => this.requestAndWrap(init)))
+    return await Promise.all(inits.map(init => this._request(init)))
   }
 
   async _send(init: RpcRequestInit<unknown>, callback: (err: unknown, ok: unknown) => void) {
-    const response = await this.requestAndWrap(init)
+    const response = await this._request(init)
 
     if (response.isErr())
       callback(response.inner, response)
