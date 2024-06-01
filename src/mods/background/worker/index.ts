@@ -34,4 +34,8 @@ async function generateOrThrow(params: NetworkParams) {
   return secretZeroHex
 }
 
-self.addEventListener("message", async (e: MessageEvent<NetworkParams>) => self.postMessage(await generateOrThrow(e.data)))
+self.addEventListener("message", async (e: MessageEvent<NetworkParams>) => {
+  if (e.origin !== location.origin)
+    return
+  self.postMessage(await generateOrThrow(e.data))
+})

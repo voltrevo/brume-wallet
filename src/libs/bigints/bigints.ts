@@ -1,6 +1,5 @@
 import { ZeroHexString } from "@hazae41/cubane"
 import { Result } from "@hazae41/result"
-import { FixedNumber } from "ethers"
 
 export namespace BigIntToHex {
 
@@ -18,36 +17,3 @@ export namespace BigIntToHex {
 
 }
 
-export namespace BigInts {
-
-  export class ParseError extends Error {
-    readonly #class = ParseError
-    readonly name = this.#class.name
-
-    constructor(options?: ErrorOptions) {
-      super(`Could not parse`, options)
-    }
-
-    static from(cause: unknown) {
-      return new ParseError({ cause })
-    }
-  }
-
-  export function float(x: bigint, d = 180) {
-    return FixedNumber
-      .fromValue(x, d)
-      .round(3)
-      .toUnsafeFloat()
-  }
-
-  export function parseOrThrow(text: string) {
-    if (text.trim().length === 0)
-      throw new ParseError()
-    return BigInt(text)
-  }
-
-  export function tens(value: number) {
-    return BigInt(`1${`0`.repeat(value)}`)
-  }
-
-}

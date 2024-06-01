@@ -79,6 +79,8 @@ if (isWebsite() && self.__WB_PRODUCTION) {
   precacheAndRoute(self.__WB_MANIFEST)
 
   self.addEventListener("message", (event) => {
+    if (event.origin !== location.origin)
+      return
     if (event.data !== "SKIP_WAITING")
       return
     self.skipWaiting()
@@ -1613,6 +1615,8 @@ if (isWebsite() || isAndroidApp()) {
   }
 
   self.addEventListener("message", (event) => {
+    if (event.origin !== location.origin)
+      return
     if (event.data === "SKIP_WAITING")
       return void onSkipWaiting(event)
     if (event.data === "FOREGROUND->BACKGROUND")
@@ -1658,6 +1662,8 @@ if (isAppleApp()) {
   }
 
   self.addEventListener("message", (event) => {
+    if (event.origin !== location.origin)
+      return
     if (event.data === "FOREGROUND->BACKGROUND")
       return void onForeground(event)
     return
