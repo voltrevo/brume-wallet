@@ -19,18 +19,11 @@ const nextConfig = {
   output: "export",
   pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
   generateBuildId: async () => {
-    return "brume"
+    return "unique"
   },
   webpack(config, options) {
-    config.optimization.minimize = true
-
-    config.module.rules.push({
-      test: /\.tsx?$/,
-      use: "ts-loader",
-      exclude: /node_modules/,
-    });
-
-    if (options.isServer) return config
+    if (options.isServer)
+      return config
 
     rmSync("./.webpack", { force: true, recursive: true })
 
