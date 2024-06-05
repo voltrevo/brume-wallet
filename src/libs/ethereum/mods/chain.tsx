@@ -60,7 +60,7 @@ export const chainDataByChainId: Chains = {
     },
   },
   56: {
-    name: "Binance Smart Chain",
+    name: "BNB Smart Chain",
     chainId: 56,
     urls: ["wss://bsc-rpc.publicnode.com", "https://1rpc.io/bnb"],
     etherscan: "https://bscscan.com",
@@ -146,6 +146,26 @@ export const chainDataByChainId: Chains = {
           WebkitMask: `url(/assets/chains/polygon.svg) no-repeat center / contain`
         }} />
       </div>
+    },
+  },
+  204: {
+    name: "opBNB",
+    chainId: 204,
+    urls: ["wss://opbnb-rpc.publicnode.com", "https://1rpc.io/opbnb"],
+    etherscan: "https://opbnbscan.com/",
+    token: {
+      uuid: "5c94437e-3f5c-4d95-a849-328a416f1b78",
+      type: "native",
+      name: "BNB",
+      chainId: 204,
+      symbol: "BNB",
+      decimals: 18,
+      pairs: ["0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae"]
+    },
+    icon() {
+      return <img className="w-6 h-6 rounded-full"
+        src="/assets/chains/binance.svg"
+        alt="Binance" />
     },
   },
   324: {
