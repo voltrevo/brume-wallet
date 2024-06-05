@@ -190,6 +190,23 @@ export const chainDataByChainId: Chains = {
       </div>
     },
   },
+  1116: {
+    name: "Core",
+    chainId: 1116,
+    urls: ["https://1rpc.io/core"],
+    etherscan: "https://scan.coredao.org",
+    token: {
+      uuid: "c7adde9b-55cd-4677-b5bd-97a22ee77c1e",
+      type: "native",
+      name: "CORE",
+      chainId: 1116,
+      symbol: "CORE",
+      decimals: 18,
+    },
+    icon() {
+      return <div />
+    },
+  },
   5000: {
     name: "Mantle",
     chainId: 5000,
@@ -319,7 +336,7 @@ export const chainDataByChainId: Chains = {
   59144: {
     name: "Linea",
     chainId: 59144,
-    urls: ["https://rpc.linea.build"],
+    urls: ["https://1rpc.io/linea"],
     etherscan: "https://lineascan.build",
     token: {
       uuid: "664012af-5c47-4b6e-ab3e-c0c130e23b3c",

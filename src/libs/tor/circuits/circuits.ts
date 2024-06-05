@@ -102,7 +102,7 @@ export namespace Circuits {
                 && !it.flags.includes("BadExit"))
 
               try {
-                using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(1000)))
+                using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(5000)))
 
                 /**
                  * Try to extend to middle relay 3 times before giving up this circuit
@@ -111,7 +111,7 @@ export namespace Circuits {
                   return Result.unthrow<Result<void, Looped<Error>>>(async t => {
                     const head = middles[Math.floor(Math.random() * middles.length)]
                     const body = await Consensus.Microdesc.tryFetch(circuit.inner, head).then(r => r.mapErrSync(Cancel.new).throw(t))
-                    await circuit.inner.tryExtend(body, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Retry.new).throw(t))
+                    await circuit.inner.tryExtend(body, AbortSignal.timeout(5000)).then(r => r.mapErrSync(Retry.new).throw(t))
 
                     return Ok.void()
                   })
@@ -124,7 +124,7 @@ export namespace Circuits {
                   return Result.unthrow<Result<void, Looped<Error>>>(async t => {
                     const head = exits[Math.floor(Math.random() * exits.length)]
                     const body = await Consensus.Microdesc.tryFetch(circuit.inner, head).then(r => r.mapErrSync(Cancel.new).throw(t))
-                    await circuit.inner.tryExtend(body, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Retry.new).throw(t))
+                    await circuit.inner.tryExtend(body, AbortSignal.timeout(5000)).then(r => r.mapErrSync(Retry.new).throw(t))
 
                     return Ok.void()
                   })
@@ -142,7 +142,7 @@ export namespace Circuits {
                   /**
                    * Speed test
                    */
-                  const signal = AbortSignal.timeout(1000)
+                  const signal = AbortSignal.timeout(5000)
 
                   await fetch("http://detectportal.firefox.com", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())
                 }
