@@ -11,6 +11,7 @@ export function createNativeWebSocketPool(params: PoolParams) {
   const pool = new Pool<Disposer<WebSocket>>(async (subparams) => {
     const { index, pool } = subparams
 
+    const start = Date.now()
     const socket = new WebSocket("wss://snowflake.torproject.net/")
 
     socket.binaryType = "arraybuffer"
@@ -19,6 +20,8 @@ export function createNativeWebSocketPool(params: PoolParams) {
       socket.addEventListener("open", ok)
       socket.addEventListener("error", err)
     })
+
+    console.log(`Created native WebSocket in ${Date.now() - start}ms`)
 
     using preProxy = new Box(new Disposer(socket, () => socket.close()))
 
@@ -135,12 +138,22 @@ export function createTorPool(sockets: Pool<Disposer<WebSocket>>, params: PoolPa
       const result = await Result.runAndDoubleWrap(async () => {
         const { index, signal } = subparams
 
+        let start = Date.now()
+
         using preSocket = await sockets.getOrThrow(index % sockets.capacity, signal).then(r => r.unwrap().inner)
         const stream = new WebSocketDuplex(preSocket.getOrThrow().get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
 
+        start = Date.now()
         using preTor = new Box(await createTorOrThrow(stream))
-        using tmpCircuit = await preTor.getOrThrow().createOrThrow(AbortSignal.timeout(5000))
-        const consensus = await Consensus.fetchOrThrow(tmpCircuit)
+        console.log(`Created Tor in ${Date.now() - start}ms`)
+
+        start = Date.now()
+        using tmpCircuit = await preTor.getOrThrow().createOrThrow(AbortSignal.timeout(1000))
+        console.log(`Created consensus circuit in ${Date.now() - start}ms`)
+
+        start = Date.now()
+        const consensus = await Consensus.fetchOrThrow(tmpCircuit, AbortSignal.timeout(20_000))
+        console.log(`Fetched consensus in ${Date.now() - start}ms`)
 
         /**
          * Move Tor into a new struct with [TorClientDuplex, Consensus]

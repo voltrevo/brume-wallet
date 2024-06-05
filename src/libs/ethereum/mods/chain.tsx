@@ -42,7 +42,7 @@ export const chainDataByChainId: Chains = {
   10: {
     name: "Optimism",
     chainId: 10,
-    urls: ["wss://optimism-rpc.publicnode.com", "https://1rpc.io/op"],
+    urls: ["wss://optimism-rpc.publicnode.com", "wss://optimism.gateway.tenderly.co", "https://1rpc.io/op"],
     etherscan: "https://optimistic.etherscan.io",
     token: {
       uuid: "664002af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -128,7 +128,7 @@ export const chainDataByChainId: Chains = {
   137: {
     name: "Polygon",
     chainId: 137,
-    urls: ["wss://polygon-bor-rpc.publicnode.com", "https://1rpc.io/matic"],
+    urls: ["wss://polygon-bor-rpc.publicnode.com", "wss://polygon.gateway.tenderly.co", "https://1rpc.io/matic"],
     etherscan: "https://polygonscan.com",
     token: {
       uuid: "664006af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -253,7 +253,7 @@ export const chainDataByChainId: Chains = {
   8453: {
     name: "Base",
     chainId: 8453,
-    urls: ["wss://base-rpc.publicnode.com", "https://1rpc.io/base"],
+    urls: ["wss://base-rpc.publicnode.com", "wss://base.gateway.tenderly.co", "https://1rpc.io/base"],
     etherscan: "https://basescan.org",
     token: {
       uuid: "664008af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -276,7 +276,7 @@ export const chainDataByChainId: Chains = {
   42161: {
     name: "Arbitrum",
     chainId: 42161,
-    urls: ["wss://arbitrum-one-rpc.publicnode.com", "https://1rpc.io/arb"],
+    urls: ["wss://arbitrum-one-rpc.publicnode.com", "wss://arbitrum.gateway.tenderly.co", "https://1rpc.io/arb"],
     etherscan: "https://arbiscan.io",
     token: {
       uuid: "664009af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -317,7 +317,7 @@ export const chainDataByChainId: Chains = {
     },
   },
   43114: {
-    name: "Avalanche C-Chain",
+    name: "Avalanche C",
     chainId: 43114,
     urls: ["wss://avalanche-c-chain-rpc.publicnode.com", "https://1rpc.io/avax/c"],
     etherscan: "https://snowtrace.io",
@@ -359,7 +359,7 @@ export const chainDataByChainId: Chains = {
   11155111: {
     name: "Sepolia (testnet)",
     chainId: 11155111,
-    urls: ["wss://ethereum-sepolia-rpc.publicnode.com", "https://1rpc.io/sepolia"],
+    urls: ["wss://ethereum-sepolia-rpc.publicnode.com", "wss://sepolia.gateway.tenderly.co", "https://1rpc.io/sepolia"],
     etherscan: "https://sepolia.etherscan.io",
     token: {
       uuid: "664013af-5c47-4b6e-ab3e-c0c130e23b3c",

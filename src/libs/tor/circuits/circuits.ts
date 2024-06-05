@@ -88,6 +88,8 @@ export namespace Circuits {
 
           using circuit = await (async () => {
             while (true) {
+              let start = Date.now()
+
               const [tor, consensus] = await torsAndConsensus.getOrThrow(index % torsAndConsensus.capacity, signal).then(r => r.unwrap().inner.inner.inner)
 
               const middles = consensus.microdescs.filter(it => true
@@ -102,7 +104,9 @@ export namespace Circuits {
                 && !it.flags.includes("BadExit"))
 
               try {
-                using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(5000)))
+                start = Date.now()
+                using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(1000)))
+                console.log(`Created circuit #${index} in ${Date.now() - start}ms`)
 
                 /**
                  * Try to extend to middle relay 3 times before giving up this circuit
@@ -110,8 +114,14 @@ export namespace Circuits {
                 await tryLoop(() => {
                   return Result.unthrow<Result<void, Looped<Error>>>(async t => {
                     const head = middles[Math.floor(Math.random() * middles.length)]
-                    const body = await Consensus.Microdesc.tryFetch(circuit.inner, head).then(r => r.mapErrSync(Cancel.new).throw(t))
-                    await circuit.inner.tryExtend(body, AbortSignal.timeout(5000)).then(r => r.mapErrSync(Retry.new).throw(t))
+
+                    start = Date.now()
+                    const body = await Consensus.Microdesc.tryFetch(circuit.inner, head, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Cancel.new).throw(t))
+                    console.log(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
+
+                    start = Date.now()
+                    await circuit.inner.tryExtend(body, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Retry.new).throw(t))
+                    console.log(`Extended circuit #${index} in ${Date.now() - start}ms`)
 
                     return Ok.void()
                   })
@@ -123,8 +133,14 @@ export namespace Circuits {
                 await tryLoop(() => {
                   return Result.unthrow<Result<void, Looped<Error>>>(async t => {
                     const head = exits[Math.floor(Math.random() * exits.length)]
-                    const body = await Consensus.Microdesc.tryFetch(circuit.inner, head).then(r => r.mapErrSync(Cancel.new).throw(t))
-                    await circuit.inner.tryExtend(body, AbortSignal.timeout(5000)).then(r => r.mapErrSync(Retry.new).throw(t))
+
+                    start = Date.now()
+                    const body = await Consensus.Microdesc.tryFetch(circuit.inner, head, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Cancel.new).throw(t))
+                    console.log(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
+
+                    start = Date.now()
+                    await circuit.inner.tryExtend(body, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Retry.new).throw(t))
+                    console.log(`Extended circuit #${index} in ${Date.now() - start}ms`)
 
                     return Ok.void()
                   })
@@ -142,14 +158,16 @@ export namespace Circuits {
                   /**
                    * Speed test
                    */
-                  const signal = AbortSignal.timeout(5000)
+                  const signal = AbortSignal.timeout(1000)
 
+                  start = Date.now()
                   await fetch("http://detectportal.firefox.com", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())
+                  console.log(`Fetched portal #${index} in ${Date.now() - start}ms`)
                 }
 
                 return circuit.moveOrThrow()
               } catch (e: unknown) {
-                console.warn(`Retrying circuit creation`, { e })
+                console.warn(`Retrying circuit #${index} creation`, { e })
                 continue
               }
             }
@@ -158,6 +176,8 @@ export namespace Circuits {
           /**
            * NOOP
            */
+          console.log(`Added circuit #${index} in ${Date.now() - start}ms`)
+          console.log(`Circuits pool is now ${pool.size}/${pool.capacity}`)
 
           return createCircuitEntry(circuit.moveOrThrow(), params)
         }).then(r => r.inspectErrSync(e => console.error(`Circuit creation failed`, { e })))
