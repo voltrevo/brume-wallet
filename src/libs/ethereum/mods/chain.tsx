@@ -19,7 +19,7 @@ export const chainDataByChainId: Chains = {
   1: {
     name: "Ethereum",
     chainId: 1,
-    urls: ["wss://ethereum-rpc.publicnode.com", "wss://mainnet.gateway.tenderly.co"],
+    urls: ["wss://ethereum-rpc.publicnode.com", "wss://mainnet.gateway.tenderly.co", "https://1rpc.io/eth"],
     etherscan: "https://etherscan.io",
     token: {
       uuid: "664000af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -39,29 +39,10 @@ export const chainDataByChainId: Chains = {
       </div>
     },
   },
-  5: {
-    name: "Goerli (testnet)",
-    chainId: 5,
-    urls: ["wss://ethereum-goerli-rpc.publicnode.com"],
-    etherscan: "https://goerli.etherscan.io",
-    token: {
-      uuid: "664001af-5c47-4b6e-ab3e-c0c130e23b3c",
-      type: "native",
-      name: "ETH",
-      chainId: 5,
-      symbol: "ETH",
-      decimals: 18
-    },
-    icon() {
-      return <div className={`h-6 w-6 bg-gray-900 rounded-full flex items-center justify-center text-xs`}>
-        {`Gö`}
-      </div>
-    },
-  },
   10: {
     name: "Optimism",
     chainId: 10,
-    urls: ["wss://optimism-rpc.publicnode.com"],
+    urls: ["wss://optimism-rpc.publicnode.com", "https://1rpc.io/op"],
     etherscan: "https://optimistic.etherscan.io",
     token: {
       uuid: "664002af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -79,9 +60,9 @@ export const chainDataByChainId: Chains = {
     },
   },
   56: {
-    name: "Binance",
+    name: "Binance Smart Chain",
     chainId: 56,
-    urls: ["wss://bsc-rpc.publicnode.com"],
+    urls: ["wss://bsc-rpc.publicnode.com", "https://1rpc.io/bnb"],
     etherscan: "https://bscscan.com",
     token: {
       uuid: "664003af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -124,7 +105,7 @@ export const chainDataByChainId: Chains = {
   100: {
     name: "Gnosis",
     chainId: 100,
-    urls: ["wss://gnosis-rpc.publicnode.com"],
+    urls: ["wss://gnosis-rpc.publicnode.com", "https://1rpc.io/gnosis"],
     etherscan: "https://gnosisscan.io",
     token: {
       uuid: "664005af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -145,9 +126,9 @@ export const chainDataByChainId: Chains = {
     },
   },
   137: {
-    name: "Polygon Bor",
+    name: "Polygon",
     chainId: 137,
-    urls: ["wss://polygon-bor-rpc.publicnode.com"],
+    urls: ["wss://polygon-bor-rpc.publicnode.com", "https://1rpc.io/matic"],
     etherscan: "https://polygonscan.com",
     token: {
       uuid: "664006af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -204,13 +185,15 @@ export const chainDataByChainId: Chains = {
       decimals: 18,
     },
     icon() {
-      return <div />
+      return <img className="w-6 h-6 rounded-full"
+        src="/assets/chains/core.png"
+        alt="Core" />
     },
   },
   5000: {
     name: "Mantle",
     chainId: 5000,
-    urls: ["wss://mantle-rpc.publicnode.com"],
+    urls: ["wss://mantle-rpc.publicnode.com", "https://1rpc.io/mantle"],
     etherscan: "https://explorer.mantle.xyz",
     token: {
       uuid: "e55bb9b6-8ac8-47a1-ac7e-9736c3bbc078",
@@ -250,7 +233,7 @@ export const chainDataByChainId: Chains = {
   8453: {
     name: "Base",
     chainId: 8453,
-    urls: ["wss://base-rpc.publicnode.com"],
+    urls: ["wss://base-rpc.publicnode.com", "https://1rpc.io/base"],
     etherscan: "https://basescan.org",
     token: {
       uuid: "664008af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -271,9 +254,9 @@ export const chainDataByChainId: Chains = {
     },
   },
   42161: {
-    name: "Arbitrum One",
+    name: "Arbitrum",
     chainId: 42161,
-    urls: ["wss://arbitrum-one-rpc.publicnode.com"],
+    urls: ["wss://arbitrum-one-rpc.publicnode.com", "https://1rpc.io/arb"],
     etherscan: "https://arbiscan.io",
     token: {
       uuid: "664009af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -316,7 +299,7 @@ export const chainDataByChainId: Chains = {
   43114: {
     name: "Avalanche C-Chain",
     chainId: 43114,
-    urls: ["wss://avalanche-c-chain-rpc.publicnode.com"],
+    urls: ["wss://avalanche-c-chain-rpc.publicnode.com", "https://1rpc.io/avax/c"],
     etherscan: "https://snowtrace.io",
     token: {
       uuid: "664011af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -356,7 +339,7 @@ export const chainDataByChainId: Chains = {
   11155111: {
     name: "Sepolia (testnet)",
     chainId: 11155111,
-    urls: ["wss://ethereum-sepolia-rpc.publicnode.com"],
+    urls: ["wss://ethereum-sepolia-rpc.publicnode.com", "https://1rpc.io/sepolia"],
     etherscan: "https://sepolia.etherscan.io",
     token: {
       uuid: "664013af-5c47-4b6e-ab3e-c0c130e23b3c",
