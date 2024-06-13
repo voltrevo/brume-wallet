@@ -1,5 +1,4 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
-import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletRef } from "@/mods/background/service_worker/entities/wallets/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
@@ -8,6 +7,7 @@ import { Data, Fetched, States, createQuery, useQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Ok, Panic, Result } from "@hazae41/result"
+import { WebAuthnStorage } from "@hazae41/webauthnstorage"
 import { Transaction, ethers } from "ethers"
 import { useMemo } from "react"
 import { Background } from "../../background/background"
@@ -393,7 +393,7 @@ export class EthereumAuthPrivateKeyWalletInstance {
       const { idBase64, ivBase64 } = this.data.privateKey
 
       const id = Base64.get().tryDecodePadded(idBase64).throw(t).copyAndDispose()
-      const cipher = await WebAuthnStorage.tryGet(id).then(r => r.throw(t))
+      const cipher = await WebAuthnStorage.getOrThrow(id)
       const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
 
       const privateKeyBase64 = await background.requestOrThrow<string>({

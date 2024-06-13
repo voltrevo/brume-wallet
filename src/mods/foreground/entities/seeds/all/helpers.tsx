@@ -1,4 +1,3 @@
-import { WebAuthnStorage } from "@/libs/webauthn/webauthn"
 import { AuthMnemonicSeedData, LedgerSeedData, SeedData, UnauthMnemonicSeedData } from "@/mods/background/service_worker/entities/seeds/data"
 import { Background } from "@/mods/foreground/background/background"
 import { Base16 } from "@hazae41/base16"
@@ -8,6 +7,7 @@ import { Abi, ZeroHexSignature, ZeroHexString } from "@hazae41/cubane"
 import { Ledger } from "@hazae41/ledger"
 import { Option } from "@hazae41/option"
 import { Err, Ok, Panic, Result } from "@hazae41/result"
+import { WebAuthnStorage } from "@hazae41/webauthnstorage"
 import { HDKey } from "@scure/bip32"
 import { entropyToMnemonic, mnemonicToSeed } from "@scure/bip39"
 import { wordlist } from "@scure/bip39/wordlists/english"
@@ -107,7 +107,7 @@ export class AuthMnemonicSeedInstance {
       const { idBase64, ivBase64 } = this.data.mnemonic
 
       const id = Base64.get().tryDecodePadded(idBase64).throw(t).copyAndDispose()
-      const cipher = await WebAuthnStorage.tryGet(id).then(r => r.throw(t))
+      const cipher = await WebAuthnStorage.getOrThrow(id)
       const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
 
       const entropyBase64 = await background.requestOrThrow<string>({

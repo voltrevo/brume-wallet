@@ -10,7 +10,6 @@ import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
-import { WebAuthnStorage, WebAuthnStorageError } from "@/libs/webauthn/webauthn";
 import { WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Base16 } from "@hazae41/base16";
@@ -19,6 +18,7 @@ import { Bytes } from "@hazae41/bytes";
 import { Address, ZeroHexString } from "@hazae41/cubane";
 import { Panic, Result } from "@hazae41/result";
 import { Secp256k1 } from "@hazae41/secp256k1";
+import { WebAuthnStorage } from "@hazae41/webauthnstorage";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableGradientButton } from "../../actions/send";
@@ -143,7 +143,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     const cipherBytes = await WebAuthnStorage.getOrThrow(id)
 
     if (!Bytes.equals(cipherMemory.bytes, cipherBytes))
-      throw new WebAuthnStorageError()
+      throw new Error(`Corrupt storage`)
 
     const idBase64 = Base64.get().encodePaddedOrThrow(id)
     const privateKey = { ivBase64, idBase64 }

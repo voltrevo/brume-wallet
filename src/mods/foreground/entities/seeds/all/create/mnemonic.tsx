@@ -10,12 +10,12 @@ import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
-import { WebAuthnStorage, WebAuthnStorageError } from "@/libs/webauthn/webauthn";
 import { SeedData } from "@/mods/background/service_worker/entities/seeds/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Base64 } from "@hazae41/base64";
 import { Bytes } from "@hazae41/bytes";
 import { Err, Panic, Result } from "@hazae41/result";
+import { WebAuthnStorage } from "@hazae41/webauthnstorage";
 import { generateMnemonic, mnemonicToEntropy, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
@@ -130,7 +130,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     const cipherBytes = await WebAuthnStorage.getOrThrow(id)
 
     if (!Bytes.equals(cipherMemory.bytes, cipherBytes))
-      return new Err(new WebAuthnStorageError())
+      return new Err(new Error(`Corrupt storage`))
 
     const idBase64 = Base64.get().encodePaddedOrThrow(id)
     const mnemonic = { ivBase64, idBase64 }
