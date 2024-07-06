@@ -9,28 +9,25 @@ import { Pool, PoolCreatorParams, PoolParams } from "@hazae41/piscine"
 
 export function createNativeWebSocketPool(params: PoolParams) {
   const pool = new Pool<Disposer<WebSocket>>(async (subparams) => {
-    async function f() {
-      const { index, pool, signal } = subparams
+    const { index, pool, signal } = subparams
 
-      console.log("Creating native WebSocket", index, pool.capacity)
+    console.log("Creating native WebSocket", index, pool.capacity)
 
-      while (!signal.aborted) {
-        try {
-          let restarted = false
-          let start = Date.now()
+    while (!signal.aborted) {
+      try {
+        let restarted = false
+        let start = Date.now()
 
-          const socket = new WebSocket("wss://snowflake.torproject.net/")
+        const socket = new WebSocket("wss://snowflake.torproject.net/")
 
-          socket.binaryType = "arraybuffer"
+        socket.binaryType = "arraybuffer"
 
-          await Sockets.waitOrThrow(socket, AbortSignal.timeout(2000))
+        await Sockets.waitOrThrow(socket, AbortSignal.timeout(2000))
 
-          console.log(`Created native WebSocket in ${Date.now() - start}ms`, index, socket)
+        console.log(`Created native WebSocket in ${Date.now() - start}ms`, index, socket)
 
-          using preProxy = new Box(new Disposer(socket, () => {
-            console.log("closing")
-            socket.close()
-          }))
+        {
+          using preProxy = new Box(new Disposer(socket, () => socket.close()))
 
           const onCloseOrError = (reason?: unknown) => {
             if (!restarted) {
@@ -85,19 +82,15 @@ export function createNativeWebSocketPool(params: PoolParams) {
           console.log("cc")
 
           return new Disposer(proxy, onEntryClean)
-        } catch (e: unknown) {
-          console.warn(`Could not create native socket`, index, { e })
-          await new Promise(ok => setTimeout(ok, 1000))
-          continue
         }
+      } catch (e: unknown) {
+        console.warn(`Could not create native socket`, index, { e })
+        await new Promise(ok => setTimeout(ok, 1000))
+        continue
       }
-
-      throw new Error(`Aborted`, { cause: signal.reason })
     }
 
-    const result = await f()
-    console.log("result", result)
-    return result
+    throw new Error(`Aborted`, { cause: signal.reason })
   }, params)
 
   addEventListener("online", async () => {
