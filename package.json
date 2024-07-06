@@ -81,6 +81,7 @@
     "@hazae41/smux": "^1.1.1",
     "@hazae41/symbol-dispose-polyfill": "^1.0.2",
     "@hazae41/webauthnstorage": "^1.0.0",
+    "@hazae41/worker-online-polyfill": "^1.0.0",
     "@hazae41/x25519": "^2.1.4",
     "@hazae41/zepar": "^1.1.6",
     "@heroicons/react": "^2.1.3",

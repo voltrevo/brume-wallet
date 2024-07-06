@@ -1,4 +1,5 @@
 import "@hazae41/symbol-dispose-polyfill"
+import "@hazae41/worker-online-polyfill"
 
 import { Blobs } from "@/libs/blobs/blobs"
 import { BrowserError, browser } from "@/libs/browser/browser"
@@ -78,6 +79,9 @@ if (isWebsite() && self.__WB_PRODUCTION) {
 
   precacheAndRoute(self.__WB_MANIFEST)
 
+  /**
+   * TODO remove?
+   */
   self.addEventListener("message", (event) => {
     if (event.origin !== location.origin)
       return
@@ -1809,21 +1813,3 @@ if (isExtension()) {
     })
   }
 }
-
-let onLine: Nullable<boolean> = undefined
-
-setInterval(() => {
-  if (navigator.onLine && onLine === false) {
-    self.dispatchEvent(new CustomEvent("online"))
-    onLine = navigator.onLine
-    return
-  }
-
-  if (!navigator.onLine && onLine === true) {
-    self.dispatchEvent(new CustomEvent("offline"))
-    onLine = navigator.onLine
-    return
-  }
-
-  onLine = navigator.onLine
-}, 1000)

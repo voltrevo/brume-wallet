@@ -1,3 +1,4 @@
+import { Arrays } from "@hazae41/arrays"
 import { Box } from "@hazae41/box"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Disposer } from "@hazae41/disposer"
@@ -5,7 +6,7 @@ import { Circuit, Consensus, TorClientDuplex } from "@hazae41/echalote"
 import { fetch } from "@hazae41/fleche"
 import { Mutex } from "@hazae41/mutex"
 import { None } from "@hazae41/option"
-import { Cancel, Looped, Pool, PoolCreatorParams, PoolParams, Retry, tryLoop } from "@hazae41/piscine"
+import { Pool, PoolCreatorParams, PoolParams, Retry, loopOrThrow } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
 
 export function createCircuitEntry(preCircuit: Box<Circuit>, params: PoolCreatorParams<Circuit>) {
@@ -86,92 +87,82 @@ export namespace Circuits {
         const result = await Result.runAndDoubleWrap(async () => {
           const { index, signal } = params
 
-          using circuit = await (async () => {
-            while (true) {
-              let start = Date.now()
+          using circuit = await loopOrThrow(async () => {
+            let start = Date.now()
 
-              const [tor, consensus] = await torsAndConsensus.getOrThrow(index % torsAndConsensus.capacity, signal).then(r => r.unwrap().inner.inner.inner)
+            const [tor, consensus] = await torsAndConsensus.getOrThrow(index % torsAndConsensus.capacity, signal).then(r => r.unwrap().inner.inner.inner)
 
-              const middles = consensus.microdescs.filter(it => true
-                && it.flags.includes("Fast")
-                && it.flags.includes("Stable")
-                && it.flags.includes("V2Dir"))
+            const middles = consensus.microdescs.filter(it => true
+              && it.flags.includes("Fast")
+              && it.flags.includes("Stable")
+              && it.flags.includes("V2Dir"))
 
-              const exits = consensus.microdescs.filter(it => true
-                && it.flags.includes("Fast")
-                && it.flags.includes("Stable")
-                && it.flags.includes("Exit")
-                && !it.flags.includes("BadExit"))
+            const exits = consensus.microdescs.filter(it => true
+              && it.flags.includes("Fast")
+              && it.flags.includes("Stable")
+              && it.flags.includes("Exit")
+              && !it.flags.includes("BadExit"))
 
-              try {
+            try {
+              start = Date.now()
+              using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(1000)))
+              console.log(`Created circuit #${index} in ${Date.now() - start}ms`)
+
+              /**
+               * Try to extend to middle relay 3 times before giving up this circuit
+               */
+              await loopOrThrow(async () => {
+                const head = Arrays.cryptoRandom(middles)!
+
                 start = Date.now()
-                using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(1000)))
-                console.log(`Created circuit #${index} in ${Date.now() - start}ms`)
+                const body = await Consensus.Microdesc.fetchOrThrow(circuit.inner, head, AbortSignal.timeout(1000))
+                console.log(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
 
+                start = Date.now()
+                await Retry.run(() => circuit.inner.extendOrThrow(body, AbortSignal.timeout(1000)))
+                console.log(`Extended circuit #${index} in ${Date.now() - start}ms`)
+              }, { max: 3 })
+
+              /**
+               * Try to extend to exit relay 3 times before giving up this circuit
+               */
+              await loopOrThrow(async () => {
+                const head = Arrays.cryptoRandom(exits)!
+
+                start = Date.now()
+                const body = await Consensus.Microdesc.fetchOrThrow(circuit.inner, head, AbortSignal.timeout(1000))
+                console.log(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
+
+                start = Date.now()
+                await Retry.run(() => circuit.inner.extendOrThrow(body, AbortSignal.timeout(1000)))
+                console.log(`Extended circuit #${index} in ${Date.now() - start}ms`)
+              }, { max: 3 })
+
+              /**
+               * Try to open a stream to a reliable endpoint
+               */
+              using stream = await openAsOrThrow(circuit.inner, "http://detectportal.firefox.com")
+
+              /**
+               * Reliability test
+               */
+              for (let i = 0; i < 3; i++) {
                 /**
-                 * Try to extend to middle relay 3 times before giving up this circuit
+                 * Speed test
                  */
-                await tryLoop(() => {
-                  return Result.unthrow<Result<void, Looped<Error>>>(async t => {
-                    const head = middles[Math.floor(Math.random() * middles.length)]
+                const signal = AbortSignal.timeout(1000)
 
-                    start = Date.now()
-                    const body = await Consensus.Microdesc.tryFetch(circuit.inner, head, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Cancel.new).throw(t))
-                    console.log(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
-
-                    start = Date.now()
-                    await circuit.inner.tryExtend(body, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Retry.new).throw(t))
-                    console.log(`Extended circuit #${index} in ${Date.now() - start}ms`)
-
-                    return Ok.void()
-                  })
-                }, { init: 0, base: 0, max: 3 }).then(r => r.unwrap())
-
-                /**
-                 * Try to extend to exit relay 3 times before giving up this circuit
-                 */
-                await tryLoop(() => {
-                  return Result.unthrow<Result<void, Looped<Error>>>(async t => {
-                    const head = exits[Math.floor(Math.random() * exits.length)]
-
-                    start = Date.now()
-                    const body = await Consensus.Microdesc.tryFetch(circuit.inner, head, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Cancel.new).throw(t))
-                    console.log(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
-
-                    start = Date.now()
-                    await circuit.inner.tryExtend(body, AbortSignal.timeout(1000)).then(r => r.mapErrSync(Retry.new).throw(t))
-                    console.log(`Extended circuit #${index} in ${Date.now() - start}ms`)
-
-                    return Ok.void()
-                  })
-                }, { init: 0, base: 0, max: 3 }).then(r => r.unwrap())
-
-                /**
-                 * Try to open a stream to a reliable endpoint
-                 */
-                using stream = await openAsOrThrow(circuit.inner, "http://detectportal.firefox.com")
-
-                /**
-                 * Reliability test
-                 */
-                for (let i = 0; i < 3; i++) {
-                  /**
-                   * Speed test
-                   */
-                  const signal = AbortSignal.timeout(1000)
-
-                  start = Date.now()
-                  await fetch("http://detectportal.firefox.com", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())
-                  console.log(`Fetched portal #${index} in ${Date.now() - start}ms`)
-                }
-
-                return circuit.moveOrThrow()
-              } catch (e: unknown) {
-                console.warn(`Retrying circuit #${index} creation`, { e })
-                continue
+                start = Date.now()
+                await fetch("http://detectportal.firefox.com", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())
+                console.log(`Fetched portal #${index} in ${Date.now() - start}ms`)
               }
+
+              return circuit.moveOrThrow()
+            } catch (e: unknown) {
+              console.warn(`Retrying circuit #${index} creation`, { e })
+              throw new Retry(e)
             }
-          })()
+          }, { max: 9 })
 
           /**
            * NOOP
