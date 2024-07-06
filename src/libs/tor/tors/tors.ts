@@ -1,3 +1,4 @@
+import { Sockets } from "@/libs/sockets/sockets"
 import { WebSocketDuplex } from "@/libs/streams/websocket"
 import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
@@ -8,80 +9,95 @@ import { Pool, PoolCreatorParams, PoolParams } from "@hazae41/piscine"
 
 export function createNativeWebSocketPool(params: PoolParams) {
   const pool = new Pool<Disposer<WebSocket>>(async (subparams) => {
-    const { index, pool, signal } = subparams
+    async function f() {
+      const { index, pool, signal } = subparams
 
-    while (!signal.aborted) {
-      try {
-        let restarted = false
-        let start = Date.now()
+      console.log("Creating native WebSocket", index, pool.capacity)
 
-        const socket = new WebSocket("wss://snowflake.torproject.net/")
+      while (!signal.aborted) {
+        try {
+          let restarted = false
+          let start = Date.now()
 
-        socket.binaryType = "arraybuffer"
+          const socket = new WebSocket("wss://snowflake.torproject.net/")
 
-        await new Promise((ok, err) => {
-          socket.addEventListener("open", ok)
-          socket.addEventListener("error", err)
-          setTimeout(err, 2000, "timeout")
-        })
+          socket.binaryType = "arraybuffer"
 
-        console.log(`Created native WebSocket in ${Date.now() - start}ms`)
+          await Sockets.waitOrThrow(socket, AbortSignal.timeout(2000))
 
-        using preProxy = new Box(new Disposer(socket, () => socket.close()))
+          console.log(`Created native WebSocket in ${Date.now() - start}ms`, index, socket)
 
-        const onCloseOrError = (reason?: unknown) => {
-          if (!restarted) {
-            pool.restart(index)
-            restarted = true
+          using preProxy = new Box(new Disposer(socket, () => {
+            console.log("closing")
+            socket.close()
+          }))
+
+          const onCloseOrError = (reason?: unknown) => {
+            if (!restarted) {
+              pool.restart(index)
+              restarted = true
+            }
           }
-        }
 
-        preProxy.inner.inner.addEventListener("close", onCloseOrError, { passive: true })
-        using preOnCloseDisposer = new Box(new Disposer({}, () => preProxy.inner.inner.removeEventListener("close", onCloseOrError)))
+          console.log("ee")
 
-        preProxy.inner.inner.addEventListener("error", onCloseOrError, { passive: true })
-        using preOnErrorDisposer = new Box(new Disposer({}, () => preProxy.inner.inner.removeEventListener("error", onCloseOrError)))
+          preProxy.inner.inner.addEventListener("close", onCloseOrError, { passive: true })
+          using preOnCloseDisposer = new Box(new Disposer({}, () => preProxy.inner.inner.removeEventListener("close", onCloseOrError)))
 
-        const onOffline = () => {
-          /**
-           * Close socket
-           */
-          preProxy.inner.get().close()
+          console.log("aa")
 
-          /**
-           * Restart pool
-           */
-          if (!restarted) {
-            pool.restart(index)
-            restarted = true
+          preProxy.inner.inner.addEventListener("error", onCloseOrError, { passive: true })
+          using preOnErrorDisposer = new Box(new Disposer({}, () => preProxy.inner.inner.removeEventListener("error", onCloseOrError)))
+
+          const onOffline = () => {
+            /**
+             * Close socket
+             */
+            preProxy.inner.get().close()
+
+            /**
+             * Restart pool
+             */
+            if (!restarted) {
+              pool.restart(index)
+              restarted = true
+            }
           }
+
+          addEventListener("offline", onOffline, { passive: true })
+          const onOfflineClean = () => removeEventListener("offline", onOffline)
+          using preOnOfflineDisposer = new Box(new Disposer({}, onOfflineClean))
+
+          console.log("bb")
+
+          const proxy = preProxy.moveOrThrow()
+          const onCloseDisposer = preOnCloseDisposer.unwrapOrThrow()
+          const onErrorDisposer = preOnErrorDisposer.unwrapOrThrow()
+          const onOfflineDisposer = preOnOfflineDisposer.unwrapOrThrow()
+
+          const onEntryClean = () => {
+            using _0 = proxy
+            using _1 = onCloseDisposer
+            using _2 = onErrorDisposer
+            using _3 = onOfflineDisposer
+          }
+
+          console.log("cc")
+
+          return new Disposer(proxy, onEntryClean)
+        } catch (e: unknown) {
+          console.warn(`Could not create native socket`, index, { e })
+          await new Promise(ok => setTimeout(ok, 1000))
+          continue
         }
-
-        addEventListener("offline", onOffline, { passive: true })
-        const onOfflineClean = () => removeEventListener("offline", onOffline)
-        using preOnOfflineDisposer = new Box(new Disposer({}, onOfflineClean))
-
-        const proxy = preProxy.moveOrThrow()
-        const onCloseDisposer = preOnCloseDisposer.unwrapOrThrow()
-        const onErrorDisposer = preOnErrorDisposer.unwrapOrThrow()
-        const onOfflineDisposer = preOnOfflineDisposer.unwrapOrThrow()
-
-        const onEntryClean = () => {
-          using _0 = proxy
-          using _1 = onCloseDisposer
-          using _2 = onErrorDisposer
-          using _3 = onOfflineDisposer
-        }
-
-        return new Disposer(proxy, onEntryClean)
-      } catch (e: unknown) {
-        console.warn(`Could not create native socket`, { e })
-        await new Promise(ok => setTimeout(ok, 1000))
-        continue
       }
+
+      throw new Error(`Aborted`, { cause: signal.reason })
     }
 
-    throw new Error(`Aborted`, { cause: signal.reason })
+    const result = await f()
+    console.log("result", result)
+    return result
   }, params)
 
   addEventListener("online", async () => {

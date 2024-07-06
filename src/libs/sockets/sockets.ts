@@ -1,32 +1,15 @@
 import { Future } from "@hazae41/future";
-import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume";
-import { Err, Ok, Result } from "@hazae41/result";
+import { Signals } from "@hazae41/signals";
 
 export namespace Sockets {
 
-  export async function tryWaitOpen(socket: WebSocket, signal: AbortSignal) {
-    const future = new Future<Result<void, ClosedError | ErroredError | AbortedError>>()
+  export async function waitOrThrow(socket: WebSocket, signal = Signals.never()) {
+    const future = new Future<void>()
 
-    const onOpen = () => {
-      const result = Ok.void()
-      future.resolve(result)
-    }
-
-    const onError = (e: unknown) => {
-      const result = new Err(ErroredError.from(e))
-      future.resolve(result)
-    }
-
-    const onClose = (e: unknown) => {
-      const result = new Err(ClosedError.from(e))
-      future.resolve(result)
-    }
-
-    const onAbort = () => {
-      socket.close()
-      const result = new Err(AbortedError.from(signal.reason))
-      future.resolve(result)
-    }
+    const onOpen = () => future.resolve()
+    const onError = (e: unknown) => future.reject(e)
+    const onClose = (e: unknown) => future.reject(e)
+    const onAbort = (e: unknown) => future.reject(e)
 
     try {
       socket.addEventListener("open", onOpen, { passive: true })

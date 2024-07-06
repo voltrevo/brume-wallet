@@ -167,7 +167,7 @@ export namespace WebSocketConnection {
       tls.outer.readable.pipeTo(socket.inner.writable).catch(() => { })
       socket.inner.readable.pipeTo(tls.outer.writable).catch(() => { })
 
-      await Sockets.tryWaitOpen(socket, signal2).then(r => r.unwrap())
+      await Sockets.waitOrThrow(socket, signal2)
 
       return new WebSocketConnection(circuit, socket)
     }
@@ -179,7 +179,7 @@ export namespace WebSocketConnection {
       tcp.outer.readable.pipeTo(socket.inner.writable).catch(() => { })
       socket.inner.readable.pipeTo(tcp.outer.writable).catch(() => { })
 
-      await Sockets.tryWaitOpen(socket, signal2).then(r => r.unwrap())
+      await Sockets.waitOrThrow(socket, signal2)
 
       return new WebSocketConnection(circuit, socket)
     }
