@@ -1,3 +1,4 @@
+import { DisposableStack } from "@/libs/disposable/stack"
 import { Sockets } from "@/libs/sockets/sockets"
 import { WebSocketDuplex } from "@/libs/streams/websocket"
 import { Opaque, Writable } from "@hazae41/binary"
@@ -11,8 +12,6 @@ export function createNativeWebSocketPool(params: PoolParams) {
   const pool = new Pool<Disposer<WebSocket>>(async (subparams) => {
     const { index, pool, signal } = subparams
 
-    console.log("Creating native WebSocket", index, pool.capacity)
-
     while (!signal.aborted) {
       try {
         let restarted = false
@@ -23,11 +22,13 @@ export function createNativeWebSocketPool(params: PoolParams) {
         socket.binaryType = "arraybuffer"
 
         await Sockets.waitOrThrow(socket, AbortSignal.timeout(2000))
-
-        console.log(`Created native WebSocket in ${Date.now() - start}ms`, index, socket)
+        console.log(`Opened native WebSocket in ${Date.now() - start}ms`)
 
         {
-          using preProxy = new Box(new Disposer(socket, () => socket.close()))
+          using stack = new Box(new DisposableStack())
+
+          const entry = new Box(new Disposer(socket, () => socket.close()))
+          stack.getOrThrow().use(entry)
 
           const onCloseOrError = (reason?: unknown) => {
             if (!restarted) {
@@ -36,21 +37,17 @@ export function createNativeWebSocketPool(params: PoolParams) {
             }
           }
 
-          console.log("ee")
+          socket.addEventListener("close", onCloseOrError, { passive: true })
+          stack.getOrThrow().defer(() => socket.removeEventListener("close", onCloseOrError))
 
-          preProxy.inner.inner.addEventListener("close", onCloseOrError, { passive: true })
-          using preOnCloseDisposer = new Box(new Disposer({}, () => preProxy.inner.inner.removeEventListener("close", onCloseOrError)))
-
-          console.log("aa")
-
-          preProxy.inner.inner.addEventListener("error", onCloseOrError, { passive: true })
-          using preOnErrorDisposer = new Box(new Disposer({}, () => preProxy.inner.inner.removeEventListener("error", onCloseOrError)))
+          socket.addEventListener("error", onCloseOrError, { passive: true })
+          stack.getOrThrow().defer(() => socket.removeEventListener("error", onCloseOrError))
 
           const onOffline = () => {
             /**
              * Close socket
              */
-            preProxy.inner.get().close()
+            socket.close()
 
             /**
              * Restart pool
@@ -62,26 +59,11 @@ export function createNativeWebSocketPool(params: PoolParams) {
           }
 
           addEventListener("offline", onOffline, { passive: true })
-          const onOfflineClean = () => removeEventListener("offline", onOffline)
-          using preOnOfflineDisposer = new Box(new Disposer({}, onOfflineClean))
+          stack.getOrThrow().defer(() => removeEventListener("offline", onOffline))
 
-          console.log("bb")
+          const unstack = stack.unwrapOrThrow()
 
-          const proxy = preProxy.moveOrThrow()
-          const onCloseDisposer = preOnCloseDisposer.unwrapOrThrow()
-          const onErrorDisposer = preOnErrorDisposer.unwrapOrThrow()
-          const onOfflineDisposer = preOnOfflineDisposer.unwrapOrThrow()
-
-          const onEntryClean = () => {
-            using _0 = proxy
-            using _1 = onCloseDisposer
-            using _2 = onErrorDisposer
-            using _3 = onOfflineDisposer
-          }
-
-          console.log("cc")
-
-          return new Disposer(proxy, onEntryClean)
+          return new Disposer(entry, () => unstack.dispose())
         }
       } catch (e: unknown) {
         console.warn(`Could not create native socket`, index, { e })

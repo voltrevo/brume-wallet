@@ -1,11 +1,11 @@
-class Cleanup {
+export class Dispose {
 
   constructor(
-    readonly cleanup: () => void
+    readonly dispose: () => void
   ) { }
 
   [Symbol.dispose]() {
-    this.cleanup()
+    this.dispose()
   }
 
 }
@@ -24,6 +24,10 @@ export class DisposableStack {
 
   [Symbol.dispose]() {
     this.dispose()
+  }
+
+  [Symbol.toStringTag]() {
+    return "DisposableStack"
   }
 
   dispose() {
@@ -48,20 +52,20 @@ export class DisposableStack {
     return disposable
   }
 
-  adopt<T>(value: T, callback: (value: T) => void) {
+  adopt<T>(value: T, dispose: (value: T) => void) {
     if (this.#disposed)
       throw new Error()
 
-    this.#stack.unshift(new Cleanup(() => callback(value)))
+    this.#stack.unshift(new Dispose(() => dispose(value)))
 
     return value
   }
 
-  defer(callback: () => void) {
+  defer(dispose: () => void) {
     if (this.#disposed)
       throw new Error()
 
-    this.#stack.unshift(new Cleanup(callback))
+    this.#stack.unshift(new Dispose(dispose))
   }
 
   move() {
