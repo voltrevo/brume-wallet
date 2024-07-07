@@ -29,7 +29,7 @@ import { Base64Url } from "@hazae41/base64url"
 import { Bytes } from "@hazae41/bytes"
 import { Cadenas } from "@hazae41/cadenas"
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305"
-import { ZeroHexString } from "@hazae41/cubane"
+import { ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane"
 import { Circuit, Echalote } from "@hazae41/echalote"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche, fetch } from "@hazae41/fleche"
@@ -170,7 +170,7 @@ class Global {
   constructor(
     readonly storage: IDBStorage
   ) {
-    const sockets = createNativeWebSocketPool({ capacity: 1 })
+    const sockets = new Mutex(createNativeWebSocketPool({ capacity: 1 }))
     const tors = createTorPool(sockets, { capacity: 1 })
     const circuits = Circuits.pool(tors, { capacity: 8 })
 
@@ -545,7 +545,7 @@ class Global {
         if (userChainData.chainId !== chainId) {
           await script.requestOrThrow<void>({
             method: "chainChanged",
-            params: [ZeroHexString.from(chainId)]
+            params: [ZeroHexAsInteger.fromOrThrow(chainId)]
           }).then(r => r.unwrap())
 
           await script.requestOrThrow({
@@ -639,7 +639,7 @@ class Global {
     if (subrequest.method === "eth_accounts" && session == null)
       return new Ok([])
     if (subrequest.method === "eth_chainId" && session == null)
-      return new Ok(ZeroHexString.from(userChainData.chainId))
+      return new Ok(ZeroHexAsInteger.fromOrThrow(userChainData.chainId))
     if (subrequest.method === "eth_coinbase" && session == null)
       return new Ok(undefined)
     if (subrequest.method === "net_version" && session == null)
@@ -732,7 +732,7 @@ class Global {
     if (session.type === "wc")
       throw new Error("Unexpected WalletConnect session")
 
-    return new Ok(ZeroHexString.from(session.chain.chainId))
+    return new Ok(ZeroHexAsInteger.fromOrThrow(session.chain.chainId))
   }
 
   async net_version(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Result<string, Error>> {
@@ -794,7 +794,7 @@ class Global {
     const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, from))
     const walletId = Option.unwrap(maybeWallet?.uuid)
 
-    const chainId = ZeroHexString.from(ethereum.chain.chainId)
+    const chainId = ZeroHexAsInteger.fromOrThrow(ethereum.chain.chainId)
 
     const hash = await this.requestOrThrow<string>({
       id: randomUUID(),
@@ -824,7 +824,7 @@ class Global {
     const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, address))
     const walletId = Option.unwrap(maybeWallet?.uuid)
 
-    const chainId = ZeroHexString.from(ethereum.chain.chainId)
+    const chainId = ZeroHexAsInteger.fromOrThrow(ethereum.chain.chainId)
 
     const signature = await this.requestOrThrow<string>({
       id: randomUUID(),
@@ -854,7 +854,7 @@ class Global {
     const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, address))
     const walletId = Option.unwrap(maybeWallet?.uuid)
 
-    const chainId = ZeroHexString.from(ethereum.chain.chainId)
+    const chainId = ZeroHexAsInteger.fromOrThrow(ethereum.chain.chainId)
 
     const signature = await this.requestOrThrow<string>({
       id: randomUUID(),
@@ -886,7 +886,7 @@ class Global {
     for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([])) {
       await script.requestOrThrow({
         method: "chainChanged",
-        params: [ZeroHexString.from(chain.chainId)]
+        params: [ZeroHexAsInteger.fromOrThrow(chain.chainId)]
       }).then(r => r.unwrap())
 
       await script.requestOrThrow({
@@ -1024,7 +1024,7 @@ class Global {
     for (const script of Option.wrap(this.scriptsBySession.get(sessionId)).unwrapOr([])) {
       await script.requestOrThrow({
         method: "chainChanged",
-        params: [ZeroHexString.from(chain.chainId)]
+        params: [ZeroHexAsInteger.fromOrThrow(chain.chainId)]
       }).then(r => r.unwrap())
 
       await script.requestOrThrow({

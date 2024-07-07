@@ -1,10 +1,12 @@
 import { DisposableStack } from "@/libs/disposable/stack"
+import { AbortSignals } from "@/libs/signals/signals"
 import { Sockets } from "@/libs/sockets/sockets"
 import { WebSocketDuplex } from "@/libs/streams/websocket"
 import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Consensus, TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote"
+import { Mutex } from "@hazae41/mutex"
 import { None, Option, Some } from "@hazae41/option"
 import { Pool, PoolParams } from "@hazae41/piscine"
 
@@ -14,14 +16,14 @@ export function createNativeWebSocketPool(params: PoolParams) {
 
     while (!signal.aborted) {
       try {
-        let restarted = false
         let start = Date.now()
 
         const socket = new WebSocket("wss://snowflake.torproject.net/")
 
         socket.binaryType = "arraybuffer"
 
-        await Sockets.waitOrThrow(socket, AbortSignal.timeout(2000))
+        start = Date.now()
+        await Sockets.waitOrThrow(socket, AbortSignals.timeout(2000, signal))
         console.log(`Opened native WebSocket in ${Date.now() - start}ms`)
 
         {
@@ -31,10 +33,7 @@ export function createNativeWebSocketPool(params: PoolParams) {
           stack.getOrThrow().use(entry)
 
           const onCloseOrError = (reason?: unknown) => {
-            if (!restarted) {
-              pool.restart(index)
-              restarted = true
-            }
+            pool.restart(index)
           }
 
           socket.addEventListener("close", onCloseOrError, { passive: true })
@@ -48,14 +47,6 @@ export function createNativeWebSocketPool(params: PoolParams) {
              * Close socket
              */
             socket.close()
-
-            /**
-             * Restart pool
-             */
-            if (!restarted) {
-              pool.restart(index)
-              restarted = true
-            }
           }
 
           addEventListener("offline", onOffline, { passive: true })
@@ -106,7 +97,7 @@ export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque
   return tor
 }
 
-export function createTorPool(sockets: Pool<Disposer<WebSocket>>, params: PoolParams) {
+export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, params: PoolParams) {
   const pool = new Pool<TorClientDuplex>(async (subparams) => {
     const { pool, index, signal } = subparams
 
@@ -114,24 +105,25 @@ export function createTorPool(sockets: Pool<Disposer<WebSocket>>, params: PoolPa
       try {
         let start = Date.now()
 
-        using socket = await sockets.getOrThrow(index % sockets.capacity, signal).then(r => r.unwrap().get().moveOrThrow())
+        using socket = await Pool.takeCryptoRandomOrThrow(sockets, signal).then(r => r.unwrap().get().moveOrThrow())
         const stream = new WebSocketDuplex(socket.getOrThrow().get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
 
         start = Date.now()
-        using tor = new Box(await createTorOrThrow(stream, AbortSignal.timeout(2000)))
+        using tor = new Box(await createTorOrThrow(stream, AbortSignals.timeout(2000, signal)))
         console.log(`Created Tor in ${Date.now() - start}ms`)
 
-        socket.moveOrThrow()
+        socket.unwrapOrThrow()
 
         if (consensus.isNone()) {
           start = Date.now()
-          using circuit = await tor.getOrThrow().createOrThrow(AbortSignal.timeout(2000))
+          using circuit = await tor.getOrThrow().createOrThrow(AbortSignals.timeout(2000, signal))
           console.log(`Created consensus circuit in ${Date.now() - start}ms`)
 
           start = Date.now()
-          consensus = new Some(await Consensus.fetchOrThrow(circuit, AbortSignal.timeout(20_000)))
+          consensus = new Some(await Consensus.fetchOrThrow(circuit, AbortSignals.timeout(20_000, signal)))
           console.log(`Fetched consensus in ${Date.now() - start}ms`)
         }
+
 
         using stack = new Box(new DisposableStack())
 
@@ -162,7 +154,7 @@ export function createTorPool(sockets: Pool<Disposer<WebSocket>>, params: PoolPa
     throw new Error(`Aborted`, { cause: signal.reason })
   }, params)
 
-  sockets.events.on("started", async i => {
+  sockets.inner.events.on("started", async i => {
     for (let i = 0; i < pool.capacity; i++) {
       const child = pool.tryGetSync(i)
 

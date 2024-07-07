@@ -18,7 +18,7 @@ export namespace BgSignature {
       method: "eth_call",
       params: [{
         to: "0xBB59B5Cc543746A16011BC011F4db742F918672F",
-        data: Abi.encodeOrThrow(Abi.FunctionSignature.parseOrThrow("get(bytes4)").from(hash))
+        data: Abi.encodeOrThrow(Abi.FunctionSignature.parseOrThrow("get(bytes4)").fromOrThrow(hash))
       }, "latest"]
     })).ok().inner
   }

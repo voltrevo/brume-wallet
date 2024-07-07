@@ -13,8 +13,9 @@ export function WalletDataReceiveScreen(props: {}) {
   const wallet = useWalletDataContext().unwrap()
 
   const address = useMemo(() => {
-    return Address.from(wallet.address)!
+    return Address.fromOrThrow(wallet.address)
   }, [wallet.address])
+
   const [url, setUrl] = useState<string>()
 
   useEffect(() => {

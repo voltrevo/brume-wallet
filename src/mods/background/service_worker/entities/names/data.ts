@@ -16,7 +16,7 @@ export namespace BgEns {
       try {
         const registry = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
 
-        const data = Abi.encodeOrThrow(EnsAbi.resolver.from(namehash))
+        const data = Abi.encodeOrThrow(EnsAbi.resolver.fromOrThrow(namehash))
 
         const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
           method: "eth_call",
@@ -82,7 +82,7 @@ export namespace BgEns {
         if (resolver.isErr())
           return resolver
 
-        const data = Abi.encodeOrThrow(EnsAbi.addr.from(namehash))
+        const data = Abi.encodeOrThrow(EnsAbi.addr.fromOrThrow(namehash))
 
         const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
           method: "eth_call",
@@ -146,7 +146,7 @@ export namespace BgEns {
         if (resolver.isErr())
           return resolver
 
-        const data = Abi.encodeOrThrow(EnsAbi.name.from(namehash))
+        const data = Abi.encodeOrThrow(EnsAbi.name.fromOrThrow(namehash))
 
         const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
           method: "eth_call",

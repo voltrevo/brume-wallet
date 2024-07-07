@@ -58,7 +58,7 @@ export function WalletSendScreenTarget(props: {}) {
   const onSubmit = useCallback(async () => {
     if (maybeTarget == null)
       return
-    if (Address.from(maybeTarget) == null && !maybeTarget.endsWith(".eth"))
+    if (Address.fromOrNull(maybeTarget) == null && !maybeTarget.endsWith(".eth"))
       return
     setStep("value")
   }, [maybeTarget, setStep])
@@ -74,7 +74,7 @@ export function WalletSendScreenTarget(props: {}) {
   const onPaste = useCallback(async () => {
     const input = await navigator.clipboard.readText()
 
-    if (Address.from(input) == null && !input.endsWith(".eth"))
+    if (Address.fromOrNull(input) == null && !input.endsWith(".eth"))
       return
 
     setType(undefined)

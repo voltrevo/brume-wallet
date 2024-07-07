@@ -13,7 +13,7 @@ import { qurl } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
 import { HashSubpathProvider, useHashSubpath, useKeyValueState, usePathContext, usePathState } from "@/mods/foreground/router/path/context";
-import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
+import { Address, Fixed, ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
 import { Data } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Optional, Some } from "@hazae41/option";
@@ -161,7 +161,7 @@ export function WalletTransactionDialog(props: {}) {
   const maybeFinalTarget = useMemo(() => {
     if (maybeTarget == null)
       return undefined
-    if (Address.from(maybeTarget) != null)
+    if (Address.fromOrNull(maybeTarget) != null)
       return maybeTarget
     if (maybeEnsTarget != null)
       return maybeEnsTarget
@@ -222,7 +222,7 @@ export function WalletTransactionDialog(props: {}) {
 
   const maybeTriedMaybeFinalData = useMemo(() => Result.runAndDoubleWrapSync(() => {
     return maybeData?.trim().length
-      ? ZeroHexString.from(maybeData.trim())
+      ? ZeroHexAsInteger.fromOrThrow(maybeData.trim())
       : undefined
   }), [maybeData])
 
@@ -470,12 +470,12 @@ export function WalletTransactionDialog(props: {}) {
     const key = {
       method: "eth_estimateGas",
       params: [{
-        chainId: ZeroHexString.from(chainData.chainId),
+        chainId: ZeroHexAsInteger.fromOrThrow(chainData.chainId),
         from: wallet.address,
         to: maybeFinalTarget,
-        gasPrice: ZeroHexString.from(maybeFinalGasPrice),
-        value: ZeroHexString.from(maybeFinalValue.value),
-        nonce: ZeroHexString.from(maybeFinalNonce),
+        gasPrice: ZeroHexAsInteger.fromOrThrow(maybeFinalGasPrice),
+        value: ZeroHexAsInteger.fromOrThrow(maybeFinalValue.value),
+        nonce: ZeroHexAsInteger.fromOrThrow(maybeFinalNonce),
         data: maybeTriedMaybeFinalData.get()
       }, "latest"]
     } satisfies RpcRequestPreinit<[unknown, unknown]>
@@ -504,13 +504,13 @@ export function WalletTransactionDialog(props: {}) {
     const key = {
       method: "eth_estimateGas",
       params: [{
-        chainId: ZeroHexString.from(chainData.chainId),
+        chainId: ZeroHexAsInteger.fromOrThrow(chainData.chainId),
         from: wallet.address,
         to: maybeFinalTarget,
-        maxFeePerGas: ZeroHexString.from(maybeFinalMaxFeePerGas),
-        maxPriorityFeePerGas: ZeroHexString.from(maybeFinalMaxPriorityFeePerGas),
-        value: ZeroHexString.from(maybeFinalValue.value),
-        nonce: ZeroHexString.from(maybeFinalNonce),
+        maxFeePerGas: ZeroHexAsInteger.fromOrThrow(maybeFinalMaxFeePerGas),
+        maxPriorityFeePerGas: ZeroHexAsInteger.fromOrThrow(maybeFinalMaxPriorityFeePerGas),
+        value: ZeroHexAsInteger.fromOrThrow(maybeFinalValue.value),
+        nonce: ZeroHexAsInteger.fromOrThrow(maybeFinalNonce),
         data: maybeTriedMaybeFinalData.get()
       }, "latest"]
     } satisfies RpcRequestPreinit<[unknown, unknown]>
@@ -743,11 +743,11 @@ export function WalletTransactionDialog(props: {}) {
       params = {
         from: wallet.address,
         to: maybeTarget,
-        gas: ZeroHexString.from(gasLimit),
-        maxFeePerGas: ZeroHexString.from(maxFeePerGas),
-        maxPriorityFeePerGas: ZeroHexString.from(maxPriorityFeePerGas),
-        value: ZeroHexString.from(value.value),
-        nonce: ZeroHexString.from(nonce),
+        gas: ZeroHexAsInteger.fromOrThrow(gasLimit),
+        maxFeePerGas: ZeroHexAsInteger.fromOrThrow(maxFeePerGas),
+        maxPriorityFeePerGas: ZeroHexAsInteger.fromOrThrow(maxPriorityFeePerGas),
+        value: ZeroHexAsInteger.fromOrThrow(value.value),
+        nonce: ZeroHexAsInteger.fromOrThrow(nonce),
         data: data
       }
     }
@@ -773,10 +773,10 @@ export function WalletTransactionDialog(props: {}) {
       params = {
         from: wallet.address,
         to: maybeTarget,
-        gas: ZeroHexString.from(gasLimit),
-        gasPrice: ZeroHexString.from(gasPrice),
-        value: ZeroHexString.from(value.value),
-        nonce: ZeroHexString.from(nonce),
+        gas: ZeroHexAsInteger.fromOrThrow(gasLimit),
+        gasPrice: ZeroHexAsInteger.fromOrThrow(gasPrice),
+        value: ZeroHexAsInteger.fromOrThrow(value.value),
+        nonce: ZeroHexAsInteger.fromOrThrow(nonce),
         data: data
       }
     }

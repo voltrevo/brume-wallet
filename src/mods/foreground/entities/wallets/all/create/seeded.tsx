@@ -114,7 +114,7 @@ export function SeededWalletCreatorDialog(props: {}) {
         return new UIError(`Could not get the address of the device`, { cause })
       }).unwrap())
 
-      if (!ZeroHexString.is(address))
+      if (!ZeroHexString.String.is(address))
         throw new UIError(`Could not get the address of the device`)
 
       const seed = SeedRef.from(seedData)
@@ -152,7 +152,7 @@ export function SeededWalletCreatorDialog(props: {}) {
       const privateKeyBytes = Option.unwrap(child.privateKey)
       const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
 
-      const address = Address.compute(uncompressedPublicKeyBytes)
+      const address = Address.computeOrThrow(uncompressedPublicKeyBytes)
       const seed = SeedRef.from(seedData)
 
       const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, seed, path: defPathInput }

@@ -4,7 +4,7 @@ import { Mutators } from "@/libs/glacier/mutators"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { BgToken, ContractTokenData, ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
-import { Cubane, Fixed, ZeroHexFixed, ZeroHexString } from "@hazae41/cubane"
+import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, FetcherMore, States, core, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
@@ -103,7 +103,7 @@ export namespace FgToken {
           return
 
         const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-          await fetchOrFail<ZeroHexString>(request, context).then(f => f.mapSync(x => new ZeroHexFixed(x, context.chain.token.decimals)))
+          await fetchOrFail<ZeroHexString>(request, context).then(f => f.mapSync(x => new ZeroHexFixedInit(x, context.chain.token.decimals)))
 
         const indexer = async (states: States<Data, Fail>) => {
           if (block !== "pending")

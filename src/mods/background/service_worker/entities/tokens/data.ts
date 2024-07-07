@@ -1,7 +1,7 @@
 import { TokenAbi } from "@/libs/abi/erc20.abi"
 import { ChainData, chainDataByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
-import { Cubane, Fixed, ZeroHexFixed, ZeroHexString } from "@hazae41/cubane"
+import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
@@ -56,7 +56,7 @@ export interface ContractTokenRef {
   readonly uuid: string
   readonly type: "contract"
   readonly chainId: number
-  readonly address: ZeroHexString
+  readonly address: ZeroHexString.Unsafe
 }
 
 export namespace ContractTokenRef {
@@ -87,8 +87,8 @@ export interface ContractTokenData {
   readonly chainId: number,
   readonly symbol: string,
   readonly decimals: number,
-  readonly address: ZeroHexString
-  readonly pairs?: readonly ZeroHexString[]
+  readonly address: ZeroHexString.Unsafe
+  readonly pairs?: readonly ZeroHexString.Unsafe[]
 }
 
 export namespace BgToken {
@@ -187,7 +187,7 @@ export namespace BgToken {
 
       export function schema(account: ZeroHexString, block: string, context: BgEthereumContext, storage: IDBStorage) {
         const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore) =>
-          await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more).then(f => f.mapSync(x => new ZeroHexFixed(x, context.chain.token.decimals)))
+          await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more).then(f => f.mapSync(x => new ZeroHexFixedInit(x, context.chain.token.decimals)))
 
         const indexer = async (states: States<Data, Fail>) => {
           if (block !== "pending")
@@ -305,7 +305,7 @@ export namespace BgToken {
           method: "eth_call",
           params: [{
             to: token.address,
-            data: Cubane.Abi.encodeOrThrow(TokenAbi.balanceOf.from(account))
+            data: Cubane.Abi.encodeOrThrow(TokenAbi.balanceOf.fromOrThrow(account))
           }, block]
         })).ok().inner
       }

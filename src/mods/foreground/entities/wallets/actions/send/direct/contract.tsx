@@ -218,7 +218,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   const maybeFinalTarget = useMemo(() => {
     if (maybeTarget == null)
       return undefined
-    if (Address.from(maybeTarget) != null)
+    if (Address.fromOrNull(maybeTarget) != null)
       return maybeTarget
     if (maybeEnsTarget != null)
       return maybeEnsTarget
@@ -247,7 +247,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
       const address = Address.fromOrThrow(maybeFinalTarget)
       const value = maybeFinalValue.value
 
-      const abi = TokenAbi.transfer.from(address, value)
+      const abi = TokenAbi.transfer.fromOrThrow(address, value)
       const hex = Abi.encodeOrThrow(abi)
 
       return hex

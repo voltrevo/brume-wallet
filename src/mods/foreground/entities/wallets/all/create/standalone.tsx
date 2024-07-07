@@ -15,7 +15,7 @@ import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Base16 } from "@hazae41/base16";
 import { Base64 } from "@hazae41/base64";
 import { Bytes } from "@hazae41/bytes";
-import { Address, ZeroHexString } from "@hazae41/cubane";
+import { Address, ZeroHexAsInteger } from "@hazae41/cubane";
 import { Panic, Result } from "@hazae41/result";
 import { Secp256k1 } from "@hazae41/secp256k1";
 import { WebAuthnStorage } from "@hazae41/webauthnstorage";
@@ -49,25 +49,25 @@ export function StandaloneWalletCreatorDialog(props: {}) {
   const [rawKeyInput = "", setRawKeyInput] = useState<string>()
 
   const defKeyInput = useDeferredValue(rawKeyInput)
-  const zeroHexKey = ZeroHexString.from(defKeyInput)
+  const zeroHexKey = ZeroHexAsInteger.fromOrThrow(defKeyInput)
 
   const onKeyInputChange = useTextAreaChange(e => {
     setRawKeyInput(e.currentTarget.value)
   }, [])
 
   const generateOrAlert = useCallback(() => Errors.runAndLogAndAlertSync(() => {
-    using memory = Secp256k1.get().PrivateKey.tryRandom().unwrap().tryExport().unwrap()
+    using memory = Secp256k1.get().PrivateKey.randomOrThrow().exportOrThrow()
 
     setRawKeyInput(`0x${Base16.get().encodeOrThrow(memory)}`)
   }), [])
 
   const triedAddress = useMemo(() => Result.runAndDoubleWrapSync(() => {
     using privateKeyMemory = Base16.get().padStartAndDecodeOrThrow(zeroHexKey.slice(2))
-    using privateKey = Secp256k1.get().PrivateKey.tryImport(privateKeyMemory).unwrap()
-    using publicKey = privateKey.tryGetPublicKey().unwrap()
-    using uncompressedPublicKeyMemory = publicKey.tryExportUncompressed().unwrap()
+    using privateKey = Secp256k1.get().PrivateKey.importOrThrow(privateKeyMemory)
+    using publicKey = privateKey.getPublicKeyOrThrow()
+    using uncompressedPublicKeyMemory = publicKey.exportUncompressedOrThrow()
 
-    return Address.compute(uncompressedPublicKeyMemory.bytes)
+    return Address.computeOrThrow(uncompressedPublicKeyMemory.bytes)
   }), [zeroHexKey])
 
   const addUnauthenticatedOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {

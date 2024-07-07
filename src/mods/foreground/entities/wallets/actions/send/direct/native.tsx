@@ -214,7 +214,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   const maybeFinalTarget = useMemo(() => {
     if (maybeTarget == null)
       return undefined
-    if (Address.from(maybeTarget) != null)
+    if (Address.fromOrNull(maybeTarget) != null)
       return maybeTarget
     if (maybeEnsTarget != null)
       return maybeEnsTarget

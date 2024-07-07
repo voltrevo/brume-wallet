@@ -266,11 +266,11 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
 
       const passwordBytes = Bytes.fromUtf8(password)
       const hashSlice = Keccak256.get().hashOrThrow(passwordBytes)
-      const privateKey = Secp256k1.get().PrivateKey.tryImport(hashSlice).unwrap()
-      const publicKey = privateKey.tryGetPublicKey().unwrap().tryExportUncompressed().unwrap().copyAndDispose()
-      const address = Address.compute(publicKey)
+      const privateKey = Secp256k1.get().PrivateKey.importOrThrow(hashSlice)
+      const publicKey = privateKey.getPublicKeyOrThrow().exportUncompressedOrThrow().copyAndDispose()
+      const address = Address.computeOrThrow(publicKey)
 
-      const abi = PeanutAbi.makeDeposit.from(token, 0, value, 0, address)
+      const abi = PeanutAbi.makeDeposit.fromOrThrow(token, 0, value, 0, address)
       const hex = Abi.encodeOrThrow(abi)
 
       return hex

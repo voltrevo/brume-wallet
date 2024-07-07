@@ -2,8 +2,7 @@ import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
 import { useKeyValueState, usePathState } from "@/mods/foreground/router/path/context";
-import { Base16 } from "@hazae41/base16";
-import { Abi, ZeroHexString } from "@hazae41/cubane";
+import { Abi, ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Result } from "@hazae41/result";
 import { useMemo } from "react";
@@ -81,7 +80,7 @@ export function SignatureRow(props: {
       if (typeof x === "bigint")
         return String(x)
       if (x instanceof Uint8Array)
-        return ZeroHexString.from(Base16.get().encodeOrThrow(x))
+        return ZeroHexAsInteger.fromOrThrow(x)
       if (Array.isArray(x))
         return `(${x.map(stringifyOrThrow).join(", ")})`
       return "unknown"

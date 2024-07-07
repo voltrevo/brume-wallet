@@ -65,7 +65,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   const maybeAddress = useMemo(() => {
     if (maybeEnsAddress != null)
       return maybeEnsAddress
-    if (ZeroHexString.is(defAddressInput))
+    if (ZeroHexString.String.is(defAddressInput))
       return defAddressInput
     return undefined
   }, [defAddressInput, maybeEnsAddress])
@@ -76,7 +76,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
 
     const address = Option.wrap(maybeAddress).okOrElseSync(() => {
       return new UIError(`Could not fetch or parse address`)
-    }).mapSync(x => Address.from(x) as ZeroHexString).unwrap()
+    }).mapSync(x => Address.fromOrThrow(x) as ZeroHexString).unwrap()
 
     const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address }
 

@@ -20,7 +20,7 @@ export namespace BgPair {
         method: "eth_call",
         params: [{
           to: pair.address,
-          data: Abi.encodeOrThrow(PairAbi.getReserves.from())
+          data: Abi.encodeOrThrow(PairAbi.getReserves.fromOrThrow())
         }, block]
       })).ok().inner
     }

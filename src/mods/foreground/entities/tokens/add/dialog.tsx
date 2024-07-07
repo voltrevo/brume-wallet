@@ -42,13 +42,13 @@ export function TokenAddDialog(props: {}) {
   const token = useToken(chain.chainId, defAddress)
 
   const addOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    if (!ZeroHexString.is(defAddress))
+    if (!ZeroHexString.String.is(defAddress))
       throw new UIError(`Invalid address`)
 
     const name = await Result.unthrow<Result<string, Error>>(async t => {
       const context = { uuid: wallet.uuid, background, chain }
       const signature = Cubane.Abi.FunctionSignature.tryParse("name()").throw(t)
-      const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
+      const data = Cubane.Abi.tryEncode(signature.fromOrThrow()).throw(t)
 
       const schema = FgEthereum.Unknown.schema<ZeroHexString>({
         method: "eth_call",
@@ -72,7 +72,7 @@ export function TokenAddDialog(props: {}) {
     const symbol = await Result.unthrow<Result<string, Error>>(async t => {
       const context = { uuid: wallet.uuid, background, chain }
       const signature = Cubane.Abi.FunctionSignature.tryParse("symbol()").throw(t)
-      const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
+      const data = Cubane.Abi.tryEncode(signature.fromOrThrow()).throw(t)
 
       const schema = FgEthereum.Unknown.schema<ZeroHexString>({
         method: "eth_call",
@@ -96,7 +96,7 @@ export function TokenAddDialog(props: {}) {
     const decimals = await Result.unthrow<Result<number, Error>>(async t => {
       const context = { uuid: wallet.uuid, background, chain }
       const signature = Cubane.Abi.FunctionSignature.tryParse("decimals()").throw(t)
-      const data = Cubane.Abi.tryEncode(signature.from()).throw(t)
+      const data = Cubane.Abi.tryEncode(signature.fromOrThrow()).throw(t)
 
       const schema = FgEthereum.Unknown.schema<ZeroHexString>({
         method: "eth_call",
