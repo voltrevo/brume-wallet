@@ -15,9 +15,6 @@ export function createNativeWebSocketPool(params: PoolParams) {
   const pool = new Pool<Disposer<WebSocket>>(async (subparams) => {
     const { index, pool, signal } = subparams
 
-    if (!navigator.onLine)
-      throw new Error()
-
     while (!signal.aborted) {
       try {
         return await (async () => {
@@ -63,26 +60,7 @@ export function createNativeWebSocketPool(params: PoolParams) {
     throw new Error(`Aborted`, { cause: signal.reason })
   }, params)
 
-  const stack = new DisposableStack()
-
-  const onOnline = () => {
-    for (let i = 0; i < pool.capacity; i++) {
-      const child = pool.tryGetSync(i)
-
-      if (child.isErr())
-        continue
-
-      if (child.inner.isErr())
-        pool.restart(i)
-
-      continue
-    }
-  }
-
-  addEventListener("online", onOnline, { passive: true })
-  stack.defer(() => removeEventListener("online", onOnline))
-
-  return new Disposer(pool, () => stack.dispose())
+  return new Disposer(pool, () => { })
 }
 
 export let consensus: Option<Consensus> = new None()
