@@ -172,7 +172,7 @@ class Global {
   ) {
     const sockets = new Mutex(createNativeWebSocketPool({ capacity: 1 }).get())
     const tors = new Mutex(createTorPool(sockets, { capacity: 1 }).get())
-    const circuits = new Mutex(Circuits.pool(tors.inner, { capacity: 8 }))
+    const circuits = new Mutex(Circuits.pool(tors, { capacity: 8 }).get())
 
     this.circuits = circuits
 

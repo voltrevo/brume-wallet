@@ -1,3 +1,4 @@
+import { DisposableStack } from "@/libs/disposable/stack"
 import { Arrays } from "@hazae41/arrays"
 import { Box } from "@hazae41/box"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
@@ -78,7 +79,7 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function pool(tors: Pool<TorClientDuplex>, params: PoolParams) {
+  export function pool(tors: Mutex<Pool<TorClientDuplex>>, params: PoolParams) {
     let update = Date.now()
 
     const pool = new Pool<Circuit>(async (params) => {
@@ -91,7 +92,7 @@ export namespace Circuits {
           using circuit = await loopOrThrow(async () => {
             let start = Date.now()
 
-            const tor = await tors.getOrThrow(index % tors.capacity, signal).then(r => r.unwrap().get().getOrThrow())
+            const tor = await tors.inner.getOrThrow(index % tors.inner.capacity, signal).then(r => r.unwrap().get().getOrThrow())
 
             const middles = consensus.unwrap().microdescs.filter(it => true
               && it.flags.includes("Fast")
@@ -186,7 +187,9 @@ export namespace Circuits {
       throw new Error(`Aborted`, { cause: signal.reason })
     }, params)
 
-    tors.events.on("started", () => {
+    const stack = new DisposableStack()
+
+    const onStarted = () => {
       update = Date.now()
 
       for (let i = 0; i < pool.capacity; i++) {
@@ -202,9 +205,12 @@ export namespace Circuits {
       }
 
       return new None()
-    }, { passive: true })
+    }
 
-    return pool
+    tors.inner.events.on("started", onStarted, { passive: true })
+    stack.defer(() => tors.inner.events.off("started", onStarted))
+
+    return new Disposer(pool, () => stack.dispose())
   }
 
   /**
