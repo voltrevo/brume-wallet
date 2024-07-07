@@ -10,6 +10,20 @@ export class Dispose {
 
 }
 
+export class DisposableTuple<T extends readonly Disposable[]> {
+
+  constructor(
+    readonly inner: T
+  ) { }
+
+  [Symbol.dispose]() {
+    for (const disposable of this.inner) {
+      using _ = disposable
+    }
+  }
+
+}
+
 export class DisposableStack {
 
   #stack = new Array<Disposable>()

@@ -5,8 +5,8 @@ import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Consensus, TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote"
-import { None } from "@hazae41/option"
-import { Pool, PoolCreatorParams, PoolParams } from "@hazae41/piscine"
+import { None, Option, Some } from "@hazae41/option"
+import { Pool, PoolParams } from "@hazae41/piscine"
 
 export function createNativeWebSocketPool(params: PoolParams) {
   const pool = new Pool<Disposer<WebSocket>>(async (subparams) => {
@@ -76,8 +76,6 @@ export function createNativeWebSocketPool(params: PoolParams) {
   }, params)
 
   addEventListener("online", async () => {
-    console.log("online")
-
     for (let i = 0; i < pool.capacity; i++) {
       const child = pool.tryGetSync(i)
 
@@ -94,6 +92,8 @@ export function createNativeWebSocketPool(params: PoolParams) {
   return pool
 }
 
+export let consensus: Option<Consensus> = new None()
+
 export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque, Writable> }, signal: AbortSignal): Promise<TorClientDuplex> {
   const tcp = createSnowflakeStream(raw)
   const tor = new TorClientDuplex()
@@ -106,85 +106,52 @@ export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque
   return tor
 }
 
-export function createTorAndConsensusEntry(preTorAndConsensus: Box<Disposer<readonly [TorClientDuplex, Consensus]>>, params: PoolCreatorParams<Disposer<readonly [TorClientDuplex, Consensus]>>) {
-  const { pool, index } = params
-
-  const rawTorAndConsensus = preTorAndConsensus.getOrThrow()
-
-  using _ = preTorAndConsensus
-
-  const onCloseOrError = async (reason?: unknown) => {
-    pool.restart(index)
-    return new None()
-  }
-
-  using preOnCloseDisposer = new Box(new Disposer({}, rawTorAndConsensus.inner[0].events.on("close", onCloseOrError, { passive: true })))
-  using preOnErrorDisposer = new Box(new Disposer({}, rawTorAndConsensus.inner[0].events.on("error", onCloseOrError, { passive: true })))
-
-  addEventListener("offline", onCloseOrError, { passive: true })
-  const onOfflineClean = () => removeEventListener("offline", onCloseOrError)
-  using preOnOfflineDisposer = new Box(new Disposer({}, onOfflineClean))
-
-  /**
-   * Move all resources
-   */
-  const torAndConsensus = preTorAndConsensus.moveOrThrow()
-  const onCloseDisposer = preOnCloseDisposer.moveOrThrow()
-  const onErrorDisposer = preOnErrorDisposer.moveOrThrow()
-  const onOfflineDisposer = preOnOfflineDisposer.moveOrThrow()
-
-  const onEntryClean = () => {
-    using _0 = torAndConsensus
-    using _1 = onCloseDisposer
-    using _2 = onErrorDisposer
-    using _3 = onOfflineDisposer
-  }
-
-  return new Disposer(torAndConsensus, onEntryClean)
-}
-
 export function createTorPool(sockets: Pool<Disposer<WebSocket>>, params: PoolParams) {
-  const pool = new Pool<Disposer<readonly [TorClientDuplex, Consensus]>>(async (subparams) => {
-    const { index, signal } = subparams
+  const pool = new Pool<TorClientDuplex>(async (subparams) => {
+    const { pool, index, signal } = subparams
 
     while (!signal.aborted) {
       try {
         let start = Date.now()
 
-        using preSocket = await sockets.getOrThrow(index % sockets.capacity, signal).then(r => r.unwrap().inner)
-        console.log(preSocket.get())
-        const stream = new WebSocketDuplex(preSocket.getOrThrow().get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
+        using socket = await sockets.getOrThrow(index % sockets.capacity, signal).then(r => r.unwrap().get().moveOrThrow())
+        const stream = new WebSocketDuplex(socket.getOrThrow().get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
 
         start = Date.now()
-        using preTor = new Box(await createTorOrThrow(stream, AbortSignal.timeout(2000)))
+        using tor = new Box(await createTorOrThrow(stream, AbortSignal.timeout(2000)))
         console.log(`Created Tor in ${Date.now() - start}ms`)
 
-        start = Date.now()
-        using tmpCircuit = await preTor.getOrThrow().createOrThrow(AbortSignal.timeout(2000))
-        console.log(`Created consensus circuit in ${Date.now() - start}ms`)
+        socket.moveOrThrow()
 
-        start = Date.now()
-        const consensus = await Consensus.fetchOrThrow(tmpCircuit, AbortSignal.timeout(20_000))
-        console.log(`Fetched consensus in ${Date.now() - start}ms`)
+        if (consensus.isNone()) {
+          start = Date.now()
+          using circuit = await tor.getOrThrow().createOrThrow(AbortSignal.timeout(2000))
+          console.log(`Created consensus circuit in ${Date.now() - start}ms`)
 
-        /**
-         * Move Tor into a new struct with [TorClientDuplex, Consensus]
-         */
-        const socket = preSocket.moveOrThrow()
-        const tor = preTor.unwrapOrThrow()
-
-        const onTorAndConsensusClean = () => {
-          using _0 = socket
-          using _1 = tor
+          start = Date.now()
+          consensus = new Some(await Consensus.fetchOrThrow(circuit, AbortSignal.timeout(20_000)))
+          console.log(`Fetched consensus in ${Date.now() - start}ms`)
         }
 
-        using preTorAndConsensus = new Box(new Disposer([tor, consensus] as const, onTorAndConsensusClean))
+        using stack = new Box(new DisposableStack())
 
-        /**
-         * NOOP
-         */
+        const entry = tor.moveOrThrow()
+        stack.getOrThrow().use(entry)
 
-        return createTorAndConsensusEntry(preTorAndConsensus.moveOrThrow(), subparams)
+        const onCloseOrError = (reason?: unknown) => {
+          pool.restart(index)
+          return new None()
+        }
+
+        stack.getOrThrow().defer(entry.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
+        stack.getOrThrow().defer(entry.getOrThrow().events.on("error", onCloseOrError, { passive: true }))
+
+        addEventListener("offline", onCloseOrError, { passive: true })
+        stack.getOrThrow().defer(() => removeEventListener("offline", onCloseOrError))
+
+        const unstack = stack.unwrapOrThrow()
+
+        return new Disposer(entry, () => unstack.dispose())
       } catch (e: unknown) {
         console.log(`Tor creation failed`, { e })
         await new Promise(ok => setTimeout(ok, 1000))
