@@ -16,17 +16,17 @@ export function createNativeWebSocketPool(params: PoolParams) {
 
     while (!signal.aborted) {
       try {
-        let start = Date.now()
+        return await (async () => {
+          let start = Date.now()
 
-        const socket = new WebSocket("wss://snowflake.torproject.net/")
+          const socket = new WebSocket("wss://snowflake.torproject.net/")
 
-        socket.binaryType = "arraybuffer"
+          socket.binaryType = "arraybuffer"
 
-        start = Date.now()
-        await Sockets.waitOrThrow(socket, AbortSignals.timeout(2000, signal))
-        console.log(`Opened native WebSocket in ${Date.now() - start}ms`)
+          start = Date.now()
+          await Sockets.waitOrThrow(socket, AbortSignals.timeout(2000, signal))
+          console.log(`Opened native WebSocket in ${Date.now() - start}ms`)
 
-        {
           using stack = new Box(new DisposableStack())
 
           const entry = new Box(new Disposer(socket, () => socket.close()))
@@ -55,7 +55,7 @@ export function createNativeWebSocketPool(params: PoolParams) {
           const unstack = stack.unwrapOrThrow()
 
           return new Disposer(entry, () => unstack.dispose())
-        }
+        })()
       } catch (e: unknown) {
         console.warn(`Could not create native socket`, index, { e })
         await new Promise(ok => setTimeout(ok, 1000))
@@ -103,47 +103,48 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, params:
 
     while (!signal.aborted) {
       try {
-        let start = Date.now()
+        return await (async () => {
+          let start = Date.now()
 
-        using socket = await Pool.takeCryptoRandomOrThrow(sockets, signal).then(r => r.unwrap().get().moveOrThrow())
-        const stream = new WebSocketDuplex(socket.getOrThrow().get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
-
-        start = Date.now()
-        using tor = new Box(await createTorOrThrow(stream, AbortSignals.timeout(2000, signal)))
-        console.log(`Created Tor in ${Date.now() - start}ms`)
-
-        socket.unwrapOrThrow()
-
-        if (consensus.isNone()) {
-          start = Date.now()
-          using circuit = await tor.getOrThrow().createOrThrow(AbortSignals.timeout(2000, signal))
-          console.log(`Created consensus circuit in ${Date.now() - start}ms`)
+          using socket = await Pool.takeCryptoRandomOrThrow(sockets, signal).then(r => r.unwrap().get().moveOrThrow())
+          const stream = new WebSocketDuplex(socket.getOrThrow().get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
 
           start = Date.now()
-          consensus = new Some(await Consensus.fetchOrThrow(circuit, AbortSignals.timeout(20_000, signal)))
-          console.log(`Fetched consensus in ${Date.now() - start}ms`)
-        }
+          using tor = new Box(await createTorOrThrow(stream, AbortSignals.timeout(2000, signal)))
+          console.log(`Created Tor in ${Date.now() - start}ms`)
 
+          socket.unwrapOrThrow()
 
-        using stack = new Box(new DisposableStack())
+          if (consensus.isNone()) {
+            start = Date.now()
+            using circuit = await tor.getOrThrow().createOrThrow(AbortSignals.timeout(2000, signal))
+            console.log(`Created consensus circuit in ${Date.now() - start}ms`)
 
-        const entry = tor.moveOrThrow()
-        stack.getOrThrow().use(entry)
+            start = Date.now()
+            consensus = new Some(await Consensus.fetchOrThrow(circuit, AbortSignals.timeout(20_000, signal)))
+            console.log(`Fetched consensus in ${Date.now() - start}ms`)
+          }
 
-        const onCloseOrError = (reason?: unknown) => {
-          pool.restart(index)
-          return new None()
-        }
+          using stack = new Box(new DisposableStack())
 
-        stack.getOrThrow().defer(entry.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
-        stack.getOrThrow().defer(entry.getOrThrow().events.on("error", onCloseOrError, { passive: true }))
+          const entry = tor.moveOrThrow()
+          stack.getOrThrow().use(entry)
 
-        addEventListener("offline", onCloseOrError, { passive: true })
-        stack.getOrThrow().defer(() => removeEventListener("offline", onCloseOrError))
+          const onCloseOrError = (reason?: unknown) => {
+            pool.restart(index)
+            return new None()
+          }
 
-        const unstack = stack.unwrapOrThrow()
+          stack.getOrThrow().defer(entry.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
+          stack.getOrThrow().defer(entry.getOrThrow().events.on("error", onCloseOrError, { passive: true }))
 
-        return new Disposer(entry, () => unstack.dispose())
+          addEventListener("offline", onCloseOrError, { passive: true })
+          stack.getOrThrow().defer(() => removeEventListener("offline", onCloseOrError))
+
+          const unstack = stack.unwrapOrThrow()
+
+          return new Disposer(entry, () => unstack.dispose())
+        })()
       } catch (e: unknown) {
         console.log(`Tor creation failed`, { e })
         await new Promise(ok => setTimeout(ok, 1000))
