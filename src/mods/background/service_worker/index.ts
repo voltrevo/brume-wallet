@@ -171,10 +171,10 @@ class Global {
     readonly storage: IDBStorage
   ) {
     const sockets = new Mutex(createNativeWebSocketPool({ capacity: 1 }).get())
-    const tors = createTorPool(sockets, { capacity: 1 })
-    const circuits = Circuits.pool(tors, { capacity: 8 })
+    const tors = new Mutex(createTorPool(sockets, { capacity: 1 }).get())
+    const circuits = new Mutex(Circuits.pool(tors.inner, { capacity: 8 }))
 
-    this.circuits = new Mutex(circuits)
+    this.circuits = circuits
 
     core.onState.on(BgAppRequest.All.key, async () => {
       const state = core.getStateSync(BgAppRequest.All.key) as State<AppRequest[], never>

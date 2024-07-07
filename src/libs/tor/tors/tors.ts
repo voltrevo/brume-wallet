@@ -163,7 +163,9 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, params:
     throw new Error(`Aborted`, { cause: signal.reason })
   }, params)
 
-  sockets.inner.events.on("started", () => {
+  const stack = new DisposableStack()
+
+  const onStarted = () => {
     update = Date.now()
 
     for (let i = 0; i < pool.capacity; i++) {
@@ -179,7 +181,10 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, params:
     }
 
     return new None()
-  }, { passive: true })
+  }
 
-  return pool
+  sockets.inner.events.on("started", onStarted, { passive: true })
+  stack.defer(() => sockets.inner.events.off("started", onStarted))
+
+  return new Disposer(pool, () => stack.dispose())
 }
