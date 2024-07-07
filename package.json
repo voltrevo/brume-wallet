@@ -66,7 +66,7 @@
     "@hazae41/jsonrpc": "^1.0.5",
     "@hazae41/kcp": "^1.1.2",
     "@hazae41/keccak256": "^1.0.8",
-    "@hazae41/ledger": "^0.1.1",
+    "@hazae41/ledger": "^0.1.2",
     "@hazae41/morax": "^1.1.5",
     "@hazae41/mutex": "^2.0.0",
     "@hazae41/network-bundle": "^1.2.1",
