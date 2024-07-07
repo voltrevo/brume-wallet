@@ -82,12 +82,12 @@ export namespace Circuits {
     let update = Date.now()
 
     const pool = new Pool<Circuit>(async (params) => {
-      while (true) {
+      const { index, signal } = params
+
+      while (!signal.aborted) {
         const start = Date.now()
 
         const result = await Result.runAndDoubleWrap(async () => {
-          const { index, signal } = params
-
           using circuit = await loopOrThrow(async () => {
             let start = Date.now()
 
@@ -182,9 +182,11 @@ export namespace Circuits {
 
         throw result.getErr()
       }
+
+      throw new Error(`Aborted`, { cause: signal.reason })
     }, params)
 
-    tors.events.on("started", async i => {
+    tors.events.on("started", () => {
       update = Date.now()
 
       for (let i = 0; i < pool.capacity; i++) {
