@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-import { openAsBlob, readFileSync, statSync, writeFileSync } from "fs";
+import { openAsBlob, readFileSync, writeFileSync } from "fs";
 import path, { dirname } from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
@@ -34,37 +34,36 @@ const versionCode = Number(version.replaceAll(".", "")).toString()
   body.append("file", await openAsBlob("./dist/ios-and-ipados.ipa"), "ios-and-ipados.ipa");
   body.append("file", await openAsBlob("./dist/macos.zip"), "macos.zip");
 
-  const headers = { "Authorization": `Bearer ${process.env.NFTSTORAGE_TOKEN}` }
-  const response = await fetch("https://api.nft.storage/upload", { method: "POST", headers, body })
+  const headers = new Headers({ "Authorization": `Basic ${process.env.IPFS_SECRET}` })
+  const response = await fetch(`https://ipfs0.hazae41.me:5001/api/v0/add?wrap-with-directory=true&cid-version=1`, { method: "POST", headers, body })
 
   if (!response.ok)
     throw new Error(await response.text())
 
-  const result = await response.json()
+  const hash = await response.text()
+    .then(r => r.split("\n").at(-2))
+    .then(JSON.parse)
+    .then(r => r.Hash)
 
-  if (!result.ok)
-    throw new Error(result.error.message)
-
-  writeFileSync("./dist/.ipfs.md", `https://${result.value.cid}.ipfs.cf-ipfs.com/`)
+  writeFileSync("./dist/.ipfs.md", `https://${hash}.ipfs.ipfs0.hazae41.me/`)
 }
 
 {
   const body = new FormData()
 
-  for (const filePath of walkSync("./dist/website")) {
+  for (const filePath of walkSync("./dist/website"))
     body.append("file", await openAsBlob(filePath), path.relative("./dist/website", filePath))
-  }
 
-  const headers = { "Authorization": `Bearer ${process.env.NFTSTORAGE_TOKEN}` }
-  const response = await fetch("https://api.nft.storage/upload", { method: "POST", headers, body })
+  const headers = new Headers({ "Authorization": `Basic ${process.env.IPFS_SECRET}` })
+  const response = await fetch(`https://ipfs0.hazae41.me:5001/api/v0/add?wrap-with-directory=true&cid-version=1`, { method: "POST", headers, body })
 
   if (!response.ok)
     throw new Error(await response.text())
 
-  const result = await response.json()
+  const hash = await response.text()
+    .then(r => r.split("\n").at(-2))
+    .then(JSON.parse)
+    .then(r => r.Hash)
 
-  if (!result.ok)
-    throw new Error(result.error.message)
-
-  writeFileSync("./dist/.website.ipfs.md", `https://${result.value.cid}.ipfs.cf-ipfs.com/`)
+  writeFileSync("./dist/.website.ipfs.md", `https://${hash}.ipfs.ipfs0.hazae41.me/`)
 }
