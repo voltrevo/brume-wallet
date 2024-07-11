@@ -21,7 +21,7 @@ import { walkSync } from "./libs/walkSync.mjs";
   for await (const file of importer(source, blockstore, { wrapWithDirectory: true }))
     last = file
 
-  await writeFile("./dist/.ipfs.md", `https://${last.cid.toString()}.ipfs.cf-ipfs.com/`)
+  await writeFile("./dist/.ipfs.md", `https://${last.cid.toString()}.ipfs.ipfs0.hazae41.me/`)
 }
 
 {
@@ -37,5 +37,5 @@ import { walkSync } from "./libs/walkSync.mjs";
   for await (const file of importer(source, blockstore, { wrapWithDirectory: true }))
     last = file
 
-  await writeFile("./dist/.website.ipfs.md", `https://${last.cid.toString()}.ipfs.cf-ipfs.com/`)
+  await writeFile("./dist/.website.ipfs.md", `https://${last.cid.toString()}.ipfs.ipfs0.hazae41.me/`)
 }
