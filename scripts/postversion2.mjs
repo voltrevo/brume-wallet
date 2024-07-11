@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-import { openAsBlob, readFileSync, writeFileSync } from "fs";
+import { openAsBlob, readFileSync, statSync, writeFileSync } from "fs";
 import path, { dirname } from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
