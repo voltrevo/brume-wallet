@@ -3,7 +3,7 @@ import "@hazae41/symbol-dispose-polyfill";
 import { Blobs } from "@/libs/blobs/blobs";
 import { BrowserError, browser } from "@/libs/browser/browser";
 import { ExtensionRpcRouter } from "@/libs/channel/channel";
-import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch";
+import { fetchAsBlobOrThrow, fetchAsJsonOrThrow } from "@/libs/fetch";
 import { Mouse } from "@/libs/mouse/mouse";
 import { isFirefoxExtension, isSafariExtension } from "@/libs/platform/platform";
 import { AbortSignals } from "@/libs/signals/signals";
@@ -14,7 +14,7 @@ import { Disposer } from "@hazae41/disposer";
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
 import { None, Some } from "@hazae41/option";
 import { Pool } from "@hazae41/piscine";
-import { Ok } from "@hazae41/result";
+import { Ok, Result } from "@hazae41/result";
 import { PreOriginData } from "../service_worker/entities/origins/data";
 
 declare const self: ServiceWorkerGlobalScope
@@ -68,7 +68,7 @@ async function main() {
 
     for (const link of document.getElementsByTagName("link")) {
       if (["icon", "shortcut icon", "icon shortcut"].includes(link.rel)) {
-        const blob = await tryFetchAsBlob(link.href)
+        const blob = await Result.runAndWrap(() => fetchAsBlobOrThrow(link.href))
 
         if (blob.isErr())
           continue
@@ -83,7 +83,7 @@ async function main() {
       }
 
       if (link.rel === "manifest") {
-        const manifest = await tryFetchAsJson<any>(link.href)
+        const manifest = await Result.runAndWrap(() => fetchAsJsonOrThrow<any>(link.href))
 
         if (manifest.isErr())
           continue
@@ -100,7 +100,7 @@ async function main() {
 
     if (!origin.icon) {
       await (async () => {
-        const blob = await tryFetchAsBlob("/favicon.ico")
+        const blob = await Result.runAndWrap(() => fetchAsBlobOrThrow("/favicon.ico"))
 
         if (blob.isErr())
           return
