@@ -6,7 +6,6 @@ import { Err, Ok, Result } from "@hazae41/result"
 import { Signals } from "@hazae41/signals"
 import { BrowserError } from "../browser/browser"
 import { Console } from "../console"
-import { AbortSignals } from "../signals/signals"
 import { randomUUID } from "../uuid/uuid"
 
 export type RpcRouter =
@@ -120,11 +119,11 @@ export class MessageRpcRouter {
     return await this.onResponse(data)
   }
 
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>, signal = AbortSignals.never()): Promise<Result<RpcResponse<T>, Error>> {
+  async tryRequest<T>(init: RpcRequestPreinit<unknown>, signal = Signals.never()): Promise<Result<RpcResponse<T>, Error>> {
     return Result.runAndDoubleWrap(() => this.requestOrThrow<T>(init, signal))
   }
 
-  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = AbortSignals.never()): Promise<RpcResponse<T>> {
+  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = Signals.never()): Promise<RpcResponse<T>> {
     const request = this.counter.prepare(init)
 
     if (request.id !== "ping")
@@ -142,7 +141,7 @@ export class MessageRpcRouter {
     }, signal)
   }
 
-  async waitHelloOrThrow(signal = AbortSignals.never()) {
+  async waitHelloOrThrow(signal = Signals.never()) {
     const active = this.requestOrThrow<void>({ method: "brume_hello" }).then(r => r.unwrap())
 
     using passive = this.events.wait("request", (future: Future<void>, init) => {
@@ -254,7 +253,7 @@ export class ExtensionRpcRouter {
     return Result.runAndDoubleWrap(() => this.requestOrThrow<T>(init))
   }
 
-  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = AbortSignals.never()): Promise<RpcResponse<T>> {
+  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = Signals.never()): Promise<RpcResponse<T>> {
     const request = this.counter.prepare(init)
 
     if (request.id !== "ping")
@@ -271,7 +270,7 @@ export class ExtensionRpcRouter {
     }, signal)
   }
 
-  async waitHelloOrThrow(signal = AbortSignals.never()) {
+  async waitHelloOrThrow(signal = Signals.never()) {
     const active = this.requestOrThrow<void>({ method: "brume_hello" }).then(r => r.unwrap())
 
     using passive = this.events.wait("request", (future: Future<void>, init) => {

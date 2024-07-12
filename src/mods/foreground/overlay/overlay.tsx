@@ -1,5 +1,5 @@
 import { BrowserError, browser } from "@/libs/browser/browser";
-import { fetchAsJsonOrThrow } from "@/libs/fetch/fetch";
+import { fetchAsJsonOrThrow } from "@/libs/fetch";
 import { Outline } from "@/libs/icons/icons";
 import { isExtension, isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";

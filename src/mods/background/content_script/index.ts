@@ -6,7 +6,6 @@ import { ExtensionRpcRouter } from "@/libs/channel/channel";
 import { fetchAsBlobOrThrow, fetchAsJsonOrThrow } from "@/libs/fetch";
 import { Mouse } from "@/libs/mouse/mouse";
 import { isFirefoxExtension, isSafariExtension } from "@/libs/platform/platform";
-import { AbortSignals } from "@/libs/signals/signals";
 import { NonReadonly } from "@/libs/types/readonly";
 import { qurl } from "@/libs/url/url";
 import { Box } from "@hazae41/box";
@@ -15,6 +14,7 @@ import { RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc
 import { None, Some } from "@hazae41/option";
 import { Pool } from "@hazae41/piscine";
 import { Ok, Result } from "@hazae41/result";
+import { Signals } from "@hazae41/signals";
 import { PreOriginData } from "../service_worker/entities/origins/data";
 
 declare const self: ServiceWorkerGlobalScope
@@ -134,7 +134,7 @@ async function main() {
       using preChannel = new Box(new Disposer(raw, () => raw.disconnect()))
       using preRouter = new Box(new ExtensionRpcRouter("background", preChannel.inner.inner))
 
-      await preRouter.getOrThrow().waitHelloOrThrow(AbortSignals.timeout(1000))
+      await preRouter.getOrThrow().waitHelloOrThrow(AbortSignal.timeout(1000))
 
       connected = true
 
@@ -239,7 +239,7 @@ async function main() {
 
       const icon = await router.inner.requestOrThrow<string>({
         method: "brume_icon"
-      }, AbortSignals.never()).then(r => r.unwrap())
+      }, Signals.never()).then(r => r.unwrap())
 
       const detail = JSON.stringify(icon)
       const event = new CustomEvent("brume:icon", { detail })

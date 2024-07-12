@@ -1,11 +1,11 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { Maps } from "@/libs/maps/maps"
 import { TorRpc } from "@/libs/rpc/rpc"
-import { AbortSignals } from "@/libs/signals/signals"
 import { Fail, Fetched, FetcherMore } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Option } from "@hazae41/option"
 import { Catched, Panic } from "@hazae41/result"
+import { Signals } from "@hazae41/signals"
 import { EthBrume } from "./entities/brumes/data"
 import { EthereumFetchParams } from "./entities/wallets/data"
 
@@ -24,11 +24,11 @@ export namespace BgEthereumContext {
       const pools = Option.unwrap(brume[ethereum.chain.chainId])
 
       async function runWithPoolOrThrow(index: number) {
-        const poolSignal = AbortSignals.timeout(5_000, parentSignal)
+        const poolSignal = Signals.merge(AbortSignal.timeout(5_000), parentSignal)
         const pool = await pools.tryGet(index, poolSignal).then(r => r.unwrap().unwrap().inner.inner)
 
         async function runWithConnOrThrow(index: number) {
-          const connSignal = AbortSignals.timeout(5_000, parentSignal)
+          const connSignal = Signals.merge(AbortSignal.timeout(5_000), parentSignal)
           const conn = await pool.tryGet(index, connSignal).then(r => r.unwrap().unwrap().inner.inner)
 
           const { counter, connection } = conn
@@ -37,7 +37,7 @@ export namespace BgEthereumContext {
           if (connection.isURL()) {
             const { url, circuit } = connection
 
-            const signal = AbortSignals.timeout(10_000, parentSignal)
+            const signal = Signals.merge(AbortSignal.timeout(10_000), parentSignal)
             const response = await TorRpc.fetchWithCircuitOrThrow<T>(url, { ...request, circuit, signal })
 
             return Fetched.rewrap(response)
@@ -48,7 +48,7 @@ export namespace BgEthereumContext {
 
             await cooldown
 
-            const signal = AbortSignals.timeout(10_000, parentSignal)
+            const signal = Signals.merge(AbortSignal.timeout(10_000), parentSignal)
             const response = await TorRpc.fetchWithSocketOrThrow<T>(socket, request, signal)
 
             return Fetched.rewrap(response)

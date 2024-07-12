@@ -9,12 +9,11 @@ import { BrowserError, browser } from "@/libs/browser/browser";
 import { ExtensionRpcRouter, MessageRpcRouter, RpcRouter } from "@/libs/channel/channel";
 import { Console } from "@/libs/console";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
-import { fetchAsBlobOrThrow } from "@/libs/fetch/fetch";
+import { fetchAsBlobOrThrow } from "@/libs/fetch";
 import { Mutators } from "@/libs/glacier/mutators";
 import { Mime } from "@/libs/mime/mime";
 import { Mouse } from "@/libs/mouse/mouse";
 import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExtension, isIpad, isSafariExtension, isWebsite } from "@/libs/platform/platform";
-import { AbortSignals } from "@/libs/signals/signals";
 import { Strings } from "@/libs/strings/strings";
 import { Circuits } from "@/libs/tor/circuits/circuits";
 import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors";
@@ -1616,7 +1615,7 @@ if (isWebsite() || isAndroidApp()) {
 
     port.start()
 
-    await router.waitHelloOrThrow(AbortSignals.timeout(1000))
+    await router.waitHelloOrThrow(AbortSignal.timeout(1000))
 
     router.runPingLoop()
   }
@@ -1663,7 +1662,7 @@ if (isAppleApp()) {
 
     port.start()
 
-    await router.waitHelloOrThrow(AbortSignals.timeout(1000))
+    await router.waitHelloOrThrow(AbortSignal.timeout(1000))
 
     router.runPingLoop()
   }
@@ -1691,7 +1690,7 @@ if (isExtension()) {
       return await inited.get().tryRouteContentScript(router, request)
     })
 
-    await router.waitHelloOrThrow(AbortSignals.timeout(1000))
+    await router.waitHelloOrThrow(AbortSignal.timeout(1000))
   }
 
   const onForeground = async (port: chrome.runtime.Port) => {
@@ -1707,7 +1706,7 @@ if (isExtension()) {
       return await inited.get().routeForegroundOrThrow(router, request)
     })
 
-    await router.waitHelloOrThrow(AbortSignals.timeout(1000))
+    await router.waitHelloOrThrow(AbortSignal.timeout(1000))
   }
 
   const onOffscreen = async (port: chrome.runtime.Port) => {
@@ -1716,7 +1715,7 @@ if (isExtension()) {
 
     console.log(name, "connected")
 
-    await router.waitHelloOrThrow(AbortSignals.timeout(1000))
+    await router.waitHelloOrThrow(AbortSignal.timeout(1000))
   }
 
   browser.runtime.onConnect.addListener(port => {

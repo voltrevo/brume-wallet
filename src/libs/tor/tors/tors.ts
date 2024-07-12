@@ -1,4 +1,3 @@
-import { AbortSignals } from "@/libs/signals/signals"
 import { Sockets } from "@/libs/sockets/sockets"
 import { WebSocketDuplex } from "@/libs/streams/websocket"
 import { Opaque, Writable } from "@hazae41/binary"
@@ -9,6 +8,7 @@ import { Mutex } from "@hazae41/mutex"
 import { None, Option, Some } from "@hazae41/option"
 import { Pool, PoolParams } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
+import { Signals } from "@hazae41/signals"
 
 export function createNativeWebSocketPool(params: PoolParams) {
   const pool = new Pool<Disposer<WebSocket>>(async (subparams) => {
@@ -24,7 +24,7 @@ export function createNativeWebSocketPool(params: PoolParams) {
           socket.binaryType = "arraybuffer"
 
           start = Date.now()
-          await Sockets.waitOrThrow(socket, AbortSignals.timeout(2000, signal))
+          await Sockets.waitOrThrow(socket, Signals.merge(AbortSignal.timeout(2000), signal))
           console.log(`Opened native WebSocket in ${Date.now() - start}ms`)
 
           using stack = new Box(new DisposableStack())
@@ -92,18 +92,18 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, params:
         const stream = new WebSocketDuplex(socket.getOrThrow().get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
 
         start = Date.now()
-        using tor = new Box(await createTorOrThrow(stream, AbortSignals.timeout(2000, signal)))
+        using tor = new Box(await createTorOrThrow(stream, Signals.merge(AbortSignal.timeout(2000), signal)))
         console.log(`Created Tor in ${Date.now() - start}ms`)
 
         socket.unwrapOrThrow()
 
         if (consensus.isNone()) {
           start = Date.now()
-          using circuit = await tor.getOrThrow().createOrThrow(AbortSignals.timeout(2000, signal))
+          using circuit = await tor.getOrThrow().createOrThrow(Signals.merge(AbortSignal.timeout(2000), signal))
           console.log(`Created consensus circuit in ${Date.now() - start}ms`)
 
           start = Date.now()
-          consensus = new Some(await Consensus.fetchOrThrow(circuit, AbortSignals.timeout(20_000, signal)))
+          consensus = new Some(await Consensus.fetchOrThrow(circuit, Signals.merge(AbortSignal.timeout(20_000), signal)))
           console.log(`Fetched consensus in ${Date.now() - start}ms`)
         }
 

@@ -1,6 +1,5 @@
 import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionRpcRouter, MessageRpcRouter, RpcRouter } from "@/libs/channel/channel"
-import { AbortSignals } from "@/libs/signals/signals"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Future } from "@hazae41/future"
@@ -164,7 +163,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
 
     active.postMessage("FOREGROUND->BACKGROUND", [rawChannel.port2])
 
-    await router.waitHelloOrThrow(AbortSignals.timeout(1000))
+    await router.waitHelloOrThrow(AbortSignal.timeout(1000))
 
     router.runPingLoop()
 
@@ -265,7 +264,7 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
 
     worker.get().postMessage("FOREGROUND->BACKGROUND", [rawChannel.port2])
 
-    await router.waitHelloOrThrow(AbortSignals.timeout(1000))
+    await router.waitHelloOrThrow(AbortSignal.timeout(1000))
 
     router.runPingLoop()
 
@@ -353,7 +352,7 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
     using prePort = new Box(new Disposer(rawPort, () => rawPort.disconnect()))
     using preRouter = new Box(new ExtensionRpcRouter("background", rawPort))
 
-    await preRouter.getOrThrow().waitHelloOrThrow(AbortSignals.timeout(1000))
+    await preRouter.getOrThrow().waitHelloOrThrow(AbortSignal.timeout(1000))
 
     const port = prePort.unwrapOrThrow()
     const router = preRouter.unwrapOrThrow()

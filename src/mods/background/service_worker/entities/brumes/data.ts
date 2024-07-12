@@ -1,6 +1,5 @@
 import { Chains } from "@/libs/ethereum/mods/chain"
 import { Objects } from "@/libs/objects/objects"
-import { AbortSignals } from "@/libs/signals/signals"
 import { Sockets } from "@/libs/sockets/sockets"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { Jwt } from "@/libs/wconn/mods/jwt/jwt"
@@ -16,6 +15,7 @@ import { Mutex } from "@hazae41/mutex"
 import { None } from "@hazae41/option"
 import { Pool, PoolParams } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
+import { Signals } from "@hazae41/signals"
 
 export interface WcBrume {
   readonly key: Ed25519.PrivateKey
@@ -151,7 +151,7 @@ export namespace WebSocketConnection {
    * @returns 
    */
   export async function createOrThrow(circuit: Circuit, url: URL, signal?: AbortSignal): Promise<WebSocketConnection> {
-    const signal2 = AbortSignals.timeout(15_000, signal)
+    const signal2 = Signals.merge(AbortSignal.timeout(15_000), signal)
 
     if (url.protocol === "wss:") {
       const tcp = await circuit.openOrThrow(url.hostname, 443)
