@@ -1,70 +1,73 @@
-import "@hazae41/symbol-dispose-polyfill"
-import "@hazae41/worker-online-polyfill"
+import "@hazae41/symbol-dispose-polyfill";
 
-import { Blobs } from "@/libs/blobs/blobs"
-import { BrowserError, browser } from "@/libs/browser/browser"
-import { ExtensionRpcRouter, MessageRpcRouter, RpcRouter } from "@/libs/channel/channel"
-import { Console } from "@/libs/console"
-import { chainDataByChainId } from "@/libs/ethereum/mods/chain"
-import { fetchAsBlobOrThrow } from "@/libs/fetch/fetch"
-import { Mutators } from "@/libs/glacier/mutators"
-import { Mime } from "@/libs/mime/mime"
-import { Mouse } from "@/libs/mouse/mouse"
-import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExtension, isIpad, isSafariExtension, isWebsite } from "@/libs/platform/platform"
-import { AbortSignals } from "@/libs/signals/signals"
-import { Strings } from "@/libs/strings/strings"
-import { Circuits } from "@/libs/tor/circuits/circuits"
-import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors"
-import { qurl } from "@/libs/url/url"
-import { randomUUID } from "@/libs/uuid/uuid"
-import { CryptoClient } from "@/libs/wconn/mods/crypto/client"
-import { IrnBrume } from "@/libs/wconn/mods/irn/irn"
-import { Wc, WcMetadata, WcSession, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc"
-import { UnauthorizedError } from "@/mods/foreground/errors/errors"
-import { Paths } from "@/mods/foreground/router/path/context"
-import { Base16 } from "@hazae41/base16"
-import { Base58 } from "@hazae41/base58"
-import { Base64 } from "@hazae41/base64"
-import { Base64Url } from "@hazae41/base64url"
-import { Bytes } from "@hazae41/bytes"
-import { Cadenas } from "@hazae41/cadenas"
-import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305"
-import { ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane"
-import { Circuit, Echalote } from "@hazae41/echalote"
-import { Ed25519 } from "@hazae41/ed25519"
-import { Fleche, fetch } from "@hazae41/fleche"
-import { Future } from "@hazae41/future"
-import { Data, IDBStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier"
-import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
-import { Kcp } from "@hazae41/kcp"
-import { Keccak256 } from "@hazae41/keccak256"
-import { Mutex } from "@hazae41/mutex"
-import { None, Nullable, Option, Some } from "@hazae41/option"
-import { Pool } from "@hazae41/piscine"
-import { SuperEventTarget } from "@hazae41/plume"
-import { Err, Ok, Result } from "@hazae41/result"
-import { Ripemd160 } from "@hazae41/ripemd160"
-import { Secp256k1 } from "@hazae41/secp256k1"
-import { Sha1 } from "@hazae41/sha1"
-import { Smux } from "@hazae41/smux"
-import { X25519 } from "@hazae41/x25519"
-import { clientsClaim } from 'workbox-core'
-import { precacheAndRoute } from "workbox-precaching"
-import { BgEthereumContext } from "./context"
-import { BgBlobby, BlobbyRef } from "./entities/blobbys/data"
-import { EthBrume, WcBrume } from "./entities/brumes/data"
-import { BgEns } from "./entities/names/data"
-import { BgOrigin, OriginData, PreOriginData } from "./entities/origins/data"
-import { AppRequest, AppRequestData, BgAppRequest } from "./entities/requests/data"
-import { BgSeed, SeedData } from "./entities/seeds/data"
-import { BgSession, ExSessionData, SessionData, SessionRef, SessionStorage, WcSessionData } from "./entities/sessions/data"
-import { Status, StatusData } from "./entities/sessions/status/data"
-import { BgSettings } from "./entities/settings/data"
-import { BgSimulation } from "./entities/simulations/data"
-import { BgToken } from "./entities/tokens/data"
-import { BgUser, User, UserData, UserInit, UserSession } from "./entities/users/data"
-import { BgWallet, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data"
-import { createUserStorageOrThrow } from "./storage"
+import "@hazae41/disposable-stack-polyfill";
+
+import "@hazae41/worker-online-polyfill";
+
+import { Blobs } from "@/libs/blobs/blobs";
+import { BrowserError, browser } from "@/libs/browser/browser";
+import { ExtensionRpcRouter, MessageRpcRouter, RpcRouter } from "@/libs/channel/channel";
+import { Console } from "@/libs/console";
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
+import { fetchAsBlobOrThrow } from "@/libs/fetch/fetch";
+import { Mutators } from "@/libs/glacier/mutators";
+import { Mime } from "@/libs/mime/mime";
+import { Mouse } from "@/libs/mouse/mouse";
+import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExtension, isIpad, isSafariExtension, isWebsite } from "@/libs/platform/platform";
+import { AbortSignals } from "@/libs/signals/signals";
+import { Strings } from "@/libs/strings/strings";
+import { Circuits } from "@/libs/tor/circuits/circuits";
+import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors";
+import { qurl } from "@/libs/url/url";
+import { randomUUID } from "@/libs/uuid/uuid";
+import { CryptoClient } from "@/libs/wconn/mods/crypto/client";
+import { IrnBrume } from "@/libs/wconn/mods/irn/irn";
+import { Wc, WcMetadata, WcSession, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc";
+import { UnauthorizedError } from "@/mods/foreground/errors/errors";
+import { Paths } from "@/mods/foreground/router/path/context";
+import { Base16 } from "@hazae41/base16";
+import { Base58 } from "@hazae41/base58";
+import { Base64 } from "@hazae41/base64";
+import { Base64Url } from "@hazae41/base64url";
+import { Bytes } from "@hazae41/bytes";
+import { Cadenas } from "@hazae41/cadenas";
+import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
+import { ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
+import { Circuit, Echalote } from "@hazae41/echalote";
+import { Ed25519 } from "@hazae41/ed25519";
+import { Fleche, fetch } from "@hazae41/fleche";
+import { Future } from "@hazae41/future";
+import { Data, IDBStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier";
+import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
+import { Kcp } from "@hazae41/kcp";
+import { Keccak256 } from "@hazae41/keccak256";
+import { Mutex } from "@hazae41/mutex";
+import { None, Nullable, Option, Some } from "@hazae41/option";
+import { Pool } from "@hazae41/piscine";
+import { SuperEventTarget } from "@hazae41/plume";
+import { Err, Ok, Result } from "@hazae41/result";
+import { Ripemd160 } from "@hazae41/ripemd160";
+import { Secp256k1 } from "@hazae41/secp256k1";
+import { Sha1 } from "@hazae41/sha1";
+import { Smux } from "@hazae41/smux";
+import { X25519 } from "@hazae41/x25519";
+import { clientsClaim } from 'workbox-core';
+import { precacheAndRoute } from "workbox-precaching";
+import { BgEthereumContext } from "./context";
+import { BgBlobby, BlobbyRef } from "./entities/blobbys/data";
+import { EthBrume, WcBrume } from "./entities/brumes/data";
+import { BgEns } from "./entities/names/data";
+import { BgOrigin, OriginData, PreOriginData } from "./entities/origins/data";
+import { AppRequest, AppRequestData, BgAppRequest } from "./entities/requests/data";
+import { BgSeed, SeedData } from "./entities/seeds/data";
+import { BgSession, ExSessionData, SessionData, SessionRef, SessionStorage, WcSessionData } from "./entities/sessions/data";
+import { Status, StatusData } from "./entities/sessions/status/data";
+import { BgSettings } from "./entities/settings/data";
+import { BgSimulation } from "./entities/simulations/data";
+import { BgToken } from "./entities/tokens/data";
+import { BgUser, User, UserData, UserInit, UserSession } from "./entities/users/data";
+import { BgWallet, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data";
+import { createUserStorageOrThrow } from "./storage";
 
 declare global {
   interface ServiceWorkerGlobalScope {

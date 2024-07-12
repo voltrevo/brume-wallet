@@ -1,21 +1,21 @@
-import "@hazae41/symbol-dispose-polyfill"
+import "@hazae41/symbol-dispose-polyfill";
 
-import { Blobs } from "@/libs/blobs/blobs"
-import { BrowserError, browser } from "@/libs/browser/browser"
-import { ExtensionRpcRouter } from "@/libs/channel/channel"
-import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch"
-import { Mouse } from "@/libs/mouse/mouse"
-import { isFirefoxExtension, isSafariExtension } from "@/libs/platform/platform"
-import { AbortSignals } from "@/libs/signals/signals"
-import { NonReadonly } from "@/libs/types/readonly"
-import { qurl } from "@/libs/url/url"
-import { Box } from "@hazae41/box"
-import { Disposer } from "@hazae41/disposer"
-import { RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc"
-import { None, Some } from "@hazae41/option"
-import { Pool } from "@hazae41/piscine"
-import { Ok } from "@hazae41/result"
-import { PreOriginData } from "../service_worker/entities/origins/data"
+import { Blobs } from "@/libs/blobs/blobs";
+import { BrowserError, browser } from "@/libs/browser/browser";
+import { ExtensionRpcRouter } from "@/libs/channel/channel";
+import { tryFetchAsBlob, tryFetchAsJson } from "@/libs/fetch/fetch";
+import { Mouse } from "@/libs/mouse/mouse";
+import { isFirefoxExtension, isSafariExtension } from "@/libs/platform/platform";
+import { AbortSignals } from "@/libs/signals/signals";
+import { NonReadonly } from "@/libs/types/readonly";
+import { qurl } from "@/libs/url/url";
+import { Box } from "@hazae41/box";
+import { Disposer } from "@hazae41/disposer";
+import { RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
+import { None, Some } from "@hazae41/option";
+import { Pool } from "@hazae41/piscine";
+import { Ok } from "@hazae41/result";
+import { PreOriginData } from "../service_worker/entities/origins/data";
 
 declare const self: ServiceWorkerGlobalScope
 

@@ -66,6 +66,7 @@
     "@hazae41/chacha20poly1305": "^1.0.7",
     "@hazae41/cubane": "^0.1.21",
     "@hazae41/cursor": "^1.2.3",
+    "@hazae41/disposable-stack-polyfill": "^1.0.1",
     "@hazae41/disposer": "^2.0.20",
     "@hazae41/echalote": "^0.4.7",
     "@hazae41/ed25519": "^2.1.10",
