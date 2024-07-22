@@ -1,18 +1,11 @@
 import { DarkProps } from "@/libs/react/props/dark"
-import { usePathContext } from "@hazae41/chemin"
-import { Nullable, Option } from "@hazae41/option"
-import { AnimationEvent, KeyboardEvent, MouseEvent, SyntheticEvent, UIEvent, createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { CloseContext, useCloseContext, usePathContext } from "@hazae41/chemin"
+import { AnimationEvent, KeyboardEvent, MouseEvent, SyntheticEvent, UIEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 import { Events } from "../../react/events"
 import { ChildrenProps } from "../../react/props/children"
 import { CloseProps } from "../../react/props/close"
 import { Portal } from "../portal/portal"
-
-export const CloseContext = createContext<Nullable<(force?: boolean) => void>>(undefined)
-
-export function useCloseContext() {
-  return Option.wrap(useContext(CloseContext))
-}
 
 export function Dialog2(props: ChildrenProps & DarkProps & { hesitant?: boolean }) {
   const close = useCloseContext().unwrap()
