@@ -1,5 +1,6 @@
 import { isWebsite } from "@/libs/platform/platform"
 import { ChildrenProps } from "@/libs/react/props/children"
+import { usePathContext } from "@hazae41/chemin"
 import { DonePage, PersonalSignPage, TransactPage, TypedSignPage, WalletAndChainSelectPage } from "pages/popup"
 import { RequestsPage } from "../entities/requests/all/page"
 import { SeedsPage } from "../entities/seeds/all/page"
@@ -15,7 +16,6 @@ import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
 import { HomePage } from "../home/page"
 import { Bottom } from "../overlay/bottom"
-import { usePathContext } from "./path/context"
 
 export function Layout(props: ChildrenProps) {
   const { children } = props
@@ -51,7 +51,7 @@ export function Router() {
       <WalletsPage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/wallets(\/)trash(\/)?$/))
+  if (matches = url.pathname.match(/^\/wallets\/trash(\/)?$/))
     return <Layout>
       <TrashedWalletsPage />
     </Layout>

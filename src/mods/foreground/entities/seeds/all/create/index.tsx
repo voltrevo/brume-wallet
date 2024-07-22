@@ -3,7 +3,7 @@ import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useCloseContext } from "@/libs/ui/dialog/dialog";
-import { usePathContext } from "@/mods/foreground/router/path/context";
+import { usePathContext } from "@hazae41/chemin";
 import { MouseEvent } from "react";
 import { useGenius } from "../../../users/all/page";
 import { WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "../../../wallets/actions/send";

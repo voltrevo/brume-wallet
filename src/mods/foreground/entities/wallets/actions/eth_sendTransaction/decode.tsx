@@ -1,7 +1,8 @@
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Dialog } from "@/libs/ui/dialog/dialog";
 import { Loading } from "@/libs/ui/loading/loading";
-import { useKeyValueState, usePathState } from "@/mods/foreground/router/path/context";
+import { useKeyValueState } from "@/mods/foreground/router/path/context";
+import { usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
 import { Abi, ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { Result } from "@hazae41/result";
@@ -11,9 +12,10 @@ import { useWalletDataContext } from "../../context";
 import { useEthereumContext2 } from "../../data";
 
 export function WalletDecodeDialog(props: {}) {
+  const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
 
-  const $state = usePathState<{ data: ZeroHexString }>()
+  const $state = useSearchAsKeyValueState<{ data: ZeroHexString }>(path)
   const [maybeData, setData] = useKeyValueState("data", $state)
 
   const maybeHash = Option.wrap(maybeData).mapSync(x => {

@@ -4,7 +4,8 @@ import { Outline } from "@/libs/icons/icons";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { Dialog, useCloseContext } from "@/libs/ui/dialog/dialog";
-import { useKeyValueState, usePathState } from "@/mods/foreground/router/path/context";
+import { useKeyValueState } from "@/mods/foreground/router/path/context";
+import { usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
 import { Address } from "@hazae41/cubane";
 import { Option, Optional } from "@hazae41/option";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
@@ -15,10 +16,11 @@ import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
 
 export function WalletSendScreenTarget(props: {}) {
+  const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
 
-  const $state = usePathState<UrlState>()
+  const $state = useSearchAsKeyValueState<UrlState>(path)
   const [maybeStep, setStep] = useKeyValueState("step", $state)
   const [maybeChain, setChain] = useKeyValueState("chain", $state)
   const [maybeTarget, setTarget] = useKeyValueState("target", $state)

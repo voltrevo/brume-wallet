@@ -25,10 +25,10 @@ import { EthereumWalletInstance, useEthereumContext2, useWallet, useWallets } fr
 import { UserRejectedError } from "@/mods/foreground/errors/errors";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Overlay } from "@/mods/foreground/overlay/overlay";
-import { HashSubpathProvider, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context";
 import { Router } from "@/mods/foreground/router/router";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
+import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Abi } from "@hazae41/cubane";
 import { RpcErr, RpcOk } from "@hazae41/jsonrpc";
 import { Nullable, Option } from "@hazae41/option";

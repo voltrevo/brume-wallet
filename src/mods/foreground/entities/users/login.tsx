@@ -5,21 +5,23 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useCloseContext } from "@/libs/ui/dialog/dialog";
 import { UserRef } from "@/mods/background/service_worker/entities/users/data";
+import { usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { KeyboardEvent, useCallback, useDeferredValue, useRef, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
-import { useKeyValueState, usePathState } from "../../router/path/context";
+import { useKeyValueState } from "../../router/path/context";
 import { SimpleLabel, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../wallets/actions/send";
 import { UserAvatar } from "./all/page";
 import { useCurrentUser, useUser } from "./data";
 
 export function UserLoginDialog(props: { next?: string }) {
+  const path = usePathContext().unwrap()
   const close = useCloseContext().unwrap()
   const background = useBackgroundContext().unwrap()
   const { next } = props
 
-  const $state = usePathState<{ user: string }>()
+  const $state = useSearchAsKeyValueState<{ user: string }>(path)
   const [maybeUserId] = useKeyValueState("user", $state)
 
   const userQuery = useUser(maybeUserId)

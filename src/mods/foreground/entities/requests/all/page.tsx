@@ -12,7 +12,7 @@ import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/da
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { UserRejectedError } from "@/mods/foreground/errors/errors"
-import { Paths } from "@/mods/foreground/router/path/context"
+import { Chemin } from "@hazae41/chemin"
 import { RpcErr } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { Err } from "@hazae41/result"
@@ -98,7 +98,7 @@ export function RequestRow(props: { request: AppRequest }) {
   const { id, method, params } = maybeRequestData
 
   return <a className="po-md rounded-xl flex items-center gap-4"
-    href={`#${Paths.path(qurl(`/${method}?id=${id}`, params))}`}>
+    href={`#${Chemin.pathOf(qurl(`/${method}?id=${id}`, params))}`}>
     {maybeOriginData.icons?.map((x, i) =>
       <IndexedBlobbyLoader
         key={x.id}

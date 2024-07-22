@@ -1,5 +1,5 @@
 import { Outline } from "@/libs/icons/icons";
-import { usePathContext } from "@/mods/foreground/router/path/context";
+import { usePathContext } from "@hazae41/chemin";
 import { useGenius } from "../../../users/all/page";
 import { WideShrinkableNakedMenuAnchor } from "../../actions/send";
 

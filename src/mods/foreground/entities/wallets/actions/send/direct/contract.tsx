@@ -7,7 +7,8 @@ import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
-import { HashSubpathProvider, useHashSubpath, useKeyValueState, usePathContext, usePathState } from "@/mods/foreground/router/path/context";
+import { useKeyValueState } from "@/mods/foreground/router/path/context";
+import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
 import { Abi, Address, Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { Result } from "@hazae41/result";
@@ -27,7 +28,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
 
   const subpath = useHashSubpath(path)
 
-  const $state = usePathState<UrlState>()
+  const $state = useSearchAsKeyValueState<UrlState>(path)
   const [maybeStep, setStep] = useKeyValueState("step", $state)
   const [maybeChain, setChain] = useKeyValueState("chain", $state)
   const [maybeToken, setToken] = useKeyValueState("token", $state)

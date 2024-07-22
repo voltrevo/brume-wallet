@@ -1,5 +1,5 @@
 import { DarkProps } from "@/libs/react/props/dark"
-import { usePathContext } from "@/mods/foreground/router/path/context"
+import { usePathContext } from "@hazae41/chemin"
 import { Nullable, Option } from "@hazae41/option"
 import { AnimationEvent, KeyboardEvent, MouseEvent, SyntheticEvent, UIEvent, createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"

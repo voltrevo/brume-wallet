@@ -23,7 +23,6 @@ import { CryptoClient } from "@/libs/wconn/mods/crypto/client";
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn";
 import { Wc, WcMetadata, WcSession, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc";
 import { UnauthorizedError } from "@/mods/foreground/errors/errors";
-import { Paths } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
 import { Base58 } from "@hazae41/base58";
 import { Base64 } from "@hazae41/base64";
@@ -31,6 +30,7 @@ import { Base64Url } from "@hazae41/base64url";
 import { Bytes } from "@hazae41/bytes";
 import { Cadenas } from "@hazae41/cadenas";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
+import { Chemin } from "@hazae41/chemin";
 import { ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
 import { Circuit, Echalote } from "@hazae41/echalote";
 import { Ed25519 } from "@hazae41/ed25519";
@@ -355,7 +355,7 @@ class Global {
       const url = qurl(`/${method}?id=${id}`, params)
 
       if (isSafariExtension() && isIpad()) {
-        this.#path = `#${Paths.path(url)}`
+        this.#path = `#${Chemin.pathOf(url)}`
 
         await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
         const response = await this.waitResponseOrThrow<T>(request.id, done)

@@ -9,9 +9,10 @@ import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { qurl } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
-import { HashSubpathProvider, useHashSubpath, useKeyValueState, usePathContext, usePathState } from "@/mods/foreground/router/path/context";
+import { useKeyValueState } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
+import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Cursor } from "@hazae41/cursor";
 import { Keccak256 } from "@hazae41/keccak256";
@@ -33,7 +34,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
 
   const subpath = useHashSubpath(path)
 
-  const $state = usePathState<UrlState>()
+  const $state = useSearchAsKeyValueState<UrlState>(path)
   const [maybeStep, setStep] = useKeyValueState("step", $state)
   const [maybeChain, setChain] = useKeyValueState("chain", $state)
   const [maybeValue, setValue] = useKeyValueState("value", $state)

@@ -11,7 +11,7 @@ import { Dialog, Dialog2, useCloseContext } from "@/libs/ui/dialog/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { SeedData } from "@/mods/background/service_worker/entities/seeds/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
-import { HashSubpathProvider, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context";
+import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Ledger } from "@hazae41/ledger";
 import { Err, Panic } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";

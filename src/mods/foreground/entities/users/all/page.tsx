@@ -17,7 +17,7 @@ import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
 import { FourDisplay } from "@/mods/foreground/landing/4/4";
 import { FiveDisplay } from "@/mods/foreground/landing/5/5";
 import { SixDisplay } from "@/mods/foreground/landing/6/6";
-import { HashSubpathProvider, PathHandle, useHashSubpath, usePathContext } from "@/mods/foreground/router/path/context";
+import { HashSubpathProvider, PathHandle, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { KeyboardEvent, MouseEvent, useCallback, useMemo } from "react";
 import { WideShrinkableNakedMenuAnchor } from "../../wallets/actions/send";
 import { useCurrentUser, useUser, useUsers } from "../data";

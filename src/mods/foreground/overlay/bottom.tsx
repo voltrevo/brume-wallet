@@ -1,7 +1,7 @@
 import { Outline } from "@/libs/icons/icons";
 import { Anchor } from "@/libs/ui/anchor";
+import { usePathContext } from "@hazae41/chemin";
 import { useAppRequests } from "../entities/requests/data";
-import { usePathContext } from "../router/path/context";
 
 export function Bottom() {
   const { url } = usePathContext().unwrap()

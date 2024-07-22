@@ -8,7 +8,8 @@ import { Loading } from "@/libs/ui/loading/loading";
 import { qurl } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData } from "@/mods/background/service_worker/entities/transactions/data";
-import { HashSubpathProvider, useHashSubpath, useKeyValueState, usePathContext, usePathState } from "@/mods/foreground/router/path/context";
+import { useKeyValueState } from "@/mods/foreground/router/path/context";
+import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
 import { Address, Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
@@ -28,7 +29,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
 
   const subpath = useHashSubpath(path)
 
-  const $state = usePathState<UrlState>()
+  const $state = useSearchAsKeyValueState<UrlState>(path)
   const [maybeStep, setStep] = useKeyValueState("step", $state)
   const [maybeChain, setChain] = useKeyValueState("chain", $state)
   const [maybeTarget, setTarget] = useKeyValueState("target", $state)
