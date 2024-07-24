@@ -1,10 +1,13 @@
 const text = `blabla; return /hello/g; blabla; x = /world\\/hihi/g`
 
 function getRegexes(text: string) {
-  const regexes = new Array<RegExp>()
+  const regexes = new Array<[number, number]>()
+
+  let index = 0
+  let slice = text
 
   while (true) {
-    const match = text.match(/(return\s*)?(:\s*)?(=\s*)?(\(\s*)?(\/(.|\n)+\/[a-z]*)/)
+    const match = slice.match(/(return\s*)?(:\s*)?(=\s*)?(\(\s*)?(\/(.|\n)+\/[a-z]*)/)
 
     if (match == null)
       break
@@ -14,7 +17,8 @@ function getRegexes(text: string) {
     const [raw, ret, colon, equal, open, regex] = match
 
     if (!ret && !colon && !equal && !open) {
-      text = text.slice(match.index + 1)
+      index += match.index + 1
+      slice = text.slice(index)
       continue
     }
 
@@ -31,23 +35,26 @@ function getRegexes(text: string) {
     }
 
     if (laziest == null) {
-      text = text.slice(match.index + 1)
+      index += match.index + 1
+      slice = text.slice(index)
       continue
     }
 
-    const index = match.index + raw.length - regex.length + 1 + laziest.source.length + 1
-    const flags = text.slice(index).match(/^[a-z]*/)
+    const flagsi = index + match.index + raw.length - regex.length + String(laziest).length
+    const flagsm = text.slice(flagsi).match(/^[a-z]*/)
 
-    if (flags != null)
-      laziest = new RegExp(laziest, flags[0])
+    if (flagsm != null)
+      laziest = new RegExp(laziest, flagsm[0])
 
-    regexes.push(laziest)
+    const start = index + match.index + raw.length - regex.length
+    regexes.push([start, start + String(laziest).length])
 
-    text = text.slice(match.index + 1)
+    index += match.index + 1
+    slice = text.slice(index)
     continue
   }
 
   return regexes
 }
 
-console.log(getRegexes(text))
+console.log(getRegexes(text).map(([start, end]) => text.slice(start, end)))
