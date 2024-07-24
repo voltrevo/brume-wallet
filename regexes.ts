@@ -1,4 +1,6 @@
-const text = `blabla; return /hello/g; blabla; x = /world\\/hihi/g`
+import { readFileSync } from "fs"
+
+const text = readFileSync("./regexes.txt", "utf8")
 
 function getRegexes(text: string) {
   const regexes = new Array<[number, number]>()
@@ -7,7 +9,7 @@ function getRegexes(text: string) {
   let slice = text
 
   while (true) {
-    const match = slice.match(/(return\s*)?(:\s*)?(=\s*)?(\(\s*)?(\/(.|\n)+\/[a-z]*)/)
+    const match = slice.match(/(return\s*)?(:\s*)?(=*)?(\(\s*)?(\/.+\/[a-z]*)/)
 
     if (match == null)
       break
@@ -22,16 +24,15 @@ function getRegexes(text: string) {
       continue
     }
 
-    let lazier = regex
+    console.log(raw.slice(0, 100))
 
     let laziest: RegExp | null = null
 
-    while (lazier) {
+    for (let i = 1; i < regex.length; i++) {
       try {
-        laziest = eval(`new RegExp(${lazier})`)
+        laziest = eval(`new RegExp(${regex.slice(0, i)})`)
+        break
       } catch (e) { }
-
-      lazier = lazier.slice(0, -1)
     }
 
     if (laziest == null) {
@@ -39,6 +40,8 @@ function getRegexes(text: string) {
       slice = text.slice(index)
       continue
     }
+
+    console.log(laziest)
 
     const flagsi = index + match.index + raw.length - regex.length + String(laziest).length
     const flagsm = text.slice(flagsi).match(/^[a-z]*/)
@@ -48,6 +51,8 @@ function getRegexes(text: string) {
 
     const start = index + match.index + raw.length - regex.length
     regexes.push([start, start + String(laziest).length])
+
+    console.log(text.slice(start, start + String(laziest).length))
 
     index += match.index + 1
     slice = text.slice(index)
