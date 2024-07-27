@@ -9,16 +9,14 @@ function getRegexes(text: string) {
   let slice = text
 
   while (true) {
-    const match = slice.match(/((return\s*)|(\:\s*)|(\=\s*)|(\(\s*))(\/((?![*+?])(?:[^\r\n\[\/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])+)\/[gimsuy]{0,6})((\s*\.)|(\s*\,)|(\s*\;)|(\s*\)))/)
+    const match = slice.match(/(?:(?:^)|(?:\:\s*)|(?:\=\s*)|(?:\(\s*)|(?:return\s*))(\/((?![*+?])(?:[^\r\n\[\/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])+)\/[gimsuy]{0,6})(?:(?:$)|(?:\s*\.)|(?:\s*\,)|(?:\s*\;)|(?:\s*\)))/m)
 
     if (match == null)
       break
     if (match.index == null)
       break
 
-    const [raw, _pre, _ret, _colon, _equals, _paren, regex] = match
-
-    console.log("!a!", regex)
+    const [raw, regex] = match
 
     try {
       eval(`new RegExp(${regex})`)
@@ -31,8 +29,6 @@ function getRegexes(text: string) {
     const start = index - 1 + match.index + raw.length - regex.length
     regexes.push([start, start + regex.length])
 
-    console.log("!b!", text.slice(start, start + regex.length))
-
     index += match.index + 1
     slice = text.slice(index)
     continue
@@ -41,4 +37,5 @@ function getRegexes(text: string) {
   return regexes
 }
 
-console.log(getRegexes(text).map(([start, end]) => text.slice(start, end)))
+for (const regex of getRegexes(text))
+  console.log(text.slice(regex[0], regex[1]))
