@@ -37,6 +37,7 @@ import { Ed25519 } from "@hazae41/ed25519";
 import { Fleche, fetch } from "@hazae41/fleche";
 import { Future } from "@hazae41/future";
 import { Data, IDBStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier";
+import { Immutable } from "@hazae41/immutable";
 import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { Kcp } from "@hazae41/kcp";
 import { Keccak256 } from "@hazae41/keccak256";
@@ -50,8 +51,6 @@ import { Secp256k1 } from "@hazae41/secp256k1";
 import { Sha1 } from "@hazae41/sha1";
 import { Smux } from "@hazae41/smux";
 import { X25519 } from "@hazae41/x25519";
-import { clientsClaim } from 'workbox-core';
-import { precacheAndRoute } from "workbox-precaching";
 import { BgEthereumContext } from "./context";
 import { BgBlobby, BlobbyRef } from "./entities/blobbys/data";
 import { EthBrume, WcBrume } from "./entities/brumes/data";
@@ -68,39 +67,101 @@ import { BgUser, User, UserData, UserInit, UserSession } from "./entities/users/
 import { BgWallet, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data";
 import { createUserStorageOrThrow } from "./storage";
 
-declare global {
-  interface ServiceWorkerGlobalScope {
-    __WB_PRODUCTION?: boolean,
-  }
-}
-
 declare const self: ServiceWorkerGlobalScope
 
-if (isWebsite() && self.__WB_PRODUCTION) {
-  clientsClaim()
+self.addEventListener("install", (event) => {
+  /**
+   * Auto-activate as the update was already accepted
+   */
+  self.skipWaiting()
+})
 
-  precacheAndRoute(self.__WB_MANIFEST)
+/**
+ * Declare global macro
+ */
+declare function $raw$<T>(script: string): T
+
+/**
+ * Only cache on production
+ */
+if (process.env.NODE_ENV === "production") {
+  /**
+   * Use $raw$ to avoid minifiers from mangling the code
+   */
+  const files = $raw$<[string, string][]>(`$run$(async () => {
+    const fs = await import("fs")
+    const path = await import("path")
+    const crypto = await import("crypto")
+  
+    function* walkSync(dir) {
+      const files = fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name > b.name ? 1 : -1)
+  
+      for (const file of files) {
+        if (file.isDirectory()) {
+          yield* walkSync(path.join(dir, file.name))
+        } else {
+          yield path.join(dir, file.name)
+        }
+      }
+    }
+  
+    const files = new Array()
+  
+    for (const absolute of walkSync(".")) {
+      const dirname = path.dirname(absolute)
+      const filename = path.basename(absolute)
+  
+      /**
+       * Do not cache saumon files
+       */
+      if (filename.endsWith(".saumon.js"))
+        continue
+      
+      /**
+       * Do not cache service-workers
+       */
+      if (filename.startsWith("service_worker."))
+        continue
+
+      /**
+       * Do not cache bootpages
+       */
+      if (fs.existsSync(\`./\${dirname}/_\${filename}\`))
+        continue
+      if (filename.endsWith(".html") && fs.existsSync(\`./\${dirname}/_\${filename.slice(0, -5)}/index.html\`))
+        continue
+      if (!filename.endsWith(".html") && fs.existsSync(\`./\${dirname}/_\${filename}/index\`))
+        continue
+
+      const text = fs.readFileSync(absolute)
+      const hash = crypto.createHash("sha256").update(text).digest("hex")
+  
+      const relative = path.relative(".", absolute)
+  
+      files.push([\`/\${relative}\`, hash])
+    }
+  
+    return files
+  }, { space: 0 })`)
+
+  const cache = new Immutable.Cache(new Map(files))
+
+  self.addEventListener("activate", (event) => {
+    /**
+     * Uncache previous version
+     */
+    event.waitUntil(cache.uncache())
+
+    /**
+     * Precache current version
+     */
+    event.waitUntil(cache.precache())
+  })
 
   /**
-   * TODO remove?
+   * Respond with cache
    */
-  self.addEventListener("message", (event) => {
-    if (event.origin !== location.origin)
-      return
-    if (event.data !== "SKIP_WAITING")
-      return
-    self.skipWaiting()
-  })
-}
-
-if (isWebsite() && !self.__WB_PRODUCTION) {
-  clientsClaim()
-  self.skipWaiting()
-}
-
-if (isAndroidApp()) {
-  clientsClaim()
-  self.skipWaiting()
+  self.addEventListener("fetch", (event) => cache.handle(event))
 }
 
 interface PasswordData {
@@ -1582,9 +1643,6 @@ async function initOrThrow() {
 }
 
 if (isWebsite() || isAndroidApp()) {
-  const onSkipWaiting = (event: ExtendableMessageEvent) =>
-    self.skipWaiting()
-
   const onForeground = async (event: ExtendableMessageEvent) => {
     const port = event.ports[0]
 
@@ -1623,8 +1681,6 @@ if (isWebsite() || isAndroidApp()) {
   self.addEventListener("message", (event) => {
     if (event.origin !== location.origin)
       return
-    if (event.data === "SKIP_WAITING")
-      return void onSkipWaiting(event)
     if (event.data === "FOREGROUND->BACKGROUND")
       return void onForeground(event)
     return

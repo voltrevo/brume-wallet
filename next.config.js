@@ -1,107 +1,93 @@
-const webpack = require("webpack")
-const { copyFileSync, rmSync } = require("fs")
 const TerserPlugin = require("terser-webpack-plugin")
-const Log = require("next/dist/build/output/log")
 const path = require("path")
+const fs = require("fs")
+const { withImmutable, NextAsImmutable } = require("@hazae41/next-as-immutable")
 const withMDX = require("@next/mdx")()
 
-/**
- * @type {Promise<void> | undefined}
- */
-let promise = undefined
+function* walkSync(directory) {
+  const files = fs.readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name > b.name ? 1 : -1)
 
-/**
- * @type {import("next").NextConfig}
- */
-const nextConfig = {
+  for (const file of files) {
+    if (file.isDirectory()) {
+      yield* walkSync(path.join(directory, file.name))
+    } else {
+      yield path.join(directory, file.name)
+    }
+  }
+}
+
+module.exports = withMDX(withImmutable({
   reactStrictMode: false, // TODO
   swcMinify: true,
   output: "export",
   pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
-  generateBuildId: async () => {
-    return "unique"
-  },
-  webpack(config, options) {
-    if (options.isServer)
-      return config
+  compiles: function* (wpconfig) {
+    for (const absolute of walkSync("./public")) {
+      const filename = path.basename(absolute)
 
-    rmSync("./.webpack", { force: true, recursive: true })
+      if (filename.startsWith("service_worker."))
+        fs.rmSync(absolute, { force: true })
 
-    promise = Promise.all([
-      compileServiceWorker(config, options),
-      compileContentScript(config, options),
-      compileInjectedScript(config, options),
-      compileOffscreen(config, options)
-    ])
+      if (filename === "content_script.js")
+        fs.rmSync(absolute, { force: true })
+      if (filename === "injected_script.js")
+        fs.rmSync(absolute, { force: true })
+      if (filename === "offscreen.js")
+        fs.rmSync(absolute, { force: true })
 
-    return config
-  },
-  exportPathMap: async (map) => {
-    await promise
-    return map
+      continue
+    }
+
+    yield compileServiceWorker(wpconfig)
+
+    yield compileContentScript(wpconfig)
+    yield compileInjectedScript(wpconfig)
+    yield compileOffscreen(wpconfig)
   }
-}
+}))
 
-/**
- * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
- */
-async function compile(name, config, options) {
-  Log.wait(`compiling ${name}...`)
-
-  const start = Date.now()
-
-  const status = await new Promise(ok => webpack(config).run((_, status) => ok(status)))
-
-  if (status?.hasErrors()) {
-    Log.error(`failed to compile ${name}`)
-    Log.error(status.toString({ colors: true }))
-    throw new Error(`Compilation failed`)
-  }
-
-  Log.ready(`compiled ${name} in ${Date.now() - start} ms`)
-  copyFileSync(`./.webpack/${config.output.filename}`, `./public/${config.output.filename}`)
-}
-
-/**
- * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
- */
-async function compileServiceWorker(config, options) {
-  await compile("service_worker", {
+async function compileServiceWorker(wpconfig) {
+  await NextAsImmutable.compileAndVersionAsMacro({
+    name: "service_worker",
     devtool: false,
     target: "webworker",
-    mode: config.mode,
-    resolve: config.resolve,
-    resolveLoader: config.resolveLoader,
-    module: config.module,
-    plugins: config.plugins,
+    mode: wpconfig.mode,
+    resolve: wpconfig.resolve,
+    resolveLoader: wpconfig.resolveLoader,
+    module: wpconfig.module,
+    plugins: wpconfig.plugins,
     entry: "./src/mods/background/service_worker/index.ts",
     output: {
       path: path.join(process.cwd(), ".webpack"),
-      filename: "service_worker.js"
+      filename: "./service_worker.latest.js"
     },
     optimization: {
       minimize: true,
-      minimizer: [new TerserPlugin()]
+      minimizer: [new TerserPlugin({
+        terserOptions: {
+          output: {
+            comments: false
+          }
+        }
+      })]
     }
   })
 }
 
-/**
- * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
- */
-async function compileContentScript(config, options) {
-  await compile("content_script", {
+async function compileContentScript(wpconfig) {
+  await NextAsImmutable.compile({
+    name: "content_script",
     devtool: false,
     target: "webworker",
-    mode: config.mode,
-    resolve: config.resolve,
-    resolveLoader: config.resolveLoader,
-    module: config.module,
-    plugins: config.plugins,
+    mode: wpconfig.mode,
+    resolve: wpconfig.resolve,
+    resolveLoader: wpconfig.resolveLoader,
+    module: wpconfig.module,
+    plugins: wpconfig.plugins,
     entry: "./src/mods/background/content_script/index.ts",
     output: {
       path: path.join(process.cwd(), ".webpack"),
-      filename: "content_script.js"
+      filename: "./content_script.js"
     },
     optimization: {
       minimize: true,
@@ -110,22 +96,20 @@ async function compileContentScript(config, options) {
   })
 }
 
-/**
- * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
- */
-async function compileInjectedScript(config, options) {
-  await compile("injected_script", {
+async function compileInjectedScript(wpconfig) {
+  await NextAsImmutable.compile({
+    name: "injected_script",
     devtool: false,
     target: "web",
-    mode: config.mode,
-    resolve: config.resolve,
-    resolveLoader: config.resolveLoader,
-    module: config.module,
-    plugins: config.plugins,
+    mode: wpconfig.mode,
+    resolve: wpconfig.resolve,
+    resolveLoader: wpconfig.resolveLoader,
+    module: wpconfig.module,
+    plugins: wpconfig.plugins,
     entry: "./src/mods/background/injected_script/index.ts",
     output: {
       path: path.join(process.cwd(), ".webpack"),
-      filename: "injected_script.js"
+      filename: "./injected_script.js"
     },
     optimization: {
       minimize: true,
@@ -134,22 +118,20 @@ async function compileInjectedScript(config, options) {
   })
 }
 
-/**
- * @param {import("next/dist/server/config-shared").WebpackConfigContext} options
- */
-async function compileOffscreen(config, options) {
-  await compile("offscreen", {
+async function compileOffscreen(wpconfig) {
+  await NextAsImmutable.compile({
+    name: "offscreen",
     devtool: false,
     target: "web",
-    mode: config.mode,
-    resolve: config.resolve,
-    resolveLoader: config.resolveLoader,
-    module: config.module,
-    plugins: config.plugins,
+    mode: wpconfig.mode,
+    resolve: wpconfig.resolve,
+    resolveLoader: wpconfig.resolveLoader,
+    module: wpconfig.module,
+    plugins: wpconfig.plugins,
     entry: "./src/mods/background/offscreen/index.ts",
     output: {
       path: path.join(process.cwd(), ".webpack"),
-      filename: "offscreen.js"
+      filename: "./offscreen.js"
     },
     optimization: {
       minimize: true,
@@ -157,5 +139,3 @@ async function compileOffscreen(config, options) {
     }
   })
 }
-
-module.exports = withMDX(nextConfig)

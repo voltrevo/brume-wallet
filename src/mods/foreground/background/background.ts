@@ -2,7 +2,7 @@ import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionRpcRouter, MessageRpcRouter, RpcRouter } from "@/libs/channel/channel"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
-import { Future } from "@hazae41/future"
+import { Immutable } from "@hazae41/immutable"
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { None } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
@@ -23,7 +23,7 @@ export class ServiceWorkerBackground {
   }>()
 
   readonly serviceWorker = new SuperEventTarget<{
-    "update": (sw: ServiceWorker) => void
+    "update": (update: () => void) => void
   }>()
 
   async onRequest(port: RpcRouter, request: RpcRequestInit<unknown>) {
@@ -46,95 +46,31 @@ export class ServiceWorkerBackground {
 
 }
 
-export async function getServiceWorkerOrThrow(background: ServiceWorkerBackground): Promise<ServiceWorkerRegistration> {
-  /**
-   * Safari may kill the service worker and not restart it
-   * This will manual start a new one
-   */
-  const registration = await navigator.serviceWorker.register("/service_worker.js")
+export async function getServiceWorkerOrThrow(background: ServiceWorkerBackground): Promise<ServiceWorker> {
+  navigator.serviceWorker.addEventListener("controllerchange", () => location.reload())
 
-  /**
-   * Only check updates on the first service worker (navigator.serviceWorker.ready)
-   */
-  {
-    const ready = await navigator.serviceWorker.ready
+  const update = await Immutable.register("./service_worker.latest.js")
 
-    if (ready.waiting != null)
-      await background.serviceWorker.emit("update", ready.waiting)
+  if (update != null)
+    await background.serviceWorker.emit("update", update)
 
-    ready.addEventListener("updatefound", () => {
-      const { installing } = ready
+  const serviceWorker = await navigator.serviceWorker.ready.then(r => r.active)
 
-      if (installing == null)
-        return
+  if (serviceWorker == null)
+    location.reload()
 
-      const onStateChange = async () => {
-        if (installing.state !== "installed")
-          return
-        if (navigator.serviceWorker.controller == null)
-          return
-        await background.serviceWorker.emit("update", installing)
-        installing.removeEventListener("statechange", onStateChange)
-      }
-
-      installing.addEventListener("statechange", onStateChange, { passive: true })
-    }, { passive: true, once: true })
-
-    let reloading = false;
-
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (reloading)
-        return
-      location.reload()
-      reloading = true
-    })
-  }
-
-  /**
-   * Get or wait the service worker
-   */
-  {
-    const { active, installing } = registration
-
-    if (active != null)
-      return registration
-    if (installing == null)
-      throw new Error(`registration.installing is null`)
-
-    const future = new Future<ServiceWorkerRegistration>()
-
-    const onStateChange = () => {
-      if (installing.state !== "activated")
-        return
-      future.resolve(registration)
-    }
-
-    const onError = (e: ErrorEvent) => {
-      future.reject(e.error)
-    }
-
-    try {
-      installing.addEventListener("statechange", onStateChange, { passive: true })
-      installing.addEventListener("error", onError, { passive: true })
-
-      return await future.promise
-    } finally {
-      installing.removeEventListener("statechange", onStateChange)
-      installing.removeEventListener("error", onError)
-    }
-  }
+  return serviceWorker!
 }
 
 export function createServiceWorkerPortPool(background: ServiceWorkerBackground): Pool<Disposer<MessageRpcRouter>> {
+  const resolveOnServiceWorker = getServiceWorkerOrThrow(background)
+
+  resolveOnServiceWorker.catch(() => { })
+
   return new Pool<Disposer<MessageRpcRouter>>(async (params) => {
     const { pool, index } = params
 
-    using preRegistration = new Box(new Disposer(await getServiceWorkerOrThrow(background), r => r.unregister()))
-
-    const { active } = preRegistration.getOrThrow().get()
-
-    if (active == null)
-      throw new Error(`registration.active is null`)
+    const serviceWorker = await resolveOnServiceWorker
 
     const rawChannel = new MessageChannel()
 
@@ -146,12 +82,10 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
     using preChannel = new Box(new Disposer(rawChannel, onRawClean))
     using preRouter = new Box(new MessageRpcRouter("background", rawChannel.port1))
 
-    const registration = preRegistration.unwrapOrThrow()
     const channel = preChannel.unwrapOrThrow()
     const router = preRouter.unwrapOrThrow()
 
     const onWrapperClean = () => {
-      using _0 = registration
       using _1 = channel
       using _2 = router
     }
@@ -161,7 +95,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
     rawChannel.port1.start()
     rawChannel.port2.start()
 
-    active.postMessage("FOREGROUND->BACKGROUND", [rawChannel.port2])
+    serviceWorker.postMessage("FOREGROUND->BACKGROUND", [rawChannel.port2])
 
     await router.waitHelloOrThrow(AbortSignal.timeout(1000))
 
