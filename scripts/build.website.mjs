@@ -3,21 +3,21 @@ import fs from "fs";
 import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
-/**
- * Setup bootpage override
- */
 {
   fs.renameSync("./dist/website/index.html", "./dist/website/_index.html")
   fs.renameSync("./dist/website/start.html", "./dist/website/index.html")
 }
 
-/**
- * Remove unused files
- */
 {
   fs.rmSync("./dist/website/404.html")
   fs.rmSync("./dist/website/action.html")
   fs.rmSync("./dist/website/popup.html")
+}
+
+{
+  fs.rmSync("./dist/website/chrome", { recursive: true, force: true })
+  fs.rmSync("./dist/website/firefox", { recursive: true, force: true })
+  fs.rmSync("./dist/website/safari", { recursive: true, force: true })
 }
 
 {
@@ -36,9 +36,6 @@ import { walkSync } from "./libs/walkSync.mjs";
     if (!filename.endsWith(".js") && !filename.endsWith(".html"))
       continue
 
-    if (filename === "service_worker.latest.js")
-      continue
-
     const original = fs.readFileSync(pathname, "utf8")
 
     const replaced = original
@@ -53,9 +50,6 @@ import { walkSync } from "./libs/walkSync.mjs";
   }
 }
 
-/**
- * Compute the hash of each file and inject them into the service-worker
- */
 {
   const files = new Array()
 
@@ -63,7 +57,7 @@ import { walkSync } from "./libs/walkSync.mjs";
     const dirname = path.dirname(pathname)
     const filename = path.basename(pathname)
 
-    if (filename.startsWith("service_worker."))
+    if (filename === "service_worker.js")
       continue
 
     if (fs.existsSync(`./${dirname}/_${filename}`))
@@ -81,21 +75,12 @@ import { walkSync } from "./libs/walkSync.mjs";
     files.push([`/${relative}`, hash])
   }
 
-  for (const pathname of walkSync("./dist/website")) {
-    const filename = path.basename(pathname)
+  const original = fs.readFileSync(`./dist/website/service_worker.js`, "utf8")
+  const replaced = original.replaceAll("FILES", JSON.stringify(files))
 
-    if (!filename.startsWith("service_worker."))
-      continue
+  const version = crypto.createHash("sha256").update(replaced).digest("hex").slice(0, 6)
 
-    if (filename === "service_worker.latest.js")
-      continue
-
-    const original = fs.readFileSync(pathname, "utf8")
-    const replaced = original.replaceAll("FILES", JSON.stringify(files))
-
-    fs.writeFileSync(pathname, replaced, "utf8")
-    fs.writeFileSync("./dist/website/service_worker.js", replaced, "utf8")
-
-    break
-  }
+  fs.writeFileSync(`./dist/website/service_worker.js`, replaced, "utf8")
+  fs.writeFileSync(`./dist/website/service_worker.latest.js`, replaced, "utf8")
+  fs.writeFileSync(`./dist/website/service_worker.${version}.js`, replaced, "utf8")
 }

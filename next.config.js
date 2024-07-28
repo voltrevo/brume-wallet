@@ -27,7 +27,6 @@ module.exports = withMDX(withImmutable({
 
       if (filename.startsWith("service_worker."))
         fs.rmSync(absolute, { force: true })
-
       if (filename === "content_script.js")
         fs.rmSync(absolute, { force: true })
       if (filename === "injected_script.js")
@@ -46,7 +45,7 @@ module.exports = withMDX(withImmutable({
 }))
 
 async function compileServiceWorker(wpconfig) {
-  await NextAsImmutable.compileAndVersion({
+  await NextAsImmutable.compile({
     name: "service_worker",
     devtool: false,
     target: "webworker",
@@ -58,7 +57,7 @@ async function compileServiceWorker(wpconfig) {
     entry: "./src/mods/background/service_worker/index.ts",
     output: {
       path: path.join(process.cwd(), ".webpack"),
-      filename: "./service_worker.latest.js"
+      filename: "./service_worker.js"
     },
     optimization: {
       minimize: true,

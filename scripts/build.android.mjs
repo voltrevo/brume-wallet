@@ -3,14 +3,21 @@ import fs from "fs";
 import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
-/**
- * Remove unused files
- */
+
+{
+  fs.rmSync("./dist/android/start.html")
+}
+
 {
   fs.rmSync("./dist/android/404.html")
   fs.rmSync("./dist/android/action.html")
   fs.rmSync("./dist/android/popup.html")
-  fs.rmSync("./dist/android/start.html")
+}
+
+{
+  fs.rmSync("./dist/android/chrome", { recursive: true, force: true })
+  fs.rmSync("./dist/android/firefox", { recursive: true, force: true })
+  fs.rmSync("./dist/android/safari", { recursive: true, force: true })
 }
 
 {
@@ -27,9 +34,6 @@ import { walkSync } from "./libs/walkSync.mjs";
     const filename = path.basename(pathname)
 
     if (!filename.endsWith(".js") && !filename.endsWith(".html"))
-      continue
-
-    if (filename === "service_worker.latest.js")
       continue
 
     const original = fs.readFileSync(pathname, "utf8")
@@ -56,7 +60,7 @@ import { walkSync } from "./libs/walkSync.mjs";
     const dirname = path.dirname(pathname)
     const filename = path.basename(pathname)
 
-    if (filename.startsWith("service_worker."))
+    if (filename === "service_worker.js")
       continue
 
     if (fs.existsSync(`./${dirname}/_${filename}`))
@@ -74,20 +78,12 @@ import { walkSync } from "./libs/walkSync.mjs";
     files.push([`/${relative}`, hash])
   }
 
-  for (const pathname of walkSync("./dist/android")) {
-    const filename = path.basename(pathname)
+  const original = fs.readFileSync(`./dist/android/service_worker.js`, "utf8")
+  const replaced = original.replaceAll("FILES", JSON.stringify(files))
 
-    if (!filename.startsWith("service_worker."))
-      continue
+  const version = crypto.createHash("sha256").update(replaced).digest("hex").slice(0, 6)
 
-    if (filename === "service_worker.latest.js")
-      continue
-
-    const original = fs.readFileSync(pathname, "utf8")
-    const replaced = original.replaceAll("FILES", JSON.stringify(files))
-
-    fs.writeFileSync(pathname, replaced, "utf8")
-    fs.writeFileSync("./dist/android/service_worker.js", replaced, "utf8")
-    break
-  }
+  fs.writeFileSync(`./dist/android/service_worker.js`, replaced, "utf8")
+  fs.writeFileSync(`./dist/android/service_worker.latest.js`, replaced, "utf8")
+  fs.writeFileSync(`./dist/android/service_worker.${version}.js`, replaced, "utf8")
 }

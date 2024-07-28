@@ -3,6 +3,12 @@ import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
 {
+  fs.rmSync("./dist/firefox/chrome", { recursive: true, force: true })
+  fs.rmSync("./dist/firefox/firefox", { recursive: true, force: true })
+  fs.rmSync("./dist/firefox/safari", { recursive: true, force: true })
+}
+
+{
   const injected_script_base64 = fs.readFileSync("./dist/firefox/injected_script.js", "base64")
 
   const original = fs.readFileSync("./dist/firefox/content_script.js", "utf8")
@@ -27,9 +33,6 @@ import { walkSync } from "./libs/walkSync.mjs";
     if (!filename.endsWith(".js") && !filename.endsWith(".html"))
       continue
 
-    if (filename === "service_worker.latest.js")
-      continue
-
     const original = fs.readFileSync(pathname, "utf8")
 
     const replaced = original
@@ -42,11 +45,4 @@ import { walkSync } from "./libs/walkSync.mjs";
 
     fs.writeFileSync(pathname, replaced, "utf8")
   }
-}
-
-/**
- * Use the latest service worker as the service worker
- */
-{
-  fs.copyFileSync("./dist/firefox/service_worker.latest.js", "./dist/firefox/service_worker.js")
 }

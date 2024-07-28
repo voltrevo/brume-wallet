@@ -3,16 +3,9 @@ import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
 {
-  fs.renameSync("./dist/chrome/_next", "./dist/chrome/next")
-
-  for (const pathname of walkSync("./dist/chrome")) {
-    if (pathname.endsWith(".js") || pathname.endsWith(".html")) {
-      const original = fs.readFileSync(pathname, "utf8")
-      const replaced = original.replaceAll("/_next", "/next")
-
-      fs.writeFileSync(pathname, replaced, "utf8")
-    }
-  }
+  fs.rmSync("./dist/chrome/chrome", { recursive: true, force: true })
+  fs.rmSync("./dist/chrome/firefox", { recursive: true, force: true })
+  fs.rmSync("./dist/chrome/safari", { recursive: true, force: true })
 }
 
 {
@@ -25,13 +18,12 @@ import { walkSync } from "./libs/walkSync.mjs";
 }
 
 {
+  fs.renameSync("./dist/chrome/_next", "./dist/chrome/next")
+
   for (const pathname of walkSync("./dist/chrome")) {
     const filename = path.basename(pathname)
 
     if (!filename.endsWith(".js") && !filename.endsWith(".html"))
-      continue
-
-    if (filename === "service_worker.latest.js")
       continue
 
     const original = fs.readFileSync(pathname, "utf8")
@@ -43,14 +35,8 @@ import { walkSync } from "./libs/walkSync.mjs";
       .replaceAll("IS_SAFARI", "false")
       .replaceAll("IS_ANDROID", "false")
       .replaceAll("IS_APPLE", "false")
+      .replaceAll("/_next", "/next")
 
     fs.writeFileSync(pathname, replaced, "utf8")
   }
-}
-
-/**
- * Use the latest service worker as the service worker
- */
-{
-  fs.copyFileSync("./dist/chrome/service_worker.latest.js", "./dist/chrome/service_worker.js")
 }

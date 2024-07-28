@@ -3,6 +3,12 @@ import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
 {
+  fs.rmSync("./dist/apple/chrome", { recursive: true, force: true })
+  fs.rmSync("./dist/apple/firefox", { recursive: true, force: true })
+  fs.rmSync("./dist/apple/safari", { recursive: true, force: true })
+}
+
+{
   const thepackage = JSON.parse(fs.readFileSync("./package.json", "utf8"))
 
   const original = fs.readFileSync("./dist/apple/manifest.json", "utf8")
@@ -18,9 +24,6 @@ import { walkSync } from "./libs/walkSync.mjs";
     if (!filename.endsWith(".js") && !filename.endsWith(".html"))
       continue
 
-    if (filename === "service_worker.latest.js")
-      continue
-
     const original = fs.readFileSync(pathname, "utf8")
 
     const replaced = original
@@ -33,11 +36,4 @@ import { walkSync } from "./libs/walkSync.mjs";
 
     fs.writeFileSync(pathname, replaced, "utf8")
   }
-}
-
-/**
- * Use the latest service worker as the service worker
- */
-{
-  fs.copyFileSync("./dist/apple/service_worker.latest.js", "./dist/apple/service_worker.js")
 }
