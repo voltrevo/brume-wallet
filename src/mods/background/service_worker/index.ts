@@ -75,7 +75,7 @@ if (isWebsite() || isAndroidApp())
 declare const FILES: [string, string][]
 
 if (isProdWebsite()) {
-  console.log("Service worker is running in production mode")
+  console.log("Service worker is running")
 
   const cache = new Immutable.Cache(new Map(FILES))
 
