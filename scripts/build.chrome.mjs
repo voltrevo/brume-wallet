@@ -1,12 +1,14 @@
 import fs from "fs";
 import { walkSync } from "./libs/walkSync.mjs";
 
-for (const filePath of walkSync("./dist/chrome")) {
-  if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
-    const original = fs.readFileSync(filePath, "utf8")
+fs.renameSync("./dist/chrome/_next", "./dist/chrome/next")
+
+for (const pathname of walkSync("./dist/chrome")) {
+  if (pathname.endsWith(".js") || pathname.endsWith(".html")) {
+    const original = fs.readFileSync(pathname, "utf8")
     const replaced = original.replaceAll("/_next", "/next")
 
-    fs.writeFileSync(filePath, replaced, "utf8")
+    fs.writeFileSync(pathname, replaced, "utf8")
   }
 }
 
@@ -21,6 +23,9 @@ for (const filePath of walkSync("./dist/chrome")) {
 
 for (const filePath of walkSync("./dist/chrome")) {
   if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
+    if (filePath.endsWith("service_worker.latest.js"))
+      continue
+
     const original = fs.readFileSync(filePath, "utf8")
 
     const replaced = original

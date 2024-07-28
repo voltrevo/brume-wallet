@@ -21,6 +21,9 @@ import { walkSync } from "./libs/walkSync.mjs";
 
 for (const filePath of walkSync("./dist/firefox")) {
   if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
+    if (filePath.endsWith("service_worker.latest.js"))
+      continue
+
     const original = fs.readFileSync(filePath, "utf8")
 
     const replaced = original

@@ -28,3 +28,4 @@ for (const filePath of walkSync("./dist/website")) {
     fs.writeFileSync(filePath, replaced, "utf8")
   }
 }
+
