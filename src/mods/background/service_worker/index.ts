@@ -75,8 +75,6 @@ if (isWebsite() || isAndroidApp())
 declare const FILES: [string, string][]
 
 if (isProdWebsite()) {
-  console.log("4")
-
   const cache = new Immutable.Cache(new Map(FILES))
 
   self.addEventListener("activate", (event) => {
