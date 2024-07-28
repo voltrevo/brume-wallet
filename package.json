@@ -43,7 +43,7 @@
     "clean": "rimraf ./node_modules ./.next ./out ./dist ./website ./chrome ./firefox ./safari ./package-lock.json",
     "sync": "PLATFORM=android npx cap sync && PLATFORM=apple npx cap sync",
     "lint": "next lint",
-    "start": "serve ./dist/website"
+    "start": "serve --config ../../serve.json ./dist/website"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^1.10.0",
