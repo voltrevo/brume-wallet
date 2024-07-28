@@ -80,6 +80,8 @@ import { walkSync } from "./libs/walkSync.mjs";
     const replaced = original.replaceAll("FILES", JSON.stringify(files))
 
     fs.writeFileSync(pathname, replaced, "utf8")
+    fs.writeFileSync("./dist/website/service_worker.js", replaced, "utf8")
+
     break
   }
 }
