@@ -54,7 +54,7 @@ export function WebsiteOverlay(props: ChildrenProps) {
 
   useEffect(() => {
     const onUpdate = (update: () => void) => {
-      setUpdate(update)
+      setUpdate(() => update)
       return new None()
     }
 
