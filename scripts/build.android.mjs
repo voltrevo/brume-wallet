@@ -46,9 +46,6 @@ import { walkSync } from "./libs/walkSync.mjs";
     const dirname = path.dirname(pathname)
     const filename = path.basename(pathname)
 
-    if (filename.endsWith(".saumon.js"))
-      continue
-
     if (filename.startsWith("service_worker."))
       continue
 
