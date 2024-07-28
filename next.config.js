@@ -39,7 +39,6 @@ module.exports = withMDX(withImmutable({
     }
 
     yield compileServiceWorker(wpconfig)
-
     yield compileContentScript(wpconfig)
     yield compileInjectedScript(wpconfig)
     yield compileOffscreen(wpconfig)
@@ -47,7 +46,7 @@ module.exports = withMDX(withImmutable({
 }))
 
 async function compileServiceWorker(wpconfig) {
-  await NextAsImmutable.compileAndVersionAsMacro({
+  await NextAsImmutable.compileAndVersion({
     name: "service_worker",
     devtool: false,
     target: "webworker",

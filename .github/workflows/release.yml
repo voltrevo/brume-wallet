@@ -38,7 +38,7 @@ jobs:
     - run: "git restore ./dist"
 
     # Recompute IPFS hashes
-    - run: "node ./scripts/ipfs.mjs"
+    - run: "node ./scripts/verify.ipfs.mjs"
 
     # Display IPFS hashes
     - run: "cat ./dist/.ipfs.md"

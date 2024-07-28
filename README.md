@@ -132,7 +132,7 @@ rm -rf ./tmp
 git restore ./dist/
 
 # Recompute IPFS hashes
-node ./scripts/ipfs.mjs
+node ./scripts/verify.ipfs.mjs
 
 # Display IPFS hashes
 cat ./dist/.ipfs.md

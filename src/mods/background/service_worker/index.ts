@@ -13,7 +13,7 @@ import { fetchAsBlobOrThrow } from "@/libs/fetch";
 import { Mutators } from "@/libs/glacier/mutators";
 import { Mime } from "@/libs/mime/mime";
 import { Mouse } from "@/libs/mouse/mouse";
-import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExtension, isIpad, isSafariExtension, isWebsite } from "@/libs/platform/platform";
+import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExtension, isIpad, isProdWebsite, isSafariExtension, isWebsite } from "@/libs/platform/platform";
 import { Strings } from "@/libs/strings/strings";
 import { Circuits } from "@/libs/tor/circuits/circuits";
 import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors";
@@ -69,82 +69,19 @@ import { createUserStorageOrThrow } from "./storage";
 
 declare const self: ServiceWorkerGlobalScope
 
-self.addEventListener("install", (event) => {
-  /**
-   * Auto-activate as the update was already accepted
-   */
-  self.skipWaiting()
-})
+if (isWebsite() || isAndroidApp()) {
+  self.addEventListener("install", (event) => {
+    /**
+     * Auto-activate as the update was already accepted
+     */
+    self.skipWaiting()
+  })
+}
 
-/**
- * Declare global macro
- */
-declare function $raw$<T>(script: string): T
+declare const FILES: [string, string][]
 
-/**
- * Only cache on production
- */
-if (process.env.NODE_ENV === "production") {
-  /**
-   * Use $raw$ to avoid minifiers from mangling the code
-   */
-  const files = $raw$<[string, string][]>(`$run$(async () => {
-    const fs = await import("fs")
-    const path = await import("path")
-    const crypto = await import("crypto")
-  
-    function* walkSync(dir) {
-      const files = fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name > b.name ? 1 : -1)
-  
-      for (const file of files) {
-        if (file.isDirectory()) {
-          yield* walkSync(path.join(dir, file.name))
-        } else {
-          yield path.join(dir, file.name)
-        }
-      }
-    }
-  
-    const files = new Array()
-  
-    for (const absolute of walkSync(".")) {
-      const dirname = path.dirname(absolute)
-      const filename = path.basename(absolute)
-  
-      /**
-       * Do not cache saumon files
-       */
-      if (filename.endsWith(".saumon.js"))
-        continue
-      
-      /**
-       * Do not cache service-workers
-       */
-      if (filename.startsWith("service_worker."))
-        continue
-
-      /**
-       * Do not cache bootpages
-       */
-      if (fs.existsSync(\`./\${dirname}/_\${filename}\`))
-        continue
-      if (filename.endsWith(".html") && fs.existsSync(\`./\${dirname}/_\${filename.slice(0, -5)}/index.html\`))
-        continue
-      if (!filename.endsWith(".html") && fs.existsSync(\`./\${dirname}/_\${filename}/index\`))
-        continue
-
-      const text = fs.readFileSync(absolute)
-      const hash = crypto.createHash("sha256").update(text).digest("hex")
-  
-      const relative = path.relative(".", absolute)
-  
-      files.push([\`/\${relative}\`, hash])
-    }
-  
-    return files
-  }, { space: 0 })`)
-
-  const cache = new Immutable.Cache(new Map(files))
+if (isProdWebsite()) {
+  const cache = new Immutable.Cache(new Map(FILES))
 
   self.addEventListener("activate", (event) => {
     /**

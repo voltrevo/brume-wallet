@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
 {
@@ -19,12 +20,17 @@ import { walkSync } from "./libs/walkSync.mjs";
   fs.writeFileSync("./dist/safari/manifest.json", replaced, "utf8")
 }
 
-for (const filePath of walkSync("./dist/safari")) {
-  if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
-    if (filePath.endsWith("service_worker.latest.js"))
+{
+  for (const pathname of walkSync("./dist/safari")) {
+    const filename = path.basename(pathname)
+
+    if (!filename.endsWith(".js") && !filename.endsWith(".html"))
       continue
 
-    const original = fs.readFileSync(filePath, "utf8")
+    if (filename === "service_worker.latest.js")
+      continue
+
+    const original = fs.readFileSync(pathname, "utf8")
 
     const replaced = original
       .replaceAll("IS_WEBSITE", "false")
@@ -34,6 +40,13 @@ for (const filePath of walkSync("./dist/safari")) {
       .replaceAll("IS_ANDROID", "false")
       .replaceAll("IS_APPLE", "false")
 
-    fs.writeFileSync(filePath, replaced, "utf8")
+    fs.writeFileSync(pathname, replaced, "utf8")
   }
+}
+
+/**
+ * Use the latest service worker as the service worker
+ */
+{
+  fs.copyFileSync("./dist/safari/service_worker.latest.js", "./dist/safari/service_worker.js")
 }

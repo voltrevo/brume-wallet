@@ -1,4 +1,6 @@
+import crypto from "crypto";
 import fs from "fs";
+import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
 {
@@ -10,12 +12,17 @@ import { walkSync } from "./libs/walkSync.mjs";
   fs.writeFileSync("./dist/android/manifest.json", replaced, "utf8")
 }
 
-for (const filePath of walkSync("./dist/android")) {
-  if (filePath.endsWith(".js") || filePath.endsWith(".html")) {
-    if (filePath.endsWith("service_worker.latest.js"))
+{
+  for (const pathname of walkSync("./dist/android")) {
+    const filename = path.basename(pathname)
+
+    if (!filename.endsWith(".js") && !filename.endsWith(".html"))
       continue
 
-    const original = fs.readFileSync(filePath, "utf8")
+    if (filename === "service_worker.latest.js")
+      continue
+
+    const original = fs.readFileSync(pathname, "utf8")
 
     const replaced = original
       .replaceAll("IS_WEBSITE", "false")
@@ -25,6 +32,54 @@ for (const filePath of walkSync("./dist/android")) {
       .replaceAll("IS_ANDROID", "true")
       .replaceAll("IS_APPLE", "false")
 
-    fs.writeFileSync(filePath, replaced, "utf8")
+    fs.writeFileSync(pathname, replaced, "utf8")
+  }
+}
+
+/**
+ * Compute the hash of each file and inject them into the service-worker
+ */
+{
+  const files = new Array()
+
+  for (const pathname of walkSync("./dist/android")) {
+    const dirname = path.dirname(pathname)
+    const filename = path.basename(pathname)
+
+    if (filename.endsWith(".saumon.js"))
+      continue
+
+    if (filename.startsWith("service_worker."))
+      continue
+
+    if (fs.existsSync(`./${dirname}/_${filename}`))
+      continue
+    if (filename.endsWith(".html") && fs.existsSync(`./${dirname}/_${filename.slice(0, -5)}/index.html`))
+      continue
+    if (!filename.endsWith(".html") && fs.existsSync(`./${dirname}/_${filename}/index`))
+      continue
+
+    const text = fs.readFileSync(pathname)
+    const hash = crypto.createHash("sha256").update(text).digest("hex")
+
+    const relative = path.relative("./dist/android", pathname)
+
+    files.push([`/${relative}`, hash])
+  }
+
+  for (const pathname of walkSync("./dist/android")) {
+    const filename = path.basename(pathname)
+
+    if (!filename.startsWith("service_worker."))
+      continue
+
+    if (filename === "service_worker.latest.js")
+      continue
+
+    const original = fs.readFileSync(pathname, "utf8")
+    const replaced = original.replaceAll("FILES", JSON.stringify(files))
+
+    fs.writeFileSync(pathname, replaced, "utf8")
+    break
   }
 }
