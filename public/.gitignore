@@ -1,4 +1,4 @@
-service_worker.*.js
+service_worker.js
 content_script.js
 injected_script.js
 offscreen.js
