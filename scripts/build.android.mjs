@@ -3,6 +3,16 @@ import fs from "fs";
 import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
+/**
+ * Remove unused files
+ */
+{
+  fs.rmSync("./dist/android/404.html")
+  fs.rmSync("./dist/android/action.html")
+  fs.rmSync("./dist/android/popup.html")
+  fs.rmSync("./dist/android/start.html")
+}
+
 {
   const thepackage = JSON.parse(fs.readFileSync("./package.json", "utf8"))
 

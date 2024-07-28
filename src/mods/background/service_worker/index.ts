@@ -69,14 +69,8 @@ import { createUserStorageOrThrow } from "./storage";
 
 declare const self: ServiceWorkerGlobalScope
 
-if (isWebsite() || isAndroidApp()) {
-  self.addEventListener("install", (event) => {
-    /**
-     * Auto-activate as the update was already accepted
-     */
-    self.skipWaiting()
-  })
-}
+if (isWebsite() || isAndroidApp())
+  self.addEventListener("install", () => self.skipWaiting())
 
 declare const FILES: [string, string][]
 
@@ -84,20 +78,10 @@ if (isProdWebsite()) {
   const cache = new Immutable.Cache(new Map(FILES))
 
   self.addEventListener("activate", (event) => {
-    /**
-     * Uncache previous version
-     */
     event.waitUntil(cache.uncache())
-
-    /**
-     * Precache current version
-     */
     event.waitUntil(cache.precache())
   })
 
-  /**
-   * Respond with cache
-   */
   self.addEventListener("fetch", (event) => cache.handle(event))
 }
 

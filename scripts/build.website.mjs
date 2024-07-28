@@ -3,6 +3,23 @@ import fs from "fs";
 import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
+/**
+ * Setup bootpage override
+ */
+{
+  fs.renameSync("./dist/website/index.html", "./dist/website/_index.html")
+  fs.renameSync("./dist/website/start.html", "./dist/website/index.html")
+}
+
+/**
+ * Remove unused files
+ */
+{
+  fs.rmSync("./dist/website/404.html")
+  fs.rmSync("./dist/website/action.html")
+  fs.rmSync("./dist/website/popup.html")
+}
+
 {
   const thepackage = JSON.parse(fs.readFileSync("./package.json", "utf8"))
 
