@@ -111,7 +111,7 @@
 		C7BBFF3D2B867D9A00E5F86C /* manifest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = manifest.json; path = ../../../dist/safari/manifest.json; sourceTree = "<group>"; };
 		C7BBFF3E2B867D9A00E5F86C /* themer.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = themer.js; path = ../../../dist/safari/themer.js; sourceTree = "<group>"; };
 		C7BBFF3F2B867D9A00E5F86C /* content_script.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = content_script.js; path = ../../../dist/safari/content_script.js; sourceTree = "<group>"; };
-		C7BBFF402B867D9A00E5F86C /* next */ = {isa = PBXFileReference; lastKnownFileType = folder; name = next; path = ../../../dist/safari/next; sourceTree = "<group>"; };
+		C7BBFF402B867D9A00E5F86C /* _next */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _next; path = ../../../dist/safari/_next; sourceTree = "<group>"; };
 		C7BBFF412B867D9A00E5F86C /* injected_script.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = injected_script.js; path = ../../../dist/safari/injected_script.js; sourceTree = "<group>"; };
 		C7BBFF422B867D9A00E5F86C /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../../../dist/safari/assets; sourceTree = "<group>"; };
 		C7BBFF432B867D9A00E5F86C /* popup.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = popup.html; path = ../../../dist/safari/popup.html; sourceTree = "<group>"; };
