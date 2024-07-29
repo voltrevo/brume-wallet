@@ -3,11 +3,6 @@ import fs from "fs";
 import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
-
-{
-  fs.rmSync("./dist/android/start.html")
-}
-
 {
   fs.rmSync("./dist/android/404.html")
   fs.rmSync("./dist/android/action.html")
@@ -50,40 +45,12 @@ import { walkSync } from "./libs/walkSync.mjs";
   }
 }
 
-/**
- * Compute the hash of each file and inject them into the service-worker
- */
 {
-  const files = new Array()
+  fs.rmSync("./dist/android/start.html")
 
-  for (const pathname of walkSync("./dist/android")) {
-    const dirname = path.dirname(pathname)
-    const filename = path.basename(pathname)
+  const content = fs.readFileSync(`./dist/android/service_worker.js`, "utf8")
+  const version = crypto.createHash("sha256").update(content).digest("hex").slice(0, 6)
 
-    if (filename === "service_worker.js")
-      continue
-
-    if (fs.existsSync(`./${dirname}/_${filename}`))
-      continue
-    if (filename.endsWith(".html") && fs.existsSync(`./${dirname}/_${filename.slice(0, -5)}/index.html`))
-      continue
-    if (!filename.endsWith(".html") && fs.existsSync(`./${dirname}/_${filename}/index`))
-      continue
-
-    const text = fs.readFileSync(pathname)
-    const hash = crypto.createHash("sha256").update(text).digest("hex")
-
-    const relative = path.relative("./dist/android", pathname)
-
-    files.push([`/${relative}`, hash])
-  }
-
-  const original = fs.readFileSync(`./dist/android/service_worker.js`, "utf8")
-  const replaced = original.replaceAll("FILES", JSON.stringify(files))
-
-  const version = crypto.createHash("sha256").update(replaced).digest("hex").slice(0, 6)
-
-  fs.writeFileSync(`./dist/android/service_worker.js`, replaced, "utf8")
-  fs.writeFileSync(`./dist/android/service_worker.latest.js`, replaced, "utf8")
-  fs.writeFileSync(`./dist/android/service_worker.${version}.js`, replaced, "utf8")
+  fs.writeFileSync(`./dist/android/service_worker.latest.js`, content, "utf8")
+  fs.writeFileSync(`./dist/android/service_worker.${version}.js`, content, "utf8")
 }

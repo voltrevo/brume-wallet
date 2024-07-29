@@ -47,7 +47,7 @@ import { walkSync } from "./libs/walkSync.mjs";
 
 {
   for (const pathname of walkSync(`./dist/website`)) {
-    if (pathname === `./dist/website/start.html`)
+    if (pathname === `dist/website/start.html`)
       continue
 
     const dirname = path.dirname(pathname)
@@ -65,7 +65,7 @@ import { walkSync } from "./libs/walkSync.mjs";
   const files = new Array()
 
   for (const pathname of walkSync(`./dist/website`)) {
-    if (pathname === `./dist/website/service_worker.js`)
+    if (pathname === `dist/website/service_worker.js`)
       continue
 
     const dirname = path.dirname(pathname)
