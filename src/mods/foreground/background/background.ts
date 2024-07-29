@@ -1,5 +1,6 @@
 import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionRpcRouter, MessageRpcRouter, RpcRouter } from "@/libs/channel/channel"
+import { isProdWebsite } from "@/libs/platform/platform"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Immutable } from "@hazae41/immutable"
@@ -49,7 +50,7 @@ export class ServiceWorkerBackground {
 export async function getServiceWorkerOrThrow(background: ServiceWorkerBackground): Promise<ServiceWorker> {
   navigator.serviceWorker.addEventListener("controllerchange", () => location.reload())
 
-  const update = process.env.NODE_ENV === "production"
+  const update = isProdWebsite()
     ? await Immutable.register("./service_worker.latest.js")
     : void await navigator.serviceWorker.register("./service_worker.js")
 

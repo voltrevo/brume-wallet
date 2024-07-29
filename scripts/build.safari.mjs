@@ -3,11 +3,14 @@ import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
 {
+  fs.rmSync("./dist/safari/404.html")
+}
+
+{
   fs.rmSync("./dist/safari/chrome", { recursive: true, force: true })
   fs.rmSync("./dist/safari/firefox", { recursive: true, force: true })
   fs.rmSync("./dist/safari/safari", { recursive: true, force: true })
 }
-
 
 {
   const injected_script_base64 = fs.readFileSync("./dist/safari/injected_script.js", "base64")
@@ -46,4 +49,8 @@ import { walkSync } from "./libs/walkSync.mjs";
 
     fs.writeFileSync(pathname, replaced, "utf8")
   }
+}
+
+{
+  fs.rmSync("./dist/safari/start.html")
 }

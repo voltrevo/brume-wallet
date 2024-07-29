@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
@@ -47,10 +46,4 @@ import { walkSync } from "./libs/walkSync.mjs";
 
 {
   fs.rmSync("./dist/android/start.html")
-
-  const content = fs.readFileSync(`./dist/android/service_worker.js`, "utf8")
-  const version = crypto.createHash("sha256").update(content).digest("hex").slice(0, 6)
-
-  fs.writeFileSync(`./dist/android/service_worker.latest.js`, content, "utf8")
-  fs.writeFileSync(`./dist/android/service_worker.${version}.js`, content, "utf8")
 }

@@ -3,6 +3,10 @@ import path from "path";
 import { walkSync } from "./libs/walkSync.mjs";
 
 {
+  fs.rmSync("./dist/firefox/404.html")
+}
+
+{
   fs.rmSync("./dist/firefox/chrome", { recursive: true, force: true })
   fs.rmSync("./dist/firefox/firefox", { recursive: true, force: true })
   fs.rmSync("./dist/firefox/safari", { recursive: true, force: true })
@@ -45,4 +49,8 @@ import { walkSync } from "./libs/walkSync.mjs";
 
     fs.writeFileSync(pathname, replaced, "utf8")
   }
+}
+
+{
+  fs.rmSync("./dist/firefox/start.html")
 }
