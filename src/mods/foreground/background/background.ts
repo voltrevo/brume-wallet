@@ -49,7 +49,9 @@ export class ServiceWorkerBackground {
 export async function getServiceWorkerOrThrow(background: ServiceWorkerBackground): Promise<ServiceWorker> {
   navigator.serviceWorker.addEventListener("controllerchange", () => location.reload())
 
-  const update = await Immutable.register("./service_worker.latest.js")
+  const update = process.env.NODE_ENV === "production"
+    ? await Immutable.register("./service_worker.latest.js")
+    : void await navigator.serviceWorker.register("./service_worker.js")
 
   if (update != null)
     await background.serviceWorker.emit("update", update)
