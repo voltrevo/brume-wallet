@@ -19,10 +19,10 @@ import { walkSync } from "./libs/walkSync.mjs";
 }
 
 {
-  const thepackage = JSON.parse(fs.readFileSync("./package.json", "utf8"))
+  const version = process.env.npm_package_version
 
   const original = fs.readFileSync("./dist/safari/manifest.json", "utf8")
-  const replaced = original.replaceAll("VERSION", thepackage.version)
+  const replaced = original.replaceAll("VERSION", version)
 
   fs.writeFileSync("./dist/safari/manifest.json", replaced, "utf8")
 }

@@ -5,16 +5,13 @@ import { walkSync } from "./libs/walkSync.mjs";
 
 config({ path: dirname(new URL(import.meta.url).pathname) + "/.env.local" })
 
-const version = JSON.parse(readFileSync("./package.json", "utf8")).version;
-const versionCode = Number(version.replaceAll(".", "")).toString()
-
 {
   const json = JSON.parse(readFileSync("./altstore.json", "utf8"));
 
   json.apps[0].versions.unshift({
-    "version": version,
+    "version": process.env.npm_package_version,
     "date": new Date().toISOString(),
-    "localizedDescription": "Improvements and fixes. See GitHub for more details.",
+    "localizedDescription": "See GitHub for changelogs.",
     "downloadURL": `https://github.com/brumewallet/wallet/raw/v${version}/dist/ios-and-ipados.ipa`,
     "size": statSync("./dist/ios-and-ipados.ipa").size,
     "sha256": Buffer.from(await crypto.subtle.digest("SHA-256", readFileSync("./dist/ios-and-ipados.ipa"))).toString("hex"),

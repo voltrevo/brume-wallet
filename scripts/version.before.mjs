@@ -1,10 +1,10 @@
 import { readFileSync, writeFileSync } from "fs";
 
-const version = JSON.parse(readFileSync("./package.json", "utf8")).version;
-const versionCode = Number(version.replaceAll(".", "")).toString()
+const currentRaw = process.env.npm_package_version
+const currentCode = Number(currentRaw.replaceAll(".", "")).toString()
 
-const previous = readFileSync("./version.txt", "utf8").trim();
-const previousCode = Number(previous.replaceAll(".", "")).toString()
+const previousRaw = readFileSync("./version.txt", "utf8").trim();
+const previousCode = Number(previousRaw.replaceAll(".", "")).toString()
 
 /**
  * Update Android
@@ -13,8 +13,8 @@ const previousCode = Number(previous.replaceAll(".", "")).toString()
   const original = readFileSync("./apps/android/app/build.gradle", "utf8");
 
   const updated = original
-    .replaceAll(`versionName "${previous}"`, `versionName "${version}"`)
-    .replaceAll(`versionCode ${previousCode}`, `versionCode ${versionCode}`);
+    .replaceAll(`versionName "${previousRaw}"`, `versionName "${currentRaw}"`)
+    .replaceAll(`versionCode ${previousCode}`, `versionCode ${currentCode}`);
 
   writeFileSync("./apps/android/app/build.gradle", updated);
 }
@@ -26,8 +26,8 @@ const previousCode = Number(previous.replaceAll(".", "")).toString()
   const original = readFileSync("./apps/apple/wallet.xcodeproj/project.pbxproj", "utf8");
 
   const updated = original
-    .replaceAll(`MARKETING_VERSION = ${previous};`, `MARKETING_VERSION = ${version};`)
-    .replaceAll(`CURRENT_PROJECT_VERSION = ${previousCode};`, `CURRENT_PROJECT_VERSION = ${versionCode};`);
+    .replaceAll(`MARKETING_VERSION = ${previousRaw};`, `MARKETING_VERSION = ${currentRaw};`)
+    .replaceAll(`CURRENT_PROJECT_VERSION = ${previousCode};`, `CURRENT_PROJECT_VERSION = ${currentCode};`);
 
   writeFileSync("./apps/apple/wallet.xcodeproj/project.pbxproj", updated);
 }
