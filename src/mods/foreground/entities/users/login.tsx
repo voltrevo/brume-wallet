@@ -64,9 +64,6 @@ export function UserLoginDialog(props: { next?: string }) {
       return
     }
 
-    sessionStorage.setItem("uuid", user.uuid)
-    sessionStorage.setItem("password", defPasswordInput)
-
     await currentUserQuery.mutate(() => new Some(new Data(UserRef.create(user.uuid))))
 
     close(true)

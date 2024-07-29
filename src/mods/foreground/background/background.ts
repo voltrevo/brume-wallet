@@ -103,15 +103,6 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
 
     router.runPingLoop()
 
-    const uuid = sessionStorage.getItem("uuid")
-    const password = sessionStorage.getItem("password")
-
-    if (uuid && password)
-      await router.requestOrThrow({
-        method: "brume_login",
-        params: [uuid, password]
-      }).then(r => r.unwrap())
-
     const onClose = async () => {
       pool.restart(index)
       return new None()
@@ -203,15 +194,6 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
     await router.waitHelloOrThrow(AbortSignal.timeout(1000))
 
     router.runPingLoop()
-
-    const uuid = sessionStorage.getItem("uuid")
-    const password = sessionStorage.getItem("password")
-
-    if (uuid != null && password != null)
-      await router.requestOrThrow({
-        method: "brume_login",
-        params: [uuid, password]
-      }).then(r => r.unwrap())
 
     const onClose = async () => {
       pool.restart(index)

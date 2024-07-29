@@ -72,9 +72,6 @@ export function UserCreateDialog(props: { next?: string }) {
       params: [user.uuid, defPasswordInput]
     }).then(r => r.unwrap())
 
-    sessionStorage.setItem("uuid", user.uuid)
-    sessionStorage.setItem("password", defPasswordInput)
-
     await currentUserQuery.mutate(() => new Some(new Data(UserRef.create(user.uuid))))
 
     close(true)
