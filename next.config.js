@@ -14,6 +14,9 @@ module.exports = withMDX(withNextAsImmutable(withNextSidebuild({
     yield compileContentScript(wpconfig)
     yield compileInjectedScript(wpconfig)
     yield compileOffscreen(wpconfig)
+  },
+  env: {
+    VERSION: process.env.npm_package_version
   }
 })))
 

@@ -268,12 +268,18 @@ export function FullLandingPage(props: { next?: string }) {
           More downloads
         </WideShrinkableContrastAnchor>
         <div className="h-[50vh]" />
-        <div className="text-center p-4">
+        <div className="p-4 flex items-center justify-center gap-2">
           <TextAnchor
             target="_blank" rel="noreferrer"
             href="https://ethbrno.cz">
             Made by cypherpunks
           </TextAnchor>
+          <span>
+            ·
+          </span>
+          <span>
+            v{process.env.VERSION}
+          </span>
         </div>
       </div>
     </div>
