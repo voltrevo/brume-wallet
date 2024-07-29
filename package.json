@@ -110,7 +110,8 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^6.1.1",
-    "@hazae41/next-as-immutable": "^1.0.0",
+    "@hazae41/next-as-immutable": "^1.0.1",
+    "@hazae41/next-sidebuild": "^1.0.0",
     "@hazae41/phobos": "^1.0.10",
     "@hazae41/rimraf": "^1.0.1",
     "@hazae41/saumon": "^0.2.14",
