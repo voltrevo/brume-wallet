@@ -179,28 +179,6 @@ class Global {
     })
   }
 
-  async getStoredPasswordOrThrow(): Promise<Nullable<PasswordData>> {
-    if (!isExtension())
-      return
-    return await BrowserError.runOrThrow(() => browser.storage.session.get(["uuid", "password"]))
-  }
-
-  async setStoredPasswordOrThrow(uuid: string, password: string) {
-    if (!isExtension())
-      return
-    await BrowserError.runOrThrow(() => browser.storage.session.set({ uuid, password }))
-  }
-
-  async initOrThrow(): Promise<void> {
-    const credentials = await this.getStoredPasswordOrThrow()
-
-    if (credentials == null)
-      return
-
-    const { uuid, password } = credentials
-    await this.setCurrentUserOrThrow(uuid, password)
-  }
-
   async setCurrentUserOrThrow(uuid: Nullable<string>, password: Nullable<string>): Promise<Nullable<UserSession>> {
     if (uuid == null)
       return undefined
@@ -972,7 +950,7 @@ class Global {
     const [uuid, password] = (request as RpcRequestPreinit<[string, string]>).params
 
     await this.setCurrentUserOrThrow(uuid, password)
-    await this.setStoredPasswordOrThrow(uuid, password)
+
     return Ok.void()
   }
 
@@ -1555,8 +1533,6 @@ async function initOrThrow() {
 
   const storage = IDBStorage.createOrThrow({ name: "memory" })
   const global = new Global(storage)
-
-  await global.initOrThrow()
 
   console.log(`Started in ${Date.now() - start}ms`)
 
