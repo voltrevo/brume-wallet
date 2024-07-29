@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "fs";
 const currentRaw = process.env.npm_package_version
 const currentCode = Number(currentRaw.replaceAll(".", "")).toString()
 
-const previousRaw = readFileSync("./version.txt", "utf8").trim();
+const previousRaw = readFileSync("./preversion.txt", "utf8").trim();
 const previousCode = Number(previousRaw.replaceAll(".", "")).toString()
 
 /**

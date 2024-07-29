@@ -22,7 +22,7 @@
     "zip:!chrome": "cd ./dist/chrome && zip -r -X ../chrome.zip .",
     "zip:!firefox": "cd ./dist/firefox && zip -r -X ../firefox.zip .",
     "zip:!macos": "cd './dist/Brume Wallet.app' && zip -r -X ../macos.zip .",
-    "preversion": "find . -name '.DS_Store' -delete && echo $npm_package_version > ./version.txt",
+    "preversion": "echo $npm_package_version > ./preversion.txt",
     "version": "npm run version:!build",
     "version:!build": "npm run build && npm run version:!sync",
     "version:!sync": "npm run sync && npm run version:!before",
