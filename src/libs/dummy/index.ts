@@ -3,8 +3,6 @@ export function createDummy<T extends object>(name: string, target: T): T {
 
   return new Proxy(target, {
     get(_: T, property: string, receiver: any) {
-      console.log(name, 'get', property)
-
       if (property in dummy)
         return Reflect.get(dummy, property, receiver)
       else
