@@ -333,25 +333,22 @@ class Provider {
    * @deprecated
    */
   send(init: string | RpcRequestPreinit<unknown>, callback?: (err: unknown, ok: unknown) => void) {
-    if (typeof init === "string")
-      init = { method: init }
-
-    const { id = null } = init
-
     console.log("send", init, this._accounts)
 
+    if (typeof init === "string")
+      return this._request({ method: init }).then(r => r.toJSON())
     if (callback != null)
       return void this._send(init, callback)
     if (init.method === "eth_accounts")
-      return RpcOk.rewrap(id, new Ok(this._accounts)).toJSON()
+      return RpcOk.rewrap(null, new Ok(this._accounts)).toJSON()
     if (init.method === "eth_coinbase")
-      return RpcOk.rewrap(id, new Ok(this.selectedAddress)).toJSON()
+      return RpcOk.rewrap(null, new Ok(this.selectedAddress)).toJSON()
     if (init.method === "net_version")
-      return RpcOk.rewrap(id, new Ok(this._networkVersion)).toJSON()
+      return RpcOk.rewrap(null, new Ok(this._networkVersion)).toJSON()
     if (init.method === "eth_uninstallFilter")
-      throw new Error(`Unimplemented method ${init.method}`)
+      throw new Error(`Unimplemented method ${init}`)
 
-    throw new Error(`Asynchronous method ${init.method} requires a callback`)
+    throw new Error(`Asynchronous method ${init} requires a callback`)
   }
 
   /**
