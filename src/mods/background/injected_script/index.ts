@@ -304,11 +304,7 @@ class Provider {
   }
 
   async request<T>(init: RpcRequestPreinit<unknown>) {
-    console.log("request", init)
-
     const result = await this._request<T>(init)
-
-    console.log("result", result)
 
     if (result.isErr())
       throw result.getErr()
@@ -333,12 +329,12 @@ class Provider {
    * @deprecated
    */
   send(init: string | RpcRequestPreinit<unknown>, callback?: (err: unknown, ok: unknown) => void) {
-    console.log("send", init, this._accounts)
-
     if (typeof init === "string")
       return this._request({ method: init }).then(r => r.toJSON())
+
     if (callback != null)
       return void this._send(init, callback)
+
     if (init.method === "eth_accounts")
       return RpcOk.rewrap(null, new Ok(this._accounts)).toJSON()
     if (init.method === "eth_coinbase")
@@ -404,6 +400,8 @@ class Provider {
   }
 
   addListener(key: string, listener: Listener) {
+    console.log("on", key, listener)
+
     const listeners = this._listenersByEvent.get(key)
 
     if (listeners == null)
@@ -493,8 +491,6 @@ window.web3 = createDummy("web3", { currentProvider: provider, __isMetaMaskShim_
  * EIP-1193 (legacy)
  */
 window.ethereum = provider
-
-console.log("done")
 
 /**
  * EIP-6963 (modern)

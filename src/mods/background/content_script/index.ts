@@ -198,8 +198,6 @@ async function main() {
     router.events.on("request", onBackgroundRequest, { passive: true })
     router.events.on("close", onClose, { passive: true })
 
-    console.log("Brume content script started")
-
     const icon = await router.requestOrThrow<string>({
       method: "brume_icon"
     }, AbortSignal.timeout(1000)).then(r => r.unwrap())
