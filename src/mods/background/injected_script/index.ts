@@ -324,9 +324,9 @@ class Provider {
     const response = await this._request(init)
 
     if (response.isErr())
-      callback(response.inner, response)
+      callback(response.inner.toJSON(), response.toJSON())
     else
-      callback(null, response)
+      callback(null, response.toJSON())
   }
 
   /**
@@ -338,14 +338,16 @@ class Provider {
 
     const { id = null } = init
 
+    console.log("send", init, this._accounts)
+
     if (callback != null)
       return void this._send(init, callback)
     if (init.method === "eth_accounts")
-      return RpcOk.rewrap(id, new Ok(this._accounts))
+      return RpcOk.rewrap(id, new Ok(this._accounts)).toJSON()
     if (init.method === "eth_coinbase")
-      return RpcOk.rewrap(id, new Ok(this.selectedAddress))
+      return RpcOk.rewrap(id, new Ok(this.selectedAddress)).toJSON()
     if (init.method === "net_version")
-      return RpcOk.rewrap(id, new Ok(this._networkVersion))
+      return RpcOk.rewrap(id, new Ok(this._networkVersion)).toJSON()
     if (init.method === "eth_uninstallFilter")
       throw new Error(`Unimplemented method ${init.method}`)
 

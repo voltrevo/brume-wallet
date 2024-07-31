@@ -505,15 +505,15 @@ class Global {
         const { chainId } = sessionData.chain
 
         if (this.chainIdByScript.has(script.name) && this.chainIdByScript.get(script.name) !== chainId) {
-          await script.requestOrThrow({
+          script.requestOrThrow({
             method: "chainChanged",
             params: [ZeroHexAsInteger.fromOrThrow(chainId)]
-          }).then(r => r.unwrap())
+          }).then(r => r.unwrap()).catch(() => { })
 
-          await script.requestOrThrow({
+          script.requestOrThrow({
             method: "networkChanged",
             params: [chainId.toString()]
-          }).then(r => r.unwrap())
+          }).then(r => r.unwrap()).catch(() => { })
         }
 
         return sessionData
@@ -572,15 +572,15 @@ class Global {
       })
 
       if (this.chainIdByScript.has(script.name) && this.chainIdByScript.get(script.name) !== userChainId) {
-        await script.requestOrThrow<void>({
+        script.requestOrThrow<void>({
           method: "chainChanged",
           params: [ZeroHexAsInteger.fromOrThrow(userChainId)]
-        }).then(r => r.unwrap())
+        }).then(r => r.unwrap()).catch(() => { })
 
-        await script.requestOrThrow({
+        script.requestOrThrow({
           method: "networkChanged",
           params: [userChainId.toString()]
-        }).then(r => r.unwrap())
+        }).then(r => r.unwrap()).catch(() => { })
       }
 
       return sessionData
@@ -863,15 +863,15 @@ class Global {
     await sessionQuery.mutate(() => new Some(new Data({ ...sessionData, chain })))
 
     for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([])) {
-      await script.requestOrThrow({
+      script.requestOrThrow({
         method: "chainChanged",
         params: [ZeroHexAsInteger.fromOrThrow(chain.chainId)]
-      }).then(r => r.unwrap())
+      }).then(r => r.unwrap()).catch(() => { })
 
-      await script.requestOrThrow({
+      script.requestOrThrow({
         method: "networkChanged",
         params: [chain.chainId.toString()]
-      }).then(r => r.unwrap())
+      }).then(r => r.unwrap()).catch(() => { })
     }
 
     return Ok.void()
@@ -1001,15 +1001,15 @@ class Global {
     await sessionQuery.mutate(() => new Some(new Data({ ...sessionData, chain })))
 
     for (const script of Option.wrap(this.scriptsBySession.get(sessionId)).unwrapOr([])) {
-      await script.requestOrThrow({
+      script.requestOrThrow({
         method: "chainChanged",
         params: [ZeroHexAsInteger.fromOrThrow(chain.chainId)]
-      }).then(r => r.unwrap())
+      }).then(r => r.unwrap()).catch(() => { })
 
-      await script.requestOrThrow({
+      script.requestOrThrow({
         method: "networkChanged",
         params: [chain.chainId.toString()]
-      }).then(r => r.unwrap())
+      }).then(r => r.unwrap()).catch(() => { })
     }
 
     return Ok.void()
@@ -1031,10 +1031,10 @@ class Global {
     }
 
     for (const script of Option.wrap(this.scriptsBySession.get(id)).unwrapOr([])) {
-      await script.requestOrThrow({
+      script.requestOrThrow({
         method: "accountsChanged",
         params: [[]]
-      }).then(r => r.unwrap())
+      }).then(r => r.unwrap()).catch(() => { })
 
       this.chainIdByScript.delete(script.name)
       this.accountsByScript.delete(script.name)
