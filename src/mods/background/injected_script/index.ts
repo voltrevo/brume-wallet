@@ -400,8 +400,6 @@ class Provider {
   }
 
   addListener(key: string, listener: Listener) {
-    console.log("on", key, listener)
-
     const listeners = this._listenersByEvent.get(key)
 
     if (listeners == null)
