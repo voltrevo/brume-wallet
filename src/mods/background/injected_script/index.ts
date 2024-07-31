@@ -1,5 +1,6 @@
 import "@hazae41/symbol-dispose-polyfill";
 
+import { createDummy } from "@/libs/dummy";
 import { Future } from "@hazae41/future";
 import { RpcCounter, RpcOk, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { Ok } from "@hazae41/result";
@@ -7,7 +8,12 @@ import { Ok } from "@hazae41/result";
 declare global {
   interface Window {
     ethereum?: EIP1193Provider
+    web3?: Web3
   }
+}
+interface Web3 {
+  readonly currentProvider: EIP1193Provider
+  readonly __isMetaMaskShim__: true
 }
 
 interface EIP1193Provider {
@@ -17,24 +23,24 @@ interface EIP1193Provider {
 }
 
 interface EIP6963ProviderInfo {
-  uuid: string;
-  name: string;
-  icon: string;
-  rdns: string;
+  readonly uuid: string;
+  readonly name: string;
+  readonly icon: string;
+  readonly rdns: string;
 }
 
 interface EIP6963ProviderDetail {
-  info: EIP6963ProviderInfo;
-  provider: EIP1193Provider;
+  readonly info: EIP6963ProviderInfo;
+  readonly provider: EIP1193Provider;
 }
 
 interface EIP6963AnnounceProviderEvent extends CustomEvent {
-  type: "eip6963:announceProvider";
-  detail: EIP6963ProviderDetail;
+  readonly type: "eip6963:announceProvider";
+  readonly detail: EIP6963ProviderDetail;
 }
 
 interface EIP6963RequestProviderEvent extends CustomEvent {
-  type: "eip6963:requestProvider";
+  readonly type: "eip6963:requestProvider";
 }
 
 declare global {
@@ -298,7 +304,11 @@ class Provider {
   }
 
   async request<T>(init: RpcRequestPreinit<unknown>) {
+    console.log("request", init)
+
     const result = await this._request<T>(init)
+
+    console.log("result", result)
 
     if (result.isErr())
       throw result.getErr()
@@ -329,7 +339,7 @@ class Provider {
     const { id = null } = init
 
     if (callback != null)
-      return this._send(init, callback)
+      return void this._send(init, callback)
     if (init.method === "eth_accounts")
       return RpcOk.rewrap(id, new Ok(this._accounts))
     if (init.method === "eth_coinbase")
@@ -373,10 +383,14 @@ class Provider {
 
   on(key: string, listener: Listener) {
     this.addListener(key, listener)
+
+    return this
   }
 
   off(key: string, listener: Listener) {
     this.removeListener(key, listener)
+
+    return this
   }
 
   once(key: string, listener: Listener) {
@@ -386,49 +400,57 @@ class Provider {
     }
 
     this.on(key, listener2)
+
+    return this
   }
 
   addListener(key: string, listener: Listener) {
     const listeners = this._listenersByEvent.get(key)
 
     if (listeners == null)
-      return
+      return this
 
     this._listenerCount -= listeners.size
 
     listeners.add(listener)
 
     this._listenerCount += listeners.size
+
+    return this
   }
 
   removeListener(key: string, listener: Listener) {
     const listeners = this._listenersByEvent.get(key)
 
     if (listeners == null)
-      return
+      return this
 
     if (!listeners.delete(listener))
-      return
+      return this
 
     this._listenerCount--
+
+    return this
   }
 
   removeAllListeners(key: string) {
     const listeners = this._listenersByEvent.get(key)
 
     if (listeners == null)
-      return
+      return this
 
     this._listenerCount -= listeners.size
 
     listeners.clear()
+
+    return this
   }
 
   prependListener(key: string, listener: Listener) {
     const listeners = this._listenersByEvent.get(key)
 
     if (listeners == null)
-      return
+      return this
 
     this._listenerCount -= listeners.size
 
@@ -441,6 +463,8 @@ class Provider {
       listeners.add(listener)
 
     this._listenerCount += listeners.size
+
+    return this
   }
 
   prependOnceListener(key: string, listener: Listener) {
@@ -450,30 +474,28 @@ class Provider {
     }
 
     this.prependListener(key, listener2)
+
+    return this
   }
 
 }
 
-const inner = new Provider()
-
 /**
  * Fix for that extension that does `Object.assign(window.ethereum, { ... })`
  */
-const provider = new Proxy({}, {
-  get(target, property, receiver) {
-    return property in target
-      ? Reflect.get(target, property, receiver)
-      : Reflect.get(inner, property, receiver)
-  },
-  set(target, property, value, receiver) {
-    return Reflect.set(target, property, value, receiver)
-  }
-})
+const provider = createDummy("provider", new Provider())
+
+/**
+ * Legacy web3
+ */
+window.web3 = createDummy("web3", { currentProvider: provider, __isMetaMaskShim__: true as const })
 
 /**
  * EIP-1193 (legacy)
  */
 window.ethereum = provider
+
+console.log("done")
 
 /**
  * EIP-6963 (modern)
