@@ -8,13 +8,9 @@ import { Mouse } from "@/libs/mouse/mouse";
 import { isFirefoxExtension, isSafariExtension } from "@/libs/platform/platform";
 import { NonReadonly } from "@/libs/types/readonly";
 import { qurl } from "@/libs/url/url";
-import { Box } from "@hazae41/box";
-import { Disposer } from "@hazae41/disposer";
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
 import { None, Some } from "@hazae41/option";
-import { Pool } from "@hazae41/piscine";
 import { Ok, Result } from "@hazae41/result";
-import { Signals } from "@hazae41/signals";
 import { PreOriginData } from "../service_worker/entities/origins/data";
 
 declare const self: ServiceWorkerGlobalScope
@@ -117,151 +113,114 @@ async function main() {
     return origin
   }
 
-  new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
-    let connected = false
+  try {
+    const port = BrowserError.runOrThrowSync(() => {
+      const port = browser.runtime.connect({ name: "content_script->background" })
+      port.onDisconnect.addListener(() => void chrome.runtime.lastError)
+      return port
+    })
 
-    try {
-      const { index, pool } = params
+    const router = new ExtensionRpcRouter("background", port)
 
-      await new Promise(ok => setTimeout(ok, 1))
+    const onScriptRequest = async (input: CustomEvent<string>) => {
+      const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
 
-      const raw = BrowserError.runOrThrowSync(() => {
-        const port = browser.runtime.connect({ name: "content_script->background" })
-        port.onDisconnect.addListener(() => void chrome.runtime.lastError)
-        return port
-      })
+      const result = await router.tryRequest({ method: "brume_run", params: [request, mouse] })
+      const response = RpcResponse.rewrap(request.id, result.flatten())
 
-      using preChannel = new Box(new Disposer(raw, () => raw.disconnect()))
-      using preRouter = new Box(new ExtensionRpcRouter("background", preChannel.inner.inner))
+      const detail = JSON.stringify(response)
+      const output = new CustomEvent("ethereum:response", { detail })
+      window.dispatchEvent(output)
+    }
 
-      await preRouter.getOrThrow().waitHelloOrThrow(AbortSignal.timeout(1000))
+    const onAccountsChanged = async (request: RpcRequestPreinit<unknown>) => {
+      const [accounts] = (request as RpcRequestPreinit<[string[]]>).params
 
-      connected = true
-
-      const port = preChannel.moveOrThrow()
-      const router = preRouter.moveOrThrow()
-
-      const onWrapperClean = () => {
-        using _0 = port
-        using _1 = router
-      }
-
-      using preWrapper = new Box(new Disposer(router.inner, onWrapperClean))
-
-      const onScriptRequest = async (input: CustomEvent<string>) => {
-        const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
-
-        const result = await router.inner.tryRequest({ method: "brume_run", params: [request, mouse] })
-        const response = RpcResponse.rewrap(request.id, result.flatten())
-
-        const detail = JSON.stringify(response)
-        const output = new CustomEvent("ethereum:response", { detail })
-        window.dispatchEvent(output)
-      }
-
-      const onAccountsChanged = async (request: RpcRequestPreinit<unknown>) => {
-        const [accounts] = (request as RpcRequestPreinit<[string[]]>).params
-
-        const detail = JSON.stringify(accounts)
-        const event = new CustomEvent("ethereum:accountsChanged", { detail })
-        window.dispatchEvent(event)
-
-        return Ok.void()
-      }
-
-      const onConnect = async (request: RpcRequestPreinit<unknown>) => {
-        const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
-
-        const detail = JSON.stringify({ chainId })
-        const event = new CustomEvent("ethereum:connect", { detail })
-        window.dispatchEvent(event)
-
-        return Ok.void()
-      }
-
-      const onChainChanged = async (request: RpcRequestPreinit<unknown>) => {
-        const [chainId] = (request as RpcRequestPreinit<[string]>).params
-
-        const detail = JSON.stringify(chainId)
-        const event = new CustomEvent("ethereum:chainChanged", { detail })
-        window.dispatchEvent(event)
-
-        return Ok.void()
-      }
-
-      const onNetworkChanged = async (request: RpcRequestPreinit<unknown>) => {
-        const [chainId] = (request as RpcRequestPreinit<[string]>).params
-
-        const detail = JSON.stringify(chainId)
-        const event = new CustomEvent("ethereum:networkChanged", { detail })
-        window.dispatchEvent(event)
-
-        return Ok.void()
-      }
-
-      const onBackgroundRequest = async (request: RpcRequestPreinit<unknown>) => {
-        if (request.method === "brume_origin")
-          return new Some(new Ok(await getOrigin()))
-        if (request.method === "connect")
-          return new Some(await onConnect(request))
-        if (request.method === "accountsChanged")
-          return new Some(await onAccountsChanged(request))
-        if (request.method === "chainChanged")
-          return new Some(await onChainChanged(request))
-        if (request.method === "networkChanged")
-          return new Some(await onNetworkChanged(request))
-        return new None()
-      }
-
-      const onClose = async () => {
-        const event = new CustomEvent("ethereum:disconnect", {})
-        window.dispatchEvent(event)
-
-        pool.restart(index)
-        return new None()
-      }
-
-      window.addEventListener("ethereum:request", onScriptRequest, { passive: true })
-      router.inner.events.on("request", onBackgroundRequest, { passive: true })
-      router.inner.events.on("close", onClose, { passive: true })
-
-      const wrapper = preWrapper.moveOrThrow()
-
-      const onEntryClean = () => {
-        using postinner = wrapper
-
-        window.removeEventListener("ethereum:request", onScriptRequest)
-        router.inner.events.off("request", onBackgroundRequest)
-        router.inner.events.off("close", onClose)
-      }
-
-      using preEntry = new Box(new Disposer(wrapper, onEntryClean))
-
-      const icon = await router.inner.requestOrThrow<string>({
-        method: "brume_icon"
-      }, Signals.never()).then(r => r.unwrap())
-
-      const detail = JSON.stringify(icon)
-      const event = new CustomEvent("brume:icon", { detail })
+      const detail = JSON.stringify(accounts)
+      const event = new CustomEvent("ethereum:accountsChanged", { detail })
       window.dispatchEvent(event)
 
-      return preEntry.unwrapOrThrow()
-    } catch (e: unknown) {
-      if (!isSafariExtension())
-        throw e
-      if (connected)
-        throw e
-      if (sessionStorage.getItem("brume:opened"))
-        throw e
-      sessionStorage.setItem("brume:opened", "true")
-
-      const opener = BrowserError.runOrThrowSync(() => browser.runtime.getURL("/opener.html"))
-      const opened = qurl(opener, { url: location.href })
-
-      location.replace(opened)
-      throw e
+      return Ok.void()
     }
-  }, { capacity: 1 })
+
+    const onConnect = async (request: RpcRequestPreinit<unknown>) => {
+      const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
+
+      const detail = JSON.stringify({ chainId })
+      const event = new CustomEvent("ethereum:connect", { detail })
+      window.dispatchEvent(event)
+
+      return Ok.void()
+    }
+
+    const onChainChanged = async (request: RpcRequestPreinit<unknown>) => {
+      const [chainId] = (request as RpcRequestPreinit<[string]>).params
+
+      const detail = JSON.stringify(chainId)
+      const event = new CustomEvent("ethereum:chainChanged", { detail })
+      window.dispatchEvent(event)
+
+      return Ok.void()
+    }
+
+    const onNetworkChanged = async (request: RpcRequestPreinit<unknown>) => {
+      const [chainId] = (request as RpcRequestPreinit<[string]>).params
+
+      const detail = JSON.stringify(chainId)
+      const event = new CustomEvent("ethereum:networkChanged", { detail })
+      window.dispatchEvent(event)
+
+      return Ok.void()
+    }
+
+    const onBackgroundRequest = async (request: RpcRequestPreinit<unknown>) => {
+      if (request.method === "brume_origin")
+        return new Some(new Ok(await getOrigin()))
+      if (request.method === "connect")
+        return new Some(await onConnect(request))
+      if (request.method === "accountsChanged")
+        return new Some(await onAccountsChanged(request))
+      if (request.method === "chainChanged")
+        return new Some(await onChainChanged(request))
+      if (request.method === "networkChanged")
+        return new Some(await onNetworkChanged(request))
+      return new None()
+    }
+
+    const onClose = async () => {
+      const event = new CustomEvent("ethereum:disconnect", {})
+      window.dispatchEvent(event)
+
+      return new None()
+    }
+
+    window.addEventListener("ethereum:request", onScriptRequest, { passive: true })
+    router.events.on("request", onBackgroundRequest, { passive: true })
+    router.events.on("close", onClose, { passive: true })
+
+    const icon = await router.requestOrThrow<string>({
+      method: "brume_icon"
+    }, AbortSignal.timeout(1000)).then(r => r.unwrap())
+
+    const detail = JSON.stringify(icon)
+    const event = new CustomEvent("brume:icon", { detail })
+    window.dispatchEvent(event)
+  } catch (e: unknown) {
+    if (!isSafariExtension())
+      throw e
+
+    if (sessionStorage.getItem("brume:opened"))
+      throw e
+
+    sessionStorage.setItem("brume:opened", "true")
+
+    const opener = BrowserError.runOrThrowSync(() => browser.runtime.getURL("/opener.html"))
+    const opened = qurl(opener, { url: location.href })
+
+    location.replace(opened)
+
+    throw e
+  }
 }
 
 await main()

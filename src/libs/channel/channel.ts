@@ -142,19 +142,23 @@ export class MessageRpcRouter {
   }
 
   async waitHelloOrThrow(signal = Signals.never()) {
-    const active = this.requestOrThrow<void>({ method: "brume_hello" }).then(r => r.unwrap())
+    const active = this.requestOrThrow<void>({
+      method: "brume_hello"
+    }).then(r => r.unwrap())
 
-    using passive = this.events.wait("request", (future: Future<void>, init) => {
-      if (init.method !== "brume_hello")
-        return new None()
-
+    using request = this.events.wait("request", (future: Future<void>) => {
       future.resolve()
-      return new Some(Ok.void())
+      return new None()
+    })
+
+    using response = this.events.wait("response", (future: Future<void>) => {
+      future.resolve()
+      return new None()
     })
 
     using abort = Signals.rejectOnAbort(signal)
 
-    return await Promise.race([active, passive.get(), abort.get()])
+    return await Promise.race([active, request.get(), response.get(), abort.get()])
   }
 
 }
@@ -271,19 +275,23 @@ export class ExtensionRpcRouter {
   }
 
   async waitHelloOrThrow(signal = Signals.never()) {
-    const active = this.requestOrThrow<void>({ method: "brume_hello" }).then(r => r.unwrap())
+    const active = this.requestOrThrow<void>({
+      method: "brume_hello"
+    }).then(r => r.unwrap())
 
-    using passive = this.events.wait("request", (future: Future<void>, init) => {
-      if (init.method !== "brume_hello")
-        return new None()
-
+    using request = this.events.wait("request", (future: Future<void>) => {
       future.resolve()
-      return new Some(Ok.void())
+      return new None()
+    })
+
+    using response = this.events.wait("response", (future: Future<void>) => {
+      future.resolve()
+      return new None()
     })
 
     using abort = Signals.rejectOnAbort(signal)
 
-    return await Promise.race([active, passive.get(), abort.get()])
+    return await Promise.race([active, request.get(), response.get(), abort.get()])
   }
 
 }

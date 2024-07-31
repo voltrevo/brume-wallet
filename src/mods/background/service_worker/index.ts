@@ -144,6 +144,9 @@ class Global {
 
   readonly sessionByScript = new Map<string, Mutex<Slot<string>>>()
 
+  readonly accountsByScript = new Map<string, string[]>()
+  readonly chainIdByScript = new Map<string, Nullable<number>>()
+
   readonly wcBySession = new Map<string, WcSession>()
 
   /**
@@ -416,7 +419,7 @@ class Global {
     }
   }
 
-  async getExtensionSessionOrThrow(script: RpcRouter, mouse: Mouse, force: boolean): Promise<Nullable<ExSessionData>> {
+  async getExtensionSessionOrThrow(script: RpcRouter, mouse: Mouse, wait: boolean): Promise<Nullable<ExSessionData>> {
     let mutex = this.sessionByScript.get(script.name)
 
     if (mutex == null) {
@@ -425,11 +428,14 @@ class Global {
     }
 
     return await mutex.lock(async slot => {
+      if (this.#user == null && !wait)
+        return undefined
+
+      const { storage } = await this.getOrWaitUserOrThrow(mouse)
+
       const currentSession = slot.current
 
       if (currentSession != null) {
-        const { storage } = Option.unwrap(this.#user)
-
         const sessionQuery = BgSession.schema(currentSession, storage)
         const sessionState = await sessionQuery.state
         const sessionData = Option.unwrap(sessionState.data?.get())
@@ -439,8 +445,6 @@ class Global {
 
         return sessionData
       }
-
-      const { storage } = Option.unwrap(this.#user)
 
       const preOriginData = await script.requestOrThrow<PreOriginData>({
         method: "brume_origin"
@@ -498,14 +502,10 @@ class Global {
           return new None()
         })
 
-        const userChainState = await BgSettings.Chain.schema(storage).state
-        const userChainId = Option.wrap(userChainState.data?.get()).unwrapOr(1)
-        const userChainData = Option.unwrap(chainDataByChainId[userChainId])
-
         const { chainId } = sessionData.chain
 
-        if (userChainData.chainId !== chainId) {
-          await script.requestOrThrow<void>({
+        if (this.chainIdByScript.has(script.name) && this.chainIdByScript.get(script.name) !== chainId) {
+          await script.requestOrThrow({
             method: "chainChanged",
             params: [ZeroHexAsInteger.fromOrThrow(chainId)]
           }).then(r => r.unwrap())
@@ -519,7 +519,7 @@ class Global {
         return sessionData
       }
 
-      if (!force)
+      if (!wait)
         return undefined
 
       const userChainState = await BgSettings.Chain.schema(storage).state
@@ -571,6 +571,18 @@ class Global {
         return new None()
       })
 
+      if (this.chainIdByScript.has(script.name) && this.chainIdByScript.get(script.name) !== userChainId) {
+        await script.requestOrThrow<void>({
+          method: "chainChanged",
+          params: [ZeroHexAsInteger.fromOrThrow(userChainId)]
+        }).then(r => r.unwrap())
+
+        await script.requestOrThrow({
+          method: "networkChanged",
+          params: [userChainId.toString()]
+        }).then(r => r.unwrap())
+      }
+
       return sessionData
     })
   }
@@ -590,22 +602,27 @@ class Global {
   async brume_run(script: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
     const [subrequest, mouse] = (request as RpcRequestPreinit<[RpcRequestPreinit<unknown>, Mouse]>).params
 
-    const { storage } = await this.getOrWaitUserOrThrow(mouse)
-
-    const userChainState = await BgSettings.Chain.schema(storage).state
-    const userChainId = Option.wrap(userChainState.data?.get()).unwrapOr(1)
-    const userChainData = Option.unwrap(chainDataByChainId[userChainId])
-
     let session = await this.getExtensionSessionOrThrow(script, mouse, false)
 
-    if (subrequest.method === "eth_accounts" && session == null)
+    if (subrequest.method === "eth_accounts" && session == null) {
+      this.accountsByScript.set(script.name, [])
       return new Ok([])
-    if (subrequest.method === "eth_chainId" && session == null)
-      return new Ok(ZeroHexAsInteger.fromOrThrow(userChainData.chainId))
-    if (subrequest.method === "eth_coinbase" && session == null)
-      return new Ok(undefined)
-    if (subrequest.method === "net_version" && session == null)
-      return new Ok(userChainData.chainId.toString())
+    }
+
+    if (subrequest.method === "eth_coinbase" && session == null) {
+      this.accountsByScript.set(script.name, [])
+      return new Ok(null)
+    }
+
+    if (subrequest.method === "eth_chainId" && session == null) {
+      this.chainIdByScript.set(script.name, null)
+      return new Ok(null)
+    }
+
+    if (subrequest.method === "net_version" && session == null) {
+      this.chainIdByScript.set(script.name, null)
+      return new Ok(null)
+    }
 
     session = await this.getExtensionSessionOrThrow(script, mouse, true)
 
@@ -1018,6 +1035,9 @@ class Global {
         method: "accountsChanged",
         params: [[]]
       }).then(r => r.unwrap())
+
+      this.chainIdByScript.delete(script.name)
+      this.accountsByScript.delete(script.name)
 
       this.sessionByScript.delete(script.name)
     }

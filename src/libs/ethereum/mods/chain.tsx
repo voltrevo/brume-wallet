@@ -45,7 +45,7 @@ export const chainDataByChainId: Chains = {
     urls: ["wss://optimism-rpc.publicnode.com", "wss://optimism.gateway.tenderly.co", "https://1rpc.io/op"],
     etherscan: "https://optimistic.etherscan.io",
     token: {
-      uuid: "664002af-5c47-4b6e-ab3e-c0c130e23b3c",
+      uuid: "d82dbb70-ba5a-4d08-a145-af13480192bf",
       type: "native",
       name: "ETH",
       chainId: 10,
@@ -65,7 +65,7 @@ export const chainDataByChainId: Chains = {
     urls: ["wss://bsc-rpc.publicnode.com", "https://1rpc.io/bnb"],
     etherscan: "https://bscscan.com",
     token: {
-      uuid: "664003af-5c47-4b6e-ab3e-c0c130e23b3c",
+      uuid: "400f67d6-953b-4844-ad73-f677859b273d",
       type: "native",
       name: "BNB",
       chainId: 56,
@@ -85,7 +85,7 @@ export const chainDataByChainId: Chains = {
     urls: ["https://etc.rivet.link"],
     etherscan: "https://blockscout.com/etc/mainnet/",
     token: {
-      uuid: "664004af-5c47-4b6e-ab3e-c0c130e23b3c",
+      uuid: "d2c359e7-c3b7-473e-acc9-a52e5f32ed03",
       type: "native",
       name: "ETC",
       chainId: 61,
@@ -108,7 +108,7 @@ export const chainDataByChainId: Chains = {
     urls: ["wss://gnosis-rpc.publicnode.com", "https://1rpc.io/gnosis"],
     etherscan: "https://gnosisscan.io",
     token: {
-      uuid: "664005af-5c47-4b6e-ab3e-c0c130e23b3c",
+      uuid: "84cd6486-941f-4cf8-8e72-dc441ab9802d",
       type: "native",
       name: "xDAI",
       chainId: 100,
@@ -131,7 +131,7 @@ export const chainDataByChainId: Chains = {
     urls: ["wss://polygon-bor-rpc.publicnode.com", "wss://polygon.gateway.tenderly.co", "https://1rpc.io/matic"],
     etherscan: "https://polygonscan.com",
     token: {
-      uuid: "664006af-5c47-4b6e-ab3e-c0c130e23b3c",
+      uuid: "21e58495-ad1c-494d-898d-33ba3ff4b013",
       type: "native",
       name: "MATIC",
       chainId: 137,
@@ -174,7 +174,7 @@ export const chainDataByChainId: Chains = {
     urls: ["https://1rpc.io/zksync2-era"],
     etherscan: "https://explorer.zksync.io/",
     token: {
-      uuid: "664007af-5c47-4b6e-ab3e-c0c130e23b3c",
+      uuid: "943d8709-3b37-4788-8512-44eb747e6fd0",
       type: "native",
       name: "ETH",
       chainId: 324,
@@ -189,6 +189,25 @@ export const chainDataByChainId: Chains = {
           WebkitMask: `url(/assets/chains/zksync.png) no-repeat center / contain`
         }} />
       </div>
+    },
+  },
+  1115: {
+    name: "Core Testnet",
+    chainId: 1115,
+    urls: ["https://rpc.test.btcs.network"],
+    etherscan: "https://scan.coredao.org",
+    token: {
+      uuid: "ecc2206d-bdb2-4e26-ba23-452bad8c5cec",
+      type: "native",
+      name: "CORE",
+      chainId: 1115,
+      symbol: "CORE",
+      decimals: 18,
+    },
+    icon() {
+      return <img className="w-6 h-6 rounded-full"
+        src="/assets/chains/core.png"
+        alt="Core" />
     },
   },
   1116: {
@@ -256,7 +275,7 @@ export const chainDataByChainId: Chains = {
     urls: ["wss://base-rpc.publicnode.com", "wss://base.gateway.tenderly.co", "https://1rpc.io/base"],
     etherscan: "https://basescan.org",
     token: {
-      uuid: "664008af-5c47-4b6e-ab3e-c0c130e23b3c",
+      uuid: "2111ff5a-6671-4ebe-9429-a974c8c85726",
       type: "native",
       name: "ETH",
       chainId: 8453,
@@ -279,7 +298,7 @@ export const chainDataByChainId: Chains = {
     urls: ["wss://arbitrum-one-rpc.publicnode.com", "wss://arbitrum.gateway.tenderly.co", "https://1rpc.io/arb"],
     etherscan: "https://arbiscan.io",
     token: {
-      uuid: "664009af-5c47-4b6e-ab3e-c0c130e23b3c",
+      uuid: "6fce1dd8-d1f0-4a00-b152-cd1f5b73c820",
       type: "native",
       name: "ETH",
       chainId: 42161,
@@ -302,7 +321,7 @@ export const chainDataByChainId: Chains = {
     urls: ["https://1rpc.io/celo"],
     etherscan: "https://celoscan.io",
     token: {
-      uuid: "664010af-5c47-4b6e-ab3e-c0c130e23b3c",
+      uuid: "be652dfe-8748-4e84-8be2-0a449dd45aff",
       type: "native",
       name: "CELO",
       chainId: 42220,
@@ -322,7 +341,7 @@ export const chainDataByChainId: Chains = {
     urls: ["wss://avalanche-c-chain-rpc.publicnode.com", "https://1rpc.io/avax/c"],
     etherscan: "https://snowtrace.io",
     token: {
-      uuid: "664011af-5c47-4b6e-ab3e-c0c130e23b3c",
+      uuid: "22decc24-d6e3-4bbf-bfbb-c8819737f925",
       type: "native",
       name: "ETH",
       chainId: 43114,
@@ -342,7 +361,7 @@ export const chainDataByChainId: Chains = {
     urls: ["https://1rpc.io/linea"],
     etherscan: "https://lineascan.build",
     token: {
-      uuid: "664012af-5c47-4b6e-ab3e-c0c130e23b3c",
+      uuid: "a006d905-527c-419e-90f6-88d42c606899",
       type: "native",
       name: "ETH",
       chainId: 59144,
@@ -362,7 +381,7 @@ export const chainDataByChainId: Chains = {
     urls: ["wss://ethereum-sepolia-rpc.publicnode.com", "wss://sepolia.gateway.tenderly.co", "https://1rpc.io/sepolia"],
     etherscan: "https://sepolia.etherscan.io",
     token: {
-      uuid: "664013af-5c47-4b6e-ab3e-c0c130e23b3c",
+      uuid: "65c497e4-0aa3-443f-a201-f2141199a6e5",
       type: "native",
       name: "ETH",
       chainId: 11155111,

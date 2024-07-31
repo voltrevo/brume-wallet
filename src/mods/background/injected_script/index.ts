@@ -1,7 +1,7 @@
 import "@hazae41/symbol-dispose-polyfill";
 
 import { Future } from "@hazae41/future";
-import { RpcCounter, RpcOk, RpcRequestInit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
+import { RpcCounter, RpcOk, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { Ok } from "@hazae41/result";
 
 declare global {
@@ -75,12 +75,12 @@ class Provider {
   /**
    * @deprecated
    */
-  _chainId = "0x1"
+  _chainId?: string
 
   /**
    * @deprecated
    */
-  _networkVersion = "1"
+  _networkVersion?: string
 
   /**
    * @deprecated
@@ -128,21 +128,34 @@ class Provider {
     })
 
     /**
-     * Fix that old app that needs to reload on network change
+     * Fix for that old app that needs to reload on network change
      */
     this.on("networkChanged", (networkVersion: string) => {
       this._networkVersion = networkVersion
 
       if (!this.autoRefreshOnNetworkChange)
         return
+
       location.reload()
     })
 
-    /**
-     * Force update of `isConnected`, `selectedAddress`, `chainId` `networkVersion`
-     */
-    // TODO: fix 
-    // this.requestAndWrap({ id: null, method: "eth_accounts" }).then(r => r.ignore())
+    this.request<string[]>({
+      method: "eth_accounts"
+    }).then(r => {
+      this._accounts = r
+    }).catch(() => { })
+
+    this.request<string>({
+      method: "eth_chainId"
+    }).then(r => {
+      this._chainId = r
+    }).catch(() => { })
+
+    this.request<string>({
+      method: "net_version"
+    }).then(r => {
+      this._networkVersion = r
+    }).catch(() => { })
   }
 
   get isBrume() {
@@ -250,21 +263,24 @@ class Provider {
      */
     this.autoRefreshOnNetworkChange = true
 
-    return await this.request({ id: null, method: "eth_requestAccounts" })
+    return await this.request({ method: "eth_requestAccounts" })
   }
 
-  async _request(reqinit: RpcRequestInit<unknown>) {
-    const request = this._counter.prepare(reqinit)
-    const future = new Future<RpcResponse<unknown>>()
+  async _request<T>(reqinit: RpcRequestPreinit<unknown>) {
+    const { id = null, method, params } = reqinit
+
+    const request = this._counter.prepare({ method, params })
+    const future = new Future<RpcResponse<T>>()
 
     const onResponse = (e: CustomEvent<string>) => {
-      const resinit = JSON.parse(e.detail) as RpcResponseInit<unknown>
+      const resinit = JSON.parse(e.detail) as RpcResponseInit<T>
 
       if (resinit.id !== request.id)
         return
 
       const response = RpcResponse.from(resinit)
-      const rewrapped = RpcResponse.rewrap(reqinit.id, response)
+      const rewrapped = RpcResponse.rewrap(id, response)
+
       future.resolve(rewrapped)
     }
 
@@ -281,8 +297,8 @@ class Provider {
     }
   }
 
-  async request(init: RpcRequestInit<unknown>) {
-    const result = await this._request(init)
+  async request<T>(init: RpcRequestPreinit<unknown>) {
+    const result = await this._request<T>(init)
 
     if (result.isErr())
       throw result.getErr()
@@ -290,11 +306,11 @@ class Provider {
     return result.get()
   }
 
-  async requestBatch(inits: RpcRequestInit<unknown>[]) {
+  async requestBatch(inits: RpcRequestPreinit<unknown>[]) {
     return await Promise.all(inits.map(init => this._request(init)))
   }
 
-  async _send(init: RpcRequestInit<unknown>, callback: (err: unknown, ok: unknown) => void) {
+  async _send(init: RpcRequestPreinit<unknown>, callback: (err: unknown, ok: unknown) => void) {
     const response = await this._request(init)
 
     if (response.isErr())
@@ -306,18 +322,20 @@ class Provider {
   /**
    * @deprecated
    */
-  send(init: string | RpcRequestInit<unknown>, callback?: (err: unknown, ok: unknown) => void) {
+  send(init: string | RpcRequestPreinit<unknown>, callback?: (err: unknown, ok: unknown) => void) {
     if (typeof init === "string")
-      init = { id: null, method: init }
+      init = { method: init }
+
+    const { id = null } = init
 
     if (callback != null)
       return this._send(init, callback)
     if (init.method === "eth_accounts")
-      return RpcOk.rewrap(init.id, new Ok(this._accounts))
+      return RpcOk.rewrap(id, new Ok(this._accounts))
     if (init.method === "eth_coinbase")
-      return RpcOk.rewrap(init.id, new Ok(this._accounts[0]))
+      return RpcOk.rewrap(id, new Ok(this.selectedAddress))
     if (init.method === "net_version")
-      return RpcOk.rewrap(init.id, new Ok(this._networkVersion))
+      return RpcOk.rewrap(id, new Ok(this._networkVersion))
     if (init.method === "eth_uninstallFilter")
       throw new Error(`Unimplemented method ${init.method}`)
 
@@ -327,9 +345,9 @@ class Provider {
   /**
    * @deprecated
    */
-  sendAsync(init: string | RpcRequestInit<unknown>, callback: (err: unknown, ok: unknown) => void) {
+  sendAsync(init: string | RpcRequestPreinit<unknown>, callback: (err: unknown, ok: unknown) => void) {
     if (typeof init === "string")
-      init = { id: null, method: init }
+      init = { method: init }
     this._send(init, callback)
   }
 
@@ -436,11 +454,11 @@ class Provider {
 
 }
 
+const inner = new Provider()
+
 /**
  * Fix for that extension that does `Object.assign(window.ethereum, { ... })`
  */
-const inner = new Provider()
-
 const provider = new Proxy({}, {
   get(target, property, receiver) {
     return property in target
