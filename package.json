@@ -75,7 +75,7 @@
     "@hazae41/fleche": "^1.4.4",
     "@hazae41/future": "^1.0.3",
     "@hazae41/glacier": "^2.0.13",
-    "@hazae41/immutable": "^1.0.7",
+    "@hazae41/immutable": "^1.0.8",
     "@hazae41/jsonrpc": "^1.0.7",
     "@hazae41/kcp": "^1.1.2",
     "@hazae41/keccak256": "^1.0.8",
