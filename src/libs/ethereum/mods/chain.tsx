@@ -191,25 +191,6 @@ export const chainDataByChainId: Chains = {
       </div>
     },
   },
-  1115: {
-    name: "Core Testnet",
-    chainId: 1115,
-    urls: ["https://rpc.test.btcs.network"],
-    etherscan: "https://scan.coredao.org",
-    token: {
-      uuid: "ecc2206d-bdb2-4e26-ba23-452bad8c5cec",
-      type: "native",
-      name: "CORE",
-      chainId: 1115,
-      symbol: "CORE",
-      decimals: 18,
-    },
-    icon() {
-      return <img className="w-6 h-6 rounded-full"
-        src="/assets/chains/core.png"
-        alt="Core" />
-    },
-  },
   1116: {
     name: "Core",
     chainId: 1116,
