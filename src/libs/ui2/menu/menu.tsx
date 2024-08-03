@@ -155,7 +155,7 @@ export function Menu(props: ChildrenProps & DarkProps) {
             aria-modal
             onAnimationEnd={onAnimationEnd}
             onMouseDown={Events.keep}>
-            <div className="p-1 grow flex flex-col max-h-[160px] overflow-y-auto scrollbar-default">
+            <div className="p-1 grow flex flex-col max-h-[200px] overflow-y-auto scrollbar-default">
               {children}
             </div>
           </div>
