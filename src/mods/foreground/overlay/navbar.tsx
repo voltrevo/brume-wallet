@@ -3,13 +3,14 @@ import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { Button } from "@/libs/ui/button"
-import { Chemin, usePathContext } from "@hazae41/chemin"
+import { pathOf } from "@/libs/url/url"
+import { usePathContext } from "@hazae41/chemin"
 
 export function NavBar() {
   const { url } = usePathContext().unwrap()
 
   const openOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    await BrowserError.runOrThrow(() => browser.tabs.create({ url: `index.html?_=${encodeURIComponent(Chemin.pathOf(url))}` }))
+    await BrowserError.runOrThrow(() => browser.tabs.create({ url: `index.html?_=${encodeURIComponent(pathOf(url))}` }))
   }), [url])
 
   return <div className="w-full po-md border-b border-b-contrast flex items-center">

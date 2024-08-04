@@ -1,5 +1,6 @@
 import { DarkProps } from "@/libs/react/props/dark"
-import { CloseContext, useCloseContext, usePathContext } from "@hazae41/chemin"
+import { usePathContext } from "@hazae41/chemin"
+import { CloseContext, useCloseContext } from "@hazae41/react-close-context"
 import { AnimationEvent, KeyboardEvent, MouseEvent, SyntheticEvent, UIEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 import { Events } from "../../react/events"

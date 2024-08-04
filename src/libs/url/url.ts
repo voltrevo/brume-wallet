@@ -1,5 +1,10 @@
 import { Nullable } from "@hazae41/option"
 
+export function pathOf(pathOrUrl: string | URL) {
+  const url = new URL(pathOrUrl, location.href)
+  return url.pathname + url.search + url.hash
+}
+
 export function qurl(pathOrUrl: string | URL, query: Record<string, Nullable<any>> = {}) {
   const url = new URL(pathOrUrl, location.href)
 

@@ -17,7 +17,7 @@ import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExte
 import { Strings } from "@/libs/strings/strings";
 import { Circuits } from "@/libs/tor/circuits/circuits";
 import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors";
-import { qurl } from "@/libs/url/url";
+import { pathOf, qurl } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { CryptoClient } from "@/libs/wconn/mods/crypto/client";
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn";
@@ -30,7 +30,6 @@ import { Base64Url } from "@hazae41/base64url";
 import { Bytes } from "@hazae41/bytes";
 import { Cadenas } from "@hazae41/cadenas";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
-import { Chemin } from "@hazae41/chemin";
 import { ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
 import { Circuit, Echalote } from "@hazae41/echalote";
 import { Ed25519 } from "@hazae41/ed25519";
@@ -318,7 +317,7 @@ class Global {
       const url = qurl(`/${method}?id=${id}`, params)
 
       if (isSafariExtension() && isIpad()) {
-        this.#path = `#${Chemin.pathOf(url)}`
+        this.#path = `#${pathOf(url)}`
 
         await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
         const response = await this.waitResponseOrThrow<T>(request.id, done)

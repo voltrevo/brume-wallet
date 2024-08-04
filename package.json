@@ -86,6 +86,7 @@
     "@hazae41/option": "^1.0.27",
     "@hazae41/piscine": "^1.2.15",
     "@hazae41/plume": "^2.4.2",
+    "@hazae41/react-close-context": "^1.0.0",
     "@hazae41/result": "^1.2.0",
     "@hazae41/ripemd160": "^1.0.2",
     "@hazae41/secp256k1": "^1.0.0",

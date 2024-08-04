@@ -7,12 +7,11 @@ import { OkProps } from "@/libs/react/props/promise"
 import { ImageWithFallback } from "@/libs/ui/image/image_with_fallback"
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
 import { Page } from "@/libs/ui2/page/page"
-import { qurl } from "@/libs/url/url"
+import { pathOf, qurl } from "@/libs/url/url"
 import { BlobbyData } from "@/mods/background/service_worker/entities/blobbys/data"
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { UserRejectedError } from "@/mods/foreground/errors/errors"
-import { Chemin } from "@hazae41/chemin"
 import { RpcErr } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { Err } from "@hazae41/result"
@@ -98,7 +97,7 @@ export function RequestRow(props: { request: AppRequest }) {
   const { id, method, params } = maybeRequestData
 
   return <a className="po-md rounded-xl flex items-center gap-4"
-    href={`#${Chemin.pathOf(qurl(`/${method}?id=${id}`, params))}`}>
+    href={`#${pathOf(qurl(`/${method}?id=${id}`, params))}`}>
     {maybeOriginData.icons?.map((x, i) =>
       <IndexedBlobbyLoader
         key={x.id}

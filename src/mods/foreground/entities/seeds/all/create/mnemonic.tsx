@@ -14,7 +14,7 @@ import { SeedData } from "@/mods/background/service_worker/entities/seeds/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { Base64 } from "@hazae41/base64";
 import { Bytes } from "@hazae41/bytes";
-import { useCloseContext } from "@hazae41/chemin";
+import { useCloseContext } from "@hazae41/react-close-context";
 import { Err, Panic, Result } from "@hazae41/result";
 import { WebAuthnStorage } from "@hazae41/webauthnstorage";
 import { generateMnemonic, mnemonicToEntropy, validateMnemonic } from "@scure/bip39";
