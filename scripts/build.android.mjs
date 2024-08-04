@@ -4,8 +4,15 @@ import { walkSync } from "./libs/walkSync.mjs";
 
 {
   fs.rmSync("./dist/android/404.html")
+}
+
+{
   fs.rmSync("./dist/android/action.html")
   fs.rmSync("./dist/android/popup.html")
+
+  fs.rmSync(`./dist/android/content_script.js`)
+  fs.rmSync(`./dist/android/injected_script.js`)
+  fs.rmSync(`./dist/android/offscreen.js`)
 }
 
 {

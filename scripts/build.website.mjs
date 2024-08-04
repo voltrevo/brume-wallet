@@ -5,8 +5,15 @@ import { walkSync } from "./libs/walkSync.mjs";
 
 {
   fs.rmSync(`./dist/website/404.html`)
+}
+
+{
   fs.rmSync(`./dist/website/action.html`)
   fs.rmSync(`./dist/website/popup.html`)
+
+  fs.rmSync(`./dist/website/content_script.js`)
+  fs.rmSync(`./dist/website/injected_script.js`)
+  fs.rmSync(`./dist/website/offscreen.js`)
 }
 
 {
