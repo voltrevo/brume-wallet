@@ -1,8 +1,7 @@
 import { Events } from "@/libs/react/events"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { DarkProps } from "@/libs/react/props/dark"
-import { ButtonProps } from "@/libs/react/props/html"
-import { Portal } from "@/libs/ui/portal/portal"
+import { Portal } from "@/libs/ui2/portal"
 import { usePathContext } from "@hazae41/chemin"
 import { Nullable } from "@hazae41/option"
 import { CloseContext, useCloseContext } from "@hazae41/react-close-context"
@@ -164,17 +163,4 @@ export function Menu(props: ChildrenProps & DarkProps) {
       </dialog>
     </CloseContext.Provider>
   </Portal>
-}
-
-export namespace Menu {
-
-  export function SimpleButton(props: ChildrenProps & ButtonProps) {
-    const { children, ...rest } = props
-
-    return <button className="group outline-none disabled:opacity-50 transition-opacity" {...rest}>
-      <div className="h-full w-full flex items-center gap-2 group-enabled:group-active:scale-90 transition-transform">
-        {children}
-      </div>
-    </button>
-  }
 }

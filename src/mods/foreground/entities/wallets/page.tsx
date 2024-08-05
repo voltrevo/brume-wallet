@@ -15,7 +15,7 @@ import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { State } from "@/libs/react/state";
 import { Dialog, Dialog2 } from "@/libs/ui/dialog/dialog";
-import { Menu } from "@/libs/ui2/menu/menu";
+import { Menu } from "@/libs/ui2/menu";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";

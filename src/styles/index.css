@@ -33,9 +33,6 @@ body {
 }
 
 @layer utilities {
-  .a {
-    @apply text-colored focus-visible:underline;
-  }
 
   ::backdrop {
     @apply bg-transparent;

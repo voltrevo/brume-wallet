@@ -1,6 +1,6 @@
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Dialog } from "@/libs/ui/dialog/dialog";
-import { Loading } from "@/libs/ui/loading/loading";
+import { BigLoading } from "@/libs/ui2/loading";
 import { useKeyValueState } from "@/mods/foreground/router/path/context";
 import { usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
 import { Abi, ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
@@ -45,7 +45,7 @@ export function WalletDecodeDialog(props: {}) {
     <div className="h-2" />
     {triedSignatures == null &&
       <div className="grow flex flex-col items-center justify-center">
-        <Loading className="size-10" />
+        <BigLoading />
       </div>}
     {triedSignatures?.isErr() &&
       <div className="grow flex flex-col items-center justify-center">

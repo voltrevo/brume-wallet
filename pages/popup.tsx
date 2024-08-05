@@ -4,7 +4,7 @@ import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { Dialog, Dialog2 } from "@/libs/ui/dialog/dialog";
-import { Menu } from "@/libs/ui2/menu/menu";
+import { Menu } from "@/libs/ui2/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui2/page/header";
 import { Page } from "@/libs/ui2/page/page";
 import { qurl } from "@/libs/url/url";

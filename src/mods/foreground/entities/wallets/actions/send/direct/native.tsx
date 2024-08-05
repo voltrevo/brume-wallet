@@ -4,7 +4,7 @@ import { Outline } from "@/libs/icons/icons";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog, Dialog2 } from "@/libs/ui/dialog/dialog";
-import { Loading } from "@/libs/ui/loading/loading";
+import { SmallUnshrinkableLoading } from "@/libs/ui2/loading";
 import { qurl } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData } from "@/mods/background/service_worker/entities/transactions/data";
@@ -483,7 +483,7 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
   return <div className="po-md flex items-center bg-contrast rounded-xl">
     <div className="flex flex-col truncate">
       <div className="flex items-center">
-        <Loading className="size-4 shrink-0" />
+        <SmallUnshrinkableLoading />
         <div className="w-2" />
         <div className="font-medium">
           Transaction sent

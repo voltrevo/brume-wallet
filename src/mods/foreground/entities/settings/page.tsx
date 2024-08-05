@@ -1,7 +1,7 @@
 import { Errors } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
-import { TextAnchor } from "@/libs/ui/anchor/anchor";
+import { TextAnchor } from "@/libs/ui2/anchor";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { ChangeEvent } from "react";

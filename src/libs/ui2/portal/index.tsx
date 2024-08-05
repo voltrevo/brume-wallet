@@ -50,18 +50,3 @@ export function Keeper(props: ChildrenProps) {
     {children}
   </div>
 }
-
-export namespace Portal {
-
-  export function Test() {
-    return <div className="p-1">
-      <Portal>
-        Hello world
-      </Portal>
-      <div className="">
-        Hello world
-      </div>
-    </div>
-  }
-
-}

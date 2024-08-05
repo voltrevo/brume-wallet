@@ -1,9 +1,9 @@
 import { AnchorProps } from "@/libs/react/props/html";
 
 export function TextAnchor(props: AnchorProps) {
-  const { className, href, children = href, target = "_blank", rel = "noreferrer", ...others } = props
+  const { href, children = href, target = "_blank", rel = "noreferrer", ...others } = props
 
-  return <a className={`a ${className}`}
+  return <a className="text-colored focus-visible:underline"
     href={href}
     target={target}
     rel={rel}

@@ -6,7 +6,7 @@ import { flushSync } from "react-dom"
 import { Events } from "../../react/events"
 import { ChildrenProps } from "../../react/props/children"
 import { CloseProps } from "../../react/props/close"
-import { Portal } from "../portal/portal"
+import { Portal } from "../../ui2/portal"
 
 export function Dialog2(props: ChildrenProps & DarkProps & { hesitant?: boolean }) {
   const close = useCloseContext().unwrap()
