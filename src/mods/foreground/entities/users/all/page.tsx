@@ -9,6 +9,7 @@ import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
 import { Dialog } from "@/libs/ui/dialog";
 import { MediumLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
+import { ButtonGapperDiv, ButtonShrinkerDiv } from "@/libs/ui/shrinker";
 import { qurl } from "@/libs/url/url";
 import { User } from "@/mods/background/service_worker/entities/users/data";
 import { OneDisplay } from "@/mods/foreground/landing/1/1";
@@ -486,13 +487,23 @@ export function TextAnchor(props: AnchorProps) {
   </a>
 }
 
+export function SmallestOppositeChipButton(props: ChildrenProps & ButtonProps) {
+  const { children, ...rest } = props
+
+  return <button className="group po-xs text-sm bg-opposite text-opposite rounded-full outline-none enabled:hover:bg-opposite-hover focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
+    <ButtonGapperDiv>
+      {children}
+    </ButtonGapperDiv>
+  </button>
+}
+
 export function SmallShrinkableOppositeButton(props: ChildrenProps & ButtonProps) {
   const { children, ...rest } = props
 
   return <button className="group po-md bg-opposite text-opposite rounded-xl outline-none enabled:hover:bg-opposite-hover focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+    <ButtonShrinkerDiv>
       {children}
-    </div>
+    </ButtonShrinkerDiv>
   </button>
 }
 
@@ -500,9 +511,9 @@ export function SmallShrinkableContrastButton(props: ChildrenProps & ButtonProps
   const { children, ...rest } = props
 
   return <button className="group po-md bg-contrast rounded-xl outline-none enabled:hover:bg-contrast-hover focus-visible:outline-contrast disabled:opacity-50 transition-opacity" {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+    <ButtonShrinkerDiv>
       {children}
-    </div>
+    </ButtonShrinkerDiv>
   </button>
 }
 

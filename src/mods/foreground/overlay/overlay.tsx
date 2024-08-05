@@ -1,30 +1,36 @@
 import { Outline } from "@/libs/icons/icons";
 import { isExtension, isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
-import { OkProps } from "@/libs/react/props/promise";
-import { ButtonShrinkerDiv } from "@/libs/ui/shrinker";
 import { None } from "@hazae41/option";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ServiceWorkerBackground } from "../background/background";
 import { useBackgroundContext } from "../background/context";
+import { SmallestOppositeChipButton } from "../entities/users/all/page";
 import { RoundedShrinkableNakedButton } from "../entities/wallets/actions/send";
 
-export function UpdateBanner(props: OkProps<unknown>) {
-  const { ok } = props
+export function UpdateBanner(props: {
+  readonly update: () => void
+  readonly ignore: () => void
+}) {
+  const { update, ignore } = props
 
-  return <div className="w-full text-white bg-green-500 po-sm">
-    <div className="w-full max-w-[400px] m-auto flex flex-wrap gap-2 items-center text-sm">
-      <div className="grow">
-        {`An update is available`}
-      </div>
-      <RoundedShrinkableNakedButton
-        onClick={ok}>
-        <ButtonShrinkerDiv>
-          <Outline.ArrowPathIcon className="size-5" />
+  return <div className="w-full text-white bg-green-500 po-sm flex flex-wrap gap-2 items-center">
+    <div className="grow flex items-center justify-center">
+      <div className="grow max-w-[400px] flex flex-wrap gap-2 items-center">
+        <div className="grow text-sm font-medium">
+          {`An update is available`}
+        </div>
+        <SmallestOppositeChipButton
+          onClick={update}>
+          <Outline.ArrowPathIcon className="size-4" />
           Update
-        </ButtonShrinkerDiv>
-      </RoundedShrinkableNakedButton>
+        </SmallestOppositeChipButton>
+      </div>
     </div>
+    <RoundedShrinkableNakedButton
+      onClick={ignore}>
+      <Outline.XMarkIcon className="size-5" />
+    </RoundedShrinkableNakedButton>
   </div>
 }
 
@@ -62,8 +68,14 @@ export function WebsiteOverlay(props: ChildrenProps) {
     return background.serviceWorker.on("update", onUpdate)
   }, [background])
 
+  const ignore = useCallback(() => {
+    setUpdate(undefined)
+  }, [])
+
   return <>
-    {update && <UpdateBanner ok={update} />}
+    {update && <UpdateBanner
+      update={update}
+      ignore={ignore} />}
     {children}
   </>
 }

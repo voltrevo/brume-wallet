@@ -2,7 +2,6 @@ import { BrowserError, browser } from "@/libs/browser/browser"
 import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
-import { ButtonShrinkerDiv } from "@/libs/ui/shrinker"
 import { pathOf } from "@/libs/url/url"
 import { usePathContext } from "@hazae41/chemin"
 import { RoundedShrinkableNakedButton } from "../entities/wallets/actions/send"
@@ -27,9 +26,7 @@ export function NavBar() {
       <div className="w-2" />
       <RoundedShrinkableNakedButton
         onClick={openOrAlert.run}>
-        <ButtonShrinkerDiv>
-          <Outline.ArrowTopRightOnSquareIcon className="size-4 text-contrast" />
-        </ButtonShrinkerDiv>
+        <Outline.ArrowTopRightOnSquareIcon className="size-4 text-contrast" />
       </RoundedShrinkableNakedButton>
     </div>
   </div>

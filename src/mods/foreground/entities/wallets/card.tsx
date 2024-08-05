@@ -5,6 +5,7 @@ import { Outline } from "@/libs/icons/icons"
 import { Events, useMouseCancel } from "@/libs/react/events"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { AnchorProps, ButtonProps } from "@/libs/react/props/html"
+import { ButtonShrinkerDiv } from "@/libs/ui/shrinker"
 import { useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Address, ZeroHexString } from "@hazae41/cubane"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -184,8 +185,8 @@ export function CircularWhiteButtonInColoredCard(props: ButtonProps & ChildrenPr
 
   return <button className={`group p-1 bg-white text-${color}-400 dark:text-color-500 rounded-full outline-none enabled:hover:bg-white/90 focus-visible:outline-white disabled:opacity-50 transition-opacity`}
     {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+    <ButtonShrinkerDiv>
       {children}
-    </div>
+    </ButtonShrinkerDiv>
   </button>
 }

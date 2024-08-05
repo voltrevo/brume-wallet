@@ -3,7 +3,6 @@ import { Outline } from "@/libs/icons/icons";
 import { OptionalBackProps } from "@/libs/react/props/back";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { TitleProps } from "@/libs/react/props/title";
-import { ButtonShrinkerDiv } from "@/libs/ui/shrinker";
 import { RoundedShrinkableNakedButton } from "@/mods/foreground/entities/wallets/actions/send";
 import { UserAvatar } from "../../../mods/foreground/entities/users/all/page";
 import { useUserContext } from "../../../mods/foreground/entities/users/context";
@@ -12,12 +11,10 @@ export function GlobalPageHeader(props: TitleProps & ChildrenProps & OptionalBac
   const { title, children, back } = props
 
   return <div className="p-4 flex items-center">
-    {back && <div className="mr-2">
+    {back && <div className="mr-2 flex items-center">
       <RoundedShrinkableNakedButton
         onClick={back}>
-        <ButtonShrinkerDiv>
-          <Outline.ChevronLeftIcon className="size-5" />
-        </ButtonShrinkerDiv>
+        <Outline.ChevronLeftIcon className="size-5" />
       </RoundedShrinkableNakedButton>
     </div>}
     <div className="w-2" />
@@ -34,12 +31,10 @@ export function UserPageHeader(props: TitleProps & ChildrenProps & OptionalBackP
   const { title, children, back } = props
 
   return <div className="p-4 flex items-center">
-    {back && <div className="mr-2">
+    {back && <div className="mr-2 flex items-center">
       <RoundedShrinkableNakedButton
         onClick={back}>
-        <ButtonShrinkerDiv>
-          <Outline.ChevronLeftIcon className="size-5" />
-        </ButtonShrinkerDiv>
+        <Outline.ChevronLeftIcon className="size-5" />
       </RoundedShrinkableNakedButton>
     </div>}
     <button onClick={() => alert("This feature is not implemented yet")}>

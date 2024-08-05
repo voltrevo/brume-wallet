@@ -2,6 +2,7 @@
 import { Color } from "@/libs/colors/colors";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { AnchorProps, ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
+import { ButtonShrinkerDiv } from "@/libs/ui/shrinker";
 import { useKeyValueState } from "@/mods/foreground/router/path/context";
 import { usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
 import { WalletDirectSendScreenContractValue } from "./direct/contract";
@@ -66,9 +67,9 @@ export function RoundedShrinkableNakedButton(props: ChildrenProps & ButtonProps)
 
   return <button className="group rounded-full outline-none enabled:hover:bg-contrast focus-visible:bg-contrast disabled:opacity-50 transition-opacity"
     {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+    <ButtonShrinkerDiv>
       {children}
-    </div>
+    </ButtonShrinkerDiv>
   </button>
 }
 
@@ -89,9 +90,9 @@ export function PaddedRoundedShrinkableNakedButton(props: ChildrenProps & Button
 
   return <button className="group rounded-full p-2 outline-none enabled:hover:bg-contrast focus-visible:bg-contrast disabled:opacity-50 transition-opacity"
     {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+    <ButtonShrinkerDiv>
       {children}
-    </div>
+    </ButtonShrinkerDiv>
   </button>
 }
 
@@ -112,9 +113,9 @@ export function ShrinkableContrastButtonInInputBox(props: ChildrenProps & Button
 
   return <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
     {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+    <ButtonShrinkerDiv>
       {children}
-    </div>
+    </ButtonShrinkerDiv>
   </button>
 }
 
@@ -123,9 +124,9 @@ export function WideShrinkableOppositeButton(props: ChildrenProps & ButtonProps)
 
   return <button className="flex-1 group po-md bg-opposite text-opposite rounded-xl outline-none whitespace-nowrap enabled:hover:bg-opposite-hover focus-visible:outline-opposite disabled:opacity-50 transition-opacity"
     {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+    <ButtonShrinkerDiv>
       {children}
-    </div>
+    </ButtonShrinkerDiv>
   </button>
 }
 
@@ -134,9 +135,9 @@ export function WideShrinkableGradientButton(props: ChildrenProps & ButtonProps 
 
   return <button className={`flex-1 group po-md bg-${color}-400 dark:bg-${color}-500 text-white rounded-xl outline-none whitespace-nowrap enabled:hover:bg-${color}-400/90 focus-visible:outline-${color}-400 dark:enabled:hover:bg-${color}-500/90 dark:focus-visible:outline-${color}-500 disabled:opacity-50 transition-opacity`}
     {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+    <ButtonShrinkerDiv>
       {children}
-    </div>
+    </ButtonShrinkerDiv>
   </button>
 }
 
@@ -145,9 +146,9 @@ export function WideShrinkableContrastButton(props: ChildrenProps & ButtonProps)
 
   return <button className="flex-1 group po-md bg-contrast rounded-xl outline-none whitespace-nowrap enabled:hover:bg-contrast-hover focus-visible:outline-contrast disabled:opacity-50 transition-opacity"
     {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-enabled:group-active:scale-90 transition-transform">
+    <ButtonShrinkerDiv>
       {children}
-    </div>
+    </ButtonShrinkerDiv>
   </button>
 }
 
