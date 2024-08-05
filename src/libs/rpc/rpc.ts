@@ -4,7 +4,6 @@ import { fetch } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
 import { RpcRequest, RpcRequestInit, RpcResponse } from "@hazae41/jsonrpc"
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
-import { Result } from "@hazae41/result"
 import { Circuits } from "../tor/circuits/circuits"
 
 export namespace TorRpc {
@@ -33,10 +32,6 @@ export namespace TorRpc {
       console.warn(`Invalid response ID`, response.id, "expected", request.id)
 
     return response
-  }
-
-  export async function tryFetchWithCircuit<T>(input: RequestInfo | URL, init: RequestInit & RpcRequestInit<unknown> & { circuit: Circuit } & CircuitOpenParams): Promise<Result<RpcResponse<T>, Error>> {
-    return await Result.runAndDoubleWrap(() => fetchWithCircuitOrThrow<T>(input, init))
   }
 
   export async function fetchWithSocketOrThrow<T>(socket: WebSocket, request: RpcRequestInit<unknown>, signal: AbortSignal) {
@@ -80,10 +75,6 @@ export namespace TorRpc {
       socket.removeEventListener("error", onError)
       signal.removeEventListener("abort", onAbort)
     }
-  }
-
-  export async function tryFetchWithSocket<T>(socket: WebSocket, request: RpcRequestInit<unknown>, signal: AbortSignal) {
-    return await Result.runAndDoubleWrap(() => fetchWithSocketOrThrow<T>(socket, request, signal))
   }
 
 }

@@ -1,11 +1,6 @@
 import { Future } from "@hazae41/future"
-import { Result } from "@hazae41/result"
 
 export namespace Blobs {
-
-  export async function tryReadAsDataUrl(blob: Blob) {
-    return Result.runAndDoubleWrap(() => readAsDataUrlOrThrow(blob))
-  }
 
   export async function readAsDataUrlOrThrow(blob: Blob) {
     const future = new Future<string>()

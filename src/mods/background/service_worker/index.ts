@@ -247,8 +247,13 @@ class Global {
 
         const url = force ? `popup.html#${pathname}` : undefined
 
-        await BrowserError.tryRun(() => browser.tabs.update(tabId, { url, highlighted: true })).then(r => r.ignore())
-        await BrowserError.tryRun(() => browser.windows.update(windowId, { focused: true })).then(r => r.ignore())
+        await Result.runAndWrap(() => {
+          return BrowserError.runOrThrow(() => browser.tabs.update(tabId, { url, highlighted: true }))
+        }).then(r => r.ignore())
+
+        await Result.runAndWrap(() => {
+          return BrowserError.runOrThrow(() => browser.windows.update(windowId, { focused: true }))
+        }).then(r => r.ignore())
 
         return slot.current
       }

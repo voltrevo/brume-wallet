@@ -69,7 +69,7 @@ async function main() {
         if (blob.isErr())
           continue
 
-        const data = await Blobs.tryReadAsDataUrl(blob.inner)
+        const data = await Result.runAndWrap(() => Blobs.readAsDataUrlOrThrow(blob.inner))
 
         if (data.isErr())
           continue
@@ -101,7 +101,7 @@ async function main() {
         if (blob.isErr())
           return
 
-        const data = await Blobs.tryReadAsDataUrl(blob.inner)
+        const data = await Result.runAndWrap(() => Blobs.readAsDataUrlOrThrow(blob.inner))
 
         if (data.isErr())
           return

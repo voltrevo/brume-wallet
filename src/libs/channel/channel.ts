@@ -224,8 +224,8 @@ export class ExtensionRpcRouter {
     if (request.id !== "ping")
       Console.debug(this.name, "<-", response)
 
-    BrowserError.tryRunSync(() => {
-      this.port.postMessage(JSON.stringify(response))
+    Result.runAndWrapSync(() => {
+      return BrowserError.runOrThrowSync(() => this.port.postMessage(JSON.stringify(response)))
     }).ignore()
   }
 
