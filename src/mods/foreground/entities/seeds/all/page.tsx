@@ -1,6 +1,6 @@
 import { Outline } from "@/libs/icons/icons"
 import { OkProps } from "@/libs/react/props/promise"
-import { Dialog2 } from "@/libs/ui/dialog"
+import { Dialog } from "@/libs/ui/dialog"
 import { Menu } from "@/libs/ui/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
 import { Page } from "@/libs/ui/page/page"
@@ -59,13 +59,13 @@ export function SeedsPage() {
           <SeedCreatorMenu />
         </Menu>}
       {subpath.url.pathname === "/create/mnemonic" &&
-        <Dialog2>
+        <Dialog>
           <StandaloneSeedCreatorDialog />
-        </Dialog2>}
+        </Dialog>}
       {subpath.url.pathname === "/create/hardware" &&
-        <Dialog2>
+        <Dialog>
           <LedgerSeedCreatorDialog />
-        </Dialog2>}
+        </Dialog>}
     </HashSubpathProvider>
     {Header}
     {Body}

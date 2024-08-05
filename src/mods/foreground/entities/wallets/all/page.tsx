@@ -2,7 +2,7 @@
 import { Outline } from "@/libs/icons/icons"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { OkProps } from "@/libs/react/props/promise"
-import { Dialog2 } from "@/libs/ui/dialog"
+import { Dialog } from "@/libs/ui/dialog"
 import { Menu } from "@/libs/ui/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
 import { Page } from "@/libs/ui/page/page"
@@ -74,13 +74,13 @@ export function WalletsPage() {
           <WalletCreatorMenu />
         </Menu>}
       {subpath.url.pathname === "/create/standalone" &&
-        <Dialog2>
+        <Dialog>
           <StandaloneWalletCreatorDialog />
-        </Dialog2>}
+        </Dialog>}
       {subpath.url.pathname === "/create/readonly" &&
-        <Dialog2>
+        <Dialog>
           <ReadonlyWalletCreatorDialog />
-        </Dialog2>}
+        </Dialog>}
     </HashSubpathProvider>
     {Header}
     {Body}

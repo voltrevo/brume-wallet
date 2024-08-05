@@ -5,7 +5,7 @@ import { Outline } from "@/libs/icons/icons";
 import { Peanut } from "@/libs/peanut";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Dialog, Dialog2 } from "@/libs/ui/dialog";
+import { Dialog } from "@/libs/ui/dialog";
 import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
 import { qurl } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
@@ -323,9 +323,9 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   return <>
     <HashSubpathProvider>
       {subpath.url.pathname === "/eth_sendTransaction" &&
-        <Dialog2>
+        <Dialog>
           <WalletTransactionDialog />
-        </Dialog2>}
+        </Dialog>}
     </HashSubpathProvider>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}

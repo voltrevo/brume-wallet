@@ -6,7 +6,7 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
-import { Dialog2 } from "@/libs/ui/dialog";
+import { Dialog } from "@/libs/ui/dialog";
 import { MediumLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
 import { qurl } from "@/libs/url/url";
@@ -41,13 +41,13 @@ export function EmptyLandingPage(props: { next?: string }) {
   return <>
     <HashSubpathProvider>
       {subpath.url.pathname === "/users/login" &&
-        <Dialog2>
+        <Dialog>
           <UserLoginDialog next={next} />
-        </Dialog2>}
+        </Dialog>}
       {subpath.url.pathname === "/users/create" &&
-        <Dialog2>
+        <Dialog>
           <UserCreateDialog next={next} />
-        </Dialog2>}
+        </Dialog>}
       {subpath.url.pathname === "/users" &&
         <Menu>
           <UsersMenu />
@@ -116,13 +116,13 @@ export function FullLandingPage(props: { next?: string }) {
   return <>
     <HashSubpathProvider>
       {subpath.url.pathname === "/users/login" &&
-        <Dialog2>
+        <Dialog>
           <UserLoginDialog next={next} />
-        </Dialog2>}
+        </Dialog>}
       {subpath.url.pathname === "/users/create" &&
-        <Dialog2>
+        <Dialog>
           <UserCreateDialog next={next} />
-        </Dialog2>}
+        </Dialog>}
       {subpath.url.pathname === "/users" &&
         <Menu>
           <UsersMenu />
@@ -394,7 +394,7 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
   return <>
     <HashSubpathProvider>
       {subpath.url.pathname === href &&
-        <Dialog2 hesitant>
+        <Dialog hesitant>
           <div className="text-6xl">
             {title}
           </div>
@@ -404,7 +404,7 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
           </div>
           <div className="h-8" />
           {children}
-        </Dialog2>}
+        </Dialog>}
     </HashSubpathProvider>
     <div className="p-6 aspect-square bg-contrast rounded-xl flex flex-col">
       <div className="text-6xl">

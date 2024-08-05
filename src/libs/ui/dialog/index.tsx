@@ -5,24 +5,12 @@ import { AnimationEvent, KeyboardEvent, MouseEvent, SyntheticEvent, UIEvent, use
 import { flushSync } from "react-dom"
 import { Events } from "../../react/events"
 import { ChildrenProps } from "../../react/props/children"
-import { CloseProps } from "../../react/props/close"
 import { Portal } from "../portal"
 
-export function Dialog2(props: ChildrenProps & DarkProps & { hesitant?: boolean }) {
+export function Dialog(props: ChildrenProps & DarkProps & { hesitant?: boolean }) {
+  const { url } = usePathContext().unwrap()
   const close = useCloseContext().unwrap()
   const { dark, children, hesitant } = props
-
-  return <Dialog
-    hesitant={hesitant}
-    close={close}
-    dark={dark}>
-    {children}
-  </Dialog>
-}
-
-export function Dialog(props: ChildrenProps & CloseProps & DarkProps & { hesitant?: boolean }) {
-  const { url } = usePathContext().unwrap()
-  const { dark, children, close, hesitant } = props
 
   const maybeX = url.searchParams.get("x")
   const maybeY = url.searchParams.get("y")

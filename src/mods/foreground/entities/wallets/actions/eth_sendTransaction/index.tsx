@@ -7,7 +7,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Dialog, Dialog2 } from "@/libs/ui/dialog";
+import { Dialog } from "@/libs/ui/dialog";
 import { SmallUnshrinkableLoading } from "@/libs/ui/loading";
 import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
 import { qurl } from "@/libs/url/url";
@@ -838,13 +838,13 @@ export function WalletTransactionDialog(props: {}) {
   return <>
     <HashSubpathProvider>
       {subpath.url.pathname === "/decode" &&
-        <Dialog2>
+        <Dialog>
           <WalletDecodeDialog />
-        </Dialog2>}
+        </Dialog>}
       {subpath.url.pathname === "/nonce" &&
-        <Dialog2>
+        <Dialog>
           <WalletNonceDialog ok={() => { }} />
-        </Dialog2>}
+        </Dialog>}
     </HashSubpathProvider>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}

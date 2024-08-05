@@ -11,7 +11,7 @@ import { AnchorProps } from "@/libs/react/props/html";
 import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { State } from "@/libs/react/state";
-import { Dialog, Dialog2 } from "@/libs/ui/dialog";
+import { Dialog } from "@/libs/ui/dialog";
 import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
@@ -24,7 +24,7 @@ import { TokenSettings, TokenSettingsData } from "@/mods/background/service_work
 import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
 import { None, Nullable, Option, Optional, Some } from "@hazae41/option";
-import { useCloseContext } from "@hazae41/react-close-context";
+import { CloseContext, useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
@@ -236,10 +236,11 @@ function WalletDataPage() {
   const Body =
     <PageBody>
       {add.current &&
-        <Dialog
-          close={add.disable}>
-          <TokenAddDialog />
-        </Dialog>}
+        <CloseContext.Provider value={add.disable}>
+          <Dialog>
+            <TokenAddDialog />
+          </Dialog>
+        </CloseContext.Provider>}
       <div className="font-medium text-xl">
         Tokens
       </div>
@@ -291,17 +292,17 @@ function WalletDataPage() {
           <WalletConnectMenu />
         </Menu>}
       {subpath.url.pathname === "/send" &&
-        <Dialog2>
+        <Dialog>
           <WalletSendScreen />
-        </Dialog2>}
+        </Dialog>}
       {subpath.url.pathname === "/edit" &&
-        <Dialog2>
+        <Dialog>
           <WalletEditDialog />
-        </Dialog2>}
+        </Dialog>}
       {subpath.url.pathname === "/receive" &&
-        <Dialog2 dark>
+        <Dialog dark>
           <WalletDataReceiveScreen />
-        </Dialog2>}
+        </Dialog>}
       {subpath.url.pathname === "/menu" &&
         <Menu>
           <WalletMenu

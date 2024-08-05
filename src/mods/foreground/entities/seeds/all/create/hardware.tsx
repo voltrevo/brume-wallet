@@ -7,7 +7,7 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Dialog, Dialog2 } from "@/libs/ui/dialog";
+import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { SeedData } from "@/mods/universal/entities/seeds/data";
@@ -95,9 +95,9 @@ export function LedgerSeedCreatorDialog(props: {}) {
   return <>
     <HashSubpathProvider>
       {subpath.url.pathname === "/connect" &&
-        <Dialog2>
+        <Dialog>
           <HardwareSelectDialog />
-        </Dialog2>}
+        </Dialog>}
     </HashSubpathProvider>
     <Dialog.Title>
       New seed

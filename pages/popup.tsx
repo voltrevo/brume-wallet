@@ -3,7 +3,7 @@ import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { Dialog, Dialog2 } from "@/libs/ui/dialog";
+import { Dialog } from "@/libs/ui/dialog";
 import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
@@ -165,9 +165,9 @@ export function TransactPage() {
     <Page>
       <HashSubpathProvider>
         {subpath.url.pathname === "/eth_sendTransaction" &&
-          <Dialog2>
+          <Dialog>
             <WalletTransactionDialog />
-          </Dialog2>}
+          </Dialog>}
       </HashSubpathProvider>
       <PageBody>
         <Dialog.Title>
@@ -559,13 +559,13 @@ export function WalletAndChainSelectPage() {
           <WalletCreatorMenu />
         </Menu>}
       {subpath.url.pathname === "/create/standalone" &&
-        <Dialog2>
+        <Dialog>
           <StandaloneWalletCreatorDialog />
-        </Dialog2>}
+        </Dialog>}
       {subpath.url.pathname === "/create/readonly" &&
-        <Dialog2>
+        <Dialog>
           <ReadonlyWalletCreatorDialog />
-        </Dialog2>}
+        </Dialog>}
     </HashSubpathProvider>
     {Header}
     {Body}

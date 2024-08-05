@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { UUIDProps } from "@/libs/react/props/uuid";
-import { Dialog2 } from "@/libs/ui/dialog";
+import { Dialog } from "@/libs/ui/dialog";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
@@ -61,9 +61,9 @@ function SeedDataPage() {
   return <Page>
     <HashSubpathProvider>
       {subpath.url.pathname === "/create" &&
-        <Dialog2>
+        <Dialog>
           <SeededWalletCreatorDialog />
-        </Dialog2>}
+        </Dialog>}
     </HashSubpathProvider>
     {Header}
     {Card}

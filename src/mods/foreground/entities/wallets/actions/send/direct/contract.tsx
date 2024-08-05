@@ -3,7 +3,7 @@ import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Dialog, Dialog2 } from "@/libs/ui/dialog";
+import { Dialog } from "@/libs/ui/dialog";
 import { qurl } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
@@ -273,9 +273,9 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   return <>
     <HashSubpathProvider>
       {subpath.url.pathname === "/eth_sendTransaction" &&
-        <Dialog2>
+        <Dialog>
           <WalletTransactionDialog />
-        </Dialog2>}
+        </Dialog>}
     </HashSubpathProvider>
     {tokenData.pairs?.map((address, i) =>
       <PriceResolver key={i}
