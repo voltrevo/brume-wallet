@@ -1,11 +1,13 @@
 import { Sockets } from "@/libs/sockets/sockets"
 import { WebSocketDuplex } from "@/libs/streams/websocket"
+import { MicrodescQuery } from "@/mods/universal/entities/consensus/data"
 import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
-import { Consensus, TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote"
+import { TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote"
+import { Storage } from "@hazae41/glacier"
 import { Mutex } from "@hazae41/mutex"
-import { None, Option, Some } from "@hazae41/option"
+import { None, Option } from "@hazae41/option"
 import { Pool, PoolParams } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
 import { Signals } from "@hazae41/signals"
@@ -62,8 +64,6 @@ export function createNativeWebSocketPool(params: PoolParams) {
   return new Disposer(pool, () => { })
 }
 
-export let consensus: Option<Consensus> = new None()
-
 export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque, Writable> }, signal: AbortSignal): Promise<TorClientDuplex> {
   const tcp = createSnowflakeStream(raw)
   const tor = new TorClientDuplex()
@@ -76,7 +76,7 @@ export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque
   return tor
 }
 
-export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, params: PoolParams) {
+export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage: Storage, params: PoolParams) {
   let update = Date.now()
 
   const pool = new Pool<TorClientDuplex>(async (subparams) => {
@@ -97,15 +97,8 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, params:
 
         socket.unwrapOrThrow()
 
-        if (consensus.isNone()) {
-          start = Date.now()
-          using circuit = await tor.getOrThrow().createOrThrow(Signals.merge(AbortSignal.timeout(2000), signal))
-          console.log(`Created consensus circuit in ${Date.now() - start}ms`)
-
-          start = Date.now()
-          consensus = new Some(await Consensus.fetchOrThrow(circuit, Signals.merge(AbortSignal.timeout(20_000), signal)))
-          console.log(`Fetched consensus in ${Date.now() - start}ms`)
-        }
+        const microdescsQuery = MicrodescQuery.All.create(tor.getOrThrow(), storage)
+        await microdescsQuery.fetch().then(r => Option.unwrap(r.inner.current?.unwrap()))
 
         using stack = new Box(new DisposableStack())
 

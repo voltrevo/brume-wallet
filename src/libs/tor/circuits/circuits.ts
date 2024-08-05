@@ -1,14 +1,15 @@
+import { MicrodescQuery } from "@/mods/universal/entities/consensus/data"
 import { Arrays } from "@hazae41/arrays"
 import { Box } from "@hazae41/box"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Disposer } from "@hazae41/disposer"
-import { Circuit, Consensus, TorClientDuplex } from "@hazae41/echalote"
+import { Circuit, TorClientDuplex } from "@hazae41/echalote"
 import { fetch } from "@hazae41/fleche"
+import { Storage } from "@hazae41/glacier"
 import { Mutex } from "@hazae41/mutex"
-import { None } from "@hazae41/option"
+import { None, Option } from "@hazae41/option"
 import { Pool, PoolCreatorParams, PoolParams, Retry, loopOrThrow } from "@hazae41/piscine"
 import { Ok, Result } from "@hazae41/result"
-import { consensus } from "../tors/tors"
 
 export function createCircuitEntry(preCircuit: Box<Circuit>, params: PoolCreatorParams<Circuit>) {
   const { pool, index } = params
@@ -78,7 +79,7 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function pool(tors: Mutex<Pool<TorClientDuplex>>, params: PoolParams) {
+  export function pool(tors: Mutex<Pool<TorClientDuplex>>, storage: Storage, params: PoolParams) {
     let update = Date.now()
 
     const pool = new Pool<Circuit>(async (params) => {
@@ -93,12 +94,15 @@ export namespace Circuits {
 
             const tor = await tors.inner.getOrThrow(index % tors.inner.capacity, signal).then(r => r.unwrap().get().getOrThrow())
 
-            const middles = consensus.unwrap().microdescs.filter(it => true
+            const microdescsQuery = MicrodescQuery.All.create(undefined, storage)
+            const microdescsData = await microdescsQuery.state.then(r => Option.unwrap(r.current?.unwrap()))
+
+            const middles = microdescsData.filter(it => true
               && it.flags.includes("Fast")
               && it.flags.includes("Stable")
               && it.flags.includes("V2Dir"))
 
-            const exits = consensus.unwrap().microdescs.filter(it => true
+            const exits = microdescsData.filter(it => true
               && it.flags.includes("Fast")
               && it.flags.includes("Stable")
               && it.flags.includes("Exit")
@@ -115,9 +119,8 @@ export namespace Circuits {
               await loopOrThrow(async () => {
                 const head = Arrays.cryptoRandom(middles)!
 
-                start = Date.now()
-                const body = await Consensus.Microdesc.fetchOrThrow(circuit.inner, head, AbortSignal.timeout(1000))
-                console.log(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
+                const query = Option.unwrap(MicrodescQuery.create(head, index, circuit.inner, storage))
+                const body = await query.fetch().then(r => Option.unwrap(r.inner.current?.unwrap()))
 
                 start = Date.now()
                 await Retry.run(() => circuit.inner.extendOrThrow(body, AbortSignal.timeout(1000)))
@@ -130,9 +133,8 @@ export namespace Circuits {
               await loopOrThrow(async () => {
                 const head = Arrays.cryptoRandom(exits)!
 
-                start = Date.now()
-                const body = await Consensus.Microdesc.fetchOrThrow(circuit.inner, head, AbortSignal.timeout(1000))
-                console.log(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
+                const query = Option.unwrap(MicrodescQuery.create(head, index, circuit.inner, storage))
+                const body = await query.fetch().then(r => Option.unwrap(r.inner.current?.unwrap()))
 
                 start = Date.now()
                 await Retry.run(() => circuit.inner.extendOrThrow(body, AbortSignal.timeout(1000)))

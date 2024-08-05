@@ -157,8 +157,8 @@ class Global {
     readonly storage: IDBStorage
   ) {
     const sockets = new Mutex(createNativeWebSocketPool({ capacity: 1 }).get())
-    const tors = new Mutex(createTorPool(sockets, { capacity: 1 }).get())
-    const circuits = new Mutex(Circuits.pool(tors, { capacity: 8 }).get())
+    const tors = new Mutex(createTorPool(sockets, storage, { capacity: 1 }).get())
+    const circuits = new Mutex(Circuits.pool(tors, storage, { capacity: 8 }).get())
 
     this.circuits = circuits
 
