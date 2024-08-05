@@ -3,7 +3,8 @@ import { Outline } from "@/libs/icons/icons";
 import { OptionalBackProps } from "@/libs/react/props/back";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { TitleProps } from "@/libs/react/props/title";
-import { Button } from "@/libs/ui/button";
+import { ButtonShrinkerDiv } from "@/libs/ui/shrinker";
+import { RoundedShrinkableNakedButton } from "@/mods/foreground/entities/wallets/actions/send";
 import { UserAvatar } from "../../../mods/foreground/entities/users/all/page";
 import { useUserContext } from "../../../mods/foreground/entities/users/context";
 
@@ -12,12 +13,12 @@ export function GlobalPageHeader(props: TitleProps & ChildrenProps & OptionalBac
 
   return <div className="p-4 flex items-center">
     {back && <div className="mr-2">
-      <button className={`${Button.Base.className} size-8 hovered-or-clicked-or-focused:scale-105 !transition`}
+      <RoundedShrinkableNakedButton
         onClick={back}>
-        <div className={`${Button.Shrinker.className}`}>
+        <ButtonShrinkerDiv>
           <Outline.ChevronLeftIcon className="size-5" />
-        </div>
-      </button>
+        </ButtonShrinkerDiv>
+      </RoundedShrinkableNakedButton>
     </div>}
     <div className="w-2" />
     <div className="text-2xl font-medium mb-0.5">
@@ -34,12 +35,12 @@ export function UserPageHeader(props: TitleProps & ChildrenProps & OptionalBackP
 
   return <div className="p-4 flex items-center">
     {back && <div className="mr-2">
-      <button className={`${Button.Base.className} size-8 hovered-or-clicked-or-focused:scale-105 !transition`}
+      <RoundedShrinkableNakedButton
         onClick={back}>
-        <div className={`${Button.Shrinker.className}`}>
+        <ButtonShrinkerDiv>
           <Outline.ChevronLeftIcon className="size-5" />
-        </div>
-      </button>
+        </ButtonShrinkerDiv>
+      </RoundedShrinkableNakedButton>
     </div>}
     <button onClick={() => alert("This feature is not implemented yet")}>
       <UserAvatar className="size-7 text-lg"

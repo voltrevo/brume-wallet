@@ -1,5 +1,5 @@
 import { OkProps } from "@/libs/react/props/promise";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog } from "@/libs/ui/dialog";
 
 export type WalletNonceDialogState = {
   readonly chain?: string

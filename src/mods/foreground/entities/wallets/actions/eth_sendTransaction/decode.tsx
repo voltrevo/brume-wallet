@@ -1,6 +1,6 @@
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
-import { Dialog } from "@/libs/ui/dialog/dialog";
-import { BigLoading } from "@/libs/ui2/loading";
+import { Dialog } from "@/libs/ui/dialog";
+import { BigLoading } from "@/libs/ui/loading";
 import { useKeyValueState } from "@/mods/foreground/router/path/context";
 import { usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
 import { Abi, ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";

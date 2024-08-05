@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useCopy } from "@/libs/copy/copy";
 import { Outline } from "@/libs/icons/icons";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog } from "@/libs/ui/dialog";
 import { Address } from "@hazae41/cubane";
 import { Result } from "@hazae41/result";
 import createQR from "@paulmillr/qr";

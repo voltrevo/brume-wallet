@@ -2,11 +2,12 @@ import { Outline } from "@/libs/icons/icons";
 import { isExtension, isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { OkProps } from "@/libs/react/props/promise";
-import { Button } from "@/libs/ui/button";
+import { ButtonShrinkerDiv } from "@/libs/ui/shrinker";
 import { None } from "@hazae41/option";
 import { useEffect, useState } from "react";
 import { ServiceWorkerBackground } from "../background/background";
 import { useBackgroundContext } from "../background/context";
+import { RoundedShrinkableNakedButton } from "../entities/wallets/actions/send";
 
 export function UpdateBanner(props: OkProps<unknown>) {
   const { ok } = props
@@ -16,13 +17,13 @@ export function UpdateBanner(props: OkProps<unknown>) {
       <div className="grow">
         {`An update is available`}
       </div>
-      <Button.Base className="hovered-or-clicked-or-focused:scale-105 !transition"
+      <RoundedShrinkableNakedButton
         onClick={ok}>
-        <div className={`${Button.Shrinker.className}`}>
+        <ButtonShrinkerDiv>
           <Outline.ArrowPathIcon className="size-5" />
           Update
-        </div>
-      </Button.Base>
+        </ButtonShrinkerDiv>
+      </RoundedShrinkableNakedButton>
     </div>
   </div>
 }

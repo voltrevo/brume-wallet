@@ -1,12 +1,12 @@
 import { Errors } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
-import { TextAnchor } from "@/libs/ui2/anchor";
+import { TextAnchor } from "@/libs/ui/anchor";
+import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
+import { Page } from "@/libs/ui/page/page";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { ChangeEvent } from "react";
-import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
-import { Page } from "../../../../libs/ui2/page/page";
 import { SimpleLabel } from "../wallets/actions/send";
 import { useChain, useLogs } from "./data";
 

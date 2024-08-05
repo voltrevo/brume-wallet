@@ -7,8 +7,9 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Dialog, Dialog2 } from "@/libs/ui/dialog/dialog";
-import { SmallUnshrinkableLoading } from "@/libs/ui2/loading";
+import { Dialog, Dialog2 } from "@/libs/ui/dialog";
+import { SmallUnshrinkableLoading } from "@/libs/ui/loading";
+import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
 import { qurl } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
@@ -1121,20 +1122,20 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
       <div className="flex items-center gap-1">
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
-          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+          <AnchorShrinkerDiv>
             Copy
             {onCopy.current
               ? <Outline.CheckIcon className="size-4" />
               : <Outline.ClipboardIcon className="size-4" />}
-          </div>
+          </AnchorShrinkerDiv>
         </button>
         <a className="group px-2 bg-contrast rounded-full"
           target="_blank" rel="noreferrer"
           href={`${chainData.etherscan}/tx/${data.hash}`}>
-          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+          <AnchorShrinkerDiv>
             Open
             <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-          </div>
+          </AnchorShrinkerDiv>
         </a>
       </div>
     </div>
@@ -1188,27 +1189,27 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
       <div className="flex items-center gap-1">
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
-          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+          <AnchorShrinkerDiv>
             Copy
             {onCopy.current
               ? <Outline.CheckIcon className="size-4" />
               : <Outline.ClipboardIcon className="size-4" />}
-          </div>
+          </AnchorShrinkerDiv>
         </button>
         <a className="group px-2 bg-contrast rounded-full"
           target="_blank" rel="noreferrer"
           href={`${chainData.etherscan}/tx/${data.hash}`}>
-          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+          <AnchorShrinkerDiv>
             Open
             <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-          </div>
+          </AnchorShrinkerDiv>
         </a>
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onRetryClick}>
-          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+          <AnchorShrinkerDiv>
             Retry
             <Outline.BoltIcon className="size-4" />
-          </div>
+          </AnchorShrinkerDiv>
         </button>
       </div>
     </div>
@@ -1238,19 +1239,19 @@ export function SignedTransactionCard(props: { data: SignedTransactionData } & {
       <div className="flex items-center gap-1">
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
-          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+          <AnchorShrinkerDiv>
             Copy
             {onCopy.current
               ? <Outline.CheckIcon className="size-4" />
               : <Outline.ClipboardIcon className="size-4" />}
-          </div>
+          </AnchorShrinkerDiv>
         </button>
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onSendClick}>
-          <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+          <AnchorShrinkerDiv>
             Send
             <Outline.PaperAirplaneIcon className="size-4" />
-          </div>
+          </AnchorShrinkerDiv>
         </button>
       </div>
     </div>

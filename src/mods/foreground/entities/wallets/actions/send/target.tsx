@@ -3,7 +3,7 @@ import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
-import { Dialog } from "@/libs/ui/dialog/dialog";
+import { Dialog } from "@/libs/ui/dialog";
 import { useKeyValueState } from "@/mods/foreground/router/path/context";
 import { usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
 import { Address } from "@hazae41/cubane";

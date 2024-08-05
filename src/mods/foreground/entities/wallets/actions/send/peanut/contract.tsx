@@ -6,7 +6,8 @@ import { Outline } from "@/libs/icons/icons";
 import { Peanut } from "@/libs/peanut";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { Dialog, Dialog2 } from "@/libs/ui/dialog/dialog";
+import { Dialog, Dialog2 } from "@/libs/ui/dialog";
+import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
 import { qurl } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
@@ -523,20 +524,20 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
           <div className="flex items-center gap-1">
             <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
               onClick={onLinkCopy.run}>
-              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+              <AnchorShrinkerDiv>
                 Copy
                 {onLinkCopy.current
                   ? <Outline.CheckIcon className="size-4" />
                   : <Outline.ClipboardIcon className="size-4" />}
-              </div>
+              </AnchorShrinkerDiv>
             </button>
             <a className="group px-2 bg-contrast rounded-full"
               target="_blank" rel="noreferrer"
               href={maybeTriedLink.get()}>
-              <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+              <AnchorShrinkerDiv>
                 Open
                 <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-              </div>
+              </AnchorShrinkerDiv>
             </a>
           </div>
         </div>

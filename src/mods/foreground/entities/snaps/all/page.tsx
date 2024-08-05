@@ -1,6 +1,6 @@
 import { Outline } from "@/libs/icons/icons"
-import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
-import { Page } from "@/libs/ui2/page/page"
+import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
+import { Page } from "@/libs/ui/page/page"
 import { useCallback } from "react"
 import { PaddedRoundedShrinkableNakedButton } from "../../wallets/actions/send"
 import { useSnaps } from "../data"

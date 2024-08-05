@@ -2,9 +2,10 @@ import { BrowserError, browser } from "@/libs/browser/browser"
 import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
-import { Button } from "@/libs/ui/button"
+import { ButtonShrinkerDiv } from "@/libs/ui/shrinker"
 import { pathOf } from "@/libs/url/url"
 import { usePathContext } from "@hazae41/chemin"
+import { RoundedShrinkableNakedButton } from "../entities/wallets/actions/send"
 
 export function NavBar() {
   const { url } = usePathContext().unwrap()
@@ -24,12 +25,12 @@ export function NavBar() {
         </span>
       </div>
       <div className="w-2" />
-      <Button.Base className="text-contrast hovered-or-clicked-or-focused:scale-105 !transition"
+      <RoundedShrinkableNakedButton
         onClick={openOrAlert.run}>
-        <div className={`${Button.Shrinker.className}`}>
-          <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-        </div>
-      </Button.Base>
+        <ButtonShrinkerDiv>
+          <Outline.ArrowTopRightOnSquareIcon className="size-4 text-contrast" />
+        </ButtonShrinkerDiv>
+      </RoundedShrinkableNakedButton>
     </div>
   </div>
 }

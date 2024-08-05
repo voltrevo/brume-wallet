@@ -1,5 +1,5 @@
 import { Outline } from "@/libs/icons/icons";
-import { Anchor } from "@/libs/ui/anchor";
+import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
 import { usePathContext } from "@hazae41/chemin";
 import { useAppRequests } from "../entities/requests/data";
 
@@ -14,35 +14,35 @@ export function Bottom() {
       <a className={`group grow text-contrast data-[selected=true]:text-default`}
         data-selected={url.pathname === "/home"}
         href="#/home">
-        <div className={`${Anchor.Shrinker.className}`}>
+        <AnchorShrinkerDiv>
           <Outline.HomeIcon className="size-6" />
-        </div>
+        </AnchorShrinkerDiv>
       </a>
       <a className={`group grow text-contrast data-[selected=true]:text-default`}
         data-selected={url.pathname === "/wallets"}
         href="#/wallets">
-        <div className={`${Anchor.Shrinker.className}`}>
+        <AnchorShrinkerDiv>
           <Outline.WalletIcon className="size-6" />
-        </div>
+        </AnchorShrinkerDiv>
       </a>
       <a className={`group grow text-contrast data-[selected=true]:text-default`}
         data-selected={url.pathname === "/seeds"}
         href="#/seeds">
-        <div className={`${Anchor.Shrinker.className}`}>
+        <AnchorShrinkerDiv>
           <Outline.SparklesIcon className="size-6" />
-        </div>
+        </AnchorShrinkerDiv>
       </a>
       <a className="group grow text-contrast data-[selected=true]:text-default"
         data-selected={url.pathname === "/sessions"}
         href="#/sessions">
-        <div className={`${Anchor.Shrinker.className}`}>
+        <AnchorShrinkerDiv>
           <Outline.GlobeAltIcon className="size-6" />
-        </div>
+        </AnchorShrinkerDiv>
       </a>
       <a className="group grow text-contrast data-[selected=true]:text-default"
         data-selected={url.pathname === "/requests"}
         href="#/requests">
-        <div className={`${Anchor.Shrinker.className}`}>
+        <AnchorShrinkerDiv>
           <div className="relative">
             {Boolean(requests?.length) &&
               <div className="absolute top-0 -right-2">
@@ -53,21 +53,14 @@ export function Bottom() {
               </div>}
             <Outline.CheckIcon className="size-6" />
           </div>
-        </div>
+        </AnchorShrinkerDiv>
       </a>
-      {/* <a className="group grow text-contrast data-[selected=true]:text-default"
-        data-selected={url.pathname === "/plugins"}
-        href="#/plugins">
-        <div className={`${Anchor.Shrinker.className}`}>
-          <Outline.PuzzlePieceIcon className="size-6" />
-        </div>
-      </a> */}
       <a className="group grow text-contrast data-[selected=true]:text-default"
         data-selected={url.pathname === "/settings"}
         href="#/settings">
-        <div className={`${Anchor.Shrinker.className}`}>
+        <AnchorShrinkerDiv>
           <Outline.CogIcon className="size-6" />
-        </div>
+        </AnchorShrinkerDiv>
       </a>
     </div>
   </nav>

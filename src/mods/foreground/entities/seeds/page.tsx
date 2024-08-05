@@ -1,11 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 import { UUIDProps } from "@/libs/react/props/uuid";
-import { Dialog2 } from "@/libs/ui/dialog/dialog";
+import { Dialog2 } from "@/libs/ui/dialog";
+import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
+import { Page } from "@/libs/ui/page/page";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { useCallback } from "react";
-import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
-import { Page } from "../../../../libs/ui2/page/page";
 import { SeededWalletCreatorDialog } from "../wallets/all/create/seeded";
 import { ClickableWalletGrid } from "../wallets/all/page";
 import { useWalletsBySeed } from "../wallets/data";

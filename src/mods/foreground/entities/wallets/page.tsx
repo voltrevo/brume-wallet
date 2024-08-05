@@ -6,16 +6,16 @@ import { Mutators } from "@/libs/glacier/mutators";
 import { Outline, Solid } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
-import { useKeyboardEnter } from "@/libs/react/events";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
-import { ChildrenProps } from "@/libs/react/props/children";
-import { ClassNameProps } from "@/libs/react/props/className";
 import { AnchorProps } from "@/libs/react/props/html";
 import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { State } from "@/libs/react/state";
-import { Dialog, Dialog2 } from "@/libs/ui/dialog/dialog";
-import { Menu } from "@/libs/ui2/menu";
+import { Dialog, Dialog2 } from "@/libs/ui/dialog";
+import { Menu } from "@/libs/ui/menu";
+import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
+import { Page } from "@/libs/ui/page/page";
+import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
@@ -27,8 +27,6 @@ import { None, Nullable, Option, Optional, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import { PageBody, UserPageHeader } from "../../../../libs/ui2/page/header";
-import { Page } from "../../../../libs/ui2/page/page";
 import { useBackgroundContext } from "../../background/context";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
@@ -116,26 +114,10 @@ export function AnchorCard(props: AnchorProps) {
 
   return <a className="grow group p-4 bg-contrast rounded-xl cursor-pointer focus:outline-black focus:outline-1"
     {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-active:scale-90 transition-transform">
+    <AnchorShrinkerDiv>
       {children}
-    </div>
+    </AnchorShrinkerDiv>
   </a>
-}
-
-export function DivLikeButton(props: ChildrenProps & ClassNameProps & { onClick: () => void }) {
-  const { children, onClick, className } = props
-
-  const onEnter = useKeyboardEnter(() => {
-    onClick()
-  }, [onClick])
-
-  return <div className={className}
-    role="button"
-    onClick={onClick}
-    onKeyDown={onEnter}
-    tabIndex={0}>
-    {children}
-  </div>
 }
 
 function WalletDataPage() {

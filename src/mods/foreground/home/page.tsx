@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { isWebsite } from "@/libs/platform/platform"
-import { PageBody, UserPageHeader } from "@/libs/ui2/page/header"
-import { Page } from "@/libs/ui2/page/page"
+import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
+import { Page } from "@/libs/ui/page/page"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { useCallback, useEffect, useState } from "react"
 import { useTotalPricedBalance } from "../entities/unknown/data"
