@@ -2,7 +2,7 @@ import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
-import { SeedRef } from "../seeds/data"
+import { SeedRef } from "../../../../universal/entities/seeds/data"
 import { BgTotal } from "../unknown/data"
 
 export type Wallet =

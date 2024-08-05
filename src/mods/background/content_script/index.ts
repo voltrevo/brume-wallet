@@ -11,7 +11,7 @@ import { qurl } from "@/libs/url/url";
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
 import { None, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
-import { PreOriginData } from "../service_worker/entities/origins/data";
+import { PreOriginData } from "../../universal/entities/origins/data";
 
 declare const self: ServiceWorkerGlobalScope
 

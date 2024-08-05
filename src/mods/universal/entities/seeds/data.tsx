@@ -1,5 +1,6 @@
 import { Mutators } from "@/libs/glacier/mutators"
-import { Data, IDBStorage, States, createQuery } from "@hazae41/glacier"
+import { Data, States, Storage, createQuery } from "@hazae41/glacier"
+import { Nullable } from "@hazae41/option"
 
 export type Seed =
   | SeedRef
@@ -68,38 +69,41 @@ export interface LedgerSeedData {
   readonly address: string
 }
 
-export namespace BgSeed {
+export namespace SeedQuery {
 
   export namespace All {
 
-    export type Key = typeof key
-    export type Data = SeedRef[]
-    export type Fail = never
+    export type K = string
+    export type D = SeedRef[]
+    export type F = never
 
     export const key = `seeds`
 
-    export function schema(storage: IDBStorage) {
-      return createQuery<Key, Data, Fail>({ key, storage })
+    export function create(storage: Storage) {
+      return createQuery<K, D, F>({ key, storage })
     }
 
   }
 
-  export type Key = string
-  export type Data = SeedData
-  export type Fail = never
+  export type K = string
+  export type D = SeedData
+  export type F = never
 
-  export function key(uuid: string): Key {
+  export function key(uuid: string): K {
     return `seed/${uuid}`
   }
 
-  export function schema(uuid: string, storage: IDBStorage) {
-    const indexer = async (states: States<Data, Fail>) => {
+  export function create(uuid: Nullable<string>, storage: Storage) {
+    if (uuid == null)
+      return
+
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.get()
       const currentData = current.real?.current.ok()?.get()
 
-      await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+      await All.create(storage).mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData?.uuid === currentData?.uuid)
           return d
         if (previousData != null)
@@ -110,7 +114,7 @@ export namespace BgSeed {
       }))
     }
 
-    return createQuery<Key, Data, Fail>({ key: key(uuid), storage, indexer })
+    return createQuery<K, D, F>({ key: key(uuid), storage, indexer })
   }
 
 }

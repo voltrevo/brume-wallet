@@ -1,4 +1,5 @@
-import { IDBStorage, createQuery } from "@hazae41/glacier"
+import { Storage, createQuery } from "@hazae41/glacier"
+import { Nullable } from "@hazae41/option"
 
 export type Blobby =
   | BlobbyData
@@ -26,18 +27,20 @@ export interface BlobbyData {
   readonly data: string
 }
 
-export namespace BgBlobby {
+export namespace BlobbyQuery {
 
-  export type Key = string
-  export type Data = BlobbyData
-  export type Fail = never
+  export type K = string
+  export type D = BlobbyData
+  export type F = never
 
   export function key(id: string) {
     return `blobby/${id}`
   }
 
-  export function schema(id: string, storage: IDBStorage) {
-    return createQuery<Key, Data, Fail>({ key: key(id), storage })
+  export function create(id: Nullable<string>, storage: Storage) {
+    if (id == null)
+      return
+    return createQuery<K, D, F>({ key: key(id), storage })
   }
 
 }

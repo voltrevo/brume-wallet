@@ -50,16 +50,16 @@ import { Secp256k1 } from "@hazae41/secp256k1";
 import { Sha1 } from "@hazae41/sha1";
 import { Smux } from "@hazae41/smux";
 import { X25519 } from "@hazae41/x25519";
+import { BlobbyQuery, BlobbyRef } from "../../universal/entities/blobbys/data";
+import { OriginData, OriginQuery, PreOriginData } from "../../universal/entities/origins/data";
+import { SeedData, SeedQuery } from "../../universal/entities/seeds/data";
+import { SettingsQuery } from "../../universal/entities/settings/data";
 import { BgEthereumContext } from "./context";
-import { BgBlobby, BlobbyRef } from "./entities/blobbys/data";
 import { EthBrume, WcBrume } from "./entities/brumes/data";
 import { BgEns } from "./entities/names/data";
-import { BgOrigin, OriginData, PreOriginData } from "./entities/origins/data";
 import { AppRequest, AppRequestData, BgAppRequest } from "./entities/requests/data";
-import { BgSeed, SeedData } from "./entities/seeds/data";
 import { BgSession, ExSessionData, SessionData, SessionRef, SessionStorage, WcSessionData } from "./entities/sessions/data";
 import { Status, StatusData } from "./entities/sessions/status/data";
-import { BgSettings } from "./entities/settings/data";
 import { BgSimulation } from "./entities/simulations/data";
 import { BgToken } from "./entities/tokens/data";
 import { BgUser, User, UserData, UserInit, UserSession } from "./entities/users/data";
@@ -450,7 +450,7 @@ class Global {
       }).then(r => r.unwrap())
 
       const { origin, title, description } = preOriginData
-      const iconQuery = BgBlobby.schema(origin, storage)
+      const iconQuery = Option.unwrap(BlobbyQuery.create(origin, storage))
       const iconRef = BlobbyRef.create(origin)
 
       if (preOriginData.icon) {
@@ -458,7 +458,7 @@ class Global {
         await iconQuery.mutate(Mutators.data(iconData))
       }
 
-      const originQuery = BgOrigin.schema(origin, storage)
+      const originQuery = Option.unwrap(OriginQuery.create(origin, storage))
       const originData: OriginData = { origin, title, description, icons: [iconRef] }
       await originQuery.mutate(Mutators.data(originData))
 
@@ -521,7 +521,7 @@ class Global {
       if (!wait)
         return undefined
 
-      const userChainState = await BgSettings.Chain.schema(storage).state
+      const userChainState = await SettingsQuery.Chain.create(storage).state
       const userChainId = Option.wrap(userChainState.data?.get()).unwrapOr(1)
       const userChainData = Option.unwrap(chainDataByChainId[userChainId])
 
@@ -1080,7 +1080,7 @@ class Global {
 
     const { storage } = Option.unwrap(this.#user)
 
-    const seedQuery = BgSeed.schema(seed.uuid, storage)
+    const seedQuery = Option.unwrap(SeedQuery.create(seed.uuid, storage))
     await seedQuery.mutate(Mutators.data(seed))
 
     return Ok.void()
@@ -1264,7 +1264,7 @@ class Global {
   async brume_log(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
     const { storage } = Option.unwrap(this.#user)
 
-    const logs = await BgSettings.Logs.schema(storage).state
+    const logs = await SettingsQuery.Logs.create(storage).state
 
     if (logs.real?.current?.get() !== true)
       return Ok.void()
@@ -1408,7 +1408,7 @@ class Global {
       description: session.metadata.description,
     }
 
-    const originQuery = BgOrigin.schema(originData.origin, storage)
+    const originQuery = Option.unwrap(OriginQuery.create(originData.origin, storage))
     await originQuery.mutate(Mutators.data(originData))
 
     const authKeyJwk = await session.client.irn.brume.key.exportJwkOrThrow()
@@ -1498,7 +1498,7 @@ class Global {
 
         const iconData = await Blobs.readAsDataUrlOrThrow(iconBlob)
 
-        const blobbyQuery = BgBlobby.schema(iconUrl, storage)
+        const blobbyQuery = Option.unwrap(BlobbyQuery.create(iconUrl, storage))
         const blobbyData = { id: iconUrl, data: iconData }
         await blobbyQuery.mutate(Mutators.data(blobbyData))
       })().catch(console.warn)

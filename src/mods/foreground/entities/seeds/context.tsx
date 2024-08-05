@@ -1,6 +1,6 @@
 import { ChildrenProps } from "@/libs/react/props/children"
 import { UUIDProps } from "@/libs/react/props/uuid"
-import { SeedData } from "@/mods/background/service_worker/entities/seeds/data"
+import { SeedData } from "@/mods/universal/entities/seeds/data"
 import { Nullable, Option } from "@hazae41/option"
 import { createContext, useContext } from "react"
 import { useSeed } from "./data"

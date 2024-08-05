@@ -1,5 +1,6 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumFetchParams, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletRef } from "@/mods/background/service_worker/entities/wallets/data"
+import { SeedQuery } from "@/mods/universal/entities/seeds/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
@@ -14,7 +15,6 @@ import { Background } from "../../background/background"
 import { useBackgroundContext } from "../../background/context"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { SeedInstance } from "../seeds/all/helpers"
-import { FgSeed } from "../seeds/data"
 import { FgTotal } from "../unknown/data"
 
 export interface WalletProps {
@@ -296,7 +296,7 @@ export class EthereumSeededWalletInstance {
   static async tryNew(data: EthereumSeededWalletData, background: Background): Promise<Result<EthereumSeededWalletInstance, Error>> {
     return await Result.unthrow(async t => {
       const storage = new UserStorage(background)
-      const seedQuery = FgSeed.schema(data.seed.uuid, storage)
+      const seedQuery = SeedQuery.create(data.seed.uuid, storage)
       const seedState = await seedQuery?.state
       const seedData = Option.wrap(seedState?.data?.get()).ok().throw(t)
 

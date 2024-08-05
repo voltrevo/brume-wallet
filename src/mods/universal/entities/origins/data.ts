@@ -1,4 +1,5 @@
-import { IDBStorage, createQuery } from "@hazae41/glacier"
+import { Storage, createQuery } from "@hazae41/glacier"
+import { Nullable } from "@hazae41/option"
 import { Blobby } from "../blobbys/data"
 
 export type Origin =
@@ -24,18 +25,21 @@ export interface OriginData {
   readonly description?: string
 }
 
-export namespace BgOrigin {
+export namespace OriginQuery {
 
-  export type Key = string
-  export type Data = OriginData
-  export type Fail = never
+  export type K = string
+  export type D = OriginData
+  export type F = never
 
   export function key(origin: string) {
     return `origins/${origin}`
   }
 
-  export function schema(origin: string, storage: IDBStorage) {
-    return createQuery<Key, Data, Fail>({ key: key(origin), storage })
+  export function create(origin: Nullable<string>, storage: Storage) {
+    if (origin == null)
+      return
+
+    return createQuery<K, D, F>({ key: key(origin), storage })
   }
 
 }
