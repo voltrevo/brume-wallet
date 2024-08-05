@@ -111,7 +111,9 @@ export function SeededWalletCreatorDialog(props: {}) {
         return new UIError(`Could not connect to the device`, { cause })
       }).unwrap())
 
-      const { address } = await Ledger.Ethereum.tryGetAddress(connector, defPathInput.slice(2)).then(r => r.mapErrSync(cause => {
+      const { address } = await Result.runAndWrap(() => {
+        return Ledger.Ethereum.getAddressOrThrow(connector, defPathInput.slice(2))
+      }).then(r => r.mapErrSync(cause => {
         return new UIError(`Could not get the address of the device`, { cause })
       }).unwrap())
 
