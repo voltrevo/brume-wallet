@@ -42,7 +42,10 @@ export function createNativeWebSocketPool(params: PoolParams) {
           socket.addEventListener("error", onCloseOrError, { passive: true })
           stack.getOrThrow().defer(() => socket.removeEventListener("error", onCloseOrError))
 
-          const onOffline = () => socket.close()
+          const onOffline = () => {
+            socket.close()
+            pool.restart(index)
+          }
 
           addEventListener("offline", onOffline, { passive: true })
           stack.getOrThrow().defer(() => removeEventListener("offline", onOffline))
@@ -88,14 +91,15 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage
       const result = await Result.runAndWrap(async () => {
         let start = Date.now()
 
-        using socket = await Pool.takeCryptoRandomOrThrow(sockets, signal).then(r => r.unwrap().get().moveOrThrow())
-        const stream = new WebSocketDuplex(socket.getOrThrow().get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
+        const socket = await sockets.inner.getCryptoRandomOrThrow(signal).then(r => r.unwrap().get().getOrThrow().get())
+        const stream = new WebSocketDuplex(socket, { shouldCloseOnError: true, shouldCloseOnClose: true })
+
+        using stack = new Box(new DisposableStack())
 
         start = Date.now()
-        using tor = new Box(await createTorOrThrow(stream, Signals.merge(AbortSignal.timeout(2000), signal)))
+        const tor = new Box(await createTorOrThrow(stream, Signals.merge(AbortSignal.timeout(2000), signal)))
+        stack.getOrThrow().use(tor)
         console.log(`Created Tor in ${Date.now() - start}ms`)
-
-        socket.unwrapOrThrow()
 
         const microdescsQuery = MicrodescQuery.All.create(tor.getOrThrow(), storage)
         const microdescsStale = await microdescsQuery.state.then(r => r.current?.unwrap())
@@ -104,25 +108,20 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage
         if (microdescsStale == null)
           await microdescsFresh
 
-        using stack = new Box(new DisposableStack())
-
-        const entry = tor.moveOrThrow()
-        stack.getOrThrow().use(entry)
-
         const onCloseOrError = (reason?: unknown) => {
           pool.restart(index)
           return new None()
         }
 
-        stack.getOrThrow().defer(entry.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
-        stack.getOrThrow().defer(entry.getOrThrow().events.on("error", onCloseOrError, { passive: true }))
+        stack.getOrThrow().defer(tor.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
+        stack.getOrThrow().defer(tor.getOrThrow().events.on("error", onCloseOrError, { passive: true }))
 
         addEventListener("offline", onCloseOrError, { passive: true })
         stack.getOrThrow().defer(() => removeEventListener("offline", onCloseOrError))
 
         const unstack = stack.unwrapOrThrow()
 
-        return new Disposer(entry, () => unstack.dispose())
+        return new Disposer(tor, () => unstack.dispose())
       })
 
       if (result.isOk())
