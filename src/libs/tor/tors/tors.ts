@@ -1,6 +1,6 @@
 import { Sockets } from "@/libs/sockets/sockets"
 import { WebSocketDuplex } from "@/libs/streams/websocket"
-import { MicrodescQuery } from "@/mods/universal/entities/consensus/data"
+import { MicrodescQuery } from "@/mods/universal/entities/microdescs/data"
 import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
@@ -98,7 +98,11 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage
         socket.unwrapOrThrow()
 
         const microdescsQuery = MicrodescQuery.All.create(tor.getOrThrow(), storage)
-        await microdescsQuery.fetch().then(r => Option.unwrap(r.inner.current?.unwrap()))
+        const microdescsStale = await microdescsQuery.state.then(r => r.current?.unwrap())
+        const microdescsFresh = microdescsQuery.fetch().then(r => Option.unwrap(r.getAny().current).unwrap())
+
+        if (microdescsStale == null)
+          await microdescsFresh
 
         using stack = new Box(new DisposableStack())
 
