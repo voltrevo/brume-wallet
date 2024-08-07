@@ -10,7 +10,7 @@ import { Dialog } from "@/libs/ui/dialog";
 import { MediumLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
 import { ButtonGapperDiv, ButtonShrinkerDiv } from "@/libs/ui/shrinker";
-import { qurl } from "@/libs/url/url";
+import { urlOf } from "@/libs/url/url";
 import { User } from "@/mods/background/service_worker/entities/users/data";
 import { OneDisplay } from "@/mods/foreground/landing/1/1";
 import { TwoDisplay } from "@/mods/foreground/landing/2/2";
@@ -18,8 +18,8 @@ import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
 import { FourDisplay } from "@/mods/foreground/landing/4/4";
 import { FiveDisplay } from "@/mods/foreground/landing/5/5";
 import { SixDisplay } from "@/mods/foreground/landing/6/6";
-import { HashSubpathProvider, PathHandle, useHashSubpath, usePathContext } from "@hazae41/chemin";
-import { KeyboardEvent, MouseEvent, useCallback, useMemo } from "react";
+import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
+import { useCallback } from "react";
 import { WideShrinkableNakedMenuAnchor } from "../../wallets/actions/send";
 import { useCurrentUser, useUser, useUsers } from "../data";
 import { UserLoginDialog } from "../login";
@@ -37,7 +37,7 @@ export function EmptyLandingPage(props: { next?: string }) {
   const maybeUser = userQuery.current?.ok().get()
 
   const subpath = useHashSubpath(path)
-  const users = useGenius(subpath, "/users")
+  const users = useCoords(subpath, "/users")
 
   return <>
     <HashSubpathProvider>
@@ -112,7 +112,7 @@ export function FullLandingPage(props: { next?: string }) {
   const maybeCurrentUser = currentUserQuery.data?.get()
 
   const subpath = useHashSubpath(path)
-  const users = useGenius(subpath, "/users")
+  const users = useCoords(subpath, "/users")
 
   return <>
     <HashSubpathProvider>
@@ -293,7 +293,7 @@ export function UsersMenu() {
   const usersQuery = useUsers()
   const maybeUsers = usersQuery.current?.ok().get()
 
-  const create = useGenius(path, "/users/create")
+  const create = useCoords(path, "/users/create")
 
   return <div className="flex flex-col text-left gap-2">
     {maybeUsers?.map(user =>
@@ -318,7 +318,7 @@ export function UsersMenuRow(props: { user: User }) {
   const userQuery = useUser(props.user.uuid)
   const maybeUser = userQuery.current?.ok().get()
 
-  const open = useGenius(path, qurl("/users/login", { user: props.user.uuid }).href)
+  const open = useCoords(path, urlOf("/users/login", { user: props.user.uuid }).href)
 
   if (maybeUser == null)
     return null
@@ -334,63 +334,12 @@ export function UsersMenuRow(props: { user: User }) {
   </WideShrinkableNakedMenuAnchor>
 }
 
-export function useGenius(subpath: PathHandle, subhref?: string) {
-
-  const href = useMemo(() => {
-    if (subhref == null)
-      return
-    return subpath.go(subhref).href
-  }, [subhref, subpath])
-
-  const onClick = useCallback((e: MouseEvent) => {
-    if (e.button !== 0)
-      return
-    if (subhref == null)
-      return
-
-    e.preventDefault()
-
-    const x = e.clientX
-    const y = e.clientY
-
-    location.replace(subpath.go(qurl(subhref, { x, y })))
-  }, [subhref, subpath])
-
-  const onKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key !== "Enter")
-      return
-    if (subhref == null)
-      return
-
-    e.preventDefault()
-
-    const x = e.currentTarget.getBoundingClientRect().x + (e.currentTarget.getBoundingClientRect().width / 2)
-    const y = e.currentTarget.getBoundingClientRect().y + (e.currentTarget.getBoundingClientRect().height / 2)
-
-    location.replace(subpath.go(qurl(subhref, { x, y })))
-  }, [subhref, subpath])
-
-  const onContextMenu = useCallback((e: MouseEvent) => {
-    if (subhref == null)
-      return
-
-    e.preventDefault()
-
-    const x = e.clientX
-    const y = e.clientY
-
-    location.replace(subpath.go(qurl(subhref, { x, y })))
-  }, [subhref, subpath])
-
-  return { onClick, onKeyDown, onContextMenu, href }
-}
-
 export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & AnchorProps & { href: string }) {
   const path = usePathContext().unwrap()
   const { children, title, subtitle, href, ...rest } = props
 
   const subpath = useHashSubpath(path)
-  const genius = useGenius(subpath, href)
+  const genius = useCoords(subpath, href)
 
   return <>
     <HashSubpathProvider>

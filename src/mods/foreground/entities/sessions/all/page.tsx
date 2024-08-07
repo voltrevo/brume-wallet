@@ -12,13 +12,12 @@ import { Page } from "@/libs/ui/page/page"
 import { ExSessionData, Session, SessionData } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { BlobbyData } from "@/mods/universal/entities/blobbys/data"
-import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin"
+import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Nullable, Option } from "@hazae41/option"
 import { useCloseContext } from "@hazae41/react-close-context"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useBlobby } from "../../blobbys/data"
 import { useOrigin } from "../../origins/data"
-import { useGenius } from "../../users/all/page"
 import { PaddedRoundedShrinkableNakedAnchor, PaddedRoundedShrinkableNakedButton, WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "../../wallets/actions/send"
 import { useSession } from "../data"
 import { useStatus } from "../status/data"
@@ -98,7 +97,7 @@ export function SessionRow(props: { session: Session }) {
   const path = usePathContext().unwrap()
 
   const subpath = useHashSubpath(path)
-  const menu = useGenius(subpath, `/${session.id}/menu`)
+  const menu = useCoords(subpath, `/${session.id}/menu`)
 
   const sessionQuery = useSession(session.id)
   const maybeSessionData = sessionQuery.data?.get()
@@ -188,7 +187,7 @@ export function SessionMenu(props: { sessionData: SessionData }) {
   const path = usePathContext().unwrap()
   const background = useBackgroundContext().unwrap()
 
-  const chains = useGenius(path, `/${sessionData.id}/chains`)
+  const chains = useCoords(path, `/${sessionData.id}/chains`)
 
   const disconnectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     await background.requestOrThrow({

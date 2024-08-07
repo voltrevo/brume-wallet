@@ -3,18 +3,18 @@ import { PeanutAbi } from "@/libs/abi/peanut.abi";
 import { useCopy } from "@/libs/copy/copy";
 import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
+import { nto } from "@/libs/ntu";
 import { Peanut } from "@/libs/peanut";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog } from "@/libs/ui/dialog";
 import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
-import { qurl } from "@/libs/url/url";
+import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
-import { useKeyValueState } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
+import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Cursor } from "@hazae41/cursor";
 import { Keccak256 } from "@hazae41/keccak256";
@@ -23,7 +23,7 @@ import { useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";
 import { Secp256k1 } from "@hazae41/secp256k1";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableOppositeButton } from "..";
+import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "..";
 import { useNativeBalance, useNativePricedBalance, useToken } from "../../../../tokens/data";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext2 } from "../../../data";
@@ -35,16 +35,15 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
 
-  const subpath = useHashSubpath(path)
+  const hash = useHashSubpath(path)
 
-  const $state = useSearchAsKeyValueState<UrlState>(path)
-  const [maybeStep, setStep] = useKeyValueState("step", $state)
-  const [maybeChain, setChain] = useKeyValueState("chain", $state)
-  const [maybeToken, setToken] = useKeyValueState("token", $state)
-  const [maybeValue, setValue] = useKeyValueState("value", $state)
-  const [maybePassword, setPassword] = useKeyValueState("password", $state)
-  const [maybeTrial0, setTrial0] = useKeyValueState("trial0", $state)
-  const [maybeTrial1, setTrial1] = useKeyValueState("trial1", $state)
+  const [maybeStep, setStep] = useSearchState(path, "step")
+  const [maybeChain, setChain] = useSearchState(path, "chain")
+  const [maybeToken, setToken] = useSearchState(path, "token")
+  const [maybeValue, setValue] = useSearchState(path, "value")
+  const [maybePassword, setPassword] = useSearchState(path, "password")
+  const [maybeTrial0, setTrial0] = useSearchState(path, "trial0")
+  const [maybeTrial1, setTrial1] = useSearchState(path, "trial1")
 
   const trial0UuidFallback = useConstant(() => randomUUID())
   const trial0Uuid = Option.wrap(maybeTrial0).unwrapOr(trial0UuidFallback)
@@ -97,7 +96,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
     }, Fixed.unit(tokenData.decimals))
   }, [prices, tokenData])
 
-  const [rawValuedInput = "", setRawValuedInput] = useState<Optional<string>>(maybeValue)
+  const [rawValuedInput = "", setRawValuedInput] = useState(nto(maybeValue))
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
 
   const valuedInput = useDeferredValue(rawValuedInput)
@@ -290,8 +289,8 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   }, [maybeContract, maybeFinalValue])
 
   const onSendTransaction1Click = useCallback(() => {
-    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial1Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData1?.ok().get(), disableData: true, disableSign: true })))
-  }, [subpath, trial1Uuid, chainData, tokenData, maybeTriedMaybeFinalData1])
+    location.replace(hash.go(urlOf("/eth_sendTransaction", { trial: trial1Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData1?.ok().get(), disableData: true, disableSign: true })))
+  }, [hash, trial1Uuid, chainData, tokenData, maybeTriedMaybeFinalData1])
 
   const maybeTriedMaybeFinalData0 = useMemo(() => {
     if (maybeFinalValue == null)
@@ -315,8 +314,8 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   }, [maybeFinalValue, password, tokenData])
 
   const onSendTransaction0Click = useCallback(() => {
-    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeContract, data: maybeTriedMaybeFinalData0?.ok().get(), disableData: true, disableSign: true })))
-  }, [subpath, trial0Uuid, chainData, maybeContract, maybeTriedMaybeFinalData0])
+    location.replace(hash.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeContract, data: maybeTriedMaybeFinalData0?.ok().get(), disableData: true, disableSign: true })))
+  }, [hash, trial0Uuid, chainData, maybeContract, maybeTriedMaybeFinalData0])
 
   const trial1Query = useTransactionTrial(trial1Uuid)
   const maybeTrial1Data = trial1Query.current?.ok().get()
@@ -362,7 +361,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
 
   return <>
     <HashSubpathProvider>
-      {subpath.url.pathname === "/eth_sendTransaction" &&
+      {hash.url.pathname === "/eth_sendTransaction" &&
         <Dialog>
           <WalletTransactionDialog />
         </Dialog>}

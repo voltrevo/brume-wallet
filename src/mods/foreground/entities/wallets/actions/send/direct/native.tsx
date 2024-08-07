@@ -1,21 +1,21 @@
 import { useCopy } from "@/libs/copy/copy";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
+import { nto } from "@/libs/ntu";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog } from "@/libs/ui/dialog";
 import { SmallUnshrinkableLoading } from "@/libs/ui/loading";
 import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
-import { qurl } from "@/libs/url/url";
+import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData } from "@/mods/background/service_worker/entities/transactions/data";
-import { useKeyValueState } from "@/mods/foreground/router/path/context";
-import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
+import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
 import { Address, Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableOppositeButton } from "..";
+import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "..";
 import { useEnsLookup } from "../../../../names/data";
 import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "../../../../transactions/data";
@@ -29,14 +29,13 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
 
-  const subpath = useHashSubpath(path)
+  const hash = useHashSubpath(path)
 
-  const $state = useSearchAsKeyValueState<UrlState>(path)
-  const [maybeStep, setStep] = useKeyValueState("step", $state)
-  const [maybeChain, setChain] = useKeyValueState("chain", $state)
-  const [maybeTarget, setTarget] = useKeyValueState("target", $state)
-  const [maybeValue, setValue] = useKeyValueState("value", $state)
-  const [maybeTrial0, setTrial0] = useKeyValueState("trial0", $state)
+  const [maybeStep, setStep] = useSearchState(path, "step")
+  const [maybeChain, setChain] = useSearchState(path, "chain")
+  const [maybeTarget, setTarget] = useSearchState(path, "target")
+  const [maybeValue, setValue] = useSearchState(path, "value")
+  const [maybeTrial0, setTrial0] = useSearchState(path, "trial0")
 
   const trial0UuidFallback = useConstant(() => randomUUID())
   const trial0Uuid = Option.wrap(maybeTrial0).unwrapOr(trial0UuidFallback)
@@ -76,7 +75,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     }, Fixed.unit(tokenData.decimals))
   }, [prices, tokenData])
 
-  const [rawValuedInput = "", setRawValuedInput] = useState<Optional<string>>(maybeValue)
+  const [rawValuedInput = "", setRawValuedInput] = useState(nto(maybeValue))
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
 
   const valuedInput = useDeferredValue(rawValuedInput)
@@ -237,8 +236,8 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   }, [rawValue, tokenData])
 
   const onSendTransactionClick = useCallback(() => {
-    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeFinalTarget, value: maybeFinalValue?.toString() })))
-  }, [subpath, trial0Uuid, chainData.chainId, maybeFinalValue, maybeFinalTarget])
+    location.replace(hash.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeFinalTarget, value: maybeFinalValue?.toString() })))
+  }, [hash, trial0Uuid, chainData.chainId, maybeFinalValue, maybeFinalTarget])
 
   const trialQuery = useTransactionTrial(trial0Uuid)
   const maybeTrialData = trialQuery.current?.ok().get()
@@ -252,7 +251,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
 
   return <>
     <HashSubpathProvider>
-      {subpath.url.pathname === "/eth_sendTransaction" &&
+      {hash.url.pathname === "/eth_sendTransaction" &&
         <Dialog>
           <WalletTransactionDialog />
         </Dialog>}
@@ -272,9 +271,9 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
       </div>
       <div className="w-4" />
       <SimpleInput
-        readOnly
         onFocus={onTargetFocus}
-        value={maybeTarget} />
+        value={nto(maybeTarget)}
+        readOnly />
     </SimpleLabel>
     <div className="h-2" />
     {mode === "valued" &&

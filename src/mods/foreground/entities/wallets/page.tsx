@@ -21,7 +21,7 @@ import { Wc, WcMetadata } from "@/libs/wconn/mods/wc/wc";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
 import { TokenSettings, TokenSettingsData } from "@/mods/background/service_worker/entities/wallets/tokens/data";
-import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin";
+import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
 import { None, Nullable, Option, Optional, Some } from "@hazae41/option";
 import { CloseContext, useCloseContext } from "@hazae41/react-close-context";
@@ -32,7 +32,7 @@ import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
 import { usePairPrice } from "../tokens/pairs/data";
-import { SmallShrinkableContrastButton, useGenius } from "../users/all/page";
+import { SmallShrinkableContrastButton } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
 import { PaddedRoundedShrinkableNakedAnchor, WalletSendScreen, WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "./actions/send";
@@ -149,8 +149,8 @@ function WalletDataPage() {
     location.assign("#/wallets")
   }, [])
 
-  const connect = useGenius(subpath, "/connect")
-  const receive = useGenius(subpath, "/receive")
+  const connect = useCoords(subpath, "/connect")
+  const receive = useCoords(subpath, "/receive")
 
   const $flip = useState(false)
   const [flip, setFlip] = $flip
@@ -330,7 +330,7 @@ export function WalletMenu(props: {
   const [flip, setFlip] = $flip
   const [privateKey, setPrivateKey] = $privateKey
 
-  const edit = useGenius(path, "/edit")
+  const edit = useCoords(path, "/edit")
 
   const flipOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.unwrap())
@@ -535,7 +535,7 @@ function NativeTokenMenu(props: { token: NativeTokenData }) {
   const path = usePathContext().unwrap()
   const { token } = props
 
-  const send = useGenius(path, `/send?step=target&chain=${token.chainId}`)
+  const send = useCoords(path, `/send?step=target&chain=${token.chainId}`)
 
   const settings = useTokenSettings(wallet, token)
   const favorite = settings.data?.get().enabled
@@ -587,7 +587,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const { token, chain } = props
 
   const subpath = useHashSubpath(path)
-  const menu = useGenius(subpath, `/token/${token.chainId}`)
+  const menu = useCoords(subpath, `/token/${token.chainId}`)
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 
@@ -635,7 +635,7 @@ function ContractTokenMenu(props: { token: ContractTokenData }) {
   const path = usePathContext().unwrap()
   const { token } = props
 
-  const send = useGenius(path, `/send?step=target&chain=${token.chainId}&token=${token.address}`)
+  const send = useCoords(path, `/send?step=target&chain=${token.chainId}&token=${token.address}`)
 
   const settings = useTokenSettings(wallet, token)
   const favorite = settings.data?.get().enabled
@@ -687,7 +687,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const { token, chain } = props
 
   const subpath = useHashSubpath(path)
-  const menu = useGenius(subpath, `/token/${token.uuid}`)
+  const menu = useCoords(subpath, `/token/${token.uuid}`)
 
   const context = useEthereumContext2(wallet.uuid, chain).unwrap()
 

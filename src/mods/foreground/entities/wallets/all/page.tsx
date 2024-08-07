@@ -7,10 +7,10 @@ import { Menu } from "@/libs/ui/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
 import { Page } from "@/libs/ui/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
-import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin"
+import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Nullable } from "@hazae41/option"
 import { useCallback } from "react"
-import { WideShrinkableContrastAnchor, useGenius } from "../../users/all/page"
+import { WideShrinkableContrastAnchor } from "../../users/all/page"
 import { PaddedRoundedShrinkableNakedAnchor } from "../actions/send"
 import { RawWalletDataCard } from "../card"
 import { WalletDataProvider } from "../context"
@@ -29,7 +29,7 @@ export function WalletsPage() {
   const maybeTrashedWallets = trashedWalletsQuery.current?.ok().get()
 
   const subpath = useHashSubpath(path)
-  const creator = useGenius(subpath, "/create")
+  const creator = useCoords(subpath, "/create")
 
   const onWalletClick = useCallback((wallet: Wallet) => {
     location.assign(path.go(`/wallet/${wallet.uuid}`))
@@ -160,7 +160,7 @@ export function NewRectangularAnchorCard(props: ChildrenProps) {
   const { children } = props
 
   const subpath = useHashSubpath(path)
-  const creator = useGenius(subpath, "/create")
+  const creator = useCoords(subpath, "/create")
 
   return <a className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed active:scale-90 transition-transform"
     onContextMenu={creator.onContextMenu}

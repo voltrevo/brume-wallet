@@ -1,20 +1,20 @@
 import { TokenAbi } from "@/libs/abi/erc20.abi";
 import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
+import { nto } from "@/libs/ntu";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog } from "@/libs/ui/dialog";
-import { qurl } from "@/libs/url/url";
+import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
-import { useKeyValueState } from "@/mods/foreground/router/path/context";
-import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
+import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
 import { Abi, Address, Fixed } from "@hazae41/cubane";
 import { Nullable, Option, Optional } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableOppositeButton } from "..";
+import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "..";
 import { useEnsLookup } from "../../../../names/data";
 import { useNativeBalance, useNativePricedBalance, useToken } from "../../../../tokens/data";
 import { useWalletDataContext } from "../../../context";
@@ -29,13 +29,12 @@ export function WalletDirectSendScreenContractValue(props: {}) {
 
   const subpath = useHashSubpath(path)
 
-  const $state = useSearchAsKeyValueState<UrlState>(path)
-  const [maybeStep, setStep] = useKeyValueState("step", $state)
-  const [maybeChain, setChain] = useKeyValueState("chain", $state)
-  const [maybeToken, setToken] = useKeyValueState("token", $state)
-  const [maybeTarget, setTarget] = useKeyValueState("target", $state)
-  const [maybeValue, setValue] = useKeyValueState("value", $state)
-  const [maybeTrial0, setTrial0] = useKeyValueState("trial0", $state)
+  const [maybeStep, setStep] = useSearchState(path, "step")
+  const [maybeChain, setChain] = useSearchState(path, "chain")
+  const [maybeToken, setToken] = useSearchState(path, "token")
+  const [maybeTarget, setTarget] = useSearchState(path, "target")
+  const [maybeValue, setValue] = useSearchState(path, "value")
+  const [maybeTrial0, setTrial0] = useSearchState(path, "trial0")
 
   const trial0UuidFallback = useConstant(() => randomUUID())
   const trial0Uuid = Option.wrap(maybeTrial0).unwrapOr(trial0UuidFallback)
@@ -79,7 +78,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     }, Fixed.unit(tokenData.decimals))
   }, [prices, tokenData])
 
-  const [rawValuedInput = "", setRawValuedInput] = useState<Optional<string>>(maybeValue)
+  const [rawValuedInput = "", setRawValuedInput] = useState(nto(maybeValue))
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
 
   const valuedInput = useDeferredValue(rawValuedInput)
@@ -257,7 +256,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   }, [maybeFinalTarget, maybeFinalValue])
 
   const onSendTransactionClick = useCallback(() => {
-    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData?.ok().get(), disableData: true })))
+    location.replace(subpath.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData?.ok().get(), disableData: true })))
   }, [subpath, trial0Uuid, chainData, tokenData, maybeTriedMaybeFinalData])
 
   const trialQuery = useTransactionTrial(trial0Uuid)
@@ -292,9 +291,9 @@ export function WalletDirectSendScreenContractValue(props: {}) {
       </div>
       <div className="w-4" />
       <SimpleInput
-        readOnly
         onFocus={onTargetFocus}
-        value={maybeTarget} />
+        value={nto(maybeTarget)}
+        readOnly />
     </SimpleLabel>
     <div className="h-2" />
     {mode === "valued" &&

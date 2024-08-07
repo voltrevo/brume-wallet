@@ -1,13 +1,12 @@
 import { Outline } from "@/libs/icons/icons";
-import { usePathContext } from "@hazae41/chemin";
-import { useGenius } from "../../../users/all/page";
+import { useCoords, usePathContext } from "@hazae41/chemin";
 import { WideShrinkableNakedMenuAnchor } from "../../actions/send";
 
 export function WalletCreatorMenu(props: {}) {
   const path = usePathContext().unwrap()
 
-  const readonly = useGenius(path, "/create/readonly")
-  const standalone = useGenius(path, "/create/standalone")
+  const readonly = useCoords(path, "/create/readonly")
+  const standalone = useCoords(path, "/create/standalone")
 
   return <div className="flex flex-col text-left gap-2">
     <WideShrinkableNakedMenuAnchor

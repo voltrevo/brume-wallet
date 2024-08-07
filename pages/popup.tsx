@@ -7,13 +7,13 @@ import { Dialog } from "@/libs/ui/dialog";
 import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
-import { qurl } from "@/libs/url/url";
+import { urlOf } from "@/libs/url/url";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useAppRequests } from "@/mods/foreground/entities/requests/data";
 import { useSimulation } from "@/mods/foreground/entities/simulations/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
-import { SmallShrinkableOppositeAnchor, useGenius } from "@/mods/foreground/entities/users/all/page";
+import { SmallShrinkableOppositeAnchor } from "@/mods/foreground/entities/users/all/page";
 import { WalletTransactionDialog } from "@/mods/foreground/entities/wallets/actions/eth_sendTransaction";
 import { PaddedRoundedShrinkableNakedAnchor, SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send";
 import { WalletCreatorMenu } from "@/mods/foreground/entities/wallets/all/create";
@@ -28,7 +28,7 @@ import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Router } from "@/mods/foreground/router/router";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin";
+import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Abi } from "@hazae41/cubane";
 import { RpcErr, RpcOk } from "@hazae41/jsonrpc";
 import { Nullable, Option } from "@hazae41/option";
@@ -152,7 +152,7 @@ export function TransactPage() {
   }), [background, id, path])
 
   const onSendTransactionClick = useCallback(() => {
-    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: id, chain: chainId, target: maybeTo, value: maybeValue, nonce: maybeNonce, data: maybeData, gas: maybeGas, gasMode: "custom", gasPrice: maybeGasPrice, maxFeePerGas: maybeMaxFeePerGas, maxPriorityFeePerGas: maybeMaxPriorityFeePerGas, disableData: true, disableSign: true })))
+    location.replace(subpath.go(urlOf("/eth_sendTransaction", { trial: id, chain: chainId, target: maybeTo, value: maybeValue, nonce: maybeNonce, data: maybeData, gas: maybeGas, gasMode: "custom", gasPrice: maybeGasPrice, maxFeePerGas: maybeMaxFeePerGas, maxPriorityFeePerGas: maybeMaxPriorityFeePerGas, disableData: true, disableSign: true })))
   }, [subpath, id, chainId, maybeTo, maybeValue, maybeNonce, maybeData, maybeGas, maybeGasPrice, maybeMaxFeePerGas, maybeMaxPriorityFeePerGas])
 
   useEffect(() => {
@@ -462,7 +462,7 @@ export function WalletAndChainSelectPage() {
   const background = useBackgroundContext().unwrap()
 
   const subpath = useHashSubpath(path)
-  const creator = useGenius(subpath, "/create")
+  const creator = useCoords(subpath, "/create")
 
   const id = Option.unwrap(path.url.searchParams.get("id"))
 

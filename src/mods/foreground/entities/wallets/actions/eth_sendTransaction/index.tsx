@@ -3,22 +3,23 @@ import { useCopy } from "@/libs/copy/copy";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
+import { nto } from "@/libs/ntu";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog } from "@/libs/ui/dialog";
 import { SmallUnshrinkableLoading } from "@/libs/ui/loading";
+import { Menu } from "@/libs/ui/menu";
 import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
-import { qurl } from "@/libs/url/url";
+import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
-import { useKeyValueState } from "@/mods/foreground/router/path/context";
-import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
+import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
 import { Address, Fixed, ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
 import { Data } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
-import { Nullable, Option, Optional, Some } from "@hazae41/option";
+import { Nullable, Option, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
@@ -30,47 +31,30 @@ import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "
 import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../data";
 import { PriceResolver } from "../../page";
-import { ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../send";
+import { ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableNakedMenuButton, WideShrinkableOppositeButton } from "../send";
 import { WalletDecodeDialog } from "./decode";
 import { WalletNonceDialog } from "./nonce";
-
-export type WalletTransactionScreenState = {
-  readonly trial?: string
-  readonly chain?: string
-  readonly target?: string
-  readonly value?: string
-  readonly nonce?: string
-  readonly data?: string
-  readonly gas?: string
-  readonly gasMode?: string
-  readonly gasPrice?: string
-  readonly maxFeePerGas?: string
-  readonly maxPriorityFeePerGas?: string
-  readonly disableData?: string
-  readonly disableSign?: string
-}
 
 export function WalletTransactionDialog(props: {}) {
   const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
 
-  const subpath = useHashSubpath(path)
+  const hash = useHashSubpath(path)
 
-  const $state = useSearchAsKeyValueState<WalletTransactionScreenState>(path)
-  const [maybeTrial, setTrial] = useKeyValueState("trial", $state)
-  const [maybeChain, setChain] = useKeyValueState("chain", $state)
-  const [maybeTarget, setTarget] = useKeyValueState("target", $state)
-  const [maybeValue, setValue] = useKeyValueState("value", $state)
-  const [maybeNonce, setNonce] = useKeyValueState("nonce", $state)
-  const [maybeData, setData] = useKeyValueState("data", $state)
-  const [maybeGas, setGas] = useKeyValueState("gas", $state)
-  const [maybeGasMode, setGasMode] = useKeyValueState("gasMode", $state)
-  const [maybeGasPrice, setGasPrice] = useKeyValueState("gasPrice", $state)
-  const [maybeMaxFeePerGas, setMaxFeePerGas] = useKeyValueState("maxFeePerGas", $state)
-  const [maybeMaxPriorityFeePerGas, setMaxPriorityFeePerGas] = useKeyValueState("maxPriorityFeePerGas", $state)
-  const [maybeDisableData, setDisableData] = useKeyValueState("disableData", $state)
-  const [maybeDisableSign, setDisableSign] = useKeyValueState("disableSign", $state)
+  const [maybeTrial, setTrial] = useSearchState(path, "trial")
+  const [maybeChain, setChain] = useSearchState(path, "chain")
+  const [maybeTarget, setTarget] = useSearchState(path, "target")
+  const [maybeValue, setValue] = useSearchState(path, "value")
+  const [maybeNonce, setNonce] = useSearchState(path, "nonce")
+  const [maybeData, setData] = useSearchState(path, "data")
+  const [maybeGas, setGas] = useSearchState(path, "gas")
+  const [maybeGasMode, setGasMode] = useSearchState(path, "gasMode")
+  const [maybeGasPrice, setGasPrice] = useSearchState(path, "gasPrice")
+  const [maybeMaxFeePerGas, setMaxFeePerGas] = useSearchState(path, "maxFeePerGas")
+  const [maybeMaxPriorityFeePerGas, setMaxPriorityFeePerGas] = useSearchState(path, "maxPriorityFeePerGas")
+  const [maybeDisableData, setDisableData] = useSearchState(path, "disableData")
+  const [maybeDisableSign, setDisableSign] = useSearchState(path, "disableSign")
 
   const gasMode = Option.wrap(maybeGasMode).unwrapOr("normal")
 
@@ -135,7 +119,7 @@ export function WalletTransactionDialog(props: {}) {
   }, [maybePrice, tokenData])
 
   const [rawValuedInput = ""] = useMemo(() => {
-    return [maybeValue]
+    return [nto(maybeValue)]
   }, [maybeValue])
 
   const [rawPricedInput = ""] = useMemo(() => {
@@ -143,14 +127,14 @@ export function WalletTransactionDialog(props: {}) {
   }, [getRawPricedInput, rawValuedInput])
 
   const onNonceClick = useCallback(() => {
-    location.replace(subpath.go(qurl("/nonce", {})))
-  }, [subpath])
+    location.replace(hash.go(urlOf("/nonce", {})))
+  }, [hash])
 
   const onDecodeClick = useCallback(() => {
     if (maybeData == null)
       return
-    location.replace(subpath.go(qurl("/decode", { data: maybeData })))
-  }, [maybeData, subpath])
+    location.replace(hash.go(urlOf("/decode", { data: maybeData })))
+  }, [maybeData, hash])
 
   const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1])
 
@@ -183,7 +167,7 @@ export function WalletTransactionDialog(props: {}) {
     } catch { }
   }, [rawValue, tokenData])
 
-  const [rawNonceInput = "", setRawNonceInput] = useState<Optional<string>>(maybeNonce)
+  const [rawNonceInput = "", setRawNonceInput] = useState(nto(maybeNonce))
 
   const onNonceInputChange = useInputChange(e => {
     setRawNonceInput(e.target.value)
@@ -211,7 +195,7 @@ export function WalletTransactionDialog(props: {}) {
     return undefined
   }, [maybeCustomNonce, maybePendingNonce])
 
-  const [rawDataInput = "", setRawDataInput] = useState<Optional<string>>(maybeData)
+  const [rawDataInput = "", setRawDataInput] = useState(nto(maybeData))
 
   const onDataInputChange = useTextAreaChange(e => {
     setRawDataInput(e.target.value)
@@ -254,7 +238,7 @@ export function WalletTransactionDialog(props: {}) {
     return maybePendingBlock?.baseFeePerGas != null
   }, [maybePendingBlock])
 
-  const [rawGasLimitInput = "", setRawGasLimitInput] = useState<Optional<string>>(maybeGas)
+  const [rawGasLimitInput = "", setRawGasLimitInput] = useState(nto(maybeGas))
 
   const onGasLimitInputChange = useInputChange(e => {
     setRawGasLimitInput(e.target.value)
@@ -266,7 +250,7 @@ export function WalletTransactionDialog(props: {}) {
     setGas(gasLimitInput)
   }, [gasLimitInput])
 
-  const [rawGasPriceInput = "", setRawGasPriceInput] = useState<Optional<string>>(maybeGasPrice)
+  const [rawGasPriceInput = "", setRawGasPriceInput] = useState(nto(maybeGasPrice))
 
   const onGasPriceInputChange = useInputChange(e => {
     setRawGasPriceInput(e.target.value)
@@ -278,7 +262,7 @@ export function WalletTransactionDialog(props: {}) {
     setGasPrice(gasPriceInput)
   }, [gasPriceInput])
 
-  const [rawMaxFeePerGasInput = "", setRawMaxFeePerGasInput] = useState<Optional<string>>(maybeMaxFeePerGas)
+  const [rawMaxFeePerGasInput = "", setRawMaxFeePerGasInput] = useState(nto(maybeMaxFeePerGas))
 
   const onMaxFeePerGasInputChange = useInputChange(e => {
     setRawMaxFeePerGasInput(e.target.value)
@@ -290,7 +274,7 @@ export function WalletTransactionDialog(props: {}) {
     setMaxFeePerGas(maxFeePerGasInput)
   }, [maxFeePerGasInput])
 
-  const [rawMaxPriorityFeePerGasInput = "", setRawMaxPriorityFeePerGasInput] = useState<Optional<string>>(maybeMaxPriorityFeePerGas)
+  const [rawMaxPriorityFeePerGasInput = "", setRawMaxPriorityFeePerGasInput] = useState(nto(maybeMaxPriorityFeePerGas))
 
   const onMaxPriorityFeePerGasInputChange = useInputChange(e => {
     setRawMaxPriorityFeePerGasInput(e.target.value)
@@ -835,13 +819,35 @@ export function WalletTransactionDialog(props: {}) {
     return await signOrSendOrAlert("send")
   }, [signOrSendOrAlert])
 
+  const gasGenius = useCoords(hash, "/gas")
+
+  const onUrgentGasClick = useCallback(() => {
+    setGasMode("urgent")
+    location.replace(hash.go("/"))
+  }, [hash])
+
+  const onFastGasClick = useCallback(() => {
+    setGasMode("fast")
+    location.replace(hash.go("/"))
+  }, [hash])
+
+  const onNormalGasClick = useCallback(() => {
+    setGasMode("normal")
+    location.replace(hash.go("/"))
+  }, [hash])
+
+  const onCustomGasClick = useCallback(() => {
+    setGasMode("custom")
+    location.replace(hash.go("/"))
+  }, [hash])
+
   return <>
     <HashSubpathProvider>
-      {subpath.url.pathname === "/decode" &&
+      {hash.url.pathname === "/decode" &&
         <Dialog>
           <WalletDecodeDialog />
         </Dialog>}
-      {subpath.url.pathname === "/nonce" &&
+      {hash.url.pathname === "/nonce" &&
         <Dialog>
           <WalletNonceDialog ok={() => { }} />
         </Dialog>}
@@ -861,8 +867,8 @@ export function WalletTransactionDialog(props: {}) {
       </div>
       <div className="w-4" />
       <SimpleInput
-        readOnly
-        value={maybeTarget} />
+        value={nto(maybeTarget)}
+        readOnly />
     </SimpleLabel>
     <div className="h-2" />
     <SimpleLabel>
@@ -944,23 +950,59 @@ export function WalletTransactionDialog(props: {}) {
         Gas
       </div>
       <div className="w-4" />
-      {maybeIsEip1559 === true &&
-        <select className="w-full bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
-          value={gasMode}
-          onChange={onGasModeChange}>
-          <option value="urgent">
+      {maybeIsEip1559 === true && <>
+        <HashSubpathProvider>
+          {hash.url.pathname === "/gas" &&
+            <Menu>
+              <div className="flex flex-col text-left gap-2">
+                <WideShrinkableNakedMenuButton
+                  onClick={onUrgentGasClick}>
+                  {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
+                </WideShrinkableNakedMenuButton>
+                <WideShrinkableNakedMenuButton
+                  onClick={onFastGasClick}>
+                  {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
+                </WideShrinkableNakedMenuButton>
+                <WideShrinkableNakedMenuButton
+                  onClick={onNormalGasClick}>
+                  {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
+                </WideShrinkableNakedMenuButton>
+                <WideShrinkableNakedMenuButton
+                  onClick={onCustomGasClick}>
+                  {`Custom`}
+                </WideShrinkableNakedMenuButton>
+              </div>
+            </Menu>}
+        </HashSubpathProvider>
+        {gasMode === "urgent" &&
+          <a className="overflow-ellipsis overflow-x-hidden"
+            onClick={gasGenius.onClick}
+            onKeyDown={gasGenius.onKeyDown}
+            href={gasGenius.href}>
             {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
-          </option>
-          <option value="fast">
+          </a>}
+        {gasMode === "fast" &&
+          <a className="overflow-ellipsis overflow-x-hidden"
+            onClick={gasGenius.onClick}
+            onKeyDown={gasGenius.onKeyDown}
+            href={gasGenius.href}>
             {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
-          </option>
-          <option value="normal">
+          </a>}
+        {gasMode === "normal" &&
+          <a className="overflow-ellipsis overflow-x-hidden"
+            onClick={gasGenius.onClick}
+            onKeyDown={gasGenius.onKeyDown}
+            href={gasGenius.href}>
             {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
-          </option>
-          <option value="custom">
-            Custom
-          </option>
-        </select>}
+          </a>}
+        {gasMode === "custom" &&
+          <a className="overflow-ellipsis overflow-x-hidden"
+            onClick={gasGenius.onClick}
+            onKeyDown={gasGenius.onKeyDown}
+            href={gasGenius.href}>
+            {`Custom`}
+          </a>}
+      </>}
       {maybeIsEip1559 === false &&
         <select className="w-full bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
           value={gasMode}

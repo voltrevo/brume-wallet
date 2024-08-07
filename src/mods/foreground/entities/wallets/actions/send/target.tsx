@@ -1,16 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
 import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
+import { nto } from "@/libs/ntu";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { Dialog } from "@/libs/ui/dialog";
-import { useKeyValueState } from "@/mods/foreground/router/path/context";
-import { usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
+import { usePathContext, useSearchState } from "@hazae41/chemin";
 import { Address } from "@hazae41/cubane";
-import { Option, Optional } from "@hazae41/option";
+import { Option } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
-import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableContrastButton } from ".";
+import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, WideShrinkableContrastButton } from ".";
 import { useEnsLookup } from "../../../names/data";
 import { useToken } from "../../../tokens/data";
 import { useWalletDataContext } from "../../context";
@@ -21,12 +21,11 @@ export function WalletSendScreenTarget(props: {}) {
   const wallet = useWalletDataContext().unwrap()
   const close = useCloseContext().unwrap()
 
-  const $state = useSearchAsKeyValueState<UrlState>(path)
-  const [maybeStep, setStep] = useKeyValueState("step", $state)
-  const [maybeChain, setChain] = useKeyValueState("chain", $state)
-  const [maybeTarget, setTarget] = useKeyValueState("target", $state)
-  const [maybeType, setType] = useKeyValueState("type", $state)
-  const [maybeToken, setToken] = useKeyValueState("token", $state)
+  const [maybeStep, setStep] = useSearchState(path, "step")
+  const [maybeChain, setChain] = useSearchState(path, "chain")
+  const [maybeTarget, setTarget] = useSearchState(path, "target")
+  const [maybeType, setType] = useSearchState(path, "type")
+  const [maybeToken, setToken] = useSearchState(path, "token")
 
   const chain = Option.unwrap(maybeChain)
   const chainData = chainDataByChainId[Number(chain)]
@@ -38,7 +37,7 @@ export function WalletSendScreenTarget(props: {}) {
 
   const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1])
 
-  const [rawTargetInput = "", setRawTargetInput] = useState<Optional<string>>(maybeTarget)
+  const [rawTargetInput = "", setRawTargetInput] = useState(nto(maybeTarget))
 
   const onTargetInputChange = useInputChange(e => {
     setRawTargetInput(e.target.value)

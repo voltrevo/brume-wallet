@@ -1,10 +1,9 @@
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Dialog } from "@/libs/ui/dialog";
 import { BigLoading } from "@/libs/ui/loading";
-import { useKeyValueState } from "@/mods/foreground/router/path/context";
-import { usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
+import { usePathContext } from "@hazae41/chemin";
 import { Abi, ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
-import { Option } from "@hazae41/option";
+import { Nullable, Option } from "@hazae41/option";
 import { Result } from "@hazae41/result";
 import { useMemo } from "react";
 import { useSignature } from "../../../signatures/data";
@@ -15,12 +14,11 @@ export function WalletDecodeDialog(props: {}) {
   const path = usePathContext().unwrap()
   const wallet = useWalletDataContext().unwrap()
 
-  const $state = useSearchAsKeyValueState<{ data: ZeroHexString }>(path)
-  const [maybeData, setData] = useKeyValueState("data", $state)
+  const maybeData = path.url.searchParams.get("data") as Nullable<ZeroHexString>
 
   const maybeHash = Option.wrap(maybeData).mapSync(x => {
     return x.slice(0, 10) as ZeroHexString
-  }).inner
+  }).get()
 
   const gnosis = useEthereumContext2(wallet.uuid, chainDataByChainId[100]).unwrap()
 

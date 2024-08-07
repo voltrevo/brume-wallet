@@ -2,18 +2,18 @@ import { PeanutAbi } from "@/libs/abi/peanut.abi";
 import { useCopy } from "@/libs/copy/copy";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
+import { nto } from "@/libs/ntu";
 import { Peanut } from "@/libs/peanut";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog } from "@/libs/ui/dialog";
 import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
-import { qurl } from "@/libs/url/url";
+import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
-import { useKeyValueState } from "@/mods/foreground/router/path/context";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
-import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
+import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Cursor } from "@hazae41/cursor";
 import { Keccak256 } from "@hazae41/keccak256";
@@ -22,7 +22,7 @@ import { useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";
 import { Secp256k1 } from "@hazae41/secp256k1";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, UrlState, WideShrinkableOppositeButton } from "..";
+import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "..";
 import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/data";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext2 } from "../../../data";
@@ -36,12 +36,11 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
 
   const subpath = useHashSubpath(path)
 
-  const $state = useSearchAsKeyValueState<UrlState>(path)
-  const [maybeStep, setStep] = useKeyValueState("step", $state)
-  const [maybeChain, setChain] = useKeyValueState("chain", $state)
-  const [maybeValue, setValue] = useKeyValueState("value", $state)
-  const [maybePassword, setPassword] = useKeyValueState("password", $state)
-  const [maybeTrial0, setTrial0] = useKeyValueState("trial0", $state)
+  const [maybeStep, setStep] = useSearchState(path, "step")
+  const [maybeChain, setChain] = useSearchState(path, "chain")
+  const [maybeValue, setValue] = useSearchState(path, "value")
+  const [maybePassword, setPassword] = useSearchState(path, "password")
+  const [maybeTrial0, setTrial0] = useSearchState(path, "trial0")
 
   const trial0UuidFallback = useConstant(() => randomUUID())
   const trial0Uuid = Option.wrap(maybeTrial0).unwrapOr(trial0UuidFallback)
@@ -81,7 +80,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     }, Fixed.unit(tokenData.decimals))
   }, [prices, tokenData])
 
-  const [rawValuedInput = "", setRawValuedInput] = useState<Optional<string>>(maybeValue)
+  const [rawValuedInput = "", setRawValuedInput] = useState(nto(maybeValue))
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
 
   const valuedInput = useDeferredValue(rawValuedInput)
@@ -281,7 +280,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   }, [maybeFinalValue, password])
 
   const onSendTransactionClick = useCallback(() => {
-    location.replace(subpath.go(qurl("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableData: true, disableSign: true })))
+    location.replace(subpath.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableData: true, disableSign: true })))
   }, [subpath, trial0Uuid, chainData, maybeContract, rawValue, maybeTriedMaybeFinalData])
 
   const trial0Query = useTransactionTrial(trial0Uuid)

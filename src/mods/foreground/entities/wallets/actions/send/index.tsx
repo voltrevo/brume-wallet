@@ -3,33 +3,19 @@ import { Color } from "@/libs/colors/colors";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { AnchorProps, ButtonProps, InputProps, TextareaProps } from "@/libs/react/props/html";
 import { ButtonShrinkerDiv } from "@/libs/ui/shrinker";
-import { useKeyValueState } from "@/mods/foreground/router/path/context";
-import { usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
+import { usePathContext, useSearchState } from "@hazae41/chemin";
 import { WalletDirectSendScreenContractValue } from "./direct/contract";
 import { WalletDirectSendScreenNativeValue } from "./direct/native";
 import { WalletPeanutSendScreenContractValue } from "./peanut/contract";
 import { WalletPeanutSendScreenNativeValue } from "./peanut/native";
 import { WalletSendScreenTarget } from "./target";
 
-export type UrlState = {
-  readonly type?: string
-  readonly step?: string
-  readonly chain?: string
-  readonly token?: string
-  readonly target?: string
-  readonly value?: string
-  readonly trial0?: string
-  readonly trial1?: string
-  readonly password?: string
-}
-
 export function WalletSendScreen(props: {}) {
   const path = usePathContext().unwrap()
 
-  const $path = useSearchAsKeyValueState<UrlState>(path)
-  const [step] = useKeyValueState("step", $path)
-  const [type] = useKeyValueState("type", $path)
-  const [token] = useKeyValueState("token", $path)
+  const [step] = useSearchState(path, "step")
+  const [type] = useSearchState(path, "type")
+  const [token] = useSearchState(path, "token")
 
   if (step === "target")
     return <WalletSendScreenTarget />

@@ -7,7 +7,7 @@ import { fetchAsBlobOrThrow, fetchAsJsonOrThrow } from "@/libs/fetch";
 import { Mouse } from "@/libs/mouse/mouse";
 import { isFirefoxExtension, isSafariExtension } from "@/libs/platform/platform";
 import { NonReadonly } from "@/libs/types/readonly";
-import { qurl } from "@/libs/url/url";
+import { urlOf } from "@/libs/url/url";
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
 import { None, Some } from "@hazae41/option";
 import { Ok, Result } from "@hazae41/result";
@@ -215,7 +215,7 @@ async function main() {
     sessionStorage.setItem("brume:opened", "true")
 
     const opener = BrowserError.runOrThrowSync(() => browser.runtime.getURL("/opener.html"))
-    const opened = qurl(opener, { url: location.href })
+    const opened = urlOf(opener, { url: location.href })
 
     location.replace(opened)
 

@@ -9,6 +9,7 @@ import { Errors } from "@/libs/errors/errors";
 import { isSafariExtension } from "@/libs/platform/platform";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { Catcher, PromiseCatcher } from "@/libs/react/error";
+import { ChildrenProps } from "@/libs/react/props/children";
 import { ErrorProps } from "@/libs/react/props/error";
 import { GlobalPageHeader, PageBody } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
@@ -30,7 +31,7 @@ import { Sha1 } from "@hazae41/sha1";
 import { X25519 } from "@hazae41/x25519";
 import type { AppProps } from 'next/app';
 import Head from "next/head";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export function Fallback(props: ErrorProps) {
   const { error } = props
@@ -118,6 +119,21 @@ export function Initializer(props: {}) {
   return null
 }
 
+export function ClientOnly(props: ChildrenProps) {
+  const { children } = props
+
+  const [client, setClient] = useState(false)
+
+  useEffect(() => {
+    setClient(true)
+  }, [])
+
+  if (!client)
+    return null
+
+  return <>{children}</>
+}
+
 export default function App({ Component, pageProps }: AppProps) {
   const goto = useMemo(() => {
     if ("location" in globalThis === false)
@@ -147,15 +163,17 @@ export default function App({ Component, pageProps }: AppProps) {
     <Catcher fallback={Fallback}>
       <PromiseCatcher>
         <Initializer />
-        <HashPathProvider>
-          <BackgroundProvider>
-            <GlobalStorageProvider>
-              <UserStorageProvider>
-                <Component {...pageProps} />
-              </UserStorageProvider>
-            </GlobalStorageProvider>
-          </BackgroundProvider>
-        </HashPathProvider>
+        <ClientOnly>
+          <HashPathProvider>
+            <BackgroundProvider>
+              <GlobalStorageProvider>
+                <UserStorageProvider>
+                  <Component {...pageProps} />
+                </UserStorageProvider>
+              </GlobalStorageProvider>
+            </BackgroundProvider>
+          </HashPathProvider>
+        </ClientOnly>
       </PromiseCatcher>
     </Catcher>
   </>

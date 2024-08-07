@@ -17,7 +17,7 @@ import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExte
 import { Strings } from "@/libs/strings/strings";
 import { Circuits } from "@/libs/tor/circuits/circuits";
 import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors";
-import { pathOf, qurl } from "@/libs/url/url";
+import { pathOf, urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { CryptoClient } from "@/libs/wconn/mods/crypto/client";
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn";
@@ -319,7 +319,7 @@ class Global {
 
     try {
       const { id, method, params } = request
-      const url = qurl(`/${method}?id=${id}`, params)
+      const url = urlOf(`/${method}?id=${id}`, params)
 
       if (isSafariExtension() && isIpad()) {
         this.#path = `#${pathOf(url)}`

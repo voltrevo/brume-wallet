@@ -4,13 +4,12 @@ import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { UserRef } from "@/mods/background/service_worker/entities/users/data";
-import { usePathContext, useSearchAsKeyValueState } from "@hazae41/chemin";
+import { usePathContext } from "@hazae41/chemin";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { KeyboardEvent, useCallback, useDeferredValue, useRef, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
-import { useKeyValueState } from "../../router/path/context";
 import { SimpleLabel, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../wallets/actions/send";
 import { UserAvatar } from "./all/page";
 import { useCurrentUser, useUser } from "./data";
@@ -21,8 +20,7 @@ export function UserLoginDialog(props: { next?: string }) {
   const background = useBackgroundContext().unwrap()
   const { next } = props
 
-  const $state = useSearchAsKeyValueState<{ user: string }>(path)
-  const [maybeUserId] = useKeyValueState("user", $state)
+  const maybeUserId = path.url.searchParams.get("user")
 
   const userQuery = useUser(maybeUserId)
   const maybeUser = userQuery.current?.ok().get()

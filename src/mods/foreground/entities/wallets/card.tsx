@@ -6,13 +6,12 @@ import { Events, useMouseCancel } from "@/libs/react/events"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { AnchorProps, ButtonProps } from "@/libs/react/props/html"
 import { ButtonShrinkerDiv } from "@/libs/ui/shrinker"
-import { useHashSubpath, usePathContext } from "@hazae41/chemin"
+import { useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Address, ZeroHexString } from "@hazae41/cubane"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { flushSync } from "react-dom"
 import { useEnsReverseNoFetch } from "../names/data"
 import { useTotalWalletPricedBalance } from "../unknown/data"
-import { useGenius } from "../users/all/page"
 import { useWalletDataContext } from "./context"
 import { useEthereumContext } from "./data"
 import { useCompactDisplayUsdOrZeroOrError } from "./page"
@@ -39,7 +38,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
   const { uuid, address, name, emoji, color, index, href, privateKey, flip, unflip } = props
 
   const subpath = useHashSubpath(path)
-  const genius = useGenius(subpath, href)
+  const genius = useCoords(subpath, href)
 
   const finalAddress = useMemo(() => {
     return Address.fromOrThrow(address)

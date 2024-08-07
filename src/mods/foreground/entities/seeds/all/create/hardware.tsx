@@ -11,12 +11,11 @@ import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { SeedData } from "@/mods/universal/entities/seeds/data";
-import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin";
+import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Ledger } from "@hazae41/ledger";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { Err, Panic } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { useGenius } from "../../../users/all/page";
 import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../../wallets/actions/send";
 import { RawSeedCard } from "../../card";
 
@@ -26,7 +25,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
   const background = useBackgroundContext().unwrap()
 
   const subpath = useHashSubpath(path)
-  const connect = useGenius(subpath, "/connect")
+  const connect = useCoords(subpath, "/connect")
 
   const uuid = useConstant(() => randomUUID())
 

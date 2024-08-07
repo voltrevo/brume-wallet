@@ -1,9 +1,8 @@
 import { Color } from "@/libs/colors/colors"
 import { Outline } from "@/libs/icons/icons"
-import { useHashSubpath, usePathContext } from "@hazae41/chemin"
+import { useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { useCallback, useEffect, useState } from "react"
 import { flushSync } from "react-dom"
-import { useGenius } from "../users/all/page"
 import { CircularWhiteAnchorInColoredCard, CircularWhiteButtonInColoredCard } from "../wallets/card"
 import { useSeedDataContext } from "./context"
 
@@ -26,7 +25,7 @@ export function RawSeedCard(props: { name: string } & { emoji: string } & { colo
   const { name, emoji, color, href, index, flip, unflip } = props
 
   const subpath = useHashSubpath(path)
-  const genius = useGenius(subpath, href)
+  const genius = useCoords(subpath, href)
 
   const [preflip = false, setPreflip] = useState(flip)
   const [postflip, setPostflip] = useState(false)

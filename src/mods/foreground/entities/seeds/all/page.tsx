@@ -5,9 +5,8 @@ import { Menu } from "@/libs/ui/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
 import { Page } from "@/libs/ui/page/page"
 import { Seed } from "@/mods/universal/entities/seeds/data"
-import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin"
+import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { useCallback } from "react"
-import { useGenius } from "../../users/all/page"
 import { PaddedRoundedShrinkableNakedAnchor } from "../../wallets/actions/send"
 import { NewRectangularAnchorCard } from "../../wallets/all/page"
 import { RawSeedDataCard } from "../card"
@@ -24,7 +23,7 @@ export function SeedsPage() {
   const maybeSeeds = seedsQuery.data?.get()
 
   const subpath = useHashSubpath(path)
-  const creator = useGenius(subpath, "/create")
+  const creator = useCoords(subpath, "/create")
 
   const onSeedClick = useCallback((seed: Seed) => {
     location.assign(`#/seed/${seed.uuid}`)
