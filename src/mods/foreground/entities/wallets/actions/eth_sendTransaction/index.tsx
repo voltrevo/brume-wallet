@@ -11,6 +11,7 @@ import { useConstant } from "@/libs/react/ref";
 import { Dialog } from "@/libs/ui/dialog";
 import { SmallUnshrinkableLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
+import { SelectAndClose } from "@/libs/ui/select";
 import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
@@ -821,26 +822,6 @@ export function WalletTransactionDialog(props: {}) {
 
   const gasGenius = useCoords(hash, "/gas")
 
-  const onUrgentGasClick = useCallback(() => {
-    setGasMode("urgent")
-    location.replace(hash.go("/"))
-  }, [hash])
-
-  const onFastGasClick = useCallback(() => {
-    setGasMode("fast")
-    location.replace(hash.go("/"))
-  }, [hash])
-
-  const onNormalGasClick = useCallback(() => {
-    setGasMode("normal")
-    location.replace(hash.go("/"))
-  }, [hash])
-
-  const onCustomGasClick = useCallback(() => {
-    setGasMode("custom")
-    location.replace(hash.go("/"))
-  }, [hash])
-
   return <>
     <HashSubpathProvider>
       {hash.url.pathname === "/decode" &&
@@ -954,24 +935,26 @@ export function WalletTransactionDialog(props: {}) {
         <HashSubpathProvider>
           {hash.url.pathname === "/gas" &&
             <Menu>
-              <div className="flex flex-col text-left gap-2">
-                <WideShrinkableNakedMenuButton
-                  onClick={onUrgentGasClick}>
-                  {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
-                </WideShrinkableNakedMenuButton>
-                <WideShrinkableNakedMenuButton
-                  onClick={onFastGasClick}>
-                  {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
-                </WideShrinkableNakedMenuButton>
-                <WideShrinkableNakedMenuButton
-                  onClick={onNormalGasClick}>
-                  {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
-                </WideShrinkableNakedMenuButton>
-                <WideShrinkableNakedMenuButton
-                  onClick={onCustomGasClick}>
-                  {`Custom`}
-                </WideShrinkableNakedMenuButton>
-              </div>
+              <SelectAndClose ok={setGasMode}>
+                <div className="flex flex-col text-left gap-2">
+                  <WideShrinkableNakedMenuButton
+                    data-value="urgent">
+                    {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
+                  </WideShrinkableNakedMenuButton>
+                  <WideShrinkableNakedMenuButton
+                    data-value="fast">
+                    {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
+                  </WideShrinkableNakedMenuButton>
+                  <WideShrinkableNakedMenuButton
+                    data-value="normal">
+                    {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
+                  </WideShrinkableNakedMenuButton>
+                  <WideShrinkableNakedMenuButton
+                    data-value="custom">
+                    {`Custom`}
+                  </WideShrinkableNakedMenuButton>
+                </div>
+              </SelectAndClose>
             </Menu>}
         </HashSubpathProvider>
         {gasMode === "urgent" &&
