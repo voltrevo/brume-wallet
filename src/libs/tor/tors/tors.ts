@@ -1,3 +1,4 @@
+import { ping } from "@/libs/ping"
 import { Sockets } from "@/libs/sockets/sockets"
 import { WebSocketDuplex } from "@/libs/streams/websocket"
 import { MicrodescQuery } from "@/mods/universal/entities/microdescs/data"
@@ -26,8 +27,9 @@ export function createNativeWebSocketPool(params: PoolParams) {
           socket.binaryType = "arraybuffer"
 
           start = Date.now()
-          await Sockets.waitOrThrow(socket, Signals.merge(AbortSignal.timeout(2000), signal))
+          await Sockets.waitOrThrow(socket)
           console.log(`Opened native WebSocket in ${Date.now() - start}ms`)
+          ping.value = Date.now() - start
 
           using stack = new Box(new DisposableStack())
 
@@ -97,7 +99,7 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage
         using stack = new Box(new DisposableStack())
 
         start = Date.now()
-        const tor = new Box(await createTorOrThrow(stream, Signals.merge(AbortSignal.timeout(2000), signal)))
+        const tor = new Box(await createTorOrThrow(stream, Signals.merge(AbortSignal.timeout(ping.value * 2), signal)))
         stack.getOrThrow().use(tor)
         console.log(`Created Tor in ${Date.now() - start}ms`)
 

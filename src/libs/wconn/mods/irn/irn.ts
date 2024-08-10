@@ -1,3 +1,4 @@
+import { ping } from "@/libs/ping";
 import { Results } from "@/libs/results/results";
 import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { WcBrume, WebSocketConnection } from "@/mods/background/service_worker/entities/brumes/data";
@@ -366,7 +367,7 @@ export class IrnClient {
       const subscription = await SafeRpc.tryRequest<string>(this.socket, {
         method: "irn_subscribe",
         params: { topic }
-      }, AbortSignal.timeout(5000)).then(r => r.throw(t).throw(t))
+      }, AbortSignal.timeout(ping.value * 6)).then(r => r.throw(t).throw(t))
 
       this.topicBySubscription.set(subscription, topic)
 
@@ -379,7 +380,7 @@ export class IrnClient {
       const result = await SafeRpc.tryRequest<boolean>(this.socket, {
         method: "irn_publish",
         params: payload
-      }, AbortSignal.timeout(5000)).then(r => r.throw(t).throw(t))
+      }, AbortSignal.timeout(ping.value * 6)).then(r => r.throw(t).throw(t))
 
       return Result.assert(result).mapErrSync(() => new Error("Failed to publish"))
     })

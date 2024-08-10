@@ -1,5 +1,6 @@
 import { Maps } from "@/libs/maps/maps"
 import { NetworkParams } from "@/libs/network/network"
+import { ping } from "@/libs/ping"
 import { TorRpc } from "@/libs/rpc/rpc"
 import { randomUUID } from "@/libs/uuid/uuid"
 import { Arrays } from "@hazae41/arrays"
@@ -97,7 +98,7 @@ export namespace BgSimulation {
       const circuits = brume.circuits
 
       async function runWithCircuitOrThrow(index: number) {
-        const circuitSignal = Signals.merge(AbortSignal.timeout(5_000), parentSignal)
+        const circuitSignal = Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal)
         const circuit = await circuits.tryGet(index, circuitSignal).then(r => r.unwrap().unwrap().inner.inner)
 
         const session = randomUUID()
@@ -107,7 +108,7 @@ export namespace BgSimulation {
 
         const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
           circuit,
-          signal: Signals.merge(AbortSignal.timeout(10_000), parentSignal),
+          signal: Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal),
           ...new RpcCounter().prepare({ method: "net_get" }),
         }).then(r => r.unwrap())
 
@@ -115,13 +116,13 @@ export namespace BgSimulation {
 
         await TorRpc.fetchWithCircuitOrThrow<void>(url, {
           circuit,
-          signal: Signals.merge(AbortSignal.timeout(10_000), parentSignal),
+          signal: Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal),
           ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
         }).then(r => r.unwrap())
 
         const nodes = await TorRpc.fetchWithCircuitOrThrow<{ location: string }[]>(url, {
           circuit,
-          signal: Signals.merge(AbortSignal.timeout(10_000), parentSignal),
+          signal: Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal),
           ...new RpcCounter().prepare({ method: "net_search", params: [{}, { protocols: [`https:json-rpc:(pay-by-char|tenderly:${ethereum.chain.chainId})`] }] })
         }).then(r => r.unwrap())
 
@@ -136,7 +137,7 @@ export namespace BgSimulation {
 
           const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
             circuit,
-            signal: Signals.merge(AbortSignal.timeout(10_000), parentSignal),
+            signal: Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal),
             ...new RpcCounter().prepare({ method: "net_get" }),
           }).then(r => r.unwrap())
 
@@ -144,13 +145,13 @@ export namespace BgSimulation {
 
           await TorRpc.fetchWithCircuitOrThrow<void>(url, {
             circuit,
-            signal: Signals.merge(AbortSignal.timeout(10_000), parentSignal),
+            signal: Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal),
             ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
           }).then(r => r.unwrap())
 
           return await TorRpc.fetchWithCircuitOrThrow<T>(url, {
             circuit,
-            signal: Signals.merge(AbortSignal.timeout(10_000), parentSignal),
+            signal: Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal),
             ...new RpcCounter().prepare(init)
           }).then(r => Fetched.rewrap(r))
         }

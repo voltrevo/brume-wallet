@@ -1,3 +1,4 @@
+import { ping } from "@/libs/ping"
 import { MicrodescQuery } from "@/mods/universal/entities/microdescs/data"
 import { Arrays } from "@hazae41/arrays"
 import { Box } from "@hazae41/box"
@@ -110,7 +111,7 @@ export namespace Circuits {
 
             try {
               start = Date.now()
-              using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(1000)))
+              using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(ping.value * 2)))
               console.log(`Created circuit #${index} in ${Date.now() - start}ms`)
 
               /**
@@ -123,7 +124,7 @@ export namespace Circuits {
                 const body = await query.fetch().then(r => Option.unwrap(r.getAny().current).unwrap())
 
                 start = Date.now()
-                await Retry.run(() => circuit.inner.extendOrThrow(body, AbortSignal.timeout(1000)))
+                await Retry.run(() => circuit.inner.extendOrThrow(body, AbortSignal.timeout(ping.value * 3)))
                 console.log(`Extended circuit #${index} in ${Date.now() - start}ms`)
               }, { max: 3 })
 
@@ -137,7 +138,7 @@ export namespace Circuits {
                 const body = await query.fetch().then(r => Option.unwrap(r.getAny().current).unwrap())
 
                 start = Date.now()
-                await Retry.run(() => circuit.inner.extendOrThrow(body, AbortSignal.timeout(1000)))
+                await Retry.run(() => circuit.inner.extendOrThrow(body, AbortSignal.timeout(ping.value * 4)))
                 console.log(`Extended circuit #${index} in ${Date.now() - start}ms`)
               }, { max: 3 })
 
@@ -153,7 +154,7 @@ export namespace Circuits {
                 /**
                  * Speed test
                  */
-                const signal = AbortSignal.timeout(1000)
+                const signal = AbortSignal.timeout(ping.value * 5)
 
                 start = Date.now()
                 await fetch("http://detectportal.firefox.com", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())

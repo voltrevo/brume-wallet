@@ -1,5 +1,6 @@
 import { Chains } from "@/libs/ethereum/mods/chain"
 import { Objects } from "@/libs/objects/objects"
+import { ping } from "@/libs/ping"
 import { Sockets } from "@/libs/sockets/sockets"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { Jwt } from "@/libs/wconn/mods/jwt/jwt"
@@ -151,7 +152,7 @@ export namespace WebSocketConnection {
    * @returns 
    */
   export async function createOrThrow(circuit: Circuit, url: URL, signal?: AbortSignal): Promise<WebSocketConnection> {
-    const signal2 = Signals.merge(AbortSignal.timeout(15_000), signal)
+    const signal2 = Signals.merge(AbortSignal.timeout(ping.value * 5), signal)
 
     if (url.protocol === "wss:") {
       const tcp = await circuit.openOrThrow(url.hostname, 443)

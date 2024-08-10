@@ -1,3 +1,4 @@
+import { ping } from "@/libs/ping"
 import { Circuit, Consensus, TorClientDuplex } from "@hazae41/echalote"
 import { createQuery, Data, Fail, FetcherMore, Storage } from "@hazae41/glacier"
 import { Nullable, Option } from "@hazae41/option"
@@ -24,12 +25,12 @@ export namespace MicrodescQuery {
           const tor = Option.unwrap(maybeTor)
 
           start = Date.now()
-          const subsignal = Signals.merge(AbortSignal.timeout(2000), signal)
+          const subsignal = Signals.merge(AbortSignal.timeout(ping.value * 2), signal)
           using circuit = await tor.createOrThrow(subsignal)
           console.log(`Created consensus circuit in ${Date.now() - start}ms`)
 
           start = Date.now()
-          const subsignal2 = Signals.merge(AbortSignal.timeout(20_000), signal)
+          const subsignal2 = Signals.merge(AbortSignal.timeout(ping.value * 20), signal)
           const consensus = await Consensus.fetchOrThrow(circuit, subsignal2)
           console.log(`Fetched consensus in ${Date.now() - start}ms`)
 
@@ -68,7 +69,7 @@ export namespace MicrodescQuery {
         const circuit = Option.unwrap(maybeCircuit)
 
         start = Date.now()
-        const subsignal = Signals.merge(AbortSignal.timeout(1000), signal)
+        const subsignal = Signals.merge(AbortSignal.timeout(ping.value * 3), signal)
         const microdesc = await Consensus.Microdesc.fetchOrThrow(circuit, head, subsignal)
         console.log(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
 
