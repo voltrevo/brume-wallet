@@ -93,7 +93,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       if (maybePrice == null)
         return undefined
 
-      const priced = Fixed.fromString(rawValuedInput, tokenData.decimals).mul(maybePrice)
+      const priced = Fixed.fromStringOrZeroHex(rawValuedInput, tokenData.decimals).mul(maybePrice)
 
       if (priced.value === 0n)
         return undefined
@@ -112,7 +112,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       if (maybePrice == null)
         return undefined
 
-      const valued = Fixed.fromString(rawPricedInput, tokenData.decimals).div(maybePrice)
+      const valued = Fixed.fromStringOrZeroHex(rawPricedInput, tokenData.decimals).div(maybePrice)
 
       if (valued.value === 0n)
         return undefined
@@ -254,7 +254,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
 
   const maybeFinalValue = useMemo(() => {
     try {
-      return Fixed.fromString(rawValue, tokenData.decimals)
+      return Fixed.fromStringOrZeroHex(rawValue, tokenData.decimals)
     } catch { }
   }, [rawValue, tokenData])
 

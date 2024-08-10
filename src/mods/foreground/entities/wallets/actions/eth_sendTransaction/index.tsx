@@ -108,7 +108,7 @@ export function WalletTransactionDialog(props: {}) {
       if (maybePrice == null)
         return undefined
 
-      const priced = Fixed.fromString(rawValuedInput, tokenData.decimals).mul(maybePrice)
+      const priced = Fixed.fromStringOrZeroHex(rawValuedInput, tokenData.decimals).mul(maybePrice)
 
       if (priced.value === 0n)
         return undefined
@@ -164,7 +164,7 @@ export function WalletTransactionDialog(props: {}) {
 
   const maybeFinalValue = useMemo(() => {
     try {
-      return Fixed.fromString(rawValue, tokenData.decimals)
+      return Fixed.fromStringOrZeroHex(rawValue, tokenData.decimals)
     } catch { }
   }, [rawValue, tokenData])
 
