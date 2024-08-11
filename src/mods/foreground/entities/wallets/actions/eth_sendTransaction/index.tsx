@@ -939,47 +939,55 @@ export function WalletTransactionDialog(props: {}) {
                 <div className="flex flex-col text-left gap-2">
                   <WideShrinkableNakedMenuButton
                     data-value="urgent">
-                    {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
+                    <div className="truncate">
+                      {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
+                    </div>
                   </WideShrinkableNakedMenuButton>
                   <WideShrinkableNakedMenuButton
                     data-value="fast">
-                    {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
+                    <div className="truncate">
+                      {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
+                    </div>
                   </WideShrinkableNakedMenuButton>
                   <WideShrinkableNakedMenuButton
                     data-value="normal">
-                    {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
+                    <div className="truncate">
+                      {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
+                    </div>
                   </WideShrinkableNakedMenuButton>
                   <WideShrinkableNakedMenuButton
                     data-value="custom">
-                    {`Custom`}
+                    <div className="truncate">
+                      {`Custom`}
+                    </div>
                   </WideShrinkableNakedMenuButton>
                 </div>
               </SelectAndClose>
             </Menu>}
         </HashSubpathProvider>
         {gasMode === "urgent" &&
-          <a className="overflow-ellipsis overflow-x-hidden"
+          <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
             {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
           </a>}
         {gasMode === "fast" &&
-          <a className="overflow-ellipsis overflow-x-hidden"
+          <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
             {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
           </a>}
         {gasMode === "normal" &&
-          <a className="overflow-ellipsis overflow-x-hidden"
+          <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
             {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
           </a>}
         {gasMode === "custom" &&
-          <a className="overflow-ellipsis overflow-x-hidden"
+          <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
@@ -994,47 +1002,55 @@ export function WalletTransactionDialog(props: {}) {
                 <div className="flex flex-col text-left gap-2">
                   <WideShrinkableNakedMenuButton
                     data-value="urgent">
-                    {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
+                    <div className="truncate">
+                      {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
+                    </div>
                   </WideShrinkableNakedMenuButton>
                   <WideShrinkableNakedMenuButton
                     data-value="fast">
-                    {`Fast — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
+                    <div className="truncate">
+                      {`Fast — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
+                    </div>
                   </WideShrinkableNakedMenuButton>
                   <WideShrinkableNakedMenuButton
                     data-value="normal">
-                    {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
+                    <div className="truncate">
+                      {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
+                    </div>
                   </WideShrinkableNakedMenuButton>
                   <WideShrinkableNakedMenuButton
                     data-value="custom">
-                    {`Custom`}
+                    <div className="truncate">
+                      {`Custom`}
+                    </div>
                   </WideShrinkableNakedMenuButton>
                 </div>
               </SelectAndClose>
             </Menu>}
         </HashSubpathProvider>
         {gasMode === "urgent" &&
-          <a className="overflow-ellipsis overflow-x-hidden"
+          <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
             {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
           </a>}
         {gasMode === "fast" &&
-          <a className="overflow-ellipsis overflow-x-hidden"
+          <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
             {`Fast — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
           </a>}
         {gasMode === "normal" &&
-          <a className="overflow-ellipsis overflow-x-hidden"
+          <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
             {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
           </a>}
         {gasMode === "custom" &&
-          <a className="overflow-ellipsis overflow-x-hidden"
+          <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
