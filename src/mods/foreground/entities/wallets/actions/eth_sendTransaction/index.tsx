@@ -986,23 +986,61 @@ export function WalletTransactionDialog(props: {}) {
             {`Custom`}
           </a>}
       </>}
-      {maybeIsEip1559 === false &&
-        <select className="w-full bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
-          value={gasMode}
-          onChange={onGasModeChange}>
-          <option value="urgent">
+      {maybeIsEip1559 === false && <>
+        <HashSubpathProvider>
+          {hash.url.pathname === "/gas" &&
+            <Menu>
+              <SelectAndClose ok={setGasMode}>
+                <div className="flex flex-col text-left gap-2">
+                  <WideShrinkableNakedMenuButton
+                    data-value="urgent">
+                    {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
+                  </WideShrinkableNakedMenuButton>
+                  <WideShrinkableNakedMenuButton
+                    data-value="fast">
+                    {`Fast — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
+                  </WideShrinkableNakedMenuButton>
+                  <WideShrinkableNakedMenuButton
+                    data-value="normal">
+                    {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
+                  </WideShrinkableNakedMenuButton>
+                  <WideShrinkableNakedMenuButton
+                    data-value="custom">
+                    {`Custom`}
+                  </WideShrinkableNakedMenuButton>
+                </div>
+              </SelectAndClose>
+            </Menu>}
+        </HashSubpathProvider>
+        {gasMode === "urgent" &&
+          <a className="overflow-ellipsis overflow-x-hidden"
+            onClick={gasGenius.onClick}
+            onKeyDown={gasGenius.onKeyDown}
+            href={gasGenius.href}>
             {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
-          </option>
-          <option value="fast">
+          </a>}
+        {gasMode === "fast" &&
+          <a className="overflow-ellipsis overflow-x-hidden"
+            onClick={gasGenius.onClick}
+            onKeyDown={gasGenius.onKeyDown}
+            href={gasGenius.href}>
             {`Fast — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
-          </option>
-          <option value="normal">
+          </a>}
+        {gasMode === "normal" &&
+          <a className="overflow-ellipsis overflow-x-hidden"
+            onClick={gasGenius.onClick}
+            onKeyDown={gasGenius.onKeyDown}
+            href={gasGenius.href}>
             {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
-          </option>
-          <option value="custom">
-            Custom
-          </option>
-        </select>}
+          </a>}
+        {gasMode === "custom" &&
+          <a className="overflow-ellipsis overflow-x-hidden"
+            onClick={gasGenius.onClick}
+            onKeyDown={gasGenius.onKeyDown}
+            href={gasGenius.href}>
+            {`Custom`}
+          </a>}
+      </>}
     </SimpleLabel>
     {gasMode === "custom" && maybeIsEip1559 === false && <>
       <div className="h-2" />
