@@ -4,7 +4,7 @@ import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { WcBrume, WebSocketConnection } from "@/mods/background/service_worker/entities/brumes/data";
 import { Box } from "@hazae41/box";
 import { Disposer } from "@hazae41/disposer";
-import { RpcInternalError, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
+import { RpcError, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { Mutex } from "@hazae41/mutex";
 import { None } from "@hazae41/option";
 import { Pool, PoolEntry } from "@hazae41/piscine";
@@ -358,7 +358,7 @@ export class IrnClient {
 
       return new Err(new RpcInvalidRequestError())
     } catch (e: unknown) {
-      return new Err(new RpcInternalError())
+      return new Err(RpcError.rewrap(e))
     }
   }
 

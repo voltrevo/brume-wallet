@@ -262,11 +262,7 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
       await getBackgroundPage()
     }).catch(() => { })
 
-    const rawPort = BrowserError.runOrThrowSync(() => {
-      const port = browser.runtime.connect({ name: "foreground->background" })
-      port.onDisconnect.addListener(() => void chrome.runtime.lastError)
-      return port
-    })
+    const rawPort = BrowserError.connectOrThrow({ name: "foreground->background" })
 
     using prePort = new Box(new Disposer(rawPort, () => rawPort.disconnect()))
     using preRouter = new Box(new ExtensionRpcRouter("background", rawPort))

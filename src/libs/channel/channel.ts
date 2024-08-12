@@ -1,5 +1,5 @@
 import { Future } from "@hazae41/future"
-import { RpcCounter, RpcInternalError, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
+import { RpcCounter, RpcError, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
 import { CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
@@ -82,9 +82,8 @@ export class MessageRpcRouter {
 
       return new Err(new RpcInvalidRequestError())
     } catch (e: unknown) {
-      console.warn(request.id, request.method, e)
-
-      return new Err(new RpcInternalError())
+      console.warn(request.method, e)
+      return new Err(RpcError.rewrap(e))
     }
   }
 
@@ -212,9 +211,7 @@ export class ExtensionRpcRouter {
 
       return new Err(new RpcInvalidRequestError())
     } catch (e: unknown) {
-      console.warn(request.id, request.method, e)
-
-      return new Err(new RpcInternalError())
+      return new Err(RpcError.rewrap(e))
     }
   }
 

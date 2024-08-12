@@ -18,6 +18,16 @@ export class BrowserError extends Error {
     return new BrowserError(undefined, { cause })
   }
 
+  static #connect(connectInfo?: chrome.runtime.ConnectInfo) {
+    const port = browser.runtime.connect(connectInfo)
+    port.onDisconnect.addListener(() => void chrome.runtime.lastError)
+    return port
+  }
+
+  static connectOrThrow(connectInfo?: chrome.runtime.ConnectInfo) {
+    return this.runOrThrowSync(() => this.#connect(connectInfo))
+  }
+
   static async runOrThrow<T>(callback: () => Promise<T>) {
     try {
       const result = await callback()

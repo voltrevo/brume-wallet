@@ -16,11 +16,7 @@ interface Web3 {
   readonly __isMetaMaskShim__: true
 }
 
-interface EIP1193Provider {
-  /**
-   * No definition? :(
-   */
-}
+interface EIP1193Provider { }
 
 interface EIP6963ProviderInfo {
   readonly uuid: string;
@@ -280,6 +276,8 @@ class Provider {
 
     const onResponse = (e: CustomEvent<string>) => {
       const resinit = JSON.parse(e.detail) as RpcResponseInit<T>
+
+      console.log("response", resinit)
 
       if (resinit.id !== request.id)
         return
