@@ -76,20 +76,17 @@ export function RawSeedCard(props: { name: string } & { emoji: string } & { colo
       </div>
     </div>
 
-  return <div className="w-full h-full"
-    style={{ perspective: "1000px" }}>
+  return <div className="w-full h-full [perspective:1000px]">
     <div className={`relative z-10 w-full h-full text-white bg-${color}-400 dark:bg-${color}-500 rounded-xl ${preflip && !postflip ? "animate-flip-in" : ""} ${!preflip && postflip ? "animate-flip-out" : ""}`}
       style={{ transform: preflip && postflip ? `rotateY(180deg)` : "", transformStyle: "preserve-3d" }}
       onAnimationEnd={onFlipTransitionEnd}>
-      <div className="po-md absolute w-full h-full flex flex-col"
-        style={{ backfaceVisibility: "hidden" }}
+      <div className="po-md absolute w-full h-full flex flex-col [backface-visibility:hidden]"
         onContextMenu={genius.onContextMenu}>
         {First}
         <div className="grow" />
         {Name}
       </div>
-      <div className="po-md absolute w-full h-full flex flex-col"
-        style={{ backfaceVisibility: "hidden", transform: `rotateY(180deg)` }}
+      <div className="po-md absolute w-full h-full flex flex-col [backface-visibility:hidden] [transform:rotateY(180deg)]"
         onContextMenu={genius.onContextMenu}>
         <div className="flex items-center">
           <div className="w-2 grow" />
