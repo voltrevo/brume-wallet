@@ -1,3 +1,4 @@
+import { browser, BrowserError } from "@/libs/browser/browser";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
@@ -24,8 +25,6 @@ import { WalletDataContext } from "@/mods/foreground/entities/wallets/context";
 import { EthereumWalletInstance, useEthereumContext2, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
 import { UserRejectedError } from "@/mods/foreground/errors/errors";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
-import { Overlay } from "@/mods/foreground/overlay/overlay";
-import { Router } from "@/mods/foreground/router/router";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
@@ -38,46 +37,57 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 export default function Popup() {
   const background = useBackgroundContext().unwrap()
 
+  const [hash, setHash] = useState<string>()
+
   useEffect(() => {
     background.requestOrThrow<void>({
       method: "popup_hello"
-    }).then(r => r.unwrap())
-  }, [background])
+    }).then(r => r.unwrap()).catch(() => { })
 
-  const [loading, setLoading] = useState(false)
-
-  useMemo(() => {
-    if (location.hash !== "")
+    if (location.hash !== "") {
+      setHash(location.hash)
       return
+    }
 
     background.requestOrThrow<string>({
       method: "brume_getPath"
-    }).then(r => {
-      location.hash = r.unwrap()
-      setLoading(false)
-    })
+    }).then(r => setHash(r.unwrap())).catch(() => { })
+  }, [])
 
-    setLoading(true)
-  }, [background])
+  const url = useMemo(() => {
+    if (hash == null)
+      return
+    const url = new URL(BrowserError.runOrThrowSync(() => browser.runtime.getURL("/index.html")))
+    url.hash = hash
+    return url
+  }, [hash])
+
+  const [iframe, setIframe] = useState<Nullable<HTMLIFrameElement>>()
 
   useEffect(() => {
+    if (iframe == null)
+      return
+    if (iframe.contentWindow == null)
+      return
+    const subwindow = iframe.contentWindow
+
     const onHashChange = () => void background.requestOrThrow<void>({
       method: "brume_setPath",
-      params: [location.hash]
+      params: [subwindow.location.hash]
     }).then(r => r.unwrap())
 
-    addEventListener("hashchange", onHashChange, { passive: true })
-    return () => removeEventListener("hashchange", onHashChange)
-  }, [background])
+    subwindow.addEventListener("hashchange", onHashChange, { passive: true })
+    return () => subwindow.removeEventListener("hashchange", onHashChange)
+  }, [iframe])
 
-  if (loading)
+  if (url == null)
     return null
 
   return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden">
     <NavBar />
-    <Overlay>
-      <Router />
-    </Overlay>
+    <iframe className="grow w-full"
+      ref={setIframe}
+      src={url.href} />
   </main>
 }
 

@@ -1,6 +1,7 @@
 import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionRpcRouter, MessageRpcRouter, RpcRouter } from "@/libs/channel/channel"
-import { isProdWebsite } from "@/libs/platform/platform"
+import { isProdWebsite, isSafariExtension } from "@/libs/platform/platform"
+import { urlOf } from "@/libs/url/url"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Immutable } from "@hazae41/immutable"
@@ -256,53 +257,56 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
   return new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
     const { index, pool } = params
 
-    const { getBackgroundPage } = browser.runtime as any
+    using stack = new Box(new DisposableStack())
 
-    await BrowserError.runOrThrow(async () => {
-      await getBackgroundPage()
-    }).catch(() => { })
+    await new Promise(ok => setTimeout(ok, 1))
 
-    const rawPort = BrowserError.connectOrThrow({ name: "foreground->background" })
+    let router: ExtensionRpcRouter
 
-    using prePort = new Box(new Disposer(rawPort, () => rawPort.disconnect()))
-    using preRouter = new Box(new ExtensionRpcRouter("background", rawPort))
+    try {
+      const port = BrowserError.connectOrThrow({ name: "foreground->background" })
+      using dport = new Box(new Disposer(port, () => port.disconnect()))
 
-    await preRouter.getOrThrow().waitHelloOrThrow(AbortSignal.timeout(1000))
+      router = new ExtensionRpcRouter("background", port)
+      await router.waitHelloOrThrow(AbortSignal.timeout(1000))
 
-    const port = prePort.unwrapOrThrow()
-    const router = preRouter.unwrapOrThrow()
+      dport.moveOrThrow()
+    } catch (e: unknown) {
+      if (!isSafariExtension())
+        throw e
 
-    const onInnerClean = () => {
-      using _0 = port
-      using _1 = router
+      if (sessionStorage.getItem("#brume.opened"))
+        throw e
+
+      sessionStorage.setItem("#brume.opened", "true")
+
+      const opener = BrowserError.runOrThrowSync(() => browser.runtime.getURL("/opener.html"))
+      const opened = urlOf(opener, { url: location.href })
+
+      location.replace(opened)
+
+      throw e
     }
 
-    using preWrapper = new Box(new Disposer(router, onInnerClean))
+    const entry = new Box(new Disposer(router, () => router.port.disconnect()))
+    stack.getOrThrow().use(entry)
 
-    const onClose = async () => {
+    const onCloseOrError = async () => {
       pool.restart(index)
       return new None()
     }
 
+    stack.getOrThrow().defer(router.events.on("close", onCloseOrError, { passive: true }))
+    stack.getOrThrow().defer(router.events.on("error", onCloseOrError, { passive: true }))
+
     const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
     const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
 
-    using preOnRequestDisposer = new Box(new Disposer({}, router.events.on("request", onRequest, { passive: true })))
-    using preOnResponseDisposer = new Box(new Disposer({}, router.events.on("response", onResponse, { passive: true })))
-    using preOnCloseDisposer = new Box(new Disposer({}, router.events.on("close", onClose, { passive: true })))
+    stack.getOrThrow().defer(router.events.on("request", onRequest, { passive: true }))
+    stack.getOrThrow().defer(router.events.on("response", onResponse, { passive: true }))
 
-    const wrapper = preWrapper.moveOrThrow()
-    const onRequestDisposer = preOnRequestDisposer.moveOrThrow()
-    const onResponseDisposer = preOnResponseDisposer.moveOrThrow()
-    const onCloseDisposer = preOnCloseDisposer.moveOrThrow()
+    const unstack = stack.unwrapOrThrow()
 
-    const onEntryClean = () => {
-      using _0 = wrapper
-      using _1 = onRequestDisposer
-      using _2 = onResponseDisposer
-      using _3 = onCloseDisposer
-    }
-
-    return new Disposer(wrapper, onEntryClean)
+    return new Disposer(entry, () => unstack.dispose())
   }, { capacity: 1 })
 }

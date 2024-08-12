@@ -91,9 +91,6 @@ async function fetchOriginDataOrDefault() {
 }
 
 async function main() {
-  if (location.origin === new URL(browser.runtime.getURL("/")).origin)
-    return
-
   const mouse: Mouse = {
     x: window.screen.width / 2,
     y: window.screen.height / 2
