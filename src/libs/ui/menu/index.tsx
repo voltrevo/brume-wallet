@@ -142,14 +142,14 @@ export function Menu(props: ChildrenProps & DarkProps) {
   return <Portal>
     <CloseContext.Provider value={hide}>
       <dialog className=""
-        style={{ "--x": `${maybeX}px`, "--y": `${maybeY}px`, "--w": `${maybeW}px`, "--h": `${maybeH}px` } as any}
+        style={{ "--x": `${maybeX}px`, "--y": `${maybeY}px`, "--w": `${maybeW}px`, "--h": `${maybeH}px`, "--l": `${maybeL}px`, "--t": `${maybeT}px` } as any}
         onKeyDown={onEscape}
         onClose={onClose}
         ref={setDialog}>
         <div className={`fixed inset-0 ${dark ? "dark" : ""}`}
           onMouseDown={onClickOutside}
           onClick={Events.keep}>
-          <div className={`absolute flex flex-col min-w-32 max-w-xl text-default bg-default border border-contrast rounded-2xl p-1 ${premount ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
+          <div className={`absolute flex flex-col min-w-[min(calc(100vw-var(--l)),8rem)] max-w-[min(calc(100vw-var(--l)),32rem)] text-default bg-default border border-contrast rounded-2xl p-1 ${premount ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
             style={{ translate: `${maybeL}px ${maybeT}px` }}
             ref={setMenu}
             aria-modal
