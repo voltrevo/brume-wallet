@@ -324,7 +324,7 @@ class Global {
       const url = urlOf(`/${method}?id=${id}`, params)
 
       if (isSafariExtension() && isIpad()) {
-        this.#path = pathOf(url)
+        this.#path = `#${pathOf(url)}`
 
         await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
         const response = await this.waitResponseOrThrow<T>(request.id, done)
