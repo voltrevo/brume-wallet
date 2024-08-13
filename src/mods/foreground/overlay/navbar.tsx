@@ -14,16 +14,19 @@ export function NavBar() {
   }), [path])
 
   return <div className="w-full po-md border-b border-b-contrast flex items-center">
-    <div className="bg-contrast rounded-xl po-sm grow flex items-center min-w-0">
+    <div className="bg-contrast rounded-xl po-sm grow flex items-center gap-2 min-w-0">
       <div className="grow whitespace-nowrap overflow-hidden text-ellipsis text-sm">
         <span className="text-contrast">
-          {`brume://`}
+          {`brume:`}
         </span>
         <span>
-          {pathOf(path.url).slice(1)}
+          {pathOf(path.url)}
         </span>
       </div>
-      <div className="w-2" />
+      <RoundedShrinkableNakedButton
+        onClick={() => location.reload()}>
+        <Outline.ArrowPathIcon className="size-4 text-contrast" />
+      </RoundedShrinkableNakedButton>
       <RoundedShrinkableNakedButton
         onClick={openOrAlert.run}>
         <Outline.ArrowTopRightOnSquareIcon className="size-4 text-contrast" />
