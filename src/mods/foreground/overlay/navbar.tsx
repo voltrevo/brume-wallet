@@ -7,11 +7,11 @@ import { usePathContext } from "@hazae41/chemin"
 import { RoundedShrinkableNakedButton } from "../entities/wallets/actions/send"
 
 export function NavBar() {
-  const { url } = usePathContext().unwrap()
+  const path = usePathContext().unwrap()
 
   const openOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    await BrowserError.runOrThrow(() => browser.tabs.create({ url: `index.html?_=${encodeURIComponent(pathOf(url))}` }))
-  }), [url])
+    await BrowserError.runOrThrow(() => browser.tabs.create({ url: `index.html#/?_=${encodeURIComponent(pathOf(path.url))}` }))
+  }), [path])
 
   return <div className="w-full po-md border-b border-b-contrast flex items-center">
     <div className="bg-contrast rounded-xl po-sm grow flex items-center min-w-0">
@@ -20,7 +20,7 @@ export function NavBar() {
           {`brume://`}
         </span>
         <span>
-          {url.pathname.slice(1)}
+          {pathOf(path.url).slice(1)}
         </span>
       </div>
       <div className="w-2" />

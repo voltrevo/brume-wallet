@@ -22,7 +22,7 @@ import { Base58 } from "@hazae41/base58";
 import { Base64 } from "@hazae41/base64";
 import { Base64Url } from "@hazae41/base64url";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
-import { HashPathProvider } from "@hazae41/chemin";
+import { HashPathProvider, usePathContext } from "@hazae41/chemin";
 import { Ed25519 } from "@hazae41/ed25519";
 import { Keccak256 } from "@hazae41/keccak256";
 import { Ripemd160 } from "@hazae41/ripemd160";
@@ -134,37 +134,38 @@ export function ClientOnly(props: ChildrenProps) {
   return <>{children}</>
 }
 
-export default function App({ Component, pageProps }: AppProps) {
+export function Goto(props: ChildrenProps) {
+  const path = usePathContext().unwrap()
+  const { children } = props
+
   const goto = useMemo(() => {
-    if ("location" in globalThis === false)
+    const goto = path.url.searchParams.get("_")
+
+    if (goto == null)
       return
 
-    const url = new URL(location.href)
-    const goto = url.searchParams.get("_")
+    location.replace(path.go(decodeURIComponent(goto)))
 
-    if (!goto)
-      return
-
-    url.hash = decodeURIComponent(goto)
-    url.search = ""
-
-    location.replace(url)
     return goto
-  }, [])
+  }, [path])
 
   if (goto != null)
     return null
 
-  return <>
+  return <>{children}</>
+}
+
+export default function App({ Component, pageProps }: AppProps) {
+  return <ClientOnly>
     <Head>
       <title>Brume Wallet</title>
       <meta key="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
     </Head>
     <Catcher fallback={Fallback}>
       <PromiseCatcher>
-        <Initializer />
-        <ClientOnly>
-          <HashPathProvider>
+        <HashPathProvider>
+          <Goto>
+            <Initializer />
             <BackgroundProvider>
               <GlobalStorageProvider>
                 <UserStorageProvider>
@@ -172,9 +173,9 @@ export default function App({ Component, pageProps }: AppProps) {
                 </UserStorageProvider>
               </GlobalStorageProvider>
             </BackgroundProvider>
-          </HashPathProvider>
-        </ClientOnly>
+          </Goto>
+        </HashPathProvider>
       </PromiseCatcher>
     </Catcher>
-  </>
+  </ClientOnly>
 }

@@ -34,25 +34,70 @@ import { Nullable, Option } from "@hazae41/option";
 import { Err, Result } from "@hazae41/result";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+function isEmpty(hash: string) {
+  if (hash === "")
+    return true
+  if (hash === "#/")
+    return true
+  return false
+}
+
 export default function Popup() {
   const background = useBackgroundContext().unwrap()
+
+  const helloOrThrow = useCallback(async () => {
+    await background.requestOrThrow<void>({
+      method: "popup_hello"
+    }).then(r => r.unwrap())
+  }, [background])
+
+  useEffect(() => {
+    helloOrThrow().catch(console.error)
+  }, [helloOrThrow])
+
+  const getHashOrThrow = useCallback(async () => {
+    return await background.requestOrThrow<string>({
+      method: "brume_getPath"
+    }).then(r => r.unwrap())
+  }, [background])
+
+  const setHashOrThrow = useCallback(async (hash: string) => {
+    await background.requestOrThrow<void>({
+      method: "brume_setPath",
+      params: [hash]
+    }).then(r => r.unwrap())
+  }, [background])
 
   const [hash, setHash] = useState<string>()
 
   useEffect(() => {
-    background.requestOrThrow<void>({
-      method: "popup_hello"
-    }).then(r => r.unwrap()).catch(() => { })
+    const onHashChange = () => setHash(location.hash)
 
-    if (location.hash !== "") {
+    addEventListener("hashchange", onHashChange, { passive: true })
+    return () => removeEventListener("hashchange", onHashChange)
+  }, [])
+
+  const initHashOrThrow = useCallback(async () => {
+    if (!isEmpty(location.hash)) {
       setHash(location.hash)
       return
     }
 
-    background.requestOrThrow<string>({
-      method: "brume_getPath"
-    }).then(r => setHash(r.unwrap())).catch(() => { })
+    const hash = await getHashOrThrow()
+
+    location.hash = hash
+    setHash(location.hash)
+  }, [getHashOrThrow])
+
+  useEffect(() => {
+    initHashOrThrow().catch(console.error)
   }, [])
+
+  useEffect(() => {
+    if (hash == null)
+      return
+    setHashOrThrow(hash).catch(console.error)
+  }, [hash])
 
   const url = useMemo(() => {
     if (hash == null)
@@ -71,13 +116,10 @@ export default function Popup() {
       return
     const subwindow = iframe.contentWindow
 
-    const onHashChange = () => void background.requestOrThrow<void>({
-      method: "brume_setPath",
-      params: [subwindow.location.hash]
-    }).then(r => r.unwrap())
+    const onSubwindowHashChange = () => location.hash = subwindow.location.hash
 
-    subwindow.addEventListener("hashchange", onHashChange, { passive: true })
-    return () => subwindow.removeEventListener("hashchange", onHashChange)
+    subwindow.addEventListener("hashchange", onSubwindowHashChange, { passive: true })
+    return () => subwindow.removeEventListener("hashchange", onSubwindowHashChange)
   }, [iframe])
 
   if (url == null)

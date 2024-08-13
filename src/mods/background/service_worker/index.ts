@@ -239,13 +239,15 @@ class Global {
     }
   }
 
-  async openOrFocusPopupOrThrow(pathname: string, mouse: Mouse, force?: boolean): Promise<PopupData> {
+  async openOrFocusPopupOrThrow(pathOrUrl: string | URL, mouse: Mouse, force?: boolean): Promise<PopupData> {
     return await this.popup.lock(async (slot) => {
       if (slot.current != null) {
         const tabId = Option.unwrap(slot.current.tab.id)
         const windowId = Option.unwrap(slot.current.tab.windowId)
 
-        const url = force ? `popup.html#${pathname}` : undefined
+        const url = force
+          ? `popup.html#/?_=${encodeURIComponent(pathOf(pathOrUrl))}`
+          : undefined
 
         await Result.runAndWrap(() => {
           return BrowserError.runOrThrow(() => browser.tabs.update(tabId, { url, highlighted: true }))
@@ -265,8 +267,8 @@ class Global {
       const left = Math.max(mouse.x - (width / 2), 0)
 
       const tab = "create" in browser.windows
-        ? await BrowserError.runOrThrow(() => browser.windows.create({ type: "popup", url: `popup.html?_=${encodeURIComponent(pathname)}`, state: "normal", height, width, top, left }).then(w => w.tabs?.[0]))
-        : await BrowserError.runOrThrow(() => browser.tabs.create({ url: `popup.html?_=${encodeURIComponent(pathname)}`, active: true }))
+        ? await BrowserError.runOrThrow(() => browser.windows.create({ type: "popup", url: `popup.html#/?_=${encodeURIComponent(pathOf(pathOrUrl))}`, state: "normal", height, width, top, left }).then(w => w.tabs?.[0]))
+        : await BrowserError.runOrThrow(() => browser.tabs.create({ url: `popup.html#/?_=${encodeURIComponent(pathOf(pathOrUrl))}`, active: true }))
 
       if (tab == null)
         throw new Error("Failed to create tab")
@@ -322,7 +324,7 @@ class Global {
       const url = urlOf(`/${method}?id=${id}`, params)
 
       if (isSafariExtension() && isIpad()) {
-        this.#path = `#${pathOf(url)}`
+        this.#path = pathOf(url)
 
         await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
         const response = await this.waitResponseOrThrow<T>(request.id, done)
@@ -330,7 +332,7 @@ class Global {
         return response
       }
 
-      const popup = await this.openOrFocusPopupOrThrow(url.href, mouse)
+      const popup = await this.openOrFocusPopupOrThrow(url, mouse)
       const response = await this.waitPopupResponseOrThrow<T>(request.id, popup, done)
 
       return response
@@ -348,7 +350,7 @@ class Global {
       await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
       return await this.resolveOnUser.promise
     } else {
-      const popup = await this.openOrFocusPopupOrThrow("", mouse)
+      const popup = await this.openOrFocusPopupOrThrow("/", mouse)
       return await this.waitUserOrPopupRemovalOrThrow(popup)
     }
   }
@@ -1734,7 +1736,7 @@ if (isExtension()) {
       const x = window.left + window.width - 220
       const y = window.top + 360
 
-      await inited.get().openOrFocusPopupOrThrow("", { x, y })
+      await inited.get().openOrFocusPopupOrThrow("/", { x, y })
     })
   }
 
@@ -1759,7 +1761,7 @@ if (isExtension()) {
       const x = window.left + window.width - 220
       const y = window.top + 360
 
-      await inited.get().openOrFocusPopupOrThrow("", { x, y })
+      await inited.get().openOrFocusPopupOrThrow("/", { x, y })
     })
   }
 
@@ -1788,7 +1790,7 @@ if (isExtension()) {
       const x = window.left + 220
       const y = window.top + 360
 
-      await inited.get().openOrFocusPopupOrThrow("", { x, y })
+      await inited.get().openOrFocusPopupOrThrow("/", { x, y })
     })
   }
 }
