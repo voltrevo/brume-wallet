@@ -91,13 +91,13 @@ export default function Popup() {
 
   useEffect(() => {
     initHashOrThrow().catch(console.error)
-  }, [])
+  }, [initHashOrThrow])
 
   useEffect(() => {
     if (hash == null)
       return
     setHashOrThrow(hash).catch(console.error)
-  }, [hash])
+  }, [setHashOrThrow, hash])
 
   const url = useMemo(() => {
     if (hash == null)

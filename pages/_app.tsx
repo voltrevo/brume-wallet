@@ -139,15 +139,14 @@ export function Goto(props: ChildrenProps) {
   const { children } = props
 
   const goto = useMemo(() => {
-    const goto = path.url.searchParams.get("_")
+    return path.url.searchParams.get("_")
+  }, [path])
 
+  useEffect(() => {
     if (goto == null)
       return
-
     location.replace(path.go(decodeURIComponent(goto)))
-
-    return goto
-  }, [path])
+  }, [path, goto])
 
   if (goto != null)
     return null
