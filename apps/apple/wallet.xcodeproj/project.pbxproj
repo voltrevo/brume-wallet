@@ -7,36 +7,42 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C7BBFF482B867D9A00E5F86C /* action.html in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF392B867D9A00E5F86C /* action.html */; };
-		C7BBFF492B867D9A00E5F86C /* action.html in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF392B867D9A00E5F86C /* action.html */; };
-		C7BBFF4A2B867D9A00E5F86C /* service_worker.js in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF3A2B867D9A00E5F86C /* service_worker.js */; };
-		C7BBFF4B2B867D9A00E5F86C /* service_worker.js in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF3A2B867D9A00E5F86C /* service_worker.js */; };
-		C7BBFF4C2B867D9A00E5F86C /* round.png in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF3B2B867D9A00E5F86C /* round.png */; };
-		C7BBFF4D2B867D9A00E5F86C /* round.png in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF3B2B867D9A00E5F86C /* round.png */; };
-		C7BBFF4E2B867D9A00E5F86C /* favicon.ico in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF3C2B867D9A00E5F86C /* favicon.ico */; };
-		C7BBFF4F2B867D9A00E5F86C /* favicon.ico in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF3C2B867D9A00E5F86C /* favicon.ico */; };
-		C7BBFF502B867D9A00E5F86C /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF3D2B867D9A00E5F86C /* manifest.json */; };
-		C7BBFF512B867D9A00E5F86C /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF3D2B867D9A00E5F86C /* manifest.json */; };
-		C7BBFF522B867D9A00E5F86C /* themer.js in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF3E2B867D9A00E5F86C /* themer.js */; };
-		C7BBFF532B867D9A00E5F86C /* themer.js in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF3E2B867D9A00E5F86C /* themer.js */; };
-		C7BBFF542B867D9A00E5F86C /* content_script.js in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF3F2B867D9A00E5F86C /* content_script.js */; };
-		C7BBFF552B867D9A00E5F86C /* content_script.js in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF3F2B867D9A00E5F86C /* content_script.js */; };
-		C7BBFF562B867D9A00E5F86C /* next in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF402B867D9A00E5F86C /* next */; };
-		C7BBFF572B867D9A00E5F86C /* next in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF402B867D9A00E5F86C /* next */; };
-		C7BBFF582B867D9A00E5F86C /* injected_script.js in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF412B867D9A00E5F86C /* injected_script.js */; };
-		C7BBFF592B867D9A00E5F86C /* injected_script.js in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF412B867D9A00E5F86C /* injected_script.js */; };
-		C7BBFF5A2B867D9A00E5F86C /* assets in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF422B867D9A00E5F86C /* assets */; };
-		C7BBFF5B2B867D9A00E5F86C /* assets in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF422B867D9A00E5F86C /* assets */; };
-		C7BBFF5C2B867D9A00E5F86C /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF432B867D9A00E5F86C /* popup.html */; };
-		C7BBFF5D2B867D9A00E5F86C /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF432B867D9A00E5F86C /* popup.html */; };
-		C7BBFF5E2B867D9A00E5F86C /* square.png in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF442B867D9A00E5F86C /* square.png */; };
-		C7BBFF5F2B867D9A00E5F86C /* square.png in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF442B867D9A00E5F86C /* square.png */; };
-		C7BBFF602B867D9A00E5F86C /* favicon.png in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF452B867D9A00E5F86C /* favicon.png */; };
-		C7BBFF612B867D9A00E5F86C /* favicon.png in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF452B867D9A00E5F86C /* favicon.png */; };
-		C7BBFF622B867D9A00E5F86C /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF462B867D9A00E5F86C /* index.html */; };
-		C7BBFF632B867D9A00E5F86C /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF462B867D9A00E5F86C /* index.html */; };
-		C7BBFF642B867D9A00E5F86C /* opener.html in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF472B867D9A00E5F86C /* opener.html */; };
-		C7BBFF652B867D9A00E5F86C /* opener.html in Resources */ = {isa = PBXBuildFile; fileRef = C7BBFF472B867D9A00E5F86C /* opener.html */; };
+		9A4E097D2C6B320400DDEA09 /* favicon.ico in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096B2C6B320300DDEA09 /* favicon.ico */; };
+		9A4E097E2C6B320400DDEA09 /* favicon.ico in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096B2C6B320300DDEA09 /* favicon.ico */; };
+		9A4E097F2C6B320400DDEA09 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096C2C6B320300DDEA09 /* manifest.json */; };
+		9A4E09802C6B320400DDEA09 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096C2C6B320300DDEA09 /* manifest.json */; };
+		9A4E09812C6B320400DDEA09 /* square.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096D2C6B320300DDEA09 /* square.png */; };
+		9A4E09822C6B320400DDEA09 /* square.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096D2C6B320300DDEA09 /* square.png */; };
+		9A4E09832C6B320400DDEA09 /* favicon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096E2C6B320300DDEA09 /* favicon.png */; };
+		9A4E09842C6B320400DDEA09 /* favicon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096E2C6B320300DDEA09 /* favicon.png */; };
+		9A4E09852C6B320400DDEA09 /* appicon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096F2C6B320300DDEA09 /* appicon.png */; };
+		9A4E09862C6B320400DDEA09 /* appicon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096F2C6B320300DDEA09 /* appicon.png */; };
+		9A4E09872C6B320400DDEA09 /* tab.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09702C6B320300DDEA09 /* tab.html */; };
+		9A4E09882C6B320400DDEA09 /* tab.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09702C6B320300DDEA09 /* tab.html */; };
+		9A4E09892C6B320400DDEA09 /* offscreen.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09712C6B320300DDEA09 /* offscreen.js */; };
+		9A4E098A2C6B320400DDEA09 /* offscreen.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09712C6B320300DDEA09 /* offscreen.js */; };
+		9A4E098B2C6B320400DDEA09 /* _next in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09722C6B320300DDEA09 /* _next */; };
+		9A4E098C2C6B320400DDEA09 /* _next in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09722C6B320300DDEA09 /* _next */; };
+		9A4E098D2C6B320400DDEA09 /* service_worker.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09732C6B320300DDEA09 /* service_worker.js */; };
+		9A4E098E2C6B320400DDEA09 /* service_worker.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09732C6B320300DDEA09 /* service_worker.js */; };
+		9A4E098F2C6B320400DDEA09 /* round.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09742C6B320300DDEA09 /* round.png */; };
+		9A4E09902C6B320400DDEA09 /* round.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09742C6B320300DDEA09 /* round.png */; };
+		9A4E09912C6B320400DDEA09 /* content_script.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09752C6B320300DDEA09 /* content_script.js */; };
+		9A4E09922C6B320400DDEA09 /* content_script.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09752C6B320300DDEA09 /* content_script.js */; };
+		9A4E09932C6B320400DDEA09 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09762C6B320300DDEA09 /* assets */; };
+		9A4E09942C6B320400DDEA09 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09762C6B320300DDEA09 /* assets */; };
+		9A4E09952C6B320400DDEA09 /* action.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09772C6B320300DDEA09 /* action.html */; };
+		9A4E09962C6B320400DDEA09 /* action.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09772C6B320300DDEA09 /* action.html */; };
+		9A4E09972C6B320400DDEA09 /* opener.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09782C6B320400DDEA09 /* opener.html */; };
+		9A4E09982C6B320400DDEA09 /* opener.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09782C6B320400DDEA09 /* opener.html */; };
+		9A4E09992C6B320400DDEA09 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09792C6B320400DDEA09 /* index.html */; };
+		9A4E099A2C6B320400DDEA09 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09792C6B320400DDEA09 /* index.html */; };
+		9A4E099B2C6B320400DDEA09 /* injected_script.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E097A2C6B320400DDEA09 /* injected_script.js */; };
+		9A4E099C2C6B320400DDEA09 /* injected_script.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E097A2C6B320400DDEA09 /* injected_script.js */; };
+		9A4E099D2C6B320400DDEA09 /* themer.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E097B2C6B320400DDEA09 /* themer.js */; };
+		9A4E099E2C6B320400DDEA09 /* themer.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E097B2C6B320400DDEA09 /* themer.js */; };
+		9A4E099F2C6B320400DDEA09 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E097C2C6B320400DDEA09 /* popup.html */; };
+		9A4E09A02C6B320400DDEA09 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E097C2C6B320400DDEA09 /* popup.html */; };
 		C7C5EB3A2B7421CE005E8F8A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C5EB392B7421CE005E8F8A /* AppDelegate.swift */; };
 		C7C5EB3C2B7421CE005E8F8A /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C5EB3B2B7421CE005E8F8A /* SceneDelegate.swift */; };
 		C7C5EB3F2B7421CE005E8F8A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C7C5EB3D2B7421CE005E8F8A /* LaunchScreen.storyboard */; };
@@ -104,21 +110,24 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		C7BBFF392B867D9A00E5F86C /* action.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = action.html; path = ../../../dist/safari/action.html; sourceTree = "<group>"; };
-		C7BBFF3A2B867D9A00E5F86C /* service_worker.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = service_worker.js; path = ../../../dist/safari/service_worker.js; sourceTree = "<group>"; };
-		C7BBFF3B2B867D9A00E5F86C /* round.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = round.png; path = ../../../dist/safari/round.png; sourceTree = "<group>"; };
-		C7BBFF3C2B867D9A00E5F86C /* favicon.ico */ = {isa = PBXFileReference; lastKnownFileType = image.ico; name = favicon.ico; path = ../../../dist/safari/favicon.ico; sourceTree = "<group>"; };
-		C7BBFF3D2B867D9A00E5F86C /* manifest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = manifest.json; path = ../../../dist/safari/manifest.json; sourceTree = "<group>"; };
-		C7BBFF3E2B867D9A00E5F86C /* themer.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = themer.js; path = ../../../dist/safari/themer.js; sourceTree = "<group>"; };
-		C7BBFF3F2B867D9A00E5F86C /* content_script.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = content_script.js; path = ../../../dist/safari/content_script.js; sourceTree = "<group>"; };
-		C7BBFF402B867D9A00E5F86C /* _next */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _next; path = ../../../dist/safari/_next; sourceTree = "<group>"; };
-		C7BBFF412B867D9A00E5F86C /* injected_script.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = injected_script.js; path = ../../../dist/safari/injected_script.js; sourceTree = "<group>"; };
-		C7BBFF422B867D9A00E5F86C /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../../../dist/safari/assets; sourceTree = "<group>"; };
-		C7BBFF432B867D9A00E5F86C /* popup.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = popup.html; path = ../../../dist/safari/popup.html; sourceTree = "<group>"; };
-		C7BBFF442B867D9A00E5F86C /* square.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = square.png; path = ../../../dist/safari/square.png; sourceTree = "<group>"; };
-		C7BBFF452B867D9A00E5F86C /* favicon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = favicon.png; path = ../../../dist/safari/favicon.png; sourceTree = "<group>"; };
-		C7BBFF462B867D9A00E5F86C /* index.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = index.html; path = ../../../dist/safari/index.html; sourceTree = "<group>"; };
-		C7BBFF472B867D9A00E5F86C /* opener.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = opener.html; path = ../../../dist/safari/opener.html; sourceTree = "<group>"; };
+		9A4E096B2C6B320300DDEA09 /* favicon.ico */ = {isa = PBXFileReference; lastKnownFileType = image.ico; name = favicon.ico; path = ../../../dist/safari/favicon.ico; sourceTree = "<group>"; };
+		9A4E096C2C6B320300DDEA09 /* manifest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = manifest.json; path = ../../../dist/safari/manifest.json; sourceTree = "<group>"; };
+		9A4E096D2C6B320300DDEA09 /* square.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = square.png; path = ../../../dist/safari/square.png; sourceTree = "<group>"; };
+		9A4E096E2C6B320300DDEA09 /* favicon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = favicon.png; path = ../../../dist/safari/favicon.png; sourceTree = "<group>"; };
+		9A4E096F2C6B320300DDEA09 /* appicon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = appicon.png; path = ../../../dist/safari/appicon.png; sourceTree = "<group>"; };
+		9A4E09702C6B320300DDEA09 /* tab.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = tab.html; path = ../../../dist/safari/tab.html; sourceTree = "<group>"; };
+		9A4E09712C6B320300DDEA09 /* offscreen.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = offscreen.js; path = ../../../dist/safari/offscreen.js; sourceTree = "<group>"; };
+		9A4E09722C6B320300DDEA09 /* _next */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _next; path = ../../../dist/safari/_next; sourceTree = "<group>"; };
+		9A4E09732C6B320300DDEA09 /* service_worker.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = service_worker.js; path = ../../../dist/safari/service_worker.js; sourceTree = "<group>"; };
+		9A4E09742C6B320300DDEA09 /* round.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = round.png; path = ../../../dist/safari/round.png; sourceTree = "<group>"; };
+		9A4E09752C6B320300DDEA09 /* content_script.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = content_script.js; path = ../../../dist/safari/content_script.js; sourceTree = "<group>"; };
+		9A4E09762C6B320300DDEA09 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../../../dist/safari/assets; sourceTree = "<group>"; };
+		9A4E09772C6B320300DDEA09 /* action.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = action.html; path = ../../../dist/safari/action.html; sourceTree = "<group>"; };
+		9A4E09782C6B320400DDEA09 /* opener.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = opener.html; path = ../../../dist/safari/opener.html; sourceTree = "<group>"; };
+		9A4E09792C6B320400DDEA09 /* index.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = index.html; path = ../../../dist/safari/index.html; sourceTree = "<group>"; };
+		9A4E097A2C6B320400DDEA09 /* injected_script.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = injected_script.js; path = ../../../dist/safari/injected_script.js; sourceTree = "<group>"; };
+		9A4E097B2C6B320400DDEA09 /* themer.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = themer.js; path = ../../../dist/safari/themer.js; sourceTree = "<group>"; };
+		9A4E097C2C6B320400DDEA09 /* popup.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = popup.html; path = ../../../dist/safari/popup.html; sourceTree = "<group>"; };
 		C7C5EB2A2B7421CD005E8F8A /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = ../Base.lproj/Main.html; sourceTree = "<group>"; };
 		C7C5EB2B2B7421CD005E8F8A /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
 		C7C5EB2C2B7421CD005E8F8A /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
@@ -179,21 +188,24 @@
 		C7BBFF382B867D7300E5F86C /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				C7BBFF392B867D9A00E5F86C /* action.html */,
-				C7BBFF422B867D9A00E5F86C /* assets */,
-				C7BBFF3F2B867D9A00E5F86C /* content_script.js */,
-				C7BBFF3C2B867D9A00E5F86C /* favicon.ico */,
-				C7BBFF452B867D9A00E5F86C /* favicon.png */,
-				C7BBFF462B867D9A00E5F86C /* index.html */,
-				C7BBFF412B867D9A00E5F86C /* injected_script.js */,
-				C7BBFF3D2B867D9A00E5F86C /* manifest.json */,
-				C7BBFF402B867D9A00E5F86C /* next */,
-				C7BBFF472B867D9A00E5F86C /* opener.html */,
-				C7BBFF432B867D9A00E5F86C /* popup.html */,
-				C7BBFF3B2B867D9A00E5F86C /* round.png */,
-				C7BBFF3A2B867D9A00E5F86C /* service_worker.js */,
-				C7BBFF442B867D9A00E5F86C /* square.png */,
-				C7BBFF3E2B867D9A00E5F86C /* themer.js */,
+				9A4E09722C6B320300DDEA09 /* _next */,
+				9A4E09772C6B320300DDEA09 /* action.html */,
+				9A4E096F2C6B320300DDEA09 /* appicon.png */,
+				9A4E09762C6B320300DDEA09 /* assets */,
+				9A4E09752C6B320300DDEA09 /* content_script.js */,
+				9A4E096B2C6B320300DDEA09 /* favicon.ico */,
+				9A4E096E2C6B320300DDEA09 /* favicon.png */,
+				9A4E09792C6B320400DDEA09 /* index.html */,
+				9A4E097A2C6B320400DDEA09 /* injected_script.js */,
+				9A4E096C2C6B320300DDEA09 /* manifest.json */,
+				9A4E09712C6B320300DDEA09 /* offscreen.js */,
+				9A4E09782C6B320400DDEA09 /* opener.html */,
+				9A4E097C2C6B320400DDEA09 /* popup.html */,
+				9A4E09742C6B320300DDEA09 /* round.png */,
+				9A4E09732C6B320300DDEA09 /* service_worker.js */,
+				9A4E096D2C6B320300DDEA09 /* square.png */,
+				9A4E09702C6B320300DDEA09 /* tab.html */,
+				9A4E097B2C6B320400DDEA09 /* themer.js */,
 			);
 			name = Resources;
 			path = "all-ext";
@@ -445,21 +457,24 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C7BBFF582B867D9A00E5F86C /* injected_script.js in Resources */,
-				C7BBFF642B867D9A00E5F86C /* opener.html in Resources */,
-				C7BBFF4C2B867D9A00E5F86C /* round.png in Resources */,
-				C7BBFF542B867D9A00E5F86C /* content_script.js in Resources */,
-				C7BBFF4A2B867D9A00E5F86C /* service_worker.js in Resources */,
-				C7BBFF562B867D9A00E5F86C /* next in Resources */,
-				C7BBFF5C2B867D9A00E5F86C /* popup.html in Resources */,
-				C7BBFF5A2B867D9A00E5F86C /* assets in Resources */,
-				C7BBFF622B867D9A00E5F86C /* index.html in Resources */,
-				C7BBFF502B867D9A00E5F86C /* manifest.json in Resources */,
-				C7BBFF602B867D9A00E5F86C /* favicon.png in Resources */,
-				C7BBFF4E2B867D9A00E5F86C /* favicon.ico in Resources */,
-				C7BBFF482B867D9A00E5F86C /* action.html in Resources */,
-				C7BBFF5E2B867D9A00E5F86C /* square.png in Resources */,
-				C7BBFF522B867D9A00E5F86C /* themer.js in Resources */,
+				9A4E09992C6B320400DDEA09 /* index.html in Resources */,
+				9A4E09852C6B320400DDEA09 /* appicon.png in Resources */,
+				9A4E09912C6B320400DDEA09 /* content_script.js in Resources */,
+				9A4E09832C6B320400DDEA09 /* favicon.png in Resources */,
+				9A4E09972C6B320400DDEA09 /* opener.html in Resources */,
+				9A4E098F2C6B320400DDEA09 /* round.png in Resources */,
+				9A4E09872C6B320400DDEA09 /* tab.html in Resources */,
+				9A4E099B2C6B320400DDEA09 /* injected_script.js in Resources */,
+				9A4E099D2C6B320400DDEA09 /* themer.js in Resources */,
+				9A4E098B2C6B320400DDEA09 /* _next in Resources */,
+				9A4E097F2C6B320400DDEA09 /* manifest.json in Resources */,
+				9A4E09892C6B320400DDEA09 /* offscreen.js in Resources */,
+				9A4E098D2C6B320400DDEA09 /* service_worker.js in Resources */,
+				9A4E099F2C6B320400DDEA09 /* popup.html in Resources */,
+				9A4E09932C6B320400DDEA09 /* assets in Resources */,
+				9A4E09812C6B320400DDEA09 /* square.png in Resources */,
+				9A4E09952C6B320400DDEA09 /* action.html in Resources */,
+				9A4E097D2C6B320400DDEA09 /* favicon.ico in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -467,21 +482,24 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C7BBFF592B867D9A00E5F86C /* injected_script.js in Resources */,
-				C7BBFF652B867D9A00E5F86C /* opener.html in Resources */,
-				C7BBFF4D2B867D9A00E5F86C /* round.png in Resources */,
-				C7BBFF552B867D9A00E5F86C /* content_script.js in Resources */,
-				C7BBFF4B2B867D9A00E5F86C /* service_worker.js in Resources */,
-				C7BBFF572B867D9A00E5F86C /* next in Resources */,
-				C7BBFF5D2B867D9A00E5F86C /* popup.html in Resources */,
-				C7BBFF5B2B867D9A00E5F86C /* assets in Resources */,
-				C7BBFF632B867D9A00E5F86C /* index.html in Resources */,
-				C7BBFF512B867D9A00E5F86C /* manifest.json in Resources */,
-				C7BBFF612B867D9A00E5F86C /* favicon.png in Resources */,
-				C7BBFF4F2B867D9A00E5F86C /* favicon.ico in Resources */,
-				C7BBFF492B867D9A00E5F86C /* action.html in Resources */,
-				C7BBFF5F2B867D9A00E5F86C /* square.png in Resources */,
-				C7BBFF532B867D9A00E5F86C /* themer.js in Resources */,
+				9A4E099A2C6B320400DDEA09 /* index.html in Resources */,
+				9A4E09862C6B320400DDEA09 /* appicon.png in Resources */,
+				9A4E09922C6B320400DDEA09 /* content_script.js in Resources */,
+				9A4E09842C6B320400DDEA09 /* favicon.png in Resources */,
+				9A4E09982C6B320400DDEA09 /* opener.html in Resources */,
+				9A4E09902C6B320400DDEA09 /* round.png in Resources */,
+				9A4E09882C6B320400DDEA09 /* tab.html in Resources */,
+				9A4E099C2C6B320400DDEA09 /* injected_script.js in Resources */,
+				9A4E099E2C6B320400DDEA09 /* themer.js in Resources */,
+				9A4E098C2C6B320400DDEA09 /* _next in Resources */,
+				9A4E09802C6B320400DDEA09 /* manifest.json in Resources */,
+				9A4E098A2C6B320400DDEA09 /* offscreen.js in Resources */,
+				9A4E098E2C6B320400DDEA09 /* service_worker.js in Resources */,
+				9A4E09A02C6B320400DDEA09 /* popup.html in Resources */,
+				9A4E09942C6B320400DDEA09 /* assets in Resources */,
+				9A4E09822C6B320400DDEA09 /* square.png in Resources */,
+				9A4E09962C6B320400DDEA09 /* action.html in Resources */,
+				9A4E097E2C6B320400DDEA09 /* favicon.ico in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

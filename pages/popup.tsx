@@ -34,7 +34,7 @@ import { Nullable, Option } from "@hazae41/option";
 import { Err, Result } from "@hazae41/result";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-function isEmpty(hash: string) {
+export function isEmptyHash(hash: string) {
   if (hash === "")
     return true
   if (hash === "#/")
@@ -78,7 +78,7 @@ export default function Popup() {
   }, [])
 
   const initHashOrThrow = useCallback(async () => {
-    if (!isEmpty(location.hash)) {
+    if (!isEmptyHash(location.hash)) {
       setHash(location.hash)
       return
     }

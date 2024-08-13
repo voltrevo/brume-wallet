@@ -1,4 +1,5 @@
 import { browser, BrowserError } from "@/libs/browser/browser";
+import { isSafariExtension } from "@/libs/platform/platform";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Nullable } from "@hazae41/option";
@@ -7,11 +8,6 @@ import { isEmptyHash } from "./popup";
 
 export default function Action() {
   const background = useBackgroundContext().unwrap()
-
-  useEffect(() => {
-    document.documentElement.classList.add("h-[600px]", "w-[400px]")
-    document.body.classList.add("h-[600px]", "w-[400px]")
-  }, [])
 
   const getHashOrThrow = useCallback(async () => {
     return await background.requestOrThrow<string>({
@@ -84,7 +80,7 @@ export default function Action() {
     return null
 
   return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden">
-    <NavBar />
+    {isSafariExtension() && <NavBar />}
     <iframe className="grow w-full"
       ref={setIframe}
       src={url.href} />

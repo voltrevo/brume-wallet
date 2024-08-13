@@ -15,7 +15,7 @@ export function SeedCreatorMenu(props: {}) {
   const hardware = useCoords(path, "/create/hardware")
 
   const openHardwareOrAlert = useAsyncUniqueCallback((e: MouseEvent) => Errors.runAndLogAndAlert(async () => {
-    await BrowserError.runOrThrow(() => browser.tabs.create({ url: `index.html#/?_=${encodeURIComponent(path.go("/create/hardware").hash.slice(1))}` }))
+    await BrowserError.runOrThrow(() => browser.tabs.create({ url: `tab.html#/?_=${encodeURIComponent(path.go("/create/hardware").hash.slice(1))}` }))
     close()
   }), [path, close])
 
@@ -27,14 +27,14 @@ export function SeedCreatorMenu(props: {}) {
       <Outline.DocumentTextIcon className="size-4" />
       Mnemonic
     </WideShrinkableNakedMenuAnchor>
-    {(location.pathname !== "/" && location.pathname !== "/index.html") &&
+    {(location.pathname !== "/" && location.pathname !== "/tab.html") &&
       <WideShrinkableNakedMenuButton
         disabled={openHardwareOrAlert.loading}
         onClick={openHardwareOrAlert.run}>
         <Outline.SwatchIcon className="size-4" />
         Hardware
       </WideShrinkableNakedMenuButton>}
-    {(location.pathname === "/" || location.pathname === "/index.html") &&
+    {(location.pathname === "/" || location.pathname === "/tab.html") &&
       <WideShrinkableNakedMenuAnchor
         onClick={hardware.onClick}
         onKeyDown={hardware.onKeyDown}
