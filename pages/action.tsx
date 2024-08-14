@@ -8,8 +8,8 @@ export default function Action() {
   const background = useBackgroundContext().unwrap()
 
   useEffect(() => {
-    document.documentElement.classList.add("h-[700px]", "w-[400px]")
-    document.body.classList.add("h-[700px]", "w-[400px]")
+    document.documentElement.classList.add("h-[600px]", "w-[400px]")
+    document.body.classList.add("h-[600px]", "w-[400px]")
   }, [])
 
   const getHashOrThrow = useCallback(async () => {
