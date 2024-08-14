@@ -62,6 +62,7 @@ export function WalletDataReceiveScreen(props: {}) {
         {`This is an Ethereum address, only send Ethereum-compatible stuff to this address`}
       </div>
     </div>
+    <div className="h-4 grow" />
     {typeof navigator.share === "function" &&
       <div className="flex items-center flex-wrap-reverse gap-2">
         <WideShrinkableOppositeButton

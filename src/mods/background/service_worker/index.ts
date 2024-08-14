@@ -260,7 +260,7 @@ class Global {
         return slot.current
       }
 
-      const height = 630
+      const height = 700
       const width = 400
 
       const top = Math.max(mouse.y - (height / 2), 0)
