@@ -158,7 +158,6 @@ export default function App({ Component, pageProps }: AppProps) {
   return <ClientOnly>
     <Head>
       <title>Brume Wallet</title>
-      <meta key="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
     </Head>
     <Catcher fallback={Fallback}>
       <PromiseCatcher>

@@ -121,5 +121,8 @@ export function Router() {
       <DonePage />
     </Layout>
 
-  return <FullLandingPage />
+  if (isWebsite())
+    return <FullLandingPage />
+
+  return <EmptyLandingPage />
 }

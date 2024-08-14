@@ -3,7 +3,6 @@ import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Nullable } from "@hazae41/option";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { isEmptyHash } from "./popup";
 
 export default function Action() {
   const background = useBackgroundContext().unwrap()
@@ -30,21 +29,21 @@ export default function Action() {
 
   useEffect(() => {
     const onHashChange = () => setHash(location.hash)
-
     addEventListener("hashchange", onHashChange, { passive: true })
     return () => removeEventListener("hashchange", onHashChange)
   }, [])
 
-  const initHashOrThrow = useCallback(async () => {
-    if (!isEmptyHash(location.hash)) {
-      setHash(location.hash)
+  useEffect(() => {
+    if (hash == null)
       return
-    }
-
-    const hash = await getHashOrThrow()
-
     location.hash = hash
-    setHash(location.hash)
+  }, [hash])
+
+  const initHashOrThrow = useCallback(async () => {
+    if (location.hash && location.hash !== "#/")
+      setHash(location.hash)
+    else
+      setHash(await getHashOrThrow())
   }, [getHashOrThrow])
 
   useEffect(() => {
@@ -67,25 +66,28 @@ export default function Action() {
 
   const [iframe, setIframe] = useState<Nullable<HTMLIFrameElement>>()
 
-  useEffect(() => {
+  const subwindow = useMemo(() => {
     if (iframe == null)
       return
     if (iframe.contentWindow == null)
       return
-    const subwindow = iframe.contentWindow
+    return iframe.contentWindow
+  }, [iframe])
 
-    const onSubwindowHashChange = () => location.hash = subwindow.location.hash
-
+  useEffect(() => {
+    if (subwindow == null)
+      return
+    const onSubwindowHashChange = () => setHash(subwindow.location.hash)
     subwindow.addEventListener("hashchange", onSubwindowHashChange, { passive: true })
     return () => subwindow.removeEventListener("hashchange", onSubwindowHashChange)
-  }, [iframe])
+  }, [subwindow])
 
   if (url == null)
     return null
 
   return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden">
     <NavBar />
-    <iframe className="grow w-full"
+    <iframe className="grow w-full animate-opacity-in"
       ref={setIframe}
       src={url.href} />
   </main >

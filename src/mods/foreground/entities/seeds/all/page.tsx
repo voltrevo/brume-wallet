@@ -51,6 +51,7 @@ export function SeedsPage() {
       </div>
     </div>
   </>
+
   return <Page>
     <HashSubpathProvider>
       {subpath.url.pathname === "/create" &&
