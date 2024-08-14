@@ -85,9 +85,9 @@ export default function Action() {
   if (url == null)
     return null
 
-  return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden">
+  return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
     <NavBar />
-    <iframe className="grow w-full animate-opacity-in"
+    <iframe className="grow w-full"
       ref={setIframe}
       src={url.href} />
   </main >
