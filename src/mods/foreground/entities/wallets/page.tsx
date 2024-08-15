@@ -333,8 +333,8 @@ export function WalletMenu(props: {
   const edit = useCoords(path, "/edit")
 
   const flipOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.unwrap())
-    const privateKey = await instance.tryGetPrivateKey(background).then(r => r.unwrap())
+    const instance = await EthereumWalletInstance.createOrThrow(wallet, background)
+    const privateKey = await instance.getPrivateKeyOrThrow(background)
 
     setPrivateKey(privateKey)
     setFlip(true)

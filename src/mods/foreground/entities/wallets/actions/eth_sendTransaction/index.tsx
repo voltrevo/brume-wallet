@@ -769,8 +769,8 @@ export function WalletTransactionDialog(props: {}) {
       }
     }
 
-    const instance = await EthereumWalletInstance.tryFrom(wallet, context.background).then(r => r.unwrap())
-    const signature = await instance.trySignTransaction(tx, context.background).then(r => r.unwrap())
+    const instance = await EthereumWalletInstance.createOrThrow(wallet, context.background)
+    const signature = await instance.signTransactionOrThrow(tx, context.background)
 
     tx.signature = signature
 

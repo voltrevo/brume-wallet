@@ -2,11 +2,11 @@ import { Background } from "@/mods/foreground/background/background"
 import { AuthMnemonicSeedData, LedgerSeedData, SeedData, UnauthMnemonicSeedData } from "@/mods/universal/entities/seeds/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
-import { Bytes } from "@hazae41/bytes"
+import { Bytes, Uint8Array } from "@hazae41/bytes"
 import { Abi, ZeroHexSignature, ZeroHexString } from "@hazae41/cubane"
 import { Ledger } from "@hazae41/ledger"
 import { Option } from "@hazae41/option"
-import { Err, Ok, Panic, Result } from "@hazae41/result"
+import { Panic } from "@hazae41/result"
 import { WebAuthnStorage } from "@hazae41/webauthnstorage"
 import { HDKey } from "@scure/bip32"
 import { entropyToMnemonic, mnemonicToSeed } from "@scure/bip39"
@@ -20,13 +20,13 @@ export type SeedInstance =
 
 export namespace SeedInstance {
 
-  export async function tryFrom(seed: SeedData, background: Background) {
+  export async function createOrThrow(seed: SeedData, background: Background) {
     if (seed.type === "mnemonic")
-      return new Ok(new UnauthMnemonicSeedInstance(seed))
+      return new UnauthMnemonicSeedInstance(seed)
     if (seed.type === "authMnemonic")
-      return new Ok(new AuthMnemonicSeedInstance(seed))
+      return new AuthMnemonicSeedInstance(seed)
     if (seed.type === "ledger")
-      return new Ok(new LedgerSeedInstance(seed))
+      return new LedgerSeedInstance(seed)
     throw new Panic()
   }
 
@@ -38,60 +38,46 @@ export class UnauthMnemonicSeedInstance {
     readonly data: UnauthMnemonicSeedData
   ) { }
 
-  async tryGetMnemonic(background: Background): Promise<Result<string, Error>> {
-    return new Ok(this.data.mnemonic)
+  async getMnemonicOrThrow(background: Background): Promise<string> {
+    return this.data.mnemonic
   }
 
-  async tryGetPrivateKey(path: string, background: Background): Promise<Result<ZeroHexString, Error>> {
-    return await Result.unthrow(async t => {
-      const mnemonic = await this.tryGetMnemonic(background).then(r => r.throw(t))
-      const masterSeed = await mnemonicToSeed(mnemonic)
+  async getPrivateKeyOrThrow(path: string, background: Background): Promise<ZeroHexString> {
+    const mnemonic = await this.getMnemonicOrThrow(background)
+    const masterSeed = await mnemonicToSeed(mnemonic)
 
-      const root = HDKey.fromMasterSeed(masterSeed)
-      const child = root.derive(path)
+    const root = HDKey.fromMasterSeed(masterSeed)
+    const child = root.derive(path)
 
-      const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
+    const privateKeyBytes = Option.unwrap(child.privateKey)
 
-      return new Ok(`0x${Base16.get().tryEncode(privateKeyBytes).throw(t)}` as ZeroHexString)
-    })
+    return `0x${Base16.get().encodeOrThrow(privateKeyBytes)}` as ZeroHexString
   }
 
-  async trySignPersonalMessage(path: string, message: string, background: Background): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
+  async signPersonalMessageOrThrow(path: string, message: string, background: Background): Promise<ZeroHexString> {
+    const privateKey = await this.getPrivateKeyOrThrow(path, background)
 
-      const signature = await Result.runAndDoubleWrap(async () => {
-        return await new ethers.Wallet(privateKey).signMessage(message)
-      }).then(r => r.throw(t))
+    const signature = await new ethers.Wallet(privateKey).signMessage(message)
 
-      return new Ok(signature)
-    })
+    return signature as ZeroHexString
   }
 
-  async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<ZeroHexString, Error>> {
-    return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
+  async signTransactionOrThrow(path: string, transaction: Transaction, background: Background): Promise<ZeroHexString> {
+    const privateKey = await this.getPrivateKeyOrThrow(path, background)
 
-      const signature = Result.runAndDoubleWrapSync(() => {
-        return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized as ZeroHexString
-      }).throw(t)
+    const signature = new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
 
-      return new Ok(signature)
-    })
+    return signature as ZeroHexString
   }
 
-  async trySignEIP712HashedMessage(path: string, data: Abi.Typed.TypedData, background: Background): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
+  async signEIP712HashedMessageOrThrow(path: string, data: Abi.Typed.TypedData, background: Background): Promise<ZeroHexString> {
+    const privateKey = await this.getPrivateKeyOrThrow(path, background)
 
-      delete (data.types as any)["EIP712Domain"]
+    delete (data.types as any)["EIP712Domain"]
 
-      const signature = await Result.runAndDoubleWrap(async () => {
-        return await new ethers.Wallet(privateKey).signTypedData(data.domain as any, data.types as any, data.message)
-      }).then(r => r.throw(t))
+    const signature = await new ethers.Wallet(privateKey).signTypedData(data.domain as any, data.types as any, data.message)
 
-      return new Ok(signature)
-    })
+    return signature as ZeroHexString
   }
 
 }
@@ -102,75 +88,60 @@ export class AuthMnemonicSeedInstance {
     readonly data: AuthMnemonicSeedData
   ) { }
 
-  async tryGetMnemonic(background: Background): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const { idBase64, ivBase64 } = this.data.mnemonic
+  async getMnemonicOrThrow(background: Background): Promise<string> {
+    const { idBase64, ivBase64 } = this.data.mnemonic
 
-      const id = Base64.get().tryDecodePadded(idBase64).throw(t).copyAndDispose()
-      const cipher = await WebAuthnStorage.getOrThrow(id)
-      const cipherBase64 = Base64.get().tryEncodePadded(cipher).throw(t)
+    const id = Base64.get().decodePaddedOrThrow(idBase64).copyAndDispose()
 
-      const entropyBase64 = await background.requestOrThrow<string>({
-        method: "brume_decrypt",
-        params: [ivBase64, cipherBase64]
-      }).then(r => r.throw(t))
+    const cipher = await WebAuthnStorage.getOrThrow(id)
+    const cipherBase64 = Base64.get().encodePaddedOrThrow(cipher)
 
-      const entropy = Base64.get().tryDecodePadded(entropyBase64).throw(t).copyAndDispose()
+    const entropyBase64 = await background.requestOrThrow<string>({
+      method: "brume_decrypt",
+      params: [ivBase64, cipherBase64]
+    }).then(r => r.unwrap())
 
-      return new Ok(entropyToMnemonic(entropy, wordlist))
-    })
+    const entropy = Base64.get().decodePaddedOrThrow(entropyBase64).copyAndDispose()
+
+    return entropyToMnemonic(entropy, wordlist)
   }
 
-  async tryGetPrivateKey(path: string, background: Background): Promise<Result<ZeroHexString, Error>> {
-    return await Result.unthrow(async t => {
-      const mnemonic = await this.tryGetMnemonic(background).then(r => r.throw(t))
-      const masterSeed = await mnemonicToSeed(mnemonic)
+  async getPrivateKeyOrThrow(path: string, background: Background): Promise<ZeroHexString> {
+    const mnemonic = await this.getMnemonicOrThrow(background)
+    const masterSeed = await mnemonicToSeed(mnemonic)
 
-      const root = HDKey.fromMasterSeed(masterSeed)
-      const child = root.derive(path)
+    const root = HDKey.fromMasterSeed(masterSeed)
+    const child = root.derive(path)
 
-      const privateKeyBytes = Option.wrap(child.privateKey).ok().throw(t)
+    const privateKeyBytes = Option.unwrap(child.privateKey)
 
-      return new Ok(`0x${Base16.get().tryEncode(privateKeyBytes).throw(t)}` as ZeroHexString)
-    })
+    return `0x${Base16.get().encodeOrThrow(privateKeyBytes)}` as ZeroHexString
   }
 
-  async trySignPersonalMessage(path: string, message: string, background: Background): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
+  async signPersonalMessageOrThrow(path: string, message: string, background: Background): Promise<ZeroHexString> {
+    const privateKey = await this.getPrivateKeyOrThrow(path, background)
 
-      const signature = await Result.runAndDoubleWrap(async () => {
-        return await new ethers.Wallet(privateKey).signMessage(message)
-      }).then(r => r.throw(t))
+    const signature = await new ethers.Wallet(privateKey).signMessage(message)
 
-      return new Ok(signature)
-    })
+    return signature as ZeroHexString
   }
 
-  async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<ZeroHexString, Error>> {
-    return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
+  async signTransactionOrThrow(path: string, transaction: Transaction, background: Background): Promise<ZeroHexString> {
+    const privateKey = await this.getPrivateKeyOrThrow(path, background)
 
-      const signature = Result.runAndDoubleWrapSync(() => {
-        return new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized as ZeroHexString
-      }).throw(t)
+    const signature = new ethers.Wallet(privateKey).signingKey.sign(transaction.unsignedHash).serialized
 
-      return new Ok(signature)
-    })
+    return signature as ZeroHexString
   }
 
-  async trySignEIP712HashedMessage(path: string, data: Abi.Typed.TypedData, background: Background): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const privateKey = await this.tryGetPrivateKey(path, background).then(r => r.throw(t))
+  async signEIP712HashedMessageOrThrow(path: string, data: Abi.Typed.TypedData, background: Background): Promise<ZeroHexString> {
+    const privateKey = await this.getPrivateKeyOrThrow(path, background)
 
-      delete (data.types as any)["EIP712Domain"]
+    delete (data.types as any)["EIP712Domain"]
 
-      const signature = await Result.runAndDoubleWrap(async () => {
-        return await new ethers.Wallet(privateKey).signTypedData(data.domain as any, data.types as any, data.message)
-      }).then(r => r.throw(t))
+    const signature = await new ethers.Wallet(privateKey).signTypedData(data.domain as any, data.types as any, data.message)
 
-      return new Ok(signature)
-    })
+    return signature as ZeroHexString
   }
 
 }
@@ -181,59 +152,46 @@ export class LedgerSeedInstance {
     readonly data: LedgerSeedData
   ) { }
 
-  async tryGetMnemonic(background: Background): Promise<Result<string, Error>> {
-    return new Err(new Error(`Unimplemented`))
+  async getMnemonicOrThrow(background: Background): Promise<string> {
+    throw new Panic(`Unimplemented`)
   }
 
-  async tryGetPrivateKey(path: string, background: Background): Promise<Result<ZeroHexString, Error>> {
-    return new Err(new Error(`Unimplemented`))
+  async getPrivateKeyOrThrow(path: string, background: Background): Promise<ZeroHexString> {
+    throw new Panic(`Unimplemented`)
   }
 
-  async trySignPersonalMessage(path: string, message: string, background: Background): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const device = await Ledger.USB.getOrRequestDeviceOrThrow()
-      const connector = await Ledger.USB.connectOrThrow(device)
-      const signature = await Ledger.Ethereum.trySignPersonalMessage(connector, path.slice(2), Bytes.fromUtf8(message)).then(r => r.throw(t))
+  async signPersonalMessageOrThrow(path: string, message: string, background: Background): Promise<ZeroHexString> {
+    const device = await Ledger.USB.getOrRequestDeviceOrThrow()
+    const connector = await Ledger.USB.connectOrThrow(device)
+    const signature = await Ledger.Ethereum.signPersonalMessageOrThrow(connector, path.slice(2), Bytes.fromUtf8(message))
 
-      return new Ok(ZeroHexSignature.fromOrThrow(signature).value)
-    })
+    return ZeroHexSignature.fromOrThrow(signature).value
   }
 
-  async trySignTransaction(path: string, transaction: Transaction, background: Background): Promise<Result<ZeroHexString, Error>> {
-    return await Result.unthrow(async t => {
-      const device = await Ledger.USB.getOrRequestDeviceOrThrow()
-      const connector = await Ledger.USB.connectOrThrow(device)
+  async signTransactionOrThrow(path: string, transaction: Transaction, background: Background): Promise<ZeroHexString> {
+    const device = await Ledger.USB.getOrRequestDeviceOrThrow()
+    const connector = await Ledger.USB.connectOrThrow(device)
 
-      using slice = Base16.get().padStartAndDecodeOrThrow(transaction.unsignedSerialized.slice(2))
-      const signature = await Ledger.Ethereum.trySignTransaction(connector, path.slice(2), slice.bytes).then(r => r.throw(t))
+    using slice = Base16.get().padStartAndDecodeOrThrow(transaction.unsignedSerialized.slice(2))
+    const signature = await Ledger.Ethereum.signTransactionOrThrow(connector, path.slice(2), slice.bytes)
 
-      return new Ok(ZeroHexSignature.fromOrThrow(signature).value)
-    })
+    return ZeroHexSignature.fromOrThrow(signature).value
   }
 
-  async trySignEIP712HashedMessage(path: string, data: Abi.Typed.TypedData, background: Background): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const device = await Ledger.USB.getOrRequestDeviceOrThrow()
-      const connector = await Ledger.USB.connectOrThrow(device)
+  async signEIP712HashedMessageOrThrow(path: string, data: Abi.Typed.TypedData, background: Background): Promise<ZeroHexString> {
+    const device = await Ledger.USB.getOrRequestDeviceOrThrow()
+    const connector = await Ledger.USB.connectOrThrow(device)
 
-      delete (data.types as any)["EIP712Domain"]
+    delete (data.types as any)["EIP712Domain"]
 
-      const encoder = Result.runAndDoubleWrapSync(() => {
-        return new ethers.TypedDataEncoder(data.types as any)
-      }).throw(t)
+    const encoder = new ethers.TypedDataEncoder(data.types as any)
 
-      const domain = Result.runAndDoubleWrapSync(() => {
-        return Base16.get().tryPadStartAndDecode(ethers.TypedDataEncoder.hashDomain(data.domain as any).slice(2)).unwrap().copyAndDispose()
-      }).throw(t) as Bytes<32>
+    const domain = Base16.get().padStartAndDecodeOrThrow(ethers.TypedDataEncoder.hashDomain(data.domain as any).slice(2)).copyAndDispose() as Uint8Array<32>
+    const message = Base16.get().padStartAndDecodeOrThrow(encoder.hashStruct(data.primaryType, data.message).slice(2)).copyAndDispose() as Uint8Array<32>
 
-      const message = Result.runAndDoubleWrapSync(() => {
-        return Base16.get().tryPadStartAndDecode(encoder.hashStruct(data.primaryType, data.message).slice(2)).unwrap().copyAndDispose()
-      }).throw(t) as Bytes<32>
+    const signature = await Ledger.Ethereum.signEIP712HashedMessageOrThrow(connector, path.slice(2), domain, message)
 
-      const signature = await Ledger.Ethereum.trySignEIP712HashedMessage(connector, path.slice(2), domain, message).then(r => r.throw(t))
-
-      return new Ok(ZeroHexSignature.fromOrThrow(signature).value)
-    })
+    return ZeroHexSignature.fromOrThrow(signature).value
   }
 
 }

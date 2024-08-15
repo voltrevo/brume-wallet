@@ -372,8 +372,8 @@ export function PersonalSignPage() {
     const wallet = Option.unwrap(maybeWallet)
     const message = triedUserMessage.unwrap()
 
-    const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.unwrap())
-    const signature = await instance.trySignPersonalMessage(message, background).then(r => r.unwrap())
+    const instance = await EthereumWalletInstance.createOrThrow(wallet, background)
+    const signature = await instance.signPersonalMessageOrThrow(message, background)
 
     await background.requestOrThrow({
       method: "brume_respond",
@@ -448,8 +448,8 @@ export function TypedSignPage() {
     const wallet = Option.unwrap(maybeWallet)
     const data = triedParsedData.unwrap()
 
-    const instance = await EthereumWalletInstance.tryFrom(wallet, background).then(r => r.unwrap())
-    const signature = await instance.trySignEIP712HashedMessage(data, background).then(r => r.unwrap())
+    const instance = await EthereumWalletInstance.createOrThrow(wallet, background)
+    const signature = await instance.signEIP712HashedMessageOrThrow(data, background)
 
     await background.requestOrThrow({
       method: "brume_respond",

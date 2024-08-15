@@ -132,9 +132,11 @@ export function SeededWalletCreatorDialog(props: {}) {
       }).unwrap())
 
     } else {
-      const instance = await SeedInstance.tryFrom(seedData, background).then(r => r.get())
+      const instance = await SeedInstance.createOrThrow(seedData, background)
 
-      const mnemonic = await instance.tryGetMnemonic(background).then(r => r.mapErrSync(cause => {
+      const mnemonic = await Result.runAndWrap(async () => {
+        return await instance.getMnemonicOrThrow(background)
+      }).then(r => r.mapErrSync(cause => {
         return new UIError(`Could not get mnemonic`, { cause })
       }).unwrap())
 
