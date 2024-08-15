@@ -168,9 +168,6 @@ export namespace Circuits {
             }
           }, { max: 9 })
 
-          /**
-           * NOOP
-           */
           console.log(`Added circuit #${index} in ${Date.now() - start}ms`)
           console.log(`Circuits pool is now ${pool.size}/${pool.capacity}`)
 

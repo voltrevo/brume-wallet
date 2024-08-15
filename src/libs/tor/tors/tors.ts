@@ -104,7 +104,7 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage
         console.log(`Created Tor in ${Date.now() - start}ms`)
 
         const microdescsQuery = MicrodescQuery.All.create(tor.getOrThrow(), storage)
-        const microdescsStale = await microdescsQuery.state.then(r => r.current?.unwrap())
+        const microdescsStale = await microdescsQuery.state.then(r => r.current?.ok().get())
         const microdescsFresh = microdescsQuery.fetch().then(r => Option.unwrap(r.getAny().current).unwrap())
 
         if (microdescsStale == null)
