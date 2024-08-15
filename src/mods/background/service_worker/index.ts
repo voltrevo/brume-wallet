@@ -119,6 +119,7 @@ interface Permission {
 export class Global {
 
   readonly events = new SuperEventTarget<{
+    "user": (user: UserSession) => void,
     "popup": (router: RpcRouter) => void,
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
@@ -126,7 +127,7 @@ export class Global {
   #user?: UserSession
   #path: string = "/"
 
-  readonly resolveOnUser = new Future<UserSession>()
+  readonly popup = new Mutex<Slot<PopupData>>({})
 
   readonly tors: Mutex<Pool<TorClientDuplex>>
   readonly sockets: Mutex<Pool<Disposer<WebSocket>>>
@@ -142,10 +143,6 @@ export class Global {
   readonly chainIdByScript = new Map<string, Nullable<number>>()
 
   readonly wcBySession = new Map<string, WcSession>()
-
-  readonly popup = new Mutex<Slot<PopupData>>({})
-
-  readonly resolveOnPopupHello?: Future<RpcRouter>
 
   constructor(
     readonly storage: IDBStorage
@@ -200,7 +197,7 @@ export class Global {
 
     this.#user = userSession
 
-    this.resolveOnUser.resolve(userSession)
+    await this.events.emit("user", userSession)
     await this.#wcReconnectAllOrThrow()
 
     return userSession
@@ -340,15 +337,29 @@ export class Global {
 
     if (isSafariExtension() && isIpad()) {
       await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
-      return await this.resolveOnUser.promise
-    } else {
-      const popup = await this.openOrFocusPopupOrThrow("/", mouse)
-      return await this.waitUserOrPopupRemovalOrThrow(popup)
+
+      const user = await this.events.wait("user", (future: Future<UserSession>, user: UserSession) => {
+        future.resolve(user)
+        return new None()
+      }).await()
+
+      return user
     }
+
+    const popup = await this.openOrFocusPopupOrThrow("/", mouse)
+    return await this.waitUserOrPopupRemovalOrThrow(popup)
   }
 
   async waitUserOrPopupRemovalOrThrow(popup: PopupData) {
+    using stack = new DisposableStack()
+
+    const resolveOnUser = new Future<UserSession>()
     const rejectOnRemove = new Future<never>()
+
+    const onUser = (user: UserSession) => {
+      resolveOnUser.resolve(user)
+      return new None()
+    }
 
     const onRemoved = (id: number) => {
       if (id !== popup.tab.id)
@@ -356,13 +367,12 @@ export class Global {
       rejectOnRemove.reject(new Error())
     }
 
-    try {
-      browser.tabs.onRemoved.addListener(onRemoved)
+    stack.defer(this.events.on("user", onUser))
 
-      return await Promise.race([this.resolveOnUser.promise, rejectOnRemove.promise])
-    } finally {
-      browser.tabs.onRemoved.removeListener(onRemoved)
-    }
+    browser.tabs.onRemoved.addListener(onRemoved)
+    stack.defer(() => browser.tabs.onRemoved.removeListener(onRemoved))
+
+    return await Promise.race([resolveOnUser.promise, rejectOnRemove.promise])
   }
 
   async waitResponseOrThrow<T>(id: string, done: Future<void>) {
