@@ -14,7 +14,7 @@ import { SeedData } from "@/mods/universal/entities/seeds/data";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Ledger } from "@hazae41/ledger";
 import { useCloseContext } from "@hazae41/react-close-context";
-import { Err, Panic } from "@hazae41/result";
+import { Panic } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../../wallets/actions/send";
 import { RawSeedCard } from "../../card";
@@ -47,7 +47,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
 
   const addOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     if (!finalNameInput)
-      return new Err(new Panic())
+      throw new Panic()
 
     const device = await Ledger.USB.getOrRequestDeviceOrThrow()
     const connector = await Ledger.USB.connectOrThrow(device)

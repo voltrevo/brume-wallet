@@ -15,7 +15,7 @@ import { SeedData } from "@/mods/universal/entities/seeds/data";
 import { Base64 } from "@hazae41/base64";
 import { Bytes } from "@hazae41/bytes";
 import { useCloseContext } from "@hazae41/react-close-context";
-import { Err, Panic, Result } from "@hazae41/result";
+import { Panic, Result } from "@hazae41/result";
 import { WebAuthnStorage } from "@hazae41/webauthnstorage";
 import { generateMnemonic, mnemonicToEntropy, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english";
@@ -131,7 +131,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     const cipherBytes = await WebAuthnStorage.getOrThrow(id)
 
     if (!Bytes.equals(cipherMemory.bytes, cipherBytes))
-      return new Err(new Error(`Corrupt storage`))
+      throw new Error(`Corrupt storage`)
 
     const idBase64 = Base64.get().encodePaddedOrThrow(id)
     const mnemonic = { ivBase64, idBase64 }

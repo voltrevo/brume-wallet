@@ -17,7 +17,7 @@ export class MessageRpcRouter {
   readonly uuid = randomUUID()
 
   readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
-    "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
+    "request": (request: RpcRequestInit<unknown>) => unknown
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
@@ -68,12 +68,12 @@ export class MessageRpcRouter {
     }
   }
 
-  async tryRouteRequest(request: RpcRequestInit<unknown>) {
+  async routeAndWrap(request: RpcRequestInit<unknown>) {
     try {
       const returned = await this.events.emit("request", request)
 
       if (returned.isSome())
-        return returned.inner
+        return new Ok(returned.inner)
 
       if (request.method === "brume_hello")
         return Ok.void()
@@ -91,7 +91,7 @@ export class MessageRpcRouter {
     if (request.id !== "ping")
       Console.debug(this.name, "->", request)
 
-    const result = await this.tryRouteRequest(request)
+    const result = await this.routeAndWrap(request)
     const response = RpcResponse.rewrap(request.id, result)
 
     if (request.id !== "ping")
@@ -109,7 +109,7 @@ export class MessageRpcRouter {
     if (returned.isSome())
       return returned.inner
 
-    return new Err(new Error(`Unhandled JSON-RPC response ${JSON.stringify(response)}`))
+    console.warn(`Unhandled response`)
   }
 
   async onMessage(message: MessageEvent<string>) {
@@ -169,7 +169,7 @@ export class ExtensionRpcRouter {
   readonly uuid = randomUUID()
 
   readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
-    "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
+    "request": (request: RpcRequestInit<unknown>) => unknown
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
@@ -197,12 +197,12 @@ export class ExtensionRpcRouter {
     this.#clean()
   }
 
-  async tryRouteRequest(request: RpcRequestInit<unknown>) {
+  async routeAndWrap(request: RpcRequestInit<unknown>) {
     try {
       const returned = await this.events.emit("request", request)
 
       if (returned.isSome())
-        return returned.inner
+        return new Ok(returned.inner)
 
       if (request.method === "brume_hello")
         return Ok.void()
@@ -219,7 +219,7 @@ export class ExtensionRpcRouter {
     if (request.id !== "ping")
       Console.debug(this.name, "->", request)
 
-    const result = await this.tryRouteRequest(request)
+    const result = await this.routeAndWrap(request)
     const response = RpcResponse.rewrap(request.id, result)
 
     if (request.id !== "ping")
@@ -239,7 +239,7 @@ export class ExtensionRpcRouter {
     if (returned.isSome())
       return returned.inner
 
-    return new Err(new Error(`Unhandled JSON-RPC response ${JSON.stringify(response)}`))
+    console.warn(`Unhandled response`)
   }
 
   async onMessage(message: string) {
