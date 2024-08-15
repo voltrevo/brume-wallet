@@ -173,7 +173,7 @@ export function SeededWalletCreatorDialog(props: {}) {
 
   const NameInput =
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Name
       </div>
       <div className="w-4" />
@@ -185,7 +185,7 @@ export function SeededWalletCreatorDialog(props: {}) {
 
   const PathInput =
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Path
       </div>
       <div className="w-4" />
@@ -197,7 +197,7 @@ export function SeededWalletCreatorDialog(props: {}) {
 
   const IndexInput =
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Index
       </div>
       <div className="w-4" />
@@ -234,7 +234,7 @@ export function SeededWalletCreatorDialog(props: {}) {
       {NameInput}
       <div className="h-2" />
       <SimpleLabel>
-        <div className="shrink-0">
+        <div className="flex-none">
           Derivation
         </div>
         <div className="w-4" />

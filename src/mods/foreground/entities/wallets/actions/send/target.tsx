@@ -112,7 +112,7 @@ export function WalletSendScreenTarget(props: {}) {
     </Dialog.Title>
     <div className="h-4" />
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Target
       </div>
       <div className="w-4" />
@@ -153,7 +153,7 @@ export function WalletSendScreenTarget(props: {}) {
       <div className="po-md flex items-center bg-contrast rounded-xl cursor-pointer"
         role="button"
         onClick={onSubmit}>
-        <div className="size-12 shrink-0 rounded-full bg-contrast" />
+        <div className="size-12 flex-none rounded-full bg-contrast" />
         <div className="w-4" />
         <div className="flex flex-col truncate">
           <div className="font-medium">
@@ -183,7 +183,7 @@ export function WalletSendScreenTarget(props: {}) {
     <div className="po-md flex items-center bg-contrast rounded-xl cursor-pointer"
       role="button"
       onClick={onBrumeClick}>
-      <img className="size-12 shrink-0 rounded-full bg-contrast"
+      <img className="size-12 flex-none rounded-full bg-contrast"
         src="/square.png"
         alt="logo" />
       <div className="w-4" />

@@ -101,7 +101,7 @@ export function UserCreateDialog(props: { next?: string }) {
 
   const NameInput =
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Name
       </div>
       <div className="w-4" />
@@ -113,7 +113,7 @@ export function UserCreateDialog(props: { next?: string }) {
 
   const PasswordInput =
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Password
       </div>
       <div className="w-4" />
@@ -126,7 +126,7 @@ export function UserCreateDialog(props: { next?: string }) {
 
   const PasswordInput2 =
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Password
       </div>
       <div className="w-4" />

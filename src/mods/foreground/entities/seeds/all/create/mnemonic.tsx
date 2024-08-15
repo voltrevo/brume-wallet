@@ -148,7 +148,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
 
   const NameInput =
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Name
       </div>
       <div className="w-4" />
@@ -161,7 +161,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
   const PhraseInput =
     <div className="po-md flex flex-col bg-contrast rounded-xl">
       <div className="flex items-start">
-        <div className="shrink-0">
+        <div className="flex-none">
           Seed phrase
         </div>
         <div className="w-4" />

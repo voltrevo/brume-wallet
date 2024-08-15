@@ -142,7 +142,7 @@ export function SessionRow(props: { session: Session }) {
         index={i}
         id={x.id}
         ok={onIconData} />)}
-    <div className="relative shrink-0">
+    <div className="relative flex-none">
       {(() => {
         if (maybeStatusData == null)
           return <div className="absolute top-0 -right-2 bg-blue-400 rounded-full w-2 h-2" />
@@ -202,7 +202,7 @@ export function SessionMenu(props: { sessionData: SessionData }) {
         onClick={chains.onClick}
         onKeyDown={chains.onKeyDown}
         href={chains.href}>
-        <Outline.LinkIcon className="shrink-0 size-4" />
+        <Outline.LinkIcon className="flex-none size-4" />
         <div className="truncate">
           {sessionData.chain.name}
         </div>
@@ -246,7 +246,7 @@ export function ChainRow(props: { sessionData: ExSessionData, chainData: ChainDa
     disabled={switchOrAlert.loading}
     onClick={switchOrAlert.run}>
     {sessionData.chain.chainId === chainData.chainId &&
-      <Outline.CheckIcon className="shrink-0 size-4" />}
+      <Outline.CheckIcon className="flex-none size-4" />}
     <div className="truncate">
       {chainData.name}
     </div>

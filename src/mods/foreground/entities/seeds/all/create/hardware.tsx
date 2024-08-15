@@ -66,7 +66,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
 
   const NameInput =
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Name
       </div>
       <div className="w-4" />

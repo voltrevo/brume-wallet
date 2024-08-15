@@ -9,7 +9,7 @@ export function Bottom() {
   const requestsQuery = useAppRequests()
   const requests = requestsQuery.data?.get()
 
-  return <nav className="h-16 w-full shrink-0 border-t border-t-contrast">
+  return <nav className="h-16 w-full flex-none border-t border-t-contrast">
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">
       <a className={`group grow text-contrast data-[selected=true]:text-default`}
         data-selected={url.pathname === "/home"}

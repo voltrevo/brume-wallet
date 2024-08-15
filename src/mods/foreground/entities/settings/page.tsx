@@ -31,7 +31,7 @@ export function SettingsPage() {
         Compatibility
       </div>
       <SimpleLabel>
-        <div className="shrink-0">
+        <div className="flex-none">
           Default chain
         </div>
         <div className="w-4 grow" />
@@ -52,7 +52,7 @@ export function SettingsPage() {
         Debugging
       </div>
       <SimpleLabel>
-        <div className="shrink-0">
+        <div className="flex-none">
           Enable logs
         </div>
         <div className="w-4 grow" />

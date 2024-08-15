@@ -5,7 +5,7 @@ import { nto } from "@/libs/ntu";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { Dialog } from "@/libs/ui/dialog";
-import { SmallUnshrinkableLoading } from "@/libs/ui/loading";
+import { SmallUnflexLoading } from "@/libs/ui/loading";
 import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
@@ -266,7 +266,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     </Dialog.Title>
     <div className="h-4" />
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Target
       </div>
       <div className="w-4" />
@@ -278,7 +278,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     <div className="h-2" />
     {mode === "valued" &&
       <SimpleLabel>
-        <div className="shrink-0">
+        <div className="flex-none">
           Value
         </div>
         <div className="w-4" />
@@ -327,7 +327,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
       </SimpleLabel>}
     {mode === "priced" &&
       <SimpleLabel>
-        <div className="shrink-0">
+        <div className="flex-none">
           Value
         </div>
         <div className="w-4" />
@@ -416,7 +416,7 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
   return <div className="po-md flex items-center bg-contrast rounded-xl">
     <div className="flex flex-col truncate">
       <div className="flex items-center">
-        <Outline.CheckIcon className="size-4 shrink-0" />
+        <Outline.CheckIcon className="size-4 flex-none" />
         <div className="w-2" />
         <div className="font-medium">
           Transaction confirmed
@@ -483,7 +483,7 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
   return <div className="po-md flex items-center bg-contrast rounded-xl">
     <div className="flex flex-col truncate">
       <div className="flex items-center">
-        <SmallUnshrinkableLoading />
+        <SmallUnflexLoading />
         <div className="w-2" />
         <div className="font-medium">
           Transaction sent

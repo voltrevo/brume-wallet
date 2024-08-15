@@ -42,7 +42,7 @@ export function HomePage() {
 
   const Body =
     <PageBody>
-      <div className="h-[min(32rem,90dvh)] shrink-0 grow flex flex-col items-center">
+      <div className="h-[max(24rem,100dvh_-_16rem)] flex-none flex flex-col items-center">
         <div className="grow" />
         <h1 className="text-center text-6xl font-medium">
           Welcome back<span className="text-contrast">, {userData.name}</span>
@@ -71,7 +71,7 @@ export function HomePage() {
         {totalPricedBalanceDisplay}
       </div>
       <div className="h-4" />
-      <div className="p-4 bg-contrast shrink-0 h-[300px] rounded-xl flex flex-col items-center justify-center">
+      <div className="p-4 bg-contrast flex-none h-[300px] rounded-xl flex flex-col items-center justify-center">
         <img src="/favicon.png" alt="logo" className="h-24 w-auto" />
         <div className="">
           Coming soon...

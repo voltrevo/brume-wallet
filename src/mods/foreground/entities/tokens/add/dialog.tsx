@@ -147,7 +147,7 @@ export function TokenAddDialog(props: {}) {
     </Dialog.Title>
     <div className="h-4" />
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Chain
       </div>
       <div className="w-4 grow" />
@@ -162,7 +162,7 @@ export function TokenAddDialog(props: {}) {
     </SimpleLabel>
     <div className="h-2" />
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Address
       </div>
       <div className="w-4" />

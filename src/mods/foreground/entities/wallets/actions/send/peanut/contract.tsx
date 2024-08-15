@@ -376,7 +376,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
     </Dialog.Title>
     <div className="h-4" />
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Target
       </div>
       <div className="w-4" />
@@ -388,7 +388,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
     <div className="h-2" />
     {mode === "valued" &&
       <SimpleLabel>
-        <div className="shrink-0">
+        <div className="flex-none">
           Value
         </div>
         <div className="w-4" />
@@ -437,7 +437,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       </SimpleLabel>}
     {mode === "priced" &&
       <SimpleLabel>
-        <div className="shrink-0">
+        <div className="flex-none">
           Value
         </div>
         <div className="w-4" />

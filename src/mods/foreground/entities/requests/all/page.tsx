@@ -104,7 +104,7 @@ export function RequestRow(props: { request: AppRequest }) {
         index={i}
         id={x.id}
         ok={onIconData} />)}
-    <div className="shrink-0">
+    <div className="flex-none">
       <ImageWithFallback className="size-10"
         alt="icon"
         src={iconDatas.find(Boolean)?.data}>

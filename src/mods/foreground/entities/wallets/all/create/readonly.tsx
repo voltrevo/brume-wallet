@@ -101,7 +101,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
 
   const NameInput =
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Name
       </div>
       <div className="w-4" />
@@ -113,7 +113,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
 
   const AddressInput =
     <SimpleLabel>
-      <div className="shrink-0">
+      <div className="flex-none">
         Address
       </div>
       <div className="w-4" />

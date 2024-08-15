@@ -231,7 +231,7 @@ export function TransactPage() {
         {preTx.from && <>
           <div className="h-2" />
           <SimpleLabel>
-            <div className="shrink-0">
+            <div className="flex-none">
               From
             </div>
             <div className="w-4" />
@@ -243,7 +243,7 @@ export function TransactPage() {
         {preTx.to && <>
           <div className="h-2" />
           <SimpleLabel>
-            <div className="shrink-0">
+            <div className="flex-none">
               To
             </div>
             <div className="w-4" />
@@ -255,7 +255,7 @@ export function TransactPage() {
         {preTx.value && <>
           <div className="h-2" />
           <SimpleLabel>
-            <div className="shrink-0">
+            <div className="flex-none">
               Value
             </div>
             <div className="w-4" />
@@ -267,7 +267,7 @@ export function TransactPage() {
         {preTx.nonce && <>
           <div className="h-2" />
           <SimpleLabel>
-            <div className="shrink-0">
+            <div className="flex-none">
               Nonce
             </div>
             <div className="w-4" />
@@ -279,7 +279,7 @@ export function TransactPage() {
         {preTx.data && <>
           <div className="h-2" />
           <SimpleLabel>
-            <div className="shrink-0">
+            <div className="flex-none">
               Data
             </div>
             <div className="w-4" />
@@ -573,7 +573,7 @@ export function WalletAndChainSelectPage() {
         selecteds={selecteds} />
       <div className="h-4" />
       <label className="po-md flex items-center bg-contrast rounded-xl">
-        <div className="shrink-0">
+        <div className="flex-none">
           Stay connected
         </div>
         <div className="w-4 grow" />

@@ -82,7 +82,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
 
   const First =
     <div className="flex items-center">
-      <div className="shrink-0 text-xl">
+      <div className="flex-none text-xl">
         {emoji}
       </div>
       <div className="w-2 grow" />
