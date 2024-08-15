@@ -5,7 +5,7 @@ import { Opaque, Readable, Writable } from "@hazae41/binary";
 import { Bytes } from "@hazae41/bytes";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Future } from "@hazae41/future";
-import { RpcId, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
+import { RpcId, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { None, Some } from "@hazae41/option";
 import { SuperEventTarget } from "@hazae41/plume";
 import { Err, Ok, Result } from "@hazae41/result";
@@ -135,7 +135,7 @@ export interface WcReceiptAndPromise<T> {
 export class CryptoClient {
 
   readonly events = new SuperEventTarget<{
-    request: (request: RpcRequestPreinit<unknown>) => unknown
+    request: (request: RpcRequestPreinit<unknown>) => Result<unknown, Error>
     response: (response: RpcResponseInit<unknown>) => void
   }>()
 
@@ -186,40 +186,44 @@ export class CryptoClient {
       const data = SafeJson.parse(plaintext) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
 
       if ("method" in data)
-        this.#onRequest(data).catch(console.warn)
+        this.#onRequest(data).then(r => r.unwrap()).catch(console.warn)
       else
-        this.#onResponse(data).catch(console.warn)
+        this.#onResponse(data).then(r => r.unwrap()).catch(console.warn)
 
       return new Ok(true)
     })
   }
 
-  async #onRequest(request: RpcRequestInit<unknown>): Promise<void> {
-    // console.log("relay request", "->", request)
+  async #onRequest(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
+    return Result.unthrow(async t => {
+      // console.log("relay request", "->", request)
 
-    if (typeof request.id !== "number")
-      return
-    if (this.#ack.has(request.id))
-      return
-    this.#ack.add(request.id)
+      if (typeof request.id !== "number")
+        return Ok.void()
+      if (this.#ack.has(request.id))
+        return Ok.void()
+      this.#ack.add(request.id)
 
-    const result = await this.#routeAndWrap(request)
-    const response = RpcResponse.rewrap(request.id, result)
-    // console.log("relay", "<-", response)
+      const result = await this.#tryRouteRequest(request)
+      const response = RpcResponse.rewrap(request.id, result)
+      // console.log("relay", "<-", response)
 
-    const { topic } = this
-    const message = this.#tryEncrypt(response).unwrap()
-    const { prompt, tag, ttl } = ENGINE_RPC_OPTS[request.method].res
-    await this.irn.tryPublish({ topic, message, prompt, tag, ttl }).then(r => r.unwrap())
+      const { topic } = this
+      const message = this.#tryEncrypt(response).throw(t)
+      const { prompt, tag, ttl } = ENGINE_RPC_OPTS[request.method].res
+      await this.irn.tryPublish({ topic, message, prompt, tag, ttl }).then(r => r.throw(t))
+
+      return Ok.void()
+    })
   }
 
-  async #routeAndWrap(request: RpcRequestPreinit<unknown>) {
+  async #tryRouteRequest(request: RpcRequestPreinit<unknown>) {
     const returned = await this.events.emit("request", request)
 
     if (returned.isSome())
-      return new Ok(returned.inner)
+      return returned.inner
 
-    return new Err(new RpcInvalidRequestError())
+    return new Err(new Error(`Unhandled`))
   }
 
   async #onResponse(response: RpcResponseInit<unknown>) {
@@ -229,7 +233,7 @@ export class CryptoClient {
     if (returned.isSome())
       return Ok.void()
 
-    console.warn(`Unhandled response`)
+    return new Err(new Error(`Unhandled`))
   }
 
   #tryEncrypt(data: unknown): Result<string, Error> {

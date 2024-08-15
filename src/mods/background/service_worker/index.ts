@@ -1335,11 +1335,11 @@ class Global {
       const ethereum: BgEthereumContext = { chain: chainData, brume }
 
       if (request.method === "eth_sendTransaction")
-        return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
+        return new Some(await Result.runAndDoubleWrap(() => this.eth_sendTransaction(ethereum, sessionData, request)))
       if (request.method === "personal_sign")
-        return new Some(await this.personal_sign(ethereum, sessionData, request))
+        return new Some(await Result.runAndDoubleWrap(() => this.personal_sign(ethereum, sessionData, request)))
       if (request.method === "eth_signTypedData_v4")
-        return new Some(await this.eth_signTypedData_v4(ethereum, sessionData, request))
+        return new Some(await Result.runAndDoubleWrap(() => this.eth_signTypedData_v4(ethereum, sessionData, request)))
       return new None()
     }
 
@@ -1430,11 +1430,11 @@ class Global {
       const ethereum: BgEthereumContext = { chain: chainData, brume }
 
       if (request.method === "eth_sendTransaction")
-        return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
+        return new Some(await Result.runAndDoubleWrap(() => this.eth_sendTransaction(ethereum, sessionData, request)))
       if (request.method === "personal_sign")
-        return new Some(await this.personal_sign(ethereum, sessionData, request))
+        return new Some(await Result.runAndDoubleWrap(() => this.personal_sign(ethereum, sessionData, request)))
       if (request.method === "eth_signTypedData_v4")
-        return new Some(await this.eth_signTypedData_v4(ethereum, sessionData, request))
+        return new Some(await Result.runAndDoubleWrap(() => this.eth_signTypedData_v4(ethereum, sessionData, request)))
       return new None()
     }
 
