@@ -1,14 +1,7 @@
 import { Mutators } from "@/libs/glacier/mutators"
-import { Circuits } from "@/libs/tor/circuits/circuits"
-import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
-import { Disposer } from "@hazae41/disposer"
-import { Circuit, TorClientDuplex } from "@hazae41/echalote"
-import { AesGcmCoder, Data, HmacEncoder, IDBStorage, States, createQuery } from "@hazae41/glacier"
-import { Mutex } from "@hazae41/mutex"
-import { Pool } from "@hazae41/piscine"
-import { EthBrume, WcBrume } from "../brumes/data"
+import { Data, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBase64, Pbkdf2ParamsBytes } from "./crypto"
 
 export type User =
@@ -62,60 +55,6 @@ export interface UserData {
 
   readonly passwordParamsBase64: Pbkdf2ParamsBase64
   readonly passwordHashBase64: string
-}
-
-export interface UserSessionParams {
-  readonly user: User,
-  readonly storage: IDBStorage,
-  readonly hasher: HmacEncoder,
-  readonly crypter: AesGcmCoder
-}
-
-export class UserSession {
-
-  readonly tors: Mutex<Pool<TorClientDuplex>>
-  readonly sockets: Mutex<Pool<Disposer<WebSocket>>>
-  readonly circuits: Mutex<Pool<Circuit>>
-
-  readonly wcBrumes: Mutex<Pool<WcBrume>>
-  readonly ethBrumes: Mutex<Pool<EthBrume>>
-
-  readonly ethBrumeByUuid = new Mutex(new Map<string, EthBrume>())
-
-  constructor(
-    readonly user: User,
-    readonly storage: IDBStorage,
-    readonly hasher: HmacEncoder,
-    readonly crypter: AesGcmCoder
-  ) {
-    this.sockets = new Mutex(createNativeWebSocketPool({ capacity: 1 }).get())
-    this.tors = new Mutex(createTorPool(this.sockets, storage, { capacity: 1 }).get())
-    this.circuits = new Mutex(Circuits.pool(this.tors, storage, { capacity: 8 }).get())
-
-    this.wcBrumes = new Mutex(WcBrume.createPool(this.circuits, { capacity: 1 }))
-    this.ethBrumes = new Mutex(EthBrume.createPool(this.circuits, { capacity: 1 }))
-  }
-
-  static create(params: UserSessionParams) {
-    const { user, storage, hasher, crypter } = params
-    return new UserSession(user, storage, hasher, crypter)
-  }
-
-  async getOrTakeEthBrumeOrThrow(uuid: string): Promise<EthBrume> {
-    return await this.ethBrumeByUuid.lock(async ethBrumeByUuid => {
-      const cached = ethBrumeByUuid.get(uuid)
-
-      if (cached != null)
-        return cached
-
-      const fetched = await Pool.takeCryptoRandomOrThrow(this.ethBrumes).then(r => r.unwrap().inner.inner)
-
-      ethBrumeByUuid.set(uuid, fetched)
-
-      return fetched
-    })
-  }
-
 }
 
 export namespace BgUser {

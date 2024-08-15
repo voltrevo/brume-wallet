@@ -16,6 +16,7 @@ import { Mouse } from "@/libs/mouse/mouse";
 import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExtension, isIpad, isProdWebsite, isSafariExtension, isWebsite } from "@/libs/platform/platform";
 import { Strings } from "@/libs/strings/strings";
 import { Circuits } from "@/libs/tor/circuits/circuits";
+import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors";
 import { pathOf, urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { CryptoClient } from "@/libs/wconn/mods/crypto/client";
@@ -30,11 +31,12 @@ import { Bytes } from "@hazae41/bytes";
 import { Cadenas } from "@hazae41/cadenas";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
-import { Echalote } from "@hazae41/echalote";
+import { Disposer } from "@hazae41/disposer";
+import { Circuit, Echalote, TorClientDuplex } from "@hazae41/echalote";
 import { Ed25519 } from "@hazae41/ed25519";
 import { Fleche, fetch } from "@hazae41/fleche";
 import { Future } from "@hazae41/future";
-import { Data, IDBStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier";
+import { AesGcmCoder, Data, HmacEncoder, IDBStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier";
 import { Immutable } from "@hazae41/immutable";
 import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { Kcp } from "@hazae41/kcp";
@@ -61,7 +63,7 @@ import { BgSession, ExSessionData, SessionData, SessionRef, SessionStorage, WcSe
 import { Status, StatusData } from "./entities/sessions/status/data";
 import { BgSimulation } from "./entities/simulations/data";
 import { BgToken } from "./entities/tokens/data";
-import { BgUser, User, UserData, UserInit, UserSession } from "./entities/users/data";
+import { BgUser, User, UserData, UserInit } from "./entities/users/data";
 import { BgWallet, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data";
 import { createUserStorageOrThrow } from "./storage";
 
@@ -83,14 +85,9 @@ if (isProdWebsite()) {
   self.addEventListener("fetch", (event) => cache.handle(event))
 }
 
-interface PasswordData {
-  uuid?: string
-  password?: string
-}
-
 interface PopupData {
   tab: chrome.tabs.Tab,
-  port: RpcRouter
+  router: RpcRouter
 }
 
 interface Slot<T> {
@@ -119,10 +116,10 @@ interface Permission {
   readonly caveats: Caveat[];
 }
 
-class Global {
+export class Global {
 
   readonly events = new SuperEventTarget<{
-    "popup_hello": (foreground: RpcRouter) => void
+    "popup": (router: RpcRouter) => void,
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
@@ -131,25 +128,35 @@ class Global {
 
   readonly resolveOnUser = new Future<UserSession>()
 
-  readonly ethBrumeByUuid = new Mutex(new Map<string, EthBrume>())
+  readonly tors: Mutex<Pool<TorClientDuplex>>
+  readonly sockets: Mutex<Pool<Disposer<WebSocket>>>
+  readonly circuits: Mutex<Pool<Circuit>>
+
+  readonly wcBrumes: Mutex<Pool<WcBrume>>
+  readonly ethBrumes: Mutex<Pool<EthBrume>>
 
   readonly scriptsBySession = new Map<string, Set<RpcRouter>>()
 
   readonly sessionByScript = new Map<string, Mutex<Slot<string>>>()
-
   readonly accountsByScript = new Map<string, string[]>()
   readonly chainIdByScript = new Map<string, Nullable<number>>()
 
   readonly wcBySession = new Map<string, WcSession>()
 
-  /**
-   * Current popup
-   */
   readonly popup = new Mutex<Slot<PopupData>>({})
+
+  readonly resolveOnPopupHello?: Future<RpcRouter>
 
   constructor(
     readonly storage: IDBStorage
   ) {
+    this.sockets = new Mutex(createNativeWebSocketPool({ capacity: 1 }).get())
+    this.tors = new Mutex(createTorPool(this.sockets, storage, { capacity: 1 }).get())
+    this.circuits = new Mutex(Circuits.pool(this.tors, storage, { capacity: 8 }).get())
+
+    this.wcBrumes = new Mutex(WcBrume.createPool(this.circuits, { capacity: 1 }))
+    this.ethBrumes = new Mutex(EthBrume.createPool(this.circuits, { capacity: 1 }))
+
     core.onState.on(BgAppRequest.All.key, async () => {
       const state = core.getStateSync(BgAppRequest.All.key) as State<AppRequest[], never>
 
@@ -189,7 +196,7 @@ class Global {
     const currentUserQuery = BgUser.Current.schema(storage)
     await currentUserQuery.mutate(() => new Some(new Data(user)))
 
-    const userSession = UserSession.create({ user, storage, hasher, crypter })
+    const userSession = UserSession.create(this, { user, storage, hasher, crypter })
 
     this.#user = userSession
 
@@ -214,12 +221,12 @@ class Global {
     }
 
     try {
-      this.events.on("popup_hello", onRequest, { passive: true })
+      this.events.on("popup", onRequest, { passive: true })
       browser.tabs.onRemoved.addListener(onRemoved)
 
       return await future.promise
     } finally {
-      this.events.off("popup_hello", onRequest)
+      this.events.off("popup", onRequest)
       browser.tabs.onRemoved.removeListener(onRemoved)
     }
   }
@@ -258,9 +265,9 @@ class Global {
       if (tab == null)
         throw new Error("Failed to create tab")
 
-      const channel = await this.waitPopupHelloOrThrow(tab)
+      const router = await this.waitPopupHelloOrThrow(tab)
 
-      slot.current = { tab, port: channel }
+      slot.current = { tab, router: router }
 
       const onRemoved = (tabId: number) => {
         if (tabId !== tab.id)
@@ -919,7 +926,7 @@ class Global {
   }
 
   async popup_hello(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<void> {
-    await this.events.emit("popup_hello", foreground)
+    await this.events.emit("popup", foreground)
   }
 
   async brume_respond(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<void> {
@@ -1215,7 +1222,7 @@ class Global {
     if (logs.real?.current?.get() !== true)
       return
 
-    using circuit = await Pool.takeCryptoRandomOrThrow(user.circuits).then(r => r.unwrap().inner.inner)
+    using circuit = await Pool.takeCryptoRandomOrThrow(this.circuits).then(r => r.unwrap().inner.inner)
 
     const body = JSON.stringify({ tor: true, method: "eth_getBalance" })
 
@@ -1270,7 +1277,7 @@ class Global {
 
     const authKey = await Ed25519.get().PrivateKey.importJwkOrThrow(authKeyJwk)
 
-    const brume = await WcBrume.createOrThrow(user.circuits, authKey)
+    const brume = await WcBrume.createOrThrow(this.circuits, authKey)
     const irn = new IrnBrume(brume)
 
     const rawSessionKey = Base64.get().decodePaddedOrThrow(sessionKeyBase64).copyAndDispose()
@@ -1340,7 +1347,7 @@ class Global {
     const wcUrl = new URL(rawWcUrl)
     const pairParams = await Wc.tryParse(wcUrl).then(r => r.unwrap())
 
-    const brume = await Pool.takeCryptoRandomOrThrow(user.wcBrumes).then(r => r.unwrap().inner.inner)
+    const brume = await Pool.takeCryptoRandomOrThrow(this.wcBrumes).then(r => r.unwrap().inner.inner)
     const irn = new IrnBrume(brume)
 
     const [session, settlement] = await Wc.tryPair(irn, pairParams, walletData.address).then(r => r.unwrap())
@@ -1428,7 +1435,7 @@ class Global {
 
     for (const iconUrl of session.metadata.icons) {
       (async () => {
-        using circuit = await Pool.takeCryptoRandomOrThrow(user.circuits).then(r => r.unwrap().inner.inner)
+        using circuit = await Pool.takeCryptoRandomOrThrow(this.circuits).then(r => r.unwrap().inner.inner)
 
         console.debug(`Fetching ${iconUrl} with ${circuit.id}`)
 
@@ -1449,6 +1456,48 @@ class Global {
 
     return session.metadata
   }
+
+}
+
+export interface UserSessionParams {
+  readonly user: User,
+  readonly storage: IDBStorage,
+  readonly hasher: HmacEncoder,
+  readonly crypter: AesGcmCoder
+}
+
+export class UserSession {
+
+  readonly ethBrumeByUuid = new Mutex(new Map<string, EthBrume>())
+
+  constructor(
+    readonly global: Global,
+    readonly user: User,
+    readonly storage: IDBStorage,
+    readonly hasher: HmacEncoder,
+    readonly crypter: AesGcmCoder
+  ) { }
+
+  static create(global: Global, params: UserSessionParams) {
+    const { user, storage, hasher, crypter } = params
+    return new UserSession(global, user, storage, hasher, crypter)
+  }
+
+  async getOrTakeEthBrumeOrThrow(uuid: string): Promise<EthBrume> {
+    return await this.ethBrumeByUuid.lock(async ethBrumeByUuid => {
+      const cached = ethBrumeByUuid.get(uuid)
+
+      if (cached != null)
+        return cached
+
+      const fetched = await Pool.takeCryptoRandomOrThrow(this.global.ethBrumes).then(r => r.unwrap().inner.inner)
+
+      ethBrumeByUuid.set(uuid, fetched)
+
+      return fetched
+    })
+  }
+
 
 }
 
