@@ -136,13 +136,8 @@ export class Global {
   readonly wcBrumes: Mutex<Pool<WcBrume>>
   readonly ethBrumes: Mutex<Pool<EthBrume>>
 
-  readonly scriptsBySession = new Map<string, Set<RpcRouter>>()
-
-  readonly sessionByScript = new Map<string, Mutex<Slot<string>>>()
   readonly accountsByScript = new Map<string, string[]>()
   readonly chainIdByScript = new Map<string, Nullable<number>>()
-
-  readonly wcBySession = new Map<string, WcSession>()
 
   constructor(
     readonly storage: IDBStorage
@@ -428,11 +423,13 @@ export class Global {
   }
 
   async getExtensionSessionOrThrow(script: RpcRouter, mouse: Mouse, wait: boolean): Promise<Nullable<ExSessionData>> {
-    let mutex = this.sessionByScript.get(script.name)
+    const user = Option.unwrap(this.#user)
+
+    let mutex = user.sessionByScript.get(script.name)
 
     if (mutex == null) {
       mutex = new Mutex<Slot<string>>({})
-      this.sessionByScript.set(script.name, mutex)
+      user.sessionByScript.set(script.name, mutex)
     }
 
     return await mutex.lock(async slot => {
@@ -486,11 +483,11 @@ export class Global {
 
         slot.current = sessionId
 
-        let scripts = this.scriptsBySession.get(sessionId)
+        let scripts = user.scriptsBySession.get(sessionId)
 
         if (scripts == null) {
           scripts = new Set()
-          this.scriptsBySession.set(sessionId, scripts)
+          user.scriptsBySession.set(sessionId, scripts)
         }
 
         scripts.add(script)
@@ -500,7 +497,7 @@ export class Global {
 
         script.events.on("close", async () => {
           scripts!.delete(script)
-          this.sessionByScript.delete(script.name)
+          user.sessionByScript.delete(script.name)
 
           if (scripts!.size === 0) {
             const { id } = sessionData
@@ -555,11 +552,11 @@ export class Global {
 
       slot.current = sessionData.id
 
-      let scripts = this.scriptsBySession.get(sessionData.id)
+      let scripts = user.scriptsBySession.get(sessionData.id)
 
       if (scripts == null) {
         scripts = new Set()
-        this.scriptsBySession.set(sessionData.id, scripts)
+        user.scriptsBySession.set(sessionData.id, scripts)
       }
 
       scripts.add(script)
@@ -569,7 +566,7 @@ export class Global {
 
       script.events.on("close", async () => {
         scripts!.delete(script)
-        this.sessionByScript.delete(script.name)
+        user.sessionByScript.delete(script.name)
 
         if (scripts!.size === 0) {
           const { id } = sessionData
@@ -868,7 +865,7 @@ export class Global {
 
     await sessionQuery.mutate(() => new Some(new Data({ ...sessionData, chain })))
 
-    for (const script of Option.wrap(this.scriptsBySession.get(session.id)).unwrapOr([])) {
+    for (const script of Option.wrap(user.scriptsBySession.get(session.id)).unwrapOr([])) {
       script.requestOrThrow({
         method: "chainChanged",
         params: [ZeroHexAsInteger.fromOrThrow(chain.chainId)]
@@ -988,7 +985,7 @@ export class Global {
 
     await sessionQuery.mutate(() => new Some(new Data({ ...sessionData, chain })))
 
-    for (const script of Option.wrap(this.scriptsBySession.get(sessionId)).unwrapOr([])) {
+    for (const script of Option.wrap(user.scriptsBySession.get(sessionId)).unwrapOr([])) {
       script.requestOrThrow({
         method: "chainChanged",
         params: [ZeroHexAsInteger.fromOrThrow(chain.chainId)]
@@ -1009,14 +1006,14 @@ export class Global {
     const sessionQuery = BgSession.schema(id, user.storage)
     await sessionQuery.delete()
 
-    const wcSession = this.wcBySession.get(id)
+    const wcSession = user.wcBySession.get(id)
 
     if (wcSession != null) {
       await wcSession.tryClose(undefined).then(r => r.unwrap())
-      this.wcBySession.delete(id)
+      user.wcBySession.delete(id)
     }
 
-    for (const script of Option.wrap(this.scriptsBySession.get(id)).unwrapOr([])) {
+    for (const script of Option.wrap(user.scriptsBySession.get(id)).unwrapOr([])) {
       script.requestOrThrow({
         method: "accountsChanged",
         params: [[]]
@@ -1025,10 +1022,10 @@ export class Global {
       this.chainIdByScript.delete(script.name)
       this.accountsByScript.delete(script.name)
 
-      this.sessionByScript.delete(script.name)
+      user.sessionByScript.delete(script.name)
     }
 
-    this.scriptsBySession.delete(id)
+    user.scriptsBySession.delete(id)
   }
 
   async brume_encrypt(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<[string, string]> {
@@ -1255,7 +1252,7 @@ export class Global {
   async #wcResolveAndReconnectOrThrow(sessionRef: SessionRef): Promise<void> {
     const user = Option.unwrap(this.#user)
 
-    if (this.wcBySession.has(sessionRef.id))
+    if (user.wcBySession.has(sessionRef.id))
       return
 
     const sessionQuery = BgSession.schema(sessionRef.id, user.storage)
@@ -1341,7 +1338,7 @@ export class Global {
     session.client.irn.events.on("close", onCloseOrError, { passive: true })
     session.client.irn.events.on("error", onCloseOrError, { passive: true })
 
-    this.wcBySession.set(sessionData.id, session)
+    user.wcBySession.set(sessionData.id, session)
 
     return session
   }
@@ -1435,7 +1432,7 @@ export class Global {
     session.client.irn.events.on("close", onCloseOrError, { passive: true })
     session.client.irn.events.on("error", onCloseOrError, { passive: true })
 
-    this.wcBySession.set(sessionData.id, session)
+    user.wcBySession.set(sessionData.id, session)
 
     const { id } = sessionData
     await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
@@ -1479,6 +1476,11 @@ export interface UserSessionParams {
 export class UserSession {
 
   readonly ethBrumeByUuid = new Mutex(new Map<string, EthBrume>())
+
+  readonly scriptsBySession = new Map<string, Set<RpcRouter>>()
+  readonly sessionByScript = new Map<string, Mutex<Slot<string>>>()
+
+  readonly wcBySession = new Map<string, WcSession>()
 
   constructor(
     readonly global: Global,
