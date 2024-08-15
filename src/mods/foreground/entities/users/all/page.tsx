@@ -326,7 +326,7 @@ export function UsersMenuRow(props: { user: User }) {
     onClick={open.onClick}
     onKeyDown={open.onKeyDown}
     href={open.href}>
-    <UserAvatar className="size-7 text-lg"
+    <UserAvatar className="size-7 text-lg flex-none"
       color={Color.get(maybeUser.color)}
       name={maybeUser.name} />
     {maybeUser.name}
