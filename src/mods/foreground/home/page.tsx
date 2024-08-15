@@ -51,7 +51,7 @@ export function HomePage() {
         {persisted === false && <>
           <div className="h-4" />
           <div className="p-4 bg-contrast rounded-xl max-w-xs">
-            <h3 className="text-lg font-medium">
+            <h3 className="font-medium">
               Your storage is not persistent yet
             </h3>
             <p className="text-contrast">
