@@ -15,7 +15,7 @@ import { Disposer } from "@hazae41/disposer";
 import { RpcErr, RpcError, RpcErrorInit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
 import { None, Some } from "@hazae41/option";
 import { Pool } from "@hazae41/piscine";
-import { Ok, Result } from "@hazae41/result";
+import { Result } from "@hazae41/result";
 import { PreOriginData } from "../../universal/entities/origins/data";
 
 declare const self: ServiceWorkerGlobalScope
@@ -26,7 +26,7 @@ declare global {
   }
 }
 
-async function fetchOriginDataOrDefault() {
+async function getOriginData() {
   const origin: NonReadonly<PreOriginData> = {
     origin: location.origin,
     title: document.title
@@ -168,7 +168,7 @@ async function main() {
 
     const onBackgroundRequest = async (request: RpcRequestPreinit<unknown>) => {
       if (request.method === "brume_origin")
-        return new Some(new Ok(await fetchOriginDataOrDefault()))
+        return new Some(await getOriginData())
       if (request.method === "connect")
         return new Some(await onConnect(request))
       if (request.method === "disconnect")
@@ -188,8 +188,6 @@ async function main() {
       const detail = JSON.stringify(accounts)
       const event = new CustomEvent("ethereum:accountsChanged", { detail })
       window.dispatchEvent(event)
-
-      return Ok.void()
     }
 
     const onConnect = async (request: RpcRequestPreinit<unknown>) => {
@@ -198,8 +196,6 @@ async function main() {
       const detail = JSON.stringify({ chainId })
       const event = new CustomEvent("ethereum:connect", { detail })
       window.dispatchEvent(event)
-
-      return Ok.void()
     }
 
     const onDisconnect = async (request: RpcRequestPreinit<unknown>) => {
@@ -208,8 +204,6 @@ async function main() {
       const detail = JSON.stringify(error)
       const event = new CustomEvent("ethereum:disconnect", { detail })
       window.dispatchEvent(event)
-
-      return Ok.void()
     }
 
     const onChainChanged = async (request: RpcRequestPreinit<unknown>) => {
@@ -218,8 +212,6 @@ async function main() {
       const detail = JSON.stringify(chainId)
       const event = new CustomEvent("ethereum:chainChanged", { detail })
       window.dispatchEvent(event)
-
-      return Ok.void()
     }
 
     const onNetworkChanged = async (request: RpcRequestPreinit<unknown>) => {
@@ -228,8 +220,6 @@ async function main() {
       const detail = JSON.stringify(chainId)
       const event = new CustomEvent("ethereum:networkChanged", { detail })
       window.dispatchEvent(event)
-
-      return Ok.void()
     }
 
     stack.getOrThrow().defer(router.events.on("request", onBackgroundRequest, { passive: true }))
@@ -245,8 +235,8 @@ async function main() {
     try {
       const router = await routers.getOrThrow(0).then(r => r.get().get().getOrThrow().get())
 
-      const result = await router.tryRequest({ method: "brume_run", params: [request, mouse] })
-      const response = RpcResponse.rewrap(request.id, result.flatten())
+      const result = await router.requestOrThrow({ method: "brume_run", params: [request, mouse] })
+      const response = RpcResponse.rewrap(request.id, result)
 
       const detail = JSON.stringify(response)
       const output = new CustomEvent("ethereum:response", { detail })
