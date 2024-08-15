@@ -968,7 +968,6 @@ export class Global {
     return userState.current?.get()
   }
 
-
   async brume_switchEthereumChain(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<void> {
     const user = Option.unwrap(this.#user)
 
