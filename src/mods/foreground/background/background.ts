@@ -41,7 +41,7 @@ export class ServiceWorkerBackground {
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
-    const port = await this.ports.getOrThrow(0).then(r => r.unwrap().inner.inner.inner)
+    const port = await this.ports.getOrThrow(0).then(r => r.get().get().getOrThrow().get())
 
     return await port.requestOrThrow<T>(init)
   }
@@ -154,7 +154,7 @@ export class WorkerBackground {
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
-    const port = await this.ports.getOrThrow(0).then(r => r.unwrap().inner.inner.inner)
+    const port = await this.ports.getOrThrow(0).then(r => r.get().get().getOrThrow().get())
 
     return await port.requestOrThrow<T>(init)
   }
@@ -242,7 +242,7 @@ export class ExtensionBackground {
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
-    const port = await this.ports.getOrThrow(0).then(r => r.unwrap().inner.inner.inner)
+    const port = await this.ports.getOrThrow(0).then(r => r.get().get().getOrThrow().get())
 
     return await port.requestOrThrow<T>(init)
   }

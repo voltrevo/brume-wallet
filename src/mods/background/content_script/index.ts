@@ -243,7 +243,7 @@ async function main() {
     const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
 
     try {
-      const router = await routers.getOrThrow(0).then(r => r.unwrap().get().getOrThrow().get())
+      const router = await routers.getOrThrow(0).then(r => r.get().get().getOrThrow().get())
 
       const result = await router.tryRequest({ method: "brume_run", params: [request, mouse] })
       const response = RpcResponse.rewrap(request.id, result.flatten())

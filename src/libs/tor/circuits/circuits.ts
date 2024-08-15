@@ -93,7 +93,7 @@ export namespace Circuits {
           using circuit = await loopOrThrow(async () => {
             let start = Date.now()
 
-            const tor = await tors.inner.getOrThrow(index % tors.inner.capacity, signal).then(r => r.unwrap().get().getOrThrow())
+            const tor = await tors.inner.getOrThrow(index % tors.inner.capacity, signal).then(r => r.get().get().getOrThrow())
 
             const microdescsQuery = MicrodescQuery.All.create(undefined, storage)
             const microdescsData = await microdescsQuery.state.then(r => Option.unwrap(r.current?.unwrap()))
