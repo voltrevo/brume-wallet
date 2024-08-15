@@ -1,4 +1,4 @@
-import { Chains } from "@/libs/ethereum/mods/chain"
+import { chainDataByChainId, Chains } from "@/libs/ethereum/mods/chain"
 import { Objects } from "@/libs/objects/objects"
 import { ping } from "@/libs/ping"
 import { Sockets } from "@/libs/sockets/sockets"
@@ -120,16 +120,16 @@ export namespace WcBrume {
 
 export namespace EthBrume {
 
-  export function create(circuits: Mutex<Pool<Circuit>>, chains: Chains): EthBrume {
+  export function create(circuits: Mutex<Pool<Circuit>>): EthBrume {
     const subcircuits = Circuits.subpool(circuits, { capacity: 3 })
-    const conns = Objects.mapValuesSync(chains, x => RpcCircuits.create(subcircuits, x.urls))
+    const conns = Objects.mapValuesSync(chainDataByChainId, x => RpcCircuits.create(subcircuits, x.urls))
 
     return { ...conns, circuits: subcircuits }
   }
 
-  export function createPool(circuits: Mutex<Pool<Circuit>>, chains: Chains, params: PoolParams) {
+  export function createPool(circuits: Mutex<Pool<Circuit>>, params: PoolParams) {
     return new Pool<EthBrume>(async (params) => {
-      const brume = new Box(EthBrume.create(circuits, chains))
+      const brume = new Box(EthBrume.create(circuits))
 
       /**
        * Wait for at least one ready circuit (or skip if all are errored)
