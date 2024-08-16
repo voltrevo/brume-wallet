@@ -517,6 +517,6 @@ export function UserAvatar(props: ClassNameProps & { name: string } & { color: C
   const { color, name, className } = props
 
   return <div className={`bg-${color}-400 dark:bg-${color}-500 rounded-full flex justify-center items-center ${className} text-white`}>
-    {name[0]}
+    {Array.from(name)[0]}
   </div>
 }
