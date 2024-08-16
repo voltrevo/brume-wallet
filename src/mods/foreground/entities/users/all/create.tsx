@@ -1,5 +1,4 @@
 import { Color } from "@/libs/colors/colors";
-import { Emojis } from "@/libs/emojis/emojis";
 import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
@@ -29,7 +28,6 @@ export function UserCreateDialog(props: { next?: string }) {
 
   const modhash = useModhash(uuid)
   const color = Color.get(modhash)
-  const emoji = Emojis.get(modhash)
 
   const [rawNameInput = "", setRawNameInput] = useState<string>()
 
@@ -60,7 +58,7 @@ export function UserCreateDialog(props: { next?: string }) {
   }, [])
 
   const createOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    const user: UserInit = { uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, password: defPasswordInput }
+    const user: UserInit = { uuid, name: finalNameInput, color: Color.all.indexOf(color), password: defPasswordInput }
 
     await background.requestOrThrow<User[]>({
       method: "brume_createUser",
@@ -80,7 +78,7 @@ export function UserCreateDialog(props: { next?: string }) {
       location.assign(next)
 
     return
-  }), [uuid, finalNameInput, color, emoji, defPasswordInput, background, close, next])
+  }), [uuid, finalNameInput, color, defPasswordInput, background, close, next])
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key !== "Enter")

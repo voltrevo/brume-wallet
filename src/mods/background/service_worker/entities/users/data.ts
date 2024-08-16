@@ -36,9 +36,7 @@ export namespace UserRef {
 export interface UserInit {
   readonly uuid: string,
   readonly name: string,
-
   readonly color: number
-  readonly emoji: string
 
   readonly password: string
 }
@@ -46,9 +44,7 @@ export interface UserInit {
 export interface UserData {
   readonly uuid: string,
   readonly name: string,
-
   readonly color: number
-  readonly emoji: string
 
   readonly keyParamsBase64: HmacPbkdf2ParamsBase64
   readonly valueParamsBase64: AesGcmPbkdf2ParamsBase64
@@ -117,7 +113,7 @@ export namespace BgUser {
   }
 
   export async function createOrThrow(init: UserInit): Promise<UserData> {
-    const { uuid, name, color, emoji, password } = init
+    const { uuid, name, color, password } = init
 
     const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits"])
 
@@ -158,7 +154,7 @@ export namespace BgUser {
     const passwordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, 256))
     const passwordHashBase64 = Base64.get().encodePaddedOrThrow(passwordHashBytes)
 
-    return { uuid, name, color, emoji, keyParamsBase64, valueParamsBase64, passwordParamsBase64, passwordHashBase64 }
+    return { uuid, name, color, keyParamsBase64, valueParamsBase64, passwordParamsBase64, passwordHashBase64 }
   }
 
 }
