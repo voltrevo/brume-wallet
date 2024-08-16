@@ -27,14 +27,22 @@ export type MnemonicSeedData =
   | UnauthMnemonicSeedData
   | AuthMnemonicSeedData
 
+export function getSeedEmoji(type: SeedData["type"]): string {
+  if (type === "mnemonic")
+    return "🖋️"
+  if (type === "authMnemonic")
+    return "🔏"
+  if (type === "ledger")
+    return "✨"
+  return type satisfies never
+}
+
 export interface UnauthMnemonicSeedData {
   readonly type: "mnemonic"
 
   readonly uuid: string
   readonly name: string
-
   readonly color: number
-  readonly emoji: string
 
   readonly mnemonic: string
 }
@@ -44,9 +52,7 @@ export interface AuthMnemonicSeedData {
 
   readonly uuid: string
   readonly name: string
-
   readonly color: number
-  readonly emoji: string
 
   readonly mnemonic: {
     readonly ivBase64: string,
@@ -59,9 +65,7 @@ export interface LedgerSeedData {
 
   readonly uuid: string
   readonly name: string
-
   readonly color: number
-  readonly emoji: string
 
   /**
    * 44'/60'/0'/0/0 address in order to identify the seed

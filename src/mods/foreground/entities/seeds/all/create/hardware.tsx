@@ -1,6 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
 import { Color } from "@/libs/colors/colors";
-import { Emojis } from "@/libs/emojis/emojis";
 import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
@@ -11,7 +10,7 @@ import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { SeedData } from "@/mods/universal/entities/seeds/data";
-import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
+import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Ledger } from "@hazae41/ledger";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { Panic } from "@hazae41/result";
@@ -25,13 +24,11 @@ export function LedgerSeedCreatorDialog(props: {}) {
   const background = useBackgroundContext().unwrap()
 
   const subpath = useHashSubpath(path)
-  const connect = useCoords(subpath, "/connect")
 
   const uuid = useConstant(() => randomUUID())
 
   const modhash = useModhash(uuid)
   const color = Color.get(modhash)
-  const emoji = Emojis.get(modhash)
 
   const [rawNameInput = "", setRawNameInput] = useState<string>()
 
@@ -54,7 +51,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
 
     const { address } = await Ledger.Ethereum.getAddressOrThrow(connector, "44'/60'/0'/0/0")
 
-    const seed: SeedData = { type: "ledger", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address }
+    const seed: SeedData = { type: "ledger", uuid, name: finalNameInput, color: Color.all.indexOf(color), address }
 
     await background.requestOrThrow<void>({
       method: "brume_createSeed",
@@ -62,7 +59,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
     }).then(r => r.unwrap())
 
     close()
-  }), [finalNameInput, uuid, color, emoji, background, close])
+  }), [finalNameInput, uuid, color, background, close])
 
   const NameInput =
     <SimpleLabel>
@@ -107,7 +104,6 @@ export function LedgerSeedCreatorDialog(props: {}) {
         <div className="w-full aspect-video rounded-xl">
           <RawSeedCard
             name={finalNameInput}
-            emoji={emoji}
             color={color} />
         </div>
       </div>

@@ -76,9 +76,9 @@ export function WalletEditDialog(props: {}) {
       <div className="w-full max-w-sm">
         <div className="w-full aspect-video rounded-xl">
           <RawWalletCard
+            type={wallet.type}
             uuid={wallet.uuid}
             name={finalNameInput}
-            emoji={wallet.emoji}
             address={wallet.address}
             color={color} />
         </div>

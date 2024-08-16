@@ -1,5 +1,4 @@
 import { Color } from "@/libs/colors/colors";
-import { Emojis } from "@/libs/emojis/emojis";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
@@ -30,7 +29,6 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
 
   const modhash = useModhash(uuid)
   const color = Color.get(modhash)
-  const emoji = Emojis.get(modhash)
 
   const mainnet = useEthereumContext(uuid, chainDataByChainId[1])
 
@@ -79,7 +77,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
       return new UIError(`Could not fetch or parse address`)
     }).mapSync(x => Address.fromOrThrow(x) as ZeroHexString).unwrap()
 
-    const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address }
+    const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: finalNameInput, color: Color.all.indexOf(color), address }
 
     await background.requestOrThrow<Wallet[]>({
       method: "brume_createWallet",
@@ -87,7 +85,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
     }).then(r => r.unwrap())
 
     close()
-  }), [finalNameInput, maybeAddress, uuid, color, emoji, background, close])
+  }), [finalNameInput, maybeAddress, uuid, color, background, close])
 
   const addDisabled = useMemo(() => {
     if (addOrAlert.loading)
@@ -145,7 +143,6 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
             <RawWalletCard
               uuid={uuid}
               name={finalNameInput}
-              emoji={emoji}
               address={maybeAddress}
               color={color} />
           </div>}

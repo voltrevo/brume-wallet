@@ -1,5 +1,4 @@
 import { Color } from "@/libs/colors/colors";
-import { Emojis } from "@/libs/emojis/emojis";
 import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
@@ -31,7 +30,6 @@ export function StandaloneSeedCreatorDialog(props: {}) {
 
   const modhash = useModhash(uuid)
   const color = Color.get(modhash)
-  const emoji = Emojis.get(modhash)
 
   const [rawNameInput = "", setRawNameInput] = useState<string>()
 
@@ -69,7 +67,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     if (!isSafariExtension() && confirm("Did you backup your seed phrase?") === false)
       return
 
-    const seed: SeedData = { type: "mnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, mnemonic: defPhraseInput }
+    const seed: SeedData = { type: "mnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), mnemonic: defPhraseInput }
 
     await background.requestOrThrow<void>({
       method: "brume_createSeed",
@@ -77,7 +75,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     }).then(r => r.unwrap())
 
     close()
-  }), [finalNameInput, defPhraseInput, uuid, color, emoji, background, close])
+  }), [finalNameInput, defPhraseInput, uuid, color, background, close])
 
   const triedEncryptedPhrase = useAsyncReplaceMemo(() => Result.runAndWrap(async () => {
     if (!finalNameInput)
@@ -136,7 +134,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     const idBase64 = Base64.get().encodePaddedOrThrow(id)
     const mnemonic = { ivBase64, idBase64 }
 
-    const seed: SeedData = { type: "authMnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, mnemonic }
+    const seed: SeedData = { type: "authMnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), mnemonic }
 
     await background.requestOrThrow<void>({
       method: "brume_createSeed",
@@ -144,7 +142,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     }).then(r => r.unwrap())
 
     close()
-  }), [id, finalNameInput, triedEncryptedPhrase, uuid, color, emoji, background, close])
+  }), [id, finalNameInput, triedEncryptedPhrase, uuid, color, background, close])
 
   const NameInput =
     <SimpleLabel>
@@ -228,7 +226,6 @@ export function StandaloneSeedCreatorDialog(props: {}) {
         <div className="w-full aspect-video rounded-xl">
           <RawSeedCard
             name={finalNameInput}
-            emoji={emoji}
             color={color} />
         </div>
       </div>

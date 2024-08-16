@@ -1,5 +1,4 @@
 import { Color } from "@/libs/colors/colors";
-import { Emojis } from "@/libs/emojis/emojis";
 import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
@@ -33,7 +32,6 @@ export function StandaloneWalletCreatorDialog(props: {}) {
 
   const modhash = useModhash(uuid)
   const color = Color.get(modhash)
-  const emoji = Emojis.get(modhash)
 
   const [rawNameInput = "", setRawNameInput] = useState<string>()
 
@@ -80,7 +78,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       return
 
     const address = triedAddress.unwrap()
-    const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, privateKey: zeroHexKey }
+    const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), address, privateKey: zeroHexKey }
 
     await background.requestOrThrow<void>({
       method: "brume_createWallet",
@@ -88,7 +86,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     }).then(r => r.unwrap())
 
     close()
-  }), [finalNameInput, zeroHexKey, uuid, color, emoji, background, close])
+  }), [finalNameInput, zeroHexKey, uuid, color, background, close])
 
   const triedEncryptedPrivateKey = useAsyncReplaceMemo(() => Result.runAndWrap(async () => {
     if (!finalNameInput)
@@ -149,7 +147,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     const idBase64 = Base64.get().encodePaddedOrThrow(id)
     const privateKey = { ivBase64, idBase64 }
 
-    const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), emoji, address, privateKey }
+    const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), address, privateKey }
 
     await background.requestOrThrow<void>({
       method: "brume_createWallet",
@@ -157,7 +155,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     }).then(r => r.unwrap())
 
     close()
-  }), [id, finalNameInput, triedAddress, triedEncryptedPrivateKey, uuid, color, emoji, background, close])
+  }), [id, finalNameInput, triedAddress, triedEncryptedPrivateKey, uuid, color, background, close])
 
   const NameInput =
     <SimpleLabel>
@@ -238,7 +236,6 @@ export function StandaloneWalletCreatorDialog(props: {}) {
             <RawWalletCard
               uuid={uuid}
               name={finalNameInput}
-              emoji={emoji}
               address={triedAddress.get()}
               color={color} />
           </div>}

@@ -6,6 +6,7 @@ import { Events, useMouseCancel } from "@/libs/react/events"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { AnchorProps, ButtonProps } from "@/libs/react/props/html"
 import { ButtonShrinkerDiv } from "@/libs/ui/shrinker"
+import { getWalletEmoji, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Address, ZeroHexString } from "@hazae41/cubane"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -21,10 +22,10 @@ export function RawWalletDataCard(props: { index?: number } & { href?: string } 
   const { index, href, privateKey, flip, unflip } = props
 
   return <RawWalletCard
+    type={wallet.type}
     uuid={wallet.uuid}
     address={wallet.address}
     name={wallet.name}
-    emoji={wallet.emoji}
     color={Color.get(wallet.color)}
     privateKey={privateKey}
     flip={flip}
@@ -33,9 +34,9 @@ export function RawWalletDataCard(props: { index?: number } & { href?: string } 
     href={href} />
 }
 
-export function RawWalletCard(props: { uuid: string } & { name: string } & { emoji: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { href?: string } & { privateKey?: string } & { flip?: boolean } & { unflip?: () => void }) {
+export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: string } & { name: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { href?: string } & { privateKey?: string } & { flip?: boolean } & { unflip?: () => void }) {
   const path = usePathContext().unwrap()
-  const { uuid, address, name, emoji, color, index, href, privateKey, flip, unflip } = props
+  const { type, uuid, address, name, color, index, href, privateKey, flip, unflip } = props
 
   const subpath = useHashSubpath(path)
   const genius = useCoords(subpath, href)
@@ -83,7 +84,7 @@ export function RawWalletCard(props: { uuid: string } & { name: string } & { emo
   const First =
     <div className="flex items-center">
       <div className="flex-none text-xl">
-        {emoji}
+        {type && getWalletEmoji(type)}
       </div>
       <div className="w-2 grow" />
       {index == null && href != null &&

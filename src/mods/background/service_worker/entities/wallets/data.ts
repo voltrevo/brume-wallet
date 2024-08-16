@@ -49,15 +49,25 @@ export type EthereumPrivateKeyWalletData =
   | EthereumUnauthPrivateKeyWalletData
   | EthereumAuthPrivateKeyWalletData
 
+export function getWalletEmoji(type: WalletData["type"]): string {
+  if (type === "seeded")
+    return "🌱"
+  if (type === "readonly")
+    return "👀"
+  if (type === "privateKey")
+    return "🔑"
+  if (type === "authPrivateKey")
+    return "🔐"
+  return type satisfies never
+}
+
 export interface EthereumReadonlyWalletData {
   readonly coin: "ethereum"
   readonly type: "readonly"
 
   readonly uuid: string
   readonly name: string,
-
   readonly color: number,
-  readonly emoji: string
 
   readonly address: ZeroHexString
 
@@ -70,9 +80,7 @@ export interface EthereumUnauthPrivateKeyWalletData {
 
   readonly uuid: string
   readonly name: string,
-
   readonly color: number,
-  readonly emoji: string
 
   readonly address: ZeroHexString
 
@@ -87,9 +95,7 @@ export interface EthereumAuthPrivateKeyWalletData {
 
   readonly uuid: string
   readonly name: string,
-
   readonly color: number,
-  readonly emoji: string
 
   readonly address: ZeroHexString
 
@@ -107,9 +113,7 @@ export interface EthereumSeededWalletData {
 
   readonly uuid: string
   readonly name: string,
-
   readonly color: number,
-  readonly emoji: string
 
   readonly address: ZeroHexString
 

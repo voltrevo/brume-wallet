@@ -1,5 +1,6 @@
 import { Color } from "@/libs/colors/colors"
 import { Outline } from "@/libs/icons/icons"
+import { getSeedEmoji, SeedData } from "@/mods/universal/entities/seeds/data"
 import { useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { useCallback, useEffect, useState } from "react"
 import { flushSync } from "react-dom"
@@ -11,8 +12,8 @@ export function RawSeedDataCard(props: { href?: string } & { index?: number } & 
   const { href, index, flip, unflip } = props
 
   return <RawSeedCard
+    type={seed.type}
     name={seed.name}
-    emoji={seed.emoji}
     color={Color.get(seed.color)}
     flip={flip}
     unflip={unflip}
@@ -20,9 +21,9 @@ export function RawSeedDataCard(props: { href?: string } & { index?: number } & 
     href={href} />
 }
 
-export function RawSeedCard(props: { name: string } & { emoji: string } & { color: Color } & { href?: string } & { index?: number } & { flip?: boolean } & { unflip?: () => void }) {
+export function RawSeedCard(props: { type?: SeedData["type"] } & { name: string } & { color: Color } & { href?: string } & { index?: number } & { flip?: boolean } & { unflip?: () => void }) {
   const path = usePathContext().unwrap()
-  const { name, emoji, color, href, index, flip, unflip } = props
+  const { type, name, color, href, index, flip, unflip } = props
 
   const subpath = useHashSubpath(path)
   const genius = useCoords(subpath, href)
@@ -46,7 +47,7 @@ export function RawSeedCard(props: { name: string } & { emoji: string } & { colo
   const First =
     <div className="flex items-center">
       <div className="flex-none text-xl">
-        {emoji}
+        {type && getSeedEmoji(type)}
       </div>
       <div className="w-2 grow" />
       {index == null && href != null &&
