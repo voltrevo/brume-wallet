@@ -88,7 +88,7 @@ export namespace WcBrume {
 
   export async function createOrThrow(circuits: Mutex<Pool<Circuit>>, key: Ed25519.PrivateKey): Promise<WcBrume> {
     const relay = Wc.RELAY
-    const auth = await Jwt.trySign(key, relay).then(r => r.unwrap())
+    const auth = await Jwt.signOrThrow(key, relay)
     const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
     const url = `${relay}/?auth=${auth}&projectId=${projectId}`
 

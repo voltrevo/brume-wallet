@@ -2,7 +2,7 @@ import { Ciphertext, Envelope, EnvelopeTypeZero, Plaintext } from "@/libs/wconn/
 import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { Base64 } from "@hazae41/base64";
 import { Opaque, Readable, Writable } from "@hazae41/binary";
-import { Bytes } from "@hazae41/bytes";
+import { Bytes, Uint8Array } from "@hazae41/bytes";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Future } from "@hazae41/future";
 import { RpcId, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
@@ -143,20 +143,18 @@ export class CryptoClient {
 
   private constructor(
     readonly topic: string,
-    readonly key: Bytes<32>,
+    readonly key: Uint8Array<32>,
     readonly irn: IrnBrume,
     readonly cipher: ChaCha20Poly1305.Cipher
   ) {
     irn.events.on("request", this.#onIrnRequest.bind(this))
   }
 
-  static tryNew(topic: string, key: Bytes<32>, irn: IrnBrume): Result<CryptoClient, Error> {
-    return Result.unthrowSync(t => {
-      const cipher = ChaCha20Poly1305.get().Cipher.tryImport(key).throw(t)
-      const client = new CryptoClient(topic, key, irn, cipher)
+  static createOrThrow(topic: string, key: Uint8Array<32>, irn: IrnBrume): CryptoClient {
+    const cipher = ChaCha20Poly1305.get().Cipher.tryImport(key).unwrap()
+    const client = new CryptoClient(topic, key, irn, cipher)
 
-      return new Ok(client)
-    })
+    return client
   }
 
   async #onIrnRequest(request: RpcRequestPreinit<unknown>) {
@@ -175,46 +173,42 @@ export class CryptoClient {
   }
 
   async #onMessage(message: string): Promise<Result<true, Error>> {
-    return Result.unthrow(async t => {
-      using slice = Base64.get().tryDecodePadded(message).throw(t)
+    using slice = Base64.get().decodePaddedOrThrow(message)
 
-      const envelope = Readable.tryReadFromBytes(Envelope, slice.bytes).throw(t)
-      const cipher = envelope.fragment.tryReadInto(Ciphertext).throw(t)
-      const plain = cipher.tryDecrypt(this.cipher).throw(t)
-      const plaintext = Bytes.toUtf8(plain.fragment.bytes)
+    const envelope = Readable.readFromBytesOrThrow(Envelope, slice.bytes)
+    const cipher = envelope.fragment.readIntoOrThrow(Ciphertext)
+    const plain = cipher.decryptOrThrow(this.cipher)
+    const plaintext = Bytes.toUtf8(plain.fragment.bytes)
 
-      const data = SafeJson.parse(plaintext) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
+    const data = SafeJson.parse(plaintext) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
 
-      if ("method" in data)
-        this.#onRequest(data).then(r => r.unwrap()).catch(console.warn)
-      else
-        this.#onResponse(data).then(r => r.unwrap()).catch(console.warn)
+    if ("method" in data)
+      this.#onRequest(data).then(r => r.unwrap()).catch(console.warn)
+    else
+      this.#onResponse(data).then(r => r.unwrap()).catch(console.warn)
 
-      return new Ok(true)
-    })
+    return new Ok(true)
   }
 
   async #onRequest(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
-    return Result.unthrow(async t => {
-      // console.log("relay request", "->", request)
+    // console.log("relay request", "->", request)
 
-      if (typeof request.id !== "number")
-        return Ok.void()
-      if (this.#ack.has(request.id))
-        return Ok.void()
-      this.#ack.add(request.id)
-
-      const result = await this.#tryRouteRequest(request)
-      const response = RpcResponse.rewrap(request.id, result)
-      // console.log("relay", "<-", response)
-
-      const { topic } = this
-      const message = this.#tryEncrypt(response).throw(t)
-      const { prompt, tag, ttl } = ENGINE_RPC_OPTS[request.method].res
-      await this.irn.tryPublish({ topic, message, prompt, tag, ttl }).then(r => r.throw(t))
-
+    if (typeof request.id !== "number")
       return Ok.void()
-    })
+    if (this.#ack.has(request.id))
+      return Ok.void()
+    this.#ack.add(request.id)
+
+    const result = await this.#tryRouteRequest(request)
+    const response = RpcResponse.rewrap(request.id, result)
+    // console.log("relay", "<-", response)
+
+    const { topic } = this
+    const message = this.#encryptOrThrow(response)
+    const { prompt, tag, ttl } = ENGINE_RPC_OPTS[request.method].res
+    await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl })
+
+    return Ok.void()
   }
 
   async #tryRouteRequest(request: RpcRequestPreinit<unknown>) {
@@ -236,39 +230,35 @@ export class CryptoClient {
     return new Err(new Error(`Unhandled`))
   }
 
-  #tryEncrypt(data: unknown): Result<string, Error> {
-    return Result.unthrowSync(t => {
-      const plaintext = SafeJson.stringify(data)
-      const plain = new Plaintext(new Opaque(Bytes.fromUtf8(plaintext)))
-      const iv = Bytes.random(12) // TODO maybe use a counter
-      const cipher = plain.tryEncrypt(this.cipher, iv).throw(t)
-      const envelope = new EnvelopeTypeZero(cipher)
-      const bytes = Writable.tryWriteToBytes(envelope).throw(t)
-      const message = Base64.get().tryEncodePadded(bytes).throw(t)
+  #encryptOrThrow(data: unknown): string {
+    const plaintext = SafeJson.stringify(data)
+    const plain = new Plaintext(new Opaque(Bytes.fromUtf8(plaintext)))
+    const iv = Bytes.random(12) // TODO maybe use a counter
+    const cipher = plain.encryptOrThrow(this.cipher, iv)
+    const envelope = new EnvelopeTypeZero(cipher)
+    const bytes = Writable.writeToBytesOrThrow(envelope)
+    const message = Base64.get().encodePaddedOrThrow(bytes)
 
-      return new Ok(message)
-    })
+    return message
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<WcReceiptAndPromise<T>, Error>> {
-    return Result.unthrow(async t => {
-      const request = SafeRpc.prepare(init)
-      // console.log("relay", "<-", request)
+    const request = SafeRpc.prepare(init)
+    // console.log("relay", "<-", request)
 
-      const { topic } = this
-      const message = this.#tryEncrypt(request).throw(t)
-      const { prompt, tag, ttl } = ENGINE_RPC_OPTS[init.method].req
+    const { topic } = this
+    const message = this.#encryptOrThrow(request)
+    const { prompt, tag, ttl } = ENGINE_RPC_OPTS[init.method].req
 
-      const { id } = request
-      const end = Date.now() + (ttl * 1000)
+    const { id } = request
+    const end = Date.now() + (ttl * 1000)
 
-      const receipt = { id, end }
-      const promise = this.tryWait<T>(receipt)
+    const receipt = { id, end }
+    const promise = this.tryWait<T>(receipt)
 
-      await this.irn.tryPublish({ topic, message, prompt, tag, ttl }).then(r => r.throw(t))
+    await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl })
 
-      return new Ok({ receipt, promise })
-    })
+    return new Ok({ receipt, promise })
   }
 
   async waitOrThrow<T>(receipt: RpcReceipt): Promise<RpcResponse<T>> {
@@ -297,7 +287,6 @@ export class CryptoClient {
       signal.removeEventListener("abort", onAbort)
     }
   }
-
 
   async tryWait<T>(receipt: RpcReceipt): Promise<Result<RpcResponse<T>, Error>> {
     return await Result.runAndDoubleWrap(async () => this.waitOrThrow(receipt))

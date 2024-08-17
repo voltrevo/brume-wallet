@@ -1,10 +1,11 @@
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Base16 } from "@hazae41/base16";
+import type { Uint8Array } from "@hazae41/bytes";
 import { Bytes } from "@hazae41/bytes";
 import { Future } from "@hazae41/future";
 import { RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
 import { None, Option, Some } from "@hazae41/option";
-import { Err, Ok, Result } from "@hazae41/result";
+import { Ok, Result } from "@hazae41/result";
 import { X25519 } from "@hazae41/x25519";
 import { CryptoClient, RpcReceipt, WcReceiptAndPromise } from "../crypto/client";
 import { IrnBrume } from "../irn/irn";
@@ -78,17 +79,13 @@ export class WcSession {
     readonly metadata: WcMetadata
   ) { }
 
-  async tryClose(reason: unknown): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      await this.client.tryRequest({
-        method: "wc_sessionDelete",
-        params: { code: 6000, message: "User disconnected." }
-      }).then(r => r.throw(t))
+  async closeOrThrow(reason: unknown): Promise<void> {
+    await this.client.tryRequest({
+      method: "wc_sessionDelete",
+      params: { code: 6000, message: "User disconnected." }
+    }).then(r => r.unwrap())
 
-      await this.client.irn.tryClose(reason).then(r => r.throw(t))
-
-      return Ok.void()
-    })
+    await this.client.irn.closeOrThrow(reason)
   }
 
 }
@@ -98,7 +95,7 @@ export interface WcPairParams {
   readonly version: "2"
   readonly pairingTopic: string
   readonly relayProtocol: "irn"
-  readonly symKey: Bytes<32>
+  readonly symKey: Uint8Array<32>
 }
 
 export interface WcSessionParams {
@@ -106,36 +103,34 @@ export interface WcSessionParams {
   readonly version: "2"
   readonly sessionTopic: string
   readonly relayProtocol: "irn"
-  readonly symKey: Bytes<32>
+  readonly symKey: Uint8Array<32>
 }
 
 export namespace Wc {
 
   export const RELAY = "wss://relay.walletconnect.org"
 
-  export function tryParse(url: URL): Promise<Result<WcPairParams, Error>> {
-    return Result.unthrow(async t => {
-      const { protocol, pathname, searchParams } = url
+  export function parseOrThrow(url: URL): WcPairParams {
+    const { protocol, pathname, searchParams } = url
 
-      if (protocol !== "wc:")
-        return new Err(new Error(`Invalid protocol`))
+    if (protocol !== "wc:")
+      throw new Error(`Invalid protocol`)
 
-      const [pairingTopic, version] = pathname.split("@")
+    const [pairingTopic, version] = pathname.split("@")
 
-      if (version !== "2")
-        return new Err(new Error(`Invalid version`))
+    if (version !== "2")
+      throw new Error(`Invalid version`)
 
-      const relayProtocol = Option.wrap(searchParams.get("relay-protocol")).ok().throw(t)
+    const relayProtocol = Option.unwrap(searchParams.get("relay-protocol"))
 
-      if (relayProtocol !== "irn")
-        return new Err(new Error(`Invalid relay protocol`))
+    if (relayProtocol !== "irn")
+      throw new Error(`Invalid relay protocol`)
 
-      const symKeyHex = Option.wrap(searchParams.get("symKey")).ok().throw(t)
-      const symKeyRaw = Base16.get().tryPadStartAndDecode(symKeyHex).throw(t).copyAndDispose()
-      const symKey = Bytes.tryCast(symKeyRaw, 32).throw(t)
+    const symKeyHex = Option.unwrap(searchParams.get("symKey"))
+    const symKeyRaw = Base16.get().padStartAndDecodeOrThrow(symKeyHex).copyAndDispose()
+    const symKey = Bytes.castOrThrow(symKeyRaw, 32)
 
-      return new Ok({ protocol, pairingTopic, version, relayProtocol, symKey })
-    })
+    return { protocol, pairingTopic, version, relayProtocol, symKey }
   }
 
   export interface WcSettlement {
@@ -143,67 +138,65 @@ export namespace Wc {
     readonly promise: Promise<Result<RpcResponse<boolean>, Error>>
   }
 
-  export async function tryPair(irn: IrnBrume, params: WcPairParams, address: string): Promise<Result<[WcSession, WcReceiptAndPromise<boolean>], Error>> {
-    return await Result.unthrow(async t => {
-      const { pairingTopic, symKey } = params
+  export async function pairOrThrow(irn: IrnBrume, params: WcPairParams, address: string): Promise<[WcSession, WcReceiptAndPromise<boolean>]> {
+    const { pairingTopic, symKey } = params
 
-      const pairing = CryptoClient.tryNew(pairingTopic, symKey, irn).throw(t)
+    const pairing = CryptoClient.createOrThrow(pairingTopic, symKey, irn)
 
-      const relay = { protocol: "irn" }
+    const relay = { protocol: "irn" }
 
-      const selfPrivate = await X25519.get().PrivateKey.tryRandom().then(r => r.throw(t))
-      const selfPublic = selfPrivate.tryGetPublicKey().throw(t)
+    const selfPrivate = await X25519.get().PrivateKey.tryRandom().then(r => r.unwrap())
+    const selfPublic = selfPrivate.tryGetPublicKey().unwrap()
 
-      using selfPublicMemory = await selfPublic.tryExport().then(r => r.throw(t))
-      const selfPublicHex = Base16.get().tryEncode(selfPublicMemory).throw(t)
+    using selfPublicMemory = await selfPublic.tryExport().then(r => r.unwrap())
+    const selfPublicHex = Base16.get().encodeOrThrow(selfPublicMemory)
 
-      await irn.trySubscribe(pairingTopic).then(r => r.throw(t))
+    await irn.subscribeOrThrow(pairingTopic)
 
-      const proposal = await pairing.events.wait("request", async (future: Future<RpcRequestPreinit<WcSessionProposeParams>>, request) => {
-        if (request.method !== "wc_sessionPropose")
-          return new None()
-        future.resolve(request as RpcRequestPreinit<WcSessionProposeParams>)
-        return new Some(new Ok({ relay, responderPublicKey: selfPublicHex }))
-      }).inner
+    const proposal = await pairing.events.wait("request", async (future: Future<RpcRequestPreinit<WcSessionProposeParams>>, request) => {
+      if (request.method !== "wc_sessionPropose")
+        return new None()
+      future.resolve(request as RpcRequestPreinit<WcSessionProposeParams>)
+      return new Some(new Ok({ relay, responderPublicKey: selfPublicHex }))
+    }).inner
 
-      using peerPublicMemory = Base16.get().tryPadStartAndDecode(proposal.params.proposer.publicKey).throw(t)
-      const peerPublic = await X25519.get().PublicKey.tryImport(peerPublicMemory).then(r => r.throw(t))
+    using peerPublicMemory = Base16.get().padStartAndDecodeOrThrow(proposal.params.proposer.publicKey)
+    const peerPublic = await X25519.get().PublicKey.tryImport(peerPublicMemory).then(r => r.unwrap())
 
-      const sharedRef = await selfPrivate.tryCompute(peerPublic).then(r => r.throw(t))
-      using sharedSlice = sharedRef.tryExport().throw(t)
+    const sharedRef = await selfPrivate.tryCompute(peerPublic).then(r => r.unwrap())
+    using sharedSlice = sharedRef.tryExport().unwrap()
 
-      const hdfk_key = await crypto.subtle.importKey("raw", sharedSlice.bytes, "HKDF", false, ["deriveBits"])
-      const hkdf_params = { name: "HKDF", hash: "SHA-256", info: new Uint8Array(), salt: new Uint8Array() }
+    const hdfk_key = await crypto.subtle.importKey("raw", sharedSlice.bytes, "HKDF", false, ["deriveBits"])
+    const hkdf_params = { name: "HKDF", hash: "SHA-256", info: new Uint8Array(), salt: new Uint8Array() }
 
-      const sessionKey = new Uint8Array(await crypto.subtle.deriveBits(hkdf_params, hdfk_key, 8 * 32)) as Bytes<32>
-      const sessionDigest = new Uint8Array(await crypto.subtle.digest("SHA-256", sessionKey))
-      const sessionTopic = Base16.get().tryEncode(sessionDigest).throw(t)
-      const session = CryptoClient.tryNew(sessionTopic, sessionKey, irn).throw(t)
+    const sessionKey = new Uint8Array(await crypto.subtle.deriveBits(hkdf_params, hdfk_key, 8 * 32)) as Uint8Array<32>
+    const sessionDigest = new Uint8Array(await crypto.subtle.digest("SHA-256", sessionKey))
+    const sessionTopic = Base16.get().encodeOrThrow(sessionDigest)
+    const session = CryptoClient.createOrThrow(sessionTopic, sessionKey, irn)
 
-      await irn.trySubscribe(sessionTopic).then(r => r.throw(t))
+    await irn.subscribeOrThrow(sessionTopic)
 
-      {
-        const { proposer, requiredNamespaces, optionalNamespaces } = proposal.params
+    {
+      const { proposer, requiredNamespaces, optionalNamespaces } = proposal.params
 
-        const namespaces = {
-          eip155: {
-            chains: Object.values(chainDataByChainId).map(chain => `eip155:${chain.chainId}`),
-            methods: ["eth_sendTransaction", "personal_sign", "eth_signTypedData", "eth_signTypedData_v4"],
-            events: ["chainChanged", "accountsChanged"],
-            accounts: Object.values(chainDataByChainId).map(chain => `eip155:${chain.chainId}:${address}`)
-          }
+      const namespaces = {
+        eip155: {
+          chains: Object.values(chainDataByChainId).map(chain => `eip155:${chain.chainId}`),
+          methods: ["eth_sendTransaction", "personal_sign", "eth_signTypedData", "eth_signTypedData_v4"],
+          events: ["chainChanged", "accountsChanged"],
+          accounts: Object.values(chainDataByChainId).map(chain => `eip155:${chain.chainId}:${address}`)
         }
-
-        const metadata = { name: "Brume", description: "Brume", url: location.origin, icons: [] }
-        const controller = { publicKey: selfPublicHex, metadata }
-        const expiry = Math.floor((Date.now() + (7 * 24 * 60 * 60 * 1000)) / 1000)
-        const params: WcSessionSettleParams = { relay, namespaces, requiredNamespaces, optionalNamespaces, pairingTopic, controller, expiry }
-
-        const settlement = await session.tryRequest<boolean>({ method: "wc_sessionSettle", params }).then(r => r.throw(t))
-
-        return new Ok([new WcSession(session, proposer.metadata), settlement])
       }
-    })
+
+      const metadata = { name: "Brume", description: "Brume", url: location.origin, icons: [] }
+      const controller = { publicKey: selfPublicHex, metadata }
+      const expiry = Math.floor((Date.now() + (7 * 24 * 60 * 60 * 1000)) / 1000)
+      const params: WcSessionSettleParams = { relay, namespaces, requiredNamespaces, optionalNamespaces, pairingTopic, controller, expiry }
+
+      const settlement = await session.tryRequest<boolean>({ method: "wc_sessionSettle", params }).then(r => r.unwrap())
+
+      return [new WcSession(session, proposer.metadata), settlement]
+    }
   }
 
 }

@@ -2,7 +2,6 @@ import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { Future } from "@hazae41/future";
 import { RpcRequest, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
 import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume";
-import { Err, Ok, Result } from "@hazae41/result";
 
 export namespace SafeRpc {
 
@@ -11,12 +10,12 @@ export namespace SafeRpc {
     return new RpcRequest(id, init.method, init.params)
   }
 
-  export async function tryRequest<T>(socket: WebSocket, init: RpcRequestPreinit<unknown>, signal: AbortSignal) {
+  export async function requestOrThrow<T>(socket: WebSocket, init: RpcRequestPreinit<unknown>, signal: AbortSignal) {
     const request = prepare(init)
 
     socket.send(SafeJson.stringify(request))
 
-    const future = new Future<Result<RpcResponse<T>, ClosedError | ErroredError | AbortedError>>()
+    const future = new Future<RpcResponse<T>>()
 
     const onMessage = async (event: MessageEvent<unknown>) => {
       if (typeof event.data !== "string")
@@ -25,19 +24,19 @@ export namespace SafeRpc {
 
       if (response.id !== request.id)
         return
-      future.resolve(new Ok(response))
+      future.resolve(response)
     }
 
     const onError = (e: unknown) => {
-      future.resolve(new Err(ErroredError.from(e)))
+      future.reject(ErroredError.from(e))
     }
 
     const onClose = (e: unknown) => {
-      future.resolve(new Err(ClosedError.from(e)))
+      future.reject(ClosedError.from(e))
     }
 
     const onAbort = () => {
-      future.resolve(new Err(AbortedError.from(signal.reason)))
+      future.reject(AbortedError.from(signal.reason))
     }
 
     try {

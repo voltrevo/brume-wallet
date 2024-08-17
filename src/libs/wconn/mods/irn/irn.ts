@@ -9,7 +9,7 @@ import { Mutex } from "@hazae41/mutex";
 import { None } from "@hazae41/option";
 import { Pool, PoolEntry } from "@hazae41/piscine";
 import { CloseEvents, ErrorEvents, SuperEventTarget } from "@hazae41/plume";
-import { Err, Ok, Result } from "@hazae41/result";
+import { Err, Result } from "@hazae41/result";
 import { SafeRpc } from "../rpc/rpc";
 
 export interface IrnSubscriptionPayload {
@@ -70,7 +70,7 @@ export class IrnBrume {
           const irn = new IrnSockets(new Mutex(circuit))
 
           for (const topic of this.topics)
-            await irn.trySubscribe(topic).then(r => r.unwrap())
+            await irn.subscribeOrThrow(topic)
 
           const onRequest = async (request: RpcRequestPreinit<unknown>) => {
             return await this.events.emit("request", request)
@@ -132,34 +132,29 @@ export class IrnBrume {
     return new Disposer(pool, () => stack.dispose())
   }
 
-  async trySubscribe(topic: string): Promise<Result<void, Error>> {
-    return await Result.runAndDoubleWrap(async () => {
-      const client = await this.pool.getOrThrow(0)
-      await client.trySubscribe(topic).then(r => r.unwrap())
-      this.topics.add(topic)
-    })
+  async subscribeOrThrow(topic: string): Promise<void> {
+    const client = await this.pool.getOrThrow(0)
+    await client.subscribeOrThrow(topic)
+
+    this.topics.add(topic)
   }
 
-  async tryPublish(payload: IrnPublishPayload): Promise<Result<void, Error>> {
-    return await Result.runAndDoubleWrap(async () => {
-      const client = await this.pool.getOrThrow(0)
-      await client.tryPublish(payload).then(r => r.unwrap())
-    })
+  async publishOrThrow(payload: IrnPublishPayload): Promise<void> {
+    const client = await this.pool.getOrThrow(0)
+    await client.publishOrThrow(payload)
   }
 
-  async tryClose(reason: unknown): Promise<Result<void, Error>> {
-    return Result.runAndDoubleWrap(async () => {
-      this.#closed = { reason }
+  async closeOrThrow(reason: unknown): Promise<void> {
+    this.#closed = { reason }
 
-      await this.events.emit("close", [reason])
+    await this.events.emit("close", [reason])
 
-      const irn = await Result.runAndWrap(() => this.pool.getOrThrow(0))
+    const irn = await Result.runAndWrap(() => this.pool.getOrThrow(0))
 
-      if (irn.isErr())
-        return
+    if (irn.isErr())
+      return
 
-      await irn.get().tryClose(reason).then(r => r.unwrap())
-    })
+    await irn.get().closeOrThrow(reason)
   }
 
 }
@@ -209,7 +204,7 @@ export class IrnSockets {
           using preirn = new Box(new IrnClient(preconn.unwrapOrThrow().socket))
 
           for (const topic of this.topics)
-            await preirn.inner.trySubscribe(topic).then(r => r.unwrap())
+            await preirn.inner.subscribeOrThrow(topic)
 
           const onRequest = async (request: RpcRequestPreinit<unknown>) => {
             return await this.events.emit("request", request)
@@ -275,34 +270,29 @@ export class IrnSockets {
     return new Disposer(pool, () => stack.dispose())
   }
 
-  async trySubscribe(topic: string): Promise<Result<void, Error>> {
-    return await Result.runAndDoubleWrap(async () => {
-      const client = await this.pool.inner.getOrThrow(0)
-      await client.trySubscribe(topic).then(r => r.unwrap())
-      this.topics.add(topic)
-    })
+  async subscribeOrThrow(topic: string): Promise<void> {
+    const client = await this.pool.inner.getOrThrow(0)
+    await client.subscribeOrThrow(topic)
+
+    this.topics.add(topic)
   }
 
-  async tryPublish(payload: IrnPublishPayload): Promise<Result<void, Error>> {
-    return await Result.runAndDoubleWrap(async () => {
-      const client = await this.pool.inner.getOrThrow(0)
-      await client.tryPublish(payload).then(r => r.unwrap())
-    })
+  async publishOrThrow(payload: IrnPublishPayload): Promise<void> {
+    const client = await this.pool.inner.getOrThrow(0)
+    await client.publishOrThrow(payload)
   }
 
-  async tryClose(reason: unknown): Promise<Result<void, Error>> {
-    return Result.runAndDoubleWrap(async () => {
-      this.#closed = { reason }
+  async closeOrThrow(reason: unknown): Promise<void> {
+    this.#closed = { reason }
 
-      await this.events.emit("close", [reason])
+    await this.events.emit("close", [reason])
 
-      const irn = await Result.runAndWrap(() => this.pool.inner.getOrThrow(0))
+    const irn = await Result.runAndWrap(() => this.pool.inner.getOrThrow(0))
 
-      if (irn.isErr())
-        return
+    if (irn.isErr())
+      return
 
-      await irn.get().tryClose(reason).then(r => r.unwrap())
-    })
+    await irn.get().closeOrThrow(reason)
   }
 
 }
@@ -326,7 +316,7 @@ export class IrnClient {
   }
 
   [Symbol.dispose]() {
-    this.tryClose(undefined).catch(console.error)
+    this.closeOrThrow(undefined).catch(console.error)
   }
 
   get closed() {
@@ -372,35 +362,37 @@ export class IrnClient {
     }
   }
 
-  async trySubscribe(topic: string): Promise<Result<string, Error>> {
-    return await Result.unthrow(async t => {
-      const subscription = await SafeRpc.tryRequest<string>(this.socket, {
-        method: "irn_subscribe",
-        params: { topic }
-      }, AbortSignal.timeout(ping.value * 6)).then(r => r.throw(t).throw(t))
+  async subscribeOrThrow(topic: string): Promise<string> {
+    const signal = AbortSignal.timeout(ping.value * 6)
 
-      this.topicBySubscription.set(subscription, topic)
+    const subscription = await SafeRpc.requestOrThrow<string>(this.socket, {
+      method: "irn_subscribe",
+      params: { topic }
+    }, signal).then(r => r.unwrap())
 
-      return new Ok(subscription)
-    })
+    this.topicBySubscription.set(subscription, topic)
+
+    return subscription
   }
 
-  async tryPublish(payload: IrnPublishPayload): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const result = await SafeRpc.tryRequest<boolean>(this.socket, {
-        method: "irn_publish",
-        params: payload
-      }, AbortSignal.timeout(ping.value * 6)).then(r => r.throw(t).throw(t))
+  async publishOrThrow(payload: IrnPublishPayload): Promise<void> {
+    const signal = AbortSignal.timeout(ping.value * 6)
 
-      return Result.assert(result).mapErrSync(() => new Error("Failed to publish"))
-    })
+    const result = await SafeRpc.requestOrThrow<boolean>(this.socket, {
+      method: "irn_publish",
+      params: payload
+    }, signal).then(r => r.unwrap())
+
+    if (!result)
+      throw new Error("Failed to publish")
+
+    return
   }
 
-  async tryClose(reason: unknown): Promise<Result<void, Error>> {
+  async closeOrThrow(reason: unknown): Promise<void> {
     this.#closed = { reason }
     await this.events.emit("close", [reason])
     this.socket.close()
-    return Ok.void()
   }
 
 }

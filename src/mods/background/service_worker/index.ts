@@ -1008,7 +1008,7 @@ export class Global {
     const wcSession = user.wcBySession.get(id)
 
     if (wcSession != null) {
-      await wcSession.tryClose(undefined).then(r => r.unwrap())
+      await wcSession.closeOrThrow(undefined)
       user.wcBySession.delete(id)
     }
 
@@ -1288,10 +1288,10 @@ export class Global {
 
     const rawSessionKey = Base64.get().decodePaddedOrThrow(sessionKeyBase64).copyAndDispose()
     const sessionKey = Bytes.castOrThrow(rawSessionKey, 32)
-    const sessionClient = CryptoClient.tryNew(topic, sessionKey, irn).unwrap()
+    const sessionClient = CryptoClient.createOrThrow(topic, sessionKey, irn)
     const session = new WcSession(sessionClient, metadata)
 
-    await irn.trySubscribe(topic).then(r => r.unwrap())
+    await irn.subscribeOrThrow(topic)
 
     /**
      * When settlement has been interrupted
@@ -1351,12 +1351,12 @@ export class Global {
     const walletData = Option.unwrap(walletState.real?.current.ok().get())
 
     const wcUrl = new URL(rawWcUrl)
-    const pairParams = await Wc.tryParse(wcUrl).then(r => r.unwrap())
+    const pairParams = await Wc.parseOrThrow(wcUrl)
 
     const brume = await Pool.takeCryptoRandomOrThrow(this.wcBrumes)
     const irn = new IrnBrume(brume)
 
-    const [session, settlement] = await Wc.tryPair(irn, pairParams, walletData.address).then(r => r.unwrap())
+    const [session, settlement] = await Wc.pairOrThrow(irn, pairParams, walletData.address)
 
     const originData: OriginData = {
       origin: `wc://${randomUUID()}`,

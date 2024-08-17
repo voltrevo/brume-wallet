@@ -430,15 +430,17 @@ export function WalletConnectMenu() {
       return Option.wrap(prompt("Paste a WalletConnect link here")).ok()
     }).unwrap())
 
-    const url = Result.runAndDoubleWrapSync(() => {
+    const url = Result.runAndWrapSync(() => {
       return new URL(clipboard)
     }).mapErrSync(() => {
       return new UIError("You must copy a WalletConnect link")
     }).unwrap()
 
-    await Wc.tryParse(url).then(r => r.mapErrSync(() => {
+    Result.runAndWrapSync(() => {
+      return Wc.parseOrThrow(url)
+    }).mapErrSync(() => {
       return new UIError("You must copy a WalletConnect link")
-    }).unwrap())
+    }).unwrap()
 
     alert(`Connecting...`)
 
