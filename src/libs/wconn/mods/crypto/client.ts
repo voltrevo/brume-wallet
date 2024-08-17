@@ -8,7 +8,7 @@ import { Future } from "@hazae41/future";
 import { RpcId, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { None, Some } from "@hazae41/option";
 import { SuperEventTarget } from "@hazae41/plume";
-import { Err, Ok, Result } from "@hazae41/result";
+import { Err, Result } from "@hazae41/result";
 import { IrnBrume, IrnSubscriptionPayload } from "../irn/irn";
 import { SafeRpc } from "../rpc/rpc";
 
@@ -129,7 +129,7 @@ export interface RpcReceipt {
 
 export interface WcReceiptAndPromise<T> {
   readonly receipt: RpcReceipt
-  readonly promise: Promise<Result<RpcResponse<T>, Error>>
+  readonly promise: Promise<RpcResponse<T>>
 }
 
 export class CryptoClient {
@@ -172,7 +172,7 @@ export class CryptoClient {
     return new Some(await this.#onMessage(data.message))
   }
 
-  async #onMessage(message: string): Promise<Result<true, Error>> {
+  async #onMessage(message: string): Promise<true> {
     using slice = Base64.get().decodePaddedOrThrow(message)
 
     const envelope = Readable.readFromBytesOrThrow(Envelope, slice.bytes)
@@ -183,20 +183,20 @@ export class CryptoClient {
     const data = SafeJson.parse(plaintext) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
 
     if ("method" in data)
-      this.#onRequest(data).then(r => r.unwrap()).catch(console.warn)
+      this.#onRequest(data).catch(console.warn)
     else
-      this.#onResponse(data).then(r => r.unwrap()).catch(console.warn)
+      this.#onResponse(data).catch(console.warn)
 
-    return new Ok(true)
+    return true
   }
 
-  async #onRequest(request: RpcRequestInit<unknown>): Promise<Result<void, Error>> {
+  async #onRequest(request: RpcRequestInit<unknown>): Promise<void> {
     // console.log("relay request", "->", request)
 
     if (typeof request.id !== "number")
-      return Ok.void()
+      return
     if (this.#ack.has(request.id))
-      return Ok.void()
+      return
     this.#ack.add(request.id)
 
     const result = await this.#tryRouteRequest(request)
@@ -207,8 +207,6 @@ export class CryptoClient {
     const message = this.#encryptOrThrow(response)
     const { prompt, tag, ttl } = ENGINE_RPC_OPTS[request.method].res
     await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl })
-
-    return Ok.void()
   }
 
   async #tryRouteRequest(request: RpcRequestPreinit<unknown>) {
@@ -225,9 +223,9 @@ export class CryptoClient {
     const returned = await this.events.emit("response", response)
 
     if (returned.isSome())
-      return Ok.void()
+      return
 
-    return new Err(new Error(`Unhandled`))
+    console.warn(`Unhandled`)
   }
 
   #encryptOrThrow(data: unknown): string {
@@ -242,7 +240,7 @@ export class CryptoClient {
     return message
   }
 
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<WcReceiptAndPromise<T>, Error>> {
+  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<WcReceiptAndPromise<T>> {
     const request = SafeRpc.prepare(init)
     // console.log("relay", "<-", request)
 
@@ -254,11 +252,11 @@ export class CryptoClient {
     const end = Date.now() + (ttl * 1000)
 
     const receipt = { id, end }
-    const promise = this.tryWait<T>(receipt)
+    const promise = this.waitOrThrow<T>(receipt)
 
     await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl })
 
-    return new Ok({ receipt, promise })
+    return { receipt, promise }
   }
 
   async waitOrThrow<T>(receipt: RpcReceipt): Promise<RpcResponse<T>> {
@@ -286,10 +284,6 @@ export class CryptoClient {
       this.events.off("response", onResponse)
       signal.removeEventListener("abort", onAbort)
     }
-  }
-
-  async tryWait<T>(receipt: RpcReceipt): Promise<Result<RpcResponse<T>, Error>> {
-    return await Result.runAndDoubleWrap(async () => this.waitOrThrow(receipt))
   }
 
 }

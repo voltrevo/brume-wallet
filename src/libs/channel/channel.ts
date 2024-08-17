@@ -120,10 +120,6 @@ export class MessageRpcRouter {
     return await this.onResponse(data)
   }
 
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>, signal = Signals.never()): Promise<Result<RpcResponse<T>, Error>> {
-    return Result.runAndDoubleWrap(() => this.requestOrThrow<T>(init, signal))
-  }
-
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = Signals.never()): Promise<RpcResponse<T>> {
     const request = this.counter.prepare(init)
 
@@ -253,10 +249,6 @@ export class ExtensionRpcRouter {
 
   async onDisconnect() {
     await this.events.emit("close", [undefined])
-  }
-
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return Result.runAndDoubleWrap(() => this.requestOrThrow<T>(init))
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = Signals.never()): Promise<RpcResponse<T>> {

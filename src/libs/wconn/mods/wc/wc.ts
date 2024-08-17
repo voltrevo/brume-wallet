@@ -3,11 +3,11 @@ import { Base16 } from "@hazae41/base16";
 import type { Uint8Array } from "@hazae41/bytes";
 import { Bytes } from "@hazae41/bytes";
 import { Future } from "@hazae41/future";
-import { RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
+import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { None, Option, Some } from "@hazae41/option";
-import { Ok, Result } from "@hazae41/result";
+import { Ok } from "@hazae41/result";
 import { X25519 } from "@hazae41/x25519";
-import { CryptoClient, RpcReceipt, WcReceiptAndPromise } from "../crypto/client";
+import { CryptoClient, WcReceiptAndPromise } from "../crypto/client";
 import { IrnBrume } from "../irn/irn";
 
 export interface WcMetadata {
@@ -80,11 +80,8 @@ export class WcSession {
   ) { }
 
   async closeOrThrow(reason: unknown): Promise<void> {
-    await this.client.tryRequest({
-      method: "wc_sessionDelete",
-      params: { code: 6000, message: "User disconnected." }
-    }).then(r => r.unwrap())
-
+    const params = { code: 6000, message: "User disconnected." }
+    await this.client.requestOrThrow({ method: "wc_sessionDelete", params })
     await this.client.irn.closeOrThrow(reason)
   }
 
@@ -131,11 +128,6 @@ export namespace Wc {
     const symKey = Bytes.castOrThrow(symKeyRaw, 32)
 
     return { protocol, pairingTopic, version, relayProtocol, symKey }
-  }
-
-  export interface WcSettlement {
-    readonly receipt: RpcReceipt,
-    readonly promise: Promise<Result<RpcResponse<boolean>, Error>>
   }
 
   export async function pairOrThrow(irn: IrnBrume, params: WcPairParams, address: string): Promise<[WcSession, WcReceiptAndPromise<boolean>]> {
@@ -193,7 +185,7 @@ export namespace Wc {
       const expiry = Math.floor((Date.now() + (7 * 24 * 60 * 60 * 1000)) / 1000)
       const params: WcSessionSettleParams = { relay, namespaces, requiredNamespaces, optionalNamespaces, pairingTopic, controller, expiry }
 
-      const settlement = await session.tryRequest<boolean>({ method: "wc_sessionSettle", params }).then(r => r.unwrap())
+      const settlement = await session.requestOrThrow<boolean>({ method: "wc_sessionSettle", params })
 
       return [new WcSession(session, proposer.metadata), settlement]
     }

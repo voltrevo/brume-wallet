@@ -733,7 +733,7 @@ export class Global {
     return [{ invoker: session.origin, parentCapability: "eth_accounts", caveats: [] }]
   }
 
-  async eth_getBalance(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>): Promise<Result<unknown, Error>> {
+  async eth_getBalance(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>): Promise<unknown> {
     const user = Option.unwrap(this.#user)
 
     const [address, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
@@ -1263,15 +1263,12 @@ export class Global {
     if (sessionDataOpt.inner.type !== "wc")
       return
 
-    const sessionResult = await this.#tryWcReconnect(sessionDataOpt.inner)
+    const sessionData = sessionDataOpt.inner
+    const sessionResult = await Result.runAndDoubleWrap(() => this.#wcReconnectOrThrow(sessionData))
 
     const { id } = sessionRef
     const error = sessionResult.mapErrSync(RpcError.rewrap).err().inner
     await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id, error }))
-  }
-
-  async #tryWcReconnect(sessionData: WcSessionData): Promise<Result<WcSession, Error>> {
-    return await Result.runAndDoubleWrap(() => this.#wcReconnectOrThrow(sessionData))
   }
 
   async #wcReconnectOrThrow(sessionData: WcSessionData): Promise<WcSession> {
@@ -1351,7 +1348,7 @@ export class Global {
     const walletData = Option.unwrap(walletState.real?.current.ok().get())
 
     const wcUrl = new URL(rawWcUrl)
-    const pairParams = await Wc.parseOrThrow(wcUrl)
+    const pairParams = Wc.parseOrThrow(wcUrl)
 
     const brume = await Pool.takeCryptoRandomOrThrow(this.wcBrumes)
     const irn = new IrnBrume(brume)
@@ -1391,7 +1388,7 @@ export class Global {
      * Service worker can die here
      */
     await settlement.promise
-      .then(r => r.unwrap().unwrap())
+      .then(r => r.unwrap())
       .then(Result.assert)
       .then(r => r.unwrap())
 

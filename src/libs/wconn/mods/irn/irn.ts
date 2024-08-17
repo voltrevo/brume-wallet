@@ -1,5 +1,4 @@
 import { ping } from "@/libs/ping";
-import { Results } from "@/libs/results/results";
 import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { WcBrume, WebSocketConnection } from "@/mods/background/service_worker/entities/brumes/data";
 import { Box } from "@hazae41/box";
@@ -9,7 +8,7 @@ import { Mutex } from "@hazae41/mutex";
 import { None } from "@hazae41/option";
 import { Pool, PoolEntry } from "@hazae41/piscine";
 import { CloseEvents, ErrorEvents, SuperEventTarget } from "@hazae41/plume";
-import { Err, Result } from "@hazae41/result";
+import { Err, Ok, Result } from "@hazae41/result";
 import { SafeRpc } from "../rpc/rpc";
 
 export interface IrnSubscriptionPayload {
@@ -35,7 +34,7 @@ export class IrnBrume {
   readonly topics = new Set<string>()
 
   readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
-    request: (request: RpcRequestPreinit<unknown>) => Result<unknown, Error>
+    request: (request: RpcRequestPreinit<unknown>) => unknown
   }>()
 
   readonly pool: Pool<IrnSockets>
@@ -92,7 +91,7 @@ export class IrnBrume {
           }
 
           return new Disposer(new Box(irn), onEntryClean)
-        }).then(Results.log)
+        })
 
         if (result.isOk())
           return result.get()
@@ -164,7 +163,7 @@ export class IrnSockets {
   readonly topics = new Set<string>()
 
   readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
-    request: (request: RpcRequestPreinit<unknown>) => Result<unknown, Error>
+    request: (request: RpcRequestPreinit<unknown>) => unknown
   }>()
 
   readonly pool: Mutex<Pool<IrnClient>>
@@ -230,7 +229,7 @@ export class IrnSockets {
           }
 
           return new Disposer(irn, onEntryClean)
-        }).then(Results.log)
+        })
 
         if (result.isOk())
           return result.get()
@@ -302,7 +301,7 @@ export class IrnClient {
   readonly topicBySubscription = new Map<string, string>()
 
   readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
-    request: (request: RpcRequestPreinit<unknown>) => Result<unknown, Error>
+    request: (request: RpcRequestPreinit<unknown>) => unknown
   }>()
 
   #closed?: { reason: unknown }
@@ -343,18 +342,18 @@ export class IrnClient {
 
   async #onRequest(request: RpcRequestInit<unknown>) {
     // console.log("irn", "->", request)
-    const result = await this.#tryRouteRequest(request)
+    const result = await this.#routeAndWrap(request)
     const response = RpcResponse.rewrap(request.id, result)
     // console.log("irn", "<-", response)
     this.socket.send(SafeJson.stringify(response))
   }
 
-  async #tryRouteRequest(request: RpcRequestPreinit<unknown>) {
+  async #routeAndWrap(request: RpcRequestPreinit<unknown>) {
     try {
       const returned = await this.events.emit("request", request)
 
       if (returned.isSome())
-        return returned.inner
+        return new Ok(returned.inner)
 
       return new Err(new RpcInvalidRequestError())
     } catch (e: unknown) {
