@@ -62,15 +62,6 @@ export interface WcSessionRequestParams<T = unknown> {
   readonly request: RpcRequestPreinit<T>
 }
 
-export class WcProposal {
-
-  constructor(
-    readonly client: CryptoClient,
-    readonly metadata: WcMetadata
-  ) { }
-
-}
-
 export class WcSession {
 
   constructor(
