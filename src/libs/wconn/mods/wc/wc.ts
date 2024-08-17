@@ -5,7 +5,6 @@ import { Bytes } from "@hazae41/bytes";
 import { Future } from "@hazae41/future";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { None, Option, Some } from "@hazae41/option";
-import { Ok } from "@hazae41/result";
 import { X25519 } from "@hazae41/x25519";
 import { CryptoClient, WcReceiptAndPromise } from "../crypto/client";
 import { IrnBrume } from "../irn/irn";
@@ -149,7 +148,7 @@ export namespace Wc {
       if (request.method !== "wc_sessionPropose")
         return new None()
       future.resolve(request as RpcRequestPreinit<WcSessionProposeParams>)
-      return new Some(new Ok({ relay, responderPublicKey: selfPublicHex }))
+      return new Some({ relay, responderPublicKey: selfPublicHex })
     }).inner
 
     using peerPublicMemory = Base16.get().padStartAndDecodeOrThrow(proposal.params.proposer.publicKey)

@@ -5,10 +5,10 @@ import { Opaque, Readable, Writable } from "@hazae41/binary";
 import { Bytes, Uint8Array } from "@hazae41/bytes";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Future } from "@hazae41/future";
-import { RpcId, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
+import { RpcError, RpcId, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { None, Some } from "@hazae41/option";
 import { SuperEventTarget } from "@hazae41/plume";
-import { Err, Result } from "@hazae41/result";
+import { Err, Ok } from "@hazae41/result";
 import { IrnBrume, IrnSubscriptionPayload } from "../irn/irn";
 import { SafeRpc } from "../rpc/rpc";
 
@@ -135,7 +135,7 @@ export interface WcReceiptAndPromise<T> {
 export class CryptoClient {
 
   readonly events = new SuperEventTarget<{
-    request: (request: RpcRequestPreinit<unknown>) => Result<unknown, Error>
+    request: (request: RpcRequestPreinit<unknown>) => unknown
     response: (response: RpcResponseInit<unknown>) => void
   }>()
 
@@ -199,7 +199,7 @@ export class CryptoClient {
       return
     this.#ack.add(request.id)
 
-    const result = await this.#tryRouteRequest(request)
+    const result = await this.#routeAndWrap(request)
     const response = RpcResponse.rewrap(request.id, result)
     // console.log("relay", "<-", response)
 
@@ -209,13 +209,17 @@ export class CryptoClient {
     await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl })
   }
 
-  async #tryRouteRequest(request: RpcRequestPreinit<unknown>) {
-    const returned = await this.events.emit("request", request)
+  async #routeAndWrap(request: RpcRequestPreinit<unknown>) {
+    try {
+      const returned = await this.events.emit("request", request)
 
-    if (returned.isSome())
-      return returned.inner
+      if (returned.isSome())
+        return new Ok(returned.inner)
 
-    return new Err(new Error(`Unhandled`))
+      return new Err(new RpcInvalidRequestError())
+    } catch (e: unknown) {
+      return new Err(RpcError.rewrap(e))
+    }
   }
 
   async #onResponse(response: RpcResponseInit<unknown>) {
