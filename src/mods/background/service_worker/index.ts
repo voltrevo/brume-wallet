@@ -142,12 +142,12 @@ export class Global {
   constructor(
     readonly storage: IDBStorage
   ) {
-    this.sockets = new Mutex(createNativeWebSocketPool({ capacity: 1 }).get())
-    this.tors = new Mutex(createTorPool(this.sockets, storage, { capacity: 1 }).get())
-    this.circuits = new Mutex(Circuits.pool(this.tors, storage, { capacity: 8 }).get())
+    this.sockets = new Mutex(createNativeWebSocketPool(1).get())
+    this.tors = new Mutex(createTorPool(this.sockets, storage, 1).get())
+    this.circuits = new Mutex(Circuits.pool(this.tors, storage, 8).get())
 
-    this.wcBrumes = new Mutex(WcBrume.createPool(this.circuits, { capacity: 1 }))
-    this.ethBrumes = new Mutex(EthBrume.createPool(this.circuits, { capacity: 1 }))
+    this.wcBrumes = new Mutex(WcBrume.createPool(this.circuits, 1))
+    this.ethBrumes = new Mutex(EthBrume.createPool(this.circuits, 1))
 
     core.onState.on(BgAppRequest.All.key, async () => {
       const state = core.getStateSync(BgAppRequest.All.key) as State<AppRequest[], never>
@@ -1228,7 +1228,7 @@ export class Global {
     if (logs.real?.current?.get() !== true)
       return
 
-    using circuit = await Pool.takeCryptoRandomOrThrow(this.circuits).then(r => r.unwrap().inner.inner)
+    using circuit = await Pool.takeCryptoRandomOrThrow(this.circuits)
 
     const body = JSON.stringify({ tor: true, method: "eth_getBalance" })
 
@@ -1353,7 +1353,7 @@ export class Global {
     const wcUrl = new URL(rawWcUrl)
     const pairParams = await Wc.tryParse(wcUrl).then(r => r.unwrap())
 
-    const brume = await Pool.takeCryptoRandomOrThrow(this.wcBrumes).then(r => r.unwrap().inner.inner)
+    const brume = await Pool.takeCryptoRandomOrThrow(this.wcBrumes)
     const irn = new IrnBrume(brume)
 
     const [session, settlement] = await Wc.tryPair(irn, pairParams, walletData.address).then(r => r.unwrap())
@@ -1441,7 +1441,7 @@ export class Global {
 
     for (const iconUrl of session.metadata.icons) {
       (async () => {
-        using circuit = await Pool.takeCryptoRandomOrThrow(this.circuits).then(r => r.unwrap().inner.inner)
+        using circuit = await Pool.takeCryptoRandomOrThrow(this.circuits)
 
         console.debug(`Fetching ${iconUrl} with ${circuit.id}`)
 
@@ -1496,16 +1496,16 @@ export class UserSession {
 
   async getOrTakeEthBrumeOrThrow(uuid: string): Promise<EthBrume> {
     return await this.ethBrumeByUuid.lock(async ethBrumeByUuid => {
-      const cached = ethBrumeByUuid.get(uuid)
+      const prev = ethBrumeByUuid.get(uuid)
 
-      if (cached != null)
-        return cached
+      if (prev != null)
+        return prev
 
-      const fetched = await Pool.takeCryptoRandomOrThrow(this.global.ethBrumes).then(r => r.unwrap().inner.inner)
+      const next = await Pool.takeCryptoRandomOrThrow(this.global.ethBrumes)
 
-      ethBrumeByUuid.set(uuid, fetched)
+      ethBrumeByUuid.set(uuid, next)
 
-      return fetched
+      return next
     })
   }
 

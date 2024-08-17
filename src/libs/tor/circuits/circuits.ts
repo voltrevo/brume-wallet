@@ -9,8 +9,8 @@ import { fetch } from "@hazae41/fleche"
 import { Storage } from "@hazae41/glacier"
 import { Mutex } from "@hazae41/mutex"
 import { None, Option } from "@hazae41/option"
-import { Pool, PoolCreatorParams, PoolParams, Retry, loopOrThrow } from "@hazae41/piscine"
-import { Ok, Result } from "@hazae41/result"
+import { Pool, PoolCreatorParams, Retry, loopOrThrow } from "@hazae41/piscine"
+import { Result } from "@hazae41/result"
 
 export function createCircuitEntry(preCircuit: Box<Circuit>, params: PoolCreatorParams<Circuit>) {
   const { pool, index } = params
@@ -80,7 +80,7 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function pool(tors: Mutex<Pool<TorClientDuplex>>, storage: Storage, params: PoolParams) {
+  export function pool(tors: Mutex<Pool<TorClientDuplex>>, storage: Storage, size: number) {
     let update = Date.now()
 
     const pool = new Pool<Circuit>(async (params) => {
@@ -93,7 +93,7 @@ export namespace Circuits {
           using circuit = await loopOrThrow(async () => {
             let start = Date.now()
 
-            const tor = await tors.inner.getOrThrow(index % tors.inner.capacity, signal).then(r => r.get().get().getOrThrow())
+            const tor = await tors.inner.getOrThrow(index % tors.inner.length, signal)
 
             const microdescsQuery = MicrodescQuery.All.create(undefined, storage)
             const microdescsData = await microdescsQuery.state.then(r => Option.unwrap(r.current?.unwrap()))
@@ -169,7 +169,7 @@ export namespace Circuits {
           }, { max: 9 })
 
           console.log(`Added circuit #${index} in ${Date.now() - start}ms`)
-          console.log(`Circuits pool is now ${pool.size}/${pool.capacity}`)
+          console.log(`Circuits pool is now ${[...pool.okEntries].length}/${pool.length}`)
 
           return createCircuitEntry(circuit.moveOrThrow(), params)
         }).then(r => r.inspectErrSync(e => console.error(`Circuit creation failed`, { e })))
@@ -184,20 +184,20 @@ export namespace Circuits {
       }
 
       throw new Error(`Aborted`, { cause: signal.reason })
-    }, params)
+    })
 
     const stack = new DisposableStack()
 
     const onStarted = () => {
       update = Date.now()
 
-      for (let i = 0; i < pool.capacity; i++) {
-        const child = pool.tryGetSync(i)
+      for (let i = 0; i < pool.length; i++) {
+        const slot = Result.runAndWrapSync(() => pool.getRawSyncOrThrow(i))
 
-        if (child.isErr())
+        if (slot.isErr())
           continue
 
-        if (child.inner.isErr())
+        if (slot.get().isErr())
           pool.restart(i)
 
         continue
@@ -209,6 +209,9 @@ export namespace Circuits {
     tors.inner.events.on("started", onStarted, { passive: true })
     stack.defer(() => tors.inner.events.off("started", onStarted))
 
+    for (let i = 0; i < size; i++)
+      pool.start(i)
+
     return new Disposer(pool, () => stack.dispose())
   }
 
@@ -218,16 +221,16 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function subpool(circuits: Mutex<Pool<Circuit>>, params: PoolParams) {
+  export function subpool(circuits: Mutex<Pool<Circuit>>, size: number) {
     let update = Date.now()
 
     const pool = new Pool<Circuit>(async (params) => {
       while (true) {
         const start = Date.now()
 
-        const result = await Result.unthrow<Result<Disposer<Box<Circuit>>, Error>>(async t => {
-          using circuit = await Pool.tryTakeCryptoRandom(circuits).then(r => r.throw(t).throw(t).inner)
-          return new Ok(createCircuitEntry(circuit.moveOrThrow(), params))
+        const result = await Result.runAndWrap(async () => {
+          using circuit = new Box(await Pool.takeCryptoRandomOrThrow(circuits))
+          return createCircuitEntry(circuit.moveOrThrow(), params)
         })
 
         if (result.isOk())
@@ -238,27 +241,35 @@ export namespace Circuits {
 
         throw result.getErr()
       }
-    }, params)
+    })
 
-    circuits.inner.events.on("started", async () => {
+    const stack = new DisposableStack()
+
+    const onStarted = async () => {
       update = Date.now()
 
-      for (let i = 0; i < pool.capacity; i++) {
-        const child = pool.tryGetSync(i)
+      for (let i = 0; i < pool.length; i++) {
+        const slot = Result.runAndWrapSync(() => pool.getRawSyncOrThrow(i))
 
-        if (child.isErr())
+        if (slot.isErr())
           continue
 
-        if (child.inner.isErr())
+        if (slot.get().isErr())
           pool.restart(i)
 
         continue
       }
 
       return new None()
-    }, { passive: true })
+    }
 
-    return pool
+    circuits.inner.events.on("started", onStarted, { passive: true })
+    stack.defer(() => circuits.inner.events.off("started", onStarted))
+
+    for (let i = 0; i < size; i++)
+      pool.start(i)
+
+    return new Disposer(pool, () => stack.dispose())
   }
 
 }

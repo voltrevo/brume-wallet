@@ -41,9 +41,8 @@ export class ServiceWorkerBackground {
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
-    const port = await this.ports.getOrThrow(0).then(r => r.get().get().getOrThrow().get())
-
-    return await port.requestOrThrow<T>(init)
+    const port = await this.ports.getOrThrow(0)
+    return await port.get().requestOrThrow<T>(init)
   }
 
 }
@@ -71,7 +70,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
 
   resolveOnServiceWorker.catch(() => { })
 
-  return new Pool<Disposer<MessageRpcRouter>>(async (params) => {
+  const pool = new Pool<Disposer<MessageRpcRouter>>(async (params) => {
     const { pool, index } = params
 
     const serviceWorker = await resolveOnServiceWorker
@@ -130,7 +129,11 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
     }
 
     return new Disposer(wrapper, onEntryClean)
-  }, { capacity: 1 })
+  })
+
+  pool.start(0)
+
+  return pool
 }
 
 export class WorkerBackground {
@@ -154,15 +157,14 @@ export class WorkerBackground {
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
-    const port = await this.ports.getOrThrow(0).then(r => r.get().get().getOrThrow().get())
-
-    return await port.requestOrThrow<T>(init)
+    const port = await this.ports.getOrThrow(0)
+    return await port.get().requestOrThrow<T>(init)
   }
 
 }
 
 export function createWorkerPortPool(background: WorkerBackground): Pool<Disposer<MessageRpcRouter>> {
-  return new Pool<Disposer<MessageRpcRouter>>(async (params) => {
+  const pool = new Pool<Disposer<MessageRpcRouter>>(async (params) => {
     const { pool, index } = params
 
     const rawChannel = new MessageChannel()
@@ -222,7 +224,11 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
     }
 
     return new Disposer(wrapper, onEntryClean)
-  }, { capacity: 1 })
+  })
+
+  pool.start(0)
+
+  return pool
 }
 
 export class ExtensionBackground {
@@ -242,9 +248,8 @@ export class ExtensionBackground {
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
-    const port = await this.ports.getOrThrow(0).then(r => r.get().get().getOrThrow().get())
-
-    return await port.requestOrThrow<T>(init)
+    const port = await this.ports.getOrThrow(0)
+    return await port.get().requestOrThrow<T>(init)
   }
 
   async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
@@ -254,7 +259,7 @@ export class ExtensionBackground {
 }
 
 export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<ExtensionRpcRouter>> {
-  return new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
+  const pool = new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
     const { index, pool } = params
 
     using stack = new Box(new DisposableStack())
@@ -308,5 +313,9 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
     const unstack = stack.unwrapOrThrow()
 
     return new Disposer(entry, () => unstack.dispose())
-  }, { capacity: 1 })
+  })
+
+  pool.start(0)
+
+  return pool
 }

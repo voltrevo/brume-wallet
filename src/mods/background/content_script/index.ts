@@ -227,13 +227,13 @@ async function main() {
     const unstack = stack.unwrapOrThrow()
 
     return new Disposer(entry, () => unstack.dispose())
-  }, { capacity: 1 })
+  })
 
   const onScriptRequest = async (input: CustomEvent<string>) => {
     const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
 
     try {
-      const router = await routers.getOrThrow(0).then(r => r.get().get().getOrThrow().get())
+      const router = await routers.getOrThrow(0).then(r => r.get())
 
       const result = await router.requestOrThrow({ method: "brume_run", params: [request, mouse] })
       const response = RpcResponse.rewrap(request.id, result)
@@ -252,6 +252,8 @@ async function main() {
   }
 
   window.addEventListener("ethereum:request", onScriptRequest, { passive: true })
+
+  routers.start(0)
 }
 
 await main()

@@ -47,7 +47,7 @@ export class IrnBrume {
     readonly brume: WcBrume
   ) {
     this.circuits = new Mutex(brume.sockets)
-    this.pool = this.#pool()
+    this.pool = this.#pool().get()
   }
 
   get closed() {
@@ -61,16 +61,16 @@ export class IrnBrume {
       while (true) {
         const start = Date.now()
 
-        const result = await Result.unthrow<Result<Disposer<Box<IrnSockets>>, Error>>(async t => {
+        const result = await Result.runAndWrap(async () => {
           if (this.#closed)
-            return new Err(new Error("Closed", { cause: this.#closed.reason }))
+            throw new Error("Closed", { cause: this.#closed.reason })
 
-          const circuit = await Pool.tryTakeCryptoRandom(this.circuits).then(r => r.throw(t).throw(t).inner.inner)
+          const circuit = await Pool.takeCryptoRandomOrThrow(this.circuits)
 
           const irn = new IrnSockets(new Mutex(circuit))
 
           for (const topic of this.topics)
-            await irn.trySubscribe(topic).then(r => r.throw(t))
+            await irn.trySubscribe(topic).then(r => r.unwrap())
 
           const onRequest = async (request: RpcRequestPreinit<unknown>) => {
             return await this.events.emit("request", request)
@@ -91,7 +91,7 @@ export class IrnBrume {
             irn.events.off("error", onCloseOrError)
           }
 
-          return new Ok(new Disposer(new Box(irn), onEntryClean))
+          return new Disposer(new Box(irn), onEntryClean)
         }).then(Results.log)
 
         if (result.isOk())
@@ -102,58 +102,63 @@ export class IrnBrume {
 
         throw result.getErr()
       }
-    }, { capacity: 1 })
+    })
 
-    this.circuits.inner.events.on("started", async () => {
+    const stack = new DisposableStack()
+
+    const onStarted = () => {
       update = Date.now()
 
-      for (let i = 0; i < pool.capacity; i++) {
-        const child = pool.tryGetSync(i)
+      for (let i = 0; i < pool.length; i++) {
+        const slot = Result.runAndWrapSync(() => pool.getRawSyncOrThrow(i))
 
-        if (child.isErr())
+        if (slot.isErr())
           continue
 
-        if (child.inner.isErr())
+        if (slot.get().isErr())
           pool.restart(i)
 
         continue
       }
 
       return new None()
-    }, { passive: true })
+    }
 
-    return pool
+    this.circuits.inner.events.on("started", onStarted, { passive: true })
+    stack.defer(() => this.circuits.inner.events.off("started", onStarted))
+
+    pool.start(0)
+
+    return new Disposer(pool, () => stack.dispose())
   }
 
   async trySubscribe(topic: string): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const client = await this.pool.tryGet(0).then(r => r.throw(t).throw(t).inner.inner)
-      await client.trySubscribe(topic).then(r => r.throw(t))
+    return await Result.runAndDoubleWrap(async () => {
+      const client = await this.pool.getOrThrow(0)
+      await client.trySubscribe(topic).then(r => r.unwrap())
       this.topics.add(topic)
-      return Ok.void()
     })
   }
 
   async tryPublish(payload: IrnPublishPayload): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const client = await this.pool.tryGet(0).then(r => r.throw(t).throw(t).inner.inner)
-      await client.tryPublish(payload).then(r => r.throw(t))
-      return Ok.void()
+    return await Result.runAndDoubleWrap(async () => {
+      const client = await this.pool.getOrThrow(0)
+      await client.tryPublish(payload).then(r => r.unwrap())
     })
   }
 
   async tryClose(reason: unknown): Promise<Result<void, Error>> {
-    return Result.unthrow(async t => {
+    return Result.runAndDoubleWrap(async () => {
       this.#closed = { reason }
 
       await this.events.emit("close", [reason])
 
-      const irn = await this.pool.tryGet(0).then(r => r.flatten().ok().mapSync(x => x.inner.inner))
+      const irn = await Result.runAndWrap(() => this.pool.getOrThrow(0))
 
-      if (irn.isNone())
-        return Ok.void()
-      await irn.inner.tryClose(reason).then(r => r.throw(t))
-      return Ok.void()
+      if (irn.isErr())
+        return
+
+      await irn.get().tryClose(reason).then(r => r.unwrap())
     })
   }
 
@@ -174,7 +179,7 @@ export class IrnSockets {
   constructor(
     readonly sockets: Mutex<Pool<WebSocketConnection>>
   ) {
-    this.pool = new Mutex(this.#pool())
+    this.pool = new Mutex(this.#pool().get())
 
     this.pool.inner.events.on("created", this.#onCreated.bind(this))
   }
@@ -196,15 +201,15 @@ export class IrnSockets {
       while (true) {
         const start = Date.now()
 
-        const result = await Result.unthrow<Result<Disposer<Box<IrnClient>>, Error>>(async t => {
+        const result = await Result.runAndDoubleWrap(async () => {
           if (this.#closed)
-            return new Err(new Error("Closed", { cause: this.#closed.reason }))
+            throw new Error("Closed", { cause: this.#closed.reason })
 
-          using preconn = await Pool.tryTakeCryptoRandom(this.sockets).then(r => r.throw(t).throw(t).inner)
+          using preconn = new Box(await Pool.takeCryptoRandomOrThrow(this.sockets))
           using preirn = new Box(new IrnClient(preconn.unwrapOrThrow().socket))
 
           for (const topic of this.topics)
-            await preirn.inner.trySubscribe(topic).then(r => r.throw(t))
+            await preirn.inner.trySubscribe(topic).then(r => r.unwrap())
 
           const onRequest = async (request: RpcRequestPreinit<unknown>) => {
             return await this.events.emit("request", request)
@@ -229,7 +234,7 @@ export class IrnSockets {
             irn.inner.events.off("error", onCloseOrError)
           }
 
-          return new Ok(new Disposer(irn, onEntryClean))
+          return new Disposer(irn, onEntryClean)
         }).then(Results.log)
 
         if (result.isOk())
@@ -240,58 +245,63 @@ export class IrnSockets {
 
         throw result.getErr()
       }
-    }, { capacity: 1 })
+    })
 
-    this.sockets.inner.events.on("started", async () => {
+    const stack = new DisposableStack()
+
+    const onStarted = () => {
       update = Date.now()
 
-      for (let i = 0; i < pool.capacity; i++) {
-        const child = pool.tryGetSync(i)
+      for (let i = 0; i < pool.length; i++) {
+        const slot = Result.runAndWrapSync(() => pool.getRawSyncOrThrow(i))
 
-        if (child.isErr())
+        if (slot.isErr())
           continue
 
-        if (child.inner.isErr())
+        if (slot.get().isErr())
           pool.restart(i)
 
         continue
       }
 
       return new None()
-    }, { passive: true })
+    }
 
-    return pool
+    this.sockets.inner.events.on("started", onStarted, { passive: true })
+    stack.defer(() => this.sockets.inner.events.off("started", onStarted))
+
+    pool.start(0)
+
+    return new Disposer(pool, () => stack.dispose())
   }
 
   async trySubscribe(topic: string): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const client = await this.pool.inner.tryGet(0).then(r => r.throw(t).throw(t).inner.inner)
-      await client.trySubscribe(topic).then(r => r.throw(t))
+    return await Result.runAndDoubleWrap(async () => {
+      const client = await this.pool.inner.getOrThrow(0)
+      await client.trySubscribe(topic).then(r => r.unwrap())
       this.topics.add(topic)
-      return Ok.void()
     })
   }
 
   async tryPublish(payload: IrnPublishPayload): Promise<Result<void, Error>> {
-    return await Result.unthrow(async t => {
-      const client = await this.pool.inner.tryGet(0).then(r => r.throw(t).throw(t).inner.inner)
-      await client.tryPublish(payload).then(r => r.throw(t))
-      return Ok.void()
+    return await Result.runAndDoubleWrap(async () => {
+      const client = await this.pool.inner.getOrThrow(0)
+      await client.tryPublish(payload).then(r => r.unwrap())
     })
   }
 
   async tryClose(reason: unknown): Promise<Result<void, Error>> {
-    return Result.unthrow(async t => {
+    return Result.runAndDoubleWrap(async () => {
       this.#closed = { reason }
 
       await this.events.emit("close", [reason])
 
-      const irn = await this.pool.inner.tryGet(0).then(r => r.flatten().ok().mapSync(x => x.inner.inner))
+      const irn = await Result.runAndWrap(() => this.pool.inner.getOrThrow(0))
 
-      if (irn.isNone())
-        return Ok.void()
-      await irn.inner.tryClose(reason).then(r => r.throw(t))
-      return Ok.void()
+      if (irn.isErr())
+        return
+
+      await irn.get().tryClose(reason).then(r => r.unwrap())
     })
   }
 

@@ -12,7 +12,7 @@ import { Cubane, ZeroHexString } from "@hazae41/cubane";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
-import { Ok, Panic, Result } from "@hazae41/result";
+import { Panic, Result } from "@hazae41/result";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { FgEthereum } from "../../unknown/data";
 import { SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "../../wallets/actions/send";
@@ -46,10 +46,10 @@ export function TokenAddDialog(props: {}) {
     if (!ZeroHexString.String.is(defAddress))
       throw new UIError(`Invalid address`)
 
-    const name = await Result.unthrow<Result<string, Error>>(async t => {
+    const name = await Result.runAndWrap(async () => {
       const context = { uuid: wallet.uuid, background, chain }
-      const signature = Cubane.Abi.FunctionSignature.tryParse("name()").throw(t)
-      const data = Cubane.Abi.tryEncode(signature.fromOrThrow()).throw(t)
+      const signature = Cubane.Abi.FunctionSignature.parseOrThrow("name()")
+      const data = Cubane.Abi.encodeOrThrow(signature.fromOrThrow())
 
       const schema = FgEthereum.Unknown.schema<ZeroHexString>({
         method: "eth_call",
@@ -62,18 +62,18 @@ export function TokenAddDialog(props: {}) {
       if (schema == null)
         throw new Panic()
 
-      const result = await schema.refetch().then(r => r.real?.current.throw(t))
+      const result = await schema.refetch().then(r => r.real?.current.unwrap())
 
       const returns = Cubane.Abi.Tuple.create(Cubane.Abi.String)
-      const [name] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
+      const [name] = Cubane.Abi.decodeOrThrow(returns, result!).intoOrThrow()
 
-      return new Ok(name)
+      return name
     }).then(r => r.unwrap())
 
-    const symbol = await Result.unthrow<Result<string, Error>>(async t => {
+    const symbol = await Result.runAndWrap(async () => {
       const context = { uuid: wallet.uuid, background, chain }
-      const signature = Cubane.Abi.FunctionSignature.tryParse("symbol()").throw(t)
-      const data = Cubane.Abi.tryEncode(signature.fromOrThrow()).throw(t)
+      const signature = Cubane.Abi.FunctionSignature.parseOrThrow("symbol()")
+      const data = Cubane.Abi.encodeOrThrow(signature.fromOrThrow())
 
       const schema = FgEthereum.Unknown.schema<ZeroHexString>({
         method: "eth_call",
@@ -86,18 +86,18 @@ export function TokenAddDialog(props: {}) {
       if (schema == null)
         throw new Panic()
 
-      const result = await schema.refetch().then(r => r.real?.current.throw(t))
+      const result = await schema.refetch().then(r => r.real?.current.unwrap())
 
       const returns = Cubane.Abi.Tuple.create(Cubane.Abi.String)
-      const [symbol] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
+      const [symbol] = Cubane.Abi.decodeOrThrow(returns, result!).intoOrThrow()
 
-      return new Ok(symbol)
+      return symbol
     }).then(r => r.unwrap())
 
-    const decimals = await Result.unthrow<Result<number, Error>>(async t => {
+    const decimals = await Result.runAndWrap(async () => {
       const context = { uuid: wallet.uuid, background, chain }
-      const signature = Cubane.Abi.FunctionSignature.tryParse("decimals()").throw(t)
-      const data = Cubane.Abi.tryEncode(signature.fromOrThrow()).throw(t)
+      const signature = Cubane.Abi.FunctionSignature.parseOrThrow("decimals()")
+      const data = Cubane.Abi.encodeOrThrow(signature.fromOrThrow())
 
       const schema = FgEthereum.Unknown.schema<ZeroHexString>({
         method: "eth_call",
@@ -110,12 +110,12 @@ export function TokenAddDialog(props: {}) {
       if (schema == null)
         throw new Panic()
 
-      const result = await schema.refetch().then(r => r.real?.current.throw(t))
+      const result = await schema.refetch().then(r => r.real?.current.unwrap())
 
       const returns = Cubane.Abi.Tuple.create(Cubane.Abi.Uint8)
-      const [decimals] = Cubane.Abi.tryDecode(returns, result!).throw(t).intoOrThrow()
+      const [decimals] = Cubane.Abi.decodeOrThrow(returns, result!).intoOrThrow()
 
-      return new Ok(Number(decimals))
+      return Number(decimals)
     }).then(r => r.unwrap())
 
     await token.mutate(s => {

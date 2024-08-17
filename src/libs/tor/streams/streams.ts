@@ -4,15 +4,15 @@ import { Disposer } from "@hazae41/disposer"
 import { Circuit } from "@hazae41/echalote"
 import { Mutex } from "@hazae41/mutex"
 import { None } from "@hazae41/option"
-import { Pool, PoolParams } from "@hazae41/piscine"
-import { Ok, Result } from "@hazae41/result"
+import { Pool } from "@hazae41/piscine"
+import { Result } from "@hazae41/result"
 import { Circuits } from "../circuits/circuits"
 
 export type Stream = Disposer<Mutex<ReadableWritablePair<Opaque, Writable>>>
 
 export namespace Streams {
 
-  export function createStreamPool(url: URL, circuits: Mutex<Pool<Circuit>>, params: PoolParams) {
+  export function createStreamPool(url: URL, circuits: Mutex<Pool<Circuit>>, size: number) {
     let update = Date.now()
 
     const pool = new Pool<Stream>(async (params) => {
@@ -21,9 +21,9 @@ export namespace Streams {
       while (true) {
         const start = Date.now()
 
-        const result = await Result.unthrow<Result<Disposer<Box<Stream>>, Error>>(async t => {
-          using precircuit = await Pool.tryTakeCryptoRandom(circuits).then(r => r.throw(t).throw(t).inner)
-          using prestream = new Box(await Circuits.tryOpenAs(precircuit.inner, url.origin).then(r => r.throw(t)))
+        const result = await Result.runAndWrap(async () => {
+          using precircuit = new Box(await Pool.takeCryptoRandomOrThrow(circuits))
+          using prestream = new Box(await Circuits.openAsOrThrow(precircuit.getOrThrow(), url.origin))
 
           const inputer = new TransformStream<Opaque, Opaque>({})
           const outputer = new TransformStream<Writable, Writable>({})
@@ -69,9 +69,7 @@ export namespace Streams {
             cleaned = true
           }
 
-          using preentry = new Box(new Disposer(resource, onEntryClean))
-
-          return new Ok(preentry.unwrapOrThrow())
+          return new Disposer(resource, onEntryClean)
         })
 
         if (result.isOk())
@@ -82,27 +80,32 @@ export namespace Streams {
 
         throw result.getErr()
       }
-    }, params)
+    })
 
-    circuits.inner.events.on("started", async () => {
+    const stack = new DisposableStack()
+
+    const onStarted = () => {
       update = Date.now()
 
-      for (let i = 0; i < pool.capacity; i++) {
-        const child = pool.tryGetSync(i)
+      for (let i = 0; i < pool.length; i++) {
+        const slot = Result.runAndWrapSync(() => pool.getRawSyncOrThrow(i))
 
-        if (child.isErr())
+        if (slot.isErr())
           continue
 
-        if (child.inner.isErr())
+        if (slot.get().isErr())
           pool.restart(i)
 
         continue
       }
 
       return new None()
-    }, { passive: true })
+    }
 
-    return pool
+    circuits.inner.events.on("started", onStarted, { passive: true })
+    stack.defer(() => circuits.inner.events.off("started", onStarted))
+
+    return new Disposer(pool, () => stack.dispose())
   }
 
 }
