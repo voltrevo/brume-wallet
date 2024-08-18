@@ -22,6 +22,8 @@ export function createNativeWebSocketPool(size: number) {
         return await (async () => {
           let start = Date.now()
 
+          using stack = new Box(new DisposableStack())
+
           const socket = new WebSocket("wss://snowflake.torproject.net/")
 
           socket.binaryType = "arraybuffer"
@@ -30,8 +32,6 @@ export function createNativeWebSocketPool(size: number) {
           await Sockets.waitOrThrow(socket)
           console.log(`Opened native WebSocket in ${Date.now() - start}ms`)
           ping.value = Date.now() - start
-
-          using stack = new Box(new DisposableStack())
 
           const entry = new Box(new Disposer(socket, () => socket.close()))
           stack.getOrThrow().use(entry)
@@ -96,10 +96,10 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage
       const result = await Result.runAndWrap(async () => {
         let start = Date.now()
 
+        using stack = new Box(new DisposableStack())
+
         const socket = await sockets.inner.getCryptoRandomOrThrow(signal)
         const stream = new WebSocketDuplex(socket.get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
-
-        using stack = new Box(new DisposableStack())
 
         start = Date.now()
         const tor = new Box(await createTorOrThrow(stream, Signals.merge(AbortSignal.timeout(ping.value * 2), signal)))

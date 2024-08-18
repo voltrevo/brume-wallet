@@ -38,7 +38,7 @@ export class IrnBrume {
   }>()
 
   readonly pool: Pool<IrnSockets>
-  readonly circuits: Mutex<Pool<Pool<WebSocketConnection>>>
+  readonly circuits: Mutex<Pool<Disposer<Pool<WebSocketConnection>>>>
 
   #closed?: { reason: unknown }
 
@@ -68,7 +68,7 @@ export class IrnBrume {
 
           const circuit = await Pool.takeCryptoRandomOrThrow(this.circuits, signal)
 
-          const irn = new IrnSockets(new Mutex(circuit))
+          const irn = new IrnSockets(new Mutex(circuit.get()))
 
           for (const topic of this.topics)
             await irn.subscribeOrThrow(topic)

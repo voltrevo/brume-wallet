@@ -21,7 +21,7 @@ import { Signals } from "@hazae41/signals"
 export interface WcBrume {
   readonly key: Ed25519.PrivateKey
   readonly circuits: Pool<Circuit>
-  readonly sockets: Pool<Pool<WebSocketConnection>>
+  readonly sockets: Pool<Disposer<Pool<WebSocketConnection>>>
 }
 
 export type EthBrumes = Pool<EthBrume>
@@ -106,12 +106,12 @@ export namespace WcBrume {
       /**
        * Wait for at least one ready circuit (or skip if all are errored)
        */
-      await Promise.any(brume.inner.circuits.okPromises).catch(() => { })
+      await Promise.any(brume.getOrThrow().circuits.okPromises).catch(() => { })
 
       /**
        * Wait for at least one ready socket pool (or skip if all are errored)
        */
-      await Promise.any(brume.inner.sockets.okPromises).catch(() => { })
+      await Promise.any(brume.getOrThrow().sockets.okPromises).catch(() => { })
 
       return new Disposer(brume, () => { })
     })
@@ -208,32 +208,32 @@ export namespace WebSocketConnection {
     const pool = new Pool<WebSocketConnection>(async (params) => {
       const { index, signal } = params
 
+      using stack = new Box(new DisposableStack())
+
       const url = new URL(urls[index])
       const raw = await WebSocketConnection.createOrThrow(circuit, url, signal)
+      const box = new Box(raw)
+      stack.getOrThrow().use(box)
 
       const onCloseOrError = async () => {
         pool.restart(index)
       }
 
       raw.socket.addEventListener("close", onCloseOrError, { passive: true })
+      stack.getOrThrow().defer(() => raw.socket.removeEventListener("close", onCloseOrError))
+
       raw.socket.addEventListener("error", onCloseOrError, { passive: true })
+      stack.getOrThrow().defer(() => raw.socket.removeEventListener("error", onCloseOrError))
 
-      const box = new Box(raw)
+      const unstack = stack.unwrapOrThrow()
 
-      const onEntryClean = () => {
-        using _ = box
-
-        raw.socket.removeEventListener("close", onCloseOrError)
-        raw.socket.removeEventListener("error", onCloseOrError)
-      }
-
-      return new Disposer(box, onEntryClean)
+      return new Disposer(box, () => unstack.dispose())
     })
 
     for (let i = 0; i < urls.length; i++)
       pool.start(i)
 
-    return pool
+    return new Disposer(pool, () => { })
   }
 
   /**
@@ -245,35 +245,35 @@ export namespace WebSocketConnection {
   export function createPools(subcircuits: Pool<Circuit>, urls: readonly string[]) {
     let update = Date.now()
 
-    const pool = new Pool<Pool<WebSocketConnection>>(async (params) => {
+    const pool = new Pool<Disposer<Pool<WebSocketConnection>>>(async (params) => {
       const { index, signal } = params
 
       while (!signal.aborted) {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
+          using stack = new Box(new DisposableStack())
+
           const circuit = await subcircuits.getOrThrow(index % subcircuits.length, signal)
           const subpool = new Box(WebSocketConnection.createPool(circuit, urls))
+          stack.getOrThrow().use(subpool)
 
           const onCloseOrError = async (reason?: unknown) => {
             pool.restart(index)
             return new None()
           }
 
-          circuit.events.on("close", onCloseOrError, { passive: true })
-          circuit.events.on("error", onCloseOrError, { passive: true })
-
-          const onEntryClean = () => {
-            circuit.events.off("close", onCloseOrError)
-            circuit.events.off("error", onCloseOrError)
-          }
+          stack.getOrThrow().defer(circuit.events.on("close", onCloseOrError, { passive: true }))
+          stack.getOrThrow().defer(circuit.events.on("error", onCloseOrError, { passive: true }))
 
           /**
            * Wait for at least one ready connection (or skip if all are errored)
            */
-          await Promise.any(subpool.inner.okPromises).catch(() => { })
+          await Promise.any(subpool.getOrThrow().get().okPromises).catch(() => { })
 
-          return new Disposer(subpool, onEntryClean)
+          const unstack = stack.unwrapOrThrow()
+
+          return new Disposer(subpool, () => unstack.dispose())
         })
 
         if (result.isOk())
@@ -345,36 +345,37 @@ export namespace RpcConnections {
     const pool = new Pool<RpcConnection>(async (params) => {
       const { index, signal } = params
 
+      using stack = new Box(new DisposableStack())
+
       const url = new URL(urls[index])
 
       if (url.protocol === "http:" || url.protocol === "https:") {
-        const box = new Box(new RpcConnection(new UrlConnection(circuit, url)))
+        const raw = new UrlConnection(circuit, url)
+        const box = new Box(new RpcConnection(raw))
+        stack.getOrThrow().use(box)
 
-        const onEntryClean = () => {
-          using _ = box
-        }
+        const unstack = stack.unwrapOrThrow()
 
-        return new Disposer(box, onEntryClean)
+        return new Disposer(box, () => unstack.dispose())
       }
 
       const raw = await WebSocketConnection.createOrThrow(circuit, url, signal)
       const box = new Box(new RpcConnection(raw))
+      stack.getOrThrow().use(box)
 
       const onCloseOrError = async () => {
         pool.restart(index)
       }
 
       raw.socket.addEventListener("close", onCloseOrError, { passive: true })
+      stack.getOrThrow().defer(() => raw.socket.removeEventListener("close", onCloseOrError))
+
       raw.socket.addEventListener("error", onCloseOrError, { passive: true })
+      stack.getOrThrow().defer(() => raw.socket.removeEventListener("error", onCloseOrError))
 
-      const onEntryClean = () => {
-        using _ = box
+      const unstack = stack.unwrapOrThrow()
 
-        raw.socket.removeEventListener("close", onCloseOrError)
-        raw.socket.removeEventListener("error", onCloseOrError)
-      }
-
-      return new Disposer(box, onEntryClean)
+      return new Disposer(box, () => unstack.dispose())
     })
 
     for (let i = 0; i < urls.length; i++)

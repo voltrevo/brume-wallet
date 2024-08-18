@@ -68,32 +68,34 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
   const pool = new Pool<Disposer<MessageRpcRouter>>(async (params) => {
     const { index, signal } = params
 
+    using stack = new Box(new DisposableStack())
+
     const serviceWorker = await resolveOnServiceWorker
 
-    const rawChannel = new MessageChannel()
+    const raw = new MessageChannel()
 
     const onRawClean = () => {
-      rawChannel.port1.close()
-      rawChannel.port2.close()
+      raw.port1.close()
+      raw.port2.close()
     }
 
-    using preChannel = new Box(new Disposer(rawChannel, onRawClean))
-    using preRouter = new Box(new MessageRpcRouter("background", rawChannel.port1))
+    using substack = new Box(new DisposableStack())
 
-    const channel = preChannel.unwrapOrThrow()
-    const router = preRouter.unwrapOrThrow()
+    const channel = new Disposer(raw, onRawClean)
+    substack.getOrThrow().use(channel)
 
-    const onWrapperClean = () => {
-      using _1 = channel
-      using _2 = router
-    }
+    const router = new MessageRpcRouter("background", raw.port1)
+    substack.getOrThrow().use(router)
 
-    using preWrapper = new Box(new Disposer(router, onWrapperClean))
+    const unsubstack = substack.unwrapOrThrow()
 
-    rawChannel.port1.start()
-    rawChannel.port2.start()
+    const entry = new Box(new Disposer(router, () => unsubstack.dispose()))
+    stack.getOrThrow().use(entry)
 
-    serviceWorker.postMessage("FOREGROUND->BACKGROUND", [rawChannel.port2])
+    raw.port1.start()
+    raw.port2.start()
+
+    serviceWorker.postMessage("FOREGROUND->BACKGROUND", [raw.port2])
 
     await router.waitHelloOrThrow(AbortSignal.any([signal, AbortSignal.timeout(1000)]))
 
@@ -107,23 +109,13 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
     const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
     const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
 
-    using preOnRequestDisposer = new Box(new Disposer({}, router.events.on("request", onRequest, { passive: true })))
-    using preOnResponseDisposer = new Box(new Disposer({}, router.events.on("response", onResponse, { passive: true })))
-    using preOnCloseDisposer = new Box(new Disposer({}, router.events.on("close", onClose, { passive: true })))
+    stack.getOrThrow().defer(router.events.on("request", onRequest, { passive: true }))
+    stack.getOrThrow().defer(router.events.on("response", onResponse, { passive: true }))
+    stack.getOrThrow().defer(router.events.on("close", onClose, { passive: true }))
 
-    const wrapper = preWrapper.moveOrThrow()
-    const onRequestDisposer = preOnRequestDisposer.moveOrThrow()
-    const onResponseDisposer = preOnResponseDisposer.moveOrThrow()
-    const onCloseDisposer = preOnCloseDisposer.moveOrThrow()
+    const unstack = stack.unwrapOrThrow()
 
-    const onEntryClean = () => {
-      using _0 = wrapper
-      using _1 = onRequestDisposer
-      using _2 = onResponseDisposer
-      using _3 = onCloseDisposer
-    }
-
-    return new Disposer(wrapper, onEntryClean)
+    return new Disposer(entry, () => unstack.dispose())
   })
 
   pool.start(0)
@@ -158,33 +150,35 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
   const pool = new Pool<Disposer<MessageRpcRouter>>(async (params) => {
     const { index, signal } = params
 
-    const rawChannel = new MessageChannel()
+    using stack = new Box(new DisposableStack())
+
+    const raw = new MessageChannel()
 
     const onRawClean = () => {
-      rawChannel.port1.close()
-      rawChannel.port2.close()
+      raw.port1.close()
+      raw.port2.close()
     }
 
-    using preWorker = new Box(new Disposer(new Worker("/service_worker.js"), w => w.terminate()))
-    using preChannel = new Box(new Disposer(rawChannel, onRawClean))
-    using preRouter = new Box(new MessageRpcRouter("background", rawChannel.port1))
+    using substack = new Box(new DisposableStack())
 
-    const worker = preWorker.unwrapOrThrow()
-    const channel = preChannel.unwrapOrThrow()
-    const router = preRouter.unwrapOrThrow()
+    const worker = new Disposer(new Worker("/service_worker.js"), w => w.terminate())
+    substack.getOrThrow().use(worker)
 
-    const onWrapperClean = () => {
-      using _0 = worker
-      using _1 = channel
-      using _2 = router
-    }
+    const channel = new Disposer(raw, onRawClean)
+    substack.getOrThrow().use(channel)
 
-    using preWrapper = new Box(new Disposer(router, onWrapperClean))
+    const router = new MessageRpcRouter("background", raw.port1)
+    substack.getOrThrow().use(router)
 
-    rawChannel.port1.start()
-    rawChannel.port2.start()
+    const unsubstack = substack.unwrapOrThrow()
 
-    worker.get().postMessage("FOREGROUND->BACKGROUND", [rawChannel.port2])
+    const entry = new Box(new Disposer(router, () => unsubstack.dispose()))
+    stack.getOrThrow().use(entry)
+
+    raw.port1.start()
+    raw.port2.start()
+
+    worker.get().postMessage("FOREGROUND->BACKGROUND", [raw.port2])
 
     await router.waitHelloOrThrow(AbortSignal.any([signal, AbortSignal.timeout(1000)]))
 
@@ -198,23 +192,13 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
     const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
     const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
 
-    using preOnRequestDisposer = new Box(new Disposer({}, router.events.on("request", onRequest, { passive: true })))
-    using preOnResponseDisposer = new Box(new Disposer({}, router.events.on("response", onResponse, { passive: true })))
-    using preOnCloseDisposer = new Box(new Disposer({}, router.events.on("close", onClose, { passive: true })))
+    stack.getOrThrow().defer(router.events.on("request", onRequest, { passive: true }))
+    stack.getOrThrow().defer(router.events.on("response", onResponse, { passive: true }))
+    stack.getOrThrow().defer(router.events.on("close", onClose, { passive: true }))
 
-    const wrapper = preWrapper.moveOrThrow()
-    const onRequestDisposer = preOnRequestDisposer.moveOrThrow()
-    const onResponseDisposer = preOnResponseDisposer.moveOrThrow()
-    const onCloseDisposer = preOnCloseDisposer.moveOrThrow()
+    const unstack = stack.unwrapOrThrow()
 
-    const onEntryClean = () => {
-      using _0 = wrapper
-      using _1 = onRequestDisposer
-      using _2 = onResponseDisposer
-      using _3 = onCloseDisposer
-    }
-
-    return new Disposer(wrapper, onEntryClean)
+    return new Disposer(entry, () => unstack.dispose())
   })
 
   pool.start(0)
