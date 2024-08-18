@@ -5,7 +5,7 @@ import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
-import { Catched, Panic, Result } from "@hazae41/result"
+import { Catched, Result } from "@hazae41/result"
 import { BgEthereumContext } from "../../context"
 import { BgTotal } from "../unknown/data"
 import { EthereumQueryKey } from "../wallets/data"
@@ -33,7 +33,7 @@ export namespace TokenRef {
       return NativeTokenRef.from(token)
     if (token.type === "contract")
       return ContractTokenRef.from(token)
-    throw new Panic()
+    return token satisfies never
   }
 }
 

@@ -1,7 +1,6 @@
 import { Mutators } from "@/libs/glacier/mutators";
 import { Data, IDBStorage, States, createQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
-import { Panic } from "@hazae41/result";
 import { Token, TokenRef } from "../../tokens/data";
 import { Wallet, WalletRef } from "../data";
 
@@ -61,7 +60,7 @@ export namespace BgTokenSettings {
       return `tokenSettings/${wallet.uuid}/${token.chainId}/native`
     if (token.type === "contract")
       return `tokenSettings/${wallet.uuid}/${token.chainId}/${token.address}`
-    throw new Panic()
+    return token satisfies never
   }
 
   export function schema(wallet: Nullable<Wallet>, token: Nullable<Token>, storage: IDBStorage) {

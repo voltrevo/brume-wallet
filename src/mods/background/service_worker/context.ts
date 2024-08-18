@@ -5,7 +5,7 @@ import { TorRpc } from "@/libs/rpc/rpc"
 import { Fail, Fetched, FetcherMore } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Option } from "@hazae41/option"
-import { Catched, Panic } from "@hazae41/result"
+import { Catched } from "@hazae41/result"
 import { Signals } from "@hazae41/signals"
 import { EthBrume } from "./entities/brumes/data"
 import { EthereumFetchParams } from "./entities/wallets/data"
@@ -55,7 +55,7 @@ export namespace BgEthereumContext {
             return Fetched.rewrap(response)
           }
 
-          throw new Panic()
+          return connection satisfies never
         }
 
         const promises = Array.from({ length: pool.length }, (_, i) => runWithConnOrThrow(i))

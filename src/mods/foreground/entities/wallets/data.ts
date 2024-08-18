@@ -281,7 +281,9 @@ export namespace EthereumWalletInstance {
       return await EthereumAuthPrivateKeyWalletInstance.createOrThrow(wallet, background)
     if (wallet.type === "seeded")
       return await EthereumSeededWalletInstance.createOrThrow(wallet, background)
-    throw new Panic()
+    if (wallet.type === "readonly")
+      throw new Panic()
+    return wallet satisfies never
   }
 
 }

@@ -27,7 +27,7 @@ export namespace SeedInstance {
       return new AuthMnemonicSeedInstance(seed)
     if (seed.type === "ledger")
       return new LedgerSeedInstance(seed)
-    throw new Panic()
+    return seed satisfies never
   }
 
 }
