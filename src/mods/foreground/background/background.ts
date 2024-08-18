@@ -36,7 +36,7 @@ export class ServiceWorkerBackground {
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
-    const port = await this.ports.getOrThrow(0)
+    const port = await this.ports.get().getOrThrow(0)
     return await port.get().requestOrThrow<T>(init)
   }
 
@@ -60,7 +60,7 @@ export async function getServiceWorkerOrThrow(background: ServiceWorkerBackgroun
   return serviceWorker!
 }
 
-export function createServiceWorkerPortPool(background: ServiceWorkerBackground): Pool<Disposer<MessageRpcRouter>> {
+export function createServiceWorkerPortPool(background: ServiceWorkerBackground): Disposer<Pool<Disposer<MessageRpcRouter>>> {
   const resolveOnServiceWorker = getServiceWorkerOrThrow(background)
 
   resolveOnServiceWorker.catch(() => { })
@@ -120,7 +120,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
 
   pool.start(0)
 
-  return pool
+  return new Disposer(pool, () => { })
 }
 
 export class WorkerBackground {
@@ -140,13 +140,13 @@ export class WorkerBackground {
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
-    const port = await this.ports.getOrThrow(0)
+    const port = await this.ports.get().getOrThrow(0)
     return await port.get().requestOrThrow<T>(init)
   }
 
 }
 
-export function createWorkerPortPool(background: WorkerBackground): Pool<Disposer<MessageRpcRouter>> {
+export function createWorkerPortPool(background: WorkerBackground): Disposer<Pool<Disposer<MessageRpcRouter>>> {
   const pool = new Pool<Disposer<MessageRpcRouter>>(async (params) => {
     const { index, signal } = params
 
@@ -203,7 +203,7 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
 
   pool.start(0)
 
-  return pool
+  return new Disposer(pool, () => { })
 }
 
 export class ExtensionBackground {
@@ -223,13 +223,13 @@ export class ExtensionBackground {
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
-    const port = await this.ports.getOrThrow(0)
+    const port = await this.ports.get().getOrThrow(0)
     return await port.get().requestOrThrow<T>(init)
   }
 
 }
 
-export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<ExtensionRpcRouter>> {
+export function createExtensionChannelPool(background: ExtensionBackground): Disposer<Pool<Disposer<ExtensionRpcRouter>>> {
   const pool = new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
     const { index, signal } = params
 
@@ -289,5 +289,5 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
 
   pool.start(0)
 
-  return pool
+  return new Disposer(pool, () => { })
 }

@@ -35,7 +35,7 @@ export class GlobalStorage implements Storage {
   constructor(
     readonly background: Background
   ) {
-    background.ports.events.on("created", e => {
+    background.ports.get().events.on("created", e => {
       if (e.isErr())
         return new None()
       for (const key of this.keys)

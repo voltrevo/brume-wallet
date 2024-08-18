@@ -146,8 +146,8 @@ export class Global {
     this.tors = new Mutex(createTorPool(this.sockets, storage, 1).get())
     this.circuits = new Mutex(Circuits.pool(this.tors, storage, 8).get())
 
-    this.wcBrumes = new Mutex(WcBrume.createPool(this.circuits, 1))
-    this.ethBrumes = new Mutex(EthBrume.createPool(this.circuits, 1))
+    this.wcBrumes = new Mutex(WcBrume.createPool(this.circuits, 1).get())
+    this.ethBrumes = new Mutex(EthBrume.createPool(this.circuits, 1).get())
 
     core.onState.on(BgAppRequest.All.key, async () => {
       const state = core.getStateSync(BgAppRequest.All.key) as State<AppRequest[], never>

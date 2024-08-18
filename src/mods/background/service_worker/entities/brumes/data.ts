@@ -119,7 +119,7 @@ export namespace WcBrume {
     for (let i = 0; i < size; i++)
       pool.start(i)
 
-    return pool
+    return new Disposer(pool, () => { })
   }
 }
 
@@ -147,7 +147,7 @@ export namespace EthBrume {
     for (let i = 0; i < size; i++)
       pool.start(i)
 
-    return pool
+    return new Disposer(pool, () => { })
   }
 
 }
@@ -381,7 +381,7 @@ export namespace RpcConnections {
     for (let i = 0; i < urls.length; i++)
       pool.start(i)
 
-    return pool
+    return new Disposer(pool, () => { })
   }
 
 }
@@ -397,35 +397,35 @@ export namespace RpcCircuits {
   export function create(subcircuits: Pool<Circuit>, urls: readonly string[]) {
     let update = Date.now()
 
-    const pool = new Pool<Pool<RpcConnection>>(async (params) => {
+    const pool = new Pool<Disposer<Pool<RpcConnection>>>(async (params) => {
       const { index, signal } = params
 
       while (!signal.aborted) {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
+          using stack = new Box(new DisposableStack())
+
           const circuit = await subcircuits.getOrThrow(index % subcircuits.length)
           const subpool = new Box(RpcConnections.create(circuit, urls))
+          stack.getOrThrow().use(subpool)
 
           const onCloseOrError = async (reason?: unknown) => {
             pool.restart(index)
             return new None()
           }
 
-          circuit.events.on("close", onCloseOrError, { passive: true })
-          circuit.events.on("error", onCloseOrError, { passive: true })
-
-          const onEntryClean = () => {
-            circuit.events.off("close", onCloseOrError)
-            circuit.events.off("error", onCloseOrError)
-          }
+          stack.getOrThrow().defer(circuit.events.on("close", onCloseOrError, { passive: true }))
+          stack.getOrThrow().defer(circuit.events.on("error", onCloseOrError, { passive: true }))
 
           /**
            * Wait for at least one ready connection (or skip if all are errored)
            */
-          await Promise.any(subpool.inner.okPromises).catch(() => { })
+          await Promise.any(subpool.getOrThrow().get().okPromises).catch(() => { })
 
-          return new Disposer(subpool, onEntryClean)
+          const unstack = stack.unwrapOrThrow()
+
+          return new Disposer(subpool, () => unstack.dispose())
         })
 
         if (result.isOk())
