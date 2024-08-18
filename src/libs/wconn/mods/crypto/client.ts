@@ -1,7 +1,6 @@
 import { Ciphertext, Envelope, EnvelopeTypeZero, Plaintext } from "@/libs/latrine/libs/crypto";
 import { SafeJson } from "@/libs/latrine/libs/json";
 import { IrnLike, IrnSubscriptionPayload } from "@/libs/latrine/mods/irn";
-import { ping } from "@/libs/ping";
 import { Base64 } from "@hazae41/base64";
 import { Opaque, Readable, Writable } from "@hazae41/binary";
 import { Bytes, Uint8Array } from "@hazae41/bytes";
@@ -128,7 +127,7 @@ export interface RpcReceipt {
   readonly end: number
 }
 
-export interface WcReceiptAndPromise<T> {
+export interface RpcReceiptAndPromise<T> {
   readonly receipt: RpcReceipt
   readonly promise: Promise<RpcResponse<T>>
 }
@@ -146,12 +145,13 @@ export class CryptoClient {
     readonly topic: string,
     readonly key: Uint8Array<32>,
     readonly irn: IrnLike,
-    readonly cipher: ChaCha20Poly1305.Cipher
+    readonly cipher: ChaCha20Poly1305.Cipher,
+    readonly publishTimeout = 1000
   ) {
     irn.events.on("request", this.#onIrnRequest.bind(this))
   }
 
-  static createOrThrow(topic: string, key: Uint8Array<32>, irn: IrnLike): CryptoClient {
+  static createOrThrow(irn: IrnLike, topic: string, key: Uint8Array<32>, publishTimeout: number): CryptoClient {
     const cipher = ChaCha20Poly1305.get().Cipher.tryImport(key).unwrap()
     const client = new CryptoClient(topic, key, irn, cipher)
 
@@ -184,30 +184,31 @@ export class CryptoClient {
     const data = SafeJson.parse(plaintext) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
 
     if ("method" in data)
-      this.#onRequest(data).catch(console.warn)
+      this.#onRequest(data).catch(console.error)
     else
-      this.#onResponse(data).catch(console.warn)
+      this.#onResponse(data).catch(console.error)
 
     return true
   }
 
   async #onRequest(request: RpcRequestInit<unknown>): Promise<void> {
-    // console.log("relay request", "->", request)
-
     if (typeof request.id !== "number")
       return
+
     if (this.#ack.has(request.id))
       return
     this.#ack.add(request.id)
 
     const result = await this.#routeAndWrap(request)
     const response = RpcResponse.rewrap(request.id, result)
-    // console.log("relay", "<-", response)
 
     const { topic } = this
-    const message = this.#encryptOrThrow(response)
     const { prompt, tag, ttl } = ENGINE_RPC_OPTS[request.method].res
-    await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl }, AbortSignal.timeout(ping.value * 6))
+
+    const message = this.#encryptOrThrow(response)
+
+    const publishSignal = AbortSignal.timeout(this.publishTimeout)
+    await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl }, publishSignal)
   }
 
   async #routeAndWrap(request: RpcRequestPreinit<unknown>) {
@@ -224,13 +225,12 @@ export class CryptoClient {
   }
 
   async #onResponse(response: RpcResponseInit<unknown>) {
-    // console.log("relay response", "->", response)
     const returned = await this.events.emit("response", response)
 
     if (returned.isSome())
       return
 
-    console.warn(`Unhandled`)
+    console.warn(`Unhandled response`, response)
   }
 
   #encryptOrThrow(data: unknown): string {
@@ -245,9 +245,8 @@ export class CryptoClient {
     return message
   }
 
-  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<WcReceiptAndPromise<T>> {
+  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcReceiptAndPromise<T>> {
     const request = SafeRpc.prepare(init)
-    // console.log("relay", "<-", request)
 
     const { topic } = this
     const message = this.#encryptOrThrow(request)
@@ -259,36 +258,37 @@ export class CryptoClient {
     const receipt = { id, end }
     const promise = this.waitOrThrow<T>(receipt)
 
-    await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl }, AbortSignal.timeout(ping.value * 6))
+    const publishSignal = AbortSignal.timeout(this.publishTimeout)
+    await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl }, publishSignal)
 
     return { receipt, promise }
   }
 
   async waitOrThrow<T>(receipt: RpcReceipt): Promise<RpcResponse<T>> {
+    using stack = new DisposableStack()
+
     const future = new Future<RpcResponse<T>>()
     const signal = AbortSignal.timeout(receipt.end - Date.now())
 
     const onResponse = (init: RpcResponseInit<any>) => {
       if (init.id !== receipt.id)
         return new None()
+
       const response = RpcResponse.from<T>(init)
+
       future.resolve(response)
+
       return new Some(undefined)
     }
 
-    const onAbort = () => {
-      future.reject(new Error(`Timed out`))
-    }
+    stack.defer(this.events.on("response", onResponse, { passive: true }))
 
-    try {
-      this.events.on("response", onResponse, { passive: true })
-      signal.addEventListener("abort", onAbort, { passive: true })
+    const onAbort = () => future.reject(new Error("Aborted", { cause: signal.reason }))
 
-      return await future.promise
-    } finally {
-      this.events.off("response", onResponse)
-      signal.removeEventListener("abort", onAbort)
-    }
+    signal.addEventListener("abort", onAbort, { passive: true })
+    stack.defer(() => signal.removeEventListener("abort", onAbort))
+
+    return await future.promise
   }
 
 }

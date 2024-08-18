@@ -7,7 +7,7 @@ import { Future } from "@hazae41/future";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { None, Option, Some } from "@hazae41/option";
 import { X25519 } from "@hazae41/x25519";
-import { CryptoClient, WcReceiptAndPromise } from "../crypto/client";
+import { CryptoClient, RpcReceiptAndPromise } from "../crypto/client";
 import { IrnBrume } from "../irn/irn";
 
 export interface WcMetadata {
@@ -121,10 +121,10 @@ export namespace Wc {
     return { protocol, pairingTopic, version, relayProtocol, symKey }
   }
 
-  export async function pairOrThrow(irn: IrnBrume, params: WcPairParams, address: string): Promise<[WcSession, WcReceiptAndPromise<boolean>]> {
+  export async function pairOrThrow(irn: IrnBrume, params: WcPairParams, address: string): Promise<[WcSession, RpcReceiptAndPromise<boolean>]> {
     const { pairingTopic, symKey } = params
 
-    const pairing = CryptoClient.createOrThrow(pairingTopic, symKey, irn)
+    const pairing = CryptoClient.createOrThrow(irn, pairingTopic, symKey, ping.value * 6)
 
     const relay = { protocol: "irn" }
 
@@ -155,7 +155,7 @@ export namespace Wc {
     const sessionKey = new Uint8Array(await crypto.subtle.deriveBits(hkdf_params, hdfk_key, 8 * 32)) as Uint8Array<32>
     const sessionDigest = new Uint8Array(await crypto.subtle.digest("SHA-256", sessionKey))
     const sessionTopic = Base16.get().encodeOrThrow(sessionDigest)
-    const session = CryptoClient.createOrThrow(sessionTopic, sessionKey, irn)
+    const session = CryptoClient.createOrThrow(irn, sessionTopic, sessionKey, ping.value * 6)
 
     await irn.subscribeOrThrow(sessionTopic, AbortSignal.timeout(ping.value * 6))
 

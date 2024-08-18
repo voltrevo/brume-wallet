@@ -1286,7 +1286,7 @@ export class Global {
 
     const rawSessionKey = Base64.get().decodePaddedOrThrow(sessionKeyBase64).copyAndDispose()
     const sessionKey = Bytes.castOrThrow(rawSessionKey, 32)
-    const sessionClient = CryptoClient.createOrThrow(topic, sessionKey, irn)
+    const sessionClient = CryptoClient.createOrThrow(irn, topic, sessionKey, ping.value * 6)
     const session = new WcSession(sessionClient, metadata)
 
     await irn.subscribeOrThrow(topic, AbortSignal.timeout(ping.value * 6))
