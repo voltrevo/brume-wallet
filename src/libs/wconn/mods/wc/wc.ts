@@ -1,6 +1,4 @@
-import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { IrnLike } from "@/libs/latrine/mods/irn";
-import { ping } from "@/libs/ping";
 import { Base16 } from "@hazae41/base16";
 import type { Uint8Array } from "@hazae41/bytes";
 import { Bytes } from "@hazae41/bytes";
@@ -121,10 +119,10 @@ export namespace Wc {
     return { protocol, pairingTopic, version, relayProtocol, symKey }
   }
 
-  export async function pairOrThrow(irn: IrnLike, params: WcPairParams, address: string): Promise<[WcSession, RpcReceiptAndPromise<boolean>]> {
+  export async function pairOrThrow(irn: IrnLike, params: WcPairParams, metadata: WcMetadata, address: string, chains: number[], timeout: number): Promise<[WcSession, RpcReceiptAndPromise<boolean>]> {
     const { pairingTopic, symKey } = params
 
-    const pairing = CryptoClient.createOrThrow(irn, pairingTopic, symKey, ping.value * 6)
+    const pairing = CryptoClient.createOrThrow(irn, pairingTopic, symKey, timeout)
 
     const relay = { protocol: "irn" }
 
@@ -134,7 +132,7 @@ export namespace Wc {
     using selfPublicMemory = await selfPublic.tryExport().then(r => r.unwrap())
     const selfPublicHex = Base16.get().encodeOrThrow(selfPublicMemory)
 
-    await irn.subscribeOrThrow(pairingTopic, AbortSignal.timeout(ping.value * 6))
+    await irn.subscribeOrThrow(pairingTopic, AbortSignal.timeout(timeout))
 
     const proposal = await pairing.events.wait("request", async (future: Future<RpcRequestPreinit<WcSessionProposeParams>>, request) => {
       if (request.method !== "wc_sessionPropose")
@@ -155,23 +153,22 @@ export namespace Wc {
     const sessionKey = new Uint8Array(await crypto.subtle.deriveBits(hkdf_params, hdfk_key, 8 * 32)) as Uint8Array<32>
     const sessionDigest = new Uint8Array(await crypto.subtle.digest("SHA-256", sessionKey))
     const sessionTopic = Base16.get().encodeOrThrow(sessionDigest)
-    const session = CryptoClient.createOrThrow(irn, sessionTopic, sessionKey, ping.value * 6)
+    const session = CryptoClient.createOrThrow(irn, sessionTopic, sessionKey, timeout)
 
-    await irn.subscribeOrThrow(sessionTopic, AbortSignal.timeout(ping.value * 6))
+    await irn.subscribeOrThrow(sessionTopic, AbortSignal.timeout(timeout))
 
     {
       const { proposer, requiredNamespaces, optionalNamespaces } = proposal.params
 
       const namespaces = {
         eip155: {
-          chains: Object.values(chainDataByChainId).map(chain => `eip155:${chain.chainId}`),
+          chains: chains.map(chainId => `eip155:${chainId}`),
           methods: ["eth_sendTransaction", "personal_sign", "eth_signTypedData", "eth_signTypedData_v4"],
           events: ["chainChanged", "accountsChanged"],
-          accounts: Object.values(chainDataByChainId).map(chain => `eip155:${chain.chainId}:${address}`)
+          accounts: chains.map(chainId => `eip155:${chainId}:${address}`)
         }
       }
 
-      const metadata = { name: "Brume", description: "Brume", url: location.origin, icons: [] }
       const controller = { publicKey: selfPublicHex, metadata }
       const expiry = Math.floor((Date.now() + (7 * 24 * 60 * 60 * 1000)) / 1000)
       const params: WcSessionSettleParams = { relay, namespaces, requiredNamespaces, optionalNamespaces, pairingTopic, controller, expiry }

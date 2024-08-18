@@ -11,8 +11,10 @@ import { Console } from "@/libs/console";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { fetchAsBlobOrThrow } from "@/libs/fetch";
 import { Mutators } from "@/libs/glacier/mutators";
+import { CryptoClient } from "@/libs/latrine/mods/crypto";
 import { Mime } from "@/libs/mime/mime";
 import { Mouse } from "@/libs/mouse/mouse";
+import { Objects } from "@/libs/objects/objects";
 import { ping } from "@/libs/ping";
 import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExtension, isIpad, isProdWebsite, isSafariExtension, isWebsite } from "@/libs/platform/platform";
 import { Strings } from "@/libs/strings/strings";
@@ -20,7 +22,6 @@ import { Circuits } from "@/libs/tor/circuits/circuits";
 import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors";
 import { pathOf, urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
-import { CryptoClient } from "@/libs/wconn/mods/crypto/client";
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn";
 import { Wc, WcMetadata, WcSession, WcSessionRequestParams } from "@/libs/wconn/mods/wc/wc";
 import { UnauthorizedError } from "@/mods/foreground/errors/errors";
@@ -1354,7 +1355,9 @@ export class Global {
     const brume = await Pool.takeCryptoRandomOrThrow(this.wcBrumes)
     const irn = new IrnBrume(brume)
 
-    const [session, settlement] = await Wc.pairOrThrow(irn, pairParams, walletData.address)
+    const chains = Objects.values(chainDataByChainId).map(x => x.chainId)
+    const metadata = { name: "Brume", description: "Brume", url: location.origin, icons: [] }
+    const [session, settlement] = await Wc.pairOrThrow(irn, pairParams, metadata, walletData.address, chains, ping.value * 6)
 
     const originData: OriginData = {
       origin: `wc://${randomUUID()}`,

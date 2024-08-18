@@ -1,6 +1,6 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
-import { RpcReceipt } from "@/libs/wconn/mods/crypto/client"
+import { RpcReceipt } from "@/libs/latrine/mods/crypto"
 import { WcMetadata } from "@/libs/wconn/mods/wc/wc"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Data, IDBStorage, RawState2, States, Storage, createQuery } from "@hazae41/glacier"
