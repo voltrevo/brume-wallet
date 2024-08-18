@@ -36,7 +36,7 @@ export interface IrnLike {
 
   publishOrThrow(payload: IrnPublishPayload, signal?: AbortSignal): Awaitable<void>
 
-  closeOrThrow(reason: unknown): Awaitable<void>
+  closeOrThrow(reason?: unknown): Awaitable<void>
 }
 
 export interface IrnClientParams {
@@ -58,17 +58,17 @@ export class IrnClient implements IrnLike {
     readonly socket: WebSocket,
     readonly params: IrnClientParams = {}
   ) {
-    const onMessage = this.#onMessage.bind(this)
-    socket.addEventListener("message", onMessage, { passive: true })
-    this.#stack.defer(() => socket.removeEventListener("message", onMessage))
+    const onSocketMessage = this.#onSocketMessage.bind(this)
+    socket.addEventListener("message", onSocketMessage, { passive: true })
+    this.#stack.defer(() => socket.removeEventListener("message", onSocketMessage))
 
-    const onClose = this.#onSocketClose.bind(this)
-    socket.addEventListener("close", onClose, { passive: true })
-    this.#stack.defer(() => socket.removeEventListener("close", onClose))
+    const onSocketClose = this.#onSocketClose.bind(this)
+    socket.addEventListener("close", onSocketClose, { passive: true })
+    this.#stack.defer(() => socket.removeEventListener("close", onSocketClose))
 
-    const onError = this.#onSocketError.bind(this)
-    socket.addEventListener("error", onError, { passive: true })
-    this.#stack.defer(() => socket.removeEventListener("error", onError))
+    const onSocketError = this.#onSocketError.bind(this)
+    socket.addEventListener("error", onSocketError, { passive: true })
+    this.#stack.defer(() => socket.removeEventListener("error", onSocketError))
   }
 
   [Symbol.dispose]() {
@@ -96,7 +96,7 @@ export class IrnClient implements IrnLike {
     this.events.emit("error", [undefined]).catch(console.error)
   }
 
-  #onMessage(event: MessageEvent<unknown>) {
+  #onSocketMessage(event: MessageEvent<unknown>) {
     if (typeof event.data !== "string")
       return
     const json = JSON.parse(event.data) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
@@ -152,8 +152,8 @@ export class IrnClient implements IrnLike {
   closeOrThrow(reason?: unknown) {
     this.#closed = { reason }
     this.#stack.dispose()
-    this.socket.close()
     this.events.emit("close", [reason]).catch(console.error)
+    this.socket.close()
   }
 
 }

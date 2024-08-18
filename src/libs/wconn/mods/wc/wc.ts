@@ -1,4 +1,5 @@
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
+import { IrnLike } from "@/libs/latrine/mods/irn";
 import { ping } from "@/libs/ping";
 import { Base16 } from "@hazae41/base16";
 import type { Uint8Array } from "@hazae41/bytes";
@@ -7,8 +8,7 @@ import { Future } from "@hazae41/future";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { None, Option, Some } from "@hazae41/option";
 import { X25519 } from "@hazae41/x25519";
-import { CryptoClient, RpcReceiptAndPromise } from "../crypto/client";
-import { IrnBrume } from "../irn/irn";
+import { CryptoClient, RpcReceiptAndPromise } from "../../../latrine/mods/crypto";
 
 export interface WcMetadata {
   readonly name: string
@@ -121,7 +121,7 @@ export namespace Wc {
     return { protocol, pairingTopic, version, relayProtocol, symKey }
   }
 
-  export async function pairOrThrow(irn: IrnBrume, params: WcPairParams, address: string): Promise<[WcSession, RpcReceiptAndPromise<boolean>]> {
+  export async function pairOrThrow(irn: IrnLike, params: WcPairParams, address: string): Promise<[WcSession, RpcReceiptAndPromise<boolean>]> {
     const { pairingTopic, symKey } = params
 
     const pairing = CryptoClient.createOrThrow(irn, pairingTopic, symKey, ping.value * 6)

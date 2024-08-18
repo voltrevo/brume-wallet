@@ -8,9 +8,9 @@ import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Future } from "@hazae41/future";
 import { RpcError, RpcId, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { None, Some } from "@hazae41/option";
-import { SuperEventTarget } from "@hazae41/plume";
+import { CloseEvents, ErrorEvents, SuperEventTarget } from "@hazae41/plume";
 import { Err, Ok } from "@hazae41/result";
-import { SafeRpc } from "../../../latrine/libs/rpc/rpc";
+import { SafeRpc } from "../../libs/rpc/rpc";
 
 export interface RpcOpts {
   readonly prompt: boolean
@@ -132,30 +132,59 @@ export interface RpcReceiptAndPromise<T> {
   readonly promise: Promise<RpcResponse<T>>
 }
 
+export interface CryptoClientParams {
+  readonly shouldCloseOnDispose?: boolean
+}
+
 export class CryptoClient {
 
-  readonly events = new SuperEventTarget<{
+  readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
     request: (request: RpcRequestPreinit<unknown>) => unknown
     response: (response: RpcResponseInit<unknown>) => void
   }>()
 
-  #ack = new Set<number>()
+  #stack = new DisposableStack()
+  #acks = new Set<number>()
 
   private constructor(
+    readonly irn: IrnLike,
     readonly topic: string,
     readonly key: Uint8Array<32>,
-    readonly irn: IrnLike,
     readonly cipher: ChaCha20Poly1305.Cipher,
-    readonly publishTimeout = 1000
+    readonly timeout: number,
+    readonly params: CryptoClientParams
   ) {
-    irn.events.on("request", this.#onIrnRequest.bind(this))
+    this.#stack.defer(irn.events.on("close", this.#onIrnClose.bind(this), { passive: true }))
+    this.#stack.defer(irn.events.on("error", this.#onIrnError.bind(this), { passive: true }))
+    this.#stack.defer(irn.events.on("request", this.#onIrnRequest.bind(this), { passive: true }))
   }
 
-  static createOrThrow(irn: IrnLike, topic: string, key: Uint8Array<32>, publishTimeout: number): CryptoClient {
+  static createOrThrow(irn: IrnLike, topic: string, key: Uint8Array<32>, timeout: number, params: CryptoClientParams = {}): CryptoClient {
     const cipher = ChaCha20Poly1305.get().Cipher.tryImport(key).unwrap()
-    const client = new CryptoClient(topic, key, irn, cipher)
+    const client = new CryptoClient(irn, topic, key, cipher, timeout, params)
 
     return client
+  }
+
+  [Symbol.dispose]() {
+    const { shouldCloseOnDispose = true } = this.params
+
+    if (shouldCloseOnDispose)
+      return void this.closeOrThrow().catch(console.error)
+
+    this.#stack.dispose()
+  }
+
+  async #onIrnClose(reason?: unknown) {
+    this.#stack.dispose()
+    this.events.emit("close", [reason]).catch(console.error)
+    return new None()
+  }
+
+  async #onIrnError(reason?: unknown) {
+    this.#stack.dispose()
+    this.events.emit("error", [reason]).catch(console.error)
+    return new None()
   }
 
   async #onIrnRequest(request: RpcRequestPreinit<unknown>) {
@@ -195,9 +224,9 @@ export class CryptoClient {
     if (typeof request.id !== "number")
       return
 
-    if (this.#ack.has(request.id))
+    if (this.#acks.has(request.id))
       return
-    this.#ack.add(request.id)
+    this.#acks.add(request.id)
 
     const result = await this.#routeAndWrap(request)
     const response = RpcResponse.rewrap(request.id, result)
@@ -207,8 +236,10 @@ export class CryptoClient {
 
     const message = this.#encryptOrThrow(response)
 
-    const publishSignal = AbortSignal.timeout(this.publishTimeout)
-    await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl }, publishSignal)
+    const payload = { topic, message, prompt, tag, ttl }
+    const signal = AbortSignal.timeout(this.timeout)
+
+    await this.irn.publishOrThrow(payload, signal)
   }
 
   async #routeAndWrap(request: RpcRequestPreinit<unknown>) {
@@ -258,8 +289,10 @@ export class CryptoClient {
     const receipt = { id, end }
     const promise = this.waitOrThrow<T>(receipt)
 
-    const publishSignal = AbortSignal.timeout(this.publishTimeout)
-    await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl }, publishSignal)
+    const payload = { topic, message, prompt, tag, ttl }
+    const signal = AbortSignal.timeout(this.timeout)
+
+    await this.irn.publishOrThrow(payload, signal)
 
     return { receipt, promise }
   }
@@ -289,6 +322,10 @@ export class CryptoClient {
     stack.defer(() => signal.removeEventListener("abort", onAbort))
 
     return await future.promise
+  }
+
+  async closeOrThrow(reason?: unknown) {
+    await this.irn.closeOrThrow(reason)
   }
 
 }
