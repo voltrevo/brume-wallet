@@ -1662,7 +1662,12 @@ if (isExtension()) {
       return await inited.get().routeContentScriptOrThrow(router, request)
     })
 
-    await router.waitHelloOrThrow(AbortSignal.timeout(1000))
+    try {
+      await router.waitHelloOrThrow(AbortSignal.timeout(1000))
+    } catch (e: unknown) {
+      console.warn(`Could not connect to content-script`)
+      port.disconnect()
+    }
   }
 
   const onForeground = async (port: chrome.runtime.Port) => {
@@ -1678,7 +1683,12 @@ if (isExtension()) {
       return await inited.get().routeForegroundOrThrow(router, request)
     })
 
-    await router.waitHelloOrThrow(AbortSignal.timeout(1000))
+    try {
+      await router.waitHelloOrThrow(AbortSignal.timeout(1000))
+    } catch (e: unknown) {
+      console.warn(`Could not connect to foreground`)
+      port.disconnect()
+    }
   }
 
   const onOffscreen = async (port: chrome.runtime.Port) => {
@@ -1687,7 +1697,12 @@ if (isExtension()) {
 
     console.log(name, "connected")
 
-    await router.waitHelloOrThrow(AbortSignal.timeout(1000))
+    try {
+      await router.waitHelloOrThrow(AbortSignal.timeout(1000))
+    } catch (e: unknown) {
+      console.warn(`Could not connect to offscreen`)
+      port.disconnect()
+    }
   }
 
   browser.runtime.onConnect.addListener(port => {
@@ -1703,11 +1718,15 @@ if (isExtension()) {
   })
 
   if (isChromeExtension()) {
-    await BrowserError.runOrThrow(() => browser.offscreen.createDocument({
-      url: "/offscreen.html",
-      reasons: [chrome.offscreen.Reason.WORKERS],
-      justification: "We need to run workers"
-    }))
+    try {
+      const url = "/offscreen.html"
+      const reasons = [chrome.offscreen.Reason.WORKERS]
+      const justification = "We need to run workers"
+
+      await BrowserError.runOrThrow(() => browser.offscreen.createDocument({ url, reasons, justification }))
+    } catch (e: unknown) {
+      console.warn(`Could not create offscreen document`, e)
+    }
 
     browser.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       const inited = await init
