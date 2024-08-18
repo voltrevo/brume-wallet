@@ -150,7 +150,8 @@ async function main() {
       throw e
     }
 
-    const entry = new Box(new Disposer(router, () => router.port.disconnect()))
+    const onEntryClean = () => router.port.disconnect()
+    const entry = new Box(new Disposer(router, onEntryClean))
     stack.getOrThrow().use(entry)
 
     const icon = await router.requestOrThrow<string>({

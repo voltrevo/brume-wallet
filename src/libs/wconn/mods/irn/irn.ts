@@ -63,12 +63,16 @@ export class IrnBrume {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
+          using stack = new Box(new DisposableStack())
+
           if (this.#closed)
             throw new Error("Closed", { cause: this.#closed.reason })
 
           const circuit = await Pool.takeCryptoRandomOrThrow(this.circuits, signal)
-
           const irn = new IrnSockets(new Mutex(circuit.get()))
+
+          const entry = new Box(irn)
+          stack.getOrThrow().use(entry)
 
           for (const topic of this.topics)
             await irn.subscribeOrThrow(topic)
@@ -82,17 +86,13 @@ export class IrnBrume {
             return new None()
           }
 
-          irn.events.on("request", onRequest, { passive: true })
-          irn.events.on("close", onCloseOrError, { passive: true })
-          irn.events.on("error", onCloseOrError, { passive: true })
+          stack.getOrThrow().defer(irn.events.on("request", onRequest, { passive: true }))
+          stack.getOrThrow().defer(irn.events.on("close", onCloseOrError, { passive: true }))
+          stack.getOrThrow().defer(irn.events.on("error", onCloseOrError, { passive: true }))
 
-          const onEntryClean = () => {
-            irn.events.off("request", onRequest)
-            irn.events.off("close", onCloseOrError)
-            irn.events.off("error", onCloseOrError)
-          }
+          const unstack = stack.unwrapOrThrow()
 
-          return new Disposer(new Box(irn), onEntryClean)
+          return new Disposer(entry, () => unstack.dispose())
         })
 
         if (result.isOk())
@@ -202,14 +202,19 @@ export class IrnSockets {
         const start = Date.now()
 
         const result = await Result.runAndDoubleWrap(async () => {
+          using stack = new Box(new DisposableStack())
+
           if (this.#closed)
             throw new Error("Closed", { cause: this.#closed.reason })
 
-          using preconn = new Box(await Pool.takeCryptoRandomOrThrow(this.sockets, signal))
-          using preirn = new Box(new IrnClient(preconn.unwrapOrThrow().socket))
+          const conn = await Pool.takeCryptoRandomOrThrow(this.sockets, signal)
+          const irn = new IrnClient(conn.socket)
+
+          const entry = new Box(irn)
+          stack.getOrThrow().use(entry)
 
           for (const topic of this.topics)
-            await preirn.inner.subscribeOrThrow(topic)
+            await irn.subscribeOrThrow(topic)
 
           const onRequest = async (request: RpcRequestPreinit<unknown>) => {
             return await this.events.emit("request", request)
@@ -220,21 +225,13 @@ export class IrnSockets {
             return new None()
           }
 
-          preirn.inner.events.on("request", onRequest, { passive: true })
-          preirn.inner.events.on("close", onCloseOrError, { passive: true })
-          preirn.inner.events.on("error", onCloseOrError, { passive: true })
+          stack.getOrThrow().defer(irn.events.on("request", onRequest, { passive: true }))
+          stack.getOrThrow().defer(irn.events.on("close", onCloseOrError, { passive: true }))
+          stack.getOrThrow().defer(irn.events.on("error", onCloseOrError, { passive: true }))
 
-          const irn = preirn.moveOrThrow()
+          const unstack = stack.unwrapOrThrow()
 
-          const onEntryClean = () => {
-            using _ = irn
-
-            irn.inner.events.off("request", onRequest)
-            irn.inner.events.off("close", onCloseOrError)
-            irn.inner.events.off("error", onCloseOrError)
-          }
-
-          return new Disposer(irn, onEntryClean)
+          return new Disposer(entry, () => unstack.dispose())
         })
 
         if (result.isOk())
