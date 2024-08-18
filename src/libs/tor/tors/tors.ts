@@ -30,7 +30,7 @@ export function createNativeWebSocketPool(size: number) {
 
           start = Date.now()
           await Sockets.waitOrThrow(socket)
-          console.log(`Opened native WebSocket in ${Date.now() - start}ms`)
+          console.debug(`Opened native WebSocket in ${Date.now() - start}ms`)
           ping.value = Date.now() - start
 
           const entry = new Box(new Disposer(socket, () => socket.close()))
@@ -104,7 +104,7 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage
         start = Date.now()
         const tor = new Box(await createTorOrThrow(stream, Signals.merge(AbortSignal.timeout(ping.value * 2), signal)))
         stack.getOrThrow().use(tor)
-        console.log(`Created Tor in ${Date.now() - start}ms`)
+        console.debug(`Created Tor in ${Date.now() - start}ms`)
 
         const microdescsQuery = MicrodescQuery.All.create(tor.getOrThrow(), storage)
         const microdescsStale = await microdescsQuery.state.then(r => r.current?.ok().get())

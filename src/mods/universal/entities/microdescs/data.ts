@@ -27,12 +27,12 @@ export namespace MicrodescQuery {
           start = Date.now()
           const subsignal = Signals.merge(AbortSignal.timeout(ping.value * 2), signal)
           using circuit = await tor.createOrThrow(subsignal)
-          console.log(`Created consensus circuit in ${Date.now() - start}ms`)
+          console.debug(`Created consensus circuit in ${Date.now() - start}ms`)
 
           start = Date.now()
           const subsignal2 = Signals.merge(AbortSignal.timeout(ping.value * 20), signal)
           const consensus = await Consensus.fetchOrThrow(circuit, subsignal2)
-          console.log(`Fetched consensus in ${Date.now() - start}ms`)
+          console.debug(`Fetched consensus in ${Date.now() - start}ms`)
 
           const expiration = Date.now() + 7 * 24 * 60 * 60 * 1000
           const cooldown = Date.now() + 1 * 24 * 60 * 60 * 1000
@@ -71,7 +71,7 @@ export namespace MicrodescQuery {
         start = Date.now()
         const subsignal = Signals.merge(AbortSignal.timeout(ping.value * 3), signal)
         const microdesc = await Consensus.Microdesc.fetchOrThrow(circuit, head, subsignal)
-        console.log(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
+        console.debug(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
 
         const expiration = Date.now() + 7 * 24 * 60 * 60 * 1000
         const cooldown = Date.now() + 1 * 24 * 60 * 60 * 1000

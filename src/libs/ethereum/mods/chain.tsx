@@ -3,9 +3,6 @@ import { ContractTokenData, NativeTokenData } from "@/mods/background/service_wo
 
 export type ChainId = number
 
-export type Chains<T = ChainData> =
-  Record<ChainId, T>
-
 export interface ChainData {
   readonly name: string
   readonly chainId: ChainId,
@@ -15,7 +12,7 @@ export interface ChainData {
   readonly icon: () => JSX.Element
 }
 
-export const chainDataByChainId: Chains = {
+export const chainDataByChainId: Record<ChainId, ChainData> = {
   1: {
     name: "Ethereum",
     chainId: 1,

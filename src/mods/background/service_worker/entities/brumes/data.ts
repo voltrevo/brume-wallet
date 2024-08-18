@@ -1,4 +1,4 @@
-import { chainDataByChainId, Chains } from "@/libs/ethereum/mods/chain"
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain"
 import { Jwt } from "@/libs/latrine/libs/jwt"
 import { Objects } from "@/libs/objects/objects"
 import { ping } from "@/libs/ping"
@@ -26,7 +26,8 @@ export interface WcBrume {
 
 export type EthBrumes = Pool<EthBrume>
 
-export interface EthBrume extends Chains<Pool<Pool<RpcConnection>>> {
+export interface EthBrume {
+  readonly [chainId: number]: Disposer<Pool<Disposer<Pool<RpcConnection>>>>
   readonly circuits: Pool<Circuit>
 }
 
@@ -92,7 +93,7 @@ export namespace WcBrume {
     const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
     const url = `${relay}/?auth=${auth}&projectId=${projectId}`
 
-    const subcircuits = Circuits.subpool(circuits, 2)
+    const subcircuits = Circuits.createCircuitSubpool(circuits, 2)
     const subsockets = WebSocketConnection.createPools(subcircuits.get(), [url])
 
     return { key, circuits: subcircuits.get(), sockets: subsockets.get() }
@@ -126,10 +127,10 @@ export namespace WcBrume {
 export namespace EthBrume {
 
   export function create(circuits: Mutex<Pool<Circuit>>): EthBrume {
-    const subcircuits = Circuits.subpool(circuits, 3)
-    const conns = Objects.mapValuesSync(chainDataByChainId, x => RpcCircuits.create(subcircuits.get(), x.urls))
+    const subcircuits = Circuits.createCircuitSubpool(circuits, 3)
+    const conns = Objects.mapValuesSync(chainDataByChainId, x => RpcCircuits.createRpcCircuitsPool(subcircuits.get(), x.urls))
 
-    return { ...conns, circuits: subcircuits.get() }
+    return { ...conns, circuits: subcircuits.get() } satisfies EthBrume
   }
 
   export function createPool(circuits: Mutex<Pool<Circuit>>, size: number) {
@@ -139,7 +140,7 @@ export namespace EthBrume {
       /**
        * Wait for at least one ready circuit (or skip if all are errored)
        */
-      await Promise.any(brume.inner.circuits.okPromises).catch(() => { })
+      await Promise.any(brume.getOrThrow().circuits.okPromises).catch(() => { })
 
       return new Disposer(brume, () => { })
     })
@@ -336,12 +337,12 @@ export class RpcConnection {
 export namespace RpcConnections {
 
   /**
-   * Create a pool of rpc connections from a circuit and urls
+   * Create a pool of rpc connections for each url using the given circuit
    * @param circuit 
    * @param urls 
    * @returns 
    */
-  export function create(circuit: Circuit, urls: readonly string[]) {
+  export function createRpcConnectionsPool(circuit: Circuit, urls: readonly string[]) {
     const pool = new Pool<RpcConnection>(async (params) => {
       const { index, signal } = params
 
@@ -389,12 +390,12 @@ export namespace RpcConnections {
 export namespace RpcCircuits {
 
   /**
-   * Create a pool of pool of rpc connections from a pool of circuits and urls
+   * Create a pool of rpc connections for each url and for each circuit
    * @param subcircuits 
    * @param urls 
    * @returns 
    */
-  export function create(subcircuits: Pool<Circuit>, urls: readonly string[]) {
+  export function createRpcCircuitsPool(subcircuits: Pool<Circuit>, urls: readonly string[]) {
     let update = Date.now()
 
     const pool = new Pool<Disposer<Pool<RpcConnection>>>(async (params) => {
@@ -406,8 +407,8 @@ export namespace RpcCircuits {
         const result = await Result.runAndWrap(async () => {
           using stack = new Box(new DisposableStack())
 
-          const circuit = await subcircuits.getOrThrow(index % subcircuits.length)
-          const subpool = new Box(RpcConnections.create(circuit, urls))
+          const circuit = await subcircuits.getOrThrow(index % subcircuits.length, signal)
+          const subpool = new Box(RpcConnections.createRpcConnectionsPool(circuit, urls))
           stack.getOrThrow().use(subpool)
 
           const onCloseOrError = async (reason?: unknown) => {

@@ -146,7 +146,7 @@ export class Global {
   ) {
     this.sockets = new Mutex(createNativeWebSocketPool(1).get())
     this.tors = new Mutex(createTorPool(this.sockets, storage, 1).get())
-    this.circuits = new Mutex(Circuits.pool(this.tors, storage, 8).get())
+    this.circuits = new Mutex(Circuits.createCircuitPool(this.tors, storage, 8).get())
 
     this.wcBrumes = new Mutex(WcBrume.createPool(this.circuits, 1).get())
     this.ethBrumes = new Mutex(EthBrume.createPool(this.circuits, 1).get())
@@ -1557,7 +1557,7 @@ async function initOrThrow() {
   const storage = IDBStorage.createOrThrow({ name: "memory" })
   const global = new Global(storage)
 
-  console.log(`Started in ${Date.now() - start}ms`)
+  console.debug(`Started in ${Date.now() - start}ms`)
 
   return global
 }
@@ -1699,7 +1699,7 @@ if (isExtension()) {
     const name = `offscreen-${randomUUID().slice(0, 8)}`
     const router = new ExtensionRpcRouter(name, port)
 
-    console.log(name, "connected")
+    console.debug(name, "connected")
 
     try {
       await router.waitHelloOrThrow(AbortSignal.timeout(1000))

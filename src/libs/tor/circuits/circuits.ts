@@ -12,24 +12,6 @@ import { None, Option } from "@hazae41/option"
 import { Pool, Retry, loopOrThrow } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
 
-export function createCircuitEntry(pool: Pool<Circuit>, index: number, circuit: Box<Circuit>) {
-  using stack = new Box(new DisposableStack())
-
-  stack.getOrThrow().use(circuit)
-
-  const onCloseOrError = async (reason?: unknown) => {
-    pool.restart(index)
-    return new None()
-  }
-
-  stack.getOrThrow().defer(circuit.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
-  stack.getOrThrow().defer(circuit.getOrThrow().events.on("error", onCloseOrError, { passive: true }))
-
-  const unstack = stack.unwrapOrThrow()
-
-  return new Disposer(circuit, () => unstack.dispose())
-}
-
 export namespace Circuits {
 
   export async function openAsOrThrow(circuit: Circuit, input: RequestInfo | URL) {
@@ -57,13 +39,31 @@ export namespace Circuits {
     throw new Error(url.protocol)
   }
 
+  export function createCircuitEntry(pool: Pool<Circuit>, index: number, circuit: Box<Circuit>) {
+    using stack = new Box(new DisposableStack())
+
+    stack.getOrThrow().use(circuit)
+
+    const onCloseOrError = async (reason?: unknown) => {
+      pool.restart(index)
+      return new None()
+    }
+
+    stack.getOrThrow().defer(circuit.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
+    stack.getOrThrow().defer(circuit.getOrThrow().events.on("error", onCloseOrError, { passive: true }))
+
+    const unstack = stack.unwrapOrThrow()
+
+    return new Disposer(circuit, () => unstack.dispose())
+  }
+
   /**
    * Create a pool of Circuits modulo a pool of Tor clients
    * @param tors 
    * @param params 
    * @returns 
    */
-  export function pool(tors: Mutex<Pool<TorClientDuplex>>, storage: Storage, size: number) {
+  export function createCircuitPool(tors: Mutex<Pool<TorClientDuplex>>, storage: Storage, size: number) {
     let update = Date.now()
 
     const pool: Pool<Circuit> = new Pool<Circuit>(async (params) => {
@@ -95,7 +95,7 @@ export namespace Circuits {
             try {
               start = Date.now()
               using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(ping.value * 2)))
-              console.log(`Created circuit #${index} in ${Date.now() - start}ms`)
+              console.debug(`Created circuit #${index} in ${Date.now() - start}ms`)
 
               /**
                * Try to extend to middle relay 3 times before giving up this circuit
@@ -108,7 +108,7 @@ export namespace Circuits {
 
                 start = Date.now()
                 await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 3)))
-                console.log(`Extended circuit #${index} in ${Date.now() - start}ms`)
+                console.debug(`Extended circuit #${index} in ${Date.now() - start}ms`)
               }, { max: 3 })
 
               /**
@@ -122,7 +122,7 @@ export namespace Circuits {
 
                 start = Date.now()
                 await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 4)))
-                console.log(`Extended circuit #${index} in ${Date.now() - start}ms`)
+                console.debug(`Extended circuit #${index} in ${Date.now() - start}ms`)
               }, { max: 3 })
 
               /**
@@ -141,7 +141,7 @@ export namespace Circuits {
 
                 start = Date.now()
                 await fetch("http://detectportal.firefox.com", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())
-                console.log(`Fetched portal #${index} in ${Date.now() - start}ms`)
+                console.debug(`Fetched portal #${index} in ${Date.now() - start}ms`)
               }
 
               return circuit.moveOrThrow()
@@ -151,8 +151,8 @@ export namespace Circuits {
             }
           }, { max: 9 })
 
-          console.log(`Added circuit #${index} in ${Date.now() - start}ms`)
-          console.log(`Circuits pool is now ${[...pool.okEntries].length}/${pool.length}`)
+          console.debug(`Added circuit #${index} in ${Date.now() - start}ms`)
+          console.debug(`Circuits pool is now ${[...pool.okEntries].length}/${pool.length}`)
 
           return createCircuitEntry(pool, index, circuit.moveOrThrow())
         }).then(r => r.inspectErrSync(e => console.error(`Circuit creation failed`, { e })))
@@ -204,7 +204,7 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function subpool(circuits: Mutex<Pool<Circuit>>, size: number) {
+  export function createCircuitSubpool(circuits: Mutex<Pool<Circuit>>, size: number) {
     let update = Date.now()
 
     const pool: Pool<Circuit> = new Pool<Circuit>(async (params) => {
