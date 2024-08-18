@@ -3,7 +3,7 @@ import { Base58 } from "@hazae41/base58"
 import { Base64Url } from "@hazae41/base64url"
 import { Bytes } from "@hazae41/bytes"
 import { Ed25519 } from "@hazae41/ed25519"
-import { SafeJson } from "../json/json"
+import { SafeJson } from "../json"
 
 export namespace Jwt {
 

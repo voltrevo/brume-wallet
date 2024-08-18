@@ -2,17 +2,6 @@ import { Opaque, Writable } from "@hazae41/binary";
 import { Uint8Array } from "@hazae41/bytes";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Cursor } from "@hazae41/cursor";
-import { Result } from "@hazae41/result";
-
-export class CryptoError extends Error {
-  readonly #class = CryptoError
-  readonly name = this.#class.name
-
-  static from(cause: unknown) {
-    return new CryptoError(undefined, { cause })
-  }
-
-}
 
 export class Plaintext<T extends Writable> {
 
@@ -25,10 +14,6 @@ export class Plaintext<T extends Writable> {
     const cipher = key.tryEncrypt(plain, iv).unwrap().copyAndDispose()
 
     return new Ciphertext(iv, cipher)
-  }
-
-  tryEncrypt(key: ChaCha20Poly1305.Cipher, iv: Uint8Array<12>) {
-    return Result.runAndDoubleWrapSync(() => this.encryptOrThrow(key, iv))
   }
 
 }
@@ -44,10 +29,6 @@ export class Ciphertext {
     const plain = key.tryDecrypt(this.inner, this.iv).unwrap().copyAndDispose()
 
     return new Plaintext(new Opaque(plain))
-  }
-
-  tryDecrypt(key: ChaCha20Poly1305.Cipher) {
-    return Result.runAndDoubleWrapSync(() => this.decryptOrThrow(key))
   }
 
   sizeOrThrow() {
@@ -93,6 +74,7 @@ export namespace Envelope {
       return EnvelopeTypeZero.readOrThrow(cursor)
     if (type === 1)
       return EnvelopeTypeOne.readOrThrow(cursor)
+
     throw new UnknownTypeError(type)
   }
 

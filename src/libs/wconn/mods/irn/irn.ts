@@ -1,35 +1,16 @@
+import { IrnClient, IrnLike, IrnPublishPayload } from "@/libs/latrine/mods/irn";
 import { ping } from "@/libs/ping";
-import { SafeJson } from "@/libs/wconn/mods/json/json";
 import { WcBrume, WebSocketConnection } from "@/mods/background/service_worker/entities/brumes/data";
 import { Box } from "@hazae41/box";
 import { Disposer } from "@hazae41/disposer";
-import { RpcError, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
+import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Mutex } from "@hazae41/mutex";
 import { None } from "@hazae41/option";
 import { Pool, PoolEntry } from "@hazae41/piscine";
 import { CloseEvents, ErrorEvents, SuperEventTarget } from "@hazae41/plume";
-import { Err, Ok, Result } from "@hazae41/result";
-import { SafeRpc } from "../rpc/rpc";
+import { Result } from "@hazae41/result";
 
-export interface IrnSubscriptionPayload {
-  readonly id: string
-  readonly data: {
-    readonly topic: string
-    readonly message: string
-    readonly publishedAt: number
-    readonly tag: number
-  }
-}
-
-export interface IrnPublishPayload {
-  readonly topic: string
-  readonly message: string
-  readonly prompt: boolean
-  readonly tag: number
-  readonly ttl: number
-}
-
-export class IrnBrume {
+export class IrnBrume implements IrnLike {
 
   readonly topics = new Set<string>()
 
@@ -74,8 +55,11 @@ export class IrnBrume {
           const entry = new Box(irn)
           stack.getOrThrow().use(entry)
 
-          for (const topic of this.topics)
-            await irn.subscribeOrThrow(topic)
+          for (const topic of this.topics) {
+            const timeout = AbortSignal.timeout(ping.value * 6)
+            const subsignal = AbortSignal.any([signal, timeout])
+            await irn.subscribeOrThrow(topic, subsignal)
+          }
 
           const onRequest = async (request: RpcRequestPreinit<unknown>) => {
             return await this.events.emit("request", request)
@@ -135,16 +119,18 @@ export class IrnBrume {
     return new Disposer(pool, () => stack.dispose())
   }
 
-  async subscribeOrThrow(topic: string): Promise<void> {
-    const client = await this.pool.getOrThrow(0)
-    await client.subscribeOrThrow(topic)
+  async subscribeOrThrow(topic: string, signal = new AbortController().signal): Promise<string> {
+    const client = await this.pool.getOrThrow(0, signal)
+    const subscription = await client.subscribeOrThrow(topic, signal)
 
     this.topics.add(topic)
+
+    return subscription
   }
 
-  async publishOrThrow(payload: IrnPublishPayload): Promise<void> {
-    const client = await this.pool.getOrThrow(0)
-    await client.publishOrThrow(payload)
+  async publishOrThrow(payload: IrnPublishPayload, signal = new AbortController().signal): Promise<void> {
+    const client = await this.pool.getOrThrow(0, signal)
+    await client.publishOrThrow(payload, signal)
   }
 
   async closeOrThrow(reason: unknown): Promise<void> {
@@ -162,7 +148,7 @@ export class IrnBrume {
 
 }
 
-export class IrnSockets {
+export class IrnSockets implements IrnLike {
 
   readonly topics = new Set<string>()
 
@@ -213,8 +199,11 @@ export class IrnSockets {
           const entry = new Box(irn)
           stack.getOrThrow().use(entry)
 
-          for (const topic of this.topics)
-            await irn.subscribeOrThrow(topic)
+          for (const topic of this.topics) {
+            const timeout = AbortSignal.timeout(ping.value * 6)
+            const subsignal = AbortSignal.any([signal, timeout])
+            await irn.subscribeOrThrow(topic, subsignal)
+          }
 
           const onRequest = async (request: RpcRequestPreinit<unknown>) => {
             return await this.events.emit("request", request)
@@ -274,16 +263,18 @@ export class IrnSockets {
     return new Disposer(pool, () => stack.dispose())
   }
 
-  async subscribeOrThrow(topic: string): Promise<void> {
-    const client = await this.pool.inner.getOrThrow(0)
-    await client.subscribeOrThrow(topic)
+  async subscribeOrThrow(topic: string, signal = new AbortController().signal): Promise<string> {
+    const client = await this.pool.inner.getOrThrow(0, signal)
+    const subscription = await client.subscribeOrThrow(topic, signal)
 
     this.topics.add(topic)
+
+    return subscription
   }
 
-  async publishOrThrow(payload: IrnPublishPayload): Promise<void> {
-    const client = await this.pool.inner.getOrThrow(0)
-    await client.publishOrThrow(payload)
+  async publishOrThrow(payload: IrnPublishPayload, signal = new AbortController().signal): Promise<void> {
+    const client = await this.pool.inner.getOrThrow(0, signal)
+    await client.publishOrThrow(payload, signal)
   }
 
   async closeOrThrow(reason: unknown): Promise<void> {
@@ -297,106 +288,6 @@ export class IrnSockets {
       return
 
     await irn.get().closeOrThrow(reason)
-  }
-
-}
-
-export class IrnClient {
-
-  readonly topicBySubscription = new Map<string, string>()
-
-  readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
-    request: (request: RpcRequestPreinit<unknown>) => unknown
-  }>()
-
-  #closed?: { reason: unknown }
-
-  constructor(
-    readonly socket: WebSocket
-  ) {
-    socket.addEventListener("message", this.#onMessage.bind(this), { passive: true })
-    socket.addEventListener("close", this.#onClose.bind(this), { passive: true })
-    socket.addEventListener("error", this.#onError.bind(this), { passive: true })
-  }
-
-  [Symbol.dispose]() {
-    this.closeOrThrow(undefined).catch(console.error)
-  }
-
-  get closed() {
-    return this.#closed
-  }
-
-  async #onClose(event: CloseEvent) {
-    await this.events.emit("close", [event.reason])
-  }
-
-  async #onError(event: Event) {
-    await this.events.emit("error", [undefined])
-  }
-
-  async #onMessage(event: MessageEvent<unknown>) {
-    if (typeof event.data !== "string")
-      return
-    const json = JSON.parse(event.data) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
-
-    if ("method" in json)
-      return await this.#onRequest(json)
-    return
-  }
-
-  async #onRequest(request: RpcRequestInit<unknown>) {
-    // console.log("irn", "->", request)
-    const result = await this.#routeAndWrap(request)
-    const response = RpcResponse.rewrap(request.id, result)
-    // console.log("irn", "<-", response)
-    this.socket.send(SafeJson.stringify(response))
-  }
-
-  async #routeAndWrap(request: RpcRequestPreinit<unknown>) {
-    try {
-      const returned = await this.events.emit("request", request)
-
-      if (returned.isSome())
-        return new Ok(returned.inner)
-
-      return new Err(new RpcInvalidRequestError())
-    } catch (e: unknown) {
-      return new Err(RpcError.rewrap(e))
-    }
-  }
-
-  async subscribeOrThrow(topic: string): Promise<string> {
-    const signal = AbortSignal.timeout(ping.value * 6)
-
-    const subscription = await SafeRpc.requestOrThrow<string>(this.socket, {
-      method: "irn_subscribe",
-      params: { topic }
-    }, signal).then(r => r.unwrap())
-
-    this.topicBySubscription.set(subscription, topic)
-
-    return subscription
-  }
-
-  async publishOrThrow(payload: IrnPublishPayload): Promise<void> {
-    const signal = AbortSignal.timeout(ping.value * 6)
-
-    const result = await SafeRpc.requestOrThrow<boolean>(this.socket, {
-      method: "irn_publish",
-      params: payload
-    }, signal).then(r => r.unwrap())
-
-    if (!result)
-      throw new Error("Failed to publish")
-
-    return
-  }
-
-  async closeOrThrow(reason: unknown): Promise<void> {
-    this.#closed = { reason }
-    await this.events.emit("close", [reason])
-    this.socket.close()
   }
 
 }

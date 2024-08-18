@@ -13,6 +13,7 @@ import { fetchAsBlobOrThrow } from "@/libs/fetch";
 import { Mutators } from "@/libs/glacier/mutators";
 import { Mime } from "@/libs/mime/mime";
 import { Mouse } from "@/libs/mouse/mouse";
+import { ping } from "@/libs/ping";
 import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExtension, isIpad, isProdWebsite, isSafariExtension, isWebsite } from "@/libs/platform/platform";
 import { Strings } from "@/libs/strings/strings";
 import { Circuits } from "@/libs/tor/circuits/circuits";
@@ -1288,7 +1289,7 @@ export class Global {
     const sessionClient = CryptoClient.createOrThrow(topic, sessionKey, irn)
     const session = new WcSession(sessionClient, metadata)
 
-    await irn.subscribeOrThrow(topic)
+    await irn.subscribeOrThrow(topic, AbortSignal.timeout(ping.value * 6))
 
     /**
      * When settlement has been interrupted
@@ -1364,7 +1365,7 @@ export class Global {
     const originQuery = Option.unwrap(OriginQuery.create(originData.origin, user.storage))
     await originQuery.mutate(Mutators.data(originData))
 
-    const authKeyJwk = await session.client.irn.brume.key.exportJwkOrThrow()
+    const authKeyJwk = await irn.brume.key.exportJwkOrThrow()
     const sessionKeyBase64 = Base64.get().encodePaddedOrThrow(session.client.key)
 
     const sessionData: WcSessionData = {

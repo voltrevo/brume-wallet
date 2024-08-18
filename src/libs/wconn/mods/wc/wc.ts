@@ -1,4 +1,5 @@
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
+import { ping } from "@/libs/ping";
 import { Base16 } from "@hazae41/base16";
 import type { Uint8Array } from "@hazae41/bytes";
 import { Bytes } from "@hazae41/bytes";
@@ -133,7 +134,7 @@ export namespace Wc {
     using selfPublicMemory = await selfPublic.tryExport().then(r => r.unwrap())
     const selfPublicHex = Base16.get().encodeOrThrow(selfPublicMemory)
 
-    await irn.subscribeOrThrow(pairingTopic)
+    await irn.subscribeOrThrow(pairingTopic, AbortSignal.timeout(ping.value * 6))
 
     const proposal = await pairing.events.wait("request", async (future: Future<RpcRequestPreinit<WcSessionProposeParams>>, request) => {
       if (request.method !== "wc_sessionPropose")
@@ -156,7 +157,7 @@ export namespace Wc {
     const sessionTopic = Base16.get().encodeOrThrow(sessionDigest)
     const session = CryptoClient.createOrThrow(sessionTopic, sessionKey, irn)
 
-    await irn.subscribeOrThrow(sessionTopic)
+    await irn.subscribeOrThrow(sessionTopic, AbortSignal.timeout(ping.value * 6))
 
     {
       const { proposer, requiredNamespaces, optionalNamespaces } = proposal.params

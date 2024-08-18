@@ -1,5 +1,7 @@
-import { Ciphertext, Envelope, EnvelopeTypeZero, Plaintext } from "@/libs/wconn/mods/crypto/crypto";
-import { SafeJson } from "@/libs/wconn/mods/json/json";
+import { Ciphertext, Envelope, EnvelopeTypeZero, Plaintext } from "@/libs/latrine/libs/crypto";
+import { SafeJson } from "@/libs/latrine/libs/json";
+import { IrnLike, IrnSubscriptionPayload } from "@/libs/latrine/mods/irn";
+import { ping } from "@/libs/ping";
 import { Base64 } from "@hazae41/base64";
 import { Opaque, Readable, Writable } from "@hazae41/binary";
 import { Bytes, Uint8Array } from "@hazae41/bytes";
@@ -9,8 +11,7 @@ import { RpcError, RpcId, RpcInvalidRequestError, RpcRequestInit, RpcRequestPrei
 import { None, Some } from "@hazae41/option";
 import { SuperEventTarget } from "@hazae41/plume";
 import { Err, Ok } from "@hazae41/result";
-import { IrnBrume, IrnSubscriptionPayload } from "../irn/irn";
-import { SafeRpc } from "../rpc/rpc";
+import { SafeRpc } from "../../../latrine/libs/rpc/rpc";
 
 export interface RpcOpts {
   readonly prompt: boolean
@@ -144,13 +145,13 @@ export class CryptoClient {
   private constructor(
     readonly topic: string,
     readonly key: Uint8Array<32>,
-    readonly irn: IrnBrume,
+    readonly irn: IrnLike,
     readonly cipher: ChaCha20Poly1305.Cipher
   ) {
     irn.events.on("request", this.#onIrnRequest.bind(this))
   }
 
-  static createOrThrow(topic: string, key: Uint8Array<32>, irn: IrnBrume): CryptoClient {
+  static createOrThrow(topic: string, key: Uint8Array<32>, irn: IrnLike): CryptoClient {
     const cipher = ChaCha20Poly1305.get().Cipher.tryImport(key).unwrap()
     const client = new CryptoClient(topic, key, irn, cipher)
 
@@ -206,7 +207,7 @@ export class CryptoClient {
     const { topic } = this
     const message = this.#encryptOrThrow(response)
     const { prompt, tag, ttl } = ENGINE_RPC_OPTS[request.method].res
-    await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl })
+    await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl }, AbortSignal.timeout(ping.value * 6))
   }
 
   async #routeAndWrap(request: RpcRequestPreinit<unknown>) {
@@ -258,7 +259,7 @@ export class CryptoClient {
     const receipt = { id, end }
     const promise = this.waitOrThrow<T>(receipt)
 
-    await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl })
+    await this.irn.publishOrThrow({ topic, message, prompt, tag, ttl }, AbortSignal.timeout(ping.value * 6))
 
     return { receipt, promise }
   }

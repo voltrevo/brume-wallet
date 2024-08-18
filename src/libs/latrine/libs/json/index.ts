@@ -18,7 +18,7 @@ export namespace BigJson {
   export function parse(text: string) {
     const replaced = text.replace(BIG_REGEX, `$1"$2n"$3`)
 
-    function reviver(key: string, value: any) {
+    function reviver(_key: string, value: any) {
       if (typeof value !== "string")
         return value
       if (!value.match(/^\d+n$/))
