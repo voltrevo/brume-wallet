@@ -9,7 +9,6 @@ import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from 
 import { None } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
 import { SuperEventTarget } from "@hazae41/plume"
-import { Result } from "@hazae41/result"
 
 export type Background =
   | ServiceWorkerBackground
@@ -20,7 +19,7 @@ export class ServiceWorkerBackground {
   readonly ports = createServiceWorkerPortPool(this)
 
   readonly events = new SuperEventTarget<{
-    "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
+    "request": (request: RpcRequestInit<unknown>) => unknown
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
@@ -34,10 +33,6 @@ export class ServiceWorkerBackground {
 
   async onResponse(port: RpcRouter, response: RpcResponseInit<unknown>) {
     return await this.events.emit("response", response)
-  }
-
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return await Result.runAndDoubleWrap(() => this.requestOrThrow(init))
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
@@ -71,7 +66,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
   resolveOnServiceWorker.catch(() => { })
 
   const pool = new Pool<Disposer<MessageRpcRouter>>(async (params) => {
-    const { pool, index } = params
+    const { index, signal } = params
 
     const serviceWorker = await resolveOnServiceWorker
 
@@ -100,7 +95,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
 
     serviceWorker.postMessage("FOREGROUND->BACKGROUND", [rawChannel.port2])
 
-    await router.waitHelloOrThrow(AbortSignal.timeout(1000))
+    await router.waitHelloOrThrow(AbortSignal.any([signal, AbortSignal.timeout(1000)]))
 
     router.runPingLoop()
 
@@ -140,7 +135,7 @@ export class WorkerBackground {
   readonly ports = createWorkerPortPool(this)
 
   readonly events = new SuperEventTarget<{
-    "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
+    "request": (request: RpcRequestInit<unknown>) => unknown
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
@@ -152,10 +147,6 @@ export class WorkerBackground {
     return await this.events.emit("response", response)
   }
 
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return await Result.runAndDoubleWrap(() => this.requestOrThrow(init))
-  }
-
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
     const port = await this.ports.getOrThrow(0)
     return await port.get().requestOrThrow<T>(init)
@@ -165,7 +156,7 @@ export class WorkerBackground {
 
 export function createWorkerPortPool(background: WorkerBackground): Pool<Disposer<MessageRpcRouter>> {
   const pool = new Pool<Disposer<MessageRpcRouter>>(async (params) => {
-    const { pool, index } = params
+    const { index, signal } = params
 
     const rawChannel = new MessageChannel()
 
@@ -195,7 +186,7 @@ export function createWorkerPortPool(background: WorkerBackground): Pool<Dispose
 
     worker.get().postMessage("FOREGROUND->BACKGROUND", [rawChannel.port2])
 
-    await router.waitHelloOrThrow(AbortSignal.timeout(1000))
+    await router.waitHelloOrThrow(AbortSignal.any([signal, AbortSignal.timeout(1000)]))
 
     router.runPingLoop()
 
@@ -235,7 +226,7 @@ export class ExtensionBackground {
   readonly ports = createExtensionChannelPool(this)
 
   readonly events = new SuperEventTarget<{
-    "request": (request: RpcRequestInit<unknown>) => Result<unknown, Error>
+    "request": (request: RpcRequestInit<unknown>) => unknown
     "response": (response: RpcResponseInit<unknown>) => void
   }>()
 
@@ -252,15 +243,11 @@ export class ExtensionBackground {
     return await port.get().requestOrThrow<T>(init)
   }
 
-  async tryRequest<T>(init: RpcRequestPreinit<unknown>): Promise<Result<RpcResponse<T>, Error>> {
-    return await Result.runAndDoubleWrap(() => this.requestOrThrow(init))
-  }
-
 }
 
 export function createExtensionChannelPool(background: ExtensionBackground): Pool<Disposer<ExtensionRpcRouter>> {
   const pool = new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
-    const { index, pool } = params
+    const { index, signal } = params
 
     using stack = new Box(new DisposableStack())
 
@@ -273,7 +260,7 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
       using dport = new Box(new Disposer(port, () => port.disconnect()))
 
       router = new ExtensionRpcRouter("background", port)
-      await router.waitHelloOrThrow(AbortSignal.timeout(1000))
+      await router.waitHelloOrThrow(AbortSignal.any([signal, AbortSignal.timeout(1000)]))
 
       dport.moveOrThrow()
     } catch (e: unknown) {
@@ -293,7 +280,8 @@ export function createExtensionChannelPool(background: ExtensionBackground): Poo
       throw e
     }
 
-    const entry = new Box(new Disposer(router, () => router.port.disconnect()))
+    const onEntryClean = () => router.port.disconnect()
+    const entry = new Box(new Disposer(router, onEntryClean))
     stack.getOrThrow().use(entry)
 
     const onCloseOrError = async () => {

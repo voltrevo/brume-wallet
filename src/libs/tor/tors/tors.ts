@@ -14,8 +14,8 @@ import { Result } from "@hazae41/result"
 import { Signals } from "@hazae41/signals"
 
 export function createNativeWebSocketPool(size: number) {
-  const pool = new Pool<Disposer<WebSocket>>(async (subparams) => {
-    const { index, pool, signal } = subparams
+  const pool = new Pool<Disposer<WebSocket>>(async (params) => {
+    const { index, signal } = params
 
     while (!signal.aborted) {
       try {
@@ -63,7 +63,7 @@ export function createNativeWebSocketPool(size: number) {
       }
     }
 
-    throw new Error(`Aborted`, { cause: signal.reason })
+    throw new Error("Aborted", { cause: signal.reason })
   })
 
   for (let i = 0; i < size; i++)
@@ -87,8 +87,8 @@ export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque
 export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage: Storage, size: number) {
   let update = Date.now()
 
-  const pool = new Pool<TorClientDuplex>(async (subparams) => {
-    const { pool, index, signal } = subparams
+  const pool = new Pool<TorClientDuplex>(async (params) => {
+    const { index, signal } = params
 
     while (!signal.aborted) {
       const start = Date.now()
@@ -138,7 +138,7 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage
       throw result.getErr()
     }
 
-    throw new Error(`Aborted`, { cause: signal.reason })
+    throw new Error("Aborted", { cause: signal.reason })
   })
 
   const stack = new DisposableStack()

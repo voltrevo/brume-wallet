@@ -9,45 +9,28 @@ import { fetch } from "@hazae41/fleche"
 import { Storage } from "@hazae41/glacier"
 import { Mutex } from "@hazae41/mutex"
 import { None, Option } from "@hazae41/option"
-import { Pool, PoolCreatorParams, Retry, loopOrThrow } from "@hazae41/piscine"
+import { Pool, Retry, loopOrThrow } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
 
-export function createCircuitEntry(preCircuit: Box<Circuit>, params: PoolCreatorParams<Circuit>) {
-  const { pool, index } = params
+export function createCircuitEntry(pool: Pool<Circuit>, index: number, circuit: Box<Circuit>) {
+  using stack = new Box(new DisposableStack())
 
-  const rawCircuit = preCircuit.getOrThrow()
-
-  using _ = preCircuit
+  stack.getOrThrow().use(circuit)
 
   const onCloseOrError = async (reason?: unknown) => {
     pool.restart(index)
     return new None()
   }
 
-  using preOnCloseDisposer = new Box(new Disposer(undefined, rawCircuit.events.on("close", onCloseOrError, { passive: true })))
-  using preOnErrorDisposer = new Box(new Disposer(undefined, rawCircuit.events.on("error", onCloseOrError, { passive: true })))
+  stack.getOrThrow().defer(circuit.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
+  stack.getOrThrow().defer(circuit.getOrThrow().events.on("error", onCloseOrError, { passive: true }))
 
-  /**
-   * Move all resources
-   */
-  const circuit = preCircuit.moveOrThrow()
-  const onCloseDisposer = preOnCloseDisposer.moveOrThrow()
-  const onErrorDisposer = preOnErrorDisposer.moveOrThrow()
+  const unstack = stack.unwrapOrThrow()
 
-  const onEntryClean = () => {
-    using _0 = circuit
-    using _1 = onCloseDisposer
-    using _2 = onErrorDisposer
-  }
-
-  return new Disposer(circuit, onEntryClean)
+  return new Disposer(circuit, () => unstack.dispose())
 }
 
 export namespace Circuits {
-
-  export async function tryOpenAs(circuit: Circuit, input: RequestInfo | URL) {
-    return await Result.runAndDoubleWrap(() => openAsOrThrow(circuit, input))
-  }
 
   export async function openAsOrThrow(circuit: Circuit, input: RequestInfo | URL) {
     const req = new Request(input)
@@ -83,7 +66,7 @@ export namespace Circuits {
   export function pool(tors: Mutex<Pool<TorClientDuplex>>, storage: Storage, size: number) {
     let update = Date.now()
 
-    const pool = new Pool<Circuit>(async (params) => {
+    const pool: Pool<Circuit> = new Pool<Circuit>(async (params) => {
       const { index, signal } = params
 
       while (!signal.aborted) {
@@ -120,11 +103,11 @@ export namespace Circuits {
               await loopOrThrow(async () => {
                 const head = Arrays.cryptoRandom(middles)!
 
-                const query = Option.unwrap(MicrodescQuery.create(head, index, circuit.inner, storage))
+                const query = Option.unwrap(MicrodescQuery.create(head, index, circuit.getOrThrow(), storage))
                 const body = await query.fetch().then(r => Option.unwrap(r.getAny().current).unwrap())
 
                 start = Date.now()
-                await Retry.run(() => circuit.inner.extendOrThrow(body, AbortSignal.timeout(ping.value * 3)))
+                await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 3)))
                 console.log(`Extended circuit #${index} in ${Date.now() - start}ms`)
               }, { max: 3 })
 
@@ -134,18 +117,18 @@ export namespace Circuits {
               await loopOrThrow(async () => {
                 const head = Arrays.cryptoRandom(exits)!
 
-                const query = Option.unwrap(MicrodescQuery.create(head, index, circuit.inner, storage))
+                const query = Option.unwrap(MicrodescQuery.create(head, index, circuit.getOrThrow(), storage))
                 const body = await query.fetch().then(r => Option.unwrap(r.getAny().current).unwrap())
 
                 start = Date.now()
-                await Retry.run(() => circuit.inner.extendOrThrow(body, AbortSignal.timeout(ping.value * 4)))
+                await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 4)))
                 console.log(`Extended circuit #${index} in ${Date.now() - start}ms`)
               }, { max: 3 })
 
               /**
                * Try to open a stream to a reliable endpoint
                */
-              using stream = await openAsOrThrow(circuit.inner, "http://detectportal.firefox.com")
+              using stream = await openAsOrThrow(circuit.getOrThrow(), "http://detectportal.firefox.com")
 
               /**
                * Reliability test
@@ -171,7 +154,7 @@ export namespace Circuits {
           console.log(`Added circuit #${index} in ${Date.now() - start}ms`)
           console.log(`Circuits pool is now ${[...pool.okEntries].length}/${pool.length}`)
 
-          return createCircuitEntry(circuit.moveOrThrow(), params)
+          return createCircuitEntry(pool, index, circuit.moveOrThrow())
         }).then(r => r.inspectErrSync(e => console.error(`Circuit creation failed`, { e })))
 
         if (result.isOk())
@@ -183,7 +166,7 @@ export namespace Circuits {
         throw result.getErr()
       }
 
-      throw new Error(`Aborted`, { cause: signal.reason })
+      throw new Error("Aborted", { cause: signal.reason })
     })
 
     const stack = new DisposableStack()
@@ -224,13 +207,15 @@ export namespace Circuits {
   export function subpool(circuits: Mutex<Pool<Circuit>>, size: number) {
     let update = Date.now()
 
-    const pool = new Pool<Circuit>(async (params) => {
-      while (true) {
+    const pool: Pool<Circuit> = new Pool<Circuit>(async (params) => {
+      const { index, signal } = params
+
+      while (!signal.aborted) {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
-          using circuit = new Box(await Pool.takeCryptoRandomOrThrow(circuits))
-          return createCircuitEntry(circuit.moveOrThrow(), params)
+          const circuit = await Pool.takeCryptoRandomOrThrow(circuits, signal)
+          return createCircuitEntry(pool, index, new Box(circuit))
         })
 
         if (result.isOk())
@@ -241,6 +226,8 @@ export namespace Circuits {
 
         throw result.getErr()
       }
+
+      throw new Error("Aborted", { cause: signal.reason })
     })
 
     const stack = new DisposableStack()

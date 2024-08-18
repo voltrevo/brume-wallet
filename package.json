@@ -85,7 +85,7 @@
     "@hazae41/mutex": "^2.0.0",
     "@hazae41/network-bundle": "^1.2.1",
     "@hazae41/option": "^1.0.27",
-    "@hazae41/piscine": "^2.0.2",
+    "@hazae41/piscine": "^2.0.4",
     "@hazae41/plume": "^2.4.2",
     "@hazae41/react-close-context": "^1.0.0",
     "@hazae41/result": "^1.2.1",

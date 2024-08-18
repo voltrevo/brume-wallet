@@ -33,7 +33,6 @@ export class MessageRpcRouter {
 
     this.#clean = () => {
       this.port.removeEventListener("message", onMessage)
-
       this.#clean = () => { }
     }
   }
@@ -45,6 +44,7 @@ export class MessageRpcRouter {
   async runPingLoop() {
     let count = 0
 
+    // TODO use AbortController
     while (true) {
       try {
         await new Promise(ok => setTimeout(ok, 1000))

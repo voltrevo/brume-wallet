@@ -56,15 +56,17 @@ export class IrnBrume {
   #pool() {
     let update = Date.now()
 
-    const pool = new Pool<IrnSockets>(async ({ index, pool }) => {
-      while (true) {
+    const pool = new Pool<IrnSockets>(async (params) => {
+      const { index, signal } = params
+
+      while (!signal.aborted) {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
           if (this.#closed)
             throw new Error("Closed", { cause: this.#closed.reason })
 
-          const circuit = await Pool.takeCryptoRandomOrThrow(this.circuits)
+          const circuit = await Pool.takeCryptoRandomOrThrow(this.circuits, signal)
 
           const irn = new IrnSockets(new Mutex(circuit))
 
@@ -101,6 +103,8 @@ export class IrnBrume {
 
         throw result.getErr()
       }
+
+      throw new Error("Aborted", { cause: signal.reason })
     })
 
     const stack = new DisposableStack()
@@ -191,15 +195,17 @@ export class IrnSockets {
   #pool() {
     let update = Date.now()
 
-    const pool = new Pool<IrnClient>(async ({ index, pool }) => {
-      while (true) {
+    const pool = new Pool<IrnClient>(async (params) => {
+      const { index, signal } = params
+
+      while (!signal.aborted) {
         const start = Date.now()
 
         const result = await Result.runAndDoubleWrap(async () => {
           if (this.#closed)
             throw new Error("Closed", { cause: this.#closed.reason })
 
-          using preconn = new Box(await Pool.takeCryptoRandomOrThrow(this.sockets))
+          using preconn = new Box(await Pool.takeCryptoRandomOrThrow(this.sockets, signal))
           using preirn = new Box(new IrnClient(preconn.unwrapOrThrow().socket))
 
           for (const topic of this.topics)
@@ -239,6 +245,8 @@ export class IrnSockets {
 
         throw result.getErr()
       }
+
+      throw new Error("Aborted", { cause: signal.reason })
     })
 
     const stack = new DisposableStack()

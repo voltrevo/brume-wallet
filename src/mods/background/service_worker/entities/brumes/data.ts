@@ -206,7 +206,7 @@ export namespace WebSocketConnection {
    */
   export function createPool(circuit: Circuit, urls: readonly string[]) {
     const pool = new Pool<WebSocketConnection>(async (params) => {
-      const { pool, index, signal } = params
+      const { index, signal } = params
 
       const url = new URL(urls[index])
       const raw = await WebSocketConnection.createOrThrow(circuit, url, signal)
@@ -246,13 +246,13 @@ export namespace WebSocketConnection {
     let update = Date.now()
 
     const pool = new Pool<Pool<WebSocketConnection>>(async (params) => {
-      while (true) {
+      const { index, signal } = params
+
+      while (!signal.aborted) {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
-          const { pool, index } = params
-
-          const circuit = await subcircuits.getOrThrow(index % subcircuits.length)
+          const circuit = await subcircuits.getOrThrow(index % subcircuits.length, signal)
           const subpool = new Box(WebSocketConnection.createPool(circuit, urls))
 
           const onCloseOrError = async (reason?: unknown) => {
@@ -284,6 +284,8 @@ export namespace WebSocketConnection {
 
         throw result.getErr()
       }
+
+      throw new Error("Aborted", { cause: signal.reason })
     })
 
     const stack = new DisposableStack()
@@ -341,7 +343,7 @@ export namespace RpcConnections {
    */
   export function create(circuit: Circuit, urls: readonly string[]) {
     const pool = new Pool<RpcConnection>(async (params) => {
-      const { pool, index, signal } = params
+      const { index, signal } = params
 
       const url = new URL(urls[index])
 
@@ -395,12 +397,12 @@ export namespace RpcCircuits {
     let update = Date.now()
 
     const pool = new Pool<Pool<RpcConnection>>(async (params) => {
-      while (true) {
+      const { index, signal } = params
+
+      while (!signal.aborted) {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
-          const { pool, index } = params
-
           const circuit = await subcircuits.getOrThrow(index % subcircuits.length)
           const subpool = new Box(RpcConnections.create(circuit, urls))
 
@@ -433,6 +435,8 @@ export namespace RpcCircuits {
 
         throw result.getErr()
       }
+
+      throw new Error("Aborted", { cause: signal.reason })
     })
 
     const stack = new DisposableStack()

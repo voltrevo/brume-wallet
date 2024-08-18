@@ -115,7 +115,9 @@ async function main() {
     container.removeChild(element)
   }
 
-  const routers = new Pool<Disposer<ExtensionRpcRouter>>(async ({ pool, index }) => {
+  const routers = new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
+    const { index, signal } = params
+
     using stack = new Box(new DisposableStack())
 
     await new Promise(ok => setTimeout(ok, 1))
@@ -127,7 +129,8 @@ async function main() {
       using dport = new Box(new Disposer(port, () => port.disconnect()))
 
       router = new ExtensionRpcRouter("background", port)
-      await router.waitHelloOrThrow(AbortSignal.timeout(1000))
+
+      await router.waitHelloOrThrow(AbortSignal.any([signal, AbortSignal.timeout(1000)]))
 
       dport.moveOrThrow()
     } catch (e: unknown) {
@@ -152,14 +155,14 @@ async function main() {
 
     const icon = await router.requestOrThrow<string>({
       method: "brume_icon"
-    }, AbortSignal.timeout(1000)).then(r => r.unwrap())
+    }, AbortSignal.any([signal, AbortSignal.timeout(1000)])).then(r => r.unwrap())
 
     const detail = JSON.stringify(icon)
     const event = new CustomEvent("brume:icon", { detail })
     window.dispatchEvent(event)
 
     const onCloseOrError = (reason?: unknown) => {
-      pool.restart(index)
+      routers.restart(index)
       return new None()
     }
 

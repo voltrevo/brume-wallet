@@ -16,9 +16,9 @@ export namespace Streams {
     let update = Date.now()
 
     const pool = new Pool<Stream>(async (params) => {
-      const { pool, index } = params
+      const { index, signal } = params
 
-      while (true) {
+      while (!signal.aborted) {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
@@ -80,6 +80,8 @@ export namespace Streams {
 
         throw result.getErr()
       }
+
+      throw new Error("Aborted", { cause: signal.reason })
     })
 
     const stack = new DisposableStack()
