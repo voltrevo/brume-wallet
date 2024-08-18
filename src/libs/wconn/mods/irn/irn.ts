@@ -168,6 +168,10 @@ export class IrnSockets implements IrnLike {
     this.pool.inner.events.on("created", this.#onCreated.bind(this))
   }
 
+  [Symbol.dispose]() {
+    // TODO
+  }
+
   get closed() {
     return this.#closed
   }

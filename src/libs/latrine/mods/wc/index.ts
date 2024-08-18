@@ -6,7 +6,7 @@ import { Future } from "@hazae41/future";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { None, Option, Some } from "@hazae41/option";
 import { X25519 } from "@hazae41/x25519";
-import { CryptoClient, RpcReceiptAndPromise } from "../../../latrine/mods/crypto";
+import { CryptoClient, RpcReceiptAndPromise } from "../crypto";
 
 export interface WcMetadata {
   readonly name: string
