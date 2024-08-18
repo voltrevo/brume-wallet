@@ -1,3 +1,4 @@
+import { Awaitable } from "@hazae41/echalote/dist/types/libs/promises"
 import { RpcError, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { CloseEvents, ErrorEvents, SuperEventTarget } from "@hazae41/plume"
 import { Err, Ok } from "@hazae41/result"
@@ -31,44 +32,67 @@ export type IrnEvents = CloseEvents & ErrorEvents & {
 export interface IrnLike {
   readonly events: SuperEventTarget<IrnEvents>
 
-  subscribeOrThrow(topic: string, signal?: AbortSignal): Promise<string>
+  subscribeOrThrow(topic: string, signal?: AbortSignal): Awaitable<string>
 
-  publishOrThrow(payload: IrnPublishPayload, signal?: AbortSignal): Promise<void>
+  publishOrThrow(payload: IrnPublishPayload, signal?: AbortSignal): Awaitable<void>
 
-  closeOrThrow(reason: unknown): Promise<void>
+  closeOrThrow(reason: unknown): Awaitable<void>
+}
+
+export interface IrnClientParams {
+  readonly shouldCloseOnDispose?: boolean
 }
 
 export class IrnClient implements IrnLike {
-
-  readonly topicBySubscription = new Map<string, string>()
 
   readonly events = new SuperEventTarget<CloseEvents & ErrorEvents & {
     request: (request: RpcRequestPreinit<unknown>) => unknown
   }>()
 
-  #closed?: { reason: unknown }
+  readonly #stack = new DisposableStack()
+  readonly #topics = new Map<string, string>()
+
+  #closed?: { reason?: unknown }
 
   constructor(
-    readonly socket: WebSocket
+    readonly socket: WebSocket,
+    readonly params: IrnClientParams = {}
   ) {
-    socket.addEventListener("message", this.#onMessage.bind(this), { passive: true })
-    socket.addEventListener("close", this.#onClose.bind(this), { passive: true })
-    socket.addEventListener("error", this.#onError.bind(this), { passive: true })
+    const onMessage = this.#onMessage.bind(this)
+    socket.addEventListener("message", onMessage, { passive: true })
+    this.#stack.defer(() => socket.removeEventListener("message", onMessage))
+
+    const onClose = this.#onSocketClose.bind(this)
+    socket.addEventListener("close", onClose, { passive: true })
+    this.#stack.defer(() => socket.removeEventListener("close", onClose))
+
+    const onError = this.#onSocketError.bind(this)
+    socket.addEventListener("error", onError, { passive: true })
+    this.#stack.defer(() => socket.removeEventListener("error", onError))
   }
 
   [Symbol.dispose]() {
-    this.closeOrThrow(undefined).catch(console.error)
+    const { shouldCloseOnDispose = true } = this.params
+
+    if (shouldCloseOnDispose)
+      return void this.closeOrThrow()
+
+    this.#stack.dispose()
   }
 
   get closed() {
     return this.#closed
   }
 
-  #onClose(event: CloseEvent) {
+  #onSocketClose(event: CloseEvent) {
+    this.#closed = { reason: event.reason }
+    this.#stack.dispose()
     this.events.emit("close", [event.reason]).catch(console.error)
   }
 
-  #onError(event: Event) {
+  #onSocketError(event: Event) {
+    this.#closed = {}
+    this.#stack.dispose()
     this.events.emit("error", [undefined]).catch(console.error)
   }
 
@@ -78,7 +102,8 @@ export class IrnClient implements IrnLike {
     const json = JSON.parse(event.data) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
 
     if ("method" in json)
-      return void this.#onRequest(json).catch(console.error)
+      this.#onRequest(json).catch(console.error)
+
     return
   }
 
@@ -107,7 +132,7 @@ export class IrnClient implements IrnLike {
       params: { topic }
     }, signal).then(r => r.unwrap())
 
-    this.topicBySubscription.set(subscription, topic)
+    this.#topics.set(subscription, topic)
 
     return subscription
   }
@@ -124,9 +149,11 @@ export class IrnClient implements IrnLike {
     return
   }
 
-  async closeOrThrow(reason: unknown): Promise<void> {
+  closeOrThrow(reason?: unknown) {
     this.#closed = { reason }
+    this.#stack.dispose()
     this.socket.close()
+    this.events.emit("close", [reason]).catch(console.error)
   }
 
 }
