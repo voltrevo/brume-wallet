@@ -10,7 +10,7 @@ export function NavBar() {
   const path = usePathContext().unwrap()
 
   const openOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    await BrowserError.runOrThrow(() => browser.tabs.create({ url: `tab.html#/?_=${encodeURIComponent(pathOf(path.url))}` }))
+    await BrowserError.runOrThrow(() => browser.tabs.create({ url: `tabbed.html#/?_=${encodeURIComponent(pathOf(path.url))}` }))
   }), [path])
 
   return <div className="w-full po-md border-b border-b-contrast flex items-center">

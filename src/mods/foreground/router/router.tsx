@@ -1,7 +1,10 @@
 import { isWebsite } from "@/libs/platform/platform"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { usePathContext } from "@hazae41/chemin"
+import { Address } from "@hazae41/cubane"
+import { Nullable } from "@hazae41/option"
 import { DonePage, PersonalSignPage, TransactPage, TypedSignPage, WalletAndChainSelectPage } from "pages/popup"
+import { useEffect, useState } from "react"
 import { RequestsPage } from "../entities/requests/all/page"
 import { SeedsPage } from "../entities/seeds/all/page"
 import { SeedPage } from "../entities/seeds/page"
@@ -16,113 +19,239 @@ import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
 import { HomePage } from "../home/page"
 import { Bottom } from "../overlay/bottom"
+import { Overlay } from "../overlay/overlay"
 
 export function Layout(props: ChildrenProps) {
   const { children } = props
 
-  return <UserGuard>
-    <div className="grow w-full flex flex-col overflow-y-scroll">
-      <div className="grow w-full m-auto max-w-3xl flex flex-col">
-        {children}
+  return <Overlay>
+    <UserGuard>
+      <div className="grow w-full flex flex-col overflow-y-scroll">
+        <div className="grow w-full m-auto max-w-3xl flex flex-col">
+          {children}
+        </div>
       </div>
-    </div>
-    <Bottom />
-  </UserGuard>
+      <Bottom />
+    </UserGuard>
+  </Overlay>
 }
 
 export function Router() {
-  const { url } = usePathContext().unwrap()
+  const path = usePathContext().unwrap()
+
+  if (path.url.origin !== location.origin)
+    return <X />
 
   let matches: RegExpMatchArray | null
 
-  if ((matches = url.pathname.match(/^(\/)?$/)) && isWebsite())
-    return <FullLandingPage next="#/home" />
+  if ((matches = path.url.pathname.match(/^(\/)?$/)) && isWebsite())
+    return <Overlay>
+      <FullLandingPage next="#/home" />
+    </Overlay>
 
-  if ((matches = url.pathname.match(/^(\/)?$/)) && !isWebsite())
-    return <EmptyLandingPage next="#/home" />
+  if ((matches = path.url.pathname.match(/^(\/)?$/)) && !isWebsite())
+    return <Overlay>
+      <EmptyLandingPage next="#/home" />
+    </Overlay>
 
-  if (matches = url.pathname.match(/^\/home(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/home(\/)?$/))
     return <Layout>
       <HomePage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/wallets(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/wallets(\/)?$/))
     return <Layout>
       <WalletsPage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/wallets\/trash(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/wallets\/trash(\/)?$/))
     return <Layout>
       <TrashedWalletsPage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/seeds(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/seeds(\/)?$/))
     return <Layout>
       <SeedsPage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/sessions(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/sessions(\/)?$/))
     return <Layout>
       <SessionsPage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/requests(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/requests(\/)?$/))
     return <Layout>
       <RequestsPage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/plugins(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/plugins(\/)?$/))
     return <Layout>
       <SnapsPage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/wallet\/([^\/]+)(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/wallet\/([^\/]+)(\/)?$/))
     return <Layout>
       <WalletPage uuid={matches[1]} />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/wallet\/([^\/]+)\/camera(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/wallet\/([^\/]+)\/camera(\/)?$/))
     return <Layout>
       <WalletCameraPage uuid={matches[1]} />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/seed\/([^\/]+)(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/seed\/([^\/]+)(\/)?$/))
     return <Layout>
       <SeedPage uuid={matches[1]} />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/settings(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/settings(\/)?$/))
     return <Layout>
       <SettingsPage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/eth_requestAccounts(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/eth_requestAccounts(\/)?$/))
     return <Layout>
       <WalletAndChainSelectPage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/eth_sendTransaction(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/eth_sendTransaction(\/)?$/))
     return <Layout>
       <TransactPage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/personal_sign(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/personal_sign(\/)?$/))
     return <Layout>
       <PersonalSignPage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/eth_signTypedData_v4(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/eth_signTypedData_v4(\/)?$/))
     return <Layout>
       <TypedSignPage />
     </Layout>
 
-  if (matches = url.pathname.match(/^\/done(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/done(\/)?$/))
     return <Layout>
       <DonePage />
     </Layout>
 
   if (isWebsite())
-    return <FullLandingPage />
+    return <Overlay>
+      <FullLandingPage />
+    </Overlay>
 
-  return <EmptyLandingPage />
+  return <Overlay>
+    <EmptyLandingPage />
+  </Overlay>
+}
+
+export type GnosisRpcRequestInit<T = unknown> = undefined extends T
+  ? GnosisRpcParamlessRequestInit<T>
+  : GnosisRpcParamfulRequestInit<T>
+
+export interface GnosisRpcParamlessRequestInit<T> {
+  readonly id: string
+  readonly env: GnosisRpcEnv
+  readonly method: string
+  readonly params?: T
+}
+
+export interface GnosisRpcParamfulRequestInit<T> {
+  readonly id: string
+  readonly env: GnosisRpcEnv
+  readonly method: string
+  readonly params: NonNullable<T>
+}
+
+export interface GnosisRpcEnv {
+  readonly sdkVersion: string
+}
+
+export type GnosisRpcResponseInit<T = unknown> =
+  | GnosisRpcOk<T>
+
+export interface GnosisRpcOk<T = unknown> {
+  readonly id: string
+  readonly version: string
+  readonly success: true
+  readonly data: T
+}
+
+export interface GnosisRpcSafeInfoResult {
+  readonly chainId: number
+  readonly fallbackHandler: Address.From
+  readonly guard: null
+  readonly implementation: Address.From
+  readonly isReadOnly: boolean
+  readonly modules: Address.From[]
+  readonly network: "MAINNET"
+  readonly nonce: number
+  readonly owners: Address.From[]
+  readonly safeAddress: Address.From
+  readonly threshold: number
+  readonly version: "1.1.1"
+}
+
+export interface GnosisRpcCallParams<T = unknown> {
+  readonly call: string
+  readonly params: T
+}
+
+export function X() {
+  const path = usePathContext().unwrap()
+
+  const [iframe, setIframe] = useState<Nullable<HTMLIFrameElement>>()
+
+  useEffect(() => {
+    if (iframe == null)
+      return
+    const window = iframe.contentWindow
+
+    if (window == null)
+      return
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== window)
+        return
+      const request = event.data as GnosisRpcRequestInit
+
+      if (request.method === "getSafeInfo") {
+        const { id } = request
+        const version = "9.1.0"
+
+        const data: GnosisRpcSafeInfoResult = {
+          chainId: 1,
+          fallbackHandler: "0xd5D82B6aDDc9027B22dCA772Aa68D5d74cdBdF44",
+          guard: null,
+          implementation: "0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F",
+          isReadOnly: false,
+          modules: ["0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134"],
+          network: "MAINNET",
+          nonce: 0,
+          owners: ['0x9F87C1aCaF3Afc6a5557c58284D9F8609470b571', '0x8712128BEA09C9687Df05A5D692F3750F8086C81', '0x80F59C1D46EFC1Bb18F0AaEc132b77266f00Be9a', '0x9F7dfAb2222A473284205cdDF08a677726d786A0'],
+          safeAddress: "0xfF501B324DC6d78dC9F983f140B9211c3EdB4dc7",
+          threshold: 2,
+          version: "1.1.1"
+        }
+
+        const response = { id, version, success: true, data }
+        event.source.postMessage(response, event.origin)
+        return
+      }
+
+      if (request.method === "rpcCall") {
+        const { id, params } = request as GnosisRpcRequestInit<GnosisRpcCallParams>
+
+      }
+
+      console.log(request)
+    }
+
+    addEventListener("message", onMessage)
+    return () => removeEventListener("message", onMessage)
+  }, [iframe])
+
+  return <iframe className="grow w-full"
+    ref={setIframe}
+    src={path.url.href}
+    seamless />
 }

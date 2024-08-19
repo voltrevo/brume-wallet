@@ -17,8 +17,8 @@
 		9A4E09842C6B320400DDEA09 /* favicon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096E2C6B320300DDEA09 /* favicon.png */; };
 		9A4E09852C6B320400DDEA09 /* appicon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096F2C6B320300DDEA09 /* appicon.png */; };
 		9A4E09862C6B320400DDEA09 /* appicon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096F2C6B320300DDEA09 /* appicon.png */; };
-		9A4E09872C6B320400DDEA09 /* tab.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09702C6B320300DDEA09 /* tab.html */; };
-		9A4E09882C6B320400DDEA09 /* tab.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09702C6B320300DDEA09 /* tab.html */; };
+		9A4E09872C6B320400DDEA09 /* tabbed.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09702C6B320300DDEA09 /* tabbed.html */; };
+		9A4E09882C6B320400DDEA09 /* tabbed.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09702C6B320300DDEA09 /* tabbed.html */; };
 		9A4E09892C6B320400DDEA09 /* offscreen.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09712C6B320300DDEA09 /* offscreen.js */; };
 		9A4E098A2C6B320400DDEA09 /* offscreen.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09712C6B320300DDEA09 /* offscreen.js */; };
 		9A4E098B2C6B320400DDEA09 /* _next in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09722C6B320300DDEA09 /* _next */; };
@@ -115,7 +115,7 @@
 		9A4E096D2C6B320300DDEA09 /* square.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = square.png; path = ../../../dist/safari/square.png; sourceTree = "<group>"; };
 		9A4E096E2C6B320300DDEA09 /* favicon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = favicon.png; path = ../../../dist/safari/favicon.png; sourceTree = "<group>"; };
 		9A4E096F2C6B320300DDEA09 /* appicon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = appicon.png; path = ../../../dist/safari/appicon.png; sourceTree = "<group>"; };
-		9A4E09702C6B320300DDEA09 /* tab.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = tab.html; path = ../../../dist/safari/tab.html; sourceTree = "<group>"; };
+		9A4E09702C6B320300DDEA09 /* tabbed.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = tabbed.html; path = ../../../dist/safari/tabbed.html; sourceTree = "<group>"; };
 		9A4E09712C6B320300DDEA09 /* offscreen.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = offscreen.js; path = ../../../dist/safari/offscreen.js; sourceTree = "<group>"; };
 		9A4E09722C6B320300DDEA09 /* _next */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _next; path = ../../../dist/safari/_next; sourceTree = "<group>"; };
 		9A4E09732C6B320300DDEA09 /* service_worker.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = service_worker.js; path = ../../../dist/safari/service_worker.js; sourceTree = "<group>"; };
@@ -204,7 +204,7 @@
 				9A4E09742C6B320300DDEA09 /* round.png */,
 				9A4E09732C6B320300DDEA09 /* service_worker.js */,
 				9A4E096D2C6B320300DDEA09 /* square.png */,
-				9A4E09702C6B320300DDEA09 /* tab.html */,
+				9A4E09702C6B320300DDEA09 /* tabbed.html */,
 				9A4E097B2C6B320400DDEA09 /* themer.js */,
 			);
 			name = Resources;
@@ -463,7 +463,7 @@
 				9A4E09832C6B320400DDEA09 /* favicon.png in Resources */,
 				9A4E09972C6B320400DDEA09 /* opener.html in Resources */,
 				9A4E098F2C6B320400DDEA09 /* round.png in Resources */,
-				9A4E09872C6B320400DDEA09 /* tab.html in Resources */,
+				9A4E09872C6B320400DDEA09 /* tabbed.html in Resources */,
 				9A4E099B2C6B320400DDEA09 /* injected_script.js in Resources */,
 				9A4E099D2C6B320400DDEA09 /* themer.js in Resources */,
 				9A4E098B2C6B320400DDEA09 /* _next in Resources */,
@@ -488,7 +488,7 @@
 				9A4E09842C6B320400DDEA09 /* favicon.png in Resources */,
 				9A4E09982C6B320400DDEA09 /* opener.html in Resources */,
 				9A4E09902C6B320400DDEA09 /* round.png in Resources */,
-				9A4E09882C6B320400DDEA09 /* tab.html in Resources */,
+				9A4E09882C6B320400DDEA09 /* tabbed.html in Resources */,
 				9A4E099C2C6B320400DDEA09 /* injected_script.js in Resources */,
 				9A4E099E2C6B320400DDEA09 /* themer.js in Resources */,
 				9A4E098C2C6B320400DDEA09 /* _next in Resources */,
