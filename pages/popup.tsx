@@ -34,7 +34,7 @@ import { Nullable, Option } from "@hazae41/option";
 import { Err, Result } from "@hazae41/result";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-export default function Popup() {
+export default function Main() {
   const background = useBackgroundContext().unwrap()
 
   const helloOrThrow = useCallback(async () => {
@@ -124,7 +124,8 @@ export default function Popup() {
     <NavBar />
     <iframe className="grow w-full"
       ref={setIframe}
-      src={url.href} />
+      src={url.href}
+      seamless />
   </main>
 }
 

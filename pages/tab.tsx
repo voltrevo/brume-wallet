@@ -4,7 +4,7 @@ import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Nullable } from "@hazae41/option";
 import { useEffect, useMemo, useState } from "react";
 
-export default function Action() {
+export default function Main() {
   const [hash, setHash] = useState(location.hash)
 
   useEffect(() => {
@@ -45,6 +45,7 @@ export default function Action() {
     {isSafariExtension() && <NavBar />}
     <iframe className="grow w-full"
       ref={setIframe}
-      src={url.href} />
+      src={url.href}
+      seamless />
   </main >
 }

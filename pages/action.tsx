@@ -4,7 +4,7 @@ import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Nullable } from "@hazae41/option";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-export default function Action() {
+export default function Main() {
   const background = useBackgroundContext().unwrap()
 
   useEffect(() => {
@@ -89,6 +89,7 @@ export default function Action() {
     <NavBar />
     <iframe className="grow w-full"
       ref={setIframe}
-      src={url.href} />
+      src={url.href}
+      seamless />
   </main >
 }
