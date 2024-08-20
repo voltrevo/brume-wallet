@@ -4,7 +4,6 @@ import { Errors, UIError } from "@/libs/errors/errors";
 import { ChainData, chainDataByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Mutators } from "@/libs/glacier/mutators";
 import { Outline, Solid } from "@/libs/icons/icons";
-import { Wc, WcMetadata } from "@/libs/latrine/mods/wc";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
@@ -23,6 +22,7 @@ import { WalletRef } from "@/mods/background/service_worker/entities/wallets/dat
 import { TokenSettings, TokenSettingsData } from "@/mods/background/service_worker/entities/wallets/tokens/data";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
+import { Wc, WcMetadata } from "@hazae41/latrine";
 import { None, Nullable, Option, Optional, Some } from "@hazae41/option";
 import { CloseContext, useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";

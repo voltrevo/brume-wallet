@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 import { Errors } from "@/libs/errors/errors"
-import { WcMetadata } from "@/libs/latrine/mods/wc"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { UUIDProps } from "@/libs/react/props/uuid"
+import { WcMetadata } from "@hazae41/latrine"
 import { Decoder } from "@nuintun/qrcode"
 import { DecoderResult } from "@nuintun/qrcode/types/qrcode/decoder/Reader"
 import { useCallback, useEffect, useRef, useState } from "react"

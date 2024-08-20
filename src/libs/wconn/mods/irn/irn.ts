@@ -1,16 +1,16 @@
-import { IrnClient, IrnLike, IrnPublishPayload } from "@/libs/latrine/mods/irn";
 import { ping } from "@/libs/ping";
 import { WcBrume, WebSocketConnection } from "@/mods/background/service_worker/entities/brumes/data";
 import { Box } from "@hazae41/box";
 import { Disposer } from "@hazae41/disposer";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
+import { IrnClient, IrnClientLike, IrnPublishPayload } from "@hazae41/latrine";
 import { Mutex } from "@hazae41/mutex";
 import { None } from "@hazae41/option";
 import { Pool, PoolEntry } from "@hazae41/piscine";
 import { CloseEvents, ErrorEvents, SuperEventTarget } from "@hazae41/plume";
 import { Result } from "@hazae41/result";
 
-export class IrnBrume implements IrnLike {
+export class IrnBrume implements IrnClientLike {
 
   readonly topics = new Set<string>()
 
@@ -148,7 +148,7 @@ export class IrnBrume implements IrnLike {
 
 }
 
-export class IrnSockets implements IrnLike {
+export class IrnSockets implements IrnClientLike {
 
   readonly topics = new Set<string>()
 
