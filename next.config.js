@@ -35,7 +35,7 @@ async function compileServiceWorker(wpconfig) {
       filename: "./service_worker.js"
     },
     optimization: {
-      minimize: wpconfig.optimization.minimize,
+      minimize: true,
       minimizer: wpconfig.optimization.minimizer
     }
   })
@@ -57,7 +57,7 @@ async function compileContentScript(wpconfig) {
       filename: "./content_script.js"
     },
     optimization: {
-      minimize: wpconfig.optimization.minimize,
+      minimize: true,
       minimizer: wpconfig.optimization.minimizer
     }
   })
@@ -79,7 +79,7 @@ async function compileInjectedScript(wpconfig) {
       filename: "./injected_script.js"
     },
     optimization: {
-      minimize: wpconfig.optimization.minimize,
+      minimize: true,
       minimizer: wpconfig.optimization.minimizer
     }
   })
@@ -101,7 +101,7 @@ async function compileOffscreen(wpconfig) {
       filename: "./offscreen.js"
     },
     optimization: {
-      minimize: wpconfig.optimization.minimize,
+      minimize: true,
       minimizer: wpconfig.optimization.minimizer
     }
   })
