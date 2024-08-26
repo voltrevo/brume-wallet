@@ -6,7 +6,6 @@ const withMDX = require("@next/mdx")()
 
 module.exports = withMDX(withNextAsImmutable(withNextSidebuild({
   reactStrictMode: false, // TODO
-  swcMinify: true,
   output: "export",
   pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
   sidebuilds: function* (wpconfig) {
@@ -36,8 +35,8 @@ async function compileServiceWorker(wpconfig) {
       filename: "./service_worker.js"
     },
     optimization: {
-      minimize: true,
-      minimizer: [new TerserPlugin()]
+      minimize: wpconfig.optimization.minimize,
+      minimizer: wpconfig.optimization.minimizer
     }
   })
 }
@@ -58,8 +57,8 @@ async function compileContentScript(wpconfig) {
       filename: "./content_script.js"
     },
     optimization: {
-      minimize: true,
-      minimizer: [new TerserPlugin()]
+      minimize: wpconfig.optimization.minimize,
+      minimizer: wpconfig.optimization.minimizer
     }
   })
 }
@@ -80,8 +79,8 @@ async function compileInjectedScript(wpconfig) {
       filename: "./injected_script.js"
     },
     optimization: {
-      minimize: true,
-      minimizer: [new TerserPlugin()]
+      minimize: wpconfig.optimization.minimize,
+      minimizer: wpconfig.optimization.minimizer
     }
   })
 }
@@ -102,8 +101,8 @@ async function compileOffscreen(wpconfig) {
       filename: "./offscreen.js"
     },
     optimization: {
-      minimize: true,
-      minimizer: [new TerserPlugin()]
+      minimize: wpconfig.optimization.minimize,
+      minimizer: wpconfig.optimization.minimizer
     }
   })
 }
