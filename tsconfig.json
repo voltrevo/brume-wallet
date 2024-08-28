@@ -32,7 +32,7 @@
     "jsx": "preserve"
   },
   "include": [
-    "./pages/**/*",
+    "src/pages/**/*",
     "./src/**/*",
     "./mdx-components.tsx"
   ],
