@@ -140,10 +140,7 @@
   },
   "watch": {
     "build": {
-      "patterns": [
-        "src",
-        "pages"
-      ],
+      "patterns": ["src"],
       "extensions": "js,jsx,ts,tsx,md,mdx,css,json",
       "delay": 2500
     }

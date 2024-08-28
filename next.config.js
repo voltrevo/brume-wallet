@@ -1,4 +1,3 @@
-const TerserPlugin = require("terser-webpack-plugin")
 const path = require("path")
 const { withNextAsImmutable } = require("@hazae41/next-as-immutable")
 const { withNextSidebuild, NextSidebuild } = require("@hazae41/next-sidebuild")
