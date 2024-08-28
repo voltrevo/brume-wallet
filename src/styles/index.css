@@ -1,15 +1,14 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
-@import './padding/index.css';
-@import './margin/index.css';
-@import './animations/index.css';
-@import './background/index.css';
-@import './text/index.css';
-@import './border/index.css';
-@import './transitions/index.css';
-@import './outline/index.css';
+@import "./padding/index.css";
+@import "./margin/index.css";
+@import "./animations/index.css";
+@import "./background/index.css";
+@import "./text/index.css";
+@import "./border/index.css";
+@import "./outline/index.css";
 
 html,
 body {
