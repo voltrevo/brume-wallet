@@ -474,7 +474,7 @@ export function SmallShrinkableOppositeAnchor(props: ChildrenProps & AnchorProps
     <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
       {children}
     </div>
-  </a >
+  </a>
 }
 
 export function SmallShrinkableContrastAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {

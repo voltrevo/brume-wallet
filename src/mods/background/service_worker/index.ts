@@ -128,6 +128,8 @@ export class Global {
   #user?: UserSession
   #path: string = "/"
 
+  readonly mutex = new Mutex<void>(undefined)
+
   readonly popup = new Mutex<Slot<PopupData>>({})
 
   readonly tors: Mutex<Pool<TorClientDuplex>>
@@ -424,25 +426,16 @@ export class Global {
   }
 
   async getExtensionSessionOrThrow(script: RpcRouter, mouse: Mouse, wait: boolean): Promise<Nullable<ExSessionData>> {
-    const user = Option.unwrap(this.#user)
-
-    let mutex = user.sessionByScript.get(script.name)
-
-    if (mutex == null) {
-      mutex = new Mutex<Slot<string>>({})
-      user.sessionByScript.set(script.name, mutex)
-    }
-
-    return await mutex.lock(async slot => {
+    return await this.mutex.lock(async slot => {
       if (this.#user == null && !wait)
         return undefined
 
-      const { storage } = await this.getOrWaitUserOrThrow(mouse)
+      const user = await this.getOrWaitUserOrThrow(mouse)
 
-      const currentSession = slot.current
+      const currentSession = user.sessionByScript.get(script.name)
 
       if (currentSession != null) {
-        const sessionQuery = BgSession.schema(currentSession, storage)
+        const sessionQuery = BgSession.schema(currentSession, user.storage)
         const sessionState = await sessionQuery.state
         const sessionData = Option.unwrap(sessionState.data?.get())
 
@@ -457,7 +450,7 @@ export class Global {
       }).then(r => r.unwrap())
 
       const { origin, title, description } = preOriginData
-      const iconQuery = Option.unwrap(BlobbyQuery.create(origin, storage))
+      const iconQuery = Option.unwrap(BlobbyQuery.create(origin, user.storage))
       const iconRef = BlobbyRef.create(origin)
 
       if (preOriginData.icon) {
@@ -465,24 +458,24 @@ export class Global {
         await iconQuery.mutate(Mutators.data(iconData))
       }
 
-      const originQuery = Option.unwrap(OriginQuery.create(origin, storage))
+      const originQuery = Option.unwrap(OriginQuery.create(origin, user.storage))
       const originData: OriginData = { origin, title, description, icons: [iconRef] }
       await originQuery.mutate(Mutators.data(originData))
 
-      const sessionByOriginQuery = BgSession.ByOrigin.schema(origin, storage)
+      const sessionByOriginQuery = BgSession.ByOrigin.schema(origin, user.storage)
       const sessionByOriginState = await sessionByOriginQuery.state
 
       if (sessionByOriginState.data != null) {
         const sessionId = sessionByOriginState.data.get().id
 
-        const sessionQuery = BgSession.schema(sessionId, storage)
+        const sessionQuery = BgSession.schema(sessionId, user.storage)
         const sessionState = await sessionQuery.state
         const sessionData = Option.unwrap(sessionState.data?.get())
 
         if (sessionData.type === "wc")
           throw new Error("Unexpected WalletConnect session")
 
-        slot.current = sessionId
+        user.sessionByScript.set(script.name, sessionId)
 
         let scripts = user.scriptsBySession.get(sessionId)
 
@@ -528,7 +521,7 @@ export class Global {
       if (!wait)
         return undefined
 
-      const userChainState = await SettingsQuery.Chain.create(storage).state
+      const userChainState = await SettingsQuery.Chain.create(user.storage).state
       const userChainId = Option.wrap(userChainState.data?.get()).unwrapOr(1)
       const userChainData = Option.unwrap(chainDataByChainId[userChainId])
 
@@ -548,10 +541,10 @@ export class Global {
         chain: userChainData
       }
 
-      const sessionQuery = BgSession.schema(sessionData.id, storage)
+      const sessionQuery = BgSession.schema(sessionData.id, user.storage)
       await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
 
-      slot.current = sessionData.id
+      user.sessionByScript.set(script.name, sessionData.id)
 
       let scripts = user.scriptsBySession.get(sessionData.id)
 
@@ -1477,7 +1470,7 @@ export class UserSession {
   readonly ethBrumeByUuid = new Mutex(new Map<string, EthBrume>())
 
   readonly scriptsBySession = new Map<string, Set<RpcRouter>>()
-  readonly sessionByScript = new Map<string, Mutex<Slot<string>>>()
+  readonly sessionByScript = new Map<string, string>()
 
   readonly wcBySession = new Map<string, WcSession>()
 
