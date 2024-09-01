@@ -3,7 +3,6 @@ import { Circuit, CircuitOpenParams } from "@hazae41/echalote"
 import { fetch } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
 import { RpcRequest, RpcRequestInit, RpcResponse } from "@hazae41/jsonrpc"
-import { AbortedError, ClosedError, ErroredError } from "@hazae41/plume"
 import { Circuits } from "../tor/circuits/circuits"
 
 export namespace TorRpc {
@@ -48,17 +47,9 @@ export namespace TorRpc {
       future.resolve(response)
     }
 
-    const onError = (e: unknown) => {
-      future.reject(ErroredError.from(e))
-    }
-
-    const onClose = (e: unknown) => {
-      future.reject(ClosedError.from(e))
-    }
-
-    const onAbort = () => {
-      future.reject(AbortedError.from(signal.reason))
-    }
+    const onError = (cause: unknown) => future.reject(new Error("Errored", { cause }))
+    const onClose = (cause: unknown) => future.reject(new Error("Closed", { cause }))
+    const onAbort = () => future.reject(new Error("Aborted", { cause: signal.reason }))
 
     try {
       socket.addEventListener("message", onMessage, { passive: true })

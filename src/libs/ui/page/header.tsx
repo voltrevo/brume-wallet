@@ -27,7 +27,7 @@ export function GlobalPageHeader(props: TitleProps & ChildrenProps & OptionalBac
 }
 
 export function UserPageHeader(props: TitleProps & ChildrenProps & OptionalBackProps) {
-  const userData = useUserContext().unwrap()
+  const userData = useUserContext().getOrThrow()
   const { title, children, back } = props
 
   return <div className="p-4 flex items-center">

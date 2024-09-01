@@ -40,7 +40,7 @@ export function useAsyncReplaceMemo<T>(factory: () => Promise<T>, deps: Dependen
       return
 
     aborterRef.current = undefined
-    setState(() => result.unwrap())
+    setState(() => result.getOrThrow())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 

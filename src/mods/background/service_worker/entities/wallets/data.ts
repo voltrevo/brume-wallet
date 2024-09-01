@@ -173,15 +173,15 @@ export namespace BgWallet {
         const indexer = async (states: States<Data, Fail>) => {
           const { current, previous } = states
 
-          const previousData = previous?.real?.current.ok()?.get()
-          const currentData = current.real?.current.ok()?.get()
+          const previousData = previous?.real?.current.ok()?.getOrNull()
+          const currentData = current.real?.current.ok()?.getOrNull()
 
           const [array = []] = [currentData]
 
           await BgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutate(s => {
             const current = s.current
 
-            const [{ value = new Fixed(0n, 0) } = {}] = [current?.ok().get()?.[account]]
+            const [{ value = new Fixed(0n, 0) } = {}] = [current?.ok().getOrNull()?.[account]]
 
             const inner = { value, count: array.length }
 
@@ -229,8 +229,8 @@ export namespace BgWallet {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.current.ok()?.getOrNull()
+      const currentData = current.real?.current.ok()?.getOrNull()
 
       if (previousData != null && (previousData.uuid !== currentData?.uuid || previousData.trashed !== currentData?.trashed) && !previousData.trashed) {
         await All.schema(storage).mutate(s => {

@@ -15,10 +15,9 @@ import { Mutex } from "@hazae41/mutex"
 import { None } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
-import { Signals } from "@hazae41/signals"
 
 export interface WcBrume {
-  readonly key: Ed25519.PrivateKey
+  readonly key: Ed25519.SigningKey
   readonly circuits: Pool<Circuit>
   readonly sockets: Pool<Disposer<Pool<WebSocketConnection>>>
 }
@@ -86,7 +85,7 @@ export class UrlConnection {
 
 export namespace WcBrume {
 
-  export async function createOrThrow(circuits: Mutex<Pool<Circuit>>, key: Ed25519.PrivateKey): Promise<WcBrume> {
+  export async function createOrThrow(circuits: Mutex<Pool<Circuit>>, key: Ed25519.SigningKey): Promise<WcBrume> {
     const relay = Wc.RELAY
     const auth = await Jwt.signOrThrow(key, relay)
     const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
@@ -100,7 +99,7 @@ export namespace WcBrume {
 
   export function createPool(circuits: Mutex<Pool<Circuit>>, size: number) {
     const pool = new Pool<WcBrume>(async () => {
-      const key = await Ed25519.get().PrivateKey.randomOrThrow()
+      const key = await Ed25519.get().getOrThrow().SigningKey.randomOrThrow()
       const brume = new Box(await createOrThrow(circuits, key))
 
       /**
@@ -161,8 +160,8 @@ export namespace WebSocketConnection {
    * @param signal 
    * @returns 
    */
-  export async function createOrThrow(circuit: Circuit, url: URL, signal?: AbortSignal): Promise<WebSocketConnection> {
-    const signal2 = Signals.merge(AbortSignal.timeout(ping.value * 5), signal)
+  export async function createOrThrow(circuit: Circuit, url: URL, signal = new AbortController().signal): Promise<WebSocketConnection> {
+    const signal2 = AbortSignal.any([AbortSignal.timeout(ping.value * 5), signal])
 
     if (url.protocol === "wss:") {
       const tcp = await circuit.openOrThrow(url.hostname, 443)

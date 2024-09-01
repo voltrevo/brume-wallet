@@ -10,7 +10,6 @@ import { RpcCounter, RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { NetworkMixin, base16_decode_mixed, base16_encode_lower, initBundledOnce } from "@hazae41/network-bundle"
 import { Option } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
-import { Signals } from "@hazae41/signals"
 import { BgEthereumContext } from "../../context"
 import { EthereumFetchParams, EthereumQueryKey } from "../wallets/data"
 
@@ -92,13 +91,13 @@ export namespace BgSimulation {
 
   export async function fetchOrFail<T>(ethereum: BgEthereumContext, init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}) {
     try {
-      const { signal: parentSignal } = more
+      const { signal: parentSignal = new AbortController().signal } = more
       const { brume } = ethereum
 
       const circuits = brume.circuits
 
       async function runWithCircuitOrThrow(index: number) {
-        const circuitSignal = Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal)
+        const circuitSignal = AbortSignal.any([AbortSignal.timeout(ping.value * 5), parentSignal])
         const circuit = await circuits.getOrThrow(index, circuitSignal)
 
         const session = randomUUID()
@@ -108,23 +107,23 @@ export namespace BgSimulation {
 
         const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
           circuit,
-          signal: Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal),
+          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 5), parentSignal]),
           ...new RpcCounter().prepare({ method: "net_get" }),
-        }).then(r => r.unwrap())
+        }).then(r => r.getOrThrow())
 
         const secret = await generateOrThrow(params)
 
         await TorRpc.fetchWithCircuitOrThrow<void>(url, {
           circuit,
-          signal: Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal),
+          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 5), parentSignal]),
           ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
-        }).then(r => r.unwrap())
+        }).then(r => r.getOrThrow())
 
         const nodes = await TorRpc.fetchWithCircuitOrThrow<{ location: string }[]>(url, {
           circuit,
-          signal: Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal),
+          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 5), parentSignal]),
           ...new RpcCounter().prepare({ method: "net_search", params: [{}, { protocols: [`https:json-rpc:(pay-by-char|tenderly:${ethereum.chain.chainId})`] }] })
-        }).then(r => r.unwrap())
+        }).then(r => r.getOrThrow())
 
         const node = Arrays.cryptoRandom(nodes)
 
@@ -137,21 +136,21 @@ export namespace BgSimulation {
 
           const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
             circuit,
-            signal: Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal),
+            signal: AbortSignal.any([AbortSignal.timeout(ping.value * 5), parentSignal]),
             ...new RpcCounter().prepare({ method: "net_get" }),
-          }).then(r => r.unwrap())
+          }).then(r => r.getOrThrow())
 
           const secret = await generateOrThrow(params)
 
           await TorRpc.fetchWithCircuitOrThrow<void>(url, {
             circuit,
-            signal: Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal),
+            signal: AbortSignal.any([AbortSignal.timeout(ping.value * 5), parentSignal]),
             ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
-          }).then(r => r.unwrap())
+          }).then(r => r.getOrThrow())
 
           return await TorRpc.fetchWithCircuitOrThrow<T>(url, {
             circuit,
-            signal: Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal),
+            signal: AbortSignal.any([AbortSignal.timeout(ping.value * 5), parentSignal]),
             ...new RpcCounter().prepare(init)
           }).then(r => Fetched.rewrap(r))
         }
@@ -173,7 +172,7 @@ export namespace BgSimulation {
         if (init?.noCheck)
           return result.value
         const raw = JSON.stringify(result.value.inner)
-        const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
+        const previous = Option.wrap(counters.get(raw)).getOr(0)
         counters.set(raw, previous + 1)
         fetcheds.set(raw, result.value)
       }

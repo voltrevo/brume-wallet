@@ -8,8 +8,8 @@ import { MouseEvent } from "react";
 import { WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "../../../wallets/actions/send";
 
 export function SeedCreatorMenu(props: {}) {
-  const close = useCloseContext().unwrap()
-  const path = usePathContext().unwrap()
+  const close = useCloseContext().getOrThrow()
+  const path = usePathContext().getOrThrow()
 
   const mnemonic = useCoords(path, "/create/mnemonic")
   const hardware = useCoords(path, "/create/hardware")

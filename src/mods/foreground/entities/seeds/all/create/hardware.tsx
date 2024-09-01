@@ -19,9 +19,9 @@ import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../..
 import { RawSeedCard } from "../../card";
 
 export function LedgerSeedCreatorDialog(props: {}) {
-  const path = usePathContext().unwrap()
-  const close = useCloseContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const close = useCloseContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const subpath = useHashSubpath(path)
 
@@ -56,7 +56,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
     await background.requestOrThrow<void>({
       method: "brume_createSeed",
       params: [seed]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     close()
   }), [finalNameInput, uuid, color, background, close])

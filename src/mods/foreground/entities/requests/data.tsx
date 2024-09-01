@@ -33,8 +33,8 @@ export namespace FgAppRequest {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.current.ok()?.getOrNull()
+      const currentData = current.real?.current.ok()?.getOrNull()
 
       await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData?.id === currentData?.id)
@@ -53,14 +53,14 @@ export namespace FgAppRequest {
 }
 
 export function useAppRequest(id: Nullable<string>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgAppRequest.schema, [id, storage])
 
   return query
 }
 
 export function useAppRequests() {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgAppRequest.All.schema, [storage])
 
   return query

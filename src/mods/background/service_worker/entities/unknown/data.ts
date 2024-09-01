@@ -60,8 +60,8 @@ export namespace BgTotal {
             const indexer = async (states: States<Data, Fail>) => {
               const { current, previous } = states
 
-              const previousData = previous?.real?.current.ok()?.get()
-              const currentData = current.real?.current.ok()?.get()
+              const previousData = previous?.real?.current.ok()?.getOrNull()
+              const currentData = current.real?.current.ok()?.getOrNull()
 
               const [record = {}] = [currentData]
 
@@ -91,15 +91,15 @@ export namespace BgTotal {
           const indexer = async (states: States<Data, Fail>) => {
             const { current, previous } = states
 
-            const previousData = previous?.real?.current.ok()?.get()
-            const currentData = current.real?.current.ok()?.get()
+            const previousData = previous?.real?.current.ok()?.getOrNull()
+            const currentData = current.real?.current.ok()?.getOrNull()
 
             const [value = new Fixed(0n, 0)] = [currentData]
 
             await Record.schema(coin, storage)?.mutate(s => {
               const { current } = s
 
-              const [{ count = 0 } = {}] = [current?.ok().get()?.[account]]
+              const [{ count = 0 } = {}] = [current?.ok().getOrNull()?.[account]]
 
               const inner = { count, value }
 

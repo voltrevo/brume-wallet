@@ -22,7 +22,7 @@ import { PaddedRoundedShrinkableNakedButton } from "../../wallets/actions/send"
 import { useAppRequest, useAppRequests } from "../data"
 
 export function RequestsPage() {
-  const background = useBackgroundContext().unwrap()
+  const background = useBackgroundContext().getOrThrow()
 
   const requestsQuery = useAppRequests()
   const maybeRequests = requestsQuery.data?.get()
@@ -37,7 +37,7 @@ export function RequestsPage() {
       await background.requestOrThrow({
         method: "brume_respond",
         params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-      }).then(r => r.unwrap())
+      }).then(r => r.getOrThrow())
 
     return
   }), [background, maybeRequests])

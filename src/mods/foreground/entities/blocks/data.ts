@@ -50,7 +50,7 @@ export namespace FgBlock {
 }
 
 export function useBlockByNumber(number: Nullable<string>, ethereum: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgBlock.ByNumber.schema, [number, ethereum, storage])
   useFetch(query)
   useVisible(query)

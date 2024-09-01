@@ -16,7 +16,7 @@ export async function createUserStorageOrThrow(user: UserData, password: string)
   const pbkdf2 = await crypto.subtle.importKey("raw", Bytes.fromUtf8(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"])
 
   const passwordHashBase64 = user.passwordHashBase64
-  using passwordHashSlice = Base64.get().decodePaddedOrThrow(passwordHashBase64)
+  using passwordHashSlice = Base64.get().getOrThrow().decodePaddedOrThrow(passwordHashBase64)
 
   const passwordParamsBase64 = user.passwordParamsBase64
   const passwordParamsBytes = Pbdkf2Params.parse(passwordParamsBase64)

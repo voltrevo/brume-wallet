@@ -105,7 +105,7 @@ export namespace BgToken {
 
     export function schema(address: ZeroHexString, currency: "usd", storage: IDBStorage) {
       const indexer = async (states: States<Data, Fail>) => {
-        const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
+        const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).getOr({})
         const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
         const totalBalance = BgTotal.Balance.Priced.ByAddress.schema(address, currency, storage)
@@ -139,8 +139,8 @@ export namespace BgToken {
           const indexer = async (states: States<Data, Fail>) => {
             const { current, previous } = states
 
-            const previousData = previous?.real?.current.ok()?.get()
-            const currentData = current.real?.current.ok()?.get()
+            const previousData = previous?.real?.current.ok()?.getOrNull()
+            const currentData = current.real?.current.ok()?.getOrNull()
 
             const key = `${context.chain.chainId}`
             const [value = new Fixed(0n, 0)] = [currentData]
@@ -193,7 +193,7 @@ export namespace BgToken {
           if (block !== "pending")
             return
 
-          const pricedBalance = await Option.wrap(states.current.real?.current.ok().get()).andThen(async balance => {
+          const pricedBalance = await Option.wrap(states.current.real?.current.ok().getOrNull()).andThen(async balance => {
             if (context.chain.token.pairs == null)
               return new None()
 
@@ -213,7 +213,7 @@ export namespace BgToken {
             }
 
             return new Some(new Data(pricedBalance))
-          }).then(o => o.get())
+          }).then(o => o.getOrNull())
 
           const pricedBalanceQuery = Priced.schema(account, "usd", context, storage)
           await pricedBalanceQuery.mutate(() => new Some(pricedBalance))
@@ -268,8 +268,8 @@ export namespace BgToken {
           const indexer = async (states: States<Data, Fail>) => {
             const { current, previous } = states
 
-            const previousData = previous?.real?.current.ok()?.get()
-            const currentData = current.real?.current.ok()?.get()
+            const previousData = previous?.real?.current.ok()?.getOrNull()
+            const currentData = current.real?.current.ok()?.getOrNull()
 
             const key = `${context.chain.chainId}/${token.address}`
             const [value = new Fixed(0n, 0)] = [currentData]
@@ -337,7 +337,7 @@ export namespace BgToken {
           if (block !== "pending")
             return
 
-          const pricedBalance = await Option.wrap(states.current.real?.current.ok().get()).andThen(async balance => {
+          const pricedBalance = await Option.wrap(states.current.real?.current.ok().getOrNull()).andThen(async balance => {
             if (token.pairs == null)
               return new None()
 
@@ -357,7 +357,7 @@ export namespace BgToken {
             }
 
             return new Some(new Data(pricedBalance))
-          }).then(o => o.get())
+          }).then(o => o.getOrNull())
 
           const pricedBalanceQuery = Priced.schema(account, token, "usd", ethereum, storage)
           await pricedBalanceQuery.mutate(() => new Some(pricedBalance))
@@ -385,8 +385,8 @@ export namespace BgToken {
       const indexer = async (states: States<D, F>) => {
         const { current, previous } = states
 
-        const previousData = previous?.real?.current.ok()?.get()
-        const currentData = current.real?.current.ok()?.get()
+        const previousData = previous?.real?.current.ok()?.getOrNull()
+        const currentData = current.real?.current.ok()?.getOrNull()
 
         if (previousData?.uuid === currentData?.uuid)
           return

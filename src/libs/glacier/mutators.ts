@@ -31,7 +31,7 @@ export namespace Mutators {
     export function mapOrNew<D, O>(mapper: (data?: D) => O, data: Nullable<Data<D>>) {
       return Option.wrap(data)
         .mapSync(data => data.mapSync(mapper))
-        .unwrapOr(new Data(mapper()))
+        .getOr(new Data(mapper()))
     }
 
   }

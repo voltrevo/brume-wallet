@@ -7,7 +7,8 @@ export namespace Address {
 
   export async function fromOrThrow(maybeCompressedPublicKey: Uint8Array): Promise<string> {
     const sha256 = await Sha256.digest(maybeCompressedPublicKey)
-    using ripemd160 = Ripemd160.get().tryHash(sha256).unwrap()
+
+    using ripemd160 = Ripemd160.get().getOrThrow().hashOrThrow(sha256)
 
     const cursor = new Cursor(new Uint8Array(1 + ripemd160.bytes.length + 4))
     cursor.writeUint8OrThrow(0)
@@ -19,7 +20,7 @@ export namespace Address {
 
     cursor.writeOrThrow(checksum)
 
-    return Base58.get().tryEncode(cursor.bytes).unwrap()
+    return Base58.get().getOrThrow().encodeOrThrow(cursor.bytes)
   }
 
   export function format(address: string) {

@@ -95,8 +95,8 @@ export namespace BgUser {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.current.ok()?.getOrNull()
+      const currentData = current.real?.current.ok()?.getOrNull()
 
       await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData?.uuid === currentData?.uuid)
@@ -152,7 +152,7 @@ export namespace BgUser {
 
     const passwordParamsBase64 = Pbdkf2Params.stringify(passwordParamsBytes)
     const passwordHashBytes = new Uint8Array(await crypto.subtle.deriveBits(passwordParamsBytes, pbkdf2, 256))
-    const passwordHashBase64 = Base64.get().encodePaddedOrThrow(passwordHashBytes)
+    const passwordHashBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(passwordHashBytes)
 
     return { uuid, name, color, keyParamsBase64, valueParamsBase64, passwordParamsBase64, passwordHashBase64 }
   }

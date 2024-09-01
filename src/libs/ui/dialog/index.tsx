@@ -8,8 +8,8 @@ import { ChildrenProps } from "../../react/props/children"
 import { Portal } from "../portal"
 
 export function Dialog(props: ChildrenProps & DarkProps & { hesitant?: boolean }) {
-  const { url } = usePathContext().unwrap()
-  const close = useCloseContext().unwrap()
+  const { url } = usePathContext().getOrThrow()
+  const close = useCloseContext().getOrThrow()
   const { dark, children, hesitant } = props
 
   const maybeX = url.searchParams.get("x")

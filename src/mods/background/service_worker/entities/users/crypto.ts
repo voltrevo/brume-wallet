@@ -39,7 +39,7 @@ export namespace Pbdkf2Params {
   export function stringify(params: Pbkdf2ParamsBytes): Pbkdf2ParamsBase64 {
     const { name, hash, iterations } = params
 
-    const salt = Base64.get().encodePaddedOrThrow(params.salt)
+    const salt = Base64.get().getOrThrow().encodePaddedOrThrow(params.salt)
 
     return { name, hash, iterations, salt }
   }
@@ -47,7 +47,9 @@ export namespace Pbdkf2Params {
   export function parse(params: Pbkdf2ParamsBase64): Pbkdf2ParamsBytes {
     const { name, hash, iterations } = params
 
-    const salt = Base64.get().decodePaddedOrThrow(params.salt).copyAndDispose()
+    using memory = Base64.get().getOrThrow().decodePaddedOrThrow(params.salt)
+
+    const salt = memory.bytes.slice()
 
     return { name, hash, iterations, salt }
   }

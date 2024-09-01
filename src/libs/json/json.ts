@@ -362,7 +362,7 @@ const hex = GuardedProperty.from(StringGuard)
   .then(ZeroHexStringGuard)
   .then(Guard.min(130))
   .tryAs(`0xdeadbeef4c6f72656d20697073756d20646f6c6f722073`)
-  .unwrap()
+  .getOrThrow()
 
 const obj = Property.object({}).then(Guard.inter(
   new HasPropertyGuard("hello"),
@@ -381,7 +381,7 @@ Property
 
 const object = Property.object({
   message: Property.string().then(ZeroHexStringGuard).then(Guard.min(2)).required(true)
-}).tryAs({ message: "Oxdeadbeef" }).unwrap()
+}).tryAs({ message: "Oxdeadbeef" }).getOrThrow()
 
 export class Json<T> {
 

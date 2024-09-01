@@ -79,7 +79,7 @@ export namespace Circuits {
             const tor = await tors.inner.getOrThrow(index % tors.inner.length, signal)
 
             const microdescsQuery = MicrodescQuery.All.create(undefined, storage)
-            const microdescsData = await microdescsQuery.state.then(r => Option.unwrap(r.current?.unwrap()))
+            const microdescsData = await microdescsQuery.state.then(r => Option.wrap(r.current?.getOrThrow()).getOrThrow())
 
             const middles = microdescsData.filter(it => true
               && it.flags.includes("Fast")
@@ -103,8 +103,8 @@ export namespace Circuits {
               await loopOrThrow(async () => {
                 const head = Arrays.cryptoRandom(middles)!
 
-                const query = Option.unwrap(MicrodescQuery.create(head, index, circuit.getOrThrow(), storage))
-                const body = await query.fetch().then(r => Option.unwrap(r.getAny().current).unwrap())
+                const query = Option.wrap(MicrodescQuery.create(head, index, circuit.getOrThrow(), storage)).getOrThrow()
+                const body = await query.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
                 start = Date.now()
                 await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 3)))
@@ -117,8 +117,8 @@ export namespace Circuits {
               await loopOrThrow(async () => {
                 const head = Arrays.cryptoRandom(exits)!
 
-                const query = Option.unwrap(MicrodescQuery.create(head, index, circuit.getOrThrow(), storage))
-                const body = await query.fetch().then(r => Option.unwrap(r.getAny().current).unwrap())
+                const query = Option.wrap(MicrodescQuery.create(head, index, circuit.getOrThrow(), storage)).getOrThrow()
+                const body = await query.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
                 start = Date.now()
                 await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 4)))

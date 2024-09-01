@@ -156,7 +156,7 @@ async function main() {
 
     const icon = await router.requestOrThrow<string>({
       method: "brume_icon"
-    }, AbortSignal.any([signal, AbortSignal.timeout(1000)])).then(r => r.unwrap())
+    }, AbortSignal.any([signal, AbortSignal.timeout(1000)])).then(r => r.getOrThrow())
 
     const detail = JSON.stringify(icon)
     const event = new CustomEvent("brume:icon", { detail })

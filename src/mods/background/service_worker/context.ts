@@ -6,7 +6,6 @@ import { Fail, Fetched, FetcherMore } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Option } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
-import { Signals } from "@hazae41/signals"
 import { EthBrume } from "./entities/brumes/data"
 import { EthereumFetchParams } from "./entities/wallets/data"
 
@@ -19,17 +18,17 @@ export namespace BgEthereumContext {
 
   export async function fetchOrFail<T>(ethereum: BgEthereumContext, init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}) {
     try {
-      const { signal: parentSignal } = more
+      const { signal: parentSignal = new AbortController().signal } = more
       const { brume } = ethereum
 
-      const pools = Option.unwrap(brume[ethereum.chain.chainId])
+      const pools = Option.wrap(brume[ethereum.chain.chainId]).getOrThrow()
 
       async function runWithPoolOrThrow(index: number) {
-        const poolSignal = Signals.merge(AbortSignal.timeout(1_000), parentSignal)
+        const poolSignal = AbortSignal.any([AbortSignal.timeout(1_000), parentSignal])
         const pool = await pools.get().getOrThrow(index, poolSignal)
 
         async function runWithConnOrThrow(index: number) {
-          const connSignal = Signals.merge(AbortSignal.timeout(1_000), parentSignal)
+          const connSignal = AbortSignal.any([AbortSignal.timeout(1_000), parentSignal])
           const conn = await pool.get().getOrThrow(index, connSignal)
 
           const { counter, connection } = conn
@@ -38,7 +37,7 @@ export namespace BgEthereumContext {
           if (connection.isURL()) {
             const { url, circuit } = connection
 
-            const signal = Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal)
+            const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 5), parentSignal])
             const response = await TorRpc.fetchWithCircuitOrThrow<T>(url, { ...request, circuit, signal })
 
             return Fetched.rewrap(response)
@@ -49,7 +48,7 @@ export namespace BgEthereumContext {
 
             await cooldown
 
-            const signal = Signals.merge(AbortSignal.timeout(ping.value * 5), parentSignal)
+            const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 5), parentSignal])
             const response = await TorRpc.fetchWithSocketOrThrow<T>(socket, request, signal)
 
             return Fetched.rewrap(response)
@@ -73,7 +72,7 @@ export namespace BgEthereumContext {
           if (init?.noCheck)
             return result.value
           const raw = JSON.stringify(result.value.inner)
-          const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
+          const previous = Option.wrap(counters.get(raw)).getOr(0)
           counters.set(raw, previous + 1)
           fetcheds.set(raw, result.value)
         }
@@ -119,7 +118,7 @@ export namespace BgEthereumContext {
         if (init?.noCheck)
           return result.value
         const raw = JSON.stringify(result.value.inner)
-        const previous = Option.wrap(counters.get(raw)).unwrapOr(0)
+        const previous = Option.wrap(counters.get(raw)).getOr(0)
         counters.set(raw, previous + 1)
         fetcheds.set(raw, result.value)
       }

@@ -64,7 +64,7 @@ export namespace FgEns {
 }
 
 export function useEnsLookup(name: Nullable<string>, ethereum: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgEns.Lookup.schema, [name, ethereum, storage])
   useFetch(query)
   useVisible(query)
@@ -74,7 +74,7 @@ export function useEnsLookup(name: Nullable<string>, ethereum: Nullable<FgEthere
 }
 
 export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
   useFetch(query)
   useVisible(query)
@@ -90,7 +90,7 @@ export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullab
  * @returns 
  */
 export function useEnsReverseNoFetch(address: Nullable<ZeroHexString>, ethereum: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
 
   return query

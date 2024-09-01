@@ -52,7 +52,7 @@ export class MessageRpcRouter {
         await this.requestOrThrow({
           id: "ping",
           method: "brume_ping"
-        }, AbortSignal.timeout(1000)).then(r => r.unwrap())
+        }, AbortSignal.timeout(1000)).then(r => r.getOrThrow())
 
         count = 0
         continue
@@ -120,7 +120,7 @@ export class MessageRpcRouter {
     return await this.onResponse(data)
   }
 
-  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = Signals.never()): Promise<RpcResponse<T>> {
+  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = new AbortController().signal): Promise<RpcResponse<T>> {
     const request = this.counter.prepare(init)
 
     if (request.id !== "ping")
@@ -128,7 +128,7 @@ export class MessageRpcRouter {
 
     this.port.postMessage(JSON.stringify(request))
 
-    return Plume.waitOrCloseOrErrorOrSignal(this.events, "response", (future: Future<RpcResponse<T>>, init: RpcResponseInit<any>) => {
+    return Plume.waitWithCloseAndErrorOrThrow(this.events, "response", (future: Future<RpcResponse<T>>, init: RpcResponseInit<any>) => {
       if (init.id !== request.id)
         return new None()
 
@@ -138,10 +138,10 @@ export class MessageRpcRouter {
     }, signal)
   }
 
-  async waitHelloOrThrow(signal = Signals.never()) {
+  async waitHelloOrThrow(signal = new AbortController().signal) {
     const active = this.requestOrThrow<void>({
       method: "brume_hello"
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     using request = this.events.wait("request", (future: Future<void>) => {
       future.resolve()
@@ -222,9 +222,7 @@ export class ExtensionRpcRouter {
     if (request.id !== "ping")
       Console.debug(this.name, "<-", response)
 
-    Result.runAndWrapSync(() => {
-      return BrowserError.runOrThrowSync(() => this.port.postMessage(JSON.stringify(response)))
-    }).ignore()
+    Result.runAndWrapSync(() => BrowserError.runOrThrowSync(() => this.port.postMessage(JSON.stringify(response))))
   }
 
   async onResponse(response: RpcResponseInit<unknown>) {
@@ -251,7 +249,7 @@ export class ExtensionRpcRouter {
     await this.events.emit("close", [undefined])
   }
 
-  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = Signals.never()): Promise<RpcResponse<T>> {
+  async requestOrThrow<T>(init: RpcRequestPreinit<unknown>, signal = new AbortController().signal): Promise<RpcResponse<T>> {
     const request = this.counter.prepare(init)
 
     if (request.id !== "ping")
@@ -259,7 +257,7 @@ export class ExtensionRpcRouter {
 
     BrowserError.runOrThrowSync(() => this.port.postMessage(JSON.stringify(request)))
 
-    return Plume.waitOrCloseOrErrorOrSignal(this.events, "response", (future: Future<RpcResponse<T>>, init: RpcResponseInit<any>) => {
+    return Plume.waitWithCloseAndErrorOrThrow(this.events, "response", (future: Future<RpcResponse<T>>, init: RpcResponseInit<any>) => {
       if (init.id !== request.id)
         return new None()
       const response = RpcResponse.from<T>(init)
@@ -268,10 +266,10 @@ export class ExtensionRpcRouter {
     }, signal)
   }
 
-  async waitHelloOrThrow(signal = Signals.never()) {
+  async waitHelloOrThrow(signal = new AbortController().signal) {
     const active = this.requestOrThrow<void>({
       method: "brume_hello"
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     using request = this.events.wait("request", (future: Future<void>) => {
       future.resolve()

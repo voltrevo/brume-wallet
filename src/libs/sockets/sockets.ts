@@ -1,9 +1,8 @@
 import { Future } from "@hazae41/future";
-import { Signals } from "@hazae41/signals";
 
 export namespace Sockets {
 
-  export async function waitOrThrow(socket: WebSocket, signal = Signals.never()) {
+  export async function waitOrThrow(socket: WebSocket, signal = new AbortController().signal) {
     const future = new Future<void>()
 
     const onOpen = () => future.resolve()

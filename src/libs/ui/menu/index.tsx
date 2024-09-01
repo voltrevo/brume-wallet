@@ -9,8 +9,8 @@ import { KeyboardEvent, MouseEvent, SyntheticEvent, useCallback, useEffect, useL
 import { flushSync } from "react-dom"
 
 export function Menu(props: ChildrenProps & DarkProps) {
-  const { url } = usePathContext().unwrap()
-  const close = useCloseContext().unwrap()
+  const { url } = usePathContext().getOrThrow()
+  const close = useCloseContext().getOrThrow()
   const { dark, children } = props
 
   const maybeX = url.searchParams.get("x")

@@ -23,8 +23,8 @@ import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton,
 import { RawSeedCard } from "../../card";
 
 export function StandaloneSeedCreatorDialog(props: {}) {
-  const close = useCloseContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const close = useCloseContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const uuid = useConstant(() => randomUUID())
 
@@ -72,7 +72,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     await background.requestOrThrow<void>({
       method: "brume_createSeed",
       params: [seed]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     close()
   }), [finalNameInput, defPhraseInput, uuid, color, background, close])
@@ -84,12 +84,12 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       throw new Panic()
 
     const entropyBytes = mnemonicToEntropy(defPhraseInput, wordlist)
-    const entropyBase64 = Base64.get().encodePaddedOrThrow(entropyBytes)
+    const entropyBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(entropyBytes)
 
     const [ivBase64, cipherBase64] = await background.requestOrThrow<[string, string]>({
       method: "brume_encrypt",
       params: [entropyBase64]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     return [ivBase64, cipherBase64]
   }), [finalNameInput, defPhraseInput, background])
@@ -108,9 +108,10 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     if (!isSafariExtension() && confirm("Did you backup your seed phrase?") === false)
       return
 
-    const [_, cipherBase64] = triedEncryptedPhrase.unwrap()
-    const cipher = Base64.get().decodePaddedOrThrow(cipherBase64).copyAndDispose()
-    const id = await WebAuthnStorage.createOrThrow(finalNameInput, cipher)
+    const [_, cipherBase64] = triedEncryptedPhrase.getOrThrow()
+
+    using cipher = Base64.get().getOrThrow().decodePaddedOrThrow(cipherBase64)
+    const id = await WebAuthnStorage.createOrThrow(finalNameInput, cipher.bytes.slice())
 
     setId(id)
   }), [finalNameInput, triedEncryptedPhrase])
@@ -123,15 +124,15 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     if (triedEncryptedPhrase == null)
       throw new Panic()
 
-    const [ivBase64, cipherBase64] = triedEncryptedPhrase.unwrap()
+    const [ivBase64, cipherBase64] = triedEncryptedPhrase.getOrThrow()
 
-    using cipherMemory = Base64.get().decodePaddedOrThrow(cipherBase64)
+    using cipherMemory = Base64.get().getOrThrow().decodePaddedOrThrow(cipherBase64)
     const cipherBytes = await WebAuthnStorage.getOrThrow(id)
 
     if (!Bytes.equals(cipherMemory.bytes, cipherBytes))
       throw new Error(`Corrupt storage`)
 
-    const idBase64 = Base64.get().encodePaddedOrThrow(id)
+    const idBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(id)
     const mnemonic = { ivBase64, idBase64 }
 
     const seed: SeedData = { type: "authMnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), mnemonic }
@@ -139,7 +140,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     await background.requestOrThrow<void>({
       method: "brume_createSeed",
       params: [seed]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     close()
   }), [id, finalNameInput, triedEncryptedPhrase, uuid, color, background, close])

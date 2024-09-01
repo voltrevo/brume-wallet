@@ -55,8 +55,8 @@ export namespace BgAppRequest {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.current.ok()?.getOrNull()
+      const currentData = current.real?.current.ok()?.getOrNull()
 
       await BgAppRequest.All.schema().mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData?.id === currentData?.id)

@@ -11,7 +11,6 @@ import { Mutex } from "@hazae41/mutex"
 import { None, Option } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
-import { Signals } from "@hazae41/signals"
 
 export function createNativeWebSocketPool(size: number) {
   const pool = new Pool<Disposer<WebSocket>>(async (params) => {
@@ -102,13 +101,13 @@ export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage
         const stream = new WebSocketDuplex(socket.get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
 
         start = Date.now()
-        const tor = new Box(await createTorOrThrow(stream, Signals.merge(AbortSignal.timeout(ping.value * 2), signal)))
+        const tor = new Box(await createTorOrThrow(stream, AbortSignal.any([AbortSignal.timeout(ping.value * 2), signal])))
         stack.getOrThrow().use(tor)
         console.debug(`Created Tor in ${Date.now() - start}ms`)
 
         const microdescsQuery = MicrodescQuery.All.create(tor.getOrThrow(), storage)
-        const microdescsStale = await microdescsQuery.state.then(r => r.current?.ok().get())
-        const microdescsFresh = microdescsQuery.fetch().then(r => Option.unwrap(r.getAny().current).unwrap())
+        const microdescsStale = await microdescsQuery.state.then(r => r.current?.ok().getOrNull())
+        const microdescsFresh = microdescsQuery.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
         if (microdescsStale == null)
           await microdescsFresh

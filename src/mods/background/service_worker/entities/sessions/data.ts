@@ -47,7 +47,7 @@ export interface WcSessionData {
   readonly relay: string
   readonly topic: string
   readonly sessionKeyBase64: string
-  readonly authKeyJwk: Ed25519.PrivateKeyJwk,
+  readonly authKeyJwk: Ed25519.SigningKeyJwk,
   readonly settlement?: RpcReceipt
 }
 
@@ -165,8 +165,8 @@ export namespace BgSession {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.current.ok()?.getOrNull()
+      const currentData = current.real?.current.ok()?.getOrNull()
 
       if (previousData?.id === currentData?.id)
         return

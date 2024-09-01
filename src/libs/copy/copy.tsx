@@ -11,7 +11,7 @@ export function useCopy(text?: string) {
 
     await Result.runAndWrap(async () => {
       await navigator.clipboard.writeText(text)
-    }).then(r => r.ignore())
+    }).then(r => r.getOrThrow()).catch(console.warn)
 
     enable()
 

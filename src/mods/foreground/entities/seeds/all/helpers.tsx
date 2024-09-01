@@ -49,9 +49,9 @@ export class UnauthMnemonicSeedInstance {
     const root = HDKey.fromMasterSeed(masterSeed)
     const child = root.derive(path)
 
-    const privateKeyBytes = Option.unwrap(child.privateKey)
+    const privateKeyBytes = Option.wrap(child.privateKey).getOrThrow()
 
-    return `0x${Base16.get().encodeOrThrow(privateKeyBytes)}` as ZeroHexString
+    return `0x${Base16.get().getOrThrow().encodeOrThrow(privateKeyBytes)}` as ZeroHexString
   }
 
   async signPersonalMessageOrThrow(path: string, message: string, background: Background): Promise<ZeroHexString> {

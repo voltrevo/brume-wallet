@@ -4,7 +4,7 @@ import { useCloseContext } from "@hazae41/react-close-context"
 import { KeyboardEvent, MouseEvent, useCallback } from "react"
 
 export function SelectAndClose<T extends string>(props: ChildrenProps & OkProps<T>) {
-  const close = useCloseContext().unwrap()
+  const close = useCloseContext().getOrThrow()
   const { ok, children } = props
 
   const onClick = useCallback((e: MouseEvent) => {
