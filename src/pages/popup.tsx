@@ -35,12 +35,12 @@ import { Err, Result } from "@hazae41/result";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function Main() {
-  const background = useBackgroundContext().unwrap()
+  const background = useBackgroundContext().getOrThrow()
 
   const helloOrThrow = useCallback(async () => {
     await background.requestOrThrow<void>({
       method: "popup_hello"
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
   }, [background])
 
   useEffect(() => {
@@ -50,14 +50,14 @@ export default function Main() {
   const getHashOrThrow = useCallback(async () => {
     return await background.requestOrThrow<string>({
       method: "brume_getPath"
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
   }, [background])
 
   const setHashOrThrow = useCallback(async (hash: string) => {
     await background.requestOrThrow<void>({
       method: "brume_setPath",
       params: [hash]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
   }, [background])
 
   const [hash, setHash] = useState<string>()
@@ -130,8 +130,8 @@ export default function Main() {
 }
 
 export function TransactPage() {
-  const path = usePathContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const subpath = useHashSubpath(path)
 
@@ -139,7 +139,7 @@ export function TransactPage() {
 
   const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
   const walletQuery = useWallet(walletId)
-  const maybeWallet = walletQuery.current?.ok().get()
+  const maybeWallet = walletQuery.current?.ok().getOrNull()
 
   const chainId = Option.unwrap(path.url.searchParams.get("chainId"))
   const chainData = Option.unwrap(chainDataByChainId[Number(chainId)])
@@ -157,10 +157,10 @@ export function TransactPage() {
   const maybeMaxPriorityFeePerGas = path.url.searchParams.get("maxPriorityFeePerGas")
 
   const trialQuery = useTransactionTrial(id)
-  const maybeTrialData = trialQuery.current?.ok().get()
+  const maybeTrialData = trialQuery.current?.ok().getOrNull()
 
   const transactionQuery = useTransactionWithReceipt(maybeTrialData?.transactions[0].uuid, maybeContext)
-  const maybeTransaction = transactionQuery.current?.ok().get()
+  const maybeTransaction = transactionQuery.current?.ok().getOrNull()
 
   const preTx = useMemo(() => {
     return {
@@ -185,7 +185,7 @@ export function TransactPage() {
     await background.requestOrThrow({
       method: "brume_respond",
       params: [new RpcOk(id, transaction.hash)]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     location.replace(path.go("/done"))
   }), [background, id, path, maybeTransaction])
@@ -194,7 +194,7 @@ export function TransactPage() {
     await background.requestOrThrow({
       method: "brume_respond",
       params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     location.replace(path.go("/done"))
   }), [background, id, path])
@@ -352,14 +352,14 @@ export function TransactPage() {
 }
 
 export function PersonalSignPage() {
-  const path = usePathContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const id = Option.unwrap(path.url.searchParams.get("id"))
 
   const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
   const walletQuery = useWallet(walletId)
-  const maybeWallet = walletQuery.current?.ok().get()
+  const maybeWallet = walletQuery.current?.ok().getOrNull()
 
   const message = Option.unwrap(path.url.searchParams.get("message"))
 
@@ -379,7 +379,7 @@ export function PersonalSignPage() {
     await background.requestOrThrow({
       method: "brume_respond",
       params: [new RpcOk(id, signature)]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     location.replace(path.go("/done"))
   }), [background, id, path, maybeWallet, triedUserMessage])
@@ -388,7 +388,7 @@ export function PersonalSignPage() {
     await background.requestOrThrow({
       method: "brume_respond",
       params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     location.replace(path.go("/done"))
   }), [background, id, path])
@@ -408,7 +408,7 @@ export function PersonalSignPage() {
       </div>
       <div className="h-4" />
       <div className="grow p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
-        {triedUserMessage.unwrapOr("Could not decode message")}
+        {triedUserMessage.getOr("Could not decode message")}
       </div>
       <div className="h-4 grow" />
       <div className="flex items-center flex-wrap-reverse gap-2">
@@ -430,14 +430,14 @@ export function PersonalSignPage() {
 }
 
 export function TypedSignPage() {
-  const path = usePathContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const id = Option.unwrap(path.url.searchParams.get("id"))
 
   const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
   const walletQuery = useWallet(walletId)
-  const maybeWallet = walletQuery.current?.ok().get()
+  const maybeWallet = walletQuery.current?.ok().getOrNull()
 
   const data = Option.unwrap(path.url.searchParams.get("data"))
 
@@ -455,7 +455,7 @@ export function TypedSignPage() {
     await background.requestOrThrow({
       method: "brume_respond",
       params: [new RpcOk(id, signature)]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     location.replace(path.go("/done"))
   }), [background, id, path, maybeWallet, triedParsedData])
@@ -464,7 +464,7 @@ export function TypedSignPage() {
     await background.requestOrThrow({
       method: "brume_respond",
       params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     location.replace(path.go("/done"))
   }), [background, id, path])
@@ -484,7 +484,7 @@ export function TypedSignPage() {
       </div>
       <div className="h-4" />
       <div className="grow p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
-        {triedParsedData.mapSync(x => JSON.stringify(x, undefined, 2)).unwrapOr("Could not decode message")}
+        {triedParsedData.mapSync(x => JSON.stringify(x, undefined, 2)).getOr("Could not decode message")}
       </div>
       <div className="h-4 grow" />
       <div className="flex items-center flex-wrap-reverse gap-2">
@@ -506,8 +506,8 @@ export function TypedSignPage() {
 }
 
 export function WalletAndChainSelectPage() {
-  const path = usePathContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const subpath = useHashSubpath(path)
   const creator = useCoords(subpath, "/create")
@@ -542,7 +542,7 @@ export function WalletAndChainSelectPage() {
     await background.requestOrThrow({
       method: "brume_respond",
       params: [new RpcOk(id, [persistent, selecteds])]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     location.replace(path.go("/done"))
   }), [background, id, path, selecteds, persistent])
@@ -551,7 +551,7 @@ export function WalletAndChainSelectPage() {
     await background.requestOrThrow({
       method: "brume_respond",
       params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     location.replace(path.go("/done"))
   }), [background, id, path])
@@ -621,8 +621,8 @@ export function WalletAndChainSelectPage() {
 }
 
 export function DonePage() {
-  const path = usePathContext().unwrap()
-  const requests = useAppRequests().current?.ok().get()
+  const path = usePathContext().getOrThrow()
+  const requests = useAppRequests().current?.ok().getOrNull()
 
   useEffect(() => {
     if (!requests?.length)

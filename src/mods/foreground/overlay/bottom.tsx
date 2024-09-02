@@ -4,7 +4,7 @@ import { usePathContext } from "@hazae41/chemin";
 import { useAppRequests } from "../entities/requests/data";
 
 export function Bottom() {
-  const { url } = usePathContext().unwrap()
+  const { url } = usePathContext().getOrThrow()
 
   const requestsQuery = useAppRequests()
   const requests = requestsQuery.data?.get()

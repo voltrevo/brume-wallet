@@ -18,7 +18,7 @@ import { useEthereumContext } from "./data"
 import { useCompactDisplayUsdOrZeroOrError } from "./page"
 
 export function RawWalletDataCard(props: { index?: number } & { href?: string } & { privateKey?: string } & { flip?: boolean } & { unflip?: () => void }) {
-  const wallet = useWalletDataContext().unwrap()
+  const wallet = useWalletDataContext().getOrThrow()
   const { index, href, privateKey, flip, unflip } = props
 
   return <RawWalletCard
@@ -35,7 +35,7 @@ export function RawWalletDataCard(props: { index?: number } & { href?: string } 
 }
 
 export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: string } & { name: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { href?: string } & { privateKey?: string } & { flip?: boolean } & { unflip?: () => void }) {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
   const { type, uuid, address, name, color, index, href, privateKey, flip, unflip } = props
 
   const subpath = useHashSubpath(path)

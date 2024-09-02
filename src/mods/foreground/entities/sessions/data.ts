@@ -99,8 +99,8 @@ export namespace FgSession {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.current.ok()?.getOrNull()
+      const currentData = current.real?.current.ok()?.getOrNull()
 
       if (previousData != null) {
         if (previousData.persist) {
@@ -163,7 +163,7 @@ export namespace FgSession {
 }
 
 export function useSession(id: Nullable<string>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgSession.shema, [id, storage])
 
   return query

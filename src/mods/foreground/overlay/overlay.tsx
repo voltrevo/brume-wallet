@@ -55,7 +55,7 @@ export function Overlay(props: ChildrenProps) {
 export function WebsiteOverlay(props: ChildrenProps) {
   const { children } = props
 
-  const background = useBackgroundContext().unwrap() as ServiceWorkerBackground
+  const background = useBackgroundContext().getOrThrow() as ServiceWorkerBackground
 
   const [update, setUpdate] = useState<() => void>()
 

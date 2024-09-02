@@ -18,8 +18,8 @@ import { useCurrentUser } from "../data";
 import { UserAvatar } from "./page";
 
 export function UserCreateDialog(props: { next?: string }) {
-  const close = useCloseContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const close = useCloseContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
   const { next } = props
 
   const currentUserQuery = useCurrentUser()
@@ -63,12 +63,12 @@ export function UserCreateDialog(props: { next?: string }) {
     await background.requestOrThrow<User[]>({
       method: "brume_createUser",
       params: [user]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     await background.requestOrThrow({
       method: "brume_login",
       params: [user.uuid, defPasswordInput]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     await currentUserQuery.mutate(() => new Some(new Data(UserRef.create(user.uuid))))
 

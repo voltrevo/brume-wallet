@@ -35,7 +35,7 @@ export namespace FgSimulation {
 }
 
 export function useSimulation(tx: Nullable<unknown>, block: Nullable<string>, context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgSimulation.schema, [tx, block, context, storage])
   useFetch(query)
   useError(query, Errors.onQueryError)

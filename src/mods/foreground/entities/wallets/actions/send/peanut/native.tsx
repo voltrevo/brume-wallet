@@ -30,9 +30,9 @@ import { PriceResolver } from "../../../page";
 import { TransactionCard, WalletTransactionDialog } from "../../eth_sendTransaction";
 
 export function WalletPeanutSendScreenNativeValue(props: {}) {
-  const path = usePathContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
-  const close = useCloseContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const close = useCloseContext().getOrThrow()
 
   const subpath = useHashSubpath(path)
 
@@ -43,7 +43,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const [maybeTrial0, setTrial0] = useSearchState(path, "trial0")
 
   const trial0UuidFallback = useConstant(() => randomUUID())
-  const trial0Uuid = Option.wrap(maybeTrial0).unwrapOr(trial0UuidFallback)
+  const trial0Uuid = Option.wrap(maybeTrial0).getOr(trial0UuidFallback)
 
   useEffect(() => {
     if (maybeTrial0 === trial0Uuid)
@@ -51,11 +51,11 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
     setTrial0(trial0Uuid)
   }, [maybeTrial0, setTrial0, trial0Uuid])
 
-  const chain = Option.unwrap(maybeChain)
+  const chain = Option.wrap(maybeChain).getOrThrow()
   const chainData = chainDataByChainId[Number(chain)]
   const tokenData = chainData.token
 
-  const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
+  const context = useEthereumContext2(wallet.uuid, chainData).getOrThrow()
 
   const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)
@@ -166,8 +166,8 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
   const pricedBalanceQuery = useNativePricedBalance(wallet.address, "usd", context)
 
-  const valuedBalanceData = valuedBalanceQuery.current?.ok().get()
-  const pricedBalanceData = pricedBalanceQuery.current?.ok().get()
+  const valuedBalanceData = valuedBalanceQuery.current?.ok().getOrNull()
+  const pricedBalanceData = pricedBalanceQuery.current?.ok().getOrNull()
 
   const onValueMaxClick = useCallback(() => {
     if (valuedBalanceData == null)
@@ -267,10 +267,13 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       const value = maybeFinalValue.value
 
       const passwordBytes = Bytes.fromUtf8(password)
-      const hashSlice = Keccak256.get().hashOrThrow(passwordBytes)
-      const privateKey = Secp256k1.get().PrivateKey.importOrThrow(hashSlice)
-      const publicKey = privateKey.getPublicKeyOrThrow().exportUncompressedOrThrow().copyAndDispose()
-      const address = Address.computeOrThrow(publicKey)
+
+      using hashSlice = Keccak256.get().getOrThrow().hashOrThrow(passwordBytes)
+      using privateKey = Secp256k1.get().getOrThrow().SigningKey.importOrThrow(hashSlice)
+      using publicKey = privateKey.getVerifyingKeyOrThrow()
+      using publicKeyExport = publicKey.exportUncompressedOrThrow()
+
+      const address = Address.computeOrThrow(publicKeyExport.bytes)
 
       const abi = PeanutAbi.makeDeposit.fromOrThrow(token, 0, value, 0, address)
       const hex = Abi.encodeOrThrow(abi)
@@ -280,14 +283,14 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   }, [maybeFinalValue, password])
 
   const onSendTransactionClick = useCallback(() => {
-    location.replace(subpath.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.ok().get(), disableData: true, disableSign: true })))
+    location.replace(subpath.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.ok().getOrNull(), disableData: true, disableSign: true })))
   }, [subpath, trial0Uuid, chainData, maybeContract, rawValue, maybeTriedMaybeFinalData])
 
   const trial0Query = useTransactionTrial(trial0Uuid)
-  const maybeTrial0Data = trial0Query.current?.ok().get()
+  const maybeTrial0Data = trial0Query.current?.ok().getOrNull()
 
   const transaction0Query = useTransactionWithReceipt(maybeTrial0Data?.transactions[0].uuid, context)
-  const maybeTransaction0 = transaction0Query.current?.ok().get()
+  const maybeTransaction0 = transaction0Query.current?.ok().getOrNull()
 
   const maybeTriedLink = useMemo(() => {
     if (maybeTransaction0 == null)
@@ -299,8 +302,8 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
       const signatureUtf8 = "DepositEvent(uint256,uint8,uint256,address)"
       const signatureBytes = Bytes.fromUtf8(signatureUtf8)
 
-      using hashSlice = Keccak256.get().hashOrThrow(signatureBytes)
-      const hashHex = `0x${Base16.get().encodeOrThrow(hashSlice)}`
+      using hashSlice = Keccak256.get().getOrThrow().hashOrThrow(signatureBytes)
+      const hashHex = `0x${Base16.get().getOrThrow().encodeOrThrow(hashSlice)}`
 
       const log = maybeTransaction0.receipt.logs.find(log => log.topics[0] === hashHex)
 

@@ -8,7 +8,7 @@ import { CircularWhiteAnchorInColoredCard, CircularWhiteButtonInColoredCard } fr
 import { useSeedDataContext } from "./context"
 
 export function RawSeedDataCard(props: { href?: string } & { index?: number } & { flip?: boolean } & { unflip?: () => void }) {
-  const seed = useSeedDataContext().unwrap()
+  const seed = useSeedDataContext().getOrThrow()
   const { href, index, flip, unflip } = props
 
   return <RawSeedCard
@@ -22,7 +22,7 @@ export function RawSeedDataCard(props: { href?: string } & { index?: number } & 
 }
 
 export function RawSeedCard(props: { type?: SeedData["type"] } & { name: string } & { color: Color } & { href?: string } & { index?: number } & { flip?: boolean } & { unflip?: () => void }) {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
   const { type, name, color, href, index, flip, unflip } = props
 
   const subpath = useHashSubpath(path)

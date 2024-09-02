@@ -3,7 +3,7 @@ import { useCoords, usePathContext } from "@hazae41/chemin";
 import { WideShrinkableNakedMenuAnchor } from "../../actions/send";
 
 export function WalletCreatorMenu(props: {}) {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
 
   const readonly = useCoords(path, "/create/readonly")
   const standalone = useCoords(path, "/create/standalone")

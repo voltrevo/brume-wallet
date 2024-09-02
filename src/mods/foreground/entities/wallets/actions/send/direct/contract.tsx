@@ -23,9 +23,9 @@ import { PriceResolver } from "../../../page";
 import { TransactionCard, WalletTransactionDialog } from "../../eth_sendTransaction";
 
 export function WalletDirectSendScreenContractValue(props: {}) {
-  const path = usePathContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
-  const close = useCloseContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const close = useCloseContext().getOrThrow()
 
   const subpath = useHashSubpath(path)
 
@@ -37,7 +37,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   const [maybeTrial0, setTrial0] = useSearchState(path, "trial0")
 
   const trial0UuidFallback = useConstant(() => randomUUID())
-  const trial0Uuid = Option.wrap(maybeTrial0).unwrapOr(trial0UuidFallback)
+  const trial0Uuid = Option.wrap(maybeTrial0).getOr(trial0UuidFallback)
 
   useEffect(() => {
     if (maybeTrial0 === trial0Uuid)
@@ -45,15 +45,15 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     setTrial0(trial0Uuid)
   }, [maybeTrial0, setTrial0, trial0Uuid])
 
-  const chain = Option.unwrap(maybeChain)
+  const chain = Option.wrap(maybeChain).getOrThrow()
   const chainData = chainDataByChainId[Number(chain)]
 
   const tokenQuery = useToken(chainData.chainId, maybeToken)
-  const maybeTokenData = Option.wrap(tokenQuery.current?.ok().get())
+  const maybeTokenData = Option.wrap(tokenQuery.current?.ok().getOrNull())
   const maybeTokenDef = Option.wrap(tokenByAddress[maybeToken as any])
-  const tokenData = maybeTokenData.or(maybeTokenDef).unwrap()
+  const tokenData = maybeTokenData.or(maybeTokenDef).getOrThrow()
 
-  const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
+  const context = useEthereumContext2(wallet.uuid, chainData).getOrThrow()
 
   const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)
@@ -164,8 +164,8 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
   const pricedBalanceQuery = useNativePricedBalance(wallet.address, "usd", context)
 
-  const valuedBalanceData = valuedBalanceQuery.current?.ok().get()
-  const pricedBalanceData = pricedBalanceQuery.current?.ok().get()
+  const valuedBalanceData = valuedBalanceQuery.current?.ok().getOrNull()
+  const pricedBalanceData = pricedBalanceQuery.current?.ok().getOrNull()
 
   const onValueMaxClick = useCallback(() => {
     if (valuedBalanceData == null)
@@ -214,7 +214,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     : undefined
 
   const ensTargetQuery = useEnsLookup(maybeEnsQueryKey, mainnet)
-  const maybeEnsTarget = ensTargetQuery.current?.ok().get()
+  const maybeEnsTarget = ensTargetQuery.current?.ok().getOrNull()
 
   const maybeFinalTarget = useMemo(() => {
     if (maybeTarget == null)
@@ -256,14 +256,14 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   }, [maybeFinalTarget, maybeFinalValue])
 
   const onSendTransactionClick = useCallback(() => {
-    location.replace(subpath.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData?.ok().get(), disableData: true })))
+    location.replace(subpath.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData?.ok().getOrNull(), disableData: true })))
   }, [subpath, trial0Uuid, chainData, tokenData, maybeTriedMaybeFinalData])
 
   const trialQuery = useTransactionTrial(trial0Uuid)
-  const maybeTrialData = trialQuery.current?.ok().get()
+  const maybeTrialData = trialQuery.current?.ok().getOrNull()
 
   const transactionQuery = useTransactionWithReceipt(maybeTrialData?.transactions[0].uuid, context)
-  const maybeTransaction = transactionQuery.current?.ok().get()
+  const maybeTransaction = transactionQuery.current?.ok().getOrNull()
 
   const onClose = useCallback(() => {
     close()

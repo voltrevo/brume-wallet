@@ -7,7 +7,7 @@ import { usePathContext } from "@hazae41/chemin"
 import { RoundedShrinkableNakedButton } from "../entities/wallets/actions/send"
 
 export function NavBar() {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
 
   const openOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     await BrowserError.runOrThrow(() => browser.tabs.create({ url: `tabbed.html#/?_=${encodeURIComponent(pathOf(path.url))}` }))

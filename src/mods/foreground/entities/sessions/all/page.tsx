@@ -24,7 +24,7 @@ import { useStatus } from "../status/data"
 import { usePersistentSessions, useTemporarySessions } from "./data"
 
 export function SessionsPage() {
-  const background = useBackgroundContext().unwrap()
+  const background = useBackgroundContext().getOrThrow()
 
   const tempSessionsQuery = useTemporarySessions()
   const maybeTempSessions = tempSessionsQuery.data?.get()
@@ -42,17 +42,17 @@ export function SessionsPage() {
     if (!isSafariExtension() && confirm(`Do you want to disconnect all sessions?`) === false)
       return
 
-    for (const session of Option.wrap(maybeTempSessions).unwrapOr([]))
+    for (const session of Option.wrap(maybeTempSessions).getOr([]))
       await background.requestOrThrow({
         method: "brume_disconnect",
         params: [session.id]
-      }).then(r => r.unwrap())
+      }).then(r => r.getOrThrow())
 
-    for (const session of Option.wrap(maybePersSessions).unwrapOr([]))
+    for (const session of Option.wrap(maybePersSessions).getOr([]))
       await background.requestOrThrow({
         method: "brume_disconnect",
         params: [session.id]
-      }).then(r => r.unwrap())
+      }).then(r => r.getOrThrow())
 
     return
   }), [background, maybePersSessions])
@@ -94,7 +94,7 @@ export function SessionsPage() {
 
 export function SessionRow(props: { session: Session }) {
   const { session } = props
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
 
   const subpath = useHashSubpath(path)
   const menu = useCoords(subpath, `/${session.id}/menu`)
@@ -184,8 +184,8 @@ function IndexedBlobbyLoader(props: OkProps<[number, Nullable<BlobbyData>]> & { 
 
 export function SessionMenu(props: { sessionData: SessionData }) {
   const { sessionData } = props
-  const path = usePathContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const chains = useCoords(path, `/${sessionData.id}/chains`)
 
@@ -193,7 +193,7 @@ export function SessionMenu(props: { sessionData: SessionData }) {
     await background.requestOrThrow({
       method: "brume_disconnect",
       params: [sessionData.id]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
   }), [background, sessionData])
 
   return <div className="flex flex-col text-left gap-2 w-[160px] overflow-x-hidden">
@@ -230,14 +230,14 @@ export function ChainsMenu(props: { sessionData: ExSessionData }) {
 
 export function ChainRow(props: { sessionData: ExSessionData, chainData: ChainData }) {
   const { sessionData, chainData } = props
-  const close = useCloseContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const close = useCloseContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const switchOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     await background.requestOrThrow({
       method: "brume_switchEthereumChain",
       params: [sessionData.id, chainData.chainId]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     close()
   }), [background, sessionData, chainData, close])

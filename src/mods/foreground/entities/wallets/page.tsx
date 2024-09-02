@@ -121,9 +121,9 @@ export function AnchorCard(props: AnchorProps) {
 }
 
 function WalletDataPage() {
-  const path = usePathContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const subpath = useHashSubpath(path)
 
@@ -321,10 +321,10 @@ export function WalletMenu(props: {
   $flip: State<boolean>,
   $privateKey: State<Optional<ZeroHexString>>
 }) {
-  const path = usePathContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
-  const background = useBackgroundContext().unwrap()
-  const close = useCloseContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
+  const close = useCloseContext().getOrThrow()
   const { $flip, $privateKey } = props
 
   const [flip, setFlip] = $flip
@@ -419,9 +419,9 @@ export function WalletMenu(props: {
 }
 
 export function WalletConnectMenu() {
-  const wallet = useWalletDataContext().unwrap()
-  const background = useBackgroundContext().unwrap()
-  const close = useCloseContext().unwrap()
+  const wallet = useWalletDataContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
+  const close = useCloseContext().getOrThrow()
 
   const connectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const clipboard = await Result.runAndWrap(async () => {
@@ -447,7 +447,7 @@ export function WalletConnectMenu() {
     const metadata = await background.requestOrThrow<WcMetadata>({
       method: "brume_wc_connect",
       params: [clipboard, wallet.uuid]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     alert(`Connected to ${metadata.name}`)
 
@@ -470,7 +470,7 @@ export function WalletConnectMenu() {
 }
 
 function AddedTokenRow(props: { settingsRef: TokenSettings }) {
-  const wallet = useWalletDataContext().unwrap()
+  const wallet = useWalletDataContext().getOrThrow()
 
   const { settingsRef } = props
   const { token } = settingsRef
@@ -485,7 +485,7 @@ function AddedTokenRow(props: { settingsRef: TokenSettings }) {
 }
 
 function UnaddedTokenRow(props: { token: Token }) {
-  const wallet = useWalletDataContext().unwrap()
+  const wallet = useWalletDataContext().getOrThrow()
   const { token } = props
 
   const settings = useTokenSettings(wallet, token)
@@ -532,9 +532,9 @@ function ContractTokenResolver(props: { token: ContractToken }) {
 }
 
 function NativeTokenMenu(props: { token: NativeTokenData }) {
-  const close = useCloseContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
-  const path = usePathContext().unwrap()
+  const close = useCloseContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const path = usePathContext().getOrThrow()
   const { token } = props
 
   const send = useCoords(path, `/send?step=target&chain=${token.chainId}`)
@@ -584,8 +584,8 @@ function NativeTokenMenu(props: { token: NativeTokenData }) {
 }
 
 function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }) {
-  const path = usePathContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
   const { token, chain } = props
 
   const subpath = useHashSubpath(path)
@@ -632,9 +632,9 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 }
 
 function ContractTokenMenu(props: { token: ContractTokenData }) {
-  const close = useCloseContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
-  const path = usePathContext().unwrap()
+  const close = useCloseContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const path = usePathContext().getOrThrow()
   const { token } = props
 
   const send = useCoords(path, `/send?step=target&chain=${token.chainId}&token=${token.address}`)
@@ -684,8 +684,8 @@ function ContractTokenMenu(props: { token: ContractTokenData }) {
 }
 
 function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainData }) {
-  const path = usePathContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
   const { token, chain } = props
 
   const subpath = useHashSubpath(path)
@@ -733,7 +733,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
 export function PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<Fixed.From>]>) {
   const { ok, index, address } = props
-  const wallet = useWalletDataContext().unwrap()
+  const wallet = useWalletDataContext().getOrThrow()
 
   const pairData = pairByAddress[address]
   const chainData = chainDataByChainId[pairData.chainId]

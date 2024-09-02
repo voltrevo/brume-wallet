@@ -14,11 +14,11 @@ import { FgWallet, useTrashedWallets } from "../../data"
 import { ClickableWalletGrid } from "../page"
 
 export function TrashedWalletsPage() {
-  const path = usePathContext().unwrap()
-  const storage = useUserStorageContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const storage = useUserStorageContext().getOrThrow()
 
   const walletsQuery = useTrashedWallets()
-  const maybeWallets = walletsQuery.current?.ok().get()
+  const maybeWallets = walletsQuery.current?.ok().getOrNull()
 
   const onWalletClick = useCallback((wallet: Wallet) => {
     location.assign(path.go(`/wallet/${wallet.uuid}`))

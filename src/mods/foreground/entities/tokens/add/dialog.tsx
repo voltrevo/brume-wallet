@@ -20,10 +20,10 @@ import { useWalletDataContext } from "../../wallets/context";
 import { useToken } from "../data";
 
 export function TokenAddDialog(props: {}) {
-  const close = useCloseContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
-  const background = useBackgroundContext().unwrap()
-  const storage = useUserStorageContext().unwrap()
+  const close = useCloseContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
+  const storage = useUserStorageContext().getOrThrow()
 
   const [rawChainId, setRawChainId] = useState<string>("1")
   const defChainId = useDeferredValue(rawChainId)
@@ -62,13 +62,13 @@ export function TokenAddDialog(props: {}) {
       if (schema == null)
         throw new Panic()
 
-      const result = await schema.refetch().then(r => r.real?.current.unwrap())
+      const result = await schema.refetch().then(r => r.real?.current.getOrThrow())
 
       const returns = Cubane.Abi.Tuple.create(Cubane.Abi.String)
       const [name] = Cubane.Abi.decodeOrThrow(returns, result!).intoOrThrow()
 
       return name
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     const symbol = await Result.runAndWrap(async () => {
       const context = { uuid: wallet.uuid, background, chain }
@@ -86,13 +86,13 @@ export function TokenAddDialog(props: {}) {
       if (schema == null)
         throw new Panic()
 
-      const result = await schema.refetch().then(r => r.real?.current.unwrap())
+      const result = await schema.refetch().then(r => r.real?.current.getOrThrow())
 
       const returns = Cubane.Abi.Tuple.create(Cubane.Abi.String)
       const [symbol] = Cubane.Abi.decodeOrThrow(returns, result!).intoOrThrow()
 
       return symbol
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     const decimals = await Result.runAndWrap(async () => {
       const context = { uuid: wallet.uuid, background, chain }
@@ -110,13 +110,13 @@ export function TokenAddDialog(props: {}) {
       if (schema == null)
         throw new Panic()
 
-      const result = await schema.refetch().then(r => r.real?.current.unwrap())
+      const result = await schema.refetch().then(r => r.real?.current.getOrThrow())
 
       const returns = Cubane.Abi.Tuple.create(Cubane.Abi.Uint8)
       const [decimals] = Cubane.Abi.decodeOrThrow(returns, result!).intoOrThrow()
 
       return Number(decimals)
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     await token.mutate(s => {
       const data = new Data<ContractTokenData>({

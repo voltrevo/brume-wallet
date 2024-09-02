@@ -16,7 +16,7 @@ export function useUserStorageContext() {
 
 export function UserStorageProvider(props: ChildrenProps) {
   const { children } = props
-  const background = useBackgroundContext().unwrap()
+  const background = useBackgroundContext().getOrThrow()
 
   const storage = useMemo(() => {
     return new UserStorage(background)
@@ -68,14 +68,14 @@ export class UserStorage implements Storage {
     return await this.background.requestOrThrow<RawState>({
       method: "brume_get_user",
       params: [cacheKey]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
   }
 
   async setOrThrow(cacheKey: string, value: Nullable<RawState>): Promise<void> {
     return await this.background.requestOrThrow<void>({
       method: "brume_set_user",
       params: [cacheKey, value]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
   }
 
 }

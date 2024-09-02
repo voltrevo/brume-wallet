@@ -47,8 +47,8 @@ export namespace FgUser {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.current.ok()?.getOrNull()
+      const currentData = current.real?.current.ok()?.getOrNull()
 
       await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData?.uuid === currentData?.uuid)
@@ -67,21 +67,21 @@ export namespace FgUser {
 }
 
 export function useUsers() {
-  const storage = useGlobalStorageContext().unwrap()
+  const storage = useGlobalStorageContext().getOrThrow()
   const query = useQuery(FgUser.All.schema, [storage])
 
   return query
 }
 
 export function useUser(uuid: Nullable<string>) {
-  const storage = useGlobalStorageContext().unwrap()
+  const storage = useGlobalStorageContext().getOrThrow()
   const query = useQuery(FgUser.schema, [uuid, storage])
 
   return query
 }
 
 export function useCurrentUser() {
-  const storage = useGlobalStorageContext().unwrap()
+  const storage = useGlobalStorageContext().getOrThrow()
   const query = useQuery(FgUser.Current.schema, [storage])
 
   return query

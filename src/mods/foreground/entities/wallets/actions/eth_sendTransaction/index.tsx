@@ -37,9 +37,9 @@ import { WalletDecodeDialog } from "./decode";
 import { WalletNonceDialog } from "./nonce";
 
 export function WalletTransactionDialog(props: {}) {
-  const path = usePathContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
-  const close = useCloseContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const close = useCloseContext().getOrThrow()
 
   const hash = useHashSubpath(path)
 
@@ -57,25 +57,25 @@ export function WalletTransactionDialog(props: {}) {
   const [maybeDisableData, setDisableData] = useSearchState(path, "disableData")
   const [maybeDisableSign, setDisableSign] = useSearchState(path, "disableSign")
 
-  const gasMode = Option.wrap(maybeGasMode).unwrapOr("normal")
+  const gasMode = Option.wrap(maybeGasMode).getOr("normal")
 
   const trialUuidFallback = useConstant(() => randomUUID())
-  const trialUuid = Option.wrap(maybeTrial).unwrapOr(trialUuidFallback)
+  const trialUuid = Option.wrap(maybeTrial).getOr(trialUuidFallback)
 
   const disableData = Boolean(maybeDisableData)
   const disableSign = Boolean(maybeDisableSign)
 
-  const chain = Option.unwrap(maybeChain)
+  const chain = Option.wrap(maybeChain).getOrThrow()
   const chainData = chainDataByChainId[Number(chain)]
   const tokenData = chainData.token
 
-  const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
+  const context = useEthereumContext2(wallet.uuid, chainData).getOrThrow()
 
   const transactionUuid = useConstant(() => randomUUID())
   const transactionQuery = useTransactionWithReceipt(transactionUuid, context)
 
   const pendingNonceQuery = useNonce(wallet.address, context)
-  const maybePendingNonce = pendingNonceQuery.current?.ok().get()
+  const maybePendingNonce = pendingNonceQuery.current?.ok().getOrNull()
 
   const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)
@@ -144,7 +144,7 @@ export function WalletTransactionDialog(props: {}) {
     : undefined
 
   const ensTargetQuery = useEnsLookup(maybeEnsQueryKey, mainnet)
-  const maybeEnsTarget = ensTargetQuery.current?.ok().get()
+  const maybeEnsTarget = ensTargetQuery.current?.ok().getOrNull()
 
   const maybeFinalTarget = useMemo(() => {
     if (maybeTarget == null)
@@ -219,13 +219,13 @@ export function WalletTransactionDialog(props: {}) {
   }, [setGasMode])
 
   const fetchedGasPriceQuery = useGasPrice(context)
-  const maybeFetchedGasPrice = fetchedGasPriceQuery.current?.ok().get()
+  const maybeFetchedGasPrice = fetchedGasPriceQuery.current?.ok().getOrNull()
 
   const fetchedMaxPriorityFeePerGasQuery = useMaxPriorityFeePerGas(context)
-  const maybeFetchedMaxPriorityFeePerGas = fetchedMaxPriorityFeePerGasQuery.current?.ok().get()
+  const maybeFetchedMaxPriorityFeePerGas = fetchedMaxPriorityFeePerGasQuery.current?.ok().getOrNull()
 
   const pendingBlockQuery = useBlockByNumber("pending", context)
-  const maybePendingBlock = pendingBlockQuery.current?.ok().get()
+  const maybePendingBlock = pendingBlockQuery.current?.ok().getOrNull()
 
   const maybeFetchedBaseFeePerGas = useMemo(() => {
     try {
@@ -506,14 +506,14 @@ export function WalletTransactionDialog(props: {}) {
     return new Ok(key)
   }, [wallet, chainData, maybeIsEip1559, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeTriedMaybeFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
-  const maybeLegacyGasLimitKey = maybeTriedLegacyGasLimitKey?.ok().get()
-  const maybeEip1559GasLimitKey = maybeTriedEip1559GasLimitKey?.ok().get()
+  const maybeLegacyGasLimitKey = maybeTriedLegacyGasLimitKey?.ok().getOrNull()
+  const maybeEip1559GasLimitKey = maybeTriedEip1559GasLimitKey?.ok().getOrNull()
 
   const legacyGasLimitQuery = useEstimateGas(maybeLegacyGasLimitKey, context)
-  const maybeLegacyGasLimit = legacyGasLimitQuery.current?.ok().get()
+  const maybeLegacyGasLimit = legacyGasLimitQuery.current?.ok().getOrNull()
 
   const eip1559GasLimitQuery = useEstimateGas(maybeEip1559GasLimitKey, context)
-  const maybeEip1559GasLimit = eip1559GasLimitQuery.current?.ok().get()
+  const maybeEip1559GasLimit = eip1559GasLimitQuery.current?.ok().getOrNull()
 
   const maybeFetchedGasLimit = useMemo(() => {
     if (maybeIsEip1559 == null)
@@ -684,23 +684,23 @@ export function WalletTransactionDialog(props: {}) {
     if (maybeIsEip1559 == null)
       return
 
-    const maybeTarget = Option.wrap(maybeFinalTarget).mapSync(Address.fromOrThrow).get()
+    const maybeTarget = Option.wrap(maybeFinalTarget).mapSync(Address.fromOrThrow).getOrNull()
 
     const value = Option.wrap(maybeFinalValue).okOrElseSync(() => {
       return new UIError(`Could not parse value`)
-    }).unwrap()
+    }).getOrThrow()
 
     const nonce = Option.wrap(maybeFinalNonce).okOrElseSync(() => {
       return new UIError(`Could not parse or fetch nonce`)
-    }).unwrap()
+    }).getOrThrow()
 
     const data = Option.wrap(maybeTriedMaybeFinalData).andThenSync(x => x.ok()).okOrElseSync(() => {
       return new UIError(`Could not parse or encode data`)
-    }).unwrap()
+    }).getOrThrow()
 
     const gasLimit = Option.wrap(maybeFinalGasLimit).okOrElseSync(() => {
       return new UIError(`Could not fetch gasLimit`)
-    }).unwrap()
+    }).getOrThrow()
 
     let tx: ethers.Transaction
     let params: TransactionParametersData
@@ -711,11 +711,11 @@ export function WalletTransactionDialog(props: {}) {
     if (maybeIsEip1559) {
       const maxFeePerGas = Option.wrap(maybeFinalMaxFeePerGas).okOrElseSync(() => {
         return new UIError(`Could not fetch baseFeePerGas`)
-      }).unwrap()
+      }).getOrThrow()
 
       const maxPriorityFeePerGas = Option.wrap(maybeFinalMaxPriorityFeePerGas).okOrElseSync(() => {
         return new UIError(`Could not fetch maxPriorityFeePerGas`)
-      }).unwrap()
+      }).getOrThrow()
 
       tx = Transaction.from({
         to: maybeTarget,
@@ -746,7 +746,7 @@ export function WalletTransactionDialog(props: {}) {
     else {
       const gasPrice = Option.wrap(maybeFinalGasPrice).okOrElseSync(() => {
         return new UIError(`Could not fetch gasPrice`)
-      }).unwrap()
+      }).getOrThrow()
 
       tx = Transaction.from({
         to: maybeTarget,
@@ -803,7 +803,7 @@ export function WalletTransactionDialog(props: {}) {
           params: [data],
           noCheck: true
         }]
-      }).then(r => r.unwrap())
+      }).then(r => r.getOrThrow())
 
       await transactionQuery.mutate(() => new Some(new Data({ type: "pending", uuid, trial, chainId, hash, data, params } as const)))
 

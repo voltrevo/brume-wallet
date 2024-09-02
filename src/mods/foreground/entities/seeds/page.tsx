@@ -21,8 +21,8 @@ export function SeedPage(props: UUIDProps) {
 }
 
 function SeedDataPage() {
-  const path = usePathContext().unwrap()
-  const seed = useSeedDataContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const seed = useSeedDataContext().getOrThrow()
 
   const walletsQuery = useWalletsBySeed(seed.uuid)
   const maybeWallets = walletsQuery.data?.get()

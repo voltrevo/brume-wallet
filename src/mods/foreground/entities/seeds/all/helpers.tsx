@@ -91,19 +91,19 @@ export class AuthMnemonicSeedInstance {
   async getMnemonicOrThrow(background: Background): Promise<string> {
     const { idBase64, ivBase64 } = this.data.mnemonic
 
-    const id = Base64.get().decodePaddedOrThrow(idBase64).copyAndDispose()
+    using id = Base64.get().getOrThrow().decodePaddedOrThrow(idBase64)
 
-    const cipher = await WebAuthnStorage.getOrThrow(id)
-    const cipherBase64 = Base64.get().encodePaddedOrThrow(cipher)
+    const cipher = await WebAuthnStorage.getOrThrow(id.bytes.slice())
+    const cipherBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(cipher)
 
     const entropyBase64 = await background.requestOrThrow<string>({
       method: "brume_decrypt",
       params: [ivBase64, cipherBase64]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
-    const entropy = Base64.get().decodePaddedOrThrow(entropyBase64).copyAndDispose()
+    using entropy = Base64.get().getOrThrow().decodePaddedOrThrow(entropyBase64)
 
-    return entropyToMnemonic(entropy, wordlist)
+    return entropyToMnemonic(entropy.bytes.slice(), wordlist)
   }
 
   async getPrivateKeyOrThrow(path: string, background: Background): Promise<ZeroHexString> {
@@ -113,9 +113,9 @@ export class AuthMnemonicSeedInstance {
     const root = HDKey.fromMasterSeed(masterSeed)
     const child = root.derive(path)
 
-    const privateKeyBytes = Option.unwrap(child.privateKey)
+    const privateKeyBytes = Option.wrap(child.privateKey).getOrThrow()
 
-    return `0x${Base16.get().encodeOrThrow(privateKeyBytes)}` as ZeroHexString
+    return `0x${Base16.get().getOrThrow().encodeOrThrow(privateKeyBytes)}` as ZeroHexString
   }
 
   async signPersonalMessageOrThrow(path: string, message: string, background: Background): Promise<ZeroHexString> {
@@ -172,7 +172,7 @@ export class LedgerSeedInstance {
     const device = await Ledger.USB.getOrRequestDeviceOrThrow()
     const connector = await Ledger.USB.connectOrThrow(device)
 
-    using slice = Base16.get().padStartAndDecodeOrThrow(transaction.unsignedSerialized.slice(2))
+    using slice = Base16.get().getOrThrow().padStartAndDecodeOrThrow(transaction.unsignedSerialized.slice(2))
     const signature = await Ledger.Ethereum.signTransactionOrThrow(connector, path.slice(2), slice.bytes)
 
     return ZeroHexSignature.fromOrThrow(signature).value
@@ -186,10 +186,13 @@ export class LedgerSeedInstance {
 
     const encoder = new ethers.TypedDataEncoder(data.types as any)
 
-    const domain = Base16.get().padStartAndDecodeOrThrow(ethers.TypedDataEncoder.hashDomain(data.domain as any).slice(2)).copyAndDispose() as Uint8Array<32>
-    const message = Base16.get().padStartAndDecodeOrThrow(encoder.hashStruct(data.primaryType, data.message).slice(2)).copyAndDispose() as Uint8Array<32>
+    using domain = Base16.get().getOrThrow().padStartAndDecodeOrThrow(ethers.TypedDataEncoder.hashDomain(data.domain as any).slice(2))
+    using message = Base16.get().getOrThrow().padStartAndDecodeOrThrow(encoder.hashStruct(data.primaryType, data.message).slice(2))
 
-    const signature = await Ledger.Ethereum.signEIP712HashedMessageOrThrow(connector, path.slice(2), domain, message)
+    const domainBytes = domain.bytes.slice() as Uint8Array<32>
+    const messageBytes = message.bytes.slice() as Uint8Array<32>
+
+    const signature = await Ledger.Ethereum.signEIP712HashedMessageOrThrow(connector, path.slice(2), domainBytes, messageBytes)
 
     return ZeroHexSignature.fromOrThrow(signature).value
   }

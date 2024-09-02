@@ -26,15 +26,15 @@ import { UserLoginDialog } from "../login";
 import { UserCreateDialog } from "./create";
 
 export function EmptyLandingPage(props: { next?: string }) {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
   const { next } = props
 
   const currentUserQuery = useCurrentUser()
   const currentUserLoading = !currentUserQuery.ready
-  const maybeCurrentUser = currentUserQuery.current?.ok().get()
+  const maybeCurrentUser = currentUserQuery.current?.ok().getOrNull()
 
   const userQuery = useUser(maybeCurrentUser?.uuid)
-  const maybeUser = userQuery.current?.ok().get()
+  const maybeUser = userQuery.current?.ok().getOrNull()
 
   const subpath = useHashSubpath(path)
   const users = useCoords(subpath, "/users")
@@ -103,7 +103,7 @@ export function EmptyLandingPage(props: { next?: string }) {
 }
 
 export function FullLandingPage(props: { next?: string }) {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
   const { next } = props
 
   const currentUserQuery = useCurrentUser()
@@ -287,10 +287,10 @@ export function FullLandingPage(props: { next?: string }) {
 }
 
 export function UsersMenu() {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
 
   const usersQuery = useUsers()
-  const maybeUsers = usersQuery.current?.ok().get()
+  const maybeUsers = usersQuery.current?.ok().getOrNull()
 
   const create = useCoords(path, "/users/create")
 
@@ -312,10 +312,10 @@ export function UsersMenu() {
 }
 
 export function UsersMenuRow(props: { user: User }) {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
 
   const userQuery = useUser(props.user.uuid)
-  const maybeUser = userQuery.current?.ok().get()
+  const maybeUser = userQuery.current?.ok().getOrNull()
 
   const open = useCoords(path, urlOf("/users/login", { user: props.user.uuid }).href)
 
@@ -334,7 +334,7 @@ export function UsersMenuRow(props: { user: User }) {
 }
 
 export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & AnchorProps & { href: string }) {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
   const { children, title, subtitle, href, ...rest } = props
 
   const subpath = useHashSubpath(path)

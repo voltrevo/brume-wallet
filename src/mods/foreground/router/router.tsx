@@ -37,7 +37,7 @@ export function Layout(props: ChildrenProps) {
 }
 
 export function Router() {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
 
   if (path.url.origin !== location.origin)
     return <X />
@@ -197,7 +197,7 @@ export interface GnosisRpcCallParams<T = unknown> {
 }
 
 export function X() {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
 
   const [iframe, setIframe] = useState<Nullable<HTMLIFrameElement>>()
 

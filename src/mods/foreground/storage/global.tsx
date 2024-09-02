@@ -16,7 +16,7 @@ export function useGlobalStorageContext() {
 
 export function GlobalStorageProvider(props: ChildrenProps) {
   const { children } = props
-  const background = useBackgroundContext().unwrap()
+  const background = useBackgroundContext().getOrThrow()
 
   const storage = useMemo(() => {
     return new GlobalStorage(background)
@@ -68,7 +68,7 @@ export class GlobalStorage implements Storage {
     return await this.background.requestOrThrow<RawState>({
       method: "brume_get_global",
       params: [cacheKey]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
   }
 
 }

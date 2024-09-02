@@ -28,7 +28,7 @@ export namespace FgToken {
         return
 
       const indexer = async (states: States<Data, Fail>) => {
-        const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).unwrapOr({})
+        const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).getOr({})
         const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
         const totalBalance = FgTotal.Balance.Priced.ByAddress.schema(address, currency, storage)
@@ -61,8 +61,8 @@ export namespace FgToken {
           const indexer = async (states: States<Data, Fail>) => {
             const { current, previous } = states
 
-            const previousData = previous?.real?.current.ok()?.get()
-            const currentData = current.real?.current.ok()?.get()
+            const previousData = previous?.real?.current.ok()?.getOrNull()
+            const currentData = current.real?.current.ok()?.getOrNull()
 
             const key = `${context.chain.chainId}`
             const [value = new Fixed(0n, 0)] = [currentData]
@@ -109,7 +109,7 @@ export namespace FgToken {
           if (block !== "pending")
             return
 
-          const pricedBalance = await Option.wrap(states.current.real?.current.ok().get()).andThen(async balance => {
+          const pricedBalance = await Option.wrap(states.current.real?.current.ok().getOrNull()).andThen(async balance => {
             if (context.chain.token.pairs == null)
               return new None()
 
@@ -129,7 +129,7 @@ export namespace FgToken {
             }
 
             return new Some(new Data(pricedBalance))
-          }).then(o => o.get())
+          }).then(o => o.getOrNull())
 
           const pricedBalanceQuery = Priced.schema(address, "usd", context, storage)
           await pricedBalanceQuery?.mutate(() => new Some(pricedBalance))
@@ -169,8 +169,8 @@ export namespace FgToken {
           const indexer = async (states: States<Data, Fail>) => {
             const { current, previous } = states
 
-            const previousData = previous?.real?.current.ok()?.get()
-            const currentData = current.real?.current.ok()?.get()
+            const previousData = previous?.real?.current.ok()?.getOrNull()
+            const currentData = current.real?.current.ok()?.getOrNull()
 
             const key = `${context.chain.chainId}/${token.address}`
             const [value = new Fixed(0n, 0)] = [currentData]
@@ -238,7 +238,7 @@ export namespace FgToken {
           if (block !== "pending")
             return
 
-          const pricedBalanceData = await Option.wrap(states.current.real?.current.ok()?.get()).andThen(async balance => {
+          const pricedBalanceData = await Option.wrap(states.current.real?.current.ok()?.getOrNull()).andThen(async balance => {
             if (token.pairs == null)
               return new None()
 
@@ -258,7 +258,7 @@ export namespace FgToken {
             }
 
             return new Some(new Data(pricedBalance))
-          }).then(o => o.get())
+          }).then(o => o.getOrNull())
 
           const pricedBalanceQuery = Priced.schema(address, token, "usd", context, storage)
           await pricedBalanceQuery?.mutate(() => new Some(pricedBalanceData))
@@ -303,8 +303,8 @@ export namespace FgToken {
       const indexer = async (states: States<D, F>) => {
         const { current, previous } = states
 
-        const previousData = previous?.real?.current.ok()?.get()
-        const currentData = current.real?.current.ok()?.get()
+        const previousData = previous?.real?.current.ok()?.getOrNull()
+        const currentData = current.real?.current.ok()?.getOrNull()
 
         if (previousData?.uuid === currentData?.uuid)
           return
@@ -334,21 +334,21 @@ export namespace FgToken {
 }
 
 export function useToken(chainId: Nullable<number>, address: Nullable<string>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgToken.Contract.schema, [chainId, address, storage])
 
   return query
 }
 
 export function useTokens() {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgToken.Contract.All.schema, [storage])
 
   return query
 }
 
 export function useNativeBalance(address: Nullable<ZeroHexString>, block: Nullable<string>, context: Nullable<FgEthereumContext>, prices: Nullable<Nullable<Fixed.From>[]>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgToken.Native.Balance.schema, [address, block, context, storage])
   useFetch(query)
   useVisible(query)
@@ -369,7 +369,7 @@ export function useNativeBalance(address: Nullable<ZeroHexString>, block: Nullab
 }
 
 export function useContractBalance(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, block: Nullable<string>, context: Nullable<FgEthereumContext>, prices: Nullable<Nullable<Fixed.From>[]>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgToken.Contract.Balance.schema, [address, token, block, context, storage])
   useFetch(query)
   useVisible(query)
@@ -390,14 +390,14 @@ export function useContractBalance(address: Nullable<ZeroHexString>, token: Null
 }
 
 export function useNativePricedBalance(address: Nullable<ZeroHexString>, coin: "usd", context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgToken.Native.Balance.Priced.schema, [address, coin, context, storage])
 
   return query
 }
 
 export function useContractPricedBalance(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, coin: "usd", context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgToken.Contract.Balance.Priced.schema, [address, token, coin, context, storage])
 
   return query

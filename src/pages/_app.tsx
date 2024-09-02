@@ -135,7 +135,7 @@ export function ClientOnly(props: ChildrenProps) {
 }
 
 export function Goto(props: ChildrenProps) {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
   const { children } = props
 
   const goto = useMemo(() => {

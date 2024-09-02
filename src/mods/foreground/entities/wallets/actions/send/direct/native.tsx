@@ -25,9 +25,9 @@ import { PriceResolver } from "../../../page";
 import { WalletTransactionDialog } from "../../eth_sendTransaction";
 
 export function WalletDirectSendScreenNativeValue(props: {}) {
-  const path = usePathContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
-  const close = useCloseContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const close = useCloseContext().getOrThrow()
 
   const hash = useHashSubpath(path)
 
@@ -38,7 +38,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   const [maybeTrial0, setTrial0] = useSearchState(path, "trial0")
 
   const trial0UuidFallback = useConstant(() => randomUUID())
-  const trial0Uuid = Option.wrap(maybeTrial0).unwrapOr(trial0UuidFallback)
+  const trial0Uuid = Option.wrap(maybeTrial0).getOr(trial0UuidFallback)
 
   useEffect(() => {
     if (maybeTrial0 === trial0Uuid)
@@ -46,11 +46,11 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     setTrial0(trial0Uuid)
   }, [maybeTrial0, setTrial0, trial0Uuid])
 
-  const chain = Option.unwrap(maybeChain)
+  const chain = Option.wrap(maybeChain).getOrThrow()
   const chainData = chainDataByChainId[Number(chain)]
   const tokenData = chainData.token
 
-  const context = useEthereumContext2(wallet.uuid, chainData).unwrap()
+  const context = useEthereumContext2(wallet.uuid, chainData).getOrThrow()
 
   const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)
@@ -161,8 +161,8 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
   const pricedBalanceQuery = useNativePricedBalance(wallet.address, "usd", context)
 
-  const valuedBalanceData = valuedBalanceQuery.current?.ok().get()
-  const pricedBalanceData = pricedBalanceQuery.current?.ok().get()
+  const valuedBalanceData = valuedBalanceQuery.current?.ok().getOrNull()
+  const pricedBalanceData = pricedBalanceQuery.current?.ok().getOrNull()
 
   const onValueMaxClick = useCallback(() => {
     if (valuedBalanceData == null)
@@ -211,7 +211,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     : undefined
 
   const ensTargetQuery = useEnsLookup(maybeEnsQueryKey, mainnet)
-  const maybeEnsTarget = ensTargetQuery.current?.ok().get()
+  const maybeEnsTarget = ensTargetQuery.current?.ok().getOrNull()
 
   const maybeFinalTarget = useMemo(() => {
     if (maybeTarget == null)
@@ -240,10 +240,10 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   }, [hash, trial0Uuid, chainData.chainId, maybeFinalValue, maybeFinalTarget])
 
   const trialQuery = useTransactionTrial(trial0Uuid)
-  const maybeTrialData = trialQuery.current?.ok().get()
+  const maybeTrialData = trialQuery.current?.ok().getOrNull()
 
   const transactionQuery = useTransactionWithReceipt(maybeTrialData?.transactions[0].uuid, context)
-  const maybeTransaction = transactionQuery.current?.ok().get()
+  const maybeTransaction = transactionQuery.current?.ok().getOrNull()
 
   const onClose = useCallback(() => {
     close()

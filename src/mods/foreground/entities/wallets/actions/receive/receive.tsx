@@ -10,7 +10,7 @@ import { useWalletDataContext } from "../../context";
 import { WideShrinkableOppositeButton } from "../send";
 
 export function WalletDataReceiveScreen(props: {}) {
-  const wallet = useWalletDataContext().unwrap()
+  const wallet = useWalletDataContext().getOrThrow()
 
   const address = useMemo(() => {
     return Address.fromOrThrow(wallet.address)
@@ -31,9 +31,7 @@ export function WalletDataReceiveScreen(props: {}) {
   const onCopyClick = useCopy(address)
 
   const onShareClick = useCallback(async () => {
-    await Result.runAndWrap(async () => {
-      await navigator.share({ text: address })
-    }).then(r => r.ignore())
+    await Result.runAndWrap(() => navigator.share({ text: address }))
   }, [address])
 
   return <>

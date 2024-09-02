@@ -15,15 +15,15 @@ import { UserAvatar } from "./all/page";
 import { useCurrentUser, useUser } from "./data";
 
 export function UserLoginDialog(props: { next?: string }) {
-  const path = usePathContext().unwrap()
-  const close = useCloseContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const close = useCloseContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
   const { next } = props
 
   const maybeUserId = path.url.searchParams.get("user")
 
   const userQuery = useUser(maybeUserId)
-  const maybeUser = userQuery.current?.ok().get()
+  const maybeUser = userQuery.current?.ok().getOrNull()
 
   const currentUserQuery = useCurrentUser()
 
@@ -50,7 +50,7 @@ export function UserLoginDialog(props: { next?: string }) {
     const response = await background.requestOrThrow({
       method: "brume_login",
       params: [user.uuid, defPasswordInput]
-    }).then(r => r.ignore())
+    })
 
     if (response.isErr()) {
       setInvalid(true)

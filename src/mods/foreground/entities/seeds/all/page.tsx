@@ -17,7 +17,7 @@ import { LedgerSeedCreatorDialog } from "./create/hardware"
 import { StandaloneSeedCreatorDialog } from "./create/mnemonic"
 
 export function SeedsPage() {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
 
   const seedsQuery = useSeeds()
   const maybeSeeds = seedsQuery.data?.get()

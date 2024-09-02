@@ -25,9 +25,9 @@ import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../ac
 import { EmptyRectangularCard } from "./standalone";
 
 export function SeededWalletCreatorDialog(props: {}) {
-  const close = useCloseContext().unwrap()
-  const background = useBackgroundContext().unwrap()
-  const seedData = useSeedDataContext().unwrap()
+  const close = useCloseContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
+  const seedData = useSeedDataContext().getOrThrow()
 
   const uuid = useConstant(() => randomUUID())
 
@@ -101,19 +101,19 @@ export function SeededWalletCreatorDialog(props: {}) {
         return await Ledger.USB.getOrRequestDeviceOrThrow()
       }).then(r => r.mapErrSync(cause => {
         return new UIError(`Could not find device`, { cause })
-      }).unwrap())
+      }).getOrThrow())
 
       const connector = await Result.runAndWrap(async () => {
         return await Ledger.USB.connectOrThrow(device)
       }).then(r => r.mapErrSync(cause => {
         return new UIError(`Could not connect to the device`, { cause })
-      }).unwrap())
+      }).getOrThrow())
 
       const { address } = await Result.runAndWrap(() => {
         return Ledger.Ethereum.getAddressOrThrow(connector, defPathInput.slice(2))
       }).then(r => r.mapErrSync(cause => {
         return new UIError(`Could not get the address of the device`, { cause })
-      }).unwrap())
+      }).getOrThrow())
 
       if (!ZeroHexString.String.is(address))
         throw new UIError(`Could not get the address of the device`)
@@ -127,7 +127,7 @@ export function SeededWalletCreatorDialog(props: {}) {
         params: [wallet]
       }).then(r => r.mapErrSync(cause => {
         return new UIError(`Could not create the wallet`, { cause })
-      }).unwrap())
+      }).getOrThrow())
 
     } else {
       const instance = await SeedInstance.createOrThrow(seedData, background)
@@ -136,23 +136,23 @@ export function SeededWalletCreatorDialog(props: {}) {
         return await instance.getMnemonicOrThrow(background)
       }).then(r => r.mapErrSync(cause => {
         return new UIError(`Could not get mnemonic`, { cause })
-      }).unwrap())
+      }).getOrThrow())
 
       const masterSeed = await Result.runAndWrap(async () => {
         return await mnemonicToSeed(mnemonic)
-      }).then(r => r.unwrap())
+      }).then(r => r.getOrThrow())
 
       const root = Result.runAndWrapSync(() => {
         return HDKey.fromMasterSeed(masterSeed)
-      }).unwrap()
+      }).getOrThrow()
 
       const child = Result.runAndWrapSync(() => {
         return root.derive(defPathInput)
       }).mapErrSync((cause) => {
         return new UIError(`Invalid derivation path`, { cause })
-      }).unwrap()
+      }).getOrThrow()
 
-      const privateKeyBytes = Option.unwrap(child.privateKey)
+      const privateKeyBytes = Option.wrap(child.privateKey).getOrThrow()
       const uncompressedPublicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false)
 
       const address = Address.computeOrThrow(uncompressedPublicKeyBytes)
@@ -165,7 +165,7 @@ export function SeededWalletCreatorDialog(props: {}) {
         params: [wallet]
       }).then(r => r.mapErrSync(cause => {
         return new UIError(`Could not create the wallet`, { cause })
-      }).unwrap())
+      }).getOrThrow())
     }
 
     close()

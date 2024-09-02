@@ -13,8 +13,8 @@ import { useWallet } from "../../data";
 import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../send";
 
 export function WalletEditDialog(props: {}) {
-  const wallet = useWalletDataContext().unwrap()
-  const close = useCloseContext().unwrap()
+  const wallet = useWalletDataContext().getOrThrow()
+  const close = useCloseContext().getOrThrow()
 
   const query = useWallet(wallet.uuid)
   const color = Color.get(wallet.color)

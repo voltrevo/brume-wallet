@@ -47,8 +47,8 @@ export namespace FgTransaction {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.current.ok()?.getOrNull()
+      const currentData = current.real?.current.ok()?.getOrNull()
 
       if (previousData?.uuid !== currentData?.uuid) {
         if (previousData != null) {
@@ -132,17 +132,17 @@ export namespace FgTransaction {
 }
 
 export function useTransactions(address: Nullable<ZeroHexString>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgTransaction.All.ByAddress.schema, [address, storage])
 
   return query
 }
 
 export function useTransactionWithReceipt(uuid: Nullable<string>, context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
 
   const transactionQuery = useQuery(FgTransaction.schema, [uuid, storage])
-  const maybeTransaction = transactionQuery.current?.ok().get()
+  const maybeTransaction = transactionQuery.current?.ok().getOrNull()
   useError(transactionQuery, Errors.onQueryError)
 
   const receiptQuery = useQuery(FgTransactionReceipt.schema, [uuid, maybeTransaction?.hash, context, storage])
@@ -173,7 +173,7 @@ export namespace FgTransactionTrial {
 }
 
 export function useTransactionTrial(uuid: Nullable<string>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgTransactionTrial.schema, [uuid, storage])
 
   return query
@@ -199,8 +199,8 @@ export namespace FgTransactionReceipt {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.current.ok()?.getOrNull()
+      const currentData = current.real?.current.ok()?.getOrNull()
 
       if (previousData == null && currentData != null) {
         await FgTransaction.schema(uuid, storage)?.mutate(s => {

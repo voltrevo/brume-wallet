@@ -104,8 +104,8 @@ export namespace SeedQuery {
     const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.current.ok()?.getOrNull()
+      const currentData = current.real?.current.ok()?.getOrNull()
 
       await All.create(storage).mutate(Mutators.mapData((d = new Data([])) => {
         if (previousData?.uuid === currentData?.uuid)

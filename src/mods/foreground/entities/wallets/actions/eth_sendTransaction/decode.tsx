@@ -11,16 +11,16 @@ import { useWalletDataContext } from "../../context";
 import { useEthereumContext2 } from "../../data";
 
 export function WalletDecodeDialog(props: {}) {
-  const path = usePathContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
 
   const maybeData = path.url.searchParams.get("data") as Nullable<ZeroHexString>
 
   const maybeHash = Option.wrap(maybeData).mapSync(x => {
     return x.slice(0, 10) as ZeroHexString
-  }).get()
+  }).getOrNull()
 
-  const gnosis = useEthereumContext2(wallet.uuid, chainDataByChainId[100]).unwrap()
+  const gnosis = useEthereumContext2(wallet.uuid, chainDataByChainId[100]).getOrThrow()
 
   const signaturesQuery = useSignature(maybeHash, gnosis)
   const triedSignatures = signaturesQuery.current

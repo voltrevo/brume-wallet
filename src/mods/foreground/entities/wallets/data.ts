@@ -71,15 +71,15 @@ export namespace FgWallet {
         const indexer = async (states: States<Data, Fail>) => {
           const { current, previous } = states
 
-          const previousData = previous?.real?.current.ok()?.get()
-          const currentData = current.real?.current.ok()?.get()
+          const previousData = previous?.real?.current.ok()?.getOrNull()
+          const currentData = current.real?.current.ok()?.getOrNull()
 
           const [array = []] = [currentData]
 
           await FgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutate(s => {
             const current = s.current
 
-            const [{ value = new Fixed(0n, 0) } = {}] = [current?.ok().get()?.[account]]
+            const [{ value = new Fixed(0n, 0) } = {}] = [current?.ok().getOrNull()?.[account]]
 
             const inner = { value, count: array.length }
 
@@ -126,8 +126,8 @@ export namespace FgWallet {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.current.ok()?.getOrNull()
+      const currentData = current.real?.current.ok()?.getOrNull()
 
       if (previousData != null && (previousData.uuid !== currentData?.uuid || previousData.trashed !== currentData?.trashed) && !previousData.trashed) {
         await All.schema(storage).mutate(s => {
@@ -240,28 +240,28 @@ export namespace FgWallet {
 }
 
 export function useWallet(uuid: Nullable<string>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgWallet.schema, [uuid, storage])
 
   return query
 }
 
 export function useWallets() {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgWallet.All.schema, [storage])
 
   return query
 }
 
 export function useTrashedWallets() {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgWallet.All.Trashed.schema, [storage])
 
   return query
 }
 
 export function useWalletsBySeed(uuid: Nullable<string>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgWallet.All.BySeed.schema, [uuid, storage])
 
   return query
@@ -387,7 +387,7 @@ export class EthereumAuthPrivateKeyWalletInstance {
     const privateKeyBase64 = await background.requestOrThrow<string>({
       method: "brume_decrypt",
       params: [ivBase64, cipherBase64]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     using privateKeyMemory = Base64.get().decodePaddedOrThrow(privateKeyBase64)
 
@@ -433,7 +433,7 @@ export interface EthereumContextProps {
 }
 
 export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<ChainData>) {
-  const background = useBackgroundContext().unwrap()
+  const background = useBackgroundContext().getOrThrow()
 
   const maybeContext = useMemo<Nullable<FgEthereumContext>>(() => {
     if (uuid == null)
@@ -447,7 +447,7 @@ export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<Chain
 }
 
 export function useEthereumContext2(uuid: Nullable<string>, chain: Nullable<ChainData>) {
-  const background = useBackgroundContext().unwrap()
+  const background = useBackgroundContext().getOrThrow()
 
   const maybeContext = useMemo<Nullable<FgEthereumContext>>(() => {
     if (uuid == null)

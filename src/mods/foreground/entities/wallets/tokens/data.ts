@@ -40,8 +40,8 @@ export namespace FgTokenSettings {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
-      const previousData = previous?.real?.current.ok()?.get()
-      const currentData = current.real?.current.ok()?.get()
+      const previousData = previous?.real?.current.ok()?.getOrNull()
+      const currentData = current.real?.current.ok()?.getOrNull()
 
       if (previousData?.uuid === currentData?.uuid)
         return
@@ -65,14 +65,14 @@ export namespace FgTokenSettings {
 }
 
 export function useTokenSettings(wallet: Nullable<Wallet>, token: Nullable<Token>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgTokenSettings.schema, [wallet, token, storage])
 
   return query
 }
 
 export function useTokenSettingsByWallet(wallet: Nullable<Wallet>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgTokenSettings.ByWallet.schema, [wallet, storage])
 
   return query

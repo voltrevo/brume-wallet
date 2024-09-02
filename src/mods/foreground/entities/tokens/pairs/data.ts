@@ -61,7 +61,7 @@ export namespace FgPair {
 }
 
 export function usePairPrice(pair: Nullable<PairData>, block: Nullable<string>, context: Nullable<FgEthereumContext>,) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgPair.Price.schema, [pair, block, context, storage])
   useFetch(query)
   useVisible(query)

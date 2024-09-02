@@ -17,9 +17,9 @@ import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
 
 export function WalletSendScreenTarget(props: {}) {
-  const path = usePathContext().unwrap()
-  const wallet = useWalletDataContext().unwrap()
-  const close = useCloseContext().unwrap()
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const close = useCloseContext().getOrThrow()
 
   const [maybeStep, setStep] = useSearchState(path, "step")
   const [maybeChain, setChain] = useSearchState(path, "chain")
@@ -27,13 +27,13 @@ export function WalletSendScreenTarget(props: {}) {
   const [maybeType, setType] = useSearchState(path, "type")
   const [maybeToken, setToken] = useSearchState(path, "token")
 
-  const chain = Option.unwrap(maybeChain)
+  const chain = Option.wrap(maybeChain).getOrThrow()
   const chainData = chainDataByChainId[Number(chain)]
 
   const tokenQuery = useToken(chainData.chainId, maybeToken)
-  const maybeTokenData = Option.wrap(tokenQuery.current?.ok().get())
+  const maybeTokenData = Option.wrap(tokenQuery.current?.ok().getOrNull())
   const maybeTokenDef = Option.wrap(tokenByAddress[maybeToken as any])
-  const tokenData = maybeTokenData.or(maybeTokenDef).unwrapOr(chainData.token)
+  const tokenData = maybeTokenData.or(maybeTokenDef).getOr(chainData.token)
 
   const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1])
 
@@ -55,7 +55,7 @@ export function WalletSendScreenTarget(props: {}) {
     : undefined
 
   const ensQuery = useEnsLookup(maybeEnsInput, mainnet)
-  const maybeEns = ensQuery.current?.ok().get()
+  const maybeEns = ensQuery.current?.ok().getOrNull()
 
   const onSubmit = useCallback(async () => {
     if (maybeTarget == null)

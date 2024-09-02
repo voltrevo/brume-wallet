@@ -22,8 +22,8 @@ import { useEthereumContext } from "../../data";
 import { EmptyRectangularCard } from "./standalone";
 
 export function ReadonlyWalletCreatorDialog(props: {}) {
-  const close = useCloseContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const close = useCloseContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const uuid = useConstant(() => randomUUID())
 
@@ -59,7 +59,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   }, [defAddressInput])
 
   const ensAddressQuery = useEnsLookup(maybeEnsKey, mainnet)
-  const maybeEnsAddress = ensAddressQuery.current?.ok().get()
+  const maybeEnsAddress = ensAddressQuery.current?.ok().getOrNull()
 
   const maybeAddress = useMemo(() => {
     if (maybeEnsAddress != null)
@@ -75,14 +75,14 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
 
     const address = Option.wrap(maybeAddress).okOrElseSync(() => {
       return new UIError(`Could not fetch or parse address`)
-    }).mapSync(x => Address.fromOrThrow(x) as ZeroHexString).unwrap()
+    }).mapSync(x => Address.fromOrThrow(x) as ZeroHexString).getOrThrow()
 
     const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: finalNameInput, color: Color.all.indexOf(color), address }
 
     await background.requestOrThrow<Wallet[]>({
       method: "brume_createWallet",
       params: [wallet]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     close()
   }), [finalNameInput, maybeAddress, uuid, color, background, close])

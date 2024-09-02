@@ -11,7 +11,7 @@ import { WalletPeanutSendScreenNativeValue } from "./peanut/native";
 import { WalletSendScreenTarget } from "./target";
 
 export function WalletSendScreen(props: {}) {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
 
   const [step] = useSearchState(path, "step")
   const [type] = useSearchState(path, "type")

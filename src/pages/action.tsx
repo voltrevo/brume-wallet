@@ -5,7 +5,7 @@ import { Nullable } from "@hazae41/option";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function Main() {
-  const background = useBackgroundContext().unwrap()
+  const background = useBackgroundContext().getOrThrow()
 
   useEffect(() => {
     document.documentElement.classList.add("h-[600px]", "w-[400px]")
@@ -15,14 +15,14 @@ export default function Main() {
   const getHashOrThrow = useCallback(async () => {
     return await background.requestOrThrow<string>({
       method: "brume_getPath"
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
   }, [background])
 
   const setHashOrThrow = useCallback(async (hash: string) => {
     await background.requestOrThrow<void>({
       method: "brume_setPath",
       params: [hash]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
   }, [background])
 
   const [hash, setHash] = useState<string>()

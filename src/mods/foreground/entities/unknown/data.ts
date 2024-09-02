@@ -172,7 +172,7 @@ export namespace FgEthereum {
 }
 
 export function useUnknown(request: Nullable<RpcRequestPreinit<unknown> & EthereumFetchParams>, context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgEthereum.Unknown.schema, [request, context, storage])
   useFetch(query)
   useVisible(query)
@@ -182,7 +182,7 @@ export function useUnknown(request: Nullable<RpcRequestPreinit<unknown> & Ethere
 }
 
 export function useEstimateGas(request: Nullable<RpcRequestPreinit<[unknown, unknown]>>, context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgEthereum.EstimateGas.schema, [request, context, storage])
   useFetch(query)
   useVisible(query)
@@ -193,7 +193,7 @@ export function useEstimateGas(request: Nullable<RpcRequestPreinit<[unknown, unk
 }
 
 export function useMaxPriorityFeePerGas(context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgEthereum.MaxPriorityFeePerGas.schema, [context, storage])
   useFetch(query)
   useVisible(query)
@@ -204,7 +204,7 @@ export function useMaxPriorityFeePerGas(context: Nullable<FgEthereumContext>) {
 }
 
 export function useGasPrice(context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgEthereum.GasPrice.schema, [context, storage])
   useFetch(query)
   useVisible(query)
@@ -215,7 +215,7 @@ export function useGasPrice(context: Nullable<FgEthereumContext>) {
 }
 
 export function useNonce(address: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgEthereum.Nonce.schema, [address, context, storage])
   useFetch(query)
   useVisible(query)
@@ -245,8 +245,8 @@ export namespace FgTotal {
             const indexer = async (states: States<Data, Fail>) => {
               const { current, previous } = states
 
-              const previousData = previous?.real?.current.ok()?.get()
-              const currentData = current.real?.current.ok()?.get()
+              const previousData = previous?.real?.current.ok()?.getOrNull()
+              const currentData = current.real?.current.ok()?.getOrNull()
 
               const [record = {}] = [currentData]
 
@@ -278,15 +278,15 @@ export namespace FgTotal {
           const indexer = async (states: States<Data, Fail>) => {
             const { current, previous } = states
 
-            const previousData = previous?.real?.current.ok()?.get()
-            const currentData = current.real?.current.ok()?.get()
+            const previousData = previous?.real?.current.ok()?.getOrNull()
+            const currentData = current.real?.current.ok()?.getOrNull()
 
             const [value = new Fixed(0n, 0)] = [currentData]
 
             await Record.schema(coin, storage)?.mutate(s => {
               const { current } = s
 
-              const [{ count = 0 } = {}] = [current?.ok().get()?.[account]]
+              const [{ count = 0 } = {}] = [current?.ok().getOrNull()?.[account]]
 
               const inner = { count, value }
 
@@ -324,14 +324,14 @@ export namespace FgTotal {
 }
 
 export function useTotalPricedBalance(coin: "usd") {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgTotal.Balance.Priced.schema, [coin, storage])
 
   return query
 }
 
 export function useTotalWalletPricedBalance(address: Nullable<ZeroHexString>, coin: "usd") {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgTotal.Balance.Priced.ByAddress.schema, [address, coin, storage])
 
   return query

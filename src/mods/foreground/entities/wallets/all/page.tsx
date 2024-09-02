@@ -20,13 +20,13 @@ import { ReadonlyWalletCreatorDialog } from "./create/readonly"
 import { StandaloneWalletCreatorDialog } from "./create/standalone"
 
 export function WalletsPage() {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
 
   const walletsQuery = useWallets()
-  const maybeWallets = walletsQuery.current?.ok().get()
+  const maybeWallets = walletsQuery.current?.ok().getOrNull()
 
   const trashedWalletsQuery = useTrashedWallets()
-  const maybeTrashedWallets = trashedWalletsQuery.current?.ok().get()
+  const maybeTrashedWallets = trashedWalletsQuery.current?.ok().getOrNull()
 
   const subpath = useHashSubpath(path)
   const creator = useCoords(subpath, "/create")
@@ -156,7 +156,7 @@ export function ClickableWalletCard(props: WalletProps & OkProps<Wallet>) {
 }
 
 export function NewRectangularAnchorCard(props: ChildrenProps) {
-  const path = usePathContext().unwrap()
+  const path = usePathContext().getOrThrow()
   const { children } = props
 
   const subpath = useHashSubpath(path)

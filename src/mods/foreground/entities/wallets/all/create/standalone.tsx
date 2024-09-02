@@ -25,8 +25,8 @@ import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton,
 import { RawWalletCard } from "../../card";
 
 export function StandaloneWalletCreatorDialog(props: {}) {
-  const close = useCloseContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const close = useCloseContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const uuid = useConstant(() => randomUUID())
 
@@ -55,15 +55,16 @@ export function StandaloneWalletCreatorDialog(props: {}) {
   }, [])
 
   const generateOrAlert = useCallback(() => Errors.runAndLogAndAlertSync(() => {
-    using memory = Secp256k1.get().PrivateKey.randomOrThrow().exportOrThrow()
+    using signing = Secp256k1.get().getOrThrow().SigningKey.randomOrThrow()
+    using memory = signing.exportOrThrow()
 
-    setRawKeyInput(`0x${Base16.get().encodeOrThrow(memory)}`)
+    setRawKeyInput(`0x${Base16.get().getOrThrow().encodeOrThrow(memory)}`)
   }), [])
 
   const triedAddress = useMemo(() => Result.runAndDoubleWrapSync(() => {
-    using privateKeyMemory = Base16.get().padStartAndDecodeOrThrow(zeroHexKey.slice(2))
-    using privateKey = Secp256k1.get().PrivateKey.importOrThrow(privateKeyMemory)
-    using publicKey = privateKey.getPublicKeyOrThrow()
+    using privateKeyMemory = Base16.get().getOrThrow().padStartAndDecodeOrThrow(zeroHexKey.slice(2))
+    using privateKey = Secp256k1.get().getOrThrow().SigningKey.importOrThrow(privateKeyMemory)
+    using publicKey = privateKey.getVerifyingKeyOrThrow()
     using uncompressedPublicKeyMemory = publicKey.exportUncompressedOrThrow()
 
     return Address.computeOrThrow(uncompressedPublicKeyMemory.bytes)
@@ -77,13 +78,13 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     if (!isSafariExtension() && confirm("Did you backup your private key?") === false)
       return
 
-    const address = triedAddress.unwrap()
+    const address = triedAddress.getOrThrow()
     const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), address, privateKey: zeroHexKey }
 
     await background.requestOrThrow<void>({
       method: "brume_createWallet",
       params: [wallet]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     close()
   }), [finalNameInput, zeroHexKey, uuid, color, background, close])
@@ -94,13 +95,13 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
       throw new Panic()
 
-    using privateKeyMemory = Base16.get().padStartAndDecodeOrThrow(zeroHexKey.slice(2))
-    const privateKeyBase64 = Base64.get().encodePaddedOrThrow(privateKeyMemory)
+    using privateKeyMemory = Base16.get().getOrThrow().padStartAndDecodeOrThrow(zeroHexKey.slice(2))
+    const privateKeyBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(privateKeyMemory)
 
     const [ivBase64, cipherBase64] = await background.requestOrThrow<[string, string]>({
       method: "brume_encrypt",
       params: [privateKeyBase64]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     return [ivBase64, cipherBase64]
   }), [finalNameInput, zeroHexKey, background])
@@ -119,9 +120,11 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     if (!isSafariExtension() && confirm("Did you backup your private key?") === false)
       return
 
-    const [_, cipherBase64] = triedEncryptedPrivateKey.unwrap()
-    const cipher = Base64.get().decodePaddedOrThrow(cipherBase64).copyAndDispose()
-    const id = await WebAuthnStorage.createOrThrow(finalNameInput, cipher)
+    const [_, cipherBase64] = triedEncryptedPrivateKey.getOrThrow()
+
+    using cipher = Base64.get().getOrThrow().decodePaddedOrThrow(cipherBase64)
+
+    const id = await WebAuthnStorage.createOrThrow(finalNameInput, cipher.bytes)
 
     setId(id)
   }), [finalNameInput, triedEncryptedPrivateKey])
@@ -134,17 +137,18 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     if (triedEncryptedPrivateKey == null)
       throw new Panic()
 
-    const address = triedAddress.unwrap()
+    const address = triedAddress.getOrThrow()
 
-    const [ivBase64, cipherBase64] = triedEncryptedPrivateKey.unwrap()
+    const [ivBase64, cipherBase64] = triedEncryptedPrivateKey.getOrThrow()
 
-    using cipherMemory = Base64.get().decodePaddedOrThrow(cipherBase64)
+    using cipherMemory = Base64.get().getOrThrow().decodePaddedOrThrow(cipherBase64)
     const cipherBytes = await WebAuthnStorage.getOrThrow(id)
 
     if (!Bytes.equals(cipherMemory.bytes, cipherBytes))
       throw new Error(`Corrupt storage`)
 
-    const idBase64 = Base64.get().encodePaddedOrThrow(id)
+    const idBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(id)
+
     const privateKey = { ivBase64, idBase64 }
 
     const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), address, privateKey }
@@ -152,7 +156,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     await background.requestOrThrow<void>({
       method: "brume_createWallet",
       params: [wallet]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     close()
   }), [id, finalNameInput, triedAddress, triedEncryptedPrivateKey, uuid, color, background, close])

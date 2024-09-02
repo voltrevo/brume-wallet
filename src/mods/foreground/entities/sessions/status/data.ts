@@ -11,7 +11,7 @@ export function getStatus(id: Nullable<string>, storage: UserStorage) {
 }
 
 export function useStatus(id: Nullable<string>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(getStatus, [id, storage])
 
   return query

@@ -9,8 +9,8 @@ import { useUserContext } from "../entities/users/context"
 import { useDisplayUsdOrZeroOrError } from "../entities/wallets/page"
 
 export function HomePage() {
-  const userData = useUserContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const userData = useUserContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const totalPricedBalanceQuery = useTotalPricedBalance("usd")
   const totalPricedBalanceDisplay = useDisplayUsdOrZeroOrError(totalPricedBalanceQuery.current)
@@ -18,7 +18,7 @@ export function HomePage() {
   useEffect(() => {
     background.requestOrThrow({
       method: "brume_log"
-    }).then(r => r.unwrap()).catch(console.error)
+    }).then(r => r.getOrThrow()).catch(console.error)
   }, [background])
 
   const [persisted, setPersisted] = useState<boolean>()

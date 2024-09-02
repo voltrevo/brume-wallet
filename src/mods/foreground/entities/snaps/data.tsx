@@ -35,14 +35,14 @@ export namespace FgSnap {
 }
 
 export function useSnap(uuid: Nullable<string>) {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgSnap.schema, [uuid, storage])
 
   return query
 }
 
 export function useSnaps() {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgSnap.All.schema, [storage])
 
   return query

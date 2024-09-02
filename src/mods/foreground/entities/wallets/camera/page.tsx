@@ -18,8 +18,8 @@ export function WalletCameraPage(props: UUIDProps) {
 }
 
 export function WalletDataCameraPage() {
-  const wallet = useWalletDataContext().unwrap()
-  const background = useBackgroundContext().unwrap()
+  const wallet = useWalletDataContext().getOrThrow()
+  const background = useBackgroundContext().getOrThrow()
 
   const mounted = useRef<boolean>(true)
 
@@ -107,7 +107,7 @@ export function WalletDataCameraPage() {
     const metadata = await background.requestOrThrow<WcMetadata>({
       method: "brume_wc_connect",
       params: [uri, wallet.uuid]
-    }).then(r => r.unwrap())
+    }).then(r => r.getOrThrow())
 
     alert(`Connected to ${metadata.name}`)
   }), [background, wallet])

@@ -7,7 +7,7 @@ export function getPersistentSessions(storage: UserStorage) {
 }
 
 export function usePersistentSessions() {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(getPersistentSessions, [storage])
 
   return query
@@ -18,7 +18,7 @@ export function getTemporarySessions(storage: UserStorage) {
 }
 
 export function useTemporarySessions() {
-  const storage = useUserStorageContext().unwrap()
+  const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(getTemporarySessions, [storage])
 
   return query
