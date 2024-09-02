@@ -1,7 +1,7 @@
 import { PairAbi } from "@/libs/abi/pair.abi"
 import { PairData, tokenByAddress } from "@/libs/ethereum/mods/chain"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fail, Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier"
+import { Data, Fail, Fetched, FetcherMore, IDBQueryStorage, createQuery } from "@hazae41/glacier"
 import { Catched, Result } from "@hazae41/result"
 import { BgEthereumContext } from "../../../context"
 import { EthereumQueryKey } from "../../wallets/data"
@@ -25,7 +25,7 @@ export namespace BgPair {
       })).ok().inner
     }
 
-    export function schema(ethereum: BgEthereumContext, pair: PairData, block: string, storage: IDBStorage) {
+    export function schema(ethereum: BgEthereumContext, pair: PairData, block: string, storage: IDBQueryStorage) {
       const maybeKey = key(pair, block)
 
       if (maybeKey == null)

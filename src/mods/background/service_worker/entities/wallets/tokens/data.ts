@@ -1,5 +1,5 @@
 import { Mutators } from "@/libs/glacier/mutators";
-import { Data, IDBStorage, States, createQuery } from "@hazae41/glacier";
+import { Data, IDBQueryStorage, States, createQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 import { Token, TokenRef } from "../../tokens/data";
 import { Wallet, WalletRef } from "../data";
@@ -43,7 +43,7 @@ export namespace BgTokenSettings {
       return `tokenSettingsByWallet/${wallet.uuid}`
     }
 
-    export function schema(wallet: Nullable<Wallet>, storage: IDBStorage) {
+    export function schema(wallet: Nullable<Wallet>, storage: IDBQueryStorage) {
       if (wallet == null)
         return
       return createQuery<Key, Data, Fail>({ key: key(wallet), storage })
@@ -63,7 +63,7 @@ export namespace BgTokenSettings {
     return token satisfies never
   }
 
-  export function schema(wallet: Nullable<Wallet>, token: Nullable<Token>, storage: IDBStorage) {
+  export function schema(wallet: Nullable<Wallet>, token: Nullable<Token>, storage: IDBQueryStorage) {
     if (wallet == null)
       return
     if (token == null)

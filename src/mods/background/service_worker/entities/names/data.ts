@@ -1,7 +1,7 @@
 import { EnsAbi } from "@/libs/abi/ens.abi"
 import { Bytes, Uint8Array } from "@hazae41/bytes"
 import { Abi, Address, Ens, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fail, Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier"
+import { Data, Fail, Fetched, FetcherMore, IDBQueryStorage, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
@@ -57,13 +57,13 @@ export namespace BgEns {
       }
     }
 
-    export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBQueryStorage) {
       const [name] = (request as RpcRequestPreinit<[string]>).params
 
       return schema(ethereum, name, storage)
     }
 
-    export function schema(ethereum: BgEthereumContext, name: string, storage: IDBStorage) {
+    export function schema(ethereum: BgEthereumContext, name: string, storage: IDBQueryStorage) {
       const fetcher = (key: Key, more: FetcherMore) =>
         fetchOrFail(ethereum, name, more)
 
@@ -122,13 +122,13 @@ export namespace BgEns {
       }
     }
 
-    export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+    export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBQueryStorage) {
       const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
 
       return schema(ethereum, address, storage)
     }
 
-    export function schema(ethereum: BgEthereumContext, address: ZeroHexString, storage: IDBStorage) {
+    export function schema(ethereum: BgEthereumContext, address: ZeroHexString, storage: IDBQueryStorage) {
       const fetcher = (key: Key, more: FetcherMore) => fetchOrFail(ethereum, address, more)
 
       return createQuery<Key, Data, Fail>({

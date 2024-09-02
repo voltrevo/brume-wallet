@@ -2,7 +2,7 @@ import { TokenAbi } from "@/libs/abi/erc20.abi"
 import { ChainData, chainDataByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fail, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
+import { Data, Fail, FetcherMore, IDBQueryStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
 import { Catched, Result } from "@hazae41/result"
@@ -103,7 +103,7 @@ export namespace BgToken {
       return `pricedBalanceByToken/${address}/${currency}`
     }
 
-    export function schema(address: ZeroHexString, currency: "usd", storage: IDBStorage) {
+    export function schema(address: ZeroHexString, currency: "usd", storage: IDBQueryStorage) {
       const indexer = async (states: States<Data, Fail>) => {
         const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).getOr({})
         const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
@@ -135,7 +135,7 @@ export namespace BgToken {
           }
         }
 
-        export function schema(account: ZeroHexString, coin: "usd", context: BgEthereumContext, storage: IDBStorage) {
+        export function schema(account: ZeroHexString, coin: "usd", context: BgEthereumContext, storage: IDBQueryStorage) {
           const indexer = async (states: States<Data, Fail>) => {
             const { current, previous } = states
 
@@ -179,13 +179,13 @@ export namespace BgToken {
         }
       }
 
-      export async function parseOrThrow(request: RpcRequestPreinit<unknown>, ethereum: BgEthereumContext, storage: IDBStorage) {
+      export async function parseOrThrow(request: RpcRequestPreinit<unknown>, ethereum: BgEthereumContext, storage: IDBQueryStorage) {
         const [account, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
 
         return schema(account, block, ethereum, storage)
       }
 
-      export function schema(account: ZeroHexString, block: string, context: BgEthereumContext, storage: IDBStorage) {
+      export function schema(account: ZeroHexString, block: string, context: BgEthereumContext, storage: IDBQueryStorage) {
         const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore) =>
           await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more).then(f => f.mapSync(x => new ZeroHexFixedInit(x, context.chain.token.decimals)))
 
@@ -242,7 +242,7 @@ export namespace BgToken {
 
       export const key = `contractTokens`
 
-      export function schema(storage: IDBStorage) {
+      export function schema(storage: IDBQueryStorage) {
         return createQuery<string, ContractTokenRef[], never>({ key, storage })
       }
 
@@ -264,7 +264,7 @@ export namespace BgToken {
           }
         }
 
-        export function schema(account: ZeroHexString, token: ContractTokenData, coin: "usd", context: BgEthereumContext, storage: IDBStorage) {
+        export function schema(account: ZeroHexString, token: ContractTokenData, coin: "usd", context: BgEthereumContext, storage: IDBQueryStorage) {
           const indexer = async (states: States<Data, Fail>) => {
             const { current, previous } = states
 
@@ -310,7 +310,7 @@ export namespace BgToken {
         })).ok().inner
       }
 
-      export function schema(account: ZeroHexString, token: ContractTokenData, block: string, ethereum: BgEthereumContext, storage: IDBStorage) {
+      export function schema(account: ZeroHexString, token: ContractTokenData, block: string, ethereum: BgEthereumContext, storage: IDBQueryStorage) {
         const maybeKey = key(account, token, block, ethereum.chain)
 
         if (maybeKey == null)
@@ -381,7 +381,7 @@ export namespace BgToken {
       return `contractToken/${chainId}/${address}`
     }
 
-    export function schema(chainId: number, address: string, storage: IDBStorage) {
+    export function schema(chainId: number, address: string, storage: IDBQueryStorage) {
       const indexer = async (states: States<D, F>) => {
         const { current, previous } = states
 

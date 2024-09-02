@@ -1,5 +1,5 @@
 import { Abi, ZeroHexString } from "@hazae41/cubane";
-import { Data, Fail, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier";
+import { Data, Fail, FetcherMore, IDBQueryStorage, createQuery } from "@hazae41/glacier";
 import { Catched, Result } from "@hazae41/result";
 import { BgEthereumContext } from "../../context";
 import { EthereumQueryKey } from "../wallets/data";
@@ -23,7 +23,7 @@ export namespace BgSignature {
     })).ok().inner
   }
 
-  export function schema(hash: ZeroHexString, ethereum: BgEthereumContext, storage: IDBStorage) {
+  export function schema(hash: ZeroHexString, ethereum: BgEthereumContext, storage: IDBQueryStorage) {
     const maybeKey = key(hash)
 
     if (maybeKey == null)

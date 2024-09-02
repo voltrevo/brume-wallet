@@ -6,7 +6,7 @@ import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote"
-import { Storage } from "@hazae41/glacier"
+import { QueryStorage } from "@hazae41/glacier"
 import { Mutex } from "@hazae41/mutex"
 import { None, Option } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
@@ -83,7 +83,7 @@ export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque
   return tor
 }
 
-export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage: Storage, size: number) {
+export function createTorPool(sockets: Mutex<Pool<Disposer<WebSocket>>>, storage: QueryStorage, size: number) {
   let update = Date.now()
 
   const pool = new Pool<TorClientDuplex>(async (params) => {

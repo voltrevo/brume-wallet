@@ -76,7 +76,7 @@
     "@hazae41/ed25519.wasm": "^1.0.10",
     "@hazae41/fleche": "^1.4.5",
     "@hazae41/future": "^1.0.3",
-    "@hazae41/glacier": "^2.0.13",
+    "@hazae41/glacier": "^2.0.16",
     "@hazae41/immutable": "^1.0.11",
     "@hazae41/jsonrpc": "^1.0.8",
     "@hazae41/kcp": "^1.1.3",

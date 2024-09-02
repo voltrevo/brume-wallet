@@ -1,4 +1,4 @@
-import { IDBStorage, createQuery } from "@hazae41/glacier"
+import { IDBQueryStorage, createQuery } from "@hazae41/glacier"
 import { RpcErr, RpcError, RpcOk, RpcRequestInit, RpcResponse } from "@hazae41/jsonrpc"
 import { Result } from "@hazae41/result"
 import { createSnap } from "./glue"
@@ -44,7 +44,7 @@ export namespace BgSnap {
 
     export const key = `snaps`
 
-    export function schema(storage: IDBStorage) {
+    export function schema(storage: IDBQueryStorage) {
       return createQuery<Key, Data, Fail>({ key, storage })
     }
 
@@ -60,7 +60,7 @@ export namespace BgSnap {
 
   export type Schema = ReturnType<typeof schema>
 
-  export function schema(id: string, storage: IDBStorage) {
+  export function schema(id: string, storage: IDBQueryStorage) {
     return createQuery<Key, Data, Fail>({ key: key(id), storage })
   }
 

@@ -1,13 +1,13 @@
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
-import { AesGcmCoder, AsyncJson, AsyncPipeBicoder, Data, HmacEncoder, IDBStorage, RawState } from "@hazae41/glacier"
+import { AesGcmCoder, AsyncJson, AsyncPipeBicoder, Data, HmacEncoder, IDBQueryStorage, RawState } from "@hazae41/glacier"
 import { None, Some } from "@hazae41/option"
 import { Pbdkf2Params } from "./entities/users/crypto"
 import { UserData } from "./entities/users/data"
 import { BgWallet } from "./entities/wallets/data"
 
 export interface UserStorageResult {
-  readonly storage: IDBStorage
+  readonly storage: IDBQueryStorage
   readonly hasher: HmacEncoder
   readonly crypter: AesGcmCoder
 }
@@ -107,7 +107,7 @@ export async function createUserStorageOrThrow(user: UserData, password: string)
     return
   }
 
-  const storage = IDBStorage.createOrThrow({
+  const storage = IDBQueryStorage.createOrThrow({
     name: user.uuid,
     version: 2,
     keySerializer,

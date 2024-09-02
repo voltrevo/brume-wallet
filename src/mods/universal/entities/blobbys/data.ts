@@ -1,4 +1,4 @@
-import { Storage, createQuery } from "@hazae41/glacier"
+import { createQuery, QueryStorage } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 
 export type Blobby =
@@ -37,7 +37,7 @@ export namespace BlobbyQuery {
     return `blobby/${id}`
   }
 
-  export function create(id: Nullable<string>, storage: Storage) {
+  export function create(id: Nullable<string>, storage: QueryStorage) {
     if (id == null)
       return
     return createQuery<K, D, F>({ key: key(id), storage })

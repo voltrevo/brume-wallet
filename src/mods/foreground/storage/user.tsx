@@ -1,5 +1,5 @@
 import { ChildrenProps } from "@/libs/react/props/children";
-import { RawState, Storage, core } from "@hazae41/glacier";
+import { QueryStorage, RawState, core } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { None, Nullable, Option, Some } from "@hazae41/option";
 import { Ok } from "@hazae41/result";
@@ -27,7 +27,7 @@ export function UserStorageProvider(props: ChildrenProps) {
   </UserStorageContext.Provider>
 }
 
-export class UserStorage implements Storage {
+export class UserStorage implements QueryStorage {
   readonly async: true = true
 
   readonly keys = new Set<string>()

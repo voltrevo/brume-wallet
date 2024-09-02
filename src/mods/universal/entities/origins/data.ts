@@ -1,4 +1,4 @@
-import { Storage, createQuery } from "@hazae41/glacier"
+import { createQuery, QueryStorage } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { Blobby } from "../blobbys/data"
 
@@ -35,7 +35,7 @@ export namespace OriginQuery {
     return `origins/${origin}`
   }
 
-  export function create(origin: Nullable<string>, storage: Storage) {
+  export function create(origin: Nullable<string>, storage: QueryStorage) {
     if (origin == null)
       return
 

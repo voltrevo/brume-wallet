@@ -1,5 +1,5 @@
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, FetcherMore, IDBStorage, States, createQuery } from "@hazae41/glacier"
+import { Data, FetcherMore, IDBQueryStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
 import { BgEthereumContext } from "../../context"
@@ -18,7 +18,7 @@ export namespace BgEthereum {
       return { chainId, method, params, noCheck }
     }
 
-    export function schema(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage) {
+    export function schema(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBQueryStorage) {
       const fetcher = async (request: EthereumQueryKey<unknown> & EthereumFetchParams, more: FetcherMore) =>
         await BgEthereumContext.fetchOrFail<unknown>(ethereum, request, more)
 
@@ -56,7 +56,7 @@ export namespace BgTotal {
             return `totalPricedBalanceByWallet/v2/${coin}`
           }
 
-          export function schema(coin: "usd", storage: IDBStorage) {
+          export function schema(coin: "usd", storage: IDBQueryStorage) {
             const indexer = async (states: States<Data, Fail>) => {
               const { current, previous } = states
 
@@ -87,7 +87,7 @@ export namespace BgTotal {
           return `totalWalletPricedBalance/${address}/${coin}`
         }
 
-        export function schema(account: ZeroHexString, coin: "usd", storage: IDBStorage) {
+        export function schema(account: ZeroHexString, coin: "usd", storage: IDBQueryStorage) {
           const indexer = async (states: States<Data, Fail>) => {
             const { current, previous } = states
 
@@ -129,7 +129,7 @@ export namespace BgTotal {
         return `totalPricedBalance/${currency}`
       }
 
-      export function schema(currency: "usd", storage: IDBStorage) {
+      export function schema(currency: "usd", storage: IDBQueryStorage) {
         return createQuery<Key, Data, Fail>({
           key: key(currency),
           storage

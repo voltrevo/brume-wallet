@@ -1,7 +1,7 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Ed25519 } from "@hazae41/ed25519"
-import { Data, IDBStorage, RawState2, States, Storage, createQuery } from "@hazae41/glacier"
+import { Data, IDBQueryStorage, QueryStorage, RawState2, States, createQuery } from "@hazae41/glacier"
 import { RpcReceipt, WcMetadata } from "@hazae41/latrine"
 import { Nullable } from "@hazae41/option"
 import { Wallet } from "../wallets/data"
@@ -51,10 +51,10 @@ export interface WcSessionData {
   readonly settlement?: RpcReceipt
 }
 
-export class SessionStorage implements Storage {
+export class SessionStorage implements QueryStorage {
 
   constructor(
-    readonly storage: IDBStorage
+    readonly storage: IDBQueryStorage
   ) { }
 
   getOrThrow(cacheKey: string) {
@@ -117,7 +117,7 @@ export namespace BgSession {
           return `persistentSessionsByWallet/v2/${wallet}`
         }
 
-        export function schema(wallet: string, storage: IDBStorage) {
+        export function schema(wallet: string, storage: IDBQueryStorage) {
           return createQuery<Key, Data, Fail>({ key: key(wallet), storage })
         }
 
@@ -129,7 +129,7 @@ export namespace BgSession {
 
       export const key = `persistentSessions/v2`
 
-      export function schema(storage: IDBStorage) {
+      export function schema(storage: IDBQueryStorage) {
         return createQuery<Key, Data, Fail>({ key, storage })
       }
 
@@ -147,7 +147,7 @@ export namespace BgSession {
       return `sessionByOrigin/${origin}`
     }
 
-    export function schema(origin: string, storage: IDBStorage) {
+    export function schema(origin: string, storage: IDBQueryStorage) {
       return createQuery<Key, Data, Fail>({ key: key(origin), storage })
     }
 
@@ -161,7 +161,7 @@ export namespace BgSession {
     return `session/v4/${id}`
   }
 
-  export function schema(id: string, storage: IDBStorage) {
+  export function schema(id: string, storage: IDBQueryStorage) {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 

@@ -41,7 +41,7 @@ import { Ed25519 } from "@hazae41/ed25519";
 import { Ed25519Wasm } from "@hazae41/ed25519.wasm";
 import { Fleche, fetch } from "@hazae41/fleche";
 import { Future } from "@hazae41/future";
-import { AesGcmCoder, Data, HmacEncoder, IDBStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier";
+import { AesGcmCoder, Data, HmacEncoder, IDBQueryStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier";
 import { Immutable } from "@hazae41/immutable";
 import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { Kcp } from "@hazae41/kcp";
@@ -153,7 +153,7 @@ export class Global {
   readonly chainIdByScript = new Map<string, Nullable<number>>()
 
   constructor(
-    readonly storage: IDBStorage
+    readonly storage: IDBQueryStorage
   ) {
     this.sockets = new Mutex(createNativeWebSocketPool(1).get())
     this.tors = new Mutex(createTorPool(this.sockets, storage, 1).get())
@@ -1082,7 +1082,7 @@ export class Global {
   async brume_get_global(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Nullable<RawState>> {
     const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
-    const state = await core.getOrCreateMutex(cacheKey).lock(async () => {
+    const state = await core.getOrCreateMutex(cacheKey).lockOrWait(async () => {
       const cached = core.storeds.get(cacheKey)
 
       if (cached != null)
@@ -1124,7 +1124,7 @@ export class Global {
 
     const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
-    const state = await core.getOrCreateMutex(cacheKey).lock(async () => {
+    const state = await core.getOrCreateMutex(cacheKey).lockOrWait(async () => {
       const cached = core.storeds.get(cacheKey)
 
       if (cached != null)
@@ -1194,7 +1194,7 @@ export class Global {
     return await BgEthereumContext.fetchOrFail<unknown>(context, subrequest).then(r => r.getOrThrow())
   }
 
-  async routeCustomOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBStorage): Promise<SimpleQuery<any, any, Error>> {
+  async routeCustomOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBQueryStorage): Promise<SimpleQuery<any, any, Error>> {
     if (request.method === BgEns.Lookup.method)
       return await BgEns.Lookup.parseOrThrow(ethereum, request, storage)
     if (request.method === BgEns.Reverse.method)
@@ -1472,7 +1472,7 @@ export class Global {
 
 export interface UserSessionParams {
   readonly user: User,
-  readonly storage: IDBStorage,
+  readonly storage: IDBQueryStorage,
   readonly hasher: HmacEncoder,
   readonly crypter: AesGcmCoder
 }
@@ -1489,7 +1489,7 @@ export class UserSession {
   constructor(
     readonly global: Global,
     readonly user: User,
-    readonly storage: IDBStorage,
+    readonly storage: IDBQueryStorage,
     readonly hasher: HmacEncoder,
     readonly crypter: AesGcmCoder
   ) { }
@@ -1560,7 +1560,7 @@ async function initOrThrow() {
 
   const start = Date.now()
 
-  const storage = IDBStorage.createOrThrow({ name: "memory" })
+  const storage = IDBQueryStorage.createOrThrow({ name: "memory" })
   const global = new Global(storage)
 
   console.debug(`Started in ${Date.now() - start}ms`)

@@ -1,4 +1,4 @@
-import { createQuery, Storage } from "@hazae41/glacier"
+import { createQuery, QueryStorage } from "@hazae41/glacier"
 
 export namespace LinksQuery {
 
@@ -8,7 +8,7 @@ export namespace LinksQuery {
 
   export const key = `links`
 
-  export function create(storage: Storage) {
+  export function create(storage: QueryStorage) {
     return createQuery<K, D, F>({ key, storage })
   }
 

@@ -5,7 +5,7 @@ import { TorRpc } from "@/libs/rpc/rpc"
 import { randomUUID } from "@/libs/uuid/uuid"
 import { Arrays } from "@hazae41/arrays"
 import { ZeroHexString } from "@hazae41/cubane"
-import { Fail, Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier"
+import { Fail, Fetched, FetcherMore, IDBQueryStorage, createQuery } from "@hazae41/glacier"
 import { RpcCounter, RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { NetworkWasm } from "@hazae41/network.wasm"
 import { Option } from "@hazae41/option"
@@ -217,13 +217,13 @@ export namespace BgSimulation {
     }
   }
 
-  export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBStorage) {
+  export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: IDBQueryStorage) {
     const [tx, block] = (request as RpcRequestPreinit<[unknown, string]>).params
 
     return schema(ethereum, tx, block, storage)
   }
 
-  export function schema(ethereum: BgEthereumContext, tx: unknown, block: string, storage: IDBStorage) {
+  export function schema(ethereum: BgEthereumContext, tx: unknown, block: string, storage: IDBQueryStorage) {
     const fetcher = async (request: EthereumQueryKey<unknown> & EthereumFetchParams, more: FetcherMore) =>
       await fetchOrFail<SimulationData>(ethereum, request, more).then(r => r.inspectErrSync(e => console.error({ e },)))
 

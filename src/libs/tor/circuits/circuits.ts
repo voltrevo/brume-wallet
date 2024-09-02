@@ -6,7 +6,7 @@ import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Disposer } from "@hazae41/disposer"
 import { Circuit, TorClientDuplex } from "@hazae41/echalote"
 import { fetch } from "@hazae41/fleche"
-import { Storage } from "@hazae41/glacier"
+import { QueryStorage } from "@hazae41/glacier"
 import { Mutex } from "@hazae41/mutex"
 import { None, Option } from "@hazae41/option"
 import { Pool, Retry, loopOrThrow } from "@hazae41/piscine"
@@ -63,7 +63,7 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function createCircuitPool(tors: Mutex<Pool<TorClientDuplex>>, storage: Storage, size: number) {
+  export function createCircuitPool(tors: Mutex<Pool<TorClientDuplex>>, storage: QueryStorage, size: number) {
     let update = Date.now()
 
     const pool: Pool<Circuit> = new Pool<Circuit>(async (params) => {
@@ -77,6 +77,8 @@ export namespace Circuits {
             let start = Date.now()
 
             const tor = await tors.inner.getOrThrow(index % tors.inner.length, signal)
+
+            console.log(`Creating circuit #${index}`)
 
             const microdescsQuery = MicrodescQuery.All.create(undefined, storage)
             const microdescsData = await microdescsQuery.state.then(r => Option.wrap(r.current?.getOrThrow()).getOrThrow())

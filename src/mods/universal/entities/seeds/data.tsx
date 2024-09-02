@@ -1,5 +1,5 @@
 import { Mutators } from "@/libs/glacier/mutators"
-import { Data, States, Storage, createQuery } from "@hazae41/glacier"
+import { Data, QueryStorage, States, createQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 
 export type Seed =
@@ -83,7 +83,7 @@ export namespace SeedQuery {
 
     export const key = `seeds`
 
-    export function create(storage: Storage) {
+    export function create(storage: QueryStorage) {
       return createQuery<K, D, F>({ key, storage })
     }
 
@@ -97,7 +97,7 @@ export namespace SeedQuery {
     return `seed/${uuid}`
   }
 
-  export function create(uuid: Nullable<string>, storage: Storage) {
+  export function create(uuid: Nullable<string>, storage: QueryStorage) {
     if (uuid == null)
       return
 

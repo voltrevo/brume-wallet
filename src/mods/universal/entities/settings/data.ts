@@ -1,4 +1,4 @@
-import { Storage, createQuery } from "@hazae41/glacier";
+import { createQuery, QueryStorage } from "@hazae41/glacier";
 
 export namespace SettingsQuery {
 
@@ -10,7 +10,7 @@ export namespace SettingsQuery {
 
     export const key = `settings/logs`
 
-    export function create(storage: Storage) {
+    export function create(storage: QueryStorage) {
       return createQuery<K, D, F>({ key, storage })
     }
 
@@ -24,7 +24,7 @@ export namespace SettingsQuery {
 
     export const key = `settings/chain`
 
-    export function create(storage: Storage) {
+    export function create(storage: QueryStorage) {
       return createQuery<K, D, F>({ key, storage })
     }
 

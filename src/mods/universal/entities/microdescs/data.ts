@@ -1,6 +1,6 @@
 import { ping } from "@/libs/ping"
 import { Circuit, Consensus, TorClientDuplex } from "@hazae41/echalote"
-import { createQuery, Data, Fail, FetcherMore, Storage } from "@hazae41/glacier"
+import { createQuery, Data, Fail, FetcherMore, QueryStorage } from "@hazae41/glacier"
 import { Nullable, Option } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 
@@ -14,7 +14,7 @@ export namespace MicrodescQuery {
 
     export const key = `microdescs`
 
-    export function create(maybeTor: Nullable<TorClientDuplex>, storage: Storage) {
+    export function create(maybeTor: Nullable<TorClientDuplex>, storage: QueryStorage) {
       const fetcher = async (_: K, more: FetcherMore) => {
         try {
           const { signal = new AbortController().signal } = more
@@ -55,7 +55,7 @@ export namespace MicrodescQuery {
     return `microdesc/${head.identity}`
   }
 
-  export function create(head: Nullable<Consensus.Microdesc.Head>, index: number, maybeCircuit: Nullable<Circuit>, storage: Storage) {
+  export function create(head: Nullable<Consensus.Microdesc.Head>, index: number, maybeCircuit: Nullable<Circuit>, storage: QueryStorage) {
     if (head == null)
       return
 
