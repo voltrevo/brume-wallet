@@ -110,10 +110,11 @@ export function StandaloneSeedCreatorDialog(props: {}) {
 
     const [_, cipherBase64] = triedEncryptedPhrase.getOrThrow()
 
-    using cipher = Base64.get().getOrThrow().decodePaddedOrThrow(cipherBase64)
-    const id = await WebAuthnStorage.createOrThrow(finalNameInput, cipher.bytes.slice())
+    using cipherMemory = Base64.get().getOrThrow().decodePaddedOrThrow(cipherBase64)
 
-    setId(id)
+    const idBytes = await WebAuthnStorage.createOrThrow(finalNameInput, cipherMemory.bytes)
+
+    setId(idBytes)
   }), [finalNameInput, triedEncryptedPhrase])
 
   const addAuthenticatedOrAlert2 = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {

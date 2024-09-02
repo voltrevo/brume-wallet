@@ -1036,13 +1036,13 @@ export class Global {
 
     const { crypter } = Option.wrap(this.#user).getOrThrow()
 
-    using plain = Base64.get().getOrThrow().decodePaddedOrThrow(plainBase64)
+    using plainMemory = Base64.get().getOrThrow().decodePaddedOrThrow(plainBase64)
 
-    const iv = Bytes.random(16)
-    const cipher = await crypter.encryptOrThrow(plain.bytes.slice(), iv)
+    const ivBytes = Bytes.random(16)
+    const cipherBytes = await crypter.encryptOrThrow(plainMemory.bytes, ivBytes)
 
-    const ivBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(iv)
-    const cipherBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(cipher)
+    const ivBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(ivBytes)
+    const cipherBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(cipherBytes)
 
     return [ivBase64, cipherBase64]
   }
@@ -1052,12 +1052,11 @@ export class Global {
 
     const { crypter } = Option.wrap(this.#user).getOrThrow()
 
-    using iv = Base64.get().getOrThrow().decodePaddedOrThrow(ivBase64)
-    using cipher = Base64.get().getOrThrow().decodePaddedOrThrow(cipherBase64)
+    using ivMemory = Base64.get().getOrThrow().decodePaddedOrThrow(ivBase64)
+    using cipherMemory = Base64.get().getOrThrow().decodePaddedOrThrow(cipherBase64)
 
-    const plain = await crypter.decryptOrThrow(cipher.bytes.slice(), iv.bytes.slice())
-
-    const plainBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(plain)
+    const plainBytes = await crypter.decryptOrThrow(cipherMemory.bytes, ivMemory.bytes)
+    const plainBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(plainBytes)
 
     return plainBase64
   }
@@ -1289,10 +1288,10 @@ export class Global {
     const brume = await WcBrume.createOrThrow(this.circuits, authKey)
     const irn = new IrnBrume(brume)
 
-    using rawSessionKey = Base64.get().getOrThrow().decodePaddedOrThrow(sessionKeyBase64)
-    const sessionKey = Bytes.castOrThrow(rawSessionKey.bytes.slice(), 32)
+    using sessionKeyMemory = Base64.get().getOrThrow().decodePaddedOrThrow(sessionKeyBase64)
+    const sessionKeyBytes32 = Bytes.castOrThrow(sessionKeyMemory.bytes.slice(), 32)
 
-    const sessionClient = CryptoClient.createOrThrow(irn, topic, sessionKey, ping.value * 6)
+    const sessionClient = CryptoClient.createOrThrow(irn, topic, sessionKeyBytes32, ping.value * 6)
     const session = new WcSession(sessionClient, metadata)
 
     await irn.subscribeOrThrow(topic, AbortSignal.timeout(ping.value * 6))

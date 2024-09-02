@@ -2,7 +2,7 @@ import { Background } from "@/mods/foreground/background/background"
 import { AuthMnemonicSeedData, LedgerSeedData, SeedData, UnauthMnemonicSeedData } from "@/mods/universal/entities/seeds/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
-import { Bytes, Uint8Array } from "@hazae41/bytes"
+import { Bytes } from "@hazae41/bytes"
 import { Abi, ZeroHexSignature, ZeroHexString } from "@hazae41/cubane"
 import { Ledger } from "@hazae41/ledger"
 import { Option } from "@hazae41/option"
@@ -91,19 +91,19 @@ export class AuthMnemonicSeedInstance {
   async getMnemonicOrThrow(background: Background): Promise<string> {
     const { idBase64, ivBase64 } = this.data.mnemonic
 
-    using id = Base64.get().getOrThrow().decodePaddedOrThrow(idBase64)
+    using idMemory = Base64.get().getOrThrow().decodePaddedOrThrow(idBase64)
 
-    const cipher = await WebAuthnStorage.getOrThrow(id.bytes.slice())
-    const cipherBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(cipher)
+    const cipherBytes = await WebAuthnStorage.getOrThrow(idMemory.bytes)
+    const cipherBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(cipherBytes)
 
     const entropyBase64 = await background.requestOrThrow<string>({
       method: "brume_decrypt",
       params: [ivBase64, cipherBase64]
     }).then(r => r.getOrThrow())
 
-    using entropy = Base64.get().getOrThrow().decodePaddedOrThrow(entropyBase64)
+    using entropyMemory = Base64.get().getOrThrow().decodePaddedOrThrow(entropyBase64)
 
-    return entropyToMnemonic(entropy.bytes.slice(), wordlist)
+    return entropyToMnemonic(entropyMemory.bytes, wordlist)
   }
 
   async getPrivateKeyOrThrow(path: string, background: Background): Promise<ZeroHexString> {
@@ -189,10 +189,10 @@ export class LedgerSeedInstance {
     using domain = Base16.get().getOrThrow().padStartAndDecodeOrThrow(ethers.TypedDataEncoder.hashDomain(data.domain as any).slice(2))
     using message = Base16.get().getOrThrow().padStartAndDecodeOrThrow(encoder.hashStruct(data.primaryType, data.message).slice(2))
 
-    const domainBytes = domain.bytes.slice() as Uint8Array<32>
-    const messageBytes = message.bytes.slice() as Uint8Array<32>
+    const domainBytes32 = Bytes.castOrThrow(domain.bytes, 32)
+    const messageBytes32 = Bytes.castOrThrow(message.bytes, 32)
 
-    const signature = await Ledger.Ethereum.signEIP712HashedMessageOrThrow(connector, path.slice(2), domainBytes, messageBytes)
+    const signature = await Ledger.Ethereum.signEIP712HashedMessageOrThrow(connector, path.slice(2), domainBytes32, messageBytes32)
 
     return ZeroHexSignature.fromOrThrow(signature).value
   }

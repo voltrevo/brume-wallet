@@ -1,5 +1,5 @@
 import { EnsAbi } from "@/libs/abi/ens.abi"
-import { Uint8Array } from "@hazae41/bytes"
+import { Bytes, Uint8Array } from "@hazae41/bytes"
 import { Abi, Address, Ens, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, Fetched, FetcherMore, IDBStorage, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
@@ -76,13 +76,13 @@ export namespace BgEns {
 
     export async function fetchOrFail(ethereum: BgEthereumContext, name: string, more: FetcherMore) {
       try {
-        const namehash = Ens.namehashOrThrow(name) as Uint8Array<32>
-        const resolver = await Resolver.fetchOrFail(ethereum, namehash, more)
+        const namehash32 = Bytes.castOrThrow(Ens.namehashOrThrow(name), 32)
+        const resolver = await Resolver.fetchOrFail(ethereum, namehash32, more)
 
         if (resolver.isErr())
           return resolver
 
-        const data = Abi.encodeOrThrow(EnsAbi.addr.fromOrThrow(namehash))
+        const data = Abi.encodeOrThrow(EnsAbi.addr.fromOrThrow(namehash32))
 
         const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
           method: "eth_call",
@@ -140,13 +140,13 @@ export namespace BgEns {
 
     export async function fetchUncheckedOrFail(ethereum: BgEthereumContext, address: ZeroHexString, more: FetcherMore): Promise<Fetched<Nullable<string>, Error>> {
       try {
-        const namehash = Ens.namehashOrThrow(`${address.slice(2)}.addr.reverse`) as Uint8Array<32>
-        const resolver = await Resolver.fetchOrFail(ethereum, namehash, more)
+        const namehash32 = Bytes.castOrThrow(Ens.namehashOrThrow(`${address.slice(2)}.addr.reverse`), 32)
+        const resolver = await Resolver.fetchOrFail(ethereum, namehash32, more)
 
         if (resolver.isErr())
           return resolver
 
-        const data = Abi.encodeOrThrow(EnsAbi.name.fromOrThrow(namehash))
+        const data = Abi.encodeOrThrow(EnsAbi.name.fromOrThrow(namehash32))
 
         const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
           method: "eth_call",
