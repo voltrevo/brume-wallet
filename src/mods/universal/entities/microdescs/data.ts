@@ -3,7 +3,6 @@ import { Circuit, Consensus, TorClientDuplex } from "@hazae41/echalote"
 import { createQuery, Data, Fail, FetcherMore, Storage } from "@hazae41/glacier"
 import { Nullable, Option } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
-import { Signals } from "@hazae41/signals"
 
 export namespace MicrodescQuery {
 
@@ -18,19 +17,19 @@ export namespace MicrodescQuery {
     export function create(maybeTor: Nullable<TorClientDuplex>, storage: Storage) {
       const fetcher = async (_: K, more: FetcherMore) => {
         try {
-          const { signal } = more
+          const { signal = new AbortController().signal } = more
 
           let start
 
-          const tor = Option.unwrap(maybeTor)
+          const tor = Option.wrap(maybeTor).getOrThrow()
 
           start = Date.now()
-          const subsignal = Signals.merge(AbortSignal.timeout(ping.value * 2), signal)
+          const subsignal = AbortSignal.any([AbortSignal.timeout(ping.value * 2), signal])
           using circuit = await tor.createOrThrow(subsignal)
           console.debug(`Created consensus circuit in ${Date.now() - start}ms`)
 
           start = Date.now()
-          const subsignal2 = Signals.merge(AbortSignal.timeout(ping.value * 20), signal)
+          const subsignal2 = AbortSignal.any([AbortSignal.timeout(ping.value * 20), signal])
           const consensus = await Consensus.fetchOrThrow(circuit, subsignal2)
           console.debug(`Fetched consensus in ${Date.now() - start}ms`)
 
@@ -62,14 +61,14 @@ export namespace MicrodescQuery {
 
     const fetcher = async (_: K, more: FetcherMore) => {
       try {
-        const { signal } = more
+        const { signal = new AbortController().signal } = more
 
         let start
 
-        const circuit = Option.unwrap(maybeCircuit)
+        const circuit = Option.wrap(maybeCircuit).getOrThrow()
 
         start = Date.now()
-        const subsignal = Signals.merge(AbortSignal.timeout(ping.value * 3), signal)
+        const subsignal = AbortSignal.any([AbortSignal.timeout(ping.value * 3), signal])
         const microdesc = await Consensus.Microdesc.fetchOrThrow(circuit, head, subsignal)
         console.debug(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
 

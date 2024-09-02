@@ -55,7 +55,7 @@ export function useDisplay(result: Nullable<Result<Fixed.From, Error>>) {
       return "0.00"
     if (result.isErr())
       return "0.00"
-    const number = Number(Fixed.from(result.unwrap()).move(5).toString())
+    const number = Number(Fixed.from(result.getOrThrow()).move(5).toString())
 
     return number.toLocaleString(undefined)
   }, [result])
@@ -67,7 +67,7 @@ export function useDisplayUsdOrNull(result: Nullable<Result<Fixed.From, Error>>)
       return
     if (result.isErr())
       return
-    const number = Number(Fixed.from(result.unwrap()).move(2).toString())
+    const number = Number(Fixed.from(result.getOrThrow()).move(2).toString())
 
     return number.toLocaleString(undefined, {
       style: "currency",
@@ -83,7 +83,7 @@ export function useDisplayUsdOrZeroOrError(result: Nullable<Result<Fixed.From, E
       return "0.00"
     if (result.isErr())
       return "Error"
-    const number = Number(Fixed.from(result.unwrap()).move(2).toString())
+    const number = Number(Fixed.from(result.getOrThrow()).move(2).toString())
 
     return number.toLocaleString(undefined, {
       style: "currency",
@@ -99,7 +99,7 @@ export function useCompactDisplayUsdOrZeroOrError(result: Nullable<Result<Fixed.
       return "0.00"
     if (result.isErr())
       return "Error"
-    const number = Number(Fixed.from(result.unwrap()).move(2).toString())
+    const number = Number(Fixed.from(result.getOrThrow()).move(2).toString())
 
     return number.toLocaleString(undefined, {
       style: "currency",
@@ -127,7 +127,7 @@ function WalletDataPage() {
 
   const subpath = useHashSubpath(path)
 
-  const mainnet = useEthereumContext2(wallet.uuid, chainDataByChainId[1]).unwrap()
+  const mainnet = useEthereumContext2(wallet.uuid, chainDataByChainId[1]).getOrThrow()
 
   useEnsReverse(wallet.address, mainnet)
 
@@ -428,19 +428,19 @@ export function WalletConnectMenu() {
       return await navigator.clipboard.readText()
     }).then(r => r.orElseSync(() => {
       return Option.wrap(prompt("Paste a WalletConnect link here")).ok()
-    }).unwrap())
+    }).getOrThrow())
 
     const url = Result.runAndWrapSync(() => {
       return new URL(clipboard)
     }).mapErrSync(() => {
       return new UIError("You must copy a WalletConnect link")
-    }).unwrap()
+    }).getOrThrow()
 
     Result.runAndWrapSync(() => {
       return Wc.parseOrThrow(url)
     }).mapErrSync(() => {
       return new UIError("You must copy a WalletConnect link")
-    }).unwrap()
+    }).getOrThrow()
 
     alert(`Connecting...`)
 
@@ -591,7 +591,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const subpath = useHashSubpath(path)
   const menu = useCoords(subpath, `/token/${token.chainId}`)
 
-  const context = useEthereumContext2(wallet.uuid, chain).unwrap()
+  const context = useEthereumContext2(wallet.uuid, chain).getOrThrow()
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
@@ -691,7 +691,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const subpath = useHashSubpath(path)
   const menu = useCoords(subpath, `/token/${token.uuid}`)
 
-  const context = useEthereumContext2(wallet.uuid, chain).unwrap()
+  const context = useEthereumContext2(wallet.uuid, chain).getOrThrow()
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 

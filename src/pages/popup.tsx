@@ -135,18 +135,18 @@ export function TransactPage() {
 
   const subpath = useHashSubpath(path)
 
-  const id = Option.unwrap(path.url.searchParams.get("id"))
+  const id = Option.wrap(path.url.searchParams.get("id")).getOrThrow()
 
-  const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
+  const walletId = Option.wrap(path.url.searchParams.get("walletId")).getOrThrow()
   const walletQuery = useWallet(walletId)
   const maybeWallet = walletQuery.current?.ok().getOrNull()
 
-  const chainId = Option.unwrap(path.url.searchParams.get("chainId"))
-  const chainData = Option.unwrap(chainDataByChainId[Number(chainId)])
+  const chainId = Option.wrap(path.url.searchParams.get("chainId")).getOrThrow()
+  const chainData = Option.wrap(chainDataByChainId[Number(chainId)]).getOrThrow()
 
-  const maybeContext = useEthereumContext2(maybeWallet?.uuid, chainData).get()
+  const maybeContext = useEthereumContext2(maybeWallet?.uuid, chainData).getOrThrow()
 
-  const from = Option.unwrap(path.url.searchParams.get("from"))
+  const from = Option.wrap(path.url.searchParams.get("from")).getOrThrow()
   const maybeTo = path.url.searchParams.get("to")
   const maybeGas = path.url.searchParams.get("gas")
   const maybeValue = path.url.searchParams.get("value")
@@ -180,7 +180,7 @@ export function TransactPage() {
   const currentSimulation = simulationQuery.current
 
   const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    const transaction = Option.unwrap(maybeTransaction)
+    const transaction = Option.wrap(maybeTransaction).getOrThrow()
 
     await background.requestOrThrow({
       method: "brume_respond",
@@ -355,23 +355,26 @@ export function PersonalSignPage() {
   const path = usePathContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
-  const id = Option.unwrap(path.url.searchParams.get("id"))
+  const id = Option.wrap(path.url.searchParams.get("id")).getOrThrow()
 
-  const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
+  const walletId = Option.wrap(path.url.searchParams.get("walletId")).getOrThrow()
   const walletQuery = useWallet(walletId)
   const maybeWallet = walletQuery.current?.ok().getOrNull()
 
-  const message = Option.unwrap(path.url.searchParams.get("message"))
+  const message = Option.wrap(path.url.searchParams.get("message")).getOrThrow()
 
   const triedUserMessage = useMemo(() => Result.runAndWrapSync(() => {
-    return message.startsWith("0x")
-      ? Bytes.toUtf8(Base16.get().padStartAndDecodeOrThrow(message.slice(2)).copyAndDispose())
-      : message
+    if (!message.startsWith("0x"))
+      return message
+
+    using memory = Base16.get().getOrThrow().padStartAndDecodeOrThrow(message.slice(2))
+
+    return Bytes.toUtf8(memory.bytes)
   }), [message])
 
   const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    const wallet = Option.unwrap(maybeWallet)
-    const message = triedUserMessage.unwrap()
+    const wallet = Option.wrap(maybeWallet).getOrThrow()
+    const message = triedUserMessage.getOrThrow()
 
     const instance = await EthereumWalletInstance.createOrThrow(wallet, background)
     const signature = await instance.signPersonalMessageOrThrow(message, background)
@@ -433,21 +436,21 @@ export function TypedSignPage() {
   const path = usePathContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
-  const id = Option.unwrap(path.url.searchParams.get("id"))
+  const id = Option.wrap(path.url.searchParams.get("id")).getOrThrow()
 
-  const walletId = Option.unwrap(path.url.searchParams.get("walletId"))
+  const walletId = Option.wrap(path.url.searchParams.get("walletId")).getOrThrow()
   const walletQuery = useWallet(walletId)
   const maybeWallet = walletQuery.current?.ok().getOrNull()
 
-  const data = Option.unwrap(path.url.searchParams.get("data"))
+  const data = Option.wrap(path.url.searchParams.get("data")).getOrThrow()
 
   const triedParsedData = useMemo(() => Result.runAndWrapSync(() => {
     return JSON.parse(data) as Abi.Typed.TypedData
   }), [data])
 
   const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    const wallet = Option.unwrap(maybeWallet)
-    const data = triedParsedData.unwrap()
+    const wallet = Option.wrap(maybeWallet).getOrThrow()
+    const data = triedParsedData.getOrThrow()
 
     const instance = await EthereumWalletInstance.createOrThrow(wallet, background)
     const signature = await instance.signEIP712HashedMessageOrThrow(data, background)
@@ -512,7 +515,7 @@ export function WalletAndChainSelectPage() {
   const subpath = useHashSubpath(path)
   const creator = useCoords(subpath, "/create")
 
-  const id = Option.unwrap(path.url.searchParams.get("id"))
+  const id = Option.wrap(path.url.searchParams.get("id")).getOrThrow()
 
   const wallets = useWallets()
 

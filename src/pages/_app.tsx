@@ -18,17 +18,27 @@ import { WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mo
 import { GlobalStorageProvider } from "@/mods/foreground/storage/global";
 import { UserStorageProvider } from "@/mods/foreground/storage/user";
 import { Base16 } from "@hazae41/base16";
+import { Base16Wasm } from "@hazae41/base16.wasm";
 import { Base58 } from "@hazae41/base58";
+import { Base58Wasm } from "@hazae41/base58.wasm";
 import { Base64 } from "@hazae41/base64";
+import { Base64Wasm } from "@hazae41/base64.wasm";
 import { Base64Url } from "@hazae41/base64url";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
+import { ChaCha20Poly1305Wasm } from "@hazae41/chacha20poly1305.wasm";
 import { HashPathProvider, usePathContext } from "@hazae41/chemin";
 import { Ed25519 } from "@hazae41/ed25519";
+import { Ed25519Wasm } from "@hazae41/ed25519.wasm";
 import { Keccak256 } from "@hazae41/keccak256";
+import { RipemdWasm } from "@hazae41/ripemd.wasm";
 import { Ripemd160 } from "@hazae41/ripemd160";
 import { Secp256k1 } from "@hazae41/secp256k1";
+import { Secp256k1Wasm } from "@hazae41/secp256k1.wasm";
 import { Sha1 } from "@hazae41/sha1";
+import { Sha1Wasm } from "@hazae41/sha1.wasm";
+import { Sha3Wasm } from "@hazae41/sha3.wasm";
 import { X25519 } from "@hazae41/x25519";
+import { X25519Wasm } from "@hazae41/x25519.wasm";
 import type { AppProps } from 'next/app';
 import Head from "next/head";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -78,45 +88,55 @@ export function Fallback(props: ErrorProps) {
   </Page>
 }
 
-async function initBerith() {
-  Ed25519.set(await Ed25519.fromSafeOrNoble())
-  X25519.set(await X25519.fromNativeOrNoble())
+export async function init() {
+  await Promise.all([
+    Sha1Wasm.initBundled(),
+    Sha3Wasm.initBundled(),
+    RipemdWasm.initBundled(),
+    Base16Wasm.initBundled(),
+    Base64Wasm.initBundled(),
+    Base58Wasm.initBundled(),
+    Ed25519Wasm.initBundled(),
+    X25519Wasm.initBundled(),
+    Secp256k1Wasm.initBundled(),
+    ChaCha20Poly1305Wasm.initBundled()
+  ])
+
+  Sha1.set(Sha1.fromWasm(Sha1Wasm))
+
+  Keccak256.set(Keccak256.fromWasm(Sha3Wasm))
+  Ripemd160.set(Ripemd160.fromWasm(RipemdWasm))
+
+  Base16.set(Base16.fromWasm(Base16Wasm))
+  Base64.set(Base64.fromWasm(Base64Wasm))
+  Base58.set(Base58.fromWasm(Base58Wasm))
+
+  Base64Url.set(Base64Url.fromWasm(Base64Wasm))
+
+  Secp256k1.set(Secp256k1.fromWasm(Secp256k1Wasm))
+
+  Ed25519.set(await Ed25519.fromNativeOrWasm(Ed25519Wasm))
+  X25519.set(await X25519.fromNativeOrWasm(X25519Wasm))
+
+  ChaCha20Poly1305.set(ChaCha20Poly1305.fromWasm(ChaCha20Poly1305Wasm))
 }
 
-async function initEligos() {
-  Secp256k1.set(Secp256k1.fromNoble())
-}
+export function Initializer(props: ChildrenProps) {
+  const { children } = props
 
-async function initMorax() {
-  Keccak256.set(Keccak256.fromNoble())
-  Sha1.set(await Sha1.fromNoble())
-  Ripemd160.set(Ripemd160.fromNoble())
-}
+  const [ready, setReady] = useState(false)
 
-async function initAlocer() {
-  Base16.set(await Base16.fromBufferOrScure())
-  Base64.set(await Base64.fromBufferOrScure())
-  Base64Url.set(await Base64Url.fromBufferOrScure())
-  Base58.set(await Base58.fromScure())
-}
-
-async function initZepar() {
-  ChaCha20Poly1305.set(await ChaCha20Poly1305.fromNoble())
-}
-
-export function Initializer(props: {}) {
   useEffect(() => {
     const gt = globalThis as any
     gt.Console = Console
 
-    initBerith()
-    initEligos()
-    initMorax()
-    initAlocer()
-    initZepar()
+    init().then(() => setReady(true))
   }, [])
 
-  return null
+  if (!ready)
+    return null
+
+  return <>{children}</>
 }
 
 export function ClientOnly(props: ChildrenProps) {
@@ -161,18 +181,19 @@ export default function App({ Component, pageProps }: AppProps) {
     </Head>
     <Catcher fallback={Fallback}>
       <PromiseCatcher>
-        <HashPathProvider>
-          <Goto>
-            <Initializer />
-            <BackgroundProvider>
-              <GlobalStorageProvider>
-                <UserStorageProvider>
-                  <Component {...pageProps} />
-                </UserStorageProvider>
-              </GlobalStorageProvider>
-            </BackgroundProvider>
-          </Goto>
-        </HashPathProvider>
+        <Initializer>
+          <HashPathProvider>
+            <Goto>
+              <BackgroundProvider>
+                <GlobalStorageProvider>
+                  <UserStorageProvider>
+                    <Component {...pageProps} />
+                  </UserStorageProvider>
+                </GlobalStorageProvider>
+              </BackgroundProvider>
+            </Goto>
+          </HashPathProvider>
+        </Initializer>
       </PromiseCatcher>
     </Catcher>
   </ClientOnly>

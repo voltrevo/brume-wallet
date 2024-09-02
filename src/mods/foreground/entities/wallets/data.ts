@@ -299,7 +299,7 @@ export class EthereumSeededWalletInstance {
     const storage = new UserStorage(background)
     const seedQuery = SeedQuery.create(data.seed.uuid, storage)
     const seedState = await seedQuery?.state
-    const seedData = Option.unwrap(seedState?.data?.get())
+    const seedData = Option.wrap(seedState?.data?.get()).getOrThrow()
 
     const seed = await SeedInstance.createOrThrow(seedData, background)
 
@@ -379,19 +379,19 @@ export class EthereumAuthPrivateKeyWalletInstance {
   async getPrivateKeyOrThrow(background: Background): Promise<ZeroHexString> {
     const { idBase64, ivBase64 } = this.data.privateKey
 
-    const id = Base64.get().decodePaddedOrThrow(idBase64).copyAndDispose()
+    using id = Base64.get().getOrThrow().decodePaddedOrThrow(idBase64)
 
-    const cipher = await WebAuthnStorage.getOrThrow(id)
-    const cipherBase64 = Base64.get().encodePaddedOrThrow(cipher)
+    const cipher = await WebAuthnStorage.getOrThrow(id.bytes)
+    const cipherBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(cipher)
 
     const privateKeyBase64 = await background.requestOrThrow<string>({
       method: "brume_decrypt",
       params: [ivBase64, cipherBase64]
     }).then(r => r.getOrThrow())
 
-    using privateKeyMemory = Base64.get().decodePaddedOrThrow(privateKeyBase64)
+    using privateKeyMemory = Base64.get().getOrThrow().decodePaddedOrThrow(privateKeyBase64)
 
-    return `0x${Base16.get().encodeOrThrow(privateKeyMemory)}` as ZeroHexString
+    return `0x${Base16.get().getOrThrow().encodeOrThrow(privateKeyMemory)}` as ZeroHexString
   }
 
   async signPersonalMessageOrThrow(message: string, background: Background): Promise<ZeroHexString> {
