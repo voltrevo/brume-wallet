@@ -64,9 +64,10 @@ export class IrnBrume implements IrnClientLike {
             return await this.events.emit("request", request)
           }
 
+          stack.getOrThrow().defer(irn.events.on("request", onRequest, { passive: true }))
+
           const onCloseOrError = () => void pool.restart(index)
 
-          stack.getOrThrow().defer(irn.events.on("request", onRequest, { passive: true }))
           stack.getOrThrow().defer(irn.events.on("close", onCloseOrError, { passive: true }))
           stack.getOrThrow().defer(irn.events.on("error", onCloseOrError, { passive: true }))
 

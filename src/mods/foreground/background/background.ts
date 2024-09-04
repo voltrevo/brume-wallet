@@ -101,14 +101,16 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
 
     router.runPingLoop()
 
-    const onClose = () => void pool.restart(index)
-
     const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
     const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
 
     stack.getOrThrow().defer(router.events.on("request", onRequest, { passive: true }))
     stack.getOrThrow().defer(router.events.on("response", onResponse, { passive: true }))
-    stack.getOrThrow().defer(router.events.on("close", onClose, { passive: true }))
+
+    const onCloseOrError = () => void pool.restart(index)
+
+    stack.getOrThrow().defer(router.events.on("close", onCloseOrError, { passive: true }))
+    stack.getOrThrow().defer(router.events.on("error", onCloseOrError, { passive: true }))
 
     const unstack = stack.unwrapOrThrow()
 
@@ -179,14 +181,16 @@ export function createWorkerPortPool(background: WorkerBackground) {
 
     router.runPingLoop()
 
-    const onClose = () => void pool.restart(index)
-
     const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
     const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
 
     stack.getOrThrow().defer(router.events.on("request", onRequest, { passive: true }))
     stack.getOrThrow().defer(router.events.on("response", onResponse, { passive: true }))
-    stack.getOrThrow().defer(router.events.on("close", onClose, { passive: true }))
+
+    const onCloseOrError = () => void pool.restart(index)
+
+    stack.getOrThrow().defer(router.events.on("close", onCloseOrError, { passive: true }))
+    stack.getOrThrow().defer(router.events.on("error", onCloseOrError, { passive: true }))
 
     const unstack = stack.unwrapOrThrow()
 
@@ -258,16 +262,16 @@ export function createExtensionChannelPool(background: ExtensionBackground) {
     const entry = new Box(new Disposer(router, onEntryClean))
     stack.getOrThrow().use(entry)
 
-    const onCloseOrError = () => void pool.restart(index)
-
-    stack.getOrThrow().defer(router.events.on("close", onCloseOrError, { passive: true }))
-    stack.getOrThrow().defer(router.events.on("error", onCloseOrError, { passive: true }))
-
     const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
     const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
 
     stack.getOrThrow().defer(router.events.on("request", onRequest, { passive: true }))
     stack.getOrThrow().defer(router.events.on("response", onResponse, { passive: true }))
+
+    const onCloseOrError = () => void pool.restart(index)
+
+    stack.getOrThrow().defer(router.events.on("close", onCloseOrError, { passive: true }))
+    stack.getOrThrow().defer(router.events.on("error", onCloseOrError, { passive: true }))
 
     const unstack = stack.unwrapOrThrow()
 
