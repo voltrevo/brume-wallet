@@ -1,12 +1,12 @@
 import { BrowserError, browser } from "@/libs/browser/browser"
 import { ExtensionRpcRouter, MessageRpcRouter, RpcRouter } from "@/libs/channel/channel"
 import { isProdWebsite, isSafariExtension } from "@/libs/platform/platform"
+import { SizedPool } from "@/libs/pool"
 import { urlOf } from "@/libs/url/url"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Immutable } from "@hazae41/immutable"
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
-import { None } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
 import { SuperEventTarget } from "@hazae41/plume"
 
@@ -36,7 +36,7 @@ export class ServiceWorkerBackground {
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
-    const port = await this.ports.get().getOrThrow(0)
+    const port = await this.ports.get().pool.getOrThrow(0)
     return await port.get().requestOrThrow<T>(init)
   }
 
@@ -60,7 +60,7 @@ export async function getServiceWorkerOrThrow(background: ServiceWorkerBackgroun
   return serviceWorker!
 }
 
-export function createServiceWorkerPortPool(background: ServiceWorkerBackground): Disposer<Pool<Disposer<MessageRpcRouter>>> {
+export function createServiceWorkerPortPool(background: ServiceWorkerBackground) {
   const resolveOnServiceWorker = getServiceWorkerOrThrow(background)
 
   resolveOnServiceWorker.catch(() => { })
@@ -101,10 +101,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
 
     router.runPingLoop()
 
-    const onClose = async () => {
-      pool.restart(index)
-      return new None()
-    }
+    const onClose = () => void pool.restart(index)
 
     const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
     const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
@@ -118,9 +115,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
     return new Disposer(entry, () => unstack.dispose())
   })
 
-  pool.start(0)
-
-  return new Disposer(pool, () => { })
+  return new Disposer(SizedPool.start(pool, 1), () => { })
 }
 
 export class WorkerBackground {
@@ -140,13 +135,13 @@ export class WorkerBackground {
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
-    const port = await this.ports.get().getOrThrow(0)
+    const port = await this.ports.get().pool.getOrThrow(0)
     return await port.get().requestOrThrow<T>(init)
   }
 
 }
 
-export function createWorkerPortPool(background: WorkerBackground): Disposer<Pool<Disposer<MessageRpcRouter>>> {
+export function createWorkerPortPool(background: WorkerBackground) {
   const pool = new Pool<Disposer<MessageRpcRouter>>(async (params) => {
     const { index, signal } = params
 
@@ -184,10 +179,7 @@ export function createWorkerPortPool(background: WorkerBackground): Disposer<Poo
 
     router.runPingLoop()
 
-    const onClose = async () => {
-      pool.restart(index)
-      return new None()
-    }
+    const onClose = () => void pool.restart(index)
 
     const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
     const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
@@ -201,9 +193,7 @@ export function createWorkerPortPool(background: WorkerBackground): Disposer<Poo
     return new Disposer(entry, () => unstack.dispose())
   })
 
-  pool.start(0)
-
-  return new Disposer(pool, () => { })
+  return new Disposer(SizedPool.start(pool, 1), () => { })
 }
 
 export class ExtensionBackground {
@@ -223,13 +213,13 @@ export class ExtensionBackground {
   }
 
   async requestOrThrow<T>(init: RpcRequestPreinit<unknown>): Promise<RpcResponse<T>> {
-    const port = await this.ports.get().getOrThrow(0)
+    const port = await this.ports.get().pool.getOrThrow(0)
     return await port.get().requestOrThrow<T>(init)
   }
 
 }
 
-export function createExtensionChannelPool(background: ExtensionBackground): Disposer<Pool<Disposer<ExtensionRpcRouter>>> {
+export function createExtensionChannelPool(background: ExtensionBackground) {
   const pool = new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
     const { index, signal } = params
 
@@ -268,10 +258,7 @@ export function createExtensionChannelPool(background: ExtensionBackground): Dis
     const entry = new Box(new Disposer(router, onEntryClean))
     stack.getOrThrow().use(entry)
 
-    const onCloseOrError = async () => {
-      pool.restart(index)
-      return new None()
-    }
+    const onCloseOrError = () => void pool.restart(index)
 
     stack.getOrThrow().defer(router.events.on("close", onCloseOrError, { passive: true }))
     stack.getOrThrow().defer(router.events.on("error", onCloseOrError, { passive: true }))
@@ -287,7 +274,5 @@ export function createExtensionChannelPool(background: ExtensionBackground): Dis
     return new Disposer(entry, () => unstack.dispose())
   })
 
-  pool.start(0)
-
-  return new Disposer(pool, () => { })
+  return new Disposer(SizedPool.start(pool, 1), () => { })
 }

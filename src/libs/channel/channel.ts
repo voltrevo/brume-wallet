@@ -1,6 +1,6 @@
 import { Future } from "@hazae41/future"
 import { RpcCounter, RpcError, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
-import { None, Some } from "@hazae41/option"
+import { Some } from "@hazae41/option"
 import { CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
 import { Err, Ok, Result } from "@hazae41/result"
 import { Signals } from "@hazae41/signals"
@@ -130,7 +130,7 @@ export class MessageRpcRouter {
 
     return Plume.waitWithCloseAndErrorOrThrow(this.events, "response", (future: Future<RpcResponse<T>>, init: RpcResponseInit<any>) => {
       if (init.id !== request.id)
-        return new None()
+        return
 
       const response = RpcResponse.from<T>(init)
       future.resolve(response)
@@ -143,15 +143,8 @@ export class MessageRpcRouter {
       method: "brume_hello"
     }).then(r => r.getOrThrow())
 
-    using request = this.events.wait("request", (future: Future<void>) => {
-      future.resolve()
-      return new None()
-    })
-
-    using response = this.events.wait("response", (future: Future<void>) => {
-      future.resolve()
-      return new None()
-    })
+    using request = this.events.wait("request", (future: Future<void>) => future.resolve())
+    using response = this.events.wait("response", (future: Future<void>) => future.resolve())
 
     using abort = Signals.rejectOnAbort(signal)
 
@@ -259,7 +252,7 @@ export class ExtensionRpcRouter {
 
     return Plume.waitWithCloseAndErrorOrThrow(this.events, "response", (future: Future<RpcResponse<T>>, init: RpcResponseInit<any>) => {
       if (init.id !== request.id)
-        return new None()
+        return
       const response = RpcResponse.from<T>(init)
       future.resolve(response)
       return new Some(undefined)
@@ -271,15 +264,8 @@ export class ExtensionRpcRouter {
       method: "brume_hello"
     }).then(r => r.getOrThrow())
 
-    using request = this.events.wait("request", (future: Future<void>) => {
-      future.resolve()
-      return new None()
-    })
-
-    using response = this.events.wait("response", (future: Future<void>) => {
-      future.resolve()
-      return new None()
-    })
+    using request = this.events.wait("request", (future: Future<void>) => future.resolve())
+    using response = this.events.wait("response", (future: Future<void>) => future.resolve())
 
     using abort = Signals.rejectOnAbort(signal)
 

@@ -16,6 +16,7 @@ import { Mouse } from "@/libs/mouse/mouse";
 import { Objects } from "@/libs/objects/objects";
 import { ping } from "@/libs/ping";
 import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExtension, isIpad, isProdWebsite, isSafariExtension, isWebsite } from "@/libs/platform/platform";
+import { SizedPool } from "@/libs/pool";
 import { Strings } from "@/libs/strings/strings";
 import { Circuits } from "@/libs/tor/circuits/circuits";
 import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors";
@@ -49,7 +50,6 @@ import { Keccak256 } from "@hazae41/keccak256";
 import { CryptoClient, Wc, WcMetadata, WcSession, WcSessionRequestParams } from "@hazae41/latrine";
 import { Mutex } from "@hazae41/mutex";
 import { None, Nullable, Option, Some } from "@hazae41/option";
-import { Pool } from "@hazae41/piscine";
 import { SuperEventTarget } from "@hazae41/plume";
 import { Result } from "@hazae41/result";
 import { RipemdWasm } from "@hazae41/ripemd.wasm";
@@ -142,12 +142,12 @@ export class Global {
 
   readonly popup = new Mutex<Slot<PopupData>>({})
 
-  readonly tors: Mutex<Pool<TorClientDuplex>>
-  readonly sockets: Mutex<Pool<Disposer<WebSocket>>>
-  readonly circuits: Mutex<Pool<Circuit>>
+  readonly tors: SizedPool<TorClientDuplex>
+  readonly sockets: SizedPool<Disposer<WebSocket>>
+  readonly circuits: SizedPool<Circuit>
 
-  readonly wcBrumes: Mutex<Pool<WcBrume>>
-  readonly ethBrumes: Mutex<Pool<EthBrume>>
+  readonly wcBrumes: SizedPool<WcBrume>
+  readonly ethBrumes: SizedPool<EthBrume>
 
   readonly accountsByScript = new Map<string, string[]>()
   readonly chainIdByScript = new Map<string, Nullable<number>>()
@@ -155,12 +155,12 @@ export class Global {
   constructor(
     readonly storage: IDBQueryStorage
   ) {
-    this.sockets = new Mutex(createNativeWebSocketPool(1).get())
-    this.tors = new Mutex(createTorPool(this.sockets, storage, 1).get())
-    this.circuits = new Mutex(Circuits.createCircuitPool(this.tors, storage, 8).get())
+    this.sockets = createNativeWebSocketPool(1).get()
+    this.tors = createTorPool(this.sockets, storage, 1).get()
+    this.circuits = Circuits.createCircuitPool(this.tors, storage, 8).get()
 
-    this.wcBrumes = new Mutex(WcBrume.createPool(this.circuits, 1).get())
-    this.ethBrumes = new Mutex(EthBrume.createPool(this.circuits, 1).get())
+    this.wcBrumes = WcBrume.createPool(this.circuits, 1).get()
+    this.ethBrumes = EthBrume.createPool(this.circuits, 1).get()
 
     core.onState.on(BgAppRequest.All.key, async () => {
       const state = core.getStateSync(BgAppRequest.All.key) as State<AppRequest[], never>
@@ -176,8 +176,6 @@ export class Global {
         await browser.action.setBadgeTextColor({ color: "white" })
         await browser.action.setBadgeText({ text: badge })
       }).then(r => r.getOrThrow()).catch(console.warn)
-
-      return new None()
     })
   }
 
@@ -348,7 +346,6 @@ export class Global {
 
       const user = await this.events.wait("user", (future: Future<UserSession>, user: UserSession) => {
         future.resolve(user)
-        return new None()
       }).await()
 
       return user
@@ -364,18 +361,15 @@ export class Global {
     const resolveOnUser = new Future<UserSession>()
     const rejectOnRemove = new Future<never>()
 
-    const onUser = (user: UserSession) => {
-      resolveOnUser.resolve(user)
-      return new None()
-    }
+    const onUser = (user: UserSession) => resolveOnUser.resolve(user)
+
+    stack.defer(this.events.on("user", onUser))
 
     const onRemoved = (id: number) => {
       if (id !== popup.tab.id)
         return
       rejectOnRemove.reject(new Error())
     }
-
-    stack.defer(this.events.on("user", onUser))
 
     browser.tabs.onRemoved.addListener(onRemoved)
     stack.defer(() => browser.tabs.onRemoved.removeListener(onRemoved))
@@ -388,7 +382,7 @@ export class Global {
 
     const onResponse = async (init: RpcResponseInit<any>) => {
       if (init.id !== id)
-        return new None()
+        return
 
       const response = RpcResponse.from<T>(init)
       future.resolve(response)
@@ -410,7 +404,7 @@ export class Global {
 
     const onResponse = async (init: RpcResponseInit<any>) => {
       if (init.id !== id)
-        return new None()
+        return
 
       const response = RpcResponse.from<T>(init)
       future.resolve(response)
@@ -503,12 +497,11 @@ export class Global {
           scripts!.delete(script)
           user.sessionByScript.delete(script.name)
 
-          if (scripts!.size === 0) {
-            const { id } = sessionData
-            await Status.schema(id).delete()
-          }
+          if (scripts!.size > 0)
+            return
 
-          return new None()
+          const { id } = sessionData
+          await Status.schema(id).delete().catch(console.warn)
         })
 
         const { chainId } = sessionData.chain
@@ -572,12 +565,11 @@ export class Global {
         scripts!.delete(script)
         user.sessionByScript.delete(script.name)
 
-        if (scripts!.size === 0) {
-          const { id } = sessionData
-          await Status.schema(id).delete().catch(console.warn)
-        }
+        if (scripts!.size > 0)
+          return
 
-        return new None()
+        const { id } = sessionData
+        await Status.schema(id).delete().catch(console.warn)
       })
 
       if (this.chainIdByScript.has(script.name) && this.chainIdByScript.get(script.name) !== userChainId) {
@@ -1105,16 +1097,11 @@ export class Global {
         method: "brume_update",
         params: [cacheKey, stored]
       }).then(r => r.getOrThrow()).catch(console.warn)
-
-      return new None()
     }
 
     core.onState.on(cacheKey, onState, { passive: true })
 
-    foreground.events.on("close", () => {
-      core.onState.off(cacheKey, onState)
-      return new None()
-    })
+    foreground.events.on("close", () => core.onState.off(cacheKey, onState))
 
     return state
   }
@@ -1148,16 +1135,11 @@ export class Global {
         method: "brume_update",
         params: [cacheKey, stored]
       }).then(r => r.getOrThrow()).catch(console.warn)
-
-      return new None()
     }
 
     core.onState.on(cacheKey, onState, { passive: true })
 
-    foreground.events.on("close", () => {
-      core.onState.off(cacheKey, onState)
-      return new None()
-    })
+    foreground.events.on("close", () => core.onState.off(cacheKey, onState))
 
     return state
   }
@@ -1233,7 +1215,7 @@ export class Global {
     if (logs.real?.current?.get() !== true)
       return
 
-    using circuit = await Pool.takeCryptoRandomOrThrow(this.circuits)
+    using circuit = await this.circuits.pool.takeCryptoRandomOrThrow()
 
     const body = JSON.stringify({ tor: true, method: "eth_getBalance" })
 
@@ -1311,7 +1293,7 @@ export class Global {
 
     const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
       if (suprequest.method !== "wc_sessionRequest")
-        return new None()
+        return
       const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
 
       const chainData = Option.wrap(chainDataByChainId[Number(chainId.split(":")[1])]).getOrThrow()
@@ -1333,7 +1315,6 @@ export class Global {
       session.client.events.off("request", onRequest)
       session.client.irn.events.off("close", onCloseOrError)
       session.client.irn.events.off("error", onCloseOrError)
-      return new None()
     }
 
     session.client.events.on("request", onRequest, { passive: true })
@@ -1356,7 +1337,7 @@ export class Global {
     const wcUrl = new URL(rawWcUrl)
     const pairParams = Wc.parseOrThrow(wcUrl)
 
-    const brume = await Pool.takeCryptoRandomOrThrow(this.wcBrumes)
+    const brume = await this.wcBrumes.pool.takeCryptoRandomOrThrow()
     const irn = new IrnBrume(brume)
 
     const chains = Objects.values(chainDataByChainId).map(x => x.chainId)
@@ -1404,7 +1385,7 @@ export class Global {
 
     const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
       if (suprequest.method !== "wc_sessionRequest")
-        return new None()
+        return
 
       const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
 
@@ -1429,7 +1410,6 @@ export class Global {
       session.client.events.off("request", onRequest)
       session.client.irn.events.off("close", onCloseOrError)
       session.client.irn.events.off("error", onCloseOrError)
-      return new None()
     }
 
     session.client.events.on("request", onRequest, { passive: true })
@@ -1446,7 +1426,7 @@ export class Global {
 
     for (const iconUrl of session.metadata.icons) {
       (async () => {
-        using circuit = await Pool.takeCryptoRandomOrThrow(this.circuits)
+        using circuit = await this.circuits.pool.takeCryptoRandomOrThrow()
 
         console.debug(`Fetching ${iconUrl} with ${circuit.id}`)
 
@@ -1506,7 +1486,7 @@ export class UserSession {
       if (prev != null)
         return prev
 
-      const next = await Pool.takeCryptoRandomOrThrow(this.global.ethBrumes)
+      const next = await this.global.ethBrumes.pool.takeCryptoRandomOrThrow()
 
       ethBrumeByUuid.set(uuid, next)
 
@@ -1591,8 +1571,6 @@ if (isWebsite() || isAndroidApp()) {
 
       router.events.off("request", onRequest)
       router.port.close()
-
-      return new None()
     }
 
     router.events.on("close", onClose, { passive: true })
@@ -1636,8 +1614,6 @@ if (isAppleApp()) {
 
       router.events.off("request", onRequest)
       router.port.close()
-
-      return new None()
     }
 
     router.events.on("close", onClose, { passive: true })

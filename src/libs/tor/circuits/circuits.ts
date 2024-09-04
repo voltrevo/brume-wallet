@@ -1,4 +1,5 @@
 import { ping } from "@/libs/ping"
+import { SizedPool } from "@/libs/pool"
 import { MicrodescQuery } from "@/mods/universal/entities/microdescs/data"
 import { Arrays } from "@hazae41/arrays"
 import { Box } from "@hazae41/box"
@@ -7,8 +8,7 @@ import { Disposer } from "@hazae41/disposer"
 import { Circuit, TorClientDuplex } from "@hazae41/echalote"
 import { fetch } from "@hazae41/fleche"
 import { QueryStorage } from "@hazae41/glacier"
-import { Mutex } from "@hazae41/mutex"
-import { None, Option } from "@hazae41/option"
+import { Option } from "@hazae41/option"
 import { Pool, Retry, loopOrThrow } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
 
@@ -44,10 +44,7 @@ export namespace Circuits {
 
     stack.getOrThrow().use(circuit)
 
-    const onCloseOrError = async (reason?: unknown) => {
-      pool.restart(index)
-      return new None()
-    }
+    const onCloseOrError = async (reason?: unknown) => void pool.restart(index)
 
     stack.getOrThrow().defer(circuit.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
     stack.getOrThrow().defer(circuit.getOrThrow().events.on("error", onCloseOrError, { passive: true }))
@@ -63,7 +60,7 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function createCircuitPool(tors: Mutex<Pool<TorClientDuplex>>, storage: QueryStorage, size: number) {
+  export function createCircuitPool(tors: SizedPool<TorClientDuplex>, storage: QueryStorage, size: number) {
     let update = Date.now()
 
     const pool: Pool<Circuit> = new Pool<Circuit>(async (params) => {
@@ -76,9 +73,7 @@ export namespace Circuits {
           using circuit = await loopOrThrow(async () => {
             let start = Date.now()
 
-            const tor = await tors.inner.getOrThrow(index % tors.inner.length, signal)
-
-            console.log(`Creating circuit #${index}`)
+            const tor = await tors.pool.getOrThrow(index % tors.size, signal)
 
             const microdescsQuery = MicrodescQuery.All.create(undefined, storage)
             const microdescsData = await microdescsQuery.state.then(r => Option.wrap(r.current?.getOrThrow()).getOrThrow())
@@ -154,7 +149,7 @@ export namespace Circuits {
           }, { max: 9 })
 
           console.debug(`Added circuit #${index} in ${Date.now() - start}ms`)
-          console.debug(`Circuits pool is now ${[...pool.okEntries].length}/${pool.length}`)
+          console.debug(`Circuits pool is now ${pool.size}/${size}`)
 
           return createCircuitEntry(pool, index, circuit.moveOrThrow())
         }).then(r => r.inspectErrSync(e => console.error(`Circuit creation failed`, { e })))
@@ -171,33 +166,21 @@ export namespace Circuits {
       throw new Error("Aborted", { cause: signal.reason })
     })
 
-    const stack = new DisposableStack()
-
     const onStarted = () => {
       update = Date.now()
 
-      for (let i = 0; i < pool.length; i++) {
-        const slot = Result.runAndWrapSync(() => pool.getRawSyncOrThrow(i))
+      for (const entry of pool.errEntries)
+        pool.restart(entry.index)
 
-        if (slot.isErr())
-          continue
-
-        if (slot.get().isErr())
-          pool.restart(i)
-
-        continue
-      }
-
-      return new None()
+      return
     }
 
-    tors.inner.events.on("started", onStarted, { passive: true })
-    stack.defer(() => tors.inner.events.off("started", onStarted))
+    const stack = new DisposableStack()
 
-    for (let i = 0; i < size; i++)
-      pool.start(i)
+    tors.pool.events.on("started", onStarted, { passive: true })
+    stack.defer(() => tors.pool.events.off("started", onStarted))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(SizedPool.start(pool, size), () => stack.dispose())
   }
 
   /**
@@ -206,7 +189,7 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function createCircuitSubpool(circuits: Mutex<Pool<Circuit>>, size: number) {
+  export function createCircuitSubpool(circuits: SizedPool<Circuit>, size: number) {
     let update = Date.now()
 
     const pool: Pool<Circuit> = new Pool<Circuit>(async (params) => {
@@ -216,7 +199,7 @@ export namespace Circuits {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
-          const circuit = await Pool.takeCryptoRandomOrThrow(circuits, signal)
+          const circuit = await circuits.pool.takeCryptoRandomOrThrow(signal)
           return createCircuitEntry(pool, index, new Box(circuit))
         })
 
@@ -232,33 +215,21 @@ export namespace Circuits {
       throw new Error("Aborted", { cause: signal.reason })
     })
 
-    const stack = new DisposableStack()
-
-    const onStarted = async () => {
+    const onStarted = () => {
       update = Date.now()
 
-      for (let i = 0; i < pool.length; i++) {
-        const slot = Result.runAndWrapSync(() => pool.getRawSyncOrThrow(i))
+      for (const entry of pool.errEntries)
+        pool.restart(entry.index)
 
-        if (slot.isErr())
-          continue
-
-        if (slot.get().isErr())
-          pool.restart(i)
-
-        continue
-      }
-
-      return new None()
+      return
     }
 
-    circuits.inner.events.on("started", onStarted, { passive: true })
-    stack.defer(() => circuits.inner.events.off("started", onStarted))
+    const stack = new DisposableStack()
 
-    for (let i = 0; i < size; i++)
-      pool.start(i)
+    circuits.pool.events.on("started", onStarted, { passive: true })
+    stack.defer(() => circuits.pool.events.off("started", onStarted))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(SizedPool.start(pool, size), () => stack.dispose())
   }
 
 }

@@ -1,11 +1,10 @@
 import { ping } from "@/libs/ping";
+import { SizedPool } from "@/libs/pool";
 import { WcBrume, WebSocketConnection } from "@/mods/background/service_worker/entities/brumes/data";
 import { Box } from "@hazae41/box";
 import { Disposer } from "@hazae41/disposer";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { IrnClient, IrnClientLike, IrnPublishPayload } from "@hazae41/latrine";
-import { Mutex } from "@hazae41/mutex";
-import { None } from "@hazae41/option";
 import { Pool, PoolEntry } from "@hazae41/piscine";
 import { CloseEvents, ErrorEvents, SuperEventTarget } from "@hazae41/plume";
 import { Result } from "@hazae41/result";
@@ -18,15 +17,15 @@ export class IrnBrume implements IrnClientLike {
     request: (request: RpcRequestPreinit<unknown>) => unknown
   }>()
 
-  readonly pool: Pool<IrnSockets>
-  readonly circuits: Mutex<Pool<Disposer<Pool<WebSocketConnection>>>>
+  readonly pool: SizedPool<IrnSockets>
+  readonly circuits: SizedPool<Disposer<SizedPool<WebSocketConnection>>>
 
   #closed?: { reason: unknown }
 
   constructor(
     readonly brume: WcBrume
   ) {
-    this.circuits = new Mutex(brume.sockets)
+    this.circuits = brume.sockets
     this.pool = this.#pool().get()
   }
 
@@ -49,8 +48,8 @@ export class IrnBrume implements IrnClientLike {
           if (this.#closed)
             throw new Error("Closed", { cause: this.#closed.reason })
 
-          const circuit = await Pool.takeCryptoRandomOrThrow(this.circuits, signal)
-          const irn = new IrnSockets(new Mutex(circuit.get()))
+          const circuit = await this.circuits.pool.takeCryptoRandomOrThrow(signal)
+          const irn = new IrnSockets(circuit.get())
 
           const entry = new Box(irn)
           stack.getOrThrow().use(entry)
@@ -65,10 +64,7 @@ export class IrnBrume implements IrnClientLike {
             return await this.events.emit("request", request)
           }
 
-          const onCloseOrError = async () => {
-            pool.restart(index)
-            return new None()
-          }
+          const onCloseOrError = () => void pool.restart(index)
 
           stack.getOrThrow().defer(irn.events.on("request", onRequest, { passive: true }))
           stack.getOrThrow().defer(irn.events.on("close", onCloseOrError, { passive: true }))
@@ -91,36 +87,25 @@ export class IrnBrume implements IrnClientLike {
       throw new Error("Aborted", { cause: signal.reason })
     })
 
-    const stack = new DisposableStack()
-
     const onStarted = () => {
       update = Date.now()
 
-      for (let i = 0; i < pool.length; i++) {
-        const slot = Result.runAndWrapSync(() => pool.getRawSyncOrThrow(i))
+      for (const entry of pool.errEntries)
+        pool.restart(entry.index)
 
-        if (slot.isErr())
-          continue
-
-        if (slot.get().isErr())
-          pool.restart(i)
-
-        continue
-      }
-
-      return new None()
+      return
     }
 
-    this.circuits.inner.events.on("started", onStarted, { passive: true })
-    stack.defer(() => this.circuits.inner.events.off("started", onStarted))
+    const stack = new DisposableStack()
 
-    pool.start(0)
+    this.circuits.pool.events.on("started", onStarted, { passive: true })
+    stack.defer(() => this.circuits.pool.events.off("started", onStarted))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(SizedPool.start(pool, 1), () => stack.dispose())
   }
 
   async subscribeOrThrow(topic: string, signal = new AbortController().signal): Promise<string> {
-    const client = await this.pool.getOrThrow(0, signal)
+    const client = await this.pool.pool.getOrThrow(0, signal)
     const subscription = await client.subscribeOrThrow(topic, signal)
 
     this.topics.add(topic)
@@ -129,7 +114,7 @@ export class IrnBrume implements IrnClientLike {
   }
 
   async publishOrThrow(payload: IrnPublishPayload, signal = new AbortController().signal): Promise<void> {
-    const client = await this.pool.getOrThrow(0, signal)
+    const client = await this.pool.pool.getOrThrow(0, signal)
     await client.publishOrThrow(payload, signal)
   }
 
@@ -138,7 +123,7 @@ export class IrnBrume implements IrnClientLike {
 
     await this.events.emit("close", [reason])
 
-    const irn = await Result.runAndWrap(() => this.pool.getOrThrow(0))
+    const irn = await Result.runAndWrap(() => this.pool.pool.getOrThrow(0))
 
     if (irn.isErr())
       return
@@ -156,16 +141,16 @@ export class IrnSockets implements IrnClientLike {
     request: (request: RpcRequestPreinit<unknown>) => unknown
   }>()
 
-  readonly pool: Mutex<Pool<IrnClient>>
+  readonly pool: SizedPool<IrnClient>
 
   #closed?: { reason: unknown }
 
   constructor(
-    readonly sockets: Mutex<Pool<WebSocketConnection>>
+    readonly sockets: SizedPool<WebSocketConnection>
   ) {
-    this.pool = new Mutex(this.#pool().get())
+    this.pool = this.#pool().get()
 
-    this.pool.inner.events.on("created", this.#onCreated.bind(this))
+    this.pool.pool.events.on("created", this.#onCreated.bind(this))
   }
 
   [Symbol.dispose]() {
@@ -177,9 +162,9 @@ export class IrnSockets implements IrnClientLike {
   }
 
   async #onCreated(entry: PoolEntry<IrnClient>) {
-    if (entry.isErr())
-      return await this.events.emit("error", [entry.inner])
-    return new None()
+    if (entry.isOk())
+      return
+    return await this.events.emit("error", [entry.inner])
   }
 
   #pool() {
@@ -197,7 +182,7 @@ export class IrnSockets implements IrnClientLike {
           if (this.#closed)
             throw new Error("Closed", { cause: this.#closed.reason })
 
-          const conn = await Pool.takeCryptoRandomOrThrow(this.sockets, signal)
+          const conn = await this.sockets.pool.takeCryptoRandomOrThrow(signal)
           const irn = new IrnClient(conn.socket)
 
           const entry = new Box(irn)
@@ -213,12 +198,10 @@ export class IrnSockets implements IrnClientLike {
             return await this.events.emit("request", request)
           }
 
-          const onCloseOrError = async () => {
-            pool.restart(index)
-            return new None()
-          }
-
           stack.getOrThrow().defer(irn.events.on("request", onRequest, { passive: true }))
+
+          const onCloseOrError = async () => void pool.restart(index)
+
           stack.getOrThrow().defer(irn.events.on("close", onCloseOrError, { passive: true }))
           stack.getOrThrow().defer(irn.events.on("error", onCloseOrError, { passive: true }))
 
@@ -239,36 +222,25 @@ export class IrnSockets implements IrnClientLike {
       throw new Error("Aborted", { cause: signal.reason })
     })
 
-    const stack = new DisposableStack()
-
     const onStarted = () => {
       update = Date.now()
 
-      for (let i = 0; i < pool.length; i++) {
-        const slot = Result.runAndWrapSync(() => pool.getRawSyncOrThrow(i))
+      for (const entry of pool.errEntries)
+        pool.restart(entry.index)
 
-        if (slot.isErr())
-          continue
-
-        if (slot.get().isErr())
-          pool.restart(i)
-
-        continue
-      }
-
-      return new None()
+      return
     }
 
-    this.sockets.inner.events.on("started", onStarted, { passive: true })
-    stack.defer(() => this.sockets.inner.events.off("started", onStarted))
+    const stack = new DisposableStack()
 
-    pool.start(0)
+    this.sockets.pool.events.on("started", onStarted, { passive: true })
+    stack.defer(() => this.sockets.pool.events.off("started", onStarted))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(SizedPool.start(pool, 1), () => stack.dispose())
   }
 
   async subscribeOrThrow(topic: string, signal = new AbortController().signal): Promise<string> {
-    const client = await this.pool.inner.getOrThrow(0, signal)
+    const client = await this.pool.pool.getOrThrow(0, signal)
     const subscription = await client.subscribeOrThrow(topic, signal)
 
     this.topics.add(topic)
@@ -277,7 +249,7 @@ export class IrnSockets implements IrnClientLike {
   }
 
   async publishOrThrow(payload: IrnPublishPayload, signal = new AbortController().signal): Promise<void> {
-    const client = await this.pool.inner.getOrThrow(0, signal)
+    const client = await this.pool.pool.getOrThrow(0, signal)
     await client.publishOrThrow(payload, signal)
   }
 
@@ -286,7 +258,7 @@ export class IrnSockets implements IrnClientLike {
 
     await this.events.emit("close", [reason])
 
-    const irn = await Result.runAndWrap(() => this.pool.inner.getOrThrow(0))
+    const irn = await Result.runAndWrap(() => this.pool.pool.getOrThrow(0))
 
     if (irn.isErr())
       return

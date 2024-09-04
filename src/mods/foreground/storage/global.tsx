@@ -1,7 +1,7 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { QueryStorage, RawState, core } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
-import { None, Nullable, Option, Some } from "@hazae41/option";
+import { Nullable, Option, Some } from "@hazae41/option";
 import { Ok } from "@hazae41/result";
 import { createContext, useContext, useMemo } from "react";
 import { Background } from "../background/background";
@@ -35,12 +35,12 @@ export class GlobalStorage implements QueryStorage {
   constructor(
     readonly background: Background
   ) {
-    background.ports.get().events.on("created", e => {
+    background.ports.get().pool.events.on("created", e => {
       if (e.isErr())
-        return new None()
+        return
       for (const key of this.keys)
         this.getOrThrow(key).catch(console.warn)
-      return new None()
+      return
     })
   }
 
@@ -49,12 +49,12 @@ export class GlobalStorage implements QueryStorage {
 
     this.background.events.on("request", async (request) => {
       if (request.method !== "brume_update")
-        return new None()
+        return
 
       const [cacheKey2, stored] = (request as RpcRequestPreinit<[string, Nullable<RawState>]>).params
 
       if (cacheKey2 !== cacheKey)
-        return new None()
+        return
 
       core.storeds.set(cacheKey, stored)
       core.unstoreds.delete(cacheKey)

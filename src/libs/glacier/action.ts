@@ -1,5 +1,5 @@
 import { Simple, core } from "@hazae41/glacier"
-import { None, Nullable } from "@hazae41/option"
+import { Nullable } from "@hazae41/option"
 import { DependencyList, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 export type Action<K, D, P> =
@@ -29,10 +29,7 @@ export function useAction<K, D, P extends []>(
   }, [cacheKey])
 
   useEffect(() => {
-    const onAborter = () => {
-      setAborter(core.getAborterSync(cacheKey))
-      return new None()
-    }
+    const onAborter = () => setAborter(core.getAborterSync(cacheKey))
 
     return core.onAborter.on(cacheKey, onAborter, { passive: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps

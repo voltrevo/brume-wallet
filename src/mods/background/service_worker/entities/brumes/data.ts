@@ -1,6 +1,7 @@
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain"
 import { Objects } from "@/libs/objects/objects"
 import { ping } from "@/libs/ping"
+import { SizedPool } from "@/libs/pool"
 import { Sockets } from "@/libs/sockets/sockets"
 import { Circuits } from "@/libs/tor/circuits/circuits"
 import { Box } from "@hazae41/box"
@@ -11,22 +12,20 @@ import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { RpcCounter } from "@hazae41/jsonrpc"
 import { Jwt, Wc } from "@hazae41/latrine"
-import { Mutex } from "@hazae41/mutex"
-import { None } from "@hazae41/option"
 import { Pool } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
 
 export interface WcBrume {
   readonly key: Ed25519.SigningKey
-  readonly circuits: Pool<Circuit>
-  readonly sockets: Pool<Disposer<Pool<WebSocketConnection>>>
+  readonly circuits: SizedPool<Circuit>
+  readonly sockets: SizedPool<Disposer<SizedPool<WebSocketConnection>>>
 }
 
-export type EthBrumes = Pool<EthBrume>
+export type EthBrumes = SizedPool<EthBrume>
 
 export interface EthBrume {
-  readonly [chainId: number]: Disposer<Pool<Disposer<Pool<RpcConnection>>>>
-  readonly circuits: Pool<Circuit>
+  readonly [chainId: number]: Disposer<SizedPool<Disposer<SizedPool<RpcConnection>>>>
+  readonly circuits: SizedPool<Circuit>
 }
 
 export type Connection =
@@ -85,7 +84,7 @@ export class UrlConnection {
 
 export namespace WcBrume {
 
-  export async function createOrThrow(circuits: Mutex<Pool<Circuit>>, key: Ed25519.SigningKey): Promise<WcBrume> {
+  export async function createOrThrow(circuits: SizedPool<Circuit>, key: Ed25519.SigningKey): Promise<WcBrume> {
     const relay = Wc.RELAY
     const auth = await Jwt.signOrThrow(key, relay)
     const projectId = "a6e0e589ca8c0326addb7c877bbb0857"
@@ -97,7 +96,7 @@ export namespace WcBrume {
     return { key, circuits: subcircuits.get(), sockets: subsockets.get() }
   }
 
-  export function createPool(circuits: Mutex<Pool<Circuit>>, size: number) {
+  export function createPool(circuits: SizedPool<Circuit>, size: number) {
     const pool = new Pool<WcBrume>(async () => {
       const key = await Ed25519.get().getOrThrow().SigningKey.randomOrThrow()
       const brume = new Box(await createOrThrow(circuits, key))
@@ -105,48 +104,42 @@ export namespace WcBrume {
       /**
        * Wait for at least one ready circuit (or skip if all are errored)
        */
-      await Promise.any(brume.getOrThrow().circuits.okPromises).catch(() => { })
+      await Promise.any(brume.getOrThrow().circuits.pool.okPromises).catch(() => { })
 
       /**
        * Wait for at least one ready socket pool (or skip if all are errored)
        */
-      await Promise.any(brume.getOrThrow().sockets.okPromises).catch(() => { })
+      await Promise.any(brume.getOrThrow().sockets.pool.okPromises).catch(() => { })
 
       return new Disposer(brume, () => { })
     })
 
-    for (let i = 0; i < size; i++)
-      pool.start(i)
-
-    return new Disposer(pool, () => { })
+    return new Disposer(SizedPool.start(pool, size), () => { })
   }
 }
 
 export namespace EthBrume {
 
-  export function create(circuits: Mutex<Pool<Circuit>>): EthBrume {
+  export function create(circuits: SizedPool<Circuit>): EthBrume {
     const subcircuits = Circuits.createCircuitSubpool(circuits, 3)
     const conns = Objects.mapValuesSync(chainDataByChainId, x => RpcCircuits.createRpcCircuitsPool(subcircuits.get(), x.urls))
 
     return { ...conns, circuits: subcircuits.get() } satisfies EthBrume
   }
 
-  export function createPool(circuits: Mutex<Pool<Circuit>>, size: number) {
+  export function createPool(circuits: SizedPool<Circuit>, size: number) {
     const pool = new Pool<EthBrume>(async (params) => {
       const brume = new Box(EthBrume.create(circuits))
 
       /**
        * Wait for at least one ready circuit (or skip if all are errored)
        */
-      await Promise.any(brume.getOrThrow().circuits.okPromises).catch(() => { })
+      await Promise.any(brume.getOrThrow().circuits.pool.okPromises).catch(() => { })
 
       return new Disposer(brume, () => { })
     })
 
-    for (let i = 0; i < size; i++)
-      pool.start(i)
-
-    return new Disposer(pool, () => { })
+    return new Disposer(SizedPool.start(pool, size), () => { })
   }
 
 }
@@ -229,10 +222,7 @@ export namespace WebSocketConnection {
       return new Disposer(box, () => unstack.dispose())
     })
 
-    for (let i = 0; i < urls.length; i++)
-      pool.start(i)
-
-    return new Disposer(pool, () => { })
+    return new Disposer(SizedPool.start(pool, urls.length), () => { })
   }
 
   /**
@@ -241,10 +231,10 @@ export namespace WebSocketConnection {
    * @param urls 
    * @returns 
    */
-  export function createPools(subcircuits: Pool<Circuit>, urls: readonly string[]) {
+  export function createPools(subcircuits: SizedPool<Circuit>, urls: readonly string[]) {
     let update = Date.now()
 
-    const pool = new Pool<Disposer<Pool<WebSocketConnection>>>(async (params) => {
+    const pool = new Pool<Disposer<SizedPool<WebSocketConnection>>>(async (params) => {
       const { index, signal } = params
 
       while (!signal.aborted) {
@@ -253,14 +243,11 @@ export namespace WebSocketConnection {
         const result = await Result.runAndWrap(async () => {
           using stack = new Box(new DisposableStack())
 
-          const circuit = await subcircuits.getOrThrow(index % subcircuits.length, signal)
+          const circuit = await subcircuits.pool.getOrThrow(index % subcircuits.size, signal)
           const subpool = new Box(WebSocketConnection.createPool(circuit, urls))
           stack.getOrThrow().use(subpool)
 
-          const onCloseOrError = async (reason?: unknown) => {
-            pool.restart(index)
-            return new None()
-          }
+          const onCloseOrError = async (reason?: unknown) => void pool.restart(index)
 
           stack.getOrThrow().defer(circuit.events.on("close", onCloseOrError, { passive: true }))
           stack.getOrThrow().defer(circuit.events.on("error", onCloseOrError, { passive: true }))
@@ -268,7 +255,7 @@ export namespace WebSocketConnection {
           /**
            * Wait for at least one ready connection (or skip if all are errored)
            */
-          await Promise.any(subpool.getOrThrow().get().okPromises).catch(() => { })
+          await Promise.any(subpool.getOrThrow().get().pool.okPromises).catch(() => { })
 
           const unstack = stack.unwrapOrThrow()
 
@@ -287,33 +274,21 @@ export namespace WebSocketConnection {
       throw new Error("Aborted", { cause: signal.reason })
     })
 
-    const stack = new DisposableStack()
-
     const onStarted = () => {
       update = Date.now()
 
-      for (let i = 0; i < pool.length; i++) {
-        const slot = Result.runAndWrapSync(() => pool.getRawSyncOrThrow(i))
+      for (const entry of pool.errEntries)
+        pool.restart(entry.index)
 
-        if (slot.isErr())
-          continue
-
-        if (slot.get().isErr())
-          pool.restart(i)
-
-        continue
-      }
-
-      return new None()
+      return
     }
 
-    subcircuits.events.on("started", onStarted, { passive: true })
-    stack.defer(() => subcircuits.events.off("started", onStarted))
+    const stack = new DisposableStack()
 
-    for (let i = 0; i < subcircuits.length; i++)
-      pool.start(i)
+    subcircuits.pool.events.on("started", onStarted, { passive: true })
+    stack.defer(() => subcircuits.pool.events.off("started", onStarted))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(SizedPool.start(pool, subcircuits.size), () => stack.dispose())
   }
 
 }
@@ -377,10 +352,7 @@ export namespace RpcConnections {
       return new Disposer(box, () => unstack.dispose())
     })
 
-    for (let i = 0; i < urls.length; i++)
-      pool.start(i)
-
-    return new Disposer(pool, () => { })
+    return new Disposer(SizedPool.start(pool, urls.length), () => { })
   }
 
 }
@@ -393,10 +365,10 @@ export namespace RpcCircuits {
    * @param urls 
    * @returns 
    */
-  export function createRpcCircuitsPool(subcircuits: Pool<Circuit>, urls: readonly string[]) {
+  export function createRpcCircuitsPool(subcircuits: SizedPool<Circuit>, urls: readonly string[]) {
     let update = Date.now()
 
-    const pool = new Pool<Disposer<Pool<RpcConnection>>>(async (params) => {
+    const pool = new Pool<Disposer<SizedPool<RpcConnection>>>(async (params) => {
       const { index, signal } = params
 
       while (!signal.aborted) {
@@ -405,14 +377,11 @@ export namespace RpcCircuits {
         const result = await Result.runAndWrap(async () => {
           using stack = new Box(new DisposableStack())
 
-          const circuit = await subcircuits.getOrThrow(index % subcircuits.length, signal)
+          const circuit = await subcircuits.pool.getOrThrow(index % subcircuits.size, signal)
           const subpool = new Box(RpcConnections.createRpcConnectionsPool(circuit, urls))
           stack.getOrThrow().use(subpool)
 
-          const onCloseOrError = async (reason?: unknown) => {
-            pool.restart(index)
-            return new None()
-          }
+          const onCloseOrError = async (reason?: unknown) => void pool.restart(index)
 
           stack.getOrThrow().defer(circuit.events.on("close", onCloseOrError, { passive: true }))
           stack.getOrThrow().defer(circuit.events.on("error", onCloseOrError, { passive: true }))
@@ -420,7 +389,7 @@ export namespace RpcCircuits {
           /**
            * Wait for at least one ready connection (or skip if all are errored)
            */
-          await Promise.any(subpool.getOrThrow().get().okPromises).catch(() => { })
+          await Promise.any(subpool.getOrThrow().get().pool.okPromises).catch(() => { })
 
           const unstack = stack.unwrapOrThrow()
 
@@ -439,33 +408,21 @@ export namespace RpcCircuits {
       throw new Error("Aborted", { cause: signal.reason })
     })
 
-    const stack = new DisposableStack()
-
     const onStarted = () => {
       update = Date.now()
 
-      for (let i = 0; i < pool.length; i++) {
-        const slot = Result.runAndWrapSync(() => pool.getRawSyncOrThrow(i))
+      for (const entry of pool.errEntries)
+        pool.restart(entry.index)
 
-        if (slot.isErr())
-          continue
-
-        if (slot.get().isErr())
-          pool.restart(i)
-
-        continue
-      }
-
-      return new None()
+      return
     }
 
-    subcircuits.events.on("started", onStarted, { passive: true })
-    stack.defer(() => subcircuits.events.off("started", onStarted))
+    const stack = new DisposableStack()
 
-    for (let i = 0; i < subcircuits.length; i++)
-      pool.start(i)
+    subcircuits.pool.events.on("started", onStarted, { passive: true })
+    stack.defer(() => subcircuits.pool.events.off("started", onStarted))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(SizedPool.start(pool, subcircuits.size), () => stack.dispose())
   }
 
 }

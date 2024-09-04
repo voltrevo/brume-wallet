@@ -1,7 +1,6 @@
 import { Outline } from "@/libs/icons/icons";
 import { isExtension, isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
-import { None } from "@hazae41/option";
 import { useCallback, useEffect, useState } from "react";
 import { ServiceWorkerBackground } from "../background/background";
 import { useBackgroundContext } from "../background/context";
@@ -60,10 +59,7 @@ export function WebsiteOverlay(props: ChildrenProps) {
   const [update, setUpdate] = useState<() => void>()
 
   useEffect(() => {
-    const onUpdate = (update: () => void) => {
-      setUpdate(() => update)
-      return new None()
-    }
+    const onUpdate = (update: () => void) => setUpdate(() => update)
 
     return background.serviceWorker.on("update", onUpdate)
   }, [background])

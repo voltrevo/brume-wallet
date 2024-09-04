@@ -98,7 +98,7 @@ export namespace BgSimulation {
 
       async function runWithCircuitOrThrow(index: number) {
         const circuitSignal = AbortSignal.any([AbortSignal.timeout(ping.value * 5), parentSignal])
-        const circuit = await circuits.getOrThrow(index, circuitSignal)
+        const circuit = await circuits.pool.getOrThrow(index, circuitSignal)
 
         const session = randomUUID()
 
@@ -156,7 +156,7 @@ export namespace BgSimulation {
         }
       }
 
-      const random = await circuits.getRawCryptoRandomOrThrow()
+      const random = await circuits.pool.getRawCryptoRandomOrThrow()
       const promises = [runWithCircuitOrThrow(random.index)]
 
       const results = await Promise.allSettled(promises)
