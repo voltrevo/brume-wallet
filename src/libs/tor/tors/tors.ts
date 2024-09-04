@@ -35,7 +35,7 @@ export function createNativeWebSocketPool(size: number) {
           const entry = new Box(new Disposer(socket, () => socket.close()))
           stack.getOrThrow().use(entry)
 
-          const onCloseOrError = (reason?: unknown) => pool.restart(index)
+          const onCloseOrError = () => void pool.restart(index)
 
           socket.addEventListener("close", onCloseOrError, { passive: true })
           stack.getOrThrow().defer(() => socket.removeEventListener("close", onCloseOrError))
@@ -109,7 +109,7 @@ export function createTorPool(sockets: SizedPool<Disposer<WebSocket>>, storage: 
         if (microdescsStale == null)
           await microdescsFresh
 
-        const onCloseOrError = (reason?: unknown) => void pool.restart(index)
+        const onCloseOrError = () => void pool.restart(index)
 
         stack.getOrThrow().defer(tor.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
         stack.getOrThrow().defer(tor.getOrThrow().events.on("error", onCloseOrError, { passive: true }))

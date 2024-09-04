@@ -200,7 +200,7 @@ export class IrnSockets implements IrnClientLike {
 
           stack.getOrThrow().defer(irn.events.on("request", onRequest, { passive: true }))
 
-          const onCloseOrError = async () => void pool.restart(index)
+          const onCloseOrError = () => void pool.restart(index)
 
           stack.getOrThrow().defer(irn.events.on("close", onCloseOrError, { passive: true }))
           stack.getOrThrow().defer(irn.events.on("error", onCloseOrError, { passive: true }))

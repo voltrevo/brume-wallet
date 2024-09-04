@@ -44,7 +44,7 @@ export namespace Circuits {
 
     stack.getOrThrow().use(circuit)
 
-    const onCloseOrError = async (reason?: unknown) => void pool.restart(index)
+    const onCloseOrError = () => void pool.restart(index)
 
     stack.getOrThrow().defer(circuit.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
     stack.getOrThrow().defer(circuit.getOrThrow().events.on("error", onCloseOrError, { passive: true }))

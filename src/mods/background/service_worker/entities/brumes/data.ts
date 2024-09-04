@@ -207,9 +207,7 @@ export namespace WebSocketConnection {
       const box = new Box(raw)
       stack.getOrThrow().use(box)
 
-      const onCloseOrError = async () => {
-        pool.restart(index)
-      }
+      const onCloseOrError = () => void pool.restart(index)
 
       raw.socket.addEventListener("close", onCloseOrError, { passive: true })
       stack.getOrThrow().defer(() => raw.socket.removeEventListener("close", onCloseOrError))
@@ -247,7 +245,7 @@ export namespace WebSocketConnection {
           const subpool = new Box(WebSocketConnection.createPool(circuit, urls))
           stack.getOrThrow().use(subpool)
 
-          const onCloseOrError = async (reason?: unknown) => void pool.restart(index)
+          const onCloseOrError = () => void pool.restart(index)
 
           stack.getOrThrow().defer(circuit.events.on("close", onCloseOrError, { passive: true }))
           stack.getOrThrow().defer(circuit.events.on("error", onCloseOrError, { passive: true }))
@@ -337,9 +335,7 @@ export namespace RpcConnections {
       const box = new Box(new RpcConnection(raw))
       stack.getOrThrow().use(box)
 
-      const onCloseOrError = async () => {
-        pool.restart(index)
-      }
+      const onCloseOrError = () => void pool.restart(index)
 
       raw.socket.addEventListener("close", onCloseOrError, { passive: true })
       stack.getOrThrow().defer(() => raw.socket.removeEventListener("close", onCloseOrError))
@@ -381,7 +377,7 @@ export namespace RpcCircuits {
           const subpool = new Box(RpcConnections.createRpcConnectionsPool(circuit, urls))
           stack.getOrThrow().use(subpool)
 
-          const onCloseOrError = async (reason?: unknown) => void pool.restart(index)
+          const onCloseOrError = () => void pool.restart(index)
 
           stack.getOrThrow().defer(circuit.events.on("close", onCloseOrError, { passive: true }))
           stack.getOrThrow().defer(circuit.events.on("error", onCloseOrError, { passive: true }))

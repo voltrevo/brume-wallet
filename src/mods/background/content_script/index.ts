@@ -162,7 +162,7 @@ async function main() {
     const event = new CustomEvent("brume:icon", { detail })
     window.dispatchEvent(event)
 
-    const onCloseOrError = (reason?: unknown) => void routers.restart(index)
+    const onCloseOrError = () => void routers.restart(index)
 
     stack.getOrThrow().defer(router.events.on("close", onCloseOrError, { passive: true }))
     stack.getOrThrow().defer(router.events.on("error", onCloseOrError, { passive: true }))
