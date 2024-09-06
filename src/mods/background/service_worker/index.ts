@@ -1525,7 +1525,7 @@ async function initOrThrow() {
   Secp256k1.set(Secp256k1.fromWasm(Secp256k1Wasm))
 
   Ed25519.set(await Ed25519.fromNativeOrWasm(Ed25519Wasm))
-  X25519.set(await X25519.fromNativeOrWasm(X25519Wasm))
+  X25519.set(X25519.fromWasm(X25519Wasm))
 
   ChaCha20Poly1305.set(ChaCha20Poly1305.fromWasm(ChaCha20Poly1305Wasm))
 
