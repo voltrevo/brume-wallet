@@ -2,7 +2,7 @@ import { ping } from "@/libs/ping"
 import { AutoPool } from "@/libs/pool"
 import { MicrodescQuery } from "@/mods/universal/entities/microdescs/data"
 import { Arrays } from "@hazae41/arrays"
-import { Box } from "@hazae41/box"
+import { Box, Deferred, Stack } from "@hazae41/box"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Disposer } from "@hazae41/disposer"
 import { Circuit, TorClientDuplex } from "@hazae41/echalote"
@@ -40,18 +40,18 @@ export namespace Circuits {
   }
 
   export function createCircuitEntry(pool: Pool<Circuit>, index: number, circuit: Box<Circuit>) {
-    using stack = new Box(new DisposableStack())
+    using stack = new Box(new Stack())
 
-    stack.getOrThrow().use(circuit)
+    stack.getOrThrow().push(circuit)
 
     const onCloseOrError = () => void pool.restart(index)
 
-    stack.getOrThrow().defer(circuit.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
-    stack.getOrThrow().defer(circuit.getOrThrow().events.on("error", onCloseOrError, { passive: true }))
+    stack.getOrThrow().push(new Deferred(circuit.getOrThrow().events.on("close", onCloseOrError, { passive: true })))
+    stack.getOrThrow().push(new Deferred(circuit.getOrThrow().events.on("error", onCloseOrError, { passive: true })))
 
     const unstack = stack.unwrapOrThrow()
 
-    return new Disposer(circuit, () => unstack.dispose())
+    return new Disposer(circuit, () => unstack[Symbol.dispose]())
   }
 
   /**
@@ -177,12 +177,11 @@ export namespace Circuits {
       return
     }
 
-    const stack = new DisposableStack()
+    const stack = new Stack()
 
-    tors.events.on("started", onStarted, { passive: true })
-    stack.defer(() => tors.events.off("started", onStarted))
+    stack.push(new Deferred(tors.events.on("started", onStarted, { passive: true })))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(pool, () => stack[Symbol.dispose]())
   }
 
   /**
@@ -226,12 +225,11 @@ export namespace Circuits {
       return
     }
 
-    const stack = new DisposableStack()
+    const stack = new Stack()
 
-    circuits.events.on("started", onStarted, { passive: true })
-    stack.defer(() => circuits.events.off("started", onStarted))
+    stack.push(new Deferred(circuits.events.on("started", onStarted, { passive: true })))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(pool, () => stack[Symbol.dispose]())
   }
 
 }

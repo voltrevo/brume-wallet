@@ -3,7 +3,7 @@ import { ExtensionRpcRouter, MessageRpcRouter, RpcRouter } from "@/libs/channel/
 import { isProdWebsite, isSafariExtension } from "@/libs/platform/platform"
 import { AutoPool } from "@/libs/pool"
 import { urlOf } from "@/libs/url/url"
-import { Box } from "@hazae41/box"
+import { Box, Deferred, Stack } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Immutable } from "@hazae41/immutable"
 import { RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
@@ -67,7 +67,7 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
   const pool = new AutoPool<Disposer<MessageRpcRouter>>(async (params) => {
     const { index, signal } = params
 
-    using stack = new Box(new DisposableStack())
+    using stack = new Box(new Stack())
 
     const serviceWorker = await resolveOnServiceWorker
 
@@ -78,18 +78,18 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
       raw.port2.close()
     }
 
-    using substack = new Box(new DisposableStack())
+    using substack = new Box(new Stack())
 
     const channel = new Disposer(raw, onRawClean)
-    substack.getOrThrow().use(channel)
+    substack.getOrThrow().push(channel)
 
     const router = new MessageRpcRouter("background", raw.port1)
-    substack.getOrThrow().use(router)
+    substack.getOrThrow().push(router)
 
     const unsubstack = substack.unwrapOrThrow()
 
-    const entry = new Box(new Disposer(router, () => unsubstack.dispose()))
-    stack.getOrThrow().use(entry)
+    const entry = new Box(new Disposer(router, () => unsubstack[Symbol.dispose]()))
+    stack.getOrThrow().push(entry)
 
     raw.port1.start()
     raw.port2.start()
@@ -103,17 +103,17 @@ export function createServiceWorkerPortPool(background: ServiceWorkerBackground)
     const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
     const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
 
-    stack.getOrThrow().defer(router.events.on("request", onRequest, { passive: true }))
-    stack.getOrThrow().defer(router.events.on("response", onResponse, { passive: true }))
+    stack.getOrThrow().push(new Deferred(router.events.on("request", onRequest, { passive: true })))
+    stack.getOrThrow().push(new Deferred(router.events.on("response", onResponse, { passive: true })))
 
     const onCloseOrError = () => void pool.restart(index)
 
-    stack.getOrThrow().defer(router.events.on("close", onCloseOrError, { passive: true }))
-    stack.getOrThrow().defer(router.events.on("error", onCloseOrError, { passive: true }))
+    stack.getOrThrow().push(new Deferred(router.events.on("close", onCloseOrError, { passive: true })))
+    stack.getOrThrow().push(new Deferred(router.events.on("error", onCloseOrError, { passive: true })))
 
     const unstack = stack.unwrapOrThrow()
 
-    return new Disposer(entry, () => unstack.dispose())
+    return new Disposer(entry, () => unstack[Symbol.dispose]())
   }, 1)
 
   return new Disposer(pool, () => { })
@@ -146,7 +146,7 @@ export function createWorkerPortPool(background: WorkerBackground) {
   const pool = new AutoPool<Disposer<MessageRpcRouter>>(async (params) => {
     const { index, signal } = params
 
-    using stack = new Box(new DisposableStack())
+    using stack = new Box(new Stack())
 
     const raw = new MessageChannel()
 
@@ -155,21 +155,21 @@ export function createWorkerPortPool(background: WorkerBackground) {
       raw.port2.close()
     }
 
-    using substack = new Box(new DisposableStack())
+    using substack = new Box(new Stack())
 
     const worker = new Disposer(new Worker("/service_worker.js"), w => w.terminate())
-    substack.getOrThrow().use(worker)
+    substack.getOrThrow().push(worker)
 
     const channel = new Disposer(raw, onRawClean)
-    substack.getOrThrow().use(channel)
+    substack.getOrThrow().push(channel)
 
     const router = new MessageRpcRouter("background", raw.port1)
-    substack.getOrThrow().use(router)
+    substack.getOrThrow().push(router)
 
     const unsubstack = substack.unwrapOrThrow()
 
-    const entry = new Box(new Disposer(router, () => unsubstack.dispose()))
-    stack.getOrThrow().use(entry)
+    const entry = new Box(new Disposer(router, () => unsubstack[Symbol.dispose]()))
+    stack.getOrThrow().push(entry)
 
     raw.port1.start()
     raw.port2.start()
@@ -183,17 +183,17 @@ export function createWorkerPortPool(background: WorkerBackground) {
     const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
     const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
 
-    stack.getOrThrow().defer(router.events.on("request", onRequest, { passive: true }))
-    stack.getOrThrow().defer(router.events.on("response", onResponse, { passive: true }))
+    stack.getOrThrow().push(new Deferred(router.events.on("request", onRequest, { passive: true })))
+    stack.getOrThrow().push(new Deferred(router.events.on("response", onResponse, { passive: true })))
 
     const onCloseOrError = () => void pool.restart(index)
 
-    stack.getOrThrow().defer(router.events.on("close", onCloseOrError, { passive: true }))
-    stack.getOrThrow().defer(router.events.on("error", onCloseOrError, { passive: true }))
+    stack.getOrThrow().push(new Deferred(router.events.on("close", onCloseOrError, { passive: true })))
+    stack.getOrThrow().push(new Deferred(router.events.on("error", onCloseOrError, { passive: true })))
 
     const unstack = stack.unwrapOrThrow()
 
-    return new Disposer(entry, () => unstack.dispose())
+    return new Disposer(entry, () => unstack[Symbol.dispose]())
   }, 1)
 
   return new Disposer(pool, () => { })
@@ -226,7 +226,7 @@ export function createExtensionChannelPool(background: ExtensionBackground) {
   const pool = new AutoPool<Disposer<ExtensionRpcRouter>>(async (params) => {
     const { index, signal } = params
 
-    using stack = new Box(new DisposableStack())
+    using stack = new Box(new Stack())
 
     await new Promise(ok => setTimeout(ok, 1))
 
@@ -259,22 +259,22 @@ export function createExtensionChannelPool(background: ExtensionBackground) {
 
     const onEntryClean = () => router.port.disconnect()
     const entry = new Box(new Disposer(router, onEntryClean))
-    stack.getOrThrow().use(entry)
+    stack.getOrThrow().push(entry)
 
     const onRequest = (request: RpcRequestInit<unknown>) => background.onRequest(router, request)
     const onResponse = (response: RpcResponseInit<unknown>) => background.onResponse(router, response)
 
-    stack.getOrThrow().defer(router.events.on("request", onRequest, { passive: true }))
-    stack.getOrThrow().defer(router.events.on("response", onResponse, { passive: true }))
+    stack.getOrThrow().push(new Deferred(router.events.on("request", onRequest, { passive: true })))
+    stack.getOrThrow().push(new Deferred(router.events.on("response", onResponse, { passive: true })))
 
     const onCloseOrError = () => void pool.restart(index)
 
-    stack.getOrThrow().defer(router.events.on("close", onCloseOrError, { passive: true }))
-    stack.getOrThrow().defer(router.events.on("error", onCloseOrError, { passive: true }))
+    stack.getOrThrow().push(new Deferred(router.events.on("close", onCloseOrError, { passive: true })))
+    stack.getOrThrow().push(new Deferred(router.events.on("error", onCloseOrError, { passive: true })))
 
     const unstack = stack.unwrapOrThrow()
 
-    return new Disposer(entry, () => unstack.dispose())
+    return new Disposer(entry, () => unstack[Symbol.dispose]())
   }, 1)
 
   return new Disposer(pool, () => { })

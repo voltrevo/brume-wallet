@@ -31,6 +31,7 @@ import { Base58Wasm } from "@hazae41/base58.wasm";
 import { Base64 } from "@hazae41/base64";
 import { Base64Wasm } from "@hazae41/base64.wasm";
 import { Base64Url } from "@hazae41/base64url";
+import { Deferred, Stack } from "@hazae41/box";
 import { Bytes } from "@hazae41/bytes";
 import { Cadenas } from "@hazae41/cadenas";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
@@ -356,14 +357,14 @@ export class Global {
   }
 
   async waitUserOrPopupRemovalOrThrow(popup: PopupData) {
-    using stack = new DisposableStack()
+    using stack = new Stack()
 
     const resolveOnUser = new Future<UserSession>()
     const rejectOnRemove = new Future<never>()
 
     const onUser = (user: UserSession) => resolveOnUser.resolve(user)
 
-    stack.defer(this.events.on("user", onUser))
+    stack.push(new Deferred(this.events.on("user", onUser)))
 
     const onRemoved = (id: number) => {
       if (id !== popup.tab.id)
@@ -372,7 +373,7 @@ export class Global {
     }
 
     browser.tabs.onRemoved.addListener(onRemoved)
-    stack.defer(() => browser.tabs.onRemoved.removeListener(onRemoved))
+    stack.push(new Deferred(() => browser.tabs.onRemoved.removeListener(onRemoved)))
 
     return await Promise.race([resolveOnUser.promise, rejectOnRemove.promise])
   }

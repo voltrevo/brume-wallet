@@ -4,7 +4,7 @@ import { ping } from "@/libs/ping"
 import { AutoPool } from "@/libs/pool"
 import { Sockets } from "@/libs/sockets/sockets"
 import { Circuits } from "@/libs/tor/circuits/circuits"
-import { Box } from "@hazae41/box"
+import { Box, Deferred, Stack } from "@hazae41/box"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Disposer } from "@hazae41/disposer"
 import { Circuit } from "@hazae41/echalote"
@@ -199,24 +199,24 @@ export namespace WebSocketConnection {
     const pool = new AutoPool<WebSocketConnection>(async (params) => {
       const { index, signal } = params
 
-      using stack = new Box(new DisposableStack())
+      using stack = new Box(new Stack())
 
       const url = new URL(urls[index])
       const raw = await WebSocketConnection.createOrThrow(circuit, url, signal)
       const box = new Box(raw)
-      stack.getOrThrow().use(box)
+      stack.getOrThrow().push(box)
 
       const onCloseOrError = () => void pool.restart(index)
 
       raw.socket.addEventListener("close", onCloseOrError, { passive: true })
-      stack.getOrThrow().defer(() => raw.socket.removeEventListener("close", onCloseOrError))
+      stack.getOrThrow().push(new Deferred(() => raw.socket.removeEventListener("close", onCloseOrError)))
 
       raw.socket.addEventListener("error", onCloseOrError, { passive: true })
-      stack.getOrThrow().defer(() => raw.socket.removeEventListener("error", onCloseOrError))
+      stack.getOrThrow().push(new Deferred(() => raw.socket.removeEventListener("error", onCloseOrError)))
 
       const unstack = stack.unwrapOrThrow()
 
-      return new Disposer(box, () => unstack.dispose())
+      return new Disposer(box, () => unstack[Symbol.dispose]())
     }, urls.length)
 
     return new Disposer(pool, () => { })
@@ -238,16 +238,16 @@ export namespace WebSocketConnection {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
-          using stack = new Box(new DisposableStack())
+          using stack = new Box(new Stack())
 
           const circuit = await subcircuits.getOrThrow(index % subcircuits.capacity, signal)
           const subpool = new Box(WebSocketConnection.createPool(circuit, urls))
-          stack.getOrThrow().use(subpool)
+          stack.getOrThrow().push(subpool)
 
           const onCloseOrError = () => void pool.restart(index)
 
-          stack.getOrThrow().defer(circuit.events.on("close", onCloseOrError, { passive: true }))
-          stack.getOrThrow().defer(circuit.events.on("error", onCloseOrError, { passive: true }))
+          stack.getOrThrow().push(new Deferred(circuit.events.on("close", onCloseOrError, { passive: true })))
+          stack.getOrThrow().push(new Deferred(circuit.events.on("error", onCloseOrError, { passive: true })))
 
           /**
            * Wait for at least one ready connection (or skip if all are errored)
@@ -256,7 +256,7 @@ export namespace WebSocketConnection {
 
           const unstack = stack.unwrapOrThrow()
 
-          return new Disposer(subpool, () => unstack.dispose())
+          return new Disposer(subpool, () => unstack[Symbol.dispose]())
         })
 
         if (result.isOk())
@@ -280,12 +280,11 @@ export namespace WebSocketConnection {
       return
     }
 
-    const stack = new DisposableStack()
+    const stack = new Stack()
 
-    subcircuits.events.on("started", onStarted, { passive: true })
-    stack.defer(() => subcircuits.events.off("started", onStarted))
+    stack.push(new Deferred(subcircuits.events.on("started", onStarted, { passive: true })))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(pool, () => stack[Symbol.dispose]())
   }
 
 }
@@ -316,35 +315,35 @@ export namespace RpcConnections {
     const pool = new AutoPool<RpcConnection>(async (params) => {
       const { index, signal } = params
 
-      using stack = new Box(new DisposableStack())
+      using stack = new Box(new Stack())
 
       const url = new URL(urls[index])
 
       if (url.protocol === "http:" || url.protocol === "https:") {
         const raw = new UrlConnection(circuit, url)
         const box = new Box(new RpcConnection(raw))
-        stack.getOrThrow().use(box)
+        stack.getOrThrow().push(box)
 
         const unstack = stack.unwrapOrThrow()
 
-        return new Disposer(box, () => unstack.dispose())
+        return new Disposer(box, () => unstack[Symbol.dispose]())
       }
 
       const raw = await WebSocketConnection.createOrThrow(circuit, url, signal)
       const box = new Box(new RpcConnection(raw))
-      stack.getOrThrow().use(box)
+      stack.getOrThrow().push(box)
 
       const onCloseOrError = () => void pool.restart(index)
 
       raw.socket.addEventListener("close", onCloseOrError, { passive: true })
-      stack.getOrThrow().defer(() => raw.socket.removeEventListener("close", onCloseOrError))
+      stack.getOrThrow().push(new Deferred(() => raw.socket.removeEventListener("close", onCloseOrError)))
 
       raw.socket.addEventListener("error", onCloseOrError, { passive: true })
-      stack.getOrThrow().defer(() => raw.socket.removeEventListener("error", onCloseOrError))
+      stack.getOrThrow().push(new Deferred(() => raw.socket.removeEventListener("error", onCloseOrError)))
 
       const unstack = stack.unwrapOrThrow()
 
-      return new Disposer(box, () => unstack.dispose())
+      return new Disposer(box, () => unstack[Symbol.dispose]())
     }, urls.length)
 
     return new Disposer(pool, () => { })
@@ -370,16 +369,16 @@ export namespace RpcCircuits {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
-          using stack = new Box(new DisposableStack())
+          using stack = new Box(new Stack())
 
           const circuit = await subcircuits.getOrThrow(index % subcircuits.capacity, signal)
           const subpool = new Box(RpcConnections.createRpcConnectionsPool(circuit, urls))
-          stack.getOrThrow().use(subpool)
+          stack.getOrThrow().push(subpool)
 
           const onCloseOrError = () => void pool.restart(index)
 
-          stack.getOrThrow().defer(circuit.events.on("close", onCloseOrError, { passive: true }))
-          stack.getOrThrow().defer(circuit.events.on("error", onCloseOrError, { passive: true }))
+          stack.getOrThrow().push(new Deferred(circuit.events.on("close", onCloseOrError, { passive: true })))
+          stack.getOrThrow().push(new Deferred(circuit.events.on("error", onCloseOrError, { passive: true })))
 
           /**
            * Wait for at least one ready connection (or skip if all are errored)
@@ -388,7 +387,7 @@ export namespace RpcCircuits {
 
           const unstack = stack.unwrapOrThrow()
 
-          return new Disposer(subpool, () => unstack.dispose())
+          return new Disposer(subpool, () => unstack[Symbol.dispose]())
         })
 
         if (result.isOk())
@@ -412,12 +411,11 @@ export namespace RpcCircuits {
       return
     }
 
-    const stack = new DisposableStack()
+    const stack = new Stack()
 
-    subcircuits.events.on("started", onStarted, { passive: true })
-    stack.defer(() => subcircuits.events.off("started", onStarted))
+    stack.push(new Deferred(subcircuits.events.on("started", onStarted, { passive: true })))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(pool, () => stack[Symbol.dispose]())
   }
 
 }

@@ -4,7 +4,7 @@ import { Sockets } from "@/libs/sockets/sockets"
 import { WebSocketDuplex } from "@/libs/streams/websocket"
 import { MicrodescQuery } from "@/mods/universal/entities/microdescs/data"
 import { Opaque, Writable } from "@hazae41/binary"
-import { Box } from "@hazae41/box"
+import { Box, Deferred, Stack } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote"
 import { QueryStorage } from "@hazae41/glacier"
@@ -20,7 +20,7 @@ export function createNativeWebSocketPool(size: number) {
         return await (async () => {
           let start = Date.now()
 
-          using stack = new Box(new DisposableStack())
+          using stack = new Box(new Stack())
 
           const socket = new WebSocket("wss://snowflake.torproject.net/")
 
@@ -32,15 +32,15 @@ export function createNativeWebSocketPool(size: number) {
           ping.value = Date.now() - start
 
           const entry = new Box(new Disposer(socket, () => socket.close()))
-          stack.getOrThrow().use(entry)
+          stack.getOrThrow().push(entry)
 
           const onCloseOrError = () => void pool.restart(index)
 
           socket.addEventListener("close", onCloseOrError, { passive: true })
-          stack.getOrThrow().defer(() => socket.removeEventListener("close", onCloseOrError))
+          stack.getOrThrow().push(new Deferred(() => socket.removeEventListener("close", onCloseOrError)))
 
           socket.addEventListener("error", onCloseOrError, { passive: true })
-          stack.getOrThrow().defer(() => socket.removeEventListener("error", onCloseOrError))
+          stack.getOrThrow().push(new Deferred(() => socket.removeEventListener("error", onCloseOrError)))
 
           const onOffline = () => {
             socket.close()
@@ -48,11 +48,11 @@ export function createNativeWebSocketPool(size: number) {
           }
 
           addEventListener("offline", onOffline, { passive: true })
-          stack.getOrThrow().defer(() => removeEventListener("offline", onOffline))
+          stack.getOrThrow().push(new Deferred(() => removeEventListener("offline", onOffline)))
 
           const unstack = stack.unwrapOrThrow()
 
-          return new Disposer(entry, () => unstack.dispose())
+          return new Disposer(entry, () => unstack[Symbol.dispose]())
         })()
       } catch (e: unknown) {
         console.warn(`Could not create native socket`, index, { e })
@@ -91,14 +91,14 @@ export function createTorPool(sockets: AutoPool<Disposer<WebSocket>>, storage: Q
       const result = await Result.runAndWrap(async () => {
         let start = Date.now()
 
-        using stack = new Box(new DisposableStack())
+        using stack = new Box(new Stack())
 
         const socket = await sockets.getCryptoRandomOrThrow(signal)
         const stream = new WebSocketDuplex(socket.get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
 
         start = Date.now()
         const tor = new Box(await createTorOrThrow(stream, AbortSignal.any([AbortSignal.timeout(ping.value * 2), signal])))
-        stack.getOrThrow().use(tor)
+        stack.getOrThrow().push(tor)
         console.debug(`Created Tor in ${Date.now() - start}ms`)
 
         const microdescsQuery = MicrodescQuery.All.create(tor.getOrThrow(), storage)
@@ -110,15 +110,15 @@ export function createTorPool(sockets: AutoPool<Disposer<WebSocket>>, storage: Q
 
         const onCloseOrError = () => void pool.restart(index)
 
-        stack.getOrThrow().defer(tor.getOrThrow().events.on("close", onCloseOrError, { passive: true }))
-        stack.getOrThrow().defer(tor.getOrThrow().events.on("error", onCloseOrError, { passive: true }))
+        stack.getOrThrow().push(new Deferred(tor.getOrThrow().events.on("close", onCloseOrError, { passive: true })))
+        stack.getOrThrow().push(new Deferred(tor.getOrThrow().events.on("error", onCloseOrError, { passive: true })))
 
         addEventListener("offline", onCloseOrError, { passive: true })
-        stack.getOrThrow().defer(() => removeEventListener("offline", onCloseOrError))
+        stack.getOrThrow().push(new Deferred(() => removeEventListener("offline", onCloseOrError)))
 
         const unstack = stack.unwrapOrThrow()
 
-        return new Disposer(tor, () => unstack.dispose())
+        return new Disposer(tor, () => unstack[Symbol.dispose]())
       })
 
       if (result.isOk())
@@ -142,10 +142,9 @@ export function createTorPool(sockets: AutoPool<Disposer<WebSocket>>, storage: Q
     return
   }
 
-  const stack = new DisposableStack()
+  const stack = new Stack()
 
-  sockets.events.on("started", onStarted, { passive: true })
-  stack.defer(() => sockets.events.off("started", onStarted))
+  stack.push(new Deferred(sockets.events.on("started", onStarted, { passive: true })))
 
-  return new Disposer(pool, () => stack.dispose())
+  return new Disposer(pool, () => stack[Symbol.dispose]())
 }

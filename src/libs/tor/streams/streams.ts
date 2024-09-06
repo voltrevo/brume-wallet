@@ -1,6 +1,6 @@
 import { AutoPool } from "@/libs/pool"
 import { Opaque, Writable } from "@hazae41/binary"
-import { Box } from "@hazae41/box"
+import { Box, Deferred, Stack } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Circuit } from "@hazae41/echalote"
 import { Mutex } from "@hazae41/mutex"
@@ -91,12 +91,11 @@ export namespace Streams {
       return
     }
 
-    const stack = new DisposableStack()
+    const stack = new Stack()
 
-    circuits.events.on("started", onStarted, { passive: true })
-    stack.defer(() => circuits.events.off("started", onStarted))
+    stack.push(new Deferred(circuits.events.on("started", onStarted, { passive: true })))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(pool, () => stack[Symbol.dispose]())
   }
 
 }

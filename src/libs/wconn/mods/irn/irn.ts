@@ -1,7 +1,7 @@
 import { ping } from "@/libs/ping";
 import { AutoPool } from "@/libs/pool";
 import { WcBrume, WebSocketConnection } from "@/mods/background/service_worker/entities/brumes/data";
-import { Box } from "@hazae41/box";
+import { Box, Deferred, Stack } from "@hazae41/box";
 import { Disposer } from "@hazae41/disposer";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { IrnClient, IrnClientLike, IrnPublishPayload } from "@hazae41/latrine";
@@ -43,7 +43,7 @@ export class IrnBrume implements IrnClientLike {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
-          using stack = new Box(new DisposableStack())
+          using stack = new Box(new Stack())
 
           if (this.#closed)
             throw new Error("Closed", { cause: this.#closed.reason })
@@ -52,7 +52,7 @@ export class IrnBrume implements IrnClientLike {
           const irn = new IrnSockets(circuit.get())
 
           const entry = new Box(irn)
-          stack.getOrThrow().use(entry)
+          stack.getOrThrow().push(entry)
 
           for (const topic of this.topics) {
             const timeout = AbortSignal.timeout(ping.value * 6)
@@ -64,16 +64,16 @@ export class IrnBrume implements IrnClientLike {
             return await this.events.emit("request", request)
           }
 
-          stack.getOrThrow().defer(irn.events.on("request", onRequest, { passive: true }))
+          stack.getOrThrow().push(new Deferred(irn.events.on("request", onRequest, { passive: true })))
 
           const onCloseOrError = () => void pool.restart(index)
 
-          stack.getOrThrow().defer(irn.events.on("close", onCloseOrError, { passive: true }))
-          stack.getOrThrow().defer(irn.events.on("error", onCloseOrError, { passive: true }))
+          stack.getOrThrow().push(new Deferred(irn.events.on("close", onCloseOrError, { passive: true })))
+          stack.getOrThrow().push(new Deferred(irn.events.on("error", onCloseOrError, { passive: true })))
 
           const unstack = stack.unwrapOrThrow()
 
-          return new Disposer(entry, () => unstack.dispose())
+          return new Disposer(entry, () => unstack[Symbol.dispose]())
         })
 
         if (result.isOk())
@@ -97,12 +97,11 @@ export class IrnBrume implements IrnClientLike {
       return
     }
 
-    const stack = new DisposableStack()
+    const stack = new Stack()
 
-    this.circuits.events.on("started", onStarted, { passive: true })
-    stack.defer(() => this.circuits.events.off("started", onStarted))
+    stack.push(new Deferred(this.circuits.events.on("started", onStarted, { passive: true })))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(pool, () => stack[Symbol.dispose]())
   }
 
   async subscribeOrThrow(topic: string, signal = new AbortController().signal): Promise<string> {
@@ -178,7 +177,7 @@ export class IrnSockets implements IrnClientLike {
         const start = Date.now()
 
         const result = await Result.runAndDoubleWrap(async () => {
-          using stack = new Box(new DisposableStack())
+          using stack = new Box(new Stack())
 
           if (this.#closed)
             throw new Error("Closed", { cause: this.#closed.reason })
@@ -187,7 +186,7 @@ export class IrnSockets implements IrnClientLike {
           const irn = new IrnClient(conn.socket)
 
           const entry = new Box(irn)
-          stack.getOrThrow().use(entry)
+          stack.getOrThrow().push(entry)
 
           for (const topic of this.topics) {
             const timeout = AbortSignal.timeout(ping.value * 6)
@@ -199,16 +198,16 @@ export class IrnSockets implements IrnClientLike {
             return await this.events.emit("request", request)
           }
 
-          stack.getOrThrow().defer(irn.events.on("request", onRequest, { passive: true }))
+          stack.getOrThrow().push(new Deferred(irn.events.on("request", onRequest, { passive: true })))
 
           const onCloseOrError = () => void pool.restart(index)
 
-          stack.getOrThrow().defer(irn.events.on("close", onCloseOrError, { passive: true }))
-          stack.getOrThrow().defer(irn.events.on("error", onCloseOrError, { passive: true }))
+          stack.getOrThrow().push(new Deferred(irn.events.on("close", onCloseOrError, { passive: true })))
+          stack.getOrThrow().push(new Deferred(irn.events.on("error", onCloseOrError, { passive: true })))
 
           const unstack = stack.unwrapOrThrow()
 
-          return new Disposer(entry, () => unstack.dispose())
+          return new Disposer(entry, () => unstack[Symbol.dispose]())
         })
 
         if (result.isOk())
@@ -232,12 +231,11 @@ export class IrnSockets implements IrnClientLike {
       return
     }
 
-    const stack = new DisposableStack()
+    const stack = new Stack()
 
-    this.sockets.events.on("started", onStarted, { passive: true })
-    stack.defer(() => this.sockets.events.off("started", onStarted))
+    stack.push(new Deferred(this.sockets.events.on("started", onStarted, { passive: true })))
 
-    return new Disposer(pool, () => stack.dispose())
+    return new Disposer(pool, () => stack[Symbol.dispose]())
   }
 
   async subscribeOrThrow(topic: string, signal = new AbortController().signal): Promise<string> {

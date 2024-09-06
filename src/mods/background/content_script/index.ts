@@ -10,15 +10,13 @@ import { Mouse } from "@/libs/mouse/mouse";
 import { isFirefoxExtension, isSafariExtension } from "@/libs/platform/platform";
 import { NonReadonly } from "@/libs/types/readonly";
 import { urlOf } from "@/libs/url/url";
-import { Box } from "@hazae41/box";
+import { Box, Deferred, Stack } from "@hazae41/box";
 import { Disposer } from "@hazae41/disposer";
 import { RpcErr, RpcError, RpcErrorInit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
 import { None, Some } from "@hazae41/option";
 import { Pool } from "@hazae41/piscine";
 import { Result } from "@hazae41/result";
 import { PreOriginData } from "../../universal/entities/origins/data";
-
-declare const self: ServiceWorkerGlobalScope
 
 declare global {
   interface DedicatedWorkerGlobalScopeEventMap {
@@ -118,7 +116,7 @@ async function main() {
   const routers = new Pool<Disposer<ExtensionRpcRouter>>(async (params) => {
     const { index, signal } = params
 
-    using stack = new Box(new DisposableStack())
+    using stack = new Box(new Stack())
 
     await new Promise(ok => setTimeout(ok, 1))
 
@@ -152,7 +150,7 @@ async function main() {
 
     const onEntryClean = () => router.port.disconnect()
     const entry = new Box(new Disposer(router, onEntryClean))
-    stack.getOrThrow().use(entry)
+    stack.getOrThrow().push(entry)
 
     const icon = await router.requestOrThrow<string>({
       method: "brume_icon"
@@ -164,8 +162,8 @@ async function main() {
 
     const onCloseOrError = () => void routers.restart(index)
 
-    stack.getOrThrow().defer(router.events.on("close", onCloseOrError, { passive: true }))
-    stack.getOrThrow().defer(router.events.on("error", onCloseOrError, { passive: true }))
+    stack.getOrThrow().push(new Deferred(router.events.on("close", onCloseOrError, { passive: true })))
+    stack.getOrThrow().push(new Deferred(router.events.on("error", onCloseOrError, { passive: true })))
 
     const onBackgroundRequest = async (request: RpcRequestPreinit<unknown>) => {
       if (request.method === "brume_origin")
@@ -223,11 +221,11 @@ async function main() {
       window.dispatchEvent(event)
     }
 
-    stack.getOrThrow().defer(router.events.on("request", onBackgroundRequest, { passive: true }))
+    stack.getOrThrow().push(new Deferred(router.events.on("request", onBackgroundRequest, { passive: true })))
 
     const unstack = stack.unwrapOrThrow()
 
-    return new Disposer(entry, () => unstack.dispose())
+    return new Disposer(entry, () => unstack[Symbol.dispose]())
   })
 
   const onScriptRequest = async (input: CustomEvent<string>) => {
