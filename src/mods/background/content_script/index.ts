@@ -1,7 +1,5 @@
 import "@hazae41/symbol-dispose-polyfill";
 
-import "@hazae41/disposable-stack-polyfill";
-
 import { Blobs } from "@/libs/blobs/blobs";
 import { BrowserError, browser } from "@/libs/browser/browser";
 import { ExtensionRpcRouter } from "@/libs/channel/channel";
