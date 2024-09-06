@@ -1,10 +1,9 @@
-import { SizedPool } from "@/libs/pool"
+import { AutoPool } from "@/libs/pool"
 import { Opaque, Writable } from "@hazae41/binary"
 import { Box } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
 import { Circuit } from "@hazae41/echalote"
 import { Mutex } from "@hazae41/mutex"
-import { Pool } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
 import { Circuits } from "../circuits/circuits"
 
@@ -12,17 +11,17 @@ export type Stream = Disposer<Mutex<ReadableWritablePair<Opaque, Writable>>>
 
 export namespace Streams {
 
-  export function createStreamPool(circuits: SizedPool<Circuit>, url: URL, size: number) {
+  export function createStreamPool(circuits: AutoPool<Circuit>, url: URL, size: number) {
     let update = Date.now()
 
-    const pool = new Pool<Stream>(async (params) => {
+    const pool = new AutoPool<Stream>(async (params) => {
       const { index, signal } = params
 
       while (!signal.aborted) {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
-          using precircuit = new Box(await circuits.pool.takeCryptoRandomOrThrow(signal))
+          using precircuit = new Box(await circuits.takeCryptoRandomOrThrow(signal))
           using prestream = new Box(await Circuits.openAsOrThrow(precircuit.getOrThrow(), url.origin))
 
           const inputer = new TransformStream<Opaque, Opaque>({})
@@ -81,7 +80,7 @@ export namespace Streams {
       }
 
       throw new Error("Aborted", { cause: signal.reason })
-    })
+    }, size)
 
     const onStarted = () => {
       update = Date.now()
@@ -94,8 +93,8 @@ export namespace Streams {
 
     const stack = new DisposableStack()
 
-    circuits.pool.events.on("started", onStarted, { passive: true })
-    stack.defer(() => circuits.pool.events.off("started", onStarted))
+    circuits.events.on("started", onStarted, { passive: true })
+    stack.defer(() => circuits.events.off("started", onStarted))
 
     return new Disposer(pool, () => stack.dispose())
   }

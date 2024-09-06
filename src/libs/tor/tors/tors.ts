@@ -1,5 +1,5 @@
 import { ping } from "@/libs/ping"
-import { SizedPool } from "@/libs/pool"
+import { AutoPool } from "@/libs/pool"
 import { Sockets } from "@/libs/sockets/sockets"
 import { WebSocketDuplex } from "@/libs/streams/websocket"
 import { MicrodescQuery } from "@/mods/universal/entities/microdescs/data"
@@ -9,11 +9,10 @@ import { Disposer } from "@hazae41/disposer"
 import { TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote"
 import { QueryStorage } from "@hazae41/glacier"
 import { Option } from "@hazae41/option"
-import { Pool } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
 
 export function createNativeWebSocketPool(size: number) {
-  const pool = new Pool<Disposer<WebSocket>>(async (params) => {
+  const pool = new AutoPool<Disposer<WebSocket>>(async (params) => {
     const { index, signal } = params
 
     while (!signal.aborted) {
@@ -63,9 +62,9 @@ export function createNativeWebSocketPool(size: number) {
     }
 
     throw new Error("Aborted", { cause: signal.reason })
-  })
+  }, size)
 
-  return new Disposer(SizedPool.start(pool, size), () => { })
+  return new Disposer(pool, () => { })
 }
 
 export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque, Writable> }, signal: AbortSignal): Promise<TorClientDuplex> {
@@ -80,10 +79,10 @@ export async function createTorOrThrow(raw: { outer: ReadableWritablePair<Opaque
   return tor
 }
 
-export function createTorPool(sockets: SizedPool<Disposer<WebSocket>>, storage: QueryStorage, size: number) {
+export function createTorPool(sockets: AutoPool<Disposer<WebSocket>>, storage: QueryStorage, size: number) {
   let update = Date.now()
 
-  const pool = new Pool<TorClientDuplex>(async (params) => {
+  const pool = new AutoPool<TorClientDuplex>(async (params) => {
     const { index, signal } = params
 
     while (!signal.aborted) {
@@ -94,7 +93,7 @@ export function createTorPool(sockets: SizedPool<Disposer<WebSocket>>, storage: 
 
         using stack = new Box(new DisposableStack())
 
-        const socket = await sockets.pool.getCryptoRandomOrThrow(signal)
+        const socket = await sockets.getCryptoRandomOrThrow(signal)
         const stream = new WebSocketDuplex(socket.get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
 
         start = Date.now()
@@ -132,7 +131,7 @@ export function createTorPool(sockets: SizedPool<Disposer<WebSocket>>, storage: 
     }
 
     throw new Error("Aborted", { cause: signal.reason })
-  })
+  }, size)
 
   const onStarted = () => {
     update = Date.now()
@@ -145,8 +144,8 @@ export function createTorPool(sockets: SizedPool<Disposer<WebSocket>>, storage: 
 
   const stack = new DisposableStack()
 
-  sockets.pool.events.on("started", onStarted, { passive: true })
-  stack.defer(() => sockets.pool.events.off("started", onStarted))
+  sockets.events.on("started", onStarted, { passive: true })
+  stack.defer(() => sockets.events.off("started", onStarted))
 
-  return new Disposer(SizedPool.start(pool, size), () => stack.dispose())
+  return new Disposer(pool, () => stack.dispose())
 }

@@ -1,16 +1,17 @@
-import { Pool } from "@hazae41/piscine";
+import { Pool, PoolCreator } from "@hazae41/piscine";
 
-export class SizedPool<T, N extends number = number> {
+export class AutoPool<T, N extends number = number> extends Pool<T> {
 
-  private constructor(
-    readonly pool: Pool<T>,
-    readonly size: N,
-  ) { }
+  constructor(
+    readonly factory: PoolCreator<T>,
+    readonly capacity: N,
+  ) {
+    super(factory)
 
-  static start<T, N extends number>(pool: Pool<T>, size: N) {
-    for (let i = 0; i < size; i++)
-      pool.start(i)
-    return new SizedPool(pool, size)
+    for (let i = 0; i < capacity; i++)
+      this.start(i)
+
+    return this
   }
 
 }

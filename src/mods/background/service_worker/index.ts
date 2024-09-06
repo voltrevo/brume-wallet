@@ -16,7 +16,7 @@ import { Mouse } from "@/libs/mouse/mouse";
 import { Objects } from "@/libs/objects/objects";
 import { ping } from "@/libs/ping";
 import { isAndroidApp, isAppleApp, isChromeExtension, isExtension, isFirefoxExtension, isIpad, isProdWebsite, isSafariExtension, isWebsite } from "@/libs/platform/platform";
-import { SizedPool } from "@/libs/pool";
+import { AutoPool } from "@/libs/pool";
 import { Strings } from "@/libs/strings/strings";
 import { Circuits } from "@/libs/tor/circuits/circuits";
 import { createNativeWebSocketPool, createTorPool } from "@/libs/tor/tors/tors";
@@ -142,12 +142,12 @@ export class Global {
 
   readonly popup = new Mutex<Slot<PopupData>>({})
 
-  readonly tors: SizedPool<TorClientDuplex>
-  readonly sockets: SizedPool<Disposer<WebSocket>>
-  readonly circuits: SizedPool<Circuit>
+  readonly tors: AutoPool<TorClientDuplex>
+  readonly sockets: AutoPool<Disposer<WebSocket>>
+  readonly circuits: AutoPool<Circuit>
 
-  readonly wcBrumes: SizedPool<WcBrume>
-  readonly ethBrumes: SizedPool<EthBrume>
+  readonly wcBrumes: AutoPool<WcBrume>
+  readonly ethBrumes: AutoPool<EthBrume>
 
   readonly accountsByScript = new Map<string, string[]>()
   readonly chainIdByScript = new Map<string, Nullable<number>>()
@@ -235,7 +235,7 @@ export class Global {
   }
 
   async openOrFocusPopupOrThrow(pathOrUrl: string | URL, mouse: Mouse, force?: boolean): Promise<PopupData> {
-    return await this.popup.lockOrWait(async (slot) => {
+    return await this.popup.runOrWait(async (slot) => {
       if (slot.current != null) {
         const tabId = Option.wrap(slot.current.tab.id).getOrThrow()
         const windowId = Option.wrap(slot.current.tab.windowId).getOrThrow()
@@ -430,7 +430,7 @@ export class Global {
   }
 
   async getExtensionSessionOrThrow(script: RpcRouter, mouse: Mouse, wait: boolean): Promise<Nullable<ExSessionData>> {
-    return await this.mutex.lockOrWait(async slot => {
+    return await this.mutex.runOrWait(async slot => {
       if (this.#user == null && !wait)
         return undefined
 
@@ -1074,7 +1074,7 @@ export class Global {
   async brume_get_global(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Nullable<RawState>> {
     const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
-    const state = await core.getOrCreateMutex(cacheKey).lockOrWait(async () => {
+    const state = await core.getOrCreateMutex(cacheKey).runOrWait(async () => {
       const cached = core.storeds.get(cacheKey)
 
       if (cached != null)
@@ -1111,7 +1111,7 @@ export class Global {
 
     const [cacheKey] = (request as RpcRequestPreinit<[string]>).params
 
-    const state = await core.getOrCreateMutex(cacheKey).lockOrWait(async () => {
+    const state = await core.getOrCreateMutex(cacheKey).runOrWait(async () => {
       const cached = core.storeds.get(cacheKey)
 
       if (cached != null)
@@ -1215,7 +1215,7 @@ export class Global {
     if (logs.real?.current?.get() !== true)
       return
 
-    using circuit = await this.circuits.pool.takeCryptoRandomOrThrow()
+    using circuit = await this.circuits.takeCryptoRandomOrThrow()
 
     const body = JSON.stringify({ tor: true, method: "eth_getBalance" })
 
@@ -1337,7 +1337,7 @@ export class Global {
     const wcUrl = new URL(rawWcUrl)
     const pairParams = Wc.parseOrThrow(wcUrl)
 
-    const brume = await this.wcBrumes.pool.takeCryptoRandomOrThrow()
+    const brume = await this.wcBrumes.takeCryptoRandomOrThrow()
     const irn = new IrnBrume(brume)
 
     const chains = Objects.values(chainDataByChainId).map(x => x.chainId)
@@ -1426,7 +1426,7 @@ export class Global {
 
     for (const iconUrl of session.metadata.icons) {
       (async () => {
-        using circuit = await this.circuits.pool.takeCryptoRandomOrThrow()
+        using circuit = await this.circuits.takeCryptoRandomOrThrow()
 
         console.debug(`Fetching ${iconUrl} with ${circuit.id}`)
 
@@ -1480,13 +1480,13 @@ export class UserSession {
   }
 
   async getOrTakeEthBrumeOrThrow(uuid: string): Promise<EthBrume> {
-    return await this.ethBrumeByUuid.lockOrWait(async ethBrumeByUuid => {
+    return await this.ethBrumeByUuid.runOrWait(async ethBrumeByUuid => {
       const prev = ethBrumeByUuid.get(uuid)
 
       if (prev != null)
         return prev
 
-      const next = await this.global.ethBrumes.pool.takeCryptoRandomOrThrow()
+      const next = await this.global.ethBrumes.takeCryptoRandomOrThrow()
 
       ethBrumeByUuid.set(uuid, next)
 

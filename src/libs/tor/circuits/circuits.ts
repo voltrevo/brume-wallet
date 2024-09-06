@@ -1,5 +1,5 @@
 import { ping } from "@/libs/ping"
-import { SizedPool } from "@/libs/pool"
+import { AutoPool } from "@/libs/pool"
 import { MicrodescQuery } from "@/mods/universal/entities/microdescs/data"
 import { Arrays } from "@hazae41/arrays"
 import { Box } from "@hazae41/box"
@@ -60,20 +60,20 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function createCircuitPool(tors: SizedPool<TorClientDuplex>, storage: QueryStorage, size: number) {
+  export function createCircuitPool(tors: AutoPool<TorClientDuplex>, storage: QueryStorage, size: number) {
     let update = Date.now()
 
-    const pool: Pool<Circuit> = new Pool<Circuit>(async (params) => {
+    const pool: AutoPool<Circuit> = new AutoPool<Circuit>(async (params) => {
       const { index, signal } = params
 
       while (!signal.aborted) {
         const start = Date.now()
 
-        const result = await Result.runAndDoubleWrap(async () => {
-          using circuit = await loopOrThrow(async () => {
+        try {
+          return await (async () => {
             let start = Date.now()
 
-            const tor = await tors.pool.getOrThrow(index % tors.size, signal)
+            const tor = await tors.getOrThrow(index % tors.size, signal)
 
             const microdescsQuery = MicrodescQuery.All.create(undefined, storage)
             const microdescsData = await microdescsQuery.state.then(r => Option.wrap(r.current?.getOrThrow()).getOrThrow())
@@ -89,82 +89,84 @@ export namespace Circuits {
               && it.flags.includes("Exit")
               && !it.flags.includes("BadExit"))
 
-            try {
-              start = Date.now()
-              using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(ping.value * 2)))
-              console.debug(`Created circuit #${index} in ${Date.now() - start}ms`)
+            using circuit = await loopOrThrow(async () => {
+              try {
+                return await (async () => {
+                  start = Date.now()
+                  using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(ping.value * 2)))
+                  console.debug(`Created circuit #${index} in ${Date.now() - start}ms`)
 
-              /**
-               * Try to extend to middle relay 3 times before giving up this circuit
-               */
-              await loopOrThrow(async () => {
-                const head = Arrays.cryptoRandom(middles)!
+                  /**
+                   * Try to extend to middle relay 3 times before giving up this circuit
+                   */
+                  await loopOrThrow(async () => {
+                    const head = Arrays.cryptoRandom(middles)!
 
-                const query = Option.wrap(MicrodescQuery.create(head, index, circuit.getOrThrow(), storage)).getOrThrow()
-                const body = await query.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
+                    const query = Option.wrap(MicrodescQuery.create(head, index, circuit.getOrThrow(), storage)).getOrThrow()
+                    const body = await query.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
-                start = Date.now()
-                await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 3)))
-                console.debug(`Extended circuit #${index} in ${Date.now() - start}ms`)
-              }, { max: 3 })
+                    start = Date.now()
+                    await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 3)))
+                    console.debug(`Extended circuit #${index} in ${Date.now() - start}ms`)
+                  }, { max: 3 })
 
-              /**
-               * Try to extend to exit relay 3 times before giving up this circuit
-               */
-              await loopOrThrow(async () => {
-                const head = Arrays.cryptoRandom(exits)!
+                  /**
+                   * Try to extend to exit relay 3 times before giving up this circuit
+                   */
+                  await loopOrThrow(async () => {
+                    const head = Arrays.cryptoRandom(exits)!
 
-                const query = Option.wrap(MicrodescQuery.create(head, index, circuit.getOrThrow(), storage)).getOrThrow()
-                const body = await query.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
+                    const query = Option.wrap(MicrodescQuery.create(head, index, circuit.getOrThrow(), storage)).getOrThrow()
+                    const body = await query.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
-                start = Date.now()
-                await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 4)))
-                console.debug(`Extended circuit #${index} in ${Date.now() - start}ms`)
-              }, { max: 3 })
+                    start = Date.now()
+                    await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 4)))
+                    console.debug(`Extended circuit #${index} in ${Date.now() - start}ms`)
+                  }, { max: 3 })
 
-              /**
-               * Try to open a stream to a reliable endpoint
-               */
-              using stream = await openAsOrThrow(circuit.getOrThrow(), "http://detectportal.firefox.com")
+                  /**
+                   * Try to open a stream to a reliable endpoint
+                   */
+                  using stream = await openAsOrThrow(circuit.getOrThrow(), "http://detectportal.firefox.com")
 
-              /**
-               * Reliability test
-               */
-              for (let i = 0; i < 3; i++) {
-                /**
-                 * Speed test
-                 */
-                const signal = AbortSignal.timeout(ping.value * 5)
+                  /**
+                   * Reliability test
+                   */
+                  for (let i = 0; i < 3; i++) {
+                    /**
+                     * Speed test
+                     */
+                    const signal = AbortSignal.timeout(ping.value * 5)
 
-                start = Date.now()
-                await fetch("http://detectportal.firefox.com", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())
-                console.debug(`Fetched portal #${index} in ${Date.now() - start}ms`)
+                    start = Date.now()
+                    await fetch("http://detectportal.firefox.com", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())
+                    console.debug(`Fetched portal #${index} in ${Date.now() - start}ms`)
+                  }
+
+                  return circuit.moveOrThrow()
+                })()
+              } catch (e: unknown) {
+                console.warn(`Retrying circuit #${index} creation`, { e })
+                throw new Retry(e)
               }
+            }, { max: 9 })
 
-              return circuit.moveOrThrow()
-            } catch (e: unknown) {
-              console.warn(`Retrying circuit #${index} creation`, { e })
-              throw new Retry(e)
-            }
-          }, { max: 9 })
+            console.debug(`Added circuit #${index} in ${Date.now() - start}ms`)
+            console.debug(`Circuits pool is now ${pool.size}/${size}`)
 
-          console.debug(`Added circuit #${index} in ${Date.now() - start}ms`)
-          console.debug(`Circuits pool is now ${pool.size}/${size}`)
+            return createCircuitEntry(pool, index, circuit.moveOrThrow())
+          })()
+        } catch (e: unknown) {
+          console.error(`Circuit creation failed`, { e })
 
-          return createCircuitEntry(pool, index, circuit.moveOrThrow())
-        }).then(r => r.inspectErrSync(e => console.error(`Circuit creation failed`, { e })))
-
-        if (result.isOk())
-          return result.get()
-
-        if (start < update)
-          continue
-
-        throw result.getErr()
+          if (start < update)
+            continue
+          throw e
+        }
       }
 
       throw new Error("Aborted", { cause: signal.reason })
-    })
+    }, size)
 
     const onStarted = () => {
       update = Date.now()
@@ -177,10 +179,10 @@ export namespace Circuits {
 
     const stack = new DisposableStack()
 
-    tors.pool.events.on("started", onStarted, { passive: true })
-    stack.defer(() => tors.pool.events.off("started", onStarted))
+    tors.events.on("started", onStarted, { passive: true })
+    stack.defer(() => tors.events.off("started", onStarted))
 
-    return new Disposer(SizedPool.start(pool, size), () => stack.dispose())
+    return new Disposer(pool, () => stack.dispose())
   }
 
   /**
@@ -189,17 +191,17 @@ export namespace Circuits {
    * @param params 
    * @returns 
    */
-  export function createCircuitSubpool(circuits: SizedPool<Circuit>, size: number) {
+  export function createCircuitSubpool(circuits: AutoPool<Circuit>, size: number) {
     let update = Date.now()
 
-    const pool: Pool<Circuit> = new Pool<Circuit>(async (params) => {
+    const pool: AutoPool<Circuit> = new AutoPool<Circuit>(async (params) => {
       const { index, signal } = params
 
       while (!signal.aborted) {
         const start = Date.now()
 
         const result = await Result.runAndWrap(async () => {
-          const circuit = await circuits.pool.takeCryptoRandomOrThrow(signal)
+          const circuit = await circuits.takeCryptoRandomOrThrow(signal)
           return createCircuitEntry(pool, index, new Box(circuit))
         })
 
@@ -213,7 +215,7 @@ export namespace Circuits {
       }
 
       throw new Error("Aborted", { cause: signal.reason })
-    })
+    }, size)
 
     const onStarted = () => {
       update = Date.now()
@@ -226,10 +228,10 @@ export namespace Circuits {
 
     const stack = new DisposableStack()
 
-    circuits.pool.events.on("started", onStarted, { passive: true })
-    stack.defer(() => circuits.pool.events.off("started", onStarted))
+    circuits.events.on("started", onStarted, { passive: true })
+    stack.defer(() => circuits.events.off("started", onStarted))
 
-    return new Disposer(SizedPool.start(pool, size), () => stack.dispose())
+    return new Disposer(pool, () => stack.dispose())
   }
 
 }
