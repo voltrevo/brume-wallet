@@ -25,11 +25,11 @@ export namespace BgEthereumContext {
 
       async function runWithPoolOrThrow(index: number) {
         const poolSignal = AbortSignal.any([AbortSignal.timeout(1_000), parentSignal])
-        const pool = await pools.get().pool.getOrThrow(index, poolSignal)
+        const pool = await pools.get().getOrThrow(index, poolSignal)
 
         async function runWithConnOrThrow(index: number) {
           const connSignal = AbortSignal.any([AbortSignal.timeout(1_000), parentSignal])
-          const conn = await pool.get().pool.getOrThrow(index, connSignal)
+          const conn = await pool.get().getOrThrow(index, connSignal)
 
           const { counter, connection } = conn
           const request = counter.prepare(init)
@@ -103,7 +103,7 @@ export namespace BgEthereumContext {
         return fetcheds.get(sorteds[0].key)!
       }
 
-      const promises = Array.from({ length: pools.get().size }, (_, i) => runWithPoolOrThrow(i))
+      const promises = Array.from({ length: pools.get().capacity }, (_, i) => runWithPoolOrThrow(i))
 
       const results = await Promise.allSettled(promises)
 

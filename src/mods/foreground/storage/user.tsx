@@ -35,7 +35,7 @@ export class UserStorage implements QueryStorage {
   constructor(
     readonly background: Background
   ) {
-    background.ports.get().pool.events.on("created", e => {
+    background.ports.get().events.on("created", e => {
       if (e.isErr())
         return
       for (const key of this.keys)

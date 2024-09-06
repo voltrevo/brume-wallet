@@ -240,7 +240,7 @@ export namespace WebSocketConnection {
         const result = await Result.runAndWrap(async () => {
           using stack = new Box(new DisposableStack())
 
-          const circuit = await subcircuits.getOrThrow(index % subcircuits.size, signal)
+          const circuit = await subcircuits.getOrThrow(index % subcircuits.capacity, signal)
           const subpool = new Box(WebSocketConnection.createPool(circuit, urls))
           stack.getOrThrow().use(subpool)
 
@@ -372,7 +372,7 @@ export namespace RpcCircuits {
         const result = await Result.runAndWrap(async () => {
           using stack = new Box(new DisposableStack())
 
-          const circuit = await subcircuits.getOrThrow(index % subcircuits.size, signal)
+          const circuit = await subcircuits.getOrThrow(index % subcircuits.capacity, signal)
           const subpool = new Box(RpcConnections.createRpcConnectionsPool(circuit, urls))
           stack.getOrThrow().use(subpool)
 
