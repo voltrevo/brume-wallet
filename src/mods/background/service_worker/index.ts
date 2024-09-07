@@ -22,23 +22,19 @@ import { pathOf, urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn";
 import { UnauthorizedError } from "@/mods/foreground/errors/errors";
+import { WalletWasm } from "@brumewallet/wallet.wasm";
 import { Base16 } from "@hazae41/base16";
-import { Base16Wasm } from "@hazae41/base16.wasm";
 import { Base58 } from "@hazae41/base58";
-import { Base58Wasm } from "@hazae41/base58.wasm";
 import { Base64 } from "@hazae41/base64";
-import { Base64Wasm } from "@hazae41/base64.wasm";
 import { Base64Url } from "@hazae41/base64url";
 import { Deferred, Stack } from "@hazae41/box";
 import { Bytes } from "@hazae41/bytes";
 import { Cadenas } from "@hazae41/cadenas";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
-import { ChaCha20Poly1305Wasm } from "@hazae41/chacha20poly1305.wasm";
 import { ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
 import { Disposer } from "@hazae41/disposer";
 import { Circuit, Echalote, TorClientDuplex } from "@hazae41/echalote";
 import { Ed25519 } from "@hazae41/ed25519";
-import { Ed25519Wasm } from "@hazae41/ed25519.wasm";
 import { Fleche, fetch } from "@hazae41/fleche";
 import { Future } from "@hazae41/future";
 import { AesGcmCoder, Data, HmacEncoder, IDBQueryStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier";
@@ -51,16 +47,11 @@ import { Mutex } from "@hazae41/mutex";
 import { None, Nullable, Option, Some } from "@hazae41/option";
 import { SuperEventTarget } from "@hazae41/plume";
 import { Result } from "@hazae41/result";
-import { RipemdWasm } from "@hazae41/ripemd.wasm";
 import { Ripemd160 } from "@hazae41/ripemd160";
 import { Secp256k1 } from "@hazae41/secp256k1";
-import { Secp256k1Wasm } from "@hazae41/secp256k1.wasm";
 import { Sha1 } from "@hazae41/sha1";
-import { Sha1Wasm } from "@hazae41/sha1.wasm";
-import { Sha3Wasm } from "@hazae41/sha3.wasm";
 import { Smux } from "@hazae41/smux";
 import { X25519 } from "@hazae41/x25519";
-import { X25519Wasm } from "@hazae41/x25519.wasm";
 import { BlobbyQuery, BlobbyRef } from "../../universal/entities/blobbys/data";
 import { OriginData, OriginQuery, PreOriginData } from "../../universal/entities/origins/data";
 import { SeedData, SeedQuery } from "../../universal/entities/seeds/data";
@@ -1498,36 +1489,25 @@ export class UserSession {
 const init = Result.runAndDoubleWrap(() => initOrThrow())
 
 async function initOrThrow() {
-  await Promise.all([
-    Sha1Wasm.initBundled(),
-    Sha3Wasm.initBundled(),
-    RipemdWasm.initBundled(),
-    Base16Wasm.initBundled(),
-    Base64Wasm.initBundled(),
-    Base58Wasm.initBundled(),
-    Ed25519Wasm.initBundled(),
-    X25519Wasm.initBundled(),
-    Secp256k1Wasm.initBundled(),
-    ChaCha20Poly1305Wasm.initBundled()
-  ])
+  await WalletWasm.initBundled()
 
-  Sha1.set(Sha1.fromWasm(Sha1Wasm))
+  Sha1.set(Sha1.fromWasm(WalletWasm))
 
-  Keccak256.set(Keccak256.fromWasm(Sha3Wasm))
-  Ripemd160.set(Ripemd160.fromWasm(RipemdWasm))
+  Keccak256.set(Keccak256.fromWasm(WalletWasm))
+  Ripemd160.set(Ripemd160.fromWasm(WalletWasm))
 
-  Base16.set(Base16.fromWasm(Base16Wasm))
-  Base64.set(Base64.fromWasm(Base64Wasm))
-  Base58.set(Base58.fromWasm(Base58Wasm))
+  Base16.set(Base16.fromWasm(WalletWasm))
+  Base64.set(Base64.fromWasm(WalletWasm))
+  Base58.set(Base58.fromWasm(WalletWasm))
 
-  Base64Url.set(Base64Url.fromWasm(Base64Wasm))
+  Base64Url.set(Base64Url.fromWasm(WalletWasm))
 
-  Secp256k1.set(Secp256k1.fromWasm(Secp256k1Wasm))
+  Secp256k1.set(Secp256k1.fromWasm(WalletWasm))
 
-  Ed25519.set(await Ed25519.fromNativeOrWasm(Ed25519Wasm))
-  X25519.set(X25519.fromWasm(X25519Wasm))
+  Ed25519.set(await Ed25519.fromNativeOrWasm(WalletWasm))
+  X25519.set(X25519.fromWasm(WalletWasm))
 
-  ChaCha20Poly1305.set(ChaCha20Poly1305.fromWasm(ChaCha20Poly1305Wasm))
+  ChaCha20Poly1305.set(ChaCha20Poly1305.fromWasm(WalletWasm))
 
   const gt = globalThis as any
   gt.Console = Console
