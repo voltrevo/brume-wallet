@@ -54,9 +54,11 @@ export async function getServiceWorkerOrThrow(background: ServiceWorkerBackgroun
   const serviceWorker = await navigator.serviceWorker.ready.then(r => r.active)
 
   if (serviceWorker == null)
-    location.reload()
+    return location.reload() as never
 
-  return serviceWorker!
+  setInterval(() => serviceWorker.postMessage("PING"), 1000)
+
+  return serviceWorker
 }
 
 export function createServiceWorkerPortPool(background: ServiceWorkerBackground) {
