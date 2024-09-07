@@ -1564,6 +1564,8 @@ if (isWebsite() || isAndroidApp()) {
   self.addEventListener("message", (event) => {
     if (event.origin !== location.origin)
       return
+    if (event.data === "PING")
+      return void event.source?.postMessage("PONG")
     if (event.data === "FOREGROUND->BACKGROUND")
       return void onForeground(event)
     return
@@ -1607,6 +1609,8 @@ if (isAppleApp()) {
   self.addEventListener("message", (event) => {
     if (event.origin !== location.origin)
       return
+    if (event.data === "PING")
+      return void event.source?.postMessage("PONG")
     if (event.data === "FOREGROUND->BACKGROUND")
       return void onForeground(event)
     return

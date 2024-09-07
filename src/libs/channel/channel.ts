@@ -45,10 +45,8 @@ export class MessageRpcRouter {
     let count = 0
 
     // TODO use AbortController
-    while (true) {
+    while (await new Promise<true>(ok => setTimeout(ok, 1000, true))) {
       try {
-        await new Promise(ok => setTimeout(ok, 1000))
-
         await this.requestOrThrow({
           id: "ping",
           method: "brume_ping"
@@ -126,16 +124,17 @@ export class MessageRpcRouter {
     if (request.id !== "ping")
       Console.debug(this.name, "<-", request)
 
-    this.port.postMessage(JSON.stringify(request))
-
-    return Plume.waitWithCloseAndErrorOrThrow(this.events, "response", (future: Future<RpcResponse<T>>, init: RpcResponseInit<any>) => {
+    const promise = Plume.waitWithCloseAndErrorOrThrow(this.events, "response", (future: Future<RpcResponse<T>>, init: RpcResponseInit<any>) => {
       if (init.id !== request.id)
         return
-
       const response = RpcResponse.from<T>(init)
       future.resolve(response)
       return new Some(undefined)
     }, signal)
+
+    this.port.postMessage(JSON.stringify(request))
+
+    return await promise
   }
 
   async waitHelloOrThrow(signal = new AbortController().signal) {
@@ -248,15 +247,17 @@ export class ExtensionRpcRouter {
     if (request.id !== "ping")
       Console.debug(this.name, "<-", request)
 
-    BrowserError.runOrThrowSync(() => this.port.postMessage(JSON.stringify(request)))
-
-    return Plume.waitWithCloseAndErrorOrThrow(this.events, "response", (future: Future<RpcResponse<T>>, init: RpcResponseInit<any>) => {
+    const promise = Plume.waitWithCloseAndErrorOrThrow(this.events, "response", (future: Future<RpcResponse<T>>, init: RpcResponseInit<any>) => {
       if (init.id !== request.id)
         return
       const response = RpcResponse.from<T>(init)
       future.resolve(response)
       return new Some(undefined)
     }, signal)
+
+    BrowserError.runOrThrowSync(() => this.port.postMessage(JSON.stringify(request)))
+
+    return await promise
   }
 
   async waitHelloOrThrow(signal = new AbortController().signal) {
