@@ -1,5 +1,5 @@
-import { Err, Ok, Result } from "@hazae41/result"
-import { isFirefoxExtension } from "../platform/platform"
+
+export type Maybe<X, T> = unknown extends X ? X : T
 
 export class AnyGuard {
 
@@ -33,11 +33,11 @@ export class NullGuard {
 
   constructor() { }
 
-  static is(value: unknown): value is null {
+  static is<X>(value: Maybe<X, null>): value is X & null {
     return value === null
   }
 
-  is(value: unknown): value is null {
+  is<X>(value: Maybe<X, null>): value is X & null {
     return value === null
   }
 
@@ -49,7 +49,7 @@ export class StrongEqualityGuard<T> {
     readonly value: T
   ) { }
 
-  is(value: unknown): value is T {
+  is<X>(value: Maybe<X, T>): value is X & T {
     return value === this.value
   }
 
@@ -61,7 +61,7 @@ export class WeakEqualityGuard<T> {
     readonly value: T
   ) { }
 
-  is(value: unknown): value is T {
+  is<X>(value: Maybe<X, T>): value is X & T {
     return value == this.value
   }
 
@@ -71,11 +71,11 @@ export class UndefinedGuard {
 
   constructor() { }
 
-  static is(value: unknown): value is undefined {
+  static is<X>(value: Maybe<X, undefined>): value is X & undefined {
     return typeof value === "undefined"
   }
 
-  is(value: unknown): value is undefined {
+  is<X>(value: Maybe<X, undefined>): value is X & undefined {
     return typeof value === "undefined"
   }
 
@@ -85,11 +85,11 @@ export class BooleanGuard {
 
   constructor() { }
 
-  static is(value: unknown): value is boolean {
+  static is<X>(value: Maybe<X, boolean>): value is X & boolean {
     return typeof value === "boolean"
   }
 
-  is(value: unknown): value is boolean {
+  is<X>(value: Maybe<X, boolean>): value is X & boolean {
     return typeof value === "boolean"
   }
 
@@ -282,57 +282,27 @@ export namespace Guard {
 
 }
 
-export interface PropertyOptions {
-  readonly required?: boolean
-}
-
-export abstract class Property<I, O> implements Guard<I, O> {
-  abstract readonly options: PropertyOptions
-  abstract is(value: I): value is I & O
-}
-
-export class ObjectProperty<I, T extends { [property in PropertyKey]: Property<unknown, unknown> }, O extends { [P in keyof T]: Guard.Output<T[P]> }> {
+export class StrictObjectGuard<T extends { [k: PropertyKey]: Guard<unknown, unknown> }> {
 
   constructor(
-    readonly guards: T,
-    readonly options: PropertyOptions = {}
+    readonly guard: T
   ) { }
 
-  is(value: I): value is I & O {
+  is(value: { [K in keyof T]: Guard.Input<T[K]> }): value is { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> } {
     if (!ObjectGuard.is(value))
       return false
 
-    for (const [key, property] of Object.entries(this.guards)) {
+    for (const [key, property] of Object.entries(this.guard)) {
       if (new HasPropertyGuard(key).is(value)) {
         if (!property.is(value[key]))
           return false
         continue
       }
 
-      if (property.options.required === true)
-        return false
       continue
     }
 
     return true
-  }
-
-  tryAs(value: I): Result<O, Error> {
-    if (this.is(value))
-      return new Ok(value)
-    return new Err(new Error())
-  }
-
-  // inter<X>(other: Guard<I, I & X>) {
-  //   return GuardedProperty.from(new InterGuard<I, O, I & X>(this, other), this.options)
-  // }
-
-  // then<X>(other: Guard<O, O & X>) {
-  //   return GuardedProperty.from(new ThenGuard<I, O, O & X>(this, other), this.options)
-  // }
-
-  required(required: boolean) {
-    return new ObjectProperty(this.guards, { ...this.options, required })
   }
 
 }
@@ -489,7 +459,6 @@ export interface Toolbox {
   readonly symbol: SymbolGuard
   readonly array: <I extends Guard.Infer<I>>(inner: I) => Guard<unknown, Guard.Output<I>[]>
   readonly inter: <I, A, B>(left: Guard<I, A>, right: Guard<I, B>) => InterGuard<I, A, B>
-  readonly readonly: (key: string) => symbol
 }
 
 export type Parseable =
@@ -497,26 +466,19 @@ export type Parseable =
   | string
   | number
   | bigint
-  | Guard.Bivariant<unknown, unknown>
   | readonly Parseable[]
-// | { [x: PropertyKey]: Parseable }
+  | { [x: PropertyKey]: Parseable }
+  | Guard.Bivariant<unknown, unknown>
 
 export type Parsed<T> =
-  | NullGuardFrom<T>
-  | (T extends string ? StrongEqualityGuard<T> : never)
-  | (T extends number ? StrongEqualityGuard<T> : never)
-  | (T extends bigint ? StrongEqualityGuard<T> : never)
-  | (T extends Guard.Bivariant<unknown, unknown> ? T : never)
-  | (T extends Parseable[] ? never : never)
-  | TupleGuardFrom<T>
-
-export type NullGuardFrom<T> =
-  T extends null ? NullGuard :
-  never
-
-export type TupleGuardFrom<T> =
+  T extends null ? Guard<T, T> :
+  T extends string ? Guard<T, T> :
+  T extends number ? Guard<T, T> :
+  T extends bigint ? Guard<T, T> :
   T extends unknown[] ? never :
-  T extends readonly unknown[] ? TupleGuard<{ [K in keyof T]: Parsed<T[K]> }> :
+  T extends readonly unknown[] ? Guard<{ [K in keyof T]: Guard.Input<Parsed<T[K]>> }, { [K in keyof T]: Guard.Input<Parsed<T[K]>> }> :
+  T extends Guard.Bivariant<unknown, unknown> ? T :
+  T extends object ? Guard<{ [K in keyof T]: Guard.Input<Parsed<T[K]>> }, { [K in keyof T]: Guard.Input<Parsed<T[K]>> }> :
   never
 
 function parse<T extends Parseable>(f: (toolbox: Toolbox) => T): Parsed<T> {
@@ -534,20 +496,32 @@ parse(() => "hello")
 parse(() => 123)
 parse(() => 123n)
 parse(({ string }) => string)
-parse(({ array, string }) => array(string))
+parse(({ array, string }) => array(string)).is([])
 const x = null as any
+
+parse(() => ({
+  hello: "world",
+  hello2: "world"
+} as const)).is(x)
+
+function f<T>(x: unknown extends T ? T : string) {
+
+}
+
+f("hello")
+f(123)
+
+const y = null as unknown
+
+f(y)
 
 if (parse(({ string }) => [string, string] as const).is(x)) {
 }
 
-namespace Properties {
-  export const readonly = isFirefoxExtension() ? new WeakSet() : new Set()
-}
+declare const ReadonlySymbol: unique symbol
 
-function readonly(key: string) {
-  const symbol = Symbol(key)
-  Properties.readonly.add(symbol)
-  return symbol
+function readonly<T extends string>(key: T): T & { [ReadonlySymbol]: true } {
+  return key as any
 }
 
 const z = {
