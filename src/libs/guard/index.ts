@@ -1,4 +1,5 @@
 import { Err, Ok, Result } from "@hazae41/result"
+import { isFirefoxExtension } from "../platform/platform"
 
 export class AnyGuard {
 
@@ -322,13 +323,13 @@ export class ObjectProperty<I, T extends { [property in PropertyKey]: Property<u
     return new Err(new Error())
   }
 
-  inter<X>(other: Guard<I, I & X>) {
-    return GuardedProperty.from(new InterGuard<I, O, I & X>(this, other), this.options)
-  }
+  // inter<X>(other: Guard<I, I & X>) {
+  //   return GuardedProperty.from(new InterGuard<I, O, I & X>(this, other), this.options)
+  // }
 
-  then<X>(other: Guard<O, O & X>) {
-    return GuardedProperty.from(new ThenGuard<I, O, O & X>(this, other), this.options)
-  }
+  // then<X>(other: Guard<O, O & X>) {
+  //   return GuardedProperty.from(new ThenGuard<I, O, O & X>(this, other), this.options)
+  // }
 
   required(required: boolean) {
     return new ObjectProperty(this.guards, { ...this.options, required })
@@ -488,6 +489,7 @@ export interface Toolbox {
   readonly symbol: SymbolGuard
   readonly array: <I extends Guard.Infer<I>>(inner: I) => Guard<unknown, Guard.Output<I>[]>
   readonly inter: <I, A, B>(left: Guard<I, A>, right: Guard<I, B>) => InterGuard<I, A, B>
+  readonly readonly: (key: string) => symbol
 }
 
 export type Parseable =
@@ -499,15 +501,22 @@ export type Parseable =
   | readonly Parseable[]
 // | { [x: PropertyKey]: Parseable }
 
-// @ts-ignore
 export type Parsed<T> =
+  | NullGuardFrom<T>
+  | (T extends string ? StrongEqualityGuard<T> : never)
+  | (T extends number ? StrongEqualityGuard<T> : never)
+  | (T extends bigint ? StrongEqualityGuard<T> : never)
+  | (T extends Guard.Bivariant<unknown, unknown> ? T : never)
+  | (T extends Parseable[] ? never : never)
+  | TupleGuardFrom<T>
+
+export type NullGuardFrom<T> =
   T extends null ? NullGuard :
-  T extends string ? StrongEqualityGuard<T> :
-  T extends number ? StrongEqualityGuard<T> :
-  T extends bigint ? StrongEqualityGuard<T> :
-  T extends Parseable[] ? never :
-  T extends readonly Parseable[] ? TupleGuard<{ [K in keyof T]: Parsed<T[K]> }> :
-  T extends Guard.Bivariant<unknown, unknown> ? T :
+  never
+
+export type TupleGuardFrom<T> =
+  T extends unknown[] ? never :
+  T extends readonly unknown[] ? TupleGuard<{ [K in keyof T]: Parsed<T[K]> }> :
   never
 
 function parse<T extends Parseable>(f: (toolbox: Toolbox) => T): Parsed<T> {
@@ -528,8 +537,22 @@ parse(({ string }) => string)
 parse(({ array, string }) => array(string))
 const x = null as any
 
-if (parse(({ string }) => [string, string]).is(x)) {
-  const x = ["dd"]
+if (parse(({ string }) => [string, string] as const).is(x)) {
+}
+
+namespace Properties {
+  export const readonly = isFirefoxExtension() ? new WeakSet() : new Set()
+}
+
+function readonly(key: string) {
+  const symbol = Symbol(key)
+  Properties.readonly.add(symbol)
+  return symbol
+}
+
+const z = {
+  ["hello"]: "world",
+  [readonly("hello")]: "world"
 }
 
 function lol<T>(f: () => T) {
