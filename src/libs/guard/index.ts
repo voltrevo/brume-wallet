@@ -513,17 +513,11 @@ parse(() => 123)
 parse(() => 123n)
 parse(({ string }) => string)
 parse(({ array, string }) => array(string)).is([])
-const x = null as any
 
 parse(() => ({
   hello: "world",
   hello2: "world"
-})).is(x)
-
-const y = null as unknown
-
-if (parse(({ string }) => [string, string] as const).is(x)) {
-}
+}))
 
 declare const ReadonlySymbol: unique symbol
 
