@@ -283,23 +283,30 @@ export namespace Guard {
 
 }
 
-export class StrictObjectGuard<T extends { [k: PropertyKey]: Guard<unknown, unknown> }> {
+export class RecordGuard<T extends { [k: PropertyKey]: Guard<unknown, unknown> }> {
 
   constructor(
     readonly guard: T
   ) { }
 
   is(value: { [K in keyof T]: Guard.Input<T[K]> }): value is { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> } {
-    if (!ObjectGuard.is(value))
-      return false
+    for (const key of Reflect.ownKeys(this.guard)) {
+      if (typeof key === "symbol" && optionals.has(key)) {
+        const truekey = key.description!
 
-    for (const [key, property] of Object.entries(this.guard)) {
-      if (new HasPropertyGuard(key).is(value)) {
-        if (!property.is(value[key]))
+        if (truekey in value === false)
+          continue
+        if (value[truekey] === undefined)
+          continue
+        if (!this.guard[key].is(value[truekey]))
           return false
         continue
       }
 
+      if (key in value === false)
+        return false
+      if (!this.guard[key].is(value[key]))
+        return false
       continue
     }
 
@@ -385,31 +392,6 @@ export class TupleGuard<T extends readonly Guard<unknown, unknown>[]> {
 
 }
 
-export class HasPropertyGuard<P extends PropertyKey> {
-
-  constructor(
-    readonly property: P
-  ) { }
-
-  is(value: object): value is object & { [property in P]: unknown } {
-    return this.property in value
-  }
-
-}
-
-export class PropertyGuard<P extends PropertyKey, O> {
-
-  constructor(
-    readonly property: P,
-    readonly subguard: Guard<unknown, O>
-  ) { }
-
-  is(value: { [property in P]: unknown }): value is { [property in P]: O } {
-    return this.subguard.is(value[this.property])
-  }
-
-}
-
 export class ThenGuard<I, X, O> implements Guard<I, O> {
 
   constructor(
@@ -458,7 +440,7 @@ export interface Toolbox {
   readonly bigint: BigIntGuard
   readonly object: ObjectGuard
   readonly symbol: SymbolGuard
-  readonly array: <I extends Guard.Infer<I>>(inner: I) => Guard<unknown, Guard.Output<I>[]>
+  readonly array: <T>(inner: Guard<unknown, T>) => Guard<unknown, T[]>
   readonly inter: <I, A, B>(left: Guard<I, A>, right: Guard<I, B>) => InterGuard<I, A, B>
 }
 
@@ -477,13 +459,33 @@ export type Parsed<T> =
   T extends number ? Guard<T, T> :
   T extends bigint ? Guard<T, T> :
   T extends unknown[] ? never :
-  T extends readonly unknown[] ? Guard<{ [K in keyof T]: Guard.Input<Parsed<T[K]>> }, { [K in keyof T]: Guard.Input<Parsed<T[K]>> }> :
+  T extends readonly unknown[] ? Guard<{ [K in keyof T]: Guard.Input<Parsed<T[K]>> }, { [K in keyof T]: Guard.Output<Parsed<T[K]>> }> :
   T extends Guard.Bivariant<unknown, unknown> ? T :
-  T extends object ? Guard<{ [K in keyof T]: Guard.Input<Parsed<T[K]>> }, { [K in keyof T]: Guard.Input<Parsed<T[K]>> }> :
+  T extends object ? Guard<{ [K in keyof T]: Guard.Input<Parsed<T[K]>> }, { [K in keyof T]: Guard.Output<Parsed<T[K]>> }> :
   never
 
 function parse<T extends Parseable>(f: (toolbox: Toolbox) => T): Parsed<T> {
-  return null as any
+  const value = f({
+    any: AnyGuard,
+    never: NeverGuard,
+    boolean: BooleanGuard,
+    string: StringGuard,
+    number: NumberGuard,
+    bigint: BigIntGuard,
+    object: ObjectGuard,
+    symbol: SymbolGuard,
+    array: <T>(inner: Guard<unknown, T>) => ({
+      is(value: unknown): value is T[] {
+        return ArrayGuard.is(value) && value.every(x => inner.is(x))
+      }
+    }),
+    // array: inner => ({
+    //   is(value): value is Guard.Output<typeof inner>[] {
+    //     return ArrayGuard.is(value) && value.every(x => inner.is(x))
+    //   },
+    // }),
+    inter: (left, right) => new InterGuard(left, right)
+  })
 }
 
 // parse(({ string }) => ({
@@ -503,7 +505,7 @@ const x = null as any
 parse(() => ({
   hello: "world",
   hello2: "world"
-} as const)).is(x)
+})).is(x)
 
 const y = null as unknown
 
@@ -516,16 +518,20 @@ function readonly<T extends string>(key: T): T & { [ReadonlySymbol]: true } {
   return key as any
 }
 
+declare const OptionalSymbol: unique symbol
+
+const optionals = new Set() // or WeakSet
+
+function optional<T extends string>(key: T): symbol & { [OptionalSymbol]: T } {
+  const symbol = Symbol(key)
+  optionals.add(symbol)
+  return symbol as any
+}
+
 const z = {
-  ["hello"]: "world",
-  [readonly("hello")]: "world"
+  [optional("x")]: "world"
 }
 
-function lol<T>(f: () => T) {
-
-}
-
-lol(() => [1, 2] as const)
 
 export class Json<T> {
 
