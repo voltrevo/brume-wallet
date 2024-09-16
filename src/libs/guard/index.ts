@@ -457,7 +457,7 @@ export interface Toolbox {
   readonly bigint: BigIntGuard
   readonly object: ObjectGuard
   readonly symbol: SymbolGuard
-  readonly array: <T>(inner: Guard<unknown, T>) => Guard<unknown, T[]>
+  readonly array: <T extends Parseable>(inner: T) => Guard<unknown, Guard.Output<Parsed<T>>[]>
   readonly inter: <I, A extends Guard<I, unknown>, B extends Guard<I, unknown>>(a: A, b: B) => Guard<I, Guard.Output<A> & Guard.Output<B>>
   readonly union: <I, A extends Guard<I, unknown>, B extends Guard<I, unknown>>(a: A, b: B) => Guard<I, Guard.Output<A> | Guard.Output<B>>
   readonly then: <M, A extends Guard<unknown, M>, B extends Guard<M, unknown>>(a: A, b: B) => Guard<Guard.Input<A>, Guard.Output<A> & Guard.Output<B>>
@@ -506,11 +506,6 @@ function parse<T extends Parseable>(f: (toolbox: Toolbox) => T): Parsed<T> {
 
   return value as any
 }
-
-// parse(({ string }) => ({
-//   hello: string,
-//   hello2: null,
-// }))
 
 parse(() => null)
 parse(() => "hello")
