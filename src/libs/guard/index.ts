@@ -1,5 +1,5 @@
 
-export type Maybe<X, T> = unknown extends X ? X : T
+export type Coerce<Value, Strong, Weak> = Weak extends Value ? Value : Strong
 
 export class AnyGuard {
 
@@ -33,11 +33,11 @@ export class NullGuard {
 
   constructor() { }
 
-  static is<X>(value: Maybe<X, null>): value is X & null {
+  static is<X>(value: Coerce<X, null, unknown>): value is X & null {
     return value === null
   }
 
-  is<X>(value: Maybe<X, null>): value is X & null {
+  is<X>(value: Coerce<X, null, unknown>): value is X & null {
     return value === null
   }
 
@@ -49,7 +49,7 @@ export class StrongEqualityGuard<T> {
     readonly value: T
   ) { }
 
-  is<X>(value: Maybe<X, T>): value is X & T {
+  is<X>(value: Coerce<X, T, unknown>): value is X & T {
     return value === this.value
   }
 
@@ -61,7 +61,7 @@ export class WeakEqualityGuard<T> {
     readonly value: T
   ) { }
 
-  is<X>(value: Maybe<X, T>): value is X & T {
+  is<X>(value: Coerce<X, T, unknown>): value is X & T {
     return value == this.value
   }
 
@@ -71,11 +71,11 @@ export class UndefinedGuard {
 
   constructor() { }
 
-  static is<X>(value: Maybe<X, undefined>): value is X & undefined {
+  static is<X>(value: Coerce<X, undefined, unknown>): value is X & undefined {
     return typeof value === "undefined"
   }
 
-  is<X>(value: Maybe<X, undefined>): value is X & undefined {
+  is<X>(value: Coerce<X, undefined, unknown>): value is X & undefined {
     return typeof value === "undefined"
   }
 
@@ -85,11 +85,11 @@ export class BooleanGuard {
 
   constructor() { }
 
-  static is<X>(value: Maybe<X, boolean>): value is X & boolean {
+  static is<X>(value: Coerce<X, boolean, unknown>): value is X & boolean {
     return typeof value === "boolean"
   }
 
-  is<X>(value: Maybe<X, boolean>): value is X & boolean {
+  is<X>(value: Coerce<X, boolean, unknown>): value is X & boolean {
     return typeof value === "boolean"
   }
 
@@ -99,11 +99,11 @@ export class TrueGuard {
 
   constructor() { }
 
-  static is(value: unknown): value is true {
+  static is<X>(value: Coerce<X, true, unknown>): value is X & true {
     return value === true
   }
 
-  is(value: unknown): value is true {
+  is<X>(value: Coerce<X, true, unknown>): value is X & true {
     return value === true
   }
 
@@ -113,11 +113,11 @@ export class FalseGuard {
 
   constructor() { }
 
-  static is(value: unknown): value is false {
+  static is<X>(value: Coerce<X, false, unknown>): value is X & false {
     return value === false
   }
 
-  is(value: unknown): value is false {
+  is<X>(value: Coerce<X, false, unknown>): value is X & false {
     return value === false
   }
 
@@ -127,11 +127,11 @@ export class StringGuard {
 
   constructor() { }
 
-  static is(value: unknown): value is string {
+  static is<X>(value: Coerce<X, string, unknown>): value is X & string {
     return typeof value === "string"
   }
 
-  is(value: unknown): value is string {
+  is<X>(value: Coerce<X, string, unknown>): value is X & string {
     return typeof value === "string"
   }
 
@@ -141,11 +141,11 @@ export class NumberGuard {
 
   constructor() { }
 
-  static is(value: unknown): value is number {
+  static is<X>(value: Coerce<X, number, unknown>): value is X & number {
     return typeof value === "number"
   }
 
-  is(value: unknown): value is number {
+  is<X>(value: Coerce<X, number, unknown>): value is X & number {
     return typeof value === "number"
   }
 
@@ -155,11 +155,11 @@ export class BigIntGuard {
 
   constructor() { }
 
-  static is(value: unknown): value is bigint {
+  static is<X>(value: Coerce<X, bigint, unknown>): value is X & bigint {
     return typeof value === "bigint"
   }
 
-  is(value: unknown): value is bigint {
+  is<X>(value: Coerce<X, bigint, unknown>): value is X & bigint {
     return typeof value === "bigint"
   }
 
@@ -169,11 +169,11 @@ export class ObjectGuard {
 
   constructor() { }
 
-  static is(value: unknown): value is object {
+  static is<X>(value: Coerce<X, object, unknown>): value is X & object {
     return typeof value === "object"
   }
 
-  is(value: unknown): value is object {
+  is<X>(value: Coerce<X, object, unknown>): value is X & object {
     return typeof value === "object"
   }
 
@@ -183,11 +183,11 @@ export class ArrayGuard {
 
   constructor() { }
 
-  static is(value: unknown): value is unknown[] {
+  static is<X>(value: Coerce<X, unknown[], unknown>): value is X & unknown[] {
     return Array.isArray(value)
   }
 
-  is(value: unknown): value is unknown[] {
+  is<X>(value: Coerce<X, unknown[], unknown>): value is X & unknown[] {
     return Array.isArray(value)
   }
 
@@ -197,25 +197,26 @@ export class FunctionGuard {
 
   constructor() { }
 
-  static is(value: unknown): value is Function {
+  static is<X>(value: Coerce<X, Function, unknown>): value is X & Function {
     return typeof value === "function"
   }
 
-  is(value: unknown): value is Function {
+  is<X>(value: Coerce<X, Function, unknown>): value is X & Function {
     return typeof value === "function"
   }
 
 }
 
+
 export class SymbolGuard {
 
   constructor() { }
 
-  static is(value: unknown): value is symbol {
+  static is<X>(value: Coerce<X, symbol, unknown>): value is X & symbol {
     return typeof value === "symbol"
   }
 
-  is(value: unknown): value is symbol {
+  is<X>(value: Coerce<X, symbol, unknown>): value is X & symbol {
     return typeof value === "symbol"
   }
 
@@ -351,7 +352,7 @@ export class MaxLengthGuard<T extends { length: number }, N extends number> {
 
 export namespace ZeroHexStringGuard {
 
-  export function is(value: string): value is `0x${string}` {
+  export function is<X extends string>(value: string extends X ? X : `0x${string}`): value is X & `0x${string}` {
     return value.startsWith("0x")
   }
 
@@ -504,16 +505,7 @@ parse(() => ({
   hello2: "world"
 } as const)).is(x)
 
-function f<T>(x: unknown extends T ? T : string) {
-
-}
-
-f("hello")
-f(123)
-
 const y = null as unknown
-
-f(y)
 
 if (parse(({ string }) => [string, string] as const).is(x)) {
 }
