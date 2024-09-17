@@ -635,7 +635,7 @@ function parse<T>(f: (toolbox: Toolbox) => T): Parsed<T> {
       return [k, parse(() => v)]
     }))) as any
 
-  if (typeof value === "object" && "is" in value)
+  if (typeof value === "object" && "asOrThrow" in value)
     return value as any
 
   return new StrongEqualityGuard(value) as any
