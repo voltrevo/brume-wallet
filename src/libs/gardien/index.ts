@@ -558,7 +558,6 @@ type AsNotOptional<T, K extends keyof T> = T[K] extends OptionalProperty<unknown
 type OfOptional<T> = T extends OptionalProperty<infer U> ? U : never
 type OfNotOptional<T> = T extends OptionalProperty<unknown> ? never : T
 
-
 type Unoptional<T> = { [K in keyof T as AsOptional<T, K>]?: OfOptional<T[K]> } & { [K in keyof T as AsNotOptional<T, K>]-?: OfNotOptional<T[K]> }
 
 class ReadonlyProperty<T> {
@@ -584,8 +583,8 @@ type Property<T> =
 
 export type Parsed<T> =
   T extends unknown[] ? never :
-  T extends readonly unknown[] ? Guard<unknown, Finalize<Subparsed<T>>> :
   T extends Guard<unknown, unknown> ? T :
+  T extends readonly unknown[] ? Guard<unknown, Finalize<Subparsed<T>>> :
   T extends object ? Guard<unknown, Finalize<Subparsed<Unoptional<Unreadonly<T>>>>> :
   Guard<unknown, T>
 
@@ -665,19 +664,19 @@ function parse<T>(f: (toolbox: Toolbox) => T): Parsed<T> {
   return new StrongEqualityGuard(value) as any
 }
 
-parse(() => null)
-parse(() => "hello")
-parse(() => 123)
-parse(() => 123n)
-parse(({ string }) => string)
-parse(({ array, string }) => array(string))
+parse(() => null).asOrThrow(null)
+parse(() => "hello").asOrThrow("hello")
+parse(() => 123).asOrThrow(123)
+parse(() => 123n).asOrThrow(123n)
+parse(({ string }) => string).asOrThrow("hello")
+parse(({ array, string }) => array(string)).asOrThrow(["hello"])
 
 const MyObjectGuard = parse(({ readonly, optional, string }) => ({
   hello: readonly("world"),
-  hello2: optional(string)
+  world: optional(string)
 }))
 
-const myObject = MyObjectGuard.asOrThrow({ hello: "world", hello2: "aaa" })
+const myObject = MyObjectGuard.asOrThrow({ hello: "world", world: "aaa" })
 
 console.log(myObject)
 
@@ -694,4 +693,4 @@ export class Json<T> {
 
 }
 
-new Json(JSON.stringify("hello")).parseOrThrow(StringGuard)
+console.log(new Json(JSON.stringify("hello")).parseOrThrow(StringGuard))
