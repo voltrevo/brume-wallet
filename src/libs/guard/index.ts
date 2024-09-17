@@ -444,7 +444,9 @@ export class RecordGuard<T extends { [k: PropertyKey]: Property<Guard<unknown, u
     readonly guard: T
   ) { }
 
-  asOrThrow(value: { [K in keyof T]: Guard.Input<T[K]> }): value is { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> } {
+  asOrThrow(value: { [K in keyof T]: Guard.Input<T[K]> }): { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> } {
+    let cause = []
+
     for (const key of Reflect.ownKeys(this.guard)) {
       const guard = this.guard[key]
 
@@ -453,25 +455,49 @@ export class RecordGuard<T extends { [k: PropertyKey]: Property<Guard<unknown, u
           continue
         if (value[key] === undefined)
           continue
-        guard.value.asOrThrow(value[key])
+
+        try {
+          guard.value.asOrThrow(value[key])
+        } catch (e: unknown) {
+          cause.push(e)
+        }
+
         continue
       }
 
       if (guard instanceof ReadonlyProperty) {
-        if (key in value === false)
-          return false
-        console.log(key, value[key], guard)
-        guard.value.asOrThrow(value[key])
+        if (key in value === false) {
+          cause.push(new Error())
+          continue
+        }
+
+        try {
+          guard.value.asOrThrow(value[key])
+        } catch (e: unknown) {
+          cause.push(e)
+        }
+
         continue
       }
 
-      if (key in value === false)
-        return false
-      guard.asOrThrow(value[key])
+      if (key in value === false) {
+        cause.push(new Error())
+        continue
+      }
+
+      try {
+        guard.asOrThrow(value[key])
+      } catch (e: unknown) {
+        cause.push(e)
+      }
+
       continue
     }
 
-    return true
+    if (cause.length > 0)
+      throw new Error(undefined, { cause })
+
+    return value as { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> }
   }
 
 }
@@ -646,14 +672,14 @@ parse(() => 123n)
 parse(({ string }) => string)
 parse(({ array, string }) => array(string))
 
-const MyObjectGuard = parse(({ readonly, optional }) => ({
+const MyObjectGuard = parse(({ readonly, optional, string }) => ({
   hello: readonly("world"),
-  hello2: optional("world")
+  hello2: optional(string)
 }))
 
-console.log(MyObjectGuard)
+const myObject = MyObjectGuard.asOrThrow({ hello: "world", hello2: "aaa" })
 
-const myObject = MyObjectGuard.asOrThrow({ hello: "world" })
+console.log(myObject)
 
 
 export class Json<T> {
