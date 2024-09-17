@@ -1,5 +1,5 @@
 
-export type Coerce<X, I, O> = O | (I extends X ? X : never)
+export type Coerce<X, I, O> = O | (I extends X ? X : O)
 
 export type Finalize<T> = {} & { [K in keyof T]: T[K] }
 
@@ -8,12 +8,12 @@ export class AnyGuard {
 
   constructor() { }
 
-  static is<T>(value: T): value is T {
-    return true
+  static asOrThrow<X>(value: X): X {
+    return value
   }
 
-  is<T>(value: T): value is T {
-    return true
+  asOrThrow<X>(value: X): X {
+    return value
   }
 
 }
@@ -22,12 +22,12 @@ export class NeverGuard {
 
   constructor() { }
 
-  static is<T>(value: T): value is T {
-    return false
+  static asOrThrow(value: never): never {
+    throw new Error()
   }
 
-  is<T>(value: T): value is T {
-    return false
+  asOrThrow(value: never): never {
+    throw new Error()
   }
 
 }
@@ -36,12 +36,16 @@ export class NullGuard {
 
   constructor() { }
 
-  static is<X>(value: Coerce<X, unknown, null>): value is null {
-    return value === null
+  static asOrThrow<X>(value: Coerce<X, unknown, null>): X & null {
+    if (value !== null)
+      throw new Error()
+    return value as X & null
   }
 
-  is<X>(value: Coerce<X, unknown, null>): value is null {
-    return value === null
+  asOrThrow<X>(value: Coerce<X, unknown, null>): X & null {
+    if (value !== null)
+      throw new Error()
+    return value as X & null
   }
 
 }
@@ -52,8 +56,10 @@ export class StrongEqualityGuard<T> {
     readonly value: T
   ) { }
 
-  is<X>(value: Coerce<X, unknown, T>): value is T {
-    return value === this.value
+  asOrThrow<X>(value: Coerce<X, unknown, T>): X & T {
+    if (value !== this.value)
+      throw new Error()
+    return value as X & T
   }
 
 }
@@ -64,8 +70,10 @@ export class WeakEqualityGuard<T> {
     readonly value: T
   ) { }
 
-  is<X>(value: Coerce<X, unknown, T>): value is T {
-    return value == this.value
+  asOrThrow<X>(value: Coerce<X, unknown, T>): X & T {
+    if (value != this.value)
+      throw new Error()
+    return value as X & T
   }
 
 }
@@ -74,12 +82,16 @@ export class UndefinedGuard {
 
   constructor() { }
 
-  static is<X>(value: Coerce<X, unknown, undefined>): value is undefined {
-    return typeof value === "undefined"
+  static asOrThrow<X>(value: Coerce<X, unknown, undefined>): X & undefined {
+    if (value !== undefined)
+      throw new Error()
+    return value as X & undefined
   }
 
-  is<X>(value: Coerce<X, unknown, undefined>): value is undefined {
-    return typeof value === "undefined"
+  asOrThrow<X>(value: Coerce<X, unknown, undefined>): X & undefined {
+    if (value !== undefined)
+      throw new Error()
+    return value as X & undefined
   }
 
 }
@@ -88,12 +100,16 @@ export class BooleanGuard {
 
   constructor() { }
 
-  static is<X>(value: Coerce<X, unknown, boolean>): value is boolean {
-    return typeof value === "boolean"
+  static asOrThrow<X>(value: Coerce<X, unknown, boolean>): X & boolean {
+    if (typeof value !== "boolean")
+      throw new Error()
+    return value as X & boolean
   }
 
-  is<X>(value: Coerce<X, unknown, boolean>): value is boolean {
-    return typeof value === "boolean"
+  asOrThrow<X>(value: Coerce<X, unknown, boolean>): X & boolean {
+    if (typeof value !== "boolean")
+      throw new Error()
+    return value as X & boolean
   }
 
 }
@@ -102,12 +118,16 @@ export class TrueGuard {
 
   constructor() { }
 
-  static is<X>(value: Coerce<X, unknown, true>): value is true {
-    return value === true
+  static asOrThrow<X>(value: Coerce<X, unknown, true>): X & true {
+    if (value !== true)
+      throw new Error()
+    return value as X & true
   }
 
-  is<X>(value: Coerce<X, unknown, true>): value is true {
-    return value === true
+  asOrThrow<X>(value: Coerce<X, unknown, true>): X & true {
+    if (value !== true)
+      throw new Error()
+    return value as X & true
   }
 
 }
@@ -116,12 +136,16 @@ export class FalseGuard {
 
   constructor() { }
 
-  static is<X>(value: Coerce<X, unknown, false>): value is false {
-    return value === false
+  static asOrThrow<X>(value: Coerce<X, unknown, false>): X & false {
+    if (value !== false)
+      throw new Error()
+    return value as X & false
   }
 
-  is<X>(value: Coerce<X, unknown, false>): value is false {
-    return value === false
+  asOrThrow<X>(value: Coerce<X, unknown, false>): X & false {
+    if (value !== false)
+      throw new Error()
+    return value as X & false
   }
 
 }
@@ -130,20 +154,26 @@ export class StringGuard {
 
   constructor() { }
 
-  static is<X>(value: Coerce<X, unknown, string>): value is string {
-    return typeof value === "string"
+  static asOrThrow<X>(value: Coerce<X, unknown, string>): X & string {
+    if (typeof value !== "string")
+      throw new Error()
+    return value as X & string
   }
 
-  is<X>(value: Coerce<X, unknown, string>): value is string {
-    return typeof value === "string"
+  asOrThrow<X>(value: Coerce<X, unknown, string>): X & string {
+    if (typeof value !== "string")
+      throw new Error()
+    return value as X & string
   }
 
 }
 
 export namespace ZeroHexStringGuard {
 
-  export function is<X extends string>(value: Coerce<X, string, `0x${string}`>): value is `0x${string}` {
-    return value.startsWith("0x")
+  export function asOrThrow<X extends string>(value: Coerce<X, string, `0x${string}`>): X & `0x${string}` {
+    if (!value.startsWith("0x"))
+      throw new Error()
+    return value as X & `0x${string}`
   }
 
 }
@@ -152,12 +182,16 @@ export class NumberGuard {
 
   constructor() { }
 
-  static is<X>(value: Coerce<X, unknown, number>): value is number {
-    return typeof value === "number"
+  static asOrThrow<X>(value: Coerce<X, unknown, number>): X & number {
+    if (typeof value !== "number")
+      throw new Error()
+    return value as X & number
   }
 
-  is<X>(value: Coerce<X, unknown, number>): value is number {
-    return typeof value === "number"
+  asOrThrow<X>(value: Coerce<X, unknown, number>): X & number {
+    if (typeof value !== "number")
+      throw new Error()
+    return value as X & number
   }
 
 }
@@ -166,12 +200,16 @@ export class BigIntGuard {
 
   constructor() { }
 
-  static is<X>(value: Coerce<X, unknown, bigint>): value is bigint {
-    return typeof value === "bigint"
+  static asOrThrow<X>(value: Coerce<X, unknown, bigint>): X & bigint {
+    if (typeof value !== "bigint")
+      throw new Error()
+    return value as X & bigint
   }
 
-  is<X>(value: Coerce<X, unknown, bigint>): value is bigint {
-    return typeof value === "bigint"
+  asOrThrow<X>(value: Coerce<X, unknown, bigint>): X & bigint {
+    if (typeof value !== "bigint")
+      throw new Error()
+    return value as X & bigint
   }
 
 }
@@ -180,12 +218,16 @@ export class ObjectGuard {
 
   constructor() { }
 
-  static is<X>(value: Coerce<X, unknown, object>): value is object {
-    return typeof value === "object"
+  static asOrThrow<X>(value: Coerce<X, unknown, object>): X & object {
+    if (typeof value !== "object")
+      throw new Error()
+    return value as X & object
   }
 
-  is<X>(value: Coerce<X, unknown, object>): value is object {
-    return typeof value === "object"
+  asOrThrow<X>(value: Coerce<X, unknown, object>): X & object {
+    if (typeof value !== "object")
+      throw new Error()
+    return value as X & object
   }
 
 }
@@ -194,12 +236,16 @@ export class ArrayGuard {
 
   constructor() { }
 
-  static is<X>(value: Coerce<X, unknown, unknown[]>): value is unknown[] {
-    return Array.isArray(value)
+  static asOrThrow<X>(value: Coerce<X, unknown, unknown[]>): X & unknown[] {
+    if (!Array.isArray(value))
+      throw new Error()
+    return value as X & unknown[]
   }
 
-  is<X>(value: Coerce<X, unknown, unknown[]>): value is unknown[] {
-    return Array.isArray(value)
+  asOrThrow<X>(value: Coerce<X, unknown, unknown[]>): X & unknown[] {
+    if (!Array.isArray(value))
+      throw new Error()
+    return value as X & unknown[]
   }
 
 }
@@ -210,8 +256,10 @@ export class ElementsGuard<T extends Guard<unknown, unknown>> {
     readonly subguard: T
   ) { }
 
-  is<X>(value: Coerce<X, Guard.Input<T>, Guard.Output<T>>[]): value is Guard.Output<T>[] {
-    return value.every(x => this.subguard.is(x))
+  asOrThrow<X>(value: Coerce<X, Guard.Input<T>, Guard.Output<T>>[]): X & Guard.Output<T>[] {
+    if (!value.every(x => this.subguard.asOrThrow(x)))
+      throw new Error()
+    return value as X & Guard.Output<T>[]
   }
 
 }
@@ -222,8 +270,12 @@ export class ArrayAndElementsGuard<T extends Guard<unknown, unknown>> {
     readonly subguard: T
   ) { }
 
-  is<X>(value: Coerce<X, unknown, Guard.Output<T>[]>): value is Guard.Output<T>[] {
-    return Array.isArray(value) && value.every(x => this.subguard.is(x))
+  asOrThrow<X>(value: Coerce<X, unknown, Guard.Output<T>[]>): X & Guard.Output<T>[] {
+    if (!Array.isArray(value))
+      throw new Error()
+    if (!value.every(x => this.subguard.asOrThrow(x)))
+      throw new Error()
+    return value as X & Guard.Output<T>[]
   }
 
 }
@@ -232,12 +284,16 @@ export class FunctionGuard {
 
   constructor() { }
 
-  static is<X>(value: Coerce<X, unknown, Function>): value is Function {
-    return typeof value === "function"
+  static asOrThrow<X>(value: Coerce<X, unknown, Function>): X & Function {
+    if (typeof value !== "function")
+      throw new Error()
+    return value as X & Function
   }
 
-  is<X>(value: Coerce<X, unknown, Function>): value is Function {
-    return typeof value === "function"
+  asOrThrow<X>(value: Coerce<X, unknown, Function>): X & Function {
+    if (typeof value !== "function")
+      throw new Error()
+    return value as X & Function
   }
 
 }
@@ -247,12 +303,16 @@ export class SymbolGuard {
 
   constructor() { }
 
-  static is<X>(value: Coerce<X, unknown, symbol>): value is symbol {
-    return typeof value === "symbol"
+  static asOrThrow<X>(value: Coerce<X, unknown, symbol>): X & symbol {
+    if (typeof value !== "symbol")
+      throw new Error()
+    return value as X & symbol
   }
 
-  is<X>(value: Coerce<X, unknown, symbol>): value is symbol {
-    return typeof value === "symbol"
+  asOrThrow<X>(value: Coerce<X, unknown, symbol>): X & symbol {
+    if (typeof value !== "symbol")
+      throw new Error()
+    return value as X & symbol
   }
 
 }
@@ -264,8 +324,22 @@ export class UnionGuard<I, A extends Guard<I, unknown>, B extends Guard<I, unkno
     readonly right: B
   ) { }
 
-  is<X>(value: Coerce<X, I, Guard.Output<A> | Guard.Output<B>>): value is Guard.Output<A> | Guard.Output<B> {
-    return this.left.is(value) || this.right.is(value)
+  asOrThrow<X>(value: Coerce<X, I, Guard.Output<A> | Guard.Output<B>>): X & (Guard.Output<A> | Guard.Output<B>) {
+    let cause = []
+
+    try {
+      return this.left.asOrThrow(value) as X & Guard.Output<A>
+    } catch (e: unknown) {
+      cause.push(e)
+    }
+
+    try {
+      return this.right.asOrThrow(value) as X & Guard.Output<B>
+    } catch (e: unknown) {
+      cause.push(e)
+    }
+
+    throw new Error(undefined, { cause })
   }
 
 }
@@ -277,8 +351,11 @@ export class InterGuard<I, A extends Guard<I, unknown>, B extends Guard<I, unkno
     readonly right: B
   ) { }
 
-  is<X>(value: Coerce<X, I, Guard.Output<A> & Guard.Output<B>>): value is Guard.Output<A> & Guard.Output<B> {
-    return this.left.is(value) && this.right.is(value)
+  asOrThrow<X>(value: Coerce<X, I, Guard.Output<A> & Guard.Output<B>>): X & Guard.Output<A> & Guard.Output<B> {
+    this.left.asOrThrow(value)
+    this.right.asOrThrow(value)
+
+    return value as X & Guard.Output<A> & Guard.Output<B>
   }
 
 }
@@ -290,20 +367,20 @@ export class ThenGuard<M, A extends Guard<unknown, M>, B extends Guard<M, unknow
     readonly right: B
   ) { }
 
-  is<X>(value: Coerce<X, Guard.Input<A>, Guard.Output<A>>): value is Guard.Output<A> & Guard.Output<B> {
-    return this.left.is(value) && this.right.is(value)
+  asOrThrow<X>(value: Coerce<X, Guard.Input<A>, Guard.Output<A>>): X & Guard.Output<A> & Guard.Output<B> {
+    return this.right.asOrThrow(this.left.asOrThrow(value)) as X & Guard.Output<A> & Guard.Output<B>
   }
 
 }
 
 export interface Guard<I, O> {
-  is<X>(value: Coerce<X, I, O>): value is O
+  asOrThrow<X>(value: Coerce<X, I, O>): O
 }
 
 export namespace Guard {
 
   export interface Strict<I, O> {
-    is: <X>(value: Coerce<X, I, O>) => value is O
+    asOrThrow: <X>(value: Coerce<X, I, O>) => O
   }
 
   export type Infer<T extends Guard<unknown, unknown>> = Guard<Input<T>, Output<T>>
@@ -312,16 +389,22 @@ export namespace Guard {
 
   export type Output<T> = T extends Guard<unknown, infer O> ? O : never
 
-  export function asOrThrow<T extends Guard.Infer<T>, X>(guard: T, value: Coerce<X, Guard.Input<T>, Guard.Output<T>>): Guard.Output<T> {
-    if (!guard.is(value))
-      throw new Error()
-    return value
+  export function asOrNull<T extends Guard.Infer<T>, X>(guard: T, value: Coerce<X, Guard.Input<T>, Guard.Output<T>>): X & Guard.Output<T> | null {
+    try {
+      return guard.asOrThrow(value) as X & Guard.Output<T>
+    } catch {
+      return null
+    }
   }
 
-  export function asOrNull<T extends Guard.Infer<T>, X>(guard: T, value: Coerce<X, Guard.Input<T>, Guard.Output<T>>): Guard.Output<T> | null {
-    if (!guard.is(value))
-      return null
-    return value
+  export function is<T extends Guard.Infer<T>, X>(guard: T, value: Coerce<X, Guard.Input<T>, Guard.Output<T>>): value is X & Guard.Output<T> {
+    try {
+      guard.asOrThrow(value)
+
+      return true
+    } catch {
+      return false
+    }
   }
 
 }
@@ -352,7 +435,7 @@ export class RecordGuard<T extends { [k: PropertyKey]: Property<Guard<unknown, u
     readonly guard: T
   ) { }
 
-  is(value: { [K in keyof T]: Guard.Input<T[K]> }): value is { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> } {
+  asOrThrow(value: { [K in keyof T]: Guard.Input<T[K]> }): value is { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> } {
     for (const key of Reflect.ownKeys(this.guard)) {
       const guard = this.guard[key]
 
@@ -361,23 +444,20 @@ export class RecordGuard<T extends { [k: PropertyKey]: Property<Guard<unknown, u
           continue
         if (value[key] === undefined)
           continue
-        if (!guard.value.is(value[key]))
-          return false
+        guard.value.asOrThrow(value[key])
         continue
       }
 
       if (guard instanceof ReadonlyProperty) {
         if (key in value === false)
           return false
-        if (!guard.value.is(value[key]))
-          return false
+        guard.value.asOrThrow(value[key])
         continue
       }
 
       if (key in value === false)
         return false
-      if (!guard.is(value[key]))
-        return false
+      guard.asOrThrow(value[key])
       continue
     }
 
@@ -435,8 +515,12 @@ export class TupleGuard<T extends readonly Guard<unknown, unknown>[]> {
     readonly subguards: T
   ) { }
 
-  is(value: { [K in keyof T]: Guard.Input<T[K]> }): value is { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> } {
-    return value.length === this.subguards.length && value.every((x, i) => this.subguards[i].is(x))
+  asOrThrow(value: { [K in keyof T]: Guard.Input<T[K]> }): { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> } {
+    if (value.length !== this.subguards.length)
+      throw new Error()
+    if (!value.every((x, i) => this.subguards[i].asOrThrow(x)))
+      throw new Error()
+    return value as { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> }
   }
 
 }
@@ -543,7 +627,13 @@ function parse<T>(f: (toolbox: Toolbox) => T): Parsed<T> {
     return new TupleGuard(value.map(x => parse(() => x))) as any
 
   if (Object.getPrototypeOf(value) === Object.prototype)
-    return new RecordGuard(Object.fromEntries(Object.entries(value).map(([k, v]) => [k, parse(() => v)]))) as any
+    return new RecordGuard(Object.fromEntries(Object.entries(value).map(([k, v]) => {
+      if (v instanceof ReadonlyProperty)
+        return [k, readonly(parse(() => v))]
+      if (v instanceof OptionalProperty)
+        return [k, optional(parse(() => v))]
+      return [k, parse(() => v)]
+    }))) as any
 
   if (typeof value === "object" && "is" in value)
     return value as any
@@ -556,12 +646,12 @@ parse(() => "hello")
 parse(() => 123)
 parse(() => 123n)
 parse(({ string }) => string)
-parse(({ array, string }) => array(string)).is([])
+parse(({ array, string }) => array(string))
 
 const obj = parse(({ readonly, optional }) => ({
   hello: readonly("world"),
   hello2: optional("world")
-}))
+})).asOrThrow({ hello: "world" })
 
 export class Json<T> {
 
@@ -570,7 +660,7 @@ export class Json<T> {
   ) { }
 
   parseOrThrow(guard: Guard<unknown, T>) {
-    return Guard.asOrThrow(guard, JSON.parse(this.text))
+    return guard.asOrThrow(JSON.parse(this.text))
   }
 
 }
