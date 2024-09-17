@@ -1,5 +1,5 @@
 import { Coerce } from "./coerce"
-import { StringGuard } from "./guards/primitives"
+import { NumberGuard } from "./guards/primitives"
 import { Json } from "./json"
 import { parse } from "./parse"
 
@@ -69,5 +69,4 @@ const MyObjectGuard = parse(({ readonly, optional, string }) => ({
 
 const myObject = MyObjectGuard.asOrThrow({ hello: "world", world: "aaa" })
 
-
-console.log(new Json(JSON.stringify("hello")).parseOrThrow(StringGuard))
+console.log(new Json<number>(JSON.stringify(123)).parseOrThrow(NumberGuard))
