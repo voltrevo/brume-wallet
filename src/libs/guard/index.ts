@@ -460,6 +460,7 @@ export class RecordGuard<T extends { [k: PropertyKey]: Property<Guard<unknown, u
       if (guard instanceof ReadonlyProperty) {
         if (key in value === false)
           return false
+        console.log(key, value[key], guard)
         guard.value.asOrThrow(value[key])
         continue
       }
@@ -626,9 +627,9 @@ function parse<T>(f: (toolbox: Toolbox) => T): Parsed<T> {
   if (Object.getPrototypeOf(value) === Object.prototype)
     return new RecordGuard(Object.fromEntries(Object.entries(value).map(([k, v]) => {
       if (v instanceof ReadonlyProperty)
-        return [k, readonly(parse(() => v))]
+        return [k, readonly(parse(() => v.value))]
       if (v instanceof OptionalProperty)
-        return [k, optional(parse(() => v))]
+        return [k, optional(parse(() => v.value))]
       return [k, parse(() => v)]
     }))) as any
 
@@ -645,10 +646,15 @@ parse(() => 123n)
 parse(({ string }) => string)
 parse(({ array, string }) => array(string))
 
-const obj = parse(({ readonly, optional }) => ({
+const MyObjectGuard = parse(({ readonly, optional }) => ({
   hello: readonly("world"),
   hello2: optional("world")
-})).asOrThrow({ hello: "world" })
+}))
+
+console.log(MyObjectGuard)
+
+const myObject = MyObjectGuard.asOrThrow({ hello: "world" })
+
 
 export class Json<T> {
 
@@ -662,6 +668,4 @@ export class Json<T> {
 
 }
 
-function test(json: Json<string>) {
-  const value = json.parseOrThrow(StringGuard)
-}
+new Json(JSON.stringify("hello")).parseOrThrow(StringGuard)
