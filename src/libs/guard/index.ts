@@ -352,8 +352,22 @@ export class InterGuard<I, A extends Guard<I, unknown>, B extends Guard<I, unkno
   ) { }
 
   asOrThrow<X>(value: Coerce<X, I, Guard.Output<A> & Guard.Output<B>>): X & Guard.Output<A> & Guard.Output<B> {
-    this.left.asOrThrow(value)
-    this.right.asOrThrow(value)
+    let cause = []
+
+    try {
+      this.left.asOrThrow(value)
+    } catch (e: unknown) {
+      cause.push(e)
+    }
+
+    try {
+      this.right.asOrThrow(value)
+    } catch (e: unknown) {
+      cause.push(e)
+    }
+
+    if (cause.length > 0)
+      throw new Error(undefined, { cause })
 
     return value as X & Guard.Output<A> & Guard.Output<B>
   }
