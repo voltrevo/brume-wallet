@@ -1,7 +1,7 @@
 
 export type Coerce<X, I, O> = O | (I extends X ? X : never)
 
-export type Merge<T> = {} & { [K in keyof T]: T[K] }
+export type Finalize<T> = {} & { [K in keyof T]: T[K] }
 
 
 export class AnyGuard {
@@ -441,51 +441,52 @@ export class TupleGuard<T extends readonly Guard<unknown, unknown>[]> {
 
 }
 
-export class OptionalProperty<T> {
+class OptionalProperty<T> {
+  readonly #class = OptionalProperty
+
   constructor(
     readonly value: T
   ) { }
 }
 
-export type AsOptional<T, K extends keyof T> = T[K] extends OptionalProperty<unknown> ? K : never
-export type AsNotOptional<T, K extends keyof T> = T[K] extends OptionalProperty<unknown> ? never : K
+type AsOptional<T, K extends keyof T> = T[K] extends OptionalProperty<unknown> ? K : never
+type AsNotOptional<T, K extends keyof T> = T[K] extends OptionalProperty<unknown> ? never : K
 
-export class ReadonlyProperty<T> {
+type OfOptional<T> = T extends OptionalProperty<infer U> ? U : never
+type OfNotOptional<T> = T extends OptionalProperty<unknown> ? never : T
+
+
+type Unoptional<T> = { [K in keyof T as AsOptional<T, K>]?: OfOptional<T[K]> } & { [K in keyof T as AsNotOptional<T, K>]-?: OfNotOptional<T[K]> }
+
+class ReadonlyProperty<T> {
+  readonly #class = ReadonlyProperty
+
   constructor(
     readonly value: T
   ) { }
 }
 
-export type AsReadonly<T, K extends keyof T> = T[K] extends ReadonlyProperty<unknown> ? K : never
-export type AsNotReadonly<T, K extends keyof T> = T[K] extends ReadonlyProperty<unknown> ? never : K
+type AsReadonly<T, K extends keyof T> = T[K] extends ReadonlyProperty<unknown> ? K : never
+type AsNotReadonly<T, K extends keyof T> = T[K] extends ReadonlyProperty<unknown> ? never : K
 
-export type OfReadonly<T> = T extends ReadonlyProperty<infer U> ? U : never
-export type OfNotReadonly<T> = T extends ReadonlyProperty<unknown> ? never : T
+type OfReadonly<T> = T extends ReadonlyProperty<infer U> ? U : never
+type OfNotReadonly<T> = T extends ReadonlyProperty<unknown> ? never : T
 
-export type Property<T> =
+type Unreadonly<T> = { readonly [K in keyof T as AsReadonly<T, K>]: OfReadonly<T[K]> } & { -readonly [K in keyof T as AsNotReadonly<T, K>]: OfNotReadonly<T[K]> }
+
+type Property<T> =
   | T
   | OptionalProperty<T>
   | ReadonlyProperty<T>
 
-export type Parseable =
-  | null
-  | string
-  | number
-  | bigint
-  | readonly Parseable[]
-  | { [x: PropertyKey]: Property<Parseable> }
-  | Guard<unknown, unknown>
-
 export type Parsed<T> =
-  T extends null ? Guard<unknown, T> :
-  T extends string ? Guard<unknown, T> :
-  T extends number ? Guard<unknown, T> :
-  T extends bigint ? Guard<unknown, T> :
   T extends unknown[] ? never :
-  T extends readonly unknown[] ? Guard<unknown, { [K in keyof T]: Guard.Output<Parsed<T[K]>> }> :
+  T extends readonly unknown[] ? Guard<unknown, Finalize<Subparsed<T>>> :
   T extends Guard<unknown, unknown> ? T :
-  T extends object ? Guard<unknown, Merge<{ readonly [K in keyof T as AsReadonly<T, K>]: Guard.Output<Parsed<OfReadonly<T[K]>>> } & { -readonly [K in keyof T as AsNotReadonly<T, K>]: Guard.Output<Parsed<OfNotReadonly<T[K]>>> }>> :
-  never
+  T extends object ? Guard<unknown, Finalize<Subparsed<Unoptional<Unreadonly<T>>>>> :
+  Guard<unknown, T>
+
+type Subparsed<T> = { [K in keyof T]: Guard.Output<Parsed<T[K]>> }
 
 export interface Toolbox {
   readonly boolean: BooleanGuard
@@ -494,15 +495,19 @@ export interface Toolbox {
   readonly bigint: BigIntGuard
   readonly object: ObjectGuard
   readonly symbol: SymbolGuard
+
   readonly optional: <T>(value: T) => OptionalProperty<T>
   readonly readonly: <T>(value: T) => ReadonlyProperty<T>
-  readonly array: <T extends Parseable>(inner: T) => Guard<unknown, Guard.Output<Parsed<T>>[]>
+
+  readonly array: <T>(inner: T) => Guard<unknown, Guard.Output<Parsed<T>>[]>
+
   readonly inter: <I, A extends Guard<I, unknown>, B extends Guard<I, unknown>>(a: A, b: B) => Guard<I, Guard.Output<A> & Guard.Output<B>>
   readonly union: <I, A extends Guard<I, unknown>, B extends Guard<I, unknown>>(a: A, b: B) => Guard<I, Guard.Output<A> | Guard.Output<B>>
+
   readonly then: <M, A extends Guard<unknown, M>, B extends Guard<M, unknown>>(a: A, b: B) => Guard<Guard.Input<A>, Guard.Output<A> & Guard.Output<B>>
 }
 
-function parse<T extends Parseable>(f: (toolbox: Toolbox) => T): Parsed<T> {
+function parse<T>(f: (toolbox: Toolbox) => T): Parsed<T> {
   const { boolean, string, number, bigint, object, symbol } = Primitives
 
   function optional<T>(value: T): OptionalProperty<T> {
@@ -513,7 +518,7 @@ function parse<T extends Parseable>(f: (toolbox: Toolbox) => T): Parsed<T> {
     return new ReadonlyProperty(value)
   }
 
-  function array<T extends Parseable>(inner: T): Guard<unknown, Guard.Output<Parsed<T>>[]> {
+  function array<T>(inner: T): Guard<unknown, Guard.Output<Parsed<T>>[]> {
     return new ArrayAndElementsGuard(parse(() => inner))
   }
 
@@ -534,20 +539,16 @@ function parse<T extends Parseable>(f: (toolbox: Toolbox) => T): Parsed<T> {
   if (value == null)
     return NullGuard as any
 
-  if (typeof value === "string")
-    return StringGuard as any
-  if (typeof value === "number")
-    return NumberGuard as any
-  if (typeof value === "bigint")
-    return BigIntGuard as any
-
   if (Array.isArray(value))
     return new TupleGuard(value.map(x => parse(() => x))) as any
 
   if (Object.getPrototypeOf(value) === Object.prototype)
     return new RecordGuard(Object.fromEntries(Object.entries(value).map(([k, v]) => [k, parse(() => v)]))) as any
 
-  return value as any
+  if (typeof value === "object" && "is" in value)
+    return value as any
+
+  return new StrongEqualityGuard(value) as any
 }
 
 parse(() => null)
@@ -557,9 +558,9 @@ parse(() => 123n)
 parse(({ string }) => string)
 parse(({ array, string }) => array(string)).is([])
 
-parse(({ readonly }) => ({
+const obj = parse(({ readonly, optional }) => ({
   hello: readonly("world"),
-  hello2: "world"
+  hello2: optional("world")
 }))
 
 export class Json<T> {
