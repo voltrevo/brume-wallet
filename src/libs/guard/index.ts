@@ -1,8 +1,43 @@
-
 export type Coerce<X, I, O> = O | (I extends X ? X : O)
 
 export type Finalize<T> = {} & { [K in keyof T]: T[K] }
 
+
+export interface Guard<I, O> {
+  asOrThrow<X>(value: Coerce<X, I, O>): O
+}
+
+export namespace Guard {
+
+  export interface Strict<I, O> {
+    asOrThrow: <X>(value: Coerce<X, I, O>) => O
+  }
+
+  export type Infer<T extends Guard<unknown, unknown>> = Guard<Input<T>, Output<T>>
+
+  export type Input<T> = T extends Guard<infer I, unknown> ? I : never
+
+  export type Output<T> = T extends Guard<unknown, infer O> ? O : never
+
+  export function asOrNull<T extends Guard.Infer<T>, X>(guard: T, value: Coerce<X, Guard.Input<T>, Guard.Output<T>>): X & Guard.Output<T> | null {
+    try {
+      return guard.asOrThrow(value) as X & Guard.Output<T>
+    } catch {
+      return null
+    }
+  }
+
+  export function is<T extends Guard.Infer<T>, X>(guard: T, value: Coerce<X, Guard.Input<T>, Guard.Output<T>>): value is X & Guard.Output<T> {
+    try {
+      guard.asOrThrow(value)
+
+      return true
+    } catch {
+      return false
+    }
+  }
+
+}
 
 export class AnyGuard {
 
@@ -387,59 +422,19 @@ export class ThenGuard<M, A extends Guard<unknown, M>, B extends Guard<M, unknow
 
 }
 
-export interface Guard<I, O> {
-  asOrThrow<X>(value: Coerce<X, I, O>): O
-}
+export class TupleGuard<T extends readonly Guard<unknown, unknown>[]> {
 
-export namespace Guard {
+  constructor(
+    readonly subguards: T
+  ) { }
 
-  export interface Strict<I, O> {
-    asOrThrow: <X>(value: Coerce<X, I, O>) => O
+  asOrThrow(value: { [K in keyof T]: Guard.Input<T[K]> }): { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> } {
+    if (value.length !== this.subguards.length)
+      throw new Error()
+    if (!value.every((x, i) => this.subguards[i].asOrThrow(x)))
+      throw new Error()
+    return value as { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> }
   }
-
-  export type Infer<T extends Guard<unknown, unknown>> = Guard<Input<T>, Output<T>>
-
-  export type Input<T> = T extends Guard<infer I, unknown> ? I : never
-
-  export type Output<T> = T extends Guard<unknown, infer O> ? O : never
-
-  export function asOrNull<T extends Guard.Infer<T>, X>(guard: T, value: Coerce<X, Guard.Input<T>, Guard.Output<T>>): X & Guard.Output<T> | null {
-    try {
-      return guard.asOrThrow(value) as X & Guard.Output<T>
-    } catch {
-      return null
-    }
-  }
-
-  export function is<T extends Guard.Infer<T>, X>(guard: T, value: Coerce<X, Guard.Input<T>, Guard.Output<T>>): value is X & Guard.Output<T> {
-    try {
-      guard.asOrThrow(value)
-
-      return true
-    } catch {
-      return false
-    }
-  }
-
-}
-
-export class Primitives {
-
-  private constructor() { }
-
-  static readonly any = AnyGuard
-  static readonly never = NeverGuard
-  static readonly null = NullGuard
-  static readonly undefined = UndefinedGuard
-  static readonly boolean = BooleanGuard
-  static readonly true = TrueGuard
-  static readonly false = FalseGuard
-  static readonly string = StringGuard
-  static readonly number = NumberGuard
-  static readonly bigint = BigIntGuard
-  static readonly object = ObjectGuard
-  static readonly symbol = SymbolGuard
-  static readonly function = FunctionGuard
 
 }
 
@@ -522,23 +517,6 @@ export class MaxLengthGuard<T extends { length: number }, N extends number> {
 
 }
 
-
-export class TupleGuard<T extends readonly Guard<unknown, unknown>[]> {
-
-  constructor(
-    readonly subguards: T
-  ) { }
-
-  asOrThrow(value: { [K in keyof T]: Guard.Input<T[K]> }): { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> } {
-    if (value.length !== this.subguards.length)
-      throw new Error()
-    if (!value.every((x, i) => this.subguards[i].asOrThrow(x)))
-      throw new Error()
-    return value as { [K in keyof T]: Guard.Input<T[K]> } & { [K in keyof T]: Guard.Output<T[K]> }
-  }
-
-}
-
 class OptionalProperty<T> {
   readonly #class = OptionalProperty
 
@@ -606,7 +584,12 @@ export interface Toolbox {
 }
 
 function parse<T>(f: (toolbox: Toolbox) => T): Parsed<T> {
-  const { boolean, string, number, bigint, object, symbol } = Primitives
+  const boolean = BooleanGuard
+  const string = StringGuard
+  const number = NumberGuard
+  const bigint = BigIntGuard
+  const object = ObjectGuard
+  const symbol = SymbolGuard
 
   function optional<T>(value: T): OptionalProperty<T> {
     return new OptionalProperty(value)
