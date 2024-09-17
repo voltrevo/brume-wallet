@@ -1,0 +1,1 @@
+export type Coerce<X, I, O> = I extends X ? X : O
