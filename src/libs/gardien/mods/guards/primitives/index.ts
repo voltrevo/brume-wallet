@@ -54,39 +54,6 @@ export class FalseGuard {
 
 }
 
-export class StringGuard {
-
-  constructor() { }
-
-  static asOrThrow<X>(value: Coerced<X, unknown, string>): X & string {
-    if (typeof value !== "string")
-      throw new Error()
-    return value as X & string
-  }
-
-  asOrThrow<X>(value: Coerced<X, unknown, string>): X & string {
-    if (typeof value !== "string")
-      throw new Error()
-    return value as X & string
-  }
-
-}
-
-
-export class StringableGuard {
-
-  constructor() { }
-
-  static asOrThrow(value?: any): string {
-    return String(value)
-  }
-
-  asOrThrow(value?: any): string {
-    return String(value)
-  }
-
-}
-
 export class NumberGuard {
 
   constructor() { }
