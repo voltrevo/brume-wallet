@@ -1,11 +1,11 @@
-import { Coerce } from "./coerce"
+import { Coerced } from "./coerce"
 import { NumberGuard } from "./guards/primitives"
 import { Json } from "./json"
 import { parse } from "./parse"
 
 export namespace ZeroHexStringGuard {
 
-  export function asOrThrow<X extends string>(value: Coerce<X, string, `0x${string}`>): X & `0x${string}` {
+  export function asOrThrow<X extends string>(value: Coerced<X, string, `0x${string}`>): X & `0x${string}` {
     if (!value.startsWith("0x"))
       throw new Error()
     return value as X & `0x${string}`
@@ -19,7 +19,7 @@ export class LengthGuard<T extends { length: number }, N extends number> {
     readonly length: N
   ) { }
 
-  is(value: T): value is T & { length: N } {
+  asOrThrow(value: T): value is T & { length: N } {
     return value.length === this.length
   }
 

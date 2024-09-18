@@ -1,13 +1,13 @@
-import { Coerce } from "../coerce"
+import { Coerced } from "../coerce"
 
 export interface Guard<I, O> {
-  asOrThrow<X>(value: Coerce<X, I, O>): O
+  asOrThrow(value: I): O
 }
 
 export namespace Guard {
 
   export interface Strict<I, O> {
-    asOrThrow: <X>(value: Coerce<X, I, O>) => O
+    asOrThrow: (value: I) => O
   }
 
   export type Infer<T extends Guard<unknown, unknown>> = Guard<Input<T>, Output<T>>
@@ -20,17 +20,17 @@ export namespace Guard {
 
   export type AllOutput<T> = { [K in keyof T]: Output<T[K]> }
 
-  export function asOrNull<T extends Guard.Infer<T>, X>(guard: T, value: Coerce<X, Guard.Input<T>, Guard.Output<T>>): X & Guard.Output<T> | null {
+  export function asOrNull<T extends Guard.Infer<T>, X>(guard: T, value: Coerced.Input<T["asOrThrow"], X, Guard.Input<T>, Guard.Output<T>>): Coerced.Output<T["asOrThrow"], X, Guard.Input<T>, Guard.Output<T>> | null {
     try {
-      return guard.asOrThrow(value) as X & Guard.Output<T>
+      return guard.asOrThrow(value as Guard.Input<T>) as Coerced.Output<T["asOrThrow"], X, Guard.Input<T>, Guard.Output<T>>
     } catch {
       return null
     }
   }
 
-  export function is<T extends Guard.Infer<T>, X>(guard: T, value: Coerce<X, Guard.Input<T>, Guard.Output<T>>): value is X & Guard.Output<T> {
+  export function is<T extends Guard.Infer<T>, X>(guard: T, value: Coerced.Input<T["asOrThrow"], X, Guard.Input<T>, Guard.Output<T>>): value is Coerced.Input<T["asOrThrow"], X, Guard.Input<T>, Guard.Output<T>> & Guard.Output<T> {
     try {
-      guard.asOrThrow(value)
+      guard.asOrThrow(value as Guard.Input<T>)
 
       return true
     } catch {

@@ -1,4 +1,4 @@
-import { Coerce } from "../../coerce"
+import { Coerced } from "../../coerce"
 
 export class StrongEqualityGuard<T> {
 
@@ -6,7 +6,7 @@ export class StrongEqualityGuard<T> {
     readonly value: T
   ) { }
 
-  asOrThrow<X>(value: Coerce<X, unknown, T>): X & T {
+  asOrThrow<X>(value: Coerced<X, unknown, T>): X & T {
     if (value !== this.value)
       throw new Error()
     return value as X & T
@@ -20,7 +20,7 @@ export class WeakEqualityGuard<T> {
     readonly value: T
   ) { }
 
-  asOrThrow<X>(value: Coerce<X, unknown, T>): X & T {
+  asOrThrow<X>(value: Coerced<X, unknown, T>): X & T {
     if (value != this.value)
       throw new Error()
     return value as X & T
