@@ -57,7 +57,7 @@ export class InterGuard<I, A extends Guard<I, unknown>, B extends Guard<I, unkno
 
 }
 
-export class ThenGuard<M, A extends Guard<unknown, M>, B extends Guard<M, unknown>> {
+export class PipeGuard<M, A extends Guard<unknown, M>, B extends Guard<M, unknown>> {
 
   constructor(
     readonly left: A,

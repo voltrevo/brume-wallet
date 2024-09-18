@@ -5,7 +5,7 @@ import { parse } from "./parse"
 
 export namespace ZeroHexStringGuard {
 
-  export function asOrThrow<X extends string>(value: Coerced<X, string, `0x${string}`>): X & `0x${string}` {
+  export function asOrThrow<X>(value: Coerced<X, string, `0x${string}`>): X & `0x${string}` {
     if (!value.startsWith("0x"))
       throw new Error()
     return value as X & `0x${string}`

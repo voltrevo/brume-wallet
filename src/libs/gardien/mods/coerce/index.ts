@@ -1,3 +1,6 @@
+/**
+ * Accept a value of exact type `I` or accept a value of type `O`
+ */
 export type Coerced<X, I, O> = I extends X ? I : O
 
 export namespace Coerced {

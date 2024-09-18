@@ -1,6 +1,6 @@
 import { Finalize } from "../../libs/finalize"
 import { Guard } from "../guard"
-import { ArrayAndElementsGuard, BigIntGuard, BooleanGuard, InterGuard, NullGuard, NumberGuard, ObjectGuard, RecordGuard, StringGuard, StrongEqualityGuard, SymbolGuard, ThenGuard, TupleGuard, UnionGuard } from "../guards"
+import { ArrayAndElementsGuard, BigIntGuard, BooleanGuard, InterGuard, NullGuard, NumberGuard, ObjectGuard, PipeGuard, RecordGuard, StringGuard, StrongEqualityGuard, SymbolGuard, TupleGuard, UnionGuard } from "../guards"
 import { Property } from "../props"
 
 export type Parsed<T> =
@@ -60,7 +60,7 @@ export function parse<T>(f: (toolbox: Toolbox) => T): Parsed<T> {
   }
 
   function then<M, A extends Guard<unknown, M>, B extends Guard<M, unknown>>(a: A, b: B): Guard<Guard.Input<A>, Guard.Output<A> & Guard.Output<B>> {
-    return new ThenGuard(a, b)
+    return new PipeGuard(a, b)
   }
 
   const value = f({ boolean, string, number, bigint, object, symbol, optional, readonly, array, inter, union, then })
