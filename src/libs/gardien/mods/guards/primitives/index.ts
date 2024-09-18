@@ -77,11 +77,11 @@ export class StringableGuard {
 
   constructor() { }
 
-  static asOrThrow(value: unknown): string {
+  static asOrThrow(value?: any): string {
     return String(value)
   }
 
-  asOrThrow(value: unknown): string {
+  asOrThrow(value?: any): string {
     return String(value)
   }
 
@@ -105,6 +105,20 @@ export class NumberGuard {
 
 }
 
+export class NumberableGuard {
+
+  constructor() { }
+
+  static asOrThrow(value?: any): number {
+    return Number(value)
+  }
+
+  asOrThrow(value?: any): number {
+    return Number(value)
+  }
+
+}
+
 export class BigIntGuard {
 
   constructor() { }
@@ -119,6 +133,20 @@ export class BigIntGuard {
     if (typeof value !== "bigint")
       throw new Error()
     return value as X & bigint
+  }
+
+}
+
+export class BigIntableGuard {
+
+  constructor() { }
+
+  static asOrThrow(value: string | number | bigint | boolean): bigint {
+    return BigInt(value)
+  }
+
+  asOrThrow(value: string | number | bigint | boolean): bigint {
+    return BigInt(value)
   }
 
 }

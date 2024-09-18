@@ -2,11 +2,11 @@ export class AnyGuard {
 
   constructor() { }
 
-  static asOrThrow(value: unknown): any {
+  static asOrThrow(value: any): any {
     return value
   }
 
-  asOrThrow(value: unknown): any {
+  asOrThrow(value: any): any {
     return value
   }
 
