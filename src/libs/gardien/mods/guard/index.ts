@@ -1,36 +1,19 @@
 import { ArrayGuard } from "../guards"
+import { Super } from "../super"
 
 export interface Guard<I, O> {
-  asOrThrow(value: I): O
+  asOrThrow<X>(value: Super<X, I>): O
 }
 
 export namespace Guard {
 
   export interface Strict<I, O> {
-    asOrThrow: (value: I) => O
+    asOrThrow: <X>(value: Super<X, I>) => O
   }
 
-  export interface Coerced<W, S, O> extends Guard<S, O> {
-    asOrThrow(value: S): O
-    asOrThrow<X>(value: Strict<X, W>): O
-  }
-
-  export namespace Coerced {
-    export type Reject<T> = T extends Coerced<any, any, any> ? never : T
-
-    export type Weak<T> = T extends Coerced<infer W, any, any> ? W : never
-
-    export type Strong<T> = T extends Coerced<any, infer S, any> ? S : never
-
-    export type Output<T> = T extends Coerced<any, any, infer O> ? O : never
-  }
-
-  export interface Casted<I, O> extends Coerced<I, O, O> {
+  export interface Casted<I, O> extends Guard<I, O> {
     asOrThrow<X extends O>(value: X): X
-
-    asOrThrow(value: O): O
-
-    asOrThrow<X>(value: Strict<X, I>): O
+    asOrThrow<X>(value: Super<X, I>): O
   }
 
   export namespace Casted {
@@ -53,11 +36,7 @@ export namespace Guard {
 
   export function asOrNull<T extends Guard.Casted<any, any>, X extends Guard.Casted.Input<T>>(guard: T, value: X): (X & Guard.Casted.Output<T>) | null;
 
-  export function asOrNull<T extends Guard.Coerced<any, any, any>, X>(guard: T, value: Guard.Coerced.Strong<T>): Guard.Coerced.Output<T> | null;
-
-  export function asOrNull<T extends Guard.Coerced<any, any, any>, X>(guard: T, value: Strict<X, Guard.Coerced.Weak<T>>): Guard.Coerced.Output<T> | null;
-
-  export function asOrNull<T extends Guard<any, any>>(guard: Guard.Coerced.Reject<T>, value: Guard.Input<T>): Guard.Output<T> | null;
+  export function asOrNull<T extends Guard<any, any>, X>(guard: Guard.Casted.Reject<T>, value: Super<X, Guard.Input<T>>): Guard.Output<T> | null;
 
   export function asOrNull<T extends Guard<any, any>>(guard: T, value: Guard.Input<T>): Guard.Output<T> | null {
     try {

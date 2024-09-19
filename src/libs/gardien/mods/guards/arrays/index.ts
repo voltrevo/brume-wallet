@@ -1,5 +1,5 @@
 import { Guard } from "../../guard"
-import { Strict } from "../../strict"
+import { Super } from "../../super"
 
 export class ArrayGuard {
 
@@ -7,26 +7,22 @@ export class ArrayGuard {
 
   static asOrThrow<X extends unknown[]>(value: X): X
 
-  static asOrThrow(value: unknown[]): unknown[]
-
-  static asOrThrow<X>(value: Strict<X, unknown>): unknown[]
+  static asOrThrow<X>(value: Super<X, unknown[]>): unknown[];
 
   static asOrThrow(value: unknown): unknown[] {
     if (!Array.isArray(value))
       throw new Error()
-    return value as unknown[]
+    return value
   }
 
   asOrThrow<X extends unknown[]>(value: X): X
 
-  asOrThrow(value: unknown[]): unknown[]
-
-  asOrThrow<X>(value: Strict<X, unknown>): unknown[]
+  asOrThrow<X>(value: Super<X, unknown[]>): unknown[]
 
   asOrThrow(value: unknown): unknown[] {
     if (!Array.isArray(value))
       throw new Error()
-    return value as unknown[]
+    return value
   }
 
 }

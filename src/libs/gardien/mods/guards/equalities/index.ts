@@ -1,4 +1,4 @@
-import { Coerced } from "../../strict"
+import { Super } from "../../super"
 
 export class StrongEqualityGuard<T> {
 
@@ -6,10 +6,14 @@ export class StrongEqualityGuard<T> {
     readonly value: T
   ) { }
 
-  asOrThrow<X>(value: Coerced<X, unknown, T>): X & T {
+  asOrThrow<X extends T>(value: X): X
+
+  asOrThrow<X>(value: Super<X, T>): T
+
+  asOrThrow(value: unknown): T {
     if (value !== this.value)
       throw new Error()
-    return value as X & T
+    return value as T
   }
 
 }
@@ -20,10 +24,14 @@ export class WeakEqualityGuard<T> {
     readonly value: T
   ) { }
 
-  asOrThrow<X>(value: Coerced<X, unknown, T>): X & T {
+  asOrThrow<X extends T>(value: X): X
+
+  asOrThrow<X>(value: Super<X, T>): T
+
+  asOrThrow(value: unknown): T {
     if (value != this.value)
       throw new Error()
-    return value as X & T
+    return value as T
   }
 
 }

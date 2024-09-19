@@ -1,6 +1,6 @@
 import { Errorer } from "../../errorer"
 import { Guard } from "../../guard"
-import { Strict } from "../../strict"
+import { Super } from "../../super"
 import { LengthGuard, MaxLength, MaxLengthGuard, MinLength, MinLengthGuard } from "../lengths"
 import { InterGuard } from "../logicals"
 
@@ -32,26 +32,22 @@ export class StringGuard {
 
   static asOrThrow<X extends string>(value: X): X
 
-  static asOrThrow(value: string): string
-
-  static asOrThrow<X>(value: Strict<X, unknown>): string
+  static asOrThrow<X>(value: Super<X, string>): string
 
   static asOrThrow(value: unknown): string {
     if (typeof value !== "string")
       throw new Error()
-    return value as string
+    return value
   }
 
   asOrThrow<X extends string>(value: X): X
 
-  asOrThrow<X>(value: string): string;
+  asOrThrow<X>(value: Super<X, string>): string
 
-  asOrThrow<X>(value: Strict<X, unknown>): string;
-
-  asOrThrow<X>(value: unknown): string {
+  asOrThrow(value: unknown): string {
     if (typeof value !== "string")
       throw new Error()
-    return value as X & string
+    return value
   }
 
 }

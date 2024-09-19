@@ -1,19 +1,27 @@
-import { Coerced } from "../../strict"
+import { Super } from "../../super"
 
 export class NullGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, null>): X & null {
+  static asOrThrow<X extends null>(value: X): X
+
+  static asOrThrow<X>(value: Super<X, null>): null
+
+  static asOrThrow(value: unknown): null {
     if (value !== null)
       throw new Error()
-    return value as X & null
+    return value
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, null>): X & null {
+  asOrThrow<X extends null>(value: X): X
+
+  asOrThrow<X>(value: Super<X, null>): null
+
+  asOrThrow(value: unknown): null {
     if (value !== null)
       throw new Error()
-    return value as X & null
+    return value
   }
 
 }
@@ -22,16 +30,24 @@ export class UndefinedGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, undefined>): X & undefined {
+  static asOrThrow<X extends undefined>(value: X): X
+
+  static asOrThrow<X>(value: Super<X, undefined>): undefined
+
+  static asOrThrow(value: unknown): undefined {
     if (value !== undefined)
       throw new Error()
-    return value as X & undefined
+    return value
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, undefined>): X & undefined {
+  asOrThrow<X extends undefined>(value: X): X
+
+  asOrThrow<X>(value: Super<X, undefined>): undefined
+
+  asOrThrow(value: unknown): undefined {
     if (value !== undefined)
       throw new Error()
-    return value as X & undefined
+    return value
   }
 
 }
@@ -40,16 +56,24 @@ export class NonNullableGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, null | undefined>): NonNullable<X> {
+  static asOrThrow<X>(value: NonNullable<X>): NonNullable<X>
+
+  static asOrThrow<X>(value: Super<X, NonNullable<X>>): NonNullable<X>
+
+  static asOrThrow<X>(value: X): NonNullable<X> {
     if (value == null)
       throw new Error()
-    return value as NonNullable<X>
+    return value
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, null | undefined>): NonNullable<X> {
+  asOrThrow<X>(value: NonNullable<X>): NonNullable<X>
+
+  asOrThrow<X>(value: Super<X, NonNullable<X>>): NonNullable<X>
+
+  asOrThrow<X>(value: X): NonNullable<X> {
     if (value == null)
       throw new Error()
-    return value as NonNullable<X>
+    return value
   }
 
 }

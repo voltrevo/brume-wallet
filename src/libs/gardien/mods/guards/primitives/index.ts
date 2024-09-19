@@ -1,19 +1,27 @@
-import { Coerced } from "../../strict"
+import { Super } from "../../super"
 
 export class BooleanGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, boolean>): X & boolean {
+  static asOrThrow<X extends boolean>(value: X): X
+
+  static asOrThrow<X>(value: Super<X, boolean>): boolean
+
+  static asOrThrow(value: unknown): boolean {
     if (typeof value !== "boolean")
       throw new Error()
-    return value as X & boolean
+    return value
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, boolean>): X & boolean {
+  asOrThrow<X extends boolean>(value: X): X
+
+  asOrThrow<X>(value: Super<X, boolean>): boolean
+
+  asOrThrow(value: unknown): boolean {
     if (typeof value !== "boolean")
       throw new Error()
-    return value as X & boolean
+    return value
   }
 
 }
@@ -22,16 +30,24 @@ export class TrueGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, true>): X & true {
+  static asOrThrow<X extends true>(value: X): X
+
+  static asOrThrow<X>(value: Super<X, true>): true
+
+  static asOrThrow(value: unknown): true {
     if (value !== true)
       throw new Error()
-    return value as X & true
+    return value
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, true>): X & true {
+  asOrThrow<X extends true>(value: X): X
+
+  asOrThrow<X>(value: Super<X, true>): true
+
+  asOrThrow(value: unknown): true {
     if (value !== true)
       throw new Error()
-    return value as X & true
+    return value
   }
 
 }
@@ -40,16 +56,24 @@ export class FalseGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, false>): X & false {
+  static asOrThrow<X extends false>(value: X): X
+
+  static asOrThrow<X>(value: Super<X, false>): false
+
+  static asOrThrow(value: unknown): false {
     if (value !== false)
       throw new Error()
-    return value as X & false
+    return value
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, false>): X & false {
+  asOrThrow<X extends false>(value: X): X
+
+  asOrThrow<X>(value: Super<X, false>): false
+
+  asOrThrow(value: unknown): false {
     if (value !== false)
       throw new Error()
-    return value as X & false
+    return value
   }
 
 }
@@ -58,16 +82,24 @@ export class NumberGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, number>): X & number {
+  static asOrThrow<X extends number>(value: X): X
+
+  static asOrThrow<X>(value: Super<X, number>): number
+
+  static asOrThrow(value: unknown): number {
     if (typeof value !== "number")
       throw new Error()
-    return value as X & number
+    return value
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, number>): X & number {
+  asOrThrow<X extends number>(value: X): X
+
+  asOrThrow<X>(value: Super<X, number>): number
+
+  asOrThrow(value: unknown): number {
     if (typeof value !== "number")
       throw new Error()
-    return value as X & number
+    return value
   }
 
 }
@@ -90,16 +122,24 @@ export class BigIntGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, bigint>): X & bigint {
+  static asOrThrow<X extends bigint>(value: X): X
+
+  static asOrThrow<X>(value: Super<X, bigint>): bigint
+
+  static asOrThrow(value: unknown): bigint {
     if (typeof value !== "bigint")
       throw new Error()
-    return value as X & bigint
+    return value
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, bigint>): X & bigint {
+  asOrThrow<X extends bigint>(value: X): X
+
+  asOrThrow<X>(value: Super<X, bigint>): bigint
+
+  asOrThrow(value: unknown): bigint {
     if (typeof value !== "bigint")
       throw new Error()
-    return value as X & bigint
+    return value
   }
 
 }
@@ -122,16 +162,28 @@ export class ObjectGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, object>): X & object {
+  static asOrThrow<X extends object>(value: X): X
+
+  static asOrThrow<X>(value: Super<X, object>): object
+
+  static asOrThrow(value: unknown): object {
     if (typeof value !== "object")
       throw new Error()
-    return value as X & object
+    if (value === null)
+      throw new Error()
+    return value
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, object>): X & object {
+  asOrThrow<X extends object>(value: X): X
+
+  asOrThrow<X>(value: Super<X, object>): object
+
+  asOrThrow(value: unknown): object {
     if (typeof value !== "object")
       throw new Error()
-    return value as X & object
+    if (value === null)
+      throw new Error()
+    return value
   }
 
 }
@@ -140,16 +192,24 @@ export class FunctionGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, Function>): X & Function {
+  static asOrThrow<X extends Function>(value: X): X
+
+  static asOrThrow<X>(value: Super<X, Function>): Function
+
+  static asOrThrow(value: unknown): Function {
     if (typeof value !== "function")
       throw new Error()
-    return value as X & Function
+    return value
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, Function>): X & Function {
+  asOrThrow<X extends Function>(value: X): X
+
+  asOrThrow<X>(value: Super<X, Function>): Function
+
+  asOrThrow(value: unknown): Function {
     if (typeof value !== "function")
       throw new Error()
-    return value as X & Function
+    return value
   }
 
 }
@@ -158,16 +218,24 @@ export class SymbolGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, symbol>): X & symbol {
+  static asOrThrow<X extends symbol>(value: X): X
+
+  static asOrThrow<X>(value: Super<X, symbol>): symbol
+
+  static asOrThrow(value: unknown): symbol {
     if (typeof value !== "symbol")
       throw new Error()
-    return value as X & symbol
+    return value
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, symbol>): X & symbol {
+  asOrThrow<X extends symbol>(value: X): X
+
+  asOrThrow<X>(value: Super<X, symbol>): symbol
+
+  asOrThrow(value: unknown): symbol {
     if (typeof value !== "symbol")
       throw new Error()
-    return value as X & symbol
+    return value
   }
 
 }

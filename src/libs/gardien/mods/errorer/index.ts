@@ -1,6 +1,6 @@
 import { Guard } from "../guard"
 import { StringGuard } from "../guards/strings"
-import { Strict } from "../strict"
+import { Super } from "../super"
 
 export class Errorer<T extends Guard<any, any>> {
 
@@ -11,7 +11,7 @@ export class Errorer<T extends Guard<any, any>> {
 
   asOrThrow<T extends Guard.Coerced<any, any, any>, X>(this: Errorer<T>, value: Guard.Coerced.Strong<T>): Guard.Coerced.Output<T>;
 
-  asOrThrow<T extends Guard.Coerced<any, any, any>, X>(this: Errorer<T>, value: Strict<X, Guard.Coerced.Weak<T>>): Guard.Coerced.Output<T>;
+  asOrThrow<T extends Guard.Coerced<any, any, any>, X>(this: Errorer<T>, value: Super<X, Guard.Coerced.Weak<T>>): Guard.Coerced.Output<T>;
 
   asOrThrow<T extends Guard<any, any>>(this: Errorer<Guard.Coerced.Reject<T>>, value: Guard.Input<T>): Guard.Output<T>;
 
