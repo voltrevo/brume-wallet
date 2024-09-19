@@ -1,4 +1,4 @@
-import { Coerced } from "../../coerce"
+import { Coerced } from "../../strict"
 
 export class NullGuard {
 

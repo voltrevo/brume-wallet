@@ -1,7 +1,7 @@
-import { Coerced } from "./coerce"
 import { NumberGuard } from "./guards/primitives"
 import { Json } from "./json"
 import { parse } from "./parse"
+import { Coerced } from "./strict"
 
 export namespace ZeroHexStringGuard {
 

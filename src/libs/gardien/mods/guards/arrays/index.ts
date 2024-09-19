@@ -1,25 +1,37 @@
-import { Coerced } from "../../coerce"
 import { Guard } from "../../guard"
+import { Strict } from "../../strict"
 
 export class ArrayGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, unknown[]>): X & unknown[] {
+  static asOrThrow<X extends unknown[]>(value: X): X
+
+  static asOrThrow(value: unknown[]): unknown[]
+
+  static asOrThrow<X>(value: Strict<X, unknown>): unknown[]
+
+  static asOrThrow(value: unknown): unknown[] {
     if (!Array.isArray(value))
       throw new Error()
-    return value as X & unknown[]
+    return value as unknown[]
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, unknown[]>): X & unknown[] {
+  asOrThrow<X extends unknown[]>(value: X): X
+
+  asOrThrow(value: unknown[]): unknown[]
+
+  asOrThrow<X>(value: Strict<X, unknown>): unknown[]
+
+  asOrThrow(value: unknown): unknown[] {
     if (!Array.isArray(value))
       throw new Error()
-    return value as X & unknown[]
+    return value as unknown[]
   }
 
 }
 
-export class ElementsGuard<T extends Guard<unknown, unknown>> {
+export class ElementsGuard<T extends Guard<any, any>> {
 
   constructor(
     readonly subguard: T
@@ -33,7 +45,7 @@ export class ElementsGuard<T extends Guard<unknown, unknown>> {
 
 }
 
-export class ArrayAndElementsGuard<T extends Guard<unknown, unknown>> {
+export class ArrayAndElementsGuard<T extends Guard<any, any>> {
 
   constructor(
     readonly subguard: T

@@ -1,6 +1,6 @@
-import { Coerced } from "../../coerce"
 import { Errorer } from "../../errorer"
 import { Guard } from "../../guard"
+import { Strict } from "../../strict"
 import { LengthGuard, MaxLength, MaxLengthGuard, MinLength, MinLengthGuard } from "../lengths"
 import { InterGuard } from "../logicals"
 
@@ -30,13 +30,25 @@ export class StringGuard {
 
   constructor() { }
 
-  static asOrThrow<X>(value: Coerced<X, unknown, string>): X & string {
+  static asOrThrow<X extends string>(value: X): X
+
+  static asOrThrow(value: string): string
+
+  static asOrThrow<X>(value: Strict<X, unknown>): string
+
+  static asOrThrow(value: unknown): string {
     if (typeof value !== "string")
       throw new Error()
-    return value as X & string
+    return value as string
   }
 
-  asOrThrow<X>(value: Coerced<X, unknown, string>): X & string {
+  asOrThrow<X extends string>(value: X): X
+
+  asOrThrow<X>(value: string): string;
+
+  asOrThrow<X>(value: Strict<X, unknown>): string;
+
+  asOrThrow<X>(value: unknown): string {
     if (typeof value !== "string")
       throw new Error()
     return value as X & string

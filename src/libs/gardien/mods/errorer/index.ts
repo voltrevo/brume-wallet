@@ -1,19 +1,28 @@
-import { Coerced } from "../coerce"
 import { Guard } from "../guard"
+import { StringGuard } from "../guards/strings"
+import { Strict } from "../strict"
 
-export class Errorer<T extends Guard<unknown, unknown>> {
+export class Errorer<T extends Guard<any, any>> {
 
   constructor(
     readonly guard: T,
     readonly error: () => Error
   ) { }
 
-  asOrThrow<X>(value: Coerced.Input<T["asOrThrow"], X, Guard.Input<T>, Guard.Output<T>>): Coerced.Output<T["asOrThrow"], X, Guard.Input<T>, Guard.Output<T>> {
+  asOrThrow<T extends Guard.Coerced<any, any, any>, X>(this: Errorer<T>, value: Guard.Coerced.Strong<T>): Guard.Coerced.Output<T>;
+
+  asOrThrow<T extends Guard.Coerced<any, any, any>, X>(this: Errorer<T>, value: Strict<X, Guard.Coerced.Weak<T>>): Guard.Coerced.Output<T>;
+
+  asOrThrow<T extends Guard<any, any>>(this: Errorer<Guard.Coerced.Reject<T>>, value: Guard.Input<T>): Guard.Output<T>;
+
+  asOrThrow(value: Guard.Input<T>): Guard.Output<T> {
     try {
-      return this.guard.asOrThrow(value) as Coerced.Output<T["asOrThrow"], X, Guard.Input<T>, Guard.Output<T>>
+      return this.guard.asOrThrow(value)
     } catch (error) {
       throw this.error()
     }
   }
 
 }
+
+new Errorer(StringGuard, () => new Error("Not a string")).asOrThrow(null as unknown)
