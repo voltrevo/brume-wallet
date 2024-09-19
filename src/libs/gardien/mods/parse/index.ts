@@ -1,6 +1,7 @@
 import { Finalize } from "../../libs/finalize"
 import { Guard } from "../guard"
-import { ArrayAndElementsGuard, BigIntGuard, BooleanGuard, InterGuard, NullGuard, NumberGuard, ObjectGuard, PipeGuard, RecordGuard, StringGuard, StrongEqualityGuard, SymbolGuard, TupleGuard, UnionGuard } from "../guards"
+import { ArrayAndElementsGuard, BigIntGuard, BooleanGuard, InterGuard, NullGuard, NumberGuard, ObjectGuard, RecordGuard, StrongEqualityGuard, SymbolGuard, TupleGuard, UnionGuard } from "../guards"
+import { StringGuard } from "../guards/strings"
 import { Property } from "../props"
 
 export type Parsed<T> =
@@ -25,10 +26,9 @@ export interface Toolbox {
 
   readonly array: <T>(inner: T) => Guard<unknown, Guard.Output<Parsed<T>>[]>
 
-  readonly inter: <I, A extends Guard<I, unknown>, B extends Guard<I, unknown>>(a: A, b: B) => Guard<I, Guard.Output<A> & Guard.Output<B>>
-  readonly union: <I, A extends Guard<I, unknown>, B extends Guard<I, unknown>>(a: A, b: B) => Guard<I, Guard.Output<A> | Guard.Output<B>>
+  readonly inter: <I, M, O>(a: Guard<I, M>, b: Guard<M, O>) => Guard<I, O>
 
-  readonly then: <M, A extends Guard<unknown, M>, B extends Guard<M, unknown>>(a: A, b: B) => Guard<Guard.Input<A>, Guard.Output<A> & Guard.Output<B>>
+  readonly union: <I, A, B>(a: Guard<I, A>, b: Guard<I, B>) => Guard<I, A | B>
 }
 
 export function parse<T>(f: (toolbox: Toolbox) => T): Parsed<T> {
@@ -51,19 +51,15 @@ export function parse<T>(f: (toolbox: Toolbox) => T): Parsed<T> {
     return new ArrayAndElementsGuard(parse(() => inner))
   }
 
-  function inter<I, A extends Guard<I, unknown>, B extends Guard<I, unknown>>(a: A, b: B): Guard<I, Guard.Output<A> & Guard.Output<B>> {
+  function inter<I, M, O>(a: Guard<I, M>, b: Guard<M, O>): Guard<I, O> {
     return new InterGuard(a, b)
   }
 
-  function union<I, A extends Guard<I, unknown>, B extends Guard<I, unknown>>(a: A, b: B): Guard<I, Guard.Output<A> | Guard.Output<B>> {
+  function union<I, A, B>(a: Guard<I, A>, b: Guard<I, B>): Guard<I, A | B> {
     return new UnionGuard(a, b)
   }
 
-  function then<M, A extends Guard<unknown, M>, B extends Guard<M, unknown>>(a: A, b: B): Guard<Guard.Input<A>, Guard.Output<A> & Guard.Output<B>> {
-    return new PipeGuard(a, b)
-  }
-
-  const value = f({ boolean, string, number, bigint, object, symbol, optional, readonly, array, inter, union, then })
+  const value = f({ boolean, string, number, bigint, object, symbol, optional, readonly, array, inter, union })
 
   if (value == null)
     return NullGuard as any

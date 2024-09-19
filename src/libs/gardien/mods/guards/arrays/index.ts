@@ -25,10 +25,10 @@ export class ElementsGuard<T extends Guard<unknown, unknown>> {
     readonly subguard: T
   ) { }
 
-  asOrThrow<X>(value: Coerced<X, Guard.Input<T>, Guard.Output<T>>[]): X & Guard.Output<T>[] {
+  asOrThrow(value: Guard.Input<T>[]): Guard.Output<T>[] {
     if (!value.every(x => this.subguard.asOrThrow(x)))
       throw new Error()
-    return value as X & Guard.Output<T>[]
+    return value as Guard.Output<T>[]
   }
 
 }
