@@ -1,6 +1,5 @@
 import { Guard } from "../guard"
-import { StringGuard } from "../guards/strings"
-import { Super } from "../super"
+import { Infer, Super } from "../super"
 
 export class Errorer<T extends Guard<any, any>> {
 
@@ -9,11 +8,15 @@ export class Errorer<T extends Guard<any, any>> {
     readonly error: () => Error
   ) { }
 
-  asOrThrow<T extends Guard.Coerced<any, any, any>, X>(this: Errorer<T>, value: Guard.Coerced.Strong<T>): Guard.Coerced.Output<T>;
+  asOrThrow<T extends Guard.Casted<any, any, any>, X extends Guard.Casted.Strong<T>>(this: Errorer<T>, value: X): X
 
-  asOrThrow<T extends Guard.Coerced<any, any, any>, X>(this: Errorer<T>, value: Super<X, Guard.Coerced.Weak<T>>): Guard.Coerced.Output<T>;
+  asOrThrow<T extends Guard.Casted<any, any, any>, X extends Guard.Casted.Weak<T>>(this: Errorer<T>, value: Super<Infer<X>, Guard.Casted.Strong<T>>): Guard.Casted.Output<T>
 
-  asOrThrow<T extends Guard<any, any>>(this: Errorer<Guard.Coerced.Reject<T>>, value: Guard.Input<T>): Guard.Output<T>;
+  asOrThrow<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Strong<T>>(this: Errorer<Guard.Casted.Reject<T>>, value: X): Guard.Overloaded.Output<T>
+
+  asOrThrow<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Weak<T>>(this: Errorer<Guard.Casted.Reject<T>>, value: Super<Infer<X>, Guard.Overloaded.Strong<T>>): Guard.Overloaded.Output<T>
+
+  asOrThrow<T extends Guard<any, any>>(this: Errorer<Guard.Overloaded.Reject<T>>, value: Guard.Input<T>): Guard.Output<T>
 
   asOrThrow(value: Guard.Input<T>): Guard.Output<T> {
     try {
@@ -24,5 +27,3 @@ export class Errorer<T extends Guard<any, any>> {
   }
 
 }
-
-new Errorer(StringGuard, () => new Error("Not a string")).asOrThrow(null as unknown)
