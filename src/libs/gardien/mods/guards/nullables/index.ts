@@ -1,4 +1,4 @@
-import { Infer, Super } from "../../super"
+import { Resolve, Super } from "../../super"
 
 export class NullGuard {
 
@@ -6,7 +6,7 @@ export class NullGuard {
 
   static asOrThrow<X extends null>(value: X): X
 
-  static asOrThrow<X>(value: Super<Infer<X>, null>): null
+  static asOrThrow<X>(value: Super<Resolve<X>, null>): null
 
   static asOrThrow(value: unknown): null {
     if (value !== null)
@@ -16,7 +16,7 @@ export class NullGuard {
 
   asOrThrow<X extends null>(value: X): X
 
-  asOrThrow<X>(value: Super<Infer<X>, null>): null
+  asOrThrow<X>(value: Super<Resolve<X>, null>): null
 
   asOrThrow(value: unknown): null {
     if (value !== null)
@@ -32,7 +32,7 @@ export class UndefinedGuard {
 
   static asOrThrow<X extends undefined>(value: X): X
 
-  static asOrThrow<X>(value: Super<Infer<X>, undefined>): undefined
+  static asOrThrow<X>(value: Super<Resolve<X>, undefined>): undefined
 
   static asOrThrow(value: unknown): undefined {
     if (value !== undefined)
@@ -42,7 +42,7 @@ export class UndefinedGuard {
 
   asOrThrow<X extends undefined>(value: X): X
 
-  asOrThrow<X>(value: Super<Infer<X>, undefined>): undefined
+  asOrThrow<X>(value: Super<Resolve<X>, undefined>): undefined
 
   asOrThrow(value: unknown): undefined {
     if (value !== undefined)

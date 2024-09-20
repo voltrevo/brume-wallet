@@ -1,4 +1,4 @@
-import { Super } from "../super"
+import { Resolve, Super } from "../super"
 
 export interface Guard<I, O> {
   asOrThrow(value: I): O
@@ -6,7 +6,7 @@ export interface Guard<I, O> {
 
 export namespace Guard {
 
-  export interface Overloaded<W, S, O> {
+  export interface Overloaded<W extends S, S, O> {
     asOrThrow(value: S): O
     asOrThrow(value: W): O
   }
@@ -25,7 +25,9 @@ export namespace Guard {
     export type AllOutput<T> = { [K in keyof T]: Output<T[K]> }
   }
 
-  export interface Casted<W, S extends O, O> {
+  export interface Casted<W extends S, S extends O, O> {
+    casted: true
+
     asOrThrow(value: S): S
     asOrThrow(value: W): O
   }
@@ -76,15 +78,9 @@ export namespace Guard {
 
   export type AllOutputOrSelf<T> = { [K in keyof T]: OutputOrSelf<T[K]> }
 
-  export function asOrNull<T extends Guard.Casted<any, any, any>, X extends Guard.Casted.Strong<T>>(guard: T, value: X): X | null;
+  export function asOrNull<T extends Guard<any, any>, X extends Guard.Overloaded.Strong<T>>(guard: T, value: X): Guard.Overloaded.Output<T> | null;
 
-  export function asOrNull<T extends Guard.Casted<any, any, any>, X extends Guard.Casted.Weak<T>>(guard: T, value: Super<Infer<X>, Guard.Casted.Strong<T>>): Guard.Casted.Output<T> | null;
-
-  export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Strong<T>>(guard: Exclude<T, Guard.Casted<any, any, any>>, value: X): Guard.Overloaded.Output<T> | null;
-
-  export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Weak<T>>(guard: Exclude<T, Guard.Casted<any, any, any>>, value: Super<Infer<X>, Guard.Overloaded.Strong<T>>): Guard.Overloaded.Output<T> | null;
-
-  export function asOrNull<T extends Guard<any, any>>(guard: Exclude<T, Guard.Overloaded<any, any, any>>, value: Guard.Input<T>): Guard.Output<T> | null;
+  export function asOrNull<T extends Guard<any, any>, X extends Guard.Overloaded.Weak<T>>(guard: T, value: Super<Resolve<X>, Guard.Overloaded.Strong<T>>): Guard.Overloaded.Output<T> | null;
 
   export function asOrNull<T extends Guard<any, any>>(guard: T, value: Guard.Input<T>): Guard.Output<T> | null {
     try {

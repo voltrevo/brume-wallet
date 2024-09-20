@@ -6,4 +6,4 @@ export type Super<X, T> = T extends X ? X : never
 /**
  * Force literal type `X` to be inferred
  */
-export type Infer<T> = T extends Super<T, T> ? T : never
+export type Resolve<T> = T extends Super<T, T> ? T : never

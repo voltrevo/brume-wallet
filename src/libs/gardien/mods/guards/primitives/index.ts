@@ -1,4 +1,4 @@
-import { Infer, Super } from "../../super"
+import { Resolve, Super } from "../../super"
 
 export class BooleanGuard {
 
@@ -6,7 +6,7 @@ export class BooleanGuard {
 
   static asOrThrow<X extends boolean>(value: X): X
 
-  static asOrThrow<X>(value: Super<Infer<X>, boolean>): boolean
+  static asOrThrow<X>(value: Super<Resolve<X>, boolean>): boolean
 
   static asOrThrow(value: unknown): boolean {
     if (typeof value !== "boolean")
@@ -16,7 +16,7 @@ export class BooleanGuard {
 
   asOrThrow<X extends boolean>(value: X): X
 
-  asOrThrow<X>(value: Super<Infer<X>, boolean>): boolean
+  asOrThrow<X>(value: Super<Resolve<X>, boolean>): boolean
 
   asOrThrow(value: unknown): boolean {
     if (typeof value !== "boolean")
@@ -32,7 +32,7 @@ export class TrueGuard {
 
   static asOrThrow<X extends true>(value: X): X
 
-  static asOrThrow<X>(value: Super<Infer<X>, true>): true
+  static asOrThrow<X>(value: Super<Resolve<X>, true>): true
 
   static asOrThrow(value: unknown): true {
     if (value !== true)
@@ -42,7 +42,7 @@ export class TrueGuard {
 
   asOrThrow<X extends true>(value: X): X
 
-  asOrThrow<X>(value: Super<Infer<X>, true>): true
+  asOrThrow<X>(value: Super<Resolve<X>, true>): true
 
   asOrThrow(value: unknown): true {
     if (value !== true)
@@ -58,7 +58,7 @@ export class FalseGuard {
 
   static asOrThrow<X extends false>(value: X): X
 
-  static asOrThrow<X>(value: Super<Infer<X>, false>): false
+  static asOrThrow<X>(value: Super<Resolve<X>, false>): false
 
   static asOrThrow(value: unknown): false {
     if (value !== false)
@@ -68,7 +68,7 @@ export class FalseGuard {
 
   asOrThrow<X extends false>(value: X): X
 
-  asOrThrow<X>(value: Super<Infer<X>, false>): false
+  asOrThrow<X>(value: Super<Resolve<X>, false>): false
 
   asOrThrow(value: unknown): false {
     if (value !== false)
@@ -84,7 +84,7 @@ export class NumberGuard {
 
   static asOrThrow<X extends number>(value: X): X
 
-  static asOrThrow<X>(value: Super<Infer<X>, number>): number
+  static asOrThrow<X>(value: Super<Resolve<X>, number>): number
 
   static asOrThrow(value: unknown): number {
     if (typeof value !== "number")
@@ -94,7 +94,7 @@ export class NumberGuard {
 
   asOrThrow<X extends number>(value: X): X
 
-  asOrThrow<X>(value: Super<Infer<X>, number>): number
+  asOrThrow<X>(value: Super<Resolve<X>, number>): number
 
   asOrThrow(value: unknown): number {
     if (typeof value !== "number")
@@ -124,7 +124,7 @@ export class BigIntGuard {
 
   static asOrThrow<X extends bigint>(value: X): X
 
-  static asOrThrow<X>(value: Super<Infer<X>, bigint>): bigint
+  static asOrThrow<X>(value: Super<Resolve<X>, bigint>): bigint
 
   static asOrThrow(value: unknown): bigint {
     if (typeof value !== "bigint")
@@ -134,7 +134,7 @@ export class BigIntGuard {
 
   asOrThrow<X extends bigint>(value: X): X
 
-  asOrThrow<X>(value: Super<Infer<X>, bigint>): bigint
+  asOrThrow<X>(value: Super<Resolve<X>, bigint>): bigint
 
   asOrThrow(value: unknown): bigint {
     if (typeof value !== "bigint")
@@ -164,7 +164,7 @@ export class ObjectGuard {
 
   static asOrThrow<X extends object>(value: X): X
 
-  static asOrThrow<X>(value: Super<Infer<X>, object>): object
+  static asOrThrow<X>(value: Super<Resolve<X>, object>): object
 
   static asOrThrow(value: unknown): object {
     if (typeof value !== "object")
@@ -176,7 +176,7 @@ export class ObjectGuard {
 
   asOrThrow<X extends object>(value: X): X
 
-  asOrThrow<X>(value: Super<Infer<X>, object>): object
+  asOrThrow<X>(value: Super<Resolve<X>, object>): object
 
   asOrThrow(value: unknown): object {
     if (typeof value !== "object")
@@ -194,7 +194,7 @@ export class FunctionGuard {
 
   static asOrThrow<X extends Function>(value: X): X
 
-  static asOrThrow<X>(value: Super<Infer<X>, Function>): Function
+  static asOrThrow<X>(value: Super<Resolve<X>, Function>): Function
 
   static asOrThrow(value: unknown): Function {
     if (typeof value !== "function")
@@ -204,7 +204,7 @@ export class FunctionGuard {
 
   asOrThrow<X extends Function>(value: X): X
 
-  asOrThrow<X>(value: Super<Infer<X>, Function>): Function
+  asOrThrow<X>(value: Super<Resolve<X>, Function>): Function
 
   asOrThrow(value: unknown): Function {
     if (typeof value !== "function")
@@ -220,7 +220,7 @@ export class SymbolGuard {
 
   static asOrThrow<X extends symbol>(value: X): X
 
-  static asOrThrow<X>(value: Super<Infer<X>, symbol>): symbol
+  static asOrThrow<X>(value: Super<Resolve<X>, symbol>): symbol
 
   static asOrThrow(value: unknown): symbol {
     if (typeof value !== "symbol")
@@ -230,7 +230,7 @@ export class SymbolGuard {
 
   asOrThrow<X extends symbol>(value: X): X
 
-  asOrThrow<X>(value: Super<Infer<X>, symbol>): symbol
+  asOrThrow<X>(value: Super<Resolve<X>, symbol>): symbol
 
   asOrThrow(value: unknown): symbol {
     if (typeof value !== "symbol")
