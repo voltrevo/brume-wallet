@@ -5,9 +5,9 @@ export class ArrayGuard {
 
   constructor() { }
 
-  static asOrThrow<X extends unknown[]>(value: X): X
+  static asOrThrow<X extends readonly unknown[]>(value: X): X
 
-  static asOrThrow<X>(value: Super<X, unknown[]>): unknown[];
+  static asOrThrow<X>(value: Super<X, readonly unknown[]>): unknown[];
 
   static asOrThrow(value: unknown): unknown[] {
     if (!Array.isArray(value))
@@ -15,9 +15,9 @@ export class ArrayGuard {
     return value
   }
 
-  asOrThrow<X extends unknown[]>(value: X): X
+  asOrThrow<X extends readonly unknown[]>(value: X): X
 
-  asOrThrow<X>(value: Super<X, unknown[]>): unknown[]
+  asOrThrow<X>(value: Super<X, readonly unknown[]>): unknown[]
 
   asOrThrow(value: unknown): unknown[] {
     if (!Array.isArray(value))
