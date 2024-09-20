@@ -1,4 +1,4 @@
-import { Infer, Super } from "../super"
+import { Super } from "../super"
 
 export interface Guard<I, O> {
   asOrThrow(value: I): O
@@ -19,6 +19,14 @@ export namespace Guard {
     export type Strong<T> = T extends Overloaded<any, infer S, any> ? S : never
 
     export type Output<T> = T extends Overloaded<any, any, infer O> ? O : never
+
+    export type AllReject<T> = T extends readonly Overloaded<any, any, any>[] ? never : T
+
+    export type AllStrong<T> = { [K in keyof T]: Strong<T[K]> }
+
+    export type AllWeak<T> = { [K in keyof T]: Weak<T[K]> }
+
+    export type AllOutput<T> = { [K in keyof T]: Output<T[K]> }
   }
 
   export interface Casted<W, S extends O, O> {
@@ -34,13 +42,25 @@ export namespace Guard {
     export type Strong<T> = T extends Casted<any, infer S, any> ? S : never
 
     export type Output<T> = T extends Casted<any, any, infer O> ? O : never
+
+    export type AllReject<T> = T extends readonly Casted<any, any, any>[] ? never : T
+
+    export type AllStrong<T> = { [K in keyof T]: Strong<T[K]> }
+
+    export type AllWeak<T> = { [K in keyof T]: Weak<T[K]> }
+
+    export type AllOutput<T> = { [K in keyof T]: Output<T[K]> }
   }
+
+  export type Infer<T> = Guard<Guard.Input<T>, Guard.Output<T>>
 
   export type Reject<T> = T extends Guard<any, any> ? never : T
 
   export type Input<T> = T extends Guard<infer X, any> ? X : never
 
   export type Output<T> = T extends Guard<any, infer X> ? X : never
+
+  export type AllInfer<T> = { [K in keyof T]: Infer<T[K]> }
 
   export type AllInput<T> = { [K in keyof T]: Input<T[K]> }
 

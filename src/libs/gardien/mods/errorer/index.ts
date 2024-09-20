@@ -18,7 +18,7 @@ export class Errorer<T extends Guard<any, any>> {
 
   asOrThrow<T extends Guard<any, any>>(this: Errorer<Guard.Overloaded.Reject<T>>, value: Guard.Input<T>): Guard.Output<T>
 
-  asOrThrow(value: Guard.Input<T>): Guard.Output<T> {
+  asOrThrow(this: Errorer<Guard.Infer<T>>, value: Guard.Input<T>): Guard.Output<T> {
     try {
       return this.guard.asOrThrow(value)
     } catch (error) {

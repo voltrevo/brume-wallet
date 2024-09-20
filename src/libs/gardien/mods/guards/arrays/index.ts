@@ -27,13 +27,23 @@ export class ArrayGuard {
 
 }
 
-export class ElementsGuard<T extends Guard<string, any>> {
+export class ElementsGuard<T extends Guard<any, any>> {
 
   constructor(
-    readonly guard: Guard<Guard.Input<T>, Guard.Output<T>>
+    readonly guard: T
   ) { }
 
-  asOrThrow(value: Guard.Input<T>[]): Guard.Output<T>[] {
+  asOrThrow<T extends Guard.Casted<any, any, any>, X extends readonly Guard.Casted.Strong<T>[]>(this: ElementsGuard<T>, value: X): X
+
+  asOrThrow<T extends Guard.Casted<any, any, any>, X extends readonly Guard.Casted.Weak<T>[]>(this: ElementsGuard<T>, value: Super<Infer<X>, Guard.Casted.Strong<T>[]>): Guard.Casted.Output<T>[]
+
+  asOrThrow<T extends Guard.Overloaded<any, any, any>, X extends readonly Guard.Overloaded.Strong<T>[]>(this: ElementsGuard<Guard.Casted.Reject<T>>, value: X): Guard.Overloaded.Output<T>[]
+
+  asOrThrow<T extends Guard.Overloaded<any, any, any>, X extends readonly Guard.Overloaded.Weak<T>[]>(this: ElementsGuard<Guard.Casted.Reject<T>>, value: Super<Infer<X>, Guard.Overloaded.Strong<T>[]>): Guard.Overloaded.Output<T>[]
+
+  asOrThrow<T extends Guard<any, any>>(this: ElementsGuard<Guard.Overloaded.Reject<T>>, value: Guard.Input<T>[]): Guard.Output<T>[]
+
+  asOrThrow(this: ElementsGuard<Guard.Infer<T>>, value: Guard.Input<T>[]): Guard.Output<T>[] {
     return value.map(x => this.guard.asOrThrow(x))
   }
 
@@ -42,10 +52,20 @@ export class ElementsGuard<T extends Guard<string, any>> {
 export class ArrayAndElementsGuard<T extends Guard<any, any>> {
 
   constructor(
-    readonly guard: Guard<Guard.Input<T>, Guard.Output<T>>
+    readonly guard: T
   ) { }
 
-  asOrThrow(value: unknown): Guard.Output<T>[] {
+  asOrThrow<T extends Guard.Casted<any, any, any>, X extends readonly Guard.Casted.Strong<T>[]>(this: ArrayAndElementsGuard<T>, value: X): X
+
+  asOrThrow<T extends Guard.Casted<any, any, any>, X>(this: ArrayAndElementsGuard<T>, value: Super<Infer<X>, Guard.Casted.Strong<T>[]>): Guard.Casted.Output<T>[]
+
+  asOrThrow<T extends Guard.Overloaded<any, any, any>, X extends readonly Guard.Overloaded.Strong<T>[]>(this: ArrayAndElementsGuard<Guard.Casted.Reject<T>>, value: X): Guard.Overloaded.Output<T>[]
+
+  asOrThrow<T extends Guard.Overloaded<any, any, any>, X>(this: ArrayAndElementsGuard<Guard.Casted.Reject<T>>, value: Super<Infer<X>, Guard.Overloaded.Strong<T>[]>): Guard.Overloaded.Output<T>[]
+
+  asOrThrow<T extends Guard<any, any>>(this: ArrayAndElementsGuard<Guard.Overloaded.Reject<T>>, value: unknown): Guard.Output<T>[]
+
+  asOrThrow(this: ArrayAndElementsGuard<Guard.Infer<T>>, value: unknown): Guard.Output<T>[] {
     if (!Array.isArray(value))
       throw new Error()
     return value.map(x => this.guard.asOrThrow(x))
@@ -56,10 +76,25 @@ export class ArrayAndElementsGuard<T extends Guard<any, any>> {
 export class TupleGuard<T extends readonly Guard<any, any>[]> {
 
   constructor(
-    readonly guards: { [K in keyof T]: Guard<Guard.Input<T[K]>, Guard.Output<T[K]>> }
+    readonly guards: T
   ) { }
 
-  asOrThrow(value: { [K in keyof T]: Guard.Input<T[K]> }): { [K in keyof T]: Guard.Output<T[K]> } {
+  // @ts-ignore
+  asOrThrow<T extends readonly Guard.Casted<any, any, any>[], X extends Guard.Casted.AllStrong<T>>(this: TupleGuard<T>, value: X): X
+
+  // @ts-ignore
+  asOrThrow<T extends readonly Guard.Casted<any, any, any>[], X extends Guard.Casted.AllWeak<T>>(this: TupleGuard<T>, value: Super<Infer<X>, Guard.Casted.AllStrong<T>>): Guard.Casted.AllOutput<T>
+
+  // @ts-ignore
+  asOrThrow<T extends readonly Guard.Overloaded<any, any, any>[], X extends Guard.Overloaded.AllStrong<T>>(this: TupleGuard<Guard.Casted.AllReject<T>>, value: X): Guard.Overloaded.AllOutput<T>
+
+  // @ts-ignore
+  asOrThrow<T extends readonly Guard.Overloaded<any, any, any>[], X extends Guard.Overloaded.AllWeak<T>>(this: TupleGuard<Guard.Casted.AllReject<T>>, value: Super<Infer<X>, Guard.Overloaded.AllStrong<T>>): Guard.Overloaded.AllOutput<T>
+
+  // @ts-ignore
+  asOrThrow<T extends readonly Guard<any, any>[]>(this: TupleGuard<Guard.Overloaded.AllReject<T>>, value: Guard.AllInput<T>): Guard.AllOutput<T>
+
+  asOrThrow(this: TupleGuard<Guard.AllInfer<T>>, value: Guard.AllInput<T>): Guard.AllOutput<T> {
     if (value.length !== this.guards.length)
       throw new Error()
     return value.map((x, i) => this.guards[i].asOrThrow(x)) as any
