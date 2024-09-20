@@ -7,8 +7,6 @@ export type Property<T> =
 
 export namespace Property {
 
-  export type AllUnwrapped<T> = AllReadonly<AllOptional<T>>
-
   export class Optional<T> {
     readonly #class = Optional
 
@@ -17,13 +15,17 @@ export namespace Property {
     ) { }
   }
 
-  export type AsOptional<T, K extends keyof T> = T[K] extends Optional<unknown> ? K : never
-  export type AsNotOptional<T, K extends keyof T> = T[K] extends Optional<unknown> ? never : K
+  export namespace Optional {
 
-  export type OfOptional<T> = T extends Optional<infer U> ? U : never
-  export type OfNotOptional<T> = T extends Optional<unknown> ? never : T
+    export type As<T, K extends keyof T> = T[K] extends Optional<unknown> ? K : never
+    export type AsNot<T, K extends keyof T> = T[K] extends Optional<unknown> ? never : K
 
-  export type AllOptional<T> = Finalize<{ [K in keyof T as AsOptional<T, K>]?: OfOptional<T[K]> } & { [K in keyof T as AsNotOptional<T, K>]-?: OfNotOptional<T[K]> }>
+    export type Of<T> = T extends Optional<infer U> ? U : never
+    export type OfNot<T> = T extends Optional<unknown> ? never : T
+
+    export type AllUnwrapped<T> = Finalize<{ [K in keyof T as As<T, K>]?: Of<T[K]> } & { [K in keyof T as AsNot<T, K>]-?: OfNot<T[K]> }>
+
+  }
 
   export class Readonly<T> {
     readonly #class = Readonly
@@ -33,12 +35,17 @@ export namespace Property {
     ) { }
   }
 
-  export type AsReadonly<T, K extends keyof T> = T[K] extends Readonly<unknown> ? K : never
-  export type AsNotReadonly<T, K extends keyof T> = T[K] extends Readonly<unknown> ? never : K
+  export namespace Readonly {
 
-  export type OfReadonly<T> = T extends Readonly<infer U> ? U : never
-  export type OfNotReadonly<T> = T extends Readonly<unknown> ? never : T
+    export type As<T, K extends keyof T> = T[K] extends Readonly<unknown> ? K : never
+    export type AsNot<T, K extends keyof T> = T[K] extends Readonly<unknown> ? never : K
 
-  export type AllReadonly<T> = Finalize<{ readonly [K in keyof T as AsReadonly<T, K>]: OfReadonly<T[K]> } & { -readonly [K in keyof T as AsNotReadonly<T, K>]: OfNotReadonly<T[K]> }>
+    export type Of<T> = T extends Readonly<infer U> ? U : never
+    export type OfNot<T> = T extends Readonly<unknown> ? never : T
 
+    export type AllUnwrapped<T> = Finalize<{ readonly [K in keyof T as As<T, K>]: Of<T[K]> } & { -readonly [K in keyof T as AsNot<T, K>]: OfNot<T[K]> }>
+
+  }
+
+  export type AllUnwrapped<T> = Readonly.AllUnwrapped<Optional.AllUnwrapped<T>>
 }
