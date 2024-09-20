@@ -6,10 +6,6 @@ export interface Guard<I, O> {
 
 export namespace Guard {
 
-  export interface Strict<I, O> {
-    asOrThrow: (value: I) => O
-  }
-
   export interface Overloaded<W, S, O> {
     asOrThrow(value: S): O
     asOrThrow(value: W): O
