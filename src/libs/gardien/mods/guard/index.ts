@@ -31,6 +31,8 @@ export namespace Guard {
   }
 
   export interface Casted<W, S extends W> {
+    casted: true
+
     is(value: S): value is S
     is(value: W): value is S
 

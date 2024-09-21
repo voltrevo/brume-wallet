@@ -1,5 +1,6 @@
 import { ZeroHexStringGuard } from ".."
 import { Guard } from "../guard"
+import { StringGuard } from "../guards/strings"
 import { Resolve, Strongest, Super } from "../super"
 
 class Simple {
@@ -47,6 +48,10 @@ export class Errorer<T extends Guard<any, any>> {
     readonly error: () => Error
   ) { }
 
+  get casted(): T extends Guard.Casted<any, any> ? true : false {
+    return "casted" in this.guard as any
+  }
+
   is<X extends Guard.Casted.Strong<T>>(value: X): value is X
 
   is<X extends Guard.Casted.Weak<T>>(value: Super<Resolve<X>, Strongest<X, Guard.Casted.Strong<T>>>): value is Guard.Casted.Strong<T>
@@ -77,7 +82,7 @@ const x = new Errorer(new Errorer(ZeroHexStringGuard, () => new Error()), () => 
 
 type X = Guard.Casted.Strong<typeof x>
 
-new Errorer(new Errorer(ZeroHexStringGuard, () => new Error()), () => new Error()).is("0x")
+new Errorer(new Errorer(StringGuard, () => new Error()), () => new Error()).is("0x")
 
 const Tuple = <T extends [any, ...any]>(v: T) => v
 

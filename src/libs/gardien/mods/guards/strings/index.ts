@@ -30,6 +30,8 @@ export class StringGuard {
 
   constructor() { }
 
+  static readonly casted = true
+
   static is<X extends string>(value: X): value is X
 
   static is<X>(value: Super<Resolve<X>, string>): value is Super<Resolve<X>, string> & string;
