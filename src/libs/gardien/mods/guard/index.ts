@@ -1,4 +1,4 @@
-import { Resolve, Super } from "../super"
+import { Resolve, Strongest, Super } from "../super"
 
 export interface Guard<I, O> {
   asOrThrow(value: I): O
@@ -82,7 +82,7 @@ export namespace Guard {
 
   export function asOrNull<T extends Guard<any, any>, X extends Guard.Overloaded.Strong<T>>(guard: T, value: X): Guard.Overloaded.Output<T> | null;
 
-  export function asOrNull<T extends Guard<any, any>, X extends Guard.Overloaded.Weak<T>>(guard: T, value: Super<Resolve<X>, Guard.Overloaded.Strong<T>>): Guard.Overloaded.Output<T> | null;
+  export function asOrNull<T extends Guard<any, any>, X extends Guard.Overloaded.Weak<T>>(guard: T, value: Super<Resolve<X>, Strongest<X, Guard.Overloaded.Strong<T>>>): Guard.Overloaded.Output<T> | null;
 
   export function asOrNull<T extends Guard<any, any>>(guard: T, value: Guard.Input<T>): Guard.Output<T> | null {
     try {

@@ -1,7 +1,7 @@
+import { ZeroHexStringGuard } from ".."
 import { Guard } from "../guard"
 import { ElementsGuard } from "../guards"
-import { StringGuard } from "../guards/strings"
-import { Resolve, Super } from "../super"
+import { Resolve, Strongest, Super } from "../super"
 
 class Simple {
   asOrThrow(value: number): string;
@@ -50,7 +50,7 @@ export class Errorer<T extends Guard<any, any>> {
 
   is<X extends Guard.Casted.Strong<T>>(value: X): value is X
 
-  is<X extends Guard.Casted.Weak<T>>(value: Super<Resolve<X>, Guard.Casted.Strong<T>>): value is Guard.Casted.Strong<T>
+  is<X extends Guard.Casted.Weak<T>>(value: Super<Resolve<X>, Strongest<X, Guard.Casted.Strong<T>>>): value is Guard.Casted.Strong<T>
 
   is(this: Errorer<Guard.Casted.Infer<T>>, value: Guard.Casted.Weak<T>): value is Guard.Casted.Strong<T> {
     return this.guard.is(value)
@@ -58,7 +58,7 @@ export class Errorer<T extends Guard<any, any>> {
 
   asOrThrow<X extends Guard.Overloaded.Strong<T>>(value: X): T extends Guard.Casted<any, any> ? X : Guard.Overloaded.Output<T>
 
-  asOrThrow<X extends Guard.Overloaded.Weak<T>>(value: Super<Resolve<X>, Mutable<Guard.Overloaded.Strong<T>>>): Guard.Overloaded.Output<T>
+  asOrThrow<X extends Guard.Overloaded.Weak<T>>(value: Super<Resolve<X>, Strongest<X, Guard.Overloaded.Strong<T>>>): Guard.Overloaded.Output<T>
 
   asOrThrow(this: Errorer<Guard.Overloaded.Infer<T>>, value: Guard.Overloaded.Weak<T>): Guard.Overloaded.Output<T> {
     try {
@@ -70,14 +70,13 @@ export class Errorer<T extends Guard<any, any>> {
 
 }
 
-new Errorer(new Simple(), () => new Error()).asOrThrow(123)
-new Errorer(new Overloaded(), () => new Error()).asOrThrow(123)
+// new Errorer(new Simple(), () => new Error()).asOrThrow(123)
+// new Errorer(new Overloaded(), () => new Error()).asOrThrow(123)
 new Errorer(new Casted(), () => new Error()).is(123)
 new Errorer(new Errorer(new Casted(), () => new Error()), () => new Error()).is(123)
 
-new ElementsGuard(StringGuard).is([null as unknown])
+const x = new ElementsGuard(ZeroHexStringGuard)
 
-
-// new Errorer(new ElementsGuard(StringGuard), () => new Error()).asOrThrow([null as unknown] as const)
+new Errorer(new ElementsGuard(ZeroHexStringGuard), () => new Error()).asOrThrow(["dd"])
 
 const Tuple = <T extends [any, ...any]>(v: T) => v
