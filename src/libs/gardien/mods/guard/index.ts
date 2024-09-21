@@ -25,6 +25,9 @@ export namespace Guard {
     export type AllWeak<T> = { [K in keyof T]: Weak<T[K]> }
 
     export type AllOutput<T> = { [K in keyof T]: Output<T[K]> }
+
+    export type AllAsOutput<T, X> = { [K in keyof X]: Output<T> }
+
   }
 
   export interface Casted<W, S extends W> {
@@ -43,6 +46,8 @@ export namespace Guard {
     export type WeakOrSelf<T> = T extends Casted<infer W, any> ? W : T
 
     export type Strong<T> = T extends Casted<any, infer S> ? S : never
+
+    export type AllAsStrong<T, X> = { [K in keyof X]: Strong<T> }
 
     export type StrongOrSelf<T> = T extends Casted<any, infer S> ? S : T
 

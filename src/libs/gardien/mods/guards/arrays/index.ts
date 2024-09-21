@@ -33,12 +33,20 @@ export class ElementsGuard<T extends Guard<any, any>> {
     readonly guard: T
   ) { }
 
-  asOrThrow<X extends Guard.Overloaded.Strong<T>[]>(value: X): Guard.Output<T>[]
+  is<Y extends Guard.Casted.Strong<T>, X extends readonly Y[]>(value: X): value is X
 
-  asOrThrow<X extends Guard.Overloaded.Weak<T>[]>(value: Super<Resolve<X>, Guard.Overloaded.Strong<T>[]>): Guard.Output<T>[]
+  is<Y extends Guard.Casted.Weak<T>, X extends readonly Super<Resolve<Y>, Guard.Casted.Strong<T>>[]>(value: X): value is Guard.Casted.AllAsStrong<T, X>
 
-  asOrThrow(this: ElementsGuard<Guard.Infer<T>>, value: Guard.Overloaded.Weak<T>[]): Guard.Output<T>[] {
-    return value.map(x => this.guard.asOrThrow(x))
+  is<X extends readonly Guard.Casted.Weak<T>[]>(this: ElementsGuard<Guard.Casted.Infer<T>>, value: X): value is Guard.Casted.AllAsStrong<T, X> {
+    return value.every(x => this.guard.is(x))
+  }
+
+  asOrThrow<Y extends Guard.Overloaded.Strong<T>, X extends readonly Y[]>(value: X): T extends Guard.Casted<any, any> ? X : Guard.Overloaded.AllAsOutput<T, X>
+
+  asOrThrow<Y extends Guard.Overloaded.Weak<T>, X extends readonly Super<Resolve<Y>, Guard.Overloaded.Strong<T>>[]>(value: X): Guard.Overloaded.AllAsOutput<T, X>
+
+  asOrThrow<X extends readonly Guard.Overloaded.Weak<T>[]>(this: ElementsGuard<Guard.Overloaded.Infer<T>>, value: X): Guard.Overloaded.AllAsOutput<T, X> {
+    return value.map(x => this.guard.asOrThrow(x)) as Guard.Overloaded.AllAsOutput<T, X>
   }
 
 }

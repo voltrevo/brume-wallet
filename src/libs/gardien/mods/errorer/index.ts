@@ -39,6 +39,8 @@ class Casted {
   }
 }
 
+export type Mutable<T> = T extends readonly (infer U)[] ? U[] : T
+
 export class Errorer<T extends Guard<any, any>> {
 
   constructor(
@@ -56,7 +58,7 @@ export class Errorer<T extends Guard<any, any>> {
 
   asOrThrow<X extends Guard.Overloaded.Strong<T>>(value: X): T extends Guard.Casted<any, any> ? X : Guard.Overloaded.Output<T>
 
-  asOrThrow<X extends Guard.Overloaded.Weak<T>>(value: Super<Resolve<X>, Guard.Overloaded.Strong<T>>): Guard.Overloaded.Output<T>
+  asOrThrow<X extends Guard.Overloaded.Weak<T>>(value: Super<Resolve<X>, Mutable<Guard.Overloaded.Strong<T>>>): Guard.Overloaded.Output<T>
 
   asOrThrow(this: Errorer<Guard.Overloaded.Infer<T>>, value: Guard.Overloaded.Weak<T>): Guard.Overloaded.Output<T> {
     try {
@@ -73,26 +75,9 @@ new Errorer(new Overloaded(), () => new Error()).asOrThrow(123)
 new Errorer(new Casted(), () => new Error()).is(123)
 new Errorer(new Errorer(new Casted(), () => new Error()), () => new Error()).is(123)
 
-type lol = Super<unknown[], readonly string[]>
-
-new Errorer(new ElementsGuard(StringGuard), () => new Error()).asOrThrow([""])
-
-const x = new ElementsGuard(StringGuard)
-
-type X = Guard.Overloaded.Strong<typeof x>
-type Y = Guard.Overloaded.Weak<typeof x>
+new ElementsGuard(StringGuard).is([null as unknown])
 
 
+// new Errorer(new ElementsGuard(StringGuard), () => new Error()).asOrThrow([null as unknown] as const)
 
-
-type A = Guard.Casted.Strong<Casted>
-type B = Guard.Overloaded.Strong<Casted>
-
-type C = Guard.Casted.Strong<Overloaded>
-type D = Guard.Overloaded.Strong<Overloaded>
-
-type E = Guard.Casted.Output<Overloaded>
-type F = Guard.Overloaded.Output<Overloaded>
-
-type G = Guard.Casted.Output<Casted>
-type H = Guard.Overloaded.Output<Casted>
+const Tuple = <T extends [any, ...any]>(v: T) => v
