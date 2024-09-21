@@ -1,6 +1,5 @@
 import { ZeroHexStringGuard } from ".."
 import { Guard } from "../guard"
-import { ElementsGuard } from "../guards"
 import { Resolve, Strongest, Super } from "../super"
 
 class Simple {
@@ -70,13 +69,18 @@ export class Errorer<T extends Guard<any, any>> {
 
 }
 
-// new Errorer(new Simple(), () => new Error()).asOrThrow(123)
-// new Errorer(new Overloaded(), () => new Error()).asOrThrow(123)
-new Errorer(new Casted(), () => new Error()).is(123)
-new Errorer(new Errorer(new Casted(), () => new Error()), () => new Error()).is(123)
+const y = new Errorer(ZeroHexStringGuard, () => new Error())
 
-const x = new ElementsGuard(ZeroHexStringGuard)
+type Y = Guard.Casted.Strong<typeof y>
 
-new Errorer(new ElementsGuard(ZeroHexStringGuard), () => new Error()).asOrThrow(["dd"])
+const x = new Errorer(new Errorer(ZeroHexStringGuard, () => new Error()), () => new Error())
+
+type X = Guard.Casted.Strong<typeof x>
+
+new Errorer(new Errorer(ZeroHexStringGuard, () => new Error()), () => new Error()).is("0x")
 
 const Tuple = <T extends [any, ...any]>(v: T) => v
+
+const a = [1, 2, 3]
+
+const b = Tuple([1, 2, 3])
