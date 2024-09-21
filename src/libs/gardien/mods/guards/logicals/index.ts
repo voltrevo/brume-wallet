@@ -1,4 +1,7 @@
 import { Guard } from "../../guard"
+import { Intersect, Super } from "../../super"
+import { ArrayGuard, ElementsGuard } from "../arrays"
+import { StringGuard } from "../strings"
 
 export class UnionGuard<I, A, B> {
 
@@ -27,15 +30,21 @@ export class UnionGuard<I, A, B> {
 
 }
 
-export class InterGuard<I, M, O> {
+export class InterGuard<A extends Guard.Overloaded<any, any, any>, B extends Guard.Overloaded<Guard.Overloaded.Output<A>, Guard.Overloaded.Output<A>, any>> {
 
   constructor(
-    readonly left: Guard<I, M>,
-    readonly right: Guard<M, O>
+    readonly left: A,
+    readonly right: B
   ) { }
 
-  asOrThrow(value: I): O {
+  asOrThrow<X extends Guard.Overloaded.Strong<B>>(value: X): Guard.Overloaded.Output<B>
+
+  asOrThrow<X extends Guard.Overloaded.Weak<A>>(value: Super<X, Intersect<X, Guard.Overloaded.Strong<B>>>): Guard.Overloaded.Output<B>
+
+  asOrThrow(value: Guard.Overloaded.Weak<A>): Guard.Overloaded.Output<B> {
     return this.right.asOrThrow(this.left.asOrThrow(value))
   }
 
 }
+
+new InterGuard(ArrayGuard, new ElementsGuard(StringGuard)).asOrThrow([] as const)
