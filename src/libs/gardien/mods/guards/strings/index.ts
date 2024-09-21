@@ -30,6 +30,14 @@ export class StringGuard {
 
   constructor() { }
 
+  static is<X extends string>(value: X): value is X
+
+  static is<X>(value: Super<Resolve<X>, string>): value is Super<Resolve<X>, string> & string;
+
+  static is(value: unknown): value is string {
+    return typeof value === "string"
+  }
+
   static asOrThrow<X extends string>(value: X): X
 
   static asOrThrow<X>(value: Super<Resolve<X>, string>): string

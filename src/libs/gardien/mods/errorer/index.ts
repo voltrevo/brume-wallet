@@ -3,6 +3,42 @@ import { ElementsGuard } from "../guards"
 import { StringGuard } from "../guards/strings"
 import { Resolve, Super } from "../super"
 
+class Simple {
+  asOrThrow(value: number): string;
+
+  asOrThrow(value: number): string {
+    return value.toString()
+  }
+}
+
+class Overloaded {
+  asOrThrow(value: number): string
+
+  asOrThrow<X>(value: Super<Resolve<X>, number>): string
+
+  asOrThrow(value: unknown): string {
+    return value as string
+  }
+}
+
+class Casted {
+  is<X extends number>(value: X): value is X
+
+  is<X extends unknown>(value: Super<Resolve<X>, number>): value is Super<Resolve<X>, number> & number
+
+  is(value: unknown): value is number {
+    return typeof value === "number"
+  }
+
+  asOrThrow<X extends number>(value: X): X
+
+  asOrThrow<X extends unknown>(value: Super<Resolve<X>, number>): number
+
+  asOrThrow(value: unknown): number {
+    return value as number
+  }
+}
+
 export class Errorer<T extends Guard<any, any>> {
 
   constructor(
@@ -10,11 +46,19 @@ export class Errorer<T extends Guard<any, any>> {
     readonly error: () => Error
   ) { }
 
-  asOrThrow<X extends Guard.Overloaded.Strong<T>>(value: X): Guard.Output<T>
+  is<X extends Guard.Casted.Strong<T>>(value: X): value is X
 
-  asOrThrow<X extends Guard.Overloaded.Weak<T>>(value: Super<Resolve<X>, Guard.Overloaded.Strong<T>>): Guard.Output<T>
+  is<X extends Guard.Casted.Weak<T>>(value: Super<Resolve<X>, Guard.Casted.Strong<T>>): value is Guard.Casted.Strong<T>
 
-  asOrThrow(this: Errorer<Guard.Infer<T>>, value: Guard.Overloaded.Weak<T>): Guard.Output<T> {
+  is(this: Errorer<Guard.Casted.Infer<T>>, value: Guard.Casted.Weak<T>): value is Guard.Casted.Strong<T> {
+    return this.guard.is(value)
+  }
+
+  asOrThrow<X extends Guard.Overloaded.Strong<T>>(value: X): T extends Guard.Casted<any, any> ? X : Guard.Overloaded.Output<T>
+
+  asOrThrow<X extends Guard.Overloaded.Weak<T>>(value: Super<Resolve<X>, Guard.Overloaded.Strong<T>>): Guard.Overloaded.Output<T>
+
+  asOrThrow(this: Errorer<Guard.Overloaded.Infer<T>>, value: Guard.Overloaded.Weak<T>): Guard.Overloaded.Output<T> {
     try {
       return this.guard.asOrThrow(value)
     } catch (error) {
@@ -24,19 +68,14 @@ export class Errorer<T extends Guard<any, any>> {
 
 }
 
+new Errorer(new Simple(), () => new Error()).asOrThrow(123)
+new Errorer(new Overloaded(), () => new Error()).asOrThrow(123)
+new Errorer(new Casted(), () => new Error()).is(123)
+new Errorer(new Errorer(new Casted(), () => new Error()), () => new Error()).is(123)
 
 type lol = Super<unknown[], readonly string[]>
 
 new Errorer(new ElementsGuard(StringGuard), () => new Error()).asOrThrow([""])
-
-class Simple {
-  // asOrThrow(value: number): string;
-  asOrThrow(value: number): string;
-
-  asOrThrow(value: number): string {
-    return value.toString()
-  }
-}
 
 const x = new ElementsGuard(StringGuard)
 
@@ -44,33 +83,16 @@ type X = Guard.Overloaded.Strong<typeof x>
 type Y = Guard.Overloaded.Weak<typeof x>
 
 
-class Overload {
-  asOrThrow<X extends 123>(value: X): 123
-  asOrThrow<X extends number>(value: Super<Resolve<X>, 123>): 123
 
-  asOrThrow(value: number): 123 {
-    return value as 123
-  }
-}
 
-class Cast {
-  asOrThrow<X extends 123>(value: X): X
-  asOrThrow<X extends 123>(value: X): 123
-  asOrThrow<X extends number>(value: Super<Resolve<X>, 123>): 123
+type A = Guard.Casted.Strong<Casted>
+type B = Guard.Overloaded.Strong<Casted>
 
-  asOrThrow(value: number): 123 {
-    return value as 123
-  }
-}
+type C = Guard.Casted.Strong<Overloaded>
+type D = Guard.Overloaded.Strong<Overloaded>
 
-type A = Guard.Casted.Strong<Cast>
-type B = Guard.Overloaded.Strong<Cast>
+type E = Guard.Casted.Output<Overloaded>
+type F = Guard.Overloaded.Output<Overloaded>
 
-type C = Guard.Casted.Strong<Overload>
-type D = Guard.Overloaded.Strong<Overload>
-
-type E = Guard.Casted.Output<Overload>
-type F = Guard.Overloaded.Output<Overload>
-
-type G = Guard.Casted.Output<Cast>
-type H = Guard.Overloaded.Output<Cast>
+type G = Guard.Casted.Output<Casted>
+type H = Guard.Overloaded.Output<Casted>
