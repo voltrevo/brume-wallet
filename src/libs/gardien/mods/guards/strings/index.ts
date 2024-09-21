@@ -32,7 +32,7 @@ export class StringGuard {
 
   static asOrThrow<X extends string>(value: X): X
 
-  static asOrThrow<X>(value: Super<X, string>): string
+  static asOrThrow<X>(value: Super<X, X & string>): X & string
 
   static asOrThrow(value: unknown): string {
     if (typeof value !== "string")
@@ -42,7 +42,7 @@ export class StringGuard {
 
   asOrThrow<X extends string>(value: X): X
 
-  asOrThrow<X>(value: Super<X, string>): string
+  asOrThrow<X>(value: Super<X, X & string>): X & string
 
   asOrThrow(value: unknown): string {
     if (typeof value !== "string")

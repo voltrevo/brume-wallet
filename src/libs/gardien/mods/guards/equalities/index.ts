@@ -8,7 +8,7 @@ export class StrongEqualityGuard<T> {
 
   asOrThrow<X extends T>(value: X): X
 
-  asOrThrow<X>(value: Super<X, T>): T
+  asOrThrow<X>(value: Super<X, X & T>): X & T
 
   asOrThrow(value: unknown): T {
     if (value !== this.value)
@@ -26,7 +26,7 @@ export class WeakEqualityGuard<T> {
 
   asOrThrow<X extends T>(value: X): X
 
-  asOrThrow<X>(value: Super<X, T>): T
+  asOrThrow<X>(value: Super<X, X & T>): X & T
 
   asOrThrow(value: unknown): T {
     if (value != this.value)

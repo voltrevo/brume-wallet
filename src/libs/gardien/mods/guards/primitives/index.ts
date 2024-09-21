@@ -6,7 +6,7 @@ export class BooleanGuard {
 
   static asOrThrow<X extends boolean>(value: X): X
 
-  static asOrThrow<X>(value: Super<X, boolean>): boolean
+  static asOrThrow<X>(value: Super<X, X & boolean>): X & boolean
 
   static asOrThrow(value: unknown): boolean {
     if (typeof value !== "boolean")
@@ -16,7 +16,7 @@ export class BooleanGuard {
 
   asOrThrow<X extends boolean>(value: X): X
 
-  asOrThrow<X>(value: Super<X, boolean>): boolean
+  asOrThrow<X>(value: Super<X, X & boolean>): X & boolean
 
   asOrThrow(value: unknown): boolean {
     if (typeof value !== "boolean")
@@ -32,7 +32,7 @@ export class TrueGuard {
 
   static asOrThrow<X extends true>(value: X): X
 
-  static asOrThrow<X>(value: Super<X, true>): true
+  static asOrThrow<X>(value: Super<X, X & true>): X & true
 
   static asOrThrow(value: unknown): true {
     if (value !== true)
@@ -42,7 +42,7 @@ export class TrueGuard {
 
   asOrThrow<X extends true>(value: X): X
 
-  asOrThrow<X>(value: Super<X, true>): true
+  asOrThrow<X>(value: Super<X, X & true>): X & true
 
   asOrThrow(value: unknown): true {
     if (value !== true)
@@ -58,7 +58,7 @@ export class FalseGuard {
 
   static asOrThrow<X extends false>(value: X): X
 
-  static asOrThrow<X>(value: Super<X, false>): false
+  static asOrThrow<X>(value: Super<X, X & false>): X & false
 
   static asOrThrow(value: unknown): false {
     if (value !== false)
@@ -68,7 +68,7 @@ export class FalseGuard {
 
   asOrThrow<X extends false>(value: X): X
 
-  asOrThrow<X>(value: Super<X, false>): false
+  asOrThrow<X>(value: Super<X, X & false>): X & false
 
   asOrThrow(value: unknown): false {
     if (value !== false)
@@ -84,7 +84,7 @@ export class NumberGuard {
 
   static asOrThrow<X extends number>(value: X): X
 
-  static asOrThrow<X>(value: Super<X, number>): number
+  static asOrThrow<X>(value: Super<X, X & number>): X & number
 
   static asOrThrow(value: unknown): number {
     if (typeof value !== "number")
@@ -94,7 +94,7 @@ export class NumberGuard {
 
   asOrThrow<X extends number>(value: X): X
 
-  asOrThrow<X>(value: Super<X, number>): number
+  asOrThrow<X>(value: Super<X, X & number>): X & number
 
   asOrThrow(value: unknown): number {
     if (typeof value !== "number")
@@ -124,7 +124,7 @@ export class BigIntGuard {
 
   static asOrThrow<X extends bigint>(value: X): X
 
-  static asOrThrow<X>(value: Super<X, bigint>): bigint
+  static asOrThrow<X>(value: Super<X, X & bigint>): X & bigint
 
   static asOrThrow(value: unknown): bigint {
     if (typeof value !== "bigint")
@@ -134,7 +134,7 @@ export class BigIntGuard {
 
   asOrThrow<X extends bigint>(value: X): X
 
-  asOrThrow<X>(value: Super<X, bigint>): bigint
+  asOrThrow<X>(value: Super<X, X & bigint>): X & bigint
 
   asOrThrow(value: unknown): bigint {
     if (typeof value !== "bigint")

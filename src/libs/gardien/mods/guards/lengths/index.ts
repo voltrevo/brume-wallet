@@ -1,13 +1,19 @@
-export class LengthGuard<T extends { length: number }, N extends number> {
+import { Super } from "../../super"
+
+export class LengthGuard<N extends number> {
 
   constructor(
     readonly length: N
   ) { }
 
-  asOrThrow(value: T): T & { length: N } {
+  asOrThrow<X extends { length: N }>(value: X): X
+
+  asOrThrow<X extends { length: number }>(value: Super<X, X & { length: N }>): X & { length: N }
+
+  asOrThrow<X extends { length: number }>(value: X): X & { length: N } {
     if (value.length !== this.length)
       throw new Error()
-    return value as T & { length: N }
+    return value as X & { length: N }
   }
 
 }
@@ -18,16 +24,16 @@ export interface MinLength<N extends number> {
   readonly [MinLengthSymbol]: N
 }
 
-export class MinLengthGuard<T extends { length: number }, N extends number> {
+export class MinLengthGuard<N extends number> {
 
   constructor(
     readonly length: N
   ) { }
 
-  asOrThrow(value: T): T & MinLength<N> {
+  asOrThrow<X extends { length: number }>(value: X): X & MinLength<N> {
     if (value.length < this.length)
       throw new Error()
-    return value as T & MinLength<N>
+    return value as X & MinLength<N>
   }
 
 }
