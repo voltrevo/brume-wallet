@@ -1,5 +1,5 @@
 import { Guard } from "../guard"
-import { Morph, Super } from "../super"
+import { Strongest, Super } from "../super"
 
 export class Errorer<T extends Guard<any, any>> {
 
@@ -10,7 +10,7 @@ export class Errorer<T extends Guard<any, any>> {
 
   asOrThrow<X extends Guard.Overloaded.Strong<T>>(value: X): X extends Guard.Overloaded.Output<T> ? X : Guard.Overloaded.Output<T>
 
-  asOrThrow<X extends Guard.Overloaded.Weak<T>>(value: Super<X, Morph<X, Guard.Overloaded.Strong<T>>>): Guard.Overloaded.Output<T>
+  asOrThrow<X extends Guard.Overloaded.Weak<T>>(value: Super<X, Strongest<X, Guard.Overloaded.Strong<T>>>): Guard.Overloaded.Output<T>
 
   asOrThrow(this: Errorer<Guard.Overloaded.Infer<T>>, value: Guard.Overloaded.Weak<T>): Guard.Overloaded.Output<T> {
     try {

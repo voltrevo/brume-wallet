@@ -1,4 +1,4 @@
-import { Morph, Resolve, Super } from "../super"
+import { Resolve, Strongest, Super } from "../super"
 
 export interface Guard<I, O> {
   asOrThrow(value: I): O
@@ -20,13 +20,13 @@ export namespace Guard {
 
     export type Output<T> = T extends Overloaded<any, any, infer O> ? O : never
 
+    export type AllInfer<T> = { [K in keyof T]: Infer<T[K]> }
+
     export type AllStrong<T> = { [K in keyof T]: Strong<T[K]> }
 
     export type AllWeak<T> = { [K in keyof T]: Weak<T[K]> }
 
     export type AllOutput<T> = { [K in keyof T]: Output<T[K]> }
-
-    export type AllAsOutput<T, X> = { [K in keyof X]: Output<T> }
 
   }
 
@@ -52,7 +52,7 @@ export namespace Guard {
 
   export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Strong<T>>(guard: T, value: Resolve<X>): (X extends Guard.Overloaded.Output<T> ? X : Guard.Overloaded.Output<T>) | null;
 
-  export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Weak<T>>(guard: T, value: Super<Resolve<X>, Morph<X, Guard.Overloaded.Strong<T>>>): Guard.Overloaded.Output<T> | null;
+  export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Weak<T>>(guard: T, value: Super<Resolve<X>, Strongest<X, Guard.Overloaded.Strong<T>>>): Guard.Overloaded.Output<T> | null;
 
   export function asOrNull<T extends Guard.Overloaded<any, any, any>>(guard: T, value: Guard.Input<T>): Guard.Output<T> | null {
     try {
