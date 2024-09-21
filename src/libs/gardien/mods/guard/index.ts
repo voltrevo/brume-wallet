@@ -53,7 +53,7 @@ export namespace Guard {
 
   export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Strong<T>>(guard: T, value: Resolve<X>): (IsSame<Guard.Overloaded.Strong<T>, Guard.Overloaded.Output<T>> extends true ? X : Guard.Overloaded.Output<T>) | null;
 
-  export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Weak<T>>(guard: T, value: Super<Resolve<X>, Intersect<X, Guard.Overloaded.Strong<T>>>): Guard.Overloaded.Output<T> | null;
+  export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Weak<T>>(guard: T, value: Super<Resolve<X>, Intersect<X, Guard.Overloaded.Strong<T>>>): (IsSame<Guard.Overloaded.Strong<T>, Guard.Overloaded.Output<T>> extends true ? Intersect<X, Guard.Overloaded.Output<T>> : Guard.Overloaded.Output<T>) | null;
 
   export function asOrNull<T extends Guard.Overloaded<any, any, any>>(guard: T, value: Guard.Input<T>): Guard.Output<T> | null {
     try {

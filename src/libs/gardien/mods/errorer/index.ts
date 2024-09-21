@@ -1,7 +1,4 @@
 import { Guard } from "../guard"
-import { ElementsGuard } from "../guards"
-import { LengthGuard } from "../guards/lengths"
-import { StringGuard } from "../guards/strings"
 import { IsSame } from "../same"
 import { Intersect, Super } from "../super"
 
@@ -25,8 +22,3 @@ export class Errorer<T extends Guard<any, any>> {
   }
 
 }
-
-new Errorer(new LengthGuard(3), () => new Error()).asOrThrow([1, 2, 3])
-
-new ElementsGuard(StringGuard).asOrThrow([null as unknown])
-type Z = Intersect<[unknown], string[]>
