@@ -1,4 +1,3 @@
-import { ZeroHexStringGuard } from ".."
 import { Morph, Resolve, Super } from "../super"
 
 export interface Guard<I, O> {
@@ -74,5 +73,3 @@ export namespace Guard {
   // }
 
 }
-
-Guard.asOrNull(ZeroHexStringGuard, "0xdd")
