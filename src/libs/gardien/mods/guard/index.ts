@@ -1,4 +1,5 @@
-import { Resolve, Strongest, Super } from "../super"
+import { ZeroHexStringGuard } from ".."
+import { Morph, Resolve, Super } from "../super"
 
 export interface Guard<I, O> {
   asOrThrow(value: I): O
@@ -30,38 +31,6 @@ export namespace Guard {
 
   }
 
-  export interface Casted<W, S extends W> {
-    casted: true
-
-    is(value: S): value is S
-    is(value: W): value is S
-
-    asOrThrow(value: S): S
-    asOrThrow(value: W): S
-  }
-
-  export namespace Casted {
-    export type Infer<T> = Casted<Weak<T>, Strong<T>>
-
-    export type Weak<T> = T extends Casted<infer W, any> ? W : never
-
-    export type WeakOrSelf<T> = T extends Casted<infer W, any> ? W : T
-
-    export type Strong<T> = T extends Casted<any, infer S> ? S : never
-
-    export type AllAsStrong<T, X> = { [K in keyof X]: Strong<T> }
-
-    export type StrongOrSelf<T> = T extends Casted<any, infer S> ? S : T
-
-    export type AllStrong<T> = { [K in keyof T]: Strong<T[K]> }
-
-    export type AllStrongOrSelf<T> = { [K in keyof T]: StrongOrSelf<T[K]> }
-
-    export type AllWeak<T> = { [K in keyof T]: Weak<T[K]> }
-
-    export type AllWeakOrSelf<T> = { [K in keyof T]: WeakOrSelf<T[K]> }
-  }
-
   export type Infer<T> = Guard<Guard.Input<T>, Guard.Output<T>>
 
   export type Input<T> = T extends Guard<infer X, any> ? X : never
@@ -82,11 +51,11 @@ export namespace Guard {
 
   export type AllOutputOrSelf<T> = { [K in keyof T]: OutputOrSelf<T[K]> }
 
-  export function asOrNull<T extends Guard<any, any>, X extends Guard.Overloaded.Strong<T>>(guard: T, value: X): Guard.Overloaded.Output<T> | null;
+  export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Strong<T>>(guard: T, value: Resolve<X>): (X extends Guard.Overloaded.Output<T> ? X : Guard.Overloaded.Output<T>) | null;
 
-  export function asOrNull<T extends Guard<any, any>, X extends Guard.Overloaded.Weak<T>>(guard: T, value: Super<Resolve<X>, Strongest<X, Guard.Overloaded.Strong<T>>>): Guard.Overloaded.Output<T> | null;
+  export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Weak<T>>(guard: T, value: Super<Resolve<X>, Morph<X, Guard.Overloaded.Strong<T>>>): Guard.Overloaded.Output<T> | null;
 
-  export function asOrNull<T extends Guard<any, any>>(guard: T, value: Guard.Input<T>): Guard.Output<T> | null {
+  export function asOrNull<T extends Guard.Overloaded<any, any, any>>(guard: T, value: Guard.Input<T>): Guard.Output<T> | null {
     try {
       return guard.asOrThrow(value)
     } catch {
@@ -105,3 +74,5 @@ export namespace Guard {
   // }
 
 }
+
+Guard.asOrNull(ZeroHexStringGuard, "0xdd")

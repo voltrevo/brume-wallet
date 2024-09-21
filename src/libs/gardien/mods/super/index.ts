@@ -9,6 +9,12 @@ export type Super<X, T> = T extends X ? X : never
 export type Resolve<T> = T extends Super<T, T> ? T : never
 
 /**
- * Get the strongest type of `X` and `T`
+ * Morph structure of `X` as `T`
+ * @example Morph<[1, 2, 3], unknown[]> = [unknown, unknown, unknown]
  */
-export type Strongest<X, T> = T extends readonly (infer U)[] ? { [K in keyof X]: U } : T
+export type Morph<X, T> =
+  X extends readonly unknown[] ?
+  T extends readonly (infer U)[] ?
+  { [K in keyof X]: U }
+  : T
+  : T

@@ -1,6 +1,6 @@
 import { Errorer } from "../../errorer"
 import { Guard } from "../../guard"
-import { Resolve, Super } from "../../super"
+import { Super } from "../../super"
 import { LengthGuard, MaxLength, MaxLengthGuard, MinLength, MinLengthGuard } from "../lengths"
 import { InterGuard } from "../logicals"
 
@@ -30,19 +30,9 @@ export class StringGuard {
 
   constructor() { }
 
-  static readonly casted = true
-
-  static is<X extends string>(value: X): value is X
-
-  static is<X>(value: Super<Resolve<X>, string>): value is Super<Resolve<X>, string> & string;
-
-  static is(value: unknown): value is string {
-    return typeof value === "string"
-  }
-
   static asOrThrow<X extends string>(value: X): X
 
-  static asOrThrow<X>(value: Super<Resolve<X>, string>): string
+  static asOrThrow<X>(value: Super<X, string>): string
 
   static asOrThrow(value: unknown): string {
     if (typeof value !== "string")
@@ -52,7 +42,7 @@ export class StringGuard {
 
   asOrThrow<X extends string>(value: X): X
 
-  asOrThrow<X>(value: Super<Resolve<X>, string>): string
+  asOrThrow<X>(value: Super<X, string>): string
 
   asOrThrow(value: unknown): string {
     if (typeof value !== "string")
