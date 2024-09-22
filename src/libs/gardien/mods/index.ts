@@ -7,7 +7,7 @@ export namespace ZeroHexStringGuard {
 
   export function asOrThrow<X extends `0x${string}`>(value: X): X
 
-  export function asOrThrow<X extends string>(value: Super<X, X & `0x${string}`>): X & `0x${string}`
+  export function asOrThrow<X extends string>(value: Super<X, `0x${string}`>): `0x${string}`
 
   export function asOrThrow(value: string): `0x${string}` {
     if (!value.startsWith("0x"))
