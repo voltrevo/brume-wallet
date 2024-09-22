@@ -1,5 +1,5 @@
 import { IsSame } from "../same"
-import { Groverride, Resolve, Super } from "../super"
+import { Override, Resolve, Super } from "../super"
 
 export interface Guard<I, O> {
   asOrThrow(value: I): O
@@ -65,7 +65,7 @@ export namespace Guard {
 
   export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Strong<T>>(guard: T, value: Resolve<X>): (IsSame<Guard.Overloaded.Strong<T>, Guard.Overloaded.Output<T>> extends true ? X : Guard.Overloaded.Output<T>) | null;
 
-  export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Weak<T>>(guard: T, value: Super<Resolve<X>, Groverride<X, Guard.Overloaded.Strong<T>>>): (IsSame<Guard.Overloaded.Strong<T>, Guard.Overloaded.Output<T>> extends true ? Groverride<X, Guard.Overloaded.Output<T>> : Guard.Overloaded.Output<T>) | null;
+  export function asOrNull<T extends Guard.Overloaded<any, any, any>, X extends Guard.Overloaded.Weak<T>>(guard: T, value: Super<Resolve<X>, Override<X, Guard.Overloaded.Strong<T>>>): (IsSame<Guard.Overloaded.Strong<T>, Guard.Overloaded.Output<T>> extends true ? Override<X, Guard.Overloaded.Output<T>> : Guard.Overloaded.Output<T>) | null;
 
   export function asOrNull<T extends Guard.Overloaded<any, any, any>>(guard: T, value: Guard.Input<T>): Guard.Output<T> | null {
     try {
