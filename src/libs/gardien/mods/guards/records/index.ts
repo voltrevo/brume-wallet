@@ -1,9 +1,7 @@
-import { ZeroHexStringGuard } from "../.."
 import { Guard } from "../../guard"
 import { Property } from "../../props"
-import { Super } from "../../super"
+import { Override, Super } from "../../super"
 import { NumberGuard } from "../primitives"
-import { StringGuard } from "../strings"
 
 export class RecordGuard<T extends { [k: PropertyKey]: Property<Guard<any, any>> }> {
 
@@ -11,17 +9,11 @@ export class RecordGuard<T extends { [k: PropertyKey]: Property<Guard<any, any>>
     readonly guard: T
   ) { }
 
-  asOrThrow<T extends { [k: PropertyKey]: Property<Guard.Casted<any, any, any>> }, X extends Guard.Casted.AllStrongOrSelf<Property.AllUnwrapped<T>>>(this: RecordGuard<T>, value: X): X
+  asOrThrow<X extends Guard.Overloaded.AllStrongOrSelf<Property.AllUnwrapped<T>>>(value: X): X
 
-  asOrThrow<T extends { [k: PropertyKey]: Property<Guard.Casted<any, any, any>> }, X extends Guard.Casted.AllWeakOrSelf<Property.AllUnwrapped<T>>>(this: RecordGuard<T>, value: Super<X, Guard.Casted.AllStrongOrSelf<Property.AllUnwrapped<T>>>): Guard.Casted.AllOutputOrSelf<Property.AllUnwrapped<T>>
+  asOrThrow<X extends Guard.Overloaded.AllWeakOrSelf<Property.AllUnwrapped<T>>>(value: Super<X, Override<X, Required<Guard.Overloaded.AllStrongOrSelf<Property.AllUnwrapped<T>>>>>): Guard.Overloaded.AllOutputOrSelf<Property.AllUnwrapped<T>>
 
-  // asOrThrow<T extends { [k: PropertyKey]: Property<Guard.Overloaded<any, any, any>> }, X extends Guard.Overloaded.AllStrong<Property.AllUnwrapped<T>>>(this: RecordGuard<Exclude<T, { [k: PropertyKey]: Property<Guard.Casted<any, any, any>> }>>, value: X): Guard.Overloaded.AllOutput<Property.AllUnwrapped<T>>
-
-  // asOrThrow<T extends { [k: PropertyKey]: Property<Guard.Overloaded<any, any, any>> }, X extends Guard.Overloaded.AllWeak<Property.AllUnwrapped<T>>>(this: RecordGuard<Exclude<T, { [k: PropertyKey]: Property<Guard.Casted<any, any, any>> }>>, value: Super<Infer<X>, Guard.Overloaded.AllStrong<Property.AllUnwrapped<T>>>): Guard.Overloaded.AllOutput<Property.AllUnwrapped<T>>
-
-  asOrThrow<T extends { [k: PropertyKey]: Property<Guard<any, any>> }>(this: RecordGuard<Exclude<T, { [k: PropertyKey]: Property<Guard.Overloaded<any, any, any>> }>>, value: Guard.AllInputOrSelf<Property.AllUnwrapped<T>>): Guard.AllOutputOrSelf<Property.AllUnwrapped<T>>
-
-  asOrThrow(value: Guard.AllInputOrSelf<Property.AllUnwrapped<T>>): Guard.AllOutputOrSelf<Property.AllUnwrapped<T>> {
+  asOrThrow(value: Guard.Overloaded.AllWeakOrSelf<Property.AllUnwrapped<T>>): Guard.Overloaded.AllOutputOrSelf<Property.AllUnwrapped<T>> {
     const result: Record<PropertyKey, unknown> = {}
 
     let cause = []
@@ -76,17 +68,16 @@ export class RecordGuard<T extends { [k: PropertyKey]: Property<Guard<any, any>>
     if (cause.length > 0)
       throw new Error(undefined, { cause })
 
-    return result as Guard.AllOutput<Property.AllUnwrapped<T>>
+    return result as Guard.Overloaded.AllOutputOrSelf<Property.AllUnwrapped<T>>
   }
 
 }
 
 new RecordGuard({
-  a: new Property.Optional(StringGuard),
-  b: NumberGuard,
-  c: ZeroHexStringGuard
+  a: NumberGuard,
+  b: new Property.Optional(NumberGuard),
+  c: new Property.Readonly(NumberGuard),
 }).asOrThrow({
-  a: "0",
-  b: null as unknown,
-  c: "0x0"
+  a: null as unknown,
+  c: null as unknown,
 })

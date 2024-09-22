@@ -1,7 +1,7 @@
 import { Errorer } from "../../errorer"
 import { Guard } from "../../guard"
 import { Super } from "../../super"
-import { LengthGuard, MaxLength, MaxLengthGuard, MinLength, MinLengthGuard } from "../lengths"
+import { LengthGuard, Max, MaxLengthGuard, Min, MinLengthGuard } from "../lengths"
 import { InterGuard } from "../logicals"
 
 export function string(message?: string) {
@@ -32,7 +32,7 @@ export class StringGuard {
 
   static asOrThrow<X extends string>(value: X): X
 
-  static asOrThrow<X>(value: Super<X, X & string>): X & string
+  static asOrThrow<X>(value: Super<X, string>): string
 
   static asOrThrow(value: unknown): string {
     if (typeof value !== "string")
@@ -42,7 +42,7 @@ export class StringGuard {
 
   asOrThrow<X extends string>(value: X): X
 
-  asOrThrow<X>(value: Super<X, X & string>): X & string
+  asOrThrow<X>(value: Super<X, string>): string
 
   asOrThrow(value: unknown): string {
     if (typeof value !== "string")
@@ -66,15 +66,15 @@ export class StringGuardBuilder<I, O extends string> {
     return new StringGuardBuilder(new InterGuard(this.guard, new Errorer(guard, () => new Error(message))))
   }
 
-  min<N extends number>(length: N, message?: string): StringGuardBuilder<I, O & MinLength<N>> {
+  min<N extends number>(length: N, message?: string): StringGuardBuilder<I, O & Min<N>> {
     return this.pipe(new MinLengthGuard(length), message)
   }
 
-  max<N extends number>(length: N, message?: string): StringGuardBuilder<I, O & MaxLength<N>> {
+  max<N extends number>(length: N, message?: string): StringGuardBuilder<I, O & Max<N>> {
     return this.pipe(new MaxLengthGuard(length), message)
   }
 
-  minmax<A extends number, B extends number>(min: A, max: B, message?: string): StringGuardBuilder<I, O & MinLength<A> & MaxLength<B>> {
+  minmax<A extends number, B extends number>(min: A, max: B, message?: string): StringGuardBuilder<I, O & Min<A> & Max<B>> {
     return this.pipe(new InterGuard(new MaxLengthGuard(max), new MinLengthGuard(min)), message)
   }
 
