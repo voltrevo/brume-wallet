@@ -8,12 +8,12 @@ export class LengthGuard<N extends number> {
 
   asOrThrow<X extends { length: N }>(value: X): X
 
-  asOrThrow<X extends { length: number }>(value: Super<X, Override<X, { length: N }>>): X & { length: N }
+  asOrThrow<X extends { length: number }>(value: Super<X, Override<X, { length: N }>>): Override<X, { length: N }>
 
-  asOrThrow<X extends { length: number }>(value: X): X & { length: N } {
+  asOrThrow<X extends { length: number }>(value: X): Override<X, { length: N }> {
     if (value.length !== this.length)
       throw new Error()
-    return value as X & { length: N }
+    return value as Override<X, { length: N }>
   }
 
 }
@@ -32,12 +32,12 @@ export class MinLengthGuard<N extends number> {
 
   asOrThrow<X extends { length: Min<N> }>(value: X): X
 
-  asOrThrow<X extends { length: number }>(value: Super<X, X & { length: Min<N> }>): X & { length: Min<N> }
+  asOrThrow<X extends { length: number }>(value: Super<X, Override<X, { length: Min<N> }>>): Override<X, { length: Min<N> }>
 
-  asOrThrow<X extends { length: number }>(value: X): X & { length: Min<N> } {
+  asOrThrow<X extends { length: number }>(value: X): Override<X, { length: Min<N> }> {
     if (value.length < this.length)
       throw new Error()
-    return value as X & { length: Min<N> }
+    return value as Override<X, { length: Min<N> }>
   }
 
 }
@@ -56,12 +56,12 @@ export class MaxLengthGuard<N extends number> {
 
   asOrThrow<X extends { length: Max<N> }>(value: X): X
 
-  asOrThrow<X extends { length: number }>(value: Super<X, X & { length: Max<N> }>): X & { length: Max<N> }
+  asOrThrow<X extends { length: number }>(value: Super<X, Override<X, { length: Max<N> }>>): Override<X, { length: Max<N> }>
 
-  asOrThrow<X extends { length: number }>(value: X): X & { length: Max<N> } {
+  asOrThrow<X extends { length: number }>(value: X): Override<X, { length: Max<N> }> {
     if (value.length > this.length)
       throw new Error()
-    return value as X & { length: Max<N> }
+    return value as Override<X, { length: Max<N> }>
   }
 
 }
