@@ -1,5 +1,5 @@
 import { Guard } from "../../guard"
-import { Groverride, Super } from "../../super"
+import { Override, Super } from "../../super"
 import { ArrayGuard, ElementsGuard } from "../arrays"
 import { StringGuard } from "../strings"
 
@@ -39,7 +39,7 @@ export class InterGuard<A extends Guard.Overloaded<any, any, any>, B extends Gua
 
   asOrThrow<X extends Guard.Overloaded.Strong<B>>(value: X): Guard.Overloaded.Output<B>
 
-  asOrThrow<X extends Guard.Overloaded.Weak<A>>(value: Super<X, Groverride<X, Guard.Overloaded.Strong<B>>>): Guard.Overloaded.Output<B>
+  asOrThrow<X extends Guard.Overloaded.Weak<A>>(value: Super<X, Override<X, Required<Guard.Overloaded.Strong<B>>>>): Guard.Overloaded.Output<B>
 
   asOrThrow(value: Guard.Overloaded.Weak<A>): Guard.Overloaded.Output<B> {
     return this.right.asOrThrow(this.left.asOrThrow(value))
@@ -47,4 +47,4 @@ export class InterGuard<A extends Guard.Overloaded<any, any, any>, B extends Gua
 
 }
 
-new InterGuard(ArrayGuard, new ElementsGuard(StringGuard)).asOrThrow([] as const)
+new InterGuard(ArrayGuard, new ElementsGuard(StringGuard)).asOrThrow([null as unknown] as const)

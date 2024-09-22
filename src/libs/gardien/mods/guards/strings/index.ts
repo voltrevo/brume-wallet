@@ -63,27 +63,27 @@ export class StringGuardBuilder<I, O extends string> {
   }
 
   pipe<P extends string>(guard: Guard<O, P>, message?: string): StringGuardBuilder<I, P> {
-    return new StringGuardBuilder(new InterGuard(this.guard, new Errorer(guard, () => new Error(message))))
+    return new StringGuardBuilder<I, P>(new Errorer(new InterGuard(this.guard, guard), () => new Error(message)))
   }
 
-  min<N extends number>(length: N, message?: string): StringGuardBuilder<I, O & Min<N>> {
-    return this.pipe(new MinLengthGuard(length), message)
+  min<N extends number>(length: N, message?: string): StringGuardBuilder<I, O & { length: Min<N> }> {
+    return this.pipe(new MinLengthGuard<O, N>(length), message)
   }
 
-  max<N extends number>(length: N, message?: string): StringGuardBuilder<I, O & Max<N>> {
-    return this.pipe(new MaxLengthGuard(length), message)
+  max<N extends number>(length: N, message?: string): StringGuardBuilder<I, O & { length: Max<N> }> {
+    return this.pipe(new MaxLengthGuard<O, N>(length), message)
   }
 
-  minmax<A extends number, B extends number>(min: A, max: B, message?: string): StringGuardBuilder<I, O & Min<A> & Max<B>> {
-    return this.pipe(new InterGuard(new MaxLengthGuard(max), new MinLengthGuard(min)), message)
+  minmax<A extends number, B extends number>(min: A, max: B, message?: string): StringGuardBuilder<I, O & { length: Min<A> & Max<B> }> {
+    return this.pipe(new InterGuard(new MinLengthGuard<O, A>(min), new MaxLengthGuard<O & { length: Min<A> }, B>(max)), message)
   }
 
   length<N extends number>(length: N, message?: string): StringGuardBuilder<I, O & { length: N }> {
-    return this.pipe(new LengthGuard(length), message)
+    return this.pipe(new LengthGuard<O, N>(length), message)
   }
 
   includes<S extends string>(value: S, message?: string): StringGuardBuilder<I, O & StringIncludes<S>> {
-    return this.pipe(new StringIncludesGuard(value), message)
+    return this.pipe(new StringIncludesGuard<O, S>(value), message)
   }
 
 }
