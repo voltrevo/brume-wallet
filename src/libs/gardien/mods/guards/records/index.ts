@@ -1,3 +1,4 @@
+import { Errorer } from "../../errorer"
 import { Guard } from "../../guard"
 import { Property } from "../../props"
 import { Override, Super } from "../../super"
@@ -11,7 +12,7 @@ export class RecordGuard<T extends { [k: PropertyKey]: Property<Guard<any, any>>
 
   asOrThrow<X extends Guard.Overloaded.AllStrongOrSelf<Property.AllUnwrapped<T>>>(value: X): X
 
-  asOrThrow<X extends Guard.Overloaded.AllWeakOrSelf<Property.AllUnwrapped<T>>>(value: Super<X, Override<X, Required<Guard.Overloaded.AllStrongOrSelf<Property.AllUnwrapped<T>>>>>): Guard.Overloaded.AllOutputOrSelf<Property.AllUnwrapped<T>>
+  asOrThrow<X extends Guard.Overloaded.AllWeakOrSelf<Property.AllUnwrapped<T>>>(value: Super<X, Override<X, Required<Guard.Overloaded.AllStrongOrSelf<Property.AllUnwrapped<T>>>>>): Override<X, Guard.Overloaded.AllOutputOrSelf<Property.AllUnwrapped<T>>>
 
   asOrThrow(value: Guard.Overloaded.AllWeakOrSelf<Property.AllUnwrapped<T>>): Guard.Overloaded.AllOutputOrSelf<Property.AllUnwrapped<T>> {
     const result: Record<PropertyKey, unknown> = {}
@@ -79,5 +80,16 @@ new RecordGuard({
   c: new Property.Readonly(NumberGuard),
 }).asOrThrow({
   a: null as unknown,
+  b: 123,
+  c: null as unknown,
+})
+
+new Errorer(new RecordGuard({
+  a: NumberGuard,
+  b: new Property.Optional(NumberGuard),
+  c: new Property.Readonly(NumberGuard),
+}), () => new Error()).asOrThrow({
+  a: null as unknown,
+  b: 13,
   c: null as unknown,
 })

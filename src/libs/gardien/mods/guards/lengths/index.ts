@@ -10,10 +10,10 @@ export class LengthGuard<N extends number> {
 
   asOrThrow<X extends { length: number }>(value: Super<X, Override<X, { length: N }>>): Override<X, { length: N }>
 
-  asOrThrow<X extends { length: number }>(value: X): Override<X, { length: N }> {
+  asOrThrow(value: { length: number }): { length: N } {
     if (value.length !== this.length)
       throw new Error()
-    return value as Override<X, { length: N }>
+    return value as { length: N }
   }
 
 }
@@ -30,14 +30,14 @@ export class MinLengthGuard<N extends number> {
     readonly length: N
   ) { }
 
-  asOrThrow<X extends { length: Min<N> }>(value: X): X
+  asOrThrow<X extends { length: number & Min<N> }>(value: X): X
 
-  asOrThrow<X extends { length: number }>(value: Super<X, Override<X, { length: Min<N> }>>): Override<X, { length: Min<N> }>
+  asOrThrow<X extends { length: number }>(value: Super<X, Override<X, { length: Min<N> }>>): Override<X, { length: number & Min<N> }>
 
-  asOrThrow<X extends { length: number }>(value: X): Override<X, { length: Min<N> }> {
+  asOrThrow(value: { length: number }): { length: number & Min<N> } {
     if (value.length < this.length)
       throw new Error()
-    return value as Override<X, { length: Min<N> }>
+    return value as { length: number & Min<N> }
   }
 
 }
@@ -54,14 +54,14 @@ export class MaxLengthGuard<N extends number> {
     readonly length: N
   ) { }
 
-  asOrThrow<X extends { length: Max<N> }>(value: X): X
+  asOrThrow<X extends { length: number & Max<N> }>(value: X): X
 
-  asOrThrow<X extends { length: number }>(value: Super<X, Override<X, { length: Max<N> }>>): Override<X, { length: Max<N> }>
+  asOrThrow<X extends { length: number }>(value: Super<X, Override<X, { length: number & Max<N> }>>): Override<X, { length: number & Max<N> }>
 
-  asOrThrow<X extends { length: number }>(value: X): Override<X, { length: Max<N> }> {
+  asOrThrow(value: { length: number }): { length: number & Max<N> } {
     if (value.length > this.length)
       throw new Error()
-    return value as Override<X, { length: Max<N> }>
+    return value as { length: number & Max<N> }
   }
 
 }

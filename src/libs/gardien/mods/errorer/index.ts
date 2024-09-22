@@ -11,7 +11,7 @@ export class Errorer<T extends Guard<any, any>> {
 
   asOrThrow<X extends Guard.Overloaded.Strong<T>>(value: X): IsSame<Guard.Overloaded.Strong<T>, Guard.Overloaded.Output<T>> extends true ? X : Guard.Overloaded.Output<T>
 
-  asOrThrow<X extends Guard.Overloaded.Weak<T>>(value: Super<X, Override<X, Guard.Overloaded.Strong<T>>>): IsSame<Guard.Overloaded.Strong<T>, Guard.Overloaded.Output<T>> extends true ? Override<X, Guard.Overloaded.Output<T>> : Guard.Overloaded.Output<T>
+  asOrThrow<X extends Guard.Overloaded.Weak<T>>(value: Super<X, Override<X, Required<Guard.Overloaded.Strong<T>>>>): IsSame<Guard.Overloaded.Strong<T>, Guard.Overloaded.Output<T>> extends true ? Override<X, Guard.Overloaded.Output<T>> : Guard.Overloaded.Output<T>
 
   asOrThrow(this: Errorer<Guard.Overloaded.Infer<T>>, value: Guard.Overloaded.Weak<T>): Guard.Overloaded.Output<T> {
     try {

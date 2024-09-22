@@ -8,7 +8,8 @@ export class StrongEqualityGuard<T> {
 
   asOrThrow<X extends T>(value: X): X
 
-  asOrThrow<X>(value: Super<X, Override<X, T>>): T
+  // @ts-ignore
+  asOrThrow<X>(value: Super<X, Override<X, T>>): Override<X, T>
 
   asOrThrow(value: unknown): T {
     if (value !== this.value)
@@ -26,7 +27,8 @@ export class WeakEqualityGuard<T> {
 
   asOrThrow<X extends T>(value: X): X
 
-  asOrThrow<X>(value: Super<X, Override<X, T>>): T
+  // @ts-ignore
+  asOrThrow<X>(value: Super<X, Override<X, T>>): Override<X, T>
 
   asOrThrow(value: unknown): T {
     if (value != this.value)
