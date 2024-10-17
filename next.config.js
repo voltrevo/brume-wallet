@@ -7,6 +7,11 @@ module.exports = withMDX(withNextAsImmutable(withNextSidebuild({
   reactStrictMode: false, // TODO
   output: "export",
   pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
+  webpack: (config) => {
+    config.optimization.minimize = false
+
+    return config
+  },
   sidebuilds: function* (wpconfig) {
     yield compileServiceWorker(wpconfig)
     yield compileContentScript(wpconfig)
