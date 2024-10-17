@@ -71,6 +71,7 @@
     "@hazae41/ed25519": "^2.1.22",
     "@hazae41/fleche": "^1.4.5",
     "@hazae41/future": "^1.0.3",
+    "@hazae41/gardien": "^0.1.0",
     "@hazae41/glacier": "^2.0.20",
     "@hazae41/immutable": "^1.0.11",
     "@hazae41/jsonrpc": "^1.0.8",

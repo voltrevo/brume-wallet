@@ -1,8 +1,10 @@
 import "@hazae41/symbol-dispose-polyfill";
 
 import { createDummy } from "@/libs/dummy";
+import { RpcResponseGuard } from "@/libs/jsonrpc";
 import { Future } from "@hazae41/future";
-import { RpcCounter, RpcOk, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
+import { Guard, z } from "@hazae41/gardien";
+import { RpcCounter, RpcOk, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
 import { Ok } from "@hazae41/result";
 
 declare global {
@@ -275,7 +277,10 @@ class Provider {
     const future = new Future<RpcResponse<T>>()
 
     const onResponse = (e: CustomEvent<string>) => {
-      const resinit = JSON.parse(e.detail) as RpcResponseInit<T>
+      const resinit = Guard.asOrNull(RpcResponseGuard, JSON.parse(e.detail) as unknown)
+
+      if (resinit == null)
+        return
 
       if (resinit.id !== request.id)
         return
@@ -283,7 +288,7 @@ class Provider {
       const response = RpcResponse.from(resinit)
       const rewrapped = RpcResponse.rewrap(id, response)
 
-      future.resolve(rewrapped)
+      future.resolve(rewrapped as RpcResponse<T>)
     }
 
     try {
@@ -489,19 +494,29 @@ window.ethereum = provider
 /**
  * EIP-6963 (modern)
  */
-const icon = new Future<string>()
+const resolveOnIcon = new Future<string>()
+const resolveOnError = new Future<unknown>()
 
-const onLogo = (event: CustomEvent<string>) => {
-  icon.resolve(JSON.parse(event.detail))
+const onIcon = (event: CustomEvent<string>) => {
+  try {
+    const data = JSON.parse(event.detail) as unknown
+    const icon = Guard.asOrThrow(z.string(), data)
+
+    resolveOnIcon.resolve(icon)
+  } catch (e: unknown) {
+    resolveOnError.resolve(e)
+  }
 }
 
-window.addEventListener("brume:icon", onLogo, { passive: true, once: true })
+window.addEventListener("brume:icon", onIcon, { passive: true, once: true })
 
 async function announceAsBrume() {
+  const icon = await Promise.race([resolveOnIcon.promise, resolveOnError.promise.then(e => { throw e })])
+
   const info: EIP6963ProviderInfo = Object.freeze({
     uuid: "e750a98c-ff2d-4fc4-b6e2-faf4d13d1add",
     name: "Brume Wallet",
-    icon: await icon.promise,
+    icon: icon,
     rdns: "money.brume"
   })
 

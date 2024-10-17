@@ -107,7 +107,7 @@ export class RustSnapContext {
   constructor() { }
 
   request(req: string) {
-    const request = JSON.parse(req)
+    const request = JSON.parse(req) // guard
 
     const response = Result.runAndWrap(() => {
       return this.#onRequest(request)
@@ -144,7 +144,7 @@ export class RustSnapWrapper {
     try {
       const req = JSON.stringify(request)
       const ret = this.inner.on_request(req)
-      const res = JSON.parse(ret)
+      const res = JSON.parse(ret) // guard
 
       return new RpcOk<T>(request.id, res)
     } catch (e: unknown) {

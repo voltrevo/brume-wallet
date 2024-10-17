@@ -4,13 +4,15 @@ import { Blobs } from "@/libs/blobs/blobs";
 import { BrowserError, browser } from "@/libs/browser/browser";
 import { ExtensionRpcRouter } from "@/libs/channel/channel";
 import { fetchAsBlobOrThrow, fetchAsJsonOrThrow } from "@/libs/fetch";
+import { RpcRequestGuard } from "@/libs/jsonrpc";
 import { Mouse } from "@/libs/mouse/mouse";
 import { isFirefoxExtension, isSafariExtension } from "@/libs/platform/platform";
 import { NonReadonly } from "@/libs/types/readonly";
 import { urlOf } from "@/libs/url/url";
 import { Box, Deferred, Stack } from "@hazae41/box";
 import { Disposer } from "@hazae41/disposer";
-import { RpcErr, RpcError, RpcErrorInit, RpcRequestInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
+import { Guard } from "@hazae41/gardien";
+import { RpcErr, RpcError, RpcErrorInit, RpcRequestPreinit, RpcResponse } from "@hazae41/jsonrpc";
 import { None, Some } from "@hazae41/option";
 import { Pool } from "@hazae41/piscine";
 import { Result } from "@hazae41/result";
@@ -227,7 +229,10 @@ async function main() {
   })
 
   const onScriptRequest = async (input: CustomEvent<string>) => {
-    const request = JSON.parse(input.detail) as RpcRequestInit<unknown>
+    const request = Guard.asOrNull(RpcRequestGuard, JSON.parse(input.detail) as unknown)
+
+    if (request == null)
+      return
 
     try {
       const router = await routers.getOrThrow(0).then(r => r.get())

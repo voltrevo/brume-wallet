@@ -1,4 +1,5 @@
 import { Future } from "@hazae41/future"
+import { Guard } from "@hazae41/gardien"
 import { RpcCounter, RpcError, RpcInvalidRequestError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
 import { Some } from "@hazae41/option"
 import { CloseEvents, ErrorEvents, Plume, SuperEventTarget } from "@hazae41/plume"
@@ -6,6 +7,7 @@ import { Err, Ok, Result } from "@hazae41/result"
 import { Signals } from "@hazae41/signals"
 import { BrowserError } from "../browser/browser"
 import { Console } from "../console"
+import { RpcMessageGuard } from "../jsonrpc"
 import { randomUUID } from "../uuid/uuid"
 
 export type RpcRouter =
@@ -111,10 +113,11 @@ export class MessageRpcRouter {
   }
 
   async onMessage(message: MessageEvent<string>) {
-    const data = JSON.parse(message.data) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
+    const data = Guard.asOrThrow(RpcMessageGuard, JSON.parse(message.data) as unknown)
 
     if ("method" in data)
       return await this.onRequest(data)
+
     return await this.onResponse(data)
   }
 
@@ -230,10 +233,11 @@ export class ExtensionRpcRouter {
   }
 
   async onMessage(message: string) {
-    const data = JSON.parse(message) as RpcRequestInit<unknown> | RpcResponseInit<unknown>
+    const data = Guard.asOrThrow(RpcMessageGuard, JSON.parse(message) as unknown)
 
     if ("method" in data)
       return await this.onRequest(data)
+
     return await this.onResponse(data)
   }
 

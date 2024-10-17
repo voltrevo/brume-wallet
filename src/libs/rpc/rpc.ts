@@ -2,7 +2,9 @@ import { Bytes } from "@hazae41/bytes"
 import { Circuit, CircuitOpenParams } from "@hazae41/echalote"
 import { fetch } from "@hazae41/fleche"
 import { Future } from "@hazae41/future"
-import { RpcRequest, RpcRequestInit, RpcResponse } from "@hazae41/jsonrpc"
+import { Guard } from "@hazae41/gardien"
+import { RpcRequest, RpcRequestInit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc"
+import { RpcResponseGuard } from "../jsonrpc"
 import { Circuits } from "../tor/circuits/circuits"
 
 export namespace TorRpc {
@@ -40,7 +42,13 @@ export namespace TorRpc {
     const onMessage = async (event: MessageEvent<unknown>) => {
       if (typeof event.data !== "string")
         return
-      const response = RpcResponse.from<T>(JSON.parse(event.data))
+
+      const guarded = Guard.asOrNull(RpcResponseGuard, JSON.parse(event.data) as unknown)
+
+      if (guarded == null)
+        return
+
+      const response = RpcResponse.from<T>(guarded as RpcResponseInit<T>)
 
       if (response.id !== request.id)
         return

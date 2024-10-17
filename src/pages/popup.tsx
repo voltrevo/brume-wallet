@@ -445,7 +445,7 @@ export function TypedSignPage() {
   const data = Option.wrap(path.url.searchParams.get("data")).getOrThrow()
 
   const triedParsedData = useMemo(() => Result.runAndWrapSync(() => {
-    return JSON.parse(data) as Abi.Typed.TypedData
+    return JSON.parse(data) as Abi.Typed.TypedData // TODO: guard
   }), [data])
 
   const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
