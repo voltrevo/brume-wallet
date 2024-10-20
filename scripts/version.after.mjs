@@ -31,7 +31,7 @@ config({ path: dirname(new URL(import.meta.url).pathname) + "/.env.local" })
   body.append("file", await openAsBlob("./dist/ios-and-ipados.ipa"), "ios-and-ipados.ipa");
   body.append("file", await openAsBlob("./dist/macos.zip"), "macos.zip");
 
-  const headers = new Headers({ "Authorization": `Basic ${process.env.IPFS_SECRET}` })
+  const headers = new Headers({ "Authorization": `Bearer ${process.env.IPFS_SECRET}` })
   const response = await fetch(`https://ipfs0.hazae41.me:5001/api/v0/add?wrap-with-directory=true&cid-version=1`, { method: "POST", headers, body })
 
   if (!response.ok)

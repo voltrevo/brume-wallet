@@ -39,7 +39,7 @@ async function compileServiceWorker(wpconfig) {
       filename: "./service_worker.js"
     },
     optimization: {
-      minimize: true,
+      minimize: false,
       minimizer: wpconfig.optimization.minimizer
     }
   })
