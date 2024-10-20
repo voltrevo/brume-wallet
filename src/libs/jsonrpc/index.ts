@@ -16,7 +16,7 @@ export const RpcErrorGuard = z.record({
 export const RpcOkGuard = z.record({
   jsonrpc: z.strong("2.0"),
   id: z.union([z.strong(null), z.number(), z.string()]),
-  result: z.unknown(),
+  result: z.omitable(z.unknown()),
 } as const)
 
 export const RpcErrGuard = z.record({
