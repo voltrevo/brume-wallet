@@ -51,7 +51,7 @@ config({ path: dirname(new URL(import.meta.url).pathname) + "/.env.local" })
   for (const filePath of walkSync("./dist/website"))
     body.append("file", await openAsBlob(filePath), path.relative("./dist/website", filePath))
 
-  const headers = new Headers({ "Authorization": `Basic ${process.env.IPFS_SECRET}` })
+  const headers = new Headers({ "Authorization": `Bearer ${process.env.IPFS_SECRET}` })
   const response = await fetch(`https://ipfs0.hazae41.me:5001/api/v0/add?wrap-with-directory=true&cid-version=1`, { method: "POST", headers, body })
 
   if (!response.ok)
