@@ -8,7 +8,7 @@ module.exports = withMDX(withNextAsImmutable(withNextSidebuild({
   output: "export",
   pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
   webpack: (config) => {
-    config.optimization.minimize = false
+    config.optimization.minimize = true
 
     return config
   },
@@ -39,7 +39,7 @@ async function compileServiceWorker(wpconfig) {
       filename: "./service_worker.js"
     },
     optimization: {
-      minimize: false,
+      minimize: true,
       minimizer: wpconfig.optimization.minimizer
     }
   })
