@@ -7,9 +7,7 @@
   "icons": {
     "512": "favicon.png"
   },
-  "permissions": [
-    "storage"
-  ],
+  "permissions": [],
   "background": {
     "type": "module",
     "scripts": [
