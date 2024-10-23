@@ -144,7 +144,7 @@ export function TransactPage() {
   const chainId = Option.wrap(path.url.searchParams.get("chainId")).getOrThrow()
   const chainData = Option.wrap(chainDataByChainId[Number(chainId)]).getOrThrow()
 
-  const maybeContext = useEthereumContext2(maybeWallet?.uuid, chainData).getOrThrow()
+  const maybeContext = useEthereumContext2(maybeWallet?.uuid, chainData).getOrNull()
 
   const from = Option.wrap(path.url.searchParams.get("from")).getOrThrow()
   const maybeTo = path.url.searchParams.get("to")
