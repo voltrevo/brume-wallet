@@ -10,6 +10,7 @@ import { walkSync } from "./libs/walkSync.mjs";
 {
   fs.rmSync(`./dist/website/action.html`)
   fs.rmSync(`./dist/website/popup.html`)
+  fs.rmSync(`./dist/website/tabbed.html`)
 
   fs.rmSync(`./dist/website/content_script.js`)
   fs.rmSync(`./dist/website/injected_script.js`)
@@ -63,8 +64,15 @@ import { walkSync } from "./libs/walkSync.mjs";
     if (!filename.endsWith(".html"))
       continue
 
+    const canonical = path.relative(`./dist/website`, `./${dirname}/_${filename}`)
+
     fs.copyFileSync(pathname, `./${dirname}/_${filename}`)
     fs.copyFileSync(`./dist/website/start.html`, pathname)
+
+    const original = fs.readFileSync(pathname, "utf8")
+    const replaced = original.replaceAll(`<link rel="canonical" href="/">`, `<link rel="canonical" href="${canonical}">`)
+
+    fs.writeFileSync(pathname, replaced, "utf8")
   }
 
   fs.rmSync(`./dist/website/start.html`)
@@ -85,10 +93,10 @@ import { walkSync } from "./libs/walkSync.mjs";
     if (!filename.endsWith(`.html`) && fs.existsSync(`./${dirname}/_${filename}/index`))
       continue
 
+    const relative = path.relative(`./dist/website`, pathname)
+
     const text = fs.readFileSync(pathname)
     const hash = crypto.createHash("sha256").update(text).digest("hex")
-
-    const relative = path.relative(`./dist/website`, pathname)
 
     files.push([`/${relative}`, hash])
   }

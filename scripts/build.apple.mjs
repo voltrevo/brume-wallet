@@ -9,6 +9,7 @@ import { walkSync } from "./libs/walkSync.mjs";
 {
   fs.rmSync("./dist/apple/action.html")
   fs.rmSync("./dist/apple/popup.html")
+  fs.rmSync(`./dist/apple/tabbed.html`)
 
   fs.rmSync(`./dist/apple/content_script.js`)
   fs.rmSync(`./dist/apple/injected_script.js`)
