@@ -186,8 +186,22 @@ export namespace BgToken {
       }
 
       export function schema(account: ZeroHexString, block: string, context: BgEthereumContext, storage: IDBQueryStorage) {
-        const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore) =>
-          await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more).then(f => f.mapSync(x => new ZeroHexFixedInit(x, context.chain.token.decimals)))
+        const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore) => {
+          try {
+            const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more)
+
+            if (fetched.isErr())
+              return fetched
+            if (!ZeroHexString.Unknown.is(fetched.get()))
+              throw new Error("Invalid response")
+
+            const fixed = new ZeroHexFixedInit(fetched.get(), context.chain.token.decimals)
+
+            return new Data(fixed)
+          } catch (e: unknown) {
+            return new Fail(Catched.wrap(e))
+          }
+        }
 
         const indexer = async (states: States<Data, Fail>) => {
           if (block !== "pending")

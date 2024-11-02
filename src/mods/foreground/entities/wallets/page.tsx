@@ -49,63 +49,50 @@ export function WalletPage(props: UUIDProps) {
   </WalletDataProvider>
 }
 
-export function useDisplay(result: Nullable<Result<Fixed.From, Error>>) {
+export function useDisplayRaw(result: Nullable<Result<Fixed.From, Error>>) {
   return useMemo(() => {
     if (result == null)
-      return "0.00"
-    if (result.isErr())
-      return "0.00"
-    const number = Number(Fixed.from(result.getOrThrow()).move(5).toString())
+      return "???"
+    return result.andThenSync(fixed => Result.runAndDoubleWrapSync(() => {
+      const fixed5 = Fixed.from(fixed).move(5)
+      const float = Number(fixed5.toString())
 
-    return number.toLocaleString(undefined)
+      return float.toLocaleString(undefined)
+    })).getOr("Error")
   }, [result])
 }
 
-export function useDisplayUsdOrNull(result: Nullable<Result<Fixed.From, Error>>) {
+export function useDisplayUsd(result: Nullable<Result<Fixed.From, Error>>) {
   return useMemo(() => {
     if (result == null)
-      return
-    if (result.isErr())
-      return
-    const number = Number(Fixed.from(result.getOrThrow()).move(2).toString())
+      return "???"
+    return result.andThenSync(fixed => Result.runAndDoubleWrapSync(() => {
+      const fixed2 = Fixed.from(fixed).move(2)
+      const float = Number(fixed2.toString())
 
-    return number.toLocaleString(undefined, {
-      style: "currency",
-      currency: "USD",
-      notation: "standard"
-    })
+      const style = "currency"
+      const currency = "USD"
+      const notation = "standard"
+
+      return float.toLocaleString(undefined, { style, currency, notation })
+    })).getOr("Error")
   }, [result])
 }
 
-export function useDisplayUsdOrZeroOrError(result: Nullable<Result<Fixed.From, Error>>) {
+export function useCompactDisplayUsd(result: Nullable<Result<Fixed.From, Error>>) {
   return useMemo(() => {
     if (result == null)
-      return "0.00"
-    if (result.isErr())
-      return "Error"
-    const number = Number(Fixed.from(result.getOrThrow()).move(2).toString())
+      return "???"
+    return result.andThenSync(fixed => Result.runAndDoubleWrapSync(() => {
+      const fixed2 = Fixed.from(fixed).move(2)
+      const float = Number(fixed2.toString())
 
-    return number.toLocaleString(undefined, {
-      style: "currency",
-      currency: "USD",
-      notation: "standard"
-    })
-  }, [result])
-}
+      const style = "currency"
+      const currency = "USD"
+      const notation = "compact"
 
-export function useCompactDisplayUsdOrZeroOrError(result: Nullable<Result<Fixed.From, Error>>) {
-  return useMemo(() => {
-    if (result == null)
-      return "0.00"
-    if (result.isErr())
-      return "Error"
-    const number = Number(Fixed.from(result.getOrThrow()).move(2).toString())
-
-    return number.toLocaleString(undefined, {
-      style: "currency",
-      currency: "USD",
-      notation: "compact"
-    })
+      return float.toLocaleString(undefined, { style, currency, notation })
+    })).getOr("Error")
   }, [result])
 }
 
@@ -596,10 +583,10 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
   const balanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
-  const balanceDisplay = useDisplay(balanceQuery.current)
+  const balanceDisplay = useDisplayRaw(balanceQuery.current)
 
   const balanceUsdFixed = useNativePricedBalance(wallet.address, "usd", context)
-  const balanceUsdDisplay = useDisplayUsdOrNull(balanceUsdFixed.current)
+  const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
 
   const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
     setPrices(prices => {
@@ -696,10 +683,10 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
   const balanceQuery = useContractBalance(wallet.address, token, "pending", context, prices)
-  const balanceDisplay = useDisplay(balanceQuery.current)
+  const balanceDisplay = useDisplayRaw(balanceQuery.current)
 
   const balanceUsdFixed = useContractPricedBalance(wallet.address, token, "usd", context)
-  const balanceUsdDisplay = useDisplayUsdOrNull(balanceUsdFixed.current)
+  const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
 
   const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
     setPrices(prices => {
@@ -749,7 +736,7 @@ export function PriceResolver(props: { index: number } & { address: string } & O
   return null
 }
 
-function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay?: string } & AnchorProps) {
+function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay: string } & AnchorProps) {
   const { token, chain, balanceDisplay, balanceUsdDisplay, ...others } = props
 
   const tokenId = token.type === "native"

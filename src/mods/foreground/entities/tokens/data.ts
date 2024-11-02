@@ -102,8 +102,22 @@ export namespace FgToken {
         if (block == null)
           return
 
-        const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-          await fetchOrFail<ZeroHexString>(request, context).then(f => f.mapSync(x => new ZeroHexFixedInit(x, context.chain.token.decimals)))
+        const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) => {
+          try {
+            const fetched = await fetchOrFail<ZeroHexString>(request, context)
+
+            if (fetched.isErr())
+              return fetched
+            if (!ZeroHexString.Unknown.is(fetched.get()))
+              throw new Error("Invalid response")
+
+            const fixed = new ZeroHexFixedInit(fetched.get(), context.chain.token.decimals)
+
+            return new Data(fixed)
+          } catch (e: unknown) {
+            return new Fail(Catched.wrap(e))
+          }
+        }
 
         const indexer = async (states: States<Data, Fail>) => {
           if (block !== "pending")

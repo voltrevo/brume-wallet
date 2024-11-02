@@ -15,7 +15,7 @@ import { useEnsReverseNoFetch } from "../names/data"
 import { useTotalWalletPricedBalance } from "../unknown/data"
 import { useWalletDataContext } from "./context"
 import { useEthereumContext } from "./data"
-import { useCompactDisplayUsdOrZeroOrError } from "./page"
+import { useCompactDisplayUsd } from "./page"
 
 export function RawWalletDataCard(props: { index?: number } & { href?: string } & { privateKey?: string } & { flip?: boolean } & { unflip?: () => void }) {
   const wallet = useWalletDataContext().getOrThrow()
@@ -59,7 +59,7 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
   const onClickCopyEthereumAddress = useMouseCancel(copyEthereumAddress.run)
 
   const totalBalanceQuery = useTotalWalletPricedBalance(finalAddress, "usd")
-  const totalBalanceDisplay = useCompactDisplayUsdOrZeroOrError(totalBalanceQuery.current)
+  const totalBalanceDisplay = useCompactDisplayUsd(totalBalanceQuery.current)
 
   const [preflip = false, setPreflip] = useState(flip)
   const [postflip, setPostflip] = useState(false)
