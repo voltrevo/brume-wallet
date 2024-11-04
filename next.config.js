@@ -20,6 +20,21 @@ module.exports = withMDX(withNextAsImmutable(withNextSidebuild({
   },
   env: {
     VERSION: process.env.npm_package_version
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/",
+        has: [
+          {
+            type: "header",
+            key: "user-agent",
+            value: ".*(bot|spider).*"
+          }
+        ],
+        destination: "/_index"
+      }
+    ]
   }
 })))
 
