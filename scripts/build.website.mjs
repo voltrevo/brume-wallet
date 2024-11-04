@@ -64,15 +64,8 @@ import { walkSync } from "./libs/walkSync.mjs";
     if (!filename.endsWith(".html"))
       continue
 
-    const canonical = path.relative(`./dist/website`, `./${dirname}/_${filename}`)
-
     fs.copyFileSync(pathname, `./${dirname}/_${filename}`)
     fs.copyFileSync(`./dist/website/start.html`, pathname)
-
-    const original = fs.readFileSync(pathname, "utf8")
-    const replaced = original.replaceAll(`<link rel="canonical" href="/">`, `<link rel="canonical" href="${canonical}">`)
-
-    fs.writeFileSync(pathname, replaced, "utf8")
   }
 
   fs.rmSync(`./dist/website/start.html`)
