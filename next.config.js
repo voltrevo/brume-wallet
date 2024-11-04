@@ -1,12 +1,17 @@
 const path = require("path")
-const { withNextAsImmutable } = require("@hazae41/next-as-immutable")
 const { withNextSidebuild, NextSidebuild } = require("@hazae41/next-sidebuild")
 const withMDX = require("@next/mdx")()
 
-module.exports = withMDX(withNextAsImmutable(withNextSidebuild({
-  reactStrictMode: false, // TODO
+module.exports = withMDX(withNextSidebuild({
   output: "export",
+  reactStrictMode: false, // TODO
   pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
+  env: {
+    VERSION: process.env.npm_package_version
+  },
+  generateBuildId() {
+    return "immutable"
+  },
   webpack: (config) => {
     config.optimization.minimize = true
 
@@ -18,25 +23,41 @@ module.exports = withMDX(withNextAsImmutable(withNextSidebuild({
     yield compileInjectedScript(wpconfig)
     yield compileOffscreen(wpconfig)
   },
-  env: {
-    VERSION: process.env.npm_package_version
-  },
-  async rewrites() {
+  async headers() {
     return [
       {
-        source: "/",
-        has: [
+        source: "/:path*",
+        headers: [
           {
-            type: "header",
-            key: "user-agent",
-            value: ".*(bot|spider).*"
+            key: "Allow-CSP-From",
+            value: "*"
+          },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
           }
-        ],
-        destination: "/_index"
+        ]
       }
     ]
+  },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/",
+          has: [
+            {
+              type: "header",
+              key: "user-agent",
+              value: ".*(bot|spider).*"
+            }
+          ],
+          destination: "/_index"
+        }
+      ]
+    }
   }
-})))
+}))
 
 async function compileServiceWorker(wpconfig) {
   await NextSidebuild.compile({
