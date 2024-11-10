@@ -97,7 +97,7 @@ export function createTorPool(sockets: AutoPool<Disposer<WebSocket>>, storage: Q
         const stream = new WebSocketDuplex(socket.get(), { shouldCloseOnError: true, shouldCloseOnClose: true })
 
         start = Date.now()
-        const tor = new Box(await createTorOrThrow(stream, AbortSignal.any([AbortSignal.timeout(ping.value * 5), signal])))
+        const tor = new Box(await createTorOrThrow(stream, AbortSignal.any([AbortSignal.timeout(ping.value * 3), signal])))
         stack.getOrThrow().push(tor)
         console.debug(`Created Tor in ${Date.now() - start}ms`)
 
