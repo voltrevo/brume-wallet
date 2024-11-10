@@ -21,17 +21,15 @@ export namespace BgEthereumContext {
       const { signal: parentSignal = new AbortController().signal } = more
       const { brume } = ethereum
 
-      const pools = Option.wrap(brume[ethereum.chain.chainId]).getOrThrow()
+      const circuits = Option.wrap(brume[ethereum.chain.chainId]).getOrThrow()
 
-      async function runWithPoolOrThrow(index: number) {
-        const poolSignal = AbortSignal.any([AbortSignal.timeout(1_000), parentSignal])
-        const pool = await pools.get().getOrThrow(index, poolSignal)
+      async function runWithCircuitOrThrow(index: number) {
+        const circuit = await circuits.get().getCryptoRandomOrThrow(parentSignal)
 
-        async function runWithConnOrThrow(index: number) {
-          const connSignal = AbortSignal.any([AbortSignal.timeout(1_000), parentSignal])
-          const conn = await pool.get().getOrThrow(index, connSignal)
+        async function runWithTargetOrThrow(index: number) {
+          const target = await circuit.get().getOrThrow(index, parentSignal)
 
-          const { counter, connection } = conn
+          const { counter, connection } = target
           const request = counter.prepare(init)
 
           if (connection.isURL()) {
@@ -39,6 +37,8 @@ export namespace BgEthereumContext {
 
             const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 40), parentSignal])
             const response = await TorRpc.fetchWithCircuitOrThrow<T>(url, { ...request, circuit, signal })
+
+            console.log(`Fetched ${request.method} on ${ethereum.chain.name}`, response)
 
             return Fetched.rewrap(response)
           }
@@ -51,13 +51,15 @@ export namespace BgEthereumContext {
             const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 40), parentSignal])
             const response = await TorRpc.fetchWithSocketOrThrow<T>(socket, request, signal)
 
+            console.log(`Fetched ${request.method} on ${ethereum.chain.name}`, response)
+
             return Fetched.rewrap(response)
           }
 
           return connection satisfies never
         }
 
-        const promises = Array.from({ length: pool.get().size }, (_, i) => runWithConnOrThrow(i))
+        const promises = Array.from({ length: circuit.get().size }, (_, i) => runWithTargetOrThrow(i))
 
         const results = await Promise.allSettled(promises)
 
@@ -103,7 +105,7 @@ export namespace BgEthereumContext {
         return fetcheds.get(sorteds[0].key)!
       }
 
-      const promises = Array.from({ length: pools.get().capacity }, (_, i) => runWithPoolOrThrow(i))
+      const promises = Array.from({ length: 3 }, (_, i) => runWithCircuitOrThrow(i))
 
       const results = await Promise.allSettled(promises)
 
