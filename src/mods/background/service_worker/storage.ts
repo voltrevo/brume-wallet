@@ -1,13 +1,14 @@
+import { requestOrThrow } from "@/libs/indexeddb"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
-import { AesGcmCoder, AsyncJson, AsyncPipeBicoder, Data, HmacEncoder, IDBQueryStorage, RawState } from "@hazae41/glacier"
+import { AesGcmCoder, AsyncJson, AsyncPipeBicoder, Data, HmacEncoder, QueryStorage, RawState, SeracQueryStorage } from "@hazae41/glacier"
 import { None, Some } from "@hazae41/option"
 import { Pbdkf2Params } from "./entities/users/crypto"
 import { UserData } from "./entities/users/data"
 import { BgWallet } from "./entities/wallets/data"
 
 export interface UserStorageResult {
-  readonly storage: IDBQueryStorage
+  readonly storage: QueryStorage
   readonly hasher: HmacEncoder
   readonly crypter: AesGcmCoder
 }
@@ -40,81 +41,104 @@ export async function createUserStorageOrThrow(user: UserData, password: string)
   const keySerializer = hasher
   const valueSerializer = new AsyncPipeBicoder<RawState, string, string>(AsyncJson, crypter)
 
-  async function onUpgrade(e: IDBVersionChangeEvent) {
-    if (e.newVersion === 2) {
-      const walletsState = await BgWallet.All.schema(storage).state
-      const [walletsData = []] = [walletsState.data?.get()]
+  const upgrade: { event?: IDBVersionChangeEvent } = {}
 
-      for (const walletRef of walletsData) {
-        const walletState = await BgWallet.schema(walletRef.uuid, storage).state
-        const walletData = walletState.data?.get()
+  function upgrader(database: IDBDatabase, event: IDBVersionChangeEvent) {
+    if (event.oldVersion === 0)
+      return
 
-        if (walletData == null)
-          continue
+    const request = event.target as IDBOpenDBRequest
+    const transaction = request.transaction
 
-        await BgWallet.All.ByAddress.schema(walletData.address, storage).mutate(s => {
-          const current = s.real?.current
+    if (transaction == null)
+      return
 
-          if (current == null)
-            return new Some(new Data([walletRef]))
-          if (current.isErr())
-            return new None()
+    upgrade.event = event
 
-          return new Some(current.mapSync(d => [...d, walletRef]))
-        })
-      }
-    }
+    if (event.oldVersion < 3)
+      transaction.objectStore("keyval").createIndex("expiration", "expiration")
+
+    return
   }
 
-  async function onCollect(e: { storageKey: string }) {
-    const { storageKey } = e
-
+  async function collector(storage: SeracQueryStorage, storageKey: IDBValidKey) {
     const raw = await storage.getStoredOrThrow(storageKey)
 
     if (raw?.version !== 3) {
-      storage.deleteStoredOrThrow(storageKey)
+      await storage.database.deleteOrThrow(storageKey)
       return
     }
 
     if (typeof raw.key !== "string") {
-      storage.deleteStoredOrThrow(storageKey)
+      await storage.database.deleteOrThrow(storageKey)
       return
     }
 
     if (raw.key.startsWith("wallet/")) {
       const [, uuid] = raw.key.split("/")
 
-      const walletQuery = BgWallet.schema(uuid, storage)
-      const walletState = await walletQuery.state
-      const walletResult = walletState.current
+      /**
+       * Safely delete the wallet
+       */
+      await BgWallet.schema(uuid, storage).delete()
 
-      if (walletResult == null)
-        return
-
-      if (walletResult.isOk()) {
-        /**
-         * Safely delete the wallet
-         */
-        await walletQuery.delete()
-        return
-      }
-
-      storage.deleteStoredOrThrow(storageKey)
       return
     }
 
-    storage.deleteStoredOrThrow(storageKey)
+    await storage.database.deleteOrThrow(storageKey)
     return
   }
 
-  const storage = IDBQueryStorage.createOrThrow({
+  const storage = await SeracQueryStorage.openAndCollectOrThrow({
     name: user.uuid,
-    version: 2,
-    keySerializer,
-    valueSerializer,
-    onUpgrade,
-    onCollect
+    version: 3,
+    encoders: {
+      key: keySerializer,
+      value: valueSerializer
+    },
+    upgrader,
+    collector
   })
+
+  if (upgrade.event != null && upgrade.event.oldVersion < 3) {
+    const keyval = storage.database.database.transaction("keyval").objectStore("keyval")
+    const keys = await requestOrThrow(keyval.getAllKeys())
+
+    for (const storageKey of keys) {
+      if (storageKey === "__keys")
+        continue
+
+      const storageValue = await requestOrThrow(storage.database.database.transaction("keyval").objectStore("keyval").get(storageKey))
+      const storageState = await storage.encoders.value.decodeOrThrow(storageValue)
+      await storage.database.setOrThrow(storageKey, storageValue, storageState?.expiration)
+    }
+
+    console.log("Sucessfully migrated to version 3")
+  }
+
+  if (upgrade.event != null && upgrade.event.oldVersion < 2) {
+    const walletsState = await BgWallet.All.schema(storage).state
+    const [walletsData = []] = [walletsState.data?.get()]
+
+    for (const walletRef of walletsData) {
+      const walletState = await BgWallet.schema(walletRef.uuid, storage).state
+      const walletData = walletState.data?.get()
+
+      if (walletData == null)
+        continue
+
+      await BgWallet.All.ByAddress.schema(walletData.address, storage).mutate(s => {
+        const current = s.real?.current
+
+        if (current == null)
+          return new Some(new Data([walletRef]))
+        if (current.isErr())
+          return new None()
+
+        return new Some(current.mapSync(d => [...d, walletRef]))
+      })
+    }
+  }
 
   return { storage, hasher, crypter }
 }

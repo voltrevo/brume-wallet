@@ -1,8 +1,8 @@
 import { Mutators } from "@/libs/glacier/mutators"
 import { BgUser, UserRef } from "@/mods/background/service_worker/entities/users/data"
-import { Data, States, createQuery, useQuery } from "@hazae41/glacier"
+import { Data, QueryStorage, States, createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { GlobalStorage, useGlobalStorageContext } from "../../storage/global"
+import { useGlobalStorageContext } from "../../storage/global"
 
 export namespace FgUser {
 
@@ -14,7 +14,7 @@ export namespace FgUser {
 
     export const key = BgUser.All.key
 
-    export function schema(storage: GlobalStorage) {
+    export function schema(storage: QueryStorage) {
       return createQuery<Key, Data, Fail>({ key, storage })
     }
 
@@ -28,7 +28,7 @@ export namespace FgUser {
 
     export const key = BgUser.Current.key
 
-    export function schema(storage: GlobalStorage) {
+    export function schema(storage: QueryStorage) {
       return createQuery<Key, Data, Fail>({ key, storage })
     }
 
@@ -40,7 +40,7 @@ export namespace FgUser {
 
   export const key = BgUser.key
 
-  export function schema(uuid: Nullable<string>, storage: GlobalStorage) {
+  export function schema(uuid: Nullable<string>, storage: QueryStorage) {
     if (uuid == null)
       return
 

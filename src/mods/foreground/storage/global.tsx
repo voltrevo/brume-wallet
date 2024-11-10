@@ -71,4 +71,6 @@ export class GlobalStorage implements QueryStorage {
     }).then(r => r.getOrThrow())
   }
 
+  async setOrThrow(cacheKey: string, value: RawState) { }
+
 }

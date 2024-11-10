@@ -1,7 +1,7 @@
 import { Mutators } from "@/libs/glacier/mutators"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
-import { Data, IDBQueryStorage, States, createQuery } from "@hazae41/glacier"
+import { Data, QueryStorage, States, createQuery } from "@hazae41/glacier"
 import { AesGcmPbkdf2ParamsBase64, HmacPbkdf2ParamsBase64, Pbdkf2Params, Pbkdf2ParamsBase64, Pbkdf2ParamsBytes } from "./crypto"
 
 export type User =
@@ -63,7 +63,7 @@ export namespace BgUser {
 
     export const key = `users`
 
-    export function schema(storage: IDBQueryStorage) {
+    export function schema(storage: QueryStorage) {
       return createQuery<Key, Data, Fail>({ key, storage })
     }
 
@@ -77,7 +77,7 @@ export namespace BgUser {
 
     export const key = `user`
 
-    export function schema(storage: IDBQueryStorage) {
+    export function schema(storage: QueryStorage) {
       return createQuery<Key, Data, Fail>({ key, storage })
     }
 
@@ -91,7 +91,7 @@ export namespace BgUser {
     return `user/${uuid}`
   }
 
-  export function schema(uuid: string, storage: IDBQueryStorage) {
+  export function schema(uuid: string, storage: QueryStorage) {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 

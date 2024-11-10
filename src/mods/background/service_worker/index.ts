@@ -9,6 +9,7 @@ import { Console } from "@/libs/console";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { fetchAsBlobOrThrow } from "@/libs/fetch";
 import { Mutators } from "@/libs/glacier/mutators";
+import { requestOrThrow } from "@/libs/indexeddb";
 import { Mime } from "@/libs/mime/mime";
 import { Mouse } from "@/libs/mouse/mouse";
 import { Objects } from "@/libs/objects/objects";
@@ -37,7 +38,7 @@ import { Circuit, Echalote, TorClientDuplex } from "@hazae41/echalote";
 import { Ed25519 } from "@hazae41/ed25519";
 import { Fleche, fetch } from "@hazae41/fleche";
 import { Future } from "@hazae41/future";
-import { AesGcmCoder, Data, HmacEncoder, IDBQueryStorage, RawState, SimpleQuery, State, core } from "@hazae41/glacier";
+import { AesGcmCoder, Data, HmacEncoder, QueryStorage, RawState, SeracQueryStorage, SimpleQuery, State, SyncIdentity, core } from "@hazae41/glacier";
 import { Immutable } from "@hazae41/immutable";
 import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { Kcp } from "@hazae41/kcp";
@@ -143,7 +144,7 @@ export class Global {
   readonly chainIdByScript = new Map<string, Nullable<number>>()
 
   constructor(
-    readonly storage: IDBQueryStorage
+    readonly storage: QueryStorage
   ) {
     this.sockets = createNativeWebSocketPool(1).get()
     this.tors = createTorPool(this.sockets, storage, 1).get()
@@ -1166,7 +1167,7 @@ export class Global {
     return await BgEthereumContext.fetchOrFail<unknown>(context, subrequest).then(r => r.getOrThrow())
   }
 
-  async routeCustomOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: IDBQueryStorage): Promise<SimpleQuery<any, any, Error>> {
+  async routeCustomOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: QueryStorage): Promise<SimpleQuery<any, any, Error>> {
     if (request.method === BgEns.Lookup.method)
       return await BgEns.Lookup.parseOrThrow(ethereum, request, storage)
     if (request.method === BgEns.Reverse.method)
@@ -1442,7 +1443,7 @@ export class Global {
 
 export interface UserSessionParams {
   readonly user: User,
-  readonly storage: IDBQueryStorage,
+  readonly storage: QueryStorage,
   readonly hasher: HmacEncoder,
   readonly crypter: AesGcmCoder
 }
@@ -1459,7 +1460,7 @@ export class UserSession {
   constructor(
     readonly global: Global,
     readonly user: User,
-    readonly storage: IDBQueryStorage,
+    readonly storage: QueryStorage,
     readonly hasher: HmacEncoder,
     readonly crypter: AesGcmCoder
   ) { }
@@ -1519,7 +1520,55 @@ async function initOrThrow() {
 
   const start = Date.now()
 
-  const storage = IDBQueryStorage.createOrThrow({ name: "memory" })
+  const upgrade: { event?: IDBVersionChangeEvent } = {}
+
+  function upgrader(database: IDBDatabase, event: IDBVersionChangeEvent) {
+    if (event.oldVersion === 0)
+      return
+
+    const request = event.target as IDBOpenDBRequest
+    const transaction = request.transaction
+
+    if (transaction == null)
+      return
+
+    upgrade.event = event
+
+    if (event.oldVersion < 3)
+      transaction.objectStore("keyval").createIndex("expiration", "expiration")
+
+    return
+  }
+
+  const storage = await SeracQueryStorage.openAndCollectOrThrow({
+    name: "memory",
+    version: 6,
+    encoders: { key: SyncIdentity, value: SyncIdentity as any },
+    collector: async (storage, key) => {
+      console.log("Collecting", key)
+
+      await storage.database.deleteOrThrow(key)
+    },
+    upgrader
+  })
+
+  console.log(upgrade)
+
+  if (upgrade.event != null && upgrade.event.oldVersion < 6) {
+    const keys = await requestOrThrow(storage.database.database.transaction("keyval").objectStore("keyval").getAllKeys())
+
+    for (const storageKey of keys) {
+      if (storageKey === "__keys")
+        continue
+
+      const storageValue = await requestOrThrow(storage.database.database.transaction("keyval").objectStore("keyval").get(storageKey))
+      const storageState = await storage.encoders.value.decodeOrThrow(storageValue)
+      await storage.database.setOrThrow(storageKey, storageValue, storageState?.expiration)
+    }
+
+    console.log("Sucessfully migrated to version 3")
+  }
+
   const global = new Global(storage)
 
   console.debug(`Started in ${Date.now() - start}ms`)

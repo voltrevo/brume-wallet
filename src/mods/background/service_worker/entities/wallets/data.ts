@@ -1,5 +1,5 @@
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, IDBQueryStorage, States, createQuery } from "@hazae41/glacier"
+import { Data, QueryStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
 import { SeedRef } from "../../../../universal/entities/seeds/data"
@@ -137,7 +137,7 @@ export namespace BgWallet {
 
       export type Schema = ReturnType<typeof schema>
 
-      export function schema(storage: IDBQueryStorage) {
+      export function schema(storage: QueryStorage) {
         return createQuery<Key, Data, Fail>({ key, storage })
       }
 
@@ -153,7 +153,7 @@ export namespace BgWallet {
         return `walletsBySeed/${uuid}`
       }
 
-      export function schema(uuid: string, storage: IDBQueryStorage) {
+      export function schema(uuid: string, storage: QueryStorage) {
         return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
       }
 
@@ -169,7 +169,7 @@ export namespace BgWallet {
         return `walletsByAddress/${address}`
       }
 
-      export function schema(account: ZeroHexString, storage: IDBQueryStorage) {
+      export function schema(account: ZeroHexString, storage: QueryStorage) {
         const indexer = async (states: States<Data, Fail>) => {
           const { current, previous } = states
 
@@ -211,7 +211,7 @@ export namespace BgWallet {
 
     export type Schema = ReturnType<typeof schema>
 
-    export function schema(storage: IDBQueryStorage) {
+    export function schema(storage: QueryStorage) {
       return createQuery<Key, Data, Fail>({ key, storage })
     }
 
@@ -225,7 +225,7 @@ export namespace BgWallet {
     return `wallet/${uuid}`
   }
 
-  export function schema(uuid: string, storage: IDBQueryStorage) {
+  export function schema(uuid: string, storage: QueryStorage) {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 

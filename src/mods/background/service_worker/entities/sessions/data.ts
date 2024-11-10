@@ -1,7 +1,7 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { Ed25519 } from "@hazae41/ed25519"
-import { Data, IDBQueryStorage, QueryStorage, RawState2, States, createQuery } from "@hazae41/glacier"
+import { Data, QueryStorage, RawState2, States, createQuery } from "@hazae41/glacier"
 import { RpcReceipt, WcMetadata } from "@hazae41/latrine"
 import { Nullable } from "@hazae41/option"
 import { Wallet } from "../wallets/data"
@@ -54,7 +54,7 @@ export interface WcSessionData {
 export class SessionStorage implements QueryStorage {
 
   constructor(
-    readonly storage: IDBQueryStorage
+    readonly storage: QueryStorage
   ) { }
 
   getOrThrow(cacheKey: string) {
@@ -117,7 +117,7 @@ export namespace BgSession {
           return `persistentSessionsByWallet/v2/${wallet}`
         }
 
-        export function schema(wallet: string, storage: IDBQueryStorage) {
+        export function schema(wallet: string, storage: QueryStorage) {
           return createQuery<Key, Data, Fail>({ key: key(wallet), storage })
         }
 
@@ -129,7 +129,7 @@ export namespace BgSession {
 
       export const key = `persistentSessions/v2`
 
-      export function schema(storage: IDBQueryStorage) {
+      export function schema(storage: QueryStorage) {
         return createQuery<Key, Data, Fail>({ key, storage })
       }
 
@@ -147,7 +147,7 @@ export namespace BgSession {
       return `sessionByOrigin/${origin}`
     }
 
-    export function schema(origin: string, storage: IDBQueryStorage) {
+    export function schema(origin: string, storage: QueryStorage) {
       return createQuery<Key, Data, Fail>({ key: key(origin), storage })
     }
 
@@ -161,7 +161,7 @@ export namespace BgSession {
     return `session/v4/${id}`
   }
 
-  export function schema(id: string, storage: IDBQueryStorage) {
+  export function schema(id: string, storage: QueryStorage) {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 

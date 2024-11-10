@@ -1,6 +1,6 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { ZeroHexString } from "@hazae41/cubane"
-import { Data, FetcherMore, IDBQueryStorage, States, createQuery } from "@hazae41/glacier"
+import { Data, FetcherMore, QueryStorage, States, createQuery } from "@hazae41/glacier"
 import { None, Nullable, Some } from "@hazae41/option"
 import { BgEthereumContext } from "../../context"
 import { EthereumQueryKey } from "../wallets/data"
@@ -176,7 +176,7 @@ export namespace BgTransaction {
         return `transaction/v0/all/byAddress/${address}`
       }
 
-      export function schema(address: ZeroHexString, storage: IDBQueryStorage) {
+      export function schema(address: ZeroHexString, storage: QueryStorage) {
         return createQuery<Key, Data, Fail>({
           key: key(address),
           storage
@@ -195,7 +195,7 @@ export namespace BgTransaction {
     return `transaction/v0/${uuid}`
   }
 
-  export function schema(uuid: string, storage: IDBQueryStorage) {
+  export function schema(uuid: string, storage: QueryStorage) {
     const indexer = async (states: States<Data, Fail>) => {
       const { current, previous } = states
 
@@ -297,7 +297,7 @@ export namespace BgTransactionTrial {
         return `transactionTrial/v0/all/byAddress/${address}`
       }
 
-      export function schema(address: ZeroHexString, storage: IDBQueryStorage) {
+      export function schema(address: ZeroHexString, storage: QueryStorage) {
         return createQuery<Key, Data, Fail>({
           key: key(address),
           storage
@@ -316,7 +316,7 @@ export namespace BgTransactionTrial {
     return `transactionTrial/v0/${uuid}`
   }
 
-  export function schema(uuid: string, storage: IDBQueryStorage) {
+  export function schema(uuid: string, storage: QueryStorage) {
     return createQuery<Key, Data, Fail>({
       key: key(uuid),
       storage
@@ -369,7 +369,7 @@ export namespace BgTransactionReceipt {
     }
   }
 
-  export function schema(uuid: string, hash: ZeroHexString, ethereum: BgEthereumContext, storage: IDBQueryStorage) {
+  export function schema(uuid: string, hash: ZeroHexString, ethereum: BgEthereumContext, storage: QueryStorage) {
     const fetcher = async (request: EthereumQueryKey<unknown>, more: FetcherMore) =>
       await BgEthereumContext.fetchOrFail<Data>(ethereum, request, more)
 
