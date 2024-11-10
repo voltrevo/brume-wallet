@@ -12,6 +12,7 @@ import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { State } from "@/libs/react/state";
 import { Dialog } from "@/libs/ui/dialog";
+import { SmallUnflexLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
@@ -22,10 +23,12 @@ import { WalletRef } from "@/mods/background/service_worker/entities/wallets/dat
 import { TokenSettings, TokenSettingsData } from "@/mods/background/service_worker/entities/wallets/tokens/data";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
+import { Data, Fail, Fetched } from "@hazae41/glacier";
 import { Wc, WcMetadata } from "@hazae41/latrine";
 import { None, Nullable, Option, Optional, Some } from "@hazae41/option";
 import { CloseContext, useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
 import { useEnsReverse } from "../names/data";
@@ -49,51 +52,39 @@ export function WalletPage(props: UUIDProps) {
   </WalletDataProvider>
 }
 
-export function useDisplayRaw(result: Nullable<Result<Fixed.From, Error>>) {
+export function useDisplayRaw(fixed: Fixed.From = new Fixed(0n, 5)) {
   return useMemo(() => {
-    if (result == null)
-      return "???"
-    return result.andThenSync(fixed => Result.runAndDoubleWrapSync(() => {
-      const fixed5 = Fixed.from(fixed).move(5)
-      const float = Number(fixed5.toString())
+    const fixed5 = Fixed.from(fixed).move(5)
+    const float = Number(fixed5.toString())
 
-      return float.toLocaleString(undefined)
-    })).getOr("Error")
-  }, [result])
+    return float.toLocaleString(undefined)
+  }, [fixed])
 }
 
-export function useDisplayUsd(result: Nullable<Result<Fixed.From, Error>>) {
+export function useDisplayUsd(fixed: Fixed.From = new Fixed(0n, 2)) {
   return useMemo(() => {
-    if (result == null)
-      return "???"
-    return result.andThenSync(fixed => Result.runAndDoubleWrapSync(() => {
-      const fixed2 = Fixed.from(fixed).move(2)
-      const float = Number(fixed2.toString())
+    const fixed2 = Fixed.from(fixed).move(2)
+    const float = Number(fixed2.toString())
 
-      const style = "currency"
-      const currency = "USD"
-      const notation = "standard"
+    const style = "currency"
+    const currency = "USD"
+    const notation = "standard"
 
-      return float.toLocaleString(undefined, { style, currency, notation })
-    })).getOr("Error")
-  }, [result])
+    return float.toLocaleString(undefined, { style, currency, notation })
+  }, [fixed])
 }
 
-export function useCompactDisplayUsd(result: Nullable<Result<Fixed.From, Error>>) {
+export function useCompactDisplayUsd(fixed: Fixed.From = new Fixed(0n, 2)) {
   return useMemo(() => {
-    if (result == null)
-      return "???"
-    return result.andThenSync(fixed => Result.runAndDoubleWrapSync(() => {
-      const fixed2 = Fixed.from(fixed).move(2)
-      const float = Number(fixed2.toString())
+    const fixed2 = Fixed.from(fixed).move(2)
+    const float = Number(fixed2.toString())
 
-      const style = "currency"
-      const currency = "USD"
-      const notation = "compact"
+    const style = "currency"
+    const currency = "USD"
+    const notation = "compact"
 
-      return float.toLocaleString(undefined, { style, currency, notation })
-    })).getOr("Error")
-  }, [result])
+    return float.toLocaleString(undefined, { style, currency, notation })
+  }, [fixed])
 }
 
 export function AnchorCard(props: AnchorProps) {
@@ -583,10 +574,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
   const balanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
-  const balanceDisplay = useDisplayRaw(balanceQuery.current)
-
-  const balanceUsdFixed = useNativePricedBalance(wallet.address, "usd", context)
-  const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
+  const balanceUsdQuery = useNativePricedBalance(wallet.address, "usd", context)
 
   const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
     setPrices(prices => {
@@ -613,8 +601,8 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
       onContextMenu={menu.onContextMenu}
       token={token}
       chain={chain}
-      balanceDisplay={balanceDisplay}
-      balanceUsdDisplay={balanceUsdDisplay} />
+      balanceQuery={balanceQuery}
+      balanceUsdQuery={balanceUsdQuery} />
   </>
 }
 
@@ -683,10 +671,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
   const balanceQuery = useContractBalance(wallet.address, token, "pending", context, prices)
-  const balanceDisplay = useDisplayRaw(balanceQuery.current)
-
-  const balanceUsdFixed = useContractPricedBalance(wallet.address, token, "usd", context)
-  const balanceUsdDisplay = useDisplayUsd(balanceUsdFixed.current)
+  const balanceUsdQuery = useContractPricedBalance(wallet.address, token, "usd", context)
 
   const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
     setPrices(prices => {
@@ -713,9 +698,16 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
       onContextMenu={menu.onContextMenu}
       token={token}
       chain={chain}
-      balanceDisplay={balanceDisplay}
-      balanceUsdDisplay={balanceUsdDisplay} />
+      balanceQuery={balanceQuery}
+      balanceUsdQuery={balanceUsdQuery} />
   </>
+}
+
+export interface QueryLike<D, E> {
+  readonly data?: Data<D>
+  readonly error?: Fail<E>
+  readonly current?: Fetched<D, E>
+  readonly fetching?: boolean
 }
 
 export function PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<Fixed.From>]>) {
@@ -736,8 +728,8 @@ export function PriceResolver(props: { index: number } & { address: string } & O
   return null
 }
 
-function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceDisplay: string } & { balanceUsdDisplay: string } & AnchorProps) {
-  const { token, chain, balanceDisplay, balanceUsdDisplay, ...others } = props
+function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceQuery: QueryLike<Fixed.From, Error> } & { balanceUsdQuery: QueryLike<Fixed.From, Error> } & AnchorProps) {
+  const { token, chain, balanceQuery, balanceUsdQuery, ...others } = props
 
   const tokenId = token.type === "native"
     ? token.chainId + token.symbol
@@ -745,6 +737,9 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
 
   const modhash = useModhash(tokenId)
   const color = Color.get(modhash)
+
+  const balanceDisplay = useDisplayRaw(balanceQuery.data?.get())
+  const balanceUsdDisplay = useDisplayUsd(balanceUsdQuery.data?.get())
 
   return <a className="po-sm group flex items-center text-left"
     {...others}>
@@ -772,12 +767,16 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
           </span>
         </div>
         {balanceUsdDisplay != null &&
-          <div className="">
-            {balanceUsdDisplay}
+          <div className="flex items-center gap-1">
+            <div>{balanceUsdDisplay}</div>
+            {balanceUsdQuery.error != null && <ExclamationTriangleIcon className="h-4 mt-1" />}
+            {balanceUsdQuery.fetching && <SmallUnflexLoading />}
           </div>}
       </div>
-      <div className="text-contrast">
-        {balanceDisplay} {token.symbol}
+      <div className="flex items-center text-contrast gap-1">
+        <div>{balanceDisplay} {token.symbol}</div>
+        {balanceQuery.error != null && <ExclamationTriangleIcon className="h-4 mt-1" />}
+        {balanceQuery.fetching && <SmallUnflexLoading />}
       </div>
     </div>
   </a>

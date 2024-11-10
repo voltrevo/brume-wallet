@@ -13,7 +13,7 @@ export function HomePage() {
   const background = useBackgroundContext().getOrThrow()
 
   const totalPricedBalanceQuery = useTotalPricedBalance("usd")
-  const totalPricedBalanceDisplay = useDisplayUsd(totalPricedBalanceQuery.current)
+  const totalPricedBalanceDisplay = useDisplayUsd(totalPricedBalanceQuery.data?.get())
 
   useEffect(() => {
     background.requestOrThrow({
