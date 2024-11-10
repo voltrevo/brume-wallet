@@ -55,7 +55,7 @@ export class IrnBrume implements IrnClientLike {
           stack.getOrThrow().push(entry)
 
           for (const topic of this.topics) {
-            const timeout = AbortSignal.timeout(ping.value * 6)
+            const timeout = AbortSignal.timeout(ping.value * 50)
             const subsignal = AbortSignal.any([signal, timeout])
             await irn.subscribeOrThrow(topic, subsignal)
           }
@@ -189,7 +189,7 @@ export class IrnSockets implements IrnClientLike {
           stack.getOrThrow().push(entry)
 
           for (const topic of this.topics) {
-            const timeout = AbortSignal.timeout(ping.value * 6)
+            const timeout = AbortSignal.timeout(ping.value * 50)
             const subsignal = AbortSignal.any([signal, timeout])
             await irn.subscribeOrThrow(topic, subsignal)
           }

@@ -82,7 +82,7 @@ export class MessageRpcRouter {
 
       return new Err(new RpcInvalidRequestError())
     } catch (e: unknown) {
-      console.warn(request.method, e)
+      console.warn(request.method, { e })
       return new Err(RpcError.rewrap(e))
     }
   }
@@ -202,7 +202,7 @@ export class ExtensionRpcRouter {
 
       return new Err(new RpcInvalidRequestError())
     } catch (e: unknown) {
-      console.warn(request.method, e)
+      console.warn(request.method, { e })
       return new Err(RpcError.rewrap(e))
     }
   }

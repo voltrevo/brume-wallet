@@ -153,7 +153,7 @@ export namespace WebSocketConnection {
    * @returns 
    */
   export async function createOrThrow(circuit: Circuit, url: URL, signal = new AbortController().signal): Promise<WebSocketConnection> {
-    const signal2 = AbortSignal.any([AbortSignal.timeout(ping.value * 5), signal])
+    const signal2 = AbortSignal.any([AbortSignal.timeout(ping.value * 40), signal])
 
     if (url.protocol === "wss:") {
       const tcp = await circuit.openOrThrow(url.hostname, 443)

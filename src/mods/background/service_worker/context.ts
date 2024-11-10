@@ -37,7 +37,7 @@ export namespace BgEthereumContext {
           if (connection.isURL()) {
             const { url, circuit } = connection
 
-            const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 5), parentSignal])
+            const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 40), parentSignal])
             const response = await TorRpc.fetchWithCircuitOrThrow<T>(url, { ...request, circuit, signal })
 
             return Fetched.rewrap(response)
@@ -48,7 +48,7 @@ export namespace BgEthereumContext {
 
             await cooldown
 
-            const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 5), parentSignal])
+            const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 40), parentSignal])
             const response = await TorRpc.fetchWithSocketOrThrow<T>(socket, request, signal)
 
             return Fetched.rewrap(response)
