@@ -101,11 +101,13 @@ export async function createUserStorageOrThrow(user: UserData, password: string)
   })
 
   if (upgrade.event != null && upgrade.event.oldVersion < 3) {
+    const index = await storage.encoders.key.encodeOrThrow("__keys")
+
     const keyval = storage.database.database.transaction("keyval").objectStore("keyval")
     const keys = await requestOrThrow(keyval.getAllKeys())
 
     for (const storageKey of keys) {
-      if (storageKey === "__keys")
+      if (storageKey === index)
         continue
 
       const storageValue = await requestOrThrow(storage.database.database.transaction("keyval").objectStore("keyval").get(storageKey))
@@ -113,7 +115,8 @@ export async function createUserStorageOrThrow(user: UserData, password: string)
       await storage.database.setOrThrow(storageKey, storageValue, storageState?.expiration)
     }
 
-    console.log("Sucessfully migrated to version 3")
+    await storage.setStoredOrThrow(index, undefined)
+    console.log("Sucessfully migrated to Serac")
   }
 
   if (upgrade.event != null && upgrade.event.oldVersion < 2) {

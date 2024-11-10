@@ -1542,19 +1542,13 @@ async function initOrThrow() {
 
   const storage = await SeracQueryStorage.openAndCollectOrThrow({
     name: "memory",
-    version: 6,
+    version: 3,
     encoders: { key: SyncIdentity, value: SyncIdentity as any },
-    collector: async (storage, key) => {
-      console.log("Collecting", key)
-
-      await storage.database.deleteOrThrow(key)
-    },
+    collector: (storage, key) => storage.database.deleteOrThrow(key),
     upgrader
   })
 
-  console.log(upgrade)
-
-  if (upgrade.event != null && upgrade.event.oldVersion < 6) {
+  if (upgrade.event != null && upgrade.event.oldVersion < 3) {
     const keys = await requestOrThrow(storage.database.database.transaction("keyval").objectStore("keyval").getAllKeys())
 
     for (const storageKey of keys) {
@@ -1566,7 +1560,8 @@ async function initOrThrow() {
       await storage.database.setOrThrow(storageKey, storageValue, storageState?.expiration)
     }
 
-    console.log("Sucessfully migrated to version 3")
+    await storage.database.deleteOrThrow("__keys")
+    console.log("Sucessfully migrated to Serac")
   }
 
   const global = new Global(storage)
