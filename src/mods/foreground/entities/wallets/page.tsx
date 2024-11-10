@@ -769,13 +769,13 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
         {balanceUsdDisplay != null &&
           <div className="flex items-center gap-1">
             <div>{balanceUsdDisplay}</div>
-            {balanceUsdQuery.error != null && <ExclamationTriangleIcon className="h-4 mt-1" />}
+            {balanceUsdQuery.error != null && <ExclamationTriangleIcon className="h-4 mt-0.5" />}
             {balanceUsdQuery.fetching && <SmallUnflexLoading />}
           </div>}
       </div>
       <div className="flex items-center text-contrast gap-1">
         <div>{balanceDisplay} {token.symbol}</div>
-        {balanceQuery.error != null && <ExclamationTriangleIcon className="h-4 mt-1" />}
+        {balanceQuery.error != null && <ExclamationTriangleIcon className="h-4 mt-0.5" />}
         {balanceQuery.fetching && <SmallUnflexLoading />}
       </div>
     </div>
