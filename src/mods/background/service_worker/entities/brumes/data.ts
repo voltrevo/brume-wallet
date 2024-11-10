@@ -120,7 +120,7 @@ export namespace WcBrume {
 export namespace EthBrume {
 
   export function create(circuits: AutoPool<Circuit>): EthBrume {
-    const subcircuits = Circuits.createCircuitSubpool(circuits, 16)
+    const subcircuits = Circuits.createCircuitSubpool(circuits, 3)
     const conns = Objects.mapValuesSync(chainDataByChainId, x => RpcCircuits.createRpcCircuitsPool(subcircuits.get(), x.urls))
 
     return { ...conns, circuits: subcircuits.get() } satisfies EthBrume
@@ -153,7 +153,7 @@ export namespace WebSocketConnection {
    * @returns 
    */
   export async function createOrThrow(circuit: Circuit, url: URL, signal = new AbortController().signal): Promise<WebSocketConnection> {
-    const signal2 = AbortSignal.any([AbortSignal.timeout(ping.value * 40), signal])
+    const signal2 = AbortSignal.any([AbortSignal.timeout(ping.value * 5), signal])
 
     if (url.protocol === "wss:") {
       const tcp = await circuit.openOrThrow(url.hostname, 443)

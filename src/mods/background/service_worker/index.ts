@@ -148,7 +148,7 @@ export class Global {
   ) {
     this.sockets = createNativeWebSocketPool(1).get()
     this.tors = createTorPool(this.sockets, storage, 1).get()
-    this.circuits = Circuits.createCircuitPool(this.tors, storage, 16).get()
+    this.circuits = Circuits.createCircuitPool(this.tors, storage, 32).get()
 
     this.wcBrumes = WcBrume.createPool(this.circuits, 1).get()
     this.ethBrumes = EthBrume.createPool(this.circuits, 1).get()
@@ -1264,10 +1264,10 @@ export class Global {
     using sessionKeyMemory = Base64.get().getOrThrow().decodePaddedOrThrow(sessionKeyBase64)
     const sessionKeyBytes32 = Bytes.castOrThrow(sessionKeyMemory.bytes.slice(), 32)
 
-    const sessionClient = CryptoClient.createOrThrow(irn, topic, sessionKeyBytes32, ping.value * 50)
+    const sessionClient = CryptoClient.createOrThrow(irn, topic, sessionKeyBytes32, ping.value * 5)
     const session = new WcSession(sessionClient, metadata)
 
-    await irn.subscribeOrThrow(topic, AbortSignal.timeout(ping.value * 50))
+    await irn.subscribeOrThrow(topic, AbortSignal.timeout(ping.value * 5))
 
     /**
      * When settlement has been interrupted
@@ -1333,7 +1333,7 @@ export class Global {
 
     const chains = Objects.values(chainDataByChainId).map(x => x.chainId)
     const metadata = { name: "Brume", description: "Brume", url: location.origin, icons: [] }
-    const [session, settlement] = await Wc.pairOrThrow(irn, pairParams, metadata, walletData.address, chains, ping.value * 50)
+    const [session, settlement] = await Wc.pairOrThrow(irn, pairParams, metadata, walletData.address, chains, ping.value * 5)
 
     const originData: OriginData = {
       origin: `wc://${randomUUID()}`,
