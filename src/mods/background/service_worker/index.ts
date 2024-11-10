@@ -1523,15 +1523,13 @@ async function initOrThrow() {
   const upgrade: { event?: IDBVersionChangeEvent } = {}
 
   function upgrader(database: IDBDatabase, event: IDBVersionChangeEvent) {
-    if (event.oldVersion === 0)
-      return
-
     const request = event.target as IDBOpenDBRequest
     const transaction = request.transaction
 
     if (transaction == null)
       return
-
+    if (event.oldVersion === 0)
+      return
     upgrade.event = event
 
     if (event.oldVersion < 3)
