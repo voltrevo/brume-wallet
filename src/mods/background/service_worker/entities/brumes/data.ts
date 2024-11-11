@@ -121,7 +121,7 @@ export namespace WcBrume {
 export namespace EthBrume {
 
   export function create(circuits: AutoPool<Circuit>): EthBrume {
-    const subcircuits = Circuits.createCircuitSubpool(circuits, 9)
+    const subcircuits = Circuits.createCircuitSubpool(circuits, 3)
 
     const chains = Objects.mapValuesSync(chainDataByChainId, (chainData) =>
       RpcCircuits.createRpcCircuitsPool(subcircuits.get(), chainData.urls))
