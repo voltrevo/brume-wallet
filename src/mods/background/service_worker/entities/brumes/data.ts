@@ -339,7 +339,7 @@ export namespace RpcConnections {
           try {
             return await WebSocketConnection.createOrThrow(circuit, url, signal)
           } catch (e: unknown) {
-            console.log(`Retrying WebSocket connection creation ${url.origin} #${circuit.id}`, { e })
+            console.debug(`Retrying WebSocket connection creation ${url.origin} #${circuit.id}`, { e })
             throw new Retry(e)
           }
         }, { max: 9 })

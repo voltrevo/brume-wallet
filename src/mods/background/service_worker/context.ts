@@ -39,10 +39,10 @@ export namespace BgEthereumContext {
           const response = await TorRpc.fetchWithCircuitOrThrow<T>(url, { ...request, circuit, signal })
 
           if (response.isOk())
-            console.log(`Fetched ${request.method} on ${ethereum.chain.name}`, response)
+            console.debug(`Fetched ${request.method} on ${ethereum.chain.name}`, response)
 
           if (response.isErr())
-            console.error(`Failed to fetch ${request.method} on ${ethereum.chain.name}`, response)
+            console.debug(`Failed to fetch ${request.method} on ${ethereum.chain.name}`, response)
 
           return Fetched.rewrap(response)
         }
@@ -56,10 +56,10 @@ export namespace BgEthereumContext {
           const response = await TorRpc.fetchWithSocketOrThrow<T>(socket, request, signal)
 
           if (response.isOk())
-            console.log(`Fetched ${request.method} on ${ethereum.chain.name}`, response)
+            console.debug(`Fetched ${request.method} on ${ethereum.chain.name}`, response)
 
           if (response.isErr())
-            console.error(`Failed to fetch ${request.method} on ${ethereum.chain.name}`, response)
+            console.debug(`Failed to fetch ${request.method} on ${ethereum.chain.name}`, response)
 
           return Fetched.rewrap(response)
         }
@@ -75,7 +75,6 @@ export namespace BgEthereumContext {
       const counters = new Map<string, number>()
 
       for (const result of results) {
-        console.log(result)
         if (result.status === "rejected")
           continue
         if (result.value.isErr())

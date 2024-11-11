@@ -146,7 +146,7 @@ export namespace Circuits {
                   return circuit.moveOrThrow()
                 })()
               } catch (e: unknown) {
-                console.log(`Retrying circuit #${index} creation`, { e })
+                console.debug(`Retrying circuit #${index} creation`, { e })
                 throw new Retry(e)
               }
             }, { max: 9 })

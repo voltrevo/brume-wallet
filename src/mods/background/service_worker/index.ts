@@ -148,7 +148,7 @@ export class Global {
   ) {
     this.sockets = createNativeWebSocketPool(1).get()
     this.tors = createTorPool(this.sockets, storage, 1).get()
-    this.circuits = Circuits.createCircuitPool(this.tors, storage, 32).get()
+    this.circuits = Circuits.createCircuitPool(this.tors, storage, 64).get()
 
     this.wcBrumes = WcBrume.createPool(this.circuits, 1).get()
     this.ethBrumes = EthBrume.createPool(this.circuits, 1).get()
