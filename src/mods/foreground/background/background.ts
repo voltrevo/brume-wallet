@@ -251,7 +251,7 @@ export function createExtensionChannelPool(background: ExtensionBackground) {
 
       sessionStorage.setItem("#brume.opened", "true")
 
-      const opener = BrowserError.runOrThrowSync(() => browser.runtime.getURL("/opener.html"))
+      const opener = BrowserError.runOrThrowSync(() => browser!.runtime.getURL("/opener.html"))
       const opened = urlOf(opener, { url: location.href })
 
       location.replace(opened)

@@ -1,14 +1,13 @@
+import { Nullable } from "@hazae41/option"
 
 type Chrome = typeof chrome
 
-declare module globalThis {
-  const browser: Chrome
-  const chrome: Chrome
+declare namespace globalThis {
+  const browser: Nullable<Chrome>
+  const chrome: Nullable<Chrome>
 }
 
-export const browser = null
-  ?? globalThis.browser
-  ?? globalThis.chrome
+export const browser = false || globalThis.browser || globalThis.chrome
 
 export class BrowserError extends Error {
   readonly #class = BrowserError
@@ -19,7 +18,7 @@ export class BrowserError extends Error {
   }
 
   static #connect(connectInfo?: chrome.runtime.ConnectInfo) {
-    const port = browser.runtime.connect(connectInfo)
+    const port = browser!.runtime.connect(connectInfo)
     port.onDisconnect.addListener(() => void chrome.runtime.lastError)
     return port
   }
@@ -32,8 +31,8 @@ export class BrowserError extends Error {
     try {
       const result = await callback()
 
-      if (browser.runtime.lastError)
-        throw browser.runtime.lastError
+      if (browser!.runtime.lastError)
+        throw browser!.runtime.lastError
 
       return result
     } catch (e: unknown) {
@@ -45,8 +44,8 @@ export class BrowserError extends Error {
     try {
       const result = callback()
 
-      if (browser.runtime.lastError)
-        throw browser.runtime.lastError
+      if (browser!.runtime.lastError)
+        throw browser!.runtime.lastError
 
       return result
     } catch (e: unknown) {

@@ -15,7 +15,7 @@ export function SeedCreatorMenu(props: {}) {
   const hardware = useCoords(path, "/create/hardware")
 
   const openHardwareOrAlert = useAsyncUniqueCallback((e: MouseEvent) => Errors.runAndLogAndAlert(async () => {
-    await BrowserError.runOrThrow(() => browser.tabs.create({ url: `tabbed.html#/?_=${encodeURIComponent(path.go("/create/hardware").hash.slice(1))}` }))
+    await BrowserError.runOrThrow(() => browser!.tabs.create({ url: `tabbed.html#/?_=${encodeURIComponent(path.go("/create/hardware").hash.slice(1))}` }))
     close()
   }), [path, close])
 

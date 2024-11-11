@@ -18,7 +18,7 @@ export default function Main() {
   }, [hash])
 
   const url = useMemo(() => {
-    const url = new URL(BrowserError.runOrThrowSync(() => browser.runtime.getURL("/index.html")))
+    const url = new URL(BrowserError.runOrThrowSync(() => browser!.runtime.getURL("/index.html")))
     url.hash = hash
     return url
   }, [hash])

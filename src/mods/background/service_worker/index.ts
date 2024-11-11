@@ -163,9 +163,9 @@ export class Global {
         .getOr("")
 
       await Result.runAndWrap(async () => {
-        await browser.action.setBadgeBackgroundColor({ color: "#ba77ff" })
-        await browser.action.setBadgeTextColor({ color: "white" })
-        await browser.action.setBadgeText({ text: badge })
+        await browser!.action.setBadgeBackgroundColor({ color: "#ba77ff" })
+        await browser!.action.setBadgeTextColor({ color: "white" })
+        await browser!.action.setBadgeText({ text: badge })
       }).then(r => r.getOrThrow()).catch(console.warn)
     })
   }
@@ -216,12 +216,12 @@ export class Global {
 
     try {
       this.events.on("popup", onRequest, { passive: true })
-      browser.tabs.onRemoved.addListener(onRemoved)
+      browser!.tabs.onRemoved.addListener(onRemoved)
 
       return await future.promise
     } finally {
       this.events.off("popup", onRequest)
-      browser.tabs.onRemoved.removeListener(onRemoved)
+      browser!.tabs.onRemoved.removeListener(onRemoved)
     }
   }
 
@@ -236,11 +236,11 @@ export class Global {
           : undefined
 
         await Result.runAndWrap(() => {
-          return BrowserError.runOrThrow(() => browser.tabs.update(tabId, { url, highlighted: true }))
+          return BrowserError.runOrThrow(() => browser!.tabs.update(tabId, { url, highlighted: true }))
         }).then(r => r.getOrThrow()).catch(console.warn)
 
         await Result.runAndWrap(() => {
-          return BrowserError.runOrThrow(() => browser.windows.update(windowId, { focused: true }))
+          return BrowserError.runOrThrow(() => browser!.windows.update(windowId, { focused: true }))
         }).then(r => r.getOrThrow()).catch(console.warn)
 
         return slot.current
@@ -252,9 +252,9 @@ export class Global {
       const top = Math.max(mouse.y - (height / 2), 0)
       const left = Math.max(mouse.x - (width / 2), 0)
 
-      const tab = "create" in browser.windows
-        ? await BrowserError.runOrThrow(() => browser.windows.create({ type: "popup", url: `popup.html#/?_=${encodeURIComponent(pathOf(pathOrUrl))}`, state: "normal", height, width, top, left }).then(w => w.tabs?.[0]))
-        : await BrowserError.runOrThrow(() => browser.tabs.create({ url: `popup.html#/?_=${encodeURIComponent(pathOf(pathOrUrl))}`, active: true }))
+      const tab = "create" in browser!.windows
+        ? await BrowserError.runOrThrow(() => browser!.windows.create({ type: "popup", url: `popup.html#/?_=${encodeURIComponent(pathOf(pathOrUrl))}`, state: "normal", height, width, top, left }).then(w => w.tabs?.[0]))
+        : await BrowserError.runOrThrow(() => browser!.tabs.create({ url: `popup.html#/?_=${encodeURIComponent(pathOf(pathOrUrl))}`, active: true }))
 
       if (tab == null)
         throw new Error("Failed to create tab")
@@ -269,10 +269,10 @@ export class Global {
 
         slot.current = undefined
 
-        browser.tabs.onRemoved.removeListener(onRemoved)
+        browser!.tabs.onRemoved.removeListener(onRemoved)
       }
 
-      browser.tabs.onRemoved.addListener(onRemoved)
+      browser!.tabs.onRemoved.addListener(onRemoved)
 
       return slot.current
     })
@@ -312,7 +312,7 @@ export class Global {
       if (isSafariExtension() && isIpad()) {
         this.#path = `#${pathOf(url)}`
 
-        await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
+        await BrowserError.runOrThrow(() => (browser!.browserAction as any).openPopup())
         const response = await this.waitResponseOrThrow<T>(request.id, done)
 
         return response
@@ -333,7 +333,7 @@ export class Global {
       return this.#user
 
     if (isSafariExtension() && isIpad()) {
-      await BrowserError.runOrThrow(() => (browser.browserAction as any).openPopup())
+      await BrowserError.runOrThrow(() => (browser!.browserAction as any).openPopup())
 
       const user = await this.events.wait("user", (future: Future<UserSession>, user: UserSession) => {
         future.resolve(user)
@@ -362,8 +362,8 @@ export class Global {
       rejectOnRemove.reject(new Error())
     }
 
-    browser.tabs.onRemoved.addListener(onRemoved)
-    stack.push(new Deferred(() => browser.tabs.onRemoved.removeListener(onRemoved)))
+    browser!.tabs.onRemoved.addListener(onRemoved)
+    stack.push(new Deferred(() => browser!.tabs.onRemoved.removeListener(onRemoved)))
 
     return await Promise.race([resolveOnUser.promise, rejectOnRemove.promise])
   }
@@ -411,12 +411,12 @@ export class Global {
 
     try {
       this.events.on("response", onResponse, { passive: true })
-      browser.tabs.onRemoved.addListener(onRemoved)
+      browser!.tabs.onRemoved.addListener(onRemoved)
 
       return await future.promise
     } finally {
       this.events.off("response", onResponse)
-      browser.tabs.onRemoved.removeListener(onRemoved)
+      browser!.tabs.onRemoved.removeListener(onRemoved)
     }
   }
 
@@ -1716,8 +1716,8 @@ if (isExtension()) {
     }
   }
 
-  browser.runtime.onConnect.addListener(port => {
-    if (port.sender?.id !== browser.runtime.id)
+  browser!.runtime.onConnect.addListener(port => {
+    if (port.sender?.id !== browser!.runtime.id)
       return
     if (port.name === "foreground->background")
       return void onForeground(port)
@@ -1734,18 +1734,18 @@ if (isExtension()) {
       const reasons = [chrome.offscreen.Reason.WORKERS]
       const justification = "We need to run workers"
 
-      await BrowserError.runOrThrow(() => browser.offscreen.createDocument({ url, reasons, justification }))
+      await BrowserError.runOrThrow(() => browser!.offscreen.createDocument({ url, reasons, justification }))
     } catch (e: unknown) {
       console.warn(`Could not create offscreen document`, e)
     }
 
-    browser.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
+    browser!.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       const inited = await init
 
       if (inited.isErr())
         return
 
-      const window = await BrowserError.runOrThrow(() => browser.windows.getCurrent())
+      const window = await BrowserError.runOrThrow(() => browser!.windows.getCurrent())
 
       if (window.width == null)
         return
@@ -1764,13 +1764,13 @@ if (isExtension()) {
   }
 
   if (isFirefoxExtension()) {
-    browser.browserAction.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
+    browser!.browserAction.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       const inited = await init
 
       if (inited.isErr())
         return
 
-      const window = await BrowserError.runOrThrow(() => browser.windows.getCurrent())
+      const window = await BrowserError.runOrThrow(() => browser!.windows.getCurrent())
 
       if (window.width == null)
         return
@@ -1789,17 +1789,17 @@ if (isExtension()) {
   }
 
   if (isSafariExtension() && isIpad()) {
-    browser.browserAction.setPopup({ popup: "action.html" })
+    browser!.browserAction.setPopup({ popup: "action.html" })
   }
 
   if (isSafariExtension() && !isIpad()) {
-    browser.browserAction.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
+    browser!.browserAction.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
       const inited = await init
 
       if (inited.isErr())
         return
 
-      const window = await BrowserError.runOrThrow(() => browser.windows.getCurrent())
+      const window = await BrowserError.runOrThrow(() => browser!.windows.getCurrent())
 
       if (window.width == null)
         return

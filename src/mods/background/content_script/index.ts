@@ -103,7 +103,7 @@ async function main() {
     const container = document.documentElement
 
     const scriptBody = atob("INJECTED_SCRIPT")
-    const scriptUrl = browser.runtime.getURL("injected_script.js")
+    const scriptUrl = browser!.runtime.getURL("injected_script.js")
 
     const element = document.createElement("script")
     element.type = "text/javascript"
@@ -140,7 +140,7 @@ async function main() {
 
       sessionStorage.setItem("#brume.opened", "true")
 
-      const opener = BrowserError.runOrThrowSync(() => browser.runtime.getURL("/opener.html"))
+      const opener = BrowserError.runOrThrowSync(() => browser!.runtime.getURL("/opener.html"))
       const opened = urlOf(opener, { url: location.href })
 
       location.replace(opened)

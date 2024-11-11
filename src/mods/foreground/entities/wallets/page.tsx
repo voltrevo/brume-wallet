@@ -52,9 +52,9 @@ export function WalletPage(props: UUIDProps) {
   </WalletDataProvider>
 }
 
-export function useDisplayRaw(fixed: Fixed.From = new Fixed(0n, 5)) {
+export function useDisplayRaw(fixed: Fixed.From = new Fixed(0n, 18)) {
   return useMemo(() => {
-    const fixed5 = Fixed.from(fixed).move(5)
+    const fixed5 = Fixed.from(fixed).move(18)
     const float = Number(fixed5.toString())
 
     return float.toLocaleString(undefined)
@@ -769,8 +769,6 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
         {balanceUsdDisplay != null &&
           <div className="flex items-center gap-1">
             <div>{balanceUsdDisplay}</div>
-            {balanceUsdQuery.error != null && <ExclamationTriangleIcon className="h-4 mt-0.5" />}
-            {balanceUsdQuery.fetching && <SmallUnflexLoading />}
           </div>}
       </div>
       <div className="flex items-center text-contrast gap-1">
