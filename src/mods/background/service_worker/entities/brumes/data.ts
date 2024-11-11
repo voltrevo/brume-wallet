@@ -120,10 +120,12 @@ export namespace WcBrume {
 export namespace EthBrume {
 
   export function create(circuits: AutoPool<Circuit>): EthBrume {
-    const subcircuits = Circuits.createCircuitSubpool(circuits, 3)
-    const conns = Objects.mapValuesSync(chainDataByChainId, x => RpcCircuits.createRpcCircuitsPool(subcircuits.get(), x.urls))
+    const subcircuits = Circuits.createCircuitSubpool(circuits, 9)
 
-    return { ...conns, circuits: subcircuits.get() } satisfies EthBrume
+    const connections = Objects.mapValuesSync(chainDataByChainId, (chainData) =>
+      RpcCircuits.createRpcCircuitsPool(subcircuits.get(), chainData.urls))
+
+    return { ...connections, circuits: subcircuits.get() } satisfies EthBrume
   }
 
   export function createPool(circuits: AutoPool<Circuit>, size: number) {
@@ -315,11 +317,11 @@ export namespace RpcConnections {
     const pool = new AutoPool<RpcConnection>(async (params) => {
       const { index, signal } = params
 
-      using stack = new Box(new Stack())
-
       const url = new URL(urls[index])
 
       if (url.protocol === "http:" || url.protocol === "https:") {
+        using stack = new Box(new Stack())
+
         const raw = new UrlConnection(circuit, url)
         const box = new Box(new RpcConnection(raw))
         stack.getOrThrow().push(box)
@@ -329,21 +331,27 @@ export namespace RpcConnections {
         return new Disposer(box, () => unstack[Symbol.dispose]())
       }
 
-      const raw = await WebSocketConnection.createOrThrow(circuit, url, signal)
-      const box = new Box(new RpcConnection(raw))
-      stack.getOrThrow().push(box)
+      if (url.protocol === "ws:" || url.protocol === "wss:") {
+        using stack = new Box(new Stack())
 
-      const onCloseOrError = () => void pool.restart(index)
+        const raw = await WebSocketConnection.createOrThrow(circuit, url, signal)
+        const box = new Box(new RpcConnection(raw))
+        stack.getOrThrow().push(box)
 
-      raw.socket.addEventListener("close", onCloseOrError, { passive: true })
-      stack.getOrThrow().push(new Deferred(() => raw.socket.removeEventListener("close", onCloseOrError)))
+        const onCloseOrError = () => void pool.restart(index)
 
-      raw.socket.addEventListener("error", onCloseOrError, { passive: true })
-      stack.getOrThrow().push(new Deferred(() => raw.socket.removeEventListener("error", onCloseOrError)))
+        raw.socket.addEventListener("close", onCloseOrError, { passive: true })
+        stack.getOrThrow().push(new Deferred(() => raw.socket.removeEventListener("close", onCloseOrError)))
 
-      const unstack = stack.unwrapOrThrow()
+        raw.socket.addEventListener("error", onCloseOrError, { passive: true })
+        stack.getOrThrow().push(new Deferred(() => raw.socket.removeEventListener("error", onCloseOrError)))
 
-      return new Disposer(box, () => unstack[Symbol.dispose]())
+        const unstack = stack.unwrapOrThrow()
+
+        return new Disposer(box, () => unstack[Symbol.dispose]())
+      }
+
+      throw new Error(`Unknown protocol ${url.protocol}`)
     }, urls.length)
 
     return new Disposer(pool, () => { })
