@@ -5,7 +5,7 @@ import { TorRpc } from "@/libs/rpc/rpc"
 import { Fail, Fetched, FetcherMore } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Option } from "@hazae41/option"
-import { Catched } from "@hazae41/result"
+import { Catched, Result } from "@hazae41/result"
 import { EthBrume } from "./entities/brumes/data"
 import { EthereumFetchParams } from "./entities/wallets/data"
 
@@ -25,7 +25,9 @@ export namespace BgEthereumContext {
       const circuit = await circuits.get().getCryptoRandomOrThrow(parentSignal)
 
       async function runWithTargetOrThrow(index: number) {
-        const target = await circuit.get().getOrThrow(index, parentSignal)
+        const target = await Result.runAndWrap(() => circuit.get().getOrThrow(index, parentSignal))
+          .then(r => r.inspectErrSync(e => console.warn(`Failed to get target ${index} for ${init.method} on ${ethereum.chain.name}`, e)))
+          .then(r => r.getOrThrow())
 
         const { counter, connection } = target
         const request = counter.prepare(init)
@@ -33,10 +35,14 @@ export namespace BgEthereumContext {
         if (connection.isURL()) {
           const { url, circuit } = connection
 
-          const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal])
+          const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal])
           const response = await TorRpc.fetchWithCircuitOrThrow<T>(url, { ...request, circuit, signal })
 
-          console.log(`Fetched ${request.method} on ${ethereum.chain.name}`, response)
+          if (response.isOk())
+            console.log(`Fetched ${request.method} on ${ethereum.chain.name}`, response)
+
+          if (response.isErr())
+            console.error(`Failed to fetch ${request.method} on ${ethereum.chain.name}`, response)
 
           return Fetched.rewrap(response)
         }
@@ -46,10 +52,14 @@ export namespace BgEthereumContext {
 
           await cooldown
 
-          const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal])
+          const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal])
           const response = await TorRpc.fetchWithSocketOrThrow<T>(socket, request, signal)
 
-          console.log(`Fetched ${request.method} on ${ethereum.chain.name}`, response)
+          if (response.isOk())
+            console.log(`Fetched ${request.method} on ${ethereum.chain.name}`, response)
+
+          if (response.isErr())
+            console.error(`Failed to fetch ${request.method} on ${ethereum.chain.name}`, response)
 
           return Fetched.rewrap(response)
         }
@@ -65,6 +75,7 @@ export namespace BgEthereumContext {
       const counters = new Map<string, number>()
 
       for (const result of results) {
+        console.log(result)
         if (result.status === "rejected")
           continue
         if (result.value.isErr())

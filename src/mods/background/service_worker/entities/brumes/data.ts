@@ -12,6 +12,7 @@ import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { RpcCounter } from "@hazae41/jsonrpc"
 import { Jwt, Wc } from "@hazae41/latrine"
+import { loopOrThrow, PoolEntry, Retry } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
 
 export interface WcBrume {
@@ -122,10 +123,10 @@ export namespace EthBrume {
   export function create(circuits: AutoPool<Circuit>): EthBrume {
     const subcircuits = Circuits.createCircuitSubpool(circuits, 9)
 
-    const connections = Objects.mapValuesSync(chainDataByChainId, (chainData) =>
+    const chains = Objects.mapValuesSync(chainDataByChainId, (chainData) =>
       RpcCircuits.createRpcCircuitsPool(subcircuits.get(), chainData.urls))
 
-    return { ...connections, circuits: subcircuits.get() } satisfies EthBrume
+    return { ...chains, circuits: subcircuits.get() } satisfies EthBrume
   }
 
   export function createPool(circuits: AutoPool<Circuit>, size: number) {
@@ -155,7 +156,7 @@ export namespace WebSocketConnection {
    * @returns 
    */
   export async function createOrThrow(circuit: Circuit, url: URL, signal = new AbortController().signal): Promise<WebSocketConnection> {
-    const signal2 = AbortSignal.any([AbortSignal.timeout(ping.value * 9), signal])
+    const signal2 = AbortSignal.any([AbortSignal.timeout(ping.value * 6), signal])
 
     if (url.protocol === "wss:") {
       const tcp = await circuit.openOrThrow(url.hostname, 443)
@@ -334,7 +335,15 @@ export namespace RpcConnections {
       if (url.protocol === "ws:" || url.protocol === "wss:") {
         using stack = new Box(new Stack())
 
-        const raw = await WebSocketConnection.createOrThrow(circuit, url, signal)
+        const raw = await loopOrThrow(async () => {
+          try {
+            return await WebSocketConnection.createOrThrow(circuit, url, signal)
+          } catch (e: unknown) {
+            console.log(`Retrying WebSocket connection creation ${url.origin} #${circuit.id}`, { e })
+            throw new Retry(e)
+          }
+        }, { max: 9 })
+
         const box = new Box(new RpcConnection(raw))
         stack.getOrThrow().push(box)
 
@@ -354,7 +363,17 @@ export namespace RpcConnections {
       throw new Error(`Unknown protocol ${url.protocol}`)
     }, urls.length)
 
-    return new Disposer(pool, () => { })
+    const onCreated = (entry: PoolEntry<RpcConnection>) => {
+      if (entry.isOk())
+        return
+      console.error(`Error creating rpc connection`, entry)
+    }
+
+    const stack = new Stack()
+
+    stack.push(new Deferred(pool.events.on("created", onCreated, { passive: true })))
+
+    return new Disposer(pool, () => stack[Symbol.dispose]())
   }
 
 }

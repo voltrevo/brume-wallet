@@ -93,7 +93,7 @@ export namespace Circuits {
               try {
                 return await (async () => {
                   start = Date.now()
-                  using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(ping.value * 3)))
+                  using circuit = new Box(await tor.createOrThrow(AbortSignal.timeout(ping.value * 1)))
                   console.debug(`Created circuit #${index} in ${Date.now() - start}ms`)
 
                   /**
@@ -106,7 +106,7 @@ export namespace Circuits {
                     const body = await query.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
                     start = Date.now()
-                    await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 3)))
+                    await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 1)))
                     console.debug(`Extended circuit #${index} in ${Date.now() - start}ms`)
                   }, { max: 3 })
 
@@ -120,7 +120,7 @@ export namespace Circuits {
                     const body = await query.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
                     start = Date.now()
-                    await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 3)))
+                    await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 1)))
                     console.debug(`Extended circuit #${index} in ${Date.now() - start}ms`)
                   }, { max: 3 })
 
@@ -136,7 +136,7 @@ export namespace Circuits {
                     /**
                      * Speed test
                      */
-                    const signal = AbortSignal.timeout(ping.value * 3)
+                    const signal = AbortSignal.timeout(ping.value * 1)
 
                     start = Date.now()
                     await fetch("http://detectportal.firefox.com", { stream: stream.inner, signal, preventAbort: true, preventCancel: true, preventClose: true }).then(r => r.text())

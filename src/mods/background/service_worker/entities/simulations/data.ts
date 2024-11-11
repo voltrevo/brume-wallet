@@ -1,4 +1,3 @@
-import { Maps } from "@/libs/maps/maps"
 import { NetworkParams } from "@/libs/network/network"
 import { ping } from "@/libs/ping"
 import { TorRpc } from "@/libs/rpc/rpc"
@@ -8,7 +7,6 @@ import { ZeroHexString } from "@hazae41/cubane"
 import { Fail, Fetched, FetcherMore, QueryStorage, createQuery } from "@hazae41/glacier"
 import { RpcCounter, RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { NetworkWasm } from "@hazae41/network.wasm"
-import { Option } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 import { BgEthereumContext } from "../../context"
 import { EthereumFetchParams, EthereumQueryKey } from "../wallets/data"
@@ -94,20 +92,44 @@ export namespace BgSimulation {
       const { signal: parentSignal = new AbortController().signal } = more
       const { brume } = ethereum
 
-      const circuits = brume.circuits
+      const circuit = await brume.circuits.getCryptoRandomOrThrow(parentSignal)
+      const session = randomUUID()
 
-      async function runWithCircuitOrThrow(index: number) {
-        const circuitSignal = AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal])
-        const circuit = await circuits.getOrThrow(index, circuitSignal)
+      const url = new URL(`https://signal.node0.hazae41.me`)
+      url.searchParams.set("session", session)
 
-        const session = randomUUID()
+      const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
+        circuit,
+        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal]),
+        ...new RpcCounter().prepare({ method: "net_get" }),
+      }).then(r => r.getOrThrow())
 
-        const url = new URL(`https://signal.node0.hazae41.me`)
+      const secret = await generateOrThrow(params)
+
+      await TorRpc.fetchWithCircuitOrThrow<void>(url, {
+        circuit,
+        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal]),
+        ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
+      }).then(r => r.getOrThrow())
+
+      const nodes = await TorRpc.fetchWithCircuitOrThrow<{ location: string }[]>(url, {
+        circuit,
+        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal]),
+        ...new RpcCounter().prepare({ method: "net_search", params: [{}, { protocols: [`https:json-rpc:(pay-by-char|tenderly:${ethereum.chain.chainId})`] }] })
+      }).then(r => r.getOrThrow())
+
+      const node = Arrays.cryptoRandom(nodes)
+
+      if (node == null)
+        throw new Error(`No node found for ${ethereum.chain.name}`)
+
+      {
+        const url = new URL(`${node.location}`)
         url.searchParams.set("session", session)
 
         const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
           circuit,
-          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
+          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal]),
           ...new RpcCounter().prepare({ method: "net_get" }),
         }).then(r => r.getOrThrow())
 
@@ -115,92 +137,16 @@ export namespace BgSimulation {
 
         await TorRpc.fetchWithCircuitOrThrow<void>(url, {
           circuit,
-          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
+          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal]),
           ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
         }).then(r => r.getOrThrow())
 
-        const nodes = await TorRpc.fetchWithCircuitOrThrow<{ location: string }[]>(url, {
+        return await TorRpc.fetchWithCircuitOrThrow<T>(url, {
           circuit,
-          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
-          ...new RpcCounter().prepare({ method: "net_search", params: [{}, { protocols: [`https:json-rpc:(pay-by-char|tenderly:${ethereum.chain.chainId})`] }] })
-        }).then(r => r.getOrThrow())
-
-        const node = Arrays.cryptoRandom(nodes)
-
-        if (node == null)
-          throw new Error(`No node found for ${ethereum.chain.name}`)
-
-        {
-          const url = new URL(`${node.location}`)
-          url.searchParams.set("session", session)
-
-          const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
-            circuit,
-            signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
-            ...new RpcCounter().prepare({ method: "net_get" }),
-          }).then(r => r.getOrThrow())
-
-          const secret = await generateOrThrow(params)
-
-          await TorRpc.fetchWithCircuitOrThrow<void>(url, {
-            circuit,
-            signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
-            ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
-          }).then(r => r.getOrThrow())
-
-          return await TorRpc.fetchWithCircuitOrThrow<T>(url, {
-            circuit,
-            signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
-            ...new RpcCounter().prepare(init)
-          }).then(r => Fetched.rewrap(r))
-        }
+          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal]),
+          ...new RpcCounter().prepare(init)
+        }).then(r => Fetched.rewrap(r))
       }
-
-      const random = await circuits.getRawCryptoRandomOrThrow()
-      const promises = [runWithCircuitOrThrow(random.index)]
-
-      const results = await Promise.allSettled(promises)
-
-      const fetcheds = new Map<string, Fetched<T, Error>>()
-      const counters = new Map<string, number>()
-
-      for (const result of results) {
-        if (result.status === "rejected")
-          continue
-        if (result.value.isErr())
-          continue
-        if (init?.noCheck)
-          return result.value
-        const raw = JSON.stringify(result.value.inner)
-        const previous = Option.wrap(counters.get(raw)).getOr(0)
-        counters.set(raw, previous + 1)
-        fetcheds.set(raw, result.value)
-      }
-
-      /**
-       * One truth -> return it
-       * Zero truth -> throw AggregateError
-       */
-      if (counters.size < 2)
-        return await Promise.any(promises)
-
-      console.warn(`Different results from multiple circuits for ${init.method} on ${ethereum.chain.name}`, { fetcheds })
-
-      /**
-       * Sort truths by occurence
-       */
-      const sorteds = [...Maps.entries(counters)].sort((a, b) => b.value - a.value)
-
-      /**
-       * Two concurrent truths
-       */
-      if (sorteds[0].value === sorteds[1].value) {
-        console.warn(`Could not choose truth for ${init.method} on ${ethereum.chain.name}`)
-        const random = Math.round(Math.random())
-        return fetcheds.get(sorteds[random].key)!
-      }
-
-      return fetcheds.get(sorteds[0].key)!
     } catch (e: unknown) {
       return new Fail(Catched.wrap(e))
     }
