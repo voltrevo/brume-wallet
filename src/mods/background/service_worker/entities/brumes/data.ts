@@ -12,7 +12,7 @@ import { Ed25519 } from "@hazae41/ed25519"
 import { Fleche } from "@hazae41/fleche"
 import { RpcCounter } from "@hazae41/jsonrpc"
 import { Jwt, Wc } from "@hazae41/latrine"
-import { loopOrThrow, PoolEntry, Retry } from "@hazae41/piscine"
+import { Cancel, loopOrThrow, PoolEntry, Retry } from "@hazae41/piscine"
 import { Result } from "@hazae41/result"
 
 export interface WcBrume {
@@ -336,13 +336,16 @@ export namespace RpcConnections {
         using stack = new Box(new Stack())
 
         const raw = await loopOrThrow(async () => {
+          if (circuit.closed)
+            throw new Cancel("Circuit closed")
+
           try {
             return await WebSocketConnection.createOrThrow(circuit, url, signal)
           } catch (e: unknown) {
             console.debug(`Retrying WebSocket connection creation ${url.origin} #${circuit.id}`, { e })
             throw new Retry(e)
           }
-        }, { max: 9 })
+        }, { max: 3 })
 
         const box = new Box(new RpcConnection(raw))
         stack.getOrThrow().push(box)
