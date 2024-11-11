@@ -24,12 +24,12 @@ export namespace MicrodescQuery {
           const tor = Option.wrap(maybeTor).getOrThrow()
 
           start = Date.now()
-          const subsignal = AbortSignal.any([AbortSignal.timeout(ping.value * 3), signal])
+          const subsignal = AbortSignal.any([AbortSignal.timeout(ping.value * 24), signal])
           using circuit = await tor.createOrThrow(subsignal)
           console.debug(`Created consensus circuit in ${Date.now() - start}ms`)
 
           start = Date.now()
-          const subsignal2 = AbortSignal.any([AbortSignal.timeout(ping.value * 3), signal])
+          const subsignal2 = AbortSignal.any([AbortSignal.timeout(ping.value * 24), signal])
           const consensus = await Consensus.fetchOrThrow(circuit, subsignal2)
           console.debug(`Fetched consensus in ${Date.now() - start}ms`)
 

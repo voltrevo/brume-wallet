@@ -100,7 +100,7 @@ export namespace BgSimulation {
 
       const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
         circuit,
-        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal]),
+        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
         ...new RpcCounter().prepare({ method: "net_get" }),
       }).then(r => r.getOrThrow())
 
@@ -108,13 +108,13 @@ export namespace BgSimulation {
 
       await TorRpc.fetchWithCircuitOrThrow<void>(url, {
         circuit,
-        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal]),
+        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
         ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
       }).then(r => r.getOrThrow())
 
       const nodes = await TorRpc.fetchWithCircuitOrThrow<{ location: string }[]>(url, {
         circuit,
-        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal]),
+        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
         ...new RpcCounter().prepare({ method: "net_search", params: [{}, { protocols: [`https:json-rpc:(pay-by-char|tenderly:${ethereum.chain.chainId})`] }] })
       }).then(r => r.getOrThrow())
 
@@ -129,7 +129,7 @@ export namespace BgSimulation {
 
         const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
           circuit,
-          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal]),
+          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
           ...new RpcCounter().prepare({ method: "net_get" }),
         }).then(r => r.getOrThrow())
 
@@ -137,13 +137,13 @@ export namespace BgSimulation {
 
         await TorRpc.fetchWithCircuitOrThrow<void>(url, {
           circuit,
-          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal]),
+          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
           ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
         }).then(r => r.getOrThrow())
 
         return await TorRpc.fetchWithCircuitOrThrow<T>(url, {
           circuit,
-          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 3), parentSignal]),
+          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
           ...new RpcCounter().prepare(init)
         }).then(r => Fetched.rewrap(r))
       }

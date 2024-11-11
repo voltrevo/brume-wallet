@@ -16,7 +16,7 @@ export const chainDataByChainId: Record<ChainId, ChainData> = {
   1: {
     name: "Ethereum",
     chainId: 1,
-    urls: ["wss://ethereum-rpc.publicnode.com", "wss://mainnet.gateway.tenderly.co", "https://1rpc.io/eth"],
+    urls: ["wss://ethereum-rpc.publicnode.com", "https://1rpc.io/eth"],
     etherscan: "https://etherscan.io",
     token: {
       uuid: "664000af-5c47-4b6e-ab3e-c0c130e23b3c",
@@ -39,7 +39,7 @@ export const chainDataByChainId: Record<ChainId, ChainData> = {
   10: {
     name: "Optimism",
     chainId: 10,
-    urls: ["wss://optimism-rpc.publicnode.com", "wss://optimism.gateway.tenderly.co", "https://1rpc.io/op"],
+    urls: ["wss://optimism-rpc.publicnode.com", "https://1rpc.io/op"],
     etherscan: "https://optimistic.etherscan.io",
     token: {
       uuid: "d82dbb70-ba5a-4d08-a145-af13480192bf",
@@ -125,7 +125,7 @@ export const chainDataByChainId: Record<ChainId, ChainData> = {
   137: {
     name: "Polygon",
     chainId: 137,
-    urls: ["wss://polygon-bor-rpc.publicnode.com", "wss://polygon.gateway.tenderly.co", "https://1rpc.io/matic"],
+    urls: ["wss://polygon-bor-rpc.publicnode.com", "https://1rpc.io/matic"],
     etherscan: "https://polygonscan.com",
     token: {
       uuid: "21e58495-ad1c-494d-898d-33ba3ff4b013",
@@ -250,7 +250,7 @@ export const chainDataByChainId: Record<ChainId, ChainData> = {
   8453: {
     name: "Base",
     chainId: 8453,
-    urls: ["wss://base-rpc.publicnode.com", "wss://base.gateway.tenderly.co", "https://1rpc.io/base"],
+    urls: ["wss://base-rpc.publicnode.com", "https://1rpc.io/base"],
     etherscan: "https://basescan.org",
     token: {
       uuid: "2111ff5a-6671-4ebe-9429-a974c8c85726",
@@ -273,7 +273,7 @@ export const chainDataByChainId: Record<ChainId, ChainData> = {
   42161: {
     name: "Arbitrum",
     chainId: 42161,
-    urls: ["wss://arbitrum-one-rpc.publicnode.com", "wss://arbitrum.gateway.tenderly.co", "https://1rpc.io/arb"],
+    urls: ["wss://arbitrum-one-rpc.publicnode.com", "https://1rpc.io/arb"],
     etherscan: "https://arbiscan.io",
     token: {
       uuid: "6fce1dd8-d1f0-4a00-b152-cd1f5b73c820",
@@ -356,7 +356,7 @@ export const chainDataByChainId: Record<ChainId, ChainData> = {
   11155111: {
     name: "Sepolia (testnet)",
     chainId: 11155111,
-    urls: ["wss://ethereum-sepolia-rpc.publicnode.com", "wss://sepolia.gateway.tenderly.co", "https://1rpc.io/sepolia"],
+    urls: ["wss://ethereum-sepolia-rpc.publicnode.com", "https://1rpc.io/sepolia"],
     etherscan: "https://sepolia.etherscan.io",
     token: {
       uuid: "65c497e4-0aa3-443f-a201-f2141199a6e5",

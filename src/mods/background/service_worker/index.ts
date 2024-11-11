@@ -1264,10 +1264,10 @@ export class Global {
     using sessionKeyMemory = Base64.get().getOrThrow().decodePaddedOrThrow(sessionKeyBase64)
     const sessionKeyBytes32 = Bytes.castOrThrow(sessionKeyMemory.bytes.slice(), 32)
 
-    const sessionClient = CryptoClient.createOrThrow(irn, topic, sessionKeyBytes32, ping.value * 3)
+    const sessionClient = CryptoClient.createOrThrow(irn, topic, sessionKeyBytes32, ping.value * 9)
     const session = new WcSession(sessionClient, metadata)
 
-    await irn.subscribeOrThrow(topic, AbortSignal.timeout(ping.value * 3))
+    await irn.subscribeOrThrow(topic, AbortSignal.timeout(ping.value * 9))
 
     /**
      * When settlement has been interrupted
@@ -1333,7 +1333,7 @@ export class Global {
 
     const chains = Objects.values(chainDataByChainId).map(x => x.chainId)
     const metadata = { name: "Brume", description: "Brume", url: location.origin, icons: [] }
-    const [session, settlement] = await Wc.pairOrThrow(irn, pairParams, metadata, walletData.address, chains, ping.value * 3)
+    const [session, settlement] = await Wc.pairOrThrow(irn, pairParams, metadata, walletData.address, chains, ping.value * 9)
 
     const originData: OriginData = {
       origin: `wc://${randomUUID()}`,
