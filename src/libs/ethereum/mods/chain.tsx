@@ -296,7 +296,7 @@ export const chainDataByChainId: Record<ChainId, ChainData> = {
   42220: {
     name: "Celo",
     chainId: 42220,
-    urls: ["https://1rpc.io/celo"],
+    urls: ["wss://celo-rpc.publicnode.com", "https://1rpc.io/celo"],
     etherscan: "https://celoscan.io",
     token: {
       uuid: "be652dfe-8748-4e84-8be2-0a449dd45aff",
@@ -336,7 +336,7 @@ export const chainDataByChainId: Record<ChainId, ChainData> = {
   59144: {
     name: "Linea",
     chainId: 59144,
-    urls: ["https://1rpc.io/linea"],
+    urls: ["wss://linea-rpc.publicnode.com", "https://1rpc.io/linea"],
     etherscan: "https://lineascan.build",
     token: {
       uuid: "a006d905-527c-419e-90f6-88d42c606899",
