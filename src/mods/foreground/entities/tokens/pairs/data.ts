@@ -1,5 +1,6 @@
 import { Errors } from "@/libs/errors/errors"
 import { PairData } from "@/libs/ethereum/mods/chain"
+import { UniswapV2 } from "@/libs/uniswap"
 import { BgPair } from "@/mods/background/service_worker/entities/tokens/pairs/data"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
 import { Abi, ZeroHexString } from "@hazae41/cubane"
@@ -41,7 +42,7 @@ export namespace FgPair {
           const returns = Abi.Tuple.create(Abi.Uint112, Abi.Uint112, Abi.Uint32)
           const [a, b] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
 
-          const price = BgPair.Price.computeOrThrow(pair, [a, b])
+          const price = UniswapV2.computeOrThrow(pair, [a, b])
 
           return new Data(price)
         } catch (e: unknown) {
