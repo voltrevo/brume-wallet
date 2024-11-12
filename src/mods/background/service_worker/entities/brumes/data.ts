@@ -343,7 +343,7 @@ export namespace RpcConnections {
             console.debug(`Retrying WebSocket connection creation ${url.origin} #${circuit.id}`, { e })
             throw new Retry(e)
           }
-        }, { max: 3 })
+        }, { max: 9 })
 
         const box = new Box(new RpcConnection(raw))
         stack.getOrThrow().push(box)
