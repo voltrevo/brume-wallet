@@ -8,7 +8,7 @@ import { Result } from "@hazae41/result";
 import { useMemo } from "react";
 import { useSignature } from "../../../signatures/data";
 import { useWalletDataContext } from "../../context";
-import { useEthereumContext2 } from "../../data";
+import { useEthereumContext } from "../../data";
 
 export function WalletDecodeDialog(props: {}) {
   const path = usePathContext().getOrThrow()
@@ -20,7 +20,7 @@ export function WalletDecodeDialog(props: {}) {
     return x.slice(0, 10) as ZeroHexString
   }).getOrNull()
 
-  const gnosis = useEthereumContext2(wallet.uuid, chainDataByChainId[100]).getOrThrow()
+  const gnosis = useEthereumContext(wallet.uuid, chainDataByChainId[100]).getOrThrow()
 
   const signaturesQuery = useSignature(maybeHash, gnosis)
   const triedSignatures = signaturesQuery.current

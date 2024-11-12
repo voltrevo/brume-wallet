@@ -49,7 +49,7 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
     return Address.format(finalAddress)
   }, [finalAddress])
 
-  const mainnet = useEthereumContext(uuid, chainDataByChainId[1])
+  const mainnet = useEthereumContext(uuid, chainDataByChainId[1]).getOrThrow()
   const ens = useEnsReverseNoFetch(finalAddress, mainnet)
 
   const ensOrFinalAddress = ens.data?.get() ?? finalAddress

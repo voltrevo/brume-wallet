@@ -41,7 +41,7 @@ import { WalletDataReceiveScreen } from "./actions/receive/receive";
 import { PaddedRoundedShrinkableNakedAnchor, WalletSendScreen, WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "./actions/send";
 import { RawWalletDataCard } from "./card";
 import { WalletDataProvider, useWalletDataContext } from "./context";
-import { EthereumWalletInstance, useEthereumContext, useEthereumContext2, useWallet } from "./data";
+import { EthereumWalletInstance, useEthereumContext, useWallet } from "./data";
 import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
 
 export function WalletPage(props: UUIDProps) {
@@ -101,11 +101,10 @@ export function AnchorCard(props: AnchorProps) {
 function WalletDataPage() {
   const path = usePathContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
-  const background = useBackgroundContext().getOrThrow()
 
   const subpath = useHashSubpath(path)
 
-  const mainnet = useEthereumContext2(wallet.uuid, chainDataByChainId[1]).getOrThrow()
+  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1]).getOrThrow()
 
   useEnsReverse(wallet.address, mainnet)
 
@@ -569,7 +568,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
   const subpath = useHashSubpath(path)
   const menu = useCoords(subpath, `/token/${token.chainId}`)
 
-  const context = useEthereumContext2(wallet.uuid, chain).getOrThrow()
+  const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
@@ -666,7 +665,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
   const subpath = useHashSubpath(path)
   const menu = useCoords(subpath, `/token/${token.uuid}`)
 
-  const context = useEthereumContext2(wallet.uuid, chain).getOrThrow()
+  const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
 
   const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
 
@@ -717,7 +716,7 @@ export function PriceResolver(props: { index: number } & { address: string } & O
   const pairData = pairByAddress[address]
   const chainData = chainDataByChainId[pairData.chainId]
 
-  const context = useEthereumContext(wallet.uuid, chainData)
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
   const { data } = usePairPrice(pairData, "pending", context)
 

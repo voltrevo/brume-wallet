@@ -636,12 +636,3 @@ export const pairByAddress: Record<string, PairData> = {
     token1: "0x64dEFa3544c695db8c535D289d843a189aa26b98"
   }
 } as const
-
-export const pairByName = {
-  WETH_USDT: "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
-  WBTC_WETH: "0xbb2b8038a1640196fbe3e38816f3e67cba72d940",
-  MATIC_WETH: "0x819f3450dA6f110BA6Ea52195B3beaFa246062dE",
-  USDT_WBNB: "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae",
-  ETC_BUSD: "0xdb8721b7a04c3e592264bf58558526b16b15e757",
-  CELO_MCUSD: "0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422"
-} as const

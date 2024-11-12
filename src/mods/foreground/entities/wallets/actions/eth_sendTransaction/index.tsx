@@ -30,7 +30,7 @@ import { useEnsLookup } from "../../../names/data";
 import { useTransactionWithReceipt } from "../../../transactions/data";
 import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
-import { EthereumWalletInstance, useEthereumContext, useEthereumContext2 } from "../../data";
+import { EthereumWalletInstance, useEthereumContext } from "../../data";
 import { PriceResolver } from "../../page";
 import { ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableNakedMenuButton, WideShrinkableOppositeButton } from "../send";
 import { WalletDecodeDialog } from "./decode";
@@ -69,7 +69,7 @@ export function WalletTransactionDialog(props: {}) {
   const chainData = chainDataByChainId[Number(chain)]
   const tokenData = chainData.token
 
-  const context = useEthereumContext2(wallet.uuid, chainData).getOrThrow()
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
   const transactionUuid = useConstant(() => randomUUID())
   const transactionQuery = useTransactionWithReceipt(transactionUuid, context)
@@ -137,7 +137,7 @@ export function WalletTransactionDialog(props: {}) {
     location.replace(hash.go(urlOf("/decode", { data: maybeData })))
   }, [maybeData, hash])
 
-  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1])
+  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1]).getOrThrow()
 
   const maybeEnsQueryKey = maybeTarget?.endsWith(".eth")
     ? maybeTarget

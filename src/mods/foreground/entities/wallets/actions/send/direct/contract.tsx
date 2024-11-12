@@ -18,7 +18,7 @@ import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, Simpl
 import { useEnsLookup } from "../../../../names/data";
 import { useNativeBalance, useNativePricedBalance, useToken } from "../../../../tokens/data";
 import { useWalletDataContext } from "../../../context";
-import { useEthereumContext, useEthereumContext2 } from "../../../data";
+import { useEthereumContext } from "../../../data";
 import { PriceResolver } from "../../../page";
 import { TransactionCard, WalletTransactionDialog } from "../../eth_sendTransaction";
 
@@ -53,7 +53,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   const maybeTokenDef = Option.wrap(tokenByAddress[maybeToken as any])
   const tokenData = maybeTokenData.or(maybeTokenDef).getOrThrow()
 
-  const context = useEthereumContext2(wallet.uuid, chainData).getOrThrow()
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
   const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)
@@ -207,7 +207,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     setMode("valued")
   }, [])
 
-  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1])
+  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1]).getOrThrow()
 
   const maybeEnsQueryKey = maybeTarget?.endsWith(".eth")
     ? maybeTarget

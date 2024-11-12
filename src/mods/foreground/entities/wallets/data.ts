@@ -443,20 +443,6 @@ export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<Chain
     return { uuid, chain, background }
   }, [uuid, chain, background])
 
-  return maybeContext
-}
-
-export function useEthereumContext2(uuid: Nullable<string>, chain: Nullable<ChainData>) {
-  const background = useBackgroundContext().getOrThrow()
-
-  const maybeContext = useMemo<Nullable<FgEthereumContext>>(() => {
-    if (uuid == null)
-      return
-    if (chain == null)
-      return
-    return { uuid, chain, background }
-  }, [uuid, chain, background])
-
   return Option.wrap(maybeContext)
 }
 

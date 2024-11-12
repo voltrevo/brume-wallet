@@ -20,7 +20,7 @@ import { useEnsLookup } from "../../../../names/data";
 import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "../../../../transactions/data";
 import { useWalletDataContext } from "../../../context";
-import { useEthereumContext, useEthereumContext2 } from "../../../data";
+import { useEthereumContext } from "../../../data";
 import { PriceResolver } from "../../../page";
 import { WalletTransactionDialog } from "../../eth_sendTransaction";
 
@@ -50,7 +50,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   const chainData = chainDataByChainId[Number(chain)]
   const tokenData = chainData.token
 
-  const context = useEthereumContext2(wallet.uuid, chainData).getOrThrow()
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
   const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)
@@ -204,7 +204,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     setMode("valued")
   }, [])
 
-  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1])
+  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1]).getOrThrow()
 
   const maybeEnsQueryKey = maybeTarget?.endsWith(".eth")
     ? maybeTarget

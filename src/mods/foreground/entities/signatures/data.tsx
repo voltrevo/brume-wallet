@@ -51,7 +51,7 @@ export namespace FgSignature {
 
 }
 
-export function useSignature(hash: Nullable<ZeroHexString>, ethereum: Nullable<FgEthereumContext>,) {
+export function useSignature(hash: Nullable<ZeroHexString>, ethereum: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgSignature.schema, [hash, ethereum, storage])
   useFetch(query)

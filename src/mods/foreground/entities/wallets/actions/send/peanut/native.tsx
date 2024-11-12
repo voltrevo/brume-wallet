@@ -25,7 +25,7 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "rea
 import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "..";
 import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/data";
 import { useWalletDataContext } from "../../../context";
-import { useEthereumContext2 } from "../../../data";
+import { useEthereumContext } from "../../../data";
 import { PriceResolver } from "../../../page";
 import { TransactionCard, WalletTransactionDialog } from "../../eth_sendTransaction";
 
@@ -55,7 +55,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const chainData = chainDataByChainId[Number(chain)]
   const tokenData = chainData.token
 
-  const context = useEthereumContext2(wallet.uuid, chainData).getOrThrow()
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
   const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)

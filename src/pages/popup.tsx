@@ -22,7 +22,7 @@ import { ReadonlyWalletCreatorDialog } from "@/mods/foreground/entities/wallets/
 import { StandaloneWalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create/standalone";
 import { SelectableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { WalletDataContext } from "@/mods/foreground/entities/wallets/context";
-import { EthereumWalletInstance, useEthereumContext2, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
+import { EthereumWalletInstance, useEthereumContext, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
 import { UserRejectedError } from "@/mods/foreground/errors/errors";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Base16 } from "@hazae41/base16";
@@ -144,7 +144,7 @@ export function TransactPage() {
   const chainId = Option.wrap(path.url.searchParams.get("chainId")).getOrThrow()
   const chainData = Option.wrap(chainDataByChainId[Number(chainId)]).getOrThrow()
 
-  const maybeContext = useEthereumContext2(maybeWallet?.uuid, chainData).getOrNull()
+  const maybeContext = useEthereumContext(maybeWallet?.uuid, chainData).getOrNull()
 
   const from = Option.wrap(path.url.searchParams.get("from")).getOrThrow()
   const maybeTo = path.url.searchParams.get("to")

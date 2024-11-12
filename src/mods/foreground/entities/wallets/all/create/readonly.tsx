@@ -30,7 +30,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   const modhash = useModhash(uuid)
   const color = Color.get(modhash)
 
-  const mainnet = useEthereumContext(uuid, chainDataByChainId[1])
+  const mainnet = useEthereumContext(uuid, chainDataByChainId[1]).getOrThrow()
 
   const [rawNameInput = "", setRawNameInput] = useState<string>()
 

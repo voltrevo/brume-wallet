@@ -35,7 +35,7 @@ export function WalletSendScreenTarget(props: {}) {
   const maybeTokenDef = Option.wrap(tokenByAddress[maybeToken as any])
   const tokenData = maybeTokenData.or(maybeTokenDef).getOr(chainData.token)
 
-  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1])
+  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1]).getOrThrow()
 
   const [rawTargetInput = "", setRawTargetInput] = useState(nto(maybeTarget))
 
