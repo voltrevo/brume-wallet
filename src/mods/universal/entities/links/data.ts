@@ -8,6 +8,12 @@ export namespace LinksQuery {
 
   export const key = `links`
 
+  export function route(cacheKey: string, storage: QueryStorage) {
+    if (cacheKey !== key)
+      return
+    return create(storage)
+  }
+
   export function create(storage: QueryStorage) {
     return createQuery<K, D, F>({ key, storage })
   }

@@ -14,6 +14,12 @@ export namespace MicrodescQuery {
 
     export const key = `microdescs`
 
+    export function route(cacheKey: string, storage: QueryStorage) {
+      if (cacheKey !== key)
+        return
+      return create(undefined, storage)
+    }
+
     export function create(maybeTor: Nullable<TorClientDuplex>, storage: QueryStorage) {
       const fetcher = async (_: K, more: FetcherMore) => {
         try {
@@ -51,20 +57,27 @@ export namespace MicrodescQuery {
   export type D = Consensus.Microdesc
   export type F = Error
 
-  export function key(head: Consensus.Microdesc.Head) {
-    return `microdesc/${head.identity}`
+  export function key(identity: string) {
+    return `microdesc/${identity}`
   }
 
-  export function create(head: Nullable<Consensus.Microdesc.Head>, index: number, maybeCircuit: Nullable<Circuit>, storage: QueryStorage) {
-    if (head == null)
+  export function route(cacheKey: string, storage: QueryStorage) {
+    if (!cacheKey.startsWith("microdesc/"))
       return
+    const [identity] = cacheKey.split("/").slice(1)
 
+    return create(identity, undefined, undefined, undefined, storage)
+  }
+
+  export function create(identity: string, maybeIndex: Nullable<number>, maybeHead: Nullable<Consensus.Microdesc.Head>, maybeCircuit: Nullable<Circuit>, storage: QueryStorage) {
     const fetcher = async (_: K, more: FetcherMore) => {
       try {
         const { signal = new AbortController().signal } = more
 
         let start
 
+        const index = Option.wrap(maybeIndex).getOrThrow()
+        const head = Option.wrap(maybeHead).getOrThrow()
         const circuit = Option.wrap(maybeCircuit).getOrThrow()
 
         start = Date.now()
@@ -81,7 +94,7 @@ export namespace MicrodescQuery {
       }
     }
 
-    return createQuery<K, D, F>({ key: key(head), fetcher, storage })
+    return createQuery<K, D, F>({ key: key(identity), fetcher, storage })
   }
 
 }

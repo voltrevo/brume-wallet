@@ -37,6 +37,14 @@ export namespace BlobbyQuery {
     return `blobby/${id}`
   }
 
+  export function route(cacheKey: string, storage: QueryStorage) {
+    if (!cacheKey.startsWith("blobby/"))
+      return
+    const [id] = cacheKey.split("/").slice(1)
+
+    return create(id, storage)
+  }
+
   export function create(id: Nullable<string>, storage: QueryStorage) {
     if (id == null)
       return

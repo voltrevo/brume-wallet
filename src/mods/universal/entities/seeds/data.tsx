@@ -83,6 +83,12 @@ export namespace SeedQuery {
 
     export const key = `seeds`
 
+    export function route(cacheKey: string, storage: QueryStorage) {
+      if (cacheKey !== key)
+        return
+      return create(storage)
+    }
+
     export function create(storage: QueryStorage) {
       return createQuery<K, D, F>({ key, storage })
     }
@@ -95,6 +101,14 @@ export namespace SeedQuery {
 
   export function key(uuid: string): K {
     return `seed/${uuid}`
+  }
+
+  export function route(cacheKey: string, storage: QueryStorage) {
+    if (!cacheKey.startsWith("seed/"))
+      return
+    const [uuid] = cacheKey.split("/").slice(1)
+
+    return create(uuid, storage)
   }
 
   export function create(uuid: Nullable<string>, storage: QueryStorage) {

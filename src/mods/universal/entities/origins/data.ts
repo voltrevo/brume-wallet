@@ -35,6 +35,14 @@ export namespace OriginQuery {
     return `origins/${origin}`
   }
 
+  export function route(cacheKey: string, storage: QueryStorage) {
+    if (!cacheKey.startsWith("origins/"))
+      return
+    const [origin] = cacheKey.split("/").slice(1)
+
+    return create(origin, storage)
+  }
+
   export function create(origin: Nullable<string>, storage: QueryStorage) {
     if (origin == null)
       return

@@ -102,7 +102,7 @@ export namespace Circuits {
                   await loopOrThrow(async () => {
                     const head = Arrays.cryptoRandom(middles)!
 
-                    const query = Option.wrap(MicrodescQuery.create(head, index, circuit.getOrThrow(), storage)).getOrThrow()
+                    const query = Option.wrap(MicrodescQuery.create(head.identity, index, head, circuit.getOrThrow(), storage)).getOrThrow()
                     const body = await query.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
                     start = Date.now()
@@ -116,7 +116,7 @@ export namespace Circuits {
                   await loopOrThrow(async () => {
                     const head = Arrays.cryptoRandom(exits)!
 
-                    const query = Option.wrap(MicrodescQuery.create(head, index, circuit.getOrThrow(), storage)).getOrThrow()
+                    const query = Option.wrap(MicrodescQuery.create(head.identity, index, head, circuit.getOrThrow(), storage)).getOrThrow()
                     const body = await query.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
                     start = Date.now()
