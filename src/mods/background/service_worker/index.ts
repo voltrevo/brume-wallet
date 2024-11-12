@@ -884,6 +884,8 @@ export class Global {
       return new Some(await this.brume_disconnect(foreground, request))
     if (request.method === "brume_get_global")
       return new Some(await this.brume_get_global(foreground, request))
+    if (request.method === "brume_set_global")
+      return new Some(await this.brume_set_global(request))
     if (request.method === "brume_get_user")
       return new Some(await this.brume_get_user(foreground, request))
     if (request.method === "brume_set_user")
@@ -1095,6 +1097,18 @@ export class Global {
     foreground.events.on("close", () => core.onState.off(cacheKey, onState))
 
     return state
+  }
+
+  async brume_set_global(request: RpcRequestPreinit<unknown>) {
+    const [cacheKey, rawState] = (request as RpcRequestPreinit<[string, Nullable<RawState>]>).params
+
+    this.storage.setOrThrow(cacheKey, rawState)
+
+    core.storeds.set(cacheKey, rawState)
+    core.unstoreds.delete(cacheKey)
+
+    await core.onState.emit("*", cacheKey)
+    await core.onState.emit(cacheKey, cacheKey)
   }
 
   async brume_get_user(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Nullable<RawState>> {

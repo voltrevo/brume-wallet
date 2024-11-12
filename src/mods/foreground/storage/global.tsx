@@ -71,6 +71,11 @@ export class GlobalStorage implements QueryStorage {
     }).then(r => r.getOrThrow())
   }
 
-  async setOrThrow(cacheKey: string, value: RawState) { }
+  async setOrThrow(cacheKey: string, value: Nullable<RawState>): Promise<void> {
+    return await this.background.requestOrThrow<void>({
+      method: "brume_set_global",
+      params: [cacheKey, value]
+    }).then(r => r.getOrThrow())
+  }
 
 }
