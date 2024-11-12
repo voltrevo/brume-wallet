@@ -21,11 +21,9 @@ export interface WcBrume {
   readonly sockets: AutoPool<Disposer<AutoPool<WebSocketConnection>>>
 }
 
-export type EthBrumes = AutoPool<EthBrume>
-
 export interface EthBrume {
-  readonly [chainId: number]: Disposer<AutoPool<Disposer<AutoPool<RpcConnection>>>>
   readonly circuits: AutoPool<Circuit>
+  readonly ethereum: Record<number, Disposer<AutoPool<Disposer<AutoPool<RpcConnection>>>>>
 }
 
 export type Connection =
@@ -123,10 +121,10 @@ export namespace EthBrume {
   export function create(circuits: AutoPool<Circuit>): EthBrume {
     const subcircuits = Circuits.createCircuitSubpool(circuits, 3)
 
-    const chains = Objects.mapValuesSync(chainDataByChainId, (chainData) =>
+    const ethereum = Objects.mapValuesSync(chainDataByChainId, (chainData) =>
       RpcCircuits.createRpcCircuitsPool(subcircuits.get(), chainData.urls))
 
-    return { ...chains, circuits: subcircuits.get() } satisfies EthBrume
+    return { circuits: subcircuits.get(), ethereum } satisfies EthBrume
   }
 
   export function createPool(circuits: AutoPool<Circuit>, size: number) {

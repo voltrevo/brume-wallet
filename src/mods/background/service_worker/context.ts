@@ -5,7 +5,7 @@ import { TorRpc } from "@/libs/rpc/rpc"
 import { Fail, Fetched, FetcherMore } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Option } from "@hazae41/option"
-import { Catched, Result } from "@hazae41/result"
+import { Catched } from "@hazae41/result"
 import { EthBrume } from "./entities/brumes/data"
 import { EthereumFetchParams } from "./entities/wallets/data"
 
@@ -21,13 +21,11 @@ export namespace BgEthereumContext {
       const { signal: parentSignal = new AbortController().signal } = more
       const { brume } = ethereum
 
-      const circuits = Option.wrap(brume[ethereum.chain.chainId]).getOrThrow()
+      const circuits = Option.wrap(brume.ethereum[ethereum.chain.chainId]).getOrThrow()
       const circuit = await circuits.get().getCryptoRandomOrThrow(parentSignal)
 
       async function runWithTargetOrThrow(index: number) {
-        const target = await Result.runAndWrap(() => circuit.get().getOrThrow(index, parentSignal))
-          .then(r => r.inspectErrSync(e => console.warn(`Failed to get target ${index} for ${init.method} on ${ethereum.chain.name}`, e)))
-          .then(r => r.getOrThrow())
+        const target = await circuit.get().getOrThrow(index, parentSignal)
 
         const { counter, connection } = target
         const request = counter.prepare(init)
