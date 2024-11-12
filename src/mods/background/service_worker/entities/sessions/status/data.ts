@@ -8,16 +8,16 @@ export interface StatusData {
 
 export namespace Status {
 
-  export type Key = string
-  export type Data = StatusData
-  export type Fail = never
+  export type K = string
+  export type D = StatusData
+  export type F = never
 
   export function key(id: string) {
     return `session/status/v4/${id}`
   }
 
   export function schema(id: string) {
-    return createQuery<Key, Data, Fail>({ key: key(id) })
+    return createQuery<K, D, F>({ key: key(id) })
   }
 
 }

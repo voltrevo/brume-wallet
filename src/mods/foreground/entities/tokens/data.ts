@@ -17,9 +17,9 @@ export namespace FgToken {
 
   export namespace Balance {
 
-    export type Key = BgToken.Balance.Key
-    export type Data = BgToken.Balance.Data
-    export type Fail = BgToken.Balance.Fail
+    export type K = BgToken.Balance.K
+    export type D = BgToken.Balance.D
+    export type F = BgToken.Balance.F
 
     export const key = BgToken.Balance.key
 
@@ -27,7 +27,7 @@ export namespace FgToken {
       if (address == null)
         return
 
-      const indexer = async (states: States<Data, Fail>) => {
+      const indexer = async (states: States<D, F>) => {
         const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).getOr({})
         const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
@@ -35,7 +35,7 @@ export namespace FgToken {
         await totalBalance?.mutate(Mutators.data<Fixed.From, never>(total))
       }
 
-      return createQuery<Key, Data, Fail>({ key: key(address, currency), indexer, storage })
+      return createQuery<K, D, F>({ key: key(address, currency), indexer, storage })
     }
 
   }
@@ -46,9 +46,9 @@ export namespace FgToken {
 
       export namespace Priced {
 
-        export type Key = BgToken.Native.Balance.Priced.Key
-        export type Data = BgToken.Native.Balance.Priced.Data
-        export type Fail = BgToken.Native.Balance.Priced.Fail
+        export type K = BgToken.Native.Balance.Priced.K
+        export type D = BgToken.Native.Balance.Priced.D
+        export type F = BgToken.Native.Balance.Priced.F
 
         export const key = BgToken.Native.Balance.Priced.key
 
@@ -58,7 +58,7 @@ export namespace FgToken {
           if (account == null)
             return
 
-          const indexer = async (states: States<Data, Fail>) => {
+          const indexer = async (states: States<D, F>) => {
             const { current, previous } = states
 
             const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -79,7 +79,7 @@ export namespace FgToken {
             })
           }
 
-          return createQuery<Key, Data, Fail>({
+          return createQuery<K, D, F>({
             key: key(account, coin, context.chain),
             indexer,
             storage
@@ -88,9 +88,9 @@ export namespace FgToken {
 
       }
 
-      export type Key = BgToken.Native.Balance.Key
-      export type Data = BgToken.Native.Balance.Data
-      export type Fail = BgToken.Native.Balance.Fail
+      export type K = BgToken.Native.Balance.K
+      export type D = BgToken.Native.Balance.D
+      export type F = BgToken.Native.Balance.F
 
       export const key = BgToken.Native.Balance.key
 
@@ -119,7 +119,7 @@ export namespace FgToken {
           }
         }
 
-        const indexer = async (states: States<Data, Fail>) => {
+        const indexer = async (states: States<D, F>) => {
           if (block !== "pending")
             return
 
@@ -149,7 +149,7 @@ export namespace FgToken {
           await pricedBalanceQuery?.mutate(() => new Some(pricedBalance))
         }
 
-        return createQuery<Key, Data, Fail>({
+        return createQuery<K, D, F>({
           key: key(address, block, context.chain),
           fetcher,
           indexer,
@@ -166,9 +166,9 @@ export namespace FgToken {
 
       export namespace Priced {
 
-        export type Key = BgToken.Contract.Balance.Priced.Key
-        export type Data = BgToken.Contract.Balance.Priced.Data
-        export type Fail = BgToken.Contract.Balance.Priced.Fail
+        export type K = BgToken.Contract.Balance.Priced.K
+        export type D = BgToken.Contract.Balance.Priced.D
+        export type F = BgToken.Contract.Balance.Priced.F
 
         export const key = BgToken.Contract.Balance.Priced.key
 
@@ -180,7 +180,7 @@ export namespace FgToken {
           if (token == null)
             return
 
-          const indexer = async (states: States<Data, Fail>) => {
+          const indexer = async (states: States<D, F>) => {
             const { current, previous } = states
 
             const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -201,7 +201,7 @@ export namespace FgToken {
             })
           }
 
-          return createQuery<Key, Data, Fail>({
+          return createQuery<K, D, F>({
             key: key(account, token, coin, context.chain),
             indexer,
             storage
@@ -290,14 +290,14 @@ export namespace FgToken {
 
     export namespace All {
 
-      export type Key = BgToken.Contract.All.Key
-      export type Data = BgToken.Contract.All.Data
-      export type Fail = BgToken.Contract.All.Fail
+      export type K = BgToken.Contract.All.K
+      export type D = BgToken.Contract.All.D
+      export type F = BgToken.Contract.All.F
 
       export const key = BgToken.Contract.All.key
 
       export function schema(storage: UserStorage) {
-        return createQuery<Key, Data, Fail>({ key, storage })
+        return createQuery<K, D, F>({ key, storage })
       }
 
     }

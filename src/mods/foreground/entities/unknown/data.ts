@@ -14,9 +14,9 @@ export namespace FgEthereum {
 
   export namespace Unknown {
 
-    export type Key = BgEthereum.Unknown.Key
-    export type Data = BgEthereum.Unknown.Data
-    export type Fail = BgEthereum.Unknown.Fail
+    export type K = BgEthereum.Unknown.K
+    export type D = BgEthereum.Unknown.D
+    export type F = BgEthereum.Unknown.F
 
     export const key = BgEthereum.Unknown.key
 
@@ -29,7 +29,7 @@ export namespace FgEthereum {
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await fetchOrFail<T>(request, context)
 
-      return createQuery<Key, T, Fail>({
+      return createQuery<K, T, F>({
         key: key(context.chain.chainId, request),
         fetcher,
         storage
@@ -40,9 +40,9 @@ export namespace FgEthereum {
 
   export namespace EstimateGas {
 
-    export type Key = EthereumQueryKey<unknown>
-    export type Data = bigint
-    export type Fail = Error
+    export type K = EthereumQueryKey<unknown>
+    export type D = bigint
+    export type F = Error
 
     export function key(request: RpcRequestPreinit<[unknown, unknown]>, context: FgEthereumContext) {
       return {
@@ -62,7 +62,7 @@ export namespace FgEthereum {
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
 
-      return createQuery<Key, Data, Fail>({
+      return createQuery<K, D, F>({
         key: key(request, context),
         fetcher,
         storage,
@@ -74,9 +74,9 @@ export namespace FgEthereum {
 
   export namespace MaxPriorityFeePerGas {
 
-    export type Key = EthereumQueryKey<unknown>
-    export type Data = bigint
-    export type Fail = Error
+    export type K = EthereumQueryKey<unknown>
+    export type D = bigint
+    export type F = Error
 
     export function key(chain: ChainData) {
       return {
@@ -94,7 +94,7 @@ export namespace FgEthereum {
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
 
-      return createQuery<Key, Data, Fail>({
+      return createQuery<K, D, F>({
         key: key(context.chain),
         fetcher,
         storage,
@@ -106,9 +106,9 @@ export namespace FgEthereum {
 
   export namespace GasPrice {
 
-    export type Key = EthereumQueryKey<unknown> & EthereumFetchParams
-    export type Data = bigint
-    export type Fail = Error
+    export type K = EthereumQueryKey<unknown> & EthereumFetchParams
+    export type D = bigint
+    export type F = Error
 
     export function key(chain: ChainData) {
       return {
@@ -126,7 +126,7 @@ export namespace FgEthereum {
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
 
-      return createQuery<Key, Data, Error>({
+      return createQuery<K, D, Error>({
         key: key(context.chain),
         fetcher,
         storage,
@@ -138,9 +138,9 @@ export namespace FgEthereum {
 
   export namespace Nonce {
 
-    export type Key = EthereumQueryKey<unknown>
-    export type Data = bigint
-    export type Fail = Error
+    export type K = EthereumQueryKey<unknown>
+    export type D = bigint
+    export type F = Error
 
     export function key(address: ZeroHexString, chain: ChainData) {
       return {
@@ -235,14 +235,14 @@ export namespace FgTotal {
 
         export namespace Record {
 
-          export type Key = BgTotal.Balance.Priced.ByAddress.Record.Key
-          export type Data = BgTotal.Balance.Priced.ByAddress.Record.Data
-          export type Fail = BgTotal.Balance.Priced.ByAddress.Record.Fail
+          export type K = BgTotal.Balance.Priced.ByAddress.Record.K
+          export type D = BgTotal.Balance.Priced.ByAddress.Record.D
+          export type F = BgTotal.Balance.Priced.ByAddress.Record.F
 
           export const key = BgTotal.Balance.Priced.ByAddress.Record.key
 
           export function schema(coin: "usd", storage: UserStorage) {
-            const indexer = async (states: States<Data, Fail>) => {
+            const indexer = async (states: States<D, F>) => {
               const { current, previous } = states
 
               const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -260,14 +260,14 @@ export namespace FgTotal {
               await Priced.schema(coin, storage).mutate(() => new Some(new Data(total)))
             }
 
-            return createQuery<Key, Data, Fail>({ key: key(coin), indexer, storage })
+            return createQuery<K, D, F>({ key: key(coin), indexer, storage })
           }
 
         }
 
-        export type Key = string
-        export type Data = Fixed.From
-        export type Fail = never
+        export type K = string
+        export type D = Fixed.From
+        export type F = never
 
         export const key = BgTotal.Balance.Priced.ByAddress.key
 
@@ -275,7 +275,7 @@ export namespace FgTotal {
           if (account == null)
             return
 
-          const indexer = async (states: States<Data, Fail>) => {
+          const indexer = async (states: States<D, F>) => {
             const { current, previous } = states
 
             const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -299,21 +299,21 @@ export namespace FgTotal {
             })
           }
 
-          return createQuery<Key, Data, Fail>({ key: key(account, coin), indexer, storage })
+          return createQuery<K, D, F>({ key: key(account, coin), indexer, storage })
         }
 
       }
 
-      export type Key = string
-      export type Data = Fixed.From
-      export type Fail = never
+      export type K = string
+      export type D = Fixed.From
+      export type F = never
 
       export function key(coin: "usd") {
         return `totalPricedBalance/${coin}`
       }
 
       export function schema(coin: "usd", storage: UserStorage) {
-        return createQuery<Key, Data, Fail>({ key: key(coin), storage })
+        return createQuery<K, D, F>({ key: key(coin), storage })
       }
 
     }

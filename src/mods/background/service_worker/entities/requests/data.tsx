@@ -31,28 +31,28 @@ export namespace BgAppRequest {
 
   export namespace All {
 
-    export type Key = string
-    export type Data = AppRequest[]
-    export type Fail = never
+    export type K = string
+    export type D = AppRequest[]
+    export type F = never
 
     export const key = `requests`
 
     export function schema() {
-      return createQuery<Key, Data, Fail>({ key })
+      return createQuery<K, D, F>({ key })
     }
 
   }
 
-  export type Key = string
-  export type Data = AppRequestData
-  export type Fail = never
+  export type K = string
+  export type D = AppRequestData
+  export type F = never
 
   export function key(id: string) {
     return `request/${id}`
   }
 
   export function schema(id: string) {
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -69,7 +69,7 @@ export namespace BgAppRequest {
       }))
     }
 
-    return createQuery<Key, Data, Fail>({ key: key(id), indexer })
+    return createQuery<K, D, F>({ key: key(id), indexer })
   }
 
 }

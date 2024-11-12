@@ -9,9 +9,9 @@ import { FgEthereumContext, fetchOrFail } from "../wallets/data";
 
 export namespace FgSignature {
 
-  export type Key = BgSignature.Key
-  export type Data = BgSignature.Data
-  export type Fail = BgSignature.Fail
+  export type K = BgSignature.K
+  export type D = BgSignature.D
+  export type F = BgSignature.F
 
   export const key = BgSignature.key
 
@@ -26,7 +26,7 @@ export namespace FgSignature {
     if (maybeKey == null)
       return
 
-    const fetcher = async (request: Key) => {
+    const fetcher = async (request: K) => {
       try {
         const fetched = await fetchOrFail<ZeroHexString>(request, ethereum)
 
@@ -42,7 +42,7 @@ export namespace FgSignature {
       }
     }
 
-    return createQuery<Key, Data, Fail>({
+    return createQuery<K, D, F>({
       key: maybeKey,
       fetcher,
       storage

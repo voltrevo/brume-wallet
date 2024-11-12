@@ -8,21 +8,21 @@ export namespace FgAppRequest {
 
   export namespace All {
 
-    export type Key = BgAppRequest.All.Key
-    export type Data = BgAppRequest.All.Data
-    export type Fail = BgAppRequest.All.Fail
+    export type K = BgAppRequest.All.K
+    export type D = BgAppRequest.All.D
+    export type F = BgAppRequest.All.F
 
     export const key = BgAppRequest.All.key
 
     export function schema(storage: UserStorage) {
-      return createQuery<Key, Data, Fail>({ key, storage })
+      return createQuery<K, D, F>({ key, storage })
     }
 
   }
 
-  export type Key = BgAppRequest.Key
-  export type Data = BgAppRequest.Data
-  export type Fail = BgAppRequest.Fail
+  export type K = BgAppRequest.K
+  export type D = BgAppRequest.D
+  export type F = BgAppRequest.F
 
   export const key = BgAppRequest.key
 
@@ -30,7 +30,7 @@ export namespace FgAppRequest {
     if (id == null)
       return
 
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -47,7 +47,7 @@ export namespace FgAppRequest {
       }))
     }
 
-    return createQuery<Key, Data, Fail>({ key: key(id), indexer, storage })
+    return createQuery<K, D, F>({ key: key(id), indexer, storage })
   }
 
 }

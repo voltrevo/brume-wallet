@@ -10,9 +10,9 @@ export namespace FgTokenSettings {
 
   export namespace ByWallet {
 
-    export type Key = BgTokenSettings.ByWallet.Key
-    export type Data = BgTokenSettings.ByWallet.Data
-    export type Fail = BgTokenSettings.ByWallet.Fail
+    export type K = BgTokenSettings.ByWallet.K
+    export type D = BgTokenSettings.ByWallet.D
+    export type F = BgTokenSettings.ByWallet.F
 
     export const key = BgTokenSettings.ByWallet.key
 
@@ -20,14 +20,14 @@ export namespace FgTokenSettings {
       if (wallet == null)
         return
 
-      return createQuery<Key, Data, Fail>({ key: key(wallet), storage })
+      return createQuery<K, D, F>({ key: key(wallet), storage })
     }
 
   }
 
-  export type Key = BgTokenSettings.Key
-  export type Data = BgTokenSettings.Data
-  export type Fail = BgTokenSettings.Fail
+  export type K = BgTokenSettings.K
+  export type D = BgTokenSettings.D
+  export type F = BgTokenSettings.F
 
   export const key = BgTokenSettings.key
 
@@ -37,7 +37,7 @@ export namespace FgTokenSettings {
     if (token == null)
       return
 
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -59,7 +59,7 @@ export namespace FgTokenSettings {
       }
     }
 
-    return createQuery<Key, Data, Fail>({ key: key(wallet, token), storage, indexer })
+    return createQuery<K, D, F>({ key: key(wallet, token), storage, indexer })
   }
 
 }

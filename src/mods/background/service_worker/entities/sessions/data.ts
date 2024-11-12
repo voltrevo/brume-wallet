@@ -77,30 +77,30 @@ export namespace BgSession {
 
       export namespace ByWallet {
 
-        export type Key = string
-        export type Data = SessionRef[]
-        export type Fail = never
+        export type K = string
+        export type D = SessionRef[]
+        export type F = never
 
         export function key(wallet: string) {
           return `temporarySessionsByWallet/v2/${wallet}`
         }
 
         export function schema(wallet: string) {
-          return createQuery<Key, Data, Fail>({ key: key(wallet) })
+          return createQuery<K, D, F>({ key: key(wallet) })
         }
 
       }
 
-      export type Key = string
-      export type Data = SessionRef[]
-      export type Fail = never
+      export type K = string
+      export type D = SessionRef[]
+      export type F = never
 
       export const key = `temporarySessions/v2`
 
       export type Schema = ReturnType<typeof schema>
 
       export function schema() {
-        return createQuery<Key, Data, Fail>({ key })
+        return createQuery<K, D, F>({ key })
       }
 
     }
@@ -109,28 +109,28 @@ export namespace BgSession {
 
       export namespace ByWallet {
 
-        export type Key = string
-        export type Data = SessionRef[]
-        export type Fail = never
+        export type K = string
+        export type D = SessionRef[]
+        export type F = never
 
         export function key(wallet: string) {
           return `persistentSessionsByWallet/v2/${wallet}`
         }
 
         export function schema(wallet: string, storage: QueryStorage) {
-          return createQuery<Key, Data, Fail>({ key: key(wallet), storage })
+          return createQuery<K, D, F>({ key: key(wallet), storage })
         }
 
       }
 
-      export type Key = string
-      export type Data = SessionRef[]
-      export type Fail = never
+      export type K = string
+      export type D = SessionRef[]
+      export type F = never
 
       export const key = `persistentSessions/v2`
 
       export function schema(storage: QueryStorage) {
-        return createQuery<Key, Data, Fail>({ key, storage })
+        return createQuery<K, D, F>({ key, storage })
       }
 
     }
@@ -139,30 +139,30 @@ export namespace BgSession {
 
   export namespace ByOrigin {
 
-    export type Key = string
-    export type Data = Session
-    export type Fail = never
+    export type K = string
+    export type D = Session
+    export type F = never
 
     export function key(origin: string) {
       return `sessionByOrigin/${origin}`
     }
 
     export function schema(origin: string, storage: QueryStorage) {
-      return createQuery<Key, Data, Fail>({ key: key(origin), storage })
+      return createQuery<K, D, F>({ key: key(origin), storage })
     }
 
   }
 
-  export type Key = string
-  export type Data = SessionData
-  export type Fail = never
+  export type K = string
+  export type D = SessionData
+  export type F = never
 
   export function key(id: string) {
     return `session/v4/${id}`
   }
 
   export function schema(id: string, storage: QueryStorage) {
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -226,7 +226,7 @@ export namespace BgSession {
       }
     }
 
-    return createQuery<Key, Data, Fail>({ key: key(id), indexer, storage: new SessionStorage(storage) })
+    return createQuery<K, D, F>({ key: key(id), indexer, storage: new SessionStorage(storage) })
   }
 
 }

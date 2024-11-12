@@ -27,23 +27,23 @@ export namespace FgWallet {
 
     export namespace Trashed {
 
-      export type Key = BgWallet.All.Trashed.Key
-      export type Data = BgWallet.All.Trashed.Data
-      export type Fail = BgWallet.All.Trashed.Fail
+      export type K = BgWallet.All.Trashed.K
+      export type D = BgWallet.All.Trashed.D
+      export type F = BgWallet.All.Trashed.F
 
       export const key = BgWallet.All.Trashed.key
 
       export function schema(storage: UserStorage) {
-        return createQuery<Key, Data, Fail>({ key, storage })
+        return createQuery<K, D, F>({ key, storage })
       }
 
     }
 
     export namespace BySeed {
 
-      export type Key = BgWallet.All.BySeed.Key
-      export type Data = BgWallet.All.BySeed.Data
-      export type Fail = BgWallet.All.BySeed.Fail
+      export type K = BgWallet.All.BySeed.K
+      export type D = BgWallet.All.BySeed.D
+      export type F = BgWallet.All.BySeed.F
 
       export const key = BgWallet.All.BySeed.key
 
@@ -51,16 +51,16 @@ export namespace FgWallet {
         if (uuid == null)
           return
 
-        return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
+        return createQuery<K, D, F>({ key: key(uuid), storage })
       }
 
     }
 
     export namespace ByAddress {
 
-      export type Key = BgWallet.All.ByAddress.Key
-      export type Data = BgWallet.All.ByAddress.Data
-      export type Fail = BgWallet.All.ByAddress.Fail
+      export type K = BgWallet.All.ByAddress.K
+      export type D = BgWallet.All.ByAddress.D
+      export type F = BgWallet.All.ByAddress.F
 
       export const key = BgWallet.All.ByAddress.key
 
@@ -68,7 +68,7 @@ export namespace FgWallet {
         if (account == null)
           return
 
-        const indexer = async (states: States<Data, Fail>) => {
+        const indexer = async (states: States<D, F>) => {
           const { current, previous } = states
 
           const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -92,7 +92,7 @@ export namespace FgWallet {
           })
         }
 
-        return createQuery<Key, Data, Fail>({
+        return createQuery<K, D, F>({
           key: key(account),
           indexer,
           storage
@@ -101,21 +101,21 @@ export namespace FgWallet {
 
     }
 
-    export type Key = BgWallet.All.Key
-    export type Data = BgWallet.All.Data
-    export type Fail = BgWallet.All.Fail
+    export type K = BgWallet.All.K
+    export type D = BgWallet.All.D
+    export type F = BgWallet.All.F
 
     export const key = BgWallet.All.key
 
     export function schema(storage: UserStorage) {
-      return createQuery<Key, Data, Fail>({ key, storage })
+      return createQuery<K, D, F>({ key, storage })
     }
 
   }
 
-  export type Key = BgWallet.Key
-  export type Data = BgWallet.Data
-  export type Fail = BgWallet.Fail
+  export type K = BgWallet.K
+  export type D = BgWallet.D
+  export type F = BgWallet.F
 
   export const key = BgWallet.key
 
@@ -123,7 +123,7 @@ export namespace FgWallet {
     if (uuid == null)
       return
 
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -234,7 +234,7 @@ export namespace FgWallet {
       }
     }
 
-    return createQuery<Key, Data, Fail>({ key: key(uuid), indexer, storage })
+    return createQuery<K, D, F>({ key: key(uuid), indexer, storage })
   }
 
 }

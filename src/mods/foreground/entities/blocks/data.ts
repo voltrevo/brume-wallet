@@ -16,9 +16,9 @@ export namespace FgBlock {
 
   export namespace ByNumber {
 
-    export type Key = EthereumQueryKey<unknown> & EthereumFetchParams
-    export type Data = BlockData
-    export type Fail = Error
+    export type K = EthereumQueryKey<unknown> & EthereumFetchParams
+    export type D = BlockData
+    export type F = Error
 
     export function key(chain: ChainData, number: string) {
       return {
@@ -38,7 +38,7 @@ export namespace FgBlock {
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await fetchOrFail<BlockData>(request, context)
 
-      return createQuery<Key, Data, Fail>({
+      return createQuery<K, D, F>({
         key: key(context.chain, number),
         fetcher,
         storage,

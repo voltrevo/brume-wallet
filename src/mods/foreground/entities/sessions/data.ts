@@ -12,9 +12,9 @@ export namespace FgSession {
 
       export namespace ByWallet {
 
-        export type Key = BgSession.All.Temporary.ByWallet.Key
-        export type Data = BgSession.All.Temporary.ByWallet.Data
-        export type Fail = BgSession.All.Temporary.ByWallet.Fail
+        export type K = BgSession.All.Temporary.ByWallet.K
+        export type D = BgSession.All.Temporary.ByWallet.D
+        export type F = BgSession.All.Temporary.ByWallet.F
 
         export const key = BgSession.All.Temporary.ByWallet.key
 
@@ -22,19 +22,19 @@ export namespace FgSession {
           if (wallet == null)
             return
 
-          return createQuery<Key, Data, Fail>({ key: key(wallet), storage })
+          return createQuery<K, D, F>({ key: key(wallet), storage })
         }
 
       }
 
-      export type Key = BgSession.All.Temporary.Key
-      export type Data = BgSession.All.Temporary.Data
-      export type Fail = BgSession.All.Temporary.Fail
+      export type K = BgSession.All.Temporary.K
+      export type D = BgSession.All.Temporary.D
+      export type F = BgSession.All.Temporary.F
 
       export const key = BgSession.All.Temporary.key
 
       export function schema(storage: UserStorage) {
-        return createQuery<Key, Data, Fail>({ key, storage })
+        return createQuery<K, D, F>({ key, storage })
       }
 
     }
@@ -43,9 +43,9 @@ export namespace FgSession {
 
       export namespace ByWallet {
 
-        export type Key = BgSession.All.Persistent.ByWallet.Key
-        export type Data = BgSession.All.Persistent.ByWallet.Data
-        export type Fail = BgSession.All.Persistent.ByWallet.Fail
+        export type K = BgSession.All.Persistent.ByWallet.K
+        export type D = BgSession.All.Persistent.ByWallet.D
+        export type F = BgSession.All.Persistent.ByWallet.F
 
         export const key = BgSession.All.Persistent.ByWallet.key
 
@@ -53,19 +53,19 @@ export namespace FgSession {
           if (wallet == null)
             return
 
-          return createQuery<Key, Data, Fail>({ key: key(wallet), storage })
+          return createQuery<K, D, F>({ key: key(wallet), storage })
         }
 
       }
 
-      export type Key = BgSession.All.Persistent.Key
-      export type Data = BgSession.All.Persistent.Data
-      export type Fail = BgSession.All.Persistent.Fail
+      export type K = BgSession.All.Persistent.K
+      export type D = BgSession.All.Persistent.D
+      export type F = BgSession.All.Persistent.F
 
       export const key = BgSession.All.Persistent.key
 
       export function schema(storage: UserStorage) {
-        return createQuery<Key, Data, Fail>({ key, storage })
+        return createQuery<K, D, F>({ key, storage })
       }
 
     }
@@ -74,21 +74,21 @@ export namespace FgSession {
 
   export namespace ByOrigin {
 
-    export type Key = BgSession.ByOrigin.Key
-    export type Data = BgSession.ByOrigin.Data
-    export type Fail = BgSession.ByOrigin.Fail
+    export type K = BgSession.ByOrigin.K
+    export type D = BgSession.ByOrigin.D
+    export type F = BgSession.ByOrigin.F
 
     export const key = BgSession.ByOrigin.key
 
     export function schema(origin: string, storage: UserStorage) {
-      return createQuery<Key, Data, Fail>({ key: key(origin), storage })
+      return createQuery<K, D, F>({ key: key(origin), storage })
     }
 
   }
 
-  export type Key = BgSession.Key
-  export type Data = BgSession.Data
-  export type Fail = BgSession.Fail
+  export type K = BgSession.K
+  export type D = BgSession.D
+  export type F = BgSession.F
 
   export const key = BgSession.key
 
@@ -96,7 +96,7 @@ export namespace FgSession {
     if (id == null)
       return
 
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -132,7 +132,7 @@ export namespace FgSession {
       if (currentData != null) {
         if (currentData.persist) {
           const sessionByOrigin = ByOrigin.schema(currentData.origin, storage)
-          await sessionByOrigin.mutate(Mutators.data<ByOrigin.Data, ByOrigin.Fail>(SessionRef.from(currentData)))
+          await sessionByOrigin.mutate(Mutators.data<ByOrigin.D, ByOrigin.F>(SessionRef.from(currentData)))
         }
 
         const sessionsQuery = currentData.persist
@@ -157,7 +157,7 @@ export namespace FgSession {
       }
     }
 
-    return createQuery<Key, Data, Fail>({ key: key(id), indexer, storage })
+    return createQuery<K, D, F>({ key: key(id), indexer, storage })
   }
 
 }

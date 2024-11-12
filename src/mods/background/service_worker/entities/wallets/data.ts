@@ -129,48 +129,48 @@ export namespace BgWallet {
 
     export namespace Trashed {
 
-      export type Key = string
-      export type Data = Wallet[]
-      export type Fail = never
+      export type K = string
+      export type D = Wallet[]
+      export type F = never
 
       export const key = `trashedWallets`
 
       export type Schema = ReturnType<typeof schema>
 
       export function schema(storage: QueryStorage) {
-        return createQuery<Key, Data, Fail>({ key, storage })
+        return createQuery<K, D, F>({ key, storage })
       }
 
     }
 
     export namespace BySeed {
 
-      export type Key = string
-      export type Data = Wallet[]
-      export type Fail = never
+      export type K = string
+      export type D = Wallet[]
+      export type F = never
 
       export function key(uuid: string) {
         return `walletsBySeed/${uuid}`
       }
 
       export function schema(uuid: string, storage: QueryStorage) {
-        return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
+        return createQuery<K, D, F>({ key: key(uuid), storage })
       }
 
     }
 
     export namespace ByAddress {
 
-      export type Key = string
-      export type Data = Wallet[]
-      export type Fail = never
+      export type K = string
+      export type D = Wallet[]
+      export type F = never
 
       export function key(address: string) {
         return `walletsByAddress/${address}`
       }
 
       export function schema(account: ZeroHexString, storage: QueryStorage) {
-        const indexer = async (states: States<Data, Fail>) => {
+        const indexer = async (states: States<D, F>) => {
           const { current, previous } = states
 
           const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -194,7 +194,7 @@ export namespace BgWallet {
           })
         }
 
-        return createQuery<Key, Data, Fail>({
+        return createQuery<K, D, F>({
           key: key(account),
           indexer,
           storage
@@ -203,30 +203,30 @@ export namespace BgWallet {
 
     }
 
-    export type Key = string
-    export type Data = Wallet[]
-    export type Fail = never
+    export type K = string
+    export type D = Wallet[]
+    export type F = never
 
     export const key = `wallets`
 
     export type Schema = ReturnType<typeof schema>
 
     export function schema(storage: QueryStorage) {
-      return createQuery<Key, Data, Fail>({ key, storage })
+      return createQuery<K, D, F>({ key, storage })
     }
 
   }
 
-  export type Key = string
-  export type Data = WalletData
-  export type Fail = never
+  export type K = string
+  export type D = WalletData
+  export type F = never
 
   export function key(uuid: string) {
     return `wallet/${uuid}`
   }
 
   export function schema(uuid: string, storage: QueryStorage) {
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -337,7 +337,7 @@ export namespace BgWallet {
       }
     }
 
-    return createQuery<Key, Data, Fail>({ key: key(uuid), indexer, storage })
+    return createQuery<K, D, F>({ key: key(uuid), indexer, storage })
   }
 
 }

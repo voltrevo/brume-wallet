@@ -168,16 +168,16 @@ export namespace BgTransaction {
 
     export namespace ByAddress {
 
-      export type Key = string
-      export type Data = TransactionRef[]
-      export type Fail = never
+      export type K = string
+      export type D = TransactionRef[]
+      export type F = never
 
       export function key(address: ZeroHexString) {
         return `transaction/v0/all/byAddress/${address}`
       }
 
       export function schema(address: ZeroHexString, storage: QueryStorage) {
-        return createQuery<Key, Data, Fail>({
+        return createQuery<K, D, F>({
           key: key(address),
           storage
         })
@@ -187,16 +187,16 @@ export namespace BgTransaction {
 
   }
 
-  export type Key = string
-  export type Data = TransactionData
-  export type Fail = never
+  export type K = string
+  export type D = TransactionData
+  export type F = never
 
   export function key(uuid: string) {
     return `transaction/v0/${uuid}`
   }
 
   export function schema(uuid: string, storage: QueryStorage) {
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -274,7 +274,7 @@ export namespace BgTransaction {
       }
     }
 
-    return createQuery<Key, Data, Fail>({
+    return createQuery<K, D, F>({
       key: key(uuid),
       storage,
       indexer
@@ -289,16 +289,16 @@ export namespace BgTransactionTrial {
 
     export namespace ByAddress {
 
-      export type Key = string
-      export type Data = TransactionTrialRef[]
-      export type Fail = never
+      export type K = string
+      export type D = TransactionTrialRef[]
+      export type F = never
 
       export function key(address: ZeroHexString) {
         return `transactionTrial/v0/all/byAddress/${address}`
       }
 
       export function schema(address: ZeroHexString, storage: QueryStorage) {
-        return createQuery<Key, Data, Fail>({
+        return createQuery<K, D, F>({
           key: key(address),
           storage
         })
@@ -308,16 +308,16 @@ export namespace BgTransactionTrial {
 
   }
 
-  export type Key = string
-  export type Data = TransactionTrialData
-  export type Fail = never
+  export type K = string
+  export type D = TransactionTrialData
+  export type F = never
 
   export function key(uuid: string) {
     return `transactionTrial/v0/${uuid}`
   }
 
   export function schema(uuid: string, storage: QueryStorage) {
-    return createQuery<Key, Data, Fail>({
+    return createQuery<K, D, F>({
       key: key(uuid),
       storage
     })
@@ -356,9 +356,9 @@ export interface LogData {
 
 export namespace BgTransactionReceipt {
 
-  export type Key = EthereumQueryKey<unknown>
-  export type Data = Nullable<TransactionReceiptData>
-  export type Fail = Error
+  export type K = EthereumQueryKey<unknown>
+  export type D = Nullable<TransactionReceiptData>
+  export type F = Error
 
   export function key(hash: ZeroHexString, chain: ChainData) {
     return {
@@ -371,9 +371,9 @@ export namespace BgTransactionReceipt {
 
   export function schema(uuid: string, hash: ZeroHexString, ethereum: BgEthereumContext, storage: QueryStorage) {
     const fetcher = async (request: EthereumQueryKey<unknown>, more: FetcherMore) =>
-      await BgEthereumContext.fetchOrFail<Data>(ethereum, request, more)
+      await BgEthereumContext.fetchOrFail<D>(ethereum, request, more)
 
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -393,7 +393,7 @@ export namespace BgTransactionReceipt {
       }
     }
 
-    return createQuery<Key, Data, Fail>({
+    return createQuery<K, D, F>({
       key: key(hash, ethereum.chain),
       fetcher,
       indexer,

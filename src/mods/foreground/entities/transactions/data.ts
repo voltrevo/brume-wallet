@@ -14,9 +14,9 @@ export namespace FgTransaction {
 
     export namespace ByAddress {
 
-      export type Key = BgTransaction.All.ByAddress.Key
-      export type Data = BgTransaction.All.ByAddress.Data
-      export type Fail = BgTransaction.All.ByAddress.Fail
+      export type K = BgTransaction.All.ByAddress.K
+      export type D = BgTransaction.All.ByAddress.D
+      export type F = BgTransaction.All.ByAddress.F
 
       export const key = BgTransaction.All.ByAddress.key
 
@@ -24,7 +24,7 @@ export namespace FgTransaction {
         if (address == null)
           return
 
-        return createQuery<Key, Data, Fail>({
+        return createQuery<K, D, F>({
           key: key(address),
           storage
         })
@@ -34,9 +34,9 @@ export namespace FgTransaction {
 
   }
 
-  export type Key = BgTransaction.Key
-  export type Data = BgTransaction.Data
-  export type Fail = BgTransaction.Fail
+  export type K = BgTransaction.K
+  export type D = BgTransaction.D
+  export type F = BgTransaction.F
 
   export const key = BgTransaction.key
 
@@ -44,7 +44,7 @@ export namespace FgTransaction {
     if (uuid == null)
       return
 
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -122,7 +122,7 @@ export namespace FgTransaction {
       }
     }
 
-    return createQuery<Key, Data, Fail>({
+    return createQuery<K, D, F>({
       key: key(uuid),
       storage,
       indexer
@@ -154,9 +154,9 @@ export function useTransactionWithReceipt(uuid: Nullable<string>, context: Nulla
 
 export namespace FgTransactionTrial {
 
-  export type Key = BgTransactionTrial.Key
-  export type Data = BgTransactionTrial.Data
-  export type Fail = BgTransactionTrial.Fail
+  export type K = BgTransactionTrial.K
+  export type D = BgTransactionTrial.D
+  export type F = BgTransactionTrial.F
 
   export const key = BgTransactionTrial.key
 
@@ -164,7 +164,7 @@ export namespace FgTransactionTrial {
     if (uuid == null)
       return
 
-    return createQuery<Key, Data, Fail>({
+    return createQuery<K, D, F>({
       key: key(uuid),
       storage
     })
@@ -181,9 +181,9 @@ export function useTransactionTrial(uuid: Nullable<string>) {
 
 export namespace FgTransactionReceipt {
 
-  export type Key = BgTransactionReceipt.Key
-  export type Data = BgTransactionReceipt.Data
-  export type Fail = BgTransactionReceipt.Fail
+  export type K = BgTransactionReceipt.K
+  export type D = BgTransactionReceipt.D
+  export type F = BgTransactionReceipt.F
 
   export const key = BgTransactionReceipt.key
 
@@ -194,9 +194,9 @@ export namespace FgTransactionReceipt {
       return
 
     const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-      await fetchOrFail<Data>(request, context)
+      await fetchOrFail<D>(request, context)
 
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -216,7 +216,7 @@ export namespace FgTransactionReceipt {
       }
     }
 
-    return createQuery<Key, Data, Fail>({
+    return createQuery<K, D, F>({
       key: key(hash, context.chain),
       fetcher,
       indexer,

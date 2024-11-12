@@ -11,9 +11,9 @@ export namespace FgEns {
 
   export namespace Lookup {
 
-    export type Key = BgEns.Lookup.Key
-    export type Data = BgEns.Lookup.Data
-    export type Fail = BgEns.Lookup.Fail
+    export type K = BgEns.Lookup.K
+    export type D = BgEns.Lookup.D
+    export type F = BgEns.Lookup.F
 
     export const key = BgEns.Lookup.key
 
@@ -26,7 +26,7 @@ export namespace FgEns {
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await customFetchOrFail<Address>(request, context)
 
-      return createQuery<Key, Data, Fail>({
+      return createQuery<K, D, F>({
         key: key(name),
         fetcher,
         storage
@@ -37,9 +37,9 @@ export namespace FgEns {
 
   export namespace Reverse {
 
-    export type Key = BgEns.Reverse.Key
-    export type Data = BgEns.Reverse.Data
-    export type Fail = BgEns.Reverse.Fail
+    export type K = BgEns.Reverse.K
+    export type D = BgEns.Reverse.D
+    export type F = BgEns.Reverse.F
 
     export const key = BgEns.Reverse.key
 
@@ -52,7 +52,7 @@ export namespace FgEns {
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
         await customFetchOrFail<ZeroHexString>(request, context)
 
-      return createQuery<Key, Data, Fail>({
+      return createQuery<K, D, F>({
         key: key(address),
         fetcher,
         storage

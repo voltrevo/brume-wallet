@@ -95,16 +95,16 @@ export namespace BgToken {
 
   export namespace Balance {
 
-    export type Key = string
-    export type Data = Record<string, Fixed.From>
-    export type Fail = never
+    export type K = string
+    export type D = Record<string, Fixed.From>
+    export type F = never
 
     export function key(address: ZeroHexString, currency: "usd") {
       return `pricedBalanceByToken/${address}/${currency}`
     }
 
     export function schema(address: ZeroHexString, currency: "usd", storage: QueryStorage) {
-      const indexer = async (states: States<Data, Fail>) => {
+      const indexer = async (states: States<D, F>) => {
         const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).getOr({})
         const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
@@ -112,7 +112,7 @@ export namespace BgToken {
         await totalBalance.mutate(Mutators.data<Fixed.From, never>(total))
       }
 
-      return createQuery<Key, Data, Fail>({ key: key(address, currency), indexer, storage })
+      return createQuery<K, D, F>({ key: key(address, currency), indexer, storage })
     }
 
   }
@@ -123,9 +123,9 @@ export namespace BgToken {
 
       export namespace Priced {
 
-        export type Key = EthereumQueryKey<unknown>
-        export type Data = Fixed.From
-        export type Fail = never
+        export type K = EthereumQueryKey<unknown>
+        export type D = Fixed.From
+        export type F = never
 
         export function key(address: ZeroHexString, currency: "usd", chain: ChainData) {
           return {
@@ -136,7 +136,7 @@ export namespace BgToken {
         }
 
         export function schema(account: ZeroHexString, coin: "usd", context: BgEthereumContext, storage: QueryStorage) {
-          const indexer = async (states: States<Data, Fail>) => {
+          const indexer = async (states: States<D, F>) => {
             const { current, previous } = states
 
             const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -157,7 +157,7 @@ export namespace BgToken {
             })
           }
 
-          return createQuery<Key, Data, Fail>({
+          return createQuery<K, D, F>({
             key: key(account, coin, context.chain),
             indexer,
             storage
@@ -166,9 +166,9 @@ export namespace BgToken {
 
       }
 
-      export type Key = EthereumQueryKey<unknown>
-      export type Data = Fixed.From
-      export type Fail = Error
+      export type K = EthereumQueryKey<unknown>
+      export type D = Fixed.From
+      export type F = Error
 
       export function key(account: ZeroHexString, block: string, chain: ChainData) {
         return {
@@ -203,7 +203,7 @@ export namespace BgToken {
           }
         }
 
-        const indexer = async (states: States<Data, Fail>) => {
+        const indexer = async (states: States<D, F>) => {
           if (block !== "pending")
             return
 
@@ -233,7 +233,7 @@ export namespace BgToken {
           await pricedBalanceQuery.mutate(() => new Some(pricedBalance))
         }
 
-        return createQuery<Key, Data, Fail>({
+        return createQuery<K, D, F>({
           key: key(account, block, context.chain),
           fetcher,
           indexer,
@@ -250,9 +250,9 @@ export namespace BgToken {
 
     export namespace All {
 
-      export type Key = string
-      export type Data = ContractToken[]
-      export type Fail = never
+      export type K = string
+      export type D = ContractToken[]
+      export type F = never
 
       export const key = `contractTokens`
 
@@ -266,9 +266,9 @@ export namespace BgToken {
 
       export namespace Priced {
 
-        export type Key = EthereumQueryKey<unknown>
-        export type Data = Fixed.From
-        export type Fail = never
+        export type K = EthereumQueryKey<unknown>
+        export type D = Fixed.From
+        export type F = never
 
         export function key(address: ZeroHexString, token: ContractTokenData, currency: "usd", chain: ChainData) {
           return {
@@ -279,7 +279,7 @@ export namespace BgToken {
         }
 
         export function schema(account: ZeroHexString, token: ContractTokenData, coin: "usd", context: BgEthereumContext, storage: QueryStorage) {
-          const indexer = async (states: States<Data, Fail>) => {
+          const indexer = async (states: States<D, F>) => {
             const { current, previous } = states
 
             const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -300,7 +300,7 @@ export namespace BgToken {
             })
           }
 
-          return createQuery<Key, Data, Fail>({
+          return createQuery<K, D, F>({
             key: key(account, token, coin, context.chain),
             indexer,
             storage

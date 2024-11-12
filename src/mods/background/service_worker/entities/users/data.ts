@@ -57,42 +57,42 @@ export namespace BgUser {
 
   export namespace All {
 
-    export type Key = string
-    export type Data = User[]
-    export type Fail = never
+    export type K = string
+    export type D = User[]
+    export type F = never
 
     export const key = `users`
 
     export function schema(storage: QueryStorage) {
-      return createQuery<Key, Data, Fail>({ key, storage })
+      return createQuery<K, D, F>({ key, storage })
     }
 
   }
 
   export namespace Current {
 
-    export type Key = string
-    export type Data = User
-    export type Fail = never
+    export type K = string
+    export type D = User
+    export type F = never
 
     export const key = `user`
 
     export function schema(storage: QueryStorage) {
-      return createQuery<Key, Data, Fail>({ key, storage })
+      return createQuery<K, D, F>({ key, storage })
     }
 
   }
 
-  export type Key = string
-  export type Data = UserData
-  export type Fail = never
+  export type K = string
+  export type D = UserData
+  export type F = never
 
   export function key(uuid: string) {
     return `user/${uuid}`
   }
 
   export function schema(uuid: string, storage: QueryStorage) {
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -109,7 +109,7 @@ export namespace BgUser {
       }))
     }
 
-    return createQuery<Key, Data, Fail>({ key: key(uuid), storage, indexer })
+    return createQuery<K, D, F>({ key: key(uuid), storage, indexer })
   }
 
   export async function createOrThrow(init: UserInit): Promise<UserData> {

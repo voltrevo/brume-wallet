@@ -12,9 +12,9 @@ export namespace FgPair {
 
   export namespace Price {
 
-    export type Key = BgPair.Price.Key
-    export type Data = BgPair.Price.Data
-    export type Fail = BgPair.Price.Fail
+    export type K = BgPair.Price.K
+    export type D = BgPair.Price.D
+    export type F = BgPair.Price.F
 
     export const key = BgPair.Price.key
 
@@ -31,7 +31,7 @@ export namespace FgPair {
       if (maybeKey == null)
         return
 
-      const fetcher = async (request: Key, more: FetcherMore = {}) => {
+      const fetcher = async (request: K, more: FetcherMore = {}) => {
         try {
           const fetched = await fetchOrFail<ZeroHexString>(request, context)
 
@@ -49,7 +49,7 @@ export namespace FgPair {
         }
       }
 
-      return createQuery<Key, Data, Fail>({
+      return createQuery<K, D, F>({
         key: maybeKey,
         fetcher,
         storage

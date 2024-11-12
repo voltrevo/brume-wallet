@@ -43,9 +43,9 @@ export namespace BgEns {
 
   export namespace Lookup {
 
-    export type Key = EthereumQueryKey<unknown>
-    export type Data = Address
-    export type Fail = Error
+    export type K = EthereumQueryKey<unknown>
+    export type D = Address
+    export type F = Error
 
     export const method = "ens_lookup"
 
@@ -64,10 +64,10 @@ export namespace BgEns {
     }
 
     export function schema(ethereum: BgEthereumContext, name: string, storage: QueryStorage) {
-      const fetcher = (key: Key, more: FetcherMore) =>
+      const fetcher = (key: K, more: FetcherMore) =>
         fetchOrFail(ethereum, name, more)
 
-      return createQuery<Key, Data, Error>({
+      return createQuery<K, D, Error>({
         key: key(name),
         fetcher,
         storage
@@ -108,9 +108,9 @@ export namespace BgEns {
 
   export namespace Reverse {
 
-    export type Key = EthereumQueryKey<unknown>
-    export type Data = Nullable<string>
-    export type Fail = Error
+    export type K = EthereumQueryKey<unknown>
+    export type D = Nullable<string>
+    export type F = Error
 
     export const method = "ens_reverse"
 
@@ -129,9 +129,9 @@ export namespace BgEns {
     }
 
     export function schema(ethereum: BgEthereumContext, address: ZeroHexString, storage: QueryStorage) {
-      const fetcher = (key: Key, more: FetcherMore) => fetchOrFail(ethereum, address, more)
+      const fetcher = (key: K, more: FetcherMore) => fetchOrFail(ethereum, address, more)
 
-      return createQuery<Key, Data, Fail>({
+      return createQuery<K, D, F>({
         key: key(address),
         fetcher,
         storage

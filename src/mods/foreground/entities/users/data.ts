@@ -8,35 +8,35 @@ export namespace FgUser {
 
   export namespace All {
 
-    export type Key = BgUser.All.Key
-    export type Data = BgUser.All.Data
-    export type Fail = BgUser.All.Fail
+    export type K = BgUser.All.K
+    export type D = BgUser.All.D
+    export type F = BgUser.All.F
 
     export const key = BgUser.All.key
 
     export function schema(storage: QueryStorage) {
-      return createQuery<Key, Data, Fail>({ key, storage })
+      return createQuery<K, D, F>({ key, storage })
     }
 
   }
 
   export namespace Current {
 
-    export type Key = BgUser.Current.Key
-    export type Data = BgUser.Current.Data
-    export type Fail = BgUser.Current.Fail
+    export type K = BgUser.Current.K
+    export type D = BgUser.Current.D
+    export type F = BgUser.Current.F
 
     export const key = BgUser.Current.key
 
     export function schema(storage: QueryStorage) {
-      return createQuery<Key, Data, Fail>({ key, storage })
+      return createQuery<K, D, F>({ key, storage })
     }
 
   }
 
-  export type Key = BgUser.Key
-  export type Data = BgUser.Data
-  export type Fail = BgUser.Fail
+  export type K = BgUser.K
+  export type D = BgUser.D
+  export type F = BgUser.F
 
   export const key = BgUser.key
 
@@ -44,7 +44,7 @@ export namespace FgUser {
     if (uuid == null)
       return
 
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -61,7 +61,7 @@ export namespace FgUser {
       }))
     }
 
-    return createQuery<Key, Data, Fail>({ key: key(uuid), indexer, storage })
+    return createQuery<K, D, F>({ key: key(uuid), indexer, storage })
   }
 
 }

@@ -35,9 +35,9 @@ export namespace BgTokenSettings {
 
   export namespace ByWallet {
 
-    export type Key = string
-    export type Data = TokenSettings[]
-    export type Fail = never
+    export type K = string
+    export type D = TokenSettings[]
+    export type F = never
 
     export function key(wallet: Wallet) {
       return `tokenSettingsByWallet/${wallet.uuid}`
@@ -46,14 +46,14 @@ export namespace BgTokenSettings {
     export function schema(wallet: Nullable<Wallet>, storage: QueryStorage) {
       if (wallet == null)
         return
-      return createQuery<Key, Data, Fail>({ key: key(wallet), storage })
+      return createQuery<K, D, F>({ key: key(wallet), storage })
     }
 
   }
 
-  export type Key = string
-  export type Data = TokenSettingsData
-  export type Fail = never
+  export type K = string
+  export type D = TokenSettingsData
+  export type F = never
 
   export function key(wallet: Wallet, token: Token) {
     if (token.type === "native")
@@ -69,7 +69,7 @@ export namespace BgTokenSettings {
     if (token == null)
       return
 
-    const indexer = async (states: States<Data, Fail>) => {
+    const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
 
       const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -91,7 +91,7 @@ export namespace BgTokenSettings {
       }
     }
 
-    return createQuery<Key, Data, Fail>({
+    return createQuery<K, D, F>({
       key: key(wallet, token),
       storage,
       indexer

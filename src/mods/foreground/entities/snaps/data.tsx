@@ -7,21 +7,21 @@ export namespace FgSnap {
 
   export namespace All {
 
-    export type Key = BgSnap.All.Key
-    export type Data = BgSnap.All.Data
-    export type Fail = BgSnap.All.Fail
+    export type K = BgSnap.All.K
+    export type D = BgSnap.All.D
+    export type F = BgSnap.All.F
 
     export const key = BgSnap.All.key
 
     export function schema(storage: UserStorage) {
-      return createQuery<Key, Data, Fail>({ key, storage })
+      return createQuery<K, D, F>({ key, storage })
     }
 
   }
 
-  export type Key = BgSnap.Key
-  export type Data = BgSnap.Data
-  export type Fail = BgSnap.Fail
+  export type K = BgSnap.K
+  export type D = BgSnap.D
+  export type F = BgSnap.F
 
   export const key = BgSnap.key
 
@@ -29,7 +29,7 @@ export namespace FgSnap {
     if (uuid == null)
       return
 
-    return createQuery<Key, Data, Fail>({ key: key(uuid), storage })
+    return createQuery<K, D, F>({ key: key(uuid), storage })
   }
 
 }

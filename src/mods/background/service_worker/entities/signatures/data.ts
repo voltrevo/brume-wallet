@@ -6,9 +6,9 @@ import { EthereumQueryKey } from "../wallets/data";
 
 export namespace BgSignature {
 
-  export type Key = EthereumQueryKey<unknown>
-  export type Data = readonly string[]
-  export type Fail = Error
+  export type K = EthereumQueryKey<unknown>
+  export type D = readonly string[]
+  export type F = Error
 
   export const method = "sig_getSignatures"
 
@@ -29,7 +29,7 @@ export namespace BgSignature {
     if (maybeKey == null)
       return
 
-    const fetcher = async (request: Key, more: FetcherMore) => {
+    const fetcher = async (request: K, more: FetcherMore) => {
       try {
         const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request)
 
@@ -45,7 +45,7 @@ export namespace BgSignature {
       }
     }
 
-    return createQuery<Key, Data, Fail>({
+    return createQuery<K, D, F>({
       key: maybeKey,
       fetcher,
       storage

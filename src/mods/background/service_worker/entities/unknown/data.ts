@@ -9,9 +9,9 @@ export namespace BgEthereum {
 
   export namespace Unknown {
 
-    export type Key = EthereumQueryKey<unknown> & EthereumFetchParams
-    export type Data = unknown
-    export type Fail = Error
+    export type K = EthereumQueryKey<unknown> & EthereumFetchParams
+    export type D = unknown
+    export type F = Error
 
     export function key(chainId: number, request: RpcRequestPreinit<unknown> & EthereumFetchParams) {
       const { method, params, noCheck } = request
@@ -22,7 +22,7 @@ export namespace BgEthereum {
       const fetcher = async (request: EthereumQueryKey<unknown> & EthereumFetchParams, more: FetcherMore) =>
         await BgEthereumContext.fetchOrFail<unknown>(ethereum, request, more)
 
-      return createQuery<Key, Data, Fail>({
+      return createQuery<K, D, F>({
         key: key(ethereum.chain.chainId, request),
         fetcher,
         storage
@@ -48,16 +48,16 @@ export namespace BgTotal {
             readonly value: Fixed.From
           }
 
-          export type Key = string
-          export type Data = Record<string, Subdata>
-          export type Fail = never
+          export type K = string
+          export type D = Record<string, Subdata>
+          export type F = never
 
           export function key(coin: "usd") {
             return `totalPricedBalanceByWallet/v2/${coin}`
           }
 
           export function schema(coin: "usd", storage: QueryStorage) {
-            const indexer = async (states: States<Data, Fail>) => {
+            const indexer = async (states: States<D, F>) => {
               const { current, previous } = states
 
               const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -74,21 +74,21 @@ export namespace BgTotal {
               await Priced.schema(coin, storage).mutate(() => new Some(new Data(total)))
             }
 
-            return createQuery<Key, Data, Fail>({ key: key(coin), indexer, storage })
+            return createQuery<K, D, F>({ key: key(coin), indexer, storage })
           }
 
         }
 
-        export type Key = string
-        export type Data = Fixed.From
-        export type Fail = never
+        export type K = string
+        export type D = Fixed.From
+        export type F = never
 
         export function key(address: string, coin: "usd") {
           return `totalWalletPricedBalance/${address}/${coin}`
         }
 
         export function schema(account: ZeroHexString, coin: "usd", storage: QueryStorage) {
-          const indexer = async (states: States<Data, Fail>) => {
+          const indexer = async (states: States<D, F>) => {
             const { current, previous } = states
 
             const previousData = previous?.real?.current.ok()?.getOrNull()
@@ -112,7 +112,7 @@ export namespace BgTotal {
             })
           }
 
-          return createQuery<Key, Data, Fail>({
+          return createQuery<K, D, F>({
             key: key(account, coin),
             indexer,
             storage
@@ -121,16 +121,16 @@ export namespace BgTotal {
 
       }
 
-      export type Key = string
-      export type Data = Fixed.From
-      export type Fail = never
+      export type K = string
+      export type D = Fixed.From
+      export type F = never
 
       export function key(currency: "usd") {
         return `totalPricedBalance/${currency}`
       }
 
       export function schema(currency: "usd", storage: QueryStorage) {
-        return createQuery<Key, Data, Fail>({
+        return createQuery<K, D, F>({
           key: key(currency),
           storage
         })

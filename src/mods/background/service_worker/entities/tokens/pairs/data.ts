@@ -10,9 +10,9 @@ export namespace BgPair {
 
   export namespace Price {
 
-    export type Key = EthereumQueryKey<unknown>
-    export type Data = Fixed.From
-    export type Fail = Error
+    export type K = EthereumQueryKey<unknown>
+    export type D = Fixed.From
+    export type F = Error
 
     export function key(pair: PairData, block: string) {
       return Result.runAndWrapSync(() => ({
@@ -31,7 +31,7 @@ export namespace BgPair {
       if (maybeKey == null)
         return
 
-      const fetcher = (request: Key, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
+      const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
         try {
           const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, more)
 
@@ -49,7 +49,7 @@ export namespace BgPair {
         }
       })
 
-      return createQuery<Key, Data, Fail>({
+      return createQuery<K, D, F>({
         key: maybeKey,
         fetcher,
         storage
