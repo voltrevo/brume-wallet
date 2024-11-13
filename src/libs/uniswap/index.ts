@@ -19,3 +19,11 @@ export namespace UniswapV2 {
   }
 
 }
+
+export namespace UniswapV3 {
+
+  export function computeOrThrow(pair: PairData, sqrtPriceX96: Fixed.From) {
+
+  }
+
+}
