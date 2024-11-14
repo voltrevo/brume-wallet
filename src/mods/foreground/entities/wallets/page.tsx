@@ -32,7 +32,7 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
 import { useEnsReverse } from "../names/data";
-import { usePairV2Price } from "../pairs/data";
+import { usePairV2Price, usePairV3Price } from "../pairs/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
 import { SmallShrinkableContrastButton } from "../users/all/page";
@@ -710,6 +710,20 @@ export interface QueryLike<D, E> {
 }
 
 export function PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<Fixed.From>]>) {
+  const { address } = props
+
+  const pairData = pairByAddress[address]
+
+  if (pairData.version === 2)
+    return <PairV2PriceResolver {...props} />
+
+  if (pairData.version === 3)
+    return <PairV3PriceResolver {...props} />
+
+  return null
+}
+
+export function PairV2PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<Fixed.From>]>) {
   const { ok, index, address } = props
   const wallet = useWalletDataContext().getOrThrow()
 
@@ -721,7 +735,25 @@ export function PriceResolver(props: { index: number } & { address: string } & O
   const { data } = usePairV2Price(context, pairData, "pending")
 
   useEffect(() => {
-    ok([index, data?.inner])
+    ok([index, data?.get()])
+  }, [index, data, ok])
+
+  return null
+}
+
+export function PairV3PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<Fixed.From>]>) {
+  const wallet = useWalletDataContext().getOrThrow()
+  const { ok, index, address } = props
+
+  const pairData = pairByAddress[address]
+  const chainData = chainDataByChainId[pairData.chainId]
+
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
+
+  const { data } = usePairV3Price(context, pairData, "pending")
+
+  useEffect(() => {
+    ok([index, data?.get()])
   }, [index, data, ok])
 
   return null

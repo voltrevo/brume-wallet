@@ -582,10 +582,25 @@ export const tokenById = {
   MSUSD_ON_CELO: "0x64dEFa3544c695db8c535D289d843a189aa26b98"
 } as const
 
-export interface PairData {
-  readonly chainId: number,
+export type PairData =
+  | PairDataV2
+  | PairDataV3
+
+export interface PairDataV2 {
   readonly name: string
+  readonly chainId: number,
   readonly address: string,
+  readonly version: 2
+  readonly token0: string,
+  readonly token1: string,
+  readonly reversed?: boolean
+}
+
+export interface PairDataV3 {
+  readonly name: string
+  readonly chainId: number,
+  readonly address: string,
+  readonly version: 3
   readonly token0: string,
   readonly token1: string,
   readonly reversed?: boolean
@@ -594,6 +609,7 @@ export interface PairData {
 export const pairByAddress: Record<string, PairData> = {
   "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852": {
     chainId: 1,
+    version: 2,
     name: "WETH_USDT",
     address: "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
     token0: tokenById.WETH_ON_ETHEREUM,
@@ -601,6 +617,7 @@ export const pairByAddress: Record<string, PairData> = {
   },
   "0xbb2b8038a1640196fbe3e38816f3e67cba72d940": {
     chainId: 1,
+    version: 2,
     name: "WBTC_WETH",
     address: "0xbb2b8038a1640196fbe3e38816f3e67cba72d940",
     token0: tokenById.WBTC_ON_ETHEREUM,
@@ -608,6 +625,7 @@ export const pairByAddress: Record<string, PairData> = {
   },
   "0x819f3450dA6f110BA6Ea52195B3beaFa246062dE": {
     chainId: 1,
+    version: 2,
     name: "MATIC_WETH",
     address: "0x819f3450dA6f110BA6Ea52195B3beaFa246062dE",
     token0: tokenById.MATIC_ON_ETHEREUM,
@@ -615,6 +633,7 @@ export const pairByAddress: Record<string, PairData> = {
   },
   "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae": {
     chainId: 56,
+    version: 2,
     name: "USDT_WBNB",
     address: "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae",
     token0: tokenById.USDT_ON_BINANCE,
@@ -623,6 +642,7 @@ export const pairByAddress: Record<string, PairData> = {
   },
   "0xdb8721b7a04c3e592264bf58558526b16b15e757": {
     chainId: 56,
+    version: 2,
     name: "ETC_BUSD",
     address: "0xdb8721b7a04c3e592264bf58558526b16b15e757",
     token0: "0x3d6545b08693dae087e957cb1180ee38b9e3c25e",
@@ -630,6 +650,7 @@ export const pairByAddress: Record<string, PairData> = {
   },
   "0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422": {
     chainId: 42220,
+    version: 2,
     name: "CELO_MCUSD",
     address: "0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422",
     token0: "0x471EcE3750Da237f93B8E339c536989b8978a438",

@@ -5,6 +5,7 @@ import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { BgToken, ContractTokenData, ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
 import { PairV2 } from "@/mods/universal/entities/pairs/v2"
+import { PairV3 } from "@/mods/universal/entities/pairs/v3"
 import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, FetcherMore, States, core, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
@@ -130,16 +131,30 @@ export namespace FgToken {
             let pricedBalance: Fixed = Fixed.from(balance)
 
             for (const pairAddress of context.chain.token.pairs) {
-              const pair = pairByAddress[pairAddress]
-              const chain = chainDataByChainId[pair.chainId]
+              const pairData = pairByAddress[pairAddress]
+              const chainData = chainDataByChainId[pairData.chainId]
 
-              const price = PairV2.Price.queryOrThrow(context.switch(chain), pair, block, storage)
-              const priceState = await price?.state
+              if (pairData.version === 2) {
+                const priceQuery = PairV2.Price.queryOrThrow(context.switch(chainData), pairData, block, storage)
+                const priceState = await priceQuery?.state
 
-              if (priceState?.data == null)
-                return new None()
+                if (priceState?.data == null)
+                  return new None()
 
-              pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+                pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+              }
+
+              if (pairData.version === 3) {
+                const priceQuery = PairV3.Price.queryOrThrow(context.switch(chainData), pairData, block, storage)
+                const priceState = await priceQuery?.state
+
+                if (priceState?.data == null)
+                  return new None()
+
+                pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+              }
+
+              return new None()
             }
 
             return new Some(new Data(pricedBalance))
@@ -259,16 +274,28 @@ export namespace FgToken {
             let pricedBalance: Fixed = Fixed.from(balance)
 
             for (const pairAddress of token.pairs) {
-              const pair = pairByAddress[pairAddress]
-              const chain = chainDataByChainId[pair.chainId]
+              const pairData = pairByAddress[pairAddress]
+              const chainData = chainDataByChainId[pairData.chainId]
 
-              const price = PairV2.Price.queryOrThrow(context.switch(chain), pair, block, storage)
-              const priceState = await price?.state
+              if (pairData.version === 2) {
+                const priceQuery = PairV2.Price.queryOrThrow(context.switch(chainData), pairData, block, storage)
+                const priceState = await priceQuery?.state
 
-              if (priceState?.data == null)
-                return new None()
+                if (priceState?.data == null)
+                  return new None()
 
-              pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+                pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+              }
+
+              if (pairData.version === 3) {
+                const priceQuery = PairV3.Price.queryOrThrow(context.switch(chainData), pairData, block, storage)
+                const priceState = await priceQuery?.state
+
+                if (priceState?.data == null)
+                  return new None()
+
+                pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+              }
             }
 
             return new Some(new Data(pricedBalance))
