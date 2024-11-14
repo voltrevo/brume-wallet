@@ -4,6 +4,7 @@ import { Mutators } from "@/libs/glacier/mutators"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { BgToken, ContractTokenData, ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
+import { PairV2 } from "@/mods/universal/entities/pairs/v2"
 import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, FetcherMore, States, core, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
@@ -11,7 +12,6 @@ import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 import { FgTotal } from "../unknown/data"
 import { FgEthereumContext } from "../wallets/data"
-import { FgPairV2 } from "./pairs/data"
 
 export namespace FgToken {
 
@@ -133,7 +133,7 @@ export namespace FgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainDataByChainId[pair.chainId]
 
-              const price = FgPairV2.Price.schema(pair, block, context.switch(chain), storage)
+              const price = PairV2.Price.queryOrThrow(context.switch(chain), pair, block, storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)
@@ -262,7 +262,7 @@ export namespace FgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainDataByChainId[pair.chainId]
 
-              const price = FgPairV2.Price.schema(pair, block, context.switch(chain), storage)
+              const price = PairV2.Price.queryOrThrow(context.switch(chain), pair, block, storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)

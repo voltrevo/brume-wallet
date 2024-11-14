@@ -1,6 +1,7 @@
 import { TokenAbi } from "@/libs/abi/erc20.abi"
 import { ChainData, chainDataByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
+import { PairV2 } from "@/mods/universal/entities/pairs/v2"
 import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, FetcherMore, QueryStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
@@ -9,7 +10,6 @@ import { Catched, Result } from "@hazae41/result"
 import { BgEthereumContext } from "../../context"
 import { BgTotal } from "../unknown/data"
 import { EthereumQueryKey } from "../wallets/data"
-import { BgPairV2 } from "./pairs/data"
 
 export type Token =
   | TokenData
@@ -217,7 +217,7 @@ export namespace BgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainDataByChainId[pair.chainId]
 
-              const price = BgPairV2.Price.schema(context.switch(chain), pair, block, storage)
+              const price = PairV2.Price.queryOrThrow(context.switch(chain), pair, block, storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)
@@ -361,7 +361,7 @@ export namespace BgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainDataByChainId[pair.chainId]
 
-              const price = BgPairV2.Price.schema(context.switch(chain), pair, block, storage)
+              const price = PairV2.Price.queryOrThrow(context.switch(chain), pair, block, storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)

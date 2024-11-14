@@ -1,14 +1,13 @@
-import { PairAbiV2, PairAbiV3 } from "@/libs/abi/pair.abi"
+import { PairAbiV3 } from "@/libs/abi/pair.abi"
 import { PairData } from "@/libs/ethereum/mods/chain"
-import { UniswapV2, UniswapV3 } from "@/libs/uniswap"
+import { UniswapV3 } from "@/libs/uniswap"
+import { EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fetched, FetcherMore, QueryStorage, States, createQuery } from "@hazae41/glacier"
-import { Option, Some } from "@hazae41/option"
-import { Result } from "@hazae41/result"
-import { BgEthereumContext } from "../../../context"
-import { EthereumQueryKey } from "../../wallets/data"
+import { createQuery, Data, Fetched, FetcherMore, QueryStorage, States } from "@hazae41/glacier"
+import { Nullable, Option, Some } from "@hazae41/option"
+import { EthereumContext } from "../../../context/ethereum"
 
-export namespace BgPairV3 {
+export namespace PairV3 {
 
   export namespace Price {
 
@@ -27,9 +26,16 @@ export namespace BgPairV3 {
       }
     }
 
-    export function queryOrThrow(context: BgEthereumContext, pair: PairData, block: string, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<PairData>, block: Nullable<string>, storage: QueryStorage) {
+      if (context == null)
+        return
+      if (pair == null)
+        return
+      if (block == null)
+        return
+
       const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
-        const sqrtPriceX96 = await SqrtPriceX96.queryOrThrow(context, pair, block, storage).refetch().then(r => Option.wrap(r.real?.current).getOrThrow())
+        const sqrtPriceX96 = await SqrtPriceX96.queryOrThrow(context, pair, block, storage)!.refetch().then(r => Option.wrap(r.real?.current).getOrThrow())
 
         if (sqrtPriceX96.isErr())
           return sqrtPriceX96
@@ -62,9 +68,16 @@ export namespace BgPairV3 {
       }
     }
 
-    export function queryOrThrow(context: BgEthereumContext, pair: PairData, block: string, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<PairData>, block: Nullable<string>, storage: QueryStorage) {
+      if (context == null)
+        return
+      if (pair == null)
+        return
+      if (block == null)
+        return
+
       const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
-        const slot0 = await Slot0.queryOrThrow(context, pair, block, storage).refetch().then(r => Option.wrap(r.real?.current).getOrThrow())
+        const slot0 = await Slot0.queryOrThrow(context, pair, block, storage)!.refetch().then(r => Option.wrap(r.real?.current).getOrThrow())
 
         if (slot0.isErr())
           return slot0
@@ -79,7 +92,7 @@ export namespace BgPairV3 {
 
         const maybeCurrentData = current.real?.current.checkOrNull()
 
-        await Price.queryOrThrow(context, pair, block, storage).mutate(() => {
+        await Price.queryOrThrow(context, pair, block, storage)?.mutate(() => {
           if (maybeCurrentData == null)
             return new Some(undefined)
 
@@ -117,7 +130,14 @@ export namespace BgPairV3 {
       }
     }
 
-    export function queryOrThrow(context: BgEthereumContext, pair: PairData, block: string, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<PairData>, block: Nullable<string>, storage: QueryStorage) {
+      if (context == null)
+        return
+      if (pair == null)
+        return
+      if (block == null)
+        return
+
       const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
         const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
 
@@ -135,7 +155,7 @@ export namespace BgPairV3 {
 
         const maybeCurrentData = current.real?.current.checkOrNull()
 
-        await SqrtPriceX96.queryOrThrow(context, pair, block, storage).mutate(() => {
+        await SqrtPriceX96.queryOrThrow(context, pair, block, storage)?.mutate(() => {
           if (maybeCurrentData == null)
             return new Some(undefined)
 
@@ -155,54 +175,4 @@ export namespace BgPairV3 {
     }
 
   }
-}
-
-export namespace BgPairV2 {
-
-  export namespace Price {
-
-    export type K = EthereumQueryKey<unknown>
-    export type D = Fixed.From
-    export type F = Error
-
-    export function key(pair: PairData, block: string) {
-      return Result.runAndWrapSync(() => ({
-        chainId: pair.chainId,
-        method: "eth_call",
-        params: [{
-          to: pair.address,
-          data: Abi.encodeOrThrow(PairAbiV2.getReserves.fromOrThrow())
-        }, block]
-      })).ok().getOrNull()
-    }
-
-    export function schema(context: BgEthereumContext, pair: PairData, block: string, storage: QueryStorage) {
-      const maybeKey = key(pair, block)
-
-      if (maybeKey == null)
-        return
-
-      const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
-
-        if (fetched.isErr())
-          return fetched
-
-        const returns = Abi.Tuple.create(Abi.Uint112, Abi.Uint112, Abi.Uint32)
-        const [a, b] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
-
-        const price = UniswapV2.computeOrThrow(pair, [a, b])
-
-        return new Data(price)
-      })
-
-      return createQuery<K, D, F>({
-        key: maybeKey,
-        fetcher,
-        storage
-      })
-    }
-
-  }
-
 }
