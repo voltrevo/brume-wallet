@@ -12,13 +12,13 @@ export namespace BgEns {
 
   export namespace Resolver {
 
-    export async function fetchOrFail(ethereum: BgEthereumContext, namehash: Uint8Array<32>, more: FetcherMore): Promise<Fetched<ZeroHexString, Error>> {
+    export async function fetchOrFail(context: BgEthereumContext, namehash: Uint8Array<32>, more: FetcherMore): Promise<Fetched<ZeroHexString, Error>> {
       try {
         const registry = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
 
         const data = Abi.encodeOrThrow(EnsAbi.resolver.fromOrThrow(namehash))
 
-        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
+        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, {
           method: "eth_call",
           params: [{
             to: registry,
@@ -57,15 +57,15 @@ export namespace BgEns {
       }
     }
 
-    export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: QueryStorage) {
+    export async function parseOrThrow(context: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: QueryStorage) {
       const [name] = (request as RpcRequestPreinit<[string]>).params
 
-      return schema(ethereum, name, storage)
+      return schema(context, name, storage)
     }
 
-    export function schema(ethereum: BgEthereumContext, name: string, storage: QueryStorage) {
+    export function schema(context: BgEthereumContext, name: string, storage: QueryStorage) {
       const fetcher = (key: K, more: FetcherMore) =>
-        fetchOrFail(ethereum, name, more)
+        fetchOrFail(context, name, more)
 
       return createQuery<K, D, Error>({
         key: key(name),
@@ -74,17 +74,17 @@ export namespace BgEns {
       })
     }
 
-    export async function fetchOrFail(ethereum: BgEthereumContext, name: string, more: FetcherMore) {
+    export async function fetchOrFail(context: BgEthereumContext, name: string, more: FetcherMore) {
       try {
         const namehash32 = Bytes.castOrThrow(Ens.namehashOrThrow(name), 32)
-        const resolver = await Resolver.fetchOrFail(ethereum, namehash32, more)
+        const resolver = await Resolver.fetchOrFail(context, namehash32, more)
 
         if (resolver.isErr())
           return resolver
 
         const data = Abi.encodeOrThrow(EnsAbi.addr.fromOrThrow(namehash32))
 
-        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
+        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, {
           method: "eth_call",
           params: [{
             to: resolver.inner,
@@ -122,14 +122,14 @@ export namespace BgEns {
       }
     }
 
-    export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: QueryStorage) {
+    export async function parseOrThrow(context: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: QueryStorage) {
       const [address] = (request as RpcRequestPreinit<[ZeroHexString]>).params
 
-      return schema(ethereum, address, storage)
+      return schema(context, address, storage)
     }
 
-    export function schema(ethereum: BgEthereumContext, address: ZeroHexString, storage: QueryStorage) {
-      const fetcher = (key: K, more: FetcherMore) => fetchOrFail(ethereum, address, more)
+    export function schema(context: BgEthereumContext, address: ZeroHexString, storage: QueryStorage) {
+      const fetcher = (key: K, more: FetcherMore) => fetchOrFail(context, address, more)
 
       return createQuery<K, D, F>({
         key: key(address),
@@ -138,17 +138,17 @@ export namespace BgEns {
       })
     }
 
-    export async function fetchUncheckedOrFail(ethereum: BgEthereumContext, address: ZeroHexString, more: FetcherMore): Promise<Fetched<Nullable<string>, Error>> {
+    export async function fetchUncheckedOrFail(context: BgEthereumContext, address: ZeroHexString, more: FetcherMore): Promise<Fetched<Nullable<string>, Error>> {
       try {
         const namehash32 = Bytes.castOrThrow(Ens.namehashOrThrow(`${address.slice(2)}.addr.reverse`), 32)
-        const resolver = await Resolver.fetchOrFail(ethereum, namehash32, more)
+        const resolver = await Resolver.fetchOrFail(context, namehash32, more)
 
         if (resolver.isErr())
           return resolver
 
         const data = Abi.encodeOrThrow(EnsAbi.name.fromOrThrow(namehash32))
 
-        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, {
+        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, {
           method: "eth_call",
           params: [{
             to: resolver.inner,
@@ -171,8 +171,8 @@ export namespace BgEns {
       }
     }
 
-    export async function fetchOrFail(ethereum: BgEthereumContext, address: ZeroHexString, more: FetcherMore) {
-      const name = await fetchUncheckedOrFail(ethereum, address, more)
+    export async function fetchOrFail(context: BgEthereumContext, address: ZeroHexString, more: FetcherMore) {
+      const name = await fetchUncheckedOrFail(context, address, more)
 
       if (name.isErr())
         return name
@@ -180,7 +180,7 @@ export namespace BgEns {
       if (name.inner == null)
         return name
 
-      const address2 = await Lookup.fetchOrFail(ethereum, name.inner, more)
+      const address2 = await Lookup.fetchOrFail(context, name.inner, more)
 
       if (address2.isErr())
         return address2

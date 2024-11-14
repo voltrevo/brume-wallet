@@ -446,8 +446,8 @@ export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<Chain
   return Option.wrap(maybeContext)
 }
 
-export async function customFetchOrFail<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, ethereum: FgEthereumContext): Promise<Fetched<T, Error>> {
-  const { uuid, background, chain } = ethereum
+export async function customFetchOrFail<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, context: FgEthereumContext): Promise<Fetched<T, Error>> {
+  const { uuid, background, chain } = context
 
   return await background.requestOrThrow<T>({
     method: "brume_eth_custom_fetch",
@@ -455,8 +455,8 @@ export async function customFetchOrFail<T>(request: RpcRequestPreinit<unknown> &
   }).then(r => Fetched.rewrap(r))
 }
 
-export async function fetchOrFail<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, ethereum: FgEthereumContext): Promise<Fetched<T, Error>> {
-  const { uuid, background, chain } = ethereum
+export async function fetchOrFail<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams, context: FgEthereumContext): Promise<Fetched<T, Error>> {
+  const { uuid, background, chain } = context
 
   return await background.requestOrThrow<T>({
     method: "brume_eth_fetch",

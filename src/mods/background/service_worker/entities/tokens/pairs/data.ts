@@ -26,7 +26,7 @@ export namespace BgPairV3 {
       })).ok().getOrNull()
     }
 
-    export function schema(ethereum: BgEthereumContext, pair: PairData, block: string, storage: QueryStorage) {
+    export function schema(context: BgEthereumContext, pair: PairData, block: string, storage: QueryStorage) {
       const maybeKey = key(pair, block)
 
       if (maybeKey == null)
@@ -34,7 +34,7 @@ export namespace BgPairV3 {
 
       const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
         try {
-          const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, more)
+          const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more)
 
           if (fetched.isErr())
             return fetched
@@ -78,7 +78,7 @@ export namespace BgPair {
       })).ok().getOrNull()
     }
 
-    export function schema(ethereum: BgEthereumContext, pair: PairData, block: string, storage: QueryStorage) {
+    export function schema(context: BgEthereumContext, pair: PairData, block: string, storage: QueryStorage) {
       const maybeKey = key(pair, block)
 
       if (maybeKey == null)
@@ -86,7 +86,7 @@ export namespace BgPair {
 
       const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
         try {
-          const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, more)
+          const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more)
 
           if (fetched.isErr())
             return fetched

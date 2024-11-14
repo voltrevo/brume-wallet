@@ -87,10 +87,10 @@ export namespace BgSimulation {
     return secretZeroHex
   }
 
-  export async function fetchOrFail<T>(ethereum: BgEthereumContext, init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}) {
+  export async function fetchOrFail<T>(context: BgEthereumContext, init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}) {
     try {
       const { signal: parentSignal = new AbortController().signal } = more
-      const { brume } = ethereum
+      const { brume } = context
 
       const circuit = await brume.circuits.getCryptoRandomOrThrow(parentSignal)
       const session = randomUUID()
@@ -115,13 +115,13 @@ export namespace BgSimulation {
       const nodes = await TorRpc.fetchWithCircuitOrThrow<{ location: string }[]>(url, {
         circuit,
         signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
-        ...new RpcCounter().prepare({ method: "net_search", params: [{}, { protocols: [`https:json-rpc:(pay-by-char|tenderly:${ethereum.chain.chainId})`] }] })
+        ...new RpcCounter().prepare({ method: "net_search", params: [{}, { protocols: [`https:json-rpc:(pay-by-char|tenderly:${context.chain.chainId})`] }] })
       }).then(r => r.getOrThrow())
 
       const node = Arrays.cryptoRandom(nodes)
 
       if (node == null)
-        throw new Error(`No node found for ${ethereum.chain.name}`)
+        throw new Error(`No node found for ${context.chain.name}`)
 
       {
         const url = new URL(`${node.location}`)
@@ -163,18 +163,18 @@ export namespace BgSimulation {
     }
   }
 
-  export async function parseOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: QueryStorage) {
+  export async function parseOrThrow(context: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: QueryStorage) {
     const [tx, block] = (request as RpcRequestPreinit<[unknown, string]>).params
 
-    return schema(ethereum, tx, block, storage)
+    return schema(context, tx, block, storage)
   }
 
-  export function schema(ethereum: BgEthereumContext, tx: unknown, block: string, storage: QueryStorage) {
+  export function schema(context: BgEthereumContext, tx: unknown, block: string, storage: QueryStorage) {
     const fetcher = async (request: EthereumQueryKey<unknown> & EthereumFetchParams, more: FetcherMore) =>
-      await fetchOrFail<SimulationData>(ethereum, request, more).then(r => r.inspectErrSync(e => console.error({ e },)))
+      await fetchOrFail<SimulationData>(context, request, more).then(r => r.inspectErrSync(e => console.error({ e },)))
 
     return createQuery<K, D, F>({
-      key: key(ethereum.chain.chainId, tx, block),
+      key: key(context.chain.chainId, tx, block),
       fetcher,
       storage
     })

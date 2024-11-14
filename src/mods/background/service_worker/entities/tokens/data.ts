@@ -179,10 +179,10 @@ export namespace BgToken {
         }
       }
 
-      export async function parseOrThrow(request: RpcRequestPreinit<unknown>, ethereum: BgEthereumContext, storage: QueryStorage) {
+      export async function parseOrThrow(request: RpcRequestPreinit<unknown>, context: BgEthereumContext, storage: QueryStorage) {
         const [account, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
 
-        return schema(account, block, ethereum, storage)
+        return schema(account, block, context, storage)
       }
 
       export function schema(account: ZeroHexString, block: string, context: BgEthereumContext, storage: QueryStorage) {
@@ -324,15 +324,15 @@ export namespace BgToken {
         })).ok().inner
       }
 
-      export function schema(account: ZeroHexString, token: ContractTokenData, block: string, ethereum: BgEthereumContext, storage: QueryStorage) {
-        const maybeKey = key(account, token, block, ethereum.chain)
+      export function schema(account: ZeroHexString, token: ContractTokenData, block: string, context: BgEthereumContext, storage: QueryStorage) {
+        const maybeKey = key(account, token, block, context.chain)
 
         if (maybeKey == null)
           return undefined
 
         const fetcher = async (request: K, more: FetcherMore) => {
           try {
-            const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request, more)
+            const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more)
 
             if (fetched.isErr())
               return fetched
@@ -361,7 +361,7 @@ export namespace BgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainDataByChainId[pair.chainId]
 
-              const price = BgPair.Price.schema({ ...ethereum, chain }, pair, block, storage)
+              const price = BgPair.Price.schema({ ...context, chain }, pair, block, storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)
@@ -373,7 +373,7 @@ export namespace BgToken {
             return new Some(new Data(pricedBalance))
           }).then(o => o.getOrNull())
 
-          const pricedBalanceQuery = Priced.schema(account, token, "usd", ethereum, storage)
+          const pricedBalanceQuery = Priced.schema(account, token, "usd", context, storage)
           await pricedBalanceQuery.mutate(() => new Some(pricedBalance))
         }
 

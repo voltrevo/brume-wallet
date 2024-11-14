@@ -18,12 +18,12 @@ export namespace BgEthereum {
       return { chainId, method, params, noCheck }
     }
 
-    export function schema(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: QueryStorage) {
+    export function schema(context: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: QueryStorage) {
       const fetcher = async (request: EthereumQueryKey<unknown> & EthereumFetchParams, more: FetcherMore) =>
-        await BgEthereumContext.fetchOrFail<unknown>(ethereum, request, more)
+        await BgEthereumContext.fetchOrFail<unknown>(context, request, more)
 
       return createQuery<K, D, F>({
-        key: key(ethereum.chain.chainId, request),
+        key: key(context.chain.chainId, request),
         fetcher,
         storage
       })

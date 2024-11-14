@@ -63,9 +63,9 @@ export namespace FgEns {
 
 }
 
-export function useEnsLookup(name: Nullable<string>, ethereum: Nullable<FgEthereumContext>) {
+export function useEnsLookup(name: Nullable<string>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgEns.Lookup.schema, [name, ethereum, storage])
+  const query = useQuery(FgEns.Lookup.schema, [name, context, storage])
   useFetch(query)
   useVisible(query)
 
@@ -73,9 +73,9 @@ export function useEnsLookup(name: Nullable<string>, ethereum: Nullable<FgEthere
   return query
 }
 
-export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullable<FgEthereumContext>) {
+export function useEnsReverse(address: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
+  const query = useQuery(FgEns.Reverse.schema, [address, context, storage])
   useFetch(query)
   useVisible(query)
 
@@ -86,12 +86,12 @@ export function useEnsReverse(address: Nullable<ZeroHexString>, ethereum: Nullab
 /**
  * Used in the wallet list to display the ens name
  * @param address 
- * @param ethereum 
+ * @param context 
  * @returns 
  */
-export function useEnsReverseNoFetch(address: Nullable<ZeroHexString>, ethereum: Nullable<FgEthereumContext>) {
+export function useEnsReverseNoFetch(address: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgEns.Reverse.schema, [address, ethereum, storage])
+  const query = useQuery(FgEns.Reverse.schema, [address, context, storage])
 
   return query
 }

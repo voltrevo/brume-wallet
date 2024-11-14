@@ -15,8 +15,8 @@ export namespace FgSignature {
 
   export const key = BgSignature.key
 
-  export function schema(hash: Nullable<ZeroHexString>, ethereum: Nullable<FgEthereumContext>, storage: UserStorage) {
-    if (ethereum == null)
+  export function schema(hash: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
+    if (context == null)
       return
     if (hash == null)
       return
@@ -28,7 +28,7 @@ export namespace FgSignature {
 
     const fetcher = async (request: K) => {
       try {
-        const fetched = await fetchOrFail<ZeroHexString>(request, ethereum)
+        const fetched = await fetchOrFail<ZeroHexString>(request, context)
 
         if (fetched.isErr())
           return fetched
@@ -51,9 +51,9 @@ export namespace FgSignature {
 
 }
 
-export function useSignature(hash: Nullable<ZeroHexString>, ethereum: Nullable<FgEthereumContext>) {
+export function useSignature(hash: Nullable<ZeroHexString>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgSignature.schema, [hash, ethereum, storage])
+  const query = useQuery(FgSignature.schema, [hash, context, storage])
   useFetch(query)
   useVisible(query)
 

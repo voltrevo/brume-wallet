@@ -49,9 +49,9 @@ export namespace FgBlock {
 
 }
 
-export function useBlockByNumber(number: Nullable<string>, ethereum: Nullable<FgEthereumContext>) {
+export function useBlockByNumber(number: Nullable<string>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgBlock.ByNumber.schema, [number, ethereum, storage])
+  const query = useQuery(FgBlock.ByNumber.schema, [number, context, storage])
   useFetch(query)
   useVisible(query)
   useInterval(query, 10 * 1000)

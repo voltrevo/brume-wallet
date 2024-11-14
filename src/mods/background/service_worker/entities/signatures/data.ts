@@ -23,7 +23,7 @@ export namespace BgSignature {
     })).ok().inner
   }
 
-  export function schema(hash: ZeroHexString, ethereum: BgEthereumContext, storage: QueryStorage) {
+  export function schema(hash: ZeroHexString, context: BgEthereumContext, storage: QueryStorage) {
     const maybeKey = key(hash)
 
     if (maybeKey == null)
@@ -31,7 +31,7 @@ export namespace BgSignature {
 
     const fetcher = async (request: K, more: FetcherMore) => {
       try {
-        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(ethereum, request)
+        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request)
 
         if (fetched.isErr())
           return fetched

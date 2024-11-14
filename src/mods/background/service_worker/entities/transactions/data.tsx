@@ -369,9 +369,9 @@ export namespace BgTransactionReceipt {
     }
   }
 
-  export function schema(uuid: string, hash: ZeroHexString, ethereum: BgEthereumContext, storage: QueryStorage) {
+  export function schema(uuid: string, hash: ZeroHexString, context: BgEthereumContext, storage: QueryStorage) {
     const fetcher = async (request: EthereumQueryKey<unknown>, more: FetcherMore) =>
-      await BgEthereumContext.fetchOrFail<D>(ethereum, request, more)
+      await BgEthereumContext.fetchOrFail<D>(context, request, more)
 
     const indexer = async (states: States<D, F>) => {
       const { current, previous } = states
@@ -394,7 +394,7 @@ export namespace BgTransactionReceipt {
     }
 
     return createQuery<K, D, F>({
-      key: key(hash, ethereum.chain),
+      key: key(hash, context.chain),
       fetcher,
       indexer,
       storage

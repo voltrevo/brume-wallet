@@ -657,7 +657,7 @@ export class Global {
     return await BgEthereumContext.fetchOrFail(context, { ...subrequest, noCheck: true }).then(r => r.getOrThrow())
   }
 
-  async eth_requestAccounts(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<string[]> {
+  async eth_requestAccounts(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<string[]> {
     const user = Option.wrap(this.#user).getOrThrow()
 
     return await Promise.all(session.wallets.map(async wallet => {
@@ -669,7 +669,7 @@ export class Global {
     }))
   }
 
-  async eth_accounts(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<string[]> {
+  async eth_accounts(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<string[]> {
     const user = Option.wrap(this.#user).getOrThrow()
 
     return await Promise.all(session.wallets.map(async wallet => {
@@ -681,7 +681,7 @@ export class Global {
     }))
   }
 
-  async eth_coinbase(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Nullable<string>> {
+  async eth_coinbase(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Nullable<string>> {
     const user = Option.wrap(this.#user).getOrThrow()
 
     const walletRef = session.wallets.at(0)
@@ -696,36 +696,36 @@ export class Global {
     return walletData.address
   }
 
-  async eth_chainId(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<string> {
+  async eth_chainId(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<string> {
     if (session.type === "wc")
       throw new Error("Unexpected WalletConnect session")
 
     return ZeroHexAsInteger.fromOrThrow(session.chain.chainId)
   }
 
-  async net_version(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<string> {
+  async net_version(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<string> {
     if (session.type === "wc")
       throw new Error("Unexpected WalletConnect session")
 
     return session.chain.chainId.toString()
   }
 
-  async wallet_requestPermissions(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<RequestedPermission[]> {
+  async wallet_requestPermissions(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<RequestedPermission[]> {
     const [prequest] = (request as RpcRequestPreinit<[PermissionRequest]>).params
 
     return Object.keys(prequest).map(it => ({ parentCapability: it }))
   }
 
-  async wallet_getPermissions(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Permission[]> {
+  async wallet_getPermissions(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<Permission[]> {
     return [{ invoker: session.origin, parentCapability: "eth_accounts", caveats: [] }]
   }
 
-  async eth_getBalance(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown>): Promise<unknown> {
+  async eth_getBalance(context: BgEthereumContext, request: RpcRequestPreinit<unknown>): Promise<unknown> {
     const user = Option.wrap(this.#user).getOrThrow()
 
     const [address, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
 
-    const query = BgToken.Native.Balance.schema(address, block, ethereum, user.storage)
+    const query = BgToken.Native.Balance.schema(address, block, context, user.storage)
 
     try { await query.fetch() } catch { }
 
@@ -736,7 +736,7 @@ export class Global {
     return fetched
   }
 
-  async eth_sendTransaction(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<string> {
+  async eth_sendTransaction(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<string> {
     const user = Option.wrap(this.#user).getOrThrow()
 
     const [{ from, to, gas, value, nonce, data, gasPrice, maxFeePerGas, maxPriorityFeePerGas }] = (request as RpcRequestPreinit<[{
@@ -763,7 +763,7 @@ export class Global {
     const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, from))
     const walletId = Option.wrap(maybeWallet?.uuid).getOrThrow()
 
-    const chainId = ZeroHexAsInteger.fromOrThrow(ethereum.chain.chainId)
+    const chainId = ZeroHexAsInteger.fromOrThrow(context.chain.chainId)
 
     const hash = await this.requestOrThrow<string>({
       id: randomUUID(),
@@ -776,7 +776,7 @@ export class Global {
     return hash
   }
 
-  async personal_sign(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<string> {
+  async personal_sign(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<string> {
     const user = Option.wrap(this.#user).getOrThrow()
 
     const [message, address] = (request as RpcRequestPreinit<[string, string]>).params
@@ -793,7 +793,7 @@ export class Global {
     const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, address))
     const walletId = Option.wrap(maybeWallet?.uuid).getOrThrow()
 
-    const chainId = ZeroHexAsInteger.fromOrThrow(ethereum.chain.chainId)
+    const chainId = ZeroHexAsInteger.fromOrThrow(context.chain.chainId)
 
     const signature = await this.requestOrThrow<string>({
       id: randomUUID(),
@@ -806,7 +806,7 @@ export class Global {
     return signature
   }
 
-  async eth_signTypedData_v4(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<string> {
+  async eth_signTypedData_v4(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse?: Mouse): Promise<string> {
     const user = Option.wrap(this.#user).getOrThrow()
 
     const [address, data] = (request as RpcRequestPreinit<[string, string]>).params
@@ -823,7 +823,7 @@ export class Global {
     const maybeWallet = wallets.find(wallet => Strings.equalsIgnoreCase(wallet.address, address))
     const walletId = Option.wrap(maybeWallet?.uuid).getOrThrow()
 
-    const chainId = ZeroHexAsInteger.fromOrThrow(ethereum.chain.chainId)
+    const chainId = ZeroHexAsInteger.fromOrThrow(context.chain.chainId)
 
     const signature = await this.requestOrThrow<string>({
       id: randomUUID(),
@@ -836,7 +836,7 @@ export class Global {
     return signature
   }
 
-  async wallet_switchEthereumChain(ethereum: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<void> {
+  async wallet_switchEthereumChain(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>, mouse: Mouse): Promise<void> {
     const user = Option.wrap(this.#user).getOrThrow()
 
     const [{ chainId }] = (request as RpcRequestPreinit<[{ chainId: string }]>).params
@@ -1181,13 +1181,13 @@ export class Global {
     return await BgEthereumContext.fetchOrFail<unknown>(context, subrequest).then(r => r.getOrThrow())
   }
 
-  async routeCustomOrThrow(ethereum: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: QueryStorage): Promise<SimpleQuery<any, any, Error>> {
+  async routeCustomOrThrow(context: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: QueryStorage): Promise<SimpleQuery<any, any, Error>> {
     if (request.method === BgEns.Lookup.method)
-      return await BgEns.Lookup.parseOrThrow(ethereum, request, storage)
+      return await BgEns.Lookup.parseOrThrow(context, request, storage)
     if (request.method === BgEns.Reverse.method)
-      return await BgEns.Reverse.parseOrThrow(ethereum, request, storage)
+      return await BgEns.Reverse.parseOrThrow(context, request, storage)
     if (request.method === BgSimulation.method)
-      return await BgSimulation.parseOrThrow(ethereum, request, storage)
+      return await BgSimulation.parseOrThrow(context, request, storage)
 
     throw new Error(`Unknown fetcher`)
   }
@@ -1200,9 +1200,9 @@ export class Global {
     const chain = Option.wrap(chainDataByChainId[chainId]).getOrThrow()
     const brume = await user.getOrTakeEthBrumeOrThrow(uuid)
 
-    const ethereum: BgEthereumContext = { chain, brume }
+    const context: BgEthereumContext = { chain, brume }
 
-    const query = await this.routeCustomOrThrow(ethereum, subrequest, user.storage)
+    const query = await this.routeCustomOrThrow(context, subrequest, user.storage)
 
     try { await query.fetch() } catch { }
 
@@ -1305,14 +1305,14 @@ export class Global {
 
       const brume = await user.getOrTakeEthBrumeOrThrow(firstWalletRef.uuid)
 
-      const ethereum: BgEthereumContext = { chain: chainData, brume }
+      const context: BgEthereumContext = { chain: chainData, brume }
 
       if (request.method === "eth_sendTransaction")
-        return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
+        return new Some(await this.eth_sendTransaction(context, sessionData, request))
       if (request.method === "personal_sign")
-        return new Some(await this.personal_sign(ethereum, sessionData, request))
+        return new Some(await this.personal_sign(context, sessionData, request))
       if (request.method === "eth_signTypedData_v4")
-        return new Some(await this.eth_signTypedData_v4(ethereum, sessionData, request))
+        return new Some(await this.eth_signTypedData_v4(context, sessionData, request))
       return new None()
     }
 
@@ -1400,14 +1400,14 @@ export class Global {
       const chain = Option.wrap(chainDataByChainId[Number(chainId.split(":")[1])]).getOrThrow()
       const brume = await user.getOrTakeEthBrumeOrThrow(walletData.uuid)
 
-      const ethereum: BgEthereumContext = { chain, brume }
+      const context: BgEthereumContext = { chain, brume }
 
       if (request.method === "eth_sendTransaction")
-        return new Some(await this.eth_sendTransaction(ethereum, sessionData, request))
+        return new Some(await this.eth_sendTransaction(context, sessionData, request))
       if (request.method === "personal_sign")
-        return new Some(await this.personal_sign(ethereum, sessionData, request))
+        return new Some(await this.personal_sign(context, sessionData, request))
       if (request.method === "eth_signTypedData_v4")
-        return new Some(await this.eth_signTypedData_v4(ethereum, sessionData, request))
+        return new Some(await this.eth_signTypedData_v4(context, sessionData, request))
       return new None()
     }
 
