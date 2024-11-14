@@ -5,7 +5,7 @@ import { Data, Fail, createQuery, useError, useFetch, useQuery, useVisible } fro
 import { Nullable } from "@hazae41/option";
 import { Catched } from "@hazae41/result";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
-import { FgEthereumContext, fetchOrFail } from "../wallets/data";
+import { FgEthereumContext } from "../wallets/data";
 
 export namespace FgSignature {
 
@@ -28,7 +28,7 @@ export namespace FgSignature {
 
     const fetcher = async (request: K) => {
       try {
-        const fetched = await fetchOrFail<ZeroHexString>(request, context)
+        const fetched = await context.fetchOrFail<ZeroHexString>(request)
 
         if (fetched.isErr())
           return fetched

@@ -9,7 +9,7 @@ import { Catched, Result } from "@hazae41/result"
 import { BgEthereumContext } from "../../context"
 import { BgTotal } from "../unknown/data"
 import { EthereumQueryKey } from "../wallets/data"
-import { BgPair } from "./pairs/data"
+import { BgPairV2 } from "./pairs/data"
 
 export type Token =
   | TokenData
@@ -217,7 +217,7 @@ export namespace BgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainDataByChainId[pair.chainId]
 
-              const price = BgPair.Price.schema({ ...context, chain }, pair, block, storage)
+              const price = BgPairV2.Price.schema({ ...context, chain }, pair, block, storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)
@@ -361,7 +361,7 @@ export namespace BgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainDataByChainId[pair.chainId]
 
-              const price = BgPair.Price.schema({ ...context, chain }, pair, block, storage)
+              const price = BgPairV2.Price.schema({ ...context, chain }, pair, block, storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)

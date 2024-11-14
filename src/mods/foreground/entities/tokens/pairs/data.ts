@@ -1,23 +1,25 @@
 import { Errors } from "@/libs/errors/errors"
 import { PairData } from "@/libs/ethereum/mods/chain"
 import { UniswapV2 } from "@/libs/uniswap"
-import { BgPair } from "@/mods/background/service_worker/entities/tokens/pairs/data"
+import { BgPairV2 } from "@/mods/background/service_worker/entities/tokens/pairs/data"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
 import { Abi, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, FetcherMore, createQuery, useError, useFetch, useQuery, useVisible } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
-import { FgEthereumContext, fetchOrFail } from "../../wallets/data"
+import { FgEthereumContext } from "../../wallets/data"
 
-export namespace FgPair {
+
+
+export namespace FgPairV2 {
 
   export namespace Price {
 
-    export type K = BgPair.Price.K
-    export type D = BgPair.Price.D
-    export type F = BgPair.Price.F
+    export type K = BgPairV2.Price.K
+    export type D = BgPairV2.Price.D
+    export type F = BgPairV2.Price.F
 
-    export const key = BgPair.Price.key
+    export const key = BgPairV2.Price.key
 
     export function schema(pair: Nullable<PairData>, block: Nullable<string>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
       if (context == null)
@@ -34,7 +36,7 @@ export namespace FgPair {
 
       const fetcher = async (request: K, more: FetcherMore = {}) => {
         try {
-          const fetched = await fetchOrFail<ZeroHexString>(request, context)
+          const fetched = await context.fetchOrFail<ZeroHexString>(request)
 
           if (fetched.isErr())
             return fetched
@@ -61,9 +63,9 @@ export namespace FgPair {
 
 }
 
-export function usePairPrice(pair: Nullable<PairData>, block: Nullable<string>, context: Nullable<FgEthereumContext>,) {
+export function usePairV2Price(pair: Nullable<PairData>, block: Nullable<string>, context: Nullable<FgEthereumContext>,) {
   const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgPair.Price.schema, [pair, block, context, storage])
+  const query = useQuery(FgPairV2.Price.schema, [pair, block, context, storage])
   useFetch(query)
   useVisible(query)
 

@@ -10,8 +10,8 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 import { FgTotal } from "../unknown/data"
-import { FgEthereumContext, fetchOrFail } from "../wallets/data"
-import { FgPair } from "./pairs/data"
+import { FgEthereumContext } from "../wallets/data"
+import { FgPairV2 } from "./pairs/data"
 
 export namespace FgToken {
 
@@ -104,7 +104,7 @@ export namespace FgToken {
 
         const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) => {
           try {
-            const fetched = await fetchOrFail<ZeroHexString>(request, context)
+            const fetched = await context.fetchOrFail<ZeroHexString>(request)
 
             if (fetched.isErr())
               return fetched
@@ -133,7 +133,7 @@ export namespace FgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainDataByChainId[pair.chainId]
 
-              const price = FgPair.Price.schema(pair, block, { ...context, chain }, storage)
+              const price = FgPairV2.Price.schema(pair, block, context.switch(chain), storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)
@@ -233,7 +233,7 @@ export namespace FgToken {
 
         const fetcher = async (request: K, more: FetcherMore = {}) => {
           try {
-            const fetched = await fetchOrFail<ZeroHexString>(request, context)
+            const fetched = await context.fetchOrFail<ZeroHexString>(request)
 
             if (fetched.isErr())
               return fetched
@@ -262,7 +262,7 @@ export namespace FgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainDataByChainId[pair.chainId]
 
-              const price = FgPair.Price.schema(pair, block, { ...context, chain }, storage)
+              const price = FgPairV2.Price.schema(pair, block, context.switch(chain), storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)

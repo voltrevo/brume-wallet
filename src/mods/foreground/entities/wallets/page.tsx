@@ -34,7 +34,7 @@ import { useBackgroundContext } from "../../background/context";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
-import { usePairPrice } from "../tokens/pairs/data";
+import { usePairV2Price } from "../tokens/pairs/data";
 import { SmallShrinkableContrastButton } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
@@ -718,7 +718,7 @@ export function PriceResolver(props: { index: number } & { address: string } & O
 
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
-  const { data } = usePairPrice(pairData, "pending", context)
+  const { data } = usePairV2Price(pairData, "pending", context)
 
   useEffect(() => {
     ok([index, data?.inner])

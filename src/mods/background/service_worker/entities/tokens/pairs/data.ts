@@ -1,6 +1,6 @@
 import { PairAbiV2, PairAbiV3 } from "@/libs/abi/pair.abi"
-import { PairData, tokenByAddress } from "@/libs/ethereum/mods/chain"
-import { UniswapV2 } from "@/libs/uniswap"
+import { PairData } from "@/libs/ethereum/mods/chain"
+import { UniswapV2, UniswapV3 } from "@/libs/uniswap"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fetched, FetcherMore, QueryStorage, States, createQuery } from "@hazae41/glacier"
 import { Option, Some } from "@hazae41/option"
@@ -34,15 +34,7 @@ export namespace BgPairV3 {
         if (sqrtPriceX96.isErr())
           return sqrtPriceX96
 
-        const decimals0 = tokenByAddress[pair.token0].decimals
-        const decimals1 = tokenByAddress[pair.token1].decimals
-
-        const sqrtPriceX96BigInt = Fixed.from(sqrtPriceX96.get()).value
-
-        const priceBigInt = (sqrtPriceX96BigInt / (2n ** 96n)) ** 2n
-        const ratioBigInt = (10n ** BigInt(decimals1)) / (10n ** BigInt(decimals0))
-
-        return new Data(new Fixed(priceBigInt / ratioBigInt, decimals1), sqrtPriceX96)
+        return new Data(UniswapV3.computeOrThrow(pair, sqrtPriceX96.get()), sqrtPriceX96)
       })
 
       return createQuery<K, D, F>({
@@ -91,17 +83,9 @@ export namespace BgPairV3 {
           if (maybeCurrentData == null)
             return new Some(undefined)
 
-          const sqrtPriceX96 = maybeCurrentData
+          const price = UniswapV3.computeOrThrow(pair, maybeCurrentData.get())
 
-          const decimals0 = tokenByAddress[pair.token0].decimals
-          const decimals1 = tokenByAddress[pair.token1].decimals
-
-          const sqrtPriceX96BigInt = Fixed.from(sqrtPriceX96.get()).value
-
-          const priceBigInt = (sqrtPriceX96BigInt / (2n ** 96n)) ** 2n
-          const ratioBigInt = (10n ** BigInt(decimals1)) / (10n ** BigInt(decimals0))
-
-          return new Some(new Data(new Fixed(priceBigInt / ratioBigInt, decimals1), sqrtPriceX96))
+          return new Some(new Data(price, maybeCurrentData))
         })
       }
 
@@ -173,7 +157,7 @@ export namespace BgPairV3 {
   }
 }
 
-export namespace BgPair {
+export namespace BgPairV2 {
 
   export namespace Price {
 

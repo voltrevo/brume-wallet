@@ -6,7 +6,7 @@ import { Data, States, createQuery, useError, useQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Some } from "@hazae41/option"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
-import { FgEthereumContext, fetchOrFail } from "../wallets/data"
+import { FgEthereumContext } from "../wallets/data"
 
 export namespace FgTransaction {
 
@@ -194,7 +194,7 @@ export namespace FgTransactionReceipt {
       return
 
     const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-      await fetchOrFail<D>(request, context)
+      await context.fetchOrFail<D>(request)
 
     const indexer = async (states: States<D, F>) => {
       const { current, previous } = states

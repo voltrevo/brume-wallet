@@ -8,7 +8,7 @@ import { Data, FetcherMore, States, createQuery, useError, useFetch, useInterval
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { None, Nullable, Some } from "@hazae41/option";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
-import { FgEthereumContext, fetchOrFail } from "../wallets/data";
+import { FgEthereumContext } from "../wallets/data";
 
 export namespace FgEthereum {
 
@@ -27,7 +27,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await fetchOrFail<T>(request, context)
+        await context.fetchOrFail<T>(request)
 
       return createQuery<K, T, F>({
         key: key(context.chain.chainId, request),
@@ -60,7 +60,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
+        await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
 
       return createQuery<K, D, F>({
         key: key(request, context),
@@ -92,7 +92,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
+        await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
 
       return createQuery<K, D, F>({
         key: key(context.chain),
@@ -124,7 +124,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
+        await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
 
       return createQuery<K, D, Error>({
         key: key(context.chain),
@@ -157,7 +157,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
-        await fetchOrFail<ZeroHexString>(request, context).then(r => r.mapSync(BigInt))
+        await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
 
       return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
         key: key(address, context.chain),

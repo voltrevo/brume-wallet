@@ -6,7 +6,7 @@ import { createQuery, useError, useFetch, useInterval, useQuery, useVisible } fr
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
-import { FgEthereumContext, fetchOrFail } from "../wallets/data"
+import { FgEthereumContext } from "../wallets/data"
 
 export interface BlockData {
   readonly baseFeePerGas?: ZeroHexString
@@ -36,7 +36,7 @@ export namespace FgBlock {
         return
 
       const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-        await fetchOrFail<BlockData>(request, context)
+        await context.fetchOrFail<BlockData>(request)
 
       return createQuery<K, D, F>({
         key: key(context.chain, number),

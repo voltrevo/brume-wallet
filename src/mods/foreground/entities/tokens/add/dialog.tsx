@@ -17,6 +17,7 @@ import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from
 import { FgEthereum } from "../../unknown/data";
 import { SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "../../wallets/actions/send";
 import { useWalletDataContext } from "../../wallets/context";
+import { FgEthereumContext } from "../../wallets/data";
 import { useToken } from "../data";
 
 export function TokenAddDialog(props: {}) {
@@ -47,7 +48,7 @@ export function TokenAddDialog(props: {}) {
       throw new UIError(`Invalid address`)
 
     const name = await Result.runAndWrap(async () => {
-      const context = { uuid: wallet.uuid, background, chain }
+      const context = new FgEthereumContext(wallet.uuid, chain, background)
       const signature = Cubane.Abi.FunctionSignature.parseOrThrow("name()")
       const data = Cubane.Abi.encodeOrThrow(signature.fromOrThrow())
 
@@ -71,7 +72,7 @@ export function TokenAddDialog(props: {}) {
     }).then(r => r.getOrThrow())
 
     const symbol = await Result.runAndWrap(async () => {
-      const context = { uuid: wallet.uuid, background, chain }
+      const context = new FgEthereumContext(wallet.uuid, chain, background)
       const signature = Cubane.Abi.FunctionSignature.parseOrThrow("symbol()")
       const data = Cubane.Abi.encodeOrThrow(signature.fromOrThrow())
 
@@ -95,7 +96,7 @@ export function TokenAddDialog(props: {}) {
     }).then(r => r.getOrThrow())
 
     const decimals = await Result.runAndWrap(async () => {
-      const context = { uuid: wallet.uuid, background, chain }
+      const context = new FgEthereumContext(wallet.uuid, chain, background)
       const signature = Cubane.Abi.FunctionSignature.parseOrThrow("decimals()")
       const data = Cubane.Abi.encodeOrThrow(signature.fromOrThrow())
 

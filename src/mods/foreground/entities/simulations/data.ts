@@ -4,7 +4,7 @@ import { createQuery, useError, useFetch, useQuery } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable } from "@hazae41/option";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
-import { FgEthereumContext, customFetchOrFail } from "../wallets/data";
+import { FgEthereumContext } from "../wallets/data";
 
 export namespace FgSimulation {
 
@@ -23,7 +23,7 @@ export namespace FgSimulation {
       return
 
     const fetcher = async (request: RpcRequestPreinit<unknown>) =>
-      await customFetchOrFail<SimulationData>(request, context)
+      await context.customFetchOrFail<SimulationData>(request)
 
     return createQuery<K, D, F>({
       key: key(context.chain.chainId, tx, block),
