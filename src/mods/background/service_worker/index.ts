@@ -629,7 +629,7 @@ export class Global {
     const chain = session.chain
     const brume = await user.getOrTakeEthBrumeOrThrow(wallet.uuid)
 
-    const context: BgEthereumContext = { chain: chain, brume }
+    const context = new BgEthereumContext(wallet.uuid, chain, brume)
 
     if (subrequest.method === "eth_requestAccounts")
       return await this.eth_requestAccounts(context, session, subrequest)
@@ -654,7 +654,7 @@ export class Global {
     if (subrequest.method === "wallet_switchEthereumChain")
       return await this.wallet_switchEthereumChain(context, session, subrequest, mouse)
 
-    return await BgEthereumContext.fetchOrFail(context, { ...subrequest, noCheck: true }).then(r => r.getOrThrow())
+    return await context.fetchOrFail({ ...subrequest, noCheck: true }).then(r => r.getOrThrow())
   }
 
   async eth_requestAccounts(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<string[]> {
@@ -1176,9 +1176,9 @@ export class Global {
     const chain = Option.wrap(chainDataByChainId[chainId]).getOrThrow()
     const brume = await user.getOrTakeEthBrumeOrThrow(uuid)
 
-    const context: BgEthereumContext = { chain, brume }
+    const context = new BgEthereumContext(uuid, chain, brume)
 
-    return await BgEthereumContext.fetchOrFail<unknown>(context, subrequest).then(r => r.getOrThrow())
+    return await context.fetchOrFail<unknown>(subrequest).then(r => r.getOrThrow())
   }
 
   async routeCustomOrThrow(context: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: QueryStorage): Promise<SimpleQuery<any, any, Error>> {
@@ -1200,7 +1200,7 @@ export class Global {
     const chain = Option.wrap(chainDataByChainId[chainId]).getOrThrow()
     const brume = await user.getOrTakeEthBrumeOrThrow(uuid)
 
-    const context: BgEthereumContext = { chain, brume }
+    const context = new BgEthereumContext(uuid, chain, brume)
 
     const query = await this.routeCustomOrThrow(context, subrequest, user.storage)
 
@@ -1301,11 +1301,10 @@ export class Global {
         return
       const { chainId, request } = (suprequest as RpcRequestInit<WcSessionRequestParams>).params
 
-      const chainData = Option.wrap(chainDataByChainId[Number(chainId.split(":")[1])]).getOrThrow()
-
+      const chain = Option.wrap(chainDataByChainId[Number(chainId.split(":")[1])]).getOrThrow()
       const brume = await user.getOrTakeEthBrumeOrThrow(firstWalletRef.uuid)
 
-      const context: BgEthereumContext = { chain: chainData, brume }
+      const context = new BgEthereumContext(firstWalletRef.uuid, chain, brume)
 
       if (request.method === "eth_sendTransaction")
         return new Some(await this.eth_sendTransaction(context, sessionData, request))
@@ -1400,7 +1399,7 @@ export class Global {
       const chain = Option.wrap(chainDataByChainId[Number(chainId.split(":")[1])]).getOrThrow()
       const brume = await user.getOrTakeEthBrumeOrThrow(walletData.uuid)
 
-      const context: BgEthereumContext = { chain, brume }
+      const context = new BgEthereumContext(walletData.uuid, chain, brume)
 
       if (request.method === "eth_sendTransaction")
         return new Some(await this.eth_sendTransaction(context, sessionData, request))

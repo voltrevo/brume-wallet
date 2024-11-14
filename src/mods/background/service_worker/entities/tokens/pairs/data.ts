@@ -119,7 +119,7 @@ export namespace BgPairV3 {
 
     export function queryOrThrow(context: BgEthereumContext, pair: PairData, block: string, storage: QueryStorage) {
       const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more)
+        const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
 
         if (fetched.isErr())
           return fetched
@@ -183,7 +183,7 @@ export namespace BgPairV2 {
         return
 
       const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more)
+        const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
 
         if (fetched.isErr())
           return fetched

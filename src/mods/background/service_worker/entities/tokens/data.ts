@@ -188,7 +188,7 @@ export namespace BgToken {
       export function schema(account: ZeroHexString, block: string, context: BgEthereumContext, storage: QueryStorage) {
         const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore) => {
           try {
-            const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more)
+            const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
 
             if (fetched.isErr())
               return fetched
@@ -217,7 +217,7 @@ export namespace BgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainDataByChainId[pair.chainId]
 
-              const price = BgPairV2.Price.schema({ ...context, chain }, pair, block, storage)
+              const price = BgPairV2.Price.schema(context.switch(chain), pair, block, storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)
@@ -332,7 +332,7 @@ export namespace BgToken {
 
         const fetcher = async (request: K, more: FetcherMore) => {
           try {
-            const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request, more)
+            const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
 
             if (fetched.isErr())
               return fetched
@@ -361,7 +361,7 @@ export namespace BgToken {
               const pair = pairByAddress[pairAddress]
               const chain = chainDataByChainId[pair.chainId]
 
-              const price = BgPairV2.Price.schema({ ...context, chain }, pair, block, storage)
+              const price = BgPairV2.Price.schema(context.switch(chain), pair, block, storage)
               const priceState = await price?.state
 
               if (priceState?.data == null)

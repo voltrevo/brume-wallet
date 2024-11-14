@@ -4,7 +4,7 @@ import { SeedQuery } from "@/mods/universal/entities/seeds/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fetched, States, createQuery, useQuery } from "@hazae41/glacier"
+import { Data, Fetched, FetcherMore, States, createQuery, useQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Panic } from "@hazae41/result"
@@ -440,21 +440,21 @@ export class FgEthereumContext {
     return new FgEthereumContext(uuid, chain, background)
   }
 
-  async fetchOrFail<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams): Promise<Fetched<T, Error>> {
+  async fetchOrFail<T>(init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}): Promise<Fetched<T, Error>> {
     const { uuid, background, chain } = this
 
     return await background.requestOrThrow<T>({
       method: "brume_eth_fetch",
-      params: [uuid, chain.chainId, request]
+      params: [uuid, chain.chainId, init]
     }).then(r => Fetched.rewrap(r))
   }
 
-  async customFetchOrFail<T>(request: RpcRequestPreinit<unknown> & EthereumFetchParams): Promise<Fetched<T, Error>> {
+  async customFetchOrFail<T>(init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}): Promise<Fetched<T, Error>> {
     const { uuid, background, chain } = this
 
     return await background.requestOrThrow<T>({
       method: "brume_eth_custom_fetch",
-      params: [uuid, chain.chainId, request]
+      params: [uuid, chain.chainId, init]
     }).then(r => Fetched.rewrap(r))
   }
 

@@ -31,7 +31,7 @@ export namespace BgSignature {
 
     const fetcher = async (request: K, more: FetcherMore) => {
       try {
-        const fetched = await BgEthereumContext.fetchOrFail<ZeroHexString>(context, request)
+        const fetched = await context.fetchOrFail<ZeroHexString>(request)
 
         if (fetched.isErr())
           return fetched

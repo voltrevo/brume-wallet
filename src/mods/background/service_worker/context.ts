@@ -9,22 +9,28 @@ import { Catched } from "@hazae41/result"
 import { EthBrume } from "./entities/brumes/data"
 import { EthereumFetchParams } from "./entities/wallets/data"
 
-export interface BgEthereumContext {
-  readonly chain: ChainData
-  readonly brume: EthBrume
-}
+export class BgEthereumContext {
 
-export namespace BgEthereumContext {
+  constructor(
+    readonly uuid: string,
+    readonly chain: ChainData,
+    readonly brume: EthBrume
+  ) { }
 
-  export async function fetchOrFail<T>(context: BgEthereumContext, init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}) {
+  switch(chain: ChainData) {
+    const { uuid, brume } = this
+
+    return new BgEthereumContext(uuid, chain, brume)
+  }
+
+  async fetchOrFail<T>(init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}) {
     try {
       const { signal: parentSignal = new AbortController().signal } = more
-      const { brume } = context
 
-      const circuits = Option.wrap(brume.ethereum[context.chain.chainId]).getOrThrow()
+      const circuits = Option.wrap(this.brume.ethereum[this.chain.chainId]).getOrThrow()
       const circuit = await circuits.get().getCryptoRandomOrThrow(parentSignal)
 
-      async function runWithTargetOrThrow(index: number) {
+      const runWithTargetOrThrow = async (index: number) => {
         const target = await circuit.get().getOrThrow(index, parentSignal)
 
         const { counter, connection } = target
@@ -37,10 +43,10 @@ export namespace BgEthereumContext {
           const response = await TorRpc.fetchWithCircuitOrThrow<T>(url, { ...request, circuit, signal })
 
           if (response.isOk())
-            console.debug(`Fetched ${request.method} on ${context.chain.name}`, response)
+            console.debug(`Fetched ${request.method} on ${this.chain.name}`, response)
 
           if (response.isErr())
-            console.debug(`Failed to fetch ${request.method} on ${context.chain.name}`, response)
+            console.debug(`Failed to fetch ${request.method} on ${this.chain.name}`, response)
 
           return Fetched.rewrap(response)
         }
@@ -54,10 +60,10 @@ export namespace BgEthereumContext {
           const response = await TorRpc.fetchWithSocketOrThrow<T>(socket, request, signal)
 
           if (response.isOk())
-            console.debug(`Fetched ${request.method} on ${context.chain.name}`, response)
+            console.debug(`Fetched ${request.method} on ${this.chain.name}`, response)
 
           if (response.isErr())
-            console.debug(`Failed to fetch ${request.method} on ${context.chain.name}`, response)
+            console.debug(`Failed to fetch ${request.method} on ${this.chain.name}`, response)
 
           return Fetched.rewrap(response)
         }
@@ -92,7 +98,7 @@ export namespace BgEthereumContext {
       if (counters.size < 2)
         return await Promise.any(promises)
 
-      console.warn(`Different results from multiple connections for ${init.method} on ${context.chain.name}`, { fetcheds })
+      console.warn(`Different results from multiple connections for ${init.method} on ${this.chain.name}`, { fetcheds })
 
       /**
        * Sort truths by occurence
@@ -103,7 +109,7 @@ export namespace BgEthereumContext {
        * Two concurrent truths
        */
       if (sorteds[0].value === sorteds[1].value) {
-        console.warn(`Could not choose truth for ${init.method} on ${context.chain.name}`)
+        console.warn(`Could not choose truth for ${init.method} on ${this.chain.name}`)
         const random = Math.round(Math.random())
         return fetcheds.get(sorteds[random].key)!
       }
@@ -115,4 +121,3 @@ export namespace BgEthereumContext {
   }
 
 }
-
