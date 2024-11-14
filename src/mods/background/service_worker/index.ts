@@ -187,7 +187,7 @@ export class Global {
 
     const { storage, hasher, crypter } = await createUserStorageOrThrow(userData, password)
 
-    const currentUserQuery = BgUser.Current.schema(storage)
+    const currentUserQuery = BgUser.Current.schema()
     await currentUserQuery.mutate(() => new Some(new Data(user)))
 
     const userSession = UserSession.create(this, { user, storage, hasher, crypter })

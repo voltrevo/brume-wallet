@@ -29,7 +29,10 @@ export namespace FgUser {
     export const key = BgUser.Current.key
 
     export function schema(storage: QueryStorage) {
-      return createQuery<K, D, F>({ key, storage })
+      const getOrThrow = (cacheKey: string) => storage.getOrThrow(cacheKey)
+      const setOrThrow = () => { }
+
+      return createQuery<K, D, F>({ key, storage: { getOrThrow, setOrThrow } })
     }
 
   }

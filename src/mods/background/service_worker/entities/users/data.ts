@@ -75,10 +75,10 @@ export namespace BgUser {
     export type D = User
     export type F = never
 
-    export const key = `user`
+    export const key = `user/current`
 
-    export function schema(storage: QueryStorage) {
-      return createQuery<K, D, F>({ key, storage })
+    export function schema() {
+      return createQuery<K, D, F>({ key })
     }
 
   }

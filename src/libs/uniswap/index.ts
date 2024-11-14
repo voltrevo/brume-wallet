@@ -28,10 +28,15 @@ export namespace UniswapV3 {
 
     const sqrtPriceX96BigInt = Fixed.from(sqrtPriceX96).value
 
-    const priceBigInt = (sqrtPriceX96BigInt / (2n ** 96n)) ** 2n
-    const ratioBigInt = (10n ** BigInt(decimals1)) / (10n ** BigInt(decimals0))
+    const priceX96BigInt = sqrtPriceX96BigInt ** 2n
 
-    return new Fixed(priceBigInt / ratioBigInt, decimals1)
+    const a = new Fixed(priceX96BigInt, decimals1)
+    const b = new Fixed(((2n ** 96n) ** 2n), decimals0)
+
+    if (pair.reversed)
+      return a.div(b)
+
+    return b.div(a)
   }
 
 }

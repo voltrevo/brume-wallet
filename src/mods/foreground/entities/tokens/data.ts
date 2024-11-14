@@ -142,6 +142,7 @@ export namespace FgToken {
                   return new None()
 
                 pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+                continue
               }
 
               if (pairData.version === 3) {
@@ -152,6 +153,7 @@ export namespace FgToken {
                   return new None()
 
                 pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+                continue
               }
 
               return new None()
@@ -285,6 +287,7 @@ export namespace FgToken {
                   return new None()
 
                 pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+                continue
               }
 
               if (pairData.version === 3) {
@@ -295,7 +298,10 @@ export namespace FgToken {
                   return new None()
 
                 pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+                continue
               }
+
+              return new None()
             }
 
             return new Some(new Data(pricedBalance))

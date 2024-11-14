@@ -226,6 +226,7 @@ export namespace BgToken {
                   return new None()
 
                 pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+                continue
               }
 
               if (pairData.version === 3) {
@@ -236,6 +237,7 @@ export namespace BgToken {
                   return new None()
 
                 pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+                continue
               }
 
               return new None()
@@ -384,6 +386,7 @@ export namespace BgToken {
                   return new None()
 
                 pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+                continue
               }
 
               if (pairData.version === 3) {
@@ -394,6 +397,7 @@ export namespace BgToken {
                   return new None()
 
                 pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
+                continue
               }
 
               return new None()

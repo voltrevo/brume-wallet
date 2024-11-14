@@ -554,6 +554,16 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     decimals: 18,
     address: "0x64dEFa3544c695db8c535D289d843a189aa26b98",
     pairs: []
+  },
+  "0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5": {
+    uuid: "7b8dab18-e96b-41aa-b9d8-0ba39d2f96a6",
+    type: "contract",
+    name: "Brume",
+    chainId: 1,
+    symbol: "BRUME",
+    decimals: 18,
+    address: "0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5",
+    pairs: ["0xF938596B738E058F2c70E93F9a0436f1B20aC495", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
   }
 } as const
 
@@ -655,5 +665,13 @@ export const pairByAddress: Record<string, PairData> = {
     address: "0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422",
     token0: "0x471EcE3750Da237f93B8E339c536989b8978a438",
     token1: "0x64dEFa3544c695db8c535D289d843a189aa26b98"
+  },
+  "0xF938596B738E058F2c70E93F9a0436f1B20aC495": {
+    chainId: 1,
+    version: 3,
+    name: "BRUME_WETH",
+    address: "0xF938596B738E058F2c70E93F9a0436f1B20aC495",
+    token0: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    token1: "0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5",
   }
 } as const

@@ -734,6 +734,8 @@ export function PairV2PriceResolver(props: { index: number } & { address: string
 
   const { data } = usePairV2Price(context, pairData, "pending")
 
+  console.log("pairv2", pairData, data)
+
   useEffect(() => {
     ok([index, data?.get()])
   }, [index, data, ok])
@@ -751,6 +753,8 @@ export function PairV3PriceResolver(props: { index: number } & { address: string
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
   const { data } = usePairV3Price(context, pairData, "pending")
+
+  console.log("pairv3", pairData, data)
 
   useEffect(() => {
     ok([index, data?.get()])
