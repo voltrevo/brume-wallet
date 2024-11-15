@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Color } from "@/libs/colors/colors";
 import { Errors, UIError } from "@/libs/errors/errors";
-import { ChainData, chainDataByChainId, pairByAddress, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { ChainData, chainDataByChainId, pairByAddress, SimplePairDataV3, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Mutators } from "@/libs/glacier/mutators";
 import { Outline, Solid } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
@@ -40,7 +40,7 @@ import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
 import { PaddedRoundedShrinkableNakedAnchor, WalletSendScreen, WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "./actions/send";
 import { RawWalletDataCard } from "./card";
-import { WalletDataProvider, useWalletDataContext } from "./context";
+import { useWalletDataContext, WalletDataProvider } from "./context";
 import { EthereumWalletInstance, useEthereumContext, useWallet } from "./data";
 import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
 
@@ -747,7 +747,7 @@ export function PairV3PriceResolver(props: { index: number } & { address: string
   const wallet = useWalletDataContext().getOrThrow()
   const { ok, index, address } = props
 
-  const pairData = pairByAddress[address]
+  const pairData = pairByAddress[address] as SimplePairDataV3
   const chainData = chainDataByChainId[pairData.chainId]
 
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()

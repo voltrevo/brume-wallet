@@ -7,7 +7,7 @@ import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/us
 import { PairV2 } from "@/mods/universal/entities/pairs/v2"
 import { PairV3 } from "@/mods/universal/entities/pairs/v3"
 import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fail, FetcherMore, States, core, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
+import { core, createQuery, Data, Fail, FetcherMore, States, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 import { FgTotal } from "../unknown/data"
