@@ -2,7 +2,6 @@ import { FactoryAbiV3, PairAbiV3 } from "@/libs/abi/pair.abi"
 import { SimpleContractTokenData, SimplePairDataV3 } from "@/libs/ethereum/mods/chain"
 import { Records } from "@/libs/records"
 import { UniswapV3 } from "@/libs/uniswap"
-import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data"
 import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, Fetched, FetcherMore, QueryStorage, States } from "@hazae41/glacier"
@@ -21,13 +20,27 @@ export namespace FactoryV3 {
   export const wethByChainId = {
     1: {
       type: "contract",
-      uuid: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-      chainId: 1,
-      name: "Wrapped Ether",
-      symbol: "WETH",
       decimals: 18,
       address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-    } satisfies ContractTokenData
+    } satisfies SimpleContractTokenData
+  }
+
+  export const usdcByChainId = {
+    1: {
+      type: "contract",
+      address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      decimals: 6,
+    } satisfies SimpleContractTokenData
+  }
+
+  export const usdcWethPoolByChainId = {
+    1: {
+      version: 3,
+      address: "0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640",
+      chainId: 1,
+      token0: usdcByChainId[1],
+      token1: wethByChainId[1],
+    } satisfies SimplePairDataV3
   }
 
   export namespace GetPool {

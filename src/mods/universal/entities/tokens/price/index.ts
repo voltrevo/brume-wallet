@@ -33,19 +33,30 @@ export namespace PriceV3 {
       return
 
     const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
-      const weth = Records.getOrThrow(FactoryV3.wethByChainId, context.chain.chainId)
-      const pair = await FactoryV3.GetPool.queryOrThrow(context, token, weth, 3000, block, storage)!.refetch().then(r => Option.wrap(r.real?.current).getOrThrow())
+      const wethData = Records.getOrThrow(FactoryV3.wethByChainId, context.chain.chainId)
+      const wethTokenPairFetched = await FactoryV3.GetPool.queryOrThrow(context, token, wethData, 3000, block, storage)!.fetch().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
-      if (pair.isErr())
-        return pair
+      if (wethTokenPairFetched.isErr())
+        return wethTokenPairFetched
 
-      const pairData: SimplePairDataV3 = { version: 3, address: pair.get(), chainId: context.chain.chainId, token0: token, token1: weth, reversed: false }
-      const price = await PairV3.Price.queryOrThrow(context, pairData, block, storage)!.refetch().then(r => Option.wrap(r.real?.current).getOrThrow())
+      const wethTokenPairData: SimplePairDataV3 = { version: 3, address: wethTokenPairFetched.get(), chainId: context.chain.chainId, token0: token, token1: wethData, reversed: false }
+      const wethTokenPriceFetched = await PairV3.Price.queryOrThrow(context, wethTokenPairData, block, storage)!.fetch().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
-      if (price.isErr())
-        return price
+      if (wethTokenPriceFetched.isErr())
+        return wethTokenPriceFetched
 
-      return new Data(price.get(), pair)
+      const usdcWethPairData = Records.getOrThrow(FactoryV3.usdcWethPoolByChainId, context.chain.chainId)
+      const usdcWethPriceFetched = await PairV3.Price.queryOrThrow(context, usdcWethPairData, block, storage)!.fetch().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+
+      if (usdcWethPriceFetched.isErr())
+        return usdcWethPriceFetched
+
+      const wethTokenPrice = Fixed.from(wethTokenPriceFetched.get())
+      const usdcWethPrice = Fixed.from(usdcWethPriceFetched.get())
+
+      const usdcTokenPrice = wethTokenPrice.mul(usdcWethPrice)
+
+      return new Data(usdcTokenPrice)
     })
 
     return createQuery<K, D, F>({

@@ -657,6 +657,51 @@ function ContractTokenMenu(props: { token: ContractTokenData }) {
   </div>
 }
 
+function MainnetContractTokenRow(props: { token: ContractTokenData } & { chain: ChainData }) {
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const { token, chain } = props
+
+  const subpath = useHashSubpath(path)
+  const menu = useCoords(subpath, `/token/${token.uuid}`)
+
+  const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
+
+  const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
+
+  const balanceQuery = useContractBalance(wallet.address, token, "pending", context, prices)
+  const balanceUsdQuery = useContractPricedBalance(wallet.address, token, "usd", context)
+
+  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
+    setPrices(prices => {
+      prices[index] = data
+      return [...prices]
+    })
+  }, [])
+
+  return <>
+    <HashSubpathProvider>
+      {subpath.url.pathname === `/token/${token.uuid}` &&
+        <Menu>
+          <ContractTokenMenu token={token} />
+        </Menu>}
+    </HashSubpathProvider>
+    {token.pairs?.map((address, i) =>
+      <PriceResolver key={i}
+        index={i}
+        address={address}
+        ok={onPrice} />)}
+    <ClickableTokenRow
+      href={menu.href}
+      onClick={menu.onClick}
+      onContextMenu={menu.onContextMenu}
+      token={token}
+      chain={chain}
+      balanceQuery={balanceQuery}
+      balanceUsdQuery={balanceUsdQuery} />
+  </>
+}
+
 function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainData }) {
   const path = usePathContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
