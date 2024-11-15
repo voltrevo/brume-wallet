@@ -8,7 +8,6 @@ import { PairV2 } from "@/mods/universal/entities/pairs/v2"
 import { PairV3 } from "@/mods/universal/entities/pairs/v3"
 import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
 import { Data, Fail, FetcherMore, States, core, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
-import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 import { FgTotal } from "../unknown/data"
@@ -103,7 +102,7 @@ export namespace FgToken {
         if (block == null)
           return
 
-        const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) => {
+        const fetcher = async (request: K, more: FetcherMore = {}) => {
           try {
             const fetched = await context.fetchOrFail<ZeroHexString>(request)
 

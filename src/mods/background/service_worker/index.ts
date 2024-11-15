@@ -66,7 +66,7 @@ import { Status, StatusData } from "./entities/sessions/status/data";
 import { BgSimulation } from "./entities/simulations/data";
 import { BgToken } from "./entities/tokens/data";
 import { BgUser, User, UserData, UserInit } from "./entities/users/data";
-import { BgWallet, EthereumFetchParams, EthereumQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data";
+import { BgWallet, EthereumChainlessQueryKey, Wallet, WalletData, WalletRef } from "./entities/wallets/data";
 import { createUserStorageOrThrow } from "./storage";
 
 declare const self: ServiceWorkerGlobalScope
@@ -1171,7 +1171,7 @@ export class Global {
   async brume_eth_fetch(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<unknown> {
     const user = Option.wrap(this.#user).getOrThrow()
 
-    const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown> & EthereumFetchParams]>).params
+    const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumChainlessQueryKey<unknown>]>).params
 
     const chain = Option.wrap(chainDataByChainId[chainId]).getOrThrow()
     const brume = await user.getOrTakeEthBrumeOrThrow(uuid)
@@ -1181,7 +1181,7 @@ export class Global {
     return await context.fetchOrFail<unknown>(subrequest).then(r => r.getOrThrow())
   }
 
-  async routeCustomOrThrow(context: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: QueryStorage): Promise<SimpleQuery<any, any, Error>> {
+  async routeCustomOrThrow(context: BgEthereumContext, request: EthereumChainlessQueryKey<unknown>, storage: QueryStorage): Promise<SimpleQuery<any, any, Error>> {
     if (request.method === BgEns.Lookup.method)
       return await BgEns.Lookup.parseOrThrow(context, request, storage)
     if (request.method === BgEns.Reverse.method)
@@ -1195,7 +1195,7 @@ export class Global {
   async brume_eth_custom_fetch(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<unknown> {
     const user = Option.wrap(this.#user).getOrThrow()
 
-    const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumQueryKey<unknown> & EthereumFetchParams]>).params
+    const [uuid, chainId, subrequest] = (request as RpcRequestPreinit<[string, number, EthereumChainlessQueryKey<unknown>]>).params
 
     const chain = Option.wrap(chainDataByChainId[chainId]).getOrThrow()
     const brume = await user.getOrTakeEthBrumeOrThrow(uuid)

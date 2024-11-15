@@ -9,7 +9,7 @@ import { RpcCounter, RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { NetworkWasm } from "@hazae41/network.wasm"
 import { Catched } from "@hazae41/result"
 import { BgEthereumContext } from "../../context"
-import { EthereumFetchParams, EthereumQueryKey } from "../wallets/data"
+import { EthereumChainlessQueryKey, EthereumQueryKey } from "../wallets/data"
 
 export interface SimulationData {
   readonly type: ZeroHexString
@@ -52,7 +52,7 @@ export interface LogInputData {
 
 export namespace BgSimulation {
 
-  export type K = EthereumQueryKey<unknown> & EthereumFetchParams
+  export type K = EthereumQueryKey<unknown>
   export type D = SimulationData
   export type F = Error
 
@@ -87,7 +87,7 @@ export namespace BgSimulation {
     return secretZeroHex
   }
 
-  export async function fetchOrFail<T>(context: BgEthereumContext, init: RpcRequestPreinit<unknown> & EthereumFetchParams, more: FetcherMore = {}) {
+  export async function fetchOrFail<T>(context: BgEthereumContext, init: EthereumChainlessQueryKey<unknown>, more: FetcherMore = {}) {
     try {
       const { signal: parentSignal = new AbortController().signal } = more
       const { brume } = context
@@ -170,7 +170,7 @@ export namespace BgSimulation {
   }
 
   export function schema(context: BgEthereumContext, tx: unknown, block: string, storage: QueryStorage) {
-    const fetcher = async (request: EthereumQueryKey<unknown> & EthereumFetchParams, more: FetcherMore) =>
+    const fetcher = async (request: K, more: FetcherMore) =>
       await fetchOrFail<SimulationData>(context, request, more).then(r => r.inspectErrSync(e => console.error({ e },)))
 
     return createQuery<K, D, F>({

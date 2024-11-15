@@ -7,6 +7,15 @@ import { createQuery, Data, Fetched, FetcherMore, QueryStorage, States } from "@
 import { Nullable, Option, Some } from "@hazae41/option"
 import { EthereumContext } from "../../../context/ethereum"
 
+export namespace FactoryV3 {
+
+  export namespace GetPool {
+
+
+  }
+
+}
+
 export namespace PairV3 {
 
   export namespace Price {

@@ -1,7 +1,6 @@
 import { Errors } from "@/libs/errors/errors";
 import { BgSimulation, SimulationData } from "@/mods/background/service_worker/entities/simulations/data";
 import { createQuery, useError, useFetch, useQuery } from "@hazae41/glacier";
-import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable } from "@hazae41/option";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
 import { FgEthereumContext } from "../wallets/data";
@@ -22,7 +21,7 @@ export namespace FgSimulation {
     if (block == null)
       return
 
-    const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+    const fetcher = async (request: K) =>
       await context.customFetchOrFail<SimulationData>(request)
 
     return createQuery<K, D, F>({

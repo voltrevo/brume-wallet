@@ -343,10 +343,10 @@ export namespace BgWallet {
 }
 
 export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
-  [key: string]: unknown
-  chainId: number
+  readonly chainId: number
+  readonly noCheck?: boolean
 }
 
-export interface EthereumFetchParams {
-  noCheck?: boolean
+export type EthereumChainlessQueryKey<T> = RpcRequestPreinit<T> & {
+  readonly noCheck?: boolean
 }

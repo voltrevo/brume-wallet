@@ -3,7 +3,6 @@ import { useWait } from "@/libs/glacier/hooks"
 import { BgTransaction, BgTransactionReceipt, BgTransactionTrial, TransactionRef } from "@/mods/background/service_worker/entities/transactions/data"
 import { ZeroHexString } from "@hazae41/cubane"
 import { Data, States, createQuery, useError, useQuery } from "@hazae41/glacier"
-import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Nullable, Some } from "@hazae41/option"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { FgEthereumContext } from "../wallets/data"
@@ -193,7 +192,7 @@ export namespace FgTransactionReceipt {
     if (hash == null)
       return
 
-    const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+    const fetcher = async (request: K) =>
       await context.fetchOrFail<D>(request)
 
     const indexer = async (states: States<D, F>) => {

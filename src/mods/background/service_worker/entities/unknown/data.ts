@@ -1,25 +1,23 @@
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, FetcherMore, QueryStorage, States, createQuery } from "@hazae41/glacier"
-import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
 import { BgEthereumContext } from "../../context"
-import { EthereumFetchParams, EthereumQueryKey } from "../wallets/data"
+import { EthereumChainlessQueryKey, EthereumQueryKey } from "../wallets/data"
 
 export namespace BgEthereum {
 
   export namespace Unknown {
 
-    export type K = EthereumQueryKey<unknown> & EthereumFetchParams
+    export type K = EthereumQueryKey<unknown>
     export type D = unknown
     export type F = Error
 
-    export function key(chainId: number, request: RpcRequestPreinit<unknown> & EthereumFetchParams) {
-      const { method, params, noCheck } = request
-      return { chainId, method, params, noCheck }
+    export function key(chainId: number, request: EthereumChainlessQueryKey<unknown>) {
+      return { ...request, chainId }
     }
 
-    export function schema(context: BgEthereumContext, request: RpcRequestPreinit<unknown> & EthereumFetchParams, storage: QueryStorage) {
-      const fetcher = async (request: EthereumQueryKey<unknown> & EthereumFetchParams, more: FetcherMore) =>
+    export function schema(context: BgEthereumContext, request: EthereumChainlessQueryKey<unknown>, storage: QueryStorage) {
+      const fetcher = async (request: K, more: FetcherMore) =>
         await context.fetchOrFail<unknown>(request, more)
 
       return createQuery<K, D, F>({

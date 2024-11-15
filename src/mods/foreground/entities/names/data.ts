@@ -2,7 +2,6 @@ import { Errors } from "@/libs/errors/errors"
 import { BgEns } from "@/mods/background/service_worker/entities/names/data"
 import { Address, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, useError, useFetch, useQuery, useVisible } from "@hazae41/glacier"
-import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { FgEthereumContext } from "../wallets/data"
@@ -23,7 +22,7 @@ export namespace FgEns {
       if (name == null)
         return
 
-      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+      const fetcher = async (request: K) =>
         await context.customFetchOrFail<Address>(request)
 
       return createQuery<K, D, F>({
@@ -49,7 +48,7 @@ export namespace FgEns {
       if (address == null)
         return
 
-      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+      const fetcher = async (request: K) =>
         await context.customFetchOrFail<ZeroHexString>(request)
 
       return createQuery<K, D, F>({

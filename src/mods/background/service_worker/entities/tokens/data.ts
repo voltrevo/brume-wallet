@@ -187,7 +187,7 @@ export namespace BgToken {
       }
 
       export function schema(account: ZeroHexString, block: string, context: BgEthereumContext, storage: QueryStorage) {
-        const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore) => {
+        const fetcher = async (request: K, more: FetcherMore) => {
           try {
             const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
 

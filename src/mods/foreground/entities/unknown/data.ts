@@ -2,7 +2,7 @@ import { BigIntToHex } from "@/libs/bigints/bigints";
 import { Errors } from "@/libs/errors/errors";
 import { ChainData } from "@/libs/ethereum/mods/chain";
 import { BgEthereum, BgTotal } from "@/mods/background/service_worker/entities/unknown/data";
-import { EthereumFetchParams, EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data";
+import { EthereumChainlessQueryKey, EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Data, FetcherMore, States, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
@@ -20,13 +20,13 @@ export namespace FgEthereum {
 
     export const key = BgEthereum.Unknown.key
 
-    export function schema<T>(request: Nullable<RpcRequestPreinit<unknown> & EthereumFetchParams>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
+    export function schema<T>(request: Nullable<EthereumChainlessQueryKey<unknown>>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
       if (context == null)
         return
       if (request == null)
         return
 
-      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+      const fetcher = async (request: K) =>
         await context.fetchOrFail<T>(request)
 
       return createQuery<K, T, F>({
@@ -59,7 +59,7 @@ export namespace FgEthereum {
       if (request == null)
         return
 
-      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+      const fetcher = async (request: K) =>
         await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
 
       return createQuery<K, D, F>({
@@ -91,7 +91,7 @@ export namespace FgEthereum {
       if (context == null)
         return
 
-      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+      const fetcher = async (request: K) =>
         await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
 
       return createQuery<K, D, F>({
@@ -106,7 +106,7 @@ export namespace FgEthereum {
 
   export namespace GasPrice {
 
-    export type K = EthereumQueryKey<unknown> & EthereumFetchParams
+    export type K = EthereumQueryKey<unknown>
     export type D = bigint
     export type F = Error
 
@@ -123,7 +123,7 @@ export namespace FgEthereum {
       if (context == null)
         return
 
-      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+      const fetcher = async (request: K) =>
         await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
 
       return createQuery<K, D, Error>({
@@ -156,10 +156,10 @@ export namespace FgEthereum {
       if (context == null)
         return
 
-      const fetcher = async (request: RpcRequestPreinit<unknown>, more: FetcherMore = {}) =>
+      const fetcher = async (request: K, more: FetcherMore = {}) =>
         await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
 
-      return createQuery<EthereumQueryKey<unknown>, bigint, Error>({
+      return createQuery<K, D, F>({
         key: key(address, context.chain),
         fetcher,
         storage,
@@ -171,7 +171,7 @@ export namespace FgEthereum {
 
 }
 
-export function useUnknown(request: Nullable<RpcRequestPreinit<unknown> & EthereumFetchParams>, context: Nullable<FgEthereumContext>) {
+export function useUnknown(request: Nullable<EthereumChainlessQueryKey<unknown>>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgEthereum.Unknown.schema, [request, context, storage])
   useFetch(query)

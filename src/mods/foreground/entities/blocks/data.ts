@@ -1,9 +1,8 @@
 import { Errors } from "@/libs/errors/errors"
 import { ChainData } from "@/libs/ethereum/mods/chain"
-import { EthereumFetchParams, EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data"
+import { EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data"
 import { ZeroHexString } from "@hazae41/cubane"
 import { createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
-import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { FgEthereumContext } from "../wallets/data"
@@ -16,7 +15,7 @@ export namespace FgBlock {
 
   export namespace ByNumber {
 
-    export type K = EthereumQueryKey<unknown> & EthereumFetchParams
+    export type K = EthereumQueryKey<unknown>
     export type D = BlockData
     export type F = Error
 
@@ -35,7 +34,7 @@ export namespace FgBlock {
       if (number == null)
         return
 
-      const fetcher = async (request: RpcRequestPreinit<unknown>) =>
+      const fetcher = async (request: K) =>
         await context.fetchOrFail<BlockData>(request)
 
       return createQuery<K, D, F>({
