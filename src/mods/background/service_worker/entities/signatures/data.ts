@@ -2,11 +2,11 @@ import { Abi, ZeroHexString } from "@hazae41/cubane";
 import { Data, Fail, FetcherMore, QueryStorage, createQuery } from "@hazae41/glacier";
 import { Catched, Result } from "@hazae41/result";
 import { BgEthereumContext } from "../../context";
-import { EthereumQueryKey } from "../wallets/data";
+import { EthereumChainfulRpcRequestPreinit } from "../wallets/data";
 
 export namespace BgSignature {
 
-  export type K = EthereumQueryKey<unknown>
+  export type K = EthereumChainfulRpcRequestPreinit<unknown>
   export type D = readonly string[]
   export type F = Error
 

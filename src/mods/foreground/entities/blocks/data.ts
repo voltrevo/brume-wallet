@@ -1,6 +1,6 @@
 import { Errors } from "@/libs/errors/errors"
 import { ChainData } from "@/libs/ethereum/mods/chain"
-import { EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data"
+import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { ZeroHexString } from "@hazae41/cubane"
 import { createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
@@ -15,7 +15,7 @@ export namespace FgBlock {
 
   export namespace ByNumber {
 
-    export type K = EthereumQueryKey<unknown>
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
     export type D = BlockData
     export type F = Error
 

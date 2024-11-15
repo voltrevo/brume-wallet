@@ -3,7 +3,7 @@ import { ZeroHexString } from "@hazae41/cubane"
 import { Data, FetcherMore, QueryStorage, States, createQuery } from "@hazae41/glacier"
 import { None, Nullable, Some } from "@hazae41/option"
 import { BgEthereumContext } from "../../context"
-import { EthereumQueryKey } from "../wallets/data"
+import { EthereumChainfulRpcRequestPreinit } from "../wallets/data"
 
 export type Transaction =
   | TransactionRef
@@ -356,7 +356,7 @@ export interface LogData {
 
 export namespace BgTransactionReceipt {
 
-  export type K = EthereumQueryKey<unknown>
+  export type K = EthereumChainfulRpcRequestPreinit<unknown>
   export type D = Nullable<TransactionReceiptData>
   export type F = Error
 

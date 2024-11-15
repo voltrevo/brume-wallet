@@ -1,5 +1,5 @@
 import { Errors } from "@/libs/errors/errors"
-import { PairData } from "@/libs/ethereum/mods/chain"
+import { StoredPairData } from "@/libs/ethereum/mods/chain"
 import { useUserStorageContext } from "@/mods/foreground/storage/user"
 import { PairV2 } from "@/mods/universal/entities/pairs/v2"
 import { PairV3 } from "@/mods/universal/entities/pairs/v3"
@@ -7,7 +7,7 @@ import { useError, useFetch, useQuery, useVisible } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { FgEthereumContext } from "../wallets/data"
 
-export function usePairV2Price(context: Nullable<FgEthereumContext>, pair: Nullable<PairData>, block: Nullable<string>) {
+export function usePairV2Price(context: Nullable<FgEthereumContext>, pair: Nullable<StoredPairData>, block: Nullable<string>) {
   const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(PairV2.Price.queryOrThrow, [context, pair, block, storage])
   useFetch(query)
@@ -16,7 +16,7 @@ export function usePairV2Price(context: Nullable<FgEthereumContext>, pair: Nulla
   return query
 }
 
-export function usePairV3Price(context: Nullable<FgEthereumContext>, pair: Nullable<PairData>, block: Nullable<string>) {
+export function usePairV3Price(context: Nullable<FgEthereumContext>, pair: Nullable<StoredPairData>, block: Nullable<string>) {
   const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(PairV3.Price.queryOrThrow, [context, pair, block, storage])
   useFetch(query)

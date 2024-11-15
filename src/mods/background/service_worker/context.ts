@@ -6,7 +6,7 @@ import { Fail, Fetched, FetcherMore } from "@hazae41/glacier"
 import { Option } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 import { EthBrume } from "./entities/brumes/data"
-import { EthereumChainlessQueryKey } from "./entities/wallets/data"
+import { EthereumChainlessRpcRequestPreinit } from "./entities/wallets/data"
 
 export class BgEthereumContext {
 
@@ -22,7 +22,7 @@ export class BgEthereumContext {
     return new BgEthereumContext(uuid, chain, brume)
   }
 
-  async fetchOrFail<T>(init: EthereumChainlessQueryKey<unknown>, more: FetcherMore = {}) {
+  async fetchOrFail<T>(init: EthereumChainlessRpcRequestPreinit<unknown>, more: FetcherMore = {}) {
     try {
       const { signal: parentSignal = new AbortController().signal } = more
 

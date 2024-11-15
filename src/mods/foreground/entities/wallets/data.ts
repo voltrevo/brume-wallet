@@ -1,5 +1,5 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
-import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumChainlessQueryKey, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletRef } from "@/mods/background/service_worker/entities/wallets/data"
+import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumChainlessRpcRequestPreinit, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletRef } from "@/mods/background/service_worker/entities/wallets/data"
 import { SeedQuery } from "@/mods/universal/entities/seeds/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
@@ -439,7 +439,7 @@ export class FgEthereumContext {
     return new FgEthereumContext(uuid, chain, background)
   }
 
-  async fetchOrFail<T>(init: EthereumChainlessQueryKey<unknown>, more: FetcherMore = {}): Promise<Fetched<T, Error>> {
+  async fetchOrFail<T>(init: EthereumChainlessRpcRequestPreinit<unknown>, more: FetcherMore = {}): Promise<Fetched<T, Error>> {
     const { uuid, background, chain } = this
 
     return await background.requestOrThrow<T>({
@@ -448,7 +448,7 @@ export class FgEthereumContext {
     }).then(r => Fetched.rewrap(r))
   }
 
-  async customFetchOrFail<T>(init: EthereumChainlessQueryKey<unknown>, more: FetcherMore = {}): Promise<Fetched<T, Error>> {
+  async customFetchOrFail<T>(init: EthereumChainlessRpcRequestPreinit<unknown>, more: FetcherMore = {}): Promise<Fetched<T, Error>> {
     const { uuid, background, chain } = this
 
     return await background.requestOrThrow<T>({

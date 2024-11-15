@@ -342,11 +342,11 @@ export namespace BgWallet {
 
 }
 
-export type EthereumQueryKey<T> = RpcRequestPreinit<T> & {
+export type EthereumChainfulRpcRequestPreinit<T> = RpcRequestPreinit<T> & {
   readonly chainId: number
   readonly noCheck?: boolean
 }
 
-export type EthereumChainlessQueryKey<T> = RpcRequestPreinit<T> & {
+export type EthereumChainlessRpcRequestPreinit<T> = RpcRequestPreinit<T> & {
   readonly noCheck?: boolean
 }

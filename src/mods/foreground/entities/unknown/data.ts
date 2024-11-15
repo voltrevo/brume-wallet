@@ -2,7 +2,7 @@ import { BigIntToHex } from "@/libs/bigints/bigints";
 import { Errors } from "@/libs/errors/errors";
 import { ChainData } from "@/libs/ethereum/mods/chain";
 import { BgEthereum, BgTotal } from "@/mods/background/service_worker/entities/unknown/data";
-import { EthereumChainlessQueryKey, EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data";
+import { EthereumChainfulRpcRequestPreinit, EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Data, FetcherMore, States, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
@@ -20,7 +20,7 @@ export namespace FgEthereum {
 
     export const key = BgEthereum.Unknown.key
 
-    export function schema<T>(request: Nullable<EthereumChainlessQueryKey<unknown>>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
+    export function schema<T>(request: Nullable<EthereumChainlessRpcRequestPreinit<unknown>>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
       if (context == null)
         return
       if (request == null)
@@ -40,7 +40,7 @@ export namespace FgEthereum {
 
   export namespace EstimateGas {
 
-    export type K = EthereumQueryKey<unknown>
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
     export type D = bigint
     export type F = Error
 
@@ -74,7 +74,7 @@ export namespace FgEthereum {
 
   export namespace MaxPriorityFeePerGas {
 
-    export type K = EthereumQueryKey<unknown>
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
     export type D = bigint
     export type F = Error
 
@@ -106,7 +106,7 @@ export namespace FgEthereum {
 
   export namespace GasPrice {
 
-    export type K = EthereumQueryKey<unknown>
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
     export type D = bigint
     export type F = Error
 
@@ -138,7 +138,7 @@ export namespace FgEthereum {
 
   export namespace Nonce {
 
-    export type K = EthereumQueryKey<unknown>
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
     export type D = bigint
     export type F = Error
 
@@ -171,7 +171,7 @@ export namespace FgEthereum {
 
 }
 
-export function useUnknown(request: Nullable<EthereumChainlessQueryKey<unknown>>, context: Nullable<FgEthereumContext>) {
+export function useUnknown(request: Nullable<EthereumChainlessRpcRequestPreinit<unknown>>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgEthereum.Unknown.schema, [request, context, storage])
   useFetch(query)

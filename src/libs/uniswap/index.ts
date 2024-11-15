@@ -1,9 +1,9 @@
 import { Fixed } from "@hazae41/cubane"
-import { PairData, tokenByAddress } from "../ethereum/mods/chain"
+import { SimplePairDataV3, StoredPairData, tokenByAddress } from "../ethereum/mods/chain"
 
 export namespace UniswapV2 {
 
-  export function computeOrThrow(pair: PairData, reserves: [bigint, bigint]) {
+  export function computeOrThrow(pair: StoredPairData, reserves: [bigint, bigint]) {
     const decimals0 = tokenByAddress[pair.token0].decimals
     const decimals1 = tokenByAddress[pair.token1].decimals
 
@@ -22,16 +22,13 @@ export namespace UniswapV2 {
 
 export namespace UniswapV3 {
 
-  export function computeOrThrow(pair: PairData, sqrtPriceX96: Fixed.From<0>) {
-    const decimals0 = tokenByAddress[pair.token0].decimals
-    const decimals1 = tokenByAddress[pair.token1].decimals
-
+  export function computeOrThrow(pair: SimplePairDataV3, sqrtPriceX96: Fixed.From<0>) {
     const sqrtPriceX96BigInt = Fixed.from(sqrtPriceX96).value
 
     const priceX96BigInt = sqrtPriceX96BigInt ** 2n
 
-    const a = new Fixed(priceX96BigInt, decimals1)
-    const b = new Fixed(((2n ** 96n) ** 2n), decimals0)
+    const a = new Fixed(priceX96BigInt, pair.token1.decimals)
+    const b = new Fixed(((2n ** 96n) ** 2n), pair.token0.decimals)
 
     if (pair.reversed)
       return a.div(b)

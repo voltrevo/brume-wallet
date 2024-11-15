@@ -2,21 +2,21 @@ import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, FetcherMore, QueryStorage, States, createQuery } from "@hazae41/glacier"
 import { None, Some } from "@hazae41/option"
 import { BgEthereumContext } from "../../context"
-import { EthereumChainlessQueryKey, EthereumQueryKey } from "../wallets/data"
+import { EthereumChainfulRpcRequestPreinit, EthereumChainlessRpcRequestPreinit } from "../wallets/data"
 
 export namespace BgEthereum {
 
   export namespace Unknown {
 
-    export type K = EthereumQueryKey<unknown>
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
     export type D = unknown
     export type F = Error
 
-    export function key(chainId: number, request: EthereumChainlessQueryKey<unknown>) {
+    export function key(chainId: number, request: EthereumChainlessRpcRequestPreinit<unknown>) {
       return { ...request, chainId }
     }
 
-    export function schema(context: BgEthereumContext, request: EthereumChainlessQueryKey<unknown>, storage: QueryStorage) {
+    export function schema(context: BgEthereumContext, request: EthereumChainlessRpcRequestPreinit<unknown>, storage: QueryStorage) {
       const fetcher = async (request: K, more: FetcherMore) =>
         await context.fetchOrFail<unknown>(request, more)
 

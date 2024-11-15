@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { ContractTokenData, NativeTokenData } from "@/mods/background/service_worker/entities/tokens/data"
+import { ContractTokenData as StoredContractTokenData, NativeTokenData as StoredNativeTokenData } from "@/mods/background/service_worker/entities/tokens/data"
 
 export type ChainId = number
 
@@ -8,7 +8,7 @@ export interface ChainData {
   readonly chainId: ChainId,
   readonly urls: readonly string[],
   readonly etherscan: string
-  readonly token: NativeTokenData
+  readonly token: StoredNativeTokenData
   readonly icon: () => JSX.Element
 }
 
@@ -374,7 +374,7 @@ export const chainDataByChainId: Record<ChainId, ChainData> = {
   }
 } as const
 
-export const tokenByAddress: Record<string, ContractTokenData> = {
+export const tokenByAddress: Record<string, StoredContractTokenData> = {
   "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": {
     uuid: "7b8dab00-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
@@ -592,11 +592,11 @@ export const tokenById = {
   MSUSD_ON_CELO: "0x64dEFa3544c695db8c535D289d843a189aa26b98"
 } as const
 
-export type PairData =
-  | PairDataV2
-  | PairDataV3
+export type StoredPairData =
+  | StoredPairDataV2
+  | StoredPairDataV3
 
-export interface PairDataV2 {
+export interface StoredPairDataV2 {
   readonly name: string
   readonly chainId: number,
   readonly address: string,
@@ -606,7 +606,7 @@ export interface PairDataV2 {
   readonly reversed?: boolean
 }
 
-export interface PairDataV3 {
+export interface StoredPairDataV3 {
   readonly name: string
   readonly chainId: number,
   readonly address: string,
@@ -616,7 +616,7 @@ export interface PairDataV3 {
   readonly reversed?: boolean
 }
 
-export const pairByAddress: Record<string, PairData> = {
+export const pairByAddress: Record<string, StoredPairData> = {
   "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852": {
     chainId: 1,
     version: 2,
@@ -675,3 +675,18 @@ export const pairByAddress: Record<string, PairData> = {
     token1: "0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5",
   }
 } as const
+
+export interface SimpleContractTokenData {
+  readonly type: "contract"
+  readonly decimals: number
+  readonly address: string
+}
+
+export interface SimplePairDataV3 {
+  readonly version: 3
+  readonly chainId: number,
+  readonly address: string,
+  readonly token0: SimpleContractTokenData,
+  readonly token1: SimpleContractTokenData,
+  readonly reversed?: boolean
+}

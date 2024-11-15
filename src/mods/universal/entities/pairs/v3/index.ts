@@ -1,16 +1,82 @@
-import { PairAbiV3 } from "@/libs/abi/pair.abi"
-import { PairData } from "@/libs/ethereum/mods/chain"
+import { FactoryAbiV3, PairAbiV3 } from "@/libs/abi/pair.abi"
+import { SimpleContractTokenData, SimplePairDataV3 } from "@/libs/ethereum/mods/chain"
+import { Records } from "@/libs/records"
 import { UniswapV3 } from "@/libs/uniswap"
-import { EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data"
-import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
+import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data"
+import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
+import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, Fetched, FetcherMore, QueryStorage, States } from "@hazae41/glacier"
 import { Nullable, Option, Some } from "@hazae41/option"
 import { EthereumContext } from "../../../context/ethereum"
 
 export namespace FactoryV3 {
 
+  export const factoryByChainId = {
+    1: {
+      chainId: 1,
+      address: "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+    }
+  }
+
+  export const wethByChainId = {
+    1: {
+      type: "contract",
+      uuid: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      chainId: 1,
+      name: "Wrapped Ether",
+      symbol: "WETH",
+      decimals: 18,
+      address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    } satisfies ContractTokenData
+  }
+
   export namespace GetPool {
 
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type D = Address
+    export type F = Error
+
+    export function keyOrThrow(chainId: number, token0: SimpleContractTokenData, token1: SimpleContractTokenData, fee: number, block: string) {
+      return {
+        chainId: chainId,
+        method: "eth_call",
+        params: [{
+          to: Records.getOrThrow(factoryByChainId, chainId).address,
+          data: Abi.encodeOrThrow(FactoryAbiV3.getPool.fromOrThrow(token0.address, token1.address, fee))
+        }, block]
+      }
+    }
+
+    export function queryOrThrow(context: Nullable<EthereumContext>, token0: Nullable<SimpleContractTokenData>, token1: Nullable<SimpleContractTokenData>, fee: Nullable<number>, block: Nullable<string>, storage: QueryStorage) {
+      if (context == null)
+        return
+      if (token0 == null)
+        return
+      if (token1 == null)
+        return
+      if (fee == null)
+        return
+      if (block == null)
+        return
+
+      const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
+        const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
+
+        if (fetched.isErr())
+          return fetched
+
+        const returns = Abi.Address
+        const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+
+        return new Data(decoded)
+      })
+
+      return createQuery<K, D, F>({
+        key: keyOrThrow(context.chain.chainId, token0, token1, fee, block),
+        fetcher,
+        storage
+      })
+    }
 
   }
 
@@ -20,11 +86,11 @@ export namespace PairV3 {
 
   export namespace Price {
 
-    export type K = EthereumQueryKey<unknown>
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
     export type D = Fixed.From
     export type F = Error
 
-    export function keyOrThrow(pair: PairData, block: string) {
+    export function keyOrThrow(pair: SimplePairDataV3, block: string) {
       return {
         chainId: pair.chainId,
         method: "eth_get",
@@ -35,7 +101,7 @@ export namespace PairV3 {
       }
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<PairData>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<SimplePairDataV3>, block: Nullable<string>, storage: QueryStorage) {
       if (context == null)
         return
       if (pair == null)
@@ -62,11 +128,11 @@ export namespace PairV3 {
 
   export namespace SqrtPriceX96 {
 
-    export type K = EthereumQueryKey<unknown>
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
     export type D = Fixed.From<0>
     export type F = Error
 
-    export function keyOrThrow(pair: PairData, block: string) {
+    export function keyOrThrow(pair: SimplePairDataV3, block: string) {
       return {
         chainId: pair.chainId,
         method: "eth_get",
@@ -77,7 +143,7 @@ export namespace PairV3 {
       }
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<PairData>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<SimplePairDataV3>, block: Nullable<string>, storage: QueryStorage) {
       if (context == null)
         return
       if (pair == null)
@@ -124,11 +190,11 @@ export namespace PairV3 {
 
   export namespace Slot0 {
 
-    export type K = EthereumQueryKey<unknown>
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
     export type D = readonly [Fixed.From<0>, Fixed.From<0>, Fixed.From<0>, Fixed.From<0>, Fixed.From<0>, Fixed.From<0>]
     export type F = Error
 
-    export function keyOrThrow(pair: PairData, block: string) {
+    export function keyOrThrow(pair: SimplePairDataV3, block: string) {
       return {
         chainId: pair.chainId,
         method: "eth_call",
@@ -139,7 +205,7 @@ export namespace PairV3 {
       }
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<PairData>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<SimplePairDataV3>, block: Nullable<string>, storage: QueryStorage) {
       if (context == null)
         return
       if (pair == null)

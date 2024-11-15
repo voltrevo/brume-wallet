@@ -6,7 +6,7 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 import { BgEthereumContext } from "../../context"
-import { EthereumQueryKey } from "../wallets/data"
+import { EthereumChainfulRpcRequestPreinit } from "../wallets/data"
 
 export namespace BgEns {
 
@@ -43,7 +43,7 @@ export namespace BgEns {
 
   export namespace Lookup {
 
-    export type K = EthereumQueryKey<unknown>
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
     export type D = Address
     export type F = Error
 
@@ -108,7 +108,7 @@ export namespace BgEns {
 
   export namespace Reverse {
 
-    export type K = EthereumQueryKey<unknown>
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
     export type D = Nullable<string>
     export type F = Error
 

@@ -1,7 +1,7 @@
 import { PairAbiV2 } from "@/libs/abi/pair.abi"
-import { PairData } from "@/libs/ethereum/mods/chain"
+import { StoredPairData } from "@/libs/ethereum/mods/chain"
 import { UniswapV2 } from "@/libs/uniswap"
-import { EthereumQueryKey } from "@/mods/background/service_worker/entities/wallets/data"
+import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, Fail, FetcherMore, QueryStorage } from "@hazae41/glacier"
@@ -12,11 +12,11 @@ export namespace PairV2 {
 
   export namespace Price {
 
-    export type K = EthereumQueryKey<unknown>
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
     export type D = Fixed.From
     export type F = Error
 
-    export function keyOrThrow(pair: PairData, block: string) {
+    export function keyOrThrow(pair: StoredPairData, block: string) {
       return {
         chainId: pair.chainId,
         method: "eth_call",
@@ -27,7 +27,7 @@ export namespace PairV2 {
       }
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<PairData>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<StoredPairData>, block: Nullable<string>, storage: QueryStorage) {
       if (context == null)
         return
       if (pair == null)

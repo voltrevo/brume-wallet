@@ -10,7 +10,7 @@ import { None, Option, Some } from "@hazae41/option"
 import { Catched, Result } from "@hazae41/result"
 import { BgEthereumContext } from "../../context"
 import { BgTotal } from "../unknown/data"
-import { EthereumQueryKey } from "../wallets/data"
+import { EthereumChainfulRpcRequestPreinit } from "../wallets/data"
 
 export type Token =
   | TokenData
@@ -124,7 +124,7 @@ export namespace BgToken {
 
       export namespace Priced {
 
-        export type K = EthereumQueryKey<unknown>
+        export type K = EthereumChainfulRpcRequestPreinit<unknown>
         export type D = Fixed.From
         export type F = never
 
@@ -167,7 +167,7 @@ export namespace BgToken {
 
       }
 
-      export type K = EthereumQueryKey<unknown>
+      export type K = EthereumChainfulRpcRequestPreinit<unknown>
       export type D = Fixed.From
       export type F = Error
 
@@ -283,7 +283,7 @@ export namespace BgToken {
 
       export namespace Priced {
 
-        export type K = EthereumQueryKey<unknown>
+        export type K = EthereumChainfulRpcRequestPreinit<unknown>
         export type D = Fixed.From
         export type F = never
 
@@ -326,7 +326,7 @@ export namespace BgToken {
 
       }
 
-      export type K = EthereumQueryKey<unknown>
+      export type K = EthereumChainfulRpcRequestPreinit<unknown>
       export type D = Fixed.From
       export type F = Error
 
