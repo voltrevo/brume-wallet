@@ -103,7 +103,7 @@ export namespace Circuits {
                     const head = Arrays.cryptoRandom(middles)!
 
                     const query = Option.wrap(MicrodescQuery.create(head.identity, index, head, circuit.getOrThrow(), storage)).getOrThrow()
-                    const body = await query.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
+                    const body = await query.fetchOrThrow().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
                     start = Date.now()
                     await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 1)))
@@ -117,7 +117,7 @@ export namespace Circuits {
                     const head = Arrays.cryptoRandom(exits)!
 
                     const query = Option.wrap(MicrodescQuery.create(head.identity, index, head, circuit.getOrThrow(), storage)).getOrThrow()
-                    const body = await query.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
+                    const body = await query.fetchOrThrow().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
                     start = Date.now()
                     await Retry.run(() => circuit.getOrThrow().extendOrThrow(body, AbortSignal.timeout(ping.value * 1)))

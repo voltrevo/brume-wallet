@@ -1,10 +1,11 @@
 import { NetworkParams } from "@/libs/network/network"
 import { ping } from "@/libs/ping"
 import { TorRpc } from "@/libs/rpc/rpc"
+import { AbortSignals } from "@/libs/signals"
 import { randomUUID } from "@/libs/uuid/uuid"
 import { Arrays } from "@hazae41/arrays"
 import { ZeroHexString } from "@hazae41/cubane"
-import { Fail, Fetched, FetcherMore, QueryStorage, createQuery } from "@hazae41/glacier"
+import { Fail, Fetched, QueryStorage, createQuery } from "@hazae41/glacier"
 import { RpcCounter, RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { NetworkWasm } from "@hazae41/network.wasm"
 import { Catched } from "@hazae41/result"
@@ -87,12 +88,11 @@ export namespace BgSimulation {
     return secretZeroHex
   }
 
-  export async function fetchOrFail<T>(context: BgEthereumContext, init: EthereumChainlessRpcRequestPreinit<unknown>, more: FetcherMore = {}) {
+  export async function fetchOrFail<T>(context: BgEthereumContext, info: EthereumChainlessRpcRequestPreinit<unknown>, init: RequestInit = {}) {
     try {
-      const { signal: parentSignal = new AbortController().signal } = more
-      const { brume } = context
+      const presignal = AbortSignals.getOrNever(init.signal)
 
-      const circuit = await brume.circuits.getCryptoRandomOrThrow(parentSignal)
+      const circuit = await context.brume.circuits.getCryptoRandomOrThrow(presignal)
       const session = randomUUID()
 
       const url = new URL(`https://signal.node0.hazae41.me`)
@@ -100,7 +100,7 @@ export namespace BgSimulation {
 
       const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
         circuit,
-        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
+        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), presignal]),
         ...new RpcCounter().prepare({ method: "net_get" }),
       }).then(r => r.getOrThrow())
 
@@ -108,13 +108,13 @@ export namespace BgSimulation {
 
       await TorRpc.fetchWithCircuitOrThrow<void>(url, {
         circuit,
-        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
+        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), presignal]),
         ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
       }).then(r => r.getOrThrow())
 
       const nodes = await TorRpc.fetchWithCircuitOrThrow<{ location: string }[]>(url, {
         circuit,
-        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
+        signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), presignal]),
         ...new RpcCounter().prepare({ method: "net_search", params: [{}, { protocols: [`https:json-rpc:(pay-by-char|tenderly:${context.chain.chainId})`] }] })
       }).then(r => r.getOrThrow())
 
@@ -129,7 +129,7 @@ export namespace BgSimulation {
 
         const params = await TorRpc.fetchWithCircuitOrThrow<NetworkParams>(url, {
           circuit,
-          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
+          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), presignal]),
           ...new RpcCounter().prepare({ method: "net_get" }),
         }).then(r => r.getOrThrow())
 
@@ -137,14 +137,14 @@ export namespace BgSimulation {
 
         await TorRpc.fetchWithCircuitOrThrow<void>(url, {
           circuit,
-          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
+          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), presignal]),
           ...new RpcCounter().prepare({ method: "net_tip", params: [secret] })
         }).then(r => r.getOrThrow())
 
         return await TorRpc.fetchWithCircuitOrThrow<T>(url, {
           circuit,
-          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal]),
-          ...new RpcCounter().prepare(init)
+          signal: AbortSignal.any([AbortSignal.timeout(ping.value * 9), presignal]),
+          ...new RpcCounter().prepare(info)
         }).then(r => Fetched.rewrap(r))
       }
     } catch (e: unknown) {
@@ -170,7 +170,7 @@ export namespace BgSimulation {
   }
 
   export function schema(context: BgEthereumContext, tx: unknown, block: string, storage: QueryStorage) {
-    const fetcher = async (request: K, more: FetcherMore) =>
+    const fetcher = async (request: K, more: RequestInit) =>
       await fetchOrFail<SimulationData>(context, request, more).then(r => r.inspectErrSync(e => console.error({ e },)))
 
     return createQuery<K, D, F>({

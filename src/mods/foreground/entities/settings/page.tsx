@@ -16,12 +16,12 @@ export function SettingsPage() {
 
   const onLogsChange = useAsyncUniqueCallback((e: ChangeEvent<HTMLInputElement>) => Errors.runAndLogAndAlert(async () => {
     const checked = e.currentTarget.checked
-    await logs.mutate(() => new Some(new Data(checked)))
+    await logs.mutateOrThrow(() => new Some(new Data(checked)))
   }), [])
 
   const onChainChange = useAsyncUniqueCallback((e: ChangeEvent<HTMLSelectElement>) => Errors.runAndLogAndAlert(async () => {
     const chainId = Number(e.currentTarget.value)
-    await chain.mutate(() => new Some(new Data(chainId)))
+    await chain.mutateOrThrow(() => new Some(new Data(chainId)))
   }), [])
 
   return <Page>

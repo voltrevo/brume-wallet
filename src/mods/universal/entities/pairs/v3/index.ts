@@ -4,7 +4,7 @@ import { Records } from "@/libs/records"
 import { UniswapV3 } from "@/libs/uniswap"
 import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane"
-import { createQuery, Data, Fetched, FetcherMore, QueryStorage, States } from "@hazae41/glacier"
+import { createQuery, Data, Fetched, QueryStorage, States } from "@hazae41/glacier"
 import { Nullable, Option, Some } from "@hazae41/option"
 import { EthereumContext } from "../../../context/ethereum"
 
@@ -72,7 +72,7 @@ export namespace FactoryV3 {
       if (block == null)
         return
 
-      const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
+      const fetcher = (request: K, more: RequestInit) => Fetched.runOrDoubleWrap(async () => {
         const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
 
         if (fetched.isErr())
@@ -122,8 +122,8 @@ export namespace PairV3 {
       if (block == null)
         return
 
-      const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
-        const sqrtPriceX96 = await SqrtPriceX96.queryOrThrow(context, pair, block, storage)!.refetch().then(r => Option.wrap(r.real?.current).getOrThrow())
+      const fetcher = (request: K, more: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+        const sqrtPriceX96 = await SqrtPriceX96.queryOrThrow(context, pair, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (sqrtPriceX96.isErr())
           return sqrtPriceX96
@@ -164,8 +164,8 @@ export namespace PairV3 {
       if (block == null)
         return
 
-      const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
-        const slot0 = await Slot0.queryOrThrow(context, pair, block, storage)!.refetch().then(r => Option.wrap(r.real?.current).getOrThrow())
+      const fetcher = (request: K, more: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+        const slot0 = await Slot0.queryOrThrow(context, pair, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (slot0.isErr())
           return slot0
@@ -180,7 +180,7 @@ export namespace PairV3 {
 
         const maybeCurrentData = current.real?.current.checkOrNull()
 
-        await Price.queryOrThrow(context, pair, block, storage)?.mutate(() => {
+        await Price.queryOrThrow(context, pair, block, storage)?.mutateOrThrow(() => {
           if (maybeCurrentData == null)
             return new Some(undefined)
 
@@ -226,7 +226,7 @@ export namespace PairV3 {
       if (block == null)
         return
 
-      const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
+      const fetcher = (request: K, more: RequestInit) => Fetched.runOrDoubleWrap(async () => {
         const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
 
         if (fetched.isErr())
@@ -243,7 +243,7 @@ export namespace PairV3 {
 
         const maybeCurrentData = current.real?.current.checkOrNull()
 
-        await SqrtPriceX96.queryOrThrow(context, pair, block, storage)?.mutate(() => {
+        await SqrtPriceX96.queryOrThrow(context, pair, block, storage)?.mutateOrThrow(() => {
           if (maybeCurrentData == null)
             return new Some(undefined)
 

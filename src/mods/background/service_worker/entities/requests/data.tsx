@@ -58,7 +58,7 @@ export namespace BgAppRequest {
       const previousData = previous?.real?.current.ok()?.getOrNull()
       const currentData = current.real?.current.ok()?.getOrNull()
 
-      await BgAppRequest.All.schema().mutate(Mutators.mapData((d = new Data([])) => {
+      await BgAppRequest.All.schema().mutateOrThrow(Mutators.mapData((d = new Data([])) => {
         if (previousData?.id === currentData?.id)
           return d
         if (previousData != null)

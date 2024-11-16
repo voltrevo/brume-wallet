@@ -2,7 +2,8 @@ import { ChainData } from "@/libs/ethereum/mods/chain"
 import { Maps } from "@/libs/maps/maps"
 import { ping } from "@/libs/ping"
 import { TorRpc } from "@/libs/rpc/rpc"
-import { Fail, Fetched, FetcherMore } from "@hazae41/glacier"
+import { AbortSignals } from "@/libs/signals"
+import { Fail, Fetched } from "@hazae41/glacier"
 import { Option } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 import { EthBrume } from "./entities/brumes/data"
@@ -22,23 +23,23 @@ export class BgEthereumContext {
     return new BgEthereumContext(uuid, chain, brume)
   }
 
-  async fetchOrFail<T>(init: EthereumChainlessRpcRequestPreinit<unknown>, more: FetcherMore = {}) {
+  async fetchOrFail<T>(info: EthereumChainlessRpcRequestPreinit<unknown>, init: RequestInit = {}) {
     try {
-      const { signal: parentSignal = new AbortController().signal } = more
+      const presignal = AbortSignals.getOrNever(init.signal)
 
       const circuits = Option.wrap(this.brume.ethereum[this.chain.chainId]).getOrThrow()
-      const circuit = await circuits.get().getCryptoRandomOrThrow(parentSignal)
+      const circuit = await circuits.get().getCryptoRandomOrThrow(presignal)
 
       const runWithTargetOrThrow = async (index: number) => {
-        const target = await circuit.get().getOrThrow(index, parentSignal)
+        const target = await circuit.get().getOrThrow(index, presignal)
 
         const { counter, connection } = target
-        const request = counter.prepare(init)
+        const request = counter.prepare(info)
 
         if (connection.isURL()) {
           const { url, circuit } = connection
 
-          const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal])
+          const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 9), presignal])
           const response = await TorRpc.fetchWithCircuitOrThrow<T>(url, { ...request, circuit, signal })
 
           if (response.isOk())
@@ -55,7 +56,7 @@ export class BgEthereumContext {
 
           await cooldown
 
-          const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 9), parentSignal])
+          const signal = AbortSignal.any([AbortSignal.timeout(ping.value * 9), presignal])
           const response = await TorRpc.fetchWithSocketOrThrow<T>(socket, request, signal)
 
           if (response.isOk())
@@ -82,7 +83,7 @@ export class BgEthereumContext {
           continue
         if (result.value.isErr())
           continue
-        if (init?.noCheck)
+        if (info?.noCheck)
           return result.value
         const raw = JSON.stringify(result.value.inner)
         const previous = Option.wrap(counters.get(raw)).getOr(0)
@@ -97,7 +98,7 @@ export class BgEthereumContext {
       if (counters.size < 2)
         return await Promise.any(promises)
 
-      console.warn(`Different results from multiple connections for ${init.method} on ${this.chain.name}`, { fetcheds })
+      console.warn(`Different results from multiple connections for ${info.method} on ${this.chain.name}`, { fetcheds })
 
       /**
        * Sort truths by occurence
@@ -108,7 +109,7 @@ export class BgEthereumContext {
        * Two concurrent truths
        */
       if (sorteds[0].value === sorteds[1].value) {
-        console.warn(`Could not choose truth for ${init.method} on ${this.chain.name}`)
+        console.warn(`Could not choose truth for ${info.method} on ${this.chain.name}`)
         const random = Math.round(Math.random())
         return fetcheds.get(sorteds[random].key)!
       }

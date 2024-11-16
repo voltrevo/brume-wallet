@@ -78,7 +78,7 @@ export async function createUserStorageOrThrow(user: UserData, password: string)
       /**
        * Safely delete the wallet
        */
-      await BgWallet.schema(uuid, storage).delete()
+      await BgWallet.schema(uuid, storage).deleteOrThrow()
 
       return
     }
@@ -128,7 +128,7 @@ export async function createUserStorageOrThrow(user: UserData, password: string)
       if (walletData == null)
         continue
 
-      await BgWallet.All.ByAddress.schema(walletData.address, storage).mutate(s => {
+      await BgWallet.All.ByAddress.schema(walletData.address, storage).mutateOrThrow(s => {
         const current = s.real?.current
 
         if (current == null)

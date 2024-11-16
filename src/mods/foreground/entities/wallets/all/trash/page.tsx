@@ -29,7 +29,7 @@ export function TrashedWalletsPage() {
       return
 
     for (const wallet of maybeWallets ?? [])
-      await FgWallet.schema(wallet.uuid, storage)?.delete()
+      await FgWallet.schema(wallet.uuid, storage)?.deleteOrThrow()
 
     return
   }), [maybeWallets, storage])

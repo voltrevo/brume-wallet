@@ -4,7 +4,7 @@ import { ChainData } from "@/libs/ethereum/mods/chain";
 import { BgEthereum, BgTotal } from "@/mods/background/service_worker/entities/unknown/data";
 import { EthereumChainfulRpcRequestPreinit, EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
-import { Data, FetcherMore, States, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
+import { Data, States, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { None, Nullable, Some } from "@hazae41/option";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
@@ -156,7 +156,7 @@ export namespace FgEthereum {
       if (context == null)
         return
 
-      const fetcher = async (request: K, more: FetcherMore = {}) =>
+      const fetcher = async (request: K, more: RequestInit = {}) =>
         await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
 
       return createQuery<K, D, F>({
@@ -257,7 +257,7 @@ export namespace FgTotal {
                 return Fixed.from(y.value).add(x)
               }, new Fixed(0n, 0))
 
-              await Priced.schema(coin, storage).mutate(() => new Some(new Data(total)))
+              await Priced.schema(coin, storage).mutateOrThrow(() => new Some(new Data(total)))
             }
 
             return createQuery<K, D, F>({ key: key(coin), indexer, storage })
@@ -283,7 +283,7 @@ export namespace FgTotal {
 
             const [value = new Fixed(0n, 0)] = [currentData]
 
-            await Record.schema(coin, storage)?.mutate(s => {
+            await Record.schema(coin, storage)?.mutateOrThrow(s => {
               const { current } = s
 
               const [{ count = 0 } = {}] = [current?.ok().getOrNull()?.[account]]

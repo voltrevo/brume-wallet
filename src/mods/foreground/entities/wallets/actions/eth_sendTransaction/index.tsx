@@ -782,7 +782,7 @@ export function WalletTransactionDialog(props: {}) {
       const data = tx.serialized as ZeroHexString
       const trial = TransactionTrialRef.create(trialUuid)
 
-      await transactionQuery.mutate(() => new Some(new Data({ type: "signed", uuid, trial, chainId, hash, data, params } as const)))
+      await transactionQuery.mutateOrThrow(() => new Some(new Data({ type: "signed", uuid, trial, chainId, hash, data, params } as const)))
 
       close()
       return
@@ -805,7 +805,7 @@ export function WalletTransactionDialog(props: {}) {
         }]
       }).then(r => r.getOrThrow())
 
-      await transactionQuery.mutate(() => new Some(new Data({ type: "pending", uuid, trial, chainId, hash, data, params } as const)))
+      await transactionQuery.mutateOrThrow(() => new Some(new Data({ type: "pending", uuid, trial, chainId, hash, data, params } as const)))
 
       close()
       return

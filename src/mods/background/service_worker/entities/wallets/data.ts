@@ -178,7 +178,7 @@ export namespace BgWallet {
 
           const [array = []] = [currentData]
 
-          await BgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutate(s => {
+          await BgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutateOrThrow(s => {
             const current = s.current
 
             const [{ value = new Fixed(0n, 0) } = {}] = [current?.ok().getOrNull()?.[account]]
@@ -233,7 +233,7 @@ export namespace BgWallet {
       const currentData = current.real?.current.ok()?.getOrNull()
 
       if (previousData != null && (previousData.uuid !== currentData?.uuid || previousData.trashed !== currentData?.trashed) && !previousData.trashed) {
-        await All.schema(storage).mutate(s => {
+        await All.schema(storage).mutateOrThrow(s => {
           const current = s.current
 
           if (current == null)
@@ -244,7 +244,7 @@ export namespace BgWallet {
           return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.uuid)))
         })
 
-        await All.ByAddress.schema(previousData.address, storage)?.mutate(s => {
+        await All.ByAddress.schema(previousData.address, storage)?.mutateOrThrow(s => {
           const current = s.current
 
           if (current == null)
@@ -258,7 +258,7 @@ export namespace BgWallet {
         if (previousData.type === "seeded") {
           const { seed } = previousData
 
-          await All.BySeed.schema(seed.uuid, storage)?.mutate(s => {
+          await All.BySeed.schema(seed.uuid, storage)?.mutateOrThrow(s => {
             const current = s.current
 
             if (current == null)
@@ -272,7 +272,7 @@ export namespace BgWallet {
       }
 
       if (previousData != null && (previousData.uuid !== currentData?.uuid || previousData.trashed !== currentData?.trashed) && previousData.trashed) {
-        await All.Trashed.schema(storage).mutate(s => {
+        await All.Trashed.schema(storage).mutateOrThrow(s => {
           const current = s.current
 
           if (current == null)
@@ -285,7 +285,7 @@ export namespace BgWallet {
       }
 
       if (currentData != null && (currentData.uuid !== previousData?.uuid || currentData.trashed !== previousData?.trashed) && !currentData.trashed) {
-        await All.schema(storage).mutate(s => {
+        await All.schema(storage).mutateOrThrow(s => {
           const current = s.current
 
           if (current == null)
@@ -296,7 +296,7 @@ export namespace BgWallet {
           return new Some(current.mapSync(p => [...p, WalletRef.from(currentData)]))
         })
 
-        await All.ByAddress.schema(currentData.address, storage)?.mutate(s => {
+        await All.ByAddress.schema(currentData.address, storage)?.mutateOrThrow(s => {
           const current = s.current
 
           if (current == null)
@@ -310,7 +310,7 @@ export namespace BgWallet {
         if (currentData.type === "seeded") {
           const { seed } = currentData
 
-          await All.BySeed.schema(seed.uuid, storage)?.mutate(s => {
+          await All.BySeed.schema(seed.uuid, storage)?.mutateOrThrow(s => {
             const current = s.current
 
             if (current == null)
@@ -324,7 +324,7 @@ export namespace BgWallet {
       }
 
       if (currentData != null && (currentData.uuid !== previousData?.uuid || currentData.trashed !== previousData?.trashed) && currentData.trashed) {
-        await All.Trashed.schema(storage).mutate(s => {
+        await All.Trashed.schema(storage).mutateOrThrow(s => {
           const current = s.current
 
           if (current == null)

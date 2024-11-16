@@ -63,7 +63,7 @@ export function TokenAddDialog(props: {}) {
       if (schema == null)
         throw new Panic()
 
-      const result = await schema.refetch().then(r => r.real?.current.getOrThrow())
+      const result = await schema.fetchOrThrow().then(r => r.getAny().real?.current.getOrThrow())
 
       const returns = Cubane.Abi.Tuple.create(Cubane.Abi.String)
       const [name] = Cubane.Abi.decodeOrThrow(returns, result!).intoOrThrow()
@@ -87,7 +87,7 @@ export function TokenAddDialog(props: {}) {
       if (schema == null)
         throw new Panic()
 
-      const result = await schema.refetch().then(r => r.real?.current.getOrThrow())
+      const result = await schema.fetchOrThrow().then(r => r.getAny().real?.current.getOrThrow())
 
       const returns = Cubane.Abi.Tuple.create(Cubane.Abi.String)
       const [symbol] = Cubane.Abi.decodeOrThrow(returns, result!).intoOrThrow()
@@ -111,7 +111,7 @@ export function TokenAddDialog(props: {}) {
       if (schema == null)
         throw new Panic()
 
-      const result = await schema.refetch().then(r => r.real?.current.getOrThrow())
+      const result = await schema.fetchOrThrow().then(r => r.getAny().real?.current.getOrThrow())
 
       const returns = Cubane.Abi.Tuple.create(Cubane.Abi.Uint8)
       const [decimals] = Cubane.Abi.decodeOrThrow(returns, result!).intoOrThrow()
@@ -119,7 +119,7 @@ export function TokenAddDialog(props: {}) {
       return Number(decimals)
     }).then(r => r.getOrThrow())
 
-    await token.mutate(s => {
+    await token.mutateOrThrow(s => {
       const data = new Data<ContractTokenData>({
         uuid: randomUUID(),
         type: "contract",

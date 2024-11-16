@@ -1,5 +1,5 @@
 import { Abi, ZeroHexString } from "@hazae41/cubane";
-import { Data, Fail, FetcherMore, QueryStorage, createQuery } from "@hazae41/glacier";
+import { Data, Fail, QueryStorage, createQuery } from "@hazae41/glacier";
 import { Catched, Result } from "@hazae41/result";
 import { BgEthereumContext } from "../../context";
 import { EthereumChainfulRpcRequestPreinit } from "../wallets/data";
@@ -29,7 +29,7 @@ export namespace BgSignature {
     if (maybeKey == null)
       return
 
-    const fetcher = async (request: K, more: FetcherMore) => {
+    const fetcher = async (request: K, more: RequestInit) => {
       try {
         const fetched = await context.fetchOrFail<ZeroHexString>(request)
 

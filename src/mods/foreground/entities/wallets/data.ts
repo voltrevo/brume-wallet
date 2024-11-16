@@ -4,7 +4,7 @@ import { SeedQuery } from "@/mods/universal/entities/seeds/data"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fetched, FetcherMore, States, createQuery, useQuery } from "@hazae41/glacier"
+import { Data, Fetched, States, createQuery, useQuery } from "@hazae41/glacier"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Panic } from "@hazae41/result"
 import { WebAuthnStorage } from "@hazae41/webauthnstorage"
@@ -75,7 +75,7 @@ export namespace FgWallet {
 
           const [array = []] = [currentData]
 
-          await FgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutate(s => {
+          await FgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutateOrThrow(s => {
             const current = s.current
 
             const [{ value = new Fixed(0n, 0) } = {}] = [current?.ok().getOrNull()?.[account]]
@@ -129,7 +129,7 @@ export namespace FgWallet {
       const currentData = current.real?.current.ok()?.getOrNull()
 
       if (previousData != null && (previousData.uuid !== currentData?.uuid || previousData.trashed !== currentData?.trashed) && !previousData.trashed) {
-        await All.schema(storage).mutate(s => {
+        await All.schema(storage).mutateOrThrow(s => {
           const current = s.current
 
           if (current == null)
@@ -140,7 +140,7 @@ export namespace FgWallet {
           return new Some(current.mapSync(p => p.filter(x => x.uuid !== previousData.uuid)))
         })
 
-        await All.ByAddress.schema(previousData.address, storage)?.mutate(s => {
+        await All.ByAddress.schema(previousData.address, storage)?.mutateOrThrow(s => {
           const current = s.current
 
           if (current == null)
@@ -154,7 +154,7 @@ export namespace FgWallet {
         if (previousData.type === "seeded") {
           const { seed } = previousData
 
-          await All.BySeed.schema(seed.uuid, storage)?.mutate(s => {
+          await All.BySeed.schema(seed.uuid, storage)?.mutateOrThrow(s => {
             const current = s.current
 
             if (current == null)
@@ -168,7 +168,7 @@ export namespace FgWallet {
       }
 
       if (previousData != null && (previousData.uuid !== currentData?.uuid || previousData.trashed !== currentData?.trashed) && previousData.trashed) {
-        await All.Trashed.schema(storage).mutate(s => {
+        await All.Trashed.schema(storage).mutateOrThrow(s => {
           const current = s.current
 
           if (current == null)
@@ -181,7 +181,7 @@ export namespace FgWallet {
       }
 
       if (currentData != null && (currentData.uuid !== previousData?.uuid || currentData.trashed !== previousData?.trashed) && !currentData.trashed) {
-        await All.schema(storage).mutate(s => {
+        await All.schema(storage).mutateOrThrow(s => {
           const current = s.current
 
           if (current == null)
@@ -192,7 +192,7 @@ export namespace FgWallet {
           return new Some(current.mapSync(p => [...p, WalletRef.from(currentData)]))
         })
 
-        await All.ByAddress.schema(currentData.address, storage)?.mutate(s => {
+        await All.ByAddress.schema(currentData.address, storage)?.mutateOrThrow(s => {
           const current = s.current
 
           if (current == null)
@@ -206,7 +206,7 @@ export namespace FgWallet {
         if (currentData.type === "seeded") {
           const { seed } = currentData
 
-          await All.BySeed.schema(seed.uuid, storage)?.mutate(s => {
+          await All.BySeed.schema(seed.uuid, storage)?.mutateOrThrow(s => {
             const current = s.current
 
             if (current == null)
@@ -220,7 +220,7 @@ export namespace FgWallet {
       }
 
       if (currentData != null && (currentData.uuid !== previousData?.uuid || currentData.trashed !== previousData?.trashed) && currentData.trashed) {
-        await All.Trashed.schema(storage).mutate(s => {
+        await All.Trashed.schema(storage).mutateOrThrow(s => {
           const current = s.current
 
           if (current == null)
@@ -439,7 +439,7 @@ export class FgEthereumContext {
     return new FgEthereumContext(uuid, chain, background)
   }
 
-  async fetchOrFail<T>(init: EthereumChainlessRpcRequestPreinit<unknown>, more: FetcherMore = {}): Promise<Fetched<T, Error>> {
+  async fetchOrFail<T>(init: EthereumChainlessRpcRequestPreinit<unknown>, more: RequestInit = {}): Promise<Fetched<T, Error>> {
     const { uuid, background, chain } = this
 
     return await background.requestOrThrow<T>({
@@ -448,7 +448,7 @@ export class FgEthereumContext {
     }).then(r => Fetched.rewrap(r))
   }
 
-  async customFetchOrFail<T>(init: EthereumChainlessRpcRequestPreinit<unknown>, more: FetcherMore = {}): Promise<Fetched<T, Error>> {
+  async customFetchOrFail<T>(init: EthereumChainlessRpcRequestPreinit<unknown>, more: RequestInit = {}): Promise<Fetched<T, Error>> {
     const { uuid, background, chain } = this
 
     return await background.requestOrThrow<T>({

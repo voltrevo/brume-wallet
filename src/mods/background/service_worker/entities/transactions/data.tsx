@@ -1,6 +1,6 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { ZeroHexString } from "@hazae41/cubane"
-import { Data, FetcherMore, QueryStorage, States, createQuery } from "@hazae41/glacier"
+import { Data, QueryStorage, States, createQuery } from "@hazae41/glacier"
 import { None, Nullable, Some } from "@hazae41/option"
 import { BgEthereumContext } from "../../context"
 import { EthereumChainfulRpcRequestPreinit } from "../wallets/data"
@@ -204,7 +204,7 @@ export namespace BgTransaction {
 
       if (previousData?.uuid !== currentData?.uuid) {
         if (previousData != null) {
-          await BgTransactionTrial.schema(previousData.trial.uuid, storage)?.mutate(s => {
+          await BgTransactionTrial.schema(previousData.trial.uuid, storage)?.mutateOrThrow(s => {
             const current = s.real?.current
 
             if (current == null)
@@ -215,7 +215,7 @@ export namespace BgTransaction {
             return new Some(current.mapSync(d => ({ ...d, transactions: d.transactions.filter(t => t.uuid !== uuid) })))
           })
 
-          await All.ByAddress.schema(previousData.params.from, storage)?.mutate(s => {
+          await All.ByAddress.schema(previousData.params.from, storage)?.mutateOrThrow(s => {
             const current = s.real?.current
 
             if (current == null)
@@ -228,7 +228,7 @@ export namespace BgTransaction {
         }
 
         if (currentData != null) {
-          await BgTransactionTrial.schema(currentData.trial.uuid, storage).mutate(s => {
+          await BgTransactionTrial.schema(currentData.trial.uuid, storage).mutateOrThrow(s => {
             const current = s.real?.current
 
             if (current == null) {
@@ -247,7 +247,7 @@ export namespace BgTransaction {
             return new Some(current.mapSync(d => ({ ...d, transactions: [...d.transactions, TransactionRef.from(currentData)] })))
           })
 
-          await All.ByAddress.schema(currentData.params.from, storage)?.mutate(s => {
+          await All.ByAddress.schema(currentData.params.from, storage)?.mutateOrThrow(s => {
             const current = s.real?.current
 
             if (current == null)
@@ -261,7 +261,7 @@ export namespace BgTransaction {
       }
 
       if (currentData?.type === "executed") {
-        await BgTransactionTrial.schema(currentData.trial.uuid, storage).mutate(s => {
+        await BgTransactionTrial.schema(currentData.trial.uuid, storage).mutateOrThrow(s => {
           const current = s.real?.current
 
           if (current == null)
@@ -370,7 +370,7 @@ export namespace BgTransactionReceipt {
   }
 
   export function schema(uuid: string, hash: ZeroHexString, context: BgEthereumContext, storage: QueryStorage) {
-    const fetcher = async (request: K, more: FetcherMore) =>
+    const fetcher = async (request: K, more: RequestInit) =>
       await context.fetchOrFail<D>(request, more)
 
     const indexer = async (states: States<D, F>) => {
@@ -380,7 +380,7 @@ export namespace BgTransactionReceipt {
       const currentData = current.real?.current.ok()?.getOrNull()
 
       if (previousData == null && currentData != null) {
-        await BgTransaction.schema(uuid, storage)?.mutate(s => {
+        await BgTransaction.schema(uuid, storage)?.mutateOrThrow(s => {
           const current = s.real?.current
 
           if (current == null)

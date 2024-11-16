@@ -4,7 +4,7 @@ import { Mutators } from "@/libs/glacier/mutators"
 import { PairV2 } from "@/mods/universal/entities/pairs/v2"
 import { PairV3 } from "@/mods/universal/entities/pairs/v3"
 import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
-import { createQuery, Data, Fail, FetcherMore, QueryStorage, States } from "@hazae41/glacier"
+import { createQuery, Data, Fail, QueryStorage, States } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Option, Some } from "@hazae41/option"
 import { Catched, Result } from "@hazae41/result"
@@ -110,7 +110,7 @@ export namespace BgToken {
         const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
         const totalBalance = BgTotal.Balance.Priced.ByAddress.schema(address, currency, storage)
-        await totalBalance.mutate(Mutators.data<Fixed.From, never>(total))
+        await totalBalance.mutateOrThrow(Mutators.data<Fixed.From, never>(total))
       }
 
       return createQuery<K, D, F>({ key: key(address, currency), indexer, storage })
@@ -146,7 +146,7 @@ export namespace BgToken {
             const key = `${context.chain.chainId}`
             const [value = new Fixed(0n, 0)] = [currentData]
 
-            await BgToken.Balance.schema(account, coin, storage)?.mutate(s => {
+            await BgToken.Balance.schema(account, coin, storage)?.mutateOrThrow(s => {
               const { current } = s
 
               if (current == null)
@@ -187,7 +187,7 @@ export namespace BgToken {
       }
 
       export function schema(account: ZeroHexString, block: string, context: BgEthereumContext, storage: QueryStorage) {
-        const fetcher = async (request: K, more: FetcherMore) => {
+        const fetcher = async (request: K, more: RequestInit) => {
           try {
             const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
 
@@ -247,7 +247,7 @@ export namespace BgToken {
           }).then(o => o.getOrNull())
 
           const pricedBalanceQuery = Priced.schema(account, "usd", context, storage)
-          await pricedBalanceQuery.mutate(() => new Some(pricedBalance))
+          await pricedBalanceQuery.mutateOrThrow(() => new Some(pricedBalance))
         }
 
         return createQuery<K, D, F>({
@@ -305,7 +305,7 @@ export namespace BgToken {
             const key = `${context.chain.chainId}/${token.address}`
             const [value = new Fixed(0n, 0)] = [currentData]
 
-            await BgToken.Balance.schema(account, coin, storage)?.mutate(s => {
+            await BgToken.Balance.schema(account, coin, storage)?.mutateOrThrow(s => {
               const { current } = s
 
               if (current == null)
@@ -347,7 +347,7 @@ export namespace BgToken {
         if (maybeKey == null)
           return undefined
 
-        const fetcher = async (request: K, more: FetcherMore) => {
+        const fetcher = async (request: K, more: RequestInit) => {
           try {
             const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
 
@@ -407,7 +407,7 @@ export namespace BgToken {
           }).then(o => o.getOrNull())
 
           const pricedBalanceQuery = Priced.schema(account, token, "usd", context, storage)
-          await pricedBalanceQuery.mutate(() => new Some(pricedBalance))
+          await pricedBalanceQuery.mutateOrThrow(() => new Some(pricedBalance))
         }
 
         return createQuery<K, D, F>({
@@ -439,13 +439,13 @@ export namespace BgToken {
           return
 
         if (previousData != null) {
-          await All.schema(storage)?.mutate(Mutators.mapData((d = new Data([])) => {
+          await All.schema(storage)?.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => p.filter(x => x.uuid !== previousData.uuid))
           }))
         }
 
         if (currentData != null) {
-          await All.schema(storage)?.mutate(Mutators.mapData((d = new Data([])) => {
+          await All.schema(storage)?.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => [...p, ContractTokenRef.from(currentData)])
           }))
         }

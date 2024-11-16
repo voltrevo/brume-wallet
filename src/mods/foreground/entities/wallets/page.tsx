@@ -328,7 +328,7 @@ export function WalletMenu(props: {
   const walletQuery = useWallet(wallet.uuid)
 
   const trashOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    await walletQuery.mutate(s => {
+    await walletQuery.mutateOrThrow(s => {
       const current = s.real?.current
 
       if (current == null)
@@ -343,7 +343,7 @@ export function WalletMenu(props: {
   }), [close, walletQuery])
 
   const untrashOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    await walletQuery.mutate(s => {
+    await walletQuery.mutateOrThrow(s => {
       const current = s.real?.current
 
       if (current == null)
@@ -522,7 +522,7 @@ function NativeTokenMenu(props: { token: NativeTokenData }) {
   const onToggle = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const enabled = !favorite
 
-    await settings.mutate(s => {
+    await settings.mutateOrThrow(s => {
       const data = Mutators.Datas.mapOrNew((d = {
         uuid: randomUUID(),
         token: TokenRef.from(token),
@@ -619,7 +619,7 @@ function ContractTokenMenu(props: { token: ContractTokenData }) {
   const onToggle = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
     const enabled = !favorite
 
-    await settings.mutate(s => {
+    await settings.mutateOrThrow(s => {
       const data = Mutators.Datas.mapOrNew((d = {
         uuid: randomUUID(),
         token: TokenRef.from(token),

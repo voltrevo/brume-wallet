@@ -32,7 +32,7 @@ export function WalletEditDialog(props: {}) {
   }, [defNameInput])
 
   const saveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
-    await query.mutate((s) => {
+    await query.mutateOrThrow((s) => {
       const current = s.real?.current
 
       if (current == null)

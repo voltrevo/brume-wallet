@@ -12,7 +12,7 @@ export type AnyReactQuery<K, D, F> =
  * @param interval 
  */
 export function useWait<K, D, F>(query: ReactQuery<K, D, F>, interval: number) {
-  const { fetcher, ready, data, fetch } = query
+  const { fetcher, ready, data, fetchOrThrow } = query
 
   useEffect(() => {
     if (!ready)
@@ -24,7 +24,7 @@ export function useWait<K, D, F>(query: ReactQuery<K, D, F>, interval: number) {
     if (data?.get() != null)
       return
 
-    const f = () => fetch().catch(console.warn)
+    const f = () => fetchOrThrow().catch(console.warn)
 
     const i = setInterval(f, interval)
     return () => clearInterval(i)

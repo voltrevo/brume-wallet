@@ -98,7 +98,7 @@ export namespace BgUser {
       const previousData = previous?.real?.current.ok()?.getOrNull()
       const currentData = current.real?.current.ok()?.getOrNull()
 
-      await All.schema(storage).mutate(Mutators.mapData((d = new Data([])) => {
+      await All.schema(storage).mutateOrThrow(Mutators.mapData((d = new Data([])) => {
         if (previousData?.uuid === currentData?.uuid)
           return d
         if (previousData != null)

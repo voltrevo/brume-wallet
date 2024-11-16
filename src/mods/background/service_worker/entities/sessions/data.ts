@@ -174,14 +174,14 @@ export namespace BgSession {
       if (previousData != null) {
         if (previousData.persist) {
           const sessionByOrigin = ByOrigin.schema(previousData.origin, storage)
-          await sessionByOrigin.delete()
+          await sessionByOrigin.deleteOrThrow()
         }
 
         const sessionsQuery = previousData.persist
           ? All.Persistent.schema(storage)
           : All.Temporary.schema()
 
-        await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
+        await sessionsQuery.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
           return d.mapSync(p => p.filter(x => x.id !== previousData.id))
         }))
 
@@ -192,7 +192,7 @@ export namespace BgSession {
             ? All.Persistent.ByWallet.schema(wallet.uuid, storage)
             : All.Temporary.ByWallet.schema(wallet.uuid)
 
-          await sessionsByWalletQuery.mutate(Mutators.mapData((d = new Data([])) => {
+          await sessionsByWalletQuery.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => p.filter(x => x.id !== previousData.id))
           }))
         }
@@ -201,14 +201,14 @@ export namespace BgSession {
       if (currentData != null) {
         if (currentData.persist) {
           const sessionByOrigin = ByOrigin.schema(currentData.origin, storage)
-          await sessionByOrigin.mutate(Mutators.data<Session, never>(SessionRef.from(currentData)))
+          await sessionByOrigin.mutateOrThrow(Mutators.data<Session, never>(SessionRef.from(currentData)))
         }
 
         const sessionsQuery = currentData.persist
           ? All.Persistent.schema(storage)
           : All.Temporary.schema()
 
-        await sessionsQuery.mutate(Mutators.mapData((d = new Data([])) => {
+        await sessionsQuery.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
           return d = d.mapSync(p => [...p, SessionRef.from(currentData)])
         }))
 
@@ -219,7 +219,7 @@ export namespace BgSession {
             ? All.Persistent.ByWallet.schema(wallet.uuid, storage)
             : All.Temporary.ByWallet.schema(wallet.uuid)
 
-          await sessionsByWalletQuery.mutate(Mutators.mapData((d = new Data([])) => {
+          await sessionsByWalletQuery.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => [...p, SessionRef.from(currentData)])
           }))
         }

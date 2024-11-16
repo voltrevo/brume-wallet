@@ -70,7 +70,7 @@ export function UserCreateDialog(props: { next?: string }) {
       params: [user.uuid, defPasswordInput]
     }).then(r => r.getOrThrow())
 
-    await currentUserQuery.mutate(() => new Some(new Data(UserRef.create(user.uuid))))
+    await currentUserQuery.mutateOrThrow(() => new Some(new Data(UserRef.create(user.uuid))))
 
     close(true)
 

@@ -1,5 +1,5 @@
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
-import { Data, FetcherMore, QueryStorage, States, createQuery } from "@hazae41/glacier"
+import { Data, QueryStorage, States, createQuery } from "@hazae41/glacier"
 import { None, Some } from "@hazae41/option"
 import { BgEthereumContext } from "../../context"
 import { EthereumChainfulRpcRequestPreinit, EthereumChainlessRpcRequestPreinit } from "../wallets/data"
@@ -17,7 +17,7 @@ export namespace BgEthereum {
     }
 
     export function schema(context: BgEthereumContext, request: EthereumChainlessRpcRequestPreinit<unknown>, storage: QueryStorage) {
-      const fetcher = async (request: K, more: FetcherMore) =>
+      const fetcher = async (request: K, more: RequestInit) =>
         await context.fetchOrFail<unknown>(request, more)
 
       return createQuery<K, D, F>({
@@ -69,7 +69,7 @@ export namespace BgTotal {
                 return Fixed.from(y.value).add(x)
               }, new Fixed(0n, 0))
 
-              await Priced.schema(coin, storage).mutate(() => new Some(new Data(total)))
+              await Priced.schema(coin, storage).mutateOrThrow(() => new Some(new Data(total)))
             }
 
             return createQuery<K, D, F>({ key: key(coin), indexer, storage })
@@ -94,7 +94,7 @@ export namespace BgTotal {
 
             const [value = new Fixed(0n, 0)] = [currentData]
 
-            await Record.schema(coin, storage)?.mutate(s => {
+            await Record.schema(coin, storage)?.mutateOrThrow(s => {
               const { current } = s
 
               const [{ count = 0 } = {}] = [current?.ok().getOrNull()?.[account]]

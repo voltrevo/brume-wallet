@@ -1,7 +1,7 @@
 import { EnsAbi } from "@/libs/abi/ens.abi"
 import { Bytes, Uint8Array } from "@hazae41/bytes"
 import { Abi, Address, Ens, ZeroHexString } from "@hazae41/cubane"
-import { Data, Fail, Fetched, FetcherMore, QueryStorage, createQuery } from "@hazae41/glacier"
+import { Data, Fail, Fetched, QueryStorage, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
@@ -12,7 +12,7 @@ export namespace BgEns {
 
   export namespace Resolver {
 
-    export async function fetchOrFail(context: BgEthereumContext, namehash: Uint8Array<32>, more: FetcherMore): Promise<Fetched<ZeroHexString, Error>> {
+    export async function fetchOrFail(context: BgEthereumContext, namehash: Uint8Array<32>, more: RequestInit): Promise<Fetched<ZeroHexString, Error>> {
       try {
         const registry = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
 
@@ -64,7 +64,7 @@ export namespace BgEns {
     }
 
     export function schema(context: BgEthereumContext, name: string, storage: QueryStorage) {
-      const fetcher = (key: K, more: FetcherMore) =>
+      const fetcher = (key: K, more: RequestInit) =>
         fetchOrFail(context, name, more)
 
       return createQuery<K, D, Error>({
@@ -74,7 +74,7 @@ export namespace BgEns {
       })
     }
 
-    export async function fetchOrFail(context: BgEthereumContext, name: string, more: FetcherMore) {
+    export async function fetchOrFail(context: BgEthereumContext, name: string, more: RequestInit) {
       try {
         const namehash32 = Bytes.castOrThrow(Ens.namehashOrThrow(name), 32)
         const resolver = await Resolver.fetchOrFail(context, namehash32, more)
@@ -129,7 +129,7 @@ export namespace BgEns {
     }
 
     export function schema(context: BgEthereumContext, address: ZeroHexString, storage: QueryStorage) {
-      const fetcher = (key: K, more: FetcherMore) => fetchOrFail(context, address, more)
+      const fetcher = (key: K, more: RequestInit) => fetchOrFail(context, address, more)
 
       return createQuery<K, D, F>({
         key: key(address),
@@ -138,7 +138,7 @@ export namespace BgEns {
       })
     }
 
-    export async function fetchUncheckedOrFail(context: BgEthereumContext, address: ZeroHexString, more: FetcherMore): Promise<Fetched<Nullable<string>, Error>> {
+    export async function fetchUncheckedOrFail(context: BgEthereumContext, address: ZeroHexString, more: RequestInit): Promise<Fetched<Nullable<string>, Error>> {
       try {
         const namehash32 = Bytes.castOrThrow(Ens.namehashOrThrow(`${address.slice(2)}.addr.reverse`), 32)
         const resolver = await Resolver.fetchOrFail(context, namehash32, more)
@@ -171,7 +171,7 @@ export namespace BgEns {
       }
     }
 
-    export async function fetchOrFail(context: BgEthereumContext, address: ZeroHexString, more: FetcherMore) {
+    export async function fetchOrFail(context: BgEthereumContext, address: ZeroHexString, more: RequestInit) {
       const name = await fetchUncheckedOrFail(context, address, more)
 
       if (name.isErr())

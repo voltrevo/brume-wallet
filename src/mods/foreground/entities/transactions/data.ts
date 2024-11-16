@@ -51,7 +51,7 @@ export namespace FgTransaction {
 
       if (previousData?.uuid !== currentData?.uuid) {
         if (previousData != null) {
-          await FgTransactionTrial.schema(previousData.trial.uuid, storage)?.mutate(s => {
+          await FgTransactionTrial.schema(previousData.trial.uuid, storage)?.mutateOrThrow(s => {
             const current = s.real?.current
 
             if (current == null)
@@ -62,7 +62,7 @@ export namespace FgTransaction {
             return new Some(current.mapSync(d => ({ ...d, transactions: d.transactions.filter(t => t.uuid !== uuid) })))
           })
 
-          await All.ByAddress.schema(previousData.params.from, storage)?.mutate(s => {
+          await All.ByAddress.schema(previousData.params.from, storage)?.mutateOrThrow(s => {
             const current = s.real?.current
 
             if (current == null)
@@ -75,7 +75,7 @@ export namespace FgTransaction {
         }
 
         if (currentData != null) {
-          await FgTransactionTrial.schema(currentData.trial.uuid, storage)?.mutate(s => {
+          await FgTransactionTrial.schema(currentData.trial.uuid, storage)?.mutateOrThrow(s => {
             const current = s.real?.current
 
             if (current == null) {
@@ -94,7 +94,7 @@ export namespace FgTransaction {
             return new Some(current.mapSync(d => ({ ...d, transactions: [...d.transactions, TransactionRef.from(currentData)] })))
           })
 
-          await All.ByAddress.schema(currentData.params.from, storage)?.mutate(s => {
+          await All.ByAddress.schema(currentData.params.from, storage)?.mutateOrThrow(s => {
             const current = s.real?.current
 
             if (current == null)
@@ -108,7 +108,7 @@ export namespace FgTransaction {
       }
 
       if (currentData?.type === "executed") {
-        await FgTransactionTrial.schema(currentData.trial.uuid, storage)?.mutate(s => {
+        await FgTransactionTrial.schema(currentData.trial.uuid, storage)?.mutateOrThrow(s => {
           const current = s.real?.current
 
           if (current == null)
@@ -202,7 +202,7 @@ export namespace FgTransactionReceipt {
       const currentData = current.real?.current.ok()?.getOrNull()
 
       if (previousData == null && currentData != null) {
-        await FgTransaction.schema(uuid, storage)?.mutate(s => {
+        await FgTransaction.schema(uuid, storage)?.mutateOrThrow(s => {
           const current = s.real?.current
 
           if (current == null)

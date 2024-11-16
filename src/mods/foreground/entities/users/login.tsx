@@ -63,7 +63,7 @@ export function UserLoginDialog(props: { next?: string }) {
       return
     }
 
-    await currentUserQuery.mutate(() => new Some(new Data(UserRef.create(user.uuid))))
+    await currentUserQuery.mutateOrThrow(() => new Some(new Data(UserRef.create(user.uuid))))
 
     close(true)
 

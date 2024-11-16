@@ -47,13 +47,13 @@ export namespace FgTokenSettings {
         return
 
       if (previousData != null) {
-        await ByWallet.schema(previousData.wallet, storage)?.mutate(Mutators.mapData((d = new Data([])) => {
+        await ByWallet.schema(previousData.wallet, storage)?.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
           return d.mapSync(p => p.filter(x => x.uuid !== previousData.uuid))
         }))
       }
 
       if (currentData != null) {
-        await ByWallet.schema(currentData.wallet, storage)?.mutate(Mutators.mapData((d = new Data([])) => {
+        await ByWallet.schema(currentData.wallet, storage)?.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
           return d.mapSync(p => [...p, TokenSettingsRef.from(currentData)])
         }))
       }

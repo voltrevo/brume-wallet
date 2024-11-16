@@ -4,7 +4,7 @@ import { UniswapV2 } from "@/libs/uniswap"
 import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
-import { createQuery, Data, Fail, FetcherMore, QueryStorage } from "@hazae41/glacier"
+import { createQuery, Data, Fail, QueryStorage } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 
@@ -35,7 +35,7 @@ export namespace PairV2 {
       if (block == null)
         return
 
-      const fetcher = async (request: K, more: FetcherMore = {}) => {
+      const fetcher = async (request: K, more: RequestInit = {}) => {
         try {
           const fetched = await context.fetchOrFail<ZeroHexString>(request)
 

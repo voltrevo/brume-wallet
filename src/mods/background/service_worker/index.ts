@@ -188,7 +188,7 @@ export class Global {
     const { storage, hasher, crypter } = await createUserStorageOrThrow(userData, password)
 
     const currentUserQuery = BgUser.Current.schema()
-    await currentUserQuery.mutate(() => new Some(new Data(user)))
+    await currentUserQuery.mutateOrThrow(() => new Some(new Data(user)))
 
     const userSession = UserSession.create(this, { user, storage, hasher, crypter })
 
@@ -287,21 +287,21 @@ export class Global {
 
   async requestNoPopupOrThrow<T>(request: AppRequestData): Promise<RpcResponse<T>> {
     const requestQuery = BgAppRequest.schema(request.id)
-    await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
+    await requestQuery.mutateOrThrow(Mutators.data<AppRequestData, never>(request))
 
     const done = new Future<void>()
 
     try {
       return await this.waitResponseOrThrow(request.id, done)
     } finally {
-      await requestQuery.delete()
+      await requestQuery.deleteOrThrow()
       done.resolve()
     }
   }
 
   async requestPopupOrThrow<T>(request: AppRequestData, mouse: Mouse): Promise<RpcResponse<T>> {
     const requestQuery = BgAppRequest.schema(request.id)
-    await requestQuery.mutate(Mutators.data<AppRequestData, never>(request))
+    await requestQuery.mutateOrThrow(Mutators.data<AppRequestData, never>(request))
 
     const done = new Future<void>()
 
@@ -323,7 +323,7 @@ export class Global {
 
       return response
     } finally {
-      await requestQuery.delete()
+      await requestQuery.deleteOrThrow()
       done.resolve()
     }
   }
@@ -450,12 +450,12 @@ export class Global {
 
       if (preOriginData.icon) {
         const iconData = { id: origin, data: preOriginData.icon }
-        await iconQuery.mutate(Mutators.data(iconData))
+        await iconQuery.mutateOrThrow(Mutators.data(iconData))
       }
 
       const originQuery = Option.wrap(OriginQuery.create(origin, user.storage)).getOrThrow()
       const originData: OriginData = { origin, title, description, icons: [iconRef] }
-      await originQuery.mutate(Mutators.data(originData))
+      await originQuery.mutateOrThrow(Mutators.data(originData))
 
       const sessionByOriginQuery = BgSession.ByOrigin.schema(origin, user.storage)
       const sessionByOriginState = await sessionByOriginQuery.state
@@ -482,7 +482,7 @@ export class Global {
         scripts.add(script)
 
         const { id } = sessionData
-        await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
+        await Status.schema(id).mutateOrThrow(Mutators.data<StatusData, never>({ id }))
 
         script.events.on("close", async () => {
           scripts!.delete(script)
@@ -492,7 +492,7 @@ export class Global {
             return
 
           const { id } = sessionData
-          await Status.schema(id).delete().catch(console.warn)
+          await Status.schema(id).deleteOrThrow().catch(console.warn)
         })
 
         const { chainId } = sessionData.chain
@@ -536,7 +536,7 @@ export class Global {
       }
 
       const sessionQuery = BgSession.schema(sessionData.id, user.storage)
-      await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
+      await sessionQuery.mutateOrThrow(Mutators.data<SessionData, never>(sessionData))
 
       user.sessionByScript.set(script.name, sessionData.id)
 
@@ -550,7 +550,7 @@ export class Global {
       scripts.add(script)
 
       const { id } = sessionData
-      await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
+      await Status.schema(id).mutateOrThrow(Mutators.data<StatusData, never>({ id }))
 
       script.events.on("close", async () => {
         scripts!.delete(script)
@@ -560,7 +560,7 @@ export class Global {
           return
 
         const { id } = sessionData
-        await Status.schema(id).delete().catch(console.warn)
+        await Status.schema(id).deleteOrThrow().catch(console.warn)
       })
 
       if (this.chainIdByScript.has(script.name) && this.chainIdByScript.get(script.name) !== userChainId) {
@@ -727,7 +727,7 @@ export class Global {
 
     const query = BgToken.Native.Balance.schema(address, block, context, user.storage)
 
-    try { await query.fetch() } catch { }
+    try { await query.fetchOrThrow() } catch { }
 
     const stored = core.storeds.get(query.cacheKey)
     const unstored = await core.unstoreOrThrow<any, unknown, any>(stored, { key: query.cacheKey })
@@ -850,7 +850,7 @@ export class Global {
     if (sessionData.type === "wc")
       throw new Error("Unexpected WalletConnect session")
 
-    await sessionQuery.mutate(() => new Some(new Data({ ...sessionData, chain })))
+    await sessionQuery.mutateOrThrow(() => new Some(new Data({ ...sessionData, chain })))
 
     for (const script of Option.wrap(user.scriptsBySession.get(session.id)).getOr([])) {
       script.requestOrThrow({
@@ -936,7 +936,7 @@ export class Global {
 
     const userData = await BgUser.createOrThrow(init)
     const userQuery = BgUser.schema(init.uuid, this.storage)
-    await userQuery.mutate(() => new Some(new Data(userData)))
+    await userQuery.mutateOrThrow(() => new Some(new Data(userData)))
   }
 
   async brume_login(request: RpcRequestPreinit<unknown>): Promise<void> {
@@ -971,7 +971,7 @@ export class Global {
     if (sessionData.type === "wc")
       throw new Error("Unexpected WalletConnect session")
 
-    await sessionQuery.mutate(() => new Some(new Data({ ...sessionData, chain })))
+    await sessionQuery.mutateOrThrow(() => new Some(new Data({ ...sessionData, chain })))
 
     for (const script of Option.wrap(user.scriptsBySession.get(sessionId)).getOr([])) {
       script.requestOrThrow({
@@ -992,7 +992,7 @@ export class Global {
     const [id] = (request as RpcRequestPreinit<[string]>).params
 
     const sessionQuery = BgSession.schema(id, user.storage)
-    await sessionQuery.delete()
+    await sessionQuery.deleteOrThrow()
 
     const wcSession = user.wcBySession.get(id)
 
@@ -1052,7 +1052,7 @@ export class Global {
     const [seed] = (request as RpcRequestPreinit<[SeedData]>).params
 
     const seedQuery = Option.wrap(SeedQuery.create(seed.uuid, user.storage)).getOrThrow()
-    await seedQuery.mutate(Mutators.data(seed))
+    await seedQuery.mutateOrThrow(Mutators.data(seed))
   }
 
   async brume_createWallet(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<void> {
@@ -1061,7 +1061,7 @@ export class Global {
     const [wallet] = (request as RpcRequestPreinit<[WalletData]>).params
 
     const walletQuery = BgWallet.schema(wallet.uuid, user.storage)
-    await walletQuery.mutate(Mutators.data(wallet))
+    await walletQuery.mutateOrThrow(Mutators.data(wallet))
   }
 
   async brume_get_global(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Nullable<RawState>> {
@@ -1204,7 +1204,7 @@ export class Global {
 
     const query = await this.routeCustomOrThrow(context, subrequest, user.storage)
 
-    try { await query.fetch() } catch { }
+    try { await query.fetchOrThrow() } catch { }
 
     const stored = core.storeds.get(query.cacheKey)
     const unstored = await core.unstoreOrThrow<any, unknown, Error>(stored, { key: query.cacheKey })
@@ -1260,7 +1260,7 @@ export class Global {
 
     const { id } = sessionRef
     const error = sessionResult.mapErrSync(RpcError.rewrap).err().inner
-    await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id, error }))
+    await Status.schema(id).mutateOrThrow(Mutators.data<StatusData, never>({ id, error }))
   }
 
   async #wcReconnectOrThrow(sessionData: WcSessionData): Promise<WcSession> {
@@ -1293,7 +1293,7 @@ export class Global {
         .then(r => r.getOrThrow())
 
       const sessionQuery = BgSession.schema(sessionData.id, user.storage)
-      await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
+      await sessionQuery.mutateOrThrow(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
     }
 
     const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
@@ -1355,7 +1355,7 @@ export class Global {
     }
 
     const originQuery = Option.wrap(OriginQuery.create(originData.origin, user.storage)).getOrThrow()
-    await originQuery.mutate(Mutators.data(originData))
+    await originQuery.mutateOrThrow(Mutators.data(originData))
 
     const authKeyJwk = await irn.brume.key.exportJwkOrThrow()
     const sessionKeyBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(session.client.key)
@@ -1375,7 +1375,7 @@ export class Global {
     }
 
     const sessionQuery = BgSession.schema(sessionData.id, user.storage)
-    await sessionQuery.mutate(Mutators.data<SessionData, never>(sessionData))
+    await sessionQuery.mutateOrThrow(Mutators.data<SessionData, never>(sessionData))
 
     /**
      * Service worker can die here
@@ -1385,7 +1385,7 @@ export class Global {
       .then(Result.assert)
       .then(r => r.getOrThrow())
 
-    await sessionQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
+    await sessionQuery.mutateOrThrow(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, settlement: undefined }))))
 
     const onRequest = async (suprequest: RpcRequestPreinit<unknown>) => {
       if (suprequest.method !== "wc_sessionRequest")
@@ -1423,10 +1423,10 @@ export class Global {
     user.wcBySession.set(sessionData.id, session)
 
     const { id } = sessionData
-    await Status.schema(id).mutate(Mutators.data<StatusData, never>({ id }))
+    await Status.schema(id).mutateOrThrow(Mutators.data<StatusData, never>({ id }))
 
     const icons = session.metadata.icons.map<BlobbyRef>(x => ({ ref: true, id: x }))
-    await originQuery.mutate(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icons }))))
+    await originQuery.mutateOrThrow(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icons }))))
 
     for (const iconUrl of session.metadata.icons) {
       (async () => {
@@ -1445,7 +1445,7 @@ export class Global {
 
         const blobbyQuery = Option.wrap(BlobbyQuery.create(iconUrl, user.storage)).getOrThrow()
         const blobbyData = { id: iconUrl, data: iconData }
-        await blobbyQuery.mutate(Mutators.data(blobbyData))
+        await blobbyQuery.mutateOrThrow(Mutators.data(blobbyData))
       })().catch(console.warn)
     }
 

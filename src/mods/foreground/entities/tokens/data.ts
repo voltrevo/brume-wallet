@@ -9,7 +9,7 @@ import { PairV2 } from "@/mods/universal/entities/pairs/v2"
 import { PairV3 } from "@/mods/universal/entities/pairs/v3"
 import { PriceV3 } from "@/mods/universal/entities/tokens/price"
 import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
-import { core, createQuery, Data, Fail, FetcherMore, States, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
+import { core, createQuery, Data, Fail, States, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 import { FgTotal } from "../unknown/data"
@@ -34,7 +34,7 @@ export namespace FgToken {
         const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
         const totalBalance = FgTotal.Balance.Priced.ByAddress.schema(address, currency, storage)
-        await totalBalance?.mutate(Mutators.data<Fixed.From, never>(total))
+        await totalBalance?.mutateOrThrow(Mutators.data<Fixed.From, never>(total))
       }
 
       return createQuery<K, D, F>({ key: key(address, currency), indexer, storage })
@@ -69,7 +69,7 @@ export namespace FgToken {
             const key = `${context.chain.chainId}`
             const [value = new Fixed(0n, 0)] = [currentData]
 
-            await FgToken.Balance.schema(account, coin, storage)?.mutate(s => {
+            await FgToken.Balance.schema(account, coin, storage)?.mutateOrThrow(s => {
               const { current } = s
 
               if (current == null)
@@ -104,7 +104,7 @@ export namespace FgToken {
         if (block == null)
           return
 
-        const fetcher = async (request: K, more: FetcherMore = {}) => {
+        const fetcher = async (request: K, more: RequestInit = {}) => {
           try {
             const fetched = await context.fetchOrFail<ZeroHexString>(request)
 
@@ -164,7 +164,7 @@ export namespace FgToken {
           }).then(o => o.getOrNull())
 
           const pricedBalanceQuery = Priced.schema(address, "usd", context, storage)
-          await pricedBalanceQuery?.mutate(() => new Some(pricedBalance))
+          await pricedBalanceQuery?.mutateOrThrow(() => new Some(pricedBalance))
         }
 
         return createQuery<K, D, F>({
@@ -207,7 +207,7 @@ export namespace FgToken {
             const key = `${context.chain.chainId}/${token.address}`
             const [value = new Fixed(0n, 0)] = [currentData]
 
-            await FgToken.Balance.schema(account, coin, storage)?.mutate(s => {
+            await FgToken.Balance.schema(account, coin, storage)?.mutateOrThrow(s => {
               const { current } = s
 
               if (current == null)
@@ -249,7 +249,7 @@ export namespace FgToken {
         if (maybeKey == null)
           return
 
-        const fetcher = async (request: K, more: FetcherMore = {}) => {
+        const fetcher = async (request: K, more: RequestInit = {}) => {
           try {
             const fetched = await context.fetchOrFail<ZeroHexString>(request)
 
@@ -309,7 +309,7 @@ export namespace FgToken {
           }).then(o => o.getOrNull())
 
           const pricedBalanceQuery = Priced.schema(address, token, "usd", context, storage)
-          await pricedBalanceQuery?.mutate(() => new Some(pricedBalanceData))
+          await pricedBalanceQuery?.mutateOrThrow(() => new Some(pricedBalanceData))
         }
 
         return createQuery<K, D, F>({
@@ -358,13 +358,13 @@ export namespace FgToken {
           return
 
         if (previousData != null) {
-          await All.schema(storage)?.mutate(Mutators.mapData((d = new Data([])) => {
+          await All.schema(storage)?.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => p.filter(x => x.uuid !== previousData.uuid))
           }))
         }
 
         if (currentData != null) {
-          await All.schema(storage)?.mutate(Mutators.mapData((d = new Data([])) => {
+          await All.schema(storage)?.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
             return d.mapSync(p => [...p, ContractTokenRef.from(currentData)])
           }))
         }

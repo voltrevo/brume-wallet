@@ -103,7 +103,7 @@ export function createTorPool(sockets: AutoPool<Disposer<WebSocket>>, storage: Q
 
         const microdescsQuery = MicrodescQuery.All.create(tor.getOrThrow(), storage)
         const microdescsStale = await microdescsQuery.state.then(r => r.current?.ok().getOrNull())
-        const microdescsFresh = microdescsQuery.fetch().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
+        const microdescsFresh = microdescsQuery.fetchOrThrow().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
         if (microdescsStale == null)
           await microdescsFresh
