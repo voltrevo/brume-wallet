@@ -33,6 +33,22 @@ export namespace PriceV3 {
       return
 
     const fetcher = (request: K, more: FetcherMore) => Fetched.runOrDoubleWrap(async () => {
+      const usdcData = Records.getOrThrow(FactoryV3.usdcByChainId, context.chain.chainId)
+      const usdcTokenPairFetched = await FactoryV3.GetPool.queryOrThrow(context, token, usdcData, 3000, block, storage)!.fetch().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+
+      if (usdcTokenPairFetched.isErr())
+        return usdcTokenPairFetched
+
+      if (usdcTokenPairFetched.get().toString() !== "0x0000000000000000000000000000000000000000") {
+        const usdcTokenPairData: SimplePairDataV3 = { version: 3, address: usdcTokenPairFetched.get(), chainId: context.chain.chainId, token0: token, token1: usdcData, reversed: false }
+        const usdcTokenPriceFetched = await PairV3.Price.queryOrThrow(context, usdcTokenPairData, block, storage)!.fetch().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+
+        if (usdcTokenPriceFetched.isErr())
+          return usdcTokenPriceFetched
+
+        return new Data(usdcTokenPriceFetched.get())
+      }
+
       const wethData = Records.getOrThrow(FactoryV3.wethByChainId, context.chain.chainId)
       const wethTokenPairFetched = await FactoryV3.GetPool.queryOrThrow(context, token, wethData, 3000, block, storage)!.fetch().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 

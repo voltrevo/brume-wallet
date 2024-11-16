@@ -1,11 +1,13 @@
 import { Errors } from "@/libs/errors/errors"
-import { chainDataByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
+import { chainDataByChainId, pairByAddress, SimpleContractTokenData } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { BgToken, ContractTokenData, ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
+import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { PairV2 } from "@/mods/universal/entities/pairs/v2"
 import { PairV3 } from "@/mods/universal/entities/pairs/v3"
+import { PriceV3 } from "@/mods/universal/entities/tokens/price"
 import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
 import { core, createQuery, Data, Fail, FetcherMore, States, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { None, Nullable, Option, Some } from "@hazae41/option"
@@ -446,5 +448,14 @@ export function useContractPricedBalance(address: Nullable<ZeroHexString>, token
   const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgToken.Contract.Balance.Priced.schema, [address, token, coin, context, storage])
 
+  return query
+}
+
+export function useContractPriceV3(context: Nullable<EthereumContext>, token: Nullable<SimpleContractTokenData>, block: Nullable<string>) {
+  const storage = useUserStorageContext().getOrThrow()
+  const query = useQuery(PriceV3.queryOrThrow, [context, token, block, storage])
+  useFetch(query)
+  useVisible(query)
+  useError(query, Errors.onQueryError)
   return query
 }

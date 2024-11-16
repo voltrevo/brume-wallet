@@ -34,7 +34,7 @@ import { useBackgroundContext } from "../../background/context";
 import { useEnsReverse } from "../names/data";
 import { usePairV2Price, usePairV3Price } from "../pairs/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
-import { useContractBalance, useContractPricedBalance, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
+import { useContractBalance, useContractPricedBalance, useContractPriceV3, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
 import { SmallShrinkableContrastButton } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
@@ -657,51 +657,6 @@ function ContractTokenMenu(props: { token: ContractTokenData }) {
   </div>
 }
 
-function MainnetContractTokenRow(props: { token: ContractTokenData } & { chain: ChainData }) {
-  const path = usePathContext().getOrThrow()
-  const wallet = useWalletDataContext().getOrThrow()
-  const { token, chain } = props
-
-  const subpath = useHashSubpath(path)
-  const menu = useCoords(subpath, `/token/${token.uuid}`)
-
-  const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
-
-  const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
-
-  const balanceQuery = useContractBalance(wallet.address, token, "pending", context, prices)
-  const balanceUsdQuery = useContractPricedBalance(wallet.address, token, "usd", context)
-
-  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setPrices(prices => {
-      prices[index] = data
-      return [...prices]
-    })
-  }, [])
-
-  return <>
-    <HashSubpathProvider>
-      {subpath.url.pathname === `/token/${token.uuid}` &&
-        <Menu>
-          <ContractTokenMenu token={token} />
-        </Menu>}
-    </HashSubpathProvider>
-    {token.pairs?.map((address, i) =>
-      <PriceResolver key={i}
-        index={i}
-        address={address}
-        ok={onPrice} />)}
-    <ClickableTokenRow
-      href={menu.href}
-      onClick={menu.onClick}
-      onContextMenu={menu.onContextMenu}
-      token={token}
-      chain={chain}
-      balanceQuery={balanceQuery}
-      balanceUsdQuery={balanceUsdQuery} />
-  </>
-}
-
 function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainData }) {
   const path = usePathContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
@@ -716,6 +671,10 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const balanceQuery = useContractBalance(wallet.address, token, "pending", context, prices)
   const balanceUsdQuery = useContractPricedBalance(wallet.address, token, "usd", context)
+
+  const pricev3 = useContractPriceV3(context, token, "pending")
+
+  console.log("pricev3", token.symbol, pricev3)
 
   const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
     setPrices(prices => {
