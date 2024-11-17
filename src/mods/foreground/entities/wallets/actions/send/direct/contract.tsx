@@ -1,4 +1,4 @@
-import { TokenAbi } from "@/libs/abi/erc20.abi";
+import { ERC20Abi } from "@/libs/abi/erc20.abi";
 import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { nto } from "@/libs/ntu";
@@ -248,7 +248,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
       const address = Address.fromOrThrow(maybeFinalTarget)
       const value = maybeFinalValue.value
 
-      const abi = TokenAbi.transfer.fromOrThrow(address, value)
+      const abi = ERC20Abi.transfer.fromOrThrow(address, value)
       const hex = Abi.encodeOrThrow(abi)
 
       return hex

@@ -1,4 +1,4 @@
-import { TokenAbi } from "@/libs/abi/erc20.abi";
+import { ERC20Abi } from "@/libs/abi/erc20.abi";
 import { PeanutAbi } from "@/libs/abi/peanut.abi";
 import { useCopy } from "@/libs/copy/copy";
 import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
@@ -281,7 +281,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       return undefined
 
     return Result.runAndDoubleWrapSync(() => {
-      const abi = TokenAbi.approve.fromOrThrow(maybeContract, maybeFinalValue.value)
+      const abi = ERC20Abi.approve.fromOrThrow(maybeContract, maybeFinalValue.value)
       const hex = Abi.encodeOrThrow(abi)
 
       return hex

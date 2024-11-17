@@ -1,4 +1,4 @@
-import { TokenAbi } from "@/libs/abi/erc20.abi"
+import { ERC20Abi } from "@/libs/abi/erc20.abi"
 import { ChainData, chainDataByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
 import { PairV2 } from "@/mods/universal/entities/pairs/v2"
@@ -336,7 +336,7 @@ export namespace BgToken {
           method: "eth_call",
           params: [{
             to: token.address,
-            data: Cubane.Abi.encodeOrThrow(TokenAbi.balanceOf.fromOrThrow(account))
+            data: Cubane.Abi.encodeOrThrow(ERC20Abi.balanceOf.fromOrThrow(account))
           }, block]
         })).ok().inner
       }
