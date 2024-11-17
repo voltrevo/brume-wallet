@@ -1,6 +1,6 @@
 import { createQuery, QueryStorage } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { Blobby } from "../blobbys/data"
+import { Blobby } from "../blobbys"
 
 export type Origin =
   | OriginData

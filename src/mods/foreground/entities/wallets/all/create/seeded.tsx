@@ -9,7 +9,7 @@ import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
-import { SeedRef } from "@/mods/universal/entities/seeds/data";
+import { SeedRef } from "@/mods/universal/entities/seeds";
 import { Address, ZeroHexString } from "@hazae41/cubane";
 import { Ledger } from "@hazae41/ledger";
 import { Option } from "@hazae41/option";

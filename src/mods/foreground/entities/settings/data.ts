@@ -1,4 +1,4 @@
-import { SettingsQuery } from "@/mods/universal/entities/settings/data"
+import { SettingsQuery } from "@/mods/universal/entities/settings"
 import { useQuery } from "@hazae41/glacier"
 import { useUserStorageContext } from "../../storage/user"
 

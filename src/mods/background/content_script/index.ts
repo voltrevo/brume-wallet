@@ -16,7 +16,7 @@ import { RpcErr, RpcError, RpcErrorInit, RpcRequestPreinit, RpcResponse } from "
 import { None, Some } from "@hazae41/option";
 import { Pool } from "@hazae41/piscine";
 import { Result } from "@hazae41/result";
-import { PreOriginData } from "../../universal/entities/origins/data";
+import { PreOriginData } from "../../universal/entities/origins";
 
 declare global {
   interface DedicatedWorkerGlobalScopeEventMap {

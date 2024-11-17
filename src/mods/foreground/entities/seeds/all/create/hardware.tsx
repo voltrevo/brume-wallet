@@ -9,7 +9,7 @@ import { useConstant } from "@/libs/react/ref";
 import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
-import { SeedData } from "@/mods/universal/entities/seeds/data";
+import { SeedData } from "@/mods/universal/entities/seeds";
 import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Ledger } from "@hazae41/ledger";
 import { useCloseContext } from "@hazae41/react-close-context";

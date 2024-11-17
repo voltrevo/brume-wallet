@@ -1,4 +1,4 @@
-import { LinksQuery } from "@/mods/universal/entities/links/data";
+import { LinksQuery } from "@/mods/universal/entities/links";
 import { useQuery } from "@hazae41/glacier";
 import { useUserStorageContext } from "../../storage/user";
 

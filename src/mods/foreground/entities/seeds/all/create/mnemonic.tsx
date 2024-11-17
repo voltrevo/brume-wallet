@@ -10,7 +10,7 @@ import { useConstant } from "@/libs/react/ref";
 import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
-import { SeedData } from "@/mods/universal/entities/seeds/data";
+import { SeedData } from "@/mods/universal/entities/seeds";
 import { Base64 } from "@hazae41/base64";
 import { Bytes } from "@hazae41/bytes";
 import { useCloseContext } from "@hazae41/react-close-context";

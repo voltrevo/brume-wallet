@@ -1,6 +1,6 @@
 import { Color } from "@/libs/colors/colors"
 import { Outline } from "@/libs/icons/icons"
-import { getSeedEmoji, SeedData } from "@/mods/universal/entities/seeds/data"
+import { getSeedEmoji, SeedData } from "@/mods/universal/entities/seeds"
 import { useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { useCallback, useEffect, useState } from "react"
 import { flushSync } from "react-dom"

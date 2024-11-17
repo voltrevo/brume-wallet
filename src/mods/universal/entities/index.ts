@@ -1,11 +1,11 @@
 import { QueryStorage, SimpleQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { BlobbyQuery } from "./blobbys/data"
-import { LinksQuery } from "./links/data"
-import { MicrodescQuery } from "./microdescs/data"
-import { OriginQuery } from "./origins/data"
-import { SeedQuery } from "./seeds/data"
-import { SettingsQuery } from "./settings/data"
+import { BlobbyQuery } from "./blobbys"
+import { LinksQuery } from "./links"
+import { MicrodescQuery } from "./microdescs"
+import { OriginQuery } from "./origins"
+import { SeedQuery } from "./seeds"
+import { SettingsQuery } from "./settings"
 
 export function routeOrThrow(cacheKey: string, storage: QueryStorage): SimpleQuery<any, any, any> {
   let query: Nullable<any> = null

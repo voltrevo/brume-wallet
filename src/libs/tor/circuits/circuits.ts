@@ -1,6 +1,6 @@
 import { ping } from "@/libs/ping"
 import { AutoPool } from "@/libs/pool"
-import { MicrodescQuery } from "@/mods/universal/entities/microdescs/data"
+import { MicrodescQuery } from "@/mods/universal/entities/microdescs"
 import { Arrays } from "@hazae41/arrays"
 import { Box, Deferred, Stack } from "@hazae41/box"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"

@@ -1,6 +1,6 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumChainlessRpcRequestPreinit, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletRef } from "@/mods/background/service_worker/entities/wallets/data"
-import { SeedQuery } from "@/mods/universal/entities/seeds/data"
+import { SeedQuery } from "@/mods/universal/entities/seeds"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
