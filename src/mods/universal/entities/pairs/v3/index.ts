@@ -1,4 +1,5 @@
 import { FactoryAbiV3, PairAbiV3 } from "@/libs/abi/pair.abi"
+import { ZeroHexBigInt } from "@/libs/bigints/bigints"
 import { SimpleContractTokenData, SimplePairDataV3 } from "@/libs/ethereum/mods/chain"
 import { Records } from "@/libs/records"
 import { UniswapV3 } from "@/libs/uniswap"
@@ -123,12 +124,14 @@ export namespace PairV3 {
         return
 
       const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const sqrtPriceX96 = await SqrtPriceX96.queryOrThrow(context, pair, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const sqrtPriceX96Fetched = await SqrtPriceX96.queryOrThrow(context, pair, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
-        if (sqrtPriceX96.isErr())
-          return sqrtPriceX96
+        if (sqrtPriceX96Fetched.isErr())
+          return sqrtPriceX96Fetched
 
-        return new Data(UniswapV3.computeOrThrow(pair, sqrtPriceX96.get()), sqrtPriceX96)
+        const sqrtPriceX96BigInt = ZeroHexBigInt.from(sqrtPriceX96Fetched.get()).value
+
+        return new Data(UniswapV3.computeOrThrow(pair, sqrtPriceX96BigInt), sqrtPriceX96Fetched)
       })
 
       return createQuery<K, D, F>({
@@ -142,7 +145,7 @@ export namespace PairV3 {
   export namespace SqrtPriceX96 {
 
     export type K = EthereumChainfulRpcRequestPreinit<unknown>
-    export type D = Fixed.From<0>
+    export type D = ZeroHexBigInt.From
     export type F = Error
 
     export function keyOrThrow(pair: SimplePairDataV3, block: string) {
@@ -184,7 +187,8 @@ export namespace PairV3 {
           if (maybeCurrentData == null)
             return new Some(undefined)
 
-          const price = UniswapV3.computeOrThrow(pair, maybeCurrentData.get())
+          const bigint = ZeroHexBigInt.from(maybeCurrentData.get()).value
+          const price = UniswapV3.computeOrThrow(pair, bigint)
 
           return new Some(new Data(price, maybeCurrentData))
         })
@@ -204,7 +208,7 @@ export namespace PairV3 {
   export namespace Slot0 {
 
     export type K = EthereumChainfulRpcRequestPreinit<unknown>
-    export type D = readonly [Fixed.From<0>, Fixed.From<0>, Fixed.From<0>, Fixed.From<0>, Fixed.From<0>, Fixed.From<0>]
+    export type D = readonly [ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From]
     export type F = Error
 
     export function keyOrThrow(pair: SimplePairDataV3, block: string) {
@@ -233,7 +237,7 @@ export namespace PairV3 {
           return fetched
 
         const returns = Abi.Tuple.create(Abi.Uint160, Abi.Uint160, Abi.Uint32, Abi.Uint32, Abi.Uint32, Abi.Uint32)
-        const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow().map(x => new Fixed(x, 0))
+        const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow().map(x => new ZeroHexBigInt(x))
 
         return new Data(decoded as unknown as D)
       })

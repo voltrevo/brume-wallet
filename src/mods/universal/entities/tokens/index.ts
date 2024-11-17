@@ -1,6 +1,7 @@
 import { ERC20Abi, ERC20MetadataAbi } from "@/libs/abi/erc20.abi";
+import { ZeroHexBigInt } from "@/libs/bigints/bigints";
 import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
-import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane";
+import { Abi, ZeroHexString } from "@hazae41/cubane";
 import { createQuery, Data, Fetched, QueryStorage } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 import { EthereumContext } from "../../context/ethereum";
@@ -10,7 +11,7 @@ export namespace ERC20 {
   export namespace BalanceOf {
 
     export type K = EthereumChainfulRpcRequestPreinit<unknown>
-    export type D = Fixed.From<0>
+    export type D = ZeroHexBigInt.From
     export type F = Error
 
     export function keyOrThrow(chainId: number, contract: string, address: string, block: string) {
@@ -43,7 +44,7 @@ export namespace ERC20 {
         const returns = Abi.Uint256
         const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
 
-        return new Data(new Fixed(decoded, 0))
+        return new Data(new ZeroHexBigInt(decoded))
       })
 
       return createQuery<K, D, F>({

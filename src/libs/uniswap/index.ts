@@ -19,10 +19,8 @@ export namespace UniswapV2 {
 
 export namespace UniswapV3 {
 
-  export function computeOrThrow(pair: SimplePairDataV3, sqrtPriceX96: Fixed.From<0>) {
-    const sqrtPriceX96BigInt = Fixed.from(sqrtPriceX96).value
-
-    const priceX96BigInt = sqrtPriceX96BigInt ** 2n
+  export function computeOrThrow(pair: SimplePairDataV3, sqrtPriceX96: bigint) {
+    const priceX96BigInt = sqrtPriceX96 ** 2n
 
     const a = new Fixed(priceX96BigInt, pair.token1.decimals)
     const b = new Fixed(((2n ** 96n) ** 2n), pair.token0.decimals)

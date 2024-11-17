@@ -75,7 +75,11 @@ export function WalletTransactionDialog(props: {}) {
   const transactionQuery = useTransactionWithReceipt(transactionUuid, context)
 
   const pendingNonceQuery = useNonce(wallet.address, context)
-  const maybePendingNonce = pendingNonceQuery.current?.ok().getOrNull()
+  const maybePendingNonceZeroHex = pendingNonceQuery.current?.ok().getOrNull()
+
+  const maybePendingNonceBigInt = useMaybeMemo((nonce) => {
+    return ZeroHexBigInt.from(nonce).value
+  }, [maybePendingNonceZeroHex])
 
   const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
     if (tokenData.pairs == null)
@@ -191,10 +195,10 @@ export function WalletTransactionDialog(props: {}) {
   const maybeFinalNonce = useMemo(() => {
     if (maybeCustomNonce != null)
       return maybeCustomNonce
-    if (maybePendingNonce != null)
-      return maybePendingNonce
+    if (maybePendingNonceBigInt != null)
+      return maybePendingNonceBigInt
     return undefined
-  }, [maybeCustomNonce, maybePendingNonce])
+  }, [maybeCustomNonce, maybePendingNonceBigInt])
 
   const [rawDataInput = "", setRawDataInput] = useState(nto(maybeData))
 
@@ -908,7 +912,7 @@ export function WalletTransactionDialog(props: {}) {
       <SimpleInput
         value={rawNonceInput}
         onChange={onNonceInputChange}
-        placeholder={maybePendingNonce?.toString()} />
+        placeholder={maybePendingNonceBigInt?.toString()} />
       <div className="w-1" />
       <ShrinkableContrastButtonInInputBox
         onClick={onNonceClick}>

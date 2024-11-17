@@ -14,7 +14,9 @@ export namespace BigIntToHex {
 
 export namespace ZeroHexBigInt {
 
-  export type From = ZeroHexString
+  export type From =
+    | ZeroHexBigInt
+    | ZeroHexString
 
 }
 
@@ -24,7 +26,9 @@ export class ZeroHexBigInt {
     readonly value: bigint
   ) { }
 
-  static from(value: ZeroHexString) {
+  static from(value: ZeroHexBigInt.From) {
+    if (value instanceof ZeroHexBigInt)
+      return value
     if (value.length === 2)
       return new ZeroHexBigInt(0n)
     return new ZeroHexBigInt(BigInt(value))
