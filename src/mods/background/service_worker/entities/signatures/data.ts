@@ -29,7 +29,7 @@ export namespace BgSignature {
     if (maybeKey == null)
       return
 
-    const fetcher = async (request: K, more: RequestInit) => {
+    const fetcher = async (request: K, init: RequestInit) => {
       try {
         const fetched = await context.fetchOrFail<ZeroHexString>(request)
 

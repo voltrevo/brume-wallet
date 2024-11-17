@@ -1,4 +1,4 @@
-import { BigIntToHex } from "@/libs/bigints/bigints";
+import { BigIntToHex, ZeroHexBigInt } from "@/libs/bigints/bigints";
 import { useCopy } from "@/libs/copy/copy";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
@@ -219,10 +219,18 @@ export function WalletTransactionDialog(props: {}) {
   }, [setGasMode])
 
   const fetchedGasPriceQuery = useGasPrice(context)
-  const maybeFetchedGasPrice = fetchedGasPriceQuery.current?.ok().getOrNull()
+  const maybeFetchedGasPriceZeroHex = fetchedGasPriceQuery.current?.ok().getOrNull()
+
+  const maybeFetchedGasPriceBigInt = useMaybeMemo((gasPrice) => {
+    return ZeroHexBigInt.from(gasPrice).value
+  }, [maybeFetchedGasPriceZeroHex])
 
   const fetchedMaxPriorityFeePerGasQuery = useMaxPriorityFeePerGas(context)
-  const maybeFetchedMaxPriorityFeePerGas = fetchedMaxPriorityFeePerGasQuery.current?.ok().getOrNull()
+  const maybeFetchedMaxPriorityFeePerGasZeroHex = fetchedMaxPriorityFeePerGasQuery.current?.ok().getOrNull()
+
+  const maybeFetchedMaxPriorityFeePerGasBigInt = useMaybeMemo((maxPriorityFeePerGas) => {
+    return ZeroHexBigInt.from(maxPriorityFeePerGas).value
+  }, [maybeFetchedMaxPriorityFeePerGasZeroHex])
 
   const pendingBlockQuery = useBlockByNumber("pending", context)
   const maybePendingBlock = pendingBlockQuery.current?.ok().getOrNull()
@@ -287,7 +295,7 @@ export function WalletTransactionDialog(props: {}) {
     setMaxPriorityFeePerGas(maxPriorityFeePerGasInput)
   }, [maxPriorityFeePerGasInput])
 
-  function useMaybeMemo<T>(f: (x: T) => T, [x]: [Nullable<T>]) {
+  function useMaybeMemo<T, U>(f: (x: T) => U, [x]: [Nullable<T>]) {
     return useMemo(() => {
       if (x == null)
         return undefined
@@ -310,15 +318,15 @@ export function WalletTransactionDialog(props: {}) {
 
   const maybeNormalMaxPriorityFeePerGas = useMaybeMemo((maxPriorityFeePerGas) => {
     return maxPriorityFeePerGas / 4n
-  }, [maybeFetchedMaxPriorityFeePerGas])
+  }, [maybeFetchedMaxPriorityFeePerGasBigInt])
 
   const maybeFastMaxPriorityFeePerGas = useMaybeMemo((maxPriorityFeePerGas) => {
     return maxPriorityFeePerGas / 2n
-  }, [maybeFetchedMaxPriorityFeePerGas])
+  }, [maybeFetchedMaxPriorityFeePerGasBigInt])
 
   const maybeUrgentMaxPriorityFeePerGas = useMaybeMemo((maxPriorityFeePerGas) => {
     return maxPriorityFeePerGas
-  }, [maybeFetchedMaxPriorityFeePerGas])
+  }, [maybeFetchedMaxPriorityFeePerGasBigInt])
 
   const maybeCustomMaxPriorityFeePerGas = useMemo(() => {
     try {
@@ -330,15 +338,15 @@ export function WalletTransactionDialog(props: {}) {
 
   const maybeNormalGasPrice = useMaybeMemo((gasPrice) => {
     return gasPrice
-  }, [maybeFetchedGasPrice])
+  }, [maybeFetchedGasPriceBigInt])
 
   const maybeFastGasPrice = useMaybeMemo((gasPrice) => {
     return (gasPrice * 110n) / 100n
-  }, [maybeFetchedGasPrice])
+  }, [maybeFetchedGasPriceBigInt])
 
   const maybeUrgentGasPrice = useMaybeMemo((gasPrice) => {
     return (gasPrice * 120n) / 100n
-  }, [maybeFetchedGasPrice])
+  }, [maybeFetchedGasPriceBigInt])
 
   const maybeCustomGasPrice = useMemo(() => {
     try {
@@ -510,20 +518,28 @@ export function WalletTransactionDialog(props: {}) {
   const maybeEip1559GasLimitKey = maybeTriedEip1559GasLimitKey?.ok().getOrNull()
 
   const legacyGasLimitQuery = useEstimateGas(maybeLegacyGasLimitKey, context)
-  const maybeLegacyGasLimit = legacyGasLimitQuery.current?.ok().getOrNull()
+  const maybeLegacyGasLimitZeroHex = legacyGasLimitQuery.current?.ok().getOrNull()
+
+  const maybeLegacyGasLimitBigInt = useMaybeMemo((gasLimit) => {
+    return ZeroHexBigInt.from(gasLimit).value
+  }, [maybeLegacyGasLimitZeroHex])
 
   const eip1559GasLimitQuery = useEstimateGas(maybeEip1559GasLimitKey, context)
-  const maybeEip1559GasLimit = eip1559GasLimitQuery.current?.ok().getOrNull()
+  const maybeEip1559GasLimitZeroHex = eip1559GasLimitQuery.current?.ok().getOrNull()
+
+  const maybeEip1559GasLimitBigInt = useMaybeMemo((gasLimit) => {
+    return ZeroHexBigInt.from(gasLimit).value
+  }, [maybeEip1559GasLimitZeroHex])
 
   const maybeFetchedGasLimit = useMemo(() => {
     if (maybeIsEip1559 == null)
       return undefined
-    if (maybeLegacyGasLimit != null)
-      return maybeLegacyGasLimit
-    if (maybeEip1559GasLimit != null)
-      return maybeEip1559GasLimit
+    if (maybeLegacyGasLimitBigInt != null)
+      return maybeLegacyGasLimitBigInt
+    if (maybeEip1559GasLimitBigInt != null)
+      return maybeEip1559GasLimitBigInt
     return undefined
-  }, [maybeIsEip1559, maybeLegacyGasLimit, maybeEip1559GasLimit])
+  }, [maybeIsEip1559, maybeLegacyGasLimitBigInt, maybeEip1559GasLimitBigInt])
 
   const maybeCustomGasLimit = useMemo(() => {
     try {
@@ -540,34 +556,34 @@ export function WalletTransactionDialog(props: {}) {
   }, [gasMode, maybeCustomGasLimit, maybeFetchedGasLimit])
 
   const maybeNormalLegacyGasCost = useMemo(() => {
-    if (maybeLegacyGasLimit == null)
+    if (maybeLegacyGasLimitBigInt == null)
       return undefined
     if (maybeNormalGasPrice == null)
       return undefined
     if (maybePrice == null)
       return undefined
-    return new Fixed(maybeLegacyGasLimit * maybeNormalGasPrice, 18).mul(maybePrice)
-  }, [maybeLegacyGasLimit, maybeNormalGasPrice, maybePrice])
+    return new Fixed(maybeLegacyGasLimitBigInt * maybeNormalGasPrice, 18).mul(maybePrice)
+  }, [maybeLegacyGasLimitBigInt, maybeNormalGasPrice, maybePrice])
 
   const maybeFastLegacyGasCost = useMemo(() => {
-    if (maybeLegacyGasLimit == null)
+    if (maybeLegacyGasLimitBigInt == null)
       return undefined
     if (maybeFastGasPrice == null)
       return undefined
     if (maybePrice == null)
       return undefined
-    return new Fixed(maybeLegacyGasLimit * maybeFastGasPrice, 18).mul(maybePrice)
-  }, [maybeLegacyGasLimit, maybeFastGasPrice, maybePrice])
+    return new Fixed(maybeLegacyGasLimitBigInt * maybeFastGasPrice, 18).mul(maybePrice)
+  }, [maybeLegacyGasLimitBigInt, maybeFastGasPrice, maybePrice])
 
   const maybeUrgentLegacyGasCost = useMemo(() => {
-    if (maybeLegacyGasLimit == null)
+    if (maybeLegacyGasLimitBigInt == null)
       return undefined
     if (maybeUrgentGasPrice == null)
       return undefined
     if (maybePrice == null)
       return undefined
-    return new Fixed(maybeLegacyGasLimit * maybeUrgentGasPrice, 18).mul(maybePrice)
-  }, [maybeLegacyGasLimit, maybeUrgentGasPrice, maybePrice])
+    return new Fixed(maybeLegacyGasLimitBigInt * maybeUrgentGasPrice, 18).mul(maybePrice)
+  }, [maybeLegacyGasLimitBigInt, maybeUrgentGasPrice, maybePrice])
 
   const maybeCustomLegacyGasCost = useMemo(() => {
     if (maybeCustomGasLimit == null)
@@ -580,64 +596,64 @@ export function WalletTransactionDialog(props: {}) {
   }, [maybeCustomGasLimit, maybeCustomGasPrice, maybePrice])
 
   const maybeNormalMinEip1559GasCost = useMemo(() => {
-    if (maybeEip1559GasLimit == null)
+    if (maybeEip1559GasLimitBigInt == null)
       return undefined
     if (maybeNormalMinFeePerGas == null)
       return undefined
     if (maybePrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeNormalMinFeePerGas, 18).mul(maybePrice)
-  }, [maybeEip1559GasLimit, maybeNormalMinFeePerGas, maybePrice])
+    return new Fixed(maybeEip1559GasLimitBigInt * maybeNormalMinFeePerGas, 18).mul(maybePrice)
+  }, [maybeEip1559GasLimitBigInt, maybeNormalMinFeePerGas, maybePrice])
 
   const maybeFastMinEip1559GasCost = useMemo(() => {
-    if (maybeEip1559GasLimit == null)
+    if (maybeEip1559GasLimitBigInt == null)
       return undefined
     if (maybeFastMinFeePerGas == null)
       return undefined
     if (maybePrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeFastMinFeePerGas, 18).mul(maybePrice)
-  }, [maybeEip1559GasLimit, maybeFastMinFeePerGas, maybePrice])
+    return new Fixed(maybeEip1559GasLimitBigInt * maybeFastMinFeePerGas, 18).mul(maybePrice)
+  }, [maybeEip1559GasLimitBigInt, maybeFastMinFeePerGas, maybePrice])
 
   const maybeUrgentMinEip1559GasCost = useMemo(() => {
-    if (maybeEip1559GasLimit == null)
+    if (maybeEip1559GasLimitBigInt == null)
       return undefined
     if (maybeUrgentMinFeePerGas == null)
       return undefined
     if (maybePrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeUrgentMinFeePerGas, 18).mul(maybePrice)
-  }, [maybeEip1559GasLimit, maybeUrgentMinFeePerGas, maybePrice])
+    return new Fixed(maybeEip1559GasLimitBigInt * maybeUrgentMinFeePerGas, 18).mul(maybePrice)
+  }, [maybeEip1559GasLimitBigInt, maybeUrgentMinFeePerGas, maybePrice])
 
   const maybeNormalMaxEip1559GasCost = useMemo(() => {
-    if (maybeEip1559GasLimit == null)
+    if (maybeEip1559GasLimitBigInt == null)
       return undefined
     if (maybeNormalMaxFeePerGas == null)
       return undefined
     if (maybePrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeNormalMaxFeePerGas, 18).mul(maybePrice)
-  }, [maybeEip1559GasLimit, maybeNormalMaxFeePerGas, maybePrice])
+    return new Fixed(maybeEip1559GasLimitBigInt * maybeNormalMaxFeePerGas, 18).mul(maybePrice)
+  }, [maybeEip1559GasLimitBigInt, maybeNormalMaxFeePerGas, maybePrice])
 
   const maybeFastMaxEip1559GasCost = useMemo(() => {
-    if (maybeEip1559GasLimit == null)
+    if (maybeEip1559GasLimitBigInt == null)
       return undefined
     if (maybeFastMaxFeePerGas == null)
       return undefined
     if (maybePrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeFastMaxFeePerGas, 18).mul(maybePrice)
-  }, [maybeEip1559GasLimit, maybeFastMaxFeePerGas, maybePrice])
+    return new Fixed(maybeEip1559GasLimitBigInt * maybeFastMaxFeePerGas, 18).mul(maybePrice)
+  }, [maybeEip1559GasLimitBigInt, maybeFastMaxFeePerGas, maybePrice])
 
   const maybeUrgentMaxEip1559GasCost = useMemo(() => {
-    if (maybeEip1559GasLimit == null)
+    if (maybeEip1559GasLimitBigInt == null)
       return undefined
     if (maybeUrgentMaxFeePerGas == null)
       return undefined
     if (maybePrice == null)
       return undefined
-    return new Fixed(maybeEip1559GasLimit * maybeUrgentMaxFeePerGas, 18).mul(maybePrice)
-  }, [maybeEip1559GasLimit, maybeUrgentMaxFeePerGas, maybePrice])
+    return new Fixed(maybeEip1559GasLimitBigInt * maybeUrgentMaxFeePerGas, 18).mul(maybePrice)
+  }, [maybeEip1559GasLimitBigInt, maybeUrgentMaxFeePerGas, maybePrice])
 
   const maybeCustomMaxEip1559GasCost = useMemo(() => {
     if (maybeCustomGasLimit == null)
@@ -1079,7 +1095,7 @@ export function WalletTransactionDialog(props: {}) {
         <SimpleInput
           value={rawGasPriceInput}
           onChange={onGasPriceInputChange}
-          placeholder={maybeFetchedGasPrice?.toString()} />
+          placeholder={maybeFetchedGasPriceBigInt?.toString()} />
       </SimpleLabel>
     </>}
     {gasMode === "custom" && maybeIsEip1559 === true && <>
@@ -1114,7 +1130,7 @@ export function WalletTransactionDialog(props: {}) {
         <SimpleInput
           value={rawMaxPriorityFeePerGasInput}
           onChange={onMaxPriorityFeePerGasInputChange}
-          placeholder={maybeFetchedMaxPriorityFeePerGas?.toString()} />
+          placeholder={maybeFetchedMaxPriorityFeePerGasBigInt?.toString()} />
       </SimpleLabel>
     </>}
     {maybeIsEip1559 === false && maybeFinalLegacyGasCost != null && <>

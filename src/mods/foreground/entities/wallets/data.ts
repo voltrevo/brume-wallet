@@ -439,21 +439,21 @@ export class FgEthereumContext {
     return new FgEthereumContext(uuid, chain, background)
   }
 
-  async fetchOrFail<T>(init: EthereumChainlessRpcRequestPreinit<unknown>, more: RequestInit = {}): Promise<Fetched<T, Error>> {
+  async fetchOrFail<T>(info: EthereumChainlessRpcRequestPreinit<unknown>, init: RequestInit = {}): Promise<Fetched<T, Error>> {
     const { uuid, background, chain } = this
 
     return await background.requestOrThrow<T>({
       method: "brume_eth_fetch",
-      params: [uuid, chain.chainId, init]
+      params: [uuid, chain.chainId, info]
     }).then(r => Fetched.rewrap(r))
   }
 
-  async customFetchOrFail<T>(init: EthereumChainlessRpcRequestPreinit<unknown>, more: RequestInit = {}): Promise<Fetched<T, Error>> {
+  async customFetchOrFail<T>(info: EthereumChainlessRpcRequestPreinit<unknown>, init: RequestInit = {}): Promise<Fetched<T, Error>> {
     const { uuid, background, chain } = this
 
     return await background.requestOrThrow<T>({
       method: "brume_eth_custom_fetch",
-      params: [uuid, chain.chainId, init]
+      params: [uuid, chain.chainId, info]
     }).then(r => Fetched.rewrap(r))
   }
 

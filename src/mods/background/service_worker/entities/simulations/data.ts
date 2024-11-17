@@ -170,8 +170,8 @@ export namespace BgSimulation {
   }
 
   export function schema(context: BgEthereumContext, tx: unknown, block: string, storage: QueryStorage) {
-    const fetcher = async (request: K, more: RequestInit) =>
-      await fetchOrFail<SimulationData>(context, request, more).then(r => r.inspectErrSync(e => console.error({ e },)))
+    const fetcher = async (request: K, init: RequestInit) =>
+      await fetchOrFail<SimulationData>(context, request, init)
 
     return createQuery<K, D, F>({
       key: key(context.chain.chainId, tx, block),

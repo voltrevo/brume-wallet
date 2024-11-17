@@ -187,9 +187,9 @@ export namespace BgToken {
       }
 
       export function schema(account: ZeroHexString, block: string, context: BgEthereumContext, storage: QueryStorage) {
-        const fetcher = async (request: K, more: RequestInit) => {
+        const fetcher = async (request: K, init: RequestInit) => {
           try {
-            const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
+            const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
 
             if (fetched.isErr())
               return fetched
@@ -347,9 +347,9 @@ export namespace BgToken {
         if (maybeKey == null)
           return undefined
 
-        const fetcher = async (request: K, more: RequestInit) => {
+        const fetcher = async (request: K, init: RequestInit) => {
           try {
-            const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
+            const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
 
             if (fetched.isErr())
               return fetched

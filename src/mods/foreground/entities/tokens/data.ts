@@ -104,7 +104,7 @@ export namespace FgToken {
         if (block == null)
           return
 
-        const fetcher = async (request: K, more: RequestInit = {}) => {
+        const fetcher = async (request: K, init: RequestInit = {}) => {
           try {
             const fetched = await context.fetchOrFail<ZeroHexString>(request)
 
@@ -249,7 +249,7 @@ export namespace FgToken {
         if (maybeKey == null)
           return
 
-        const fetcher = async (request: K, more: RequestInit = {}) => {
+        const fetcher = async (request: K, init: RequestInit = {}) => {
           try {
             const fetched = await context.fetchOrFail<ZeroHexString>(request)
 

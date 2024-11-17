@@ -38,7 +38,7 @@ import { Circuit, Echalote, TorClientDuplex } from "@hazae41/echalote";
 import { Ed25519 } from "@hazae41/ed25519";
 import { Fleche, fetch } from "@hazae41/fleche";
 import { Future } from "@hazae41/future";
-import { AesGcmCoder, Data, HmacEncoder, QueryStorage, RawState, SeracQueryStorage, SimpleQuery, State, SyncIdentity, core } from "@hazae41/glacier";
+import { AesGcmBicoder, Data, HmacEncoder, Identity, QueryStorage, RawState, SeracQueryStorage, SimpleQuery, State, core } from "@hazae41/glacier";
 import { Immutable } from "@hazae41/immutable";
 import { RpcError, RpcRequestInit, RpcRequestPreinit, RpcResponse, RpcResponseInit } from "@hazae41/jsonrpc";
 import { Kcp } from "@hazae41/kcp";
@@ -1458,7 +1458,7 @@ export interface UserSessionParams {
   readonly user: User,
   readonly storage: QueryStorage,
   readonly hasher: HmacEncoder,
-  readonly crypter: AesGcmCoder
+  readonly crypter: AesGcmBicoder
 }
 
 export class UserSession {
@@ -1475,7 +1475,7 @@ export class UserSession {
     readonly user: User,
     readonly storage: QueryStorage,
     readonly hasher: HmacEncoder,
-    readonly crypter: AesGcmCoder
+    readonly crypter: AesGcmBicoder
   ) { }
 
   static create(global: Global, params: UserSessionParams) {
@@ -1554,7 +1554,7 @@ async function initOrThrow() {
   const storage = await SeracQueryStorage.openAndCollectOrThrow({
     name: "memory",
     version: 3,
-    encoders: { key: SyncIdentity, value: SyncIdentity as any },
+    encoders: { key: Identity, value: Identity as any },
     collector: (storage, key) => storage.database.deleteOrThrow(key),
     upgrader
   })

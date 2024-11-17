@@ -12,3 +12,27 @@ export namespace BigIntToHex {
 
 }
 
+export namespace ZeroHexBigInt {
+
+  export type From = ZeroHexString
+
+}
+
+export class ZeroHexBigInt {
+
+  constructor(
+    readonly value: bigint
+  ) { }
+
+  static from(value: ZeroHexString) {
+    if (value.length === 2)
+      return new ZeroHexBigInt(0n)
+    return new ZeroHexBigInt(BigInt(value))
+  }
+
+  toJSON() {
+    return `0x${this.value.toString(16)}`
+  }
+
+}
+

@@ -1,4 +1,4 @@
-import { BigIntToHex } from "@/libs/bigints/bigints";
+import { ZeroHexBigInt } from "@/libs/bigints/bigints";
 import { Errors } from "@/libs/errors/errors";
 import { ChainData } from "@/libs/ethereum/mods/chain";
 import { BgEthereum, BgTotal } from "@/mods/background/service_worker/entities/unknown/data";
@@ -41,7 +41,7 @@ export namespace FgEthereum {
   export namespace EstimateGas {
 
     export type K = EthereumChainfulRpcRequestPreinit<unknown>
-    export type D = bigint
+    export type D = ZeroHexBigInt.From
     export type F = Error
 
     export function key(request: RpcRequestPreinit<[unknown, unknown]>, context: FgEthereumContext) {
@@ -60,13 +60,12 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: K) =>
-        await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
+        await context.fetchOrFail<ZeroHexString>(request)
 
       return createQuery<K, D, F>({
         key: key(request, context),
         fetcher,
-        storage,
-        dataSerializer: BigIntToHex
+        storage
       })
     }
 
@@ -75,7 +74,7 @@ export namespace FgEthereum {
   export namespace MaxPriorityFeePerGas {
 
     export type K = EthereumChainfulRpcRequestPreinit<unknown>
-    export type D = bigint
+    export type D = ZeroHexBigInt.From
     export type F = Error
 
     export function key(chain: ChainData) {
@@ -92,13 +91,12 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: K) =>
-        await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
+        await context.fetchOrFail<ZeroHexString>(request)
 
       return createQuery<K, D, F>({
         key: key(context.chain),
         fetcher,
-        storage,
-        dataSerializer: BigIntToHex
+        storage
       })
     }
 
@@ -107,7 +105,7 @@ export namespace FgEthereum {
   export namespace GasPrice {
 
     export type K = EthereumChainfulRpcRequestPreinit<unknown>
-    export type D = bigint
+    export type D = ZeroHexBigInt.From
     export type F = Error
 
     export function key(chain: ChainData) {
@@ -124,13 +122,12 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: K) =>
-        await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
+        await context.fetchOrFail<ZeroHexString>(request)
 
       return createQuery<K, D, Error>({
         key: key(context.chain),
         fetcher,
-        storage,
-        dataSerializer: BigIntToHex
+        storage
       })
     }
 
@@ -139,7 +136,7 @@ export namespace FgEthereum {
   export namespace Nonce {
 
     export type K = EthereumChainfulRpcRequestPreinit<unknown>
-    export type D = bigint
+    export type D = ZeroHexBigInt.From
     export type F = Error
 
     export function key(address: ZeroHexString, chain: ChainData) {
@@ -156,14 +153,13 @@ export namespace FgEthereum {
       if (context == null)
         return
 
-      const fetcher = async (request: K, more: RequestInit = {}) =>
-        await context.fetchOrFail<ZeroHexString>(request).then(r => r.mapSync(BigInt))
+      const fetcher = async (request: K, init: RequestInit = {}) =>
+        await context.fetchOrFail<ZeroHexString>(request)
 
       return createQuery<K, D, F>({
         key: key(address, context.chain),
         fetcher,
-        storage,
-        dataSerializer: BigIntToHex,
+        storage
       })
     }
 

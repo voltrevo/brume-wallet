@@ -72,8 +72,8 @@ export namespace FactoryV3 {
       if (block == null)
         return
 
-      const fetcher = (request: K, more: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
+      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+        const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
 
         if (fetched.isErr())
           return fetched
@@ -122,7 +122,7 @@ export namespace PairV3 {
       if (block == null)
         return
 
-      const fetcher = (request: K, more: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
         const sqrtPriceX96 = await SqrtPriceX96.queryOrThrow(context, pair, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (sqrtPriceX96.isErr())
@@ -164,7 +164,7 @@ export namespace PairV3 {
       if (block == null)
         return
 
-      const fetcher = (request: K, more: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
         const slot0 = await Slot0.queryOrThrow(context, pair, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (slot0.isErr())
@@ -226,8 +226,8 @@ export namespace PairV3 {
       if (block == null)
         return
 
-      const fetcher = (request: K, more: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
+      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+        const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
 
         if (fetched.isErr())
           return fetched

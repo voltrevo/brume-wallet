@@ -12,7 +12,7 @@ export namespace BgEns {
 
   export namespace Resolver {
 
-    export async function fetchOrFail(context: BgEthereumContext, namehash: Uint8Array<32>, more: RequestInit): Promise<Fetched<ZeroHexString, Error>> {
+    export async function fetchOrFail(context: BgEthereumContext, namehash: Uint8Array<32>, init: RequestInit): Promise<Fetched<ZeroHexString, Error>> {
       try {
         const registry = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
 
@@ -24,7 +24,7 @@ export namespace BgEns {
             to: registry,
             data: data
           }, "pending"]
-        }, more)
+        }, init)
 
         if (fetched.isErr())
           return fetched
@@ -64,8 +64,8 @@ export namespace BgEns {
     }
 
     export function schema(context: BgEthereumContext, name: string, storage: QueryStorage) {
-      const fetcher = (key: K, more: RequestInit) =>
-        fetchOrFail(context, name, more)
+      const fetcher = async (key: K, init: RequestInit) =>
+        await fetchOrFail(context, name, init)
 
       return createQuery<K, D, Error>({
         key: key(name),
@@ -74,10 +74,10 @@ export namespace BgEns {
       })
     }
 
-    export async function fetchOrFail(context: BgEthereumContext, name: string, more: RequestInit) {
+    export async function fetchOrFail(context: BgEthereumContext, name: string, init: RequestInit) {
       try {
         const namehash32 = Bytes.castOrThrow(Ens.namehashOrThrow(name), 32)
-        const resolver = await Resolver.fetchOrFail(context, namehash32, more)
+        const resolver = await Resolver.fetchOrFail(context, namehash32, init)
 
         if (resolver.isErr())
           return resolver
@@ -90,7 +90,7 @@ export namespace BgEns {
             to: resolver.inner,
             data: data
           }, "pending"]
-        }, more)
+        }, init)
 
         if (fetched.isErr())
           return fetched
@@ -129,7 +129,8 @@ export namespace BgEns {
     }
 
     export function schema(context: BgEthereumContext, address: ZeroHexString, storage: QueryStorage) {
-      const fetcher = (key: K, more: RequestInit) => fetchOrFail(context, address, more)
+      const fetcher = async (key: K, init: RequestInit) =>
+        await fetchOrFail(context, address, init)
 
       return createQuery<K, D, F>({
         key: key(address),
@@ -138,10 +139,10 @@ export namespace BgEns {
       })
     }
 
-    export async function fetchUncheckedOrFail(context: BgEthereumContext, address: ZeroHexString, more: RequestInit): Promise<Fetched<Nullable<string>, Error>> {
+    export async function fetchUncheckedOrFail(context: BgEthereumContext, address: ZeroHexString, init: RequestInit): Promise<Fetched<Nullable<string>, Error>> {
       try {
         const namehash32 = Bytes.castOrThrow(Ens.namehashOrThrow(`${address.slice(2)}.addr.reverse`), 32)
-        const resolver = await Resolver.fetchOrFail(context, namehash32, more)
+        const resolver = await Resolver.fetchOrFail(context, namehash32, init)
 
         if (resolver.isErr())
           return resolver
@@ -154,7 +155,7 @@ export namespace BgEns {
             to: resolver.inner,
             data: data
           }, "pending"]
-        }, more)
+        }, init)
 
         if (fetched.isErr())
           return fetched
@@ -171,8 +172,8 @@ export namespace BgEns {
       }
     }
 
-    export async function fetchOrFail(context: BgEthereumContext, address: ZeroHexString, more: RequestInit) {
-      const name = await fetchUncheckedOrFail(context, address, more)
+    export async function fetchOrFail(context: BgEthereumContext, address: ZeroHexString, init: RequestInit) {
+      const name = await fetchUncheckedOrFail(context, address, init)
 
       if (name.isErr())
         return name
@@ -180,7 +181,7 @@ export namespace BgEns {
       if (name.inner == null)
         return name
 
-      const address2 = await Lookup.fetchOrFail(context, name.inner, more)
+      const address2 = await Lookup.fetchOrFail(context, name.inner, init)
 
       if (address2.isErr())
         return address2

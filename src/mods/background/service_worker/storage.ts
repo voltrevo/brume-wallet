@@ -1,7 +1,7 @@
 import { requestOrThrow } from "@/libs/indexeddb"
 import { Base64 } from "@hazae41/base64"
 import { Bytes } from "@hazae41/bytes"
-import { AesGcmCoder, AsyncJson, AsyncPipeBicoder, Data, HmacEncoder, QueryStorage, RawState, SeracQueryStorage } from "@hazae41/glacier"
+import { AesGcmBicoder, AsyncPipeBicoder, Data, HmacEncoder, Jsoned, QueryStorage, RawState, SeracQueryStorage } from "@hazae41/glacier"
 import { None, Some } from "@hazae41/option"
 import { Pbdkf2Params } from "./entities/users/crypto"
 import { UserData } from "./entities/users/data"
@@ -10,7 +10,7 @@ import { BgWallet } from "./entities/wallets/data"
 export interface UserStorageResult {
   readonly storage: QueryStorage
   readonly hasher: HmacEncoder
-  readonly crypter: AesGcmCoder
+  readonly crypter: AesGcmBicoder
 }
 
 export async function createUserStorageOrThrow(user: UserData, password: string): Promise<UserStorageResult> {
@@ -36,10 +36,10 @@ export async function createUserStorageOrThrow(user: UserData, password: string)
   const valueKey = await crypto.subtle.deriveKey(valueParamsBytes, pbkdf2, user.valueParamsBase64.derivedKeyType, false, ["encrypt", "decrypt"])
 
   const hasher = new HmacEncoder(keyKey)
-  const crypter = new AesGcmCoder(valueKey)
+  const crypter = new AesGcmBicoder(valueKey)
 
   const keySerializer = hasher
-  const valueSerializer = new AsyncPipeBicoder<RawState, string, string>(AsyncJson, crypter)
+  const valueSerializer = new AsyncPipeBicoder<RawState, string, string>(Jsoned, crypter)
 
   const upgrade: { event?: IDBVersionChangeEvent } = {}
 

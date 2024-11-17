@@ -34,8 +34,8 @@ export namespace ERC20 {
       if (block == null)
         return
 
-      const fetcher = (request: K, more: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
+      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+        const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
 
         if (fetched.isErr())
           return fetched
@@ -84,8 +84,8 @@ export namespace ERC20Metadata {
       if (block == null)
         return
 
-      const fetcher = (request: K, more: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
+      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+        const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
 
         if (fetched.isErr())
           return fetched
@@ -131,8 +131,8 @@ export namespace ERC20Metadata {
       if (block == null)
         return
 
-      const fetcher = (request: K, more: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
+      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+        const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
 
         if (fetched.isErr())
           return fetched
@@ -178,8 +178,8 @@ export namespace ERC20Metadata {
       if (block == null)
         return
 
-      const fetcher = (request: K, more: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await context.fetchOrFail<ZeroHexString>(request, more)
+      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+        const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
 
         if (fetched.isErr())
           return fetched
