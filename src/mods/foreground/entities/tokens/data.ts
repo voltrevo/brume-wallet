@@ -296,17 +296,3 @@ export function useTokens() {
 
   return query
 }
-
-export function useNativeTokenBalanceUsd(address: Nullable<ZeroHexString>, coin: "usd", context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgToken.Native.Balance.Priced.schema, [address, coin, context, storage])
-
-  return query
-}
-
-export function useContractTokenBalanceUsd(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, coin: "usd", context: Nullable<FgEthereumContext>) {
-  const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgToken.Contract.Balance.Priced.schema, [address, token, coin, context, storage])
-
-  return query
-}
