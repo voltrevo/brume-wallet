@@ -1,10 +1,10 @@
 import { ERC20Abi, ERC20MetadataAbi } from "@/libs/abi/erc20.abi";
 import { ZeroHexBigInt } from "@/libs/bigints/bigints";
 import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
+import { EthereumContext } from "@/mods/universal/context/ethereum";
 import { Abi, ZeroHexString } from "@hazae41/cubane";
 import { createQuery, Data, Fetched, QueryStorage } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
-import { EthereumContext } from "../../context/ethereum";
 
 export namespace ERC20 {
 
@@ -14,23 +14,23 @@ export namespace ERC20 {
     export type D = ZeroHexBigInt.From
     export type F = Error
 
-    export function keyOrThrow(chainId: number, contract: string, address: string, block: string) {
+    export function keyOrThrow(chainId: number, contract: ZeroHexString, account: ZeroHexString, block: string) {
       return {
         chainId,
         method: "eth_call",
         params: [{
           to: contract,
-          data: Abi.encodeOrThrow(ERC20Abi.balanceOf.fromOrThrow(address))
+          data: Abi.encodeOrThrow(ERC20Abi.balanceOf.fromOrThrow(account))
         }, block]
       }
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<string>, address: Nullable<string>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
       if (context == null)
         return
       if (contract == null)
         return
-      if (address == null)
+      if (account == null)
         return
       if (block == null)
         return
@@ -48,7 +48,7 @@ export namespace ERC20 {
       })
 
       return createQuery<K, D, F>({
-        key: keyOrThrow(context.chain.chainId, contract, address, block),
+        key: keyOrThrow(context.chain.chainId, contract, account, block),
         fetcher,
         storage
       })

@@ -70,7 +70,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     return Address.computeOrThrow(uncompressedPublicKeyMemory.bytes)
   }), [zeroHexKey])
 
-  const addUnauthenticatedOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const addUnauthenticatedOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!finalNameInput)
       throw new Panic()
     if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
@@ -112,7 +112,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     setId(undefined)
   }, [zeroHexKey])
 
-  const addAuthenticatedOrAlert1 = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const addAuthenticatedOrAlert1 = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!finalNameInput)
       throw new Panic()
     if (triedEncryptedPrivateKey == null)
@@ -129,7 +129,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     setId(id)
   }), [finalNameInput, triedEncryptedPrivateKey])
 
-  const addAuthenticatedOrAlert2 = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const addAuthenticatedOrAlert2 = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (id == null)
       throw new Panic()
     if (!finalNameInput)

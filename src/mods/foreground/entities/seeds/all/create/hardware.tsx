@@ -42,7 +42,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
     return defNameInput || "Holder"
   }, [defNameInput])
 
-  const addOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const addOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!finalNameInput)
       throw new Panic()
 

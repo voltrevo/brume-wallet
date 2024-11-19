@@ -17,7 +17,7 @@ import { useCloseContext } from "@hazae41/react-close-context";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "..";
 import { useEnsLookup } from "../../../../names/data";
-import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/data";
+import { useNativeTokenBalance, useNativeTokenBalanceUsd } from "../../../../tokens/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "../../../../transactions/data";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext } from "../../../data";
@@ -158,8 +158,8 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
-  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
-  const pricedBalanceQuery = useNativePricedBalance(wallet.address, "usd", context)
+  const valuedBalanceQuery = useNativeTokenBalance(wallet.address, "pending", context, prices)
+  const pricedBalanceQuery = useNativeTokenBalanceUsd(wallet.address, "usd", context)
 
   const valuedBalanceData = valuedBalanceQuery.current?.ok().getOrNull()
   const pricedBalanceData = pricedBalanceQuery.current?.ok().getOrNull()

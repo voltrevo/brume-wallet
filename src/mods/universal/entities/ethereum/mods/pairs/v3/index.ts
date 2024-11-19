@@ -4,10 +4,10 @@ import { SimpleContractTokenData, SimplePairDataV3 } from "@/libs/ethereum/mods/
 import { Records } from "@/libs/records"
 import { UniswapV3 } from "@/libs/uniswap"
 import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
+import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, Fetched, QueryStorage, States } from "@hazae41/glacier"
 import { Nullable, Option, Some } from "@hazae41/option"
-import { EthereumContext } from "../../../context/ethereum"
 
 export namespace FactoryV3 {
 
@@ -107,11 +107,8 @@ export namespace PairV3 {
     export function keyOrThrow(pair: SimplePairDataV3, block: string) {
       return {
         chainId: pair.chainId,
-        method: "eth_get",
-        params: [{
-          to: pair.address,
-          data: "price"
-        }, block]
+        method: "eth_getPairPriceV3",
+        params: [pair.address, block]
       }
     }
 
@@ -151,11 +148,8 @@ export namespace PairV3 {
     export function keyOrThrow(pair: SimplePairDataV3, block: string) {
       return {
         chainId: pair.chainId,
-        method: "eth_get",
-        params: [{
-          to: pair.address,
-          data: "sqrtPriceX96"
-        }, block]
+        method: "eth_getSqrtPriceX96",
+        params: [pair.address, block]
       }
     }
 

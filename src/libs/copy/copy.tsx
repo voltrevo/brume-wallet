@@ -6,7 +6,7 @@ import { useAsyncUniqueCallback } from "../react/callback";
 export function useCopy(text?: string) {
   const { current, enable, disable } = useBooleanHandle(false)
 
-  const { run } = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const { run } = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!text) return
 
     await Result.runAndWrap(async () => {

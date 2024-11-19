@@ -1,15 +1,9 @@
-import { Errors } from "@/libs/errors/errors"
-import { chainDataByChainId, pairByAddress, SimpleContractTokenData } from "@/libs/ethereum/mods/chain"
+import { chainDataByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
-import { useEffectButNotFirstTime } from "@/libs/react/effect"
 import { BgToken, ContractTokenData, ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data"
 import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
-import { EthereumContext } from "@/mods/universal/context/ethereum"
-import { PairV2 } from "@/mods/universal/entities/pairs/v2"
-import { PairV3 } from "@/mods/universal/entities/pairs/v3"
-import { PriceV3 } from "@/mods/universal/entities/tokens/price"
-import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
-import { core, createQuery, Data, Fail, States, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
+import { Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
+import { createQuery, Data, Fail, States, useQuery } from "@hazae41/glacier"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 import { FgTotal } from "../unknown/data"
@@ -228,98 +222,6 @@ export namespace FgToken {
 
       }
 
-      export type K = BgToken.Contract.Balance.K
-      export type D = BgToken.Contract.Balance.D
-      export type F = BgToken.Contract.Balance.F
-
-      export const key = BgToken.Contract.Balance.key
-
-      export function schema(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, block: Nullable<string>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
-        if (address == null)
-          return
-        if (token == null)
-          return
-        if (context == null)
-          return
-        if (block == null)
-          return
-
-        const maybeKey = key(address, token, block, context.chain)
-
-        if (maybeKey == null)
-          return
-
-        const fetcher = async (request: K, init: RequestInit = {}) => {
-          try {
-            const fetched = await context.fetchOrFail<ZeroHexString>(request)
-
-            if (fetched.isErr())
-              return fetched
-
-            const returns = Cubane.Abi.Tuple.create(Cubane.Abi.Uint256)
-            const [balance] = Cubane.Abi.decodeOrThrow(returns, fetched.inner).inner
-            const fixed = new Fixed(balance.intoOrThrow(), token.decimals)
-
-            return new Data(fixed)
-          } catch (e: unknown) {
-            return new Fail(Catched.wrap(e))
-          }
-        }
-
-        const indexer = async (states: States<D, F>) => {
-          if (block !== "pending")
-            return
-
-          const pricedBalanceData = await Option.wrap(states.current.real?.current.ok()?.getOrNull()).andThen(async balance => {
-            if (token.pairs == null)
-              return new None()
-
-            let pricedBalance: Fixed = Fixed.from(balance)
-
-            for (const pairAddress of token.pairs) {
-              const pairData = pairByAddress[pairAddress]
-              const chainData = chainDataByChainId[pairData.chainId]
-
-              if (pairData.version === 2) {
-                const priceQuery = PairV2.Price.queryOrThrow(context.switch(chainData), pairData, block, storage)
-                const priceState = await priceQuery?.state
-
-                if (priceState?.data == null)
-                  return new None()
-
-                pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
-                continue
-              }
-
-              if (pairData.version === 3) {
-                const priceQuery = PairV3.Price.queryOrThrow(context.switch(chainData), pairData, block, storage)
-                const priceState = await priceQuery?.state
-
-                if (priceState?.data == null)
-                  return new None()
-
-                pricedBalance = pricedBalance.mul(Fixed.from(priceState.data.get()))
-                continue
-              }
-
-              return new None()
-            }
-
-            return new Some(new Data(pricedBalance))
-          }).then(o => o.getOrNull())
-
-          const pricedBalanceQuery = Priced.schema(address, token, "usd", context, storage)
-          await pricedBalanceQuery?.mutateOrThrow(() => new Some(pricedBalanceData))
-        }
-
-        return createQuery<K, D, F>({
-          key: maybeKey,
-          fetcher,
-          indexer,
-          storage
-        })
-      }
-
     }
 
     export namespace All {
@@ -395,67 +297,16 @@ export function useTokens() {
   return query
 }
 
-export function useNativeBalance(address: Nullable<ZeroHexString>, block: Nullable<string>, context: Nullable<FgEthereumContext>, prices: Nullable<Nullable<Fixed.From>[]>) {
-  const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgToken.Native.Balance.schema, [address, block, context, storage])
-  useFetch(query)
-  useVisible(query)
-  useInterval(query, 10 * 1000)
-
-  useError(query, Errors.onQueryError)
-
-  useEffectButNotFirstTime(() => {
-    if (context == null)
-      return
-    if (query.cacheKey == null)
-      return
-    core.reindexOrThrow(query.cacheKey, query).catch(console.warn)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context, prices])
-
-  return query
-}
-
-export function useContractBalance(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, block: Nullable<string>, context: Nullable<FgEthereumContext>, prices: Nullable<Nullable<Fixed.From>[]>) {
-  const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgToken.Contract.Balance.schema, [address, token, block, context, storage])
-  useFetch(query)
-  useVisible(query)
-  useInterval(query, 10 * 1000)
-
-  useError(query, Errors.onQueryError)
-
-  useEffectButNotFirstTime(() => {
-    if (context == null)
-      return
-    if (query.cacheKey == null)
-      return
-    core.reindexOrThrow(query.cacheKey, query).catch(console.warn)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context, prices])
-
-  return query
-}
-
-export function useNativePricedBalance(address: Nullable<ZeroHexString>, coin: "usd", context: Nullable<FgEthereumContext>) {
+export function useNativeTokenBalanceUsd(address: Nullable<ZeroHexString>, coin: "usd", context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgToken.Native.Balance.Priced.schema, [address, coin, context, storage])
 
   return query
 }
 
-export function useContractPricedBalance(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, coin: "usd", context: Nullable<FgEthereumContext>) {
+export function useContractTokenBalanceUsd(address: Nullable<ZeroHexString>, token: Nullable<ContractTokenData>, coin: "usd", context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgToken.Contract.Balance.Priced.schema, [address, token, coin, context, storage])
 
-  return query
-}
-
-export function useContractPriceV3(context: Nullable<EthereumContext>, token: Nullable<SimpleContractTokenData>, block: Nullable<string>) {
-  const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(PriceV3.queryOrThrow, [context, token, block, storage])
-  useFetch(query)
-  useVisible(query)
-  useError(query, Errors.onQueryError)
   return query
 }

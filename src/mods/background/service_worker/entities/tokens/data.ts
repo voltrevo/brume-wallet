@@ -1,8 +1,7 @@
 import { ERC20Abi } from "@/libs/abi/erc20.abi"
 import { ChainData, chainDataByChainId, pairByAddress } from "@/libs/ethereum/mods/chain"
 import { Mutators } from "@/libs/glacier/mutators"
-import { PairV2 } from "@/mods/universal/entities/pairs/v2"
-import { PairV3 } from "@/mods/universal/entities/pairs/v3"
+import { Ethereum } from "@/mods/universal/entities/ethereum"
 import { Cubane, Fixed, ZeroHexFixedInit, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, Fail, QueryStorage, States } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
@@ -219,7 +218,7 @@ export namespace BgToken {
               const chainData = chainDataByChainId[pairData.chainId]
 
               if (pairData.version === 2) {
-                const priceQuery = PairV2.Price.queryOrThrow(context.switch(chainData), pairData, block, storage)
+                const priceQuery = Ethereum.PairV2.Price.queryOrThrow(context.switch(chainData), pairData, block, storage)
                 const priceState = await priceQuery?.state
 
                 if (priceState?.data == null)

@@ -24,7 +24,7 @@ export function TrashedWalletsPage() {
     location.assign(path.go(`/wallet/${wallet.uuid}`))
   }, [path])
 
-  const trashAllOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const trashAllOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!isSafariExtension() && confirm("Are you sure you want to delete all wallets in the trash?") === false)
       return
 

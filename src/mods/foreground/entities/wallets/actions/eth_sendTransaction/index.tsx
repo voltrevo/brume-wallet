@@ -700,7 +700,7 @@ export function WalletTransactionDialog(props: {}) {
   const fastMaxPriorityFeePerGasDisplay = useGasDisplay(maybeFastMaxPriorityFeePerGas)
   const urgentMaxPriorityFeePerGasDisplay = useGasDisplay(maybeUrgentMaxPriorityFeePerGas)
 
-  const signOrSendOrAlert = useCallback((action: "sign" | "send") => Errors.runAndLogAndAlert(async () => {
+  const signOrSendOrAlert = useCallback((action: "sign" | "send") => Errors.runOrLogAndAlert(async () => {
     if (maybeIsEip1559 == null)
       return
 

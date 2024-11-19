@@ -59,7 +59,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     setRawPhraseInput(generateMnemonic(wordlist, 256))
   }), [])
 
-  const addUnauthenticatedOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const addUnauthenticatedOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!finalNameInput)
       throw new Panic()
     if (!defPhraseInput)
@@ -100,7 +100,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     setId(undefined)
   }, [defPhraseInput])
 
-  const addAuthenticatedOrAlert1 = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const addAuthenticatedOrAlert1 = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!finalNameInput)
       throw new Panic()
     if (triedEncryptedPhrase == null)
@@ -117,7 +117,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     setId(idBytes)
   }), [finalNameInput, triedEncryptedPhrase])
 
-  const addAuthenticatedOrAlert2 = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const addAuthenticatedOrAlert2 = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (id == null)
       throw new Panic()
     if (!finalNameInput)

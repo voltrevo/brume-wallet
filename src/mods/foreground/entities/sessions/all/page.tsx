@@ -38,7 +38,7 @@ export function SessionsPage() {
     return temp + pers
   }, [maybeTempSessions, maybePersSessions])
 
-  const disconnectAllOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const disconnectAllOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!isSafariExtension() && confirm(`Do you want to disconnect all sessions?`) === false)
       return
 
@@ -189,7 +189,7 @@ export function SessionMenu(props: { sessionData: SessionData }) {
 
   const chains = useCoords(path, `/${sessionData.id}/chains`)
 
-  const disconnectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const disconnectOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     await background.requestOrThrow({
       method: "brume_disconnect",
       params: [sessionData.id]
@@ -233,7 +233,7 @@ export function ChainRow(props: { sessionData: ExSessionData, chainData: ChainDa
   const close = useCloseContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
-  const switchOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const switchOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     await background.requestOrThrow({
       method: "brume_switchEthereumChain",
       params: [sessionData.id, chainData.chainId]

@@ -57,7 +57,7 @@ export function UserCreateDialog(props: { next?: string }) {
     setRawConfirmPasswordInput(e.currentTarget.value)
   }, [])
 
-  const createOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const createOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     const user: UserInit = { uuid, name: finalNameInput, color: Color.all.indexOf(color), password: defPasswordInput }
 
     await background.requestOrThrow<User[]>({

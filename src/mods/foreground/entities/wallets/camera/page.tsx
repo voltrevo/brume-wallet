@@ -101,7 +101,7 @@ export function WalletDataCameraPage() {
       .catch(Errors.logAndAlert)
   }, [onStream])
 
-  const connectOrAlert = useAsyncUniqueCallback((uri: string) => Errors.runAndLogAndAlert(async () => {
+  const connectOrAlert = useAsyncUniqueCallback((uri: string) => Errors.runOrLogAndAlert(async () => {
     alert(`Connecting...`)
 
     const metadata = await background.requestOrThrow<WcMetadata>({

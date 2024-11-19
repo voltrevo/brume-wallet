@@ -27,7 +27,7 @@ export function RequestsPage() {
   const requestsQuery = useAppRequests()
   const maybeRequests = requestsQuery.data?.get()
 
-  const rejectAllOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const rejectAllOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (maybeRequests == null)
       return
     if (!isSafariExtension() && confirm(`Do you want to reject all requests?`) === false)

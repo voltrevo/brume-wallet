@@ -179,7 +179,7 @@ export function TransactPage() {
   const simulationQuery = useSimulation(preTx, "pending", maybeContext)
   const currentSimulation = simulationQuery.current
 
-  const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const approveOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     const transaction = Option.wrap(maybeTransaction).getOrThrow()
 
     await background.requestOrThrow({
@@ -190,7 +190,7 @@ export function TransactPage() {
     location.replace(path.go("/done"))
   }), [background, id, path, maybeTransaction])
 
-  const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     await background.requestOrThrow({
       method: "brume_respond",
       params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
@@ -372,7 +372,7 @@ export function PersonalSignPage() {
     return Bytes.toUtf8(memory.bytes)
   }), [message])
 
-  const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const approveOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     const wallet = Option.wrap(maybeWallet).getOrThrow()
     const message = triedUserMessage.getOrThrow()
 
@@ -387,7 +387,7 @@ export function PersonalSignPage() {
     location.replace(path.go("/done"))
   }), [background, id, path, maybeWallet, triedUserMessage])
 
-  const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     await background.requestOrThrow({
       method: "brume_respond",
       params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
@@ -448,7 +448,7 @@ export function TypedSignPage() {
     return JSON.parse(data) as Abi.Typed.TypedData // TODO: guard
   }), [data])
 
-  const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const approveOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     const wallet = Option.wrap(maybeWallet).getOrThrow()
     const data = triedParsedData.getOrThrow()
 
@@ -463,7 +463,7 @@ export function TypedSignPage() {
     location.replace(path.go("/done"))
   }), [background, id, path, maybeWallet, triedParsedData])
 
-  const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     await background.requestOrThrow({
       method: "brume_respond",
       params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]
@@ -538,7 +538,7 @@ export function WalletAndChainSelectPage() {
     setSelecteds([...clone])
   }, [selecteds])
 
-  const approveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const approveOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (selecteds.length === 0)
       throw new UIError(`No wallet selected`)
 
@@ -550,7 +550,7 @@ export function WalletAndChainSelectPage() {
     location.replace(path.go("/done"))
   }), [background, id, path, selecteds, persistent])
 
-  const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const rejectOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     await background.requestOrThrow({
       method: "brume_respond",
       params: [RpcErr.rewrap(id, new Err(new UserRejectedError()))]

@@ -14,12 +14,12 @@ export function SettingsPage() {
   const logs = useLogs()
   const chain = useChain()
 
-  const onLogsChange = useAsyncUniqueCallback((e: ChangeEvent<HTMLInputElement>) => Errors.runAndLogAndAlert(async () => {
+  const onLogsChange = useAsyncUniqueCallback((e: ChangeEvent<HTMLInputElement>) => Errors.runOrLogAndAlert(async () => {
     const checked = e.currentTarget.checked
     await logs.mutateOrThrow(() => new Some(new Data(checked)))
   }), [])
 
-  const onChainChange = useAsyncUniqueCallback((e: ChangeEvent<HTMLSelectElement>) => Errors.runAndLogAndAlert(async () => {
+  const onChainChange = useAsyncUniqueCallback((e: ChangeEvent<HTMLSelectElement>) => Errors.runOrLogAndAlert(async () => {
     const chainId = Number(e.currentTarget.value)
     await chain.mutateOrThrow(() => new Some(new Data(chainId)))
   }), [])

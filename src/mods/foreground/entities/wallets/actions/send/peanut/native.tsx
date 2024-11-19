@@ -23,7 +23,7 @@ import { Result } from "@hazae41/result";
 import { Secp256k1 } from "@hazae41/secp256k1";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "..";
-import { useNativeBalance, useNativePricedBalance } from "../../../../tokens/data";
+import { useNativeTokenBalance, useNativeTokenBalanceUsd } from "../../../../tokens/data";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext } from "../../../data";
 import { PriceResolver } from "../../../page";
@@ -163,8 +163,8 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
-  const valuedBalanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
-  const pricedBalanceQuery = useNativePricedBalance(wallet.address, "usd", context)
+  const valuedBalanceQuery = useNativeTokenBalance(wallet.address, "pending", context, prices)
+  const pricedBalanceQuery = useNativeTokenBalanceUsd(wallet.address, "usd", context)
 
   const valuedBalanceData = valuedBalanceQuery.current?.ok().getOrNull()
   const pricedBalanceData = pricedBalanceQuery.current?.ok().getOrNull()

@@ -38,30 +38,27 @@ export namespace Errors {
     alert(error)
   }
 
-  export async function runAndAlert<T>(callback: () => Promise<T>) {
+  export async function runOrLog<T>(callback: () => Promise<T>) {
     try {
       return await callback()
     } catch (e: unknown) {
-      alert(e)
-      throw e
-    }
-  }
-
-  export async function runAndAlertSync<T>(callback: () => Promise<T>) {
-    try {
-      return await callback()
-    } catch (e: unknown) {
-      alert(e)
-      throw e
-    }
-  }
-
-  export async function runAndLogAndAlert<T>(callback: () => Promise<T>) {
-    try {
-      return await callback()
-    } catch (e: unknown) {
-      alert(e)
       log(e)
+    }
+  }
+
+  export function runOrLogSync<T>(callback: () => T) {
+    try {
+      return callback()
+    } catch (e: unknown) {
+      log(e)
+    }
+  }
+
+  export async function runOrLogAndAlert<T>(callback: () => Promise<T>) {
+    try {
+      return await callback()
+    } catch (e: unknown) {
+      logAndAlert(e)
     }
   }
 
@@ -69,8 +66,7 @@ export namespace Errors {
     try {
       return callback()
     } catch (e: unknown) {
-      alert(e)
-      log(e)
+      logAndAlert(e)
     }
   }
 

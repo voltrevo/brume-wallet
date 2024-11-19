@@ -69,7 +69,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
     return undefined
   }, [defAddressInput, maybeEnsAddress])
 
-  const addOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const addOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!finalNameInput)
       throw new Panic()
 

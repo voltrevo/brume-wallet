@@ -31,7 +31,7 @@ export function WalletEditDialog(props: {}) {
     return defNameInput || "Holder"
   }, [defNameInput])
 
-  const saveOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const saveOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     await query.mutateOrThrow((s) => {
       const current = s.real?.current
 

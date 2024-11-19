@@ -1,14 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 import { Color } from "@/libs/colors/colors";
 import { Errors, UIError } from "@/libs/errors/errors";
-import { ChainData, chainDataByChainId, pairByAddress, SimplePairDataV3, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { ChainData, chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Mutators } from "@/libs/glacier/mutators";
 import { Outline, Solid } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { AnchorProps } from "@/libs/react/props/html";
-import { OkProps } from "@/libs/react/props/promise";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { State } from "@/libs/react/state";
 import { Dialog } from "@/libs/ui/dialog";
@@ -25,16 +24,16 @@ import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Data, Fail, Fetched } from "@hazae41/glacier";
 import { Wc, WcMetadata } from "@hazae41/latrine";
-import { None, Nullable, Option, Optional, Some } from "@hazae41/option";
+import { None, Option, Optional, Some } from "@hazae41/option";
 import { CloseContext, useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
 import { useEnsReverse } from "../names/data";
-import { usePairV2Price, usePairV3Price } from "../pairs/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
-import { useContractBalance, useContractPricedBalance, useContractPriceV3, useNativeBalance, useNativePricedBalance, useToken, useTokens } from "../tokens/data";
+import { useContractTokenBalance, useContractTokenBalanceUsd, useNativeTokenBalance, useNativeTokenBalanceUsd, useToken, useTokens } from "../tokens/data";
+import { useContractTokenPriceV3, useNativeTokenPriceV3 } from "../tokens/price";
 import { SmallShrinkableContrastButton } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
@@ -309,7 +308,7 @@ export function WalletMenu(props: {
 
   const edit = useCoords(path, "/edit")
 
-  const flipOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const flipOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     const instance = await EthereumWalletInstance.createOrThrow(wallet, background)
     const privateKey = await instance.getPrivateKeyOrThrow(background)
 
@@ -327,7 +326,7 @@ export function WalletMenu(props: {
 
   const walletQuery = useWallet(wallet.uuid)
 
-  const trashOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const trashOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     await walletQuery.mutateOrThrow(s => {
       const current = s.real?.current
 
@@ -342,7 +341,7 @@ export function WalletMenu(props: {
     close()
   }), [close, walletQuery])
 
-  const untrashOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const untrashOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     await walletQuery.mutateOrThrow(s => {
       const current = s.real?.current
 
@@ -400,7 +399,7 @@ export function WalletConnectMenu() {
   const background = useBackgroundContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
 
-  const connectOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const connectOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     const clipboard = await Result.runAndWrap(async () => {
       return await navigator.clipboard.readText()
     }).then(r => r.orElseSync(() => {
@@ -519,7 +518,7 @@ function NativeTokenMenu(props: { token: NativeTokenData }) {
   const settings = useTokenSettings(wallet, token)
   const favorite = settings.data?.get().enabled
 
-  const onToggle = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const onToggle = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     const enabled = !favorite
 
     await settings.mutateOrThrow(s => {
@@ -570,17 +569,30 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
   const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
 
-  const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
+  const balanceQuery = useNativeTokenBalance(wallet.address, "pending", context)
+  const usdPriceQuery = useNativeTokenPriceV3(context, token, "latest")
 
-  const balanceQuery = useNativeBalance(wallet.address, "pending", context, prices)
-  const balanceUsdQuery = useNativePricedBalance(wallet.address, "usd", context)
+  const usdPricedBalanceQuery = useNativeTokenBalanceUsd(wallet.address, "usd", context)
 
-  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setPrices(prices => {
-      prices[index] = data
-      return [...prices]
+  const computeUsdPricedBalance = useCallback(() => Errors.runOrLog(async () => {
+    await usdPricedBalanceQuery.mutateOrThrow(s => {
+      if (balanceQuery.data == null)
+        return new Some(undefined)
+      if (usdPriceQuery.data == null)
+        return new Some(undefined)
+
+      const balanceFixed = Fixed.from(balanceQuery.data.get())
+      const priceFixed = Fixed.from(usdPriceQuery.data.get())
+
+      const pricedBalanceFixed = balanceFixed.mul(priceFixed)
+
+      return new Some(new Data(pricedBalanceFixed))
     })
-  }, [])
+  }), [balanceQuery.data, usdPriceQuery.data])
+
+  useEffect(() => {
+    computeUsdPricedBalance()
+  }, [computeUsdPricedBalance])
 
   return <>
     <HashSubpathProvider>
@@ -589,11 +601,6 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
           <NativeTokenMenu token={token} />
         </Menu>}
     </HashSubpathProvider>
-    {chain.token.pairs?.map((address, i) =>
-      <PriceResolver key={i}
-        index={i}
-        address={address}
-        ok={onPrice} />)}
     <ClickableTokenRow
       href={menu.href}
       onClick={menu.onClick}
@@ -601,7 +608,7 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
       token={token}
       chain={chain}
       balanceQuery={balanceQuery}
-      balanceUsdQuery={balanceUsdQuery} />
+      balanceUsdQuery={usdPricedBalanceQuery} />
   </>
 }
 
@@ -616,7 +623,7 @@ function ContractTokenMenu(props: { token: ContractTokenData }) {
   const settings = useTokenSettings(wallet, token)
   const favorite = settings.data?.get().enabled
 
-  const onToggle = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const onToggle = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     const enabled = !favorite
 
     await settings.mutateOrThrow(s => {
@@ -667,21 +674,31 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
 
-  const [prices, setPrices] = useState(new Array<Nullable<Fixed.From>>(token.pairs?.length ?? 0))
+  const balanceQuery = useContractTokenBalance(wallet.address, token, "pending", context)
 
-  const balanceQuery = useContractBalance(wallet.address, token, "pending", context, prices)
-  const balanceUsdQuery = useContractPricedBalance(wallet.address, token, "usd", context)
+  const usdPriceQuery = useContractTokenPriceV3(context, token, "latest")
 
-  const pricev3 = useContractPriceV3(context, token, "pending")
+  const usdPricedBalanceQuery = useContractTokenBalanceUsd(wallet.address, token, "usd", context)
 
-  console.log("pricev3", token.symbol, pricev3)
+  const computeUsdPricedBalance = useCallback(() => Errors.runOrLog(async () => {
+    await usdPricedBalanceQuery.mutateOrThrow(s => {
+      if (balanceQuery.data == null)
+        return new Some(undefined)
+      if (usdPriceQuery.data == null)
+        return new Some(undefined)
 
-  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setPrices(prices => {
-      prices[index] = data
-      return [...prices]
+      const balanceFixed = Fixed.from(balanceQuery.data.get())
+      const priceFixed = Fixed.from(usdPriceQuery.data.get())
+
+      const pricedBalanceFixed = balanceFixed.mul(priceFixed)
+
+      return new Some(new Data(pricedBalanceFixed))
     })
-  }, [])
+  }), [balanceQuery.data, usdPriceQuery.data])
+
+  useEffect(() => {
+    computeUsdPricedBalance()
+  }, [computeUsdPricedBalance])
 
   return <>
     <HashSubpathProvider>
@@ -690,11 +707,6 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
           <ContractTokenMenu token={token} />
         </Menu>}
     </HashSubpathProvider>
-    {token.pairs?.map((address, i) =>
-      <PriceResolver key={i}
-        index={i}
-        address={address}
-        ok={onPrice} />)}
     <ClickableTokenRow
       href={menu.href}
       onClick={menu.onClick}
@@ -702,7 +714,7 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
       token={token}
       chain={chain}
       balanceQuery={balanceQuery}
-      balanceUsdQuery={balanceUsdQuery} />
+      balanceUsdQuery={usdPricedBalanceQuery} />
   </>
 }
 
@@ -711,60 +723,6 @@ export interface QueryLike<D, E> {
   readonly error?: Fail<E>
   readonly current?: Fetched<D, E>
   readonly fetching?: boolean
-}
-
-export function PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<Fixed.From>]>) {
-  const { address } = props
-
-  const pairData = pairByAddress[address]
-
-  if (pairData.version === 2)
-    return <PairV2PriceResolver {...props} />
-
-  if (pairData.version === 3)
-    return <PairV3PriceResolver {...props} />
-
-  return null
-}
-
-export function PairV2PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<Fixed.From>]>) {
-  const { ok, index, address } = props
-  const wallet = useWalletDataContext().getOrThrow()
-
-  const pairData = pairByAddress[address]
-  const chainData = chainDataByChainId[pairData.chainId]
-
-  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
-
-  const { data } = usePairV2Price(context, pairData, "pending")
-
-  console.log("pairv2", pairData, data)
-
-  useEffect(() => {
-    ok([index, data?.get()])
-  }, [index, data, ok])
-
-  return null
-}
-
-export function PairV3PriceResolver(props: { index: number } & { address: string } & OkProps<[number, Nullable<Fixed.From>]>) {
-  const wallet = useWalletDataContext().getOrThrow()
-  const { ok, index, address } = props
-
-  const pairData = pairByAddress[address] as SimplePairDataV3
-  const chainData = chainDataByChainId[pairData.chainId]
-
-  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
-
-  const { data } = usePairV3Price(context, pairData, "pending")
-
-  console.log("pairv3", pairData, data)
-
-  useEffect(() => {
-    ok([index, data?.get()])
-  }, [index, data, ok])
-
-  return null
 }
 
 function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceQuery: QueryLike<Fixed.From, Error> } & { balanceUsdQuery: QueryLike<Fixed.From, Error> } & AnchorProps) {

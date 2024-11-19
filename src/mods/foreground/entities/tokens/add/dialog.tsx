@@ -43,7 +43,7 @@ export function TokenAddDialog(props: {}) {
   const chain = chainDataByChainId[Number(defChainId)]
   const token = useToken(chain.chainId, defAddress)
 
-  const addOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const addOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!ZeroHexString.String.is(defAddress))
       throw new UIError(`Invalid address`)
 

@@ -92,7 +92,7 @@ export function SeededWalletCreatorDialog(props: {}) {
     return true
   }, [finalNameInput, defPathInput])
 
-  const addOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const addOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!finalNameInput)
       throw new Panic()
 

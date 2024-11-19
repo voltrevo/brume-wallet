@@ -39,7 +39,7 @@ export function Fallback(props: ErrorProps) {
     location.reload()
   }, [])
 
-  const reset = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const reset = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!isSafariExtension() && confirm(`You will lose all your wallets if you didn't made backups, are you sure?`) === false)
       return
 

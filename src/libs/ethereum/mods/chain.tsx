@@ -676,6 +676,15 @@ export const pairByAddress: Record<string, StoredPairData> = {
   }
 } as const
 
+export type SimpleTokenData =
+  | SimpleNativeTokenData
+  | SimpleContractTokenData
+
+export interface SimpleNativeTokenData {
+  readonly type: "native"
+  readonly chainId: number
+}
+
 export interface SimpleContractTokenData {
   readonly type: "contract"
   readonly decimals: number

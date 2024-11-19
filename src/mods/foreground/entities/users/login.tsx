@@ -39,7 +39,7 @@ export function UserLoginDialog(props: { next?: string }) {
 
   const [invalid, setInvalid] = useState(false)
 
-  const loginOrAlert = useAsyncUniqueCallback(() => Errors.runAndLogAndAlert(async () => {
+  const loginOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (maybeUser == null)
       return
     const user = maybeUser
