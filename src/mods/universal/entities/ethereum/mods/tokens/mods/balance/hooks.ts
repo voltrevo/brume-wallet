@@ -10,8 +10,8 @@ export function useNativeTokenBalance(context: Nullable<EthereumContext>, accoun
   const storage = useUserStorageContext().getOrThrow()
 
   const query = useQuery(Balance.Native.queryOrThrow, [context, account, block, storage])
-  useFetch(query)
-  useVisible(query)
+  useFetch(query, { cache: "reload" })
+  useVisible(query, { cache: "reload" })
   useInterval(query, 10 * 1000)
   useError(query, Errors.onQueryError)
 
@@ -22,8 +22,8 @@ export function useContractTokenBalance(context: Nullable<EthereumContext>, cont
   const storage = useUserStorageContext().getOrThrow()
 
   const query = useQuery(Balance.Contract.queryOrThrow, [context, contract, account, block, storage])
-  useFetch(query)
-  useVisible(query)
+  useFetch(query, { cache: "reload" })
+  useVisible(query, { cache: "reload" })
   useInterval(query, 10 * 1000)
   useError(query, Errors.onQueryError)
 

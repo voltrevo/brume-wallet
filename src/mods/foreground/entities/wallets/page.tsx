@@ -679,6 +679,8 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const priceQuery = useContractTokenPriceV3(context, token.address, "pending")
 
+  console.log("priceQuery", priceQuery)
+
   const valuedBalanceQuery = useContractTokenBalance(context, token.address, wallet.address, "pending")
   const pricedBalanceQuery = useContractTokenPricedBalance(context, token.address, wallet.address, "usd", "pending")
 

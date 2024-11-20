@@ -68,7 +68,6 @@ export interface NativeTokenData {
   readonly chainId: number,
   readonly symbol: string,
   readonly decimals: number,
-  readonly pairs?: readonly string[]
 }
 
 export interface ContractTokenData {
@@ -79,7 +78,6 @@ export interface ContractTokenData {
   readonly symbol: string,
   readonly decimals: number,
   readonly address: ZeroHexString
-  readonly pairs?: readonly ZeroHexString.Unsafe[]
 }
 
 export namespace BgToken {

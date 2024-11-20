@@ -86,7 +86,7 @@ export namespace UniswapV3Pool {
   export namespace Token0 {
 
     export type K = EthereumChainfulRpcRequestPreinit<unknown>
-    export type D = ZeroHexString
+    export type D = Address
     export type F = Error
 
     export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
@@ -134,7 +134,7 @@ export namespace UniswapV3Pool {
   export namespace Token1 {
 
     export type K = EthereumChainfulRpcRequestPreinit<unknown>
-    export type D = ZeroHexString
+    export type D = Address
     export type F = Error
 
     export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
@@ -182,13 +182,13 @@ export namespace UniswapV3Pool {
   export namespace Price {
 
     export type K = EthereumChainfulRpcRequestPreinit<unknown>
-    export type D = Fixed.From
+    export type D = readonly [Fixed.From, Fixed.From]
     export type F = Error
 
     export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
       return {
         chainId: chainId,
-        method: "eth_getPairPriceV3",
+        method: "eth_getUniswapV3PoolPrice",
         params: [pool, block]
       }
     }
@@ -241,7 +241,7 @@ export namespace UniswapV3Pool {
         key: keyOrThrow(context.chain.chainId, pool, block),
         fetcher,
         cooldown: 1000 * 60,
-        expiration: 1000 * 60,
+        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
     }
@@ -256,7 +256,7 @@ export namespace UniswapV3Pool {
     export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
       return {
         chainId: chainId,
-        method: "eth_getSqrtPriceX96",
+        method: "eth_getUniswapV3PoolSqrtPriceX96",
         params: [pool, block]
       }
     }
@@ -284,7 +284,7 @@ export namespace UniswapV3Pool {
         key: keyOrThrow(context.chain.chainId, pool, block),
         fetcher,
         cooldown: 1000 * 60,
-        expiration: 1000 * 60,
+        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
     }
@@ -348,7 +348,7 @@ export namespace UniswapV3Pool {
         fetcher,
         indexer,
         cooldown: 1000 * 60,
-        expiration: 1000 * 60,
+        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
 

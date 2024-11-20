@@ -40,7 +40,6 @@ export namespace UniswapV3 {
     readonly address: string,
     readonly token0: SimpleUniswapV3TokenData,
     readonly token1: SimpleUniswapV3TokenData,
-    readonly reversed?: boolean
   }
 
   export function computeOrThrow(pool: SimpleUniswapV3PoolData, sqrtPriceX96: bigint) {
@@ -49,10 +48,7 @@ export namespace UniswapV3 {
     const a = new Fixed(priceX96BigInt, pool.token1.decimals)
     const b = new Fixed(((2n ** 96n) ** 2n), pool.token0.decimals)
 
-    if (pool.reversed)
-      return a.div(b)
-
-    return b.div(a)
+    return [b.div(a), a.div(b)] as const
   }
 
 }

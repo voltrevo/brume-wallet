@@ -7,7 +7,7 @@ import { createQuery, Data, Fail, QueryStorage } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 
-export namespace PairV2 {
+export namespace UniswapV2Pool {
 
   export namespace Price {
 
@@ -15,21 +15,21 @@ export namespace PairV2 {
     export type D = Fixed.From
     export type F = Error
 
-    export function keyOrThrow(chainId: number, pair: UniswapV2.SimpleUniswapV2PoolData, block: string) {
+    export function keyOrThrow(chainId: number, pool: UniswapV2.SimpleUniswapV2PoolData, block: string) {
       return {
         chainId: chainId,
         method: "eth_call",
         params: [{
-          to: pair.address,
+          to: pool.address,
           data: Abi.encodeOrThrow(UniswapV2PoolAbi.getReserves.fromOrThrow())
         }, block]
       }
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<UniswapV2.SimpleUniswapV2PoolData>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<UniswapV2.SimpleUniswapV2PoolData>, block: Nullable<string>, storage: QueryStorage) {
       if (context == null)
         return
-      if (pair == null)
+      if (pool == null)
         return
       if (block == null)
         return
@@ -44,7 +44,7 @@ export namespace PairV2 {
           const returns = Abi.Tuple.create(Abi.Uint112, Abi.Uint112, Abi.Uint32)
           const [a, b] = Abi.decodeOrThrow(returns, fetched.inner).intoOrThrow()
 
-          const price = UniswapV2.computeOrThrow(pair, [a, b])
+          const price = UniswapV2.computeOrThrow(pool, [a, b])
 
           return new Data(price)
         } catch (e: unknown) {
@@ -53,7 +53,7 @@ export namespace PairV2 {
       }
 
       return createQuery<K, D, F>({
-        key: keyOrThrow(context.chain.chainId, pair, block),
+        key: keyOrThrow(context.chain.chainId, pool, block),
         fetcher,
         storage
       })

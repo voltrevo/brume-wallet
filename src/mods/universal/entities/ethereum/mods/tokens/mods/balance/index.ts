@@ -46,6 +46,8 @@ export namespace Balance {
       return createQuery<K, D, F>({
         key: keyOrThrow(context.chain.chainId, account, block),
         fetcher,
+        cooldown: 1000 * 60,
+        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
     }
@@ -96,6 +98,8 @@ export namespace Balance {
       return createQuery<K, D, F>({
         key: keyOrThrow(context.chain.chainId, contract, account, block),
         fetcher,
+        cooldown: 1000 * 60,
+        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
     }

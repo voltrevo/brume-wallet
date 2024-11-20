@@ -110,7 +110,9 @@ export async function createUserStorageOrThrow(user: UserData, password: string)
 
       const storageValue = await requestOrThrow(storage.database.database.transaction("keyval").objectStore("keyval").get(storageKey))
       const storageState = await storage.encoders.value.decodeOrThrow(storageValue)
-      await storage.database.setOrThrow(storageKey, storageValue, storageState?.expiration)
+      const storageExpiration = storageState?.expiration ?? undefined
+
+      await storage.database.setOrThrow(storageKey, storageValue, storageExpiration)
     }
 
     await storage.setStoredOrThrow(index, undefined)
