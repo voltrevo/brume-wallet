@@ -4,7 +4,7 @@ import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, Fetched, QueryStorage } from "@hazae41/glacier"
 import { Nullable, Option } from "@hazae41/option"
-import { FactoryV3, UniswapV3Pool } from "../../../pairs/v3"
+import { FactoryV3, UniswapV3Pool } from "../../../uniswap/v3"
 
 export namespace PriceV3 {
 
