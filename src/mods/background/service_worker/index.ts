@@ -23,6 +23,7 @@ import { pathOf, urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn";
 import { UnauthorizedError } from "@/mods/foreground/errors/errors";
+import { Ethereum } from "@/mods/universal/entities/ethereum";
 import { WalletWasm } from "@brumewallet/wallet.wasm";
 import { Base16 } from "@hazae41/base16";
 import { Base58 } from "@hazae41/base58";
@@ -64,7 +65,6 @@ import { AppRequest, AppRequestData, BgAppRequest } from "./entities/requests/da
 import { BgSession, ExSessionData, SessionData, SessionRef, SessionStorage, WcSessionData } from "./entities/sessions/data";
 import { Status, StatusData } from "./entities/sessions/status/data";
 import { BgSimulation } from "./entities/simulations/data";
-import { BgToken } from "./entities/tokens/data";
 import { BgUser, User, UserData, UserInit } from "./entities/users/data";
 import { BgWallet, EthereumChainlessRpcRequestPreinit, Wallet, WalletData, WalletRef } from "./entities/wallets/data";
 import { createUserStorageOrThrow } from "./storage";
@@ -725,7 +725,7 @@ export class Global {
 
     const [address, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
 
-    const query = BgToken.Native.Balance.schema(address, block, context, user.storage)
+    const query = Option.wrap(Ethereum.GetBalance.queryOrThrow(context, address, block, user.storage)).getOrThrow()
 
     try { await query.fetchOrThrow() } catch { }
 

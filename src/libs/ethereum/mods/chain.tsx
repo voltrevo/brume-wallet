@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { ContractTokenData as StoredContractTokenData, NativeTokenData as StoredNativeTokenData } from "@/mods/background/service_worker/entities/tokens/data"
+import { ZeroHexString } from "@hazae41/cubane"
 
 export type ChainId = number
 
@@ -382,7 +383,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "WETH",
     decimals: 18,
-    address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" as ZeroHexString,
     pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
   },
   "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599": {
@@ -392,7 +393,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "WBTC",
     decimals: 8,
-    address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+    address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" as ZeroHexString,
     pairs: ["0xbb2b8038a1640196fbe3e38816f3e67cba72d940", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
   },
   "0x6B175474E89094C44Da98b954EedeAC495271d0F": {
@@ -402,7 +403,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "DAI",
     decimals: 18,
-    address: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+    address: "0x6B175474E89094C44Da98b954EedeAC495271d0F" as ZeroHexString,
     pairs: []
   },
   "0xdAC17F958D2ee523a2206206994597C13D831ec7": {
@@ -412,7 +413,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "USDT",
     decimals: 6,
-    address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" as ZeroHexString,
     pairs: []
   },
   "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48": {
@@ -422,7 +423,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "USDC",
     decimals: 6,
-    address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as ZeroHexString,
     pairs: []
   },
   "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0": {
@@ -432,7 +433,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "MATIC",
     decimals: 18,
-    address: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
+    address: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0" as ZeroHexString,
     pairs: ["0x819f3450dA6f110BA6Ea52195B3beaFa246062dE", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"],
   },
   "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84": {
@@ -442,7 +443,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "stETH",
     decimals: 18,
-    address: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+    address: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84" as ZeroHexString,
     pairs: ["0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
   },
   "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58": {
@@ -452,7 +453,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 10,
     symbol: "USDT",
     decimals: 6,
-    address: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+    address: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58" as ZeroHexString,
     pairs: []
   },
   "0x7F5c764cBc14f9669B88837ca1490cCa17c31607": {
@@ -462,7 +463,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 10,
     symbol: "USDC",
     decimals: 6,
-    address: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
+    address: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607" as ZeroHexString,
     pairs: []
   },
   "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1": {
@@ -472,7 +473,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 10,
     symbol: "DAI",
     decimals: 18,
-    address: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+    address: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1" as ZeroHexString,
     pairs: []
   },
   "0x68f180fcCe6836688e9084f035309E29Bf0A2095": {
@@ -482,7 +483,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 10,
     symbol: "WBTC",
     decimals: 8,
-    address: "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+    address: "0x68f180fcCe6836688e9084f035309E29Bf0A2095" as ZeroHexString,
     pairs: ["0xbb2b8038a1640196fbe3e38816f3e67cba72d940", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
   },
   "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c": {
@@ -492,7 +493,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 56,
     symbol: "WBNB",
     decimals: 18,
-    address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c" as ZeroHexString,
     pairs: ["0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae"],
   },
   "0x55d398326f99059fF775485246999027B3197955": {
@@ -502,7 +503,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 56,
     symbol: "USDT",
     decimals: 18,
-    address: "0x55d398326f99059fF775485246999027B3197955",
+    address: "0x55d398326f99059fF775485246999027B3197955" as ZeroHexString,
     pairs: [],
   },
   "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56": {
@@ -512,7 +513,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 56,
     symbol: "BUSD",
     decimals: 18,
-    address: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
+    address: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56" as ZeroHexString,
     pairs: []
   },
   "0x3d6545b08693dae087e957cb1180ee38b9e3c25e": {
@@ -522,7 +523,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 56,
     symbol: "ETC",
     decimals: 18,
-    address: "0x3d6545b08693dae087e957cb1180ee38b9e3c25e",
+    address: "0x3d6545b08693dae087e957cb1180ee38b9e3c25e" as ZeroHexString,
     pairs: ["0xdb8721b7a04c3e592264bf58558526b16b15e757"]
   },
   "0xc2132D05D31c914a87C6611C10748AEb04B58e8F": {
@@ -532,7 +533,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 137,
     symbol: "USDT",
     decimals: 6,
-    address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+    address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F" as ZeroHexString,
     pairs: []
   },
   "0x471EcE3750Da237f93B8E339c536989b8978a438": {
@@ -542,7 +543,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 42220,
     symbol: "WCELO",
     decimals: 18,
-    address: "0x471EcE3750Da237f93B8E339c536989b8978a438",
+    address: "0x471EcE3750Da237f93B8E339c536989b8978a438" as ZeroHexString,
     pairs: ["0xf5b1bc6c9c180b64f5711567b1d6a51a350f8422"]
   },
   "0x64dEFa3544c695db8c535D289d843a189aa26b98": {
@@ -552,7 +553,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 42220,
     symbol: "mCUSD",
     decimals: 18,
-    address: "0x64dEFa3544c695db8c535D289d843a189aa26b98",
+    address: "0x64dEFa3544c695db8c535D289d843a189aa26b98" as ZeroHexString,
     pairs: []
   },
   "0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5": {
@@ -562,7 +563,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "BRUME",
     decimals: 18,
-    address: "0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5",
+    address: "0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5" as ZeroHexString,
     pairs: ["0xF938596B738E058F2c70E93F9a0436f1B20aC495", "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"]
   }
 } as const
@@ -675,27 +676,3 @@ export const pairByAddress: Record<string, StoredPairData> = {
     token1: tokenByAddress["0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5"],
   }
 } as const
-
-export type SimpleTokenData =
-  | SimpleNativeTokenData
-  | SimpleContractTokenData
-
-export interface SimpleNativeTokenData {
-  readonly type: "native"
-  readonly chainId: number
-}
-
-export interface SimpleContractTokenData {
-  readonly type: "contract"
-  readonly decimals: number
-  readonly address: string
-}
-
-export interface SimplePairDataV3 {
-  readonly version: 3
-  readonly chainId: number,
-  readonly address: string,
-  readonly token0: SimpleContractTokenData,
-  readonly token1: SimpleContractTokenData,
-  readonly reversed?: boolean
-}

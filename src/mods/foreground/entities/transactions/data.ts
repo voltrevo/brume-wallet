@@ -141,7 +141,7 @@ export function useTransactionWithReceipt(uuid: Nullable<string>, context: Nulla
   const storage = useUserStorageContext().getOrThrow()
 
   const transactionQuery = useQuery(FgTransaction.schema, [uuid, storage])
-  const maybeTransaction = transactionQuery.current?.ok().getOrNull()
+  const maybeTransaction = transactionQuery.current?.getOrNull()
   useError(transactionQuery, Errors.onQueryError)
 
   const receiptQuery = useQuery(FgTransactionReceipt.schema, [uuid, maybeTransaction?.hash, context, storage])

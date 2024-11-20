@@ -1,6 +1,5 @@
-import { FactoryAbiV3, PairAbiV3 } from "@/libs/abi/pair.abi"
+import { UniswapV3FactoryAbi, UniswapV3PoolAbi } from "@/libs/abi/uniswap.abi"
 import { ZeroHexBigInt } from "@/libs/bigints/bigints"
-import { SimpleContractTokenData, SimplePairDataV3 } from "@/libs/ethereum/mods/chain"
 import { Records } from "@/libs/records"
 import { UniswapV3 } from "@/libs/uniswap"
 import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
@@ -8,40 +7,24 @@ import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, Fetched, QueryStorage, States } from "@hazae41/glacier"
 import { Nullable, Option, Some } from "@hazae41/option"
+import { ERC20Metadata } from "../../tokens/mods"
 
 export namespace FactoryV3 {
 
   export const factoryByChainId = {
-    1: {
-      chainId: 1,
-      address: "0x1F98431c8aD98523631AE4a59f267346ea31F984"
-    }
+    1: "0x1F98431c8aD98523631AE4a59f267346ea31F984" as ZeroHexString
   }
 
   export const wethByChainId = {
-    1: {
-      type: "contract",
-      decimals: 18,
-      address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-    } satisfies SimpleContractTokenData
+    1: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" as ZeroHexString
   }
 
   export const usdcByChainId = {
-    1: {
-      type: "contract",
-      address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-      decimals: 6,
-    } satisfies SimpleContractTokenData
+    1: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as ZeroHexString
   }
 
   export const usdcWethPoolByChainId = {
-    1: {
-      version: 3,
-      address: "0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640",
-      chainId: 1,
-      token0: usdcByChainId[1],
-      token1: wethByChainId[1],
-    } satisfies SimplePairDataV3
+    1: "0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640" as ZeroHexString
   }
 
   export namespace GetPool {
@@ -50,18 +33,18 @@ export namespace FactoryV3 {
     export type D = Address
     export type F = Error
 
-    export function keyOrThrow(chainId: number, token0: SimpleContractTokenData, token1: SimpleContractTokenData, fee: number, block: string) {
+    export function keyOrThrow(chainId: number, token0: ZeroHexString, token1: ZeroHexString, fee: number, block: string) {
       return {
         chainId: chainId,
         method: "eth_call",
         params: [{
-          to: Records.getOrThrow(factoryByChainId, chainId).address,
-          data: Abi.encodeOrThrow(FactoryAbiV3.getPool.fromOrThrow(token0.address, token1.address, fee))
+          to: Records.getOrThrow(factoryByChainId, chainId),
+          data: Abi.encodeOrThrow(UniswapV3FactoryAbi.getPool.fromOrThrow(token0, token1, fee))
         }, block]
       }
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, token0: Nullable<SimpleContractTokenData>, token1: Nullable<SimpleContractTokenData>, fee: Nullable<number>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, token0: Nullable<ZeroHexString>, token1: Nullable<ZeroHexString>, fee: Nullable<number>, block: Nullable<string>, storage: QueryStorage) {
       if (context == null)
         return
       if (token0 == null)
@@ -88,6 +71,8 @@ export namespace FactoryV3 {
       return createQuery<K, D, F>({
         key: keyOrThrow(context.chain.chainId, token0, token1, fee, block),
         fetcher,
+        cooldown: 1000 * 60 * 60 * 24 * 365,
+        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
     }
@@ -96,7 +81,103 @@ export namespace FactoryV3 {
 
 }
 
-export namespace PairV3 {
+export namespace UniswapV3Pool {
+
+  export namespace Token0 {
+
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type D = ZeroHexString
+    export type F = Error
+
+    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
+      return {
+        chainId: chainId,
+        method: "eth_call",
+        params: [{
+          to: pool,
+          data: Abi.encodeOrThrow(UniswapV3PoolAbi.token0.fromOrThrow())
+        }, block]
+      }
+    }
+
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
+      if (context == null)
+        return
+      if (pool == null)
+        return
+      if (block == null)
+        return
+
+      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+        const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
+
+        if (fetched.isErr())
+          return fetched
+
+        const returns = Abi.Address
+        const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+
+        return new Data(decoded)
+      })
+
+      return createQuery<K, D, F>({
+        key: keyOrThrow(context.chain.chainId, pool, block),
+        fetcher,
+        cooldown: 1000 * 60 * 60 * 24 * 365,
+        expiration: 1000 * 60 * 60 * 24 * 365,
+        storage
+      })
+    }
+
+  }
+
+  export namespace Token1 {
+
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type D = ZeroHexString
+    export type F = Error
+
+    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
+      return {
+        chainId: chainId,
+        method: "eth_call",
+        params: [{
+          to: pool,
+          data: Abi.encodeOrThrow(UniswapV3PoolAbi.token1.fromOrThrow())
+        }, block]
+      }
+    }
+
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
+      if (context == null)
+        return
+      if (pool == null)
+        return
+      if (block == null)
+        return
+
+      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+        const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
+
+        if (fetched.isErr())
+          return fetched
+
+        const returns = Abi.Address
+        const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+
+        return new Data(decoded)
+      })
+
+      return createQuery<K, D, F>({
+        key: keyOrThrow(context.chain.chainId, pool, block),
+        fetcher,
+        cooldown: 1000 * 60 * 60 * 24 * 365,
+        expiration: 1000 * 60 * 60 * 24 * 365,
+        storage
+      })
+    }
+
+  }
 
   export namespace Price {
 
@@ -104,36 +185,63 @@ export namespace PairV3 {
     export type D = Fixed.From
     export type F = Error
 
-    export function keyOrThrow(pair: SimplePairDataV3, block: string) {
+    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
       return {
-        chainId: pair.chainId,
+        chainId: chainId,
         method: "eth_getPairPriceV3",
-        params: [pair.address, block]
+        params: [pool, block]
       }
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<SimplePairDataV3>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
       if (context == null)
         return
-      if (pair == null)
+      if (pool == null)
         return
       if (block == null)
         return
 
       const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const sqrtPriceX96Fetched = await SqrtPriceX96.queryOrThrow(context, pair, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const token0AddressFetched = await Token0.queryOrThrow(context, pool, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+
+        if (token0AddressFetched.isErr())
+          return token0AddressFetched
+
+        const token1AddressFetched = await Token1.queryOrThrow(context, pool, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+
+        if (token1AddressFetched.isErr())
+          return token1AddressFetched
+
+        const token0DecimalsFetched = await ERC20Metadata.Decimals.queryOrThrow(context, token0AddressFetched.get(), block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+
+        if (token0DecimalsFetched.isErr())
+          return token0DecimalsFetched
+
+        const token1DecimalsFetched = await ERC20Metadata.Decimals.queryOrThrow(context, token1AddressFetched.get(), block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+
+        if (token1DecimalsFetched.isErr())
+          return token1DecimalsFetched
+
+        const sqrtPriceX96Fetched = await SqrtPriceX96.queryOrThrow(context, pool, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (sqrtPriceX96Fetched.isErr())
           return sqrtPriceX96Fetched
 
         const sqrtPriceX96BigInt = ZeroHexBigInt.from(sqrtPriceX96Fetched.get()).value
 
-        return new Data(UniswapV3.computeOrThrow(pair, sqrtPriceX96BigInt), sqrtPriceX96Fetched)
+        const token0Data = { address: token0AddressFetched.get(), decimals: token0DecimalsFetched.get() } as const
+        const token1Data = { address: token1AddressFetched.get(), decimals: token1DecimalsFetched.get() } as const
+
+        const poolData = { address: pool, token0: token0Data, token1: token1Data } as const
+
+        return new Data(UniswapV3.computeOrThrow(poolData, sqrtPriceX96BigInt), sqrtPriceX96Fetched)
       })
 
       return createQuery<K, D, F>({
-        key: keyOrThrow(pair, block),
+        key: keyOrThrow(context.chain.chainId, pool, block),
         fetcher,
+        cooldown: 1000 * 60,
+        expiration: 1000 * 60,
         storage
       })
     }
@@ -145,24 +253,24 @@ export namespace PairV3 {
     export type D = ZeroHexBigInt.From
     export type F = Error
 
-    export function keyOrThrow(pair: SimplePairDataV3, block: string) {
+    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
       return {
-        chainId: pair.chainId,
+        chainId: chainId,
         method: "eth_getSqrtPriceX96",
-        params: [pair.address, block]
+        params: [pool, block]
       }
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<SimplePairDataV3>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
       if (context == null)
         return
-      if (pair == null)
+      if (pool == null)
         return
       if (block == null)
         return
 
       const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const slot0 = await Slot0.queryOrThrow(context, pair, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const slot0 = await Slot0.queryOrThrow(context, pool, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (slot0.isErr())
           return slot0
@@ -172,27 +280,11 @@ export namespace PairV3 {
         return new Data(sqrtPriceX96, slot0)
       })
 
-      const indexer = async (states: States<D, F>) => {
-        const { current } = states
-
-        const maybeCurrentData = current.real?.current.checkOrNull()
-
-        await Price.queryOrThrow(context, pair, block, storage)?.mutateOrThrow(() => {
-          if (maybeCurrentData == null)
-            return new Some(undefined)
-
-          const bigint = ZeroHexBigInt.from(maybeCurrentData.get()).value
-          const price = UniswapV3.computeOrThrow(pair, bigint)
-
-          return new Some(new Data(price, maybeCurrentData))
-        })
-      }
-
-
       return createQuery<K, D, F>({
-        key: keyOrThrow(pair, block),
+        key: keyOrThrow(context.chain.chainId, pool, block),
         fetcher,
-        indexer,
+        cooldown: 1000 * 60,
+        expiration: 1000 * 60,
         storage
       })
     }
@@ -205,21 +297,21 @@ export namespace PairV3 {
     export type D = readonly [ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From]
     export type F = Error
 
-    export function keyOrThrow(pair: SimplePairDataV3, block: string) {
+    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
       return {
-        chainId: pair.chainId,
+        chainId: chainId,
         method: "eth_call",
         params: [{
-          to: pair.address,
-          data: Abi.encodeOrThrow(PairAbiV3.slot0.fromOrThrow())
+          to: pool,
+          data: Abi.encodeOrThrow(UniswapV3PoolAbi.slot0.fromOrThrow())
         }, block]
       }
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<SimplePairDataV3>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
       if (context == null)
         return
-      if (pair == null)
+      if (pool == null)
         return
       if (block == null)
         return
@@ -241,7 +333,7 @@ export namespace PairV3 {
 
         const maybeCurrentData = current.real?.current.checkOrNull()
 
-        await SqrtPriceX96.queryOrThrow(context, pair, block, storage)?.mutateOrThrow(() => {
+        await SqrtPriceX96.queryOrThrow(context, pool, block, storage)?.mutateOrThrow(() => {
           if (maybeCurrentData == null)
             return new Some(undefined)
 
@@ -252,13 +344,16 @@ export namespace PairV3 {
       }
 
       return createQuery<K, D, F>({
-        key: keyOrThrow(pair, block),
+        key: keyOrThrow(context.chain.chainId, pool, block),
         fetcher,
         indexer,
+        cooldown: 1000 * 60,
+        expiration: 1000 * 60,
         storage
       })
 
     }
 
   }
+
 }

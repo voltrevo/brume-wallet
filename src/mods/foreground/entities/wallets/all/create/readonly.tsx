@@ -59,7 +59,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   }, [defAddressInput])
 
   const ensAddressQuery = useEnsLookup(maybeEnsKey, mainnet)
-  const maybeEnsAddress = ensAddressQuery.current?.ok().getOrNull()
+  const maybeEnsAddress = ensAddressQuery.current?.getOrNull()
 
   const maybeAddress = useMemo(() => {
     if (maybeEnsAddress != null)

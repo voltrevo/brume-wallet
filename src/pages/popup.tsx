@@ -139,7 +139,7 @@ export function TransactPage() {
 
   const walletId = Option.wrap(path.url.searchParams.get("walletId")).getOrThrow()
   const walletQuery = useWallet(walletId)
-  const maybeWallet = walletQuery.current?.ok().getOrNull()
+  const maybeWallet = walletQuery.current?.getOrNull()
 
   const chainId = Option.wrap(path.url.searchParams.get("chainId")).getOrThrow()
   const chainData = Option.wrap(chainDataByChainId[Number(chainId)]).getOrThrow()
@@ -157,10 +157,10 @@ export function TransactPage() {
   const maybeMaxPriorityFeePerGas = path.url.searchParams.get("maxPriorityFeePerGas")
 
   const trialQuery = useTransactionTrial(id)
-  const maybeTrialData = trialQuery.current?.ok().getOrNull()
+  const maybeTrialData = trialQuery.current?.getOrNull()
 
   const transactionQuery = useTransactionWithReceipt(maybeTrialData?.transactions[0].uuid, maybeContext)
-  const maybeTransaction = transactionQuery.current?.ok().getOrNull()
+  const maybeTransaction = transactionQuery.current?.getOrNull()
 
   const preTx = useMemo(() => {
     return {
@@ -359,7 +359,7 @@ export function PersonalSignPage() {
 
   const walletId = Option.wrap(path.url.searchParams.get("walletId")).getOrThrow()
   const walletQuery = useWallet(walletId)
-  const maybeWallet = walletQuery.current?.ok().getOrNull()
+  const maybeWallet = walletQuery.current?.getOrNull()
 
   const message = Option.wrap(path.url.searchParams.get("message")).getOrThrow()
 
@@ -440,7 +440,7 @@ export function TypedSignPage() {
 
   const walletId = Option.wrap(path.url.searchParams.get("walletId")).getOrThrow()
   const walletQuery = useWallet(walletId)
-  const maybeWallet = walletQuery.current?.ok().getOrNull()
+  const maybeWallet = walletQuery.current?.getOrNull()
 
   const data = Option.wrap(path.url.searchParams.get("data")).getOrThrow()
 
@@ -625,7 +625,7 @@ export function WalletAndChainSelectPage() {
 
 export function DonePage() {
   const path = usePathContext().getOrThrow()
-  const requests = useAppRequests().current?.ok().getOrNull()
+  const requests = useAppRequests().current?.getOrNull()
 
   useEffect(() => {
     if (!requests?.length)

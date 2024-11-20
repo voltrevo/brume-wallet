@@ -20,6 +20,7 @@ import { randomUUID } from "@/libs/uuid/uuid";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
 import { TokenSettings, TokenSettingsData } from "@/mods/background/service_worker/entities/wallets/tokens/data";
+import { useContractTokenBalance, useContractTokenPricedBalance, useNativeTokenBalance, useNativeTokenPricedBalance } from "@/mods/universal/entities/ethereum/mods/tokens/mods/balance/hooks";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Data, Fail, Fetched } from "@hazae41/glacier";
@@ -32,7 +33,7 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
-import { useContractTokenBalance, useContractTokenBalanceUsd, useNativeTokenBalance, useNativeTokenBalanceUsd, useToken, useTokens } from "../tokens/data";
+import { useToken, useTokens } from "../tokens/data";
 import { useContractTokenPriceV3, useNativeTokenPriceV3 } from "../tokens/price";
 import { SmallShrinkableContrastButton } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
@@ -569,26 +570,28 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
   const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
 
-  const balanceQuery = useNativeTokenBalance(wallet.address, "pending", context)
-  const usdPriceQuery = useNativeTokenPriceV3(context, token, "latest")
+  const priceQuery = useNativeTokenPriceV3(context, "pending")
 
-  const usdPricedBalanceQuery = useNativeTokenBalanceUsd(wallet.address, "usd", context)
+  const valuedBalanceQuery = useNativeTokenBalance(context, wallet.address, "pending")
+  const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address, "usd", "pending")
 
   const computeUsdPricedBalance = useCallback(() => Errors.runOrLog(async () => {
-    await usdPricedBalanceQuery.mutateOrThrow(s => {
-      if (balanceQuery.data == null)
+    await pricedBalanceQuery.mutateOrThrow(s => {
+      if (valuedBalanceQuery.data == null)
         return new Some(undefined)
-      if (usdPriceQuery.data == null)
+      if (priceQuery.data == null)
         return new Some(undefined)
 
-      const balanceFixed = Fixed.from(balanceQuery.data.get())
-      const priceFixed = Fixed.from(usdPriceQuery.data.get())
+      const priceFixed = Fixed.from(priceQuery.data.get())
 
-      const pricedBalanceFixed = balanceFixed.mul(priceFixed)
+      const valuedBalanceFixed = Fixed.from(valuedBalanceQuery.data.get())
+      const pricedBalanceFixed = valuedBalanceFixed.mul(priceFixed)
 
       return new Some(new Data(pricedBalanceFixed))
     })
-  }), [balanceQuery.data, usdPriceQuery.data])
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [priceQuery.data, valuedBalanceQuery.data, pricedBalanceQuery.mutateOrThrow])
 
   useEffect(() => {
     computeUsdPricedBalance()
@@ -607,8 +610,8 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
       onContextMenu={menu.onContextMenu}
       token={token}
       chain={chain}
-      balanceQuery={balanceQuery}
-      balanceUsdQuery={usdPricedBalanceQuery} />
+      balanceQuery={valuedBalanceQuery}
+      balanceUsdQuery={pricedBalanceQuery} />
   </>
 }
 
@@ -674,27 +677,28 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
 
-  const balanceQuery = useContractTokenBalance(wallet.address, token, "pending", context)
+  const priceQuery = useContractTokenPriceV3(context, token.address, "pending")
 
-  const usdPriceQuery = useContractTokenPriceV3(context, token, "latest")
-
-  const usdPricedBalanceQuery = useContractTokenBalanceUsd(wallet.address, token, "usd", context)
+  const valuedBalanceQuery = useContractTokenBalance(context, token.address, wallet.address, "pending")
+  const pricedBalanceQuery = useContractTokenPricedBalance(context, token.address, wallet.address, "usd", "pending")
 
   const computeUsdPricedBalance = useCallback(() => Errors.runOrLog(async () => {
-    await usdPricedBalanceQuery.mutateOrThrow(s => {
-      if (balanceQuery.data == null)
+    await pricedBalanceQuery.mutateOrThrow(s => {
+      if (valuedBalanceQuery.data == null)
         return new Some(undefined)
-      if (usdPriceQuery.data == null)
+      if (priceQuery.data == null)
         return new Some(undefined)
 
-      const balanceFixed = Fixed.from(balanceQuery.data.get())
-      const priceFixed = Fixed.from(usdPriceQuery.data.get())
+      const priceFixed = Fixed.from(priceQuery.data.get())
 
-      const pricedBalanceFixed = balanceFixed.mul(priceFixed)
+      const valuedBalanceFixed = Fixed.from(valuedBalanceQuery.data.get())
+      const pricedBalanceFixed = valuedBalanceFixed.mul(priceFixed)
 
       return new Some(new Data(pricedBalanceFixed))
     })
-  }), [balanceQuery.data, usdPriceQuery.data])
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [priceQuery.data, valuedBalanceQuery.data, pricedBalanceQuery.mutateOrThrow])
 
   useEffect(() => {
     computeUsdPricedBalance()
@@ -713,8 +717,8 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
       onContextMenu={menu.onContextMenu}
       token={token}
       chain={chain}
-      balanceQuery={balanceQuery}
-      balanceUsdQuery={usdPricedBalanceQuery} />
+      balanceQuery={valuedBalanceQuery}
+      balanceUsdQuery={pricedBalanceQuery} />
   </>
 }
 

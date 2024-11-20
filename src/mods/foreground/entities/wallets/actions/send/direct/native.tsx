@@ -10,18 +10,18 @@ import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData } from "@/mods/background/service_worker/entities/transactions/data";
+import { useNativeTokenPriceV3 } from "@/mods/foreground/entities/tokens/price";
+import { useNativeTokenBalance, useNativeTokenPricedBalance } from "@/mods/universal/entities/ethereum/mods/tokens/mods/balance/hooks";
 import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
 import { Address, Fixed } from "@hazae41/cubane";
-import { Nullable, Option, Optional } from "@hazae41/option";
+import { Option, Optional } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "..";
 import { useEnsLookup } from "../../../../names/data";
-import { useNativeTokenBalance, useNativeTokenBalanceUsd } from "../../../../tokens/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "../../../../transactions/data";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext } from "../../../data";
-import { PriceResolver } from "../../../page";
 import { WalletTransactionDialog } from "../../eth_sendTransaction";
 
 export function WalletDirectSendScreenNativeValue(props: {}) {
@@ -52,28 +52,8 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
 
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
-  const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
-    if (tokenData.pairs == null)
-      return
-    return new Array(tokenData.pairs.length)
-  })
-
-  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setPrices(prices => {
-      if (prices == null)
-        return
-      prices[index] = data
-      return [...prices]
-    })
-  }, [])
-
-  const maybePrice = useMemo(() => {
-    return prices?.reduce((a: Fixed, b: Nullable<Fixed.From>) => {
-      if (b == null)
-        return a
-      return a.mul(Fixed.from(b))
-    }, Fixed.unit(tokenData.decimals))
-  }, [prices, tokenData])
+  const priceQuery = useNativeTokenPriceV3(context, "pending")
+  const maybePrice = priceQuery.current?.mapSync(Fixed.from).getOrNull()
 
   const [rawValuedInput = "", setRawValuedInput] = useState(nto(maybeValue))
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
@@ -158,11 +138,11 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
-  const valuedBalanceQuery = useNativeTokenBalance(wallet.address, "pending", context, prices)
-  const pricedBalanceQuery = useNativeTokenBalanceUsd(wallet.address, "usd", context)
+  const valuedBalanceQuery = useNativeTokenBalance(context, wallet.address, "pending")
+  const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address, "usd", "pending")
 
-  const valuedBalanceData = valuedBalanceQuery.current?.ok().getOrNull()
-  const pricedBalanceData = pricedBalanceQuery.current?.ok().getOrNull()
+  const valuedBalanceData = valuedBalanceQuery.current?.getOrNull()
+  const pricedBalanceData = pricedBalanceQuery.current?.getOrNull()
 
   const onValueMaxClick = useCallback(() => {
     if (valuedBalanceData == null)
@@ -211,7 +191,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     : undefined
 
   const ensTargetQuery = useEnsLookup(maybeEnsQueryKey, mainnet)
-  const maybeEnsTarget = ensTargetQuery.current?.ok().getOrNull()
+  const maybeEnsTarget = ensTargetQuery.current?.getOrNull()
 
   const maybeFinalTarget = useMemo(() => {
     if (maybeTarget == null)
@@ -240,10 +220,10 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
   }, [hash, trial0Uuid, chainData.chainId, maybeFinalValue, maybeFinalTarget])
 
   const trialQuery = useTransactionTrial(trial0Uuid)
-  const maybeTrialData = trialQuery.current?.ok().getOrNull()
+  const maybeTrialData = trialQuery.current?.getOrNull()
 
   const transactionQuery = useTransactionWithReceipt(maybeTrialData?.transactions[0].uuid, context)
-  const maybeTransaction = transactionQuery.current?.ok().getOrNull()
+  const maybeTransaction = transactionQuery.current?.getOrNull()
 
   const onClose = useCallback(() => {
     close()
@@ -256,11 +236,6 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
           <WalletTransactionDialog />
         </Dialog>}
     </HashSubpathProvider>
-    {tokenData.pairs?.map((address, i) =>
-      <PriceResolver key={i}
-        index={i}
-        address={address}
-        ok={onPrice} />)}
     <Dialog.Title>
       Transact on {chainData.name}
     </Dialog.Title>

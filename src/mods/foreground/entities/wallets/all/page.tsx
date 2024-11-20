@@ -23,10 +23,10 @@ export function WalletsPage() {
   const path = usePathContext().getOrThrow()
 
   const walletsQuery = useWallets()
-  const maybeWallets = walletsQuery.current?.ok().getOrNull()
+  const maybeWallets = walletsQuery.current?.getOrNull()
 
   const trashedWalletsQuery = useTrashedWallets()
-  const maybeTrashedWallets = trashedWalletsQuery.current?.ok().getOrNull()
+  const maybeTrashedWallets = trashedWalletsQuery.current?.getOrNull()
 
   const subpath = useHashSubpath(path)
   const creator = useCoords(subpath, "/create")
@@ -87,7 +87,7 @@ export function WalletsPage() {
   </Page>
 }
 
-export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet[] } & { selected?: Wallet } & { disableNew?: boolean }) {
+export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets: Nullable<Wallet[]> } & { selected?: Wallet } & { disableNew?: boolean }) {
   const { wallets, ok, disableNew } = props
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
@@ -103,7 +103,7 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet[
   </div>
 }
 
-export function SelectableWalletGrid(props: OkProps<Wallet> & { wallets?: Wallet[] } & { selecteds: Nullable<Wallet>[] } & { disableNew?: boolean }) {
+export function SelectableWalletGrid(props: OkProps<Wallet> & { wallets: Nullable<Wallet[]> } & { selecteds: Nullable<Wallet>[] } & { disableNew?: boolean }) {
   const { wallets, ok, selecteds, disableNew } = props
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">

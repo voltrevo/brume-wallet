@@ -31,7 +31,7 @@ export function WalletSendScreenTarget(props: {}) {
   const chainData = chainDataByChainId[Number(chain)]
 
   const tokenQuery = useToken(chainData.chainId, maybeToken)
-  const maybeTokenData = Option.wrap(tokenQuery.current?.ok().getOrNull())
+  const maybeTokenData = Option.wrap(tokenQuery.current?.getOrNull())
   const maybeTokenDef = Option.wrap(tokenByAddress[maybeToken as any])
   const tokenData = maybeTokenData.or(maybeTokenDef).getOr(chainData.token)
 
@@ -55,7 +55,7 @@ export function WalletSendScreenTarget(props: {}) {
     : undefined
 
   const ensQuery = useEnsLookup(maybeEnsInput, mainnet)
-  const maybeEns = ensQuery.current?.ok().getOrNull()
+  const maybeEns = ensQuery.current?.getOrNull()
 
   const onSubmit = useCallback(async () => {
     if (maybeTarget == null)

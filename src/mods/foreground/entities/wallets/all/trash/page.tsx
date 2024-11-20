@@ -18,7 +18,7 @@ export function TrashedWalletsPage() {
   const storage = useUserStorageContext().getOrThrow()
 
   const walletsQuery = useTrashedWallets()
-  const maybeWallets = walletsQuery.current?.ok().getOrNull()
+  const maybeWallets = walletsQuery.current?.getOrNull()
 
   const onWalletClick = useCallback((wallet: Wallet) => {
     location.assign(path.go(`/wallet/${wallet.uuid}`))

@@ -1,4 +1,4 @@
-import { PairAbiV2 } from "@/libs/abi/pair.abi"
+import { UniswapV2PoolAbi } from "@/libs/abi/uniswap.abi"
 import { StoredPairData } from "@/libs/ethereum/mods/chain"
 import { UniswapV2 } from "@/libs/uniswap"
 import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
@@ -22,7 +22,7 @@ export namespace PairV2 {
         method: "eth_call",
         params: [{
           to: pair.address,
-          data: Abi.encodeOrThrow(PairAbiV2.getReserves.fromOrThrow())
+          data: Abi.encodeOrThrow(UniswapV2PoolAbi.getReserves.fromOrThrow())
         }, block]
       }
     }

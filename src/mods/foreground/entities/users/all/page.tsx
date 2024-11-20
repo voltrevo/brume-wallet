@@ -31,10 +31,10 @@ export function EmptyLandingPage(props: { next?: string }) {
 
   const currentUserQuery = useCurrentUser()
   const currentUserLoading = !currentUserQuery.ready
-  const maybeCurrentUser = currentUserQuery.current?.ok().getOrNull()
+  const maybeCurrentUser = currentUserQuery.current?.getOrNull()
 
   const userQuery = useUser(maybeCurrentUser?.uuid)
-  const maybeUser = userQuery.current?.ok().getOrNull()
+  const maybeUser = userQuery.current?.getOrNull()
 
   const subpath = useHashSubpath(path)
   const users = useCoords(subpath, "/users")
@@ -290,7 +290,7 @@ export function UsersMenu() {
   const path = usePathContext().getOrThrow()
 
   const usersQuery = useUsers()
-  const maybeUsers = usersQuery.current?.ok().getOrNull()
+  const maybeUsers = usersQuery.current?.getOrNull()
 
   const create = useCoords(path, "/users/create")
 
@@ -315,7 +315,7 @@ export function UsersMenuRow(props: { user: User }) {
   const path = usePathContext().getOrThrow()
 
   const userQuery = useUser(props.user.uuid)
-  const maybeUser = userQuery.current?.ok().getOrNull()
+  const maybeUser = userQuery.current?.getOrNull()
 
   const open = useCoords(path, urlOf("/users/login", { user: props.user.uuid }).href)
 

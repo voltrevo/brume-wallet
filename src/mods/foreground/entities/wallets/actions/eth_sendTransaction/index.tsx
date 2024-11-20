@@ -27,11 +27,11 @@ import { Transaction, ethers } from "ethers";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useBlockByNumber } from "../../../blocks/data";
 import { useEnsLookup } from "../../../names/data";
+import { useNativeTokenPriceV3 } from "../../../tokens/price";
 import { useTransactionWithReceipt } from "../../../transactions/data";
 import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, useEthereumContext } from "../../data";
-import { PriceResolver } from "../../page";
 import { ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableNakedMenuButton, WideShrinkableOppositeButton } from "../send";
 import { WalletDecodeDialog } from "./decode";
 import { WalletNonceDialog } from "./nonce";
@@ -75,34 +75,14 @@ export function WalletTransactionDialog(props: {}) {
   const transactionQuery = useTransactionWithReceipt(transactionUuid, context)
 
   const pendingNonceQuery = useNonce(wallet.address, context)
-  const maybePendingNonceZeroHex = pendingNonceQuery.current?.ok().getOrNull()
+  const maybePendingNonceZeroHex = pendingNonceQuery.current?.getOrNull()
 
   const maybePendingNonceBigInt = useMaybeMemo((nonce) => {
     return ZeroHexBigInt.from(nonce).value
   }, [maybePendingNonceZeroHex])
 
-  const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
-    if (tokenData.pairs == null)
-      return
-    return new Array(tokenData.pairs.length)
-  })
-
-  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setPrices(prices => {
-      if (prices == null)
-        return
-      prices[index] = data
-      return [...prices]
-    })
-  }, [])
-
-  const maybePrice = useMemo(() => {
-    return prices?.reduce((a: Fixed, b: Nullable<Fixed.From>) => {
-      if (b == null)
-        return a
-      return a.mul(Fixed.from(b))
-    }, Fixed.unit(tokenData.decimals))
-  }, [prices, tokenData])
+  const priceQuery = useNativeTokenPriceV3(context, "pending")
+  const maybePrice = priceQuery.current?.mapSync(Fixed.from).getOrNull()
 
   const getRawPricedInput = useCallback((rawValuedInput: string) => {
     try {
@@ -148,7 +128,7 @@ export function WalletTransactionDialog(props: {}) {
     : undefined
 
   const ensTargetQuery = useEnsLookup(maybeEnsQueryKey, mainnet)
-  const maybeEnsTarget = ensTargetQuery.current?.ok().getOrNull()
+  const maybeEnsTarget = ensTargetQuery.current?.getOrNull()
 
   const maybeFinalTarget = useMemo(() => {
     if (maybeTarget == null)
@@ -223,21 +203,21 @@ export function WalletTransactionDialog(props: {}) {
   }, [setGasMode])
 
   const fetchedGasPriceQuery = useGasPrice(context)
-  const maybeFetchedGasPriceZeroHex = fetchedGasPriceQuery.current?.ok().getOrNull()
+  const maybeFetchedGasPriceZeroHex = fetchedGasPriceQuery.current?.getOrNull()
 
   const maybeFetchedGasPriceBigInt = useMaybeMemo((gasPrice) => {
     return ZeroHexBigInt.from(gasPrice).value
   }, [maybeFetchedGasPriceZeroHex])
 
   const fetchedMaxPriorityFeePerGasQuery = useMaxPriorityFeePerGas(context)
-  const maybeFetchedMaxPriorityFeePerGasZeroHex = fetchedMaxPriorityFeePerGasQuery.current?.ok().getOrNull()
+  const maybeFetchedMaxPriorityFeePerGasZeroHex = fetchedMaxPriorityFeePerGasQuery.current?.getOrNull()
 
   const maybeFetchedMaxPriorityFeePerGasBigInt = useMaybeMemo((maxPriorityFeePerGas) => {
     return ZeroHexBigInt.from(maxPriorityFeePerGas).value
   }, [maybeFetchedMaxPriorityFeePerGasZeroHex])
 
   const pendingBlockQuery = useBlockByNumber("pending", context)
-  const maybePendingBlock = pendingBlockQuery.current?.ok().getOrNull()
+  const maybePendingBlock = pendingBlockQuery.current?.getOrNull()
 
   const maybeFetchedBaseFeePerGas = useMemo(() => {
     try {
@@ -518,18 +498,18 @@ export function WalletTransactionDialog(props: {}) {
     return new Ok(key)
   }, [wallet, chainData, maybeIsEip1559, maybeFinalTarget, maybeFinalValue, maybeFinalNonce, maybeTriedMaybeFinalData, maybeFinalMaxFeePerGas, maybeFinalMaxPriorityFeePerGas])
 
-  const maybeLegacyGasLimitKey = maybeTriedLegacyGasLimitKey?.ok().getOrNull()
-  const maybeEip1559GasLimitKey = maybeTriedEip1559GasLimitKey?.ok().getOrNull()
+  const maybeLegacyGasLimitKey = maybeTriedLegacyGasLimitKey?.getOrNull()
+  const maybeEip1559GasLimitKey = maybeTriedEip1559GasLimitKey?.getOrNull()
 
   const legacyGasLimitQuery = useEstimateGas(maybeLegacyGasLimitKey, context)
-  const maybeLegacyGasLimitZeroHex = legacyGasLimitQuery.current?.ok().getOrNull()
+  const maybeLegacyGasLimitZeroHex = legacyGasLimitQuery.current?.getOrNull()
 
   const maybeLegacyGasLimitBigInt = useMaybeMemo((gasLimit) => {
     return ZeroHexBigInt.from(gasLimit).value
   }, [maybeLegacyGasLimitZeroHex])
 
   const eip1559GasLimitQuery = useEstimateGas(maybeEip1559GasLimitKey, context)
-  const maybeEip1559GasLimitZeroHex = eip1559GasLimitQuery.current?.ok().getOrNull()
+  const maybeEip1559GasLimitZeroHex = eip1559GasLimitQuery.current?.getOrNull()
 
   const maybeEip1559GasLimitBigInt = useMaybeMemo((gasLimit) => {
     return ZeroHexBigInt.from(gasLimit).value
@@ -853,11 +833,6 @@ export function WalletTransactionDialog(props: {}) {
           <WalletNonceDialog ok={() => { }} />
         </Dialog>}
     </HashSubpathProvider>
-    {tokenData.pairs?.map((address, i) =>
-      <PriceResolver key={i}
-        index={i}
-        address={address}
-        ok={onPrice} />)}
     <Dialog.Title>
       Transact on {chainData.name}
     </Dialog.Title>

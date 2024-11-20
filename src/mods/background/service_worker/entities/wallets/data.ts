@@ -181,7 +181,7 @@ export namespace BgWallet {
           await BgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutateOrThrow(s => {
             const current = s.current
 
-            const [{ value = new Fixed(0n, 0) } = {}] = [current?.ok().getOrNull()?.[account]]
+            const [{ value = new Fixed(0n, 0) } = {}] = [current?.getOrNull()?.[account]]
 
             const inner = { value, count: array.length }
 

@@ -97,7 +97,7 @@ export namespace BgTotal {
             await Record.schema(coin, storage)?.mutateOrThrow(s => {
               const { current } = s
 
-              const [{ count = 0 } = {}] = [current?.ok().getOrNull()?.[account]]
+              const [{ count = 0 } = {}] = [current?.getOrNull()?.[account]]
 
               const inner = { count, value }
 

@@ -23,7 +23,7 @@ export function UserLoginDialog(props: { next?: string }) {
   const maybeUserId = path.url.searchParams.get("user")
 
   const userQuery = useUser(maybeUserId)
-  const maybeUser = userQuery.current?.ok().getOrNull()
+  const maybeUser = userQuery.current?.getOrNull()
 
   const currentUserQuery = useCurrentUser()
 

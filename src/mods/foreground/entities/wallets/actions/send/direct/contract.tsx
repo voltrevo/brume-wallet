@@ -1,4 +1,5 @@
 import { ERC20Abi } from "@/libs/abi/erc20.abi";
+import { Errors } from "@/libs/errors/errors";
 import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { nto } from "@/libs/ntu";
@@ -7,19 +8,21 @@ import { useConstant } from "@/libs/react/ref";
 import { Dialog } from "@/libs/ui/dialog";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
+import { useContractTokenPriceV3 } from "@/mods/foreground/entities/tokens/price";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
+import { useContractTokenBalance, useContractTokenPricedBalance } from "@/mods/universal/entities/ethereum/mods/tokens/mods/balance/hooks";
 import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
 import { Abi, Address, Fixed } from "@hazae41/cubane";
-import { Nullable, Option, Optional } from "@hazae41/option";
+import { Data } from "@hazae41/glacier";
+import { Option, Optional, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "..";
 import { useEnsLookup } from "../../../../names/data";
-import { useNativeTokenBalance, useNativeTokenBalanceUsd, useToken } from "../../../../tokens/data";
+import { useToken } from "../../../../tokens/data";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext } from "../../../data";
-import { PriceResolver } from "../../../page";
 import { TransactionCard, WalletTransactionDialog } from "../../eth_sendTransaction";
 
 export function WalletDirectSendScreenContractValue(props: {}) {
@@ -49,34 +52,14 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   const chainData = chainDataByChainId[Number(chain)]
 
   const tokenQuery = useToken(chainData.chainId, maybeToken)
-  const maybeTokenData = Option.wrap(tokenQuery.current?.ok().getOrNull())
+  const maybeTokenData = Option.wrap(tokenQuery.current?.getOrNull())
   const maybeTokenDef = Option.wrap(tokenByAddress[maybeToken as any])
   const tokenData = maybeTokenData.or(maybeTokenDef).getOrThrow()
 
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
-  const [prices, setPrices] = useState<Nullable<Nullable<Fixed.From>[]>>(() => {
-    if (tokenData.pairs == null)
-      return
-    return new Array(tokenData.pairs.length)
-  })
-
-  const onPrice = useCallback(([index, data]: [number, Nullable<Fixed.From>]) => {
-    setPrices(prices => {
-      if (prices == null)
-        return
-      prices[index] = data
-      return [...prices]
-    })
-  }, [])
-
-  const maybePrice = useMemo(() => {
-    return prices?.reduce((a: Fixed, b: Nullable<Fixed.From>) => {
-      if (b == null)
-        return a
-      return a.mul(Fixed.from(b))
-    }, Fixed.unit(tokenData.decimals))
-  }, [prices, tokenData])
+  const priceQuery = useContractTokenPriceV3(context, tokenData.address, "pending")
+  const maybePrice = priceQuery.current?.mapSync(Fixed.from).getOrNull()
 
   const [rawValuedInput = "", setRawValuedInput] = useState(nto(maybeValue))
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
@@ -161,11 +144,34 @@ export function WalletDirectSendScreenContractValue(props: {}) {
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
-  const valuedBalanceQuery = useNativeTokenBalance(wallet.address, "pending", context, prices)
-  const pricedBalanceQuery = useNativeTokenBalanceUsd(wallet.address, "usd", context)
+  const valuedBalanceQuery = useContractTokenBalance(context, tokenData.address, wallet.address, "pending")
+  const pricedBalanceQuery = useContractTokenPricedBalance(context, tokenData.address, wallet.address, "usd", "pending")
 
-  const valuedBalanceData = valuedBalanceQuery.current?.ok().getOrNull()
-  const pricedBalanceData = pricedBalanceQuery.current?.ok().getOrNull()
+  const computeUsdPricedBalance = useCallback(() => Errors.runOrLog(async () => {
+    await pricedBalanceQuery.mutateOrThrow(s => {
+      if (valuedBalanceQuery.data == null)
+        return new Some(undefined)
+      if (priceQuery.data == null)
+        return new Some(undefined)
+
+      const priceFixed = Fixed.from(priceQuery.data.get())
+
+      const valuedBalanceFixed = Fixed.from(valuedBalanceQuery.data.get())
+      const pricedBalanceFixed = valuedBalanceFixed.mul(priceFixed)
+
+      return new Some(new Data(pricedBalanceFixed))
+    })
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [priceQuery.data, valuedBalanceQuery.data, pricedBalanceQuery.mutateOrThrow])
+
+  useEffect(() => {
+    computeUsdPricedBalance()
+  }, [computeUsdPricedBalance])
+
+
+  const valuedBalanceData = valuedBalanceQuery.current?.getOrNull()
+  const pricedBalanceData = pricedBalanceQuery.current?.getOrNull()
 
   const onValueMaxClick = useCallback(() => {
     if (valuedBalanceData == null)
@@ -214,7 +220,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     : undefined
 
   const ensTargetQuery = useEnsLookup(maybeEnsQueryKey, mainnet)
-  const maybeEnsTarget = ensTargetQuery.current?.ok().getOrNull()
+  const maybeEnsTarget = ensTargetQuery.current?.getOrNull()
 
   const maybeFinalTarget = useMemo(() => {
     if (maybeTarget == null)
@@ -256,14 +262,14 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   }, [maybeFinalTarget, maybeFinalValue])
 
   const onSendTransactionClick = useCallback(() => {
-    location.replace(subpath.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData?.ok().getOrNull(), disableData: true })))
+    location.replace(subpath.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData?.getOrNull(), disableData: true })))
   }, [subpath, trial0Uuid, chainData, tokenData, maybeTriedMaybeFinalData])
 
   const trialQuery = useTransactionTrial(trial0Uuid)
-  const maybeTrialData = trialQuery.current?.ok().getOrNull()
+  const maybeTrialData = trialQuery.current?.getOrNull()
 
   const transactionQuery = useTransactionWithReceipt(maybeTrialData?.transactions[0].uuid, context)
-  const maybeTransaction = transactionQuery.current?.ok().getOrNull()
+  const maybeTransaction = transactionQuery.current?.getOrNull()
 
   const onClose = useCallback(() => {
     close()
@@ -276,11 +282,6 @@ export function WalletDirectSendScreenContractValue(props: {}) {
           <WalletTransactionDialog />
         </Dialog>}
     </HashSubpathProvider>
-    {tokenData.pairs?.map((address, i) =>
-      <PriceResolver key={i}
-        index={i}
-        address={address}
-        ok={onPrice} />)}
     <Dialog.Title>
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
