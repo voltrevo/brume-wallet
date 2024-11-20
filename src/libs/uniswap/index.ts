@@ -1,16 +1,27 @@
 import { Fixed } from "@hazae41/cubane"
-import { StoredPairData } from "../ethereum/mods/chain"
 
 export namespace UniswapV2 {
 
+  export interface SimpleUniswapV2TokenData {
+    readonly address: string,
+    readonly decimals: number
+  }
 
-  export function computeOrThrow(pair: StoredPairData, reserves: [bigint, bigint]) {
+  export interface SimpleUniswapV2PoolData {
+    readonly address: string,
+    readonly token0: SimpleUniswapV2TokenData,
+    readonly token1: SimpleUniswapV2TokenData,
+    readonly reversed?: boolean
+  }
+
+
+  export function computeOrThrow(pool: SimpleUniswapV2PoolData, reserves: [bigint, bigint]) {
     const [reserve0, reserve1] = reserves
 
-    const quantity0 = new Fixed(reserve0, pair.token0.decimals)
-    const quantity1 = new Fixed(reserve1, pair.token1.decimals)
+    const quantity0 = new Fixed(reserve0, pool.token0.decimals)
+    const quantity1 = new Fixed(reserve1, pool.token1.decimals)
 
-    if (pair.reversed)
+    if (pool.reversed)
       return quantity0.div(quantity1)
 
     return quantity1.div(quantity0)

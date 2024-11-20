@@ -1,5 +1,4 @@
 import { UniswapV2PoolAbi } from "@/libs/abi/uniswap.abi"
-import { StoredPairData } from "@/libs/ethereum/mods/chain"
 import { UniswapV2 } from "@/libs/uniswap"
 import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/context/ethereum"
@@ -16,9 +15,9 @@ export namespace PairV2 {
     export type D = Fixed.From
     export type F = Error
 
-    export function keyOrThrow(pair: StoredPairData, block: string) {
+    export function keyOrThrow(chainId: number, pair: UniswapV2.SimpleUniswapV2PoolData, block: string) {
       return {
-        chainId: pair.chainId,
+        chainId: chainId,
         method: "eth_call",
         params: [{
           to: pair.address,
@@ -27,7 +26,7 @@ export namespace PairV2 {
       }
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<StoredPairData>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pair: Nullable<UniswapV2.SimpleUniswapV2PoolData>, block: Nullable<string>, storage: QueryStorage) {
       if (context == null)
         return
       if (pair == null)
@@ -54,7 +53,7 @@ export namespace PairV2 {
       }
 
       return createQuery<K, D, F>({
-        key: keyOrThrow(pair, block),
+        key: keyOrThrow(context.chain.chainId, pair, block),
         fetcher,
         storage
       })
