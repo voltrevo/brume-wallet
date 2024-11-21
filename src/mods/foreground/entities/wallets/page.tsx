@@ -57,33 +57,94 @@ export function useDisplayRaw(fixed: Fixed.From = new Fixed(0n, 18)) {
     const fixed5 = Fixed.from(fixed).move(18)
     const float = Number(fixed5.toString())
 
-    return float.toLocaleString(undefined)
+    if (float > (10 ** 9))
+      return float.toLocaleString(undefined, {
+        style: "decimal",
+        notation: "scientific",
+        roundingMode: "trunc",
+        maximumSignificantDigits: 18,
+      })
+
+    return float.toLocaleString(undefined, {
+      style: "decimal",
+      notation: "compact",
+      roundingMode: "trunc",
+      maximumSignificantDigits: 18,
+    })
   }, [fixed])
 }
 
-export function useDisplayUsd(fixed: Fixed.From = new Fixed(0n, 2)) {
+export function useDisplayUsd(fixed: Fixed.From = new Fixed(0n, 18)) {
   return useMemo(() => {
-    const fixed2 = Fixed.from(fixed).move(2)
+    const fixed2 = Fixed.from(fixed).move(18)
     const float = Number(fixed2.toString())
 
-    const style = "currency"
-    const currency = "USD"
-    const notation = "standard"
+    if (float > (10 ** 9))
+      return float.toLocaleString(undefined, {
+        style: "currency",
+        currency: "USD",
+        currencyDisplay: "code",
+        notation: "scientific",
+        roundingMode: "trunc",
+        maximumSignificantDigits: 18,
+      })
 
-    return float.toLocaleString(undefined, { style, currency, notation })
+    return float.toLocaleString(undefined, {
+      style: "currency",
+      currency: "USD",
+      currencyDisplay: "code",
+      notation: "compact",
+      roundingMode: "trunc",
+      maximumSignificantDigits: 18,
+    })
   }, [fixed])
 }
 
-export function useCompactDisplayUsd(fixed: Fixed.From = new Fixed(0n, 2)) {
+export function useCompactDisplayRaw(fixed: Fixed.From = new Fixed(0n, 18)) {
   return useMemo(() => {
-    const fixed2 = Fixed.from(fixed).move(2)
+    const fixed5 = Fixed.from(fixed).move(18)
+    const float = Number(fixed5.toString())
+
+    if (float > (10 ** 9))
+      return float.toLocaleString(undefined, {
+        style: "decimal",
+        notation: "scientific",
+        roundingMode: "trunc",
+        maximumSignificantDigits: 3,
+      })
+
+    return float.toLocaleString(undefined, {
+      style: "decimal",
+      notation: "compact",
+      roundingMode: "trunc",
+      maximumSignificantDigits: 3,
+    })
+  }, [fixed])
+}
+
+export function useCompactDisplayUsd(fixed: Fixed.From = new Fixed(0n, 18)) {
+  return useMemo(() => {
+    const fixed2 = Fixed.from(fixed).move(18)
     const float = Number(fixed2.toString())
 
-    const style = "currency"
-    const currency = "USD"
-    const notation = "compact"
+    if (float > (10 ** 9))
+      return float.toLocaleString(undefined, {
+        style: "currency",
+        currency: "USD",
+        currencyDisplay: "narrowSymbol",
+        notation: "scientific",
+        roundingMode: "trunc",
+        maximumSignificantDigits: 3,
+      })
 
-    return float.toLocaleString(undefined, { style, currency, notation })
+    return float.toLocaleString(undefined, {
+      style: "currency",
+      currency: "USD",
+      currencyDisplay: "narrowSymbol",
+      notation: "compact",
+      roundingMode: "trunc",
+      maximumSignificantDigits: 3,
+    })
   }, [fixed])
 }
 
@@ -679,8 +740,6 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const priceQuery = useContractTokenPriceV3(context, token.address, "pending")
 
-  console.log("priceQuery", priceQuery)
-
   const valuedBalanceQuery = useContractTokenBalance(context, token.address, wallet.address, "pending")
   const pricedBalanceQuery = useContractTokenPricedBalance(context, token.address, wallet.address, "usd", "pending")
 
@@ -746,7 +805,7 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
 
   return <a className="po-sm group flex items-center text-left"
     {...others}>
-    <div className={`relative h-12 w-12 flex items-center justify-center bg-${color}-400 dark:bg-${color}-500 text-white rounded-full`}>
+    <div className={`relative h-12 w-12 flex items-center justify-center bg-${color}-400 dark:bg-${color}-500 text-white rounded-full shrink-0`}>
       <div className=""
         style={{ fontSize: `${Math.min((20 - (2 * token.symbol.length)), 16)}px` }}>
         {token.symbol}
@@ -755,29 +814,22 @@ function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & 
         {chain.icon()}
       </div>
     </div>
-    <div className="w-4" />
-    <div className="grow">
+    <div className="w-4 shrink-0" />
+    <div className="grow min-w-0">
       <div className="flex items-center">
-        <div className="grow flex items-center gap-1">
-          <span className="">
-            {token.name}
-          </span>
-          <span className="text-contrast">
-            on
-          </span>
-          <span className="">
-            {chain.name}
-          </span>
+        <div className="truncate">
+          {`${token.name} `}<span className="text-contrast">on</span>{` ${chain.name}`}
         </div>
-        {balanceUsdDisplay != null &&
-          <div className="flex items-center gap-1">
-            <div>{balanceUsdDisplay}</div>
-          </div>}
       </div>
       <div className="flex items-center text-contrast gap-1">
         <div>{balanceDisplay} {token.symbol}</div>
         {balanceQuery.error != null && <ExclamationTriangleIcon className="h-4 mt-0.5" />}
         {balanceQuery.fetching && <SmallUnflexLoading />}
+      </div>
+      <div className="flex items-center text-contrast gap-1">
+        <div>{balanceUsdDisplay}</div>
+        {balanceUsdQuery.error != null && <ExclamationTriangleIcon className="h-4 mt-0.5" />}
+        {balanceUsdQuery.fetching && <SmallUnflexLoading />}
       </div>
     </div>
   </a>
