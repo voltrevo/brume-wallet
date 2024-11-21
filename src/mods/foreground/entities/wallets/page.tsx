@@ -336,7 +336,7 @@ export function WalletMenu(props: {
       if (current.isErr())
         return new None()
 
-      return new Some(current.mapSync(w => ({ ...w, trashed: true })).setTimes({ ...current, expiration: Date.now() + 30 * 24 * 60 * 15 * 1000 }))
+      return new Some(current.mapSync(w => ({ ...w, trashed: true })).setInit({ ...current, expiration: Date.now() + (30 * 24 * 60 * 15 * 1000) }))
     })
 
     close()
@@ -351,7 +351,7 @@ export function WalletMenu(props: {
       if (current.isErr())
         return new None()
 
-      return new Some(current.mapSync(w => ({ ...w, trashed: undefined })).setTimes({ ...current, expiration: undefined }))
+      return new Some(current.mapSync(w => ({ ...w, trashed: undefined })).setInit({ ...current, expiration: undefined }))
     })
 
     close()

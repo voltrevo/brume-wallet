@@ -1,7 +1,7 @@
 import { Mutators } from "@/libs/glacier/mutators"
 import { BgSession, SessionRef } from "@/mods/background/service_worker/entities/sessions/data"
 import { Data, States, createQuery, useQuery } from "@hazae41/glacier"
-import { Nullable } from "@hazae41/option"
+import { Nullable, Some } from "@hazae41/option"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 
 export namespace FgSession {
@@ -132,7 +132,7 @@ export namespace FgSession {
       if (currentData != null) {
         if (currentData.persist) {
           const sessionByOrigin = ByOrigin.schema(currentData.origin, storage)
-          await sessionByOrigin.mutateOrThrow(Mutators.data<ByOrigin.D, ByOrigin.F>(SessionRef.from(currentData)))
+          await sessionByOrigin.mutateOrThrow(() => new Some(new Data(SessionRef.from(currentData))))
         }
 
         const sessionsQuery = currentData.persist

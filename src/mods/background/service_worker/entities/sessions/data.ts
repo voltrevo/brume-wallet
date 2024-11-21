@@ -3,7 +3,7 @@ import { Mutators } from "@/libs/glacier/mutators"
 import { Ed25519 } from "@hazae41/ed25519"
 import { Data, QueryStorage, RawState2, States, createQuery } from "@hazae41/glacier"
 import { RpcReceipt, WcMetadata } from "@hazae41/latrine"
-import { Nullable } from "@hazae41/option"
+import { Nullable, Some } from "@hazae41/option"
 import { Wallet } from "../wallets/data"
 
 export type Session =
@@ -201,7 +201,7 @@ export namespace BgSession {
       if (currentData != null) {
         if (currentData.persist) {
           const sessionByOrigin = ByOrigin.schema(currentData.origin, storage)
-          await sessionByOrigin.mutateOrThrow(Mutators.data<Session, never>(SessionRef.from(currentData)))
+          await sessionByOrigin.mutateOrThrow(() => new Some(new Data(SessionRef.from(currentData))))
         }
 
         const sessionsQuery = currentData.persist

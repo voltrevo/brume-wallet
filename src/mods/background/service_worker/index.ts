@@ -63,7 +63,7 @@ import { EthBrume, WcBrume } from "./entities/brumes/data";
 import { BgEns } from "./entities/names/data";
 import { AppRequest, AppRequestData, BgAppRequest } from "./entities/requests/data";
 import { BgSession, ExSessionData, SessionData, SessionRef, SessionStorage, WcSessionData } from "./entities/sessions/data";
-import { Status, StatusData } from "./entities/sessions/status/data";
+import { Status } from "./entities/sessions/status/data";
 import { BgSimulation } from "./entities/simulations/data";
 import { BgUser, User, UserData, UserInit } from "./entities/users/data";
 import { BgWallet, EthereumChainlessRpcRequestPreinit, Wallet, WalletData, WalletRef } from "./entities/wallets/data";
@@ -287,7 +287,7 @@ export class Global {
 
   async requestNoPopupOrThrow<T>(request: AppRequestData): Promise<RpcResponse<T>> {
     const requestQuery = BgAppRequest.schema(request.id)
-    await requestQuery.mutateOrThrow(Mutators.data<AppRequestData, never>(request))
+    await requestQuery.mutateOrThrow(() => new Some(new Data(request)))
 
     const done = new Future<void>()
 
@@ -301,7 +301,7 @@ export class Global {
 
   async requestPopupOrThrow<T>(request: AppRequestData, mouse: Mouse): Promise<RpcResponse<T>> {
     const requestQuery = BgAppRequest.schema(request.id)
-    await requestQuery.mutateOrThrow(Mutators.data<AppRequestData, never>(request))
+    await requestQuery.mutateOrThrow(() => new Some(new Data(request)))
 
     const done = new Future<void>()
 
@@ -450,12 +450,12 @@ export class Global {
 
       if (preOriginData.icon) {
         const iconData = { id: origin, data: preOriginData.icon }
-        await iconQuery.mutateOrThrow(Mutators.data(iconData))
+        await iconQuery.mutateOrThrow(() => new Some(new Data(iconData)))
       }
 
       const originQuery = Option.wrap(OriginQuery.create(origin, user.storage)).getOrThrow()
       const originData: OriginData = { origin, title, description, icons: [iconRef] }
-      await originQuery.mutateOrThrow(Mutators.data(originData))
+      await originQuery.mutateOrThrow(() => new Some(new Data(originData)))
 
       const sessionByOriginQuery = BgSession.ByOrigin.schema(origin, user.storage)
       const sessionByOriginState = await sessionByOriginQuery.state
@@ -482,7 +482,7 @@ export class Global {
         scripts.add(script)
 
         const { id } = sessionData
-        await Status.schema(id).mutateOrThrow(Mutators.data<StatusData, never>({ id }))
+        await Status.schema(id).mutateOrThrow(() => new Some(new Data({ id })))
 
         script.events.on("close", async () => {
           scripts!.delete(script)
@@ -536,7 +536,7 @@ export class Global {
       }
 
       const sessionQuery = BgSession.schema(sessionData.id, user.storage)
-      await sessionQuery.mutateOrThrow(Mutators.data<SessionData, never>(sessionData))
+      await sessionQuery.mutateOrThrow(() => new Some(new Data(sessionData)))
 
       user.sessionByScript.set(script.name, sessionData.id)
 
@@ -550,7 +550,7 @@ export class Global {
       scripts.add(script)
 
       const { id } = sessionData
-      await Status.schema(id).mutateOrThrow(Mutators.data<StatusData, never>({ id }))
+      await Status.schema(id).mutateOrThrow(() => new Some(new Data({ id })))
 
       script.events.on("close", async () => {
         scripts!.delete(script)
@@ -1052,7 +1052,7 @@ export class Global {
     const [seed] = (request as RpcRequestPreinit<[SeedData]>).params
 
     const seedQuery = Option.wrap(SeedQuery.create(seed.uuid, user.storage)).getOrThrow()
-    await seedQuery.mutateOrThrow(Mutators.data(seed))
+    await seedQuery.mutateOrThrow(() => new Some(new Data(seed)))
   }
 
   async brume_createWallet(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<void> {
@@ -1061,7 +1061,7 @@ export class Global {
     const [wallet] = (request as RpcRequestPreinit<[WalletData]>).params
 
     const walletQuery = BgWallet.schema(wallet.uuid, user.storage)
-    await walletQuery.mutateOrThrow(Mutators.data(wallet))
+    await walletQuery.mutateOrThrow(() => new Some(new Data(wallet)))
   }
 
   async brume_get_global(foreground: RpcRouter, request: RpcRequestPreinit<unknown>): Promise<Nullable<RawState>> {
@@ -1260,7 +1260,7 @@ export class Global {
 
     const { id } = sessionRef
     const error = sessionResult.mapErrSync(RpcError.rewrap).err().inner
-    await Status.schema(id).mutateOrThrow(Mutators.data<StatusData, never>({ id, error }))
+    await Status.schema(id).mutateOrThrow(() => new Some(new Data({ id, error })))
   }
 
   async #wcReconnectOrThrow(sessionData: WcSessionData): Promise<WcSession> {
@@ -1355,7 +1355,7 @@ export class Global {
     }
 
     const originQuery = Option.wrap(OriginQuery.create(originData.origin, user.storage)).getOrThrow()
-    await originQuery.mutateOrThrow(Mutators.data(originData))
+    await originQuery.mutateOrThrow(() => new Some(new Data(originData)))
 
     const authKeyJwk = await irn.brume.key.exportJwkOrThrow()
     const sessionKeyBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(session.client.key)
@@ -1375,7 +1375,7 @@ export class Global {
     }
 
     const sessionQuery = BgSession.schema(sessionData.id, user.storage)
-    await sessionQuery.mutateOrThrow(Mutators.data<SessionData, never>(sessionData))
+    await sessionQuery.mutateOrThrow(() => new Some(new Data(sessionData)))
 
     /**
      * Service worker can die here
@@ -1423,7 +1423,7 @@ export class Global {
     user.wcBySession.set(sessionData.id, session)
 
     const { id } = sessionData
-    await Status.schema(id).mutateOrThrow(Mutators.data<StatusData, never>({ id }))
+    await Status.schema(id).mutateOrThrow(() => new Some(new Data({ id })))
 
     const icons = session.metadata.icons.map<BlobbyRef>(x => ({ ref: true, id: x }))
     await originQuery.mutateOrThrow(Mutators.mapExistingData(d => d.mapSync(x => ({ ...x, icons }))))
@@ -1445,7 +1445,7 @@ export class Global {
 
         const blobbyQuery = Option.wrap(BlobbyQuery.create(iconUrl, user.storage)).getOrThrow()
         const blobbyData = { id: iconUrl, data: iconData }
-        await blobbyQuery.mutateOrThrow(Mutators.data(blobbyData))
+        await blobbyQuery.mutateOrThrow(() => new Some(new Data(blobbyData)))
       })().catch(console.warn)
     }
 
