@@ -1,5 +1,4 @@
 import { ERC20Abi } from "@/libs/abi/erc20.abi";
-import { Errors } from "@/libs/errors/errors";
 import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { nto } from "@/libs/ntu";
@@ -13,8 +12,7 @@ import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foregroun
 import { useContractTokenBalance, useContractTokenPricedBalance } from "@/mods/universal/entities/ethereum/mods/tokens/mods/balance/hooks";
 import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
 import { Abi, Address, Fixed } from "@hazae41/cubane";
-import { Data } from "@hazae41/glacier";
-import { Option, Optional, Some } from "@hazae41/option";
+import { Option, Optional } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
@@ -146,29 +144,6 @@ export function WalletDirectSendScreenContractValue(props: {}) {
 
   const valuedBalanceQuery = useContractTokenBalance(context, tokenData.address, wallet.address, "pending")
   const pricedBalanceQuery = useContractTokenPricedBalance(context, tokenData.address, wallet.address, "usd", "pending")
-
-  const computeUsdPricedBalance = useCallback(() => Errors.runOrLog(async () => {
-    await pricedBalanceQuery.mutateOrThrow(s => {
-      if (valuedBalanceQuery.data == null)
-        return new Some(undefined)
-      if (priceQuery.data == null)
-        return new Some(undefined)
-
-      const priceFixed = Fixed.from(priceQuery.data.get())
-
-      const valuedBalanceFixed = Fixed.from(valuedBalanceQuery.data.get())
-      const pricedBalanceFixed = valuedBalanceFixed.mul(priceFixed)
-
-      return new Some(new Data(pricedBalanceFixed))
-    })
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [priceQuery.data, valuedBalanceQuery.data, pricedBalanceQuery.mutateOrThrow])
-
-  useEffect(() => {
-    computeUsdPricedBalance()
-  }, [computeUsdPricedBalance])
-
 
   const valuedBalanceData = valuedBalanceQuery.current?.getOrNull()
   const pricedBalanceData = pricedBalanceQuery.current?.getOrNull()

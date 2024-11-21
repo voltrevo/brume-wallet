@@ -29,12 +29,11 @@ import { None, Option, Optional, Some } from "@hazae41/option";
 import { CloseContext, useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { useToken, useTokens } from "../tokens/data";
-import { useContractTokenPriceV3, useNativeTokenPriceV3 } from "../tokens/price";
 import { SmallShrinkableContrastButton } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
@@ -67,7 +66,7 @@ export function useDisplayRaw(fixed: Fixed.From = new Fixed(0n, 18)) {
 
     return float.toLocaleString(undefined, {
       style: "decimal",
-      notation: "compact",
+      notation: "standard",
       roundingMode: "trunc",
       maximumSignificantDigits: 18,
     })
@@ -93,7 +92,7 @@ export function useDisplayUsd(fixed: Fixed.From = new Fixed(0n, 18)) {
       style: "currency",
       currency: "USD",
       currencyDisplay: "code",
-      notation: "compact",
+      notation: "standard",
       roundingMode: "trunc",
       maximumSignificantDigits: 18,
     })
@@ -631,32 +630,8 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
   const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
 
-  const priceQuery = useNativeTokenPriceV3(context, "pending")
-
   const valuedBalanceQuery = useNativeTokenBalance(context, wallet.address, "pending")
   const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address, "usd", "pending")
-
-  const computeUsdPricedBalance = useCallback(() => Errors.runOrLog(async () => {
-    await pricedBalanceQuery.mutateOrThrow(s => {
-      if (valuedBalanceQuery.data == null)
-        return new Some(undefined)
-      if (priceQuery.data == null)
-        return new Some(undefined)
-
-      const priceFixed = Fixed.from(priceQuery.data.get())
-
-      const valuedBalanceFixed = Fixed.from(valuedBalanceQuery.data.get())
-      const pricedBalanceFixed = valuedBalanceFixed.mul(priceFixed)
-
-      return new Some(new Data(pricedBalanceFixed))
-    })
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [priceQuery.data, valuedBalanceQuery.data, pricedBalanceQuery.mutateOrThrow])
-
-  useEffect(() => {
-    computeUsdPricedBalance()
-  }, [computeUsdPricedBalance])
 
   return <>
     <HashSubpathProvider>
@@ -738,32 +713,8 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
 
-  const priceQuery = useContractTokenPriceV3(context, token.address, "pending")
-
   const valuedBalanceQuery = useContractTokenBalance(context, token.address, wallet.address, "pending")
   const pricedBalanceQuery = useContractTokenPricedBalance(context, token.address, wallet.address, "usd", "pending")
-
-  const computeUsdPricedBalance = useCallback(() => Errors.runOrLog(async () => {
-    await pricedBalanceQuery.mutateOrThrow(s => {
-      if (valuedBalanceQuery.data == null)
-        return new Some(undefined)
-      if (priceQuery.data == null)
-        return new Some(undefined)
-
-      const priceFixed = Fixed.from(priceQuery.data.get())
-
-      const valuedBalanceFixed = Fixed.from(valuedBalanceQuery.data.get())
-      const pricedBalanceFixed = valuedBalanceFixed.mul(priceFixed)
-
-      return new Some(new Data(pricedBalanceFixed))
-    })
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [priceQuery.data, valuedBalanceQuery.data, pricedBalanceQuery.mutateOrThrow])
-
-  useEffect(() => {
-    computeUsdPricedBalance()
-  }, [computeUsdPricedBalance])
 
   return <>
     <HashSubpathProvider>

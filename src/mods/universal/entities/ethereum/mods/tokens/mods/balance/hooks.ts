@@ -34,6 +34,9 @@ export function useNativeTokenPricedBalance(context: Nullable<EthereumContext>, 
   const storage = useUserStorageContext().getOrThrow()
 
   const query = useQuery(Balance.Priced.Native.queryOrThrow, [context, account, currency, block, storage])
+  useFetch(query, { cache: "reload" })
+  useVisible(query, { cache: "reload" })
+  useInterval(query, 10 * 1000)
   useError(query, Errors.onQueryError)
 
   return query
@@ -43,6 +46,9 @@ export function useContractTokenPricedBalance(context: Nullable<EthereumContext>
   const storage = useUserStorageContext().getOrThrow()
 
   const query = useQuery(Balance.Priced.Contract.queryOrThrow, [context, contract, account, currency, block, storage])
+  useFetch(query, { cache: "reload" })
+  useVisible(query, { cache: "reload" })
+  useInterval(query, 10 * 1000)
   useError(query, Errors.onQueryError)
 
   return query

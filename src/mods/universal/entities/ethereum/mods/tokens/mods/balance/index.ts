@@ -4,6 +4,7 @@ import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, QueryStorage, States } from "@hazae41/glacier"
 import { None, Nullable, Option, Some } from "@hazae41/option"
+import { Tokens } from "../.."
 import { GetBalance } from "../../../core"
 import { ERC20, ERC20Metadata } from "../erc20"
 
@@ -271,7 +272,7 @@ export namespace Balance {
 
       export type K = EthereumChainfulRpcRequestPreinit<unknown>
       export type D = Fixed.From
-      export type F = never
+      export type F = Error
 
       export function keyOrThrow(chainId: number, account: ZeroHexString, currency: "usd", block: string) {
         return {
@@ -290,6 +291,25 @@ export namespace Balance {
           return
         if (block == null)
           return
+
+        const fetcher = async (request: K, init: RequestInit) => {
+          const valuedBalanceFetched = await Balance.Native.queryOrThrow(context, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+
+          if (valuedBalanceFetched.isErr())
+            return valuedBalanceFetched
+
+          const priceFetched = await Tokens.Price.Native.queryOrThrow(context, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+
+          if (priceFetched.isErr())
+            return priceFetched
+
+          const priceFixed = Fixed.from(priceFetched.get())
+
+          const valuedBalanceFixed = Fixed.from(valuedBalanceFetched.get())
+          const pricedBalanceFixed = valuedBalanceFixed.mul(priceFixed)
+
+          return new Data(pricedBalanceFixed, valuedBalanceFetched)
+        }
 
         const indexer = async (states: States<D, F>) => {
           const { current } = states
@@ -311,6 +331,7 @@ export namespace Balance {
 
         return createQuery<K, D, F>({
           key: keyOrThrow(context.chain.chainId, account, currency, block),
+          fetcher,
           indexer,
           storage
         })
@@ -322,7 +343,7 @@ export namespace Balance {
 
       export type K = EthereumChainfulRpcRequestPreinit<unknown>
       export type D = Fixed.From
-      export type F = never
+      export type F = Error
 
       export function keyOrThrow(chainId: number, contract: ZeroHexString, account: ZeroHexString, currency: "usd", block: string) {
         return {
@@ -344,6 +365,25 @@ export namespace Balance {
         if (block == null)
           return
 
+        const fetcher = async (request: K, init: RequestInit) => {
+          const valuedBalanceFetched = await Balance.Contract.queryOrThrow(context, contract, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+
+          if (valuedBalanceFetched.isErr())
+            return valuedBalanceFetched
+
+          const priceFetched = await Tokens.Price.Contract.queryOrThrow(context, contract, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+
+          if (priceFetched.isErr())
+            return priceFetched
+
+          const priceFixed = Fixed.from(priceFetched.get())
+
+          const valuedBalanceFixed = Fixed.from(valuedBalanceFetched.get())
+          const pricedBalanceFixed = valuedBalanceFixed.mul(priceFixed)
+
+          return new Data(pricedBalanceFixed, valuedBalanceFetched)
+        }
+
         const indexer = async (states: States<D, F>) => {
           const { current } = states
 
@@ -364,6 +404,7 @@ export namespace Balance {
 
         return createQuery<K, D, F>({
           key: keyOrThrow(context.chain.chainId, contract, account, currency, block),
+          fetcher,
           indexer,
           storage
         })
