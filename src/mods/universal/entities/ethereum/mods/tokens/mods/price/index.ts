@@ -1,3 +1,4 @@
+import { ZeroHexBigInt } from "@/libs/bigints/bigints"
 import { Records } from "@/libs/records"
 import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/context/ethereum"
@@ -89,19 +90,30 @@ export namespace Price {
           return usdcTokenPoolFetched
 
         if (usdcTokenPoolFetched.get().toString() !== "0x0000000000000000000000000000000000000000") {
-          const usdcTokenToken0Fetched = await UniswapV3Pool.Token0.queryOrThrow(context, usdcTokenPoolFetched.get(), block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+          const usdcTokenLiquidityFetched = await UniswapV3Pool.Liquidity.queryOrThrow(context, usdcTokenPoolFetched.get(), block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
-          if (usdcTokenToken0Fetched.isErr())
-            return usdcTokenToken0Fetched
+          if (usdcTokenLiquidityFetched.isErr())
+            return usdcTokenLiquidityFetched
 
-          const usdcTokenPriceFetched = await UniswapV3Pool.Price.queryOrThrow(context, usdcTokenPoolFetched.get(), block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+          const usdcTokenLiquidityZeroHex = ZeroHexBigInt.from(usdcTokenLiquidityFetched.get())
+          const usdcTokenLiquidityFixed = new Fixed(usdcTokenLiquidityZeroHex.value, 6)
+          const usdcTokenLiquidityFloat = Number(usdcTokenLiquidityFixed.toString())
 
-          if (usdcTokenPriceFetched.isErr())
-            return usdcTokenPriceFetched
+          if (usdcTokenLiquidityFloat > (10 ** 4)) {
+            const usdcTokenToken0Fetched = await UniswapV3Pool.Token0.queryOrThrow(context, usdcTokenPoolFetched.get(), block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
-          const [usdcTokenRecto, usdcTokenVerso] = usdcTokenPriceFetched.get()
+            if (usdcTokenToken0Fetched.isErr())
+              return usdcTokenToken0Fetched
 
-          return new Data(usdcTokenToken0Fetched.get() === usdcAddress ? usdcTokenRecto : usdcTokenVerso)
+            const usdcTokenPriceFetched = await UniswapV3Pool.Price.queryOrThrow(context, usdcTokenPoolFetched.get(), block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+
+            if (usdcTokenPriceFetched.isErr())
+              return usdcTokenPriceFetched
+
+            const [usdcTokenRecto, usdcTokenVerso] = usdcTokenPriceFetched.get()
+
+            return new Data(usdcTokenToken0Fetched.get() === usdcAddress ? usdcTokenRecto : usdcTokenVerso)
+          }
         }
 
         const wethAddress = Records.getOrThrow(FactoryV3.wethByChainId, context.chain.chainId)

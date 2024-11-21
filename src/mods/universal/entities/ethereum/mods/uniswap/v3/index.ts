@@ -368,7 +368,59 @@ export namespace UniswapV3Pool {
         indexer,
         storage
       })
+    }
 
+  }
+
+  export namespace Liquidity {
+
+    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type D = ZeroHexBigInt.From
+    export type F = Error
+
+    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
+      return {
+        chainId: chainId,
+        method: "eth_call",
+        params: [{
+          to: pool,
+          data: Abi.encodeOrThrow(UniswapV3PoolAbi.liquidity.fromOrThrow())
+        }, block]
+      }
+    }
+
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
+      if (context == null)
+        return
+      if (pool == null)
+        return
+      if (block == null)
+        return
+
+      const fetcher = async (request: K, init: RequestInit) => {
+        const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
+
+        if (fetched.isErr())
+          return fetched
+
+        try {
+          const returns = Abi.Uint128
+          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+
+          const cooldown = Date.now() + (1000 * 60)
+          const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
+
+          return new Data(new ZeroHexBigInt(decoded), { cooldown, expiration })
+        } catch (e: unknown) {
+          return new Fail(Catched.wrap(e))
+        }
+      }
+
+      return createQuery<K, D, F>({
+        key: keyOrThrow(context.chain.chainId, pool, block),
+        fetcher,
+        storage
+      })
     }
 
   }

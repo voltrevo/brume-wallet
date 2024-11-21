@@ -1,7 +1,7 @@
 import { Abi } from "@hazae41/cubane"
 
-export namespace UniswapV2PoolAbi {
-  export const getReserves = Abi.FunctionSelectorAndArguments.create(Abi.FunctionSelector.fromOrThrow([9,2,241,172]),Abi.Tuple.create())
+export namespace UniswapV3FactoryAbi {
+  export const getPool = Abi.FunctionSelectorAndArguments.create(Abi.FunctionSelector.fromOrThrow([22,152,238,130]),Abi.Tuple.create(Abi.Address,Abi.Address,Abi.Int24))
 }
 
 export namespace UniswapV3PoolAbi {
@@ -9,8 +9,10 @@ export namespace UniswapV3PoolAbi {
 
   export const token0 = Abi.FunctionSelectorAndArguments.create(Abi.FunctionSelector.fromOrThrow([13,254,22,129]),Abi.Tuple.create())
   export const token1 = Abi.FunctionSelectorAndArguments.create(Abi.FunctionSelector.fromOrThrow([210,18,32,167]),Abi.Tuple.create())
+
+  export const liquidity = Abi.FunctionSelectorAndArguments.create(Abi.FunctionSelector.fromOrThrow([26,104,101,2]),Abi.Tuple.create())
 }
 
-export namespace UniswapV3FactoryAbi {
-  export const getPool = Abi.FunctionSelectorAndArguments.create(Abi.FunctionSelector.fromOrThrow([22,152,238,130]),Abi.Tuple.create(Abi.Address,Abi.Address,Abi.Int24))
+export namespace UniswapV2PoolAbi {
+  export const getReserves = Abi.FunctionSelectorAndArguments.create(Abi.FunctionSelector.fromOrThrow([9,2,241,172]),Abi.Tuple.create())
 }

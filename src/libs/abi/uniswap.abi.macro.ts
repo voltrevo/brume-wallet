@@ -18,6 +18,8 @@ export namespace UniswapV3PoolAbi {
 
   export const token0 = $parse$("token0()")
   export const token1 = $parse$("token1()")
+
+  export const liquidity = $parse$("liquidity()")
 }
 
 export namespace UniswapV2PoolAbi {
