@@ -23,7 +23,7 @@ export namespace FgEns {
         return
 
       const fetcher = async (request: K) =>
-        await context.customFetchOrFail<Address>(request)
+        await context.customFetchOrThrow<Address>(request)
 
       return createQuery<K, D, F>({
         key: key(name),
@@ -49,7 +49,7 @@ export namespace FgEns {
         return
 
       const fetcher = async (request: K) =>
-        await context.customFetchOrFail<ZeroHexString>(request)
+        await context.customFetchOrThrow<ZeroHexString>(request)
 
       return createQuery<K, D, F>({
         key: key(address),

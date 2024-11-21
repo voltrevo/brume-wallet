@@ -5,8 +5,9 @@ import { UniswapV3 } from "@/libs/uniswap"
 import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane"
-import { createQuery, Data, Fetched, QueryStorage, States } from "@hazae41/glacier"
+import { createQuery, Data, Fail, QueryStorage, States } from "@hazae41/glacier"
 import { Nullable, Option, Some } from "@hazae41/option"
+import { Catched } from "@hazae41/result"
 import { ERC20Metadata } from "../../tokens/mods"
 
 export namespace FactoryV3 {
@@ -56,23 +57,28 @@ export namespace FactoryV3 {
       if (block == null)
         return
 
-      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
+      const fetcher = async (request: K, init: RequestInit) => {
+        const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
 
         if (fetched.isErr())
           return fetched
 
-        const returns = Abi.Address
-        const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+        try {
+          const returns = Abi.Address
+          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
 
-        return new Data(decoded)
-      })
+          const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
+          const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
+
+          return new Data(decoded, { cooldown, expiration })
+        } catch (e: unknown) {
+          return new Fail(Catched.wrap(e))
+        }
+      }
 
       return createQuery<K, D, F>({
         key: keyOrThrow(context.chain.chainId, token0, token1, fee, block),
         fetcher,
-        cooldown: 1000 * 60 * 60 * 24 * 365,
-        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
     }
@@ -108,23 +114,28 @@ export namespace UniswapV3Pool {
       if (block == null)
         return
 
-      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
+      const fetcher = async (request: K, init: RequestInit) => {
+        const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
 
         if (fetched.isErr())
           return fetched
 
-        const returns = Abi.Address
-        const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+        try {
+          const returns = Abi.Address
+          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
 
-        return new Data(decoded)
-      })
+          const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
+          const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
+
+          return new Data(decoded, { cooldown, expiration })
+        } catch (e: unknown) {
+          return new Fail(Catched.wrap(e))
+        }
+      }
 
       return createQuery<K, D, F>({
         key: keyOrThrow(context.chain.chainId, pool, block),
         fetcher,
-        cooldown: 1000 * 60 * 60 * 24 * 365,
-        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
     }
@@ -156,23 +167,28 @@ export namespace UniswapV3Pool {
       if (block == null)
         return
 
-      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
+      const fetcher = async (request: K, init: RequestInit) => {
+        const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
 
         if (fetched.isErr())
           return fetched
 
-        const returns = Abi.Address
-        const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+        try {
+          const returns = Abi.Address
+          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
 
-        return new Data(decoded)
-      })
+          const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
+          const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
+
+          return new Data(decoded, { cooldown, expiration })
+        } catch (e: unknown) {
+          return new Fail(Catched.wrap(e))
+        }
+      }
 
       return createQuery<K, D, F>({
         key: keyOrThrow(context.chain.chainId, pool, block),
         fetcher,
-        cooldown: 1000 * 60 * 60 * 24 * 365,
-        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
     }
@@ -201,7 +217,7 @@ export namespace UniswapV3Pool {
       if (block == null)
         return
 
-      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+      const fetcher = async (request: K, init: RequestInit) => {
         const token0AddressFetched = await Token0.queryOrThrow(context, pool, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (token0AddressFetched.isErr())
@@ -235,13 +251,11 @@ export namespace UniswapV3Pool {
         const poolData = { address: pool, token0: token0Data, token1: token1Data } as const
 
         return new Data(UniswapV3.computeOrThrow(poolData, sqrtPriceX96BigInt), sqrtPriceX96Fetched)
-      })
+      }
 
       return createQuery<K, D, F>({
         key: keyOrThrow(context.chain.chainId, pool, block),
         fetcher,
-        cooldown: 1000 * 60,
-        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
     }
@@ -269,7 +283,7 @@ export namespace UniswapV3Pool {
       if (block == null)
         return
 
-      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+      const fetcher = async (request: K, init: RequestInit) => {
         const slot0 = await Slot0.queryOrThrow(context, pool, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (slot0.isErr())
@@ -278,13 +292,11 @@ export namespace UniswapV3Pool {
         const [sqrtPriceX96] = slot0.get()
 
         return new Data(sqrtPriceX96, slot0)
-      })
+      }
 
       return createQuery<K, D, F>({
         key: keyOrThrow(context.chain.chainId, pool, block),
         fetcher,
-        cooldown: 1000 * 60,
-        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
     }
@@ -316,17 +328,24 @@ export namespace UniswapV3Pool {
       if (block == null)
         return
 
-      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
-        const fetched = await context.fetchOrFail<ZeroHexString>(request, init)
+      const fetcher = async (request: K, init: RequestInit) => {
+        const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
 
         if (fetched.isErr())
           return fetched
 
-        const returns = Abi.Tuple.create(Abi.Uint160, Abi.Uint160, Abi.Uint32, Abi.Uint32, Abi.Uint32, Abi.Uint32)
-        const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow().map(x => new ZeroHexBigInt(x))
+        try {
+          const returns = Abi.Tuple.create(Abi.Uint160, Abi.Uint160, Abi.Uint32, Abi.Uint32, Abi.Uint32, Abi.Uint32)
+          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow().map(x => new ZeroHexBigInt(x))
 
-        return new Data(decoded as unknown as D)
-      })
+          const cooldown = Date.now() + (1000 * 60)
+          const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
+
+          return new Data(decoded as unknown as D, { cooldown, expiration })
+        } catch (e: unknown) {
+          return new Fail(Catched.wrap(e))
+        }
+      }
 
       const indexer = async (states: States<D, F>) => {
         const { current } = states
@@ -347,8 +366,6 @@ export namespace UniswapV3Pool {
         key: keyOrThrow(context.chain.chainId, pool, block),
         fetcher,
         indexer,
-        cooldown: 1000 * 60,
-        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
 

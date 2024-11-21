@@ -654,7 +654,7 @@ export class Global {
     if (subrequest.method === "wallet_switchEthereumChain")
       return await this.wallet_switchEthereumChain(context, session, subrequest, mouse)
 
-    return await context.fetchOrFail({ ...subrequest, noCheck: true }).then(r => r.getOrThrow())
+    return await context.fetchOrThrow({ ...subrequest, noCheck: true }).then(r => r.getOrThrow())
   }
 
   async eth_requestAccounts(context: BgEthereumContext, session: SessionData, request: RpcRequestPreinit<unknown>): Promise<string[]> {
@@ -1178,7 +1178,7 @@ export class Global {
 
     const context = new BgEthereumContext(uuid, chain, brume)
 
-    return await context.fetchOrFail<unknown>(subrequest).then(r => r.getOrThrow())
+    return await context.fetchOrThrow<unknown>(subrequest).then(r => r.getOrThrow())
   }
 
   async routeCustomOrThrow(context: BgEthereumContext, request: EthereumChainlessRpcRequestPreinit<unknown>, storage: QueryStorage): Promise<SimpleQuery<any, any, Error>> {

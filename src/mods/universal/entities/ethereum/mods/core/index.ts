@@ -28,14 +28,21 @@ export namespace GetBalance {
     if (block == null)
       return
 
-    const fetcher = async (request: K, init: RequestInit = {}) =>
-      await context.fetchOrFail<ZeroHexString>(request, init)
+    const fetcher = async (request: K, init: RequestInit = {}) => {
+      const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
+
+      if (fetched.isErr())
+        return fetched
+
+      const cooldown = Date.now() + (1000 * 60)
+      const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
+
+      return fetched.setInit({ cooldown, expiration })
+    }
 
     return createQuery<K, D, F>({
       key: keyOrThrow(context.chain.chainId, address, block),
       fetcher,
-      cooldown: 1000 * 60,
-      expiration: 1000 * 60 * 60 * 24 * 365,
       storage
     })
   }

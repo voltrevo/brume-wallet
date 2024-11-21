@@ -434,12 +434,10 @@ export class FgEthereumContext {
   ) { }
 
   switch(chain: ChainData) {
-    const { uuid, background } = this
-
-    return new FgEthereumContext(uuid, chain, background)
+    return new FgEthereumContext(this.uuid, chain, this.background)
   }
 
-  async fetchOrFail<T>(info: EthereumChainlessRpcRequestPreinit<unknown>, init: RequestInit = {}): Promise<Fetched<T, Error>> {
+  async fetchOrThrow<T>(info: EthereumChainlessRpcRequestPreinit<unknown>, init: RequestInit = {}): Promise<Fetched<T, Error>> {
     const { uuid, background, chain } = this
 
     return await background.requestOrThrow<T>({
@@ -448,7 +446,7 @@ export class FgEthereumContext {
     }).then(r => Fetched.rewrap(r))
   }
 
-  async customFetchOrFail<T>(info: EthereumChainlessRpcRequestPreinit<unknown>, init: RequestInit = {}): Promise<Fetched<T, Error>> {
+  async customFetchOrThrow<T>(info: EthereumChainlessRpcRequestPreinit<unknown>, init: RequestInit = {}): Promise<Fetched<T, Error>> {
     const { uuid, background, chain } = this
 
     return await background.requestOrThrow<T>({

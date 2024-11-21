@@ -371,7 +371,7 @@ export namespace BgTransactionReceipt {
 
   export function schema(uuid: string, hash: ZeroHexString, context: BgEthereumContext, storage: QueryStorage) {
     const fetcher = async (request: K, init: RequestInit) =>
-      await context.fetchOrFail<D>(request, init)
+      await context.fetchOrThrow<D>(request, init)
 
     const indexer = async (states: States<D, F>) => {
       const { current, previous } = states

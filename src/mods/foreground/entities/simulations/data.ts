@@ -22,7 +22,7 @@ export namespace FgSimulation {
       return
 
     const fetcher = async (request: K) =>
-      await context.customFetchOrFail<SimulationData>(request)
+      await context.customFetchOrThrow<SimulationData>(request)
 
     return createQuery<K, D, F>({
       key: key(context.chain.chainId, tx, block),

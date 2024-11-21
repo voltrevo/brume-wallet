@@ -27,7 +27,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: K) =>
-        await context.fetchOrFail<T>(request)
+        await context.fetchOrThrow<T>(request)
 
       return createQuery<K, T, F>({
         key: key(context.chain.chainId, request),
@@ -60,7 +60,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: K) =>
-        await context.fetchOrFail<ZeroHexString>(request)
+        await context.fetchOrThrow<ZeroHexString>(request)
 
       return createQuery<K, D, F>({
         key: key(request, context),
@@ -91,7 +91,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: K) =>
-        await context.fetchOrFail<ZeroHexString>(request)
+        await context.fetchOrThrow<ZeroHexString>(request)
 
       return createQuery<K, D, F>({
         key: key(context.chain),
@@ -122,7 +122,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: K) =>
-        await context.fetchOrFail<ZeroHexString>(request)
+        await context.fetchOrThrow<ZeroHexString>(request)
 
       return createQuery<K, D, Error>({
         key: key(context.chain),
@@ -154,7 +154,7 @@ export namespace FgEthereum {
         return
 
       const fetcher = async (request: K, init: RequestInit = {}) =>
-        await context.fetchOrFail<ZeroHexString>(request)
+        await context.fetchOrThrow<ZeroHexString>(request)
 
       return createQuery<K, D, F>({
         key: key(address, context.chain),

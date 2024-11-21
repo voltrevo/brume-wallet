@@ -2,7 +2,7 @@ import { ZeroHexBigInt } from "@/libs/bigints/bigints"
 import { EthereumChainfulRpcRequestPreinit, EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
-import { createQuery, Data, Fetched, QueryStorage, States } from "@hazae41/glacier"
+import { createQuery, Data, QueryStorage, States } from "@hazae41/glacier"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { GetBalance } from "../../../core"
 import { ERC20, ERC20Metadata } from "../erc20"
@@ -31,7 +31,7 @@ export namespace Balance {
       if (block == null)
         return
 
-      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+      const fetcher = async (request: K, init: RequestInit) => {
         const balanceFetched = await GetBalance.queryOrThrow(context, account, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (balanceFetched.isErr())
@@ -41,13 +41,11 @@ export namespace Balance {
         const balanceFixed = new Fixed(balanceBigInt, 18)
 
         return new Data(balanceFixed, balanceFetched)
-      })
+      }
 
       return createQuery<K, D, F>({
         key: keyOrThrow(context.chain.chainId, account, block),
         fetcher,
-        cooldown: 1000 * 60,
-        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
     }
@@ -78,7 +76,7 @@ export namespace Balance {
       if (block == null)
         return
 
-      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+      const fetcher = async (request: K, init: RequestInit) => {
         const decimalsFetched = await ERC20Metadata.Decimals.queryOrThrow(context, contract, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (decimalsFetched.isErr())
@@ -92,14 +90,12 @@ export namespace Balance {
         const balanceBigInt = ZeroHexBigInt.from(balanceFetched.get()).value
         const balanceFixed = new Fixed(balanceBigInt, decimalsFetched.get())
 
-        return new Data(balanceFixed)
-      })
+        return new Data(balanceFixed, balanceFetched)
+      }
 
       return createQuery<K, D, F>({
         key: keyOrThrow(context.chain.chainId, contract, account, block),
         fetcher,
-        cooldown: 1000 * 60,
-        expiration: 1000 * 60 * 60 * 24 * 365,
         storage
       })
     }

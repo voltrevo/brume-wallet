@@ -35,7 +35,7 @@ export namespace FgBlock {
         return
 
       const fetcher = async (request: K) =>
-        await context.fetchOrFail<BlockData>(request)
+        await context.fetchOrThrow<BlockData>(request)
 
       return createQuery<K, D, F>({
         key: key(context.chain, number),

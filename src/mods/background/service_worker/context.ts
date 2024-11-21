@@ -18,12 +18,10 @@ export class BgEthereumContext {
   ) { }
 
   switch(chain: ChainData) {
-    const { uuid, brume } = this
-
-    return new BgEthereumContext(uuid, chain, brume)
+    return new BgEthereumContext(this.uuid, chain, this.brume)
   }
 
-  async fetchOrFail<T>(info: EthereumChainlessRpcRequestPreinit<unknown>, init: RequestInit = {}) {
+  async fetchOrThrow<T>(info: EthereumChainlessRpcRequestPreinit<unknown>, init: RequestInit = {}) {
     try {
       const presignal = AbortSignals.getOrNever(init.signal)
 

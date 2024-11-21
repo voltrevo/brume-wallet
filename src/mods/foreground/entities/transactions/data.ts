@@ -193,7 +193,7 @@ export namespace FgTransactionReceipt {
       return
 
     const fetcher = async (request: K) =>
-      await context.fetchOrFail<D>(request)
+      await context.fetchOrThrow<D>(request)
 
     const indexer = async (states: States<D, F>) => {
       const { current, previous } = states

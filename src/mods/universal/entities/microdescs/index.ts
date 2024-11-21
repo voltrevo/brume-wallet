@@ -40,8 +40,8 @@ export namespace MicrodescQuery {
           const consensus = await Consensus.fetchOrThrow(circuit, subsignal2)
           console.debug(`Fetched consensus in ${Date.now() - start}ms`)
 
-          const expiration = Date.now() + 7 * 24 * 60 * 60 * 1000
-          const cooldown = Date.now() + 1 * 24 * 60 * 60 * 1000
+          const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 1)
+          const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
 
           return new Data(consensus.microdescs, { expiration, cooldown })
         } catch (e: unknown) {
@@ -86,8 +86,8 @@ export namespace MicrodescQuery {
         const microdesc = await Consensus.Microdesc.fetchOrThrow(circuit, head, subsignal)
         console.debug(`Fetched microdesc #${index} in ${Date.now() - start}ms`)
 
-        const expiration = Date.now() + 7 * 24 * 60 * 60 * 1000
-        const cooldown = Date.now() + 1 * 24 * 60 * 60 * 1000
+        const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 1)
+        const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
 
         return new Data(microdesc, { expiration, cooldown })
       } catch (e: unknown) {

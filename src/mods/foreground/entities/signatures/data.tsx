@@ -28,7 +28,7 @@ export namespace FgSignature {
 
     const fetcher = async (request: K) => {
       try {
-        const fetched = await context.fetchOrFail<ZeroHexString>(request)
+        const fetched = await context.fetchOrThrow<ZeroHexString>(request)
 
         if (fetched.isErr())
           return fetched

@@ -2,7 +2,7 @@ import { Records } from "@/libs/records"
 import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
-import { createQuery, Data, Fetched, QueryStorage } from "@hazae41/glacier"
+import { createQuery, Data, JsonRequest, QueryStorage } from "@hazae41/glacier"
 import { Nullable, Option } from "@hazae41/option"
 import { FactoryV3, UniswapV3Pool } from "../../../uniswap/v3"
 
@@ -10,16 +10,18 @@ export namespace Price {
 
   export namespace Native {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest<EthereumChainfulRpcRequestPreinit<unknown>>
     export type D = Fixed.From
     export type F = Error
 
     export function keyOrThrow(chainId: number, block: string) {
-      return {
+      const body = {
         chainId: chainId,
         method: "eth_getNativeTokenPrice",
         params: [block]
       }
+
+      return new JsonRequest("/ethereum", { body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, block: Nullable<string>, storage: QueryStorage) {
@@ -28,7 +30,7 @@ export namespace Price {
       if (block == null)
         return
 
-      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+      const fetcher = async (request: K, init: RequestInit) => {
         const usdcAddress = Records.getOrThrow(FactoryV3.usdcByChainId, context.chain.chainId)
         const usdcWethPoolAddress = Records.getOrThrow(FactoryV3.usdcWethPoolByChainId, context.chain.chainId)
 
@@ -45,7 +47,7 @@ export namespace Price {
         const [usdWethRecto, usdcWethVerso] = usdcWethPriceFetched.get()
 
         return new Data(usdcWethPoolToken0Fetched.get() === usdcAddress ? usdWethRecto : usdcWethVerso)
-      })
+      }
 
       return createQuery<K, D, F>({
         key: keyOrThrow(context.chain.chainId, block),
@@ -78,7 +80,7 @@ export namespace Price {
       if (block == null)
         return
 
-      const fetcher = (request: K, init: RequestInit) => Fetched.runOrDoubleWrap(async () => {
+      const fetcher = async (request: K, init: RequestInit) => {
         const usdcAddress = Records.getOrThrow(FactoryV3.usdcByChainId, context.chain.chainId)
 
         const usdcTokenPoolFetched = await FactoryV3.GetPool.queryOrThrow(context, contract, usdcAddress, 3000, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
@@ -139,7 +141,7 @@ export namespace Price {
         const usdcTokenPrice = wethTokenPrice.mul(usdcWethPrice)
 
         return new Data(usdcTokenPrice)
-      })
+      }
 
       return createQuery<K, D, F>({
         key: keyOrThrow(context.chain.chainId, contract, block),

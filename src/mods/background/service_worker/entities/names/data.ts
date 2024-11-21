@@ -18,7 +18,7 @@ export namespace BgEns {
 
         const data = Abi.encodeOrThrow(EnsAbi.resolver.fromOrThrow(namehash))
 
-        const fetched = await context.fetchOrFail<ZeroHexString>({
+        const fetched = await context.fetchOrThrow<ZeroHexString>({
           method: "eth_call",
           params: [{
             to: registry,
@@ -84,7 +84,7 @@ export namespace BgEns {
 
         const data = Abi.encodeOrThrow(EnsAbi.addr.fromOrThrow(namehash32))
 
-        const fetched = await context.fetchOrFail<ZeroHexString>({
+        const fetched = await context.fetchOrThrow<ZeroHexString>({
           method: "eth_call",
           params: [{
             to: resolver.inner,
@@ -149,7 +149,7 @@ export namespace BgEns {
 
         const data = Abi.encodeOrThrow(EnsAbi.name.fromOrThrow(namehash32))
 
-        const fetched = await context.fetchOrFail<ZeroHexString>({
+        const fetched = await context.fetchOrThrow<ZeroHexString>({
           method: "eth_call",
           params: [{
             to: resolver.inner,
