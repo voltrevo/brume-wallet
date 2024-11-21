@@ -238,7 +238,7 @@ export namespace UniswapV3Pool {
         if (token1DecimalsFetched.isErr())
           return token1DecimalsFetched
 
-        const sqrtPriceX96Fetched = await SqrtPriceX96.queryOrThrow(context, pool, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const sqrtPriceX96Fetched = await SqrtPriceX96.queryOrThrow(context, pool, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (sqrtPriceX96Fetched.isErr())
           return sqrtPriceX96Fetched

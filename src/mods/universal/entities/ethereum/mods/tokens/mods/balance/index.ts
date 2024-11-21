@@ -32,7 +32,7 @@ export namespace Balance {
         return
 
       const fetcher = async (request: K, init: RequestInit) => {
-        const balanceFetched = await GetBalance.queryOrThrow(context, account, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const balanceFetched = await GetBalance.queryOrThrow(context, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (balanceFetched.isErr())
           return balanceFetched
@@ -82,7 +82,7 @@ export namespace Balance {
         if (decimalsFetched.isErr())
           return decimalsFetched
 
-        const balanceFetched = await ERC20.BalanceOf.queryOrThrow(context, contract, account, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const balanceFetched = await ERC20.BalanceOf.queryOrThrow(context, contract, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (balanceFetched.isErr())
           return balanceFetched
