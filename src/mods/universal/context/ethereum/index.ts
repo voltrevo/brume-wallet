@@ -9,6 +9,6 @@ export interface EthereumContext {
 
   switch(chain: ChainData): EthereumContext
 
-  fetchOrThrow<T>(init: EthereumChainlessRpcRequestPreinit<unknown>, more?: RequestInit): Promise<Fetched<T, Error>>
+  fetchOrThrow<T>(request: EthereumChainlessRpcRequestPreinit<unknown>, init?: RequestInit): Promise<Fetched<T, Error>>
 
 }

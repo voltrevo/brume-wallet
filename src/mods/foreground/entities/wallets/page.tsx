@@ -282,7 +282,7 @@ function WalletDataPage() {
         Tokens
       </div>
       <div className="h-4" />
-      <div className="flex flex-col gap-4">
+      <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
         <TokenRowRouter token={chainDataByChainId[1].token} />
         {!edit && walletTokens.data?.get().map(tokenSettings =>
           <AddedTokenRow
@@ -309,7 +309,7 @@ function WalletDataPage() {
       </div>
       <div className="h-4" />
       {all &&
-        <div className="flex flex-col gap-4">
+        <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
           {allTokens.map(token =>
             <Fragment key={token.uuid}>
               {token.uuid !== chainDataByChainId[1].token.uuid &&

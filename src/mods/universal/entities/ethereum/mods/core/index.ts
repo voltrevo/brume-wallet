@@ -1,23 +1,23 @@
 import { ZeroHexBigInt } from "@/libs/bigints/bigints";
-import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
+import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
 import { EthereumContext } from "@/mods/universal/context/ethereum";
 import { ZeroHexString } from "@hazae41/cubane";
-import { createQuery, QueryStorage } from "@hazae41/glacier";
+import { createQuery, JsonRequest, QueryStorage } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 
 export namespace GetBalance {
 
-  export type K = EthereumChainfulRpcRequestPreinit<unknown>
+  export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
   export type D = ZeroHexBigInt.From
   export type F = Error
 
   export function keyOrThrow(chainId: number, address: ZeroHexString, block: string) {
-    return {
-      version: 2,
-      chainId: chainId,
+    const body = {
       method: "eth_getBalance",
       params: [address, block]
-    }
+    } as const
+
+    return new JsonRequest(`/ethereum/${chainId}`, { method: "POST", body })
   }
 
   export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
@@ -29,7 +29,8 @@ export namespace GetBalance {
       return
 
     const fetcher = async (request: K, init: RequestInit = {}) => {
-      const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
+      const body = await JsonRequest.from(request).then(r => r.bodyAsJson)
+      const fetched = await context.fetchOrThrow<ZeroHexString>(body, init)
 
       if (fetched.isErr())
         return fetched

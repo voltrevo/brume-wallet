@@ -1,9 +1,9 @@
 import { ERC20Abi, ERC20MetadataAbi } from "@/libs/abi/erc20.abi";
 import { ZeroHexBigInt } from "@/libs/bigints/bigints";
-import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
+import { EthereumChainfulRpcRequestPreinit, EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
 import { EthereumContext } from "@/mods/universal/context/ethereum";
 import { Abi, ZeroHexString } from "@hazae41/cubane";
-import { createQuery, Data, Fail, QueryStorage } from "@hazae41/glacier";
+import { createQuery, Data, Fail, JsonRequest, QueryStorage } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 import { Catched } from "@hazae41/result";
 
@@ -11,19 +11,20 @@ export namespace ERC20 {
 
   export namespace BalanceOf {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = ZeroHexBigInt.From
     export type F = Error
 
     export function keyOrThrow(chainId: number, contract: ZeroHexString, account: ZeroHexString, block: string) {
-      return {
-        chainId,
+      const body = {
         method: "eth_call",
         params: [{
           to: contract,
           data: Abi.encodeOrThrow(ERC20Abi.balanceOf.fromOrThrow(account))
         }, block]
-      }
+      } as const
+
+      return new JsonRequest(`/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
@@ -37,7 +38,8 @@ export namespace ERC20 {
         return
 
       const fetcher = async (request: K, init: RequestInit) => {
-        const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
+        const body = await JsonRequest.from(request).then(r => r.bodyAsJson)
+        const fetched = await context.fetchOrThrow<ZeroHexString>(body, init)
 
         if (fetched.isErr())
           return fetched

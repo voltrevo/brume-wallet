@@ -1,6 +1,6 @@
 import { ZeroHexBigInt } from "@/libs/bigints/bigints"
 import { Records } from "@/libs/records"
-import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
+import { EthereumChainfulRpcRequestPreinit, EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, JsonRequest, QueryStorage } from "@hazae41/glacier"
@@ -11,18 +11,17 @@ export namespace Price {
 
   export namespace Native {
 
-    export type K = JsonRequest<EthereumChainfulRpcRequestPreinit<unknown>>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = Fixed.From
     export type F = Error
 
     export function keyOrThrow(chainId: number, block: string) {
       const body = {
-        chainId: chainId,
         method: "eth_getNativeTokenPrice",
         params: [block]
       } as const
 
-      return new JsonRequest("/ethereum", { method: "POST", body })
+      return new JsonRequest(`/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, block: Nullable<string>, storage: QueryStorage) {
@@ -31,7 +30,7 @@ export namespace Price {
       if (block == null)
         return
 
-      const fetcher = async (request: K, init: RequestInit) => {
+      const fetcher = async (_: K, init: RequestInit) => {
         const usdcAddress = Records.getOrThrow(FactoryV3.usdcByChainId, context.chain.chainId)
         const usdcWethPoolAddress = Records.getOrThrow(FactoryV3.usdcWethPoolByChainId, context.chain.chainId)
 
