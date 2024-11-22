@@ -2,10 +2,10 @@ import { UniswapV3FactoryAbi, UniswapV3PoolAbi } from "@/libs/abi/uniswap.abi"
 import { ZeroHexBigInt } from "@/libs/bigints/bigints"
 import { Records } from "@/libs/records"
 import { UniswapV3 } from "@/libs/uniswap"
-import { EthereumChainfulRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
+import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane"
-import { createQuery, Data, Fail, QueryStorage, States } from "@hazae41/glacier"
+import { createQuery, Data, Fail, JsonRequest, QueryStorage, States } from "@hazae41/glacier"
 import { Nullable, Option, Some } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
 import { ERC20Metadata } from "../../tokens/mods"
@@ -30,19 +30,20 @@ export namespace FactoryV3 {
 
   export namespace GetPool {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = Address
     export type F = Error
 
     export function keyOrThrow(chainId: number, token0: ZeroHexString, token1: ZeroHexString, fee: number, block: string) {
-      return {
-        chainId: chainId,
+      const body = {
         method: "eth_call",
         params: [{
           to: Records.getOrThrow(factoryByChainId, chainId),
           data: Abi.encodeOrThrow(UniswapV3FactoryAbi.getPool.fromOrThrow(token0, token1, fee))
         }, block]
-      }
+      } as const
+
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, token0: Nullable<ZeroHexString>, token1: Nullable<ZeroHexString>, fee: Nullable<number>, block: Nullable<string>, storage: QueryStorage) {
@@ -58,7 +59,8 @@ export namespace FactoryV3 {
         return
 
       const fetcher = async (request: K, init: RequestInit) => {
-        const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
+        const body = await JsonRequest.from(request).then(r => r.bodyAsJson)
+        const fetched = await context.fetchOrThrow<ZeroHexString>(body, init)
 
         if (fetched.isErr())
           return fetched
@@ -91,19 +93,20 @@ export namespace UniswapV3Pool {
 
   export namespace Token0 {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = Address
     export type F = Error
 
     export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
-      return {
-        chainId: chainId,
+      const body = {
         method: "eth_call",
         params: [{
           to: pool,
           data: Abi.encodeOrThrow(UniswapV3PoolAbi.token0.fromOrThrow())
         }, block]
-      }
+      } as const
+
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
@@ -115,7 +118,8 @@ export namespace UniswapV3Pool {
         return
 
       const fetcher = async (request: K, init: RequestInit) => {
-        const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
+        const body = await JsonRequest.from(request).then(r => r.bodyAsJson)
+        const fetched = await context.fetchOrThrow<ZeroHexString>(body, init)
 
         if (fetched.isErr())
           return fetched
@@ -144,19 +148,20 @@ export namespace UniswapV3Pool {
 
   export namespace Token1 {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = Address
     export type F = Error
 
     export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
-      return {
-        chainId: chainId,
+      const body = {
         method: "eth_call",
         params: [{
           to: pool,
           data: Abi.encodeOrThrow(UniswapV3PoolAbi.token1.fromOrThrow())
         }, block]
-      }
+      } as const
+
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
@@ -168,7 +173,8 @@ export namespace UniswapV3Pool {
         return
 
       const fetcher = async (request: K, init: RequestInit) => {
-        const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
+        const body = await JsonRequest.from(request).then(r => r.bodyAsJson)
+        const fetched = await context.fetchOrThrow<ZeroHexString>(body, init)
 
         if (fetched.isErr())
           return fetched
@@ -197,16 +203,17 @@ export namespace UniswapV3Pool {
 
   export namespace Price {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = readonly [Fixed.From, Fixed.From]
     export type F = Error
 
     export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
-      return {
-        chainId: chainId,
+      const body = {
         method: "eth_getUniswapV3PoolPrice",
         params: [pool, block]
-      }
+      } as const
+
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
@@ -217,7 +224,7 @@ export namespace UniswapV3Pool {
       if (block == null)
         return
 
-      const fetcher = async (request: K, init: RequestInit) => {
+      const fetcher = async (_: K, init: RequestInit) => {
         const token0AddressFetched = await Token0.queryOrThrow(context, pool, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (token0AddressFetched.isErr())
@@ -263,16 +270,17 @@ export namespace UniswapV3Pool {
 
   export namespace SqrtPriceX96 {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = ZeroHexBigInt.From
     export type F = Error
 
     export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
-      return {
-        chainId: chainId,
+      const body = {
         method: "eth_getUniswapV3PoolSqrtPriceX96",
         params: [pool, block]
-      }
+      } as const
+
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
@@ -305,19 +313,20 @@ export namespace UniswapV3Pool {
 
   export namespace Slot0 {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = readonly [ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From]
     export type F = Error
 
     export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
-      return {
-        chainId: chainId,
+      const body = {
         method: "eth_call",
         params: [{
           to: pool,
           data: Abi.encodeOrThrow(UniswapV3PoolAbi.slot0.fromOrThrow())
         }, block]
-      }
+      } as const
+
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
@@ -329,7 +338,8 @@ export namespace UniswapV3Pool {
         return
 
       const fetcher = async (request: K, init: RequestInit) => {
-        const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
+        const body = await JsonRequest.from(request).then(r => r.bodyAsJson)
+        const fetched = await context.fetchOrThrow<ZeroHexString>(body, init)
 
         if (fetched.isErr())
           return fetched
@@ -374,19 +384,20 @@ export namespace UniswapV3Pool {
 
   export namespace Liquidity {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = ZeroHexBigInt.From
     export type F = Error
 
     export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
-      return {
-        chainId: chainId,
+      const body = {
         method: "eth_call",
         params: [{
           to: pool,
           data: Abi.encodeOrThrow(UniswapV3PoolAbi.liquidity.fromOrThrow())
         }, block]
-      }
+      } as const
+
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
@@ -398,7 +409,8 @@ export namespace UniswapV3Pool {
         return
 
       const fetcher = async (request: K, init: RequestInit) => {
-        const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
+        const body = await JsonRequest.from(request).then(r => r.bodyAsJson)
+        const fetched = await context.fetchOrThrow<ZeroHexString>(body, init)
 
         if (fetched.isErr())
           return fetched

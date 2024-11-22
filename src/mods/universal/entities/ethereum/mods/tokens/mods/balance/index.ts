@@ -1,5 +1,5 @@
 import { ZeroHexBigInt } from "@/libs/bigints/bigints"
-import { EthereumChainfulRpcRequestPreinit, EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
+import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, JsonRequest, QueryStorage, States } from "@hazae41/glacier"
@@ -12,16 +12,17 @@ export namespace Balance {
 
   export namespace Native {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = Fixed.From
     export type F = Error
 
     export function keyOrThrow(chainId: number, account: ZeroHexString, block: string) {
-      return {
-        chainId: chainId,
+      const body = {
         method: "eth_getNativeTokenBalance",
         params: [account, block]
-      }
+      } as const
+
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
@@ -32,7 +33,7 @@ export namespace Balance {
       if (block == null)
         return
 
-      const fetcher = async (request: K, init: RequestInit) => {
+      const fetcher = async (_: K, init: RequestInit) => {
         const balanceFetched = await GetBalance.queryOrThrow(context, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (balanceFetched.isErr())
@@ -55,16 +56,17 @@ export namespace Balance {
 
   export namespace Contract {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = Fixed.From
     export type F = Error
 
     export function keyOrThrow(chainId: number, contract: ZeroHexString, account: ZeroHexString, block: string) {
-      return {
-        chainId: chainId,
+      const body = {
         method: "eth_getContractTokenBalance",
         params: [contract, account, block]
-      }
+      } as const
+
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
@@ -77,7 +79,7 @@ export namespace Balance {
       if (block == null)
         return
 
-      const fetcher = async (request: K, init: RequestInit) => {
+      const fetcher = async (_: K, init: RequestInit) => {
         const decimalsFetched = await ERC20Metadata.Decimals.queryOrThrow(context, contract, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (decimalsFetched.isErr())
@@ -149,7 +151,6 @@ export namespace Balance {
 
         export function keyOrThrow(account: ZeroHexString, currency: "usd") {
           const body = {
-            chainId: "*",
             method: "eth_getBalances",
             params: [account, currency]
           } as const
@@ -233,16 +234,17 @@ export namespace Balance {
 
     export namespace Index {
 
-      export type K = EthereumChainfulRpcRequestPreinit<unknown>
+      export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
       export type D = Record<string, Fixed.From>
       export type F = never
 
       export function keyOrThrow(chainId: number, account: ZeroHexString, currency: "usd", block: string) {
-        return {
-          chainId: chainId,
+        const body = {
           method: "eth_getBalances",
           params: [account, currency, block]
-        }
+        } as const
+
+        return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
       }
 
       export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<ZeroHexString>, currency: Nullable<"usd">, block: string, storage: QueryStorage) {
@@ -274,16 +276,17 @@ export namespace Balance {
 
     export namespace Native {
 
-      export type K = EthereumChainfulRpcRequestPreinit<unknown>
+      export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
       export type D = Fixed.From
       export type F = Error
 
       export function keyOrThrow(chainId: number, account: ZeroHexString, currency: "usd", block: string) {
-        return {
-          chainId: chainId,
+        const body = {
           method: "eth_getNativeTokenPricedBalance",
           params: [account, currency, block]
-        }
+        } as const
+
+        return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
       }
 
       export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<ZeroHexString>, currency: Nullable<"usd">, block: Nullable<string>, storage: QueryStorage) {
@@ -296,7 +299,7 @@ export namespace Balance {
         if (block == null)
           return
 
-        const fetcher = async (request: K, init: RequestInit) => {
+        const fetcher = async (_: K, init: RequestInit) => {
           const valuedBalanceFetched = await Balance.Native.queryOrThrow(context, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
           if (valuedBalanceFetched.isErr())
@@ -345,16 +348,17 @@ export namespace Balance {
 
     export namespace Contract {
 
-      export type K = EthereumChainfulRpcRequestPreinit<unknown>
+      export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
       export type D = Fixed.From
       export type F = Error
 
       export function keyOrThrow(chainId: number, contract: ZeroHexString, account: ZeroHexString, currency: "usd", block: string) {
-        return {
-          chainId: chainId,
+        const body = {
           method: "eth_getContractTokenPricedBalance",
           params: [contract, account, currency, block]
-        }
+        } as const
+
+        return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
       }
 
       export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, currency: Nullable<"usd">, block: Nullable<string>, storage: QueryStorage) {
@@ -369,7 +373,7 @@ export namespace Balance {
         if (block == null)
           return
 
-        const fetcher = async (request: K, init: RequestInit) => {
+        const fetcher = async (_: K, init: RequestInit) => {
           const valuedBalanceFetched = await Balance.Contract.queryOrThrow(context, contract, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
           if (valuedBalanceFetched.isErr())
