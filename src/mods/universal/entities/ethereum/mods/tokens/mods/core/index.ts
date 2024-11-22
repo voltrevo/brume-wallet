@@ -13,7 +13,7 @@ export namespace All {
       method: "eth_getAllTokens"
     } as const
 
-    return new JsonRequest(`/ethereum`, { method: "POST", body })
+    return new JsonRequest(`app:/ethereum`, { method: "POST", body })
   }
 
   export function queryOrThrow(storage: QueryStorage) {

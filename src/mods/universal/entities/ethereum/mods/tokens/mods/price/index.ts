@@ -1,6 +1,6 @@
 import { ZeroHexBigInt } from "@/libs/bigints/bigints"
 import { Records } from "@/libs/records"
-import { EthereumChainfulRpcRequestPreinit, EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
+import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, JsonRequest, QueryStorage } from "@hazae41/glacier"
@@ -21,7 +21,7 @@ export namespace Price {
         params: [block]
       } as const
 
-      return new JsonRequest(`/ethereum/${chainId}`, { method: "POST", body })
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, block: Nullable<string>, storage: QueryStorage) {
@@ -60,16 +60,17 @@ export namespace Price {
 
   export namespace Contract {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = Fixed.From
     export type F = Error
 
     export function keyOrThrow(chainId: number, contract: ZeroHexString, block: string) {
-      return {
-        chainId: chainId,
+      const body = {
         method: "eth_getContractTokenPrice",
         params: [contract, block]
-      }
+      } as const
+
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
@@ -80,7 +81,7 @@ export namespace Price {
       if (block == null)
         return
 
-      const fetcher = async (request: K, init: RequestInit) => {
+      const fetcher = async (_: K, init: RequestInit) => {
         const usdcAddress = Records.getOrThrow(FactoryV3.usdcByChainId, context.chain.chainId)
 
         const usdcTokenPoolFetched = await FactoryV3.GetPool.queryOrThrow(context, contract, usdcAddress, 3000, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())

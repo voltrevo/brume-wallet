@@ -2,7 +2,7 @@ import { ZeroHexBigInt } from "@/libs/bigints/bigints"
 import { EthereumChainfulRpcRequestPreinit, EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/context/ethereum"
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
-import { createQuery, Data, QueryStorage, States } from "@hazae41/glacier"
+import { createQuery, Data, JsonRequest, QueryStorage, States } from "@hazae41/glacier"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Tokens } from "../.."
 import { GetBalance } from "../../../core"
@@ -109,16 +109,17 @@ export namespace Balance {
 
       export namespace Total {
 
-        export type K = EthereumChainlessRpcRequestPreinit<unknown>
+        export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
         export type D = Fixed.From
         export type F = never
 
         export function keyOrThrow(account: ZeroHexString, currency: "usd") {
-          return {
-            chainId: "*",
+          const body = {
             method: "eth_getTotalBalance",
             params: [account, currency]
-          }
+          } as const
+
+          return new JsonRequest(`app:/ethereum`, { method: "POST", body })
         }
 
         export function queryOrThrow(account: Nullable<ZeroHexString>, currency: Nullable<"usd">, storage: QueryStorage) {
@@ -142,16 +143,18 @@ export namespace Balance {
 
       export namespace Index {
 
-        export type K = EthereumChainlessRpcRequestPreinit<unknown>
+        export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
         export type D = Record<string, Fixed.From>
         export type F = never
 
         export function keyOrThrow(account: ZeroHexString, currency: "usd") {
-          return {
+          const body = {
             chainId: "*",
             method: "eth_getBalances",
             params: [account, currency]
-          }
+          } as const
+
+          return new JsonRequest(`app:/ethereum`, { method: "POST", body })
         }
 
         export function queryOrThrow(account: Nullable<ZeroHexString>, currency: Nullable<"usd">, storage: QueryStorage) {
@@ -178,16 +181,17 @@ export namespace Balance {
 
       }
 
-      export type K = EthereumChainfulRpcRequestPreinit<unknown>
+      export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
       export type D = Fixed.From
       export type F = never
 
       export function keyOrThrow(chainId: number, account: ZeroHexString, currency: "usd", block: string) {
-        return {
-          chainId: chainId,
+        const body = {
           method: "eth_getTotalBalance",
           params: [account, currency, block]
-        }
+        } as const
+
+        return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
       }
 
       export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<ZeroHexString>, currency: Nullable<"usd">, block: string, storage: QueryStorage) {

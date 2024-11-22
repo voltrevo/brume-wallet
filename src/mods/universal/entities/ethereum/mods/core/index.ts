@@ -17,7 +17,7 @@ export namespace GetBalance {
       params: [address, block]
     } as const
 
-    return new JsonRequest(`/ethereum/${chainId}`, { method: "POST", body })
+    return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
   }
 
   export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {

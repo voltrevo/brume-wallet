@@ -24,7 +24,7 @@ export namespace ERC20 {
         }, block]
       } as const
 
-      return new JsonRequest(`/ethereum/${chainId}`, { method: "POST", body })
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
@@ -72,19 +72,20 @@ export namespace ERC20Metadata {
 
   export namespace Name {
 
-    export type K = EthereumChainfulRpcRequestPreinit<unknown>
+    export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
     export type D = string
     export type F = Error
 
     export function keyOrThrow(chainId: number, address: string, block: string) {
-      return {
-        chainId,
+      const body = {
         method: "eth_call",
         params: [{
           to: address,
           data: Abi.encodeOrThrow(ERC20MetadataAbi.name.fromOrThrow())
         }, block]
-      }
+      } as const
+
+      return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
     export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<string>, block: Nullable<string>, storage: QueryStorage) {
@@ -96,7 +97,8 @@ export namespace ERC20Metadata {
         return
 
       const fetcher = async (request: K, init: RequestInit) => {
-        const fetched = await context.fetchOrThrow<ZeroHexString>(request, init)
+        const body = await JsonRequest.from(request).then(r => r.bodyAsJson)
+        const fetched = await context.fetchOrThrow<ZeroHexString>(body, init)
 
         if (fetched.isErr())
           return fetched
