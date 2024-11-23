@@ -16,6 +16,7 @@ import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
+import { useBlockByNumber } from "@/mods/universal/ethereum/mods/blocks/hooks";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
 import { Address, Fixed, ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
 import { Data } from "@hazae41/glacier";
@@ -24,8 +25,7 @@ import { Nullable, Option, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { Ok, Result } from "@hazae41/result";
 import { Transaction, ethers } from "ethers";
-import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
-import { useBlockByNumber } from "../../../blocks/data";
+import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useEnsLookup } from "../../../names/data";
 import { useNativeTokenPriceV3 } from "../../../tokens/price";
 import { useTransactionWithReceipt } from "../../../transactions/data";
@@ -198,10 +198,6 @@ export function WalletTransactionDialog(props: {}) {
       : undefined
   }), [maybeData])
 
-  const onGasModeChange = useCallback((e: SyntheticEvent<HTMLSelectElement>) => {
-    setGasMode(e.currentTarget.value)
-  }, [setGasMode])
-
   const fetchedGasPriceQuery = useGasPrice(context)
   const maybeFetchedGasPriceZeroHex = fetchedGasPriceQuery.current?.getOrNull()
 
@@ -216,7 +212,7 @@ export function WalletTransactionDialog(props: {}) {
     return ZeroHexBigInt.from(maxPriorityFeePerGas).value
   }, [maybeFetchedMaxPriorityFeePerGasZeroHex])
 
-  const pendingBlockQuery = useBlockByNumber("pending", context)
+  const pendingBlockQuery = useBlockByNumber(context, "pending")
   const maybePendingBlock = pendingBlockQuery.current?.getOrNull()
 
   const maybeFetchedBaseFeePerGas = useMemo(() => {

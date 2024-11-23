@@ -21,6 +21,7 @@ export type FullBlockData =
   | FullBlockData2
 
 export interface BlockData1 {
+  readonly baseFeePerGas: undefined
   readonly difficulty: ZeroHexString
   readonly extraData: ZeroHexString
   readonly gasLimit: ZeroHexString
