@@ -1,6 +1,6 @@
 import { tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Records } from "@/libs/records";
-import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
+import { EthereumChainlessRpcRequestPreinit, Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { Address } from "@hazae41/cubane";
 import { createQuery, Data, Fail, JsonRequest, QueryStorage, Times } from "@hazae41/glacier";
 import { Nullable, Option } from "@hazae41/option";
@@ -159,7 +159,7 @@ export namespace Token {
 export namespace UserTokens {
 
   export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
-  export type D = ContractTokenRef[]
+  export type D = TokenRef[]
   export type F = never
 
   export function keyOrThrow() {
@@ -172,6 +172,29 @@ export namespace UserTokens {
 
   export function queryOrThrow(storage: QueryStorage) {
     return createQuery<K, D, F>({ key: keyOrThrow(), storage })
+  }
+
+}
+
+export namespace WalletTokens {
+
+  export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
+  export type D = TokenRef[]
+  export type F = never
+
+  export function keyOrThrow(wallet: Wallet) {
+    const body = {
+      method: "eth_getWalletTokens",
+      params: [wallet.uuid]
+    } as const
+
+    return new JsonRequest(`app:/ethereum`, { method: "POST", body })
+  }
+
+  export function queryOrThrow(wallet: Nullable<Wallet>, storage: QueryStorage) {
+    if (wallet == null)
+      return
+    return createQuery<K, D, F>({ key: keyOrThrow(wallet), storage })
   }
 
 }

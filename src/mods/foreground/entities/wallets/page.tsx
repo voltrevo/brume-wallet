@@ -18,10 +18,10 @@ import { Page } from "@/libs/ui/page/page";
 import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
-import { TokenSettings, TokenSettingsData } from "@/mods/background/service_worker/entities/wallets/tokens/data";
+import { TokenSettingsData } from "@/mods/background/service_worker/entities/wallets/tokens/data";
 import { useContractTokenBalance, useContractTokenPricedBalance, useNativeTokenBalance, useNativeTokenPricedBalance } from "@/mods/universal/ethereum/mods/tokens/mods/balance/hooks";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/universal/ethereum/mods/tokens/mods/core";
-import { useToken, useUserTokens } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
+import { useToken, useUserTokens, useWalletTokens } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Data, Fail, Fetched } from "@hazae41/glacier";
@@ -41,7 +41,7 @@ import { PaddedRoundedShrinkableNakedAnchor, WalletSendScreen, WideShrinkableNak
 import { RawWalletDataCard } from "./card";
 import { useWalletDataContext, WalletDataProvider } from "./context";
 import { EthereumWalletInstance, useEthereumContext, useWallet } from "./data";
-import { useTokenSettings, useTokenSettingsByWallet } from "./tokens/data";
+import { useTokenSettings } from "./tokens/data";
 
 export function WalletPage(props: UUIDProps) {
   const { uuid } = props
@@ -168,19 +168,42 @@ function WalletDataPage() {
 
   useEnsReverse(wallet.address, mainnet)
 
-  const [all, setAll] = useState(false)
-  const [edit, setEdit] = useState(false)
   const add = useBooleanHandle(false)
 
-  const walletTokens = useTokenSettingsByWallet(wallet)
-  const userTokens = useUserTokens()
+  const userTokensQuery = useUserTokens()
 
-  const allTokens = useMemo<TokenData[]>(() => {
+  const walletTokensQuery = useWalletTokens(wallet)
+
+  const nonWalletTokens = useMemo<Token[]>(() => {
+    const [users = []] = [userTokensQuery.data?.get()]
+
     const natives = Object.values(chainDataByChainId).map(x => x.token)
     const contracts = Object.values(tokenByAddress)
-    const all = [...natives, ...contracts]
-    return all.sort((a, b) => a.chainId - b.chainId)
-  }, [])
+
+    const allTokens = [...users, ...natives, ...contracts]
+
+    return allTokens.filter(x => {
+      if (walletTokensQuery.data == null)
+        return true
+      const walletTokens = walletTokensQuery.data.get()
+
+      if (walletTokens.find(y => y.uuid === x.uuid))
+        return false
+      return true
+    }).sort((a, b) => {
+      const dChainId = a.chainId - b.chainId
+
+      if (dChainId !== 0)
+        return dChainId
+
+      if (a.type === "native")
+        return -1
+      if (b.type === "native")
+        return 1
+
+      return 0
+    })
+  }, [userTokensQuery.data, walletTokensQuery.data])
 
   const onBackClick = useCallback(() => {
     location.assign("#/wallets")
@@ -278,49 +301,29 @@ function WalletDataPage() {
             <TokenAddDialog />
           </Dialog>
         </CloseContext.Provider>}
-      <div className="font-medium text-xl">
-        Tokens
+      <div className="flex items-center gap-2">
+        <div className="font-medium text-xl">
+          Tokens
+        </div>
+        <SmallShrinkableContrastButton
+          onClick={add.enable}>
+          <Outline.PlusIcon className="size-5" />
+          {"Add"}
+        </SmallShrinkableContrastButton>
       </div>
       <div className="h-4" />
       <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
         <TokenRowRouter token={chainDataByChainId[1].token} />
         <TokenRowRouter token={tokenByAddress["0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5"]} />
-        {!edit && walletTokens.data?.get().map(tokenSettings =>
-          <AddedTokenRow
-            key={tokenSettings.uuid}
-            settingsRef={tokenSettings} />)}
+        {walletTokensQuery.data?.get().map(token =>
+          <Fragment key={token.uuid}>
+            <WalletTokenRow token={token} />
+          </Fragment>)}
+        {nonWalletTokens.map(token =>
+          <Fragment key={token.uuid}>
+            <TokenRowRouter token={token} />
+          </Fragment>)}
       </div>
-      <div className="h-4" />
-      <div className="flex items-center gap-2">
-        <SmallShrinkableContrastButton
-          onClick={() => setAll(!all)}>
-          {all
-            ? <Outline.ChevronUpIcon className="size-5" />
-            : <Outline.ChevronDownIcon className="size-5" />}
-          {all ? "Show less" : "Show more"}
-        </SmallShrinkableContrastButton>
-        <div className="grow" />
-        {all && <>
-          <SmallShrinkableContrastButton
-            onClick={add.enable}>
-            <Outline.PlusIcon className="size-5" />
-            {"Add"}
-          </SmallShrinkableContrastButton>
-        </>}
-      </div>
-      <div className="h-4" />
-      {all &&
-        <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
-          {allTokens.map(token =>
-            <Fragment key={token.uuid}>
-              {token.uuid !== chainDataByChainId[1].token.uuid &&
-                <UnaddedTokenRow token={token} />}
-            </Fragment>)}
-          {userTokens.data?.get().map(token =>
-            <UnaddedTokenRow
-              key={token.uuid}
-              token={token} />)}
-        </div>}
     </PageBody>
 
   return <Page>
@@ -507,31 +510,19 @@ export function WalletConnectMenu() {
   </div>
 }
 
-function AddedTokenRow(props: { settingsRef: TokenSettings }) {
-  const wallet = useWalletDataContext().getOrThrow()
-
-  const { settingsRef } = props
-  const { token } = settingsRef
-
-  const settings = useTokenSettings(wallet, token)
+function WalletTokenRow(props: { token: Token }) {
+  const { token } = props
 
   if (token.uuid === "app:/ethereum/1/token")
     return null
   if (token.uuid === "app:/ethereum/1/token/0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5")
     return null
-  if (!settings.data?.get().enabled)
-    return null
-  return <TokenRowRouter token={settings.data.get().token} />
+  return <TokenRowRouter token={token} />
 }
 
-function UnaddedTokenRow(props: { token: Token }) {
-  const wallet = useWalletDataContext().getOrThrow()
+function UserTokenRow(props: { token: Token }) {
   const { token } = props
 
-  const settings = useTokenSettings(wallet, token)
-
-  if (settings.data?.get().enabled)
-    return null
   return <TokenRowRouter token={token} />
 }
 
@@ -539,24 +530,24 @@ function TokenRowRouter(props: { token: Token }) {
   const { token } = props
 
   if (token.type === "native")
-    return <NativeTokenResolver token={token} />
+    return <NativeTokenRowRouter token={token} />
   if (token.type === "contract")
-    return <ContractTokenResolver token={token} />
+    return <ContractTokenRowRouter token={token} />
   return null
 }
 
-function NativeTokenResolver(props: { token: NativeToken }) {
+function NativeTokenRowRouter(props: { token: NativeToken }) {
   const { token } = props
 
   const chainData = chainDataByChainId[token.chainId]
   const tokenData = chainData.token
 
-  return <NativeTokenRow
+  return <OnlineNativeTokenRow
     token={tokenData}
     chain={chainData} />
 }
 
-function ContractTokenResolver(props: { token: ContractToken }) {
+function ContractTokenRowRouter(props: { token: ContractToken }) {
   const wallet = useWalletDataContext().getOrThrow()
   const { token } = props
 
@@ -627,7 +618,7 @@ function NativeTokenMenu(props: { token: NativeTokenData }) {
   </div>
 }
 
-function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }) {
+function OnlineNativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }) {
   const path = usePathContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const { token, chain } = props
@@ -666,33 +657,48 @@ function ContractTokenMenu(props: { token: ContractTokenData }) {
 
   const send = useCoords(path, `/send?step=target&chain=${token.chainId}&token=${token.address}`)
 
-  const settings = useTokenSettings(wallet, token)
-  const favorite = settings.data?.get().enabled
+  const walletTokensQuery = useWalletTokens(wallet)
+
+  const favorited = useMemo(() => {
+    return walletTokensQuery.data?.get().find(x => x.uuid === token.uuid) != null
+  }, [walletTokensQuery.data, token])
+
+  const favoriteOrThrow = useCallback(async () => {
+    await walletTokensQuery.mutateOrThrow(s => {
+      const current = s.real?.current
+
+      if (current == null)
+        return new Some(new Data([TokenRef.from(token)]))
+
+      return new Some(current.mapSync(array => [...array, TokenRef.from(token)]))
+    })
+  }, [walletTokensQuery.mutateOrThrow, token])
+
+  const unfavoriteOrThrow = useCallback(async () => {
+    await walletTokensQuery.mutateOrThrow(s => {
+      const current = s.real?.current
+
+      if (current == null)
+        return new None()
+
+      return new Some(current.mapSync(array => array.filter(x => x.uuid !== token.uuid)))
+    })
+  }, [walletTokensQuery.mutateOrThrow, token])
 
   const onToggle = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    const enabled = !favorite
-
-    await settings.mutateOrThrow(s => {
-      const data = Mutators.Datas.mapOrNew((d = {
-        uuid: randomUUID(),
-        token: TokenRef.from(token),
-        wallet: WalletRef.from(wallet),
-        enabled
-      }): TokenSettingsData => {
-        return { ...d, enabled }
-      }, s.real?.data)
-
-      return new Some(data)
-    })
+    if (!favorited)
+      await favoriteOrThrow()
+    else
+      await unfavoriteOrThrow()
 
     close(true)
-  }), [favorite, settings, token, wallet, close])
+  }), [favorited, favoriteOrThrow, unfavoriteOrThrow, close])
 
   return <div className="flex flex-col text-left gap-2">
     <WideShrinkableNakedMenuButton
       onClick={onToggle.run}>
-      {favorite ? <Solid.StarIcon className="size-4" /> : <Outline.StarIcon className="size-4" />}
-      {favorite ? "Unfavorite" : "Favorite"}
+      {favorited ? <Solid.StarIcon className="size-4" /> : <Outline.StarIcon className="size-4" />}
+      {favorited ? "Unfavorite" : "Favorite"}
     </WideShrinkableNakedMenuButton>
     <WideShrinkableNakedMenuAnchor
       aria-disabled={wallet.type === "readonly"}
