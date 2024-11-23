@@ -1,7 +1,7 @@
 import { ZeroHexBigInt } from "@/libs/bigints/bigints";
 import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
 import { EthereumContext } from "@/mods/universal/ethereum/mods/context";
-import { ZeroHexString } from "@hazae41/cubane";
+import { Address, ZeroHexString } from "@hazae41/cubane";
 import { createQuery, Data, JsonRequest, QueryStorage } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 import { BlockNumber } from "../blocks";
@@ -12,7 +12,7 @@ export namespace GetBalance {
   export type D = ZeroHexBigInt.From
   export type F = Error
 
-  export function keyOrThrow(chainId: number, address: ZeroHexString, block: BlockNumber) {
+  export function keyOrThrow(chainId: number, address: Address, block: BlockNumber) {
     const body = {
       method: "eth_getBalance",
       params: [address, block]
@@ -21,7 +21,7 @@ export namespace GetBalance {
     return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
   }
 
-  export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+  export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
     if (context == null)
       return
     if (address == null)

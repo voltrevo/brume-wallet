@@ -1,30 +1,26 @@
-import { Errors, UIError } from "@/libs/errors/errors";
+import { Errors } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { Dialog } from "@/libs/ui/dialog";
-import { randomUUID } from "@/libs/uuid/uuid";
-import { ContractTokenData } from "@/mods/background/service_worker/entities/tokens/data";
+import { Loading } from "@/libs/ui/loading";
+import { ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
-import { useUserStorageContext } from "@/mods/foreground/storage/user";
-import { Ethereum } from "@/mods/universal/ethereum";
-import { ZeroHexString } from "@hazae41/cubane";
+import { useToken, useUserTokens } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
+import { Address } from "@hazae41/cubane";
 import { Data } from "@hazae41/glacier";
 import { Option, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
-import { Result } from "@hazae41/result";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "../../wallets/actions/send";
 import { useWalletDataContext } from "../../wallets/context";
-import { FgEthereumContext } from "../../wallets/data";
-import { useToken } from "../data";
+import { useEthereumContext } from "../../wallets/data";
 
 export function TokenAddDialog(props: {}) {
   const close = useCloseContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
-  const storage = useUserStorageContext().getOrThrow()
 
   const [rawChainId, setRawChainId] = useState<string>("1")
   const defChainId = useDeferredValue(rawChainId)
@@ -40,58 +36,42 @@ export function TokenAddDialog(props: {}) {
     setRawAddress(e.currentTarget.value)
   }, [])
 
+  const maybeAddress = useMemo(() => {
+    return Address.fromOrNull(defAddress)
+  }, [defAddress])
+
   const chain = chainDataByChainId[Number(defChainId)]
-  const token = useToken(chain.chainId, defAddress)
+  const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
+
+  const tokenQuery = useToken(context, maybeAddress, "latest")
+  const tokensQuery = useUserTokens()
 
   const addOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    if (!ZeroHexString.String.is(defAddress))
-      throw new UIError(`Invalid address`)
+    const tokenData = Option.wrap(tokenQuery.data).getOrThrow().getOrThrow()
 
-    const context = new FgEthereumContext(wallet.uuid, chain, background)
+    await tokensQuery.mutateOrThrow(tokens => {
+      const previous = tokens.real?.current
 
-    const name = await Result.runAndWrap(async () => {
-      const query = Ethereum.Tokens.ERC20Metadata.Name.queryOrThrow(context, defAddress, "latest", storage)!
-      return await query!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow().getOrThrow())
-    }).then(r => r.mapErrSync(cause => {
-      return new UIError(`Could not fetch token name`, { cause })
-    }).getOrThrow())
+      if (previous == null)
+        return new Some(new Data([ContractTokenRef.from(tokenData)]))
 
-    const symbol = await Result.runAndWrap(async () => {
-      const query = Ethereum.Tokens.ERC20Metadata.Symbol.queryOrThrow(context, defAddress, "latest", storage)!
-      return await query!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow().getOrThrow())
-    }).then(r => r.mapErrSync(cause => {
-      return new UIError(`Could not fetch token symbol`, { cause })
-    }).getOrThrow())
-
-    const decimals = await Result.runAndWrap(async () => {
-      const query = Ethereum.Tokens.ERC20Metadata.Decimals.queryOrThrow(context, defAddress, "latest", storage)!
-      return await query!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow().getOrThrow())
-    }).then(r => r.mapErrSync(cause => {
-      return new UIError(`Could not fetch token decimals`, { cause })
-    }).getOrThrow())
-
-    await token.mutateOrThrow(s => {
-      const data = new Data<ContractTokenData>({
-        uuid: randomUUID(),
-        type: "contract",
-        chainId: chain.chainId,
-        address: defAddress,
-        name: name,
-        symbol: symbol,
-        decimals: decimals
-      })
-
-      return new Some(data)
+      return new Some(previous.mapSync(p => [...p, ContractTokenRef.from(tokenData)]))
     })
 
     close()
-  }), [background, close, chain, defAddress])
+  }), [tokenQuery.data, close])
 
   const addDisabled = useMemo(() => {
     if (!defAddress)
       return `Please enter an address`
-    return
-  }, [defAddress])
+    if (maybeAddress == null)
+      return `Invalid address`
+    if (tokenQuery.data != null)
+      return undefined
+    if (tokenQuery.error != null)
+      return `Could not fetch token`
+    return `Loading...`
+  }, [defAddress, maybeAddress, tokenQuery.data, tokenQuery.error])
 
   return <>
     <Dialog.Title>
@@ -128,8 +108,10 @@ export function TokenAddDialog(props: {}) {
       <WideShrinkableOppositeButton
         disabled={Boolean(addDisabled)}
         onClick={addOrAlert.run}>
-        <Outline.PlusIcon className="size-5" />
-        {addDisabled || "Send"}
+        {tokenQuery.fetching
+          ? <Loading className="size-5" />
+          : <Outline.PlusIcon className="size-5" />}
+        {addDisabled || "Add"}
       </WideShrinkableOppositeButton>
     </div>
   </>

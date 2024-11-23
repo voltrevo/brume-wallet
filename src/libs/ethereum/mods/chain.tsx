@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { ContractTokenData as StoredContractTokenData, NativeTokenData as StoredNativeTokenData } from "@/mods/background/service_worker/entities/tokens/data"
-import { ZeroHexString } from "@hazae41/cubane"
+import { Address } from "@hazae41/cubane"
 
 export interface ChainData<Id extends number = number> {
   readonly chainId: Id,
@@ -370,7 +370,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "WETH",
     decimals: 18,
-    address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" as ZeroHexString
+    address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" as Address
   },
   "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599": {
     uuid: "7b8dab01-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -379,7 +379,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "WBTC",
     decimals: 8,
-    address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" as ZeroHexString
+    address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" as Address
   },
   "0x6B175474E89094C44Da98b954EedeAC495271d0F": {
     uuid: "7b8dab02-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -388,7 +388,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "DAI",
     decimals: 18,
-    address: "0x6B175474E89094C44Da98b954EedeAC495271d0F" as ZeroHexString
+    address: "0x6B175474E89094C44Da98b954EedeAC495271d0F" as Address
   },
   "0xdAC17F958D2ee523a2206206994597C13D831ec7": {
     uuid: "7b8dab03-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -397,7 +397,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "USDT",
     decimals: 6,
-    address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" as ZeroHexString
+    address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" as Address
   },
   "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48": {
     uuid: "7b8dab04-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -406,7 +406,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "USDC",
     decimals: 6,
-    address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as ZeroHexString
+    address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as Address
   },
   "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0": {
     uuid: "7b8dab05-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -415,7 +415,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "MATIC",
     decimals: 18,
-    address: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0" as ZeroHexString
+    address: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0" as Address
   },
   "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84": {
     uuid: "7b8dab06-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -424,7 +424,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "stETH",
     decimals: 18,
-    address: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84" as ZeroHexString
+    address: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84" as Address
   },
   "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58": {
     uuid: "7b8dab07-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -433,7 +433,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 10,
     symbol: "USDT",
     decimals: 6,
-    address: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58" as ZeroHexString
+    address: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58" as Address
   },
   "0x7F5c764cBc14f9669B88837ca1490cCa17c31607": {
     uuid: "7b8dab08-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -442,7 +442,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 10,
     symbol: "USDC",
     decimals: 6,
-    address: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607" as ZeroHexString
+    address: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607" as Address
   },
   "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1": {
     uuid: "7b8dab09-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -451,7 +451,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 10,
     symbol: "DAI",
     decimals: 18,
-    address: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1" as ZeroHexString
+    address: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1" as Address
   },
   "0x68f180fcCe6836688e9084f035309E29Bf0A2095": {
     uuid: "7b8dab10-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -460,7 +460,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 10,
     symbol: "WBTC",
     decimals: 8,
-    address: "0x68f180fcCe6836688e9084f035309E29Bf0A2095" as ZeroHexString
+    address: "0x68f180fcCe6836688e9084f035309E29Bf0A2095" as Address
   },
   "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c": {
     uuid: "7b8dab11-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -469,7 +469,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 56,
     symbol: "WBNB",
     decimals: 18,
-    address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c" as ZeroHexString
+    address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c" as Address
   },
   "0x55d398326f99059fF775485246999027B3197955": {
     uuid: "7b8dab12-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -478,7 +478,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 56,
     symbol: "USDT",
     decimals: 18,
-    address: "0x55d398326f99059fF775485246999027B3197955" as ZeroHexString
+    address: "0x55d398326f99059fF775485246999027B3197955" as Address
   },
   "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56": {
     uuid: "7b8dab13-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -487,16 +487,16 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 56,
     symbol: "BUSD",
     decimals: 18,
-    address: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56" as ZeroHexString
+    address: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56" as Address
   },
-  "0x3d6545b08693dae087e957cb1180ee38b9e3c25e": {
+  "0x3d6545b08693daE087E957cb1180ee38B9e3c25E": {
     uuid: "7b8dab14-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",
     name: "ETC",
     chainId: 56,
     symbol: "ETC",
     decimals: 18,
-    address: "0x3d6545b08693dae087e957cb1180ee38b9e3c25e" as ZeroHexString
+    address: "0x3d6545b08693daE087E957cb1180ee38B9e3c25E" as Address
   },
   "0xc2132D05D31c914a87C6611C10748AEb04B58e8F": {
     uuid: "7b8dab15-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -505,7 +505,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 137,
     symbol: "USDT",
     decimals: 6,
-    address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F" as ZeroHexString
+    address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F" as Address
   },
   "0x471EcE3750Da237f93B8E339c536989b8978a438": {
     uuid: "7b8dab16-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -514,7 +514,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 42220,
     symbol: "WCELO",
     decimals: 18,
-    address: "0x471EcE3750Da237f93B8E339c536989b8978a438" as ZeroHexString
+    address: "0x471EcE3750Da237f93B8E339c536989b8978a438" as Address
   },
   "0x64dEFa3544c695db8c535D289d843a189aa26b98": {
     uuid: "7b8dab17-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -523,7 +523,7 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 42220,
     symbol: "mCUSD",
     decimals: 18,
-    address: "0x64dEFa3544c695db8c535D289d843a189aa26b98" as ZeroHexString
+    address: "0x64dEFa3544c695db8c535D289d843a189aa26b98" as Address
   },
   "0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5": {
     uuid: "7b8dab18-e96b-41aa-b9d8-0ba39d2f96a6",
@@ -532,31 +532,6 @@ export const tokenByAddress: Record<string, StoredContractTokenData> = {
     chainId: 1,
     symbol: "BRUME",
     decimals: 18,
-    address: "0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5" as ZeroHexString
+    address: "0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5" as Address
   }
-} as const
-
-export const tokenById = {
-  WETH_ON_ETHEREUM: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-  WBTC_ON_ETHEREUM: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-  DAI_ON_ETHEREUM: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-  USDT_ON_ETHEREUM: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-  USDC_ON_ETHEREUM: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-  MATIC_ON_ETHEREUM: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
-  STETH_ON_ETHEREUM: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
-
-  WBNB_ON_BINANCE: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
-  USDT_ON_BINANCE: "0x55d398326f99059fF775485246999027B3197955",
-  BUSD_ON_BINANCE: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
-  ETC_ON_BINANCE: "0x3d6545b08693dae087e957cb1180ee38b9e3c25e",
-
-  USDT_ON_OPTIMISM: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
-  USDC_ON_OPTIMISM: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
-  DAI_ON_OPTIMISM: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-  WBTC_ON_OPTIMISM: "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
-
-  USDT_ON_POLYGON: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-
-  CELO_ON_CELO: "0x471EcE3750Da237f93B8E339c536989b8978a438",
-  MSUSD_ON_CELO: "0x64dEFa3544c695db8c535D289d843a189aa26b98"
 } as const

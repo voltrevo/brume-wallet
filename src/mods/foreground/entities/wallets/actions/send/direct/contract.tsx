@@ -9,6 +9,7 @@ import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
 import { useContractTokenBalance, useContractTokenPricedBalance } from "@/mods/universal/ethereum/mods/tokens/mods/balance/hooks";
+import { useToken } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
 import { useContractTokenPriceV3 } from "@/mods/universal/ethereum/mods/tokens/mods/price/hooks";
 import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
 import { Abi, Address, Fixed } from "@hazae41/cubane";
@@ -18,7 +19,6 @@ import { Result } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "..";
 import { useEnsLookup } from "../../../../names/data";
-import { useToken } from "../../../../tokens/data";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext } from "../../../data";
 import { TransactionCard, WalletTransactionDialog } from "../../eth_sendTransaction";
@@ -37,6 +37,12 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   const [maybeValue, setValue] = useSearchState(path, "value")
   const [maybeTrial0, setTrial0] = useSearchState(path, "trial0")
 
+  const maybeTokenAddress = useMemo(() => {
+    if (maybeToken == null)
+      return
+    return Address.fromOrNull(maybeToken)
+  }, [maybeToken])
+
   const trial0UuidFallback = useConstant(() => randomUUID())
   const trial0Uuid = Option.wrap(maybeTrial0).getOr(trial0UuidFallback)
 
@@ -49,12 +55,12 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   const chain = Option.wrap(maybeChain).getOrThrow()
   const chainData = chainDataByChainId[Number(chain)]
 
-  const tokenQuery = useToken(chainData.chainId, maybeToken)
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
+
+  const tokenQuery = useToken(context, maybeTokenAddress, "latest")
   const maybeTokenData = Option.wrap(tokenQuery.current?.getOrNull())
   const maybeTokenDef = Option.wrap(tokenByAddress[maybeToken as any])
   const tokenData = maybeTokenData.or(maybeTokenDef).getOrThrow()
-
-  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
   const priceQuery = useContractTokenPriceV3(context, tokenData.address, "pending")
   const maybePrice = priceQuery.current?.mapSync(Fixed.from).getOrNull()
@@ -142,8 +148,8 @@ export function WalletDirectSendScreenContractValue(props: {}) {
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
-  const valuedBalanceQuery = useContractTokenBalance(context, tokenData.address, wallet.address, "pending")
-  const pricedBalanceQuery = useContractTokenPricedBalance(context, tokenData.address, wallet.address, "usd", "pending")
+  const valuedBalanceQuery = useContractTokenBalance(context, tokenData.address, wallet.address as Address, "pending")
+  const pricedBalanceQuery = useContractTokenPricedBalance(context, tokenData.address, wallet.address as Address, "usd", "pending")
 
   const valuedBalanceData = valuedBalanceQuery.current?.getOrNull()
   const pricedBalanceData = pricedBalanceQuery.current?.getOrNull()

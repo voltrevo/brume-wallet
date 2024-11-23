@@ -1,6 +1,4 @@
-import { Mutators } from "@/libs/glacier/mutators"
-import { ZeroHexString } from "@hazae41/cubane"
-import { createQuery, Data, QueryStorage, States } from "@hazae41/glacier"
+import { Address } from "@hazae41/cubane"
 
 export type Token =
   | TokenData
@@ -19,6 +17,7 @@ export type TokenRef =
   | ContractTokenRef
 
 export namespace TokenRef {
+
   export function from(token: TokenData) {
     if (token.type === "native")
       return NativeTokenRef.from(token)
@@ -26,6 +25,7 @@ export namespace TokenRef {
       return ContractTokenRef.from(token)
     return token satisfies never
   }
+
 }
 
 export interface NativeTokenRef {
@@ -47,7 +47,7 @@ export interface ContractTokenRef {
   readonly uuid: string
   readonly type: "contract"
   readonly chainId: number
-  readonly address: ZeroHexString.Unsafe
+  readonly address: Address
 }
 
 export namespace ContractTokenRef {
@@ -77,65 +77,5 @@ export interface ContractTokenData {
   readonly chainId: number,
   readonly symbol: string,
   readonly decimals: number,
-  readonly address: ZeroHexString
-}
-
-export namespace BgToken {
-
-  export namespace Contract {
-
-    export namespace All {
-
-      export type K = string
-      export type D = ContractToken[]
-      export type F = never
-
-      export const key = `contractTokens`
-
-      export function schema(storage: QueryStorage) {
-        return createQuery<string, ContractTokenRef[], never>({ key, storage })
-      }
-
-    }
-
-    export type K = string
-    export type D = ContractTokenData
-    export type F = never
-
-    export function key(chainId: number, address: string) {
-      return `contractToken/${chainId}/${address}`
-    }
-
-    export function schema(chainId: number, address: string, storage: QueryStorage) {
-      const indexer = async (states: States<D, F>) => {
-        const { current, previous } = states
-
-        const previousData = previous?.real?.current.ok()?.getOrNull()
-        const currentData = current.real?.current.ok()?.getOrNull()
-
-        if (previousData?.uuid === currentData?.uuid)
-          return
-
-        if (previousData != null) {
-          await All.schema(storage)?.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
-            return d.mapSync(p => p.filter(x => x.uuid !== previousData.uuid))
-          }))
-        }
-
-        if (currentData != null) {
-          await All.schema(storage)?.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
-            return d.mapSync(p => [...p, ContractTokenRef.from(currentData)])
-          }))
-        }
-      }
-
-      return createQuery<K, D, F>({
-        key: key(chainId, address),
-        indexer,
-        storage
-      })
-    }
-
-  }
-
+  readonly address: Address
 }

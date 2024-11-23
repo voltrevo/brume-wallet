@@ -34,7 +34,7 @@ import { Deferred, Stack } from "@hazae41/box";
 import { Bytes } from "@hazae41/bytes";
 import { Cadenas } from "@hazae41/cadenas";
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
-import { ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
+import { Address, ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
 import { Disposer } from "@hazae41/disposer";
 import { Circuit, Echalote, TorClientDuplex } from "@hazae41/echalote";
 import { Ed25519 } from "@hazae41/ed25519";
@@ -724,7 +724,9 @@ export class Global {
   async eth_getBalance(context: BgEthereumContext, request: RpcRequestPreinit<unknown>): Promise<unknown> {
     const user = Option.wrap(this.#user).getOrThrow()
 
-    const [address, block] = (request as RpcRequestPreinit<[ZeroHexString, BlockNumber]>).params
+    const [addressZeroHex, block] = (request as RpcRequestPreinit<[ZeroHexString, BlockNumber]>).params
+
+    const address = Address.fromOrThrow(addressZeroHex)
 
     const query = Option.wrap(Ethereum.GetBalance.queryOrThrow(context, address, block, user.storage)).getOrThrow()
 

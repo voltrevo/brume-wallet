@@ -5,14 +5,14 @@ import { nto } from "@/libs/ntu";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { Dialog } from "@/libs/ui/dialog";
+import { useToken } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
 import { usePathContext, useSearchState } from "@hazae41/chemin";
 import { Address } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
-import { SyntheticEvent, useCallback, useDeferredValue, useState } from "react";
+import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, WideShrinkableContrastButton } from ".";
 import { useEnsLookup } from "../../../names/data";
-import { useToken } from "../../../tokens/data";
 import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
 
@@ -27,10 +27,18 @@ export function WalletSendScreenTarget(props: {}) {
   const [maybeType, setType] = useSearchState(path, "type")
   const [maybeToken, setToken] = useSearchState(path, "token")
 
+  const maybeTokenAddress = useMemo(() => {
+    if (maybeToken == null)
+      return
+    return Address.fromOrNull(maybeToken)
+  }, [maybeToken])
+
   const chain = Option.wrap(maybeChain).getOrThrow()
   const chainData = chainDataByChainId[Number(chain)]
 
-  const tokenQuery = useToken(chainData.chainId, maybeToken)
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
+
+  const tokenQuery = useToken(context, maybeTokenAddress, "latest")
   const maybeTokenData = Option.wrap(tokenQuery.current?.getOrNull())
   const maybeTokenDef = Option.wrap(tokenByAddress[maybeToken as any])
   const tokenData = maybeTokenData.or(maybeTokenDef).getOr(chainData.token)

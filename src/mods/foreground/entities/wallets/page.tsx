@@ -21,8 +21,9 @@ import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, 
 import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
 import { TokenSettings, TokenSettingsData } from "@/mods/background/service_worker/entities/wallets/tokens/data";
 import { useContractTokenBalance, useContractTokenPricedBalance, useNativeTokenBalance, useNativeTokenPricedBalance } from "@/mods/universal/ethereum/mods/tokens/mods/balance/hooks";
+import { useToken, useUserTokens } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
-import { Fixed, ZeroHexString } from "@hazae41/cubane";
+import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Data, Fail, Fetched } from "@hazae41/glacier";
 import { Wc, WcMetadata } from "@hazae41/latrine";
 import { None, Option, Optional, Some } from "@hazae41/option";
@@ -33,7 +34,6 @@ import { Fragment, useCallback, useMemo, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
-import { useToken, useTokens } from "../tokens/data";
 import { SmallShrinkableContrastButton } from "../users/all/page";
 import { WalletEditDialog } from "./actions/edit";
 import { WalletDataReceiveScreen } from "./actions/receive/receive";
@@ -173,7 +173,7 @@ function WalletDataPage() {
   const add = useBooleanHandle(false)
 
   const walletTokens = useTokenSettingsByWallet(wallet)
-  const userTokens = useTokens()
+  const userTokens = useUserTokens()
 
   const allTokens = useMemo<TokenData[]>(() => {
     const natives = Object.values(chainDataByChainId).map(x => x.token)
@@ -554,11 +554,15 @@ function NativeTokenResolver(props: { token: NativeToken }) {
 }
 
 function ContractTokenResolver(props: { token: ContractToken }) {
+  const wallet = useWalletDataContext().getOrThrow()
   const { token } = props
 
-  const tokenQuery = useToken(token.chainId, token.address)
-  const tokenData = tokenQuery.data?.get() ?? tokenByAddress[token.address]
   const chainData = chainDataByChainId[token.chainId]
+
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
+
+  const tokenQuery = useToken(context, token.address, "latest")
+  const tokenData = tokenQuery.data?.get() ?? tokenByAddress[token.address]
 
   if (tokenData == null)
     return null
@@ -630,8 +634,8 @@ function NativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }
 
   const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
 
-  const valuedBalanceQuery = useNativeTokenBalance(context, wallet.address, "pending")
-  const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address, "usd", "pending")
+  const valuedBalanceQuery = useNativeTokenBalance(context, wallet.address as Address, "pending")
+  const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address as Address, "usd", "pending")
 
   return <>
     <HashSubpathProvider>
@@ -713,8 +717,8 @@ function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainDa
 
   const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
 
-  const valuedBalanceQuery = useContractTokenBalance(context, token.address, wallet.address, "pending")
-  const pricedBalanceQuery = useContractTokenPricedBalance(context, token.address, wallet.address, "usd", "pending")
+  const valuedBalanceQuery = useContractTokenBalance(context, token.address, wallet.address as Address, "pending")
+  const pricedBalanceQuery = useContractTokenPricedBalance(context, token.address, wallet.address as Address, "usd", "pending")
 
   return <>
     <HashSubpathProvider>

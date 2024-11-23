@@ -2,7 +2,7 @@ import { ZeroHexBigInt } from "@/libs/bigints/bigints"
 import { Records } from "@/libs/records"
 import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { EthereumContext } from "@/mods/universal/ethereum/mods/context"
-import { Fixed, ZeroHexString } from "@hazae41/cubane"
+import { Address, Fixed } from "@hazae41/cubane"
 import { createQuery, Data, JsonRequest, QueryStorage } from "@hazae41/glacier"
 import { Nullable, Option } from "@hazae41/option"
 import { BlockNumber } from "../../../blocks"
@@ -65,7 +65,7 @@ export namespace Price {
     export type D = Fixed.From
     export type F = Error
 
-    export function keyOrThrow(chainId: number, contract: ZeroHexString, block: BlockNumber) {
+    export function keyOrThrow(chainId: number, contract: Address, block: BlockNumber) {
       const body = {
         method: "eth_getContractTokenPrice",
         params: [contract, block]
@@ -74,7 +74,7 @@ export namespace Price {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (contract == null)

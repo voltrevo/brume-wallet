@@ -2,7 +2,7 @@ import { ZeroHexBigInt } from "@/libs/bigints/bigints"
 import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { Ethereum } from "@/mods/universal/ethereum"
 import { EthereumContext } from "@/mods/universal/ethereum/mods/context"
-import { Fixed, ZeroHexString } from "@hazae41/cubane"
+import { Address, Fixed } from "@hazae41/cubane"
 import { createQuery, Data, JsonRequest, QueryStorage, States } from "@hazae41/glacier"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Tokens } from "../.."
@@ -17,7 +17,7 @@ export namespace Balance {
     export type D = Fixed.From
     export type F = Error
 
-    export function keyOrThrow(chainId: number, account: ZeroHexString, block: BlockNumber) {
+    export function keyOrThrow(chainId: number, account: Address, block: BlockNumber) {
       const body = {
         method: "eth_getNativeTokenBalance",
         params: [account, block]
@@ -26,7 +26,7 @@ export namespace Balance {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (account == null)
@@ -61,7 +61,7 @@ export namespace Balance {
     export type D = Fixed.From
     export type F = Error
 
-    export function keyOrThrow(chainId: number, contract: ZeroHexString, account: ZeroHexString, block: BlockNumber) {
+    export function keyOrThrow(chainId: number, contract: Address, account: Address, block: BlockNumber) {
       const body = {
         method: "eth_getContractTokenBalance",
         params: [contract, account, block]
@@ -70,7 +70,7 @@ export namespace Balance {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<Address>, account: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (contract == null)
@@ -116,7 +116,7 @@ export namespace Balance {
         export type D = Fixed.From
         export type F = never
 
-        export function keyOrThrow(account: ZeroHexString, currency: "usd") {
+        export function keyOrThrow(account: Address, currency: "usd") {
           const body = {
             method: "eth_getTotalBalance",
             params: [account, currency]
@@ -125,7 +125,7 @@ export namespace Balance {
           return new JsonRequest(`app:/ethereum`, { method: "POST", body })
         }
 
-        export function queryOrThrow(account: Nullable<ZeroHexString>, currency: Nullable<"usd">, storage: QueryStorage) {
+        export function queryOrThrow(account: Nullable<Address>, currency: Nullable<"usd">, storage: QueryStorage) {
           if (account == null)
             return
           if (currency == null)
@@ -150,7 +150,7 @@ export namespace Balance {
         export type D = Record<string, Fixed.From>
         export type F = never
 
-        export function keyOrThrow(account: ZeroHexString, currency: "usd") {
+        export function keyOrThrow(account: Address, currency: "usd") {
           const body = {
             method: "eth_getBalances",
             params: [account, currency]
@@ -159,7 +159,7 @@ export namespace Balance {
           return new JsonRequest(`app:/ethereum`, { method: "POST", body })
         }
 
-        export function queryOrThrow(account: Nullable<ZeroHexString>, currency: Nullable<"usd">, storage: QueryStorage) {
+        export function queryOrThrow(account: Nullable<Address>, currency: Nullable<"usd">, storage: QueryStorage) {
           if (account == null)
             return
           if (currency == null)
@@ -187,7 +187,7 @@ export namespace Balance {
       export type D = Fixed.From
       export type F = never
 
-      export function keyOrThrow(chainId: number, account: ZeroHexString, currency: "usd", block: BlockNumber) {
+      export function keyOrThrow(chainId: number, account: Address, currency: "usd", block: BlockNumber) {
         const body = {
           method: "eth_getTotalBalance",
           params: [account, currency, block]
@@ -196,7 +196,7 @@ export namespace Balance {
         return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
       }
 
-      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<ZeroHexString>, currency: Nullable<"usd">, block: Nullable<BlockNumber>, storage: QueryStorage) {
+      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, currency: Nullable<"usd">, block: Nullable<BlockNumber>, storage: QueryStorage) {
         if (context == null)
           return
         if (account == null)
@@ -239,7 +239,7 @@ export namespace Balance {
       export type D = Record<string, Fixed.From>
       export type F = never
 
-      export function keyOrThrow(chainId: number, account: ZeroHexString, currency: "usd", block: BlockNumber) {
+      export function keyOrThrow(chainId: number, account: Address, currency: "usd", block: BlockNumber) {
         const body = {
           method: "eth_getBalances",
           params: [account, currency, block]
@@ -248,7 +248,7 @@ export namespace Balance {
         return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
       }
 
-      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<ZeroHexString>, currency: Nullable<"usd">, block: Nullable<BlockNumber>, storage: QueryStorage) {
+      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, currency: Nullable<"usd">, block: Nullable<BlockNumber>, storage: QueryStorage) {
         if (context == null)
           return
         if (account == null)
@@ -281,7 +281,7 @@ export namespace Balance {
       export type D = Fixed.From
       export type F = Error
 
-      export function keyOrThrow(chainId: number, account: ZeroHexString, currency: "usd", block: BlockNumber) {
+      export function keyOrThrow(chainId: number, account: Address, currency: "usd", block: BlockNumber) {
         const body = {
           method: "eth_getNativeTokenPricedBalance",
           params: [account, currency, block]
@@ -290,7 +290,7 @@ export namespace Balance {
         return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
       }
 
-      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<ZeroHexString>, currency: Nullable<"usd">, block: Nullable<BlockNumber>, storage: QueryStorage) {
+      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, currency: Nullable<"usd">, block: Nullable<BlockNumber>, storage: QueryStorage) {
         if (context == null)
           return
         if (account == null)
@@ -353,7 +353,7 @@ export namespace Balance {
       export type D = Fixed.From
       export type F = Error
 
-      export function keyOrThrow(chainId: number, contract: ZeroHexString, account: ZeroHexString, currency: "usd", block: BlockNumber) {
+      export function keyOrThrow(chainId: number, contract: Address, account: Address, currency: "usd", block: BlockNumber) {
         const body = {
           method: "eth_getContractTokenPricedBalance",
           params: [contract, account, currency, block]
@@ -362,7 +362,7 @@ export namespace Balance {
         return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
       }
 
-      export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, currency: Nullable<"usd">, block: Nullable<BlockNumber>, storage: QueryStorage) {
+      export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<Address>, account: Nullable<Address>, currency: Nullable<"usd">, block: Nullable<BlockNumber>, storage: QueryStorage) {
         if (context == null)
           return
         if (contract == null)

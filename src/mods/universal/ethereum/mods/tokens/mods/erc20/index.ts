@@ -1,8 +1,10 @@
 import { ERC20Abi, ERC20MetadataAbi } from "@/libs/abi/erc20.abi";
 import { ZeroHexBigInt } from "@/libs/bigints/bigints";
+import { tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { Records } from "@/libs/records";
 import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
 import { EthereumContext } from "@/mods/universal/ethereum/mods/context";
-import { Abi, ZeroHexString } from "@hazae41/cubane";
+import { Abi, Address, ZeroHexString } from "@hazae41/cubane";
 import { createQuery, Data, Fail, JsonRequest, QueryStorage } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 import { Catched } from "@hazae41/result";
@@ -16,7 +18,7 @@ export namespace ERC20 {
     export type D = ZeroHexBigInt.From
     export type F = Error
 
-    export function keyOrThrow(chainId: number, contract: ZeroHexString, account: ZeroHexString, block: BlockNumber) {
+    export function keyOrThrow(chainId: number, contract: Address, account: Address, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -28,7 +30,7 @@ export namespace ERC20 {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<Address>, account: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (contract == null)
@@ -77,7 +79,7 @@ export namespace ERC20Metadata {
     export type D = string
     export type F = Error
 
-    export function keyOrThrow(chainId: number, contract: ZeroHexString, block: BlockNumber) {
+    export function keyOrThrow(chainId: number, contract: Address, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -89,7 +91,7 @@ export namespace ERC20Metadata {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (contract == null)
@@ -98,6 +100,17 @@ export namespace ERC20Metadata {
         return
 
       const fetcher = async (request: K, init: RequestInit) => {
+        const builtin = Records.getOrNull(tokenByAddress, contract)
+
+        if (builtin != null) {
+          const { name } = builtin
+
+          const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
+          const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
+
+          return new Data(name, { cooldown, expiration })
+        }
+
         const body = await JsonRequest.from(request).then(r => r.bodyAsJson)
         const fetched = await context.fetchOrThrow<ZeroHexString>(body, init)
 
@@ -133,7 +146,7 @@ export namespace ERC20Metadata {
     export type D = string
     export type F = Error
 
-    export function keyOrThrow(chainId: number, contract: ZeroHexString, block: BlockNumber) {
+    export function keyOrThrow(chainId: number, contract: Address, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -145,7 +158,7 @@ export namespace ERC20Metadata {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (contract == null)
@@ -154,6 +167,17 @@ export namespace ERC20Metadata {
         return
 
       const fetcher = async (request: K, init: RequestInit) => {
+        const builtin = Records.getOrNull(tokenByAddress, contract)
+
+        if (builtin != null) {
+          const { symbol } = builtin
+
+          const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
+          const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
+
+          return new Data(symbol, { cooldown, expiration })
+        }
+
         const body = await JsonRequest.from(request).then(r => r.bodyAsJson)
         const fetched = await context.fetchOrThrow<ZeroHexString>(body, init)
 
@@ -189,7 +213,7 @@ export namespace ERC20Metadata {
     export type D = number
     export type F = Error
 
-    export function keyOrThrow(chainId: number, contract: ZeroHexString, block: BlockNumber) {
+    export function keyOrThrow(chainId: number, contract: Address, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -201,7 +225,7 @@ export namespace ERC20Metadata {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (contract == null)
@@ -210,6 +234,17 @@ export namespace ERC20Metadata {
         return
 
       const fetcher = async (request: K, init: RequestInit) => {
+        const builtin = Records.getOrNull(tokenByAddress, contract)
+
+        if (builtin != null) {
+          const { decimals } = builtin
+
+          const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
+          const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
+
+          return new Data(decimals, { cooldown, expiration })
+        }
+
         const body = await JsonRequest.from(request).then(r => r.bodyAsJson)
         const fetched = await context.fetchOrThrow<ZeroHexString>(body, init)
 
