@@ -67,8 +67,6 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   const [rawValuedInput = "", setRawValuedInput] = useState(nto(maybeValue))
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
 
-  const valuedInput = useDeferredValue(rawValuedInput)
-
   const getRawPricedInput = useCallback((rawValuedInput: string) => {
     try {
       if (rawValuedInput.trim().length === 0)
@@ -133,17 +131,12 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     setRawPriced(e.target.value)
   }, [setRawPriced])
 
-  useEffect(() => {
-    if (maybePrice == null)
-      return
-    onValuedChange(valuedInput)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maybePrice])
+  const defValuedInput = useDeferredValue(rawValuedInput)
 
   useEffect(() => {
-    setValue(valuedInput)
+    setValue(defValuedInput)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valuedInput])
+  }, [defValuedInput])
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
