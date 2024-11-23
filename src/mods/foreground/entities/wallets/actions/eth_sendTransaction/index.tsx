@@ -82,7 +82,7 @@ export function WalletTransactionDialog(props: {}) {
   }, [maybePendingNonceZeroHex])
 
   const priceQuery = useNativeTokenPriceV3(context, "pending")
-  const maybePrice = priceQuery.current?.mapSync(Fixed.from).getOrNull()
+  const maybePrice = priceQuery.current?.mapSync(x => Fixed.from(x)).getOrNull()
 
   const getRawPricedInput = useCallback((rawValuedInput: string) => {
     try {

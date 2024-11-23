@@ -58,7 +58,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
   const priceQuery = useNativeTokenPriceV3(context, "pending")
-  const maybePrice = priceQuery.current?.mapSync(Fixed.from).getOrNull()
+  const maybePrice = priceQuery.current?.mapSync(x => Fixed.from(x)).getOrNull()
 
   const [rawValuedInput = "", setRawValuedInput] = useState(nto(maybeValue))
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()

@@ -284,6 +284,7 @@ function WalletDataPage() {
       <div className="h-4" />
       <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
         <TokenRowRouter token={chainDataByChainId[1].token} />
+        <TokenRowRouter token={tokenByAddress["0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5"]} />
         {!edit && walletTokens.data?.get().map(tokenSettings =>
           <AddedTokenRow
             key={tokenSettings.uuid}
@@ -514,7 +515,9 @@ function AddedTokenRow(props: { settingsRef: TokenSettings }) {
 
   const settings = useTokenSettings(wallet, token)
 
-  if (token.type === "native" && token.chainId === 1)
+  if (token.uuid === "app:/ethereum/1/token")
+    return null
+  if (token.uuid === "app:/ethereum/1/token/0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5")
     return null
   if (!settings.data?.get().enabled)
     return null

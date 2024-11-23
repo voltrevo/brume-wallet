@@ -4,15 +4,13 @@ import "@/styles/index.css";
 
 import { Console } from "@/libs/console";
 import { Errors } from "@/libs/errors/errors";
-import { isSafariExtension } from "@/libs/platform/platform";
-import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { Catcher, PromiseCatcher } from "@/libs/react/error";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ErrorProps } from "@/libs/react/props/error";
 import { GlobalPageHeader, PageBody } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
 import { BackgroundProvider } from "@/mods/foreground/background/context";
-import { WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send";
+import { WideShrinkableOppositeButton } from "@/mods/foreground/entities/wallets/actions/send";
 import { GlobalStorageProvider } from "@/mods/foreground/storage/global";
 import { UserStorageProvider } from "@/mods/foreground/storage/user";
 import { WalletWasm } from "@brumewallet/wallet.wasm";
@@ -35,46 +33,35 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 export function Fallback(props: ErrorProps) {
   const { error } = props
 
-  const reload = useCallback(() => {
+  const onClick = useCallback(() => {
+    location.assign("#/")
     location.reload()
   }, [])
 
-  const reset = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    if (!isSafariExtension() && confirm(`You will lose all your wallets if you didn't made backups, are you sure?`) === false)
-      return
-
-    const databases = await indexedDB.databases()
-
-    for (const database of databases)
-      if (database.name)
-        indexedDB.deleteDatabase(database.name)
-
-    localStorage.clear()
-    location.reload()
-  }), [])
-
-  return <Page>
-    <GlobalPageHeader title="Error" />
-    <PageBody>
-      <div className="text-red-400 dark:text-red-500">
-        An unexpected error occured
+  return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
+    <div className="grow w-full flex flex-col overflow-y-scroll">
+      <div className="grow w-full m-auto max-w-3xl flex flex-col">
+        <Page>
+          <GlobalPageHeader title="Error" />
+          <PageBody>
+            <div className="text-red-400 dark:text-red-500">
+              An unexpected error occured
+            </div>
+            <div className="text-contrast">
+              {Errors.toString(error)}
+            </div>
+            <div className="h-4 grow" />
+            <div className="flex items-center flex-wrap-reverse gap-2">
+              <WideShrinkableOppositeButton
+                onClick={onClick}>
+                Go home
+              </WideShrinkableOppositeButton>
+            </div>
+          </PageBody>
+        </Page>
       </div>
-      <div className="text-contrast">
-        {Errors.toString(error)}
-      </div>
-      <div className="h-4 grow" />
-      <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableContrastButton
-          onClick={reset.run}>
-          Clear everything and reload the page
-        </WideShrinkableContrastButton>
-        <WideShrinkableOppositeButton
-          onClick={reload}>
-          Reload the page
-        </WideShrinkableOppositeButton>
-      </div>
-    </PageBody>
-  </Page>
+    </div>
+  </main>
 }
 
 export async function init() {

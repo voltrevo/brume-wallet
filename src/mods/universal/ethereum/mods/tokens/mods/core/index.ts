@@ -132,8 +132,8 @@ export namespace Token {
         ])
 
         const data: ContractTokenData = {
+          uuid: `app:/ethereum/${context.chain.chainId}/token/${address}`,
           type: "contract",
-          uuid: `/${context.chain.chainId}/${address}`,
           chainId: context.chain.chainId,
           address: address,
           name: name.get(),

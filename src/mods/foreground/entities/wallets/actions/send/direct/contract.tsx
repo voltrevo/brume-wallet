@@ -62,7 +62,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   const tokenData = maybeTokenData.getOrThrow()
 
   const priceQuery = useContractTokenPriceV3(context, tokenData.address, "pending")
-  const maybePrice = priceQuery.current?.mapSync(Fixed.from).getOrNull()
+  const maybePrice = priceQuery.current?.mapSync(x => Fixed.from(x)).getOrNull()
 
   const [rawValuedInput = "", setRawValuedInput] = useState(nto(maybeValue))
   const [rawPricedInput = "", setRawPricedInput] = useState<Optional<string>>()
