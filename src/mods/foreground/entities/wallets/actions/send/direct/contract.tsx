@@ -1,5 +1,5 @@
 import { ERC20Abi } from "@/libs/abi/erc20.abi";
-import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { nto } from "@/libs/ntu";
 import { useInputChange } from "@/libs/react/events";
@@ -59,8 +59,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
 
   const tokenQuery = useToken(context, maybeTokenAddress, "latest")
   const maybeTokenData = Option.wrap(tokenQuery.current?.getOrNull())
-  const maybeTokenDef = Option.wrap(tokenByAddress[maybeToken as any])
-  const tokenData = maybeTokenData.or(maybeTokenDef).getOrThrow()
+  const tokenData = maybeTokenData.getOrThrow()
 
   const priceQuery = useContractTokenPriceV3(context, tokenData.address, "pending")
   const maybePrice = priceQuery.current?.mapSync(Fixed.from).getOrNull()

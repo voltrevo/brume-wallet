@@ -562,13 +562,13 @@ function ContractTokenResolver(props: { token: ContractToken }) {
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
   const tokenQuery = useToken(context, token.address, "latest")
-  const tokenData = tokenQuery.data?.get() ?? tokenByAddress[token.address]
+  const maybeTokenData = tokenQuery.data?.get()
 
-  if (tokenData == null)
+  if (maybeTokenData == null)
     return null
 
   return <ContractTokenRow
-    token={tokenData}
+    token={maybeTokenData}
     chain={chainData} />
 }
 

@@ -59,6 +59,8 @@ export namespace Token {
 
         const builtin = Records.getOrNull(tokenByAddress, address)
 
+        console.log("!!! builtin", builtin)
+
         if (builtin != null) {
           const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
           const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
@@ -81,6 +83,8 @@ export namespace Token {
           symbol: symbol.get(),
           decimals: decimals.get()
         } as const
+
+        console.log("!!! data", data)
 
         return new Data(data, Times.min(name, symbol, decimals))
       } catch (e: unknown) {

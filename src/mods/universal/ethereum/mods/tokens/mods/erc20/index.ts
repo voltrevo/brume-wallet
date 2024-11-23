@@ -48,8 +48,8 @@ export namespace ERC20 {
           return fetched
 
         try {
-          const returns = Abi.Uint256
-          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+          const returns = Abi.Tuple.create(Abi.Uint256)
+          const [decoded] = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
 
           const cooldown = Date.now() + (1000 * 60)
           const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
@@ -118,8 +118,8 @@ export namespace ERC20Metadata {
           return fetched
 
         try {
-          const returns = Abi.String
-          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+          const returns = Abi.Tuple.create(Abi.String)
+          const [decoded] = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
 
           const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
           const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
@@ -185,8 +185,8 @@ export namespace ERC20Metadata {
           return fetched
 
         try {
-          const returns = Abi.String
-          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+          const returns = Abi.Tuple.create(Abi.String)
+          const [decoded] = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
 
           const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
           const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
@@ -252,8 +252,8 @@ export namespace ERC20Metadata {
           return fetched
 
         try {
-          const returns = Abi.Uint8
-          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+          const returns = Abi.Tuple.create(Abi.Uint8)
+          const [decoded] = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
 
           const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
           const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)

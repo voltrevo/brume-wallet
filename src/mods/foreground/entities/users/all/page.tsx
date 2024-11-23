@@ -7,7 +7,7 @@ import { ClassNameProps } from "@/libs/react/props/className";
 import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
 import { Dialog } from "@/libs/ui/dialog";
-import { MediumLoading } from "@/libs/ui/loading";
+import { Loading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
 import { ButtonGapperDiv, ButtonShrinkerDiv } from "@/libs/ui/shrinker";
 import { urlOf } from "@/libs/url/url";
@@ -77,7 +77,7 @@ export function EmptyLandingPage(props: { next?: string }) {
             {currentUserLoading &&
               <SmallShrinkableOppositeAnchor
                 aria-disabled>
-                <MediumLoading />
+                <Loading className="size-5" />
                 Loading
               </SmallShrinkableOppositeAnchor>}
             {!currentUserLoading && maybeCurrentUser == null &&
@@ -155,7 +155,7 @@ export function FullLandingPage(props: { next?: string }) {
             {currentUserLoading &&
               <SmallShrinkableOppositeAnchor
                 aria-disabled>
-                <MediumLoading />
+                <Loading className="size-5" />
                 Loading
               </SmallShrinkableOppositeAnchor>}
             {!currentUserLoading && maybeCurrentUser == null &&

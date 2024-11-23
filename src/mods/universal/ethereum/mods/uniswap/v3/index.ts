@@ -67,8 +67,8 @@ export namespace FactoryV3 {
           return fetched
 
         try {
-          const returns = Abi.Address
-          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+          const returns = Abi.Tuple.create(Abi.Address)
+          const [decoded] = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
 
           const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
           const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
@@ -126,8 +126,8 @@ export namespace UniswapV3Pool {
           return fetched
 
         try {
-          const returns = Abi.Address
-          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+          const returns = Abi.Tuple.create(Abi.Address)
+          const [decoded] = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
 
           const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
           const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
@@ -181,8 +181,8 @@ export namespace UniswapV3Pool {
           return fetched
 
         try {
-          const returns = Abi.Address
-          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+          const returns = Abi.Tuple.create(Abi.Address)
+          const [decoded] = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
 
           const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
           const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
@@ -417,8 +417,8 @@ export namespace UniswapV3Pool {
           return fetched
 
         try {
-          const returns = Abi.Uint128
-          const decoded = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
+          const returns = Abi.Tuple.create(Abi.Uint128)
+          const [decoded] = Abi.decodeOrThrow(returns, fetched.get()).intoOrThrow()
 
           const cooldown = Date.now() + (1000 * 60)
           const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)

@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { nto } from "@/libs/ntu";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
@@ -40,10 +40,7 @@ export function WalletSendScreenTarget(props: {}) {
 
   const tokenQuery = useToken(context, maybeTokenAddress, "latest")
   const maybeTokenData = Option.wrap(tokenQuery.current?.getOrNull())
-  const maybeTokenDef = Option.wrap(tokenByAddress[maybeToken as any])
-  const tokenData = maybeTokenData.or(maybeTokenDef).getOr(chainData.token)
-
-  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1]).getOrThrow()
+  const tokenData = maybeTokenData.getOr(chainData.token)
 
   const [rawTargetInput = "", setRawTargetInput] = useState(nto(maybeTarget))
 
@@ -61,6 +58,8 @@ export function WalletSendScreenTarget(props: {}) {
   const maybeEnsInput = maybeTarget?.endsWith(".eth")
     ? targetInput
     : undefined
+
+  const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1]).getOrThrow()
 
   const ensQuery = useEnsLookup(maybeEnsInput, mainnet)
   const maybeEns = ensQuery.current?.getOrNull()
