@@ -24,6 +24,7 @@ import { randomUUID } from "@/libs/uuid/uuid";
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn";
 import { UnauthorizedError } from "@/mods/foreground/errors/errors";
 import { Ethereum } from "@/mods/universal/ethereum";
+import { BlockNumber } from "@/mods/universal/ethereum/mods";
 import { WalletWasm } from "@brumewallet/wallet.wasm";
 import { Base16 } from "@hazae41/base16";
 import { Base58 } from "@hazae41/base58";
@@ -723,7 +724,7 @@ export class Global {
   async eth_getBalance(context: BgEthereumContext, request: RpcRequestPreinit<unknown>): Promise<unknown> {
     const user = Option.wrap(this.#user).getOrThrow()
 
-    const [address, block] = (request as RpcRequestPreinit<[ZeroHexString, string]>).params
+    const [address, block] = (request as RpcRequestPreinit<[ZeroHexString, BlockNumber]>).params
 
     const query = Option.wrap(Ethereum.GetBalance.queryOrThrow(context, address, block, user.storage)).getOrThrow()
 
