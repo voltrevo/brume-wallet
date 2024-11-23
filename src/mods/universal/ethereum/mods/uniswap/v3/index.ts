@@ -3,7 +3,7 @@ import { ZeroHexBigInt } from "@/libs/bigints/bigints"
 import { Records } from "@/libs/records"
 import { UniswapV3 } from "@/libs/uniswap"
 import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
-import { EthereumContext } from "@/mods/universal/context/ethereum"
+import { EthereumContext } from "@/mods/universal/ethereum/mods/context"
 import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, Fail, JsonRequest, QueryStorage, States } from "@hazae41/glacier"
 import { Nullable, Option, Some } from "@hazae41/option"
@@ -291,8 +291,8 @@ export namespace UniswapV3Pool {
       if (block == null)
         return
 
-      const fetcher = async (request: K, init: RequestInit) => {
-        const slot0 = await Slot0.queryOrThrow(context, pool, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+      const fetcher = async (_: K, init: RequestInit) => {
+        const slot0 = await Slot0.queryOrThrow(context, pool, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (slot0.isErr())
           return slot0

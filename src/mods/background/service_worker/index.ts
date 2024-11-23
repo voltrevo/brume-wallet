@@ -23,7 +23,7 @@ import { pathOf, urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { IrnBrume } from "@/libs/wconn/mods/irn/irn";
 import { UnauthorizedError } from "@/mods/foreground/errors/errors";
-import { Ethereum } from "@/mods/universal/entities/ethereum";
+import { Ethereum } from "@/mods/universal/ethereum";
 import { WalletWasm } from "@brumewallet/wallet.wasm";
 import { Base16 } from "@hazae41/base16";
 import { Base58 } from "@hazae41/base58";

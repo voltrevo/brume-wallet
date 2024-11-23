@@ -1,7 +1,7 @@
 import { UniswapV2PoolAbi } from "@/libs/abi/uniswap.abi"
 import { UniswapV2 } from "@/libs/uniswap"
 import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
-import { EthereumContext } from "@/mods/universal/context/ethereum"
+import { EthereumContext } from "@/mods/universal/ethereum/mods/context"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, Fail, JsonRequest, QueryStorage } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"

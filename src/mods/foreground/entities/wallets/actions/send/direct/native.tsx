@@ -11,7 +11,7 @@ import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData } from "@/mods/background/service_worker/entities/transactions/data";
 import { useNativeTokenPriceV3 } from "@/mods/foreground/entities/tokens/price";
-import { useNativeTokenBalance, useNativeTokenPricedBalance } from "@/mods/universal/entities/ethereum/mods/tokens/mods/balance/hooks";
+import { useNativeTokenBalance, useNativeTokenPricedBalance } from "@/mods/universal/ethereum/mods/tokens/mods/balance/hooks";
 import { HashSubpathProvider, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
 import { Address, Fixed } from "@hazae41/cubane";
 import { Option, Optional } from "@hazae41/option";

@@ -1,11 +1,11 @@
 import { ZeroHexBigInt } from "@/libs/bigints/bigints"
 import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
-import { EthereumContext } from "@/mods/universal/context/ethereum"
+import { Ethereum } from "@/mods/universal/ethereum"
+import { EthereumContext } from "@/mods/universal/ethereum/mods/context"
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, JsonRequest, QueryStorage, States } from "@hazae41/glacier"
 import { None, Nullable, Option, Some } from "@hazae41/option"
 import { Tokens } from "../.."
-import { GetBalance } from "../../../core"
 import { ERC20, ERC20Metadata } from "../erc20"
 
 export namespace Balance {
@@ -34,7 +34,7 @@ export namespace Balance {
         return
 
       const fetcher = async (_: K, init: RequestInit) => {
-        const balanceFetched = await GetBalance.queryOrThrow(context, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const balanceFetched = await Ethereum.GetBalance.queryOrThrow(context, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (balanceFetched.isErr())
           return balanceFetched

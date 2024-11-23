@@ -1,6 +1,6 @@
 import { Errors } from "@/libs/errors/errors"
 import { useUserStorageContext } from "@/mods/foreground/storage/user"
-import { EthereumContext } from "@/mods/universal/context/ethereum"
+import { EthereumContext } from "@/mods/universal/ethereum/mods/context"
 import { ZeroHexString } from "@hazae41/cubane"
 import { useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
