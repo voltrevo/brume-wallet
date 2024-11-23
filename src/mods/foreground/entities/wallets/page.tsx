@@ -2,7 +2,6 @@
 import { Color } from "@/libs/colors/colors";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { ChainData, chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
-import { Mutators } from "@/libs/glacier/mutators";
 import { Outline, Solid } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -16,9 +15,6 @@ import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
 import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
-import { randomUUID } from "@/libs/uuid/uuid";
-import { WalletRef } from "@/mods/background/service_worker/entities/wallets/data";
-import { TokenSettingsData } from "@/mods/background/service_worker/entities/wallets/tokens/data";
 import { useContractTokenBalance, useContractTokenPricedBalance, useNativeTokenBalance, useNativeTokenPricedBalance } from "@/mods/universal/ethereum/mods/tokens/mods/balance/hooks";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/universal/ethereum/mods/tokens/mods/core";
 import { useToken, useUserTokens, useWalletTokens } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
@@ -41,7 +37,6 @@ import { PaddedRoundedShrinkableNakedAnchor, WalletSendScreen, WideShrinkableNak
 import { RawWalletDataCard } from "./card";
 import { useWalletDataContext, WalletDataProvider } from "./context";
 import { EthereumWalletInstance, useEthereumContext, useWallet } from "./data";
-import { useTokenSettings } from "./tokens/data";
 
 export function WalletPage(props: UUIDProps) {
   const { uuid } = props
@@ -574,33 +569,48 @@ function NativeTokenMenu(props: { token: NativeTokenData }) {
 
   const send = useCoords(path, `/send?step=target&chain=${token.chainId}`)
 
-  const settings = useTokenSettings(wallet, token)
-  const favorite = settings.data?.get().enabled
+  const walletTokensQuery = useWalletTokens(wallet)
+
+  const favorited = useMemo(() => {
+    return walletTokensQuery.data?.get().find(x => x.uuid === token.uuid) != null
+  }, [walletTokensQuery.data, token])
+
+  const favoriteOrThrow = useCallback(async () => {
+    await walletTokensQuery.mutateOrThrow(s => {
+      const current = s.real?.current
+
+      if (current == null)
+        return new Some(new Data([TokenRef.from(token)]))
+
+      return new Some(current.mapSync(array => [...array, TokenRef.from(token)]))
+    })
+  }, [walletTokensQuery.mutateOrThrow, token])
+
+  const unfavoriteOrThrow = useCallback(async () => {
+    await walletTokensQuery.mutateOrThrow(s => {
+      const current = s.real?.current
+
+      if (current == null)
+        return new None()
+
+      return new Some(current.mapSync(array => array.filter(x => x.uuid !== token.uuid)))
+    })
+  }, [walletTokensQuery.mutateOrThrow, token])
 
   const onToggle = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    const enabled = !favorite
-
-    await settings.mutateOrThrow(s => {
-      const data = Mutators.Datas.mapOrNew((d = {
-        uuid: randomUUID(),
-        token: TokenRef.from(token),
-        wallet: WalletRef.from(wallet),
-        enabled
-      }): TokenSettingsData => {
-        return { ...d, enabled }
-      }, s.real?.data)
-
-      return new Some(data)
-    })
+    if (!favorited)
+      await favoriteOrThrow()
+    else
+      await unfavoriteOrThrow()
 
     close(true)
-  }), [favorite, settings, token, wallet, close])
+  }), [favorited, favoriteOrThrow, unfavoriteOrThrow, close])
 
   return <div className="flex flex-col text-left gap-2">
     <WideShrinkableNakedMenuButton
       onClick={onToggle.run}>
-      {favorite ? <Solid.StarIcon className="size-4" /> : <Outline.StarIcon className="size-4" />}
-      {favorite ? "Unfavorite" : "Favorite"}
+      {favorited ? <Solid.StarIcon className="size-4" /> : <Outline.StarIcon className="size-4" />}
+      {favorited ? "Unfavorite" : "Favorite"}
     </WideShrinkableNakedMenuButton>
     <WideShrinkableNakedMenuAnchor
       aria-disabled={wallet.type === "readonly"}
