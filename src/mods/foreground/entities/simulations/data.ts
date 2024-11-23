@@ -1,5 +1,6 @@
 import { Errors } from "@/libs/errors/errors";
 import { BgSimulation, SimulationData } from "@/mods/background/service_worker/entities/simulations/data";
+import { BlockNumber } from "@/mods/universal/ethereum/mods";
 import { createQuery, useError, useFetch, useQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
@@ -13,7 +14,7 @@ export namespace FgSimulation {
 
   export const key = BgSimulation.key
 
-  export function schema(tx: Nullable<unknown>, block: Nullable<string>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
+  export function schema(tx: Nullable<unknown>, block: Nullable<BlockNumber>, context: Nullable<FgEthereumContext>, storage: UserStorage) {
     if (context == null)
       return
     if (tx == null)
@@ -33,7 +34,7 @@ export namespace FgSimulation {
 
 }
 
-export function useSimulation(tx: Nullable<unknown>, block: Nullable<string>, context: Nullable<FgEthereumContext>) {
+export function useSimulation(tx: Nullable<unknown>, block: Nullable<BlockNumber>, context: Nullable<FgEthereumContext>) {
   const storage = useUserStorageContext().getOrThrow()
   const query = useQuery(FgSimulation.schema, [tx, block, context, storage])
   useFetch(query)

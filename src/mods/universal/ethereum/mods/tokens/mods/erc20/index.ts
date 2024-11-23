@@ -77,11 +77,11 @@ export namespace ERC20Metadata {
     export type D = string
     export type F = Error
 
-    export function keyOrThrow(chainId: number, address: string, block: BlockNumber) {
+    export function keyOrThrow(chainId: number, contract: ZeroHexString, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
-          to: address,
+          to: contract,
           data: Abi.encodeOrThrow(ERC20MetadataAbi.name.fromOrThrow())
         }, block]
       } as const
@@ -89,10 +89,10 @@ export namespace ERC20Metadata {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<string>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
-      if (address == null)
+      if (contract == null)
         return
       if (block == null)
         return
@@ -118,7 +118,7 @@ export namespace ERC20Metadata {
       }
 
       return createQuery<K, D, F>({
-        key: keyOrThrow(context.chain.chainId, address, block),
+        key: keyOrThrow(context.chain.chainId, contract, block),
         fetcher,
         storage
       })
@@ -133,11 +133,11 @@ export namespace ERC20Metadata {
     export type D = string
     export type F = Error
 
-    export function keyOrThrow(chainId: number, address: string, block: BlockNumber) {
+    export function keyOrThrow(chainId: number, contract: ZeroHexString, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
-          to: address,
+          to: contract,
           data: Abi.encodeOrThrow(ERC20MetadataAbi.symbol.fromOrThrow())
         }, block]
       } as const
@@ -145,10 +145,10 @@ export namespace ERC20Metadata {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<string>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
-      if (address == null)
+      if (contract == null)
         return
       if (block == null)
         return
@@ -174,7 +174,7 @@ export namespace ERC20Metadata {
       }
 
       return createQuery<K, D, F>({
-        key: keyOrThrow(context.chain.chainId, address, block),
+        key: keyOrThrow(context.chain.chainId, contract, block),
         fetcher,
         storage
       })
@@ -201,10 +201,10 @@ export namespace ERC20Metadata {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
-      if (address == null)
+      if (contract == null)
         return
       if (block == null)
         return
@@ -230,7 +230,7 @@ export namespace ERC20Metadata {
       }
 
       return createQuery<K, D, F>({
-        key: keyOrThrow(context.chain.chainId, address, block),
+        key: keyOrThrow(context.chain.chainId, contract, block),
         fetcher,
         storage
       })
