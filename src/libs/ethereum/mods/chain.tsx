@@ -2,9 +2,7 @@
 import { ContractTokenData as StoredContractTokenData, NativeTokenData as StoredNativeTokenData } from "@/mods/background/service_worker/entities/tokens/data"
 import { ZeroHexString } from "@hazae41/cubane"
 
-export type ChainId = number
-
-export interface ChainData<Id extends ChainId = ChainId> {
+export interface ChainData<Id extends number = number> {
   readonly chainId: Id,
   readonly name: string
   readonly urls: readonly string[],
@@ -362,7 +360,7 @@ export const strictChainDataByChainId = {
   }
 } as const
 
-export const chainDataByChainId: Record<ChainId, ChainData> = strictChainDataByChainId
+export const chainDataByChainId: Record<number, ChainData> = strictChainDataByChainId
 
 export const tokenByAddress: Record<string, StoredContractTokenData> = {
   "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": {

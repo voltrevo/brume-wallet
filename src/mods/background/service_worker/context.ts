@@ -1,4 +1,4 @@
-import { ChainData, ChainId } from "@/libs/ethereum/mods/chain"
+import { ChainData } from "@/libs/ethereum/mods/chain"
 import { Maps } from "@/libs/maps/maps"
 import { ping } from "@/libs/ping"
 import { TorRpc } from "@/libs/rpc/rpc"
@@ -9,7 +9,7 @@ import { Catched } from "@hazae41/result"
 import { EthBrume } from "./entities/brumes/data"
 import { EthereumChainlessRpcRequestPreinit } from "./entities/wallets/data"
 
-export class BgEthereumContext<Id extends ChainId = ChainId> {
+export class BgEthereumContext<Id extends number = number> {
 
   constructor(
     readonly uuid: string,
@@ -17,7 +17,7 @@ export class BgEthereumContext<Id extends ChainId = ChainId> {
     readonly brume: EthBrume
   ) { }
 
-  switch<Id extends ChainId = ChainId>(chain: ChainData<Id>) {
+  switch<Id extends number = number>(chain: ChainData<Id>) {
     return new BgEthereumContext<Id>(this.uuid, chain, this.brume)
   }
 

@@ -1,4 +1,4 @@
-import { ChainData, ChainId } from "@/libs/ethereum/mods/chain"
+import { ChainData } from "@/libs/ethereum/mods/chain"
 import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumChainlessRpcRequestPreinit, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletRef } from "@/mods/background/service_worker/entities/wallets/data"
 import { SeedQuery } from "@/mods/universal/entities/seeds"
 import { Base16 } from "@hazae41/base16"
@@ -425,7 +425,7 @@ export interface EthereumContextProps {
   readonly context: FgEthereumContext
 }
 
-export class FgEthereumContext<Id extends ChainId = ChainId> {
+export class FgEthereumContext<Id extends number = number> {
 
   constructor(
     readonly uuid: string,
@@ -433,7 +433,7 @@ export class FgEthereumContext<Id extends ChainId = ChainId> {
     readonly background: Background
   ) { }
 
-  switch<Id extends ChainId = ChainId>(chain: ChainData<Id>) {
+  switch<Id extends number = number>(chain: ChainData<Id>) {
     return new FgEthereumContext<Id>(this.uuid, chain, this.background)
   }
 
@@ -457,7 +457,7 @@ export class FgEthereumContext<Id extends ChainId = ChainId> {
 
 }
 
-export function useEthereumContext<Id extends ChainId = ChainId>(uuid: Nullable<string>, chain: Nullable<ChainData<Id>>) {
+export function useEthereumContext<Id extends number = number>(uuid: Nullable<string>, chain: Nullable<ChainData<Id>>) {
   const background = useBackgroundContext().getOrThrow()
 
   const maybeContext = useMemo(() => {
