@@ -1,4 +1,4 @@
-import { ChainData } from "@/libs/ethereum/mods/chain"
+import { ChainData, ChainId } from "@/libs/ethereum/mods/chain"
 import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumChainlessRpcRequestPreinit, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletRef } from "@/mods/background/service_worker/entities/wallets/data"
 import { SeedQuery } from "@/mods/universal/entities/seeds"
 import { Base16 } from "@hazae41/base16"
@@ -425,16 +425,16 @@ export interface EthereumContextProps {
   readonly context: FgEthereumContext
 }
 
-export class FgEthereumContext {
+export class FgEthereumContext<Id extends ChainId = ChainId> {
 
   constructor(
     readonly uuid: string,
-    readonly chain: ChainData,
+    readonly chain: ChainData<Id>,
     readonly background: Background
   ) { }
 
-  switch(chain: ChainData) {
-    return new FgEthereumContext(this.uuid, chain, this.background)
+  switch<Id extends ChainId = ChainId>(chain: ChainData<Id>) {
+    return new FgEthereumContext<Id>(this.uuid, chain, this.background)
   }
 
   async fetchOrThrow<T>(info: EthereumChainlessRpcRequestPreinit<unknown>, init: RequestInit = {}): Promise<Fetched<T, Error>> {
@@ -457,15 +457,15 @@ export class FgEthereumContext {
 
 }
 
-export function useEthereumContext(uuid: Nullable<string>, chain: Nullable<ChainData>) {
+export function useEthereumContext<Id extends ChainId = ChainId>(uuid: Nullable<string>, chain: Nullable<ChainData<Id>>) {
   const background = useBackgroundContext().getOrThrow()
 
-  const maybeContext = useMemo<Nullable<FgEthereumContext>>(() => {
+  const maybeContext = useMemo(() => {
     if (uuid == null)
       return
     if (chain == null)
       return
-    return new FgEthereumContext(uuid, chain, background)
+    return new FgEthereumContext<Id>(uuid, chain, background)
   }, [uuid, chain, background])
 
   return Option.wrap(maybeContext)

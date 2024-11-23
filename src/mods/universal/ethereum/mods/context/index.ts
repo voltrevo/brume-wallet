@@ -1,13 +1,13 @@
-import { ChainData } from "@/libs/ethereum/mods/chain"
+import { ChainData, ChainId } from "@/libs/ethereum/mods/chain"
 import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { Fetched } from "@hazae41/glacier"
 
-export interface EthereumContext {
+export interface EthereumContext<Id extends ChainId = ChainId> {
 
   readonly uuid: string
-  readonly chain: ChainData
+  readonly chain: ChainData<Id>
 
-  switch(chain: ChainData): EthereumContext
+  switch<Id extends ChainId = ChainId>(chain: ChainData<Id>): EthereumContext<Id>
 
   fetchOrThrow<T>(request: EthereumChainlessRpcRequestPreinit<unknown>, init?: RequestInit): Promise<Fetched<T, Error>>
 

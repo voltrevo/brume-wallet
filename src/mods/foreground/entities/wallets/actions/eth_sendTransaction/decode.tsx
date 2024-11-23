@@ -1,12 +1,12 @@
-import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
+import { strictChainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Dialog } from "@/libs/ui/dialog";
 import { BigLoading } from "@/libs/ui/loading";
+import { useSighash } from "@/mods/universal/ethereum/mods/sighash/hooks";
 import { usePathContext } from "@hazae41/chemin";
 import { Abi, ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
 import { Nullable, Option } from "@hazae41/option";
 import { Result } from "@hazae41/result";
 import { useMemo } from "react";
-import { useSignature } from "../../../signatures/data";
 import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
 
@@ -20,9 +20,9 @@ export function WalletDecodeDialog(props: {}) {
     return x.slice(0, 10) as ZeroHexString
   }).getOrNull()
 
-  const gnosis = useEthereumContext(wallet.uuid, chainDataByChainId[100]).getOrThrow()
+  const gnosis = useEthereumContext(wallet.uuid, strictChainDataByChainId[100]).getOrThrow()
 
-  const signaturesQuery = useSignature(maybeHash, gnosis)
+  const signaturesQuery = useSighash(gnosis, maybeHash)
   const triedSignatures = signaturesQuery.current
 
   if (maybeData == null)

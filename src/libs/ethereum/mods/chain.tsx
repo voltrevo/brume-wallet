@@ -4,16 +4,16 @@ import { ZeroHexString } from "@hazae41/cubane"
 
 export type ChainId = number
 
-export interface ChainData {
+export interface ChainData<Id extends ChainId = ChainId> {
+  readonly chainId: Id,
   readonly name: string
-  readonly chainId: ChainId,
   readonly urls: readonly string[],
   readonly etherscan: string
   readonly token: StoredNativeTokenData
   readonly icon: () => JSX.Element
 }
 
-export const chainDataByChainId: Record<ChainId, ChainData> = {
+export const strictChainDataByChainId = {
   1: {
     name: "Ethereum",
     chainId: 1,
@@ -361,6 +361,8 @@ export const chainDataByChainId: Record<ChainId, ChainData> = {
     },
   }
 } as const
+
+export const chainDataByChainId: Record<ChainId, ChainData> = strictChainDataByChainId
 
 export const tokenByAddress: Record<string, StoredContractTokenData> = {
   "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": {
