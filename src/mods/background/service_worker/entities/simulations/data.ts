@@ -3,6 +3,7 @@ import { ping } from "@/libs/ping"
 import { TorRpc } from "@/libs/rpc/rpc"
 import { AbortSignals } from "@/libs/signals"
 import { randomUUID } from "@/libs/uuid/uuid"
+import { BlockNumber } from "@/mods/universal/ethereum/mods"
 import { Arrays } from "@hazae41/arrays"
 import { ZeroHexString } from "@hazae41/cubane"
 import { Fail, Fetched, QueryStorage, createQuery } from "@hazae41/glacier"
@@ -154,7 +155,7 @@ export namespace BgSimulation {
 
   export const method = "tenderly_simulateTransaction"
 
-  export function key(chainId: number, tx: unknown, block: string) {
+  export function key(chainId: number, tx: unknown, block: BlockNumber) {
     return {
       chainId,
       method,
@@ -164,12 +165,12 @@ export namespace BgSimulation {
   }
 
   export async function parseOrThrow(context: BgEthereumContext, request: RpcRequestPreinit<unknown>, storage: QueryStorage) {
-    const [tx, block] = (request as RpcRequestPreinit<[unknown, string]>).params
+    const [tx, block] = (request as RpcRequestPreinit<[unknown, BlockNumber]>).params
 
     return schema(context, tx, block, storage)
   }
 
-  export function schema(context: BgEthereumContext, tx: unknown, block: string, storage: QueryStorage) {
+  export function schema(context: BgEthereumContext, tx: unknown, block: BlockNumber, storage: QueryStorage) {
     const fetcher = async (request: K, init: RequestInit) =>
       await fetchOrFail<SimulationData>(context, request, init)
 

@@ -6,6 +6,7 @@ import { Abi, ZeroHexString } from "@hazae41/cubane";
 import { createQuery, Data, Fail, JsonRequest, QueryStorage } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 import { Catched } from "@hazae41/result";
+import { BlockNumber } from "../../../blocks";
 
 export namespace ERC20 {
 
@@ -15,7 +16,7 @@ export namespace ERC20 {
     export type D = ZeroHexBigInt.From
     export type F = Error
 
-    export function keyOrThrow(chainId: number, contract: ZeroHexString, account: ZeroHexString, block: string) {
+    export function keyOrThrow(chainId: number, contract: ZeroHexString, account: ZeroHexString, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -27,7 +28,7 @@ export namespace ERC20 {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (contract == null)
@@ -76,7 +77,7 @@ export namespace ERC20Metadata {
     export type D = string
     export type F = Error
 
-    export function keyOrThrow(chainId: number, address: string, block: string) {
+    export function keyOrThrow(chainId: number, address: string, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -88,7 +89,7 @@ export namespace ERC20Metadata {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<string>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<string>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (address == null)
@@ -132,7 +133,7 @@ export namespace ERC20Metadata {
     export type D = string
     export type F = Error
 
-    export function keyOrThrow(chainId: number, address: string, block: string) {
+    export function keyOrThrow(chainId: number, address: string, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -144,7 +145,7 @@ export namespace ERC20Metadata {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<string>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<string>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (address == null)
@@ -188,11 +189,11 @@ export namespace ERC20Metadata {
     export type D = number
     export type F = Error
 
-    export function keyOrThrow(chainId: number, address: string, block: string) {
+    export function keyOrThrow(chainId: number, contract: ZeroHexString, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
-          to: address,
+          to: contract,
           data: Abi.encodeOrThrow(ERC20MetadataAbi.decimals.fromOrThrow())
         }, block]
       } as const
@@ -200,7 +201,7 @@ export namespace ERC20Metadata {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<string>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, address: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (address == null)

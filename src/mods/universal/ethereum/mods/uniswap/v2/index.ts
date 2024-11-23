@@ -6,6 +6,7 @@ import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, Fail, JsonRequest, QueryStorage } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
+import { BlockNumber } from "../../blocks"
 
 export namespace UniswapV2Pool {
 
@@ -15,7 +16,7 @@ export namespace UniswapV2Pool {
     export type D = Fixed.From
     export type F = Error
 
-    export function keyOrThrow(chainId: number, pool: UniswapV2.SimpleUniswapV2PoolData, block: string) {
+    export function keyOrThrow(chainId: number, pool: UniswapV2.SimpleUniswapV2PoolData, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -27,7 +28,7 @@ export namespace UniswapV2Pool {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<UniswapV2.SimpleUniswapV2PoolData>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<UniswapV2.SimpleUniswapV2PoolData>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (pool == null)

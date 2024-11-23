@@ -8,6 +8,7 @@ import { Abi, Address, Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, Fail, JsonRequest, QueryStorage, States } from "@hazae41/glacier"
 import { Nullable, Option, Some } from "@hazae41/option"
 import { Catched } from "@hazae41/result"
+import { BlockNumber } from "../../blocks"
 import { ERC20Metadata } from "../../tokens/mods"
 
 export namespace FactoryV3 {
@@ -34,7 +35,7 @@ export namespace FactoryV3 {
     export type D = Address
     export type F = Error
 
-    export function keyOrThrow(chainId: number, token0: ZeroHexString, token1: ZeroHexString, fee: number, block: string) {
+    export function keyOrThrow(chainId: number, token0: ZeroHexString, token1: ZeroHexString, fee: number, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -46,7 +47,7 @@ export namespace FactoryV3 {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, token0: Nullable<ZeroHexString>, token1: Nullable<ZeroHexString>, fee: Nullable<number>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, token0: Nullable<ZeroHexString>, token1: Nullable<ZeroHexString>, fee: Nullable<number>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (token0 == null)
@@ -97,7 +98,7 @@ export namespace UniswapV3Pool {
     export type D = Address
     export type F = Error
 
-    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
+    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -109,7 +110,7 @@ export namespace UniswapV3Pool {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (pool == null)
@@ -152,7 +153,7 @@ export namespace UniswapV3Pool {
     export type D = Address
     export type F = Error
 
-    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
+    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -164,7 +165,7 @@ export namespace UniswapV3Pool {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (pool == null)
@@ -207,7 +208,7 @@ export namespace UniswapV3Pool {
     export type D = readonly [Fixed.From, Fixed.From]
     export type F = Error
 
-    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
+    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: BlockNumber) {
       const body = {
         method: "eth_getUniswapV3PoolPrice",
         params: [pool, block]
@@ -216,7 +217,7 @@ export namespace UniswapV3Pool {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (pool == null)
@@ -274,7 +275,7 @@ export namespace UniswapV3Pool {
     export type D = ZeroHexBigInt.From
     export type F = Error
 
-    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
+    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: BlockNumber) {
       const body = {
         method: "eth_getUniswapV3PoolSqrtPriceX96",
         params: [pool, block]
@@ -283,7 +284,7 @@ export namespace UniswapV3Pool {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (pool == null)
@@ -317,7 +318,7 @@ export namespace UniswapV3Pool {
     export type D = readonly [ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From, ZeroHexBigInt.From]
     export type F = Error
 
-    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
+    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -329,7 +330,7 @@ export namespace UniswapV3Pool {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (pool == null)
@@ -388,7 +389,7 @@ export namespace UniswapV3Pool {
     export type D = ZeroHexBigInt.From
     export type F = Error
 
-    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: string) {
+    export function keyOrThrow(chainId: number, pool: ZeroHexString, block: BlockNumber) {
       const body = {
         method: "eth_call",
         params: [{
@@ -400,7 +401,7 @@ export namespace UniswapV3Pool {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, pool: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (pool == null)

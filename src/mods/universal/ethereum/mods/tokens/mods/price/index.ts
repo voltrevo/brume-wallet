@@ -5,6 +5,7 @@ import { EthereumContext } from "@/mods/universal/ethereum/mods/context"
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, Data, JsonRequest, QueryStorage } from "@hazae41/glacier"
 import { Nullable, Option } from "@hazae41/option"
+import { BlockNumber } from "../../../blocks"
 import { FactoryV3, UniswapV3Pool } from "../../../uniswap/v3"
 
 export namespace Price {
@@ -15,7 +16,7 @@ export namespace Price {
     export type D = Fixed.From
     export type F = Error
 
-    export function keyOrThrow(chainId: number, block: string) {
+    export function keyOrThrow(chainId: number, block: BlockNumber) {
       const body = {
         method: "eth_getNativeTokenPrice",
         params: [block]
@@ -24,7 +25,7 @@ export namespace Price {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (block == null)
@@ -64,7 +65,7 @@ export namespace Price {
     export type D = Fixed.From
     export type F = Error
 
-    export function keyOrThrow(chainId: number, contract: ZeroHexString, block: string) {
+    export function keyOrThrow(chainId: number, contract: ZeroHexString, block: BlockNumber) {
       const body = {
         method: "eth_getContractTokenPrice",
         params: [contract, block]
@@ -73,7 +74,7 @@ export namespace Price {
       return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
     }
 
-    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, block: Nullable<string>, storage: QueryStorage) {
+    export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, block: Nullable<BlockNumber>, storage: QueryStorage) {
       if (context == null)
         return
       if (contract == null)

@@ -5,8 +5,9 @@ import { ZeroHexString } from "@hazae41/cubane"
 import { useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
 import { Balance } from "."
+import { BlockNumber } from "../../../blocks"
 
-export function useNativeTokenBalance(context: Nullable<EthereumContext>, account: Nullable<ZeroHexString>, block: Nullable<string>) {
+export function useNativeTokenBalance(context: Nullable<EthereumContext>, account: Nullable<ZeroHexString>, block: Nullable<BlockNumber>) {
   const storage = useUserStorageContext().getOrThrow()
 
   const query = useQuery(Balance.Native.queryOrThrow, [context, account, block, storage])
@@ -18,7 +19,7 @@ export function useNativeTokenBalance(context: Nullable<EthereumContext>, accoun
   return query
 }
 
-export function useContractTokenBalance(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, block: Nullable<string>) {
+export function useContractTokenBalance(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, block: Nullable<BlockNumber>) {
   const storage = useUserStorageContext().getOrThrow()
 
   const query = useQuery(Balance.Contract.queryOrThrow, [context, contract, account, block, storage])
@@ -30,7 +31,7 @@ export function useContractTokenBalance(context: Nullable<EthereumContext>, cont
   return query
 }
 
-export function useNativeTokenPricedBalance(context: Nullable<EthereumContext>, account: Nullable<ZeroHexString>, currency: Nullable<"usd">, block: Nullable<string>) {
+export function useNativeTokenPricedBalance(context: Nullable<EthereumContext>, account: Nullable<ZeroHexString>, currency: Nullable<"usd">, block: Nullable<BlockNumber>) {
   const storage = useUserStorageContext().getOrThrow()
 
   const query = useQuery(Balance.Priced.Native.queryOrThrow, [context, account, currency, block, storage])
@@ -42,7 +43,7 @@ export function useNativeTokenPricedBalance(context: Nullable<EthereumContext>, 
   return query
 }
 
-export function useContractTokenPricedBalance(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, currency: Nullable<"usd">, block: Nullable<string>) {
+export function useContractTokenPricedBalance(context: Nullable<EthereumContext>, contract: Nullable<ZeroHexString>, account: Nullable<ZeroHexString>, currency: Nullable<"usd">, block: Nullable<BlockNumber>) {
   const storage = useUserStorageContext().getOrThrow()
 
   const query = useQuery(Balance.Priced.Contract.queryOrThrow, [context, contract, account, currency, block, storage])
