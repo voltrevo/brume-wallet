@@ -1,6 +1,6 @@
 import { ping } from "@/libs/ping"
 import { AutoPool } from "@/libs/pool"
-import { MicrodescQuery } from "@/mods/universal/entities/microdescs"
+import { Tor } from "@/mods/universal/tor"
 import { Arrays } from "@hazae41/arrays"
 import { Box, Deferred, Stack } from "@hazae41/box"
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
@@ -75,7 +75,7 @@ export namespace Circuits {
 
             const tor = await tors.getOrThrow(index % tors.size, signal)
 
-            const microdescsQuery = MicrodescQuery.All.create(undefined, storage)
+            const microdescsQuery = Tor.Consensus.Microdesc.All.create(undefined, storage)
             const microdescsData = await microdescsQuery.state.then(r => Option.wrap(r.current?.getOrThrow()).getOrThrow())
 
             const middles = microdescsData.filter(it => true
@@ -102,7 +102,7 @@ export namespace Circuits {
                   await loopOrThrow(async () => {
                     const head = Arrays.cryptoRandom(middles)!
 
-                    const query = Option.wrap(MicrodescQuery.create(head.identity, index, head, circuit.getOrThrow(), storage)).getOrThrow()
+                    const query = Option.wrap(Tor.Consensus.Microdesc.create(head.identity, index, head, circuit.getOrThrow(), storage)).getOrThrow()
                     const body = await query.fetchOrThrow().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
                     start = Date.now()
@@ -116,7 +116,7 @@ export namespace Circuits {
                   await loopOrThrow(async () => {
                     const head = Arrays.cryptoRandom(exits)!
 
-                    const query = Option.wrap(MicrodescQuery.create(head.identity, index, head, circuit.getOrThrow(), storage)).getOrThrow()
+                    const query = Option.wrap(Tor.Consensus.Microdesc.create(head.identity, index, head, circuit.getOrThrow(), storage)).getOrThrow()
                     const body = await query.fetchOrThrow().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 
                     start = Date.now()

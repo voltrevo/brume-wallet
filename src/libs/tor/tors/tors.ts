@@ -2,7 +2,7 @@ import { ping } from "@/libs/ping"
 import { AutoPool } from "@/libs/pool"
 import { Sockets } from "@/libs/sockets/sockets"
 import { WebSocketDuplex } from "@/libs/streams/websocket"
-import { MicrodescQuery } from "@/mods/universal/entities/microdescs"
+import { Tor } from "@/mods/universal/tor"
 import { Opaque, Writable } from "@hazae41/binary"
 import { Box, Deferred, Stack } from "@hazae41/box"
 import { Disposer } from "@hazae41/disposer"
@@ -101,7 +101,7 @@ export function createTorPool(sockets: AutoPool<Disposer<WebSocket>>, storage: Q
         stack.getOrThrow().push(tor)
         console.debug(`Created Tor in ${Date.now() - start}ms`)
 
-        const microdescsQuery = MicrodescQuery.All.create(tor.getOrThrow(), storage)
+        const microdescsQuery = Tor.Consensus.Microdesc.All.create(tor.getOrThrow(), storage)
         const microdescsStale = await microdescsQuery.state.then(r => r.current?.getOrNull())
         const microdescsFresh = microdescsQuery.fetchOrThrow().then(r => Option.wrap(r.getAny().current).getOrThrow().getOrThrow())
 

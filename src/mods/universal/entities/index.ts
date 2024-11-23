@@ -1,8 +1,8 @@
 import { QueryStorage, SimpleQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
+import { Tor } from "../tor"
 import { BlobbyQuery } from "./blobbys"
 import { LinksQuery } from "./links"
-import { MicrodescQuery } from "./microdescs"
 import { OriginQuery } from "./origins"
 import { SeedQuery } from "./seeds"
 import { SettingsQuery } from "./settings"
@@ -14,9 +14,9 @@ export function routeOrThrow(cacheKey: string, storage: QueryStorage): SimpleQue
     return query
   if (query = LinksQuery.route(cacheKey, storage))
     return query
-  if (query = MicrodescQuery.route(cacheKey, storage))
+  if (query = Tor.Consensus.Microdesc.route(cacheKey, storage))
     return query
-  if (query = MicrodescQuery.All.route(cacheKey, storage))
+  if (query = Tor.Consensus.Microdesc.All.route(cacheKey, storage))
     return query
   if (query = OriginQuery.route(cacheKey, storage))
     return query
