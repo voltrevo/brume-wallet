@@ -1,7 +1,7 @@
 import { Mutators } from "@/libs/glacier/mutators";
+import { Token, TokenRef } from "@/mods/universal/ethereum/mods/tokens/mods/core";
 import { Data, QueryStorage, States, createQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
-import { Token, TokenRef } from "../../tokens/data";
 import { Wallet, WalletRef } from "../data";
 
 export type TokenSettings =

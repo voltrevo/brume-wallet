@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { ContractTokenData as StoredContractTokenData, NativeTokenData as StoredNativeTokenData } from "@/mods/background/service_worker/entities/tokens/data"
+import { ContractTokenData, NativeTokenData } from "@/mods/universal/ethereum/mods/tokens/mods/core"
 import { Address } from "@hazae41/cubane"
 
 export interface ChainData<Id extends number = number> {
@@ -7,7 +7,7 @@ export interface ChainData<Id extends number = number> {
   readonly name: string
   readonly urls: readonly string[],
   readonly etherscan: string
-  readonly token: StoredNativeTokenData
+  readonly token: NativeTokenData
   readonly icon: () => JSX.Element
 }
 
@@ -362,7 +362,7 @@ export const strictChainDataByChainId = {
 
 export const chainDataByChainId: Record<number, ChainData> = strictChainDataByChainId
 
-export const tokenByAddress: Record<string, StoredContractTokenData> = {
+export const tokenByAddress: Record<string, ContractTokenData> = {
   "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": {
     uuid: "7b8dab00-e96b-41aa-b9d8-0ba39d2f96a6",
     type: "contract",

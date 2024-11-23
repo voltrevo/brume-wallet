@@ -1,6 +1,5 @@
 import { tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Records } from "@/libs/records";
-import { ContractTokenData, ContractTokenRef } from "@/mods/background/service_worker/entities/tokens/data";
 import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
 import { Address } from "@hazae41/cubane";
 import { createQuery, Data, Fail, JsonRequest, QueryStorage, Times } from "@hazae41/glacier";
@@ -10,24 +9,84 @@ import { BlockNumber } from "../../../blocks";
 import { EthereumContext } from "../../../context";
 import { ERC20Metadata } from "../erc20";
 
-export namespace UserTokens {
+export type Token =
+  | TokenData
+  | TokenRef
 
-  export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
-  export type D = ContractTokenRef[]
-  export type F = never
+export type NativeToken =
+  | NativeTokenData
+  | NativeTokenRef
 
-  export function keyOrThrow() {
-    const body = {
-      method: "eth_getUserTokens"
-    } as const
+export type ContractToken =
+  | ContractTokenData
+  | ContractTokenRef
 
-    return new JsonRequest(`app:/ethereum`, { method: "POST", body })
+export type TokenRef =
+  | NativeTokenRef
+  | ContractTokenRef
+
+export namespace TokenRef {
+
+  export function from(token: TokenData) {
+    if (token.type === "native")
+      return NativeTokenRef.from(token)
+    if (token.type === "contract")
+      return ContractTokenRef.from(token)
+    return token satisfies never
   }
 
-  export function queryOrThrow(storage: QueryStorage) {
-    return createQuery<K, D, F>({ key: keyOrThrow(), storage })
-  }
+}
 
+export interface NativeTokenRef {
+  readonly ref: true
+  readonly uuid: string
+  readonly type: "native"
+  readonly chainId: number
+}
+
+export namespace NativeTokenRef {
+  export function from(token: NativeTokenData): NativeTokenRef {
+    const { uuid, type, chainId } = token
+    return { ref: true, uuid, type, chainId }
+  }
+}
+
+export interface ContractTokenRef {
+  readonly ref: true
+  readonly uuid: string
+  readonly type: "contract"
+  readonly chainId: number
+  readonly address: Address
+}
+
+export namespace ContractTokenRef {
+  export function from(token: ContractTokenData): ContractTokenRef {
+    const { uuid, type, chainId, address } = token
+    return { ref: true, uuid, type, chainId, address }
+  }
+}
+
+export type TokenData =
+  | NativeTokenData
+  | ContractTokenData
+
+export interface NativeTokenData {
+  readonly uuid: string
+  readonly type: "native"
+  readonly name: string
+  readonly chainId: number,
+  readonly symbol: string,
+  readonly decimals: number,
+}
+
+export interface ContractTokenData {
+  readonly uuid: string
+  readonly type: "contract",
+  readonly name: string
+  readonly chainId: number,
+  readonly symbol: string,
+  readonly decimals: number,
+  readonly address: Address
 }
 
 export namespace Token {
@@ -59,8 +118,6 @@ export namespace Token {
 
         const builtin = Records.getOrNull(tokenByAddress, address)
 
-        console.log("!!! builtin", builtin)
-
         if (builtin != null) {
           const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
           const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
@@ -84,8 +141,6 @@ export namespace Token {
           decimals: decimals.get()
         } as const
 
-        console.log("!!! data", data)
-
         return new Data(data, Times.min(name, symbol, decimals))
       } catch (e: unknown) {
         return new Fail(Catched.wrap(e))
@@ -97,6 +152,26 @@ export namespace Token {
       fetcher,
       storage
     })
+  }
+
+}
+
+export namespace UserTokens {
+
+  export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
+  export type D = ContractTokenRef[]
+  export type F = never
+
+  export function keyOrThrow() {
+    const body = {
+      method: "eth_getUserTokens"
+    } as const
+
+    return new JsonRequest(`app:/ethereum`, { method: "POST", body })
+  }
+
+  export function queryOrThrow(storage: QueryStorage) {
+    return createQuery<K, D, F>({ key: keyOrThrow(), storage })
   }
 
 }
