@@ -1,7 +1,7 @@
 import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
 import { EthereumContext } from "@/mods/universal/ethereum/mods/context";
 import { ZeroHexString } from "@hazae41/cubane";
-import { createQuery, JsonRequest, QueryStorage } from "@hazae41/glacier";
+import { createQuery, Data, JsonRequest, QueryStorage } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 
 export type BlockNumber =
@@ -189,10 +189,17 @@ export namespace GetBlock {
         if (fetched.isErr())
           return fetched
 
-        const cooldown = Date.now() + (1000 * 60)
-        const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
+        if (ZeroHexString.String.is(number)) {
+          const cooldown = Date.now() + (1000 * 60 * 60 * 24 * 365)
+          const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
 
-        return fetched.setInit({ cooldown, expiration })
+          return new Data(fetched.get(), { cooldown, expiration })
+        } else {
+          const cooldown = Date.now() + (1000 * 60)
+          const expiration = Date.now() + (1000 * 60 * 60 * 24 * 365)
+
+          return new Data(fetched.get(), { cooldown, expiration })
+        }
       }
 
       return createQuery<K, D, F>({
