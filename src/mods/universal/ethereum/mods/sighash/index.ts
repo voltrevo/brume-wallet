@@ -11,7 +11,7 @@ export namespace Sighash {
   export type D = readonly string[]
   export type F = Error
 
-  export function keyOrThrow(hash: ZeroHexString) {
+  export function keyOrThrow(chainId: 100, hash: ZeroHexString) {
     const body = {
       method: "eth_call",
       params: [{
@@ -20,7 +20,7 @@ export namespace Sighash {
       }, "latest"]
     } as const
 
-    return new JsonRequest(`app:/ethereum/100`, { method: "POST", body })
+    return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
   }
 
   export function queryOrThrow(context: Nullable<EthereumContext<100>>, hash: Nullable<ZeroHexString>, storage: QueryStorage) {
@@ -50,7 +50,7 @@ export namespace Sighash {
     }
 
     return createQuery<K, D, F>({
-      key: keyOrThrow(hash),
+      key: keyOrThrow(context.chain.chainId, hash),
       fetcher,
       storage
     })
