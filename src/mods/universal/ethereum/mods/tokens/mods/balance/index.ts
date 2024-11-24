@@ -35,7 +35,9 @@ export namespace Balance {
         return
 
       const fetcher = async (_: K, init: RequestInit) => {
-        const balanceFetched = await Ethereum.GetBalance.queryOrThrow(context, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const { signal, cache } = init
+
+        const balanceFetched = await Ethereum.GetBalance.queryOrThrow(context, account, block, storage)!.fetchOrThrow({ signal, cache }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (balanceFetched.isErr())
           return balanceFetched
@@ -81,12 +83,14 @@ export namespace Balance {
         return
 
       const fetcher = async (_: K, init: RequestInit) => {
+        const { signal, cache } = init
+
         const decimalsFetched = await ERC20Metadata.Decimals.queryOrThrow(context, contract, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (decimalsFetched.isErr())
           return decimalsFetched
 
-        const balanceFetched = await ERC20.BalanceOf.queryOrThrow(context, contract, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const balanceFetched = await ERC20.BalanceOf.queryOrThrow(context, contract, account, block, storage)!.fetchOrThrow({ signal, cache }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (balanceFetched.isErr())
           return balanceFetched
@@ -301,12 +305,14 @@ export namespace Balance {
           return
 
         const fetcher = async (_: K, init: RequestInit) => {
-          const valuedBalanceFetched = await Balance.Native.queryOrThrow(context, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+          const { signal, cache } = init
+
+          const valuedBalanceFetched = await Balance.Native.queryOrThrow(context, account, block, storage)!.fetchOrThrow({ signal, cache }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
           if (valuedBalanceFetched.isErr())
             return valuedBalanceFetched
 
-          const priceFetched = await Tokens.Price.Native.queryOrThrow(context, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+          const priceFetched = await Tokens.Price.Native.queryOrThrow(context, block, storage)!.fetchOrThrow({ signal, cache }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
           if (priceFetched.isErr())
             return priceFetched
@@ -375,12 +381,14 @@ export namespace Balance {
           return
 
         const fetcher = async (_: K, init: RequestInit) => {
-          const valuedBalanceFetched = await Balance.Contract.queryOrThrow(context, contract, account, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+          const { signal, cache } = init
+
+          const valuedBalanceFetched = await Balance.Contract.queryOrThrow(context, contract, account, block, storage)!.fetchOrThrow({ signal, cache }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
           if (valuedBalanceFetched.isErr())
             return valuedBalanceFetched
 
-          const priceFetched = await Tokens.Price.Contract.queryOrThrow(context, contract, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+          const priceFetched = await Tokens.Price.Contract.queryOrThrow(context, contract, block, storage)!.fetchOrThrow({ signal, cache }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
           if (priceFetched.isErr())
             return priceFetched

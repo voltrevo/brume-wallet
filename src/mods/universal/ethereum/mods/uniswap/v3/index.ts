@@ -226,6 +226,8 @@ export namespace UniswapV3Pool {
         return
 
       const fetcher = async (_: K, init: RequestInit) => {
+        const { signal, cache } = init
+
         const token0AddressFetched = await Token0.queryOrThrow(context, pool, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (token0AddressFetched.isErr())
@@ -246,7 +248,7 @@ export namespace UniswapV3Pool {
         if (token1DecimalsFetched.isErr())
           return token1DecimalsFetched
 
-        const sqrtPriceX96Fetched = await SqrtPriceX96.queryOrThrow(context, pool, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const sqrtPriceX96Fetched = await SqrtPriceX96.queryOrThrow(context, pool, block, storage)!.fetchOrThrow({ signal, cache }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (sqrtPriceX96Fetched.isErr())
           return sqrtPriceX96Fetched
@@ -293,7 +295,9 @@ export namespace UniswapV3Pool {
         return
 
       const fetcher = async (_: K, init: RequestInit) => {
-        const slot0 = await Slot0.queryOrThrow(context, pool, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const { signal, cache } = init
+
+        const slot0 = await Slot0.queryOrThrow(context, pool, block, storage)!.fetchOrThrow({ signal, cache }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (slot0.isErr())
           return slot0

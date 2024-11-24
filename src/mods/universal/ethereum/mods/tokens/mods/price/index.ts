@@ -32,6 +32,8 @@ export namespace Price {
         return
 
       const fetcher = async (_: K, init: RequestInit) => {
+        const { signal, cache } = init
+
         const usdcAddress = Records.getOrThrow(FactoryV3.usdcByChainId, context.chain.chainId)
         const usdcWethPoolAddress = Records.getOrThrow(FactoryV3.usdcWethPoolByChainId, context.chain.chainId)
 
@@ -40,7 +42,7 @@ export namespace Price {
         if (usdcWethPoolToken0Fetched.isErr())
           return usdcWethPoolToken0Fetched
 
-        const usdcWethPriceFetched = await UniswapV3Pool.Price.queryOrThrow(context, usdcWethPoolAddress, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const usdcWethPriceFetched = await UniswapV3Pool.Price.queryOrThrow(context, usdcWethPoolAddress, block, storage)!.fetchOrThrow({ signal, cache }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (usdcWethPriceFetched.isErr())
           return usdcWethPriceFetched
@@ -83,6 +85,8 @@ export namespace Price {
         return
 
       const fetcher = async (_: K, init: RequestInit) => {
+        const { signal, cache } = init
+
         const usdcAddress = Records.getOrThrow(FactoryV3.usdcByChainId, context.chain.chainId)
 
         const usdcTokenPoolFetched = await FactoryV3.GetPool.queryOrThrow(context, contract, usdcAddress, 3000, block, storage)!.fetchOrThrow().then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
@@ -106,7 +110,7 @@ export namespace Price {
             if (usdcTokenToken0Fetched.isErr())
               return usdcTokenToken0Fetched
 
-            const usdcTokenPriceFetched = await UniswapV3Pool.Price.queryOrThrow(context, usdcTokenPoolFetched.get(), block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+            const usdcTokenPriceFetched = await UniswapV3Pool.Price.queryOrThrow(context, usdcTokenPoolFetched.get(), block, storage)!.fetchOrThrow({ signal, cache }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
             if (usdcTokenPriceFetched.isErr())
               return usdcTokenPriceFetched
@@ -130,7 +134,7 @@ export namespace Price {
         if (wethTokenToken0Fetched.isErr())
           return wethTokenToken0Fetched
 
-        const wethTokenPriceFetched = await UniswapV3Pool.Price.queryOrThrow(context, wethTokenPoolFetched.get(), block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const wethTokenPriceFetched = await UniswapV3Pool.Price.queryOrThrow(context, wethTokenPoolFetched.get(), block, storage)!.fetchOrThrow({ signal, cache }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (wethTokenPriceFetched.isErr())
           return wethTokenPriceFetched
@@ -140,7 +144,7 @@ export namespace Price {
         if (usdcWethToken0Fetched.isErr())
           return usdcWethToken0Fetched
 
-        const usdcWethPriceFetched = await UniswapV3Pool.Price.queryOrThrow(context, usdcWethPoolAddress, block, storage)!.fetchOrThrow(init).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
+        const usdcWethPriceFetched = await UniswapV3Pool.Price.queryOrThrow(context, usdcWethPoolAddress, block, storage)!.fetchOrThrow({ signal, cache }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow())
 
         if (usdcWethPriceFetched.isErr())
           return usdcWethPriceFetched
