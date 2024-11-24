@@ -126,13 +126,13 @@ export namespace Token {
         }
 
         const [name, symbol, decimals] = await Promise.all([
-          await ERC20Metadata.Name.queryOrThrow(context, address, block, storage)!.fetchOrThrow({ cache, signal }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow().checkOrThrow()),
-          await ERC20Metadata.Symbol.queryOrThrow(context, address, block, storage)!.fetchOrThrow({ cache, signal }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow().checkOrThrow()),
-          await ERC20Metadata.Decimals.queryOrThrow(context, address, block, storage)!.fetchOrThrow({ cache, signal }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow().checkOrThrow())
+          ERC20Metadata.Name.queryOrThrow(context, address, block, storage)!.fetchOrThrow({ cache, signal }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow().checkOrThrow()),
+          ERC20Metadata.Symbol.queryOrThrow(context, address, block, storage)!.fetchOrThrow({ cache, signal }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow().checkOrThrow()),
+          ERC20Metadata.Decimals.queryOrThrow(context, address, block, storage)!.fetchOrThrow({ cache, signal }).then(r => Option.wrap(r.getAny().real?.current).getOrThrow().checkOrThrow())
         ])
 
         const data: ContractTokenData = {
-          uuid: `app:/ethereum/${context.chain.chainId}/token/${address}`,
+          uuid: `/${context.chain.chainId}/${address}`,
           type: "contract",
           chainId: context.chain.chainId,
           address: address,

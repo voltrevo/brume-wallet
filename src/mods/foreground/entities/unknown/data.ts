@@ -143,7 +143,7 @@ export namespace FgEthereum {
       return {
         chainId: chain.chainId,
         method: "eth_getTransactionCount",
-        params: [address, "pending"]
+        params: [address, "latest"]
       }
     }
 

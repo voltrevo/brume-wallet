@@ -176,7 +176,7 @@ export function TransactPage() {
     }
   }, [from, maybeTo, maybeValue, maybeNonce, maybeData, maybeGas, maybeGasPrice, maybeMaxFeePerGas, maybeMaxPriorityFeePerGas])
 
-  const simulationQuery = useSimulation(preTx, "pending", maybeContext)
+  const simulationQuery = useSimulation(preTx, "latest", maybeContext)
   const currentSimulation = simulationQuery.current
 
   const approveOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {

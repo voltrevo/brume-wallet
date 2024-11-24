@@ -81,7 +81,7 @@ export function WalletTransactionDialog(props: {}) {
     return ZeroHexBigInt.from(nonce).value
   }, [maybePendingNonceZeroHex])
 
-  const priceQuery = useNativeTokenPriceV3(context, "pending")
+  const priceQuery = useNativeTokenPriceV3(context, "latest")
   const maybePrice = priceQuery.current?.mapSync(x => Fixed.from(x)).getOrNull()
 
   const getRawPricedInput = useCallback((rawValuedInput: string) => {
@@ -212,20 +212,20 @@ export function WalletTransactionDialog(props: {}) {
     return ZeroHexBigInt.from(maxPriorityFeePerGas).value
   }, [maybeFetchedMaxPriorityFeePerGasZeroHex])
 
-  const pendingBlockQuery = useBlockByNumber(context, "pending")
-  const maybePendingBlock = pendingBlockQuery.current?.getOrNull()
+  const latestBlockQuery = useBlockByNumber(context, "latest")
+  const maybeLatestBlock = latestBlockQuery.current?.getOrNull()
 
   const maybeFetchedBaseFeePerGas = useMemo(() => {
     try {
-      return maybePendingBlock?.baseFeePerGas != null
-        ? BigIntToHex.decodeOrThrow(maybePendingBlock.baseFeePerGas)
+      return maybeLatestBlock?.baseFeePerGas != null
+        ? BigIntToHex.decodeOrThrow(maybeLatestBlock.baseFeePerGas)
         : undefined
     } catch { }
-  }, [maybePendingBlock])
+  }, [maybeLatestBlock])
 
   const maybeIsEip1559 = useMemo(() => {
-    return maybePendingBlock?.baseFeePerGas != null
-  }, [maybePendingBlock])
+    return maybeLatestBlock?.baseFeePerGas != null
+  }, [maybeLatestBlock])
 
   const [rawGasLimitInput = "", setRawGasLimitInput] = useState(nto(maybeGas))
 

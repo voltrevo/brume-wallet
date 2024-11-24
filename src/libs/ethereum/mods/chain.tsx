@@ -18,7 +18,7 @@ export const strictChainDataByChainId = {
     urls: ["wss://ethereum-rpc.publicnode.com", "https://1rpc.io/eth"],
     etherscan: "https://etherscan.io",
     token: {
-      uuid: "app:/ethereum/1/token",
+      uuid: "/1",
       type: "native",
       name: "ETH",
       chainId: 1,
@@ -526,7 +526,7 @@ export const tokenByAddress: Record<string, ContractTokenData> = {
     address: "0x64dEFa3544c695db8c535D289d843a189aa26b98" as Address
   },
   "0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5": {
-    uuid: "app:/ethereum/1/token/0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5",
+    uuid: "/1/0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5",
     type: "contract",
     name: "Brume",
     chainId: 1,

@@ -23,7 +23,7 @@ export namespace BgEns {
           params: [{
             to: registry,
             data: data
-          }, "pending"]
+          }, "latest"]
         }, init)
 
         if (fetched.isErr())
@@ -89,7 +89,7 @@ export namespace BgEns {
           params: [{
             to: resolver.inner,
             data: data
-          }, "pending"]
+          }, "latest"]
         }, init)
 
         if (fetched.isErr())
@@ -154,7 +154,7 @@ export namespace BgEns {
           params: [{
             to: resolver.inner,
             data: data
-          }, "pending"]
+          }, "latest"]
         }, init)
 
         if (fetched.isErr())

@@ -8,7 +8,7 @@ import { Token, UserTokens, WalletTokens } from "."
 import { BlockNumber } from "../../../blocks"
 import { EthereumContext } from "../../../context"
 
-export function useToken(context: Nullable<EthereumContext>, contract: Nullable<Address>, block: Nullable<BlockNumber>) {
+export function useContractToken(context: Nullable<EthereumContext>, contract: Nullable<Address>, block: Nullable<BlockNumber>) {
   const storage = useUserStorageContext().getOrThrow()
 
   const query = useQuery(Token.queryOrThrow, [context, contract, block, storage])
@@ -19,7 +19,7 @@ export function useToken(context: Nullable<EthereumContext>, contract: Nullable<
   return query
 }
 
-export function useOfflineToken(context: Nullable<EthereumContext>, contract: Nullable<Address>, block: Nullable<BlockNumber>) {
+export function useOfflineContractToken(context: Nullable<EthereumContext>, contract: Nullable<Address>, block: Nullable<BlockNumber>) {
   const storage = useUserStorageContext().getOrThrow()
 
   const query = useQuery(Token.queryOrThrow, [context, contract, block, storage])

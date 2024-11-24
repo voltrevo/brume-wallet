@@ -5,7 +5,7 @@ import { nto } from "@/libs/ntu";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { Dialog } from "@/libs/ui/dialog";
-import { useToken } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
+import { useContractToken } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
 import { usePathContext, useSearchState } from "@hazae41/chemin";
 import { Address } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
@@ -38,7 +38,7 @@ export function WalletSendScreenTarget(props: {}) {
 
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
-  const tokenQuery = useToken(context, maybeTokenAddress, "latest")
+  const tokenQuery = useContractToken(context, maybeTokenAddress, "latest")
   const maybeTokenData = Option.wrap(tokenQuery.current?.getOrNull())
   const tokenData = maybeTokenData.getOr(chainData.token)
 

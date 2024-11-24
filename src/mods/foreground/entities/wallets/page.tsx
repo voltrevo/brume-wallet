@@ -15,9 +15,10 @@ import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
 import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
-import { useContractTokenBalance, useContractTokenPricedBalance, useNativeTokenBalance, useNativeTokenPricedBalance } from "@/mods/universal/ethereum/mods/tokens/mods/balance/hooks";
+import { Balance } from "@/mods/universal/ethereum/mods/tokens/mods/balance";
+import { useContractTokenBalance, useContractTokenPricedBalance, useNativeTokenBalance, useNativeTokenPricedBalance, useOfflineContractTokenBalance, useOfflineContractTokenPricedBalance, useOfflineNativeTokenBalance, useOfflineNativeTokenPricedBalance } from "@/mods/universal/ethereum/mods/tokens/mods/balance/hooks";
 import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/universal/ethereum/mods/tokens/mods/core";
-import { useToken, useUserTokens, useWalletTokens } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
+import { useContractToken, useUserTokens, useWalletTokens } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
 import { Data, Fail, Fetched } from "@hazae41/glacier";
@@ -28,6 +29,7 @@ import { Result } from "@hazae41/result";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Fragment, useCallback, useMemo, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
+import { useUserStorageContext } from "../../storage/user";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { SmallShrinkableContrastButton } from "../users/all/page";
@@ -169,23 +171,15 @@ function WalletDataPage() {
 
   const walletTokensQuery = useWalletTokens(wallet)
 
-  const nonWalletTokens = useMemo<Token[]>(() => {
+  const [walletTokens, userTokens, builtinTokens] = useMemo(() => {
+    const [wallets = []] = [walletTokensQuery.data?.get()]
     const [users = []] = [userTokensQuery.data?.get()]
 
     const natives = Object.values(chainDataByChainId).map(x => x.token)
     const contracts = Object.values(tokenByAddress)
+    const builtins = [...natives, ...contracts]
 
-    const allTokens = [...users, ...natives, ...contracts]
-
-    return allTokens.filter(x => {
-      if (walletTokensQuery.data == null)
-        return true
-      const walletTokens = walletTokensQuery.data.get()
-
-      if (walletTokens.find(y => y.uuid === x.uuid))
-        return false
-      return true
-    }).sort((a, b) => {
+    const sorter = (a: Token, b: Token) => {
       const dChainId = a.chainId - b.chainId
 
       if (dChainId !== 0)
@@ -197,7 +191,27 @@ function WalletDataPage() {
         return 1
 
       return 0
-    })
+    }
+
+    const wallets2 = wallets.filter(x => {
+      return true
+    }).sort(sorter)
+
+    const users2 = users.filter(x => {
+      if (wallets.find(y => y.uuid === x.uuid))
+        return false
+      return true
+    }).sort(sorter)
+
+    const builtins2 = builtins.filter(x => {
+      if (users.find(y => y.uuid === x.uuid))
+        return false
+      if (wallets.find(y => y.uuid === x.uuid))
+        return false
+      return true
+    }).sort(sorter)
+
+    return [wallets2, users2, builtins2] as const
   }, [userTokensQuery.data, walletTokensQuery.data])
 
   const onBackClick = useCallback(() => {
@@ -308,15 +322,17 @@ function WalletDataPage() {
       </div>
       <div className="h-4" />
       <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
-        <TokenRowRouter token={chainDataByChainId[1].token} />
-        <TokenRowRouter token={tokenByAddress["0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5"]} />
-        {walletTokensQuery.data?.get().map(token =>
+        {walletTokens.map(token =>
           <Fragment key={token.uuid}>
-            <WalletTokenRow token={token} />
+            <OnlineTokenRow token={token} />
           </Fragment>)}
-        {nonWalletTokens.map(token =>
+        {userTokens.map(token =>
           <Fragment key={token.uuid}>
-            <TokenRowRouter token={token} />
+            <OfflineTokenRow token={token} />
+          </Fragment>)}
+        {builtinTokens.map(token =>
+          <Fragment key={token.uuid}>
+            <OfflineTokenRow token={token} />
           </Fragment>)}
       </div>
     </PageBody>
@@ -505,44 +521,100 @@ export function WalletConnectMenu() {
   </div>
 }
 
-function WalletTokenRow(props: { token: Token }) {
-  const { token } = props
-
-  if (token.uuid === "app:/ethereum/1/token")
-    return null
-  if (token.uuid === "app:/ethereum/1/token/0xD0EbFe04Adb5Ef449Ec5874e450810501DC53ED5")
-    return null
-  return <TokenRowRouter token={token} />
-}
-
-function UserTokenRow(props: { token: Token }) {
-  const { token } = props
-
-  return <TokenRowRouter token={token} />
-}
-
-function TokenRowRouter(props: { token: Token }) {
+function OnlineTokenRow(props: { token: Token }) {
   const { token } = props
 
   if (token.type === "native")
-    return <NativeTokenRowRouter token={token} />
+    return <OnlineNativeTokenRow token={token} />
   if (token.type === "contract")
-    return <ContractTokenRowRouter token={token} />
+    return <OnlineContractTokenRow token={token} />
   return null
 }
 
-function NativeTokenRowRouter(props: { token: NativeToken }) {
+function OfflineTokenRow(props: { token: Token }) {
+  const { token } = props
+
+  if (token.type === "native")
+    return <OfflineNativeTokenRow token={token} />
+  if (token.type === "contract")
+    return <OfflineContractTokenRow token={token} />
+  return null
+}
+
+function OnlineNativeTokenRow(props: { token: NativeToken }) {
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
   const { token } = props
 
   const chainData = chainDataByChainId[token.chainId]
   const tokenData = chainData.token
 
-  return <OnlineNativeTokenRow
-    token={tokenData}
-    chain={chainData} />
+  const subpath = useHashSubpath(path)
+  const menu = useCoords(subpath, `/token/${tokenData.chainId}`)
+
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
+
+  const valuedBalanceQuery = useNativeTokenBalance(context, wallet.address as Address, "latest")
+  const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address as Address, "usd", "latest")
+
+  return <>
+    <HashSubpathProvider>
+      {subpath.url.pathname === `/token/${tokenData.chainId}` &&
+        <Menu>
+          <NativeTokenMenu
+            tokenData={tokenData}
+            chainData={chainData} />
+        </Menu>}
+    </HashSubpathProvider>
+    <TokenRowAnchor
+      href={menu.href}
+      onClick={menu.onClick}
+      onContextMenu={menu.onContextMenu}
+      token={tokenData}
+      chain={chainData}
+      balanceQuery={valuedBalanceQuery}
+      balanceUsdQuery={pricedBalanceQuery} />
+  </>
 }
 
-function ContractTokenRowRouter(props: { token: ContractToken }) {
+function OfflineNativeTokenRow(props: { token: NativeToken }) {
+  const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const { token } = props
+
+  const chainData = chainDataByChainId[token.chainId]
+  const tokenData = chainData.token
+
+  const subpath = useHashSubpath(path)
+  const menu = useCoords(subpath, `/token/${tokenData.chainId}`)
+
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
+
+  const valuedBalanceQuery = useOfflineNativeTokenBalance(context, wallet.address as Address, "latest")
+  const pricedBalanceQuery = useOfflineNativeTokenPricedBalance(context, wallet.address as Address, "usd", "latest")
+
+  return <>
+    <HashSubpathProvider>
+      {subpath.url.pathname === `/token/${tokenData.chainId}` &&
+        <Menu>
+          <NativeTokenMenu
+            tokenData={tokenData}
+            chainData={chainData} />
+        </Menu>}
+    </HashSubpathProvider>
+    <TokenRowAnchor
+      href={menu.href}
+      onClick={menu.onClick}
+      onContextMenu={menu.onContextMenu}
+      token={tokenData}
+      chain={chainData}
+      balanceQuery={valuedBalanceQuery}
+      balanceUsdQuery={pricedBalanceQuery} />
+  </>
+}
+
+function OnlineContractTokenRow(props: { token: ContractToken }) {
+  const path = usePathContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const { token } = props
 
@@ -550,41 +622,102 @@ function ContractTokenRowRouter(props: { token: ContractToken }) {
 
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
-  const tokenQuery = useToken(context, token.address, "latest")
+  const tokenQuery = useContractToken(context, token.address, "latest")
   const maybeTokenData = tokenQuery.data?.get()
+
+  const subpath = useHashSubpath(path)
+  const menu = useCoords(subpath, `/token/${token.chainId}/${token.address}`)
+
+  const valuedBalanceQuery = useContractTokenBalance(context, token.address, wallet.address as Address, "latest")
+  const pricedBalanceQuery = useContractTokenPricedBalance(context, token.address, wallet.address as Address, "usd", "latest")
 
   if (maybeTokenData == null)
     return null
 
-  return <ContractTokenRow
-    token={maybeTokenData}
-    chain={chainData} />
+  return <>
+    <HashSubpathProvider>
+      {subpath.url.pathname === `/token/${token.chainId}/${token.address}` &&
+        <Menu>
+          <ContractTokenMenu token={maybeTokenData} />
+        </Menu>}
+    </HashSubpathProvider>
+    <TokenRowAnchor
+      href={menu.href}
+      onClick={menu.onClick}
+      onContextMenu={menu.onContextMenu}
+      token={maybeTokenData}
+      chain={chainData}
+      balanceQuery={valuedBalanceQuery}
+      balanceUsdQuery={pricedBalanceQuery} />
+  </>
 }
 
-function NativeTokenMenu(props: { token: NativeTokenData }) {
-  const close = useCloseContext().getOrThrow()
-  const wallet = useWalletDataContext().getOrThrow()
+function OfflineContractTokenRow(props: { token: ContractToken }) {
   const path = usePathContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
   const { token } = props
 
-  const send = useCoords(path, `/send?step=target&chain=${token.chainId}`)
+  const chainData = chainDataByChainId[token.chainId]
+
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
+
+  const tokenQuery = useContractToken(context, token.address, "latest")
+  const maybeTokenData = tokenQuery.data?.get()
+
+  const subpath = useHashSubpath(path)
+  const menu = useCoords(subpath, `/token/${token.chainId}/${token.address}`)
+
+  const valuedBalanceQuery = useOfflineContractTokenBalance(context, token.address, wallet.address as Address, "latest")
+  const pricedBalanceQuery = useOfflineContractTokenPricedBalance(context, token.address, wallet.address as Address, "usd", "latest")
+
+  if (maybeTokenData == null)
+    return null
+
+  return <>
+    <HashSubpathProvider>
+      {subpath.url.pathname === `/token/${token.chainId}/${token.address}` &&
+        <Menu>
+          <ContractTokenMenu token={maybeTokenData} />
+        </Menu>}
+    </HashSubpathProvider>
+    <TokenRowAnchor
+      href={menu.href}
+      onClick={menu.onClick}
+      onContextMenu={menu.onContextMenu}
+      token={maybeTokenData}
+      chain={chainData}
+      balanceQuery={valuedBalanceQuery}
+      balanceUsdQuery={pricedBalanceQuery} />
+  </>
+}
+
+function NativeTokenMenu(props: { tokenData: NativeTokenData, chainData: ChainData }) {
+  const close = useCloseContext().getOrThrow()
+  const storage = useUserStorageContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
+  const path = usePathContext().getOrThrow()
+  const { tokenData, chainData } = props
+
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
+
+  const send = useCoords(path, `/send?step=target&chain=${tokenData.chainId}`)
 
   const walletTokensQuery = useWalletTokens(wallet)
 
   const favorited = useMemo(() => {
-    return walletTokensQuery.data?.get().find(x => x.uuid === token.uuid) != null
-  }, [walletTokensQuery.data, token])
+    return walletTokensQuery.data?.get().find(x => x.uuid === tokenData.uuid) != null
+  }, [walletTokensQuery.data, tokenData])
 
   const favoriteOrThrow = useCallback(async () => {
     await walletTokensQuery.mutateOrThrow(s => {
       const current = s.real?.current
 
       if (current == null)
-        return new Some(new Data([TokenRef.from(token)]))
+        return new Some(new Data([TokenRef.from(tokenData)]))
 
-      return new Some(current.mapSync(array => [...array, TokenRef.from(token)]))
+      return new Some(current.mapSync(array => [...array, TokenRef.from(tokenData)]))
     })
-  }, [walletTokensQuery.mutateOrThrow, token])
+  }, [walletTokensQuery.mutateOrThrow, tokenData])
 
   const unfavoriteOrThrow = useCallback(async () => {
     await walletTokensQuery.mutateOrThrow(s => {
@@ -593,11 +726,11 @@ function NativeTokenMenu(props: { token: NativeTokenData }) {
       if (current == null)
         return new None()
 
-      return new Some(current.mapSync(array => array.filter(x => x.uuid !== token.uuid)))
+      return new Some(current.mapSync(array => array.filter(x => x.uuid !== tokenData.uuid)))
     })
-  }, [walletTokensQuery.mutateOrThrow, token])
+  }, [walletTokensQuery.mutateOrThrow, tokenData])
 
-  const onToggle = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
+  const toggleOrLogAndAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!favorited)
       await favoriteOrThrow()
     else
@@ -606,11 +739,21 @@ function NativeTokenMenu(props: { token: NativeTokenData }) {
     close(true)
   }), [favorited, favoriteOrThrow, unfavoriteOrThrow, close])
 
+  const fetchOrLog = useAsyncUniqueCallback(() => Errors.runOrLog(() => Promise.all([
+    Balance.Native.queryOrThrow(context, wallet.address as Address, "latest", storage)!.fetchOrThrow({ cache: "reload" }),
+    Balance.Priced.Native.queryOrThrow(context, wallet.address as Address, "usd", "latest", storage)!.fetchOrThrow({ cache: "reload" })
+  ])), [context, wallet, storage])
+
   return <div className="flex flex-col text-left gap-2">
     <WideShrinkableNakedMenuButton
-      onClick={onToggle.run}>
+      onClick={toggleOrLogAndAlert.run}>
       {favorited ? <Solid.StarIcon className="size-4" /> : <Outline.StarIcon className="size-4" />}
       {favorited ? "Unfavorite" : "Favorite"}
+    </WideShrinkableNakedMenuButton>
+    <WideShrinkableNakedMenuButton
+      onClick={fetchOrLog.run}>
+      <Outline.ArrowPathIcon className="size-4" />
+      Refresh
     </WideShrinkableNakedMenuButton>
     <WideShrinkableNakedMenuAnchor
       aria-disabled={wallet.type === "readonly"}
@@ -626,37 +769,6 @@ function NativeTokenMenu(props: { token: NativeTokenData }) {
       Faucet
     </WideShrinkableNakedMenuAnchor>
   </div>
-}
-
-function OnlineNativeTokenRow(props: { token: NativeTokenData } & { chain: ChainData }) {
-  const path = usePathContext().getOrThrow()
-  const wallet = useWalletDataContext().getOrThrow()
-  const { token, chain } = props
-
-  const subpath = useHashSubpath(path)
-  const menu = useCoords(subpath, `/token/${token.chainId}`)
-
-  const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
-
-  const valuedBalanceQuery = useNativeTokenBalance(context, wallet.address as Address, "pending")
-  const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address as Address, "usd", "pending")
-
-  return <>
-    <HashSubpathProvider>
-      {subpath.url.pathname === `/token/${token.chainId}` &&
-        <Menu>
-          <NativeTokenMenu token={token} />
-        </Menu>}
-    </HashSubpathProvider>
-    <ClickableTokenRow
-      href={menu.href}
-      onClick={menu.onClick}
-      onContextMenu={menu.onContextMenu}
-      token={token}
-      chain={chain}
-      balanceQuery={valuedBalanceQuery}
-      balanceUsdQuery={pricedBalanceQuery} />
-  </>
 }
 
 function ContractTokenMenu(props: { token: ContractTokenData }) {
@@ -726,37 +838,6 @@ function ContractTokenMenu(props: { token: ContractTokenData }) {
   </div>
 }
 
-function ContractTokenRow(props: { token: ContractTokenData } & { chain: ChainData }) {
-  const path = usePathContext().getOrThrow()
-  const wallet = useWalletDataContext().getOrThrow()
-  const { token, chain } = props
-
-  const subpath = useHashSubpath(path)
-  const menu = useCoords(subpath, `/token/${token.uuid}`)
-
-  const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
-
-  const valuedBalanceQuery = useContractTokenBalance(context, token.address, wallet.address as Address, "pending")
-  const pricedBalanceQuery = useContractTokenPricedBalance(context, token.address, wallet.address as Address, "usd", "pending")
-
-  return <>
-    <HashSubpathProvider>
-      {subpath.url.pathname === `/token/${token.uuid}` &&
-        <Menu>
-          <ContractTokenMenu token={token} />
-        </Menu>}
-    </HashSubpathProvider>
-    <ClickableTokenRow
-      href={menu.href}
-      onClick={menu.onClick}
-      onContextMenu={menu.onContextMenu}
-      token={token}
-      chain={chain}
-      balanceQuery={valuedBalanceQuery}
-      balanceUsdQuery={pricedBalanceQuery} />
-  </>
-}
-
 export interface QueryLike<D, E> {
   readonly data?: Data<D>
   readonly error?: Fail<E>
@@ -764,7 +845,7 @@ export interface QueryLike<D, E> {
   readonly fetching?: boolean
 }
 
-function ClickableTokenRow(props: { token: TokenData } & { chain: ChainData } & { balanceQuery: QueryLike<Fixed.From, Error> } & { balanceUsdQuery: QueryLike<Fixed.From, Error> } & AnchorProps) {
+function TokenRowAnchor(props: { token: TokenData } & { chain: ChainData } & { balanceQuery: QueryLike<Fixed.From, Error> } & { balanceUsdQuery: QueryLike<Fixed.From, Error> } & AnchorProps) {
   const { token, chain, balanceQuery, balanceUsdQuery, ...others } = props
 
   const tokenId = token.type === "native"

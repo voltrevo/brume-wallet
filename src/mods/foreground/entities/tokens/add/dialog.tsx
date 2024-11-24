@@ -7,7 +7,7 @@ import { Dialog } from "@/libs/ui/dialog";
 import { Loading } from "@/libs/ui/loading";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { ContractTokenRef } from "@/mods/universal/ethereum/mods/tokens/mods/core";
-import { useToken, useUserTokens } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
+import { useContractToken, useUserTokens } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
 import { Address } from "@hazae41/cubane";
 import { Data } from "@hazae41/glacier";
 import { Option, Some } from "@hazae41/option";
@@ -43,7 +43,7 @@ export function TokenAddDialog(props: {}) {
   const chain = chainDataByChainId[Number(defChainId)]
   const context = useEthereumContext(wallet.uuid, chain).getOrThrow()
 
-  const tokenQuery = useToken(context, maybeAddress, "latest")
+  const tokenQuery = useContractToken(context, maybeAddress, "latest")
   const tokensQuery = useUserTokens()
 
   const addOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {

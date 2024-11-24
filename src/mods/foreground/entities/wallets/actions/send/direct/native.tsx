@@ -52,7 +52,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
 
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
-  const priceQuery = useNativeTokenPriceV3(context, "pending")
+  const priceQuery = useNativeTokenPriceV3(context, "latest")
   const maybePrice = priceQuery.current?.mapSync(x => Fixed.from(x)).getOrNull()
 
   const [rawValuedInput = "", setRawValuedInput] = useState(nto(maybeValue))
@@ -131,8 +131,8 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
 
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
-  const valuedBalanceQuery = useNativeTokenBalance(context, wallet.address as Address, "pending")
-  const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address as Address, "usd", "pending")
+  const valuedBalanceQuery = useNativeTokenBalance(context, wallet.address as Address, "latest")
+  const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address as Address, "usd", "latest")
 
   const valuedBalanceData = valuedBalanceQuery.current?.getOrNull()
   const pricedBalanceData = pricedBalanceQuery.current?.getOrNull()
