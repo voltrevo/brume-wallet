@@ -638,7 +638,9 @@ function OnlineContractTokenRow(props: { token: ContractToken }) {
     <HashSubpathProvider>
       {subpath.url.pathname === `/token/${token.chainId}/${token.address}` &&
         <Menu>
-          <ContractTokenMenu token={maybeTokenData} />
+          <ContractTokenMenu
+            tokenData={maybeTokenData}
+            chainData={chainData} />
         </Menu>}
     </HashSubpathProvider>
     <TokenRowAnchor
@@ -677,7 +679,9 @@ function OfflineContractTokenRow(props: { token: ContractToken }) {
     <HashSubpathProvider>
       {subpath.url.pathname === `/token/${token.chainId}/${token.address}` &&
         <Menu>
-          <ContractTokenMenu token={maybeTokenData} />
+          <ContractTokenMenu
+            tokenData={maybeTokenData}
+            chainData={chainData} />
         </Menu>}
     </HashSubpathProvider>
     <TokenRowAnchor
@@ -739,10 +743,12 @@ function NativeTokenMenu(props: { tokenData: NativeTokenData, chainData: ChainDa
     close(true)
   }), [favorited, favoriteOrThrow, unfavoriteOrThrow, close])
 
-  const fetchOrLog = useAsyncUniqueCallback(() => Errors.runOrLog(() => Promise.all([
-    Balance.Native.queryOrThrow(context, wallet.address as Address, "latest", storage)!.fetchOrThrow({ cache: "reload" }),
-    Balance.Priced.Native.queryOrThrow(context, wallet.address as Address, "usd", "latest", storage)!.fetchOrThrow({ cache: "reload" })
-  ])), [context, wallet, storage])
+  const fetchOrLogAndAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
+    Balance.Native.queryOrThrow(context, wallet.address as Address, "latest", storage)!.fetchOrThrow({ cache: "reload" }).catch(console.warn)
+    Balance.Priced.Native.queryOrThrow(context, wallet.address as Address, "usd", "latest", storage)!.fetchOrThrow({ cache: "reload" }).catch(console.warn)
+
+    close(true)
+  }), [context, wallet, storage, close])
 
   return <div className="flex flex-col text-left gap-2">
     <WideShrinkableNakedMenuButton
@@ -751,7 +757,7 @@ function NativeTokenMenu(props: { tokenData: NativeTokenData, chainData: ChainDa
       {favorited ? "Unfavorite" : "Favorite"}
     </WideShrinkableNakedMenuButton>
     <WideShrinkableNakedMenuButton
-      onClick={fetchOrLog.run}>
+      onClick={fetchOrLogAndAlert.run}>
       <Outline.ArrowPathIcon className="size-4" />
       Refresh
     </WideShrinkableNakedMenuButton>
@@ -771,30 +777,33 @@ function NativeTokenMenu(props: { tokenData: NativeTokenData, chainData: ChainDa
   </div>
 }
 
-function ContractTokenMenu(props: { token: ContractTokenData }) {
+function ContractTokenMenu(props: { tokenData: ContractTokenData, chainData: ChainData }) {
   const close = useCloseContext().getOrThrow()
+  const storage = useUserStorageContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const path = usePathContext().getOrThrow()
-  const { token } = props
+  const { tokenData, chainData } = props
 
-  const send = useCoords(path, `/send?step=target&chain=${token.chainId}&token=${token.address}`)
+  const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
+
+  const send = useCoords(path, `/send?step=target&chain=${tokenData.chainId}&token=${tokenData.address}`)
 
   const walletTokensQuery = useWalletTokens(wallet)
 
   const favorited = useMemo(() => {
-    return walletTokensQuery.data?.get().find(x => x.uuid === token.uuid) != null
-  }, [walletTokensQuery.data, token])
+    return walletTokensQuery.data?.get().find(x => x.uuid === tokenData.uuid) != null
+  }, [walletTokensQuery.data, tokenData])
 
   const favoriteOrThrow = useCallback(async () => {
     await walletTokensQuery.mutateOrThrow(s => {
       const current = s.real?.current
 
       if (current == null)
-        return new Some(new Data([TokenRef.from(token)]))
+        return new Some(new Data([TokenRef.from(tokenData)]))
 
-      return new Some(current.mapSync(array => [...array, TokenRef.from(token)]))
+      return new Some(current.mapSync(array => [...array, TokenRef.from(tokenData)]))
     })
-  }, [walletTokensQuery.mutateOrThrow, token])
+  }, [walletTokensQuery.mutateOrThrow, tokenData])
 
   const unfavoriteOrThrow = useCallback(async () => {
     await walletTokensQuery.mutateOrThrow(s => {
@@ -803,11 +812,11 @@ function ContractTokenMenu(props: { token: ContractTokenData }) {
       if (current == null)
         return new None()
 
-      return new Some(current.mapSync(array => array.filter(x => x.uuid !== token.uuid)))
+      return new Some(current.mapSync(array => array.filter(x => x.uuid !== tokenData.uuid)))
     })
-  }, [walletTokensQuery.mutateOrThrow, token])
+  }, [walletTokensQuery.mutateOrThrow, tokenData])
 
-  const onToggle = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
+  const toggleOrLogAndAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (!favorited)
       await favoriteOrThrow()
     else
@@ -816,11 +825,23 @@ function ContractTokenMenu(props: { token: ContractTokenData }) {
     close(true)
   }), [favorited, favoriteOrThrow, unfavoriteOrThrow, close])
 
+  const fetchOrLogAndAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
+    Balance.Contract.queryOrThrow(context, tokenData.address, wallet.address as Address, "latest", storage)!.fetchOrThrow({ cache: "reload" }).catch(console.warn)
+    Balance.Priced.Contract.queryOrThrow(context, tokenData.address, wallet.address as Address, "usd", "latest", storage)!.fetchOrThrow({ cache: "reload" }).catch(console.warn)
+
+    close(true)
+  }), [context, wallet, tokenData, storage, close])
+
   return <div className="flex flex-col text-left gap-2">
     <WideShrinkableNakedMenuButton
-      onClick={onToggle.run}>
+      onClick={toggleOrLogAndAlert.run}>
       {favorited ? <Solid.StarIcon className="size-4" /> : <Outline.StarIcon className="size-4" />}
       {favorited ? "Unfavorite" : "Favorite"}
+    </WideShrinkableNakedMenuButton>
+    <WideShrinkableNakedMenuButton
+      onClick={fetchOrLogAndAlert.run}>
+      <Outline.ArrowPathIcon className="size-4" />
+      Refresh
     </WideShrinkableNakedMenuButton>
     <WideShrinkableNakedMenuAnchor
       aria-disabled={wallet.type === "readonly"}
