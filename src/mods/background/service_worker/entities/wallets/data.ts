@@ -176,8 +176,6 @@ export namespace BgWallet {
           const data = current.real?.current.checkOrNull()
           const [count = 0] = [data?.get().length]
 
-          console.log("wallet by address", data?.get())
-
           await User.Balance.Priced.Index.queryOrThrow(storage).mutateOrThrow(s => {
             const { current } = s
 
