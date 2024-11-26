@@ -1,6 +1,20 @@
 import { Fixed } from "@hazae41/cubane"
-import { createQuery, Data, JsonRequest, QueryStorage, States } from "@hazae41/glacier"
+import { createQuery, Data, QueryStorage, States } from "@hazae41/glacier"
 import { Option, Some } from "@hazae41/option"
+
+export class LegacyRequest extends Request {
+
+  constructor(
+    readonly key: string
+  ) {
+    super(key)
+  }
+
+  toJSON() {
+    return this.key
+  }
+
+}
 
 export interface ValueAndCount {
   readonly value: Fixed.From
@@ -13,12 +27,12 @@ export namespace Balance {
 
     export namespace Total {
 
-      export type K = JsonRequest.From<undefined>
+      export type K = string
       export type D = Fixed.From
       export type F = never
 
       export function keyOrThrow() {
-        return new JsonRequest(`app:/balances/total`, { body: undefined })
+        return `totalPricedBalance/usd`
       }
 
       export function queryOrThrow(storage: QueryStorage) {
@@ -29,12 +43,12 @@ export namespace Balance {
 
     export namespace Index {
 
-      export type K = JsonRequest.From<undefined>
+      export type K = string
       export type D = Record<string, ValueAndCount>
       export type F = never
 
       export function keyOrThrow() {
-        return new JsonRequest(`app:/balances/index`, { body: undefined })
+        return `totalPricedBalanceByWallet/v2/usd`
       }
 
       export function queryOrThrow(storage: QueryStorage) {

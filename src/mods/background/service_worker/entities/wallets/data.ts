@@ -171,15 +171,17 @@ export namespace BgWallet {
 
       export function schema(account: ZeroHexString, storage: QueryStorage) {
         const indexer = async (states: States<D, F>) => {
-          const { current, previous } = states
+          const { current } = states
 
           const data = current.real?.current.checkOrNull()
           const [count = 0] = [data?.get().length]
 
+          console.log("wallet by address", data?.get())
+
           await User.Balance.Priced.Index.queryOrThrow(storage).mutateOrThrow(s => {
             const { current } = s
 
-            const [value = new Fixed(0n, 0)] = [current?.getOrNull()?.[account].value]
+            const [value = new Fixed(0n, 0)] = [current?.getOrNull()?.[account]?.value]
 
             if (current == null)
               return new Some(new Data({ [account]: { value, count } }))

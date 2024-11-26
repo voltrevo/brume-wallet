@@ -76,7 +76,7 @@ export namespace FgWallet {
           await User.Balance.Priced.Index.queryOrThrow(storage).mutateOrThrow(s => {
             const { current } = s
 
-            const [value = new Fixed(0n, 0)] = [current?.getOrNull()?.[account].value]
+            const [value = new Fixed(0n, 0)] = [current?.getOrNull()?.[account]?.value]
 
             if (current == null)
               return new Some(new Data({ [account]: { value, count } }))
