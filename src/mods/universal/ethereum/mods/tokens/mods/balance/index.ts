@@ -2,6 +2,7 @@ import { ZeroHexBigInt } from "@/libs/bigints/bigints"
 import { EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data"
 import { Ethereum } from "@/mods/universal/ethereum"
 import { EthereumContext } from "@/mods/universal/ethereum/mods/context"
+import { User } from "@/mods/universal/user"
 import { Address, Fixed } from "@hazae41/cubane"
 import { createQuery, Data, JsonRequest, QueryStorage, States } from "@hazae41/glacier"
 import { None, Nullable, Option, Some } from "@hazae41/option"
@@ -114,7 +115,7 @@ export namespace Balance {
 
     export namespace Total {
 
-      export namespace Total {
+      export namespace ByWallet {
 
         export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
         export type D = Fixed.From
@@ -134,7 +135,23 @@ export namespace Balance {
             return
 
           const indexer = async (states: States<D, F>) => {
+            const { current } = states
 
+            const data = current.real?.current.checkOrNull()
+            const [value = new Fixed(0n, 0)] = [data?.get()]
+
+            await User.Balance.Priced.Index.queryOrThrow(storage)?.mutateOrThrow(s => {
+              const { current } = s
+
+              const [count = 0] = [current?.getOrNull()?.[account]?.count]
+
+              if (current == null)
+                return new Some(new Data({ [account]: { value, count } }))
+              if (current.isErr())
+                return new None()
+
+              return new Some(current.mapSync(c => ({ ...c, [account]: { value, count } })))
+            })
           }
 
           return createQuery<K, D, F>({
@@ -146,7 +163,61 @@ export namespace Balance {
 
       }
 
-      export namespace Index {
+      export namespace ByWalletAndChain {
+
+        export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
+        export type D = Fixed.From
+        export type F = never
+
+        export function keyOrThrow(chainId: number, account: Address, block: BlockNumber) {
+          const body = {
+            method: "eth_getTotalBalance",
+            params: [account, block]
+          } as const
+
+          return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
+        }
+
+        export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+          if (context == null)
+            return
+          if (account == null)
+            return
+          if (block == null)
+            return
+
+          const indexer = async (states: States<D, F>) => {
+            const { current } = states
+
+            const data = current.real?.current.checkOrNull()
+            const [value = new Fixed(0n, 0)] = [data?.get()]
+
+            await Index.ByWallet.queryOrThrow(account, storage)?.mutateOrThrow(s => {
+              const { current } = s
+
+              if (current == null)
+                return new Some(new Data({ [context.chain.chainId]: value }))
+              if (current.isErr())
+                return new None()
+
+              return new Some(current.mapSync(c => ({ ...c, [context.chain.chainId]: value })))
+            })
+          }
+
+          return createQuery<K, D, F>({
+            key: keyOrThrow(context.chain.chainId, account, block),
+            indexer,
+            storage
+          })
+        }
+
+      }
+
+    }
+
+    export namespace Index {
+
+      export namespace ByWallet {
 
         export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
         export type D = Record<string, Fixed.From>
@@ -169,7 +240,7 @@ export namespace Balance {
             const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).getOr({})
             const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-            const totalQuery = Total.queryOrThrow(account, storage)
+            const totalQuery = Total.ByWallet.queryOrThrow(account, storage)
             await totalQuery!.mutateOrThrow(() => new Some(new Data(total)))
           }
 
@@ -180,93 +251,46 @@ export namespace Balance {
           })
         }
 
-
       }
 
-      export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
-      export type D = Fixed.From
-      export type F = never
+      export namespace ByWalletAndChain {
 
-      export function keyOrThrow(chainId: number, account: Address, block: BlockNumber) {
-        const body = {
-          method: "eth_getTotalBalance",
-          params: [account, block]
-        } as const
+        export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
+        export type D = Record<string, Fixed.From>
+        export type F = never
 
-        return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
-      }
+        export function keyOrThrow(chainId: number, account: Address, block: BlockNumber) {
+          const body = {
+            method: "eth_getBalances",
+            params: [account, block]
+          } as const
 
-      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
-        if (context == null)
-          return
-        if (account == null)
-          return
-        if (block == null)
-          return
+          return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
+        }
 
-        const indexer = async (states: States<D, F>) => {
-          const { current } = states
+        export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
+          if (context == null)
+            return
+          if (account == null)
+            return
+          if (block == null)
+            return
 
-          const data = current.real?.current.checkOrNull()
-          const [value = new Fixed(0n, 0)] = [data?.get()]
+          const indexer = async (states: States<D, F>) => {
+            const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).getOr({})
+            const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-          await Index.queryOrThrow(account, storage)?.mutateOrThrow(s => {
-            const { current } = s
+            const totalQuery = Total.ByWalletAndChain.queryOrThrow(context, account, block, storage)
+            await totalQuery!.mutateOrThrow(() => new Some(new Data(total)))
+          }
 
-            if (current == null)
-              return new Some(new Data({ [context.chain.chainId]: value }))
-            if (current.isErr())
-              return new None()
-
-            return new Some(current.mapSync(c => ({ ...c, [context.chain.chainId]: value })))
+          return createQuery<K, D, F>({
+            key: keyOrThrow(context.chain.chainId, account, block),
+            indexer,
+            storage
           })
         }
 
-        return createQuery<K, D, F>({
-          key: keyOrThrow(context.chain.chainId, account, block),
-          indexer,
-          storage
-        })
-      }
-
-    }
-
-    export namespace Index {
-
-      export type K = JsonRequest.From<EthereumChainlessRpcRequestPreinit<unknown>>
-      export type D = Record<string, Fixed.From>
-      export type F = never
-
-      export function keyOrThrow(chainId: number, account: Address, block: BlockNumber) {
-        const body = {
-          method: "eth_getBalances",
-          params: [account, block]
-        } as const
-
-        return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
-      }
-
-      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
-        if (context == null)
-          return
-        if (account == null)
-          return
-        if (block == null)
-          return
-
-        const indexer = async (states: States<D, F>) => {
-          const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).getOr({})
-          const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
-
-          const totalQuery = Total.queryOrThrow(context, account, block, storage)
-          await totalQuery!.mutateOrThrow(() => new Some(new Data(total)))
-        }
-
-        return createQuery<K, D, F>({
-          key: keyOrThrow(context.chain.chainId, account, block),
-          indexer,
-          storage
-        })
       }
 
     }
@@ -321,7 +345,7 @@ export namespace Balance {
           const data = current.real?.current.checkOrNull()
           const [value = new Fixed(0n, 0)] = [data?.get()]
 
-          await Index.queryOrThrow(context, account, block, storage)!.mutateOrThrow(s => {
+          await Index.ByWalletAndChain.queryOrThrow(context, account, block, storage)!.mutateOrThrow(s => {
             const { current } = s
 
             if (current == null)
@@ -395,7 +419,7 @@ export namespace Balance {
           const data = current.real?.current.checkOrNull()
           const [value = new Fixed(0n, 0)] = [data?.get()]
 
-          await Index.queryOrThrow(context, account, block, storage)!.mutateOrThrow(s => {
+          await Index.ByWalletAndChain.queryOrThrow(context, account, block, storage)!.mutateOrThrow(s => {
             const { current } = s
 
             if (current == null)

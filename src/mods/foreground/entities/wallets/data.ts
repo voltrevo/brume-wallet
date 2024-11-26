@@ -1,6 +1,7 @@
 import { ChainData } from "@/libs/ethereum/mods/chain"
 import { BgWallet, EthereumAuthPrivateKeyWalletData, EthereumChainlessRpcRequestPreinit, EthereumSeededWalletData, EthereumUnauthPrivateKeyWalletData, EthereumWalletData, Wallet, WalletRef } from "@/mods/background/service_worker/entities/wallets/data"
 import { SeedQuery } from "@/mods/universal/entities/seeds"
+import { User } from "@/mods/universal/user"
 import { Base16 } from "@hazae41/base16"
 import { Base64 } from "@hazae41/base64"
 import { Abi, Fixed, ZeroHexString } from "@hazae41/cubane"
@@ -14,7 +15,6 @@ import { Background } from "../../background/background"
 import { useBackgroundContext } from "../../background/context"
 import { UserStorage, useUserStorageContext } from "../../storage/user"
 import { SeedInstance } from "../seeds/all/helpers"
-import { FgTotal } from "../unknown/data"
 
 export interface WalletProps {
   readonly wallet: Wallet
@@ -68,26 +68,22 @@ export namespace FgWallet {
           return
 
         const indexer = async (states: States<D, F>) => {
-          const { current, previous } = states
+          const { current } = states
 
-          const previousData = previous?.real?.current.ok()?.getOrNull()
-          const currentData = current.real?.current.ok()?.getOrNull()
+          const data = current.real?.current.checkOrNull()
+          const [count = 0] = [data?.get().length]
 
-          const [array = []] = [currentData]
+          await User.Balance.Priced.Index.queryOrThrow(storage).mutateOrThrow(s => {
+            const { current } = s
 
-          await FgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutateOrThrow(s => {
-            const current = s.current
-
-            const [{ value = new Fixed(0n, 0) } = {}] = [current?.getOrNull()?.[account]]
-
-            const inner = { value, count: array.length }
+            const [value = new Fixed(0n, 0)] = [current?.getOrNull()?.[account].value]
 
             if (current == null)
-              return new Some(new Data({ [account]: inner }))
+              return new Some(new Data({ [account]: { value, count } }))
             if (current.isErr())
               return new None()
 
-            return new Some(current.mapSync(c => ({ ...c, [account]: inner })))
+            return new Some(current.mapSync(c => ({ ...c, [account]: { value, count } })))
           })
         }
 

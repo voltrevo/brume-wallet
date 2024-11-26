@@ -1,12 +1,12 @@
 import { ZeroHexBigInt } from "@/libs/bigints/bigints";
 import { Errors } from "@/libs/errors/errors";
 import { ChainData } from "@/libs/ethereum/mods/chain";
-import { BgEthereum, BgTotal } from "@/mods/background/service_worker/entities/unknown/data";
+import { BgEthereum } from "@/mods/background/service_worker/entities/unknown/data";
 import { EthereumChainfulRpcRequestPreinit, EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
-import { Fixed, ZeroHexString } from "@hazae41/cubane";
-import { Data, States, createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
+import { ZeroHexString } from "@hazae41/cubane";
+import { createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
-import { None, Nullable, Some } from "@hazae41/option";
+import { Nullable } from "@hazae41/option";
 import { UserStorage, useUserStorageContext } from "../../storage/user";
 import { FgEthereumContext } from "../wallets/data";
 
@@ -218,117 +218,5 @@ export function useNonce(address: Nullable<ZeroHexString>, context: Nullable<FgE
   useInterval(query, 10 * 1000)
 
   useError(query, Errors.onQueryError)
-  return query
-}
-
-export namespace FgTotal {
-
-  export namespace Balance {
-
-    export namespace Priced {
-
-      export namespace ByAddress {
-
-        export namespace Record {
-
-          export type K = BgTotal.Balance.Priced.ByAddress.Record.K
-          export type D = BgTotal.Balance.Priced.ByAddress.Record.D
-          export type F = BgTotal.Balance.Priced.ByAddress.Record.F
-
-          export const key = BgTotal.Balance.Priced.ByAddress.Record.key
-
-          export function schema(coin: "usd", storage: UserStorage) {
-            const indexer = async (states: States<D, F>) => {
-              const { current, previous } = states
-
-              const previousData = previous?.real?.current.ok()?.getOrNull()
-              const currentData = current.real?.current.ok()?.getOrNull()
-
-              const [record = {}] = [currentData]
-
-              const total = Object.values(record).reduce<Fixed>((x, y) => {
-                if (y.count === 0)
-                  return x
-
-                return Fixed.from(y.value).add(x)
-              }, new Fixed(0n, 0))
-
-              await Priced.schema(coin, storage).mutateOrThrow(() => new Some(new Data(total)))
-            }
-
-            return createQuery<K, D, F>({ key: key(coin), indexer, storage })
-          }
-
-        }
-
-        export type K = string
-        export type D = Fixed.From
-        export type F = never
-
-        export const key = BgTotal.Balance.Priced.ByAddress.key
-
-        export function schema(account: Nullable<ZeroHexString>, coin: "usd", storage: UserStorage) {
-          if (account == null)
-            return
-
-          const indexer = async (states: States<D, F>) => {
-            const { current, previous } = states
-
-            const previousData = previous?.real?.current.ok()?.getOrNull()
-            const currentData = current.real?.current.ok()?.getOrNull()
-
-            const [value = new Fixed(0n, 0)] = [currentData]
-
-            await Record.schema(coin, storage)?.mutateOrThrow(s => {
-              const { current } = s
-
-              const [{ count = 0 } = {}] = [current?.getOrNull()?.[account]]
-
-              const inner = { count, value }
-
-              if (current == null)
-                return new Some(new Data({ [account]: inner }))
-              if (current.isErr())
-                return new None()
-
-              return new Some(current.mapSync(c => ({ ...c, [account]: inner })))
-            })
-          }
-
-          return createQuery<K, D, F>({ key: key(account, coin), indexer, storage })
-        }
-
-      }
-
-      export type K = string
-      export type D = Fixed.From
-      export type F = never
-
-      export function key(coin: "usd") {
-        return `totalPricedBalance/${coin}`
-      }
-
-      export function schema(coin: "usd", storage: UserStorage) {
-        return createQuery<K, D, F>({ key: key(coin), storage })
-      }
-
-    }
-
-  }
-
-
-}
-
-export function useTotalPricedBalance(coin: "usd") {
-  const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgTotal.Balance.Priced.schema, [coin, storage])
-
-  return query
-}
-
-export function useTotalWalletPricedBalance(address: Nullable<ZeroHexString>, coin: "usd") {
-  const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgTotal.Balance.Priced.ByAddress.schema, [address, coin, storage])
-
   return query
 }

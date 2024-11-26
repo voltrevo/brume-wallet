@@ -7,6 +7,14 @@ import { Nullable } from "@hazae41/option"
 import { Balance } from "."
 import { BlockNumber } from "../../../blocks"
 
+export function useWalletTotalPricedBalance(account: Nullable<Address>) {
+  const storage = useUserStorageContext().getOrThrow()
+
+  const query = useQuery(Balance.Priced.Total.ByWallet.queryOrThrow, [account, storage])
+
+  return query
+}
+
 export function useNativeTokenBalance(context: Nullable<EthereumContext>, account: Nullable<Address>, block: Nullable<BlockNumber>) {
   const storage = useUserStorageContext().getOrThrow()
 

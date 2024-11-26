@@ -1,9 +1,9 @@
+import { User } from "@/mods/universal/user"
 import { Fixed, ZeroHexString } from "@hazae41/cubane"
 import { Data, QueryStorage, States, createQuery } from "@hazae41/glacier"
 import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { None, Some } from "@hazae41/option"
 import { SeedRef } from "../../../../universal/entities/seeds"
-import { BgTotal } from "../unknown/data"
 
 export type Wallet =
   | WalletRef
@@ -173,24 +173,20 @@ export namespace BgWallet {
         const indexer = async (states: States<D, F>) => {
           const { current, previous } = states
 
-          const previousData = previous?.real?.current.ok()?.getOrNull()
-          const currentData = current.real?.current.ok()?.getOrNull()
+          const data = current.real?.current.checkOrNull()
+          const [count = 0] = [data?.get().length]
 
-          const [array = []] = [currentData]
+          await User.Balance.Priced.Index.queryOrThrow(storage).mutateOrThrow(s => {
+            const { current } = s
 
-          await BgTotal.Balance.Priced.ByAddress.Record.schema("usd", storage).mutateOrThrow(s => {
-            const current = s.current
-
-            const [{ value = new Fixed(0n, 0) } = {}] = [current?.getOrNull()?.[account]]
-
-            const inner = { value, count: array.length }
+            const [value = new Fixed(0n, 0)] = [current?.getOrNull()?.[account].value]
 
             if (current == null)
-              return new Some(new Data({ [account]: inner }))
+              return new Some(new Data({ [account]: { value, count } }))
             if (current.isErr())
               return new None()
 
-            return new Some(current.mapSync(c => ({ ...c, [account]: inner })))
+            return new Some(current.mapSync(c => ({ ...c, [account]: { value, count } })))
           })
         }
 

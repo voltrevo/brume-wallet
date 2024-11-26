@@ -3,8 +3,8 @@ import { isWebsite } from "@/libs/platform/platform"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
 import { Page } from "@/libs/ui/page/page"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
+import { useUserTotalPricedBalance } from "@/mods/universal/user/mods/balances/hooks"
 import { useCallback, useEffect, useState } from "react"
-import { useTotalPricedBalance } from "../entities/unknown/data"
 import { useUserContext } from "../entities/users/context"
 import { useDisplayUsd } from "../entities/wallets/page"
 
@@ -12,7 +12,7 @@ export function HomePage() {
   const userData = useUserContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
-  const totalPricedBalanceQuery = useTotalPricedBalance("usd")
+  const totalPricedBalanceQuery = useUserTotalPricedBalance()
   const totalPricedBalanceDisplay = useDisplayUsd(totalPricedBalanceQuery.data?.get())
 
   useEffect(() => {
