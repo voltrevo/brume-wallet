@@ -321,6 +321,7 @@ function WalletDataPage() {
         <div className="font-medium text-xl">
           Other tokens
         </div>
+        <div className="grow" />
         <SmallShrinkableContrastButton
           onClick={add.enable}>
           <Outline.PlusIcon className="size-5" />
@@ -769,8 +770,8 @@ function NativeTokenMenu(props: { tokenData: NativeTokenData, chainData: ChainDa
   }), [favorited, favoriteOrThrow, unfavoriteOrThrow, close])
 
   const fetchOrLogAndAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    Balance.Native.queryOrThrow(context, wallet.address as Address, "latest", storage)!.fetchOrThrow({ cache: "reload" }).catch(console.warn)
-    Balance.Priced.Native.queryOrThrow(context, wallet.address as Address, "usd", "latest", storage)!.fetchOrThrow({ cache: "reload" }).catch(console.warn)
+    Balance.Native.queryOrThrow(context, wallet.address as Address, "latest", storage)!.refetchOrThrow({ cache: "reload" }).catch(console.warn)
+    Balance.Priced.Native.queryOrThrow(context, wallet.address as Address, "usd", "latest", storage)!.refetchOrThrow({ cache: "reload" }).catch(console.warn)
 
     close(true)
   }), [context, wallet, storage, close])
@@ -851,8 +852,8 @@ function ContractTokenMenu(props: { tokenData: ContractTokenData, chainData: Cha
   }), [favorited, favoriteOrThrow, unfavoriteOrThrow, close])
 
   const fetchOrLogAndAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    Balance.Contract.queryOrThrow(context, tokenData.address, wallet.address as Address, "latest", storage)!.fetchOrThrow({ cache: "reload" }).catch(console.warn)
-    Balance.Priced.Contract.queryOrThrow(context, tokenData.address, wallet.address as Address, "usd", "latest", storage)!.fetchOrThrow({ cache: "reload" }).catch(console.warn)
+    Balance.Contract.queryOrThrow(context, tokenData.address, wallet.address as Address, "latest", storage)!.refetchOrThrow({ cache: "reload" }).catch(console.warn)
+    Balance.Priced.Contract.queryOrThrow(context, tokenData.address, wallet.address as Address, "usd", "latest", storage)!.refetchOrThrow({ cache: "reload" }).catch(console.warn)
 
     close(true)
   }), [context, wallet, tokenData, storage, close])
