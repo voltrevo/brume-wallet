@@ -21,6 +21,21 @@ export type ContractToken =
   | ContractTokenData
   | ContractTokenRef
 
+export type TokenInfo =
+  | NativeTokenInfo
+  | ContractTokenInfo
+
+export interface NativeTokenInfo {
+  readonly type: "native"
+  readonly chainId: number
+}
+
+export interface ContractTokenInfo {
+  readonly type: "contract"
+  readonly chainId: number
+  readonly address: Address
+}
+
 export type TokenRef =
   | NativeTokenRef
   | ContractTokenRef

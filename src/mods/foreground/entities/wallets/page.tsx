@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Color } from "@/libs/colors/colors";
 import { Errors, UIError } from "@/libs/errors/errors";
-import { ChainData, chainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
+import { ChainData, chainDataByChainId, strictChainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { Outline, Solid } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
@@ -9,15 +9,17 @@ import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { AnchorProps } from "@/libs/react/props/html";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { State } from "@/libs/react/state";
+import { Records } from "@/libs/records";
 import { Dialog } from "@/libs/ui/dialog";
-import { SmallUnflexLoading } from "@/libs/ui/loading";
+import { Loading, SmallUnflexLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
 import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
 import { Balance } from "@/mods/universal/ethereum/mods/tokens/mods/balance";
 import { useContractTokenBalance, useContractTokenPricedBalance, useNativeTokenBalance, useNativeTokenPricedBalance, useOfflineContractTokenBalance, useOfflineContractTokenPricedBalance, useOfflineNativeTokenBalance, useOfflineNativeTokenPricedBalance } from "@/mods/universal/ethereum/mods/tokens/mods/balance/hooks";
-import { ContractToken, ContractTokenData, NativeToken, NativeTokenData, Token, TokenData, TokenRef } from "@/mods/universal/ethereum/mods/tokens/mods/core";
+import { useRankedToken } from "@/mods/universal/ethereum/mods/tokens/mods/contest/hooks";
+import { ContractTokenData, ContractTokenInfo, NativeTokenData, NativeTokenInfo, Token, TokenData, TokenInfo, TokenRef } from "@/mods/universal/ethereum/mods/tokens/mods/core";
 import { useContractToken, useUserTokens, useWalletTokens } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Address, Fixed, ZeroHexString } from "@hazae41/cubane";
@@ -193,25 +195,7 @@ function WalletDataPage() {
       return 0
     }
 
-    const wallets2 = wallets.filter(x => {
-      return true
-    }).sort(sorter)
-
-    const users2 = users.filter(x => {
-      if (wallets.find(y => y.uuid === x.uuid))
-        return false
-      return true
-    }).sort(sorter)
-
-    const builtins2 = builtins.filter(x => {
-      if (users.find(y => y.uuid === x.uuid))
-        return false
-      if (wallets.find(y => y.uuid === x.uuid))
-        return false
-      return true
-    }).sort(sorter)
-
-    return [wallets2, users2, builtins2] as const
+    return [wallets, users, builtins].map(x => x.sort(sorter))
   }, [userTokensQuery.data, walletTokensQuery.data])
 
   const onBackClick = useCallback(() => {
@@ -310,9 +294,32 @@ function WalletDataPage() {
             <TokenAddDialog />
           </Dialog>
         </CloseContext.Provider>}
+      {walletTokens.length > 0 && <>
+        <div className="font-medium text-xl">
+          Favorite tokens
+        </div>
+        <div className="h-4" />
+        <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
+          {walletTokens.map(token =>
+            <Fragment key={token.uuid}>
+              <OnlineTokenRow token={token} />
+            </Fragment>)}
+        </div>
+        <div className="h-2" />
+      </>}
+      <div className="font-medium text-xl">
+        Top tokens
+      </div>
+      <div className="h-4" />
+      <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
+        <RankedTokenRow rank={0} />
+        <RankedTokenRow rank={1} />
+        <RankedTokenRow rank={2} />
+      </div>
+      <div className="h-2" />
       <div className="flex items-center gap-2">
         <div className="font-medium text-xl">
-          Tokens
+          Other tokens
         </div>
         <SmallShrinkableContrastButton
           onClick={add.enable}>
@@ -322,10 +329,6 @@ function WalletDataPage() {
       </div>
       <div className="h-4" />
       <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
-        {walletTokens.map(token =>
-          <Fragment key={token.uuid}>
-            <OnlineTokenRow token={token} />
-          </Fragment>)}
         {userTokens.map(token =>
           <Fragment key={token.uuid}>
             <OfflineTokenRow token={token} />
@@ -367,6 +370,28 @@ function WalletDataPage() {
     {Apps}
     {Body}
   </Page>
+}
+
+export function RankedTokenRow(props: { rank: number }) {
+  const wallet = useWalletDataContext().getOrThrow()
+  const { rank } = props
+
+  const mainnet = useEthereumContext(wallet.uuid, strictChainDataByChainId[1]).getOrThrow()
+
+  const tokenQuery = useRankedToken(mainnet, "latest", rank)
+  const tokenInfo = tokenQuery.data?.get()
+
+  if (tokenInfo == null)
+    return <div className="flex items-center justify-center po-md">
+      <Loading className="size-5" />
+    </div>
+
+  const chainData = Records.getOrNull(chainDataByChainId, tokenInfo.chainId)
+
+  if (chainData == null)
+    return null
+
+  return <OfflineTokenRow token={tokenInfo} />
 }
 
 export function WalletMenu(props: {
@@ -521,7 +546,7 @@ export function WalletConnectMenu() {
   </div>
 }
 
-function OnlineTokenRow(props: { token: Token }) {
+function OnlineTokenRow(props: { token: TokenInfo }) {
   const { token } = props
 
   if (token.type === "native")
@@ -531,7 +556,7 @@ function OnlineTokenRow(props: { token: Token }) {
   return null
 }
 
-function OfflineTokenRow(props: { token: Token }) {
+function OfflineTokenRow(props: { token: TokenInfo }) {
   const { token } = props
 
   if (token.type === "native")
@@ -541,7 +566,7 @@ function OfflineTokenRow(props: { token: Token }) {
   return null
 }
 
-function OnlineNativeTokenRow(props: { token: NativeToken }) {
+function OnlineNativeTokenRow(props: { token: NativeTokenInfo }) {
   const path = usePathContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const { token } = props
@@ -577,7 +602,7 @@ function OnlineNativeTokenRow(props: { token: NativeToken }) {
   </>
 }
 
-function OfflineNativeTokenRow(props: { token: NativeToken }) {
+function OfflineNativeTokenRow(props: { token: NativeTokenInfo }) {
   const path = usePathContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const { token } = props
@@ -613,7 +638,7 @@ function OfflineNativeTokenRow(props: { token: NativeToken }) {
   </>
 }
 
-function OnlineContractTokenRow(props: { token: ContractToken }) {
+function OnlineContractTokenRow(props: { token: ContractTokenInfo }) {
   const path = usePathContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const { token } = props
@@ -654,7 +679,7 @@ function OnlineContractTokenRow(props: { token: ContractToken }) {
   </>
 }
 
-function OfflineContractTokenRow(props: { token: ContractToken }) {
+function OfflineContractTokenRow(props: { token: ContractTokenInfo }) {
   const path = usePathContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const { token } = props
