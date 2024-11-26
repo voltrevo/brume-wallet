@@ -159,7 +159,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
   const valuedBalanceQuery = useContractTokenBalance(context, tokenData.address, wallet.address as Address, "latest")
-  const pricedBalanceQuery = useContractTokenPricedBalance(context, tokenData.address, wallet.address as Address, "usd", "latest")
+  const pricedBalanceQuery = useContractTokenPricedBalance(context, tokenData.address, wallet.address as Address, "latest")
 
   const valuedBalanceData = valuedBalanceQuery.current?.getOrNull()
   const pricedBalanceData = pricedBalanceQuery.current?.getOrNull()

@@ -120,19 +120,17 @@ export namespace Balance {
         export type D = Fixed.From
         export type F = never
 
-        export function keyOrThrow(account: Address, currency: "usd") {
+        export function keyOrThrow(account: Address) {
           const body = {
             method: "eth_getTotalBalance",
-            params: [account, currency]
+            params: [account]
           } as const
 
           return new JsonRequest(`app:/ethereum`, { method: "POST", body })
         }
 
-        export function queryOrThrow(account: Nullable<Address>, currency: Nullable<"usd">, storage: QueryStorage) {
+        export function queryOrThrow(account: Nullable<Address>, storage: QueryStorage) {
           if (account == null)
-            return
-          if (currency == null)
             return
 
           const indexer = async (states: States<D, F>) => {
@@ -140,7 +138,7 @@ export namespace Balance {
           }
 
           return createQuery<K, D, F>({
-            key: keyOrThrow(account, currency),
+            key: keyOrThrow(account),
             indexer,
             storage
           })
@@ -154,31 +152,29 @@ export namespace Balance {
         export type D = Record<string, Fixed.From>
         export type F = never
 
-        export function keyOrThrow(account: Address, currency: "usd") {
+        export function keyOrThrow(account: Address) {
           const body = {
             method: "eth_getBalances",
-            params: [account, currency]
+            params: [account]
           } as const
 
           return new JsonRequest(`app:/ethereum`, { method: "POST", body })
         }
 
-        export function queryOrThrow(account: Nullable<Address>, currency: Nullable<"usd">, storage: QueryStorage) {
+        export function queryOrThrow(account: Nullable<Address>, storage: QueryStorage) {
           if (account == null)
-            return
-          if (currency == null)
             return
 
           const indexer = async (states: States<D, F>) => {
             const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).getOr({})
             const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-            const totalQuery = Total.queryOrThrow(account, currency, storage)
+            const totalQuery = Total.queryOrThrow(account, storage)
             await totalQuery!.mutateOrThrow(() => new Some(new Data(total)))
           }
 
           return createQuery<K, D, F>({
-            key: keyOrThrow(account, currency),
+            key: keyOrThrow(account),
             indexer,
             storage
           })
@@ -191,21 +187,19 @@ export namespace Balance {
       export type D = Fixed.From
       export type F = never
 
-      export function keyOrThrow(chainId: number, account: Address, currency: "usd", block: BlockNumber) {
+      export function keyOrThrow(chainId: number, account: Address, block: BlockNumber) {
         const body = {
           method: "eth_getTotalBalance",
-          params: [account, currency, block]
+          params: [account, block]
         } as const
 
         return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
       }
 
-      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, currency: Nullable<"usd">, block: Nullable<BlockNumber>, storage: QueryStorage) {
+      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
         if (context == null)
           return
         if (account == null)
-          return
-        if (currency == null)
           return
         if (block == null)
           return
@@ -216,7 +210,7 @@ export namespace Balance {
           const data = current.real?.current.checkOrNull()
           const [value = new Fixed(0n, 0)] = [data?.get()]
 
-          await Index.queryOrThrow(account, currency, storage)?.mutateOrThrow(s => {
+          await Index.queryOrThrow(account, storage)?.mutateOrThrow(s => {
             const { current } = s
 
             if (current == null)
@@ -229,7 +223,7 @@ export namespace Balance {
         }
 
         return createQuery<K, D, F>({
-          key: keyOrThrow(context.chain.chainId, account, currency, block),
+          key: keyOrThrow(context.chain.chainId, account, block),
           indexer,
           storage
         })
@@ -243,21 +237,19 @@ export namespace Balance {
       export type D = Record<string, Fixed.From>
       export type F = never
 
-      export function keyOrThrow(chainId: number, account: Address, currency: "usd", block: BlockNumber) {
+      export function keyOrThrow(chainId: number, account: Address, block: BlockNumber) {
         const body = {
           method: "eth_getBalances",
-          params: [account, currency, block]
+          params: [account, block]
         } as const
 
         return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
       }
 
-      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, currency: Nullable<"usd">, block: Nullable<BlockNumber>, storage: QueryStorage) {
+      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
         if (context == null)
           return
         if (account == null)
-          return
-        if (currency == null)
           return
         if (block == null)
           return
@@ -266,12 +258,12 @@ export namespace Balance {
           const values = Option.wrap(states.current.real?.data).mapSync(d => d.inner).getOr({})
           const total = Object.values(values).reduce<Fixed>((x, y) => Fixed.from(y).add(x), new Fixed(0n, 0))
 
-          const totalQuery = Total.queryOrThrow(context, account, currency, block, storage)
+          const totalQuery = Total.queryOrThrow(context, account, block, storage)
           await totalQuery!.mutateOrThrow(() => new Some(new Data(total)))
         }
 
         return createQuery<K, D, F>({
-          key: keyOrThrow(context.chain.chainId, account, currency, block),
+          key: keyOrThrow(context.chain.chainId, account, block),
           indexer,
           storage
         })
@@ -285,21 +277,19 @@ export namespace Balance {
       export type D = Fixed.From
       export type F = Error
 
-      export function keyOrThrow(chainId: number, account: Address, currency: "usd", block: BlockNumber) {
+      export function keyOrThrow(chainId: number, account: Address, block: BlockNumber) {
         const body = {
           method: "eth_getNativeTokenPricedBalance",
-          params: [account, currency, block]
+          params: [account, block]
         } as const
 
         return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
       }
 
-      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, currency: Nullable<"usd">, block: Nullable<BlockNumber>, storage: QueryStorage) {
+      export function queryOrThrow(context: Nullable<EthereumContext>, account: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
         if (context == null)
           return
         if (account == null)
-          return
-        if (currency == null)
           return
         if (block == null)
           return
@@ -331,7 +321,7 @@ export namespace Balance {
           const data = current.real?.current.checkOrNull()
           const [value = new Fixed(0n, 0)] = [data?.get()]
 
-          await Index.queryOrThrow(context, account, currency, block, storage)!.mutateOrThrow(s => {
+          await Index.queryOrThrow(context, account, block, storage)!.mutateOrThrow(s => {
             const { current } = s
 
             if (current == null)
@@ -344,7 +334,7 @@ export namespace Balance {
         }
 
         return createQuery<K, D, F>({
-          key: keyOrThrow(context.chain.chainId, account, currency, block),
+          key: keyOrThrow(context.chain.chainId, account, block),
           fetcher,
           indexer,
           storage
@@ -359,23 +349,21 @@ export namespace Balance {
       export type D = Fixed.From
       export type F = Error
 
-      export function keyOrThrow(chainId: number, contract: Address, account: Address, currency: "usd", block: BlockNumber) {
+      export function keyOrThrow(chainId: number, contract: Address, account: Address, block: BlockNumber) {
         const body = {
           method: "eth_getContractTokenPricedBalance",
-          params: [contract, account, currency, block]
+          params: [contract, account, block]
         } as const
 
         return new JsonRequest(`app:/ethereum/${chainId}`, { method: "POST", body })
       }
 
-      export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<Address>, account: Nullable<Address>, currency: Nullable<"usd">, block: Nullable<BlockNumber>, storage: QueryStorage) {
+      export function queryOrThrow(context: Nullable<EthereumContext>, contract: Nullable<Address>, account: Nullable<Address>, block: Nullable<BlockNumber>, storage: QueryStorage) {
         if (context == null)
           return
         if (contract == null)
           return
         if (account == null)
-          return
-        if (currency == null)
           return
         if (block == null)
           return
@@ -407,7 +395,7 @@ export namespace Balance {
           const data = current.real?.current.checkOrNull()
           const [value = new Fixed(0n, 0)] = [data?.get()]
 
-          await Index.queryOrThrow(context, account, currency, block, storage)!.mutateOrThrow(s => {
+          await Index.queryOrThrow(context, account, block, storage)!.mutateOrThrow(s => {
             const { current } = s
 
             if (current == null)
@@ -420,7 +408,7 @@ export namespace Balance {
         }
 
         return createQuery<K, D, F>({
-          key: keyOrThrow(context.chain.chainId, contract, account, currency, block),
+          key: keyOrThrow(context.chain.chainId, contract, account, block),
           fetcher,
           indexer,
           storage

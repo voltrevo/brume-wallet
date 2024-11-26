@@ -137,7 +137,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const [mode, setMode] = useState<"valued" | "priced">("valued")
 
   const valuedBalanceQuery = useNativeTokenBalance(context, wallet.address as Address, "latest")
-  const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address as Address, "usd", "latest")
+  const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address as Address, "latest")
 
   const valuedBalanceData = valuedBalanceQuery.current?.getOrNull()
   const pricedBalanceData = pricedBalanceQuery.current?.getOrNull()

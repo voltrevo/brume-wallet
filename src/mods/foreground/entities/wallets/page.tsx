@@ -581,7 +581,7 @@ function OnlineNativeTokenRow(props: { token: NativeTokenInfo }) {
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
   const valuedBalanceQuery = useNativeTokenBalance(context, wallet.address as Address, "latest")
-  const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address as Address, "usd", "latest")
+  const pricedBalanceQuery = useNativeTokenPricedBalance(context, wallet.address as Address, "latest")
 
   return <>
     <HashSubpathProvider>
@@ -617,7 +617,7 @@ function OfflineNativeTokenRow(props: { token: NativeTokenInfo }) {
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
   const valuedBalanceQuery = useOfflineNativeTokenBalance(context, wallet.address as Address, "latest")
-  const pricedBalanceQuery = useOfflineNativeTokenPricedBalance(context, wallet.address as Address, "usd", "latest")
+  const pricedBalanceQuery = useOfflineNativeTokenPricedBalance(context, wallet.address as Address, "latest")
 
   return <>
     <HashSubpathProvider>
@@ -655,7 +655,7 @@ function OnlineContractTokenRow(props: { token: ContractTokenInfo }) {
   const menu = useCoords(subpath, `/token/${token.chainId}/${token.address}`)
 
   const valuedBalanceQuery = useContractTokenBalance(context, token.address, wallet.address as Address, "latest")
-  const pricedBalanceQuery = useContractTokenPricedBalance(context, token.address, wallet.address as Address, "usd", "latest")
+  const pricedBalanceQuery = useContractTokenPricedBalance(context, token.address, wallet.address as Address, "latest")
 
   if (maybeTokenData == null)
     return null
@@ -696,7 +696,7 @@ function OfflineContractTokenRow(props: { token: ContractTokenInfo }) {
   const menu = useCoords(subpath, `/token/${token.chainId}/${token.address}`)
 
   const valuedBalanceQuery = useOfflineContractTokenBalance(context, token.address, wallet.address as Address, "latest")
-  const pricedBalanceQuery = useOfflineContractTokenPricedBalance(context, token.address, wallet.address as Address, "usd", "latest")
+  const pricedBalanceQuery = useOfflineContractTokenPricedBalance(context, token.address, wallet.address as Address, "latest")
 
   if (maybeTokenData == null)
     return null
@@ -771,7 +771,7 @@ function NativeTokenMenu(props: { tokenData: NativeTokenData, chainData: ChainDa
 
   const fetchOrLogAndAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     Balance.Native.queryOrThrow(context, wallet.address as Address, "latest", storage)!.refetchOrThrow({ cache: "reload" }).catch(console.warn)
-    Balance.Priced.Native.queryOrThrow(context, wallet.address as Address, "usd", "latest", storage)!.refetchOrThrow({ cache: "reload" }).catch(console.warn)
+    Balance.Priced.Native.queryOrThrow(context, wallet.address as Address, "latest", storage)!.refetchOrThrow({ cache: "reload" }).catch(console.warn)
 
     close(true)
   }), [context, wallet, storage, close])
@@ -853,7 +853,7 @@ function ContractTokenMenu(props: { tokenData: ContractTokenData, chainData: Cha
 
   const fetchOrLogAndAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     Balance.Contract.queryOrThrow(context, tokenData.address, wallet.address as Address, "latest", storage)!.refetchOrThrow({ cache: "reload" }).catch(console.warn)
-    Balance.Priced.Contract.queryOrThrow(context, tokenData.address, wallet.address as Address, "usd", "latest", storage)!.refetchOrThrow({ cache: "reload" }).catch(console.warn)
+    Balance.Priced.Contract.queryOrThrow(context, tokenData.address, wallet.address as Address, "latest", storage)!.refetchOrThrow({ cache: "reload" }).catch(console.warn)
 
     close(true)
   }), [context, wallet, tokenData, storage, close])
