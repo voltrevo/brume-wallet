@@ -18,7 +18,6 @@ import { TrashedWalletsPage } from "../entities/wallets/all/trash/page"
 import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
 import { HomePage } from "../home/page"
-import { Bottom } from "../overlay/bottom"
 import { Overlay } from "../overlay/overlay"
 
 export function Layout(props: ChildrenProps) {
@@ -26,12 +25,7 @@ export function Layout(props: ChildrenProps) {
 
   return <Overlay>
     <UserGuard>
-      <div className="grow w-full flex flex-col overflow-y-scroll">
-        <div className="grow w-full m-auto max-w-3xl flex flex-col">
-          {children}
-        </div>
-      </div>
-      <Bottom />
+      {children}
     </UserGuard>
   </Overlay>
 }

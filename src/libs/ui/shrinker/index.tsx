@@ -23,3 +23,11 @@ export function AnchorShrinkerDiv(props: ChildrenProps) {
     {children}
   </div>
 }
+
+export function AnchorShrinkerUnflexDiv(props: ChildrenProps) {
+  const { children } = props
+
+  return <div className="h-full w-full group-active:scale-90 transition-transform">
+    {children}
+  </div>
+}
