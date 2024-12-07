@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useCopy } from "@/libs/copy/copy";
 import { Outline } from "@/libs/icons/icons";
-import { WideShrinkableOppositeButton } from "@/libs/ui/button";
+import { WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { Address } from "@hazae41/cubane";
 import { Result } from "@hazae41/result";
@@ -63,11 +63,11 @@ export function WalletDataReceiveScreen(props: {}) {
     <div className="h-4 grow" />
     {typeof navigator.share === "function" &&
       <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableOppositeButton
+        <WideClickableOppositeButton
           onClick={onShareClick}>
           <Outline.ShareIcon className="size-5" />
           Share
-        </WideShrinkableOppositeButton>
+        </WideClickableOppositeButton>
       </div>}
   </>
 }

@@ -7,7 +7,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { useConstant } from "@/libs/react/ref";
-import { WideShrinkableContrastButton, WideShrinkableGradientButton } from "@/libs/ui/button";
+import { WideClickableContrastButton, WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { WalletData } from "@/mods/background/service_worker/entities/wallets/data";
@@ -188,11 +188,11 @@ export function StandaloneWalletCreatorDialog(props: {}) {
           rows={3} />
       </div>
       <div className="h-2" />
-      <WideShrinkableContrastButton
+      <WideClickableContrastButton
         onClick={generateOrAlert}>
         <Outline.KeyIcon className="size-5" />
         Generate
-      </WideShrinkableContrastButton>
+      </WideClickableContrastButton>
     </div>
 
   const canAdd = useMemo(() => {
@@ -204,30 +204,30 @@ export function StandaloneWalletCreatorDialog(props: {}) {
   }, [finalNameInput, zeroHexKey])
 
   const AddUnauthButton =
-    <WideShrinkableContrastButton
+    <WideClickableContrastButton
       disabled={!canAdd}
       onClick={addUnauthenticatedOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
       Add without authentication
-    </WideShrinkableContrastButton>
+    </WideClickableContrastButton>
 
   const AddAuthButton1 =
-    <WideShrinkableGradientButton
+    <WideClickableGradientButton
       color={color}
       disabled={!canAdd}
       onClick={addAuthenticatedOrAlert1.run}>
       <Outline.LockClosedIcon className="size-5" />
       Add with authentication
-    </WideShrinkableGradientButton>
+    </WideClickableGradientButton>
 
   const AddAuthButton2 =
-    <WideShrinkableGradientButton
+    <WideClickableGradientButton
       color={color}
       disabled={!canAdd}
       onClick={addAuthenticatedOrAlert2.run}>
       <Outline.LockClosedIcon className="size-5" />
       Add with authentication (1/2)
-    </WideShrinkableGradientButton>
+    </WideClickableGradientButton>
 
   return <>
     <Dialog.Title>

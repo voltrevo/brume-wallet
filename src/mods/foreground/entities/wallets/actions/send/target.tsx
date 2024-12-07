@@ -4,7 +4,7 @@ import { Outline } from "@/libs/icons/icons";
 import { nto } from "@/libs/ntu";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
-import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, WideShrinkableContrastButton } from "@/libs/ui/button";
+import { ClickableContrastButtonInInputBox, RoundedClickableNakedButton, WideClickableContrastButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { useContractToken } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
 import { usePathContext, useSearchState } from "@hazae41/chemin";
@@ -133,28 +133,28 @@ export function WalletSendScreenTarget(props: {}) {
       <div className="w-1" />
       <div className="flex items-center">
         {rawTargetInput.length === 0
-          ? <RoundedShrinkableNakedButton
+          ? <RoundedClickableNakedButton
             onClick={onPaste}>
             <Outline.ClipboardIcon className="size-4" />
-          </RoundedShrinkableNakedButton>
-          : <RoundedShrinkableNakedButton
+          </RoundedClickableNakedButton>
+          : <RoundedClickableNakedButton
             onClick={onClear}>
             <Outline.XMarkIcon className="size-4" />
-          </RoundedShrinkableNakedButton>}
+          </RoundedClickableNakedButton>}
         <div className="w-1" />
-        <ShrinkableContrastButtonInInputBox
+        <ClickableContrastButtonInInputBox
           onClick={onSubmit}>
           OK
-        </ShrinkableContrastButtonInInputBox>
+        </ClickableContrastButtonInInputBox>
       </div>
     </SimpleLabel>
     <div className="h-2" />
     <div className="flex items-center flex-wrap-reverse gap-2">
-      <WideShrinkableContrastButton
+      <WideClickableContrastButton
         onClick={onPeanutClick}>
         <Outline.LinkIcon className="size-4" />
         Create Peanut link (beta)
-      </WideShrinkableContrastButton>
+      </WideClickableContrastButton>
     </div>
     {maybeEns != null && <>
       <div className="h-2" />

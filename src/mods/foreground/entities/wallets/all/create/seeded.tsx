@@ -5,7 +5,7 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { WideShrinkableGradientButton } from "@/libs/ui/button";
+import { WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
@@ -211,13 +211,13 @@ export function SeededWalletCreatorDialog(props: {}) {
     </SimpleLabel>
 
   const AddButon =
-    <WideShrinkableGradientButton
+    <WideClickableGradientButton
       color={color}
       disabled={!finalNameInput || !canAdd}
       onClick={addOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
       Add
-    </WideShrinkableGradientButton>
+    </WideClickableGradientButton>
 
   return <>
     <Dialog.Title>

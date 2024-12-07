@@ -7,7 +7,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { useConstant } from "@/libs/react/ref";
-import { WideShrinkableContrastButton, WideShrinkableGradientButton } from "@/libs/ui/button";
+import { WideClickableContrastButton, WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -174,16 +174,16 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       </div>
       <div className="h-2" />
       <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableContrastButton
+        <WideClickableContrastButton
           onClick={generate12OrAlert}>
           <Outline.KeyIcon className="size-5" />
           Generate 12 words
-        </WideShrinkableContrastButton>
-        <WideShrinkableContrastButton
+        </WideClickableContrastButton>
+        <WideClickableContrastButton
           onClick={generate24OrAlert}>
           <Outline.KeyIcon className="size-5" />
           Generate 24 words
-        </WideShrinkableContrastButton>
+        </WideClickableContrastButton>
       </div>
     </div>
 
@@ -194,30 +194,30 @@ export function StandaloneSeedCreatorDialog(props: {}) {
   }, [defPhraseInput])
 
   const AddUnauthButton =
-    <WideShrinkableContrastButton
+    <WideClickableContrastButton
       disabled={Boolean(disabled) || addUnauthenticatedOrAlert.loading}
       onClick={addUnauthenticatedOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
       {disabled || "Add without authentication"}
-    </WideShrinkableContrastButton>
+    </WideClickableContrastButton>
 
   const AddAuthButton1 =
-    <WideShrinkableGradientButton
+    <WideClickableGradientButton
       color={color}
       disabled={Boolean(disabled) || addAuthenticatedOrAlert1.loading}
       onClick={addAuthenticatedOrAlert1.run}>
       <Outline.LockClosedIcon className="size-5" />
       {disabled || "Add with authentication"}
-    </WideShrinkableGradientButton>
+    </WideClickableGradientButton>
 
   const AddAuthButton2 =
-    <WideShrinkableGradientButton
+    <WideClickableGradientButton
       color={color}
       disabled={Boolean(disabled) || addAuthenticatedOrAlert2.loading}
       onClick={addAuthenticatedOrAlert2.run}>
       <Outline.LockClosedIcon className="size-5" />
       {disabled || "Add with authentication (1/2)"}
-    </WideShrinkableGradientButton>
+    </WideClickableGradientButton>
 
   return <>
     <Dialog.Title>

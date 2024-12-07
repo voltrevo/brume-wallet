@@ -2,7 +2,7 @@
 import { Outline } from "@/libs/icons/icons"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { OkProps } from "@/libs/react/props/promise"
-import { PaddedRoundedShrinkableNakedAnchor, WideShrinkableContrastAnchor } from "@/libs/ui/anchor"
+import { PaddedRoundedClickableNakedAnchor, WideClickableContrastAnchor } from "@/libs/ui/anchor"
 import { Dialog } from "@/libs/ui/dialog"
 import { Menu } from "@/libs/ui/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
@@ -42,22 +42,22 @@ export function WalletsPage() {
       <div className="h-4" />
       {maybeTrashedWallets != null && maybeTrashedWallets.length > 0 &&
         <div className="flex items-center flex-wrap-reverse gap-2">
-          <WideShrinkableContrastAnchor
+          <WideClickableContrastAnchor
             href="#/wallets/trash">
             <Outline.TrashIcon className="size-5" />
             Trash ({maybeTrashedWallets.length})
-          </WideShrinkableContrastAnchor>
+          </WideClickableContrastAnchor>
         </div>}
     </PageBody>
 
   const Header = <>
     <UserPageHeader title="Wallets">
-      <PaddedRoundedShrinkableNakedAnchor
+      <PaddedRoundedClickableNakedAnchor
         onKeyDown={creator.onKeyDown}
         onClick={creator.onClick}
         href={creator.href}>
         <Outline.PlusIcon className="size-5" />
-      </PaddedRoundedShrinkableNakedAnchor>
+      </PaddedRoundedClickableNakedAnchor>
     </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">

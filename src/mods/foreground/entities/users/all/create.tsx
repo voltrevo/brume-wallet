@@ -5,7 +5,7 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { WideShrinkableGradientButton } from "@/libs/ui/button";
+import { WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { User, UserInit, UserRef } from "@/mods/background/service_worker/entities/users/data";
@@ -138,13 +138,13 @@ export function UserCreateDialog(props: { next?: string }) {
     </SimpleLabel>
 
   const DoneButton =
-    <WideShrinkableGradientButton
+    <WideClickableGradientButton
       disabled={error != null}
       onClick={createOrAlert.run}
       color={color}>
       <Outline.PlusIcon className="size-5" />
       {error || "Add"}
-    </WideShrinkableGradientButton>
+    </WideClickableGradientButton>
 
   return <>
     <Dialog.Title>

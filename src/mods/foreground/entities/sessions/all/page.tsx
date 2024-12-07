@@ -5,8 +5,8 @@ import { Outline } from "@/libs/icons/icons"
 import { isSafariExtension } from "@/libs/platform/platform"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { OkProps } from "@/libs/react/props/promise"
-import { PaddedRoundedShrinkableNakedAnchor, WideShrinkableNakedMenuAnchor } from "@/libs/ui/anchor"
-import { PaddedRoundedShrinkableNakedButton, WideShrinkableNakedMenuButton } from "@/libs/ui/button"
+import { PaddedRoundedClickableNakedAnchor, WideClickableNakedMenuAnchor } from "@/libs/ui/anchor"
+import { PaddedRoundedClickableNakedButton, WideClickableNakedMenuButton } from "@/libs/ui/button"
 import { ImageWithFallback } from "@/libs/ui/image"
 import { Menu } from "@/libs/ui/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
@@ -74,11 +74,11 @@ export function SessionsPage() {
 
   const Header = <>
     <UserPageHeader title="Sessions">
-      <PaddedRoundedShrinkableNakedButton
+      <PaddedRoundedClickableNakedButton
         disabled={disconnectAllOrAlert.loading || !length}
         onClick={disconnectAllOrAlert.run}>
         <Outline.TrashIcon className="size-5" />
-      </PaddedRoundedShrinkableNakedButton>
+      </PaddedRoundedClickableNakedButton>
     </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">
@@ -165,9 +165,9 @@ export function SessionRow(props: { session: Session }) {
         {maybeOriginData.origin}
       </div>
     </div>
-    <PaddedRoundedShrinkableNakedAnchor>
+    <PaddedRoundedClickableNakedAnchor>
       <Outline.EllipsisVerticalIcon className="size-5" />
-    </PaddedRoundedShrinkableNakedAnchor>
+    </PaddedRoundedClickableNakedAnchor>
   </div>
 }
 
@@ -199,7 +199,7 @@ export function SessionMenu(props: { sessionData: SessionData }) {
 
   return <div className="flex flex-col text-left gap-2 w-[160px] overflow-x-hidden">
     {sessionData.type !== "wc" &&
-      <WideShrinkableNakedMenuAnchor
+      <WideClickableNakedMenuAnchor
         onClick={chains.onClick}
         onKeyDown={chains.onKeyDown}
         href={chains.href}>
@@ -207,13 +207,13 @@ export function SessionMenu(props: { sessionData: SessionData }) {
         <div className="truncate">
           {sessionData.chain.name}
         </div>
-      </WideShrinkableNakedMenuAnchor>}
-    <WideShrinkableNakedMenuButton
+      </WideClickableNakedMenuAnchor>}
+    <WideClickableNakedMenuButton
       disabled={disconnectOrAlert.loading}
       onClick={disconnectOrAlert.run}>
       <Outline.XMarkIcon className="size-4" />
       Disconnect
-    </WideShrinkableNakedMenuButton>
+    </WideClickableNakedMenuButton>
   </div>
 }
 
@@ -243,7 +243,7 @@ export function ChainRow(props: { sessionData: ExSessionData, chainData: ChainDa
     close()
   }), [background, sessionData, chainData, close])
 
-  return <WideShrinkableNakedMenuButton
+  return <WideClickableNakedMenuButton
     disabled={switchOrAlert.loading}
     onClick={switchOrAlert.run}>
     {sessionData.chain.chainId === chainData.chainId &&
@@ -251,5 +251,5 @@ export function ChainRow(props: { sessionData: ExSessionData, chainData: ChainDa
     <div className="truncate">
       {chainData.name}
     </div>
-  </WideShrinkableNakedMenuButton>
+  </WideClickableNakedMenuButton>
 }

@@ -3,7 +3,7 @@ import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/libs/ui/button";
+import { WideClickableContrastButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { UserRef } from "@/mods/background/service_worker/entities/users/data";
 import { usePathContext } from "@hazae41/chemin";
 import { Data } from "@hazae41/glacier";
@@ -121,17 +121,17 @@ export function UserLoginDialog(props: { next?: string }) {
         </SimpleLabel>
         <div className="h-2" />
         <div className="flex items-center flex-wrap-reverse gap-2">
-          <WideShrinkableContrastButton
+          <WideClickableContrastButton
             onClick={onCancel}>
             <Outline.ChevronLeftIcon className="size-5" />
             Cancel
-          </WideShrinkableContrastButton>
-          <WideShrinkableOppositeButton
+          </WideClickableContrastButton>
+          <WideClickableOppositeButton
             disabled={defPasswordInput.length < 3 || loginOrAlert.loading}
             onClick={onLogin}>
             <Outline.LockOpenIcon className="size-5" />
             Login
-          </WideShrinkableOppositeButton>
+          </WideClickableOppositeButton>
         </div>
       </div>
     </div>

@@ -2,8 +2,8 @@ import { BrowserError, browser } from "@/libs/browser/browser";
 import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
-import { WideShrinkableNakedMenuAnchor } from "@/libs/ui/anchor";
-import { WideShrinkableNakedMenuButton } from "@/libs/ui/button";
+import { WideClickableNakedMenuAnchor } from "@/libs/ui/anchor";
+import { WideClickableNakedMenuButton } from "@/libs/ui/button";
 import { useCoords, usePathContext } from "@hazae41/chemin";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { MouseEvent } from "react";
@@ -21,27 +21,27 @@ export function SeedCreatorMenu(props: {}) {
   }), [path, close])
 
   return <div className="flex flex-col text-left gap-2">
-    <WideShrinkableNakedMenuAnchor
+    <WideClickableNakedMenuAnchor
       onClick={mnemonic.onClick}
       onKeyDown={mnemonic.onKeyDown}
       href={mnemonic.href}>
       <Outline.DocumentTextIcon className="size-4" />
       Mnemonic
-    </WideShrinkableNakedMenuAnchor>
+    </WideClickableNakedMenuAnchor>
     {(location.pathname !== "/" && location.pathname !== "/tabbed.html") &&
-      <WideShrinkableNakedMenuButton
+      <WideClickableNakedMenuButton
         disabled={openHardwareOrAlert.loading}
         onClick={openHardwareOrAlert.run}>
         <Outline.SwatchIcon className="size-4" />
         Hardware
-      </WideShrinkableNakedMenuButton>}
+      </WideClickableNakedMenuButton>}
     {(location.pathname === "/" || location.pathname === "/tabbed.html") &&
-      <WideShrinkableNakedMenuAnchor
+      <WideClickableNakedMenuAnchor
         onClick={hardware.onClick}
         onKeyDown={hardware.onKeyDown}
         href={hardware.href}>
         <Outline.SwatchIcon className="size-4" />
         Hardware
-      </WideShrinkableNakedMenuAnchor>}
+      </WideClickableNakedMenuAnchor>}
   </div>
 }

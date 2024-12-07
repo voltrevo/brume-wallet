@@ -1,5 +1,5 @@
 import { Outline } from "@/libs/icons/icons"
-import { PaddedRoundedShrinkableNakedButton } from "@/libs/ui/button"
+import { PaddedRoundedClickableNakedButton } from "@/libs/ui/button"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
 import { Page } from "@/libs/ui/page/page"
 import { useCallback } from "react"
@@ -19,10 +19,10 @@ export function SnapsPage() {
 
   const Header = <>
     <UserPageHeader title="Plugins">
-      <PaddedRoundedShrinkableNakedButton
+      <PaddedRoundedClickableNakedButton
         onClick={onAdd}>
         <Outline.PlusIcon className="size-5" />
-      </PaddedRoundedShrinkableNakedButton>
+      </PaddedRoundedClickableNakedButton>
     </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">

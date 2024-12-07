@@ -7,9 +7,9 @@ import { nto } from "@/libs/ntu";
 import { Peanut } from "@/libs/peanut";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, WideShrinkableOppositeButton } from "@/libs/ui/button";
+import { ClickableContrastButtonInInputBox, RoundedClickableNakedButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
-import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
+import { GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
@@ -397,20 +397,20 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         <div className="w-2" />
         <div className="flex items-center">
           {rawValuedInput.length === 0
-            ? <RoundedShrinkableNakedButton
+            ? <RoundedClickableNakedButton
               onClick={onValuedPaste}>
               <Outline.ClipboardIcon className="size-4" />
-            </RoundedShrinkableNakedButton>
-            : <RoundedShrinkableNakedButton
+            </RoundedClickableNakedButton>
+            : <RoundedClickableNakedButton
               onClick={onValuedClear}>
               <Outline.XMarkIcon className="size-4" />
-            </RoundedShrinkableNakedButton>}
+            </RoundedClickableNakedButton>}
           <div className="w-1" />
-          <ShrinkableContrastButtonInInputBox
+          <ClickableContrastButtonInInputBox
             disabled={valuedBalanceQuery.data == null}
             onClick={onValueMaxClick}>
             100%
-          </ShrinkableContrastButtonInInputBox>
+          </ClickableContrastButtonInInputBox>
         </div>
       </SimpleLabel>}
     {mode === "priced" &&
@@ -446,20 +446,20 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         <div className="w-2" />
         <div className="flex items-center">
           {rawPricedInput.length === 0
-            ? <RoundedShrinkableNakedButton
+            ? <RoundedClickableNakedButton
               onClick={onPricedPaste}>
               <Outline.ClipboardIcon className="size-4" />
-            </RoundedShrinkableNakedButton>
-            : <RoundedShrinkableNakedButton
+            </RoundedClickableNakedButton>
+            : <RoundedClickableNakedButton
               onClick={onPricedClear}>
               <Outline.XMarkIcon className="size-4" />
-            </RoundedShrinkableNakedButton>}
+            </RoundedClickableNakedButton>}
           <div className="w-1" />
-          <ShrinkableContrastButtonInInputBox
+          <ClickableContrastButtonInInputBox
             disabled={pricedBalanceQuery.data == null}
             onClick={onPricedMaxClick}>
             100%
-          </ShrinkableContrastButtonInInputBox>
+          </ClickableContrastButtonInInputBox>
         </div>
       </SimpleLabel>}
     <div className="h-4" />
@@ -501,48 +501,48 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
           <div className="flex items-center gap-1">
             <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
               onClick={onLinkCopy.run}>
-              <AnchorShrinkerDiv>
+              <GapperAndClickerInAnchorDiv>
                 Copy
                 {onLinkCopy.current
                   ? <Outline.CheckIcon className="size-4" />
                   : <Outline.ClipboardIcon className="size-4" />}
-              </AnchorShrinkerDiv>
+              </GapperAndClickerInAnchorDiv>
             </button>
             <a className="group px-2 bg-contrast rounded-full"
               target="_blank" rel="noreferrer"
               href={maybeTriedLink.get()}>
-              <AnchorShrinkerDiv>
+              <GapperAndClickerInAnchorDiv>
                 Open
                 <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-              </AnchorShrinkerDiv>
+              </GapperAndClickerInAnchorDiv>
             </a>
           </div>
         </div>
       </div>
       <div className="h-2" />
       <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableOppositeButton
+        <WideClickableOppositeButton
           onClick={onClose}>
           <Outline.CheckIcon className="size-5" />
           Close
-        </WideShrinkableOppositeButton>
+        </WideClickableOppositeButton>
       </div>
     </>}
     {maybeTransaction1 == null &&
       <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableOppositeButton
+        <WideClickableOppositeButton
           onClick={onSendTransaction1Click}>
           <Outline.PaperAirplaneIcon className="size-5" />
           Transact (1/2)
-        </WideShrinkableOppositeButton>
+        </WideClickableOppositeButton>
       </div>}
     {maybeTransaction1?.type === "executed" && maybeTransaction0 == null &&
       <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableOppositeButton
+        <WideClickableOppositeButton
           onClick={onSendTransaction0Click}>
           <Outline.PaperAirplaneIcon className="size-5" />
           Transact (2/2)
-        </WideShrinkableOppositeButton>
+        </WideClickableOppositeButton>
       </div>}
   </>
 }

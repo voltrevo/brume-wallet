@@ -4,7 +4,7 @@ import { Outline } from "@/libs/icons/icons";
 import { nto } from "@/libs/ntu";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, WideShrinkableOppositeButton } from "@/libs/ui/button";
+import { ClickableContrastButtonInInputBox, RoundedClickableNakedButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
@@ -304,20 +304,20 @@ export function WalletDirectSendScreenContractValue(props: {}) {
         <div className="w-2" />
         <div className="flex items-center">
           {rawValuedInput.length === 0
-            ? <RoundedShrinkableNakedButton
+            ? <RoundedClickableNakedButton
               onClick={onValuedPaste}>
               <Outline.ClipboardIcon className="size-4" />
-            </RoundedShrinkableNakedButton>
-            : <RoundedShrinkableNakedButton
+            </RoundedClickableNakedButton>
+            : <RoundedClickableNakedButton
               onClick={onValuedClear}>
               <Outline.XMarkIcon className="size-4" />
-            </RoundedShrinkableNakedButton>}
+            </RoundedClickableNakedButton>}
           <div className="w-1" />
-          <ShrinkableContrastButtonInInputBox
+          <ClickableContrastButtonInInputBox
             disabled={valuedBalanceQuery.data == null}
             onClick={onValueMaxClick}>
             100%
-          </ShrinkableContrastButtonInInputBox>
+          </ClickableContrastButtonInInputBox>
         </div>
       </SimpleLabel>}
     {mode === "priced" &&
@@ -353,20 +353,20 @@ export function WalletDirectSendScreenContractValue(props: {}) {
         <div className="w-2" />
         <div className="flex items-center">
           {rawPricedInput.length === 0
-            ? <RoundedShrinkableNakedButton
+            ? <RoundedClickableNakedButton
               onClick={onPricedPaste}>
               <Outline.ClipboardIcon className="size-4" />
-            </RoundedShrinkableNakedButton>
-            : <RoundedShrinkableNakedButton
+            </RoundedClickableNakedButton>
+            : <RoundedClickableNakedButton
               onClick={onPricedClear}>
               <Outline.XMarkIcon className="size-4" />
-            </RoundedShrinkableNakedButton>}
+            </RoundedClickableNakedButton>}
           <div className="w-1" />
-          <ShrinkableContrastButtonInInputBox
+          <ClickableContrastButtonInInputBox
             disabled={pricedBalanceQuery.data == null}
             onClick={onPricedMaxClick}>
             100%
-          </ShrinkableContrastButtonInInputBox>
+          </ClickableContrastButtonInInputBox>
         </div>
       </SimpleLabel>}
     <div className="h-4" />
@@ -384,19 +384,19 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     <div className="h-4 grow" />
     {maybeTransaction == null &&
       <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableOppositeButton
+        <WideClickableOppositeButton
           onClick={onSendTransactionClick}>
           <Outline.PaperAirplaneIcon className="size-5" />
           Transact
-        </WideShrinkableOppositeButton>
+        </WideClickableOppositeButton>
       </div>}
     {maybeTransaction != null &&
       <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableOppositeButton
+        <WideClickableOppositeButton
           onClick={onClose}>
           <Outline.CheckIcon className="size-5" />
           Close
-        </WideShrinkableOppositeButton>
+        </WideClickableOppositeButton>
       </div>}
   </>
 }

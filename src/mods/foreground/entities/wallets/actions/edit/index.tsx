@@ -3,7 +3,7 @@ import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { WideShrinkableGradientButton } from "@/libs/ui/button";
+import { WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { None, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
@@ -60,13 +60,13 @@ export function WalletEditDialog(props: {}) {
     </SimpleLabel>
 
   const SaveButton =
-    <WideShrinkableGradientButton
+    <WideClickableGradientButton
       color={color}
       disabled={saveOrAlert.loading}
       onClick={saveOrAlert.run}>
       <Outline.CheckIcon className="size-5" />
       Save
-    </WideShrinkableGradientButton>
+    </WideClickableGradientButton>
 
   return <>
     <Dialog.Title>

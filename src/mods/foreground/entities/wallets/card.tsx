@@ -5,7 +5,7 @@ import { Outline } from "@/libs/icons/icons"
 import { Events, useMouseCancel } from "@/libs/react/events"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { AnchorProps, ButtonProps } from "@/libs/react/props/html"
-import { ButtonShrinkerDiv } from "@/libs/ui/shrinker"
+import { GapperAndClickerInButtonDiv } from "@/libs/ui/shrinker"
 import { getWalletEmoji, WalletData } from "@/mods/background/service_worker/entities/wallets/data"
 import { useWalletTotalPricedBalance } from "@/mods/universal/ethereum/mods/tokens/mods/balance/hooks"
 import { useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
@@ -182,8 +182,8 @@ export function CircularWhiteButtonInColoredCard(props: ButtonProps & ChildrenPr
 
   return <button className={`group p-1 bg-white text-${color}-400 dark:text-color-500 rounded-full outline-none enabled:hover:bg-white/90 focus-visible:outline-white disabled:opacity-50 transition-opacity`}
     {...rest}>
-    <ButtonShrinkerDiv>
+    <GapperAndClickerInButtonDiv>
       {children}
-    </ButtonShrinkerDiv>
+    </GapperAndClickerInButtonDiv>
   </button>
 }

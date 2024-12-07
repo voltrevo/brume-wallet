@@ -5,7 +5,7 @@ import { isSafariExtension } from "@/libs/platform/platform"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { OkProps } from "@/libs/react/props/promise"
 import { UserRejectedError } from "@/libs/rpc/mods/errors"
-import { PaddedRoundedShrinkableNakedButton } from "@/libs/ui/button"
+import { PaddedRoundedClickableNakedButton } from "@/libs/ui/button"
 import { ImageWithFallback } from "@/libs/ui/image"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
 import { Page } from "@/libs/ui/page/page"
@@ -54,11 +54,11 @@ export function RequestsPage() {
 
   const Header = <>
     <UserPageHeader title="Requests">
-      <PaddedRoundedShrinkableNakedButton
+      <PaddedRoundedClickableNakedButton
         disabled={rejectAllOrAlert.loading || !Boolean(maybeRequests?.length)}
         onClick={rejectAllOrAlert.run}>
         <Outline.TrashIcon className="size-5" />
-      </PaddedRoundedShrinkableNakedButton>
+      </PaddedRoundedClickableNakedButton>
     </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">

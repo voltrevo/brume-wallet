@@ -3,7 +3,7 @@ import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { isSafariExtension } from "@/libs/platform/platform"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
-import { PaddedRoundedShrinkableNakedButton } from "@/libs/ui/button"
+import { PaddedRoundedClickableNakedButton } from "@/libs/ui/button"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
 import { Page } from "@/libs/ui/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
@@ -44,11 +44,11 @@ export function TrashedWalletsPage() {
 
   const Header = <>
     <UserPageHeader title="Trash">
-      <PaddedRoundedShrinkableNakedButton
+      <PaddedRoundedClickableNakedButton
         disabled={trashAllOrAlert.loading}
         onClick={trashAllOrAlert.run}>
         <Outline.TrashIcon className="size-5" />
-      </PaddedRoundedShrinkableNakedButton>
+      </PaddedRoundedClickableNakedButton>
     </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">

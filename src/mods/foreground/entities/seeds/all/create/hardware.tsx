@@ -6,7 +6,7 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { WideShrinkableGradientButton } from "@/libs/ui/button";
+import { WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -81,13 +81,13 @@ export function LedgerSeedCreatorDialog(props: {}) {
   }, [finalNameInput])
 
   const AddButton =
-    <WideShrinkableGradientButton
+    <WideClickableGradientButton
       color={color}
       disabled={!canAdd}
       onClick={addOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
       Add
-    </WideShrinkableGradientButton>
+    </WideClickableGradientButton>
 
   return <>
     <HashSubpathProvider>

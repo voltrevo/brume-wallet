@@ -1,6 +1,6 @@
 import { Outline } from "@/libs/icons/icons";
 import { Dialog } from "@/libs/ui/dialog";
-import { AnchorShrinkerDiv, AnchorShrinkerUnflexDiv } from "@/libs/ui/shrinker";
+import { ClickerInAnchorDiv, GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";
 import { HashSubpathProvider, PathHandle, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { useAppRequests } from "../entities/requests/data";
 
@@ -56,7 +56,7 @@ export function Omnidialog(props: {
       <a className="po-md bg-contrast rounded-xl"
         data-selected={path.url.pathname === "/requests"}
         href="#/requests">
-        <AnchorShrinkerUnflexDiv>
+        <ClickerInAnchorDiv>
           <div className="relative">
             {Boolean(requests?.length) &&
               <div className="absolute top-0 -right-2">
@@ -69,7 +69,7 @@ export function Omnidialog(props: {
           </div>
           <div className="h-4" />
           Requests
-        </AnchorShrinkerUnflexDiv>
+        </ClickerInAnchorDiv>
       </a>
       <a className="po-md bg-contrast rounded-xl"
         data-selected={path.url.pathname === "/settings"}
@@ -128,45 +128,45 @@ export function Bottom() {
       <a className={`group flex-1 text-contrast data-[selected=true]:text-default`}
         data-selected={path.url.pathname === "/home"}
         href="#/home">
-        <AnchorShrinkerDiv>
+        <GapperAndClickerInAnchorDiv>
           <Outline.HomeIcon className="size-6" />
-        </AnchorShrinkerDiv>
+        </GapperAndClickerInAnchorDiv>
       </a>
       <a className={`group flex-1 text-contrast data-[selected=true]:text-default`}
         data-selected={path.url.pathname === "/wallets"}
         href="#/wallets">
-        <AnchorShrinkerDiv>
+        <GapperAndClickerInAnchorDiv>
           <Outline.WalletIcon className="size-6" />
-        </AnchorShrinkerDiv>
+        </GapperAndClickerInAnchorDiv>
       </a>
       <a className={`group flex-1 text-contrast data-[selected=true]:text-default`}
         data-selected={path.url.pathname === "/seeds"}
         href="#/seeds">
-        <AnchorShrinkerDiv>
+        <GapperAndClickerInAnchorDiv>
           <Outline.SparklesIcon className="size-6" />
-        </AnchorShrinkerDiv>
+        </GapperAndClickerInAnchorDiv>
       </a>
       <div className="flex-1 flex items-center justify-center">
         <a className="group po-md bg-opposite rounded-full text-opposite"
           href={omnidialog.href}
           onClick={omnidialog.onClick}
           onKeyDown={omnidialog.onKeyDown}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             <Outline.EllipsisHorizontalIcon className="size-6" />
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </a>
       </div>
       <a className="group flex-1 text-contrast data-[selected=true]:text-default"
         data-selected={path.url.pathname === "/sessions"}
         href="#/sessions">
-        <AnchorShrinkerDiv>
+        <GapperAndClickerInAnchorDiv>
           <Outline.GlobeAltIcon className="size-6" />
-        </AnchorShrinkerDiv>
+        </GapperAndClickerInAnchorDiv>
       </a>
       <a className="group flex-1 text-contrast data-[selected=true]:text-default"
         data-selected={path.url.pathname === "/requests"}
         href="#/requests">
-        <AnchorShrinkerDiv>
+        <GapperAndClickerInAnchorDiv>
           <div className="relative">
             {Boolean(requests?.length) &&
               <div className="absolute top-0 -right-2">
@@ -177,14 +177,14 @@ export function Bottom() {
               </div>}
             <Outline.CheckIcon className="size-6" />
           </div>
-        </AnchorShrinkerDiv>
+        </GapperAndClickerInAnchorDiv>
       </a>
       <a className="group flex-1 text-contrast data-[selected=true]:text-default"
         data-selected={path.url.pathname === "/settings"}
         href="#/settings">
-        <AnchorShrinkerDiv>
+        <GapperAndClickerInAnchorDiv>
           <Outline.CogIcon className="size-6" />
-        </AnchorShrinkerDiv>
+        </GapperAndClickerInAnchorDiv>
       </a>
     </div>
   </nav>

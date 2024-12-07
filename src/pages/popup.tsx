@@ -5,8 +5,8 @@ import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { UserRejectedError } from "@/libs/rpc/mods/errors";
-import { PaddedRoundedShrinkableNakedAnchor, SmallShrinkableOppositeAnchor } from "@/libs/ui/anchor";
-import { WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/libs/ui/button";
+import { ClickableOppositeAnchor, PaddedRoundedClickableNakedAnchor } from "@/libs/ui/anchor";
+import { WideClickableContrastButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
@@ -335,17 +335,17 @@ export function TransactPage() {
           </div>}
         <div className="h-4 grow" />
         <div className="flex items-center flex-wrap-reverse gap-2">
-          <WideShrinkableContrastButton
+          <WideClickableContrastButton
             onClick={rejectOrAlert.run}
             disabled={rejectOrAlert.loading}>
             <Outline.XMarkIcon className="size-5" />
             Reject
-          </WideShrinkableContrastButton>
-          <WideShrinkableOppositeButton
+          </WideClickableContrastButton>
+          <WideClickableOppositeButton
             onClick={onSendTransactionClick}>
             <Outline.CheckIcon className="size-5" />
             Transact
-          </WideShrinkableOppositeButton>
+          </WideClickableOppositeButton>
         </div>
       </PageBody>
     </Page>
@@ -416,18 +416,18 @@ export function PersonalSignPage() {
       </div>
       <div className="h-4 grow" />
       <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableContrastButton
+        <WideClickableContrastButton
           onClick={rejectOrAlert.run}
           disabled={rejectOrAlert.loading}>
           <Outline.XMarkIcon className="size-5" />
           Reject
-        </WideShrinkableContrastButton>
-        <WideShrinkableOppositeButton
+        </WideClickableContrastButton>
+        <WideClickableOppositeButton
           onClick={approveOrAlert.run}
           disabled={approveOrAlert.loading}>
           <Outline.CheckIcon className="size-5" />
           Approve
-        </WideShrinkableOppositeButton>
+        </WideClickableOppositeButton>
       </div>
     </PageBody>
   </Page>
@@ -492,18 +492,18 @@ export function TypedSignPage() {
       </div>
       <div className="h-4 grow" />
       <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableContrastButton
+        <WideClickableContrastButton
           onClick={rejectOrAlert.run}
           disabled={rejectOrAlert.loading}>
           <Outline.XMarkIcon className="size-5" />
           Reject
-        </WideShrinkableContrastButton>
-        <WideShrinkableOppositeButton
+        </WideClickableContrastButton>
+        <WideClickableOppositeButton
           onClick={approveOrAlert.run}
           disabled={approveOrAlert.loading}>
           <Outline.CheckIcon className="size-5" />
           Approve
-        </WideShrinkableOppositeButton>
+        </WideClickableOppositeButton>
       </div>
     </PageBody>
   </Page>
@@ -562,12 +562,12 @@ export function WalletAndChainSelectPage() {
 
   const Header =
     <UserPageHeader title="Connect">
-      <PaddedRoundedShrinkableNakedAnchor
+      <PaddedRoundedClickableNakedAnchor
         onKeyDown={creator.onKeyDown}
         onClick={creator.onClick}
         href={creator.href}>
         <Outline.PlusIcon className="size-5" />
-      </PaddedRoundedShrinkableNakedAnchor>
+      </PaddedRoundedClickableNakedAnchor>
     </UserPageHeader>
 
   const Body =
@@ -589,18 +589,18 @@ export function WalletAndChainSelectPage() {
       </label>
       <div className="h-4" />
       <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableContrastButton
+        <WideClickableContrastButton
           onClick={rejectOrAlert.run}
           disabled={rejectOrAlert.loading}>
           <Outline.XMarkIcon className="size-5" />
           Reject
-        </WideShrinkableContrastButton>
-        <WideShrinkableOppositeButton
+        </WideClickableContrastButton>
+        <WideClickableOppositeButton
           onClick={approveOrAlert.run}
           disabled={approveOrAlert.loading}>
           <Outline.CheckIcon className="size-5" />
           Approve
-        </WideShrinkableOppositeButton>
+        </WideClickableOppositeButton>
       </div>
     </PageBody>
 
@@ -646,11 +646,11 @@ export function DonePage() {
       </div>
       <div className="h-4" />
       <div className="grow flex flex-col items-center justify-center">
-        <SmallShrinkableOppositeAnchor
+        <ClickableOppositeAnchor
           href="#/home">
           <Outline.HomeIcon className="size-5" />
           Home
-        </SmallShrinkableOppositeAnchor>
+        </ClickableOppositeAnchor>
       </div>
     </PageBody>
   </Page>

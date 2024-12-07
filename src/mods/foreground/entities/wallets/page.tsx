@@ -10,14 +10,14 @@ import { AnchorProps } from "@/libs/react/props/html";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { State } from "@/libs/react/state";
 import { Records } from "@/libs/records";
-import { PaddedRoundedShrinkableNakedAnchor, WideShrinkableNakedMenuAnchor } from "@/libs/ui/anchor";
-import { SmallShrinkableContrastButton, WideShrinkableNakedMenuButton } from "@/libs/ui/button";
+import { PaddedRoundedClickableNakedAnchor, WideClickableNakedMenuAnchor } from "@/libs/ui/anchor";
+import { ClickableContrastButton, WideClickableNakedMenuButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { Loading, SmallUnflexLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
-import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
+import { GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";
 import { Balance } from "@/mods/universal/ethereum/mods/tokens/mods/balance";
 import { useContractTokenBalance, useContractTokenPricedBalance, useNativeTokenBalance, useNativeTokenPricedBalance, useOfflineContractTokenBalance, useOfflineContractTokenPricedBalance, useOfflineNativeTokenBalance, useOfflineNativeTokenPricedBalance } from "@/mods/universal/ethereum/mods/tokens/mods/balance/hooks";
 import { useRankedToken } from "@/mods/universal/ethereum/mods/tokens/mods/contest/hooks";
@@ -152,9 +152,9 @@ export function AnchorCard(props: AnchorProps) {
 
   return <a className="grow group p-4 bg-contrast rounded-xl cursor-pointer focus:outline-black focus:outline-1"
     {...rest}>
-    <AnchorShrinkerDiv>
+    <GapperAndClickerInAnchorDiv>
       {children}
-    </AnchorShrinkerDiv>
+    </GapperAndClickerInAnchorDiv>
   </a>
 }
 
@@ -222,14 +222,14 @@ function WalletDataPage() {
       title="Wallet"
       back={onBackClick}>
       <div className="flex items-center gap-2">
-        <PaddedRoundedShrinkableNakedAnchor
+        <PaddedRoundedClickableNakedAnchor
           onKeyDown={connect.onKeyDown}
           onClick={connect.onClick}
           href={connect.href}>
           <img className="size-5"
             alt="WalletConnect"
             src="/assets/wc.svg" />
-        </PaddedRoundedShrinkableNakedAnchor>
+        </PaddedRoundedClickableNakedAnchor>
       </div>
     </UserPageHeader>
 
@@ -323,11 +323,11 @@ function WalletDataPage() {
           Other tokens
         </div>
         <div className="grow" />
-        <SmallShrinkableContrastButton
+        <ClickableContrastButton
           onClick={add.enable}>
           <Outline.PlusIcon className="size-5" />
           {"Add"}
-        </SmallShrinkableContrastButton>
+        </ClickableContrastButton>
       </div>
       <div className="h-4" />
       <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
@@ -460,40 +460,40 @@ export function WalletMenu(props: {
   }), [close, walletQuery])
 
   return <div className="flex flex-col text-left gap-2">
-    <WideShrinkableNakedMenuAnchor
+    <WideClickableNakedMenuAnchor
       onClick={edit.onClick}
       onKeyDown={edit.onKeyDown}
       href={edit.href}>
       <Outline.PencilIcon className="size-4" />
       Edit
-    </WideShrinkableNakedMenuAnchor>
+    </WideClickableNakedMenuAnchor>
     {!privateKey &&
-      <WideShrinkableNakedMenuButton
+      <WideClickableNakedMenuButton
         disabled={flipOrAlert.loading}
         onClick={flipOrAlert.run}>
         <Outline.EyeIcon className="size-4" />
         Flip
-      </WideShrinkableNakedMenuButton>}
+      </WideClickableNakedMenuButton>}
     {privateKey &&
-      <WideShrinkableNakedMenuButton
+      <WideClickableNakedMenuButton
         onClick={onUnflipClick}>
         <Outline.EyeSlashIcon className="size-4" />
         Unflip
-      </WideShrinkableNakedMenuButton>}
+      </WideClickableNakedMenuButton>}
     {!wallet.trashed &&
-      <WideShrinkableNakedMenuButton
+      <WideClickableNakedMenuButton
         disabled={trashOrAlert.loading}
         onClick={trashOrAlert.run}>
         <Outline.TrashIcon className="size-4" />
         Trash
-      </WideShrinkableNakedMenuButton>}
+      </WideClickableNakedMenuButton>}
     {wallet.trashed &&
-      <WideShrinkableNakedMenuButton
+      <WideClickableNakedMenuButton
         disabled={untrashOrAlert.loading}
         onClick={untrashOrAlert.run}>
         <Outline.TrashIcon className="size-4" />
         Untrash
-      </WideShrinkableNakedMenuButton>}
+      </WideClickableNakedMenuButton>}
   </div>
 }
 
@@ -534,17 +534,17 @@ export function WalletConnectMenu() {
   }), [wallet, background, close])
 
   return <div className="flex flex-col text-left gap-2">
-    <WideShrinkableNakedMenuAnchor
+    <WideClickableNakedMenuAnchor
       href={`#/wallet/${wallet.uuid}/camera`}>
       <Outline.QrCodeIcon className="size-4" />
       Scan
-    </WideShrinkableNakedMenuAnchor>
-    <WideShrinkableNakedMenuButton
+    </WideClickableNakedMenuAnchor>
+    <WideClickableNakedMenuButton
       disabled={connectOrAlert.loading}
       onClick={connectOrAlert.run}>
       <Outline.LinkIcon className="size-4" />
       Paste
-    </WideShrinkableNakedMenuButton>
+    </WideClickableNakedMenuButton>
   </div>
 }
 
@@ -778,29 +778,29 @@ function NativeTokenMenu(props: { tokenData: NativeTokenData, chainData: ChainDa
   }), [context, wallet, storage, close])
 
   return <div className="flex flex-col text-left gap-2">
-    <WideShrinkableNakedMenuButton
+    <WideClickableNakedMenuButton
       onClick={toggleOrLogAndAlert.run}>
       {favorited ? <Solid.StarIcon className="size-4" /> : <Outline.StarIcon className="size-4" />}
       {favorited ? "Unfavorite" : "Favorite"}
-    </WideShrinkableNakedMenuButton>
-    <WideShrinkableNakedMenuButton
+    </WideClickableNakedMenuButton>
+    <WideClickableNakedMenuButton
       onClick={fetchOrLogAndAlert.run}>
       <Outline.ArrowPathIcon className="size-4" />
       Refresh
-    </WideShrinkableNakedMenuButton>
-    <WideShrinkableNakedMenuAnchor
+    </WideClickableNakedMenuButton>
+    <WideClickableNakedMenuAnchor
       aria-disabled={wallet.type === "readonly"}
       onClick={send.onClick}
       onKeyDown={send.onKeyDown}
       href={send.href}>
       <Outline.PaperAirplaneIcon className="size-4" />
       Send
-    </WideShrinkableNakedMenuAnchor>
-    <WideShrinkableNakedMenuAnchor
+    </WideClickableNakedMenuAnchor>
+    <WideClickableNakedMenuAnchor
       aria-disabled>
       <Outline.BanknotesIcon className="size-4" />
       Faucet
-    </WideShrinkableNakedMenuAnchor>
+    </WideClickableNakedMenuAnchor>
   </div>
 }
 
@@ -860,29 +860,29 @@ function ContractTokenMenu(props: { tokenData: ContractTokenData, chainData: Cha
   }), [context, wallet, tokenData, storage, close])
 
   return <div className="flex flex-col text-left gap-2">
-    <WideShrinkableNakedMenuButton
+    <WideClickableNakedMenuButton
       onClick={toggleOrLogAndAlert.run}>
       {favorited ? <Solid.StarIcon className="size-4" /> : <Outline.StarIcon className="size-4" />}
       {favorited ? "Unfavorite" : "Favorite"}
-    </WideShrinkableNakedMenuButton>
-    <WideShrinkableNakedMenuButton
+    </WideClickableNakedMenuButton>
+    <WideClickableNakedMenuButton
       onClick={fetchOrLogAndAlert.run}>
       <Outline.ArrowPathIcon className="size-4" />
       Refresh
-    </WideShrinkableNakedMenuButton>
-    <WideShrinkableNakedMenuAnchor
+    </WideClickableNakedMenuButton>
+    <WideClickableNakedMenuAnchor
       aria-disabled={wallet.type === "readonly"}
       onClick={send.onClick}
       onKeyDown={send.onKeyDown}
       href={send.href}>
       <Outline.PaperAirplaneIcon className="size-4" />
       Send
-    </WideShrinkableNakedMenuAnchor>
-    <WideShrinkableNakedMenuAnchor
+    </WideClickableNakedMenuAnchor>
+    <WideClickableNakedMenuAnchor
       aria-disabled>
       <Outline.BanknotesIcon className="size-4" />
       Faucet
-    </WideShrinkableNakedMenuAnchor>
+    </WideClickableNakedMenuAnchor>
   </div>
 }
 

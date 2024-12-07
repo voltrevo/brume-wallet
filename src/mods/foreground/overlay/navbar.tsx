@@ -2,7 +2,7 @@ import { BrowserError, browser } from "@/libs/browser/browser"
 import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
-import { RoundedShrinkableNakedButton } from "@/libs/ui/button"
+import { RoundedClickableNakedButton } from "@/libs/ui/button"
 import { pathOf } from "@/libs/url/url"
 import { usePathContext } from "@hazae41/chemin"
 
@@ -23,14 +23,14 @@ export function NavBar() {
           {pathOf(path.url)}
         </span>
       </div>
-      <RoundedShrinkableNakedButton
+      <RoundedClickableNakedButton
         onClick={() => location.reload()}>
         <Outline.ArrowPathIcon className="size-4 text-contrast" />
-      </RoundedShrinkableNakedButton>
-      <RoundedShrinkableNakedButton
+      </RoundedClickableNakedButton>
+      <RoundedClickableNakedButton
         onClick={openOrAlert.run}>
         <Outline.ArrowTopRightOnSquareIcon className="size-4 text-contrast" />
-      </RoundedShrinkableNakedButton>
+      </RoundedClickableNakedButton>
     </div>
   </div>
 }

@@ -1,7 +1,7 @@
 import { Outline } from "@/libs/icons/icons";
 import { isExtension, isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
-import { RoundedShrinkableNakedButton, SmallestOppositeChipButton } from "@/libs/ui/button";
+import { RoundedClickableNakedButton, SmallAndRoundedClickableOppositeButton } from "@/libs/ui/button";
 import { useCallback, useEffect, useState } from "react";
 import { ServiceWorkerBackground } from "../background/background";
 import { useBackgroundContext } from "../background/context";
@@ -18,17 +18,17 @@ export function UpdateBanner(props: {
         <div className="grow text-sm font-medium">
           {`An update is available`}
         </div>
-        <SmallestOppositeChipButton
+        <SmallAndRoundedClickableOppositeButton
           onClick={update}>
           <Outline.ArrowPathIcon className="size-4" />
           Update
-        </SmallestOppositeChipButton>
+        </SmallAndRoundedClickableOppositeButton>
       </div>
     </div>
-    <RoundedShrinkableNakedButton
+    <RoundedClickableNakedButton
       onClick={ignore}>
       <Outline.XMarkIcon className="size-5" />
-    </RoundedShrinkableNakedButton>
+    </RoundedClickableNakedButton>
   </div>
 }
 

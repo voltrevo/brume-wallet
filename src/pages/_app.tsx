@@ -7,7 +7,7 @@ import { Errors } from "@/libs/errors/errors";
 import { Catcher, PromiseCatcher } from "@/libs/react/error";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ErrorProps } from "@/libs/react/props/error";
-import { WideShrinkableOppositeButton } from "@/libs/ui/button";
+import { WideClickableOppositeButton } from "@/libs/ui/button";
 import { GlobalPageHeader, PageBody } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
 import { BackgroundProvider } from "@/mods/foreground/background/context";
@@ -52,10 +52,10 @@ export function Fallback(props: ErrorProps) {
             </div>
             <div className="h-4 grow" />
             <div className="flex items-center flex-wrap-reverse gap-2">
-              <WideShrinkableOppositeButton
+              <WideClickableOppositeButton
                 onClick={onClick}>
                 Go home
-              </WideShrinkableOppositeButton>
+              </WideClickableOppositeButton>
             </div>
           </PageBody>
         </Page>

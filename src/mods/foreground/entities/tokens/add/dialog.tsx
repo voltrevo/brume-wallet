@@ -3,7 +3,7 @@ import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { WideShrinkableOppositeButton } from "@/libs/ui/button";
+import { WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { Loading } from "@/libs/ui/loading";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -106,14 +106,14 @@ export function TokenAddDialog(props: {}) {
     </SimpleLabel>
     <div className="h-4 grow" />
     <div className="flex items-center flex-wrap-reverse gap-2">
-      <WideShrinkableOppositeButton
+      <WideClickableOppositeButton
         disabled={Boolean(addDisabled)}
         onClick={addOrAlert.run}>
         {tokenQuery.fetching
           ? <Loading className="size-5" />
           : <Outline.PlusIcon className="size-5" />}
         {addDisabled || "Add"}
-      </WideShrinkableOppositeButton>
+      </WideClickableOppositeButton>
     </div>
   </>
 }

@@ -1,6 +1,6 @@
 import { Outline } from "@/libs/icons/icons"
 import { OkProps } from "@/libs/react/props/promise"
-import { PaddedRoundedShrinkableNakedAnchor } from "@/libs/ui/anchor"
+import { PaddedRoundedClickableNakedAnchor } from "@/libs/ui/anchor"
 import { Dialog } from "@/libs/ui/dialog"
 import { Menu } from "@/libs/ui/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
@@ -38,12 +38,12 @@ export function SeedsPage() {
 
   const Header = <>
     <UserPageHeader title="Seeds">
-      <PaddedRoundedShrinkableNakedAnchor
+      <PaddedRoundedClickableNakedAnchor
         onKeyDown={creator.onKeyDown}
         onClick={creator.onClick}
         href={creator.href}>
         <Outline.PlusIcon className="size-5" />
-      </PaddedRoundedShrinkableNakedAnchor>
+      </PaddedRoundedClickableNakedAnchor>
     </UserPageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">

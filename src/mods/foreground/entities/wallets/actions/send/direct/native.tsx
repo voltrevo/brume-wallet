@@ -4,10 +4,10 @@ import { Outline } from "@/libs/icons/icons";
 import { nto } from "@/libs/ntu";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { RoundedShrinkableNakedButton, ShrinkableContrastButtonInInputBox, WideShrinkableOppositeButton } from "@/libs/ui/button";
+import { ClickableContrastButtonInInputBox, RoundedClickableNakedButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { SmallUnflexLoading } from "@/libs/ui/loading";
-import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
+import { GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData } from "@/mods/background/service_worker/entities/transactions/data";
@@ -278,20 +278,20 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
         <div className="w-2" />
         <div className="flex items-center">
           {rawValuedInput.length === 0
-            ? <RoundedShrinkableNakedButton
+            ? <RoundedClickableNakedButton
               onClick={onValuedPaste}>
               <Outline.ClipboardIcon className="size-4" />
-            </RoundedShrinkableNakedButton>
-            : <RoundedShrinkableNakedButton
+            </RoundedClickableNakedButton>
+            : <RoundedClickableNakedButton
               onClick={onValuedClear}>
               <Outline.XMarkIcon className="size-4" />
-            </RoundedShrinkableNakedButton>}
+            </RoundedClickableNakedButton>}
           <div className="w-1" />
-          <ShrinkableContrastButtonInInputBox
+          <ClickableContrastButtonInInputBox
             disabled={valuedBalanceQuery.data == null}
             onClick={onValueMaxClick}>
             100%
-          </ShrinkableContrastButtonInInputBox>
+          </ClickableContrastButtonInInputBox>
         </div>
       </SimpleLabel>}
     {mode === "priced" &&
@@ -327,20 +327,20 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
         <div className="w-2" />
         <div className="flex items-center">
           {rawPricedInput.length === 0
-            ? <RoundedShrinkableNakedButton
+            ? <RoundedClickableNakedButton
               onClick={onPricedPaste}>
               <Outline.ClipboardIcon className="size-4" />
-            </RoundedShrinkableNakedButton>
-            : <RoundedShrinkableNakedButton
+            </RoundedClickableNakedButton>
+            : <RoundedClickableNakedButton
               onClick={onPricedClear}>
               <Outline.XMarkIcon className="size-4" />
-            </RoundedShrinkableNakedButton>}
+            </RoundedClickableNakedButton>}
           <div className="w-1" />
-          <ShrinkableContrastButtonInInputBox
+          <ClickableContrastButtonInInputBox
             disabled={pricedBalanceQuery.data == null}
             onClick={onPricedMaxClick}>
             100%
-          </ShrinkableContrastButtonInInputBox>
+          </ClickableContrastButtonInInputBox>
         </div>
       </SimpleLabel>}
     <div className="h-4" />
@@ -358,19 +358,19 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     <div className="h-4 grow" />
     {maybeTransaction == null &&
       <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableOppositeButton
+        <WideClickableOppositeButton
           onClick={onSendTransactionClick}>
           <Outline.PaperAirplaneIcon className="size-5" />
           Transact
-        </WideShrinkableOppositeButton>
+        </WideClickableOppositeButton>
       </div>}
     {maybeTransaction != null &&
       <div className="flex items-center flex-wrap-reverse gap-2">
-        <WideShrinkableOppositeButton
+        <WideClickableOppositeButton
           onClick={onClose}>
           <Outline.CheckIcon className="size-5" />
           Close
-        </WideShrinkableOppositeButton>
+        </WideClickableOppositeButton>
       </div>}
   </>
 }
@@ -398,20 +398,20 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
       <div className="flex items-center gap-1">
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Copy
             {onCopy.current
               ? <Outline.CheckIcon className="size-4" />
               : <Outline.ClipboardIcon className="size-4" />}
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </button>
         <a className="group px-2 bg-contrast rounded-full"
           target="_blank" rel="noreferrer"
           href={`${chainData.etherscan}/tx/${data.hash}`}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Open
             <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </a>
       </div>
     </div>
@@ -465,27 +465,27 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
       <div className="flex items-center gap-1">
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Copy
             {onCopy.current
               ? <Outline.CheckIcon className="size-4" />
               : <Outline.ClipboardIcon className="size-4" />}
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </button>
         <a className="group px-2 bg-contrast rounded-full"
           target="_blank" rel="noreferrer"
           href={`${chainData.etherscan}/tx/${data.hash}`}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Open
             <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </a>
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onRetryClick}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Retry
             <Outline.BoltIcon className="size-4" />
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </button>
       </div>
     </div>
@@ -515,19 +515,19 @@ export function SignedTransactionCard(props: { data: SignedTransactionData } & {
       <div className="flex items-center gap-1">
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Copy
             {onCopy.current
               ? <Outline.CheckIcon className="size-4" />
               : <Outline.ClipboardIcon className="size-4" />}
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </button>
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onSendClick}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Send
             <Outline.PaperAirplaneIcon className="size-4" />
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </button>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
 import { AnchorProps } from "@/libs/react/props/html";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
-import { SmallShrinkableContrastAnchor, SmallShrinkableOppositeAnchor, TextAnchor, WideShrinkableContrastAnchor, WideShrinkableNakedMenuAnchor } from "@/libs/ui/anchor";
+import { ClickableContrastAnchor, ClickableOppositeAnchor, TextAnchor, WideClickableContrastAnchor, WideClickableNakedMenuAnchor } from "@/libs/ui/anchor";
 import { Dialog } from "@/libs/ui/dialog";
 import { Loading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
@@ -74,25 +74,25 @@ export function EmptyLandingPage(props: { next?: string }) {
           <div className="grow" />
           <div className="flex items-center">
             {currentUserLoading &&
-              <SmallShrinkableOppositeAnchor
+              <ClickableOppositeAnchor
                 aria-disabled>
                 <Loading className="size-5" />
                 Loading
-              </SmallShrinkableOppositeAnchor>}
+              </ClickableOppositeAnchor>}
             {!currentUserLoading && maybeCurrentUser == null &&
-              <SmallShrinkableOppositeAnchor
+              <ClickableOppositeAnchor
                 onKeyDown={users.onKeyDown}
                 onClick={users.onClick}
                 href={users.href}>
                 <Outline.LockOpenIcon className="size-5" />
                 Login
-              </SmallShrinkableOppositeAnchor>}
+              </ClickableOppositeAnchor>}
             {!currentUserLoading && maybeCurrentUser != null &&
-              <SmallShrinkableOppositeAnchor
+              <ClickableOppositeAnchor
                 href="#/home">
                 <Outline.HomeIcon className="size-5" />
                 Home
-              </SmallShrinkableOppositeAnchor>}
+              </ClickableOppositeAnchor>}
           </div>
           <div className="grow" />
         </div>
@@ -163,31 +163,31 @@ export function FullLandingPage(props: { next?: string }) {
           <div className="grow" />
           <div className="flex items-center">
             {currentUserLoading &&
-              <SmallShrinkableOppositeAnchor
+              <ClickableOppositeAnchor
                 aria-disabled>
                 <Loading className="size-5" />
                 Loading
-              </SmallShrinkableOppositeAnchor>}
+              </ClickableOppositeAnchor>}
             {!currentUserLoading && maybeCurrentUser == null &&
-              <SmallShrinkableOppositeAnchor
+              <ClickableOppositeAnchor
                 onKeyDown={users.onKeyDown}
                 onClick={users.onClick}
                 href={users.href}>
                 <Outline.LockOpenIcon className="size-5" />
                 Login
-              </SmallShrinkableOppositeAnchor>}
+              </ClickableOppositeAnchor>}
             {!currentUserLoading && maybeCurrentUser != null &&
-              <SmallShrinkableOppositeAnchor
+              <ClickableOppositeAnchor
                 href="#/home">
                 <Outline.HomeIcon className="size-5" />
                 Home
-              </SmallShrinkableOppositeAnchor>}
+              </ClickableOppositeAnchor>}
             <div className="w-2" />
-            <SmallShrinkableContrastAnchor
+            <ClickableContrastAnchor
               href={subpath.go("/download").href}>
               <Outline.ArrowDownTrayIcon className="size-5" />
               Download
-            </SmallShrinkableContrastAnchor>
+            </ClickableContrastAnchor>
           </div>
           <div className="grow" />
           <div className="grow" />
@@ -271,12 +271,12 @@ export function FullLandingPage(props: { next?: string }) {
           </DownloadCard>
         </div>
         <div className="h-4" />
-        <WideShrinkableContrastAnchor
+        <WideClickableContrastAnchor
           target="_blank" rel="noreferrer"
           href="https://github.com/brumewallet/wallet#usage">
           <Outline.ArrowTopRightOnSquareIcon className="size-5" />
           More downloads
-        </WideShrinkableContrastAnchor>
+        </WideClickableContrastAnchor>
         <div className="h-[50vh]" />
         <div className="p-4 flex items-center justify-center gap-2">
           <TextAnchor
@@ -309,7 +309,7 @@ export function UsersMenu() {
       <UsersMenuRow
         key={user.uuid}
         user={user} />)}
-    <WideShrinkableNakedMenuAnchor
+    <WideClickableNakedMenuAnchor
       onClick={create.onClick}
       onKeyDown={create.onKeyDown}
       href={create.href}>
@@ -317,7 +317,7 @@ export function UsersMenu() {
         <Outline.PlusIcon className="size-4" />
       </div>
       New user
-    </WideShrinkableNakedMenuAnchor>
+    </WideClickableNakedMenuAnchor>
   </div>
 }
 
@@ -332,7 +332,7 @@ export function UsersMenuRow(props: { user: User }) {
   if (maybeUser == null)
     return null
 
-  return <WideShrinkableNakedMenuAnchor
+  return <WideClickableNakedMenuAnchor
     onClick={open.onClick}
     onKeyDown={open.onKeyDown}
     href={open.href}>
@@ -340,7 +340,7 @@ export function UsersMenuRow(props: { user: User }) {
       color={Color.get(maybeUser.color)}
       name={maybeUser.name} />
     {maybeUser.name}
-  </WideShrinkableNakedMenuAnchor>
+  </WideClickableNakedMenuAnchor>
 }
 
 export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & AnchorProps & { href: string }) {
@@ -415,13 +415,13 @@ export function DownloadCard(props: TitleProps & ChildrenProps & { href: string 
     </div>
     <div className="h-4 grow" />
     <div className="flex items-center">
-      <WideShrinkableContrastAnchor
+      <WideClickableContrastAnchor
         target="_blank" rel="noreferrer"
         onClick={Events.keep}
         href={href}>
         <Icon className="size-5" />
         Download
-      </WideShrinkableContrastAnchor>
+      </WideClickableContrastAnchor>
     </div>
   </div>
 }

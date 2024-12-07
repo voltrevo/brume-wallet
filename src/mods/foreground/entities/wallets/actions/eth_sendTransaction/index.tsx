@@ -8,12 +8,12 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { ShrinkableContrastButtonInInputBox, WideShrinkableContrastButton, WideShrinkableNakedMenuButton, WideShrinkableOppositeButton } from "@/libs/ui/button";
+import { ClickableContrastButtonInInputBox, WideClickableContrastButton, WideClickableNakedMenuButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { SmallUnflexLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
 import { SelectAndClose } from "@/libs/ui/select";
-import { AnchorShrinkerDiv } from "@/libs/ui/shrinker";
+import { GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
@@ -886,10 +886,10 @@ export function WalletTransactionDialog(props: {}) {
         onChange={onNonceInputChange}
         placeholder={maybePendingNonceBigInt?.toString()} />
       <div className="w-1" />
-      <ShrinkableContrastButtonInInputBox
+      <ClickableContrastButtonInInputBox
         onClick={onNonceClick}>
         Select
-      </ShrinkableContrastButtonInInputBox>
+      </ClickableContrastButtonInInputBox>
     </SimpleLabel>
     <div className="h-2" />
     <div className="po-md flex flex-col bg-contrast rounded-xl">
@@ -906,12 +906,12 @@ export function WalletTransactionDialog(props: {}) {
           placeholder="0x0" />
       </div>
       <div className="h-2" />
-      <WideShrinkableContrastButton
+      <WideClickableContrastButton
         disabled={maybeData == null}
         onClick={onDecodeClick}>
         <Outline.MagnifyingGlassIcon className="size-4" />
         Decode
-      </WideShrinkableContrastButton>
+      </WideClickableContrastButton>
     </div>
     <div className="h-4" />
     <div className="font-medium">
@@ -929,30 +929,30 @@ export function WalletTransactionDialog(props: {}) {
             <Menu>
               <SelectAndClose ok={setGasMode}>
                 <div className="flex flex-col text-left gap-2">
-                  <WideShrinkableNakedMenuButton
+                  <WideClickableNakedMenuButton
                     data-value="urgent">
                     <div className="truncate">
                       {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
                     </div>
-                  </WideShrinkableNakedMenuButton>
-                  <WideShrinkableNakedMenuButton
+                  </WideClickableNakedMenuButton>
+                  <WideClickableNakedMenuButton
                     data-value="fast">
                     <div className="truncate">
                       {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
                     </div>
-                  </WideShrinkableNakedMenuButton>
-                  <WideShrinkableNakedMenuButton
+                  </WideClickableNakedMenuButton>
+                  <WideClickableNakedMenuButton
                     data-value="normal">
                     <div className="truncate">
                       {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
                     </div>
-                  </WideShrinkableNakedMenuButton>
-                  <WideShrinkableNakedMenuButton
+                  </WideClickableNakedMenuButton>
+                  <WideClickableNakedMenuButton
                     data-value="custom">
                     <div className="truncate">
                       {`Custom`}
                     </div>
-                  </WideShrinkableNakedMenuButton>
+                  </WideClickableNakedMenuButton>
                 </div>
               </SelectAndClose>
             </Menu>}
@@ -992,30 +992,30 @@ export function WalletTransactionDialog(props: {}) {
             <Menu>
               <SelectAndClose ok={setGasMode}>
                 <div className="flex flex-col text-left gap-2">
-                  <WideShrinkableNakedMenuButton
+                  <WideClickableNakedMenuButton
                     data-value="urgent">
                     <div className="truncate">
                       {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
                     </div>
-                  </WideShrinkableNakedMenuButton>
-                  <WideShrinkableNakedMenuButton
+                  </WideClickableNakedMenuButton>
+                  <WideClickableNakedMenuButton
                     data-value="fast">
                     <div className="truncate">
                       {`Fast — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
                     </div>
-                  </WideShrinkableNakedMenuButton>
-                  <WideShrinkableNakedMenuButton
+                  </WideClickableNakedMenuButton>
+                  <WideClickableNakedMenuButton
                     data-value="normal">
                     <div className="truncate">
                       {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
                     </div>
-                  </WideShrinkableNakedMenuButton>
-                  <WideShrinkableNakedMenuButton
+                  </WideClickableNakedMenuButton>
+                  <WideClickableNakedMenuButton
                     data-value="custom">
                     <div className="truncate">
                       {`Custom`}
                     </div>
-                  </WideShrinkableNakedMenuButton>
+                  </WideClickableNakedMenuButton>
                 </div>
               </SelectAndClose>
             </Menu>}
@@ -1154,18 +1154,18 @@ export function WalletTransactionDialog(props: {}) {
     </>}
     <div className="flex items-center flex-wrap-reverse gap-2">
       {!disableSign &&
-        <WideShrinkableContrastButton
+        <WideClickableContrastButton
           disabled={onSignClick.loading}
           onClick={onSignClick.run}>
           <Outline.PencilIcon className="size-5" />
           Sign
-        </WideShrinkableContrastButton>}
-      <WideShrinkableOppositeButton
+        </WideClickableContrastButton>}
+      <WideClickableOppositeButton
         disabled={onSendClick.loading}
         onClick={onSendClick.run}>
         <Outline.PaperAirplaneIcon className="size-5" />
         Send
-      </WideShrinkableOppositeButton>
+      </WideClickableOppositeButton>
     </div>
   </>
 }
@@ -1193,20 +1193,20 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
       <div className="flex items-center gap-1">
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Copy
             {onCopy.current
               ? <Outline.CheckIcon className="size-4" />
               : <Outline.ClipboardIcon className="size-4" />}
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </button>
         <a className="group px-2 bg-contrast rounded-full"
           target="_blank" rel="noreferrer"
           href={`${chainData.etherscan}/tx/${data.hash}`}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Open
             <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </a>
       </div>
     </div>
@@ -1260,27 +1260,27 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
       <div className="flex items-center gap-1">
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Copy
             {onCopy.current
               ? <Outline.CheckIcon className="size-4" />
               : <Outline.ClipboardIcon className="size-4" />}
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </button>
         <a className="group px-2 bg-contrast rounded-full"
           target="_blank" rel="noreferrer"
           href={`${chainData.etherscan}/tx/${data.hash}`}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Open
             <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </a>
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onRetryClick}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Retry
             <Outline.BoltIcon className="size-4" />
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </button>
       </div>
     </div>
@@ -1310,19 +1310,19 @@ export function SignedTransactionCard(props: { data: SignedTransactionData } & {
       <div className="flex items-center gap-1">
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Copy
             {onCopy.current
               ? <Outline.CheckIcon className="size-4" />
               : <Outline.ClipboardIcon className="size-4" />}
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </button>
         <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onSendClick}>
-          <AnchorShrinkerDiv>
+          <GapperAndClickerInAnchorDiv>
             Send
             <Outline.PaperAirplaneIcon className="size-4" />
-          </AnchorShrinkerDiv>
+          </GapperAndClickerInAnchorDiv>
         </button>
       </div>
     </div>
