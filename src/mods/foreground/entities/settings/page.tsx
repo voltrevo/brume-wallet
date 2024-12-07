@@ -1,7 +1,7 @@
 import { Errors } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
-import { TextAnchor } from "@/libs/ui/anchor";
+import { ColoredTextAnchor } from "@/libs/ui/anchor";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { Page } from "@/libs/ui/page/page";
 import { Data } from "@hazae41/glacier";
@@ -62,7 +62,7 @@ export function SettingsPage() {
           onChange={onLogsChange.run} />
       </SimpleLabel>
       <div className="po-md text-sm text-contrast">
-        All your requests will be seen on <TextAnchor href="https://logs.brume.money" />
+        All your requests will be seen on <ColoredTextAnchor href="https://logs.brume.money" />
       </div>
     </PageBody>
   </Page>

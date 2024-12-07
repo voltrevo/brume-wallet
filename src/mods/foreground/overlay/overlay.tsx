@@ -1,10 +1,10 @@
 import { Outline } from "@/libs/icons/icons";
 import { isExtension, isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
+import { SmallestOppositeChipButton } from "@/libs/ui/button";
 import { useCallback, useEffect, useState } from "react";
 import { ServiceWorkerBackground } from "../background/background";
 import { useBackgroundContext } from "../background/context";
-import { SmallestOppositeChipButton } from "../entities/users/all/page";
 import { RoundedShrinkableNakedButton } from "../entities/wallets/actions/send";
 
 export function UpdateBanner(props: {

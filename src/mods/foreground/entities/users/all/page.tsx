@@ -4,12 +4,12 @@ import { Outline } from "@/libs/icons/icons";
 import { Events } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ClassNameProps } from "@/libs/react/props/className";
-import { AnchorProps, ButtonProps } from "@/libs/react/props/html";
+import { AnchorProps } from "@/libs/react/props/html";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
+import { SmallShrinkableContrastAnchor, SmallShrinkableOppositeAnchor, TextAnchor, WideShrinkableContrastAnchor } from "@/libs/ui/anchor";
 import { Dialog } from "@/libs/ui/dialog";
 import { Loading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
-import { ButtonGapperDiv, ButtonShrinkerDiv } from "@/libs/ui/shrinker";
 import { urlOf } from "@/libs/url/url";
 import { User } from "@/mods/background/service_worker/entities/users/data";
 import { OneDisplay } from "@/mods/foreground/landing/1/1";
@@ -425,103 +425,6 @@ export function DownloadCard(props: TitleProps & ChildrenProps & { href: string 
       </WideShrinkableContrastAnchor>
     </div>
   </div>
-}
-
-export function TextButton(props: ButtonProps) {
-  const { children, ...rest } = props
-
-  return <button className="inline outline-none hover:underline focus-visible:underline disabled:opacity-50 transition-opacity"
-    {...rest}>
-    {children}
-  </button>
-}
-
-export function TextAnchor(props: AnchorProps) {
-  const { children, "aria-disabled": disabled = false, ...rest } = props
-
-  return <a className="outline-none hover:underline focus-visible:underline aria-disabled:opacity-50 transition-opacity"
-    aria-disabled={disabled}
-    {...rest}>
-    {children}
-  </a>
-}
-
-export function SmallestOppositeChipButton(props: ChildrenProps & ButtonProps) {
-  const { children, ...rest } = props
-
-  return <button className="group po-xs text-sm bg-opposite text-opposite rounded-full outline-none enabled:hover:bg-opposite-hover focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
-    <ButtonGapperDiv>
-      {children}
-    </ButtonGapperDiv>
-  </button>
-}
-
-export function SmallShrinkableOppositeButton(props: ChildrenProps & ButtonProps) {
-  const { children, ...rest } = props
-
-  return <button className="group po-md bg-opposite text-opposite rounded-xl outline-none enabled:hover:bg-opposite-hover focus-visible:outline-opposite disabled:opacity-50 transition-opacity" {...rest}>
-    <ButtonShrinkerDiv>
-      {children}
-    </ButtonShrinkerDiv>
-  </button>
-}
-
-export function SmallShrinkableContrastButton(props: ChildrenProps & ButtonProps) {
-  const { children, ...rest } = props
-
-  return <button className="group po-md bg-contrast rounded-xl outline-none enabled:hover:bg-contrast-hover focus-visible:outline-contrast disabled:opacity-50 transition-opacity" {...rest}>
-    <ButtonShrinkerDiv>
-      {children}
-    </ButtonShrinkerDiv>
-  </button>
-}
-
-export function SmallShrinkableOppositeAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
-  const { children, "aria-disabled": disabled = false, ...rest } = props
-
-  return <a className="group po-md bg-opposite text-opposite rounded-xl outline-none aria-[disabled=false]:hover:bg-opposite-hover focus-visible:outline-opposite aria-disabled:opacity-50 transition-opacity"
-    aria-disabled={disabled}
-    {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
-      {children}
-    </div>
-  </a>
-}
-
-export function SmallShrinkableContrastAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
-  const { children, "aria-disabled": disabled = false, ...rest } = props
-
-  return <a className="group po-md bg-contrast rounded-xl outline-none aria-[disabled=false]:hover:bg-contrast-hover focus-visible:outline-contrast aria-disabled:opacity-50 transition-opacity"
-    aria-disabled={disabled}
-    {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
-      {children}
-    </div>
-  </a >
-}
-
-export function WideShrinkableOppositeAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
-  const { children, "aria-disabled": disabled = false, ...rest } = props
-
-  return <a className="flex-1 group po-md bg-opposite border border-opposite text-opposite rounded-xl outline-none whitespace-nowrap aria-[disabled=false]:hover:bg-opposite-hover focus-visible:outline-contrast aria-disabled:opacity-50 transition-opacity"
-    aria-disabled={disabled}
-    {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
-      {children}
-    </div>
-  </a>
-}
-
-export function WideShrinkableContrastAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: boolean }) {
-  const { children, "aria-disabled": disabled = false, ...rest } = props
-
-  return <a className="flex-1 group po-md bg-contrast rounded-xl outline-none whitespace-nowrap aria-[disabled=false]:hover:bg-contrast-hover focus-visible:outline-contrast aria-disabled:opacity-50 transition-opacity"
-    aria-disabled={disabled}
-    {...rest}>
-    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
-      {children}
-    </div>
-  </a>
 }
 
 export function UserAvatar(props: ClassNameProps & { name: string } & { color: Color }) {
