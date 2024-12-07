@@ -8,7 +8,6 @@ import { RequestsPage } from "../entities/requests/all/page"
 import { SeedsPage } from "../entities/seeds/all/page"
 import { SeedPage } from "../entities/seeds/page"
 import { SessionsPage } from "../entities/sessions/all/page"
-import { UserSettingsPage } from "../entities/settings/page"
 import { SnapsPage } from "../entities/snaps/all/page"
 import { UserGuard } from "../entities/users/context"
 import { WalletsPage } from "../entities/wallets/all/page"
@@ -19,6 +18,7 @@ import { GlobalSettingsPage } from "../global/mods/settings/mods/page"
 import { HomePage } from "../home/page"
 import { EmptyLandingPage, FullLandingPage } from "../landing"
 import { Overlay } from "../overlay/overlay"
+import { UserSettingsPage } from "../user/mods/settings/mods/page"
 
 export function Router() {
   const path = usePathContext().getOrThrow()

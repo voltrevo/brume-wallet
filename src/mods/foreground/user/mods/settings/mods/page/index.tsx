@@ -7,8 +7,8 @@ import { UserPage } from "@/libs/ui/page/page";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { ChangeEvent } from "react";
-import { SimpleLabel } from "../wallets/actions/send";
-import { useChain, useLogs } from "./data";
+import { useChain, useLogs } from "../../../../../entities/settings/data";
+import { SimpleLabel } from "../../../../../entities/wallets/actions/send";
 
 export function UserSettingsPage() {
   const logs = useLogs()
