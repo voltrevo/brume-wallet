@@ -10,7 +10,7 @@ import { PaddedRoundedClickableNakedButton, WideClickableNakedMenuButton } from 
 import { ImageWithFallback } from "@/libs/ui/image"
 import { Menu } from "@/libs/ui/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
-import { Page } from "@/libs/ui/page/page"
+import { UserPage } from "@/libs/ui/page/page"
 import { ExSessionData, Session, SessionData } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { BlobbyData } from "@/mods/universal/entities/blobbys"
@@ -87,10 +87,10 @@ export function SessionsPage() {
     </div>
   </>
 
-  return <Page>
+  return <UserPage>
     {Header}
     {Body}
-  </Page>
+  </UserPage>
 }
 
 export function SessionRow(props: { session: Session }) {

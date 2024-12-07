@@ -3,14 +3,14 @@ import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { ColoredTextAnchor } from "@/libs/ui/anchor";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
-import { Page } from "@/libs/ui/page/page";
+import { UserPage } from "@/libs/ui/page/page";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { ChangeEvent } from "react";
 import { SimpleLabel } from "../wallets/actions/send";
 import { useChain, useLogs } from "./data";
 
-export function SettingsPage() {
+export function UserSettingsPage() {
   const logs = useLogs()
   const chain = useChain()
 
@@ -24,7 +24,7 @@ export function SettingsPage() {
     await chain.mutateOrThrow(() => new Some(new Data(chainId)))
   }), [])
 
-  return <Page>
+  return <UserPage>
     <UserPageHeader title="Settings" />
     <PageBody>
       <div className="po-md text-sm text-contrast uppercase">
@@ -65,5 +65,5 @@ export function SettingsPage() {
         All your requests will be seen on <ColoredTextAnchor href="https://logs.brume.money" />
       </div>
     </PageBody>
-  </Page>
+  </UserPage>
 }

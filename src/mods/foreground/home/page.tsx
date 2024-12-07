@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { isWebsite } from "@/libs/platform/platform"
 import { PageBody } from "@/libs/ui/page/header"
-import { Page } from "@/libs/ui/page/page"
+import { UserPage } from "@/libs/ui/page/page"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { useUserTotalPricedBalance } from "@/mods/universal/user/mods/balances/hooks"
 import { useCallback, useEffect, useState } from "react"
@@ -79,7 +79,7 @@ export function HomePage() {
       </div>
     </PageBody>
 
-  return <Page>
+  return <UserPage>
     {Body}
-  </Page>
+  </UserPage>
 }

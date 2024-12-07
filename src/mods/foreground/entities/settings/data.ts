@@ -4,14 +4,14 @@ import { useUserStorageContext } from "../../user/mods/storage"
 
 export function useLogs() {
   const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(SettingsQuery.Logs.create, [storage])
+  const query = useQuery(SettingsQuery.Logs.queryOrThrow, [storage])
 
   return query
 }
 
 export function useChain() {
   const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(SettingsQuery.Chain.create, [storage])
+  const query = useQuery(SettingsQuery.Chain.queryOrThrow, [storage])
 
   return query
 }

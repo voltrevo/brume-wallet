@@ -16,7 +16,7 @@ import { Dialog } from "@/libs/ui/dialog";
 import { Loading, SmallUnflexLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
-import { Page } from "@/libs/ui/page/page";
+import { UserPage } from "@/libs/ui/page/page";
 import { GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";
 import { Balance } from "@/mods/universal/ethereum/mods/tokens/mods/balance";
 import { useContractTokenBalance, useContractTokenPricedBalance, useNativeTokenBalance, useNativeTokenPricedBalance, useOfflineContractTokenBalance, useOfflineContractTokenPricedBalance, useOfflineNativeTokenBalance, useOfflineNativeTokenPricedBalance } from "@/mods/universal/ethereum/mods/tokens/mods/balance/hooks";
@@ -342,7 +342,7 @@ function WalletDataPage() {
       </div>
     </PageBody>
 
-  return <Page>
+  return <UserPage>
     <HashSubpathProvider>
       {subpath.url.pathname === "/connect" &&
         <Menu>
@@ -371,7 +371,7 @@ function WalletDataPage() {
     {Card}
     {Apps}
     {Body}
-  </Page>
+  </UserPage>
 }
 
 export function RankedTokenRow(props: { rank: number }) {

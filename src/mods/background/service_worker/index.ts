@@ -516,7 +516,7 @@ export class Global {
       if (!wait)
         return undefined
 
-      const userChainState = await SettingsQuery.Chain.create(user.storage).state
+      const userChainState = await SettingsQuery.Chain.queryOrThrow(user.storage).state
       const userChainId = Option.wrap(userChainState.data?.get()).getOr(1)
       const userChainData = Option.wrap(chainDataByChainId[userChainId]).getOrThrow()
 
@@ -1218,7 +1218,7 @@ export class Global {
   async brume_log(request: RpcRequestInit<unknown>): Promise<void> {
     const user = Option.wrap(this.#user).getOrThrow()
 
-    const logs = await SettingsQuery.Logs.create(user.storage).state
+    const logs = await SettingsQuery.Logs.queryOrThrow(user.storage).state
 
     if (logs.real?.current?.get() !== true)
       return

@@ -10,13 +10,13 @@ export namespace SettingsQuery {
 
     export const key = `settings/logs`
 
-    export function route(cacheKey: string, storage: QueryStorage) {
+    export function routeOrThrow(cacheKey: string, storage: QueryStorage) {
       if (cacheKey !== key)
         return
-      return create(storage)
+      return queryOrThrow(storage)
     }
 
-    export function create(storage: QueryStorage) {
+    export function queryOrThrow(storage: QueryStorage) {
       return createQuery<K, D, F>({ key, storage })
     }
 
@@ -30,13 +30,13 @@ export namespace SettingsQuery {
 
     export const key = `settings/chain`
 
-    export function route(cacheKey: string, storage: QueryStorage) {
+    export function routeOrThrow(cacheKey: string, storage: QueryStorage) {
       if (cacheKey !== key)
         return
-      return create(storage)
+      return queryOrThrow(storage)
     }
 
-    export function create(storage: QueryStorage) {
+    export function queryOrThrow(storage: QueryStorage) {
       return createQuery<K, D, F>({ key, storage })
     }
 

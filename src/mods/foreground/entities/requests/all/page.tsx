@@ -8,7 +8,7 @@ import { UserRejectedError } from "@/libs/rpc/mods/errors"
 import { PaddedRoundedClickableNakedButton } from "@/libs/ui/button"
 import { ImageWithFallback } from "@/libs/ui/image"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
-import { Page } from "@/libs/ui/page/page"
+import { UserPage } from "@/libs/ui/page/page"
 import { pathOf, urlOf } from "@/libs/url/url"
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
@@ -67,10 +67,10 @@ export function RequestsPage() {
     </div>
   </>
 
-  return <Page>
+  return <UserPage>
     {Header}
     {Body}
-  </Page>
+  </UserPage>
 }
 
 export function RequestRow(props: { request: AppRequest }) {

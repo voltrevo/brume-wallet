@@ -1,5 +1,4 @@
 import { isWebsite } from "@/libs/platform/platform"
-import { ChildrenProps } from "@/libs/react/props/children"
 import { DonePage, PersonalSignPage, TransactPage, TypedSignPage, WalletAndChainSelectPage } from "@/pages/popup"
 import { usePathContext } from "@hazae41/chemin"
 import { Address } from "@hazae41/cubane"
@@ -9,26 +8,17 @@ import { RequestsPage } from "../entities/requests/all/page"
 import { SeedsPage } from "../entities/seeds/all/page"
 import { SeedPage } from "../entities/seeds/page"
 import { SessionsPage } from "../entities/sessions/all/page"
-import { SettingsPage } from "../entities/settings/page"
+import { UserSettingsPage } from "../entities/settings/page"
 import { SnapsPage } from "../entities/snaps/all/page"
 import { UserGuard } from "../entities/users/context"
 import { WalletsPage } from "../entities/wallets/all/page"
 import { TrashedWalletsPage } from "../entities/wallets/all/trash/page"
 import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
+import { GlobalSettingsPage } from "../global/mods/settings/mods/page"
 import { HomePage } from "../home/page"
 import { EmptyLandingPage, FullLandingPage } from "../landing"
 import { Overlay } from "../overlay/overlay"
-
-export function Layout(props: ChildrenProps) {
-  const { children } = props
-
-  return <Overlay>
-    <UserGuard>
-      {children}
-    </UserGuard>
-  </Overlay>
-}
 
 export function Router() {
   const path = usePathContext().getOrThrow()
@@ -49,84 +39,119 @@ export function Router() {
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/home(\/)?$/))
-    return <Layout>
-      <HomePage />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <HomePage />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/wallets(\/)?$/))
-    return <Layout>
-      <WalletsPage />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <WalletsPage />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/wallets\/trash(\/)?$/))
-    return <Layout>
-      <TrashedWalletsPage />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <TrashedWalletsPage />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/seeds(\/)?$/))
-    return <Layout>
-      <SeedsPage />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <SeedsPage />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/sessions(\/)?$/))
-    return <Layout>
-      <SessionsPage />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <SessionsPage />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/requests(\/)?$/))
-    return <Layout>
-      <RequestsPage />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <RequestsPage />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/plugins(\/)?$/))
-    return <Layout>
-      <SnapsPage />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <SnapsPage />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/wallet\/([^\/]+)(\/)?$/))
-    return <Layout>
-      <WalletPage uuid={matches[1]} />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <WalletPage uuid={matches[1]} />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/wallet\/([^\/]+)\/camera(\/)?$/))
-    return <Layout>
-      <WalletCameraPage uuid={matches[1]} />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <WalletCameraPage uuid={matches[1]} />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/seed\/([^\/]+)(\/)?$/))
-    return <Layout>
-      <SeedPage uuid={matches[1]} />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <SeedPage uuid={matches[1]} />
+      </UserGuard>
+    </Overlay>
 
-  if (matches = path.url.pathname.match(/^\/settings(\/)?$/))
-    return <Layout>
-      <SettingsPage />
-    </Layout>
+  if (matches = path.url.pathname.match(/^\/settings\/global(\/)?$/))
+    return <Overlay>
+      <GlobalSettingsPage />
+    </Overlay>
+
+  if (matches = path.url.pathname.match(/^\/settings\/user(\/)?$/))
+    return <Overlay>
+      <UserGuard>
+        <UserSettingsPage />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/eth_requestAccounts(\/)?$/))
-    return <Layout>
-      <WalletAndChainSelectPage />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <WalletAndChainSelectPage />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/eth_sendTransaction(\/)?$/))
-    return <Layout>
-      <TransactPage />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <TransactPage />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/personal_sign(\/)?$/))
-    return <Layout>
-      <PersonalSignPage />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <PersonalSignPage />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/eth_signTypedData_v4(\/)?$/))
-    return <Layout>
-      <TypedSignPage />
-    </Layout>
+    return <Overlay>
+      <UserGuard>
+        <TypedSignPage />
+      </UserGuard>
+    </Overlay>
 
   if (matches = path.url.pathname.match(/^\/done(\/)?$/))
-    return <Layout>
+    return <Overlay>
       <DonePage />
-    </Layout>
+    </Overlay>
 
   if (isWebsite())
     return <Overlay>

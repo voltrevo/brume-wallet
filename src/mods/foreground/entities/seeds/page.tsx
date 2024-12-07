@@ -2,7 +2,7 @@
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Dialog } from "@/libs/ui/dialog";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
-import { Page } from "@/libs/ui/page/page";
+import { UserPage } from "@/libs/ui/page/page";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { useCallback } from "react";
@@ -58,7 +58,7 @@ function SeedDataPage() {
         wallets={maybeWallets} />
     </PageBody>
 
-  return <Page>
+  return <UserPage>
     <HashSubpathProvider>
       {subpath.url.pathname === "/create" &&
         <Dialog>
@@ -68,5 +68,5 @@ function SeedDataPage() {
     {Header}
     {Card}
     {Body}
-  </Page>
+  </UserPage>
 }

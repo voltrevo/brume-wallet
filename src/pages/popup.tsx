@@ -10,7 +10,7 @@ import { WideClickableContrastButton, WideClickableOppositeButton } from "@/libs
 import { Dialog } from "@/libs/ui/dialog";
 import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
-import { Page } from "@/libs/ui/page/page";
+import { UserPage } from "@/libs/ui/page/page";
 import { urlOf } from "@/libs/url/url";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -211,7 +211,7 @@ export function TransactPage() {
   }, [maybeTransaction, approveOrAlert])
 
   return <WalletDataContext.Provider value={maybeWallet}>
-    <Page>
+    <UserPage>
       <HashSubpathProvider>
         {subpath.url.pathname === "/eth_sendTransaction" &&
           <Dialog>
@@ -348,7 +348,7 @@ export function TransactPage() {
           </WideClickableOppositeButton>
         </div>
       </PageBody>
-    </Page>
+    </UserPage>
   </WalletDataContext.Provider>
 }
 
@@ -397,7 +397,7 @@ export function PersonalSignPage() {
     location.replace(path.go("/done"))
   }), [background, id, path])
 
-  return <Page>
+  return <UserPage>
     <PageBody>
       <Dialog.Title>
         Signature
@@ -430,7 +430,7 @@ export function PersonalSignPage() {
         </WideClickableOppositeButton>
       </div>
     </PageBody>
-  </Page>
+  </UserPage>
 }
 
 export function TypedSignPage() {
@@ -473,7 +473,7 @@ export function TypedSignPage() {
     location.replace(path.go("/done"))
   }), [background, id, path])
 
-  return <Page>
+  return <UserPage>
     <PageBody>
       <Dialog.Title>
         Signature
@@ -506,7 +506,7 @@ export function TypedSignPage() {
         </WideClickableOppositeButton>
       </div>
     </PageBody>
-  </Page>
+  </UserPage>
 }
 
 export function WalletAndChainSelectPage() {
@@ -604,7 +604,7 @@ export function WalletAndChainSelectPage() {
       </div>
     </PageBody>
 
-  return <Page>
+  return <UserPage>
     <HashSubpathProvider>
       {subpath.url.pathname === "/create" &&
         <Menu>
@@ -621,7 +621,7 @@ export function WalletAndChainSelectPage() {
     </HashSubpathProvider>
     {Header}
     {Body}
-  </Page>
+  </UserPage>
 }
 
 export function DonePage() {
@@ -635,7 +635,7 @@ export function DonePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requests])
 
-  return <Page>
+  return <UserPage>
     <PageBody>
       <Dialog.Title>
         Done
@@ -653,5 +653,5 @@ export function DonePage() {
         </ClickableOppositeAnchor>
       </div>
     </PageBody>
-  </Page>
+  </UserPage>
 }

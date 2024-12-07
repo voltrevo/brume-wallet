@@ -24,9 +24,9 @@ export function routeOrThrow(cacheKey: string, storage: QueryStorage): SimpleQue
     return query
   if (query = SeedQuery.All.route(cacheKey, storage))
     return query
-  if (query = SettingsQuery.Logs.route(cacheKey, storage))
+  if (query = SettingsQuery.Logs.routeOrThrow(cacheKey, storage))
     return query
-  if (query = SettingsQuery.Chain.route(cacheKey, storage))
+  if (query = SettingsQuery.Chain.queryOrThrow(cacheKey, storage))
     return query
 
   throw new Error("Unknown cache key")

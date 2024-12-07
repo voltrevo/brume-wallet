@@ -9,7 +9,7 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { ErrorProps } from "@/libs/react/props/error";
 import { WideClickableOppositeButton } from "@/libs/ui/button";
 import { GlobalPageHeader, PageBody } from "@/libs/ui/page/header";
-import { Page } from "@/libs/ui/page/page";
+import { UserPage } from "@/libs/ui/page/page";
 import { BackgroundProvider } from "@/mods/foreground/background/context";
 import { GlobalStorageProvider } from "@/mods/foreground/global/mods/storage";
 import { UserStorageProvider } from "@/mods/foreground/user/mods/storage";
@@ -41,7 +41,7 @@ export function Fallback(props: ErrorProps) {
   return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
     <div className="grow w-full flex flex-col overflow-y-scroll">
       <div className="grow w-full m-auto max-w-3xl flex flex-col">
-        <Page>
+        <UserPage>
           <GlobalPageHeader title="Error" />
           <PageBody>
             <div className="text-red-400 dark:text-red-500">
@@ -58,7 +58,7 @@ export function Fallback(props: ErrorProps) {
               </WideClickableOppositeButton>
             </div>
           </PageBody>
-        </Page>
+        </UserPage>
       </div>
     </div>
   </main>

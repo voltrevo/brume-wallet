@@ -1,7 +1,7 @@
 import { Outline } from "@/libs/icons/icons"
 import { PaddedRoundedClickableNakedButton } from "@/libs/ui/button"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
-import { Page } from "@/libs/ui/page/page"
+import { UserPage } from "@/libs/ui/page/page"
 import { useCallback } from "react"
 import { useSnaps } from "../data"
 
@@ -31,8 +31,8 @@ export function SnapsPage() {
     </div>
   </>
 
-  return <Page>
+  return <UserPage>
     {Header}
     {Body}
-  </Page>
+  </UserPage>
 }

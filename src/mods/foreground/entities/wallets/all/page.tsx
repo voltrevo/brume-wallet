@@ -6,7 +6,7 @@ import { PaddedRoundedClickableNakedAnchor, WideClickableContrastAnchor } from "
 import { Dialog } from "@/libs/ui/dialog"
 import { Menu } from "@/libs/ui/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
-import { Page } from "@/libs/ui/page/page"
+import { UserPage } from "@/libs/ui/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Nullable } from "@hazae41/option"
@@ -66,7 +66,7 @@ export function WalletsPage() {
     </div>
   </>
 
-  return <Page>
+  return <UserPage>
     <HashSubpathProvider>
       {subpath.url.pathname === "/create" &&
         <Menu>
@@ -83,7 +83,7 @@ export function WalletsPage() {
     </HashSubpathProvider>
     {Header}
     {Body}
-  </Page>
+  </UserPage>
 }
 
 export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets: Nullable<Wallet[]> } & { selected?: Wallet } & { disableNew?: boolean }) {

@@ -5,7 +5,7 @@ import { isSafariExtension } from "@/libs/platform/platform"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { PaddedRoundedClickableNakedButton } from "@/libs/ui/button"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
-import { Page } from "@/libs/ui/page/page"
+import { UserPage } from "@/libs/ui/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { useUserStorageContext } from "@/mods/foreground/user/mods/storage"
 import { usePathContext } from "@hazae41/chemin"
@@ -57,10 +57,10 @@ export function TrashedWalletsPage() {
     </div>
   </>
 
-  return <Page>
+  return <UserPage>
     {Header}
     {Body}
-  </Page>
+  </UserPage>
 }
 
 

@@ -4,7 +4,7 @@ import { PaddedRoundedClickableNakedAnchor } from "@/libs/ui/anchor"
 import { Dialog } from "@/libs/ui/dialog"
 import { Menu } from "@/libs/ui/menu"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
-import { Page } from "@/libs/ui/page/page"
+import { UserPage } from "@/libs/ui/page/page"
 import { Seed } from "@/mods/universal/entities/seeds"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { useCallback } from "react"
@@ -52,7 +52,7 @@ export function SeedsPage() {
     </div>
   </>
 
-  return <Page>
+  return <UserPage>
     <HashSubpathProvider>
       {subpath.url.pathname === "/create" &&
         <Menu>
@@ -69,7 +69,7 @@ export function SeedsPage() {
     </HashSubpathProvider>
     {Header}
     {Body}
-  </Page>
+  </UserPage>
 }
 
 export function ClickableSeedGrid(props: OkProps<Seed> & { maybeSeeds?: Seed[] } & { disableNew?: boolean }) {
