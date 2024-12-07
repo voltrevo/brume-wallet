@@ -3,6 +3,7 @@ import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
+import { WideShrinkableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { None, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
@@ -10,7 +11,7 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { RawWalletCard } from "../../card";
 import { useWalletDataContext } from "../../context";
 import { useWallet } from "../../data";
-import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../send";
+import { SimpleInput, SimpleLabel } from "../send";
 
 export function WalletEditDialog(props: {}) {
   const wallet = useWalletDataContext().getOrThrow()

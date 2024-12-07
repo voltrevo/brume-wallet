@@ -1,6 +1,6 @@
 import { Outline } from "@/libs/icons/icons";
+import { WideShrinkableNakedMenuAnchor } from "@/libs/ui/anchor";
 import { useCoords, usePathContext } from "@hazae41/chemin";
-import { WideShrinkableNakedMenuAnchor } from "../../actions/send";
 
 export function WalletCreatorMenu(props: {}) {
   const path = usePathContext().getOrThrow()

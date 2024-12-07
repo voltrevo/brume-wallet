@@ -6,6 +6,7 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
+import { WideShrinkableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -15,7 +16,7 @@ import { Ledger } from "@hazae41/ledger";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { Panic } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../../wallets/actions/send";
+import { SimpleInput, SimpleLabel } from "../../../wallets/actions/send";
 import { RawSeedCard } from "../../card";
 
 export function LedgerSeedCreatorDialog(props: {}) {

@@ -1,8 +1,8 @@
 import { Outline } from "@/libs/icons/icons"
+import { PaddedRoundedShrinkableNakedButton } from "@/libs/ui/button"
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
 import { Page } from "@/libs/ui/page/page"
 import { useCallback } from "react"
-import { PaddedRoundedShrinkableNakedButton } from "../../wallets/actions/send"
 import { useSnaps } from "../data"
 
 export function SnapsPage() {

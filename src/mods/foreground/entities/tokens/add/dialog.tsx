@@ -3,6 +3,7 @@ import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
+import { WideShrinkableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { Loading } from "@/libs/ui/loading";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -13,7 +14,7 @@ import { Data } from "@hazae41/glacier";
 import { Option, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
-import { SimpleInput, SimpleLabel, WideShrinkableOppositeButton } from "../../wallets/actions/send";
+import { SimpleInput, SimpleLabel } from "../../wallets/actions/send";
 import { useWalletDataContext } from "../../wallets/context";
 import { useEthereumContext } from "../../wallets/data";
 

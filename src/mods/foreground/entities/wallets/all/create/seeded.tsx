@@ -5,6 +5,7 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
+import { WideShrinkableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
@@ -21,7 +22,7 @@ import { mnemonicToSeed } from "@scure/bip39";
 import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { SeedInstance } from "../../../seeds/all/helpers";
 import { useSeedDataContext } from "../../../seeds/context";
-import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../actions/send";
+import { SimpleInput, SimpleLabel } from "../../actions/send";
 import { EmptyRectangularCard } from "./standalone";
 
 export function SeededWalletCreatorDialog(props: {}) {

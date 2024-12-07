@@ -2,9 +2,9 @@ import { BrowserError, browser } from "@/libs/browser/browser"
 import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
+import { RoundedShrinkableNakedButton } from "@/libs/ui/button"
 import { pathOf } from "@/libs/url/url"
 import { usePathContext } from "@hazae41/chemin"
-import { RoundedShrinkableNakedButton } from "../entities/wallets/actions/send"
 
 export function NavBar() {
   const path = usePathContext().getOrThrow()

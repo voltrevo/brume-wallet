@@ -3,6 +3,7 @@ import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
+import { WideShrinkableContrastButton, WideShrinkableOppositeButton } from "@/libs/ui/button";
 import { UserRef } from "@/mods/background/service_worker/entities/users/data";
 import { usePathContext } from "@hazae41/chemin";
 import { Data } from "@hazae41/glacier";
@@ -10,7 +11,7 @@ import { Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { KeyboardEvent, useCallback, useDeferredValue, useRef, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
-import { SimpleLabel, WideShrinkableContrastButton, WideShrinkableOppositeButton } from "../wallets/actions/send";
+import { SimpleLabel } from "../wallets/actions/send";
 import { UserAvatar } from "./all/page";
 import { useCurrentUser, useUser } from "./data";
 

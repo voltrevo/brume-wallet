@@ -5,6 +5,7 @@ import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
+import { WideShrinkableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { User, UserInit, UserRef } from "@/mods/background/service_worker/entities/users/data";
@@ -13,7 +14,7 @@ import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { KeyboardEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
-import { SimpleInput, SimpleLabel, WideShrinkableGradientButton } from "../../wallets/actions/send";
+import { SimpleInput, SimpleLabel } from "../../wallets/actions/send";
 import { useCurrentUser } from "../data";
 import { UserAvatar } from "./page";
 

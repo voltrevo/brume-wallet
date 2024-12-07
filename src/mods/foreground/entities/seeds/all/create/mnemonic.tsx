@@ -7,6 +7,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { useConstant } from "@/libs/react/ref";
+import { WideShrinkableContrastButton, WideShrinkableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -19,7 +20,7 @@ import { WebAuthnStorage } from "@hazae41/webauthnstorage";
 import { generateMnemonic, mnemonicToEntropy, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableGradientButton } from "../../../wallets/actions/send";
+import { SimpleInput, SimpleLabel, SimpleTextarea } from "../../../wallets/actions/send";
 import { RawSeedCard } from "../../card";
 
 export function StandaloneSeedCreatorDialog(props: {}) {

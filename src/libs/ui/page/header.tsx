@@ -3,9 +3,9 @@ import { Outline } from "@/libs/icons/icons";
 import { OptionalBackProps } from "@/libs/react/props/back";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { TitleProps } from "@/libs/react/props/title";
-import { RoundedShrinkableNakedButton } from "@/mods/foreground/entities/wallets/actions/send";
 import { UserAvatar } from "../../../mods/foreground/entities/users/all/page";
 import { useUserContext } from "../../../mods/foreground/entities/users/context";
+import { RoundedShrinkableNakedButton } from "../button";
 
 export function GlobalPageHeader(props: TitleProps & ChildrenProps & OptionalBackProps) {
   const { title, children, back } = props

@@ -7,6 +7,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { useConstant } from "@/libs/react/ref";
+import { WideShrinkableContrastButton, WideShrinkableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { WalletData } from "@/mods/background/service_worker/entities/wallets/data";
@@ -21,7 +22,7 @@ import { Secp256k1 } from "@hazae41/secp256k1";
 import { WebAuthnStorage } from "@hazae41/webauthnstorage";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableGradientButton } from "../../actions/send";
+import { SimpleInput, SimpleLabel, SimpleTextarea } from "../../actions/send";
 import { RawWalletCard } from "../../card";
 
 export function StandaloneWalletCreatorDialog(props: {}) {

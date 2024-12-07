@@ -2,10 +2,11 @@ import { BrowserError, browser } from "@/libs/browser/browser";
 import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
+import { WideShrinkableNakedMenuAnchor } from "@/libs/ui/anchor";
+import { WideShrinkableNakedMenuButton } from "@/libs/ui/button";
 import { useCoords, usePathContext } from "@hazae41/chemin";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { MouseEvent } from "react";
-import { WideShrinkableNakedMenuAnchor, WideShrinkableNakedMenuButton } from "../../../wallets/actions/send";
 
 export function SeedCreatorMenu(props: {}) {
   const close = useCloseContext().getOrThrow()

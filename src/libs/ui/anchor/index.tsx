@@ -73,3 +73,39 @@ export function WideShrinkableContrastAnchor(props: ChildrenProps & AnchorProps 
     </div>
   </a>
 }
+
+export function WideShrinkableNakedMenuAnchor(props: ChildrenProps & AnchorProps) {
+  const { children, "aria-disabled": disabled = false, ...rest } = props
+
+  return <a className="flex-1 group po-md rounded-xl outline-none whitespace-nowrap aria-[disabled=false]:hover:bg-contrast focus-visible:bg-contrast aria-disabled:opacity-50 transition-opacity"
+    aria-disabled={disabled}
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-start gap-4 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </a>
+}
+
+export function PaddedRoundedShrinkableNakedAnchor(props: ChildrenProps & AnchorProps) {
+  const { children, "aria-disabled": disabled = false, ...rest } = props
+
+  return <a className="group rounded-full p-2 outline-none aria-[disabled=false]:hover:bg-contrast focus-visible:bg-contrast aria-disabled:opacity-50 transition-opacity"
+    aria-disabled={disabled}
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </a>
+}
+
+export function RoundedShrinkableNakedAnchor(props: ChildrenProps & AnchorProps) {
+  const { children, "aria-disabled": disabled = false, ...rest } = props
+
+  return <a className="group rounded-full outline-none aria-[disabled=false]:hover:bg-contrast focus-visible:bg-contrast aria-disabled:opacity-50 transition-opacity"
+    aria-disabled={disabled}
+    {...rest}>
+    <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
+      {children}
+    </div>
+  </a>
+}

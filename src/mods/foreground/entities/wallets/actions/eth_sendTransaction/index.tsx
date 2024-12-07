@@ -8,6 +8,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
+import { ShrinkableContrastButtonInInputBox, WideShrinkableContrastButton, WideShrinkableNakedMenuButton, WideShrinkableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { SmallUnflexLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
@@ -32,7 +33,7 @@ import { useTransactionWithReceipt } from "../../../transactions/data";
 import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, useEthereumContext } from "../../data";
-import { ShrinkableContrastButtonInInputBox, SimpleInput, SimpleLabel, SimpleTextarea, WideShrinkableContrastButton, WideShrinkableNakedMenuButton, WideShrinkableOppositeButton } from "../send";
+import { SimpleInput, SimpleLabel, SimpleTextarea } from "../send";
 import { WalletDecodeDialog } from "./decode";
 import { WalletNonceDialog } from "./nonce";
 

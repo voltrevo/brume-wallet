@@ -1,13 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 import { useCopy } from "@/libs/copy/copy";
 import { Outline } from "@/libs/icons/icons";
+import { WideShrinkableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { Address } from "@hazae41/cubane";
 import { Result } from "@hazae41/result";
 import createQR from "@paulmillr/qr";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useWalletDataContext } from "../../context";
-import { WideShrinkableOppositeButton } from "../send";
 
 export function WalletDataReceiveScreen(props: {}) {
   const wallet = useWalletDataContext().getOrThrow()
