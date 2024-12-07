@@ -17,7 +17,7 @@ export function OmniDialog(props: {
       <Outline.SparklesIcon className="size-4" />
       <div className="w-2" />
       <input className="w-full bg-transparent outline-none"
-        placeholder="tell me what you want" />
+        placeholder="tell me what you want (coming soon)" />
     </div>
     <div className="h-4" />
     <div className="font-medium">
