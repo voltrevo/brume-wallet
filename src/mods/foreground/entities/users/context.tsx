@@ -2,7 +2,7 @@ import { ChildrenProps } from "@/libs/react/props/children";
 import { UserData } from "@/mods/background/service_worker/entities/users/data";
 import { Nullable, Option } from "@hazae41/option";
 import { createContext, useContext } from "react";
-import { EmptyLandingPage } from "./all/page";
+import { EmptyLandingPage } from "../../landing";
 import { useCurrentUser, useUser } from "./data";
 
 export const UserContext = createContext<Nullable<UserData>>(undefined)

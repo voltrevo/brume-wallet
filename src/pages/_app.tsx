@@ -142,6 +142,7 @@ export function Goto(props: ChildrenProps) {
 export default function App({ Component, pageProps }: AppProps) {
   return <ClientOnly>
     <Head>
+      <meta key="viewport" name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
       <title>Brume Wallet</title>
     </Head>
     <Catcher fallback={Fallback}>

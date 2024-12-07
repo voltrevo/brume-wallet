@@ -5,7 +5,6 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <meta key="viewport" name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
         <meta key="application-name" name="application-name" content="Brume Wallet" />
         <meta key="description" name="description" content="The private wallet" />
         <meta key="color-scheme" name="color-scheme" content="dark light" />
