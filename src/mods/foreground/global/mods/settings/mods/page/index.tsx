@@ -1,8 +1,8 @@
 import { GlobalPageHeader, PageBody } from "@/libs/ui/page/header";
-import { UserPage } from "@/libs/ui/page/page";
+import { GlobalPage } from "@/libs/ui/page/page";
 
 export function GlobalSettingsPage() {
-  return <UserPage>
+  return <GlobalPage>
     <GlobalPageHeader title="Settings" />
     <PageBody>
       <div className="po-md text-sm text-contrast uppercase">
@@ -12,5 +12,5 @@ export function GlobalSettingsPage() {
         Coming soon...
       </div>
     </PageBody>
-  </UserPage>
+  </GlobalPage>
 }

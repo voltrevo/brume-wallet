@@ -4,7 +4,7 @@ import { ClickerInAnchorDiv, GapperAndClickerInAnchorDiv } from "@/libs/ui/shrin
 import { HashSubpathProvider, PathHandle, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { useAppRequests } from "../entities/requests/data";
 
-export function Omnidialog(props: {
+export function OmniDialog(props: {
   readonly path: PathHandle
 }) {
   const { path } = props
@@ -81,7 +81,7 @@ export function Omnidialog(props: {
     </div>
     <div className="h-4" />
     <div className="font-medium">
-      General
+      Global
     </div>
     <div className="h-4" />
     <div className="grid place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
@@ -122,7 +122,7 @@ export function UserBottomNavigation() {
   return <nav className="md:hidden h-16 w-full flex-none border-t border-t-contrast">
     <HashSubpathProvider>
       {subpath.url.pathname === "/..." &&
-        <Omnidialog path={path} />}
+        <OmniDialog path={path} />}
     </HashSubpathProvider>
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">
       <a className={`group flex-1 text-contrast data-[selected=true]:text-default`}
@@ -199,7 +199,7 @@ export function GlobalBottomNavigation() {
   return <nav className="md:hidden h-16 w-full flex-none border-t border-t-contrast">
     <HashSubpathProvider>
       {subpath.url.pathname === "/..." &&
-        <Omnidialog path={path} />}
+        <OmniDialog path={path} />}
     </HashSubpathProvider>
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">
       <a className={`group flex-1 text-contrast data-[selected=true]:text-default`}
