@@ -1,7 +1,7 @@
 import { Mutators } from "@/libs/glacier/mutators"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { BgTokenSettings, TokenSettingsRef } from "@/mods/background/service_worker/entities/wallets/tokens/data"
-import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
+import { UserStorage, useUserStorageContext } from "@/mods/foreground/user/mods/storage"
 import { Token } from "@/mods/universal/ethereum/mods/tokens/mods/core"
 import { Data, States, createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"

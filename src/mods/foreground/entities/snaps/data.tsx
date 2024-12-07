@@ -1,7 +1,7 @@
 import { BgSnap } from "@/mods/background/service_worker/entities/snaps/data"
 import { createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { UserStorage, useUserStorageContext } from "../../storage/user"
+import { UserStorage, useUserStorageContext } from "../../user/mods/storage"
 
 export namespace FgSnap {
 

@@ -1,5 +1,5 @@
 import { Session } from "@/mods/background/service_worker/entities/sessions/data"
-import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user"
+import { UserStorage, useUserStorageContext } from "@/mods/foreground/user/mods/storage"
 import { createQuery, useQuery } from "@hazae41/glacier"
 
 export function getPersistentSessions(storage: UserStorage) {

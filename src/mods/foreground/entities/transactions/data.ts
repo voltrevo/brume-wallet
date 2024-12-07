@@ -4,7 +4,7 @@ import { BgTransaction, BgTransactionReceipt, BgTransactionTrial, TransactionRef
 import { ZeroHexString } from "@hazae41/cubane"
 import { Data, States, createQuery, useError, useQuery } from "@hazae41/glacier"
 import { None, Nullable, Some } from "@hazae41/option"
-import { UserStorage, useUserStorageContext } from "../../storage/user"
+import { UserStorage, useUserStorageContext } from "../../user/mods/storage"
 import { FgEthereumContext } from "../wallets/data"
 
 export namespace FgTransaction {

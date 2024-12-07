@@ -4,8 +4,8 @@ import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable, Option, Some } from "@hazae41/option";
 import { Ok } from "@hazae41/result";
 import { createContext, useContext, useMemo } from "react";
-import { Background } from "../background/background";
-import { useBackgroundContext } from "../background/context";
+import { Background } from "../../../background/background";
+import { useBackgroundContext } from "../../../background/context";
 
 export const GlobalStorageContext =
   createContext<Nullable<GlobalStorage>>(undefined)

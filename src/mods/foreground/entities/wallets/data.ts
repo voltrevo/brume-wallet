@@ -13,7 +13,7 @@ import { Transaction, ethers } from "ethers"
 import { useMemo } from "react"
 import { Background } from "../../background/background"
 import { useBackgroundContext } from "../../background/context"
-import { UserStorage, useUserStorageContext } from "../../storage/user"
+import { UserStorage, useUserStorageContext } from "../../user/mods/storage"
 import { SeedInstance } from "../seeds/all/helpers"
 
 export interface WalletProps {

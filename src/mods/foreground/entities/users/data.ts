@@ -2,7 +2,7 @@ import { Mutators } from "@/libs/glacier/mutators"
 import { BgUser, UserRef } from "@/mods/background/service_worker/entities/users/data"
 import { Data, QueryStorage, States, createQuery, useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { useGlobalStorageContext } from "../../storage/global"
+import { useGlobalStorageContext } from "../../global/mods/storage"
 
 export namespace FgUser {
 

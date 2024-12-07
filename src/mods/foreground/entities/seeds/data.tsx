@@ -1,7 +1,7 @@
 import { SeedQuery } from "@/mods/universal/entities/seeds";
 import { useQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
-import { useUserStorageContext } from "../../storage/user";
+import { useUserStorageContext } from "../../user/mods/storage";
 
 export function useSeed(uuid: Nullable<string>) {
   const storage = useUserStorageContext().getOrThrow()

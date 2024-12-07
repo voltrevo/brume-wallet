@@ -3,7 +3,7 @@ import { BgEns } from "@/mods/background/service_worker/entities/names/data"
 import { Address, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, useError, useFetch, useQuery, useVisible } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { UserStorage, useUserStorageContext } from "../../storage/user"
+import { UserStorage, useUserStorageContext } from "../../user/mods/storage"
 import { FgEthereumContext } from "../wallets/data"
 
 export namespace FgEns {

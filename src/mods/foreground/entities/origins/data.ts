@@ -1,7 +1,7 @@
 import { OriginQuery } from "@/mods/universal/entities/origins"
 import { useQuery } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"
-import { useUserStorageContext } from "../../storage/user"
+import { useUserStorageContext } from "../../user/mods/storage"
 
 export function useOrigin(origin: Nullable<string>) {
   const storage = useUserStorageContext().getOrThrow()

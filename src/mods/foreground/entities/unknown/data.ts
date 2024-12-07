@@ -7,7 +7,7 @@ import { ZeroHexString } from "@hazae41/cubane";
 import { createQuery, useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
 import { RpcRequestPreinit } from "@hazae41/jsonrpc";
 import { Nullable } from "@hazae41/option";
-import { UserStorage, useUserStorageContext } from "../../storage/user";
+import { UserStorage, useUserStorageContext } from "../../user/mods/storage";
 import { FgEthereumContext } from "../wallets/data";
 
 export namespace FgEthereum {

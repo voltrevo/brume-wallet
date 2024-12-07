@@ -31,7 +31,7 @@ import { Result } from "@hazae41/result";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Fragment, useCallback, useMemo, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
-import { useUserStorageContext } from "../../storage/user";
+import { useUserStorageContext } from "../../user/mods/storage";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
 import { SmallShrinkableContrastButton } from "../users/all/page";

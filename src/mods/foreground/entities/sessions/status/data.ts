@@ -1,5 +1,5 @@
 import { Status, StatusData } from "@/mods/background/service_worker/entities/sessions/status/data";
-import { UserStorage, useUserStorageContext } from "@/mods/foreground/storage/user";
+import { UserStorage, useUserStorageContext } from "@/mods/foreground/user/mods/storage";
 import { createQuery, useQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
 

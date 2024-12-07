@@ -1,6 +1,6 @@
 import { Errors } from "@/libs/errors/errors"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
-import { useUserStorageContext } from "@/mods/foreground/storage/user"
+import { useUserStorageContext } from "@/mods/foreground/user/mods/storage"
 import { Address } from "@hazae41/cubane"
 import { useError, useFetch, useQuery, useVisible } from "@hazae41/glacier"
 import { Nullable } from "@hazae41/option"

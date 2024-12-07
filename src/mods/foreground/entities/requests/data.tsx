@@ -2,7 +2,7 @@ import { Mutators } from "@/libs/glacier/mutators";
 import { AppRequestRef, BgAppRequest } from "@/mods/background/service_worker/entities/requests/data";
 import { Data, States, createQuery, useQuery } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";
-import { UserStorage, useUserStorageContext } from "../../storage/user";
+import { UserStorage, useUserStorageContext } from "../../user/mods/storage";
 
 export namespace FgAppRequest {
 

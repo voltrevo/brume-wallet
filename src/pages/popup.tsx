@@ -4,6 +4,7 @@ import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
+import { UserRejectedError } from "@/libs/rpc/mods/errors";
 import { Dialog } from "@/libs/ui/dialog";
 import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
@@ -23,7 +24,6 @@ import { StandaloneWalletCreatorDialog } from "@/mods/foreground/entities/wallet
 import { SelectableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { WalletDataContext } from "@/mods/foreground/entities/wallets/context";
 import { EthereumWalletInstance, useEthereumContext, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
-import { UserRejectedError } from "@/mods/foreground/errors/errors";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";

@@ -1,6 +1,6 @@
 import { SettingsQuery } from "@/mods/universal/entities/settings"
 import { useQuery } from "@hazae41/glacier"
-import { useUserStorageContext } from "../../storage/user"
+import { useUserStorageContext } from "../../user/mods/storage"
 
 export function useLogs() {
   const storage = useUserStorageContext().getOrThrow()
