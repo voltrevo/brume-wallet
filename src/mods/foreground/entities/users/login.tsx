@@ -11,8 +11,8 @@ import { Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { KeyboardEvent, useCallback, useDeferredValue, useRef, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
+import { UserAvatar } from "../../user/mods/avatar";
 import { SimpleLabel } from "../wallets/actions/send";
-import { UserAvatar } from "./all/page";
 import { useCurrentUser, useUser } from "./data";
 
 export function UserLoginDialog(props: { next?: string }) {

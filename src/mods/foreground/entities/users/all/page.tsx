@@ -3,7 +3,6 @@ import { Color } from "@/libs/colors/colors";
 import { Outline } from "@/libs/icons/icons";
 import { Events } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
-import { ClassNameProps } from "@/libs/react/props/className";
 import { AnchorProps } from "@/libs/react/props/html";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
 import { ClickableContrastAnchor, ClickableOppositeAnchor, TextAnchor, WideClickableContrastAnchor, WideClickableNakedMenuAnchor } from "@/libs/ui/anchor";
@@ -18,6 +17,7 @@ import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
 import { FourDisplay } from "@/mods/foreground/landing/4/4";
 import { FiveDisplay } from "@/mods/foreground/landing/5/5";
 import { SixDisplay } from "@/mods/foreground/landing/6/6";
+import { UserAvatar } from "@/mods/foreground/user/mods/avatar";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { useCallback } from "react";
 import { useCurrentUser, useUser, useUsers } from "../data";
@@ -423,13 +423,5 @@ export function DownloadCard(props: TitleProps & ChildrenProps & { href: string 
         Download
       </WideClickableContrastAnchor>
     </div>
-  </div>
-}
-
-export function UserAvatar(props: ClassNameProps & { name: string } & { color: Color }) {
-  const { color, name, className } = props
-
-  return <div className={`bg-${color}-400 dark:bg-${color}-500 rounded-full flex justify-center items-center ${className} text-white`}>
-    {Array.from(name)[0]}
   </div>
 }

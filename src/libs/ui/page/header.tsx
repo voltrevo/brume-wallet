@@ -3,7 +3,7 @@ import { Outline } from "@/libs/icons/icons";
 import { OptionalBackProps } from "@/libs/react/props/back";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { TitleProps } from "@/libs/react/props/title";
-import { UserAvatar } from "../../../mods/foreground/entities/users/all/page";
+import { UserAvatar } from "@/mods/foreground/user/mods/avatar";
 import { useUserContext } from "../../../mods/foreground/entities/users/context";
 import { RoundedClickableNakedButton } from "../button";
 

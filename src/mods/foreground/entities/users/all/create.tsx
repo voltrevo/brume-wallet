@@ -10,13 +10,13 @@ import { Dialog } from "@/libs/ui/dialog";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { User, UserInit, UserRef } from "@/mods/background/service_worker/entities/users/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
+import { UserAvatar } from "@/mods/foreground/user/mods/avatar";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { KeyboardEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { SimpleInput, SimpleLabel } from "../../wallets/actions/send";
 import { useCurrentUser } from "../data";
-import { UserAvatar } from "./page";
 
 export function UserCreateDialog(props: { next?: string }) {
   const close = useCloseContext().getOrThrow()
