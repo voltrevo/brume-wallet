@@ -2,7 +2,25 @@ import { Outline } from "@/libs/icons/icons";
 import { Dialog } from "@/libs/ui/dialog";
 import { ClickerInAnchorDiv, GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";
 import { HashSubpathProvider, PathHandle, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
+import { ChangeEvent, KeyboardEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useAppRequests } from "../entities/requests/data";
+
+export function asUrlOrNull(text: string) {
+  if (text.startsWith("http://"))
+    return new URL(text)
+
+  if (text.startsWith("https://"))
+    return new URL(text)
+
+  const match = /(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]/.exec(text)
+
+  if (match == null)
+    return
+  if (match.index !== 0)
+    return
+
+  return new URL(`https://${text}`)
+}
 
 export function OmniDialog(props: {
   readonly path: PathHandle
@@ -12,12 +30,52 @@ export function OmniDialog(props: {
   const requestsQuery = useAppRequests()
   const requests = requestsQuery.data?.get()
 
+  const [rawInput = "", setRawInput] = useState<string>()
+
+  const onInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setRawInput(e.target.value)
+  }, [])
+
+  const defInput = useDeferredValue(rawInput)
+
+  const maybeWebsite = useMemo(() => {
+    return asUrlOrNull(defInput)
+  }, [defInput])
+
+  const onKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter")
+      return
+    e.preventDefault()
+
+    if (maybeWebsite == null)
+      return
+    const website = maybeWebsite
+
+    window.open(new URL(`#${website.href}`, location.href), "_blank", "noreferrer")
+  }, [path, maybeWebsite])
+
   return <Dialog>
-    <div className="flex items-center po-md bg-contrast rounded-xl">
-      <Outline.SparklesIcon className="size-4" />
-      <div className="w-2" />
-      <input className="w-full bg-transparent outline-none"
-        placeholder="tell me what you want (coming soon)" />
+    <div className="po-md bg-contrast rounded-xl">
+      <div className="flex items-center">
+        <Outline.SparklesIcon className="size-4" />
+        <div className="w-2" />
+        <input className="w-full bg-transparent outline-none"
+          placeholder="tell me what you want"
+          value={rawInput}
+          onChange={onInputChange}
+          onKeyDown={onKeyDown} />
+      </div>
+      {maybeWebsite != null && <>
+        <div className="h-2" />
+        <a className="flex items-center"
+          target="_blank"
+          rel="noreferrer"
+          href={new URL(`#${maybeWebsite.href}`, location.href).href}>
+          <Outline.GlobeAltIcon className="size-4" />
+          <div className="w-2" />
+          {defInput}
+        </a>
+      </>}
     </div>
     <div className="h-4" />
     <div className="font-medium">

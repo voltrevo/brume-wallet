@@ -24,7 +24,7 @@ export function Router() {
   const path = usePathContext().getOrThrow()
 
   if (path.url.origin !== location.origin)
-    return <X />
+    return <Sandbox />
 
   let matches: RegExpMatchArray | null
 
@@ -215,7 +215,7 @@ export interface GnosisRpcCallParams<T = unknown> {
   readonly params: T
 }
 
-export function X() {
+export function Sandbox() {
   const path = usePathContext().getOrThrow()
 
   const [iframe, setIframe] = useState<Nullable<HTMLIFrameElement>>()

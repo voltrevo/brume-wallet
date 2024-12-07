@@ -15,5 +15,9 @@ export function urlOf(hrefOrUrl: string | URL, search: Record<string, Nullable<a
 
 export function pathOf(pathOrUrl: string | URL) {
   const url = new URL(pathOrUrl, location.href)
+
+  if (url.origin !== location.origin)
+    return url.href
+
   return url.pathname + url.search + url.hash
 }
