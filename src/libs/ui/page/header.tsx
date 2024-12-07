@@ -26,27 +26,21 @@ export function GlobalPageHeader(props: TitleProps & ChildrenProps & OptionalBac
   </div>
 }
 
-export function UserPageHeader(props: TitleProps & ChildrenProps & OptionalBackProps) {
+export function UserPageHeader(props: TitleProps & ChildrenProps) {
   const userData = useUserContext().getOrThrow()
-  const { title, children, back } = props
+  const { title, children } = props
 
   return <div className="p-4 flex items-center">
-    {back && <div className="mr-2 flex items-center">
-      <RoundedClickableNakedButton
-        onClick={back}>
-        <Outline.ChevronLeftIcon className="size-5" />
-      </RoundedClickableNakedButton>
-    </div>}
-    <button onClick={() => alert("This feature is not implemented yet")}>
+    <div className="md:hidden flex items-center">
       <UserAvatar className="size-7 text-lg"
         color={Color.get(userData.color)}
         name={userData.name} />
-    </button>
-    <div className="w-2" />
-    <div className="text-2xl font-medium text-contrast mb-1">
-      /
+      <div className="w-2" />
+      <div className="text-2xl font-medium text-contrast mb-1">
+        /
+      </div>
+      <div className="w-2" />
     </div>
-    <div className="w-2" />
     <div className="text-2xl font-medium mb-0.5">
       {title}
     </div>

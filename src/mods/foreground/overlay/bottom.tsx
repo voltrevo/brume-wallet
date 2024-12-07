@@ -119,7 +119,7 @@ export function Bottom() {
 
   const omnidialog = useCoords(subpath, "/...")
 
-  return <nav className="md:invisible h-16 w-full flex-none border-t border-t-contrast">
+  return <nav className="md:hidden h-16 w-full flex-none border-t border-t-contrast">
     <HashSubpathProvider>
       {subpath.url.pathname === "/..." &&
         <Omnidialog path={path} />}

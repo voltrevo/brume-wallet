@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { isWebsite } from "@/libs/platform/platform"
-import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
+import { PageBody } from "@/libs/ui/page/header"
 import { Page } from "@/libs/ui/page/page"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { useUserTotalPricedBalance } from "@/mods/universal/user/mods/balances/hooks"
@@ -79,11 +79,7 @@ export function HomePage() {
       </div>
     </PageBody>
 
-  const Header =
-    <UserPageHeader title="Home" />
-
   return <Page>
-    {Header}
     {Body}
   </Page>
 }
