@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
 
-export interface ChildrenProps {
-  readonly children?: ReactNode
+export interface ChildrenProps<T = ReactNode> {
+  readonly children?: T
 }

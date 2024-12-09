@@ -1,13 +1,15 @@
 import { Errors } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
+import { Objects } from "@/libs/objects/objects";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { ColoredTextAnchor } from "@/libs/ui/anchor";
 import { ContrastSubtitleDiv } from "@/libs/ui/div";
 import { ContrastLabel } from "@/libs/ui/label";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { UserPage } from "@/libs/ui/page/page";
+import { HashSelector } from "@/libs/ui/select";
 import { Data } from "@hazae41/glacier";
-import { Some } from "@hazae41/option";
+import { Option, Some } from "@hazae41/option";
 import { ChangeEvent } from "react";
 import { useChain, useLogs } from "../../../../../entities/settings/data";
 
@@ -20,9 +22,8 @@ export function UserSettingsPage() {
     await logs.mutateOrThrow(() => new Some(new Data(checked)))
   }), [])
 
-  const onChainChange = useAsyncUniqueCallback((e: ChangeEvent<HTMLSelectElement>) => Errors.runOrLogAndAlert(async () => {
-    const chainId = Number(e.currentTarget.value)
-    await chain.mutateOrThrow(() => new Some(new Data(chainId)))
+  const setChainIdOrLogAndAlert = useAsyncUniqueCallback((value: string) => Errors.runOrLogAndAlert(async () => {
+    await chain.mutateOrThrow(() => new Some(new Data(Number(value))))
   }), [])
 
   return <UserPage>
@@ -36,14 +37,12 @@ export function UserSettingsPage() {
           Default chain
         </div>
         <div className="w-4 grow" />
-        <select className="text-right bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
-          value={chain.real?.current.get()}
-          onChange={onChainChange.run}>
-          {Object.values(chainDataByChainId).map(x =>
-            <option key={x.chainId} value={x.chainId}>
-              {x.name}
-            </option>)}
-        </select>
+        <HashSelector
+          pathname="/chain"
+          value={String(Option.wrap(chain.real?.current.get()).getOr(1))}
+          ok={setChainIdOrLogAndAlert.run}>
+          {Objects.fromEntries(Objects.values(chainDataByChainId).map(x => [String(x.chainId), x.name]))}
+        </HashSelector>
       </ContrastLabel>
       <div className="po-md text-contrast">
         Use this parameter if some app requires a specific chain
