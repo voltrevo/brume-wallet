@@ -2,6 +2,7 @@ import { Errors } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { ColoredTextAnchor } from "@/libs/ui/anchor";
+import { ContrastSubtitleDiv } from "@/libs/ui/div";
 import { ContrastLabel } from "@/libs/ui/label";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { UserPage } from "@/libs/ui/page/page";
@@ -27,9 +28,9 @@ export function UserSettingsPage() {
   return <UserPage>
     <UserPageHeader title="Settings" />
     <PageBody>
-      <div className="po-md text-sm text-contrast uppercase">
+      <ContrastSubtitleDiv>
         Compatibility
-      </div>
+      </ContrastSubtitleDiv>
       <ContrastLabel>
         <div className="flex-none">
           Default chain
@@ -44,13 +45,13 @@ export function UserSettingsPage() {
             </option>)}
         </select>
       </ContrastLabel>
-      <div className="po-md text-sm text-contrast">
+      <div className="po-md text-contrast">
         Use this parameter if some app requires a specific chain
       </div>
       <div className="h-4" />
-      <div className="po-md text-sm text-contrast uppercase">
+      <ContrastSubtitleDiv>
         Debugging
-      </div>
+      </ContrastSubtitleDiv>
       <ContrastLabel>
         <div className="flex-none">
           Enable logs
@@ -61,7 +62,7 @@ export function UserSettingsPage() {
           checked={Boolean(logs.real?.current.get())}
           onChange={onLogsChange.run} />
       </ContrastLabel>
-      <div className="po-md text-sm text-contrast">
+      <div className="po-md text-contrast">
         All your requests will be seen on <ColoredTextAnchor href="https://logs.brume.money" />
       </div>
     </PageBody>

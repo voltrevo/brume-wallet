@@ -1,5 +1,6 @@
 import { Outline } from "@/libs/icons/icons";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastTitleDiv } from "@/libs/ui/div";
 import { ClickerInAnchorDiv, GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";
 import { HashSubpathProvider, PathHandle, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { ChangeEvent, KeyboardEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
@@ -78,9 +79,9 @@ export function OmniDialog(props: {
       </>}
     </div>
     <div className="h-4" />
-    <div className="font-medium">
+    <ContrastTitleDiv>
       User
-    </div>
+    </ContrastTitleDiv>
     <div className="h-4" />
     <div className="grid place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
       <a className="po-md bg-contrast rounded-xl"
@@ -138,9 +139,9 @@ export function OmniDialog(props: {
       </a>
     </div>
     <div className="h-4" />
-    <div className="font-medium">
+    <ContrastTitleDiv>
       Global
-    </div>
+    </ContrastTitleDiv>
     <div className="h-4" />
     <div className="grid place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
       <a className="po-md bg-contrast rounded-xl"

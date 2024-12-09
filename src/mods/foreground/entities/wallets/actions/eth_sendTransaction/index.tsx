@@ -10,6 +10,7 @@ import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { ClickableContrastButtonInInputBox, WideClickableContrastButton, WideClickableNakedMenuButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastSubtitleDiv } from "@/libs/ui/div";
 import { ContrastLabel } from "@/libs/ui/label";
 import { SmallUnflexLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
@@ -873,9 +874,9 @@ export function WalletTransactionDialog(props: {}) {
       </div>
     </ContrastLabel>
     <div className="h-4" />
-    <div className="font-medium">
+    <ContrastSubtitleDiv>
       Advanced
-    </div>
+    </ContrastSubtitleDiv>
     <div className="h-2" />
     <ContrastLabel>
       <div className="flex-none">
@@ -915,9 +916,9 @@ export function WalletTransactionDialog(props: {}) {
       </WideClickableContrastButton>
     </div>
     <div className="h-4" />
-    <div className="font-medium">
+    <ContrastSubtitleDiv>
       Gas
-    </div>
+    </ContrastSubtitleDiv>
     <div className="h-2" />
     <ContrastLabel>
       <div className="flex-none">
