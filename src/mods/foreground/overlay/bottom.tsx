@@ -51,7 +51,7 @@ export function OmniDialog(props: {
       return
     const website = maybeWebsite
 
-    window.open(new URL(`#${website.href}`, location.href), "_blank", "noreferrer")
+    window.open(path.go(website), "_blank", "noreferrer")
   }, [path, maybeWebsite])
 
   return <Dialog>
@@ -70,7 +70,7 @@ export function OmniDialog(props: {
         <a className="flex items-center"
           target="_blank"
           rel="noreferrer"
-          href={new URL(`#${maybeWebsite.href}`, location.href).href}>
+          href={path.go(maybeWebsite).href}>
           <Outline.GlobeAltIcon className="size-4" />
           <div className="w-2" />
           {defInput}
