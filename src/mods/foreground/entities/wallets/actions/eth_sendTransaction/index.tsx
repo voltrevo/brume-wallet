@@ -10,6 +10,7 @@ import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { ClickableContrastButtonInInputBox, WideClickableContrastButton, WideClickableNakedMenuButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastLabel } from "@/libs/ui/label";
 import { SmallUnflexLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
 import { SelectAndClose } from "@/libs/ui/select";
@@ -33,7 +34,7 @@ import { useTransactionWithReceipt } from "../../../transactions/data";
 import { useEstimateGas, useGasPrice, useMaxPriorityFeePerGas, useNonce } from "../../../unknown/data";
 import { useWalletDataContext } from "../../context";
 import { EthereumWalletInstance, useEthereumContext } from "../../data";
-import { SimpleInput, SimpleLabel, SimpleTextarea } from "../send";
+import { SimpleInput, SimpleTextarea } from "../send";
 import { WalletDecodeDialog } from "./decode";
 import { WalletNonceDialog } from "./nonce";
 
@@ -834,7 +835,7 @@ export function WalletTransactionDialog(props: {}) {
       Transact on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Target
       </div>
@@ -842,9 +843,9 @@ export function WalletTransactionDialog(props: {}) {
       <SimpleInput
         value={nto(maybeTarget)}
         readOnly />
-    </SimpleLabel>
+    </ContrastLabel>
     <div className="h-2" />
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Value
       </div>
@@ -870,13 +871,13 @@ export function WalletTransactionDialog(props: {}) {
           </div>
         </div>
       </div>
-    </SimpleLabel>
+    </ContrastLabel>
     <div className="h-4" />
     <div className="font-medium">
       Advanced
     </div>
     <div className="h-2" />
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Nonce
       </div>
@@ -890,7 +891,7 @@ export function WalletTransactionDialog(props: {}) {
         onClick={onNonceClick}>
         Select
       </ClickableContrastButtonInInputBox>
-    </SimpleLabel>
+    </ContrastLabel>
     <div className="h-2" />
     <div className="po-md flex flex-col bg-contrast rounded-xl">
       <div className="flex items-start">
@@ -918,7 +919,7 @@ export function WalletTransactionDialog(props: {}) {
       Gas
     </div>
     <div className="h-2" />
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Gas
       </div>
@@ -1049,10 +1050,10 @@ export function WalletTransactionDialog(props: {}) {
             {`Custom`}
           </a>}
       </>}
-    </SimpleLabel>
+    </ContrastLabel>
     {gasMode === "custom" && maybeIsEip1559 === false && <>
       <div className="h-2" />
-      <SimpleLabel>
+      <ContrastLabel>
         <div className="flex-none">
           Gas Limit
         </div>
@@ -1061,9 +1062,9 @@ export function WalletTransactionDialog(props: {}) {
           value={rawGasLimitInput}
           onChange={onGasLimitInputChange}
           placeholder={maybeFetchedGasLimit?.toString()} />
-      </SimpleLabel>
+      </ContrastLabel>
       <div className="h-2" />
-      <SimpleLabel>
+      <ContrastLabel>
         <div className="flex-none">
           Gas Price
         </div>
@@ -1072,11 +1073,11 @@ export function WalletTransactionDialog(props: {}) {
           value={rawGasPriceInput}
           onChange={onGasPriceInputChange}
           placeholder={maybeFetchedGasPriceBigInt?.toString()} />
-      </SimpleLabel>
+      </ContrastLabel>
     </>}
     {gasMode === "custom" && maybeIsEip1559 === true && <>
       <div className="h-2" />
-      <SimpleLabel>
+      <ContrastLabel>
         <div className="flex-none">
           Gas Limit
         </div>
@@ -1085,9 +1086,9 @@ export function WalletTransactionDialog(props: {}) {
           value={rawGasLimitInput}
           onChange={onGasLimitInputChange}
           placeholder={maybeFetchedGasLimit?.toString()} />
-      </SimpleLabel>
+      </ContrastLabel>
       <div className="h-2" />
-      <SimpleLabel>
+      <ContrastLabel>
         <div className="flex-none">
           Max Fee Per Gas
         </div>
@@ -1096,9 +1097,9 @@ export function WalletTransactionDialog(props: {}) {
           value={rawMaxFeePerGasInput}
           onChange={onMaxFeePerGasInputChange}
           placeholder={maybeFetchedBaseFeePerGas?.toString()} />
-      </SimpleLabel>
+      </ContrastLabel>
       <div className="h-2" />
-      <SimpleLabel>
+      <ContrastLabel>
         <div className="flex-none">
           Max Priority Fee Per Gas
         </div>
@@ -1107,7 +1108,7 @@ export function WalletTransactionDialog(props: {}) {
           value={rawMaxPriorityFeePerGasInput}
           onChange={onMaxPriorityFeePerGasInputChange}
           placeholder={maybeFetchedMaxPriorityFeePerGasBigInt?.toString()} />
-      </SimpleLabel>
+      </ContrastLabel>
     </>}
     {maybeIsEip1559 === false && maybeFinalLegacyGasCost != null && <>
       <div className="h-2" />

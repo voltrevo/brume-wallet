@@ -38,9 +38,7 @@ function SeedDataPage() {
   }, [])
 
   const Header =
-    <UserPageHeader
-      title="Seed"
-      back={onBackClick} />
+    <UserPageHeader title="Seed" />
 
   const Card =
     <div className="p-4 flex justify-center">

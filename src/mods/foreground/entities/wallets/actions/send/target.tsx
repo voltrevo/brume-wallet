@@ -6,13 +6,14 @@ import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { ClickableContrastButtonInInputBox, RoundedClickableNakedButton, WideClickableContrastButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastLabel } from "@/libs/ui/label";
 import { useContractToken } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
 import { usePathContext, useSearchState } from "@hazae41/chemin";
 import { Address } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
-import { SimpleInput, SimpleLabel } from ".";
+import { SimpleInput } from ".";
 import { useEnsLookup } from "../../../names/data";
 import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
@@ -119,7 +120,7 @@ export function WalletSendScreenTarget(props: {}) {
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Target
       </div>
@@ -147,7 +148,7 @@ export function WalletSendScreenTarget(props: {}) {
           OK
         </ClickableContrastButtonInInputBox>
       </div>
-    </SimpleLabel>
+    </ContrastLabel>
     <div className="h-2" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       <WideClickableContrastButton

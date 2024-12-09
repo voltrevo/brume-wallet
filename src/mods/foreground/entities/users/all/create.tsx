@@ -7,6 +7,7 @@ import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastLabel } from "@/libs/ui/label";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { User, UserInit, UserRef } from "@/mods/background/service_worker/entities/users/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -15,7 +16,7 @@ import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { KeyboardEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
-import { SimpleInput, SimpleLabel } from "../../wallets/actions/send";
+import { SimpleInput } from "../../wallets/actions/send";
 import { useCurrentUser } from "../data";
 
 export function UserCreateDialog(props: { next?: string }) {
@@ -99,7 +100,7 @@ export function UserCreateDialog(props: { next?: string }) {
   }, [defConfirmPasswordInput, defPasswordInput])
 
   const NameInput =
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Name
       </div>
@@ -108,10 +109,10 @@ export function UserCreateDialog(props: { next?: string }) {
         placeholder="John Doe"
         value={rawNameInput}
         onChange={onNameInputChange} />
-    </SimpleLabel>
+    </ContrastLabel>
 
   const PasswordInput =
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Password
       </div>
@@ -121,10 +122,10 @@ export function UserCreateDialog(props: { next?: string }) {
         placeholder=""
         value={rawPasswordInput}
         onChange={onPasswordInputChange} />
-    </SimpleLabel>
+    </ContrastLabel>
 
   const PasswordInput2 =
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Password
       </div>
@@ -135,7 +136,7 @@ export function UserCreateDialog(props: { next?: string }) {
         value={rawConfirmPasswordInput}
         onChange={onConfirmPasswordInputChange}
         onKeyDown={onKeyDown} />
-    </SimpleLabel>
+    </ContrastLabel>
 
   const DoneButton =
     <WideClickableGradientButton

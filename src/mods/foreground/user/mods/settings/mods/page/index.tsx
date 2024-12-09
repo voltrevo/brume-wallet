@@ -2,13 +2,13 @@ import { Errors } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { ColoredTextAnchor } from "@/libs/ui/anchor";
+import { ContrastLabel } from "@/libs/ui/label";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { UserPage } from "@/libs/ui/page/page";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { ChangeEvent } from "react";
 import { useChain, useLogs } from "../../../../../entities/settings/data";
-import { SimpleLabel } from "../../../../../entities/wallets/actions/send";
 
 export function UserSettingsPage() {
   const logs = useLogs()
@@ -30,7 +30,7 @@ export function UserSettingsPage() {
       <div className="po-md text-sm text-contrast uppercase">
         Compatibility
       </div>
-      <SimpleLabel>
+      <ContrastLabel>
         <div className="flex-none">
           Default chain
         </div>
@@ -43,7 +43,7 @@ export function UserSettingsPage() {
               {x.name}
             </option>)}
         </select>
-      </SimpleLabel>
+      </ContrastLabel>
       <div className="po-md text-sm text-contrast">
         Use this parameter if some app requires a specific chain
       </div>
@@ -51,7 +51,7 @@ export function UserSettingsPage() {
       <div className="po-md text-sm text-contrast uppercase">
         Debugging
       </div>
-      <SimpleLabel>
+      <ContrastLabel>
         <div className="flex-none">
           Enable logs
         </div>
@@ -60,7 +60,7 @@ export function UserSettingsPage() {
           type="checkbox"
           checked={Boolean(logs.real?.current.get())}
           onChange={onLogsChange.run} />
-      </SimpleLabel>
+      </ContrastLabel>
       <div className="po-md text-sm text-contrast">
         All your requests will be seen on <ColoredTextAnchor href="https://logs.brume.money" />
       </div>

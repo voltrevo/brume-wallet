@@ -9,6 +9,7 @@ import { useAsyncReplaceMemo } from "@/libs/react/memo";
 import { useConstant } from "@/libs/react/ref";
 import { WideClickableContrastButton, WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastLabel } from "@/libs/ui/label";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { SeedData } from "@/mods/universal/entities/seeds";
@@ -20,7 +21,7 @@ import { WebAuthnStorage } from "@hazae41/webauthnstorage";
 import { generateMnemonic, mnemonicToEntropy, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { SimpleInput, SimpleLabel, SimpleTextarea } from "../../../wallets/actions/send";
+import { SimpleInput, SimpleTextarea } from "../../../wallets/actions/send";
 import { RawSeedCard } from "../../card";
 
 export function StandaloneSeedCreatorDialog(props: {}) {
@@ -148,7 +149,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
   }), [id, finalNameInput, triedEncryptedPhrase, uuid, color, background, close])
 
   const NameInput =
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Name
       </div>
@@ -157,7 +158,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
         placeholder="Holder"
         value={rawNameInput}
         onChange={onNameInputChange} />
-    </SimpleLabel>
+    </ContrastLabel>
 
   const PhraseInput =
     <div className="po-md flex flex-col bg-contrast rounded-xl">

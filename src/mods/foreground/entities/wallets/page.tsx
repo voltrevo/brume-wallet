@@ -218,9 +218,7 @@ function WalletDataPage() {
   }, [setFlip, setPrivateKey])
 
   const Header =
-    <UserPageHeader
-      title="Wallet"
-      back={onBackClick}>
+    <UserPageHeader title="Wallet">
       <div className="flex items-center gap-2">
         <PaddedRoundedClickableNakedAnchor
           onKeyDown={connect.onKeyDown}

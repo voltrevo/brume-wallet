@@ -8,6 +8,7 @@ import { UserRejectedError } from "@/libs/rpc/mods/errors";
 import { ClickableOppositeAnchor, PaddedRoundedClickableNakedAnchor } from "@/libs/ui/anchor";
 import { WideClickableContrastButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastLabel } from "@/libs/ui/label";
 import { Menu } from "@/libs/ui/menu";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { UserPage } from "@/libs/ui/page/page";
@@ -18,7 +19,7 @@ import { useAppRequests } from "@/mods/foreground/entities/requests/data";
 import { useSimulation } from "@/mods/foreground/entities/simulations/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
 import { WalletTransactionDialog } from "@/mods/foreground/entities/wallets/actions/eth_sendTransaction";
-import { SimpleInput, SimpleLabel, SimpleTextarea } from "@/mods/foreground/entities/wallets/actions/send";
+import { SimpleInput, SimpleTextarea } from "@/mods/foreground/entities/wallets/actions/send";
 import { WalletCreatorMenu } from "@/mods/foreground/entities/wallets/all/create";
 import { ReadonlyWalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create/readonly";
 import { StandaloneWalletCreatorDialog } from "@/mods/foreground/entities/wallets/all/create/standalone";
@@ -232,7 +233,7 @@ export function TransactPage() {
         </div>
         {preTx.from && <>
           <div className="h-2" />
-          <SimpleLabel>
+          <ContrastLabel>
             <div className="flex-none">
               From
             </div>
@@ -240,11 +241,11 @@ export function TransactPage() {
             <SimpleInput
               readOnly
               value={preTx.from} />
-          </SimpleLabel>
+          </ContrastLabel>
         </>}
         {preTx.to && <>
           <div className="h-2" />
-          <SimpleLabel>
+          <ContrastLabel>
             <div className="flex-none">
               To
             </div>
@@ -252,11 +253,11 @@ export function TransactPage() {
             <SimpleInput
               readOnly
               value={preTx.to} />
-          </SimpleLabel>
+          </ContrastLabel>
         </>}
         {preTx.value && <>
           <div className="h-2" />
-          <SimpleLabel>
+          <ContrastLabel>
             <div className="flex-none">
               Value
             </div>
@@ -264,11 +265,11 @@ export function TransactPage() {
             <SimpleInput
               readOnly
               value={preTx.value} />
-          </SimpleLabel>
+          </ContrastLabel>
         </>}
         {preTx.nonce && <>
           <div className="h-2" />
-          <SimpleLabel>
+          <ContrastLabel>
             <div className="flex-none">
               Nonce
             </div>
@@ -276,11 +277,11 @@ export function TransactPage() {
             <SimpleInput
               readOnly
               value={preTx.nonce} />
-          </SimpleLabel>
+          </ContrastLabel>
         </>}
         {preTx.data && <>
           <div className="h-2" />
-          <SimpleLabel>
+          <ContrastLabel>
             <div className="flex-none">
               Data
             </div>
@@ -289,7 +290,7 @@ export function TransactPage() {
               readOnly
               rows={3}
               value={preTx.data} />
-          </SimpleLabel>
+          </ContrastLabel>
         </>}
         <div className="h-4" />
         <div className="font-medium">

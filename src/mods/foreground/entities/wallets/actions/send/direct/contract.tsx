@@ -6,6 +6,7 @@ import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { ClickableContrastButtonInInputBox, RoundedClickableNakedButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastLabel } from "@/libs/ui/label";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useTransactionTrial, useTransactionWithReceipt } from "@/mods/foreground/entities/transactions/data";
@@ -18,7 +19,7 @@ import { Option, Optional } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { SimpleInput, SimpleLabel } from "..";
+import { SimpleInput } from "..";
 import { useEnsLookup } from "../../../../names/data";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext } from "../../../data";
@@ -260,7 +261,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Target
       </div>
@@ -269,10 +270,10 @@ export function WalletDirectSendScreenContractValue(props: {}) {
         onFocus={onTargetFocus}
         value={nto(maybeTarget)}
         readOnly />
-    </SimpleLabel>
+    </ContrastLabel>
     <div className="h-2" />
     {mode === "valued" &&
-      <SimpleLabel>
+      <ContrastLabel>
         <div className="flex-none">
           Value
         </div>
@@ -319,9 +320,9 @@ export function WalletDirectSendScreenContractValue(props: {}) {
             100%
           </ClickableContrastButtonInInputBox>
         </div>
-      </SimpleLabel>}
+      </ContrastLabel>}
     {mode === "priced" &&
-      <SimpleLabel>
+      <ContrastLabel>
         <div className="flex-none">
           Value
         </div>
@@ -368,7 +369,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
             100%
           </ClickableContrastButtonInInputBox>
         </div>
-      </SimpleLabel>}
+      </ContrastLabel>}
     <div className="h-4" />
     {maybeTransaction != null && <>
       <div className="font-medium">

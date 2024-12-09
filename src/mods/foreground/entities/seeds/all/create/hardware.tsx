@@ -8,6 +8,7 @@ import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastLabel } from "@/libs/ui/label";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { SeedData } from "@/mods/universal/entities/seeds";
@@ -16,7 +17,7 @@ import { Ledger } from "@hazae41/ledger";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { Panic } from "@hazae41/result";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { SimpleInput, SimpleLabel } from "../../../wallets/actions/send";
+import { SimpleInput } from "../../../wallets/actions/send";
 import { RawSeedCard } from "../../card";
 
 export function LedgerSeedCreatorDialog(props: {}) {
@@ -63,7 +64,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
   }), [finalNameInput, uuid, color, background, close])
 
   const NameInput =
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Name
       </div>
@@ -72,7 +73,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
         placeholder="Holder"
         value={rawNameInput}
         onChange={onNameInputChange} />
-    </SimpleLabel>
+    </ContrastLabel>
 
   const canAdd = useMemo(() => {
     if (!finalNameInput)

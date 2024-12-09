@@ -9,6 +9,7 @@ import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { ClickableContrastButtonInInputBox, RoundedClickableNakedButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastLabel } from "@/libs/ui/label";
 import { GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
@@ -27,7 +28,7 @@ import { useCloseContext } from "@hazae41/react-close-context";
 import { Result } from "@hazae41/result";
 import { Secp256k1 } from "@hazae41/secp256k1";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { SimpleInput, SimpleLabel } from "..";
+import { SimpleInput } from "..";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext } from "../../../data";
 import { TransactionCard, WalletTransactionDialog } from "../../eth_sendTransaction";
@@ -353,7 +354,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
       Send {tokenData.symbol} on {chainData.name}
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Target
       </div>
@@ -362,10 +363,10 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         readOnly
         onFocus={onTargetFocus}
         value="Peanut" />
-    </SimpleLabel>
+    </ContrastLabel>
     <div className="h-2" />
     {mode === "valued" &&
-      <SimpleLabel>
+      <ContrastLabel>
         <div className="flex-none">
           Value
         </div>
@@ -412,9 +413,9 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
             100%
           </ClickableContrastButtonInInputBox>
         </div>
-      </SimpleLabel>}
+      </ContrastLabel>}
     {mode === "priced" &&
-      <SimpleLabel>
+      <ContrastLabel>
         <div className="flex-none">
           Value
         </div>
@@ -461,7 +462,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
             100%
           </ClickableContrastButtonInInputBox>
         </div>
-      </SimpleLabel>}
+      </ContrastLabel>}
     <div className="h-4" />
     {maybeTransaction1 != null && <>
       <div className="font-medium">

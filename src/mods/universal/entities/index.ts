@@ -26,7 +26,7 @@ export function routeOrThrow(cacheKey: string, storage: QueryStorage): SimpleQue
     return query
   if (query = SettingsQuery.Logs.routeOrThrow(cacheKey, storage))
     return query
-  if (query = SettingsQuery.Chain.queryOrThrow(cacheKey, storage))
+  if (query = SettingsQuery.Chain.routeOrThrow(cacheKey, storage))
     return query
 
   throw new Error("Unknown cache key")

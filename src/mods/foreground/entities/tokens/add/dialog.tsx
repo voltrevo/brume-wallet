@@ -5,6 +5,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastLabel } from "@/libs/ui/label";
 import { Loading } from "@/libs/ui/loading";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { ContractTokenRef } from "@/mods/universal/ethereum/mods/tokens/mods/core";
@@ -14,7 +15,7 @@ import { Data } from "@hazae41/glacier";
 import { Option, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
-import { SimpleInput, SimpleLabel } from "../../wallets/actions/send";
+import { SimpleInput } from "../../wallets/actions/send";
 import { useWalletDataContext } from "../../wallets/context";
 import { useEthereumContext } from "../../wallets/data";
 
@@ -79,7 +80,7 @@ export function TokenAddDialog(props: {}) {
       New token
     </Dialog.Title>
     <div className="h-4" />
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Chain
       </div>
@@ -92,9 +93,9 @@ export function TokenAddDialog(props: {}) {
             {x.name}
           </option>)}
       </select>
-    </SimpleLabel>
+    </ContrastLabel>
     <div className="h-2" />
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Address
       </div>
@@ -103,7 +104,7 @@ export function TokenAddDialog(props: {}) {
         placeholder="0x..."
         value={rawAddress}
         onChange={onAddressChange} />
-    </SimpleLabel>
+    </ContrastLabel>
     <div className="h-4 grow" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       <WideClickableOppositeButton

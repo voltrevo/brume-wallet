@@ -1,5 +1,4 @@
 /* eslint-disable @next/next/no-img-element */
-import { ChildrenProps } from "@/libs/react/props/children";
 import { InputProps, TextareaProps } from "@/libs/react/props/html";
 import { usePathContext, useSearchState } from "@hazae41/chemin";
 import { WalletDirectSendScreenContractValue } from "./direct/contract";
@@ -26,14 +25,6 @@ export function WalletSendScreen(props: {}) {
   if (step === "value" && token != null && type == "peanut")
     return <WalletPeanutSendScreenContractValue />
   return null
-}
-
-export function SimpleLabel(props: ChildrenProps) {
-  const { children } = props
-
-  return <label className="po-md flex items-start bg-contrast rounded-xl">
-    {children}
-  </label>
 }
 
 export function SimpleInput(props: InputProps) {

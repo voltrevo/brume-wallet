@@ -5,13 +5,14 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastLabel } from "@/libs/ui/label";
 import { None, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { useDeferredValue, useMemo, useState } from "react";
 import { RawWalletCard } from "../../card";
 import { useWalletDataContext } from "../../context";
 import { useWallet } from "../../data";
-import { SimpleInput, SimpleLabel } from "../send";
+import { SimpleInput } from "../send";
 
 export function WalletEditDialog(props: {}) {
   const wallet = useWalletDataContext().getOrThrow()
@@ -48,7 +49,7 @@ export function WalletEditDialog(props: {}) {
   }), [query, finalNameInput])
 
   const NameInput =
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Name
       </div>
@@ -57,7 +58,7 @@ export function WalletEditDialog(props: {}) {
         placeholder="Holder"
         value={rawNameInput}
         onChange={onNameInputChange} />
-    </SimpleLabel>
+    </ContrastLabel>
 
   const SaveButton =
     <WideClickableGradientButton

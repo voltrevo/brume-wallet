@@ -3,7 +3,7 @@ import { DonePage, PersonalSignPage, TransactPage, TypedSignPage, WalletAndChain
 import { usePathContext } from "@hazae41/chemin"
 import { Address } from "@hazae41/cubane"
 import { Nullable } from "@hazae41/option"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { RequestsPage } from "../entities/requests/all/page"
 import { SeedsPage } from "../entities/seeds/all/page"
 import { SeedPage } from "../entities/seeds/page"
@@ -220,11 +220,12 @@ export function Sandbox() {
 
   const [iframe, setIframe] = useState<Nullable<HTMLIFrameElement>>()
 
-  useEffect(() => {
-    if (iframe == null)
-      return
-    const window = iframe.contentWindow
+  const window = useMemo(() => {
+    console.log("iframe", iframe, iframe?.contentWindow)
+    return iframe?.contentWindow
+  }, [iframe])
 
+  useEffect(() => {
     if (window == null)
       return
 
@@ -267,10 +268,11 @@ export function Sandbox() {
 
     addEventListener("message", onMessage)
     return () => removeEventListener("message", onMessage)
-  }, [iframe])
+  }, [window])
 
   return <iframe className="grow w-full"
     ref={setIframe}
+    onLoad={console.log}
     src={path.url.href}
     seamless />
 }

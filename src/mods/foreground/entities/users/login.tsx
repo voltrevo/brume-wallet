@@ -4,6 +4,7 @@ import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { WideClickableContrastButton, WideClickableOppositeButton } from "@/libs/ui/button";
+import { ContrastLabel } from "@/libs/ui/label";
 import { UserRef } from "@/mods/background/service_worker/entities/users/data";
 import { usePathContext } from "@hazae41/chemin";
 import { Data } from "@hazae41/glacier";
@@ -12,7 +13,6 @@ import { useCloseContext } from "@hazae41/react-close-context";
 import { KeyboardEvent, useCallback, useDeferredValue, useRef, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
 import { UserAvatar } from "../../user/mods/avatar";
-import { SimpleLabel } from "../wallets/actions/send";
 import { useCurrentUser, useUser } from "./data";
 
 export function UserLoginDialog(props: { next?: string }) {
@@ -107,7 +107,7 @@ export function UserLoginDialog(props: { next?: string }) {
           </div>
         </div>
         <div className="h-4" />
-        <SimpleLabel>
+        <ContrastLabel>
           <input className="bg-transparent outline-none min-w-0 disabled:text-contrast data-[invalid=true]:border-red-400 data-[invalid=true]:text-red-400 dark:data-[invalid=true]:border-red-500 dark:data-[invalid=true]:text-red-500"
             ref={passwordInputRef}
             type="password"
@@ -118,7 +118,7 @@ export function UserLoginDialog(props: { next?: string }) {
             placeholder="Password"
             onKeyDown={onKeyDown}
             autoFocus />
-        </SimpleLabel>
+        </ContrastLabel>
         <div className="h-2" />
         <div className="flex items-center flex-wrap-reverse gap-2">
           <WideClickableContrastButton

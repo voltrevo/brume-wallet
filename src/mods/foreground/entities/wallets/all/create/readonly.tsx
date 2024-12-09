@@ -8,6 +8,7 @@ import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastLabel } from "@/libs/ui/label";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -17,7 +18,7 @@ import { useCloseContext } from "@hazae41/react-close-context";
 import { Panic } from "@hazae41/result";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useEnsLookup } from "../../../names/data";
-import { SimpleInput, SimpleLabel, SimpleTextarea } from "../../actions/send";
+import { SimpleInput, SimpleTextarea } from "../../actions/send";
 import { RawWalletCard } from "../../card";
 import { useEthereumContext } from "../../data";
 import { EmptyRectangularCard } from "./standalone";
@@ -99,7 +100,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   }, [addOrAlert.loading, finalNameInput, defAddressInput])
 
   const NameInput =
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Name
       </div>
@@ -108,10 +109,10 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
         placeholder="Vitalik"
         value={rawNameInput}
         onChange={onNameInputChange} />
-    </SimpleLabel>
+    </ContrastLabel>
 
   const AddressInput =
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Address
       </div>
@@ -121,7 +122,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
         value={rawAddressInput}
         onChange={onAddressInputChange}
         rows={4} />
-    </SimpleLabel>
+    </ContrastLabel>
 
   const AddButon =
     <WideClickableGradientButton

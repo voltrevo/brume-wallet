@@ -7,6 +7,7 @@ import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
 import { WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
+import { ContrastLabel } from "@/libs/ui/label";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
@@ -22,7 +23,7 @@ import { mnemonicToSeed } from "@scure/bip39";
 import { SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { SeedInstance } from "../../../seeds/all/helpers";
 import { useSeedDataContext } from "../../../seeds/context";
-import { SimpleInput, SimpleLabel } from "../../actions/send";
+import { SimpleInput } from "../../actions/send";
 import { EmptyRectangularCard } from "./standalone";
 
 export function SeededWalletCreatorDialog(props: {}) {
@@ -173,7 +174,7 @@ export function SeededWalletCreatorDialog(props: {}) {
   }), [finalNameInput, defPathInput, seedData, defPathInput, uuid, color, background, close])
 
   const NameInput =
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Name
       </div>
@@ -182,10 +183,10 @@ export function SeededWalletCreatorDialog(props: {}) {
         placeholder="Holder"
         value={rawNameInput}
         onChange={onNameInputChange} />
-    </SimpleLabel>
+    </ContrastLabel>
 
   const PathInput =
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Path
       </div>
@@ -194,10 +195,10 @@ export function SeededWalletCreatorDialog(props: {}) {
         placeholder="m/44'/60'/0'/0/0"
         value={rawPathInput}
         onChange={onPathInputChange} />
-    </SimpleLabel>
+    </ContrastLabel>
 
   const IndexInput =
-    <SimpleLabel>
+    <ContrastLabel>
       <div className="flex-none">
         Index
       </div>
@@ -208,7 +209,7 @@ export function SeededWalletCreatorDialog(props: {}) {
         min={0}
         value={rawIndexInput}
         onChange={onIndexInputChange} />
-    </SimpleLabel>
+    </ContrastLabel>
 
   const AddButon =
     <WideClickableGradientButton
@@ -234,7 +235,7 @@ export function SeededWalletCreatorDialog(props: {}) {
       <div className="grow" />
       {NameInput}
       <div className="h-2" />
-      <SimpleLabel>
+      <ContrastLabel>
         <div className="flex-none">
           Derivation
         </div>
@@ -258,7 +259,7 @@ export function SeededWalletCreatorDialog(props: {}) {
             Custom
           </option>
         </select>
-      </SimpleLabel>
+      </ContrastLabel>
       {rawDerivation === "custom" && <>
         <div className="h-2" />
         {PathInput}
