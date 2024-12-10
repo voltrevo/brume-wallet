@@ -21,7 +21,7 @@ import { FiveDisplay } from "@/mods/foreground/landing/5/5";
 import { SixDisplay } from "@/mods/foreground/landing/6/6";
 import { UserAvatar } from "@/mods/foreground/user/mods/avatar";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
-import { useCallback } from "react";
+import { Fragment, useCallback } from "react";
 import { UserCreateDialog } from "../entities/users/all/create";
 import { useCurrentUser, useUser, useUsers } from "../entities/users/data";
 import { UserLoginDialog } from "../entities/users/login";
@@ -275,9 +275,9 @@ export function UsersMenu() {
 
   return <div className="flex flex-col text-left gap-2">
     {maybeUsers?.map(user =>
-      <UsersMenuRow
-        key={user.uuid}
-        user={user} />)}
+      <Fragment key={user.uuid}>
+        <UsersMenuRow user={user} />
+      </Fragment>)}
     <WideClickableNakedMenuAnchor
       onClick={create.onClick}
       onKeyDown={create.onKeyDown}

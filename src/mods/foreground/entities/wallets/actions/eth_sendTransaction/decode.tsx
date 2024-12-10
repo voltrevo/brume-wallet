@@ -6,7 +6,7 @@ import { usePathContext } from "@hazae41/chemin";
 import { Abi, ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
 import { Nullable, Option } from "@hazae41/option";
 import { Result } from "@hazae41/result";
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
 
@@ -56,9 +56,11 @@ export function WalletDecodeDialog(props: {}) {
     {triedSignatures?.isOk() && triedSignatures.get().length > 0 &&
       <div className="grow flex flex-col gap-2">
         {triedSignatures.get().toReversed().map((text) =>
-          <SignatureRow key={text}
-            data={maybeData}
-            text={text} />)}
+          <Fragment key={text}>
+            <SignatureRow
+              data={maybeData}
+              text={text} />
+          </Fragment>)}
       </div>}
   </>
 }
@@ -89,7 +91,7 @@ export function SignatureRow(props: {
     return Abi.decodeOrThrow(Abi.FunctionSignature.parseOrThrow(text), data).intoOrThrow().map(stringifyOrThrow)
   }), [text, data])
 
-  return <div key={text} className="po-md bg-contrast rounded-xl">
+  return <div className="po-md bg-contrast rounded-xl">
     <div className="break-words">
       {text}
     </div>

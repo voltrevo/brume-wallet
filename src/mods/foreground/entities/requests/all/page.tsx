@@ -16,7 +16,7 @@ import { BlobbyData } from "@/mods/universal/entities/blobbys"
 import { RpcErr } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { Err } from "@hazae41/result"
-import { useCallback, useEffect, useState } from "react"
+import { Fragment, useCallback, useEffect, useState } from "react"
 import { useBlobby } from "../../blobbys/data"
 import { useOrigin } from "../../origins/data"
 import { useAppRequest, useAppRequests } from "../data"
@@ -46,9 +46,9 @@ export function RequestsPage() {
     <PageBody>
       <div className="flex flex-col gap-2">
         {maybeRequests?.map(request =>
-          <RequestRow
-            key={request.id}
-            request={request} />)}
+          <Fragment key={request.id}>
+            <RequestRow request={request} />
+          </Fragment>)}
       </div>
     </PageBody>
 
@@ -99,11 +99,12 @@ export function RequestRow(props: { request: AppRequest }) {
   return <a className="po-md rounded-xl flex items-center gap-4"
     href={`#${pathOf(urlOf(`/${method}?id=${id}`, params))}`}>
     {maybeOriginData.icons?.map((x, i) =>
-      <IndexedBlobbyLoader
-        key={x.id}
-        index={i}
-        id={x.id}
-        ok={onIconData} />)}
+      <Fragment key={x.id}>
+        <IndexedBlobbyLoader
+          index={i}
+          id={x.id}
+          ok={onIconData} />
+      </Fragment>)}
     <div className="flex-none">
       <ImageWithFallback className="size-10"
         alt="icon"

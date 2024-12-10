@@ -34,7 +34,7 @@ import { Abi } from "@hazae41/cubane";
 import { RpcErr, RpcOk } from "@hazae41/jsonrpc";
 import { Nullable, Option } from "@hazae41/option";
 import { Err, Result } from "@hazae41/result";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 
 export default function Main() {
   const background = useBackgroundContext().getOrThrow()
@@ -311,28 +311,30 @@ export function TransactPage() {
         {currentSimulation?.isOk() &&
           <div className="flex flex-col gap-2">
             {currentSimulation.get().logs.map((log, i) =>
-              <div className="p-2 bg-contrast rounded-xl"
-                key={i}>
-                <div className="font-medium">
-                  {log.name}
+              <Fragment key={i}>
+                <div className="p-2 bg-contrast rounded-xl">
+                  <div className="font-medium">
+                    {log.name}
+                  </div>
+                  <div className="text-contrast truncate">
+                    {log.raw.address}
+                  </div>
+                  <div className="h-2" />
+                  <div className="flex flex-col gap-2">
+                    {log.inputs.map((input, j) =>
+                      <Fragment key={j}>
+                        <div className="p-2 bg-contrast rounded-xl">
+                          <div className="font-medium">
+                            {input.name} {input.type}
+                          </div>
+                          <div className="text-contrast truncate">
+                            {typeof input.value === "string" ? input.value : JSON.stringify(input.value)}
+                          </div>
+                        </div>
+                      </Fragment>)}
+                  </div>
                 </div>
-                <div className="text-contrast truncate">
-                  {log.raw.address}
-                </div>
-                <div className="h-2" />
-                <div className="flex flex-col gap-2">
-                  {log.inputs.map((input, j) =>
-                    <div className="p-2 bg-contrast rounded-xl"
-                      key={j}>
-                      <div className="font-medium">
-                        {input.name} {input.type}
-                      </div>
-                      <div className="text-contrast truncate">
-                        {typeof input.value === "string" ? input.value : JSON.stringify(input.value)}
-                      </div>
-                    </div>)}
-                </div>
-              </div>)}
+              </Fragment>)}
           </div>}
         <div className="h-4 grow" />
         <div className="flex items-center flex-wrap-reverse gap-2">

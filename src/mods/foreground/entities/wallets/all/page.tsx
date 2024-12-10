@@ -10,7 +10,7 @@ import { UserPage } from "@/libs/ui/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Nullable } from "@hazae41/option"
-import { useCallback } from "react"
+import { Fragment, useCallback } from "react"
 import { RawWalletDataCard } from "../card"
 import { WalletDataProvider } from "../context"
 import { WalletProps, useTrashedWallets, useWallets } from "../data"
@@ -91,10 +91,11 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets: Nullable
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {wallets?.map(wallet =>
-      <ClickableWalletCard
-        key={wallet.uuid}
-        wallet={wallet}
-        ok={ok} />)}
+      <Fragment key={wallet.uuid}>
+        <ClickableWalletCard
+          wallet={wallet}
+          ok={ok} />
+      </Fragment>)}
     {!disableNew &&
       <NewRectangularAnchorCard>
         New wallet
@@ -107,11 +108,12 @@ export function SelectableWalletGrid(props: OkProps<Wallet> & { wallets: Nullabl
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {wallets?.map(wallet =>
-      <CheckableWalletCard
-        key={wallet.uuid}
-        wallet={wallet}
-        index={selecteds.indexOf(wallet)}
-        ok={ok} />)}
+      <Fragment key={wallet.uuid}>
+        <CheckableWalletCard
+          wallet={wallet}
+          index={selecteds.indexOf(wallet)}
+          ok={ok} />
+      </Fragment>)}
     {!disableNew &&
       <NewRectangularAnchorCard>
         New wallet

@@ -5,7 +5,7 @@ import { OkProps } from "@/libs/react/props/promise"
 import { ValueProps } from "@/libs/react/props/value"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { useCloseContext } from "@hazae41/react-close-context"
-import { KeyboardEvent, MouseEvent, useCallback } from "react"
+import { Fragment, KeyboardEvent, MouseEvent, useCallback } from "react"
 import { WideClickableNakedMenuButton } from "../button"
 import { Menu } from "../menu"
 
@@ -24,12 +24,14 @@ export function HashSelector<T extends string>(props: PathnameProps & ValueProps
           <SelectAndClose ok={ok}>
             <div className="flex flex-col text-left gap-2">
               {children != null && Objects.entries(children).map(([value, name]) =>
-                <WideClickableNakedMenuButton
-                  data-value={value}>
-                  <div className="truncate">
-                    {name}
-                  </div>
-                </WideClickableNakedMenuButton>)}
+                <Fragment key={value}>
+                  <WideClickableNakedMenuButton
+                    data-value={value}>
+                    <div className="truncate">
+                      {name}
+                    </div>
+                  </WideClickableNakedMenuButton>
+                </Fragment>)}
             </div>
           </SelectAndClose>
         </Menu>}

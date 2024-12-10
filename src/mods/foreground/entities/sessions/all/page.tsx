@@ -17,7 +17,7 @@ import { BlobbyData } from "@/mods/universal/entities/blobbys"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Nullable, Option } from "@hazae41/option"
 import { useCloseContext } from "@hazae41/react-close-context"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react"
 import { useBlobby } from "../../blobbys/data"
 import { useOrigin } from "../../origins/data"
 import { useSession } from "../data"
@@ -62,13 +62,13 @@ export function SessionsPage() {
     <PageBody>
       <div className="flex flex-col gap-2">
         {maybeTempSessions?.map(session =>
-          <SessionRow
-            key={session.id}
-            session={session} />)}
+          <Fragment key={session.id}>
+            <SessionRow session={session} />
+          </Fragment>)}
         {maybePersSessions?.map(session =>
-          <SessionRow
-            key={session.id}
-            session={session} />)}
+          <Fragment key={session.id}>
+            <SessionRow session={session} />
+          </Fragment>)}
       </div>
     </PageBody>
 
@@ -138,11 +138,12 @@ export function SessionRow(props: { session: Session }) {
         </Menu>}
     </HashSubpathProvider>
     {maybeOriginData.icons?.map((x, i) =>
-      <IndexedBlobbyLoader
-        key={x.id}
-        index={i}
-        id={x.id}
-        ok={onIconData} />)}
+      <Fragment key={x.id}>
+        <IndexedBlobbyLoader
+          index={i}
+          id={x.id}
+          ok={onIconData} />
+      </Fragment>)}
     <div className="relative flex-none">
       {(() => {
         if (maybeStatusData == null)
@@ -222,10 +223,11 @@ export function ChainsMenu(props: { sessionData: ExSessionData }) {
 
   return <div className="flex flex-col text-left gap-2 w-[160px] overflow-x-hidden">
     {Object.values(chainDataByChainId).map(chain =>
-      <ChainRow
-        key={chain.chainId}
-        sessionData={sessionData}
-        chainData={chain} />)}
+      <Fragment key={chain.chainId}>
+        <ChainRow
+          sessionData={sessionData}
+          chainData={chain} />
+      </Fragment>)}
   </div>
 }
 

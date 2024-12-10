@@ -16,7 +16,7 @@ import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/ch
 import { Ledger } from "@hazae41/ledger";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { Panic } from "@hazae41/result";
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { SimpleInput } from "../../../wallets/actions/send";
 import { RawSeedCard } from "../../card";
 
@@ -154,21 +154,22 @@ export function HardwareSelectDialog() {
     <div className="h-4" />
     <div className="flex flex-col gap-2">
       {devices.map(device =>
-        <div className="po-md bg-contrast rounded-xl flex items-center"
-          key={device.serialNumber}>
-          <img className="h-16 w-auto"
-            src="/assets/devices/ledger_nano_s.png"
-            alt="Ledger Nano S" />
-          <div className="w-4" />
-          <div className="">
+        <Fragment key={device.serialNumber}>
+          <div className="po-md bg-contrast rounded-xl flex items-center">
+            <img className="h-16 w-auto"
+              src="/assets/devices/ledger_nano_s.png"
+              alt="Ledger Nano S" />
+            <div className="w-4" />
             <div className="">
-              {device.productName}
-            </div>
-            <div className="text-contrast">
-              {device.manufacturerName}, {device.deviceVersionMajor}.{device.deviceVersionMinor}.{device.deviceVersionSubminor}
+              <div className="">
+                {device.productName}
+              </div>
+              <div className="text-contrast">
+                {device.manufacturerName}, {device.deviceVersionMajor}.{device.deviceVersionMinor}.{device.deviceVersionSubminor}
+              </div>
             </div>
           </div>
-        </div>)}
+        </Fragment>)}
       <div className="po-md rounded-xl border border-contrast border-dashed flex items-center justify-center gap-2 h-[80px]">
         <Outline.PlusIcon className="size-5" />
         New device

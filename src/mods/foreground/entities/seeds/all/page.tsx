@@ -7,7 +7,7 @@ import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
 import { Seed } from "@/mods/universal/entities/seeds"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
-import { useCallback } from "react"
+import { Fragment, useCallback } from "react"
 import { NewRectangularAnchorCard } from "../../wallets/all/page"
 import { RawSeedDataCard } from "../card"
 import { SeedDataProvider } from "../context"
@@ -77,10 +77,11 @@ export function ClickableSeedGrid(props: OkProps<Seed> & { maybeSeeds?: Seed[] }
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
     {maybeSeeds?.map(seed =>
-      <ClickableSeedCard
-        key={seed.uuid}
-        seed={seed}
-        ok={ok} />)}
+      <Fragment key={seed.uuid}>
+        <ClickableSeedCard
+          seed={seed}
+          ok={ok} />
+      </Fragment>)}
     {!disableNew &&
       <NewRectangularAnchorCard>
         New seed

@@ -14,7 +14,7 @@ import { Address } from "@hazae41/cubane";
 import { Data } from "@hazae41/glacier";
 import { Option, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
-import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
+import { Fragment, SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { SimpleInput } from "../../wallets/actions/send";
 import { useWalletDataContext } from "../../wallets/context";
 import { useEthereumContext } from "../../wallets/data";
@@ -89,9 +89,11 @@ export function TokenAddDialog(props: {}) {
         value={rawChainId}
         onChange={onChainIdChange}>
         {Object.values(chainDataByChainId).map(x =>
-          <option key={x.chainId} value={x.chainId.toString()}>
-            {x.name}
-          </option>)}
+          <Fragment key={x.chainId}>
+            <option value={x.chainId.toString()}>
+              {x.name}
+            </option>
+          </Fragment>)}
       </select>
     </ContrastLabel>
     <div className="h-2" />
