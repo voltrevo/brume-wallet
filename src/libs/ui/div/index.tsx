@@ -11,7 +11,7 @@ export function ContrastSubtitleDiv(props: ChildrenProps) {
 export function ContrastTitleDiv(props: ChildrenProps) {
   const { children } = props
 
-  return <div className="po-sm text-contrast uppercase">
+  return <div className="po-sm font-medium text-contrast uppercase">
     {children}
   </div>
 }

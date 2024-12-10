@@ -5,6 +5,7 @@ import { Events } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { AnchorProps } from "@/libs/react/props/html";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
+import { Records } from "@/libs/records";
 import { ClickableContrastAnchor, ClickableOppositeAnchor, TextAnchor, WideClickableContrastAnchor, WideClickableNakedMenuAnchor } from "@/libs/ui/anchor";
 import { Dialog } from "@/libs/ui/dialog";
 import { Loading } from "@/libs/ui/loading";
@@ -25,6 +26,7 @@ import { Fragment, useCallback } from "react";
 import { UserCreateDialog } from "../entities/users/all/create";
 import { useCurrentUser, useUser, useUsers } from "../entities/users/data";
 import { UserLoginDialog } from "../entities/users/login";
+import { useLocaleContext } from "../global/mods/locale";
 
 export function EmptyLandingPage(props: { next?: string }) {
   const path = usePathContext().getOrThrow()
@@ -93,6 +95,7 @@ export function EmptyLandingPage(props: { next?: string }) {
 }
 
 export function FullLandingPage(props: { next?: string }) {
+  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
   const { next } = props
 
@@ -123,11 +126,73 @@ export function FullLandingPage(props: { next?: string }) {
         <div className="h-[max(24rem,100dvh_-_16rem)] flex-none flex flex-col items-center">
           <div className="grow" />
           <h1 className="text-center text-6xl font-medium">
-            The private Ethereum wallet
+            {Records.getOrElseOrThrow({
+              "en": "The private Ethereum wallet",
+              "zh": "私人以太坊钱包",
+              "hi": "निजी ईथेरियम वॉलेट",
+              "es": "La billetera Ethereum privada",
+              "ar": "محفظة إيثريوم الخاصة",
+              "fr": "Le portefeuille Ethereum confidentiel",
+              "de": "Die private Ethereum-Brieftasche",
+              "ru": "Частный кошелек Ethereum",
+              "pt": "A carteira Ethereum privada",
+              "ja": "プライベートイーサリアムウォレット",
+              "pa": "ਨਿਜੀ ਇਥੇਰੀਅਮ ਵਾਲੇਟ",
+              "bn": "ব্যক্তিগত ইথেরিয়াম ওয়ালেট",
+              "id": "Dompet Ethereum pribadi",
+              "ur": "نجی ایتھیریم والیٹ",
+              "ms": "Dompet Ethereum peribadi",
+              "it": "Il portafoglio Ethereum privato",
+              "tr": "Özel Ethereum cüzdanı",
+              "ta": "தனிப்பட்ட எதீரியம் வாலட்",
+              "te": "ప్రైవేట్ ఎథిరియం వాలెట్",
+              "ko": "개인 이더리움 지갑",
+              "vi": "Ví Ethereum riêng",
+              "pl": "Prywatny portfel Ethereum",
+              "ro": "Portofelul privat Ethereum",
+              "nl": "De privé Ethereum-portemonnee",
+              "el": "Το ιδιωτικό πορτοφόλι Ethereum",
+              "th": "กระเป๋าเงิน Ethereum ส่วนตัว",
+              "cs": "Soukromá peněženka Ethereum",
+              "hu": "A privát Ethereum tárca",
+              "sv": "Den privata Ethereum-plånboken",
+              "da": "Den private Ethereum-tegnebog",
+            }, lang, "en")}
           </h1>
           <div className="h-4" />
           <div className="text-center text-contrast text-2xl">
-            Meet the only Ethereum wallet with maximum privacy and security.
+            {Records.getOrElseOrThrow({
+              "en": "Meet the only Ethereum wallet with maximum privacy and security.",
+              "zh": "了解唯一具有最大隐私和安全性的以太坊钱包。",
+              "hi": "अधिकतम गोपनीयता और सुरक्षा के साथ एकमात्र ईथेरियम वॉलेट से मिलें।",
+              "es": "Conozca la única billetera Ethereum con máxima privacidad y seguridad.",
+              "ar": "تعرف على المحفظة الوحيدة للإيثريوم بأقصى درجات الخصوصية والأمان.",
+              "fr": "Découvrez le seul portefeuille Ethereum avec une confidentialité et une sécurité maximales.",
+              "de": "Lernen Sie die einzige Ethereum-Brieftasche mit maximaler Privatsphäre und Sicherheit kennen.",
+              "ru": "Познакомьтесь с единственным кошельком Ethereum с максимальной конфиденциальностью и безопасностью.",
+              "pt": "Conheça a única carteira Ethereum com máxima privacidade e segurança.",
+              "ja": "最大限のプライバシーとセキュリティを備えた唯一のイーサリアムウォレットに会いましょう。",
+              "pa": "ਸਭ ਤੋਂ ਜ਼ਿਆਦਾ ਗੁਪਤਤਾ ਅਤੇ ਸੁਰੱਖਿਆ ਵਾਲਾ ਇਕ ਮਾਤਰ ਇਥੇਰੀਅਮ ਵਾਲੇਟ ਨਾਲ ਮਿਲੋ।",
+              "bn": "সর্বোচ্চ গোপনীয়তা এবং নিরাপত্তা সহ একমাত্র ইথেরিয়াম ওয়ালেট সাথে পরিচিত হন।",
+              "id": "Temui satu-satunya dompet Ethereum dengan privasi dan keamanan maksimum.",
+              "ur": "سب سے زیادہ رازداری اور حفاظت کے ساتھ ایک ہی ایتھیریم والیٹ سے ملیں۔",
+              "ms": "Kenali dompet Ethereum tunggal dengan privasi dan keselamatan maksimum.",
+              "it": "Incontra l'unico portafoglio Ethereum con massima privacy e sicurezza.",
+              "tr": "Maksimum gizlilik ve güvenlikle tek Ethereum cüzdanıyla tanışın.",
+              "ta": "அதிகப் பிரைவசி மற்றும் பாதுகாப்புடன் ஒரு இதீரியம் வாலட் சந்திக்கவும்.",
+              "te": "అత్యధిక గోప్యత మరియు భద్రతతో ఒకే ఎథిరియం వాలెట్తో కలిగించుకోండి.",
+              "ko": "최대 개인 정보 보호 및 보안을 갖춘 유일한 이더리움 지갑을 만나보세요.",
+              "vi": "Hãy gặp ví Ethereum duy nhất với độ riêng tư và bảo mật tối đa.",
+              "pl": "Poznaj jedyny portfel Ethereum z maksymalną prywatnością i bezpieczeństwem.",
+              "ro": "Întâlniți singurul portofel Ethereum cu maximă confidențialitate și securitate.",
+              "nl": "Maak kennis met de enige Ethereum-portemonnee met maximale privacy en veiligheid.",
+              "el": "Γνωρίστε το μοναδικό πορτοφόλι Ethereum με μέγιστη απορρήτου και ασφάλεια.",
+              "th": "พบกับกระเป๋าเงิน Ethereum เพียงหนึ่งเดียวที่มีความเป็นส่วนตัวและปลอดภัยสูงสุด",
+              "cs": "Seznamte se s jedinou peněženkou Ethereum s maximální soukromí a bezpečností.",
+              "hu": "Ismerje meg az egyetlen Ethereum pénztárcát maximális adatvédelemmel és biztonsággal.",
+              "sv": "Möt den enda Ethereum-plånboken med maximal integritet och säkerhet.",
+              "da": "Mød den eneste Ethereum-tegnebog med maksimal privatliv og sikkerhed.",
+            }, lang, "en")}
           </div>
           <div className="grow" />
           <div className="flex items-center">
