@@ -27,7 +27,7 @@
     await(async () => {
       try {
         if (navigator.userAgent.match(/(bot|spider)/) != null) {
-          const html = await fetch("/_index.html").then(res => res.text())
+          const html = await fetch("./_index.html").then(res => res.text())
 
           document.open()
           document.write(html)
