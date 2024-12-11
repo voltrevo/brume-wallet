@@ -311,4 +311,37 @@ export namespace Locale {
     da: "fortæl mig hvad du vil",
   }
 
+  export const Settings: Localized = {
+    en: "Settings",
+    zh: "设置",
+    hi: "सेटिंग्स",
+    es: "Configuración",
+    ar: "الإعدادات",
+    fr: "Paramètres",
+    de: "Einstellungen",
+    ru: "Настройки",
+    pt: "Configurações",
+    ja: "設定",
+    pa: "ਸੈਟਿੰਗਾਂ",
+    bn: "সেটিংস",
+    id: "Pengaturan",
+    ur: "ترتیبات",
+    ms: "Tetapan",
+    it: "Impostazioni",
+    tr: "Ayarlar",
+    ta: "அமைப்புகள்",
+    te: "అమరికలు",
+    ko: "설정",
+    vi: "Cài đặt",
+    pl: "Ustawienia",
+    ro: "Setări",
+    nl: "Instellingen",
+    el: "Ρυθμίσεις",
+    th: "การตั้งค่า",
+    cs: "Nastavení",
+    hu: "Beállítások",
+    sv: "Inställningar",
+    da: "Indstillinger",
+  }
+
 }

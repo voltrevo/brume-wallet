@@ -26,6 +26,8 @@ import { StandaloneWalletCreatorDialog } from "@/mods/foreground/entities/wallet
 import { SelectableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { WalletDataContext } from "@/mods/foreground/entities/wallets/context";
 import { EthereumWalletInstance, useEthereumContext, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Base16 } from "@hazae41/base16";
 import { Bytes } from "@hazae41/bytes";
@@ -628,6 +630,7 @@ export function WalletAndChainSelectPage() {
 }
 
 export function DonePage() {
+  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
   const requests = useAppRequests().current?.getOrNull()
 
@@ -652,7 +655,7 @@ export function DonePage() {
         <ClickableOppositeAnchor
           href="#/home">
           <Outline.HomeIcon className="size-5" />
-          Home
+          {Locale.get(Locale.Home, lang)}
         </ClickableOppositeAnchor>
       </div>
     </PageBody>

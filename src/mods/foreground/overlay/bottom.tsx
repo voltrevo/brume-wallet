@@ -92,7 +92,7 @@ export function OmniDialog(props: {
         href="#/home">
         <Outline.HomeIcon className="size-5" />
         <div className="h-4" />
-        Home
+        {Locale.get(Locale.Home, lang)}
       </a>
       <a className="po-md bg-contrast rounded-xl"
         data-selected={path.url.pathname === "/wallets"}
@@ -138,7 +138,7 @@ export function OmniDialog(props: {
         href="#/settings/user">
         <Outline.CogIcon className="size-5" />
         <div className="h-4" />
-        Settings
+        {Locale.get(Locale.Settings, lang)}
       </a>
     </div>
     <div className="h-4" />
@@ -152,7 +152,7 @@ export function OmniDialog(props: {
         href="#/">
         <Outline.HomeIcon className="size-5" />
         <div className="h-4" />
-        Home
+        {Locale.get(Locale.Home, lang)}
       </a>
       <a className="po-md bg-contrast rounded-xl"
         data-selected={path.url.pathname === "/apps"}
@@ -166,7 +166,7 @@ export function OmniDialog(props: {
         href="#/settings/global">
         <Outline.CogIcon className="size-5" />
         <div className="h-4" />
-        Settings
+        {Locale.get(Locale.Settings, lang)}
       </a>
     </div>
   </Dialog>

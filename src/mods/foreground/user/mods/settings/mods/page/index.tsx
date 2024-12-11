@@ -8,12 +8,16 @@ import { ContrastLabel } from "@/libs/ui/label";
 import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
 import { UserPage } from "@/libs/ui/page/page";
 import { HashSelector } from "@/libs/ui/select";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { Data } from "@hazae41/glacier";
 import { Option, Some } from "@hazae41/option";
 import { ChangeEvent } from "react";
 import { useChain, useLogs } from "../../../../../entities/settings/data";
 
 export function UserSettingsPage() {
+  const lang = useLocaleContext().getOrThrow()
+
   const logs = useLogs()
   const chain = useChain()
 
@@ -27,7 +31,7 @@ export function UserSettingsPage() {
   }), [])
 
   return <UserPage>
-    <UserPageHeader title="Settings" />
+    <UserPageHeader title={Locale.get(Locale.Settings, lang)} />
     <PageBody>
       <ContrastSubtitleDiv>
         Compatibility

@@ -4,22 +4,24 @@ import { ContrastLabel } from "@/libs/ui/label";
 import { GlobalPageHeader, PageBody } from "@/libs/ui/page/header";
 import { GlobalPage } from "@/libs/ui/page/page";
 import { HashSelector } from "@/libs/ui/select";
+import { Locale } from "@/mods/foreground/locale";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { useCallback } from "react";
-import { useLocaleQuery } from "../../../locale";
+import { useLocaleContext, useLocaleQuery } from "../../../locale";
 
 export function GlobalSettingsPage() {
-  const localeq = useLocaleQuery()
+  const lang = useLocaleContext().getOrThrow()
 
-  const [locale = "auto"] = [localeq.data?.get()]
+  const localeQuery = useLocaleQuery()
+  const [localeData = "auto"] = [localeQuery.data?.get()]
 
   const onLocaleChange = useCallback((value: string) => Errors.runOrLogAndAlert(async () => {
-    await localeq.mutateOrThrow(() => new Some(new Data(value)))
+    await localeQuery.mutateOrThrow(() => new Some(new Data(value)))
   }), [])
 
   return <GlobalPage>
-    <GlobalPageHeader title="Settings" />
+    <GlobalPageHeader title={Locale.get(Locale.Settings, lang)} />
     <PageBody>
       <ContrastSubtitleDiv>
         Language
@@ -31,40 +33,40 @@ export function GlobalSettingsPage() {
         <div className="w-4 grow" />
         <HashSelector
           pathname="/locale"
-          value={locale}
+          value={localeData}
           ok={onLocaleChange}>
           {{
             "auto": "Auto",
             "en": "English",
-            "zh": "Chinese (Mandarin)",
-            "hi": "Hindi",
-            "es": "Spanish",
-            "ar": "Arabic",
-            "fr": "French",
-            "de": "German",
-            "ru": "Russian",
-            "pt": "Portuguese",
-            "ja": "Japanese",
-            "pa": "Punjabi",
-            "bn": "Bengali",
-            "id": "Indonesian",
-            "ur": "Urdu",
-            "ms": "Malay",
-            "it": "Italian",
-            "tr": "Turkish",
-            "ta": "Tamil",
-            "te": "Telugu",
-            "ko": "Korean",
-            "vi": "Vietnamese",
-            "pl": "Polish",
-            "ro": "Romanian",
-            "nl": "Dutch",
-            "el": "Greek",
-            "th": "Thai",
-            "cs": "Czech",
-            "hu": "Hungarian",
-            "sv": "Swedish",
-            "da": "Danish"
+            "zh": "中文",
+            "hi": "हिन्दी",
+            "es": "Español",
+            "ar": "العربية",
+            "fr": "Français",
+            "de": "Deutsch",
+            "ru": "Русский",
+            "pt": "Português",
+            "ja": "日本語",
+            "pa": "ਪੰਜਾਬੀ",
+            "bn": "বাংলা",
+            "id": "Bahasa Indonesia",
+            "ur": "اردو",
+            "ms": "Bahasa Melayu",
+            "it": "Italiano",
+            "tr": "Türkçe",
+            "ta": "தமிழ்",
+            "te": "తెలుగు",
+            "ko": "한국어",
+            "vi": "Tiếng Việt",
+            "pl": "Polski",
+            "ro": "Română",
+            "nl": "Nederlands",
+            "el": "Ελληνικά",
+            "th": "ไทย",
+            "cs": "Čeština",
+            "hu": "Magyar",
+            "sv": "Svenska",
+            "da": "Dansk"
           }}
         </HashSelector>
       </ContrastLabel>

@@ -85,7 +85,7 @@ export function EmptyLandingPage(props: { next?: string }) {
               <ClickableOppositeAnchor
                 href="#/home">
                 <Outline.HomeIcon className="size-5" />
-                Home
+                {Locale.get(Locale.Home, lang)}
               </ClickableOppositeAnchor>}
           </div>
           <div className="grow" />
