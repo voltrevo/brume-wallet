@@ -33,7 +33,7 @@ export function UserProvider(props: ChildrenProps) {
 }
 
 export function UserGuardPage(props: ChildrenProps) {
-  const maybeUser = useUserContext().getOrNull()
+  const maybeUser = useUserContext().getOrNull()?.getOrNull()
   const { children } = props
 
   if (maybeUser == null)
