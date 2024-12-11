@@ -150,9 +150,9 @@ export function OmniDialog(props: {
       <a className="po-md bg-contrast rounded-xl"
         data-selected={path.url.pathname === "/"}
         href="#/">
-        <Outline.HomeIcon className="size-5" />
+        <Outline.RocketLaunchIcon className="size-5" />
         <div className="h-4" />
-        {Locale.get(Locale.Home, lang)}
+        Landing
       </a>
       <a className="po-md bg-contrast rounded-xl"
         data-selected={path.url.pathname === "/apps"}
@@ -268,7 +268,7 @@ export function GlobalBottomNavigation() {
         data-selected={path.url.pathname === "/"}
         href="#/">
         <GapperAndClickerInAnchorDiv>
-          <Outline.HomeIcon className="size-6" />
+          <Outline.RocketLaunchIcon className="size-6" />
         </GapperAndClickerInAnchorDiv>
       </a>
       <div className="flex-1 flex items-center justify-center">
