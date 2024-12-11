@@ -5,12 +5,13 @@ import { OkProps } from "@/libs/react/props/promise"
 import { PaddedRoundedClickableNakedAnchor, WideClickableContrastAnchor } from "@/libs/ui/anchor"
 import { Dialog } from "@/libs/ui/dialog"
 import { Menu } from "@/libs/ui/menu"
-import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
+import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Nullable } from "@hazae41/option"
 import { Fragment, useCallback } from "react"
+import { useUserContext } from "../../users/context"
 import { RawWalletDataCard } from "../card"
 import { WalletDataProvider } from "../context"
 import { WalletProps, useTrashedWallets, useWallets } from "../data"
@@ -21,6 +22,30 @@ import { StandaloneWalletCreatorDialog } from "./create/standalone"
 export function WalletsPage() {
   const path = usePathContext().getOrThrow()
 
+  const subpath = useHashSubpath(path)
+  const creator = useCoords(subpath, "/create")
+
+  return <UserPage>
+    <PageHeader title="Wallets">
+      <PaddedRoundedClickableNakedAnchor
+        onKeyDown={creator.onKeyDown}
+        onClick={creator.onClick}
+        href={creator.href}>
+        <Outline.PlusIcon className="size-5" />
+      </PaddedRoundedClickableNakedAnchor>
+    </PageHeader>
+    <div className="po-md text-contrast">
+      {`Wallets allow you to hold funds and generate signatures. You can import wallets from a private key or generate them from a seed.`}
+    </div>
+    <UserGuardBody>
+      <WalletsBody />
+    </UserGuardBody>
+  </UserPage>
+}
+
+export function WalletsBody() {
+  const path = usePathContext().getOrThrow()
+
   const walletsQuery = useWallets()
   const maybeWallets = walletsQuery.current?.getOrNull()
 
@@ -28,43 +53,10 @@ export function WalletsPage() {
   const maybeTrashedWallets = trashedWalletsQuery.current?.getOrNull()
 
   const subpath = useHashSubpath(path)
-  const creator = useCoords(subpath, "/create")
 
   const onWalletClick = useCallback((wallet: Wallet) => {
     location.assign(path.go(`/wallet/${wallet.uuid}`))
   }, [path])
-
-  const Body =
-    <PageBody>
-      <ClickableWalletGrid
-        ok={onWalletClick}
-        wallets={maybeWallets} />
-      <div className="h-4" />
-      {maybeTrashedWallets != null && maybeTrashedWallets.length > 0 &&
-        <div className="flex items-center flex-wrap-reverse gap-2">
-          <WideClickableContrastAnchor
-            href="#/wallets/trash">
-            <Outline.TrashIcon className="size-5" />
-            Trash ({maybeTrashedWallets.length})
-          </WideClickableContrastAnchor>
-        </div>}
-    </PageBody>
-
-  const Header = <>
-    <UserPageHeader title="Wallets">
-      <PaddedRoundedClickableNakedAnchor
-        onKeyDown={creator.onKeyDown}
-        onClick={creator.onClick}
-        href={creator.href}>
-        <Outline.PlusIcon className="size-5" />
-      </PaddedRoundedClickableNakedAnchor>
-    </UserPageHeader>
-    <div className="po-md flex items-center">
-      <div className="text-contrast">
-        {`Wallets allow you to hold funds and generate signatures. You can import wallets from a private key or generate them from a seed.`}
-      </div>
-    </div>
-  </>
 
   return <UserPage>
     <HashSubpathProvider>
@@ -81,9 +73,38 @@ export function WalletsPage() {
           <ReadonlyWalletCreatorDialog />
         </Dialog>}
     </HashSubpathProvider>
-    {Header}
-    {Body}
+    <UserGuardBody>
+      <PageBody>
+        <ClickableWalletGrid
+          ok={onWalletClick}
+          wallets={maybeWallets} />
+        <div className="h-4" />
+        {maybeTrashedWallets != null && maybeTrashedWallets.length > 0 &&
+          <div className="flex items-center flex-wrap-reverse gap-2">
+            <WideClickableContrastAnchor
+              href="#/wallets/trash">
+              <Outline.TrashIcon className="size-5" />
+              Trash ({maybeTrashedWallets.length})
+            </WideClickableContrastAnchor>
+          </div>}
+      </PageBody>
+    </UserGuardBody>
   </UserPage>
+}
+
+export function UserGuardBody(props: ChildrenProps) {
+  const maybeWrappedUser = useUserContext().getOrNull()
+  const { children } = props
+
+  if (maybeWrappedUser == null)
+    return null
+
+  const maybeUser = maybeWrappedUser.getOrNull()
+
+  if (maybeUser == null)
+    return <>Login</>
+
+  return <>{children}</>
 }
 
 export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets: Nullable<Wallet[]> } & { selected?: Wallet } & { disableNew?: boolean }) {

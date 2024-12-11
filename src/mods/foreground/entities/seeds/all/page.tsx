@@ -3,7 +3,7 @@ import { OkProps } from "@/libs/react/props/promise"
 import { PaddedRoundedClickableNakedAnchor } from "@/libs/ui/anchor"
 import { Dialog } from "@/libs/ui/dialog"
 import { Menu } from "@/libs/ui/menu"
-import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
+import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
 import { Seed } from "@/mods/universal/entities/seeds"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
@@ -37,14 +37,14 @@ export function SeedsPage() {
     </PageBody>
 
   const Header = <>
-    <UserPageHeader title="Seeds">
+    <PageHeader title="Seeds">
       <PaddedRoundedClickableNakedAnchor
         onKeyDown={creator.onKeyDown}
         onClick={creator.onClick}
         href={creator.href}>
         <Outline.PlusIcon className="size-5" />
       </PaddedRoundedClickableNakedAnchor>
-    </UserPageHeader>
+    </PageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">
         {`Seeds allow you to generate wallets from a single secret. You can import a seed from a mnemonic phrase or connect a hardware wallet.`}

@@ -9,7 +9,7 @@ import { PaddedRoundedClickableNakedAnchor, WideClickableNakedMenuAnchor } from 
 import { PaddedRoundedClickableNakedButton, WideClickableNakedMenuButton } from "@/libs/ui/button"
 import { ImageWithFallback } from "@/libs/ui/image"
 import { Menu } from "@/libs/ui/menu"
-import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
+import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
 import { ExSessionData, Session, SessionData } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
@@ -73,13 +73,13 @@ export function SessionsPage() {
     </PageBody>
 
   const Header = <>
-    <UserPageHeader title="Sessions">
+    <PageHeader title="Sessions">
       <PaddedRoundedClickableNakedButton
         disabled={disconnectAllOrAlert.loading || !length}
         onClick={disconnectAllOrAlert.run}>
         <Outline.TrashIcon className="size-5" />
       </PaddedRoundedClickableNakedButton>
-    </UserPageHeader>
+    </PageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">
         {`Sessions allow you to connect to applications. These applications can then make requests for you to approve.`}

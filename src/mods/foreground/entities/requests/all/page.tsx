@@ -7,7 +7,7 @@ import { OkProps } from "@/libs/react/props/promise"
 import { UserRejectedError } from "@/libs/rpc/mods/errors"
 import { PaddedRoundedClickableNakedButton } from "@/libs/ui/button"
 import { ImageWithFallback } from "@/libs/ui/image"
-import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
+import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
 import { pathOf, urlOf } from "@/libs/url/url"
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
@@ -53,13 +53,13 @@ export function RequestsPage() {
     </PageBody>
 
   const Header = <>
-    <UserPageHeader title="Requests">
+    <PageHeader title="Requests">
       <PaddedRoundedClickableNakedButton
         disabled={rejectAllOrAlert.loading || !Boolean(maybeRequests?.length)}
         onClick={rejectAllOrAlert.run}>
         <Outline.TrashIcon className="size-5" />
       </PaddedRoundedClickableNakedButton>
-    </UserPageHeader>
+    </PageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">
         {`Request allow you to approve various actions such as transactions and signatures. These requests are sent by applications through sessions.`}

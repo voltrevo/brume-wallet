@@ -10,7 +10,7 @@ import { WideClickableContrastButton, WideClickableOppositeButton } from "@/libs
 import { Dialog } from "@/libs/ui/dialog";
 import { ContrastLabel } from "@/libs/ui/label";
 import { Menu } from "@/libs/ui/menu";
-import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
+import { PageBody, PageHeader } from "@/libs/ui/page/header";
 import { UserPage } from "@/libs/ui/page/page";
 import { urlOf } from "@/libs/url/url";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
@@ -566,14 +566,14 @@ export function WalletAndChainSelectPage() {
   }), [background, id, path])
 
   const Header =
-    <UserPageHeader title="Connect">
+    <PageHeader title="Connect">
       <PaddedRoundedClickableNakedAnchor
         onKeyDown={creator.onKeyDown}
         onClick={creator.onClick}
         href={creator.href}>
         <Outline.PlusIcon className="size-5" />
       </PaddedRoundedClickableNakedAnchor>
-    </UserPageHeader>
+    </PageHeader>
 
   const Body =
     <PageBody>

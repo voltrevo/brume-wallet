@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { Dialog } from "@/libs/ui/dialog";
-import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
+import { PageBody, PageHeader } from "@/libs/ui/page/header";
 import { UserPage } from "@/libs/ui/page/page";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin";
@@ -38,7 +38,7 @@ function SeedDataPage() {
   }, [])
 
   const Header =
-    <UserPageHeader title="Seed" />
+    <PageHeader title="Seed" />
 
   const Card =
     <div className="p-4 flex justify-center">

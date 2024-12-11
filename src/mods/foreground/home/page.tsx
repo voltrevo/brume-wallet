@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useUserContext } from "../entities/users/context"
 
 export function HomePage() {
-  const userData = useUserContext().getOrThrow()
+  const userData = useUserContext().getOrThrow().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
   const totalPricedBalanceQuery = useUserTotalPricedBalance()

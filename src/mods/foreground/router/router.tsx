@@ -9,7 +9,7 @@ import { SeedsPage } from "../entities/seeds/all/page"
 import { SeedPage } from "../entities/seeds/page"
 import { SessionsPage } from "../entities/sessions/all/page"
 import { SnapsPage } from "../entities/snaps/all/page"
-import { UserGuard } from "../entities/users/context"
+import { UserGuardPage } from "../entities/users/context"
 import { WalletsPage } from "../entities/wallets/all/page"
 import { TrashedWalletsPage } from "../entities/wallets/all/trash/page"
 import { WalletCameraPage } from "../entities/wallets/camera/page"
@@ -40,72 +40,70 @@ export function Router() {
 
   if (matches = path.url.pathname.match(/^\/home(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <HomePage />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/wallets(\/)?$/))
     return <Overlay>
-      <UserGuard>
-        <WalletsPage />
-      </UserGuard>
+      <WalletsPage />
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/wallets\/trash(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <TrashedWalletsPage />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/seeds(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <SeedsPage />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/sessions(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <SessionsPage />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/requests(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <RequestsPage />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/plugins(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <SnapsPage />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/wallet\/([^\/]+)(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <WalletPage uuid={matches[1]} />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/wallet\/([^\/]+)\/camera(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <WalletCameraPage uuid={matches[1]} />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/seed\/([^\/]+)(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <SeedPage uuid={matches[1]} />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/settings\/global(\/)?$/))
@@ -115,37 +113,37 @@ export function Router() {
 
   if (matches = path.url.pathname.match(/^\/settings\/user(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <UserSettingsPage />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/eth_requestAccounts(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <WalletAndChainSelectPage />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/eth_sendTransaction(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <TransactPage />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/personal_sign(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <PersonalSignPage />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/eth_signTypedData_v4(\/)?$/))
     return <Overlay>
-      <UserGuard>
+      <UserGuardPage>
         <TypedSignPage />
-      </UserGuard>
+      </UserGuardPage>
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/done(\/)?$/))

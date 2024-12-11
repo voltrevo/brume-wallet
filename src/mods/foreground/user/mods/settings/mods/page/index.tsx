@@ -5,7 +5,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { ColoredTextAnchor } from "@/libs/ui/anchor";
 import { ContrastSubtitleDiv } from "@/libs/ui/div";
 import { ContrastLabel } from "@/libs/ui/label";
-import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
+import { PageBody, PageHeader } from "@/libs/ui/page/header";
 import { UserPage } from "@/libs/ui/page/page";
 import { HashSelector } from "@/libs/ui/select";
 import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
@@ -31,7 +31,7 @@ export function UserSettingsPage() {
   }), [])
 
   return <UserPage>
-    <UserPageHeader title={Locale.get(Locale.Settings, lang)} />
+    <PageHeader title={Locale.get(Locale.Settings, lang)} />
     <PageBody>
       <ContrastSubtitleDiv>
         Compatibility

@@ -15,8 +15,8 @@ export function useUserStorageContext() {
 }
 
 export function UserStorageProvider(props: ChildrenProps) {
-  const { children } = props
   const background = useBackgroundContext().getOrThrow()
+  const { children } = props
 
   const storage = useMemo(() => {
     return new UserStorage(background)

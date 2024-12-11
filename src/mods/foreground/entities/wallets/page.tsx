@@ -16,7 +16,7 @@ import { ClickableContrastButton, WideClickableNakedMenuButton } from "@/libs/ui
 import { Dialog } from "@/libs/ui/dialog";
 import { Loading, SmallUnflexLoading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
-import { PageBody, UserPageHeader } from "@/libs/ui/page/header";
+import { PageBody, PageHeader } from "@/libs/ui/page/header";
 import { UserPage } from "@/libs/ui/page/page";
 import { GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";
 import { Balance } from "@/mods/universal/ethereum/mods/tokens/mods/balance";
@@ -104,10 +104,6 @@ function WalletDataPage() {
     return [wallets, users, builtins].map(x => x.sort(sorter))
   }, [userTokensQuery.data, walletTokensQuery.data])
 
-  const onBackClick = useCallback(() => {
-    location.assign("#/wallets")
-  }, [])
-
   const connect = useCoords(subpath, "/connect")
   const receive = useCoords(subpath, "/receive")
 
@@ -123,7 +119,7 @@ function WalletDataPage() {
   }, [setFlip, setPrivateKey])
 
   const Header =
-    <UserPageHeader title="Wallet">
+    <PageHeader title="Wallet">
       <div className="flex items-center gap-2">
         <PaddedRoundedClickableNakedAnchor
           onKeyDown={connect.onKeyDown}
@@ -134,7 +130,7 @@ function WalletDataPage() {
             src="/assets/wc.svg" />
         </PaddedRoundedClickableNakedAnchor>
       </div>
-    </UserPageHeader>
+    </PageHeader>
 
   const Card =
     <div className="p-4 flex justify-center">

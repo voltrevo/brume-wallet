@@ -4,7 +4,7 @@ import { Outline } from "@/libs/icons/icons"
 import { isSafariExtension } from "@/libs/platform/platform"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { PaddedRoundedClickableNakedButton } from "@/libs/ui/button"
-import { PageBody, UserPageHeader } from "@/libs/ui/page/header"
+import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { useUserStorageContext } from "@/mods/foreground/user/mods/storage"
@@ -43,13 +43,13 @@ export function TrashedWalletsPage() {
     </PageBody>
 
   const Header = <>
-    <UserPageHeader title="Trash">
+    <PageHeader title="Trash">
       <PaddedRoundedClickableNakedButton
         disabled={trashAllOrAlert.loading}
         onClick={trashAllOrAlert.run}>
         <Outline.TrashIcon className="size-5" />
       </PaddedRoundedClickableNakedButton>
-    </UserPageHeader>
+    </PageHeader>
     <div className="po-md flex items-center">
       <div className="text-contrast">
         {`Wallets in the trash are automatically deleted after 30 days.`}

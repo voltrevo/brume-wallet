@@ -1,17 +1,17 @@
 import { ChildrenProps } from "@/libs/react/props/children";
 import { UserData } from "@/mods/background/service_worker/entities/users/data";
 import { Nullable, Option } from "@hazae41/option";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { EmptyLandingPage } from "../../landing";
 import { useCurrentUser, useUser } from "./data";
 
-export const UserContext = createContext<Nullable<UserData>>(undefined)
+export const UserContext = createContext<Nullable<Option<UserData>>>(undefined)
 
 export function useUserContext() {
   return Option.wrap(useContext(UserContext))
 }
 
-export function UserGuard(props: ChildrenProps) {
+export function UserProvider(props: ChildrenProps) {
   const { children } = props
 
   const currentUserQuery = useCurrentUser()
@@ -20,16 +20,26 @@ export function UserGuard(props: ChildrenProps) {
   const userQuery = useUser(maybeCurrentUser?.uuid)
   const maybeUser = userQuery.data?.get()
 
+  const wrappedUser = useMemo(() => {
+    return Option.wrap(maybeUser)
+  }, [maybeUser])
+
   if (!currentUserQuery.ready)
-    return null
+    return <>{children}</>
+  if (!userQuery.ready)
+    return <>{children}</>
 
-  if (maybeCurrentUser == null)
-    return <EmptyLandingPage />
-
-  if (maybeUser == null)
-    return null
-
-  return <UserContext.Provider value={maybeUser}>
+  return <UserContext.Provider value={wrappedUser}>
     {children}
   </UserContext.Provider>
+}
+
+export function UserGuardPage(props: ChildrenProps) {
+  const maybeUser = useUserContext().getOrNull()
+  const { children } = props
+
+  if (maybeUser == null)
+    return <EmptyLandingPage />
+
+  return <>{children}</>
 }

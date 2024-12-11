@@ -14,7 +14,9 @@ export namespace FgAppRequest {
 
     export const key = BgAppRequest.All.key
 
-    export function schema(storage: UserStorage) {
+    export function queryOrThrow(storage: Nullable<UserStorage>) {
+      if (storage == null)
+        return
       return createQuery<K, D, F>({ key, storage })
     }
 
@@ -36,7 +38,7 @@ export namespace FgAppRequest {
       const previousData = previous?.real?.current.ok()?.getOrNull()
       const currentData = current.real?.current.ok()?.getOrNull()
 
-      await All.schema(storage).mutateOrThrow(Mutators.mapData((d = new Data([])) => {
+      await All.queryOrThrow(storage)?.mutateOrThrow(Mutators.mapData((d = new Data([])) => {
         if (previousData?.id === currentData?.id)
           return d
         if (previousData != null)
@@ -60,8 +62,8 @@ export function useAppRequest(id: Nullable<string>) {
 }
 
 export function useAppRequests() {
-  const storage = useUserStorageContext().getOrThrow()
-  const query = useQuery(FgAppRequest.All.schema, [storage])
+  const storage = useUserStorageContext().getOrNull()
+  const query = useQuery(FgAppRequest.All.queryOrThrow, [storage])
 
   return query
 }

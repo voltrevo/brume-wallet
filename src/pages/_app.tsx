@@ -8,9 +8,10 @@ import { Catcher, PromiseCatcher } from "@/libs/react/error";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ErrorProps } from "@/libs/react/props/error";
 import { WideClickableOppositeButton } from "@/libs/ui/button";
-import { GlobalPageHeader, PageBody } from "@/libs/ui/page/header";
+import { PageBody, PageHeader } from "@/libs/ui/page/header";
 import { UserPage } from "@/libs/ui/page/page";
 import { BackgroundProvider } from "@/mods/foreground/background/context";
+import { UserProvider } from "@/mods/foreground/entities/users/context";
 import { GlobalStorageProvider } from "@/mods/foreground/global/mods/storage";
 import { UserStorageProvider } from "@/mods/foreground/user/mods/storage";
 import { WalletWasm } from "@brumewallet/wallet.wasm";
@@ -42,7 +43,7 @@ export function Fallback(props: ErrorProps) {
     <div className="grow w-full flex flex-col overflow-y-scroll">
       <div className="grow w-full m-auto max-w-3xl flex flex-col">
         <UserPage>
-          <GlobalPageHeader title="Error" />
+          <PageHeader title="Error" />
           <PageBody>
             <div className="text-red-400 dark:text-red-500">
               An unexpected error occured
@@ -153,7 +154,9 @@ export default function App({ Component, pageProps }: AppProps) {
               <BackgroundProvider>
                 <GlobalStorageProvider>
                   <UserStorageProvider>
-                    <Component {...pageProps} />
+                    <UserProvider>
+                      <Component {...pageProps} />
+                    </UserProvider>
                   </UserStorageProvider>
                 </GlobalStorageProvider>
               </BackgroundProvider>

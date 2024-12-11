@@ -177,7 +177,7 @@ export function UserBottomNavigation() {
   const subpath = useHashSubpath(path)
 
   const requestsQuery = useAppRequests()
-  const requests = requestsQuery.data?.get()
+  const requestsData = requestsQuery.data?.get()
 
   const omnidialog = useCoords(subpath, "/...")
 
@@ -230,7 +230,7 @@ export function UserBottomNavigation() {
         href="#/requests">
         <GapperAndClickerInAnchorDiv>
           <div className="relative">
-            {Boolean(requests?.length) &&
+            {Boolean(requestsData?.length) &&
               <div className="absolute top-0 -right-2">
                 <span className="relative flex w-2 h-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />

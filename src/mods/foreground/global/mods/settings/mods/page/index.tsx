@@ -1,7 +1,7 @@
 import { Errors } from "@/libs/errors/errors";
 import { ContrastSubtitleDiv } from "@/libs/ui/div";
 import { ContrastLabel } from "@/libs/ui/label";
-import { GlobalPageHeader, PageBody } from "@/libs/ui/page/header";
+import { PageBody, PageHeader } from "@/libs/ui/page/header";
 import { GlobalPage } from "@/libs/ui/page/page";
 import { HashSelector } from "@/libs/ui/select";
 import { Locale } from "@/mods/foreground/locale";
@@ -21,7 +21,7 @@ export function GlobalSettingsPage() {
   }), [localeQuery.mutateOrThrow])
 
   return <GlobalPage>
-    <GlobalPageHeader title={Locale.get(Locale.Settings, lang)} />
+    <PageHeader title={Locale.get(Locale.Settings, lang)} />
     <PageBody>
       <ContrastSubtitleDiv>
         Language
