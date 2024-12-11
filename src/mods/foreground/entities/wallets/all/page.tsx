@@ -2,16 +2,21 @@
 import { Outline } from "@/libs/icons/icons"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { OkProps } from "@/libs/react/props/promise"
-import { PaddedRoundedClickableNakedAnchor, WideClickableContrastAnchor } from "@/libs/ui/anchor"
+import { ClickableOppositeAnchor, PaddedRoundedClickableNakedAnchor, WideClickableContrastAnchor } from "@/libs/ui/anchor"
 import { Dialog } from "@/libs/ui/dialog"
 import { Menu } from "@/libs/ui/menu"
 import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale"
+import { UsersMenu } from "@/mods/foreground/landing"
+import { Locale } from "@/mods/foreground/locale"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Nullable } from "@hazae41/option"
 import { Fragment, useCallback } from "react"
+import { UserCreateDialog } from "../../users/all/create"
 import { useUserContext } from "../../users/context"
+import { UserLoginDialog } from "../../users/login"
 import { RawWalletDataCard } from "../card"
 import { WalletDataProvider } from "../context"
 import { WalletProps, useTrashedWallets, useWallets } from "../data"
@@ -34,7 +39,7 @@ export function WalletsPage() {
         <Outline.PlusIcon className="size-5" />
       </PaddedRoundedClickableNakedAnchor>
     </PageHeader>
-    <div className="po-md text-contrast">
+    <div className="p-4 text-contrast">
       {`Wallets allow you to hold funds and generate signatures. You can import wallets from a private key or generate them from a seed.`}
     </div>
     <UserGuardBody>
@@ -58,7 +63,7 @@ export function WalletsBody() {
     location.assign(path.go(`/wallet/${wallet.uuid}`))
   }, [path])
 
-  return <UserPage>
+  return <PageBody>
     <HashSubpathProvider>
       {subpath.url.pathname === "/create" &&
         <Menu>
@@ -73,38 +78,72 @@ export function WalletsBody() {
           <ReadonlyWalletCreatorDialog />
         </Dialog>}
     </HashSubpathProvider>
-    <UserGuardBody>
-      <PageBody>
-        <ClickableWalletGrid
-          ok={onWalletClick}
-          wallets={maybeWallets} />
-        <div className="h-4" />
-        {maybeTrashedWallets != null && maybeTrashedWallets.length > 0 &&
-          <div className="flex items-center flex-wrap-reverse gap-2">
-            <WideClickableContrastAnchor
-              href="#/wallets/trash">
-              <Outline.TrashIcon className="size-5" />
-              Trash ({maybeTrashedWallets.length})
-            </WideClickableContrastAnchor>
-          </div>}
-      </PageBody>
-    </UserGuardBody>
-  </UserPage>
+    <ClickableWalletGrid
+      ok={onWalletClick}
+      wallets={maybeWallets} />
+    <div className="h-4" />
+    {maybeTrashedWallets != null && maybeTrashedWallets.length > 0 &&
+      <div className="flex items-center flex-wrap-reverse gap-2">
+        <WideClickableContrastAnchor
+          href="#/wallets/trash">
+          <Outline.TrashIcon className="size-5" />
+          Trash ({maybeTrashedWallets.length})
+        </WideClickableContrastAnchor>
+      </div>}
+  </PageBody>
 }
 
 export function UserGuardBody(props: ChildrenProps) {
   const maybeWrappedUser = useUserContext().getOrNull()
   const { children } = props
 
+  console.log({ maybeWrappedUser })
+
   if (maybeWrappedUser == null)
     return null
 
   const maybeUser = maybeWrappedUser.getOrNull()
 
+  console.log({ maybeUser })
+
   if (maybeUser == null)
-    return <>Login</>
+    return <LockedBody />
 
   return <>{children}</>
+}
+
+export function LockedBody() {
+  const lang = useLocaleContext().getOrThrow()
+  const path = usePathContext().getOrThrow()
+
+  const hash = useHashSubpath(path)
+  const users = useCoords(hash, "/users")
+
+  return <PageBody>
+    <HashSubpathProvider>
+      {hash.url.pathname === "/users/login" &&
+        <Dialog>
+          <UserLoginDialog />
+        </Dialog>}
+      {hash.url.pathname === "/users/create" &&
+        <Dialog>
+          <UserCreateDialog />
+        </Dialog>}
+      {hash.url.pathname === "/users" &&
+        <Menu>
+          <UsersMenu />
+        </Menu>}
+    </HashSubpathProvider>
+    <div className="p-4 rounded-xl border border-contrast border-dashed h-[200px] flex flex-col items-center justify-center">
+      <ClickableOppositeAnchor
+        onKeyDown={users.onKeyDown}
+        onClick={users.onClick}
+        href={users.href}>
+        <Outline.LockOpenIcon className="size-5" />
+        {Locale.get(Locale.Enter, lang)}
+      </ClickableOppositeAnchor>
+    </div>
+  </PageBody>
 }
 
 export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets: Nullable<Wallet[]> } & { selected?: Wallet } & { disableNew?: boolean }) {

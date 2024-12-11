@@ -26,8 +26,6 @@ export function UserProvider(props: ChildrenProps) {
 
   if (!currentUserQuery.ready)
     return <>{children}</>
-  if (!userQuery.ready)
-    return <>{children}</>
 
   return <UserContext.Provider value={wrappedUser}>
     {children}
