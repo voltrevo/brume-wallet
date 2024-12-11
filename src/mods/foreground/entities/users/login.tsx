@@ -12,10 +12,13 @@ import { Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { KeyboardEvent, useCallback, useDeferredValue, useRef, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
+import { useLocaleContext } from "../../global/mods/locale";
+import { Locale } from "../../locale";
 import { UserAvatar } from "../../user/mods/avatar";
 import { useCurrentUser, useUser } from "./data";
 
 export function UserLoginDialog(props: { next?: string }) {
+  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
@@ -130,7 +133,7 @@ export function UserLoginDialog(props: { next?: string }) {
             disabled={defPasswordInput.length < 3 || loginOrAlert.loading}
             onClick={onLogin}>
             <Outline.LockOpenIcon className="size-5" />
-            Login
+            {Locale.get(Locale.Enter, lang)}
           </WideClickableOppositeButton>
         </div>
       </div>

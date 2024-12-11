@@ -11,6 +11,8 @@ import { ContrastLabel } from "@/libs/ui/label";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { User, UserInit, UserRef } from "@/mods/background/service_worker/entities/users/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { UserAvatar } from "@/mods/foreground/user/mods/avatar";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
@@ -20,6 +22,7 @@ import { SimpleInput } from "../../wallets/actions/send";
 import { useCurrentUser } from "../data";
 
 export function UserCreateDialog(props: { next?: string }) {
+  const lang = useLocaleContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
   const { next } = props
@@ -149,7 +152,7 @@ export function UserCreateDialog(props: { next?: string }) {
 
   return <>
     <Dialog.Title>
-      New user
+      {Locale.get(Locale.NewUser, lang)}
     </Dialog.Title>
     <div className="h-4" />
     <div className="grow flex flex-col items-center justify-center">

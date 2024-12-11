@@ -5,7 +5,6 @@ import { Events } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { AnchorProps } from "@/libs/react/props/html";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
-import { Records } from "@/libs/records";
 import { ClickableContrastAnchor, ClickableOppositeAnchor, TextAnchor, WideClickableContrastAnchor, WideClickableNakedMenuAnchor } from "@/libs/ui/anchor";
 import { Dialog } from "@/libs/ui/dialog";
 import { Loading } from "@/libs/ui/loading";
@@ -27,8 +26,10 @@ import { UserCreateDialog } from "../entities/users/all/create";
 import { useCurrentUser, useUser, useUsers } from "../entities/users/data";
 import { UserLoginDialog } from "../entities/users/login";
 import { useLocaleContext } from "../global/mods/locale";
+import { Locale, Localized } from "../locale";
 
 export function EmptyLandingPage(props: { next?: string }) {
+  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
   const { next } = props
 
@@ -78,7 +79,7 @@ export function EmptyLandingPage(props: { next?: string }) {
                 onClick={users.onClick}
                 href={users.href}>
                 <Outline.LockOpenIcon className="size-5" />
-                Login
+                {Locale.get(Locale.Enter, lang)}
               </ClickableOppositeAnchor>}
             {!currentUserLoading && maybeCurrentUser != null &&
               <ClickableOppositeAnchor
@@ -126,7 +127,7 @@ export function FullLandingPage(props: { next?: string }) {
         <div className="h-[max(24rem,100dvh_-_16rem)] flex-none flex flex-col items-center">
           <div className="grow" />
           <h1 className="text-center text-6xl font-medium">
-            {Records.getOrElseOrThrow({
+            {Locale.get({
               "en": "The private Ethereum wallet",
               "zh": "私人以太坊钱包",
               "hi": "निजी ईथेरियम वॉलेट",
@@ -157,11 +158,11 @@ export function FullLandingPage(props: { next?: string }) {
               "hu": "A privát Ethereum tárca",
               "sv": "Den privata Ethereum-plånboken",
               "da": "Den private Ethereum-tegnebog",
-            }, lang, "en")}
+            } satisfies Localized, lang)}
           </h1>
           <div className="h-4" />
           <div className="text-center text-contrast text-2xl">
-            {Records.getOrElseOrThrow({
+            {Locale.get({
               "en": "Meet the only Ethereum wallet with maximum privacy and security.",
               "zh": "了解唯一具有最大隐私和安全性的以太坊钱包。",
               "hi": "अधिकतम गोपनीयता और सुरक्षा के साथ एकमात्र ईथेरियम वॉलेट से मिलें।",
@@ -192,7 +193,7 @@ export function FullLandingPage(props: { next?: string }) {
               "hu": "Ismerje meg az egyetlen Ethereum pénztárcát maximális adatvédelemmel és biztonsággal.",
               "sv": "Möt den enda Ethereum-plånboken med maximal integritet och säkerhet.",
               "da": "Mød den eneste Ethereum-tegnebog med maksimal privatliv og sikkerhed.",
-            }, lang, "en")}
+            } satisfies Localized, lang)}
           </div>
           <div className="grow" />
           <div className="flex items-center">
@@ -200,7 +201,7 @@ export function FullLandingPage(props: { next?: string }) {
               <ClickableOppositeAnchor
                 aria-disabled>
                 <Loading className="size-5" />
-                Loading
+                {Locale.get(Locale.Loading, lang)}
               </ClickableOppositeAnchor>}
             {!currentUserLoading && maybeCurrentUser == null &&
               <ClickableOppositeAnchor
@@ -208,19 +209,19 @@ export function FullLandingPage(props: { next?: string }) {
                 onClick={users.onClick}
                 href={users.href}>
                 <Outline.LockOpenIcon className="size-5" />
-                Login
+                {Locale.get(Locale.Enter, lang)}
               </ClickableOppositeAnchor>}
             {!currentUserLoading && maybeCurrentUser != null &&
               <ClickableOppositeAnchor
                 href="#/home">
                 <Outline.HomeIcon className="size-5" />
-                Home
+                {Locale.get(Locale.Home, lang)}
               </ClickableOppositeAnchor>}
             <div className="w-2" />
             <ClickableContrastAnchor
               href={subpath.go("/download").href}>
               <Outline.ArrowDownTrayIcon className="size-5" />
-              Download
+              {Locale.get(Locale.Download, lang)}
             </ClickableContrastAnchor>
           </div>
           <div className="grow" />
@@ -267,7 +268,7 @@ export function FullLandingPage(props: { next?: string }) {
         <div className="h-16" />
         <div className="text-center text-2xl font-medium"
           id={subpath.go("/download").hash.slice(1)}>
-          Download
+          {Locale.get(Locale.Download, lang)}
         </div>
         <div className="h-8" />
         <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
@@ -309,14 +310,14 @@ export function FullLandingPage(props: { next?: string }) {
           target="_blank" rel="noreferrer"
           href="https://github.com/brumewallet/wallet#usage">
           <Outline.ArrowTopRightOnSquareIcon className="size-5" />
-          More downloads
+          {Locale.get(Locale.MoreDownloads, lang)}
         </WideClickableContrastAnchor>
         <div className="h-[50vh]" />
         <div className="p-4 flex items-center justify-center gap-2">
           <TextAnchor
             target="_blank" rel="noreferrer"
             href="https://ethbrno.cz">
-            Made by cypherpunks
+            {Locale.get(Locale.MadeByCypherpunks, lang)}
           </TextAnchor>
           <span>
             ·
@@ -331,6 +332,7 @@ export function FullLandingPage(props: { next?: string }) {
 }
 
 export function UsersMenu() {
+  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
 
   const usersQuery = useUsers()
@@ -350,7 +352,7 @@ export function UsersMenu() {
       <div className="rounded-full size-7 flex justify-center items-center border border-contrast border-dashed">
         <Outline.PlusIcon className="size-4" />
       </div>
-      New user
+      {Locale.get(Locale.NewUser, lang)}
     </WideClickableNakedMenuAnchor>
   </div>
 }
@@ -422,6 +424,7 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
 }
 
 export function DownloadCard(props: TitleProps & ChildrenProps & { href: string } & { src: string } & { highlighted?: boolean } & { icon: any }) {
+  const lang = useLocaleContext().getOrThrow()
   const { href, src, children, title, highlighted = false, icon: Icon } = props
 
   const onClick = useCallback(() => {
@@ -454,7 +457,7 @@ export function DownloadCard(props: TitleProps & ChildrenProps & { href: string 
         onClick={Events.keep}
         href={href}>
         <Icon className="size-5" />
-        Download
+        {Locale.get(Locale.Download, lang)}
       </WideClickableContrastAnchor>
     </div>
   </div>

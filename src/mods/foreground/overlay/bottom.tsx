@@ -5,6 +5,8 @@ import { ClickerInAnchorDiv, GapperAndClickerInAnchorDiv } from "@/libs/ui/shrin
 import { HashSubpathProvider, PathHandle, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { ChangeEvent, KeyboardEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useAppRequests } from "../entities/requests/data";
+import { useLocaleContext } from "../global/mods/locale";
+import { Locale } from "../locale";
 
 export function asUrlOrNull(text: string) {
   if (text.startsWith("http://"))
@@ -26,6 +28,7 @@ export function asUrlOrNull(text: string) {
 export function OmniDialog(props: {
   readonly path: PathHandle
 }) {
+  const lang = useLocaleContext().getOrThrow()
   const { path } = props
 
   const requestsQuery = useAppRequests()
@@ -61,7 +64,7 @@ export function OmniDialog(props: {
         <Outline.SparklesIcon className="size-4" />
         <div className="w-2" />
         <input className="w-full bg-transparent outline-none"
-          placeholder="tell me what you want"
+          placeholder={Locale.get(Locale.tellMeWhatYouWant, lang)}
           value={rawInput}
           onChange={onInputChange}
           onKeyDown={onKeyDown} />

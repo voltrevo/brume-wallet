@@ -18,13 +18,4 @@ export namespace Records {
     return value
   }
 
-  export function getOrElseOrThrow<K extends PropertyKey, V>(record: Record<K, V>, key: K, fallback: K): V {
-    const value = getOrNull(record, key)
-
-    if (value != null)
-      return value
-
-    return getOrThrow(record, fallback)
-  }
-
 }
