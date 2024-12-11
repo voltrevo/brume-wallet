@@ -22,15 +22,15 @@ export function useLocaleQuery() {
 export function LocaleProvider(props: ChildrenProps & ValueProps<Nullable<string>>) {
   const { children, value } = props
 
-  const stored = useLocaleQuery().data?.get()
+  const [stored = "auto"] = [useLocaleQuery().data?.get()]
 
   const locale = useMemo(() => {
-    if (stored != null && stored !== "auto")
-      return stored
     if (value != null)
       return value
+    if (stored !== "auto")
+      return stored
     return navigator.language.split("-")[0]
-  }, [stored, value])
+  }, [value, stored])
 
   return <LocaleContext.Provider value={locale}>
     {children}

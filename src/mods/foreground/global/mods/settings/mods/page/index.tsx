@@ -1,12 +1,22 @@
+import { Errors } from "@/libs/errors/errors";
 import { ContrastSubtitleDiv } from "@/libs/ui/div";
 import { ContrastLabel } from "@/libs/ui/label";
 import { GlobalPageHeader, PageBody } from "@/libs/ui/page/header";
 import { GlobalPage } from "@/libs/ui/page/page";
 import { HashSelector } from "@/libs/ui/select";
-import { useState } from "react";
+import { Data } from "@hazae41/glacier";
+import { Some } from "@hazae41/option";
+import { useCallback } from "react";
+import { useLocaleQuery } from "../../../locale";
 
 export function GlobalSettingsPage() {
-  const [lang, setLang] = useState("auto")
+  const localeq = useLocaleQuery()
+
+  const [locale = "auto"] = [localeq.data?.get()]
+
+  const onLocaleChange = useCallback((value: string) => Errors.runOrLogAndAlert(async () => {
+    await localeq.mutateOrThrow(() => new Some(new Data(value)))
+  }), [])
 
   return <GlobalPage>
     <GlobalPageHeader title="Settings" />
@@ -20,9 +30,9 @@ export function GlobalSettingsPage() {
         </div>
         <div className="w-4 grow" />
         <HashSelector
-          pathname="/lang"
-          value={lang}
-          ok={setLang}>
+          pathname="/locale"
+          value={locale}
+          ok={onLocaleChange}>
           {{
             "auto": "Auto",
             "en": "English",
