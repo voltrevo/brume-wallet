@@ -1,6 +1,7 @@
 import { Color } from "@/libs/colors/colors"
 import { useCopy } from "@/libs/copy/copy"
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain"
+import { useCompactDisplayUsd } from "@/libs/fixed"
 import { Outline } from "@/libs/icons/icons"
 import { Events, useMouseCancel } from "@/libs/react/events"
 import { ChildrenProps } from "@/libs/react/props/children"
@@ -15,7 +16,6 @@ import { flushSync } from "react-dom"
 import { useEnsReverseNoFetch } from "../names/data"
 import { useWalletDataContext } from "./context"
 import { useEthereumContext } from "./data"
-import { useCompactDisplayUsd } from "./page"
 
 export function RawWalletDataCard(props: { index?: number } & { href?: string } & { privateKey?: string } & { flip?: boolean } & { unflip?: () => void }) {
   const wallet = useWalletDataContext().getOrThrow()

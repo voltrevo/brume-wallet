@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import { useDisplayUsd } from "@/libs/fixed"
 import { isWebsite } from "@/libs/platform/platform"
 import { PageBody } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
@@ -6,7 +7,6 @@ import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { useUserTotalPricedBalance } from "@/mods/universal/user/mods/balances/hooks"
 import { useCallback, useEffect, useState } from "react"
 import { useUserContext } from "../entities/users/context"
-import { useDisplayUsd } from "../entities/wallets/page"
 
 export function HomePage() {
   const userData = useUserContext().getOrThrow()

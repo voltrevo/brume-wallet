@@ -18,7 +18,7 @@ export function GlobalSettingsPage() {
 
   const onLocaleChange = useCallback((value: string) => Errors.runOrLogAndAlert(async () => {
     await localeQuery.mutateOrThrow(() => new Some(new Data(value)))
-  }), [])
+  }), [localeQuery.mutateOrThrow])
 
   return <GlobalPage>
     <GlobalPageHeader title={Locale.get(Locale.Settings, lang)} />
