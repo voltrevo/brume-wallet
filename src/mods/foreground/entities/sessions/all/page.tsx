@@ -13,6 +13,7 @@ import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
 import { ExSessionData, Session, SessionData } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
+import { UserGuardBody } from "@/mods/foreground/user/mods/guard"
 import { BlobbyData } from "@/mods/universal/entities/blobbys"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Nullable, Option } from "@hazae41/option"
@@ -58,21 +59,7 @@ export function SessionsPage() {
     return
   }), [background, maybePersSessions])
 
-  const Body =
-    <PageBody>
-      <div className="flex flex-col gap-2">
-        {maybeTempSessions?.map(session =>
-          <Fragment key={session.id}>
-            <SessionRow session={session} />
-          </Fragment>)}
-        {maybePersSessions?.map(session =>
-          <Fragment key={session.id}>
-            <SessionRow session={session} />
-          </Fragment>)}
-      </div>
-    </PageBody>
-
-  const Header = <>
+  return <UserPage>
     <PageHeader title="Sessions">
       <PaddedRoundedClickableNakedButton
         disabled={disconnectAllOrAlert.loading || !length}
@@ -85,14 +72,32 @@ export function SessionsPage() {
         {`Sessions allow you to connect to applications. These applications can then make requests for you to approve.`}
       </div>
     </div>
-  </>
-
-  return <UserPage>
-    {Header}
-    {Body}
+    <UserGuardBody>
+      <SessionsBody />
+    </UserGuardBody>
   </UserPage>
 }
 
+export function SessionsBody() {
+  const tempSessionsQuery = useTemporarySessions()
+  const maybeTempSessions = tempSessionsQuery.data?.get()
+
+  const persSessionsQuery = usePersistentSessions()
+  const maybePersSessions = persSessionsQuery.data?.get()
+
+  return <PageBody>
+    <div className="flex flex-col gap-2">
+      {maybeTempSessions?.map(session =>
+        <Fragment key={session.id}>
+          <SessionRow session={session} />
+        </Fragment>)}
+      {maybePersSessions?.map(session =>
+        <Fragment key={session.id}>
+          <SessionRow session={session} />
+        </Fragment>)}
+    </div>
+  </PageBody>
+}
 export function SessionRow(props: { session: Session }) {
   const { session } = props
   const path = usePathContext().getOrThrow()

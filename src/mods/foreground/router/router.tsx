@@ -52,37 +52,27 @@ export function Router() {
 
   if (matches = path.url.pathname.match(/^\/wallets\/trash(\/)?$/))
     return <Overlay>
-      <UserGuardPage>
-        <TrashedWalletsPage />
-      </UserGuardPage>
+      <TrashedWalletsPage />
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/seeds(\/)?$/))
     return <Overlay>
-      <UserGuardPage>
-        <SeedsPage />
-      </UserGuardPage>
+      <SeedsPage />
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/sessions(\/)?$/))
     return <Overlay>
-      <UserGuardPage>
-        <SessionsPage />
-      </UserGuardPage>
+      <SessionsPage />
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/requests(\/)?$/))
     return <Overlay>
-      <UserGuardPage>
-        <RequestsPage />
-      </UserGuardPage>
+      <RequestsPage />
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/plugins(\/)?$/))
     return <Overlay>
-      <UserGuardPage>
-        <SnapsPage />
-      </UserGuardPage>
+      <SnapsPage />
     </Overlay>
 
   if (matches = path.url.pathname.match(/^\/wallet\/([^\/]+)(\/)?$/))

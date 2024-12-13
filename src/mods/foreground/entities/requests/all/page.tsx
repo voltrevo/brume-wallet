@@ -12,6 +12,7 @@ import { UserPage } from "@/libs/ui/page/page"
 import { pathOf, urlOf } from "@/libs/url/url"
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
+import { UserGuardBody } from "@/mods/foreground/user/mods/guard"
 import { BlobbyData } from "@/mods/universal/entities/blobbys"
 import { RpcErr } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
@@ -42,17 +43,7 @@ export function RequestsPage() {
     return
   }), [background, maybeRequests])
 
-  const Body =
-    <PageBody>
-      <div className="flex flex-col gap-2">
-        {maybeRequests?.map(request =>
-          <Fragment key={request.id}>
-            <RequestRow request={request} />
-          </Fragment>)}
-      </div>
-    </PageBody>
-
-  const Header = <>
+  return <UserPage>
     <PageHeader title="Requests">
       <PaddedRoundedClickableNakedButton
         disabled={rejectAllOrAlert.loading || !Boolean(maybeRequests?.length)}
@@ -65,12 +56,24 @@ export function RequestsPage() {
         {`Request allow you to approve various actions such as transactions and signatures. These requests are sent by applications through sessions.`}
       </div>
     </div>
-  </>
-
-  return <UserPage>
-    {Header}
-    {Body}
+    <UserGuardBody>
+      <RequestsBody />
+    </UserGuardBody>
   </UserPage>
+}
+
+export function RequestsBody() {
+  const requestsQuery = useAppRequests()
+  const maybeRequests = requestsQuery.data?.get()
+
+  return <PageBody>
+    <div className="flex flex-col gap-2">
+      {maybeRequests?.map(request =>
+        <Fragment key={request.id}>
+          <RequestRow request={request} />
+        </Fragment>)}
+    </div>
+  </PageBody>
 }
 
 export function RequestRow(props: { request: AppRequest }) {

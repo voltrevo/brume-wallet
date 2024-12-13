@@ -2,22 +2,15 @@ import { Outline } from "@/libs/icons/icons"
 import { PaddedRoundedClickableNakedButton } from "@/libs/ui/button"
 import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
+import { UserGuardBody } from "@/mods/foreground/user/mods/guard"
 import { useCallback } from "react"
-import { useSnaps } from "../data"
 
 export function SnapsPage() {
-  const snapsQuery = useSnaps()
-
   const onAdd = useCallback(() => {
-
+    // TODO
   }, [])
 
-  const Body =
-    <PageBody>
-      Coming soon...
-    </PageBody>
-
-  const Header = <>
+  return <UserPage>
     <PageHeader title="Plugins">
       <PaddedRoundedClickableNakedButton
         onClick={onAdd}>
@@ -29,10 +22,14 @@ export function SnapsPage() {
         {`Plugins allow you to securely extend the features. These features can then be used by applications you connect to.`}
       </div>
     </div>
-  </>
-
-  return <UserPage>
-    {Header}
-    {Body}
+    <UserGuardBody>
+      <SnapsBody />
+    </UserGuardBody>
   </UserPage>
+}
+
+export function SnapsBody() {
+  return <PageBody>
+    Coming soon...
+  </PageBody>
 }

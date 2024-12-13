@@ -5,6 +5,7 @@ import { Dialog } from "@/libs/ui/dialog"
 import { Menu } from "@/libs/ui/menu"
 import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
+import { UserGuardBody } from "@/mods/foreground/user/mods/guard"
 import { Seed } from "@/mods/universal/entities/seeds"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Fragment, useCallback } from "react"
@@ -19,24 +20,10 @@ import { StandaloneSeedCreatorDialog } from "./create/mnemonic"
 export function SeedsPage() {
   const path = usePathContext().getOrThrow()
 
-  const seedsQuery = useSeeds()
-  const maybeSeeds = seedsQuery.data?.get()
-
   const subpath = useHashSubpath(path)
   const creator = useCoords(subpath, "/create")
 
-  const onSeedClick = useCallback((seed: Seed) => {
-    location.assign(`#/seed/${seed.uuid}`)
-  }, [])
-
-  const Body =
-    <PageBody>
-      <ClickableSeedGrid
-        ok={onSeedClick}
-        maybeSeeds={maybeSeeds} />
-    </PageBody>
-
-  const Header = <>
+  return <UserPage>
     <PageHeader title="Seeds">
       <PaddedRoundedClickableNakedAnchor
         onKeyDown={creator.onKeyDown}
@@ -50,9 +37,25 @@ export function SeedsPage() {
         {`Seeds allow you to generate wallets from a single secret. You can import a seed from a mnemonic phrase or connect a hardware wallet.`}
       </div>
     </div>
-  </>
+    <UserGuardBody>
+      <SeedsBody />
+    </UserGuardBody>
+  </UserPage>
+}
 
-  return <UserPage>
+export function SeedsBody() {
+  const path = usePathContext().getOrThrow()
+
+  const seedsQuery = useSeeds()
+  const maybeSeeds = seedsQuery.data?.get()
+
+  const subpath = useHashSubpath(path)
+
+  const onSeedClick = useCallback((seed: Seed) => {
+    location.assign(`#/seed/${seed.uuid}`)
+  }, [])
+
+  return <PageBody>
     <HashSubpathProvider>
       {subpath.url.pathname === "/create" &&
         <Menu>
@@ -67,9 +70,10 @@ export function SeedsPage() {
           <LedgerSeedCreatorDialog />
         </Dialog>}
     </HashSubpathProvider>
-    {Header}
-    {Body}
-  </UserPage>
+    <ClickableSeedGrid
+      ok={onSeedClick}
+      maybeSeeds={maybeSeeds} />
+  </PageBody>
 }
 
 export function ClickableSeedGrid(props: OkProps<Seed> & { maybeSeeds?: Seed[] } & { disableNew?: boolean }) {
