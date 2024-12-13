@@ -63,7 +63,7 @@ export function EmptyLandingPage(props: { next?: string }) {
         <div className="h-[max(24rem,100dvh_-_16rem)] flex-none flex flex-col items-center">
           <div className="grow" />
           <h1 className="text-center text-6xl font-medium">
-            Welcome back<span className="text-contrast">, {maybeUser?.name || "anon"}</span>
+            Hello<span className="text-contrast">, {maybeUser?.name || "anon"}</span>
           </h1>
           <div className="grow" />
           <div className="flex items-center">

@@ -45,7 +45,7 @@ export function HomePage() {
       <div className="h-[max(24rem,100dvh_-_16rem)] flex-none flex flex-col items-center">
         <div className="grow" />
         <h1 className="text-center text-6xl font-medium">
-          Welcome back<span className="text-contrast">, {userData.name}</span>
+          Hello<span className="text-contrast">, {userData.name}</span>
         </h1>
         <div className="grow" />
         {persisted === false && <>
