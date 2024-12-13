@@ -54,6 +54,8 @@ import { walkSync } from "./libs/walkSync.mjs";
 }
 
 {
+  const directories = []
+
   for (const pathname of walkSync(`./dist/website`)) {
     if (pathname === `dist/website/start.html`)
       continue
@@ -66,6 +68,14 @@ import { walkSync } from "./libs/walkSync.mjs";
 
     fs.copyFileSync(pathname, `./${dirname}/_${filename}`)
     fs.copyFileSync(`./dist/website/start.html`, pathname)
+
+    if (filename === "index.html")
+      directories.push(`/${path.relative(`./dist/website`, dirname)}`)
+
+    if (filename !== "index.html")
+      directories.push(`/${path.relative(`./dist/website`, pathname.slice(0, -".html".length))}`)
+
+    continue
   }
 
   fs.rmSync(`./dist/website/start.html`)
@@ -102,4 +112,13 @@ import { walkSync } from "./libs/walkSync.mjs";
   fs.writeFileSync(`./dist/website/service_worker.js`, replaced, "utf8")
   fs.writeFileSync(`./dist/website/service_worker.latest.js`, replaced, "utf8")
   fs.writeFileSync(`./dist/website/service_worker.${version}.js`, replaced, "utf8")
+
+  fs.writeFileSync(`./dist/website/sitemap.xml`, `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    ${directories.map(directory => `<url>
+      <loc>${directory}</loc>
+      <lastmod>${new Date().toISOString()}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+    </url>`).join("\n")}
+  </urlset>`)
 }

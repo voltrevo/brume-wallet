@@ -1,42 +1,45 @@
 import { Records } from "@/libs/records"
 
-export type Locale =
-  | "en"
-  | "zh"
-  | "hi"
-  | "es"
-  | "ar"
-  | "fr"
-  | "de"
-  | "ru"
-  | "pt"
-  | "ja"
-  | "pa"
-  | "bn"
-  | "id"
-  | "ur"
-  | "ms"
-  | "it"
-  | "tr"
-  | "ta"
-  | "te"
-  | "ko"
-  | "vi"
-  | "pl"
-  | "ro"
-  | "nl"
-  | "el"
-  | "th"
-  | "cs"
-  | "hu"
-  | "sv"
-  | "da"
+export type Locale = typeof Locale.codes[number]
 
 export type Localized = {
   [key in Locale]: string
 }
 
 export namespace Locale {
+
+  export const codes = [
+    "en",
+    "zh",
+    "hi",
+    "es",
+    "ar",
+    "fr",
+    "de",
+    "ru",
+    "pt",
+    "ja",
+    "pa",
+    "bn",
+    "id",
+    "ur",
+    "ms",
+    "it",
+    "tr",
+    "ta",
+    "te",
+    "ko",
+    "vi",
+    "pl",
+    "ro",
+    "nl",
+    "el",
+    "th",
+    "cs",
+    "hu",
+    "sv",
+    "da",
+  ] as const
 
   export function get(localized: Localized, locale: string): string {
     const result = Records.getOrNull(localized, locale)
