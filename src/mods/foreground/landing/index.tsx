@@ -325,7 +325,7 @@ export function FullLandingPage(props: { next?: string }) {
         <div className="p-4 flex items-center justify-center gap-2">
           <TextAnchor
             target="_blank" rel="noreferrer"
-            href="https://ethbrno.cz">
+            href="https://brume.money">
             {Locale.get(Locale.MadeByCypherpunks, lang)}
           </TextAnchor>
           <span>
