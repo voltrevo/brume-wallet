@@ -13,6 +13,8 @@ import { ContrastLabel } from "@/libs/ui/label";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { Base16 } from "@hazae41/base16";
 import { Base64 } from "@hazae41/base64";
 import { Bytes } from "@hazae41/bytes";
@@ -27,6 +29,7 @@ import { SimpleInput, SimpleTextarea } from "../../actions/send";
 import { RawWalletCard } from "../../card";
 
 export function StandaloneWalletCreatorDialog(props: {}) {
+  const lang = useLocaleContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
@@ -166,7 +169,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
   const NameInput =
     <ContrastLabel>
       <div className="flex-none">
-        Name
+        {Locale.get(Locale.Name, lang)}
       </div>
       <div className="w-4" />
       <SimpleInput

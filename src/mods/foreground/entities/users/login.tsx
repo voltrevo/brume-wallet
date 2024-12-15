@@ -118,7 +118,7 @@ export function UserLoginDialog(props: { next?: string }) {
             onChange={onPasswordInputChange}
             disabled={loginOrAlert.loading}
             data-invalid={invalid}
-            placeholder="Password"
+            placeholder={Locale.get(Locale.Password, lang)}
             onKeyDown={onKeyDown}
             autoFocus />
         </ContrastLabel>

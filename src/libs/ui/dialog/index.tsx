@@ -1,4 +1,6 @@
 import { DarkProps } from "@/libs/react/props/dark"
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale"
+import { Locale } from "@/mods/foreground/locale"
 import { usePathContext } from "@hazae41/chemin"
 import { CloseContext, useCloseContext } from "@hazae41/react-close-context"
 import { AnimationEvent, KeyboardEvent, MouseEvent, SyntheticEvent, UIEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
@@ -252,9 +254,11 @@ export function Dialog(props: ChildrenProps & DarkProps & { hesitant?: boolean }
 export namespace Dialog {
 
   export function Title(props: ChildrenProps) {
+    const lang = useLocaleContext().getOrThrow()
     const { children } = props
 
-    return <h1 className="flex items-center">
+    return <h1 className="flex flex-row data-[direction=rtl]:flex-row-reverse items-center"
+      data-direction={Locale.get(Locale.direction, lang)}>
       <div className="text-2xl font-medium">
         {children}
       </div>

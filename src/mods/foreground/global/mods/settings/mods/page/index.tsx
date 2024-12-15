@@ -24,11 +24,11 @@ export function GlobalSettingsPage() {
     <PageHeader title={Locale.get(Locale.Settings, lang)} />
     <PageBody>
       <ContrastSubtitleDiv>
-        Language
+        {Locale.get(Locale.Language, lang)}
       </ContrastSubtitleDiv>
       <ContrastLabel>
         <div className="flex-none">
-          Language
+          {Locale.get(Locale.Language, lang)}
         </div>
         <div className="w-4 grow" />
         <HashSelector

@@ -94,18 +94,22 @@ export function UserCreateDialog(props: { next?: string }) {
   }, [createOrAlert])
 
   const error = useMemo(() => {
+    if (defPasswordInput.length < 1)
+      return Locale.get(Locale.PasswordRequired, lang)
     if (defPasswordInput.length < 3)
-      return "Password is required"
+      return Locale.get(Locale.PasswordTooShort, lang)
+    if (defConfirmPasswordInput.length < 1)
+      return Locale.get(Locale.PasswordRequired, lang)
     if (defConfirmPasswordInput.length < 3)
-      return "Confirm the password"
+      return Locale.get(Locale.PasswordTooShort, lang)
     if (defPasswordInput !== defConfirmPasswordInput)
-      return "Passwords are not the same"
-  }, [defConfirmPasswordInput, defPasswordInput])
+      return Locale.get(Locale.PasswordsDontMatch, lang)
+  }, [lang, defConfirmPasswordInput, defPasswordInput])
 
   const NameInput =
     <ContrastLabel>
       <div className="flex-none">
-        Name
+        {Locale.get(Locale.Name, lang)}
       </div>
       <div className="w-4" />
       <SimpleInput
@@ -117,7 +121,7 @@ export function UserCreateDialog(props: { next?: string }) {
   const PasswordInput =
     <ContrastLabel>
       <div className="flex-none">
-        Password
+        {Locale.get(Locale.Password, lang)}
       </div>
       <div className="w-4" />
       <SimpleInput
@@ -130,7 +134,7 @@ export function UserCreateDialog(props: { next?: string }) {
   const PasswordInput2 =
     <ContrastLabel>
       <div className="flex-none">
-        Password
+        {Locale.get(Locale.Password, lang)}
       </div>
       <div className="w-4" />
       <SimpleInput

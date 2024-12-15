@@ -7,8 +7,11 @@ import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { useUserTotalPricedBalance } from "@/mods/universal/user/mods/balances/hooks"
 import { useCallback, useEffect, useState } from "react"
 import { useUserContext } from "../entities/users/context"
+import { useLocaleContext } from "../global/mods/locale"
+import { Locale } from "../locale"
 
 export function HomePage() {
+  const lang = useLocaleContext().getOrThrow()
   const userData = useUserContext().getOrThrow().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
@@ -44,8 +47,17 @@ export function HomePage() {
     <PageBody>
       <div className="h-[max(24rem,100dvh_-_16rem)] flex-none flex flex-col items-center">
         <div className="grow" />
-        <h1 className="text-center text-6xl font-medium">
-          Hello<span className="text-contrast">, {userData.name}</span>
+        <h1 className="flex flex-row data-[direction=rtl]:flex-row-reverse text-center text-6xl font-medium"
+          data-direction={Locale.get(Locale.direction, lang)}>
+          <div>
+            {Locale.get(Locale.Hello, lang)}
+          </div>
+          <div>
+            &nbsp;
+          </div>
+          <div className="text-contrast">
+            {userData.name}
+          </div>
         </h1>
         <div className="grow" />
         {persisted === false && <>

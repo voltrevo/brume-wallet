@@ -12,6 +12,8 @@ import { ContrastLabel } from "@/libs/ui/label";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { Wallet, WalletData } from "@/mods/background/service_worker/entities/wallets/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { Address, ZeroHexString } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
@@ -24,6 +26,7 @@ import { useEthereumContext } from "../../data";
 import { EmptyRectangularCard } from "./standalone";
 
 export function ReadonlyWalletCreatorDialog(props: {}) {
+  const lang = useLocaleContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
@@ -102,7 +105,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   const NameInput =
     <ContrastLabel>
       <div className="flex-none">
-        Name
+        {Locale.get(Locale.Name, lang)}
       </div>
       <div className="w-4" />
       <SimpleInput

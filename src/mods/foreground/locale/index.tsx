@@ -2,8 +2,8 @@ import { Records } from "@/libs/records"
 
 export type Locale = typeof Locale.codes[number]
 
-export type Localized = {
-  [key in Locale]: string
+export type Localized<T> = {
+  [key in Locale]: T
 }
 
 export namespace Locale {
@@ -41,7 +41,40 @@ export namespace Locale {
     "da",
   ] as const
 
-  export function get(localized: Localized, locale: string): string {
+  export const direction = {
+    en: "ltr",
+    zh: "ltr",
+    hi: "ltr",
+    es: "ltr",
+    ar: "rtl",
+    fr: "ltr",
+    de: "ltr",
+    ru: "ltr",
+    pt: "ltr",
+    ja: "ltr",
+    pa: "ltr",
+    bn: "ltr",
+    id: "ltr",
+    ur: "rtl",
+    ms: "ltr",
+    it: "ltr",
+    tr: "ltr",
+    ta: "ltr",
+    te: "ltr",
+    ko: "ltr",
+    vi: "ltr",
+    pl: "ltr",
+    ro: "ltr",
+    nl: "ltr",
+    el: "ltr",
+    th: "ltr",
+    cs: "ltr",
+    hu: "ltr",
+    sv: "ltr",
+    da: "ltr",
+  } as const
+
+  export function get<T>(localized: Localized<T>, locale: string): T {
     const result = Records.getOrNull(localized, locale)
 
     if (result != null)
@@ -50,7 +83,7 @@ export namespace Locale {
     return localized["en"]
   }
 
-  export const Enter: Localized = {
+  export const Enter: Localized<string> = {
     en: "Enter",
     zh: "输入",
     hi: "दर्ज करें",
@@ -83,7 +116,7 @@ export namespace Locale {
     da: "Gå ind",
   }
 
-  export const Home: Localized = {
+  export const Home: Localized<string> = {
     en: "Home",
     zh: "主页",
     hi: "होम",
@@ -116,7 +149,7 @@ export namespace Locale {
     da: "Hjem",
   }
 
-  export const Download: Localized = {
+  export const Download: Localized<string> = {
     en: "Download",
     zh: "下载",
     hi: "डाउनलोड",
@@ -149,7 +182,7 @@ export namespace Locale {
     da: "Download",
   }
 
-  export const Loading: Localized = {
+  export const Loading: Localized<string> = {
     en: "Loading",
     zh: "载入中",
     hi: "लोड हो रहा है",
@@ -182,7 +215,7 @@ export namespace Locale {
     da: "Indlæser",
   }
 
-  export const MoreDownloads: Localized = {
+  export const MoreDownloads: Localized<string> = {
     en: "More downloads",
     zh: "更多下载",
     hi: "अधिक डाउनलोड",
@@ -215,7 +248,7 @@ export namespace Locale {
     da: "Flere downloads",
   }
 
-  export const MadeByCypherpunks: Localized = {
+  export const MadeByCypherpunks: Localized<string> = {
     en: "Made by cypherpunks",
     zh: "由 cypherpunks 制作",
     hi: "साइफरपंक्स द्वारा बनाया गया",
@@ -248,7 +281,7 @@ export namespace Locale {
     da: "Lavet af cypherpunks",
   }
 
-  export const NewUser: Localized = {
+  export const NewUser: Localized<string> = {
     en: "New user",
     zh: "新用户",
     hi: "नया उपयोगकर्ता",
@@ -281,7 +314,7 @@ export namespace Locale {
     da: "Ny bruger",
   }
 
-  export const tellMeWhatYouWant: Localized = {
+  export const tellMeWhatYouWant: Localized<string> = {
     en: "tell me what you want",
     zh: "告诉我你想要什么",
     hi: "मुझे बताओ तुम्हें क्या चाहिए",
@@ -314,7 +347,7 @@ export namespace Locale {
     da: "fortæl mig hvad du vil",
   }
 
-  export const Settings: Localized = {
+  export const Settings: Localized<string> = {
     en: "Settings",
     zh: "设置",
     hi: "सेटिंग्स",
@@ -345,6 +378,237 @@ export namespace Locale {
     hu: "Beállítások",
     sv: "Inställningar",
     da: "Indstillinger",
+  }
+
+  export const Hello: Localized<string> = {
+    en: "Hello",
+    zh: "你好",
+    hi: "नमस्ते",
+    es: "Hola",
+    ar: "مرحبا",
+    fr: "Bonjour",
+    de: "Hallo",
+    ru: "Привет",
+    pt: "Olá",
+    ja: "こんにちは",
+    pa: "ਹੈਲੋ",
+    bn: "হ্যালো",
+    id: "Halo",
+    ur: "ہیلو",
+    ms: "Halo",
+    it: "Ciao",
+    tr: "Merhaba",
+    ta: "வணக்கம்",
+    te: "హలో",
+    ko: "안녕",
+    vi: "Xin chào",
+    pl: "Cześć",
+    ro: "Salut",
+    nl: "Hallo",
+    el: "Γεια",
+    th: "สวัสดี",
+    cs: "Ahoj",
+    hu: "Helló",
+    sv: "Hej",
+    da: "Hej",
+  }
+
+  export const Language: Localized<string> = {
+    en: "Language",
+    zh: "语言",
+    hi: "भाषा",
+    es: "Idioma",
+    ar: "لغة",
+    fr: "Langue",
+    de: "Sprache",
+    ru: "Язык",
+    pt: "Idioma",
+    ja: "言語",
+    pa: "ਭਾਸ਼ਾ",
+    bn: "ভাষা",
+    id: "Bahasa",
+    ur: "زبان",
+    ms: "Bahasa",
+    it: "Lingua",
+    tr: "Dil",
+    ta: "மொழி",
+    te: "భాష",
+    ko: "언어",
+    vi: "Ngôn ngữ",
+    pl: "Język",
+    ro: "Limba",
+    nl: "Taal",
+    el: "Γλώσσα",
+    th: "ภาษา",
+    cs: "Jazyk",
+    hu: "Nyelv",
+    sv: "Språk",
+    da: "Sprog",
+  }
+
+  export const Name: Localized<string> = {
+    en: "Name",
+    zh: "名称",
+    hi: "नाम",
+    es: "Nombre",
+    ar: "اسم",
+    fr: "Nom",
+    de: "Name",
+    ru: "Имя",
+    pt: "Nome",
+    ja: "名前",
+    pa: "ਨਾਮ",
+    bn: "নাম",
+    id: "Nama",
+    ur: "نام",
+    ms: "Nama",
+    it: "Nome",
+    tr: "Ad",
+    ta: "பெயர்",
+    te: "పేరు",
+    ko: "이름",
+    vi: "Tên",
+    pl: "Nazwa",
+    ro: "Nume",
+    nl: "Naam",
+    el: "Όνομα",
+    th: "ชื่อ",
+    cs: "Jméno",
+    hu: "Név",
+    sv: "Namn",
+    da: "Navn",
+  }
+
+  export const Password: Localized<string> = {
+    en: "Password",
+    zh: "密码",
+    hi: "पासवर्ड",
+    es: "Contraseña",
+    ar: "كلمة السر",
+    fr: "Mot de passe",
+    de: "Passwort",
+    ru: "Пароль",
+    pt: "Senha",
+    ja: "パスワード",
+    pa: "ਪਾਸਵਰਡ",
+    bn: "পাসওয়ার্ড",
+    id: "Kata sandi",
+    ur: "پاس ورڈ",
+    ms: "Kata laluan",
+    it: "Parola d'ordine",
+    tr: "Parola",
+    ta: "கடவுச்சொல்",
+    te: "పాస్వర్డ్",
+    ko: "암호",
+    vi: "Mật khẩu",
+    pl: "Hasło",
+    ro: "Parolă",
+    nl: "Wachtwoord",
+    el: "Κωδικός",
+    th: "รหัสผ่าน",
+    cs: "Heslo",
+    hu: "Jelszó",
+    sv: "Lösenord",
+    da: "Adgangskode",
+  }
+
+  export const PasswordRequired: Localized<string> = {
+    en: "Password required",
+    zh: "需要密码",
+    hi: "पासवर्ड आवश्यक है",
+    es: "Se requiere contraseña",
+    ar: "كلمة المرور مطلوبة",
+    fr: "Mot de passe requis",
+    de: "Passwort erforderlich",
+    ru: "Требуется пароль",
+    pt: "Senha necessária",
+    ja: "パスワードが必要です",
+    pa: "ਪਾਸਵਰਡ ਦੀ ਲੋੜ ਹੈ",
+    bn: "পাসওয়ার্ড প্রয়োজন",
+    id: "Kata sandi diperlukan",
+    ur: "پاس ورڈ درکار ہے",
+    ms: "Kata laluan diperlukan",
+    it: "Password richiesta",
+    tr: "Parola gerekli",
+    ta: "கடவுச்சொல் தேவை",
+    te: "పాస్వర్డ్ అవసరం",
+    ko: "비밀번호 필요",
+    vi: "Yêu cầu mật khẩu",
+    pl: "Wymagane hasło",
+    ro: "Parolă necesară",
+    nl: "Wachtwoord vereist",
+    el: "Απαιτείται κωδικός",
+    th: "ต้องการรหัสผ่าน",
+    cs: "Vyžadováno heslo",
+    hu: "Jelszó szükséges",
+    sv: "Lösenord krävs",
+    da: "Adgangskode påkrævet",
+  }
+
+  export const PasswordTooShort: Localized<string> = {
+    en: "Password too short",
+    zh: "密码太短",
+    hi: "पासवर्ड बहुत छोटा है",
+    es: "Contraseña demasiado corta",
+    ar: "كلمة السر قصيرة جدا",
+    fr: "Mot de passe trop court",
+    de: "Passwort zu kurz",
+    ru: "Пароль слишком короткий",
+    pt: "Senha muito curta",
+    ja: "パスワードが短すぎます",
+    pa: "ਪਾਸਵਰਡ ਬਹੁਤ ਛੋਟਾ ਹੈ",
+    bn: "পাসওয়ার্ড খুব ছোট",
+    id: "Kata sandi terlalu pendek",
+    ur: "پاس ورڈ بہت چھوٹا ہے",
+    ms: "Kata laluan terlalu pendek",
+    it: "Password troppo corta",
+    tr: "Parola çok kısa",
+    ta: "கடவுச்சொல் மிகவும் குறைந்தது",
+    te: "పాస్వర్డ్ చాలా చిన్నది",
+    ko: "비밀번호가 너무 짧습니다",
+    vi: "Mật khẩu quá ngắn",
+    pl: "Hasło jest za krótkie",
+    ro: "Parola prea scurtă",
+    nl: "Wachtwoord te kort",
+    el: "Ο κωδικός είναι πολύ μικρός",
+    th: "รหัสผ่านสั้นเกินไป",
+    cs: "Heslo je příliš krátké",
+    hu: "A jelszó túl rövid",
+    sv: "Lösenordet är för kort",
+    da: "Adgangskoden er for kort",
+  }
+
+  export const PasswordsDontMatch: Localized<string> = {
+    en: "Passwords don't match",
+    zh: "密码不匹配",
+    hi: "पासवर्ड मेल नहीं खाते",
+    es: "Las contraseñas no coinciden",
+    ar: "كلمات السر غير متطابقة",
+    fr: "Les mots de passe ne correspondent pas",
+    de: "Passwörter stimmen nicht überein",
+    ru: "Пароли не совпадают",
+    pt: "Senhas não correspondem",
+    ja: "パスワードが一致しません",
+    pa: "ਪਾਸਵਰਡ ਮੈਚ ਨਹੀਂ ਕਰਦੇ",
+    bn: "পাসওয়ার্ড মিলছে না",
+    id: "Kata sandi tidak cocok",
+    ur: "پاس ورڈ میچ نہیں ہوتے",
+    ms: "Kata laluan tidak sepadan",
+    it: "Le password non corrispondono",
+    tr: "Parolalar uyuşmuyor",
+    ta: "கடவுச்சொல்கள் பொருந்தவில்லை",
+    te: "పాస్వర్డ్లు పొరపడవు",
+    ko: "비밀번호가 일치하지 않습니다",
+    vi: "Mật khẩu không khớp",
+    pl: "Hasła nie pasują",
+    ro: "Parolele nu se potrivesc",
+    nl: "Wachtwoorden komen niet overeen",
+    el: "Οι κωδικοί δεν ταιριάζουν",
+    th: "รหัสผ่านไม่ตรงกัน",
+    cs: "Hesla se neshodují",
+    hu: "A jelszavak nem egyeznek",
+    sv: "Lösenorden matchar inte",
+    da: "Adgangskoderne stemmer ikke overens",
   }
 
 }

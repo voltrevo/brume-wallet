@@ -6,6 +6,8 @@ import { useInputChange } from "@/libs/react/events";
 import { WideClickableGradientButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { ContrastLabel } from "@/libs/ui/label";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { None, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { useDeferredValue, useMemo, useState } from "react";
@@ -15,6 +17,7 @@ import { useWallet } from "../../data";
 import { SimpleInput } from "../send";
 
 export function WalletEditDialog(props: {}) {
+  const lang = useLocaleContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
 
@@ -51,7 +54,7 @@ export function WalletEditDialog(props: {}) {
   const NameInput =
     <ContrastLabel>
       <div className="flex-none">
-        Name
+        {Locale.get(Locale.Name, lang)}
       </div>
       <div className="w-4" />
       <SimpleInput

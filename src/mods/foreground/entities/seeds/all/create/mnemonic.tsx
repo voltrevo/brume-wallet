@@ -12,6 +12,8 @@ import { Dialog } from "@/libs/ui/dialog";
 import { ContrastLabel } from "@/libs/ui/label";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { SeedData } from "@/mods/universal/entities/seeds";
 import { Base64 } from "@hazae41/base64";
 import { Bytes } from "@hazae41/bytes";
@@ -25,6 +27,7 @@ import { SimpleInput, SimpleTextarea } from "../../../wallets/actions/send";
 import { RawSeedCard } from "../../card";
 
 export function StandaloneSeedCreatorDialog(props: {}) {
+  const lang = useLocaleContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
@@ -151,7 +154,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
   const NameInput =
     <ContrastLabel>
       <div className="flex-none">
-        Name
+        {Locale.get(Locale.Name, lang)}
       </div>
       <div className="w-4" />
       <SimpleInput

@@ -62,8 +62,17 @@ export function EmptyLandingPage(props: { next?: string }) {
       <PageBody>
         <div className="h-[max(24rem,100dvh_-_16rem)] flex-none flex flex-col items-center">
           <div className="grow" />
-          <h1 className="text-center text-6xl font-medium">
-            Hello<span className="text-contrast">, {maybeUser?.name || "anon"}</span>
+          <h1 className="flex flex-row data-[direction=rtl]:flex-row-reverse text-center text-6xl font-medium"
+            data-direction={Locale.get(Locale.direction, lang)}>
+            <div>
+              {Locale.get(Locale.Hello, lang)}
+            </div>
+            <div>
+              &nbsp;
+            </div>
+            <div className="text-contrast">
+              {maybeUser?.name || "Anon"}
+            </div>
           </h1>
           <div className="grow" />
           <div className="flex items-center">
@@ -158,7 +167,7 @@ export function FullLandingPage(props: { next?: string }) {
               "hu": "A privát Ethereum tárca",
               "sv": "Den privata Ethereum-plånboken",
               "da": "Den private Ethereum-tegnebog",
-            } satisfies Localized, lang)}
+            } satisfies Localized<string>, lang)}
           </h1>
           <div className="h-4" />
           <div className="text-center text-contrast text-2xl">
@@ -193,7 +202,7 @@ export function FullLandingPage(props: { next?: string }) {
               "hu": "Ismerje meg az egyetlen Ethereum pénztárcát maximális adatvédelemmel és biztonsággal.",
               "sv": "Möt den enda Ethereum-plånboken med maximal integritet och säkerhet.",
               "da": "Mød den eneste Ethereum-tegnebog med maksimal privatliv og sikkerhed.",
-            } satisfies Localized, lang)}
+            } satisfies Localized<string>, lang)}
           </div>
           <div className="grow" />
           <div className="flex items-center">
