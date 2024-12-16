@@ -6,8 +6,8 @@ export function ContrastLabel(props: ChildrenProps) {
   const lang = useLocaleContext().getOrThrow()
   const { children } = props
 
-  return <label className="po-md flex flex-row data-[direction=rtl]:flex-row-reverse items-start bg-contrast rounded-xl"
-    data-direction={Locale.get(Locale.direction, lang)}>
+  return <label className="po-md flex flex-row data-[dir=rtl]:flex-row-reverse items-start bg-contrast rounded-xl"
+    data-dir={Locale.get(Locale.direction, lang)}>
     {children}
   </label>
 }

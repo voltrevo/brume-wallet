@@ -257,8 +257,8 @@ export namespace Dialog {
     const lang = useLocaleContext().getOrThrow()
     const { children } = props
 
-    return <h1 className="flex flex-row data-[direction=rtl]:flex-row-reverse items-center"
-      data-direction={Locale.get(Locale.direction, lang)}>
+    return <h1 className="flex flex-row data-[dir=rtl]:flex-row-reverse items-center"
+      data-dir={Locale.get(Locale.direction, lang)}>
       <div className="text-2xl font-medium">
         {children}
       </div>
