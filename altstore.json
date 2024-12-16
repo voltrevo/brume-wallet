@@ -30,6 +30,15 @@
       ],
       "versions": [
         {
+          "version": "0.6.535",
+          "date": "2024-12-16T21:37:37.066Z",
+          "localizedDescription": "See GitHub for changelogs.",
+          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.535/dist/ios-and-ipados.ipa",
+          "size": 3207118,
+          "sha256": "82b906bc5fb0ac6d1a781353111c16776361b3e8a047ba0d127eedaa4237b2fb",
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "0.6.534",
           "date": "2024-12-16T21:27:54.440Z",
           "localizedDescription": "See GitHub for changelogs.",
