@@ -932,24 +932,28 @@ export function WalletTransactionDialog(props: {}) {
               <SelectAndClose ok={setGasMode}>
                 <div className="flex flex-col text-left gap-2">
                   <WideClickableNakedMenuButton
+                    aria-selected={gasMode === "urgent"}
                     data-value="urgent">
                     <div className="truncate">
                       {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
                     </div>
                   </WideClickableNakedMenuButton>
                   <WideClickableNakedMenuButton
+                    aria-selected={gasMode === "fast"}
                     data-value="fast">
                     <div className="truncate">
                       {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
                     </div>
                   </WideClickableNakedMenuButton>
                   <WideClickableNakedMenuButton
+                    aria-selected={gasMode === "normal"}
                     data-value="normal">
                     <div className="truncate">
                       {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
                     </div>
                   </WideClickableNakedMenuButton>
                   <WideClickableNakedMenuButton
+                    aria-selected={gasMode === "custom"}
                     data-value="custom">
                     <div className="truncate">
                       {`Custom`}
@@ -995,24 +999,28 @@ export function WalletTransactionDialog(props: {}) {
               <SelectAndClose ok={setGasMode}>
                 <div className="flex flex-col text-left gap-2">
                   <WideClickableNakedMenuButton
+                    aria-selected={gasMode === "urgent"}
                     data-value="urgent">
                     <div className="truncate">
                       {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
                     </div>
                   </WideClickableNakedMenuButton>
                   <WideClickableNakedMenuButton
+                    aria-selected={gasMode === "fast"}
                     data-value="fast">
                     <div className="truncate">
                       {`Fast — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
                     </div>
                   </WideClickableNakedMenuButton>
                   <WideClickableNakedMenuButton
+                    aria-selected={gasMode === "normal"}
                     data-value="normal">
                     <div className="truncate">
                       {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
                     </div>
                   </WideClickableNakedMenuButton>
                   <WideClickableNakedMenuButton
+                    aria-selected={gasMode === "custom"}
                     data-value="custom">
                     <div className="truncate">
                       {`Custom`}

@@ -23,10 +23,11 @@ export function HashSelector<T extends string>(props: PathnameProps & ValueProps
         <Menu>
           <SelectAndClose ok={ok}>
             <div className="flex flex-col text-left gap-2">
-              {children != null && Objects.entries(children).map(([value, name]) =>
-                <Fragment key={value}>
+              {children != null && Objects.entries(children).map(([code, name]) =>
+                <Fragment key={code}>
                   <WideClickableNakedMenuButton
-                    data-value={value}>
+                    aria-selected={value === code}
+                    data-value={code}>
                     <div className="truncate">
                       {name}
                     </div>
