@@ -67,6 +67,8 @@ export function WebsiteOverlay(props: ChildrenProps) {
     setUpdate(undefined)
   }, [])
 
+  console.log("update", update)
+
   return <>
     {update && <UpdateBanner
       update={update}
