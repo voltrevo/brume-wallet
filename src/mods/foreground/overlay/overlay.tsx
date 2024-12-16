@@ -1,6 +1,7 @@
 import { Outline } from "@/libs/icons/icons";
 import { isExtension, isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
+import { OkProps } from "@/libs/react/props/promise";
 import { RoundedClickableNakedButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
@@ -23,9 +24,7 @@ export function UpdateBanner(props: {
     <HashSubpathProvider>
       {hash.url.pathname === "/update" &&
         <Dialog>
-          <UpdateDialog
-            update={update}
-            ignore={ignore} />
+          <UpdateDialog ok={update} />
         </Dialog>}
     </HashSubpathProvider>
     <div className="w-full text-white bg-green-500 po-sm flex flex-wrap gap-2 items-center">
@@ -43,11 +42,8 @@ export function UpdateBanner(props: {
   </>
 }
 
-export function UpdateDialog(props: {
-  readonly update: () => void
-  readonly ignore: () => void
-}) {
-  const { update, ignore } = props
+export function UpdateDialog(props: OkProps<void>) {
+  const { ok } = props
 
   return <>
     <Dialog.Title>
@@ -77,7 +73,7 @@ export function UpdateDialog(props: {
     <div className="h-4 grow" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       <WideClickableOppositeButton
-        onClick={update}>
+        onClick={ok}>
         <Outline.ArrowPathIcon className="size-5" />
         Update
       </WideClickableOppositeButton>
@@ -126,9 +122,9 @@ export function WebsiteOverlay(props: ChildrenProps) {
     {update && <UpdateBanner
       update={update}
       ignore={ignore} />}
-    <UpdateBanner
+    {/* <UpdateBanner
       update={() => { }}
-      ignore={() => { }} />
+      ignore={() => { }} /> */}
     {children}
   </>
 }
