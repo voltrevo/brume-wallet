@@ -45,25 +45,29 @@ export function UpdateBanner(props: {
 export function UpdateDialog(props: OkProps<void>) {
   const { ok } = props
 
+  const onUpdateClick = useCallback(() => {
+    ok()
+  }, [ok])
+
   return <>
     <Dialog.Title>
       An update seems available
     </Dialog.Title>
     <div className="h-4" />
     <div className="text-contrast">
-      To avoid any ongoing attack, please confirm by multiple social channels that this update is legitimate.
+      {`To avoid any ongoing attack, please confirm by multiple social channels that this update is legitimate.`}
     </div>
     <div className="h-2" />
     <div className="text-contrast">
-      If something seems wrong or suspicious BEFORE updating, ignore this update and contact the developer immediately. Your current version is probably still safe to use if you don't use Safari.
+      {`If something seems wrong or suspicious BEFORE updating, ignore this update and contact the developer immediately. Your current version is probably still safe to use if you don't use Safari.`}
     </div>
     <div className="h-2" />
     <div className="text-contrast">
-      If something seems wrong or suspicious AFTER updating, do not login and contact the developer immediately. Use a previous version of the application to migrate your funds if necessary.
+      {`If something seems wrong or suspicious AFTER updating, do not login and contact the developer immediately. Use a previous version of the application to migrate your funds if necessary.`}
     </div>
     <div className="h-2" />
     <div className="text-contrast">
-      If you want extra security, you can enable developer tools, choose to preserve the network logs, click the button below to update, and then verify the update by comparing the hash of the downloaded "service_worker.xxxxxx.js" with the one provided by the developer.
+      {`If you want extra security, you can enable developer tools, choose to preserve the network logs, click the button below to update, and then verify the update by comparing the hash of the downloaded "service_worker.xxxxxx.js" with the one provided by the developer.`}
     </div>
     <div className="h-8" />
     <div className="flex justify-center">
@@ -73,7 +77,7 @@ export function UpdateDialog(props: OkProps<void>) {
     <div className="h-4 grow" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       <WideClickableOppositeButton
-        onClick={ok}>
+        onClick={onUpdateClick}>
         <Outline.ArrowPathIcon className="size-5" />
         Update
       </WideClickableOppositeButton>
