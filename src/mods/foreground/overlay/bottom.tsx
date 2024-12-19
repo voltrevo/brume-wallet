@@ -134,8 +134,8 @@ export function OmniDialog(props: {
         </ClickerInAnchorDiv>
       </a>
       <a className="po-md bg-contrast rounded-xl"
-        data-selected={path.url.pathname === "/settings/user"}
-        href="#/settings/user">
+        data-selected={path.url.pathname === "/settings"}
+        href="#/settings">
         <Outline.CogIcon className="size-5" />
         <div className="h-4" />
         {Locale.get(Locale.Settings, lang)}
@@ -162,11 +162,11 @@ export function OmniDialog(props: {
         Apps
       </a>
       <a className="po-md bg-contrast rounded-xl"
-        data-selected={path.url.pathname === "/settings/global"}
-        href="#/settings/global">
-        <Outline.CogIcon className="size-5" />
+        data-selected={path.url.pathname === "/locale"}
+        href="#/locale">
+        <Outline.LanguageIcon className="size-5" />
         <div className="h-4" />
-        {Locale.get(Locale.Settings, lang)}
+        {Locale.get(Locale.Language, lang)}
       </a>
     </div>
   </Dialog>
@@ -242,8 +242,8 @@ export function UserBottomNavigation() {
         </GapperAndClickerInAnchorDiv>
       </a>
       <a className="group flex-1 text-contrast data-[selected=true]:text-default"
-        data-selected={path.url.pathname === "/settings/user"}
-        href="#/settings/user">
+        data-selected={path.url.pathname === "/settings"}
+        href="#/settings">
         <GapperAndClickerInAnchorDiv>
           <Outline.CogIcon className="size-6" />
         </GapperAndClickerInAnchorDiv>
@@ -282,10 +282,10 @@ export function GlobalBottomNavigation() {
         </a>
       </div>
       <a className="group flex-1 text-contrast data-[selected=true]:text-default"
-        data-selected={path.url.pathname === "/settings/global"}
-        href="#/settings/global">
+        data-selected={path.url.pathname === "/locale"}
+        href="#/locale">
         <GapperAndClickerInAnchorDiv>
-          <Outline.CogIcon className="size-6" />
+          <Outline.LanguageIcon className="size-6" />
         </GapperAndClickerInAnchorDiv>
       </a>
     </div>

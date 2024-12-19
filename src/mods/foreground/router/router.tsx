@@ -14,9 +14,9 @@ import { WalletsPage } from "../entities/wallets/all/page"
 import { TrashedWalletsPage } from "../entities/wallets/all/trash/page"
 import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
-import { GlobalSettingsPage } from "../global/mods/settings/mods/page"
 import { HomePage } from "../home/page"
 import { EmptyLandingPage, FullLandingPage } from "../landing"
+import { LocalePage } from "../locale/mods/page"
 import { Overlay } from "../overlay/overlay"
 import { UserSettingsPage } from "../user/mods/settings/mods/page"
 
@@ -96,12 +96,12 @@ export function Router() {
       </UserGuardPage>
     </Overlay>
 
-  if (matches = path.url.pathname.match(/^\/settings\/global(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/locale(\/)?$/))
     return <Overlay>
-      <GlobalSettingsPage />
+      <LocalePage />
     </Overlay>
 
-  if (matches = path.url.pathname.match(/^\/settings\/user(\/)?$/))
+  if (matches = path.url.pathname.match(/^\/settings(\/)?$/))
     return <Overlay>
       <UserGuardPage>
         <UserSettingsPage />

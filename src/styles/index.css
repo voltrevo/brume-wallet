@@ -9,6 +9,7 @@
 @import "./text/index.css";
 @import "./border/index.css";
 @import "./outline/index.css";
+@import "./divide/index.css";
 
 html,
 body {
