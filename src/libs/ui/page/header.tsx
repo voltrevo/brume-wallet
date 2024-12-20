@@ -13,6 +13,18 @@ export function PageHeader(props: TitleProps & ChildrenProps) {
   </div>
 }
 
+export function OblongPageHeader(props: TitleProps & ChildrenProps) {
+  const { title, children } = props
+
+  return <div className="po-lg flex items-center">
+    <div className="text-2xl font-medium mb-0.5">
+      {title}
+    </div>
+    <div className="grow" />
+    {children}
+  </div>
+}
+
 export function PageBody(props: ChildrenProps) {
   const { children } = props
 

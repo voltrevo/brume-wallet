@@ -1,8 +1,7 @@
 import { Errors } from "@/libs/errors/errors"
 import { Outline } from "@/libs/icons/icons"
 import { Objects } from "@/libs/objects/objects"
-import { ContrastSubtitleDiv } from "@/libs/ui/div"
-import { PageBody, PageHeader } from "@/libs/ui/page/header"
+import { OblongPageHeader, PageBody } from "@/libs/ui/page/header"
 import { GlobalPage } from "@/libs/ui/page/page"
 import { useLocaleContext, useLocaleQuery } from "@/mods/foreground/global/mods/locale"
 import { Data } from "@hazae41/glacier"
@@ -21,12 +20,9 @@ export function LocalePage() {
   }), [localeQuery.mutateOrThrow])
 
   return <GlobalPage>
-    <PageHeader title={Locale.get(Locale.Language, lang)} />
+    <OblongPageHeader title={Locale.get(Locale.Language, lang)} />
     <PageBody>
-      <ContrastSubtitleDiv>
-        {Locale.get(Locale.Language, lang)}
-      </ContrastSubtitleDiv>
-      <div className="bg-contrast rounded-xl divide-y divide-contrast overflow-hidden">
+      <div className="bg-contrast rounded-xl overflow-hidden">
         {Objects.entries({
           auto: ["Automatic", Locale.Automatic],
           en: ["English", Locale.English],
