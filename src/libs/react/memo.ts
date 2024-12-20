@@ -1,3 +1,4 @@
+import { Nullable } from "@hazae41/option"
 import { Result } from "@hazae41/result"
 import { DependencyList, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Promises } from "../promises/promises"
@@ -26,7 +27,8 @@ export function useLazyMemo<T>(factory: () => T, deps: DependencyList) {
  */
 export function useAsyncReplaceMemo<T>(factory: () => Promise<T>, deps: DependencyList) {
   const [state, setState] = useState<T>()
-  const aborterRef = useRef<AbortController>()
+
+  const aborterRef = useRef<Nullable<AbortController>>(null)
 
   const run = useCallback(async () => {
     const aborter = new AbortController()

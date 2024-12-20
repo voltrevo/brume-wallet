@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { ContractTokenData, NativeTokenData } from "@/mods/universal/ethereum/mods/tokens/mods/core"
 import { Address } from "@hazae41/cubane"
+import { JSX } from "react"
 
 export interface ChainData<Id extends number = number> {
   readonly chainId: Id,

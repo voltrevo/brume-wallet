@@ -16,7 +16,7 @@ export function useAction<K, D, P extends []>(
 
   const [, setCounter] = useState(0)
 
-  const aborterRef = useRef<Nullable<AbortController>>()
+  const aborterRef = useRef<Nullable<AbortController>>(null)
 
   useMemo(() => {
     aborterRef.current = core.getAborterSync(cacheKey)
