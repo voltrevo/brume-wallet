@@ -203,7 +203,7 @@ export function Dialog(props: ChildrenProps & DarkProps & { hesitant?: boolean }
     return null
 
   return <Portal>
-    <CloseContext.Provider value={hide}>
+    <CloseContext value={hide}>
       <dialog className=""
         style={{ "--x": `${maybeX}px`, "--y": `${maybeY}px` } as any}
         onKeyDown={onEscape}
@@ -247,7 +247,7 @@ export function Dialog(props: ChildrenProps & DarkProps & { hesitant?: boolean }
           </div>
         </div>
       </dialog>
-    </CloseContext.Provider>
+    </CloseContext>
   </Portal>
 }
 

@@ -213,7 +213,7 @@ export function TransactPage() {
     approveOrAlert.run()
   }, [maybeTransaction, approveOrAlert])
 
-  return <WalletDataContext.Provider value={maybeWallet}>
+  return <WalletDataContext value={maybeWallet}>
     <UserPage>
       <HashSubpathProvider>
         {subpath.url.pathname === "/eth_sendTransaction" &&
@@ -354,7 +354,7 @@ export function TransactPage() {
         </div>
       </PageBody>
     </UserPage>
-  </WalletDataContext.Provider>
+  </WalletDataContext>
 }
 
 export function PersonalSignPage() {

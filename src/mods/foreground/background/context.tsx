@@ -47,9 +47,9 @@ export function ServiceWorkerBackgroundProvider(props: ChildrenProps) {
 
   const background = useConstant(() => new ServiceWorkerBackground())
 
-  return <BackgroundContext.Provider value={background}>
+  return <BackgroundContext value={background}>
     {children}
-  </BackgroundContext.Provider>
+  </BackgroundContext>
 }
 
 export function WorkerBackgroundProvider(props: ChildrenProps) {
@@ -57,9 +57,9 @@ export function WorkerBackgroundProvider(props: ChildrenProps) {
 
   const background = useConstant(() => new WorkerBackground())
 
-  return <BackgroundContext.Provider value={background}>
+  return <BackgroundContext value={background}>
     {children}
-  </BackgroundContext.Provider>
+  </BackgroundContext>
 }
 
 export function ExtensionBackgroundProvider(props: ChildrenProps) {
@@ -67,7 +67,7 @@ export function ExtensionBackgroundProvider(props: ChildrenProps) {
 
   const background = useConstant(() => new ExtensionBackground())
 
-  return <BackgroundContext.Provider value={background}>
+  return <BackgroundContext value={background}>
     {children}
-  </BackgroundContext.Provider>
+  </BackgroundContext>
 }

@@ -32,7 +32,7 @@ export function LocaleProvider(props: ChildrenProps & ValueProps<Nullable<string
     return navigator.language.split("-")[0]
   }, [value, stored])
 
-  return <LocaleContext.Provider value={locale}>
+  return <LocaleContext value={locale}>
     {children}
-  </LocaleContext.Provider>
+  </LocaleContext>
 }

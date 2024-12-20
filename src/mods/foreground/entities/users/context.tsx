@@ -27,9 +27,9 @@ export function UserProvider(props: ChildrenProps) {
   if (!currentUserQuery.ready)
     return <>{children}</>
 
-  return <UserContext.Provider value={wrappedUser}>
+  return <UserContext value={wrappedUser}>
     {children}
-  </UserContext.Provider>
+  </UserContext>
 }
 
 export function UserGuardPage(props: ChildrenProps) {

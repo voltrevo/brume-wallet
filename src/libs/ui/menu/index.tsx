@@ -140,7 +140,7 @@ export function Menu(props: ChildrenProps & DarkProps) {
     return null
 
   return <Portal>
-    <CloseContext.Provider value={hide}>
+    <CloseContext value={hide}>
       <dialog className=""
         style={{ "--x": `${maybeX}px`, "--y": `${maybeY}px`, "--w": `${maybeW}px`, "--h": `${maybeH}px`, "--l": `${maybeL}px`, "--t": `${maybeT}px` } as any}
         onKeyDown={onEscape}
@@ -160,6 +160,6 @@ export function Menu(props: ChildrenProps & DarkProps) {
           </div>
         </div>
       </dialog>
-    </CloseContext.Provider>
+    </CloseContext>
   </Portal>
 }

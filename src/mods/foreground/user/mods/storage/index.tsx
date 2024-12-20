@@ -22,9 +22,9 @@ export function UserStorageProvider(props: ChildrenProps) {
     return new UserStorage(background)
   }, [background])
 
-  return <UserStorageContext.Provider value={storage}>
+  return <UserStorageContext value={storage}>
     {children}
-  </UserStorageContext.Provider>
+  </UserStorageContext>
 }
 
 export class UserStorage implements QueryStorage {

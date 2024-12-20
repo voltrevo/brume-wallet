@@ -22,9 +22,9 @@ export function GlobalStorageProvider(props: ChildrenProps) {
     return new GlobalStorage(background)
   }, [background])
 
-  return <GlobalStorageContext.Provider value={storage}>
+  return <GlobalStorageContext value={storage}>
     {children}
-  </GlobalStorageContext.Provider>
+  </GlobalStorageContext>
 }
 
 export class GlobalStorage implements QueryStorage {

@@ -189,11 +189,11 @@ function WalletDataPage() {
   const Body =
     <PageBody>
       {add.current &&
-        <CloseContext.Provider value={add.disable}>
+        <CloseContext value={add.disable}>
           <Dialog>
             <TokenAddDialog />
           </Dialog>
-        </CloseContext.Provider>}
+        </CloseContext>}
       {walletTokens.length > 0 && <>
         <div className="font-medium text-xl">
           Favorite tokens

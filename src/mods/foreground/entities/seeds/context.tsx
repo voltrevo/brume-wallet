@@ -20,7 +20,7 @@ export function SeedDataProvider(props: UUIDProps & ChildrenProps) {
   if (seed.current == null)
     return null
 
-  return <SeedDataContext.Provider value={seed.current.get()}>
+  return <SeedDataContext value={seed.current.get()}>
     {children}
-  </SeedDataContext.Provider>
+  </SeedDataContext>
 }
