@@ -39,6 +39,23 @@ module.exports = withMDX(withNextSidebuild({
         ]
       }
     ]
+  },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/",
+          has: [
+            {
+              type: "header",
+              key: "user-agent",
+              value: ".*(bot|spider).*"
+            }
+          ],
+          destination: "/_index"
+        }
+      ]
+    }
   }
 }))
 
