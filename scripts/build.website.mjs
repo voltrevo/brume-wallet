@@ -54,6 +54,8 @@ import { walkSync } from "./libs/walkSync.mjs";
 }
 
 {
+  const start = fs.readFileSync(`./dist/website/start.html`, "utf8")
+
   for (const pathname of walkSync(`./dist/website`)) {
     if (pathname === `dist/website/start.html`)
       continue
@@ -65,7 +67,11 @@ import { walkSync } from "./libs/walkSync.mjs";
       continue
 
     fs.copyFileSync(pathname, `./${dirname}/_${filename}`)
-    fs.copyFileSync(`./dist/website/start.html`, pathname)
+
+    const injected = fs.readFileSync(pathname, "utf8")
+    const replaced = start.replaceAll("INJECT_HTML", btoa(injected))
+
+    fs.writeFileSync(pathname, replaced, "utf8")
   }
 
   fs.rmSync(`./dist/website/start.html`)

@@ -26,6 +26,16 @@
   <script type="module">
     await(async () => {
       try {
+        if (navigator.userAgent.match(/(bot|spider)/) != null) {
+          const html = atob("INJECT_HTML")
+
+          document.open()
+          document.write(html)
+          document.close()
+
+          return
+        }
+
         const latestScriptUrl = new URL(`/service_worker.latest.js`, location.href)
         const latestScriptRes = await fetch(latestScriptUrl, { cache: "reload" })
 
