@@ -29,6 +29,8 @@
         if (navigator.userAgent.match(/(bot|spider)/) != null) {
           const html = atob("INJECT_HTML")
 
+          console.log("Beep boop")
+
           document.open()
           document.write(html)
           document.close()
