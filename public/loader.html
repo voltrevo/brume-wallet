@@ -47,12 +47,12 @@
         const cache = latestScriptRes.headers.get("cache-control")
 
         if (!cache?.includes("immutable"))
-          alert("This website is not distributed as immutable. Use it at your own risk.")
+          alert("This webapp is not distributed as immutable. Use it at your own risk.")
 
         const ttl = cache?.split(",").map(s => s.trim()).find(s => s.startsWith("max-age="))?.split("=").at(-1)
 
         if (ttl !== "31536000")
-          alert("This website is distributed with a time-to-live of less than 1 year. Use it at your own risk.")
+          alert("This webapp is distributed with a time-to-live of less than 1 year. Use it at your own risk.")
 
         const { pathname } = latestScriptUrl
 

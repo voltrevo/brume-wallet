@@ -52,5 +52,5 @@ import { walkSync } from "./libs/walkSync.mjs";
 }
 
 {
-  fs.rmSync("./dist/safari/start.html")
+  fs.rmSync("./dist/safari/loader.html")
 }

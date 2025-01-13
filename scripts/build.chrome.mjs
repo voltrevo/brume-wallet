@@ -46,5 +46,5 @@ import { walkSync } from "./libs/walkSync.mjs";
 }
 
 {
-  fs.rmSync("./dist/chrome/start.html")
+  fs.rmSync("./dist/chrome/loader.html")
 }

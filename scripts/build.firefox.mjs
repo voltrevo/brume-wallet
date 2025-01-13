@@ -52,5 +52,5 @@ import { walkSync } from "./libs/walkSync.mjs";
 }
 
 {
-  fs.rmSync("./dist/firefox/start.html")
+  fs.rmSync("./dist/firefox/loader.html")
 }

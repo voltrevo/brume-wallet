@@ -53,5 +53,5 @@ import { walkSync } from "./libs/walkSync.mjs";
 }
 
 {
-  fs.rmSync("./dist/apple/start.html")
+  fs.rmSync("./dist/apple/loader.html")
 }

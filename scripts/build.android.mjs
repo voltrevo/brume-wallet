@@ -53,5 +53,5 @@ import { walkSync } from "./libs/walkSync.mjs";
 }
 
 {
-  fs.rmSync("./dist/android/start.html")
+  fs.rmSync("./dist/android/loader.html")
 }
