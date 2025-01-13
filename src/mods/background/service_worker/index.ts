@@ -897,8 +897,6 @@ export class Global {
       return new Some(await this.brume_eth_fetch(foreground, request))
     if (request.method === "brume_eth_custom_fetch")
       return new Some(await this.brume_eth_custom_fetch(foreground, request))
-    if (request.method === "brume_log")
-      return new Some(await this.brume_log(request))
     if (request.method === "brume_encrypt")
       return new Some(await this.brume_encrypt(foreground, request))
     if (request.method === "brume_decrypt")
@@ -1213,22 +1211,6 @@ export class Global {
     const unstored = await core.unstoreOrThrow<any, unknown, Error>(stored, { key: query.cacheKey })
 
     return Option.wrap(unstored.current).getOrThrow().getOrThrow()
-  }
-
-  async brume_log(request: RpcRequestInit<unknown>): Promise<void> {
-    const user = Option.wrap(this.#user).getOrThrow()
-
-    const logs = await SettingsQuery.Logs.queryOrThrow(user.storage).state
-
-    if (logs.real?.current?.get() !== true)
-      return
-
-    using circuit = await this.circuits.takeCryptoRandomOrThrow()
-
-    const body = JSON.stringify({ tor: true, method: "eth_getBalance" })
-
-    using stream = await Circuits.openAsOrThrow(circuit, "https://proxy.brume.money")
-    await fetch("https://proxy.brume.money", { method: "POST", body, stream: stream.inner })
   }
 
   async #wcReconnectAllOrThrow(): Promise<void> {

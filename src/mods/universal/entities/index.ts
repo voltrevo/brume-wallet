@@ -24,8 +24,6 @@ export function routeOrThrow(cacheKey: string, storage: QueryStorage): SimpleQue
     return query
   if (query = SeedQuery.All.route(cacheKey, storage))
     return query
-  if (query = SettingsQuery.Logs.routeOrThrow(cacheKey, storage))
-    return query
   if (query = SettingsQuery.Chain.routeOrThrow(cacheKey, storage))
     return query
 

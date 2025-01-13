@@ -18,12 +18,6 @@ export function HomePage() {
   const totalPricedBalanceQuery = useUserTotalPricedBalance()
   const totalPricedBalanceDisplay = useDisplayUsd(totalPricedBalanceQuery.data?.get())
 
-  useEffect(() => {
-    background.requestOrThrow({
-      method: "brume_log"
-    }).then(r => r.getOrThrow()).catch(console.error)
-  }, [background])
-
   const [persisted, setPersisted] = useState<boolean>()
 
   const getPersisted = useCallback(async () => {
