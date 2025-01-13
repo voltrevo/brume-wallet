@@ -12,6 +12,7 @@ import { PageBody, PageHeader } from "@/libs/ui/page/header";
 import { UserPage } from "@/libs/ui/page/page";
 import { BackgroundProvider } from "@/mods/foreground/background/context";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
+import { InstallProvider } from "@/mods/foreground/global/mods/install";
 import { GlobalStorageProvider } from "@/mods/foreground/global/mods/storage";
 import { UserStorageProvider } from "@/mods/foreground/user/mods/storage";
 import { WalletWasm } from "@brumewallet/wallet.wasm";
@@ -151,15 +152,17 @@ export default function App({ Component, pageProps }: AppProps) {
         <Initializer>
           <HashPathProvider>
             <Goto>
-              <BackgroundProvider>
-                <GlobalStorageProvider>
-                  <UserStorageProvider>
-                    <UserProvider>
-                      <Component {...pageProps} />
-                    </UserProvider>
-                  </UserStorageProvider>
-                </GlobalStorageProvider>
-              </BackgroundProvider>
+              <InstallProvider>
+                <BackgroundProvider>
+                  <GlobalStorageProvider>
+                    <UserStorageProvider>
+                      <UserProvider>
+                        <Component {...pageProps} />
+                      </UserProvider>
+                    </UserStorageProvider>
+                  </GlobalStorageProvider>
+                </BackgroundProvider>
+              </InstallProvider>
             </Goto>
           </HashPathProvider>
         </Initializer>

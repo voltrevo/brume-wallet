@@ -4,8 +4,10 @@ import { Outline } from "@/libs/icons/icons";
 import { Events } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { AnchorProps } from "@/libs/react/props/html";
+import { OkProps } from "@/libs/react/props/promise";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
 import { ClickableContrastAnchor, ClickableOppositeAnchor, TextAnchor, WideClickableContrastAnchor, WideClickableNakedMenuAnchor } from "@/libs/ui/anchor";
+import { WideClickableContrastButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { Loading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
@@ -25,6 +27,7 @@ import { Fragment, useCallback } from "react";
 import { UserCreateDialog } from "../entities/users/all/create";
 import { useCurrentUser, useUser, useUsers } from "../entities/users/data";
 import { UserLoginDialog } from "../entities/users/login";
+import { useInstallContext } from "../global/mods/install";
 import { useLocaleContext } from "../global/mods/locale";
 import { Locale, Localized } from "../locale";
 
@@ -107,6 +110,7 @@ export function EmptyLandingPage(props: { next?: string }) {
 export function FullLandingPage(props: { next?: string }) {
   const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
+  const install = useInstallContext().getOrNull()
   const { next } = props
 
   const currentUserQuery = useCurrentUser()
@@ -115,6 +119,10 @@ export function FullLandingPage(props: { next?: string }) {
 
   const subpath = useHashSubpath(path)
   const users = useCoords(subpath, "/users")
+
+  const onInstallClick = useCallback(() => {
+    install?.prompt()
+  }, [install])
 
   return <>
     <HashSubpathProvider>
@@ -297,22 +305,22 @@ export function FullLandingPage(props: { next?: string }) {
             href="https://addons.mozilla.org/firefox/addon/brumewallet/">
             Firefox, Waterfox, Pale Moon, Basilisk, IceCat, IceWeasel
           </DownloadCard>
-          <DownloadCard
+          <InstallCard
             highlighted={navigator.userAgent.includes("Safari") && !navigator.userAgent.includes("Chrome") && !navigator.userAgent.includes("Android")}
             icon={Outline.ArrowTopRightOnSquareIcon}
             title="Safari"
             src="/assets/browsers/safari.svg"
-            href="https://testflight.apple.com/join/WtNNiY98">
+            ok={() => { }}>
             iOS, iPadOS, macOS
-          </DownloadCard>
-          <DownloadCard
+          </InstallCard>
+          <InstallCard
             highlighted={navigator.userAgent.includes("Android")}
             icon={Outline.ArrowDownTrayIcon}
             title="Android"
             src="/assets/browsers/android.svg"
-            href="https://github.com/brumewallet/wallet/raw/main/dist/android.apk">
+            ok={onInstallClick}>
             Google, Samsung, Huawei, Xiaomi, Oppo, Vivo
-          </DownloadCard>
+          </InstallCard>
         </div>
         <div className="h-4" />
         <WideClickableContrastAnchor
@@ -432,7 +440,7 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
   </>
 }
 
-export function DownloadCard(props: TitleProps & ChildrenProps & { href: string } & { src: string } & { highlighted?: boolean } & { icon: any }) {
+export function DownloadCard(props: TitleProps & ChildrenProps & { src: string } & { highlighted?: boolean } & { icon: any } & { href: string }) {
   const lang = useLocaleContext().getOrThrow()
   const { href, src, children, title, highlighted = false, icon: Icon } = props
 
@@ -468,6 +476,44 @@ export function DownloadCard(props: TitleProps & ChildrenProps & { href: string 
         <Icon className="size-5" />
         {Locale.get(Locale.Download, lang)}
       </WideClickableContrastAnchor>
+    </div>
+  </div>
+}
+
+export function InstallCard(props: TitleProps & ChildrenProps & { src: string } & { highlighted?: boolean } & { icon: any } & OkProps<void>) {
+  const lang = useLocaleContext().getOrThrow()
+  const { ok, src, children, title, highlighted = false, icon: Icon } = props
+
+  const onClick = useCallback(() => {
+    ok()
+  }, [ok])
+
+  return <div className="p-6 bg-contrast rounded-xl flex flex-col data-[highlighted=false]:opacity-50 transition-opacity"
+    data-highlighted={highlighted}
+    onClick={onClick}
+    role="button">
+    <div className="flex">
+      <img className="size-24 object-contain"
+        alt={title}
+        src={src} />
+      <div className="w-8" />
+      <div className="flex flex-col">
+        <div className="font-medium text-2xl">
+          {title}
+        </div>
+        <div className="h-1" />
+        <div className="text-contrast">
+          {children}
+        </div>
+      </div>
+    </div>
+    <div className="h-4 grow" />
+    <div className="flex items-center">
+      <WideClickableContrastButton
+        onClick={Events.keep}>
+        <Icon className="size-5" />
+        {Locale.get(Locale.Install, lang)}
+      </WideClickableContrastButton>
     </div>
   </div>
 }
