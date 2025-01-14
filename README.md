@@ -1,4 +1,4 @@
-# Brume Wallet ☁️
+# Brume Wallet
 
 The private Ethereum wallet with built-in Tor
 
