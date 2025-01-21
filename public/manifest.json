@@ -7,8 +7,8 @@
 	"description": "The private wallet",
 	"start_url": "/",
 	"display": "standalone",
-	"theme_color": "#bb78ff",
-	"background_color": "#bb78ff",
+	"theme_color": "#ffffff",
+	"background_color": "#ffffff",
 	"lang": "en",
   "dir": "ltr",
 	"orientation": "any",
@@ -22,13 +22,13 @@
   },
 	"icons": [
     {
-			"src": "/square.png",
+			"src": "/maskicon.png",
 			"sizes": "512x512",
 			"type": "image/png",
 			"purpose": "maskable"
 		},
 		{
-			"src": "/round.png",
+			"src": "/favicon.png",
 			"sizes": "512x512",
 			"type": "image/png",
       "purpose": "any"

@@ -19,7 +19,7 @@ export default function Document() {
           : <meta key="content-security-policy" httpEquiv="Content-Security-Policy" />}
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/square.png" />
+        <link rel="apple-touch-icon" href="/appicon.png" />
         <script id="themer" src="/themer.js" />
       </Head>
       <body>

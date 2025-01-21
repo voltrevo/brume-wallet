@@ -193,7 +193,7 @@ export function WalletSendScreenTarget(props: {}) {
       role="button"
       onClick={onBrumeClick}>
       <img className="size-12 flex-none rounded-full bg-contrast"
-        src="/square.png"
+        src="/favicon.png"
         alt="logo" />
       <div className="w-4" />
       <div className="flex flex-col truncate">
