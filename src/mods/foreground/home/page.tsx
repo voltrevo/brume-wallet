@@ -72,7 +72,7 @@ export function HomePage() {
             <div className="flex items-center flex-wrap-reverse gap-2">
               <WideClickableContrastButton
                 onClick={onIgnoreClick}>
-                I don't care
+                {`I don't care`}
               </WideClickableContrastButton>
             </div>
           </div>
