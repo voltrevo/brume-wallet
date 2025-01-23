@@ -134,6 +134,10 @@ export function FullLandingPage(props: { next?: string }) {
         <Dialog>
           <IphoneInstallDialog />
         </Dialog>}
+      {hash.url.pathname === "/install/android" &&
+        <Dialog>
+          <AndroidInstallDialog />
+        </Dialog>}
     </HashSubpathProvider>
     <GlobalPage>
       <PageBody>
@@ -523,7 +527,7 @@ export function IphoneInstallDialog() {
     </Dialog.Title>
     <div className="h-4" />
     <div className="text-contrast">
-      You can follow these steps to install Brume Wallet on your iPhone, iPad, or Mac. Locate the share button and select "Add to Home Screen". Confirm the installation by clicking "Add".
+      You can follow these steps to install Brume Wallet on your iPhone, iPad, or Mac. Use the share button and select "Add to Home Screen". Confirm the installation by clicking "Add".
     </div>
     <div className="h-8" />
     <div className="flex flex-wrap items-center justify-center gap-2">
@@ -533,6 +537,27 @@ export function IphoneInstallDialog() {
         src="/assets/install/iphone-2.png" />
       <img className="w-auto h-[480px] rounded-[32px] border-8 border-contrast"
         src="/assets/install/iphone-3.png" />
+    </div>
+  </>
+}
+
+export function AndroidInstallDialog() {
+  return <>
+    <Dialog.Title>
+      Installing on Android
+    </Dialog.Title>
+    <div className="h-4" />
+    <div className="text-contrast">
+      You can follow these steps to install Brume Wallet on your Android. Open the browser menu and select "Add to Home screen". Confirm the installation by clicking "Install".
+    </div>
+    <div className="h-8" />
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      <img className="w-auto h-[480px] rounded-[32px] border-8 border-contrast"
+        src="/assets/install/android-1.png" />
+      <img className="w-auto h-[480px] rounded-[32px] border-8 border-contrast"
+        src="/assets/install/android-2.png" />
+      <img className="w-auto h-[480px] rounded-[32px] border-8 border-contrast"
+        src="/assets/install/android-3.png" />
     </div>
   </>
 }
