@@ -70,7 +70,7 @@ export function LocalePage() {
               <div className="grow" />
               {key === localeData &&
                 <div className="p-2">
-                  <Outline.CheckIcon className="size-6" />
+                  <Outline.CheckIcon className="size-5" />
                 </div>}
             </button>
           </Fragment>)}
