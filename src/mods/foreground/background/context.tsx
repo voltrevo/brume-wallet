@@ -74,6 +74,12 @@ export function ServiceWorkerBackgroundProvider(props: ChildrenProps) {
     return { update, ignore }
   }, [update, ignore])
 
+  useEffect(() => {
+    if (update == null)
+      return
+    console.log("update", update)
+  }, [update])
+
   return <BackgroundContext value={background}>
     <ServiceWorkerUpdateContext value={handle}>
       {children}
