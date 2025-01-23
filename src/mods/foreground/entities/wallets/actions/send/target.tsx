@@ -192,13 +192,13 @@ export function WalletSendScreenTarget(props: {}) {
     <div className="po-md flex items-center bg-contrast rounded-xl cursor-pointer"
       role="button"
       onClick={onBrumeClick}>
-      <img className="size-12 flex-none rounded-full bg-contrast"
+      <img className="size-12 flex-none rounded-full bg-white p-1"
         src="/favicon.png"
         alt="logo" />
       <div className="w-4" />
       <div className="flex flex-col truncate">
         <div className="font-medium">
-          Brume Wallet
+          Brume Foundation
         </div>
         <div className="text-contrast truncate">
           brume.eth
