@@ -11,8 +11,8 @@
 		9A4E097E2C6B320400DDEA09 /* favicon.ico in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096B2C6B320300DDEA09 /* favicon.ico */; };
 		9A4E097F2C6B320400DDEA09 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096C2C6B320300DDEA09 /* manifest.json */; };
 		9A4E09802C6B320400DDEA09 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096C2C6B320300DDEA09 /* manifest.json */; };
-		9A4E09812C6B320400DDEA09 /* square.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096D2C6B320300DDEA09 /* square.png */; };
-		9A4E09822C6B320400DDEA09 /* square.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096D2C6B320300DDEA09 /* square.png */; };
+		9A4E09812C6B320400DDEA09 /* maskicon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096D2C6B320300DDEA09 /* maskicon.png */; };
+		9A4E09822C6B320400DDEA09 /* maskicon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096D2C6B320300DDEA09 /* maskicon.png */; };
 		9A4E09832C6B320400DDEA09 /* favicon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096E2C6B320300DDEA09 /* favicon.png */; };
 		9A4E09842C6B320400DDEA09 /* favicon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096E2C6B320300DDEA09 /* favicon.png */; };
 		9A4E09852C6B320400DDEA09 /* appicon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E096F2C6B320300DDEA09 /* appicon.png */; };
@@ -25,8 +25,6 @@
 		9A4E098C2C6B320400DDEA09 /* _next in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09722C6B320300DDEA09 /* _next */; };
 		9A4E098D2C6B320400DDEA09 /* service_worker.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09732C6B320300DDEA09 /* service_worker.js */; };
 		9A4E098E2C6B320400DDEA09 /* service_worker.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09732C6B320300DDEA09 /* service_worker.js */; };
-		9A4E098F2C6B320400DDEA09 /* round.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09742C6B320300DDEA09 /* round.png */; };
-		9A4E09902C6B320400DDEA09 /* round.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09742C6B320300DDEA09 /* round.png */; };
 		9A4E09912C6B320400DDEA09 /* content_script.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09752C6B320300DDEA09 /* content_script.js */; };
 		9A4E09922C6B320400DDEA09 /* content_script.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09752C6B320300DDEA09 /* content_script.js */; };
 		9A4E09932C6B320400DDEA09 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09762C6B320300DDEA09 /* assets */; };
@@ -112,14 +110,13 @@
 /* Begin PBXFileReference section */
 		9A4E096B2C6B320300DDEA09 /* favicon.ico */ = {isa = PBXFileReference; lastKnownFileType = image.ico; name = favicon.ico; path = ../../../dist/safari/favicon.ico; sourceTree = "<group>"; };
 		9A4E096C2C6B320300DDEA09 /* manifest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = manifest.json; path = ../../../dist/safari/manifest.json; sourceTree = "<group>"; };
-		9A4E096D2C6B320300DDEA09 /* square.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = square.png; path = ../../../dist/safari/square.png; sourceTree = "<group>"; };
+		9A4E096D2C6B320300DDEA09 /* maskicon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = maskicon.png; path = ../../../dist/safari/maskicon.png; sourceTree = "<group>"; };
 		9A4E096E2C6B320300DDEA09 /* favicon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = favicon.png; path = ../../../dist/safari/favicon.png; sourceTree = "<group>"; };
 		9A4E096F2C6B320300DDEA09 /* appicon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = appicon.png; path = ../../../dist/safari/appicon.png; sourceTree = "<group>"; };
 		9A4E09702C6B320300DDEA09 /* tabbed.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = tabbed.html; path = ../../../dist/safari/tabbed.html; sourceTree = "<group>"; };
 		9A4E09712C6B320300DDEA09 /* offscreen.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = offscreen.js; path = ../../../dist/safari/offscreen.js; sourceTree = "<group>"; };
 		9A4E09722C6B320300DDEA09 /* _next */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _next; path = ../../../dist/safari/_next; sourceTree = "<group>"; };
 		9A4E09732C6B320300DDEA09 /* service_worker.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = service_worker.js; path = ../../../dist/safari/service_worker.js; sourceTree = "<group>"; };
-		9A4E09742C6B320300DDEA09 /* round.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = round.png; path = ../../../dist/safari/round.png; sourceTree = "<group>"; };
 		9A4E09752C6B320300DDEA09 /* content_script.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = content_script.js; path = ../../../dist/safari/content_script.js; sourceTree = "<group>"; };
 		9A4E09762C6B320300DDEA09 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../../../dist/safari/assets; sourceTree = "<group>"; };
 		9A4E09772C6B320300DDEA09 /* action.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = action.html; path = ../../../dist/safari/action.html; sourceTree = "<group>"; };
@@ -201,9 +198,8 @@
 				9A4E09712C6B320300DDEA09 /* offscreen.js */,
 				9A4E09782C6B320400DDEA09 /* opener.html */,
 				9A4E097C2C6B320400DDEA09 /* popup.html */,
-				9A4E09742C6B320300DDEA09 /* round.png */,
 				9A4E09732C6B320300DDEA09 /* service_worker.js */,
-				9A4E096D2C6B320300DDEA09 /* square.png */,
+				9A4E096D2C6B320300DDEA09 /* maskicon.png */,
 				9A4E09702C6B320300DDEA09 /* tabbed.html */,
 				9A4E097B2C6B320400DDEA09 /* themer.js */,
 			);
@@ -462,7 +458,6 @@
 				9A4E09912C6B320400DDEA09 /* content_script.js in Resources */,
 				9A4E09832C6B320400DDEA09 /* favicon.png in Resources */,
 				9A4E09972C6B320400DDEA09 /* opener.html in Resources */,
-				9A4E098F2C6B320400DDEA09 /* round.png in Resources */,
 				9A4E09872C6B320400DDEA09 /* tabbed.html in Resources */,
 				9A4E099B2C6B320400DDEA09 /* injected_script.js in Resources */,
 				9A4E099D2C6B320400DDEA09 /* themer.js in Resources */,
@@ -472,7 +467,7 @@
 				9A4E098D2C6B320400DDEA09 /* service_worker.js in Resources */,
 				9A4E099F2C6B320400DDEA09 /* popup.html in Resources */,
 				9A4E09932C6B320400DDEA09 /* assets in Resources */,
-				9A4E09812C6B320400DDEA09 /* square.png in Resources */,
+				9A4E09812C6B320400DDEA09 /* maskicon.png in Resources */,
 				9A4E09952C6B320400DDEA09 /* action.html in Resources */,
 				9A4E097D2C6B320400DDEA09 /* favicon.ico in Resources */,
 			);
@@ -487,7 +482,6 @@
 				9A4E09922C6B320400DDEA09 /* content_script.js in Resources */,
 				9A4E09842C6B320400DDEA09 /* favicon.png in Resources */,
 				9A4E09982C6B320400DDEA09 /* opener.html in Resources */,
-				9A4E09902C6B320400DDEA09 /* round.png in Resources */,
 				9A4E09882C6B320400DDEA09 /* tabbed.html in Resources */,
 				9A4E099C2C6B320400DDEA09 /* injected_script.js in Resources */,
 				9A4E099E2C6B320400DDEA09 /* themer.js in Resources */,
@@ -497,7 +491,7 @@
 				9A4E098E2C6B320400DDEA09 /* service_worker.js in Resources */,
 				9A4E09A02C6B320400DDEA09 /* popup.html in Resources */,
 				9A4E09942C6B320400DDEA09 /* assets in Resources */,
-				9A4E09822C6B320400DDEA09 /* square.png in Resources */,
+				9A4E09822C6B320400DDEA09 /* maskicon.png in Resources */,
 				9A4E09962C6B320400DDEA09 /* action.html in Resources */,
 				9A4E097E2C6B320400DDEA09 /* favicon.ico in Resources */,
 			);
