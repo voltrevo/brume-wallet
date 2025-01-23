@@ -62,13 +62,10 @@ export function EmptyLandingPage(props: { next?: string }) {
       <PageBody>
         <div className="h-[max(24rem,100dvh_-_16rem)] flex-none flex flex-col items-center">
           <div className="grow" />
-          <h1 className="flex flex-row data-[dir=rtl]:flex-row-reverse text-center text-6xl font-medium"
+          <h1 className="flex flex-col gap-2 text-center text-6xl font-medium"
             data-dir={Locale.get(Locale.direction, lang)}>
             <div>
               {Locale.get(Locale.Hello, lang)}
-            </div>
-            <div>
-              &nbsp;
             </div>
             <div className="text-contrast">
               {maybeUser?.name || "Anon"}

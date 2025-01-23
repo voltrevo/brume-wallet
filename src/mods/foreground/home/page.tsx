@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useDisplayUsd } from "@/libs/fixed"
 import { isWebsite } from "@/libs/platform/platform"
+import { WideClickableContrastButton } from "@/libs/ui/button"
 import { PageBody } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
@@ -37,33 +38,43 @@ export function HomePage() {
     return () => clearTimeout(t)
   }, [background, getPersisted])
 
+  const [ignored, setIgnored] = useState(false)
+
+  const onIgnoreClick = useCallback(() => {
+    setIgnored(true)
+  }, [])
+
   const Body =
     <PageBody>
       <div className="h-[max(24rem,100dvh_-_16rem)] flex-none flex flex-col items-center">
         <div className="grow" />
-        <h1 className="flex flex-row data-[dir=rtl]:flex-row-reverse text-center text-6xl font-medium"
+        <h1 className="flex flex-col gap-2 text-center text-6xl font-medium"
           data-dir={Locale.get(Locale.direction, lang)}>
           <div>
             {Locale.get(Locale.Hello, lang)}
-          </div>
-          <div>
-            &nbsp;
           </div>
           <div className="text-contrast">
             {userData.name}
           </div>
         </h1>
         <div className="grow" />
-        {persisted === false && <>
+        {!persisted && !ignored && <>
           <div className="h-4" />
-          <div className="p-4 bg-contrast rounded-xl max-w-xs">
-            <h3 className="font-medium">
-              Your storage is not persistent yet
+          <div className="p-4 bg-contrast rounded-xl max-w-sm">
+            <h3 className="font-medium text-center text-lg">
+              Your data won't be saved
             </h3>
-            <p className="text-contrast">
-              Please add this website to your favorites or to your home screen
-            </p>
             <div className="h-2" />
+            <p className="text-contrast text-center">
+              Add this website to your favorites or to your home screen if you want to keep your data
+            </p>
+            <div className="h-4" />
+            <div className="flex items-center flex-wrap-reverse gap-2">
+              <WideClickableContrastButton
+                onClick={onIgnoreClick}>
+                I don't care
+              </WideClickableContrastButton>
+            </div>
           </div>
           <div className="h-4" />
         </>}
@@ -83,7 +94,7 @@ export function HomePage() {
           Coming soon...
         </div>
       </div>
-    </PageBody>
+    </PageBody >
 
   return <UserPage>
     {Body}
