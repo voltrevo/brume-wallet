@@ -527,7 +527,7 @@ export function IphoneInstallDialog() {
     </Dialog.Title>
     <div className="h-4" />
     <div className="text-contrast">
-      You can follow these steps to install Brume Wallet on your iPhone, iPad, or Mac. Use the share button and select "Add to Home Screen". Confirm the installation by clicking "Add".
+      {`You can follow these steps to install Brume Wallet on your iPhone, iPad, or Mac. Use the share button and select "Add to Home Screen". Confirm the installation by clicking "Add".`}
     </div>
     <div className="h-8" />
     <div className="flex flex-wrap items-center justify-center gap-2">
@@ -548,7 +548,7 @@ export function AndroidInstallDialog() {
     </Dialog.Title>
     <div className="h-4" />
     <div className="text-contrast">
-      You can follow these steps to install Brume Wallet on your Android. Open the browser menu and select "Add to Home screen". Confirm the installation by clicking "Install".
+      {`You can follow these steps to install Brume Wallet on your Android. Open the browser menu and select "Add to Home screen". Confirm the installation by clicking "Install".`}
     </div>
     <div className="h-8" />
     <div className="flex flex-wrap items-center justify-center gap-2">
