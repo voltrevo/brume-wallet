@@ -1,9 +1,20 @@
 import { isAndroidApp, isAppleApp, isExtension, isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { useConstant } from "@/libs/react/ref";
-import { Option } from "@hazae41/option";
-import { createContext, useContext, useEffect, useState } from "react";
+import { Nullable, Option } from "@hazae41/option";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Background, ExtensionBackground, ServiceWorkerBackground, WorkerBackground } from "./background";
+
+export interface ServiceWorkerUpdateHandle {
+  readonly update: () => void
+  readonly ignore: () => void
+}
+
+export const ServiceWorkerUpdateContext = createContext<Nullable<ServiceWorkerUpdateHandle>>(undefined)
+
+export function useServiceWorkerUpdateContext() {
+  return Option.wrap(useContext(ServiceWorkerUpdateContext))
+}
 
 export const BackgroundContext =
   createContext<Background | undefined>(undefined)
@@ -45,10 +56,28 @@ export function BackgroundProvider(props: ChildrenProps) {
 export function ServiceWorkerBackgroundProvider(props: ChildrenProps) {
   const { children } = props
 
+  const [update, setUpdate] = useState<() => void>()
+
   const background = useConstant(() => new ServiceWorkerBackground())
 
+  useEffect(() => {
+    return background.serviceWorker.on("update", (update) => setUpdate(() => update))
+  }, [background])
+
+  const ignore = useCallback(() => {
+    setUpdate(undefined)
+  }, [])
+
+  const handle = useMemo(() => {
+    if (update == null)
+      return
+    return { update, ignore }
+  }, [update, ignore])
+
   return <BackgroundContext value={background}>
-    {children}
+    <ServiceWorkerUpdateContext value={handle}>
+      {children}
+    </ServiceWorkerUpdateContext>
   </BackgroundContext>
 }
 

@@ -30,7 +30,7 @@ export function InstallProvider(props: ChildrenProps) {
     return () => removeEventListener("beforeinstallprompt", onInstall)
   }, [])
 
-  return <InstallContext.Provider value={install}>
+  return <InstallContext value={install}>
     {children}
-  </InstallContext.Provider>
+  </InstallContext>
 }

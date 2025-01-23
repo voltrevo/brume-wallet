@@ -17,7 +17,6 @@ import { WalletPage } from "../entities/wallets/page"
 import { HomePage } from "../home/page"
 import { EmptyLandingPage, FullLandingPage } from "../landing"
 import { LocalePage } from "../locale/mods/page"
-import { Overlay } from "../overlay/overlay"
 import { UserSettingsPage } from "../user/mods/settings/mods/page"
 
 export function Router() {
@@ -29,126 +28,84 @@ export function Router() {
   let matches: RegExpMatchArray | null
 
   if ((matches = path.url.pathname.match(/^(\/)?$/)) && isWebsite())
-    return <Overlay>
-      <FullLandingPage next="#/home" />
-    </Overlay>
+    return <FullLandingPage next="#/home" />
 
   if ((matches = path.url.pathname.match(/^(\/)?$/)) && !isWebsite())
-    return <Overlay>
-      <EmptyLandingPage next="#/home" />
-    </Overlay>
+    return <EmptyLandingPage next="#/home" />
 
   if (matches = path.url.pathname.match(/^\/home(\/)?$/))
-    return <Overlay>
-      <UserGuardPage>
-        <HomePage />
-      </UserGuardPage>
-    </Overlay>
+    return <UserGuardPage>
+      <HomePage />
+    </UserGuardPage>
 
   if (matches = path.url.pathname.match(/^\/wallets(\/)?$/))
-    return <Overlay>
-      <WalletsPage />
-    </Overlay>
+    return <WalletsPage />
 
   if (matches = path.url.pathname.match(/^\/wallets\/trash(\/)?$/))
-    return <Overlay>
-      <TrashedWalletsPage />
-    </Overlay>
+    return <TrashedWalletsPage />
 
   if (matches = path.url.pathname.match(/^\/seeds(\/)?$/))
-    return <Overlay>
-      <SeedsPage />
-    </Overlay>
+    return <SeedsPage />
 
   if (matches = path.url.pathname.match(/^\/sessions(\/)?$/))
-    return <Overlay>
-      <SessionsPage />
-    </Overlay>
+    return <SessionsPage />
 
   if (matches = path.url.pathname.match(/^\/requests(\/)?$/))
-    return <Overlay>
-      <RequestsPage />
-    </Overlay>
+    return <RequestsPage />
 
   if (matches = path.url.pathname.match(/^\/plugins(\/)?$/))
-    return <Overlay>
-      <SnapsPage />
-    </Overlay>
+    return <SnapsPage />
 
   if (matches = path.url.pathname.match(/^\/wallet\/([^\/]+)(\/)?$/))
-    return <Overlay>
-      <UserGuardPage>
-        <WalletPage uuid={matches[1]} />
-      </UserGuardPage>
-    </Overlay>
+    return <UserGuardPage>
+      <WalletPage uuid={matches[1]} />
+    </UserGuardPage>
 
   if (matches = path.url.pathname.match(/^\/wallet\/([^\/]+)\/camera(\/)?$/))
-    return <Overlay>
-      <UserGuardPage>
-        <WalletCameraPage uuid={matches[1]} />
-      </UserGuardPage>
-    </Overlay>
+    return <UserGuardPage>
+      <WalletCameraPage uuid={matches[1]} />
+    </UserGuardPage>
 
   if (matches = path.url.pathname.match(/^\/seed\/([^\/]+)(\/)?$/))
-    return <Overlay>
-      <UserGuardPage>
-        <SeedPage uuid={matches[1]} />
-      </UserGuardPage>
-    </Overlay>
+    return <UserGuardPage>
+      <SeedPage uuid={matches[1]} />
+    </UserGuardPage>
 
   if (matches = path.url.pathname.match(/^\/locale(\/)?$/))
-    return <Overlay>
-      <LocalePage />
-    </Overlay>
+    return <LocalePage />
 
   if (matches = path.url.pathname.match(/^\/settings(\/)?$/))
-    return <Overlay>
-      <UserGuardPage>
-        <UserSettingsPage />
-      </UserGuardPage>
-    </Overlay>
+    return <UserGuardPage>
+      <UserSettingsPage />
+    </UserGuardPage>
 
   if (matches = path.url.pathname.match(/^\/eth_requestAccounts(\/)?$/))
-    return <Overlay>
-      <UserGuardPage>
-        <WalletAndChainSelectPage />
-      </UserGuardPage>
-    </Overlay>
+    return <UserGuardPage>
+      <WalletAndChainSelectPage />
+    </UserGuardPage>
 
   if (matches = path.url.pathname.match(/^\/eth_sendTransaction(\/)?$/))
-    return <Overlay>
-      <UserGuardPage>
-        <TransactPage />
-      </UserGuardPage>
-    </Overlay>
+    return <UserGuardPage>
+      <TransactPage />
+    </UserGuardPage>
 
   if (matches = path.url.pathname.match(/^\/personal_sign(\/)?$/))
-    return <Overlay>
-      <UserGuardPage>
-        <PersonalSignPage />
-      </UserGuardPage>
-    </Overlay>
+    return <UserGuardPage>
+      <PersonalSignPage />
+    </UserGuardPage>
 
   if (matches = path.url.pathname.match(/^\/eth_signTypedData_v4(\/)?$/))
-    return <Overlay>
-      <UserGuardPage>
-        <TypedSignPage />
-      </UserGuardPage>
-    </Overlay>
+    return <UserGuardPage>
+      <TypedSignPage />
+    </UserGuardPage>
 
   if (matches = path.url.pathname.match(/^\/done(\/)?$/))
-    return <Overlay>
-      <DonePage />
-    </Overlay>
+    return <DonePage />
 
   if (isWebsite())
-    return <Overlay>
-      <FullLandingPage />
-    </Overlay>
+    return <FullLandingPage />
 
-  return <Overlay>
-    <EmptyLandingPage />
-  </Overlay>
+  return <EmptyLandingPage />
 }
 
 export type GnosisRpcRequestInit<T = unknown> = undefined extends T

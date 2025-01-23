@@ -1,13 +1,45 @@
 import { Outline } from "@/libs/icons/icons";
-import { isExtension, isWebsite } from "@/libs/platform/platform";
+import { isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { OkProps } from "@/libs/react/props/promise";
 import { RoundedClickableNakedButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
-import { useCallback, useEffect, useState } from "react";
-import { ServiceWorkerBackground } from "../background/background";
-import { useBackgroundContext } from "../background/context";
+import { useCallback } from "react";
+import { useServiceWorkerUpdateContext } from "../background/context";
+
+export function Overlay(props: ChildrenProps) {
+  const { children } = props
+
+  if (isWebsite())
+    return <WebsiteOverlay>
+      {children}
+    </WebsiteOverlay>
+
+  return <NoOverlay>
+    {children}
+  </NoOverlay>
+}
+
+export function NoOverlay(props: ChildrenProps) {
+  const { children } = props
+
+  return <>
+    {children}
+  </>
+}
+
+export function WebsiteOverlay(props: ChildrenProps) {
+  const update = useServiceWorkerUpdateContext().getOrNull()
+  const { children } = props
+
+  return <>
+    {update != null && <UpdateBanner
+      update={update.update}
+      ignore={update.ignore} />}
+    {children}
+  </>
+}
 
 export function UpdateBanner(props: {
   readonly update: () => void
@@ -82,64 +114,5 @@ export function UpdateDialog(props: OkProps<void>) {
         Update
       </WideClickableOppositeButton>
     </div>
-  </>
-}
-
-export function Overlay(props: ChildrenProps) {
-  const { children } = props
-
-  if (isWebsite())
-    return <WebsiteOverlay>
-      {children}
-    </WebsiteOverlay>
-
-  if (isExtension())
-    return <ExtensionOverlay>
-      {children}
-    </ExtensionOverlay>
-
-  return <OtherOverlay>
-    {children}
-  </OtherOverlay>
-}
-
-export function WebsiteOverlay(props: ChildrenProps) {
-  const { children } = props
-
-  const background = useBackgroundContext().getOrThrow() as ServiceWorkerBackground
-
-  const [update, setUpdate] = useState<() => void>()
-
-  useEffect(() => {
-    const onUpdate = (update: () => void) => setUpdate(() => update)
-
-    return background.serviceWorker.on("update", onUpdate)
-  }, [background])
-
-  const ignore = useCallback(() => {
-    setUpdate(undefined)
-  }, [])
-
-  return <>
-    {update && <UpdateBanner
-      update={update}
-      ignore={ignore} />}
-    {children}
-  </>
-}
-
-export function ExtensionOverlay(props: ChildrenProps) {
-  const { children } = props
-
-  return <>
-    {children}
-  </>
-}
-
-export function OtherOverlay(props: ChildrenProps) {
-  const { children } = props
-
-  return <>
-    {children}
   </>
 }
