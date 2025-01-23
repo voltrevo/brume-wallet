@@ -62,7 +62,7 @@ export function HomePage() {
           <div className="h-4" />
           <div className="p-4 bg-contrast rounded-xl max-w-sm">
             <h3 className="font-medium text-center text-lg">
-              Your data won't be saved
+              {`Your data won't be saved`}
             </h3>
             <div className="h-2" />
             <p className="text-contrast text-center">
