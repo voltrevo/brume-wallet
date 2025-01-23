@@ -154,13 +154,13 @@ export function OmniDialog(props: {
         <div className="h-4" />
         Landing
       </a>
-      <a className="po-md bg-contrast rounded-xl"
+      {/* <a className="po-md bg-contrast rounded-xl"
         data-selected={path.url.pathname === "/apps"}
         href="#/apps">
         <Outline.GlobeAltIcon className="size-5" />
         <div className="h-4" />
         Apps
-      </a>
+      </a> */}
       <a className="po-md bg-contrast rounded-xl"
         data-selected={path.url.pathname === "/locale"}
         href="#/locale">
