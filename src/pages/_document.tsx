@@ -10,7 +10,7 @@ export default function Document() {
         <meta key="color-scheme" name="color-scheme" content="dark light" />
         <meta key="theme-color-light" name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
         <meta key="theme-color-dark" name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-        <meta key="apple-mobile-web-app-capable" name="apple-mobile-web-app-capable" content="yes" />
+        <meta key="mobile-web-app-capable" name="mobile-web-app-capable" content="yes" />
         <meta key="apple-mobile-web-app-title" name="apple-mobile-web-app-title" content="Brume Wallet" />
         <meta key="apple-mobile-web-app-status-bar-style" name="apple-mobile-web-app-status-bar-style" content="white" />
         <meta key="referrer" name="referrer" content="no-referrer" />
