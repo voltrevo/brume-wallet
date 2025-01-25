@@ -49,7 +49,7 @@ export function ClickableContrastAnchor(props: ChildrenProps & AnchorProps & { "
     <GapperAndClickerInAnchorDiv>
       {children}
     </GapperAndClickerInAnchorDiv>
-  </a >
+  </a>
 }
 
 export function WideClickableOppositeAnchor(props: ChildrenProps & AnchorProps & { "aria-disabled"?: Booleanish }) {

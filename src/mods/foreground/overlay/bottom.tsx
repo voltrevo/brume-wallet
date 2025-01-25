@@ -161,13 +161,6 @@ export function OmniDialog(props: {
         <div className="h-4" />
         Apps
       </a> */}
-      <a className="po-md bg-contrast rounded-xl"
-        data-selected={path.url.pathname === "/locale"}
-        href="#/locale">
-        <Outline.LanguageIcon className="size-5" />
-        <div className="h-4" />
-        {Locale.get(Locale.Language, lang)}
-      </a>
     </div>
   </Dialog>
 }
@@ -281,13 +274,6 @@ export function GlobalBottomNavigation() {
           </GapperAndClickerInAnchorDiv>
         </a>
       </div>
-      <a className="group flex-1 text-contrast data-[selected=true]:text-default"
-        data-selected={path.url.pathname === "/locale"}
-        href="#/locale">
-        <GapperAndClickerInAnchorDiv>
-          <Outline.LanguageIcon className="size-6" />
-        </GapperAndClickerInAnchorDiv>
-      </a>
     </div>
   </nav>
 }

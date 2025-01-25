@@ -16,7 +16,6 @@ import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
 import { HomePage } from "../home/page"
 import { EmptyLandingPage, FullLandingPage } from "../landing"
-import { LocalePage } from "../locale/mods/page"
 import { UserSettingsPage } from "../user/mods/settings/mods/page"
 
 export function Router() {
@@ -70,9 +69,6 @@ export function Router() {
     return <UserGuardPage>
       <SeedPage uuid={matches[1]} />
     </UserGuardPage>
-
-  if (matches = path.url.pathname.match(/^\/locale(\/)?$/))
-    return <LocalePage />
 
   if (matches = path.url.pathname.match(/^\/settings(\/)?$/))
     return <UserGuardPage>
