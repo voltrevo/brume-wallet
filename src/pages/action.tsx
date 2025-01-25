@@ -3,11 +3,8 @@ import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Nullable } from "@hazae41/option";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { config } from "./_document";
 
 export default function Main() {
-  config.lang = undefined
-
   const background = useBackgroundContext().getOrThrow()
 
   useEffect(() => {

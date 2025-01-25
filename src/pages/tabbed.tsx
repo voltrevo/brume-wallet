@@ -3,11 +3,8 @@ import { isSafariExtension } from "@/libs/platform/platform";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Nullable } from "@hazae41/option";
 import { useEffect, useMemo, useState } from "react";
-import { config } from "./_document";
 
 export default function Main() {
-  config.lang = undefined
-
   const [hash, setHash] = useState(location.hash)
 
   useEffect(() => {
