@@ -37,8 +37,11 @@ import { RpcErr, RpcOk } from "@hazae41/jsonrpc";
 import { Nullable, Option } from "@hazae41/option";
 import { Err, Result } from "@hazae41/result";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { config } from "./_document";
 
 export default function Main() {
+  config.lang = undefined
+
   const background = useBackgroundContext().getOrThrow()
 
   const helloOrThrow = useCallback(async () => {

@@ -1,9 +1,16 @@
 /* eslint-disable @next/next/no-sync-scripts */
+import { Optional } from '@hazae41/option'
 import { Head, Html, Main, NextScript } from 'next/document'
+
+export const config: {
+  lang: Optional<string>
+} = {
+  lang: undefined
+}
 
 export default function Document() {
   return (
-    <Html lang="en">
+    <Html lang={config.lang}>
       <Head>
         <meta key="application-name" name="application-name" content="Brume Wallet" />
         <meta key="description" name="description" content="The private wallet" />
