@@ -25,7 +25,7 @@ class MyDocument extends Document {
           <link rel="apple-touch-icon" href="/appicon.png" />
           <script id="themer" src="/themer.js" />
         </Head>
-        <body>
+        <body className="antialiased">
           <Main />
           <NextScript />
         </body>
