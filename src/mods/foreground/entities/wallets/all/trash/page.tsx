@@ -38,8 +38,8 @@ export function TrashedWalletsPage() {
         <Outline.TrashIcon className="size-5" />
       </PaddedRoundedClickableNakedButton>
     </PageHeader>
-    <div className="po-md flex items-center">
-      <div className="text-contrast">
+    <div className="po-2 flex items-center">
+      <div className="text-default-contrast">
         {`Wallets in the trash are automatically deleted after 30 days.`}
       </div>
     </div>

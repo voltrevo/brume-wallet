@@ -65,7 +65,7 @@ export function RawSeedCard(props: { type?: SeedData["type"] } & { name: string 
           </div>
         </div>}
       {index != null && index === -1 &&
-        <div className={`border-2 border-contrast flex items-center justify-center rounded-full`}>
+        <div className={`border-2 border-default-contrast flex items-center justify-center rounded-full`}>
           <div className="size-5" />
         </div>}
     </div>
@@ -81,13 +81,13 @@ export function RawSeedCard(props: { type?: SeedData["type"] } & { name: string 
     <div className={`relative z-10 w-full h-full text-white bg-${color}-400 dark:bg-${color}-500 rounded-xl ${preflip && !postflip ? "animate-flip-in" : ""} ${!preflip && postflip ? "animate-flip-out" : ""}`}
       style={{ transform: preflip && postflip ? `rotateY(180deg)` : "", transformStyle: "preserve-3d" }}
       onAnimationEnd={onFlipTransitionEnd}>
-      <div className="po-md absolute w-full h-full flex flex-col [backface-visibility:hidden]"
+      <div className="po-2 absolute w-full h-full flex flex-col [backface-visibility:hidden]"
         onContextMenu={genius.onContextMenu}>
         {First}
         <div className="grow" />
         {Name}
       </div>
-      <div className="po-md absolute w-full h-full flex flex-col [backface-visibility:hidden] [transform:rotateY(180deg)]"
+      <div className="po-2 absolute w-full h-full flex flex-col [backface-visibility:hidden] [transform:rotateY(180deg)]"
         onContextMenu={genius.onContextMenu}>
         <div className="flex items-center">
           <div className="w-2 grow" />

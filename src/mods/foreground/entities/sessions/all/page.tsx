@@ -67,8 +67,8 @@ export function SessionsPage() {
         <Outline.TrashIcon className="size-5" />
       </PaddedRoundedClickableNakedButton>
     </PageHeader>
-    <div className="po-md flex items-center">
-      <div className="text-contrast">
+    <div className="po-2 flex items-center">
+      <div className="text-default-contrast">
         {`Sessions allow you to connect to applications. These applications can then make requests for you to approve.`}
       </div>
     </div>
@@ -128,7 +128,7 @@ export function SessionRow(props: { session: Session }) {
   if (maybeOriginData == null)
     return null
 
-  return <div role="button" className="po-md rounded-xl flex items-center gap-4"
+  return <div role="button" className="po-2 rounded-xl flex items-center gap-4"
     onContextMenu={menu.onContextMenu}
     onKeyDown={menu.onKeyDown}
     onClick={menu.onClick}>
@@ -167,7 +167,7 @@ export function SessionRow(props: { session: Session }) {
       <div className="font-medium">
         {maybeOriginData.title}
       </div>
-      <div className="text-contrast">
+      <div className="text-default-contrast">
         {maybeOriginData.origin}
       </div>
     </div>

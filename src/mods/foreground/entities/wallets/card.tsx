@@ -102,7 +102,7 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
           </div>
         </div>}
       {index != null && index === -1 &&
-        <div className={`border-2 border-contrast flex items-center justify-center rounded-full`}>
+        <div className={`border-2 border-default-contrast flex items-center justify-center rounded-full`}>
           <div className="size-5" />
         </div>}
     </div>
@@ -113,17 +113,17 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
         {name}
       </div>
       <div className="w-2 grow" />
-      <div className="font-base text-white-high-contrast">
+      <div className="font-base text-white-half-contrast">
         {totalBalanceDisplay}
       </div>
     </div>
 
   const AddressDisplay =
     <div className="flex justify-between items-center text-sm">
-      <div className="text-white-high-contrast">
+      <div className="text-white-half-contrast">
         ETH
       </div>
-      <div className="cursor-pointer text-white-high-contrast"
+      <div className="cursor-pointer text-white-half-contrast"
         onClick={onClickCopyEthereumAddress}>
         {copyEthereumAddress.current
           ? "Copied"
@@ -135,14 +135,14 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
     <div className={`relative z-10 w-full h-full text-white bg-${color}-400 dark:bg-${color}-500 rounded-xl ${preflip && !postflip ? "animate-flip-in" : ""} ${!preflip && postflip ? "animate-flip-out" : ""}`}
       style={{ transform: preflip && postflip ? `rotateY(180deg)` : "", transformStyle: "preserve-3d" }}
       onAnimationEnd={onAnimationEnd}>
-      <div className="po-md absolute w-full h-full flex flex-col [backface-visibility:hidden]"
+      <div className="po-2 absolute w-full h-full flex flex-col [backface-visibility:hidden]"
         onContextMenu={genius.onContextMenu}>
         {First}
         <div className="grow" />
         {Name}
         {AddressDisplay}
       </div>
-      <div className="po-md absolute w-full h-full flex flex-col [backface-visibility:hidden] [transform:rotateY(180deg)]"
+      <div className="po-2 absolute w-full h-full flex flex-col [backface-visibility:hidden] [transform:rotateY(180deg)]"
         onContextMenu={genius.onContextMenu}>
         <div className="flex items-center">
           <div className="w-2 grow" />
@@ -156,7 +156,7 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
         <div className="text-white">
           Private key
         </div>
-        <div className="text-white-high-contrast break-all"
+        <div className="text-white-half-contrast break-all"
           onContextMenu={Events.keep}>
           {privateKey}
         </div>
@@ -168,7 +168,7 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
 export function CircularWhiteAnchorInColoredCard(props: AnchorProps & ChildrenProps & { color: Color }) {
   const { children, color, "aria-disabled": disabled = false, ...rest } = props
 
-  return <a className={`group p-1 bg-white text-${color}-400 dark:text-color-500 rounded-full outline-none aria-[disabled=false]:hover:bg-white/90 focus-visible:outline-white aria-disabled:opacity-50 transition-opacity`}
+  return <a className={`group p-1 bg-white text-${color}-400 dark:text-${color}-500 rounded-full outline-none aria-[disabled=false]:hover:bg-white/90 focus-visible:outline-white aria-disabled:opacity-50 transition-opacity`}
     aria-disabled={disabled}
     {...rest}>
     <div className="h-full w-full flex items-center justify-center gap-2 group-aria-[disabled=false]:group-active:scale-90 transition-transform">
@@ -180,7 +180,7 @@ export function CircularWhiteAnchorInColoredCard(props: AnchorProps & ChildrenPr
 export function CircularWhiteButtonInColoredCard(props: ButtonProps & ChildrenProps & { color: Color }) {
   const { children, color, ...rest } = props
 
-  return <button className={`group p-1 bg-white text-${color}-400 dark:text-color-500 rounded-full outline-none enabled:hover:bg-white/90 focus-visible:outline-white disabled:opacity-50 transition-opacity`}
+  return <button className={`group p-1 bg-white text-${color}-400 dark:text-${color}-500 rounded-full outline-none enabled:hover:bg-white/90 focus-visible:outline-white disabled:opacity-50 transition-opacity`}
     {...rest}>
     <GapperAndClickerInButtonDiv>
       {children}

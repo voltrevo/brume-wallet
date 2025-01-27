@@ -59,7 +59,7 @@ export function OmniDialog(props: {
   }, [path, maybeWebsite])
 
   return <Dialog>
-    <div className="po-md bg-contrast rounded-xl">
+    <div className="po-2 bg-default-contrast rounded-xl">
       <div className="flex items-center">
         <Outline.SparklesIcon className="size-4" />
         <div className="w-2" />
@@ -87,35 +87,35 @@ export function OmniDialog(props: {
     </ContrastTitleDiv>
     <div className="h-4" />
     <div className="grid place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
-      <a className="po-md bg-contrast rounded-xl"
+      <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/home"}
         href="#/home">
         <Outline.HomeIcon className="size-5" />
         <div className="h-4" />
         {Locale.get(Locale.Home, lang)}
       </a>
-      <a className="po-md bg-contrast rounded-xl"
+      <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/wallets"}
         href="#/wallets">
         <Outline.WalletIcon className="size-5" />
         <div className="h-4" />
         Wallets
       </a>
-      <a className="po-md bg-contrast rounded-xl"
+      <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/seeds"}
         href="#/seeds">
         <Outline.SparklesIcon className="size-5" />
         <div className="h-4" />
         Seeds
       </a>
-      <a className="po-md bg-contrast rounded-xl"
+      <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/sessions"}
         href="#/sessions">
         <Outline.GlobeAltIcon className="size-5" />
         <div className="h-4" />
         Sessions
       </a>
-      <a className="po-md bg-contrast rounded-xl"
+      <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/requests"}
         href="#/requests">
         <ClickerInAnchorDiv>
@@ -133,7 +133,7 @@ export function OmniDialog(props: {
           Requests
         </ClickerInAnchorDiv>
       </a>
-      <a className="po-md bg-contrast rounded-xl"
+      <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/settings"}
         href="#/settings">
         <Outline.CogIcon className="size-5" />
@@ -147,14 +147,14 @@ export function OmniDialog(props: {
     </ContrastTitleDiv>
     <div className="h-4" />
     <div className="grid place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
-      <a className="po-md bg-contrast rounded-xl"
+      <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/"}
         href="#/">
         <Outline.RocketLaunchIcon className="size-5" />
         <div className="h-4" />
         Landing
       </a>
-      {/* <a className="po-md bg-contrast rounded-xl"
+      {/* <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/apps"}
         href="#/apps">
         <Outline.GlobeAltIcon className="size-5" />
@@ -174,27 +174,27 @@ export function UserBottomNavigation() {
 
   const omnidialog = useCoords(subpath, "/...")
 
-  return <nav className="md:hidden h-16 w-full flex-none border-t border-t-contrast">
+  return <nav className="md:hidden h-16 w-full flex-none border-t border-default-t-contrast">
     <HashSubpathProvider>
       {subpath.url.pathname === "/..." &&
         <OmniDialog path={path} />}
     </HashSubpathProvider>
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">
-      {/* <a className={`group flex-1 text-contrast data-[selected=true]:text-default`}
+      {/* <a className={`group flex-1 text-default-contrast data-[selected=true]:text-default`}
         data-selected={path.url.pathname === "/home"}
         href="#/home">
         <GapperAndClickerInAnchorDiv>
           <Outline.HomeIcon className="size-6" />
         </GapperAndClickerInAnchorDiv>
       </a>
-      <a className={`group flex-1 text-contrast data-[selected=true]:text-default`}
+      <a className={`group flex-1 text-default-contrast data-[selected=true]:text-default`}
         data-selected={path.url.pathname === "/wallets"}
         href="#/wallets">
         <GapperAndClickerInAnchorDiv>
           <Outline.WalletIcon className="size-6" />
         </GapperAndClickerInAnchorDiv>
       </a>
-      <a className={`group flex-1 text-contrast data-[selected=true]:text-default`}
+      <a className={`group flex-1 text-default-contrast data-[selected=true]:text-default`}
         data-selected={path.url.pathname === "/seeds"}
         href="#/seeds">
         <GapperAndClickerInAnchorDiv>
@@ -202,7 +202,7 @@ export function UserBottomNavigation() {
         </GapperAndClickerInAnchorDiv>
       </a> */}
       <div className="flex-1 flex items-center justify-center">
-        <a className="group po-md bg-opposite rounded-full text-opposite"
+        <a className="group po-2 bg-opposite rounded-full text-opposite"
           href={omnidialog.href}
           onClick={omnidialog.onClick}
           onKeyDown={omnidialog.onKeyDown}>
@@ -211,14 +211,14 @@ export function UserBottomNavigation() {
           </GapperAndClickerInAnchorDiv>
         </a>
       </div>
-      {/* <a className="group flex-1 text-contrast data-[selected=true]:text-default"
+      {/* <a className="group flex-1 text-default-contrast data-[selected=true]:text-default"
         data-selected={path.url.pathname === "/sessions"}
         href="#/sessions">
         <GapperAndClickerInAnchorDiv>
           <Outline.GlobeAltIcon className="size-6" />
         </GapperAndClickerInAnchorDiv>
       </a> */}
-      {/* <a className="group flex-1 text-contrast data-[selected=true]:text-default"
+      {/* <a className="group flex-1 text-default-contrast data-[selected=true]:text-default"
         data-selected={path.url.pathname === "/requests"}
         href="#/requests">
         <GapperAndClickerInAnchorDiv>
@@ -234,7 +234,7 @@ export function UserBottomNavigation() {
           </div>
         </GapperAndClickerInAnchorDiv>
       </a> */}
-      {/* <a className="group flex-1 text-contrast data-[selected=true]:text-default"
+      {/* <a className="group flex-1 text-default-contrast data-[selected=true]:text-default"
         data-selected={path.url.pathname === "/settings"}
         href="#/settings">
         <GapperAndClickerInAnchorDiv>
@@ -251,13 +251,13 @@ export function GlobalBottomNavigation() {
 
   const omnidialog = useCoords(subpath, "/...")
 
-  return <nav className="md:hidden h-16 w-full flex-none border-t border-t-contrast">
+  return <nav className="md:hidden h-16 w-full flex-none border-t border-default-t-contrast">
     <HashSubpathProvider>
       {subpath.url.pathname === "/..." &&
         <OmniDialog path={path} />}
     </HashSubpathProvider>
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">
-      {/* <a className={`group flex-1 text-contrast data-[selected=true]:text-default`}
+      {/* <a className={`group flex-1 text-default-contrast data-[selected=true]:text-default`}
         data-selected={path.url.pathname === "/"}
         href="#/">
         <GapperAndClickerInAnchorDiv>
@@ -265,7 +265,7 @@ export function GlobalBottomNavigation() {
         </GapperAndClickerInAnchorDiv>
       </a> */}
       <div className="flex-1 flex items-center justify-center">
-        <a className="group po-md bg-opposite rounded-full text-opposite"
+        <a className="group po-2 bg-opposite rounded-full text-opposite"
           href={omnidialog.href}
           onClick={omnidialog.onClick}
           onKeyDown={omnidialog.onKeyDown}>

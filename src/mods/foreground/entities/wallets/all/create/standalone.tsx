@@ -179,7 +179,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     </ContrastLabel>
 
   const KeyInput =
-    <div className="po-md flex flex-col bg-contrast rounded-xl">
+    <div className="po-2 flex flex-col bg-default-contrast rounded-xl">
       <div className="flex items-start">
         <div className="flex-none">
           Private key
@@ -270,5 +270,5 @@ export function StandaloneWalletCreatorDialog(props: {}) {
 }
 
 export function EmptyRectangularCard(props: {}) {
-  return <div className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed hovered-or-clicked-or-focused:scale-105 !transition-transform" />
+  return <div className="po-2 w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-default-contrast border-dashed hovered-or-clicked-or-focused:scale-105 !transition-transform" />
 }

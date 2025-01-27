@@ -67,7 +67,7 @@ export function EmptyLandingPage(props: { next?: string }) {
             <div>
               {Locale.get(Locale.Hello, lang)}
             </div>
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               {maybeUser?.name || "Anon"}
             </div>
           </h1>
@@ -175,7 +175,7 @@ export function FullLandingPage(props: { next?: string }) {
             } satisfies Localized<string>, lang)}
           </h1>
           <div className="h-4" />
-          <div className="text-center text-contrast text-2xl">
+          <div className="text-center text-default-contrast text-2xl">
             {Locale.get({
               "en": "Meet the only Ethereum wallet with maximum privacy and security.",
               "zh": "了解唯一具有最大隐私和安全性的以太坊钱包。",
@@ -363,7 +363,7 @@ export function UsersMenu() {
       onClick={create.onClick}
       onKeyDown={create.onKeyDown}
       href={create.href}>
-      <div className="rounded-full size-7 flex justify-center items-center border border-contrast border-dashed">
+      <div className="rounded-full size-7 flex justify-center items-center border border-default-contrast border-dashed">
         <Outline.PlusIcon className="size-4" />
       </div>
       {Locale.get(Locale.NewUser, lang)}
@@ -408,20 +408,20 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
             {title}
           </div>
           <div className="h-2" />
-          <div className="text-contrast">
+          <div className="text-default-contrast">
             {subtitle}
           </div>
           <div className="h-8" />
           {children}
         </Dialog>}
     </HashSubpathProvider>
-    <div className="p-6 aspect-square bg-contrast rounded-xl flex flex-col">
+    <div className="p-6 aspect-square bg-default-contrast rounded-xl flex flex-col">
       <div className="text-6xl">
         {title}
       </div>
       <div className="h-4 grow" />
       <div className="">
-        <span className="text-contrast">
+        <span className="text-default-contrast">
           {subtitle}
         </span>
         <span>{` `}</span>
@@ -445,7 +445,7 @@ export function DownloadCard(props: TitleProps & ChildrenProps & { src: string }
     window.open(href, "_blank", "noreferrer")
   }, [href])
 
-  return <div className="p-6 bg-contrast rounded-xl flex flex-col data-[highlighted=false]:opacity-50 transition-opacity"
+  return <div className="p-6 bg-default-contrast rounded-xl flex flex-col data-[highlighted=false]:opacity-50 transition-opacity"
     data-highlighted={highlighted}
     onClick={onClick}
     role="button">
@@ -459,7 +459,7 @@ export function DownloadCard(props: TitleProps & ChildrenProps & { src: string }
           {title}
         </div>
         <div className="h-1" />
-        <div className="text-contrast">
+        <div className="text-default-contrast">
           {children}
         </div>
       </div>
@@ -485,7 +485,7 @@ export function InstallCard(props: TitleProps & ChildrenProps & { src: string } 
   const hash = useHashSubpath(path)
   const coords = useCoords(hash, href)
 
-  return <div className="p-6 bg-contrast rounded-xl flex flex-col data-[highlighted=false]:opacity-50 transition-opacity"
+  return <div className="p-6 bg-default-contrast rounded-xl flex flex-col data-[highlighted=false]:opacity-50 transition-opacity"
     data-highlighted={highlighted}
     onClick={coords.onClick}
     role="button">
@@ -499,7 +499,7 @@ export function InstallCard(props: TitleProps & ChildrenProps & { src: string } 
           {title}
         </div>
         <div className="h-1" />
-        <div className="text-contrast">
+        <div className="text-default-contrast">
           {children}
         </div>
       </div>
@@ -523,16 +523,16 @@ export function IphoneInstallDialog() {
       Installing on iPhone
     </Dialog.Title>
     <div className="h-4" />
-    <div className="text-contrast">
+    <div className="text-default-contrast">
       {`You can follow these steps to install Brume Wallet on your iPhone, iPad, or Mac. Use the share button and select "Add to Home Screen". Confirm the installation by clicking "Add".`}
     </div>
     <div className="h-8" />
     <div className="flex flex-wrap items-center justify-center gap-2">
-      <img className="w-auto h-[480px] rounded-[32px] border-8 border-contrast"
+      <img className="w-auto h-[480px] rounded-[32px] border-8 border-default-contrast"
         src="/assets/install/iphone-1.png" />
-      <img className="w-auto h-[480px] rounded-[32px] border-8 border-contrast"
+      <img className="w-auto h-[480px] rounded-[32px] border-8 border-default-contrast"
         src="/assets/install/iphone-2.png" />
-      <img className="w-auto h-[480px] rounded-[32px] border-8 border-contrast"
+      <img className="w-auto h-[480px] rounded-[32px] border-8 border-default-contrast"
         src="/assets/install/iphone-3.png" />
     </div>
   </>
@@ -544,16 +544,16 @@ export function AndroidInstallDialog() {
       Installing on Android
     </Dialog.Title>
     <div className="h-4" />
-    <div className="text-contrast">
+    <div className="text-default-contrast">
       {`You can follow these steps to install Brume Wallet on your Android. Open the browser menu and select "Add to Home screen". Confirm the installation by clicking "Install".`}
     </div>
     <div className="h-8" />
     <div className="flex flex-wrap items-center justify-center gap-2">
-      <img className="w-auto h-[480px] rounded-[32px] border-8 border-contrast"
+      <img className="w-auto h-[480px] rounded-[32px] border-8 border-default-contrast"
         src="/assets/install/android-1.png" />
-      <img className="w-auto h-[480px] rounded-[32px] border-8 border-contrast"
+      <img className="w-auto h-[480px] rounded-[32px] border-8 border-default-contrast"
         src="/assets/install/android-2.png" />
-      <img className="w-auto h-[480px] rounded-[32px] border-8 border-contrast"
+      <img className="w-auto h-[480px] rounded-[32px] border-8 border-default-contrast"
         src="/assets/install/android-3.png" />
     </div>
   </>

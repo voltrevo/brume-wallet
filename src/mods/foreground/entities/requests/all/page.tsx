@@ -51,8 +51,8 @@ export function RequestsPage() {
         <Outline.TrashIcon className="size-5" />
       </PaddedRoundedClickableNakedButton>
     </PageHeader>
-    <div className="po-md flex items-center">
-      <div className="text-contrast">
+    <div className="po-2 flex items-center">
+      <div className="text-default-contrast">
         {`Request allow you to approve various actions such as transactions and signatures. These requests are sent by applications through sessions.`}
       </div>
     </div>
@@ -99,7 +99,7 @@ export function RequestRow(props: { request: AppRequest }) {
 
   const { id, method, params } = maybeRequestData
 
-  return <a className="po-md rounded-xl flex items-center gap-4"
+  return <a className="po-2 rounded-xl flex items-center gap-4"
     href={`#${pathOf(urlOf(`/${method}?id=${id}`, params))}`}>
     {maybeOriginData.icons?.map((x, i) =>
       <Fragment key={x.id}>
@@ -119,7 +119,7 @@ export function RequestRow(props: { request: AppRequest }) {
       <div className="font-medium">
         {maybeOriginData.title}
       </div>
-      <div className="text-contrast">
+      <div className="text-default-contrast">
         {maybeOriginData.origin}
       </div>
     </div>

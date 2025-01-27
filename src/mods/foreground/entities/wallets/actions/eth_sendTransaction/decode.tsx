@@ -33,7 +33,7 @@ export function WalletDecodeDialog(props: {}) {
       Decode transaction data
     </Dialog.Title>
     <div className="h-4" />
-    <div className="po-md bg-contrast rounded-xl text-contrast whitespace-pre-wrap break-all">
+    <div className="po-2 bg-default-contrast rounded-xl text-default-contrast whitespace-pre-wrap break-all">
       {maybeData || "0x0"}
     </div>
     <div className="h-4" />
@@ -91,20 +91,20 @@ export function SignatureRow(props: {
     return Abi.decodeOrThrow(Abi.FunctionSignature.parseOrThrow(text), data).intoOrThrow().map(stringifyOrThrow)
   }), [text, data])
 
-  return <div className="po-md bg-contrast rounded-xl">
+  return <div className="po-2 bg-default-contrast rounded-xl">
     <div className="break-words">
       {text}
     </div>
     {triedArgs.isErr() &&
-      <div className="text-contrast">
+      <div className="text-default-contrast">
         Could not decode arguments
       </div>}
     {triedArgs.isOk() && triedArgs.get().length === 0 &&
-      <div className="text-contrast">
+      <div className="text-default-contrast">
         No arguments
       </div>}
     {triedArgs.isOk() && triedArgs.get().length > 0 &&
-      <div className="text-contrast whitespace-pre-wrap break-all">
+      <div className="text-default-contrast whitespace-pre-wrap break-all">
         {triedArgs.get().map((arg, i) =>
           <div key={i}>
             - {arg}

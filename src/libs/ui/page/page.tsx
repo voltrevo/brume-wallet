@@ -14,7 +14,7 @@ export function UserPage(props: ChildrenProps) {
 
   return <>
     <div className="grow w-full flex flex-col overflow-y-scroll">
-      <div className="hidden md:block po-md border-b-contrast">
+      <div className="hidden md:block po-2 border-default-b-contrast">
         <div className="grow w-full m-auto max-w-6xl flex items-center">
           <div className="flex-1 flex items-center">
             <a className="flex items-center"
@@ -29,7 +29,7 @@ export function UserPage(props: ChildrenProps) {
             </a>
           </div>
           <div className="w-2" />
-          <div className="flex-1 flex items-center po-md bg-contrast rounded-xl">
+          <div className="flex-1 flex items-center po-2 bg-default-contrast rounded-xl">
             <Outline.SparklesIcon className="size-4" />
             <div className="w-2" />
             <input className="w-full bg-transparent outline-none"
@@ -59,7 +59,7 @@ export function GlobalPage(props: ChildrenProps) {
 
   return <>
     <div className="grow w-full flex flex-col overflow-y-scroll">
-      <div className="hidden md:block po-md border-b-contrast">
+      <div className="hidden md:block po-2 border-default-b-contrast">
         <div className="grow w-full m-auto max-w-6xl flex items-center">
           <div className="flex-1 flex items-center">
             <a className="flex items-center"
@@ -74,7 +74,7 @@ export function GlobalPage(props: ChildrenProps) {
             </a>
           </div>
           <div className="w-2" />
-          <div className="flex-1 flex items-center po-md bg-contrast rounded-xl">
+          <div className="flex-1 flex items-center po-2 bg-default-contrast rounded-xl">
             <Outline.SparklesIcon className="size-4" />
             <div className="w-2" />
             <input className="w-full bg-transparent outline-none"

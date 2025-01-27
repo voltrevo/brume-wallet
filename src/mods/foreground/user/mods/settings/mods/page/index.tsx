@@ -40,7 +40,7 @@ export function UserSettingsPage() {
           {Objects.fromEntries(Objects.values(chainDataByChainId).map(x => [String(x.chainId), x.name]))}
         </HashSelector>
       </ContrastLabel>
-      <div className="po-md text-contrast">
+      <div className="po-2 text-default-contrast">
         Use this parameter if some app requires a specific chain
       </div>
     </PageBody>

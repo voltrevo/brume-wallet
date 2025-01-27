@@ -53,19 +53,19 @@ export function HomePage() {
           <div>
             {Locale.get(Locale.Hello, lang)}
           </div>
-          <div className="text-contrast">
+          <div className="text-default-contrast">
             {userData.name}
           </div>
         </h1>
         <div className="grow" />
         {!persisted && !ignored && <>
           <div className="h-4" />
-          <div className="p-4 bg-contrast rounded-xl max-w-sm">
+          <div className="p-4 bg-default-contrast rounded-xl max-w-sm">
             <h3 className="font-medium text-center text-lg">
               {`Your data won't be saved`}
             </h3>
             <div className="h-2" />
-            <p className="text-contrast text-center">
+            <p className="text-default-contrast text-center">
               Add this website to your favorites or to your home screen if you want to keep your data
             </p>
             <div className="h-4" />
@@ -88,7 +88,7 @@ export function HomePage() {
         {totalPricedBalanceDisplay}
       </div>
       <div className="h-4" />
-      <div className="p-4 bg-contrast flex-none h-[300px] rounded-xl flex flex-col items-center justify-center">
+      <div className="p-4 bg-default-contrast flex-none h-[300px] rounded-xl flex flex-col items-center justify-center">
         <img src="/favicon.png" alt="logo" className="h-24 w-auto" />
         <div className="">
           Coming soon...

@@ -149,7 +149,7 @@ export function Menu(props: ChildrenProps & DarkProps) {
         <div className={`fixed inset-0 ${dark ? "dark" : ""}`}
           onMouseDown={onClickOutside}
           onClick={Events.keep}>
-          <div className={`absolute flex flex-col min-w-[min(calc(100vw-var(--l)),8rem)] max-w-[min(calc(100vw-var(--l)),32rem)] [translate:var(--l)_var(--t)] text-default bg-default border border-contrast rounded-2xl p-1 ${premount ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
+          <div className={`absolute flex flex-col min-w-[min(calc(100vw-var(--l)),8rem)] max-w-[min(calc(100vw-var(--l)),32rem)] [translate:var(--l)_var(--t)] text-default bg-default border border-default-contrast rounded-2xl p-1 ${premount ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
             ref={setMenu}
             aria-modal
             onAnimationEnd={onAnimationEnd}

@@ -34,7 +34,7 @@ export function WalletsPage() {
         <Outline.PlusIcon className="size-5" />
       </PaddedRoundedClickableNakedAnchor>
     </PageHeader>
-    <div className="p-4 text-contrast">
+    <div className="p-4 text-default-contrast">
       {`Wallets allow you to hold funds and generate signatures. You can import wallets from a private key or generate them from a seed.`}
     </div>
     <UserGuardBody>
@@ -165,7 +165,7 @@ export function NewRectangularAnchorCard(props: ChildrenProps) {
   const subpath = useHashSubpath(path)
   const creator = useCoords(subpath, "/create")
 
-  return <a className="po-md w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-contrast border-dashed active:scale-90 transition-transform"
+  return <a className="po-2 w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-default-contrast border-dashed active:scale-90 transition-transform"
     onContextMenu={creator.onContextMenu}
     onKeyDown={creator.onKeyDown}
     onClick={creator.onClick}

@@ -260,18 +260,18 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
               onChange={onValuedInputChange}
               placeholder="0.0" />
             <div className="w-1" />
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               {tokenData.symbol}
             </div>
           </div>
           <div className="flex items-center cursor-pointer"
             role="button"
             onClick={onPricedClick}>
-            <div className="text-contrast truncate">
+            <div className="text-default-contrast truncate">
               {rawPricedInput || "0.0"}
             </div>
             <div className="grow" />
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               USD
             </div>
           </div>
@@ -309,18 +309,18 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
               onChange={onPricedInputChange}
               placeholder="0.0" />
             <div className="w-1" />
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               USD
             </div>
           </div>
           <div className="flex items-center cursor-pointer"
             role="button"
             onClick={onValuedClick}>
-            <div className="text-contrast truncate">
+            <div className="text-default-contrast truncate">
               {rawValuedInput || "0.0"}
             </div>
             <div className="grow" />
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               {tokenData.symbol}
             </div>
           </div>
@@ -383,7 +383,7 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
 
   const chainData = chainDataByChainId[data.chainId]
 
-  return <div className="po-md flex items-center bg-contrast rounded-xl">
+  return <div className="po-2 flex items-center bg-default-contrast rounded-xl">
     <div className="flex flex-col truncate">
       <div className="flex items-center">
         <Outline.CheckIcon className="size-4 flex-none" />
@@ -392,12 +392,12 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
           Transaction confirmed
         </div>
       </div>
-      <div className="text-contrast truncate">
+      <div className="text-default-contrast truncate">
         {data.hash}
       </div>
       <div className="h-2" />
       <div className="flex items-center gap-1">
-        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
           <GapperAndClickerInAnchorDiv>
             Copy
@@ -406,7 +406,7 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
               : <Outline.ClipboardIcon className="size-4" />}
           </GapperAndClickerInAnchorDiv>
         </button>
-        <a className="group px-2 bg-contrast rounded-full"
+        <a className="group px-2 bg-default-contrast rounded-full"
           target="_blank" rel="noreferrer"
           href={`${chainData.etherscan}/tx/${data.hash}`}>
           <GapperAndClickerInAnchorDiv>
@@ -450,7 +450,7 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
 
   const chainData = chainDataByChainId[data.chainId]
 
-  return <div className="po-md flex items-center bg-contrast rounded-xl">
+  return <div className="po-2 flex items-center bg-default-contrast rounded-xl">
     <div className="flex flex-col truncate">
       <div className="flex items-center">
         <SmallUnflexLoading />
@@ -459,12 +459,12 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
           Transaction sent
         </div>
       </div>
-      <div className="text-contrast truncate">
+      <div className="text-default-contrast truncate">
         {data.hash}
       </div>
       <div className="h-2" />
       <div className="flex items-center gap-1">
-        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
           <GapperAndClickerInAnchorDiv>
             Copy
@@ -473,7 +473,7 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
               : <Outline.ClipboardIcon className="size-4" />}
           </GapperAndClickerInAnchorDiv>
         </button>
-        <a className="group px-2 bg-contrast rounded-full"
+        <a className="group px-2 bg-default-contrast rounded-full"
           target="_blank" rel="noreferrer"
           href={`${chainData.etherscan}/tx/${data.hash}`}>
           <GapperAndClickerInAnchorDiv>
@@ -481,7 +481,7 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
             <Outline.ArrowTopRightOnSquareIcon className="size-4" />
           </GapperAndClickerInAnchorDiv>
         </a>
-        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onRetryClick}>
           <GapperAndClickerInAnchorDiv>
             Retry
@@ -502,19 +502,19 @@ export function SignedTransactionCard(props: { data: SignedTransactionData } & {
     onSend(data)
   }, [data, onSend])
 
-  return <div className="po-md flex items-center bg-contrast rounded-xl">
+  return <div className="po-2 flex items-center bg-default-contrast rounded-xl">
     <div className="flex flex-col truncate">
       <div className="flex items-center">
         <div className="font-medium">
           Transaction signed
         </div>
       </div>
-      <div className="text-contrast truncate">
+      <div className="text-default-contrast truncate">
         {data.data}
       </div>
       <div className="h-2" />
       <div className="flex items-center gap-1">
-        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
           <GapperAndClickerInAnchorDiv>
             Copy
@@ -523,7 +523,7 @@ export function SignedTransactionCard(props: { data: SignedTransactionData } & {
               : <Outline.ClipboardIcon className="size-4" />}
           </GapperAndClickerInAnchorDiv>
         </button>
-        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onSendClick}>
           <GapperAndClickerInAnchorDiv>
             Send

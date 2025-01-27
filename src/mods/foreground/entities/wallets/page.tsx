@@ -55,7 +55,7 @@ export function WalletPage(props: UUIDProps) {
 export function AnchorCard(props: AnchorProps) {
   const { children, ...rest } = props
 
-  return <a className="grow group p-4 bg-contrast rounded-xl cursor-pointer focus:outline-black focus:outline-1"
+  return <a className="grow group p-4 bg-default-contrast rounded-xl cursor-pointer focus:outline-black focus:outline-1"
     {...rest}>
     <GapperAndClickerInAnchorDiv>
       {children}
@@ -144,7 +144,7 @@ function WalletDataPage() {
         </div>
         {wallet.type === "readonly" && <>
           <div className="h-2" />
-          <div className="po-sm bg-contrast text-contrast rounded-xl flex items-center justify-center">
+          <div className="po-1 bg-default-contrast text-default-contrast rounded-xl flex items-center justify-center">
             <Outline.EyeIcon className="size-5" />
             <div className="w-2" />
             <div>
@@ -156,7 +156,7 @@ function WalletDataPage() {
     </div>
 
   const Apps =
-    <div className="po-md grid place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
+    <div className="po-2 grid place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
       <AnchorCard>
         <Outline.BanknotesIcon className="size-4" />
         Tokens
@@ -283,7 +283,7 @@ export function RankedTokenRow(props: { rank: number }) {
   const tokenInfo = tokenQuery.data?.get()
 
   if (tokenInfo == null)
-    return <div className="flex items-center justify-center po-md">
+    return <div className="flex items-center justify-center po-2">
       <Loading className="size-5" />
     </div>
 
@@ -805,7 +805,7 @@ function TokenRowAnchor(props: { token: TokenData } & { chain: ChainData } & { b
   const balanceDisplay = useDisplayRaw(balanceQuery.data?.get())
   const balanceUsdDisplay = useDisplayUsd(balanceUsdQuery.data?.get())
 
-  return <a className="po-sm group flex items-center text-left"
+  return <a className="po-1 group flex items-center text-left"
     {...others}>
     <div className={`relative h-12 w-12 flex items-center justify-center bg-${color}-400 dark:bg-${color}-500 text-white rounded-full shrink-0`}>
       <div className=""
@@ -820,15 +820,15 @@ function TokenRowAnchor(props: { token: TokenData } & { chain: ChainData } & { b
     <div className="grow min-w-0">
       <div className="flex items-center">
         <div className="truncate">
-          {`${token.name} `}<span className="text-contrast">on</span>{` ${chain.name}`}
+          {`${token.name} `}<span className="text-default-contrast">on</span>{` ${chain.name}`}
         </div>
       </div>
-      <div className="flex items-center text-contrast gap-1">
+      <div className="flex items-center text-default-contrast gap-1">
         <div>{balanceDisplay} {token.symbol}</div>
         {balanceQuery.error != null && <ExclamationTriangleIcon className="h-4 mt-0.5" />}
         {balanceQuery.fetching && <SmallUnflexLoading />}
       </div>
-      <div className="flex items-center text-contrast gap-1">
+      <div className="flex items-center text-default-contrast gap-1">
         <div>{balanceUsdDisplay}</div>
         {balanceUsdQuery.error != null && <ExclamationTriangleIcon className="h-4 mt-0.5" />}
         {balanceUsdQuery.fetching && <SmallUnflexLoading />}

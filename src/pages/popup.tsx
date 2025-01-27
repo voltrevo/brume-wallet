@@ -26,7 +26,7 @@ import { StandaloneWalletCreatorDialog } from "@/mods/foreground/entities/wallet
 import { SelectableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { WalletDataContext } from "@/mods/foreground/entities/wallets/context";
 import { EthereumWalletInstance, useEthereumContext, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
-import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Localizer, useLocaleContext } from "@/mods/foreground/global/mods/locale";
 import { Locale } from "@/mods/foreground/locale";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Base16 } from "@hazae41/base16";
@@ -124,13 +124,15 @@ export default function Main() {
   if (url == null)
     return null
 
-  return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
-    <NavBar />
-    <iframe className="grow w-full"
-      ref={setIframe}
-      src={url.href}
-      seamless />
-  </main>
+  return <Localizer value={undefined}>
+    <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
+      <NavBar />
+      <iframe className="grow w-full"
+        ref={setIframe}
+        src={url.href}
+        seamless />
+    </main>
+  </Localizer>
 }
 
 export function TransactPage() {
@@ -226,7 +228,7 @@ export function TransactPage() {
           Transaction
         </Dialog.Title>
         <div className="h-2" />
-        <div className="text-contrast">
+        <div className="text-default-contrast">
           Do you want to send the following transaction?
         </div>
         <div className="h-4" />
@@ -298,12 +300,12 @@ export function TransactPage() {
         <div className="font-medium">
           Simulation
         </div>
-        <div className="text-contrast">
+        <div className="text-default-contrast">
           The simulation logs are a preview of the transaction execution on the blockchain.
         </div>
         <div className="h-2" />
         {currentSimulation == null &&
-          <div className="text-contrast">
+          <div className="text-default-contrast">
             Loading...
           </div>}
         {currentSimulation?.isErr() &&
@@ -314,22 +316,22 @@ export function TransactPage() {
           <div className="flex flex-col gap-2">
             {currentSimulation.get().logs.map((log, i) =>
               <Fragment key={i}>
-                <div className="p-2 bg-contrast rounded-xl">
+                <div className="p-2 bg-default-contrast rounded-xl">
                   <div className="font-medium">
                     {log.name}
                   </div>
-                  <div className="text-contrast truncate">
+                  <div className="text-default-contrast truncate">
                     {log.raw.address}
                   </div>
                   <div className="h-2" />
                   <div className="flex flex-col gap-2">
                     {log.inputs.map((input, j) =>
                       <Fragment key={j}>
-                        <div className="p-2 bg-contrast rounded-xl">
+                        <div className="p-2 bg-default-contrast rounded-xl">
                           <div className="font-medium">
                             {input.name} {input.type}
                           </div>
-                          <div className="text-contrast truncate">
+                          <div className="text-default-contrast truncate">
                             {typeof input.value === "string" ? input.value : JSON.stringify(input.value)}
                           </div>
                         </div>
@@ -408,15 +410,15 @@ export function PersonalSignPage() {
         Signature
       </Dialog.Title>
       <div className="h-2" />
-      <div className="text-contrast">
+      <div className="text-default-contrast">
         Do you want to sign the following message?
       </div>
       <div className="h-2" />
-      <div className="text-contrast">
+      <div className="text-default-contrast">
         Some applications may ask you to sign a message to prove you own a specific address or to approve a specific action without doing a transaction.
       </div>
       <div className="h-4" />
-      <div className="grow p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
+      <div className="grow p-4 bg-default-contrast rounded-xl whitespace-pre-wrap break-words">
         {triedUserMessage.getOr("Could not decode message")}
       </div>
       <div className="h-4 grow" />
@@ -484,15 +486,15 @@ export function TypedSignPage() {
         Signature
       </Dialog.Title>
       <div className="h-2" />
-      <div className="text-contrast">
+      <div className="text-default-contrast">
         Do you want to sign the following message?
       </div>
       <div className="h-2" />
-      <div className="text-contrast">
+      <div className="text-default-contrast">
         Some applications may ask you to sign a message to prove you own a specific address or to approve a specific action without doing a transaction.
       </div>
       <div className="h-4" />
-      <div className="grow p-4 bg-contrast rounded-xl whitespace-pre-wrap break-words">
+      <div className="grow p-4 bg-default-contrast rounded-xl whitespace-pre-wrap break-words">
         {triedParsedData.mapSync(x => JSON.stringify(x, undefined, 2)).getOr("Could not decode message")}
       </div>
       <div className="h-4 grow" />
@@ -582,12 +584,12 @@ export function WalletAndChainSelectPage() {
         ok={onWalletClick}
         selecteds={selecteds} />
       <div className="h-4" />
-      <label className="po-md flex items-center bg-contrast rounded-xl">
+      <label className="po-2 flex items-center bg-default-contrast rounded-xl">
         <div className="flex-none">
           Stay connected
         </div>
         <div className="w-4 grow" />
-        <input className="bg-transparent outline-none min-w-0 disabled:text-contrast"
+        <input className="bg-transparent outline-none min-w-0 disabled:text-default-contrast"
           type="checkbox"
           checked={persistent}
           onChange={onPersistentChange} />
@@ -647,7 +649,7 @@ export function DonePage() {
         Done
       </Dialog.Title>
       <div className="h-2" />
-      <div className="text-contrast">
+      <div className="text-default-contrast">
         You can now close this window or continue to use it
       </div>
       <div className="h-4" />

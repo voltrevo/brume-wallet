@@ -164,7 +164,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     </ContrastLabel>
 
   const PhraseInput =
-    <div className="po-md flex flex-col bg-contrast rounded-xl">
+    <div className="po-2 flex flex-col bg-default-contrast rounded-xl">
       <div className="flex items-start">
         <div className="flex-none">
           Seed phrase

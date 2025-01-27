@@ -8,8 +8,6 @@ import { Catcher, PromiseCatcher } from "@/libs/react/error";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ErrorProps } from "@/libs/react/props/error";
 import { WideClickableOppositeButton } from "@/libs/ui/button";
-import { PageBody, PageHeader } from "@/libs/ui/page/header";
-import { UserPage } from "@/libs/ui/page/page";
 import { BackgroundProvider } from "@/mods/foreground/background/context";
 import { UserProvider } from "@/mods/foreground/entities/users/context";
 import { InstallProvider } from "@/mods/foreground/global/mods/install";
@@ -43,24 +41,19 @@ export function Fallback(props: ErrorProps) {
   return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
     <div className="grow w-full flex flex-col overflow-y-scroll">
       <div className="grow w-full m-auto max-w-3xl flex flex-col">
-        <UserPage>
-          <PageHeader title="Error" />
-          <PageBody>
-            <div className="text-red-400 dark:text-red-500">
-              An unexpected error occured
-            </div>
-            <div className="text-contrast">
-              {Errors.toString(error)}
-            </div>
-            <div className="h-4 grow" />
-            <div className="flex items-center flex-wrap-reverse gap-2">
-              <WideClickableOppositeButton
-                onClick={onClick}>
-                Go home
-              </WideClickableOppositeButton>
-            </div>
-          </PageBody>
-        </UserPage>
+        <div className="text-red-400 dark:text-red-500">
+          An unexpected error occured
+        </div>
+        <div className="text-default-contrast">
+          {Errors.toString(error)}
+        </div>
+        <div className="h-4 grow" />
+        <div className="flex items-center flex-wrap-reverse gap-2">
+          <WideClickableOppositeButton
+            onClick={onClick}>
+            Go home
+          </WideClickableOppositeButton>
+        </div>
       </div>
     </div>
   </main>

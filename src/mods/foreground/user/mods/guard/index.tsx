@@ -53,7 +53,7 @@ export function LockedBody() {
           <UsersMenu />
         </Menu>}
     </HashSubpathProvider>
-    <div className="p-4 rounded-xl border border-contrast border-dashed h-[200px] flex flex-col items-center justify-center">
+    <div className="p-4 rounded-xl border border-default-contrast border-dashed h-[200px] flex flex-col items-center justify-center">
       <ClickableOppositeAnchor
         onKeyDown={users.onKeyDown}
         onClick={users.onClick}

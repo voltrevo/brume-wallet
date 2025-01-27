@@ -159,16 +159,16 @@ export function WalletSendScreenTarget(props: {}) {
     </div>
     {maybeEns != null && <>
       <div className="h-2" />
-      <div className="po-md flex items-center bg-contrast rounded-xl cursor-pointer"
+      <div className="po-2 flex items-center bg-default-contrast rounded-xl cursor-pointer"
         role="button"
         onClick={onSubmit}>
-        <div className="size-12 flex-none rounded-full bg-contrast" />
+        <div className="size-12 flex-none rounded-full bg-default-contrast" />
         <div className="w-4" />
         <div className="flex flex-col truncate">
           <div className="font-medium">
             {targetInput}
           </div>
-          <div className="text-contrast truncate">
+          <div className="text-default-contrast truncate">
             {maybeEns}
           </div>
         </div>
@@ -176,20 +176,20 @@ export function WalletSendScreenTarget(props: {}) {
     </>}
     <div className="h-4" />
     <div className="flex items-center">
-      <button className="text-lg font-medium text-contrast data-[active=true]:text-default"
+      <button className="text-lg font-medium text-default-contrast data-[active=true]:text-default"
         onClick={onRecentsClick}
         data-active={mode === "recents"}>
         Recents
       </button>
       <div className="grow" />
-      <button className="text-contrast font-medium text-contrast data-[active=true]:text-default"
+      <button className="text-default-contrast font-medium text-default-contrast data-[active=true]:text-default"
         onClick={onContactsClick}
         data-active={mode === "contacts"}>
         Contacts
       </button>
     </div>
     <div className="h-2" />
-    <div className="po-md flex items-center bg-contrast rounded-xl cursor-pointer"
+    <div className="po-2 flex items-center bg-default-contrast rounded-xl cursor-pointer"
       role="button"
       onClick={onBrumeClick}>
       <img className="size-12 flex-none rounded-full bg-white p-1"
@@ -200,7 +200,7 @@ export function WalletSendScreenTarget(props: {}) {
         <div className="font-medium">
           Brume Foundation
         </div>
-        <div className="text-contrast truncate">
+        <div className="text-default-contrast truncate">
           brume.eth
         </div>
       </div>

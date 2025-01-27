@@ -13,10 +13,10 @@ export function NavBar() {
     await BrowserError.runOrThrow(() => browser!.tabs.create({ url: `tabbed.html#/?_=${encodeURIComponent(pathOf(path.url))}` }))
   }), [path])
 
-  return <div className="w-full po-md border-b border-b-contrast flex items-center">
-    <div className="bg-contrast rounded-xl po-sm grow flex items-center gap-2 min-w-0">
+  return <div className="w-full po-2 border-b border-default-b-contrast flex items-center">
+    <div className="bg-default-contrast rounded-xl po-1 grow flex items-center gap-2 min-w-0">
       <div className="grow whitespace-nowrap overflow-hidden text-ellipsis text-sm">
-        <span className="text-contrast">
+        <span className="text-default-contrast">
           {`brume:`}
         </span>
         <span>
@@ -25,11 +25,11 @@ export function NavBar() {
       </div>
       <RoundedClickableNakedButton
         onClick={() => location.reload()}>
-        <Outline.ArrowPathIcon className="size-4 text-contrast" />
+        <Outline.ArrowPathIcon className="size-4 text-default-contrast" />
       </RoundedClickableNakedButton>
       <RoundedClickableNakedButton
         onClick={openOrAlert.run}>
-        <Outline.ArrowTopRightOnSquareIcon className="size-4 text-contrast" />
+        <Outline.ArrowTopRightOnSquareIcon className="size-4 text-default-contrast" />
       </RoundedClickableNakedButton>
     </div>
   </div>

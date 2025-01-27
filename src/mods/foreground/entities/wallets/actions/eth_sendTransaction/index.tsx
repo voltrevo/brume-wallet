@@ -858,16 +858,16 @@ export function WalletTransactionDialog(props: {}) {
             value={rawValuedInput}
             placeholder="0.0" />
           <div className="w-1" />
-          <div className="text-contrast">
+          <div className="text-default-contrast">
             {tokenData.symbol}
           </div>
         </div>
         <div className="flex items-center cursor-pointer">
-          <div className="text-contrast truncate">
+          <div className="text-default-contrast truncate">
             {rawPricedInput || "0.0"}
           </div>
           <div className="grow" />
-          <div className="text-contrast">
+          <div className="text-default-contrast">
             USD
           </div>
         </div>
@@ -894,7 +894,7 @@ export function WalletTransactionDialog(props: {}) {
       </ClickableContrastButtonInInputBox>
     </ContrastLabel>
     <div className="h-2" />
-    <div className="po-md flex flex-col bg-contrast rounded-xl">
+    <div className="po-2 flex flex-col bg-default-contrast rounded-xl">
       <div className="flex items-start">
         <div className="flex-none">
           Data
@@ -1121,43 +1121,43 @@ export function WalletTransactionDialog(props: {}) {
     </>}
     {maybeIsEip1559 === false && maybeFinalLegacyGasCost != null && <>
       <div className="h-2" />
-      <div className="text-contrast">
+      <div className="text-default-contrast">
         This transaction is expected to cost {finalLegacyGasCostDisplay}
       </div>
     </>}
     {maybeIsEip1559 === true && maybeFinalMaxEip1559GasCost != null && maybeFinalMinEip1559GasCost == null && <>
       <div className="h-2" />
-      <div className="text-contrast">
+      <div className="text-default-contrast">
         This transaction can cost up to {finalMaxEip1559GasCostDisplay}
       </div>
     </>}
     {maybeIsEip1559 === true && maybeFinalMaxEip1559GasCost != null && maybeFinalMinEip1559GasCost != null && <>
       <div className="h-2" />
-      <div className="text-contrast">
+      <div className="text-default-contrast">
         This transaction is expected to cost {finalMinEip1559GasCostDisplay} but can cost up to {finalMaxEip1559GasCostDisplay}
       </div>
     </>}
     <div className="h-4 grow" />
     {maybeTriedEip1559GasLimitKey?.isErr() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl text-red-400 dark:text-red-500">
+      <div className="po-2 flex items-center bg-default-contrast rounded-xl text-red-400 dark:text-red-500">
         {maybeTriedEip1559GasLimitKey.getErr()?.message}
       </div>
       <div className="h-2" />
     </>}
     {maybeTriedLegacyGasLimitKey?.isErr() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl text-red-400 dark:text-red-500">
+      <div className="po-2 flex items-center bg-default-contrast rounded-xl text-red-400 dark:text-red-500">
         {maybeTriedLegacyGasLimitKey.getErr()?.message}
       </div>
       <div className="h-2" />
     </>}
     {eip1559GasLimitQuery.current?.isErr() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl text-red-400 dark:text-red-500">
+      <div className="po-2 flex items-center bg-default-contrast rounded-xl text-red-400 dark:text-red-500">
         {eip1559GasLimitQuery.current.getErr()?.message}
       </div>
       <div className="h-2" />
     </>}
     {legacyGasLimitQuery.current?.isErr() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl text-red-400 dark:text-red-500">
+      <div className="po-2 flex items-center bg-default-contrast rounded-xl text-red-400 dark:text-red-500">
         {legacyGasLimitQuery.current.getErr()?.message}
       </div>
       <div className="h-2" />
@@ -1187,7 +1187,7 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
 
   const chainData = chainDataByChainId[data.chainId]
 
-  return <div className="po-md flex items-center bg-contrast rounded-xl">
+  return <div className="po-2 flex items-center bg-default-contrast rounded-xl">
     <div className="flex flex-col truncate">
       <div className="flex items-center">
         <Outline.CheckIcon className="size-4 flex-none" />
@@ -1196,12 +1196,12 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
           Transaction confirmed
         </div>
       </div>
-      <div className="text-contrast truncate">
+      <div className="text-default-contrast truncate">
         {data.hash}
       </div>
       <div className="h-2" />
       <div className="flex items-center gap-1">
-        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
           <GapperAndClickerInAnchorDiv>
             Copy
@@ -1210,7 +1210,7 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
               : <Outline.ClipboardIcon className="size-4" />}
           </GapperAndClickerInAnchorDiv>
         </button>
-        <a className="group px-2 bg-contrast rounded-full"
+        <a className="group px-2 bg-default-contrast rounded-full"
           target="_blank" rel="noreferrer"
           href={`${chainData.etherscan}/tx/${data.hash}`}>
           <GapperAndClickerInAnchorDiv>
@@ -1254,7 +1254,7 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
 
   const chainData = chainDataByChainId[data.chainId]
 
-  return <div className="po-md flex items-center bg-contrast rounded-xl">
+  return <div className="po-2 flex items-center bg-default-contrast rounded-xl">
     <div className="flex flex-col truncate">
       <div className="flex items-center">
         <SmallUnflexLoading />
@@ -1263,12 +1263,12 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
           Transaction sent
         </div>
       </div>
-      <div className="text-contrast truncate">
+      <div className="text-default-contrast truncate">
         {data.hash}
       </div>
       <div className="h-2" />
       <div className="flex items-center gap-1">
-        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
           <GapperAndClickerInAnchorDiv>
             Copy
@@ -1277,7 +1277,7 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
               : <Outline.ClipboardIcon className="size-4" />}
           </GapperAndClickerInAnchorDiv>
         </button>
-        <a className="group px-2 bg-contrast rounded-full"
+        <a className="group px-2 bg-default-contrast rounded-full"
           target="_blank" rel="noreferrer"
           href={`${chainData.etherscan}/tx/${data.hash}`}>
           <GapperAndClickerInAnchorDiv>
@@ -1285,7 +1285,7 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
             <Outline.ArrowTopRightOnSquareIcon className="size-4" />
           </GapperAndClickerInAnchorDiv>
         </a>
-        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onRetryClick}>
           <GapperAndClickerInAnchorDiv>
             Retry
@@ -1306,19 +1306,19 @@ export function SignedTransactionCard(props: { data: SignedTransactionData } & {
     onSend(data)
   }, [data, onSend])
 
-  return <div className="po-md flex items-center bg-contrast rounded-xl">
+  return <div className="po-2 flex items-center bg-default-contrast rounded-xl">
     <div className="flex flex-col truncate">
       <div className="flex items-center">
         <div className="font-medium">
           Transaction signed
         </div>
       </div>
-      <div className="text-contrast truncate">
+      <div className="text-default-contrast truncate">
         {data.data}
       </div>
       <div className="h-2" />
       <div className="flex items-center gap-1">
-        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
           <GapperAndClickerInAnchorDiv>
             Copy
@@ -1327,7 +1327,7 @@ export function SignedTransactionCard(props: { data: SignedTransactionData } & {
               : <Outline.ClipboardIcon className="size-4" />}
           </GapperAndClickerInAnchorDiv>
         </button>
-        <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onSendClick}>
           <GapperAndClickerInAnchorDiv>
             Send

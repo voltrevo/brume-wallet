@@ -17,8 +17,8 @@ export function SnapsPage() {
         <Outline.PlusIcon className="size-5" />
       </PaddedRoundedClickableNakedButton>
     </PageHeader>
-    <div className="po-md flex items-center">
-      <div className="text-contrast">
+    <div className="po-2 flex items-center">
+      <div className="text-default-contrast">
         {`Plugins allow you to securely extend the features. These features can then be used by applications you connect to.`}
       </div>
     </div>

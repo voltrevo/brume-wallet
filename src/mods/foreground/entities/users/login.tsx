@@ -111,7 +111,7 @@ export function UserLoginDialog(props: { next?: string }) {
         </div>
         <div className="h-4" />
         <ContrastLabel>
-          <input className="bg-transparent outline-none min-w-0 disabled:text-contrast data-[invalid=true]:border-red-400 data-[invalid=true]:text-red-400 dark:data-[invalid=true]:border-red-500 dark:data-[invalid=true]:text-red-500"
+          <input className="bg-transparent outline-none min-w-0 disabled:text-default-contrast data-[invalid=true]:border-red-400 data-[invalid=true]:text-red-400 dark:data-[invalid=true]:border-red-500 dark:data-[invalid=true]:text-red-500"
             ref={passwordInputRef}
             type="password"
             value={rawPasswordInput}

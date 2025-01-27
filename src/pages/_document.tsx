@@ -3,7 +3,7 @@ import Document, { Head, Html, Main, NextScript } from 'next/document'
 
 class MyDocument extends Document {
   render() {
-    const { locale = "en" } = this.props["__NEXT_DATA__"].props.pageProps
+    const { locale } = this.props["__NEXT_DATA__"].props.pageProps
 
     return (
       <Html lang={locale}>

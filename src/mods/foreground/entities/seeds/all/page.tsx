@@ -32,8 +32,8 @@ export function SeedsPage() {
         <Outline.PlusIcon className="size-5" />
       </PaddedRoundedClickableNakedAnchor>
     </PageHeader>
-    <div className="po-md flex items-center">
-      <div className="text-contrast">
+    <div className="po-2 flex items-center">
+      <div className="text-default-contrast">
         {`Seeds allow you to generate wallets from a single secret. You can import a seed from a mnemonic phrase or connect a hardware wallet.`}
       </div>
     </div>

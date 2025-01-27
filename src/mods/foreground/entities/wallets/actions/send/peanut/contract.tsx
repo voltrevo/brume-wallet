@@ -379,18 +379,18 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
               onChange={onValuedInputChange}
               placeholder="0.0" />
             <div className="w-1" />
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               {tokenData.symbol}
             </div>
           </div>
           <div className="flex items-center cursor-pointer"
             role="button"
             onClick={onPricedClick}>
-            <div className="text-contrast truncate">
+            <div className="text-default-contrast truncate">
               {rawPricedInput || "0.0"}
             </div>
             <div className="grow" />
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               USD
             </div>
           </div>
@@ -428,18 +428,18 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
               onChange={onPricedInputChange}
               placeholder="0.0" />
             <div className="w-1" />
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               USD
             </div>
           </div>
           <div className="flex items-center cursor-pointer"
             role="button"
             onClick={onValuedClick}>
-            <div className="text-contrast truncate">
+            <div className="text-default-contrast truncate">
               {rawValuedInput || "0.0"}
             </div>
             <div className="grow" />
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               {tokenData.symbol}
             </div>
           </div>
@@ -488,19 +488,19 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
     </>}
     <div className="h-4 grow" />
     {maybeTriedLink?.isOk() && <>
-      <div className="po-md flex items-center bg-contrast rounded-xl">
+      <div className="po-2 flex items-center bg-default-contrast rounded-xl">
         <div className="flex flex-col truncate">
           <div className="flex items-center">
             <div className="font-medium">
               Link created
             </div>
           </div>
-          <div className="text-contrast truncate">
+          <div className="text-default-contrast truncate">
             {maybeTriedLink.get()}
           </div>
           <div className="h-2" />
           <div className="flex items-center gap-1">
-            <button className="group px-2 bg-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+            <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
               onClick={onLinkCopy.run}>
               <GapperAndClickerInAnchorDiv>
                 Copy
@@ -509,7 +509,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
                   : <Outline.ClipboardIcon className="size-4" />}
               </GapperAndClickerInAnchorDiv>
             </button>
-            <a className="group px-2 bg-contrast rounded-full"
+            <a className="group px-2 bg-default-contrast rounded-full"
               target="_blank" rel="noreferrer"
               href={maybeTriedLink.get()}>
               <GapperAndClickerInAnchorDiv>

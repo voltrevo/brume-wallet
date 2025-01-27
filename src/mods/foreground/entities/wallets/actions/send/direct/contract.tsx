@@ -286,18 +286,18 @@ export function WalletDirectSendScreenContractValue(props: {}) {
               onChange={onValuedInputChange}
               placeholder="0.0" />
             <div className="w-1" />
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               {tokenData.symbol}
             </div>
           </div>
           <div className="flex items-center cursor-pointer"
             role="button"
             onClick={onPricedClick}>
-            <div className="text-contrast truncate">
+            <div className="text-default-contrast truncate">
               {rawPricedInput || "0.0"}
             </div>
             <div className="grow" />
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               USD
             </div>
           </div>
@@ -335,18 +335,18 @@ export function WalletDirectSendScreenContractValue(props: {}) {
               onChange={onPricedInputChange}
               placeholder="0.0" />
             <div className="w-1" />
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               USD
             </div>
           </div>
           <div className="flex items-center cursor-pointer"
             role="button"
             onClick={onValuedClick}>
-            <div className="text-contrast truncate">
+            <div className="text-default-contrast truncate">
               {rawValuedInput || "0.0"}
             </div>
             <div className="grow" />
-            <div className="text-contrast">
+            <div className="text-default-contrast">
               {tokenData.symbol}
             </div>
           </div>

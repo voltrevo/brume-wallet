@@ -43,7 +43,7 @@ export function WalletDataReceiveScreen(props: {}) {
       <div className="text-2xl font-medium">
         {wallet.name}
       </div>
-      <button className="text-contrast text-center outline-none"
+      <button className="text-default-contrast text-center outline-none"
         onClick={onCopyClick.run}>
         {onCopyClick.current
           ? "Copied"
@@ -56,7 +56,7 @@ export function WalletDataReceiveScreen(props: {}) {
           src={url} />
       </div>
       <div className="h-4" />
-      <div className="text-contrast text-center max-w-xs">
+      <div className="text-default-contrast text-center max-w-xs">
         {`This is an Ethereum address, only send Ethereum-compatible stuff to this address`}
       </div>
     </div>

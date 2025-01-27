@@ -24,6 +24,8 @@ module.exports = withMDX(withNextSidebuild({
     yield compileOffscreen(wpconfig)
   },
   async headers() {
+    if (process.env.NODE_ENV !== "production")
+      return []
     return [
       {
         source: "/:path*",

@@ -1,4 +1,4 @@
-import { LocaleContext } from "@/mods/foreground/global/mods/locale"
+import { Localizer } from "@/mods/foreground/global/mods/locale"
 import { Locale } from "@/mods/foreground/locale"
 import { Overlay } from "@/mods/foreground/overlay/overlay"
 import { Router } from "@/mods/foreground/router/router"
@@ -23,11 +23,11 @@ export function getStaticProps(context: {
 export default function Main(props: Params) {
   const { locale } = props
 
-  return <LocaleContext value={locale}>
+  return <Localizer value={locale}>
     <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
       <Overlay>
         <Router />
       </Overlay>
     </main>
-  </LocaleContext>
+  </Localizer>
 }

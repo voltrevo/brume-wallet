@@ -28,12 +28,12 @@ export function WalletSendScreen(props: {}) {
 }
 
 export function SimpleInput(props: InputProps) {
-  return <input className="grow bg-transparent outline-none min-w-0 disabled:text-contrast"
+  return <input className="grow bg-transparent outline-none min-w-0 disabled:text-default-contrast"
     {...props} />
 }
 
 export function SimpleTextarea(props: TextareaProps) {
-  return <textarea className="grow bg-transparent outline-none min-w-0 disabled:text-contrast"
+  return <textarea className="grow bg-transparent outline-none min-w-0 disabled:text-default-contrast"
     {...props} />
 }
 

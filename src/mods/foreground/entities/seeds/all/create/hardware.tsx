@@ -158,7 +158,7 @@ export function HardwareSelectDialog() {
     <div className="flex flex-col gap-2">
       {devices.map(device =>
         <Fragment key={device.serialNumber}>
-          <div className="po-md bg-contrast rounded-xl flex items-center">
+          <div className="po-2 bg-default-contrast rounded-xl flex items-center">
             <img className="h-16 w-auto"
               src="/assets/devices/ledger_nano_s.png"
               alt="Ledger Nano S" />
@@ -167,13 +167,13 @@ export function HardwareSelectDialog() {
               <div className="">
                 {device.productName}
               </div>
-              <div className="text-contrast">
+              <div className="text-default-contrast">
                 {device.manufacturerName}, {device.deviceVersionMajor}.{device.deviceVersionMinor}.{device.deviceVersionSubminor}
               </div>
             </div>
           </div>
         </Fragment>)}
-      <div className="po-md rounded-xl border border-contrast border-dashed flex items-center justify-center gap-2 h-[80px]">
+      <div className="po-2 rounded-xl border border-default-contrast border-dashed flex items-center justify-center gap-2 h-[80px]">
         <Outline.PlusIcon className="size-5" />
         New device
       </div>
