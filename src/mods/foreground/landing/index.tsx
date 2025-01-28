@@ -247,7 +247,38 @@ export function FullLandingPage(props: { next?: string }) {
           <InfoCard
             title="0 VC"
             href="/1"
-            subtitle={`Fully crowdfunded by the community for the community. No grants. No VCs.`}>
+            subtitle={Locale.get({
+              en: `Fully crowdfunded by the community for the community. No grants. No VCs.`,
+              zh: `完全由社区为社区众筹。没有赠款。没有风投。`,
+              hi: `समुदाय के लिए समुदाय द्वारा पूरी तरह से क्राउडफंडेड। कोई सब्सिडी नहीं। कोई वीसी नहीं।`,
+              es: `Totalmente financiado por la comunidad para la comunidad. Sin subvenciones. Sin VCs.`,
+              ar: `تمويل كامل من قبل المجتمع للمجتمع. لا منح. لا VCs.`,
+              fr: `Entièrement financé par la communauté pour la communauté. Pas de subventions. Pas de VCs.`,
+              de: `Vollständig von der Gemeinschaft für die Gemeinschaft finanziert. Keine Zuschüsse. Keine VCs.`,
+              ru: `Полностью краудфандингом сообществом для сообщества. Нет грантов. Нет ВК.`,
+              pt: `Totalmente financiado pela comunidade para a comunidade. Sem subsídios. Sem VCs.`,
+              ja: `コミュニティによってコミュニティのために完全にクラウドファンディングされました。助成金なし。VCなし。`,
+              pa: `ਸਮੂਹ ਲਈ ਸਮੂਹ ਦੁਆਰਾ ਪੂਰੀ ਤਰ੍ਹਾਂ ਕਰੌਡਫੰਡਿੰਗ ਕੀਤੀ ਗਈ। ਕੋਈ ਗ੍ਰਾਂਟ ਨਹੀਂ। ਕੋਈ ਵੀਸੀ ਨਹੀਂ।`,
+              bn: `সম্প্রদায়ের জন্য সম্প্রদায় দ্বারা পূর্ণভাবে ক্রাউডফান্ড। কোন অনুদান নেই। কোন ভি. সি. নেই।`,
+              id: `Sepenuhnya didanai oleh komunitas untuk komunitas. Tidak ada hibah. Tidak ada VC.`,
+              ur: `کمیونٹی کے لیے کمیونٹی کی طرف سے مکمل طور پر کراؤڈفنڈ کیا گیا۔ کوئی گرانٹ نہیں۔ کوئی وی سی نہیں۔`,
+              ms: `Sepenuhnya didanai oleh komuniti untuk komuniti. Tiada geran. Tiada VC.`,
+              it: `Totalmente finanziato dalla comunità per la comunità. Nessun contributo. Nessun VC.`,
+              tr: `Topluluk için topluluk tarafından tamamen kitle fonlaması yapıldı. Hiçbir hibe yok. Hiçbir VC yok.`,
+              ta: `சமூகத்திற்கு சமூகத்தால் முழுவதும் குழுநிதிப்படுத்தப்பட்டது. பொதுவாகவே இல்லை. விசி இல்லை.`,
+              te: `సముదాయంకి సముదాయం ద్వారా పూర్తిగా క్రౌడ్‌ఫండింగ్ చేయబడింది. సబ్సిడీ లేదు. వీసీలేదు.`,
+              ko: `커뮤니티를 위해 커뮤니티에 의해 완전히 크라우드 펀딩되었습니다. 보조금 없음. VC 없음.`,
+              vi: `Hoàn toàn được cộng đồng tài trợ cho cộng đồng. Không có hỗ trợ. Không có VC.`,
+              pl: `Całkowicie sfinansowany przez społeczność dla społeczności. Bez dotacji. Bez VC.`,
+              ro: `Total finanțat de comunitate pentru comunitate. Fără granturi. Fără VC.`,
+              nl: `Volledig gefinancierd door de gemeenschap voor de gemeenschap. Geen subsidies. Geen VCs.`,
+              el: `Πλήρως χρηματοδοτούμενο από την κοινότητα για την κοινότητα. Χωρίς υποτροφίες. Χωρίς VCs.`,
+              th: `ได้รับการสนับสนุนโดยชุมชนสำหรับชุมชน ไม่มีทุน ไม่มี VC`,
+              cs: `Plně crowdfunded komunitou pro komunitu. žádné granty. žádné VCs.`,
+              hu: `Teljesen közösségi finanszírozás a közösség számára. Nincs támogatás. Nincs VC.`,
+              sv: `Helt finansierad av gemenskapen för gemenskapen. Inga bidrag. Inga VC.`,
+              da: `Fuldt finansieret af samfundet for samfundet. Ingen bevillinger. Ingen VC.`,
+            } satisfies Localized<string>, lang)}>
             <LocalizedOne />
           </InfoCard>
           <InfoCard
@@ -396,6 +427,7 @@ export function UsersMenuRow(props: { user: User }) {
 }
 
 export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & AnchorProps & { href: string }) {
+  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
   const { children, title, subtitle, href, ...rest } = props
 
@@ -433,7 +465,38 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
           onKeyDown={genius.onKeyDown}
           href={genius.href}
           {...rest}>
-          Learn more.
+          {Locale.get({
+            en: "Learn more.",
+            zh: "了解更多。",
+            hi: "और जानें।",
+            es: "Aprende más.",
+            ar: "تعلم المزيد.",
+            fr: "En savoir plus.",
+            de: "Erfahren Sie mehr.",
+            ru: "Узнать больше.",
+            pt: "Saber mais.",
+            ja: "詳細を知る。",
+            pa: "ਹੋਰ ਜਾਣੋ।",
+            bn: "আরও জানুন।",
+            id: "Pelajari lebih lanjut.",
+            ur: "مزید جانیں۔",
+            ms: "Ketahui lebih lanjut.",
+            it: "Per saperne di più.",
+            tr: "Daha fazla bilgi edinin.",
+            ta: "மேலும் அறிக்க.",
+            te: "మరింత అడగండి.",
+            ko: "자세히 알아보기.",
+            vi: "Tìm hiểu thêm.",
+            pl: "Dowiedz się więcej.",
+            ro: "Aflați mai multe.",
+            nl: "Lees meer.",
+            el: "Μάθετε περισσότερα.",
+            th: "เรียนรู้เพิ่มเติม.",
+            cs: "Dozvědět se více.",
+            hu: "Tudj meg többet.",
+            sv: "Lär dig mer.",
+            da: "Lær mere.",
+          }, lang)}
         </TextAnchor>
       </div>
     </div>
