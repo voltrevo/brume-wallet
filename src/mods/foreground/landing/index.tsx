@@ -14,7 +14,7 @@ import { GlobalPage } from "@/libs/ui/page/page";
 import { urlOf } from "@/libs/url/url";
 import { User } from "@/mods/background/service_worker/entities/users/data";
 import { Two } from "@/mods/foreground/landing/2";
-import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
+import { Three } from "@/mods/foreground/landing/3";
 import { FourDisplay } from "@/mods/foreground/landing/4/4";
 import { FiveDisplay } from "@/mods/foreground/landing/5/5";
 import { SixDisplay } from "@/mods/foreground/landing/6/6";
@@ -115,6 +115,7 @@ export function FullLandingPage(props: { next?: string }) {
 
   const LocalizedOne = Locale.get(One, lang)
   const LocalizedTwo = Locale.get(Two, lang)
+  const LocalizedThree = Locale.get(Three, lang)
 
   return <>
     <HashSubpathProvider>
@@ -322,8 +323,39 @@ export function FullLandingPage(props: { next?: string }) {
           <InfoCard
             title="~50"
             href="/3"
-            subtitle={`Number of external dependencies. That's around 20x less than competitors.`}>
-            <ThreeDisplay />
+            subtitle={Locale.get({
+              en: `Number of external dependencies. That's around 20x less than competitors.`,
+              zh: `外部依赖项的数量。这大约是竞争对手的 20 倍。`,
+              hi: `बाहरी आधारों की संख्या। यह लगभग प्रतियोगियों की 20 गुणा है।`,
+              es: `Número de dependencias externas. Eso es alrededor de 20 veces menos que los competidores.`,
+              ar: `عدد التبعيات الخارجية. هذا حوالي 20 مرة أقل من المنافسين.`,
+              fr: `Nombre de dépendances externes. C'est environ 20 fois moins que les concurrents.`,
+              de: `Anzahl der externen Abhängigkeiten. Das ist etwa 20-mal weniger als bei Mitbewerbern.`,
+              ru: `Количество внешних зависимостей. Это примерно в 20 раз меньше, чем у конкурентов.`,
+              pt: `Número de dependências externas. Isso é cerca de 20 vezes menos do que os concorrentes.`,
+              ja: `外部依存関係の数。これは競合他社の約20倍です。`,
+              pa: `ਬਾਹਰੀ ਆਧਾਰਾਂ ਦੀ ਗਿਣਤੀ। ਇਹ ਲਗਭਗ ਪ੍ਰਤਿਸਪਰਧਾਰਾਂ ਤੋਂ 20 ਗੁਣਾ ਘੱਟ ਹੈ।`,
+              bn: `বাহ্যিক নির্ভরণী সংখ্যা। এটা প্রাতিযোগিতাদারদের প্রায় 20 গুণ কম।`,
+              id: `Jumlah dependensi eksternal. Itu sekitar 20 kali lebih sedikit dari pesaing.`,
+              ur: `بیرونی وابستگیوں کی تعداد۔ یہ تقریباً مقابلین کی 20 گنا کم ہے۔`,
+              ms: `Bilangan ketergantungan luaran. Itu kira-kira 20 kali kurang daripada pesaing.`,
+              it: `Numero di dipendenze esterne. È circa 20 volte meno dei concorrenti.`,
+              tr: `Dış bağımlılıkların sayısı. Bu, rakiplerden yaklaşık 20 kat daha azdır.`,
+              ta: `வெற்றிகரமாக பயன்படுத்தப்படும் வெற்றிகரமான சேவைகளின் எண்ணிக்கை. இது போட்டியாக 20 மட்டுமே குடிக்கும்.`,
+              te: `బాహ్య ఆధారాల సంఖ్య. అది ప్రత్యామ్పుల నుండి సుమారుగా 20 సార్లు తక్కువవి.`,
+              ko: `외부 종속성의 수. 이는 경쟁 업체의 약 20 배입니다.`,
+              vi: `Số lượng phụ thuộc bên ngoài. Đó là khoảng 20 lần ít hơn so với đối thủ.`,
+              pl: `Liczba zewnętrznych zależności. To około 20 razy mniej niż u konkurentów.`,
+              ro: `Numărul de dependențe externe. Acesta este de aproximativ 20 de ori mai mic decât al competitorilor.`,
+              nl: `Aantal externe afhankelijkheden. Dat is ongeveer 20 keer minder dan concurrenten.`,
+              el: `Αριθμός εξωτερικών εξαρτήσεων. Αυτό είναι περίπου 20 φορές λιγότερο από τους ανταγωνιστές.`,
+              th: `จำนวนของการขึ้นอยู่กับภายนอก นั้นประมาณ 20 เท่าของคู่แข่ง`,
+              cs: `Počet externích závislostí. To je asi 20krát méně než u konkurentů.`,
+              hu: `Külső függőségek száma. Ez körülbelül 20-szor kevesebb, mint a versenytársaknál.`,
+              sv: `Antal externa beroenden. Det är cirka 20 gånger mindre än konkurrenterna.`,
+              da: `Antal eksterne afhængigheder. Det er cirka 20 gange mindre end konkurrenterne.`,
+            }, lang)}>
+            <LocalizedThree />
           </InfoCard>
           <InfoCard
             title="Auth"
