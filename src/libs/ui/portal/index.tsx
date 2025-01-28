@@ -6,7 +6,7 @@ export function Portal(props: ChildrenProps) {
   const { children } = props
 
   const element = <Keeper>{children}</Keeper>
-  const container = document.getElementById("__next")!
+  const container = document.getElementById("main")!
 
   return <>{createPortal(element, container)}</>
 }
