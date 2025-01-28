@@ -7,8 +7,6 @@ for (let i = 1; i < arr.length; i += 2) {
   const title = arr[i]
   const content = arr[i + 1]
 
-  console.log({ title, content })
-
   fs.mkdirSync(`./${title}`, { recursive: true })
   fs.writeFileSync(`./${title}/index.mdx`, content)
 }
