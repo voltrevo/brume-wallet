@@ -5,10 +5,14 @@ import { createPortal } from "react-dom"
 export function Portal(props: ChildrenProps) {
   const { children } = props
 
-  const element = <Keeper>{children}</Keeper>
-  const container = document.getElementById("main")!
+  const container = document.getElementById("main")
 
-  return <>{createPortal(element, container)}</>
+  if (container == null)
+    return null
+
+  return createPortal(<Keeper>
+    {children}
+  </Keeper>, container)
 }
 
 export function Keeper(props: ChildrenProps) {
