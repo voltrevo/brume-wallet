@@ -16,7 +16,7 @@ import { User } from "@/mods/background/service_worker/entities/users/data";
 import { Two } from "@/mods/foreground/landing/2";
 import { Three } from "@/mods/foreground/landing/3";
 import { Four } from "@/mods/foreground/landing/4";
-import { FiveDisplay } from "@/mods/foreground/landing/5/5";
+import { Five } from "@/mods/foreground/landing/5";
 import { SixDisplay } from "@/mods/foreground/landing/6/6";
 import { UserAvatar } from "@/mods/foreground/user/mods/avatar";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
@@ -117,6 +117,7 @@ export function FullLandingPage(props: { next?: string }) {
   const LocalizedTwo = Locale.get(Two, lang)
   const LocalizedThree = Locale.get(Three, lang)
   const LocalizedFour = Locale.get(Four, lang)
+  const LocalizedFive = Locale.get(Five, lang)
 
   return <>
     <HashSubpathProvider>
@@ -398,8 +399,39 @@ export function FullLandingPage(props: { next?: string }) {
           <InfoCard
             title="Truth"
             href="/5"
-            subtitle={`Each request is sent to multiple servers to ensure no one lies about the blockchain state.`}>
-            <FiveDisplay />
+            subtitle={Locale.get({
+              en: `Each request is sent to multiple servers to ensure no one lies about the blockchain state.`,
+              zh: `每个请求都发送到多个服务器，以确保没有人对区块链状态撒谎。`,
+              hi: `प्रत्येक अनुरोध को ब्लॉकचेन स्थिति के बारे में कोई झूठ न बोले इस सुनिश्चित करने के लिए कई सर्वरों को भेजा जाता है।`,
+              es: `Cada solicitud se envía a varios servidores para asegurarse de que nadie mienta sobre el estado de la cadena de bloques.`,
+              ar: `يتم إرسال كل طلب إلى عدة خوادم لضمان عدم كذب أحد حول حالة سلسلة الكتل.`,
+              fr: `Chaque demande est envoyée à plusieurs serveurs pour s'assurer que personne ne ment sur l'état de la blockchain.`,
+              de: `Jede Anfrage wird an mehrere Server gesendet, um sicherzustellen, dass niemand über den Zustand der Blockchain lügt.`,
+              ru: `Каждый запрос отправляется на несколько серверов, чтобы никто не лгал о состоянии блокчейна.`,
+              pt: `Cada solicitação é enviada para vários servidores para garantir que ninguém minta sobre o estado da blockchain.`,
+              ja: `各リクエストは、誰もがブロックチェーンの状態について嘘をつかないように、複数のサーバーに送信されます。`,
+              pa: `ਹਰ ਬਿੰਦੂ ਨੂੰ ਬਲਾਕਚੇਨ ਦੀ ਹਾਲਤ ਬਾਰੇ ਕੋਈ ਝੂਠ ਨਾ ਬੋਲੇ ਇਸ ਨੂੰ ਯਕੀਨੀ ਬਣਾਉਣ ਲਈ ਹਰ ਬਿੰਦੂ ਨੂੰ ਕਈ ਸਰਵਰਾਂ ਨੂੰ ਭੇਜਿਆ ਜਾਂਦਾ ਹੈ।`,
+              bn: `প্রতিটি অনুরোধ ব্লকচেন অবস্থানের বিষয়ে কেউ মিথ্যা বলেনা তা নিশ্চিত করার জন্য এটি একাধিক সার্ভারে পাঠানো হয়।`,
+              id: `Setiap permintaan dikirim ke beberapa server untuk memastikan tidak ada yang berbohong tentang status blockchain.`,
+              ur: `ہر درخواست کو بلاک چین حالت کے بارے میں کوئی جھوٹ نہیں بولتا یہ یقینی بنانے کے لئے کئی سروروں کو بھیجا جاتا ہے۔`,
+              ms: `Setiap permintaan dihantar ke pelbagai pelayan untuk memastikan tiada sesiapa yang berbohong tentang keadaan rangkaian blockchain.`,
+              it: `Ogni richiesta viene inviata a più server per garantire che nessuno menta sullo stato della blockchain.`,
+              tr: `Her istek, blok zincir durumu hakkında kimse yalan söylemediğinden emin olmak için birden çok sunucuya gönderilir.`,
+              ta: `ஒவ்வொரு கோரிக்கையும் பிளாக்சைன் நிலையை பற்றி ஒருவரும் பொய் சொல்லவில்லை என்பதை உறுதிப்படுத்த பல சேவைகளுக்கு அனுப்பப்படுகின்றது.`,
+              te: `ప్రతి అభ్యర్థన బ్లాక్చైన్ స్థితి గురించి ఎవరూ అసత్యం చెబుతున్నట్లు ఖచ్చితం చేస్తుంది.`,
+              ko: `각 요청은 블록체인 상태에 대해 누구도 거짓말하지 않도록 여러 서버로 전송됩니다.`,
+              vi: `Mỗi yêu cầu được gửi đến nhiều máy chủ để đảm bảo không ai nói dối về trạng thái blockchain.`,
+              pl: `Każde żądanie jest wysyłane do wielu serwerów, aby zapewnić, że nikt nie kłamie na temat stanu blockchain.`,
+              ro: `Fiecare cerere este trimisă la mai multe servere pentru a asigura că nimeni nu minte despre starea blockchain.`,
+              nl: `Elk verzoek wordt naar meerdere servers gestuurd om ervoor te zorgen dat niemand liegt over de status van de blockchain.`,
+              el: `Κάθε αίτημα στέλνεται σε πολλούς διακομιστές για να διασφαλιστεί ότι κανείς δεν λέει ψέματα για την κατάσταση της blockchain.`,
+              th: `แต่ละคำขอถูกส่งไปยังเซิร์ฟเวอร์หลายเครื่องเพื่อให้แน่ใจว่าไม่มีใครโกหกเกี่ยวกับสถานะบล็อกเชน`,
+              cs: `Každý požadavek je odeslán na několik serverů, aby se zajistilo, že nikdo nelže o stavu blockchainu.`,
+              hu: `Minden kérés több szerverre van küldve annak érdekében, hogy senki se hazudjon a blokklánc állapotáról.`,
+              sv: `Varje begäran skickas till flera servrar för att säkerställa att ingen ljuger om blockkedjans tillstånd.`,
+              da: `Hver anmodning sendes til flere servere for at sikre, at ingen lyver om blockchain-tilstanden.`,
+            }, lang)}>
+            <LocalizedFive />
           </InfoCard>
           <InfoCard
             title="MIT"

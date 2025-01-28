@@ -1,0 +1,14 @@
+## What is this?
+
+<div className="h-2"/>
+
+We ensure that we always have the true blockchain state by using an algorithm that creates a consensus out of multiple servers. This means that if one server is compromised and lying about the blockchain state, we can detect it by comparing its state with the state of other servers. This is similar to how the blockchain itself works, but with a reduced number of servers.
+
+<div className="h-4"/>
+
+## How does it work?
+
+<div className="h-2"/>
+
+We use public servers from different providers and different locations to prevent a single point of failure. Each request is sent to multiple servers, and the result is compared to ensure that the response is correct. If a discrepancy is found we prefer the response from the majority of servers. If no majority is found, we prefer not using the response at all.
+

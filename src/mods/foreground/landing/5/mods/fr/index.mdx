@@ -1,0 +1,14 @@
+## Qu'est-ce que c'est?
+
+<div className="h-2"/>
+
+Nous nous assurons que nous avons toujours l'état réel de la blockchain en utilisant un algorithme qui crée un consensus à partir de plusieurs serveurs. Cela signifie que si un serveur est compromis et ment sur l'état de la blockchain, nous pouvons le détecter en comparant son état avec l'état d'autres serveurs. C'est similaire à la façon dont la blockchain elle-même fonctionne, mais avec un nombre réduit de serveurs.
+
+<div className="h-4"/>
+
+## Comment ça marche?
+
+<div className="h-2"/>
+
+Nous utilisons des serveurs publics de différents fournisseurs et de différentes localisations pour éviter un point de défaillance unique. Chaque demande est envoyée à plusieurs serveurs, et le résultat est comparé pour s'assurer que la réponse est correcte. Si une divergence est trouvée, nous préférons la réponse de la majorité des serveurs. Si aucune majorité n'est trouvée, nous préférons ne pas utiliser la réponse du tout.
+
