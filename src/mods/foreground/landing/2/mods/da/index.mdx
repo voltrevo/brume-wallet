@@ -1,0 +1,21 @@
+## Hvad er det?
+
+<div className="h-2"/>
+
+Vores killerfunktion er en integreret implementering af Tor-netværksprotokollen. Vi sender alle dine netværksanmodninger gennem Tor, så folk i enden af røret ikke kan bruge din IP-adresse til at spore eller censurere dig.
+
+<div className="h-4"/>
+
+## Hvordan fungerer det?
+
+<div className="h-2"/>
+
+Når din tegnebog sender en netværksanmodning, vælger den en tilfældig Tor-kreds til at sende anmodningen. Dette betyder, at når du bruger flere tegnebogsadresser, vil hver enkelt bruge en anden kreds, så folk i enden af røret ikke kan forbinde dine forskellige adresser. Brugeroplevelsen er specielt designet til ikke at hente data til flere adresser på én gang.
+
+<div className="h-4"/>
+
+## Noget andet
+
+<div className="h-2"/>
+
+Derudover har vi skabt brugerdefinerede implementeringer af WalletConnect og Ledger, så de ikke lækker data til netværket og ikke kan bruges til at spore dig, vi har også sikret, at vi har rettet alle sikkerhedshuller og ydeevneproblemer, som vi fandt i de oprindelige implementeringer.

@@ -13,7 +13,7 @@ import { PageBody } from "@/libs/ui/page/header";
 import { GlobalPage } from "@/libs/ui/page/page";
 import { urlOf } from "@/libs/url/url";
 import { User } from "@/mods/background/service_worker/entities/users/data";
-import { TwoDisplay } from "@/mods/foreground/landing/2/2";
+import { Two } from "@/mods/foreground/landing/2";
 import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
 import { FourDisplay } from "@/mods/foreground/landing/4/4";
 import { FiveDisplay } from "@/mods/foreground/landing/5/5";
@@ -114,6 +114,7 @@ export function FullLandingPage(props: { next?: string }) {
   const users = useCoords(hash, "/users")
 
   const LocalizedOne = Locale.get(One, lang)
+  const LocalizedTwo = Locale.get(Two, lang)
 
   return <>
     <HashSubpathProvider>
@@ -284,8 +285,39 @@ export function FullLandingPage(props: { next?: string }) {
           <InfoCard
             title="Tor"
             href="/2"
-            subtitle={`Built-in Tor to hide your IP address from third-parties. Each account has it's own IP.`}>
-            <TwoDisplay />
+            subtitle={Locale.get({
+              en: `Built-in Tor to hide your IP address from third-parties. Each account has it's own IP.`,
+              zh: `内置 Tor 以隐藏您的 IP 地址免受第三方侵犯。每个帐户都有自己的 IP。`,
+              hi: `तिसरे पक्षों से अपने आईपी पते को छुपाने के लिए बिल्ट-इन टोर। प्रत्येक खाते का अपना आईपी है।`,
+              es: `Tor integrado para ocultar su dirección IP de terceros. Cada cuenta tiene su propia IP.`,
+              ar: `Tor المدمج لإخفاء عنوان IP الخاص بك من الأطراف الثالثة. كل حساب له عنوان IP خاص به.`,
+              fr: `Tor intégré pour masquer votre adresse IP aux tiers. Chaque compte a sa propre adresse IP.`,
+              de: `Eingebautes Tor, um Ihre IP-Adresse vor Dritten zu verbergen. Jedes Konto hat seine eigene IP.`,
+              ru: `Встроенный Tor для скрытия вашего IP-адреса от третьих лиц. У каждого аккаунта свой IP.`,
+              pt: `Tor integrado para ocultar seu endereço IP de terceiros. Cada conta tem seu próprio IP.`,
+              ja: `第三者からIPアドレスを隠すための組み込みTor。各アカウントには独自のIPがあります。`,
+              pa: `ਤੀਜੇ ਪਾਰਟੀਆਂ ਤੋਂ ਆਪਣਾ ਆਈਪੀ ਪਤਾ ਛੁਪਾਉਣ ਲਈ ਬਿਲਡ-ਇਨ ਟੋਰ। ਹਰ ਖਾਤੇ ਦਾ ਆਪਣਾ ਆਈਪੀ ਹੈ।`,
+              bn: `তৃতীয় পক্ষগুলি থেকে আপনার আইপি ঠিকানা লুকানোর জন্য নির্মিত Tor। প্রতিটি অ্যাকাউন্টের নিজস্ব আইপি আছে।`,
+              id: `Tor bawaan untuk menyembunyikan alamat IP Anda dari pihak ketiga. Setiap akun memiliki IP sendiri.`,
+              ur: `تیسری طرفوں سے اپنا آئی پی پتہ چھپانے کے لئے بلٹ-ان ٹور۔ ہر اکاؤنٹ کا اپنا آئی پی ہے۔`,
+              ms: `Tor yang disertakan untuk menyembunyikan alamat IP anda daripada pihak ketiga. Setiap akaun mempunyai IP sendiri.`,
+              it: `Tor integrato per nascondere il tuo indirizzo IP dai terzi. Ogni account ha il suo IP.`,
+              tr: `Üçüncü taraflardan IP adresinizi gizlemek için yerleşik Tor. Her hesabın kendi IP'si vardır.`,
+              ta: `மூன்றாம் தரவுகளிலிருந்து உங்கள் ஐபி முகவரியை மறைக்க உள்ள Tor உள்ளது. ஒவ்வொரு கணக்கும் தனது ஐபி உள்ளது.`,
+              te: `మూడవ పార్టీల నుండి మీ ఐపీ చిరునామాను దాచేయడానికి అంతర్నిహితంగా ఉండిన Tor. ప్రతి ఖాతాలో తన ఐపీ ఉంది.`,
+              ko: `타사로부터 IP 주소를 숨기기 위한 내장 Tor. 각 계정에는 고유한 IP가 있습니다.`,
+              vi: `Tor tích hợp để ẩn địa chỉ IP của bạn khỏi bên thứ ba. Mỗi tài khoản đều có IP riêng.`,
+              pl: `Wbudowany Tor, aby ukryć swój adres IP przed osobami trzecimi. Każde konto ma własne IP.`,
+              ro: `Tor încorporat pentru a ascunde adresa IP de la terți. Fiecare cont are propriul său IP.`,
+              nl: `Ingebouwde Tor om uw IP-adres te verbergen voor derden. Elk account heeft zijn eigen IP.`,
+              el: `Ενσωματωμένο Tor για να κρύψετε τη διεύθυνση IP σας από τρίτους. Κάθε λογαριασμός έχει το δικό του IP.`,
+              th: `Tor ที่ซ่อนที่อยู่ IP จากฝ่ายที่สาม แต่ละบัญชีมี IP ของตัวเอง`,
+              cs: `Vestavěný Tor na skrytí vaší IP adresy před třetími stranami. Každý účet má svou vlastní IP.`,
+              hu: `Beépített Tor az IP-cím elrejtéséhez harmadik fél elől. Minden fióknak saját IP-címe van.`,
+              sv: `Inbyggd Tor för att dölja din IP-adress från tredje part. Varje konto har sin egen IP.`,
+              da: `Indbygget Tor til at skjule din IP-adresse fra tredjeparter. Hver konto har sin egen IP.`,
+            }, lang)}>
+            <LocalizedTwo />
           </InfoCard>
           <InfoCard
             title="~50"

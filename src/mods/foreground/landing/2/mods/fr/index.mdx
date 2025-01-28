@@ -1,0 +1,22 @@
+## Qu'est-ce que c'est?
+
+<div className="h-2"/>
+
+Notre fonctionnalité phare est une implémentation intégrée du protocole de réseau Tor. Nous faisons passer toutes vos demandes réseau par Tor, de sorte que les personnes au bout du tuyau ne puissent pas utiliser votre adresse IP pour vous suivre ou vous censurer.
+
+<div className="h-4"/>
+
+## Comment ça marche?
+
+<div className="h-2"/>
+
+Lorsque votre portefeuille envoie une demande réseau, il choisit un circuit Tor aléatoire pour envoyer la demande. Cela signifie que lorsque vous utilisez plusieurs adresses de portefeuille, chacune utilisera un circuit différent, de sorte que les personnes au bout du tuyau ne puissent pas lier vos différentes adresses. L'expérience utilisateur est spécialement conçue de manière à ne pas récupérer de données pour plusieurs adresses en même temps.
+
+<div className="h-4"/>
+
+## Une chose de plus
+
+<div className="h-2"/>
+
+Mieux encore, nous avons réalisé des implémentations personnalisées de WalletConnect et Ledger, de sorte qu'ils ne filtrent aucune donnée vers le réseau et ne peuvent pas être utilisés pour vous suivre, nous nous sommes également assurés de corriger toutes les vulnérabilités de sécurité et les problèmes de performance que nous avons trouvés dans les implémentations originales.
+

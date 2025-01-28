@@ -1,0 +1,22 @@
+## Co to je?
+
+<div className="h-2"/>
+
+Naše killer funkce je integrovaná implementace protokolu Tor sítě. Všechny vaše síťové požadavky posíláme přes Tor, takže lidé na konci trubky nemohou použít vaši IP adresu k sledování nebo cenzuře.
+
+<div className="h-4"/>
+
+## Jak to funguje?
+
+<div className="h-2"/>
+
+Když vaše peněženka odešle síťový požadavek, vybere náhodný Tor obvod k odeslání tohoto požadavku. To znamená, že když používáte více peněženkových adres, každá z nich bude používat jiný obvod, takže lidé na konci trubky nemohou propojit vaše různé adresy. Uživatelská zkušenost je speciálně navržena tak, aby nezískávala data pro více adres najednou.
+
+<div className="h-4"/>
+
+## Ještě něco
+
+<div className="h-2"/>
+
+Kromě toho jsme vytvořili vlastní implementace WalletConnect a Ledger, takže neunikají žádná data do sítě a nemohou být použity k sledování vás, také jsme se ujistili, že jsme opravili všechny bezpečnostní chyby a výkonnostní problémy, které jsme našli v původních implementacích.
+

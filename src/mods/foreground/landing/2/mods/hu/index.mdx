@@ -1,0 +1,22 @@
+## Mi ez?
+
+<div className="h-2"/>
+
+A killer funkció az integrált Tor hálózati protokoll implementációja. Az összes hálózati kérést a Tor-on keresztül küldjük, így a cső végén lévő emberek nem használhatják az IP-címét a követésre vagy a cenzúrázásra.
+
+<div className="h-4"/>
+
+## Hogyan működik?
+
+<div className="h-2"/>
+
+Amikor a pénztárcája hálózati kérést küld, véletlenszerű Tor áramkört választ a kérés elküldéséhez. Ez azt jelenti, hogy ha több pénztárca címet használ, mindegyik más áramkört fog használni, így a cső végén lévő emberek nem tudják összekapcsolni a különböző címeit. A felhasználói élmény kifejezetten úgy van kialakítva, hogy ne szerezzen adatokat egyszerre több címre.
+
+<div className="h-4"/>
+
+## Még valami
+
+<div className="h-2"/>
+
+Ezenkívül létrehoztunk egyedi WalletConnect és Ledger implementációkat, így nem szivárognak ki adatok a hálózatba, és nem használhatók követésre, továbbá megbizonyosodtunk arról, hogy az összes biztonsági rést és teljesítményproblémát kijavítottuk az eredeti implementációkban.
+

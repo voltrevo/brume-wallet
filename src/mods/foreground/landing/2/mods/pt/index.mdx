@@ -1,0 +1,22 @@
+## O que é?
+
+<div className="h-2"/>
+
+Nosso recurso matador é uma implementação integrada do protocolo de rede Tor. Fazemos com que todas as suas solicitações de rede passem pelo Tor, de modo que as pessoas no final do tubo não possam usar seu endereço IP para rastreá-lo ou censurá-lo.
+
+<div className="h-4"/>
+
+## Como funciona?
+
+<div className="h-2"/>
+
+Quando sua carteira envia uma solicitação de rede, ela escolhe um circuito Tor aleatório para enviar a solicitação. Isso significa que, ao usar vários endereços de carteira, cada um usará um circuito diferente, de modo que as pessoas no final do tubo não possam vincular seus diferentes endereços. A experiência do usuário é especialmente projetada de forma que não buscará dados para vários endereços ao mesmo tempo.
+
+<div className="h-4"/>
+
+## Mais uma coisa
+
+<div className="h-2"/>
+
+Ainda mais, fizemos implementações personalizadas do WalletConnect e Ledger, para que eles não vazem nenhum dado para a rede e não possam ser usados para rastreá-lo, também garantimos corrigir todas as vulnerabilidades de segurança e problemas de desempenho que encontramos nas implementações originais.
+

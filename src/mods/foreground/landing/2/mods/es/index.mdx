@@ -1,0 +1,22 @@
+## ¿Qué es?
+
+<div className="h-2"/>
+
+Nuestra característica estrella es una implementación integrada del protocolo de red Tor. Hacemos que todas sus solicitudes de red pasen por Tor, de modo que las personas al final del tubo no puedan usar su dirección IP para rastrearlo o censurarlo.
+
+<div className="h-4"/>
+
+## ¿Cómo funciona?
+
+<div className="h-2"/>
+
+Cuando su billetera envía una solicitud de red, elige un circuito Tor aleatorio para enviar la solicitud. Esto significa que cuando usa múltiples direcciones de billetera, cada una usará un circuito diferente, de modo que las personas al final del tubo no puedan vincular sus diferentes direcciones. La experiencia de usuario está especialmente diseñada de tal manera que no obtendrá datos para múltiples direcciones al mismo tiempo.
+
+<div className="h-4"/>
+
+## Una cosa más
+
+<div className="h-2"/>
+
+Aún más, hicimos implementaciones personalizadas de WalletConnect y Ledger, para que no filtren ningún dato a la red y no puedan ser utilizados para rastrearlo, también nos aseguramos de corregir todas las vulnerabilidades de seguridad y problemas de rendimiento que encontramos en las implementaciones originales.
+
