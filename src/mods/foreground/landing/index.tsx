@@ -26,7 +26,7 @@ import { useCurrentUser, useUser, useUsers } from "../entities/users/data";
 import { UserLoginDialog } from "../entities/users/login";
 import { useLocaleContext } from "../global/mods/locale";
 import { Locale, Localized } from "../locale";
-import { OneDisplay } from "./1";
+import { One } from "./1";
 
 export function EmptyLandingPage(props: { next?: string }) {
   const lang = useLocaleContext().getOrThrow()
@@ -113,7 +113,7 @@ export function FullLandingPage(props: { next?: string }) {
   const hash = useHashSubpath(path)
   const users = useCoords(hash, "/users")
 
-  const LocalizedOneDisplay = Locale.get(OneDisplay, lang)
+  const LocalizedOne = Locale.get(One, lang)
 
   return <>
     <HashSubpathProvider>
@@ -248,7 +248,7 @@ export function FullLandingPage(props: { next?: string }) {
             title="0 VC"
             href="/1"
             subtitle={`Fully crowdfunded by the community for the community. No grants. No VCs.`}>
-            <LocalizedOneDisplay />
+            <LocalizedOne />
           </InfoCard>
           <InfoCard
             title="Tor"
