@@ -3,9 +3,9 @@ import { usePathContext } from "@hazae41/chemin"
 import { CloseContext, useCloseContext } from "@hazae41/react-close-context"
 import { AnimationEvent, KeyboardEvent, MouseEvent, SyntheticEvent, UIEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
+import { Portal } from "../../portal"
 import { Events } from "../../react/events"
 import { ChildrenProps } from "../../react/props/children"
-import { Portal } from "../portal"
 
 export function Dialog(props: ChildrenProps & DarkProps & { hesitant?: boolean }) {
   const { url } = usePathContext().getOrThrow()
