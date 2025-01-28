@@ -210,7 +210,8 @@ export function Dialog(props: ChildrenProps & DarkProps & { hesitant?: boolean }
         <div className={`fixed inset-0 bg-backdrop ${premount ? "animate-opacity-in" : "animate-opacity-out"}`}
           aria-hidden="true"
           role="backdrop" />
-        <div className={`fixed inset-0 md:p-safe flex flex-col [scrollbar-gutter:stable] ${dark ? "dark" : ""} ${postmount && premount ? "overflow-y-scroll" : "overflow-y-hidden"} ${premount ? "animate-slideup-in md:animate-scale-xy-in" : "animate-slideup-out md:animate-scale-xy-out"}`}
+        <div className={`fixed inset-0 md:p-safe flex flex-col [scrollbar-gutter:stable] ${postmount && premount ? "overflow-y-scroll" : "overflow-y-hidden"} ${premount ? "animate-slideup-in md:animate-scale-xy-in" : "animate-slideup-out md:animate-scale-xy-out"}`}
+          data-theme={dark && "dark"}
           onAnimationEnd={onAnimationEnd}
           onMouseDown={onClickOutside}
           onScroll={onScroll}

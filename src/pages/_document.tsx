@@ -23,7 +23,6 @@ class MyDocument extends Document {
           <link rel="shortcut icon" href="/favicon.ico" />
           <link rel="manifest" href="/manifest.json" />
           <link rel="apple-touch-icon" href="/appicon.png" />
-          <script id="themer" src="/themer.js" />
         </Head>
         <body className="antialiased">
           <Main />
