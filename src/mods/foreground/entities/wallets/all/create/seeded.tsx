@@ -243,7 +243,7 @@ export function SeededWalletCreatorDialog(props: {}) {
           Derivation
         </div>
         <div className="w-4" />
-        <select className="w-full bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
+        <select className="w-full bg-transparent outline-none text-ellipsis overflow-x-hidden appearance-none"
           value={rawDerivation}
           onChange={onDerivationChange}>
           <option value="eth-metamask">

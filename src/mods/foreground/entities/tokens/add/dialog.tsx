@@ -85,7 +85,7 @@ export function TokenAddDialog(props: {}) {
         Chain
       </div>
       <div className="w-4 grow" />
-      <select className="text-right bg-transparent outline-none overflow-ellipsis overflow-x-hidden appearance-none"
+      <select className="text-right bg-transparent outline-none text-ellipsis overflow-x-hidden appearance-none"
         value={rawChainId}
         onChange={onChainIdChange}>
         {Object.values(chainDataByChainId).map(x =>
