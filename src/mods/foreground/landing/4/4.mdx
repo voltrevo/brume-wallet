@@ -676,7 +676,7 @@ A kulcsait duplán titkosítva elküldhetik az eszközének gyártójának szerv
 
 <div className="h-2"/>
 
-Du kan använda WebAuthn för att skydda dina nycklar med autentisering från din enhet (till exempel FaceID och TouchID på Apple-enheter). Detta är helt 
+Du kan använda WebAuthn för att skydda dina nycklar med autentisering från din enhet (till exempel, FaceID och TouchID på Apple-enheter). Detta är helt valfritt, men det är mycket rekommenderat om din enhet stöder det. Detta kan förhindra phishingattacker och telefonattacker som lämnas på bordet genom att förhindra att några transaktioner eller signaturer utförs utan autentisering.
 
 <div className="h-4"/>
 
@@ -695,3 +695,25 @@ Dina nycklar kommer att krypteras med ditt lösenord och sedan skyddas med auten
 Dina nycklar kan skickas dubbelkrypterade till din enhets tillverkares servrar (till exempel Apple, Google etc.) för backup- och återställningsändamål. De skickas aldrig till oss eller till tredje part. Vår applikation vidtar ytterligare åtgärder för att förhindra att din tillverkare ser dessa nycklar eftersom de krypteras av ditt användarlösenord och av en slumpmässig nonce som endast existerar på din enhet.
 
 # da
+
+## Hvad er dette?
+
+<div className="h-2"/>
+
+Du kan bruge WebAuthn til at beskytte dine nøgler med godkendelse fra din enhed (for eksempel FaceID og TouchID på Apple-enheder). Dette er helt valgfrit, men anbefales stærkt, hvis din enhed understøtter det. Dette kan forhindre phishing-angreb og telefonangreb, der efterlades på bordet, ved at forhindre transaktioner eller signaturer i at blive udført uden godkendelse.
+
+<div className="h-4"/>
+
+## Hvordan fungerer det?
+
+<div className="h-2"/>
+
+Dine nøgler vil blive krypteret med dit kodeord og derefter beskyttet med godkendelse. Dette betyder, at hvis dit kodeord kompromitteres, forbliver dine nøgler sikre. Og hvis din godkendelse kompromitteres, vil dine nøgler stadig blive krypteret af dit brugerkodeord og af en tilfældig nonce, der kun eksisterer på din enhed.
+
+<div className="h-4"/>
+
+## Sendes mine nøgler til nogen?
+
+<div className="h-2"/>
+
+Dine nøgler kan sendes dobbeltkrypteret til din enhedsproducenters servere (for eksempel Apple, Google osv.) til backup- og gendannelsesformål. De sendes aldrig til os eller til tredjepart. Vores applikation træffer yderligere foranstaltninger for at forhindre din producent i at se disse nøgler, da de er krypteret af dit brugerkodeord og af en tilfældig nonce, der kun eksisterer på din enhed.
