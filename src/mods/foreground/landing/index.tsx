@@ -416,7 +416,8 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
         </Dialog>}
     </HashSubpathProvider>
     <div className="p-6 aspect-square bg-default-contrast rounded-xl flex flex-col">
-      <div className="text-6xl">
+      <div className="text-6xl rtl:text-right"
+        dir="ltr">
         {title}
       </div>
       <div className="h-4 grow" />
