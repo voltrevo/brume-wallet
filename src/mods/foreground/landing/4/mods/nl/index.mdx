@@ -1,0 +1,22 @@
+## Wat is dit?
+
+<div className="h-2"/>
+
+U kunt WebAuthn gebruiken om uw sleutels te beveiligen met verificatie vanaf uw apparaat (bijvoorbeeld, FaceID en TouchID op Apple-apparaten). Dit is volledig optioneel, maar wordt sterk aanbevolen als uw apparaat dit ondersteunt. Dit kan phishingaanvallen en telefoonaanvallen die op tafel zijn achtergelaten voorkomen door te voorkomen dat er transacties of handtekeningen worden uitgevoerd zonder verificatie.
+
+<div className="h-4"/>
+
+## Hoe werkt het?
+
+<div className="h-2"/>
+
+Uw sleutels worden versleuteld met uw wachtwoord en vervolgens beschermd met verificatie. Dit betekent dat als uw wachtwoord wordt gecompromitteerd, uw sleutels nog steeds veilig zijn. En als uw verificatie wordt gecompromitteerd, worden uw sleutels nog steeds versleuteld door uw gebruikerswachtwoord en door een willekeurige nonce die alleen op uw apparaat bestaat.
+
+<div className="h-4"/>
+
+## Worden mijn sleutels naar iemand gestuurd?
+
+<div className="h-2"/>
+
+Uw sleutels kunnen dubbel versleuteld naar de servers van de fabrikant van uw apparaat (bijvoorbeeld, Apple, Google, enz.) worden gestuurd voor back-up- en hersteldoeleinden. Ze worden nooit naar ons of naar derden gestuurd. Onze applicatie neemt extra maatregelen om te voorkomen dat uw fabrikant deze sleutels ziet omdat ze zijn versleuteld door uw gebruikerswachtwoord en door een willekeurige nonce die alleen op uw apparaat bestaat.
+

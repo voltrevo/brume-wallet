@@ -1,0 +1,22 @@
+## ¿Qué es esto?
+
+<div className="h-2"/>
+
+Puedes usar WebAuthn para asegurar tus claves con una autenticación desde tu dispositivo (por ejemplo, FaceID y TouchID en dispositivos Apple). Esto es completamente opcional pero se recomienda encarecidamente si tu dispositivo lo admite. Esto puede prevenir ataques de phishing y de dejar el teléfono en la mesa al evitar que se realice cualquier transacción o firma sin autenticación.
+
+<div className="h-4"/>
+
+## ¿Cómo funciona?
+
+<div className="h-2"/>
+
+Tus claves serán encriptadas con tu contraseña y luego protegidas por autenticación. Esto significa que si tu contraseña se ve comprometida, tus claves seguirán estando seguras. Y si tu autenticación se ve comprometida, tus claves seguirán estando encriptadas por tu contraseña de usuario y por un nonce aleatorio que solo se encuentra en tu dispositivo.
+
+<div className="h-4"/>
+
+## ¿Se envían mis claves a alguien?
+
+<div className="h-2"/>
+
+Tus claves pueden ser enviadas doblemente encriptadas a los servidores del fabricante de tu dispositivo (por ejemplo, Apple, Google, etc.) para fines de copia de seguridad y recuperación. Nunca se envían a nosotros ni a ningún otro tercero. Nuestra aplicación toma medidas adicionales para evitar que tu fabricante vea estas claves ya que están encriptadas por tu contraseña de usuario y por un nonce aleatorio que solo se encuentra en tu dispositivo.
+

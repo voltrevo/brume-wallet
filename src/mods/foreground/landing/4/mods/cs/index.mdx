@@ -1,0 +1,22 @@
+## Co to je?
+
+<div className="h-2"/>
+
+Můžete použít WebAuthn k ochraně svých klíčů pomocí ověření z vašeho zařízení (například FaceID a TouchID na zařízeních Apple). Jedná se o zcela volitelné, ale je velmi doporučeno, pokud vaše zařízení podporuje. To může zabránit phishingovým útokům a útokům telefonů, které zůstávají na stole, zabránění jakýchkoli transakcí nebo podpisů bez ověření.
+
+<div className="h-4"/>
+
+## Jak to funguje?
+
+<div className="h-2"/>
+
+Vaše klíče budou zašifrovány vaším heslem a následně chráněny ověřením. To znamená, že pokud je vaše heslo ohroženo, vaše klíče zůstanou v bezpečí. A pokud je vaše ověření ohroženo, vaše klíče budou stále zašifrovány heslem uživatele a náhodným nonce, který existuje pouze na vašem zařízení.
+
+<div className="h-4"/>
+
+## Jsou mé klíče někomu zaslány?
+
+<div className="h-2"/>
+
+Vaše klíče mohou být zaslány dvojitě zašifrované na servery výrobce vašeho zařízení (například Apple, Google atd.) pro účely zálohování a obnovení. Nikdy nejsou zaslány k nám nebo třetím stranám. Naše aplikace přijímá další opatření k zabránění výrobci ve vidění těchto klíčů, protože jsou zašifrovány heslem uživatele a náhodným nonce, který existuje pouze na vašem zařízení.
+

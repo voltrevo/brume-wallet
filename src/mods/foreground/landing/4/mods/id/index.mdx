@@ -1,0 +1,22 @@
+## Apa ini?
+
+<div className="h-2"/>
+
+Anda dapat menggunakan WebAuthn untuk mengamankan kunci Anda dengan otentikasi dari perangkat Anda (misalnya, FaceID dan TouchID di perangkat Apple). Ini sepenuhnya opsional tetapi sangat disarankan jika perangkat Anda mendukungnya. Ini dapat mencegah serangan phishing dan serangan telepon dibiarkan di atas meja dengan mencegah transaksi atau tanda tangan apa pun dilakukan tanpa otentikasi.
+
+<div className="h-4"/>
+
+## Bagaimana cara kerjanya?
+
+<div className="h-2"/>
+
+Kunci Anda akan dienkripsi dengan kata sandi Anda dan kemudian dilindungi dengan otentikasi. Ini berarti bahwa jika kata sandi Anda dikompromikan, kunci Anda tetap aman. Dan jika otentikasi Anda dikompromikan, kunci Anda tetap dienkripsi oleh kata sandi pengguna Anda dan oleh nonce acak yang hanya ada di perangkat Anda.
+
+<div className="h-4"/>
+
+## Apakah kunci saya dikirim ke seseorang?
+
+<div className="h-2"/>
+
+Kunci Anda dapat dikirim ganda dienkripsi ke server pabrikan perangkat Anda (misalnya, Apple, Google, dll.) untuk tujuan cadangan dan pemulihan. Mereka tidak pernah dikirim kepada kami atau pihak ketiga lainnya. Aplikasi kami mengambil langkah-langkah tambahan untuk mencegah pabrikan Anda melihat kunci ini karena mereka dienkripsi oleh kata sandi pengguna Anda dan oleh nonce acak yang hanya ada di perangkat Anda.
+

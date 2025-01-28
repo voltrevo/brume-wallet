@@ -1,0 +1,22 @@
+## Điều này là gì?
+
+<div className="h-2"/>
+
+Bạn có thể sử dụng WebAuthn để bảo vệ khóa của mình với xác thực từ thiết bị của bạn (ví dụ, FaceID và TouchID trên các thiết bị Apple). Điều này hoàn toàn tùy chọn nhưng rất được khuyến nghị nếu thiết bị của bạn hỗ trợ nó. Điều này có thể ngăn chặn các cuộc tấn công lừa đảo và cuộc tấn công điện thoại bỏ trên bàn bằng cách ngăn chặn bất kỳ giao dịch hoặc chữ ký nào được thực hiện mà không cần xác thực.
+
+<div className="h-4"/>
+
+## Nó hoạt động như thế nào?
+
+<div className="h-2"/>
+
+Khóa của bạn sẽ được mã hóa bằng mật khẩu của bạn và sau đó được bảo vệ bằng xác thực. Điều này có nghĩa là nếu mật khẩu của bạn bị đe dọa, khóa của bạn vẫn an toàn. Và nếu xác thực của bạn bị đe dọa, khóa của bạn vẫn được mã hóa bởi mật khẩu người dùng của bạn và bởi một nonce ngẫu nhiên chỉ tồn tại trên thiết bị của bạn.
+
+<div className="h-4"/>
+
+## Khóa của tôi có được gửi cho ai không?
+
+<div className="h-2"/>
+
+Khóa của bạn có thể được gửi mã hóa hai lần đến máy chủ của nhà sản xuất thiết bị của bạn (ví dụ, Apple, Google, v.v.) cho mục đích sao lưu và khôi phục. Chúng không bao giờ được gửi cho chúng tôi hoặc bên thứ ba khác. Ứng dụng của chúng tôi thực hiện các biện pháp bổ sung để ngăn nhà sản xuất của bạn nhìn thấy các khóa này vì chúng được mã hóa bởi mật khẩu người dùng của bạn và bởi một nonce ngẫu nhiên chỉ tồn tại trên thiết bị của bạn.
+

@@ -1,0 +1,22 @@
+## Bu nedir?
+
+<div className="h-2"/>
+
+WebAuthn'i kullanarak anahtarlarınızı cihazınızdan (örneğin, Apple cihazlarındaki FaceID ve TouchID) doğrulama ile koruyabilirsiniz. Bu tamamen isteğe bağlıdır ancak cihazınız bunu destekliyorsa şiddetle tavsiye edilir. Bu, kimlik avı saldırılarını ve masada bırakılan telefon saldırılarını önleyebilir ve kimlik doğrulama olmadan herhangi bir işlem veya imza yapılmasını engelleyebilir.
+
+<div className="h-4"/>
+
+## Nasıl çalışır?
+
+<div className="h-2"/>
+
+Anahtarlarınız şifrenizle şifrelenir ve ardından doğrulama ile korunur. Bu, şifrenizin tehlikeye girmesi durumunda bile anahtarlarınızın güvende olacağı anlamına gelir. Ve doğrulamanız tehlikeye girdiğinde bile anahtarlarınız yine de kullanıcı şifreniz ve yalnızca cihazınızda bulunan rastgele bir nonce ile şifrelenir.
+
+<div className="h-4"/>
+
+## Anahtarlarım birine gönderiliyor mu?
+
+<div className="h-2"/>
+
+Anahtarlarınız yedekleme ve geri yükleme amacıyla cihazınızın üreticisinin sunucularına (örneğin, Apple, Google vb.) iki kez şifrelenmiş olarak gönderilebilir. Onlar asla bize veya üçüncü taraflara gönderilmez. Uygulamamız, bu anahtarları üreticinizin görmesini engellemek için ek önlemler alır çünkü bunlar kullanıcı şifreniz ve yalnızca cihazınızda bulunan rastgele bir nonce ile şifrelenmiştir.
+

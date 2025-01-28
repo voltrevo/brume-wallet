@@ -15,7 +15,7 @@ import { urlOf } from "@/libs/url/url";
 import { User } from "@/mods/background/service_worker/entities/users/data";
 import { Two } from "@/mods/foreground/landing/2";
 import { Three } from "@/mods/foreground/landing/3";
-import { FourDisplay } from "@/mods/foreground/landing/4/4";
+import { Four } from "@/mods/foreground/landing/4";
 import { FiveDisplay } from "@/mods/foreground/landing/5/5";
 import { SixDisplay } from "@/mods/foreground/landing/6/6";
 import { UserAvatar } from "@/mods/foreground/user/mods/avatar";
@@ -116,6 +116,7 @@ export function FullLandingPage(props: { next?: string }) {
   const LocalizedOne = Locale.get(One, lang)
   const LocalizedTwo = Locale.get(Two, lang)
   const LocalizedThree = Locale.get(Three, lang)
+  const LocalizedFour = Locale.get(Four, lang)
 
   return <>
     <HashSubpathProvider>
@@ -360,8 +361,39 @@ export function FullLandingPage(props: { next?: string }) {
           <InfoCard
             title="Auth"
             href="/4"
-            subtitle={`You can use WebAuthn to authenticate and sign transactions. All your keys are stored encrypted.`}>
-            <FourDisplay />
+            subtitle={Locale.get({
+              en: `You can use WebAuthn to authenticate and sign transactions. All your keys are stored encrypted.`,
+              zh: `您可以使用 WebAuthn 进行身份验证和签署交易。所有密钥都以加密形式存储。`,
+              hi: `आप WebAuthn का उपयोग करके प्रमाणीकरण और लेन-देन के लिए हस्ताक्षर कर सकते हैं। सभी आपके कुंजी एन्क्रिप्टेड रूप में संग्रहित हैं।`,
+              es: `Puede utilizar WebAuthn para autenticar y firmar transacciones. Todas sus claves se almacenan encriptadas.`,
+              ar: `يمكنك استخدام WebAuthn للمصادقة وتوقيع المعاملات. يتم تخزين جميع مفاتيحك مشفرة.`,
+              fr: `Vous pouvez utiliser WebAuthn pour vous authentifier et signer des transactions. Toutes vos clés sont stockées cryptées.`,
+              de: `Sie können WebAuthn verwenden, um sich zu authentifizieren und Transaktionen zu signieren. Alle Ihre Schlüssel werden verschlüsselt gespeichert.`,
+              ru: `Вы можете использовать WebAuthn для аутентификации и подписи транзакций. Все ваши ключи хранятся в зашифрованном виде.`,
+              pt: `Você pode usar o WebAuthn para autenticar e assinar transações. Todas as suas chaves são armazenadas criptografadas.`,
+              ja: `WebAuthn を使用して認証およびトランザクションに署名できます。すべてのキーは暗号化されて保存されます。`,
+              pa: `ਤੁਸੀਂ WebAuthn ਦੀ ਵਰਤੋਂ ਕਰ ਸਕਦੇ ਹੋ ਅਤੇ ਲੇਨ-ਦੇਨ ਦੀ ਪੁਸ਼ਟੀ ਕਰਨ ਲਈ। ਤੁਹਾਡੀ ਸਭ ਤੋਂ ਕੁੰਜੀਆਂ ਇੰਕ੍ਰਿਪਟ ਕੀਤੀ ਹੋਈਆਂ ਹਨ।`,
+              bn: `আপনি ওয়েবআথন ব্যবহার করে প্রমাণীকরণ এবং লেনদেন সাইন করতে পারেন। আপনার সমস্ত কীগুলি এনক্রিপ্ট করা রাখা হয়।`,
+              id: `Anda dapat menggunakan WebAuthn untuk mengotentikasi dan menandatangani transaksi. Semua kunci Anda disimpan terenkripsi.`,
+              ur: `آپ ویب اتھن کا استعمال کرکے تصدیق اور ٹرانزیکشن کی تشہیر کرسکتے ہیں۔ تمام آپ کی چابیاں محفوظ ہیں۔`,
+              ms: `Anda boleh menggunakan WebAuthn untuk mengesahkan dan menandatangani urus niaga. Semua kunci anda disimpan dienkripsi.`,
+              it: `Puoi utilizzare WebAuthn per autenticarti e firmare transazioni. Tutte le tue chiavi sono memorizzate criptate.`,
+              tr: `Kimlik doğrulama ve işlemleri imzalamak için WebAuthn'yi kullanabilirsiniz. Tüm anahtarlarınız şifrelenmiş olarak saklanır.`,
+              ta: `உங்கள் ஐபி முகவரியை மூன்றாம் தரவுகளிலிருந்து மறைக்க வெப்ஆத்னை பயன்படுத்தலாம். அனைத்து கிளைகளும் என்கிரிப்டு செய்யப்பட்டுள்ளன.`,
+              te: `మీ ఐపీ చిరునామాను మూడవ పార్టీల నుండి దాచేయడానికి వెబ్ఆత్న్ ఉపయోగించవచ్చు. మీరు ఉండిన అన్ని కీలు ఎన్క్రిప్ట్ చేయబడినవి.`,
+              ko: `WebAuthn을 사용하여 인증하고 거래에 서명할 수 있습니다. 모든 키는 암호화되어 저장됩니다.`,
+              vi: `Bạn có thể sử dụng WebAuthn để xác thực và ký giao dịch. Tất cả các khóa của bạn được lưu trữ dưới dạng mã hóa.`,
+              pl: `Możesz użyć WebAuthn do uwierzytelniania i podpisywania transakcji. Wszystkie klucze są przechowywane w formie zaszyfrowanej.`,
+              ro: `Puteți folosi WebAuthn pentru autentificare și semnarea tranzacțiilor. Toate cheile dvs. sunt stocate criptate.`,
+              nl: `U kunt WebAuthn gebruiken om te authenticeren en transacties te ondertekenen. Al uw sleutels worden versleuteld opgeslagen.`,
+              el: `Μπορείτε να χρησιμοποιήσετε το WebAuthn για πιστοποίηση και υπογραφή συναλλαγών. Όλα τα κλειδιά σας αποθηκεύονται κρυπτογραφημένα.`,
+              th: `คุณสามารถใช้ WebAuthn เพื่อรับรองตัวและลงชื่อในธุรกรรม ทุกกุญแจของคุณถูกเก็บเข้ารหัส`,
+              cs: `Můžete použít WebAuthn k ověření a podepsání transakcí. Všechny vaše klíče jsou uloženy zašifrované.`,
+              hu: `WebAuthn-t használhat az azonosításhoz és a tranzakciók aláírásához. Az összes kulcs titkosítva van tárolva.`,
+              sv: `Du kan använda WebAuthn för att autentisera och signera transaktioner. Alla dina nycklar lagras krypterade.`,
+              da: `Du kan bruge WebAuthn til at autentificere og signere transaktioner. Alle dine nøgler er gemt krypteret.`,
+            }, lang)}>
+            <LocalizedFour />
           </InfoCard>
           <InfoCard
             title="Truth"

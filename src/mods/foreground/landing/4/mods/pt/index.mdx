@@ -1,0 +1,22 @@
+## O que é isso?
+
+<div className="h-2"/>
+
+Você pode usar o WebAuthn para proteger suas chaves com uma autenticação do seu dispositivo (por exemplo, FaceID e TouchID em dispositivos Apple). Isso é totalmente opcional, mas altamente recomendado se o seu dispositivo suportar. Isso pode prevenir ataques de phishing e ataques de deixar o telefone na mesa, evitando que qualquer transação ou assinatura seja feita sem autenticação.
+
+<div className="h-4"/>
+
+## Como isso funciona?
+
+<div className="h-2"/>
+
+Suas chaves serão criptografadas com sua senha e, em seguida, protegidas por autenticação. Isso significa que, se sua senha for comprometida, suas chaves ainda estarão seguras. E se sua autenticação for comprometida, suas chaves ainda estarão criptografadas por sua senha de usuário e por um nonce aleatório encontrado apenas em seu dispositivo.
+
+<div className="h-4"/>
+
+## Minhas chaves são enviadas para alguém?
+
+<div className="h-2"/>
+
+Suas chaves podem ser enviadas duplamente criptografadas para os servidores do fabricante do seu dispositivo (por exemplo, Apple, Google, etc.) para fins de backup e recuperação. Elas nunca são enviadas para nós ou para qualquer outro terceiro. Nosso aplicativo toma medidas adicionais para evitar que seu fabricante veja essas chaves, pois elas são criptografadas por sua senha de usuário e por um nonce aleatório encontrado apenas em seu dispositivo.
+

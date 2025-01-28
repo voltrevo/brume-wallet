@@ -1,0 +1,22 @@
+## Qu'est-ce que c'est ?
+
+<div className="h-2"/>
+
+Vous pouvez utiliser WebAuthn pour sécuriser vos clés avec une authentification depuis votre appareil (par exemple, FaceID et TouchID sur les appareils Apple). C'est entièrement facultatif mais fortement recommandé si votre appareil le prend en charge. Cela peut empêcher les attaques de phishing et les attaques de téléphone laissé sur la table en empêchant toute transaction ou signature d'être effectuée sans authentification.
+
+<div className="h-4"/>
+
+## Comment ça marche ?
+
+<div className="h-2"/>
+
+Vos clés seront chiffrées avec votre mot de passe puis protégées par une authentification. Cela signifie que si votre mot de passe est compromis, vos clés restent sécurisées. Et si votre authentification est compromise, vos clés restent chiffrées par votre mot de passe utilisateur et par un nonce aléatoire uniquement présent sur votre appareil.
+
+<div className="h-4"/>
+
+## Mes clés sont-elles envoyées à quelqu'un ?
+
+<div className="h-2"/>
+
+Vos clés peuvent être envoyées doublement chiffrées aux serveurs du fabricant de votre appareil (par exemple, Apple, Google, etc.) à des fins de sauvegarde et de récupération. Elles ne sont jamais envoyées à nous ou à un tiers. Notre application prend des mesures supplémentaires pour empêcher votre fabricant de voir ces clés car elles sont chiffrées par votre mot de passe utilisateur et par un nonce aléatoire uniquement présent sur votre appareil.
+

@@ -1,0 +1,22 @@
+## Vad är detta?
+
+<div className="h-2"/>
+
+Du kan använda WebAuthn för att skydda dina nycklar med autentisering från din enhet (till exempel, FaceID och TouchID på Apple-enheter). Detta är helt valfritt, men det är mycket rekommenderat om din enhet stöder det. Detta kan förhindra phishingattacker och telefonattacker som lämnas på bordet genom att förhindra att några transaktioner eller signaturer utförs utan autentisering.
+
+<div className="h-4"/>
+
+## Hur fungerar det?
+
+<div className="h-2"/>
+
+Dina nycklar kommer att krypteras med ditt lösenord och sedan skyddas med autentisering. Detta innebär att om ditt lösenord komprometteras förblir dina nycklar säkra. Och om din autentisering komprometteras kommer dina nycklar fortfarande att krypteras av ditt användarlösenord och av en slumpmässig nonce som endast existerar på din enhet.
+
+<div className="h-4"/>
+
+## Skickas mina nycklar till någon?
+
+<div className="h-2"/>
+
+Dina nycklar kan skickas dubbelkrypterade till din enhets tillverkares servrar (till exempel Apple, Google etc.) för backup- och återställningsändamål. De skickas aldrig till oss eller till tredje part. Vår applikation vidtar ytterligare åtgärder för att förhindra att din tillverkare ser dessa nycklar eftersom de krypteras av ditt användarlösenord och av en slumpmässig nonce som endast existerar på din enhet.
+

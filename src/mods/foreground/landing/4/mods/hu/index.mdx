@@ -1,0 +1,22 @@
+## Mi ez?
+
+<div className="h-2"/>
+
+WebAuthn-t használhatja a kulcsok védelmére az eszközéről történő hitelesítéssel (például az Apple eszközök FaceID és TouchID funkcióival). Ez teljesen opcionális, de nagyon ajánlott, ha az eszköze támogatja. Ez megakadályozhatja a phishing támadásokat és az asztalon hagyott telefon támadásokat, megakadályozva a hitelesítés nélküli tranzakciók vagy aláírások végrehajtását.
+
+<div className="h-4"/>
+
+## Hogyan működik?
+
+<div className="h-2"/>
+
+A kulcsokat a jelszavával titkosítják, majd hitelesítéssel védik. Ez azt jelenti, hogy ha a jelszava veszélybe kerül, a kulcsai továbbra is biztonságban vannak. És ha a hitelesítése veszélybe kerül, a kulcsai továbbra is a felhasználói jelszavával és egy véletlenszer
+
+<div className="h-4"/>
+
+## Elküldik a kulcsaimat valakinek?
+
+<div className="h-2"/>
+
+A kulcsait duplán titkosítva elküldhetik az eszközének gyártójának szervereire (például az Apple, a Google stb.) biztonsági mentési és helyreállítási célokra. Sosem küldik el hozzánk vagy harmadik félnek. Az alkalmazásunk további lépéseket tesz annak érdekében, hogy megakadályozza az eszközének gyártóját abban, hogy lássa ezeket a kulcsokat, mivel azokat a felhasználói jelszavával és egy véletlen nonce-szal titkosítják, amely csak az eszközén létezik.
+

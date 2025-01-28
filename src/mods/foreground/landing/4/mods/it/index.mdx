@@ -1,0 +1,22 @@
+## Cos'è?
+
+<div className="h-2"/>
+
+Puoi utilizzare WebAuthn per proteggere le tue chiavi con un'autenticazione dal tuo dispositivo (ad esempio, FaceID e TouchID sui dispositivi Apple). Questo è completamente facoltativo ma altamente consigliato se il tuo dispositivo lo supporta. Questo può prevenire attacchi di phishing e attacchi di telefono lasciato sul tavolo impedendo che venga effettuata qualsiasi transazione o firma senza autenticazione.
+
+<div className="h-4"/>
+
+## Come funziona?
+
+<div className="h-2"/>
+
+Le tue chiavi verranno crittografate con la tua password e poi protette da un'autenticazione. Ciò significa che se la tua password viene compromessa, le tue chiavi rimangono sicure. E se la tua autenticazione viene compromessa, le tue chiavi rimangono crittografate dalla tua password utente e da un nonce casuale presente solo sul tuo dispositivo.
+
+<div className="h-4"/>
+
+## Le mie chiavi vengono inviate a qualcuno?
+
+<div className="h-2"/>
+
+Le tue chiavi possono essere inviate doppie crittografate ai server del produttore del tuo dispositivo (ad esempio, Apple, Google, ecc.) a fini di backup e ripristino. Non vengono mai inviate a noi o a terzi. La nostra applicazione prende misure aggiuntive per impedire al tuo produttore di vedere queste chiavi poiché sono crittografate dalla tua password utente e da un nonce casuale presente solo sul tuo dispositivo.
+

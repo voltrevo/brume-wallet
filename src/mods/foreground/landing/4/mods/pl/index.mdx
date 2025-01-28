@@ -1,0 +1,22 @@
+## Co to jest?
+
+<div className="h-2"/>
+
+Możesz użyć WebAuthn, aby zabezpieczyć swoje klucze za pomocą uwierzytelnienia z Twojego urządzenia (na przykład FaceID i TouchID na urządzeniach Apple). Jest to całkowicie opcjonalne, ale bardzo zalecane, jeśli Twoje urządzenie to obsługuje. Może to zapobiec atakom phishingowym i atakom telefonów pozostawionych na stole, uniemożliwiając dokonywanie transakcji lub podpisów bez uwierzytelnienia.
+
+<div className="h-4"/>
+
+## Jak to działa?
+
+<div className="h-2"/>
+
+Twoje klucze zostaną zaszyfrowane za pomocą Twojego hasła, a następnie zabezpieczone za pomocą uwierzytelnienia. Oznacza to, że jeśli Twoje hasło zostanie skompromitowane, Twoje klucze pozostaną bezpieczne. A jeśli Twoje uwierzytelnienie zostanie skompromitowane, Twoje klucze nadal będą zaszyfrowane przez hasło użytkownika i przez losowy nonce, który istnieje tylko na Twoim urządzeniu.
+
+<div className="h-4"/>
+
+## Czy moje klucze są wysyłane komuś?
+
+<div className="h-2"/>
+
+Twoje klucze mogą być wysyłane podwójnie zaszyfrowane na serwery producenta Twojego urządzenia (na przykład Apple, Google itp.) w celu tworzenia kopii zapasowych i przywracania. Nigdy nie są one wysyłane do nas ani do osób trzecich. Nasza aplikacja podejmuje dodatkowe kroki, aby uniemożliwić producentowi zobaczenie tych kluczy, ponieważ są one zaszyfrowane za pomocą hasła użytkownika i przez losowy nonce, który istnieje tylko na Twoim urządzeniu.
+

@@ -1,0 +1,22 @@
+## Was ist das?
+
+<div className="h-2"/>
+
+Sie können WebAuthn verwenden, um Ihre Schlüssel mit einer Authentifizierung von Ihrem Gerät (z. B. FaceID und TouchID auf Apple-Geräten) zu sichern. Dies ist vollständig optional, wird jedoch dringend empfohlen, wenn Ihr Gerät dies unterstützt. Dies kann Phishing-Angriffe und Angriffe durch unbeaufsichtigte Telefone auf dem Tisch verhindern, indem verhindert wird, dass Transaktionen oder Signaturen ohne Authentifizierung durchgeführt werden.
+
+<div className="h-4"/>
+
+## Wie funktioniert das?
+
+<div className="h-2"/>
+
+Ihre Schlüssel werden mit Ihrem Passwort verschlüsselt und dann durch Authentifizierung geschützt. Das bedeutet, dass Ihre Schlüssel auch dann sicher sind, wenn Ihr Passwort kompromittiert wird. Und wenn Ihre Authentifizierung kompromittiert wird, sind Ihre Schlüssel immer noch durch Ihr Benutzerpasswort und durch eine zufällige Nonce verschlüsselt, die nur auf Ihrem Gerät zu finden ist.
+
+<div className="h-4"/>
+
+## Werden meine Schlüssel an jemanden gesendet?
+
+<div className="h-2"/>
+
+Ihre Schlüssel können doppelt verschlüsselt an die Server des Herstellers Ihres Geräts (z. B. Apple, Google usw.) zur Sicherung und Wiederherstellung gesendet werden. Sie werden niemals an uns oder an Dritte gesendet. Unsere App ergreift zusätzliche Maßnahmen, um zu verhindern, dass Ihr Hersteller diese Schlüssel sieht, da sie durch Ihr Benutzerpasswort und durch eine zufällige Nonce verschlüsselt sind, die nur auf Ihrem Gerät zu finden ist.
+
