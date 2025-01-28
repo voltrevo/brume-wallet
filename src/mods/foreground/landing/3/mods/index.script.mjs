@@ -9,7 +9,7 @@ for (let i = 1; i < arr.length; i += 2) {
 
   fs.mkdirSync(`./${title}`, { recursive: true })
 
-  const head = `import { ThreeChart } from "../../chart.jsx";`
+  const head = `import { ThreeChart } from "../../chart";`
 
   fs.writeFileSync(`./${title}/index.mdx`, `${head}\n\n${content}`)
 }
