@@ -13,7 +13,6 @@ import { PageBody } from "@/libs/ui/page/header";
 import { GlobalPage } from "@/libs/ui/page/page";
 import { urlOf } from "@/libs/url/url";
 import { User } from "@/mods/background/service_worker/entities/users/data";
-import { OneDisplay } from "@/mods/foreground/landing/1/1";
 import { TwoDisplay } from "@/mods/foreground/landing/2/2";
 import { ThreeDisplay } from "@/mods/foreground/landing/3/3";
 import { FourDisplay } from "@/mods/foreground/landing/4/4";
@@ -27,6 +26,7 @@ import { useCurrentUser, useUser, useUsers } from "../entities/users/data";
 import { UserLoginDialog } from "../entities/users/login";
 import { useLocaleContext } from "../global/mods/locale";
 import { Locale, Localized } from "../locale";
+import { OneDisplay } from "./1";
 
 export function EmptyLandingPage(props: { next?: string }) {
   const lang = useLocaleContext().getOrThrow()
@@ -112,6 +112,8 @@ export function FullLandingPage(props: { next?: string }) {
 
   const hash = useHashSubpath(path)
   const users = useCoords(hash, "/users")
+
+  const LocalizedOneDisplay = Locale.get(OneDisplay, lang)
 
   return <>
     <HashSubpathProvider>
@@ -246,7 +248,7 @@ export function FullLandingPage(props: { next?: string }) {
             title="0 VC"
             href="/1"
             subtitle={`Fully crowdfunded by the community for the community. No grants. No VCs.`}>
-            <OneDisplay />
+            <LocalizedOneDisplay />
           </InfoCard>
           <InfoCard
             title="Tor"
