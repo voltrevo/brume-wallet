@@ -4,7 +4,7 @@ import { Router } from "@/mods/foreground/router/router";
 
 export default function Main() {
   return <Localizer value={undefined}>
-    <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
+    <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
       <Overlay>
         <Router />
       </Overlay>

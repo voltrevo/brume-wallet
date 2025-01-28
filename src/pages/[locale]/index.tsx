@@ -24,7 +24,7 @@ export default function Main(props: Params) {
   const { locale } = props
 
   return <Localizer value={locale}>
-    <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
+    <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
       <Overlay>
         <Router />
       </Overlay>

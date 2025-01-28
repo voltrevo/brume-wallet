@@ -38,7 +38,7 @@ export function Fallback(props: ErrorProps) {
     location.reload()
   }, [])
 
-  return <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
+  return <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
     <div className="grow w-full flex flex-col overflow-y-scroll">
       <div className="grow w-full m-auto max-w-3xl flex flex-col">
         <div className="text-red-400 dark:text-red-500">

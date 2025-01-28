@@ -43,7 +43,7 @@ export default function Main() {
   }, [subwindow])
 
   return <Localizer value={undefined}>
-    <main id="main" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
+    <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
       {isSafariExtension() && <NavBar />}
       <iframe className="grow w-full"
         ref={setIframe}

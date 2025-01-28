@@ -5,7 +5,7 @@ import { createPortal } from "react-dom"
 export function Portal(props: ChildrenProps) {
   const { children } = props
 
-  const container = document.getElementById("main")
+  const container = document.getElementById("root")
 
   if (container == null)
     return null
