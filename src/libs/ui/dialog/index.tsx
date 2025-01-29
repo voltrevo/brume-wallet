@@ -224,7 +224,7 @@ export function Dialog(props: ChildrenProps & DarkProps & { hesitant?: boolean }
                 readOnly
                 aria-hidden />}
             <div className="h-[50vh] grow md:h-8" />
-            <div className={`grow flex flex-col w-full md:w-[max(min(100dvh-4rem-var(--safe-area-inset-top,env(safe-area-inset-top))-var(--safe-area-inset-bottom,env(safe-area-inset-bottom)),48rem),28rem)] md:aspect-square text-default bg-default rounded-t-3xl md:rounded-3xl`}
+            <div className={`flex flex-col w-full md:w-[max(min(100dvh-4rem-var(--safe-area-inset-top,env(safe-area-inset-top))-var(--safe-area-inset-bottom,env(safe-area-inset-bottom)),48rem),28rem)] text-default bg-default rounded-t-3xl md:rounded-3xl`}
               aria-modal
               onMouseDown={Events.keep}>
               <div className="md:hidden p-4 flex items-center justify-center">
