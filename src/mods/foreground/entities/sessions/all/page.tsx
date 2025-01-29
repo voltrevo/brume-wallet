@@ -13,6 +13,8 @@ import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
 import { ExSessionData, Session, SessionData } from "@/mods/background/service_worker/entities/sessions/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale"
+import { Locale } from "@/mods/foreground/locale"
 import { UserGuardBody } from "@/mods/foreground/user/mods/guard"
 import { BlobbyData } from "@/mods/universal/entities/blobbys"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
@@ -26,6 +28,7 @@ import { useStatus } from "../status/data"
 import { usePersistentSessions, useTemporarySessions } from "./data"
 
 export function SessionsPage() {
+  const lang = useLocaleContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
   const tempSessionsQuery = useTemporarySessions()
@@ -60,7 +63,7 @@ export function SessionsPage() {
   }), [background, maybePersSessions])
 
   return <UserPage>
-    <PageHeader title="Sessions">
+    <PageHeader title={Locale.get(Locale.Sessions, lang)}>
       <PaddedRoundedClickableNakedButton
         disabled={disconnectAllOrAlert.loading || !length}
         onClick={disconnectAllOrAlert.run}>

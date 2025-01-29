@@ -82,7 +82,7 @@ export function HomePage() {
         <div className="grow" />
       </div>
       <div className="text-lg font-medium">
-        Total balance
+        {Locale.get(Locale.TotalBalance, lang)}
       </div>
       <div className="text-2xl font-bold">
         {totalPricedBalanceDisplay}
@@ -91,7 +91,7 @@ export function HomePage() {
       <div className="p-4 bg-default-contrast flex-none h-[300px] rounded-xl flex flex-col items-center justify-center">
         <img src="/favicon.png" alt="logo" className="h-24 w-auto" />
         <div className="">
-          Coming soon...
+          {Locale.get(Locale.ComingSoon, lang)}...
         </div>
       </div>
     </PageBody >

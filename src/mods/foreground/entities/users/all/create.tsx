@@ -159,7 +159,7 @@ export function UserCreateDialog(props: { next?: string }) {
       {Locale.get(Locale.NewUser, lang)}
     </Dialog.Title>
     <div className="h-4" />
-    <div className="grow flex flex-col items-center justify-center">
+    <div className="grow flex flex-col items-center justify-center h-[200px]">
       <UserAvatar className="size-16 text-2xl"
         name={finalNameInput}
         color={color} />

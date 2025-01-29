@@ -5,6 +5,8 @@ import { Dialog } from "@/libs/ui/dialog"
 import { Menu } from "@/libs/ui/menu"
 import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale"
+import { Locale } from "@/mods/foreground/locale"
 import { UserGuardBody } from "@/mods/foreground/user/mods/guard"
 import { Seed } from "@/mods/universal/entities/seeds"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
@@ -18,13 +20,14 @@ import { LedgerSeedCreatorDialog } from "./create/hardware"
 import { StandaloneSeedCreatorDialog } from "./create/mnemonic"
 
 export function SeedsPage() {
+  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
 
   const subpath = useHashSubpath(path)
   const creator = useCoords(subpath, "/create")
 
   return <UserPage>
-    <PageHeader title="Seeds">
+    <PageHeader title={Locale.get(Locale.Seeds, lang)}>
       <PaddedRoundedClickableNakedAnchor
         onKeyDown={creator.onKeyDown}
         onClick={creator.onClick}

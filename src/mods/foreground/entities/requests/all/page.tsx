@@ -12,6 +12,8 @@ import { UserPage } from "@/libs/ui/page/page"
 import { pathOf, urlOf } from "@/libs/url/url"
 import { AppRequest } from "@/mods/background/service_worker/entities/requests/data"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale"
+import { Locale } from "@/mods/foreground/locale"
 import { UserGuardBody } from "@/mods/foreground/user/mods/guard"
 import { BlobbyData } from "@/mods/universal/entities/blobbys"
 import { RpcErr } from "@hazae41/jsonrpc"
@@ -23,6 +25,7 @@ import { useOrigin } from "../../origins/data"
 import { useAppRequest, useAppRequests } from "../data"
 
 export function RequestsPage() {
+  const lang = useLocaleContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
   const requestsQuery = useAppRequests()
@@ -44,7 +47,7 @@ export function RequestsPage() {
   }), [background, maybeRequests])
 
   return <UserPage>
-    <PageHeader title="Requests">
+    <PageHeader title={Locale.get(Locale.Requests, lang)}>
       <PaddedRoundedClickableNakedButton
         disabled={rejectAllOrAlert.loading || !Boolean(maybeRequests?.length)}
         onClick={rejectAllOrAlert.run}>

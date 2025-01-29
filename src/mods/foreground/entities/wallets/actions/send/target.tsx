@@ -7,6 +7,8 @@ import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
 import { ClickableContrastButtonInInputBox, RoundedClickableNakedButton, WideClickableContrastButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { ContrastLabel } from "@/libs/ui/label";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { useContractToken } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
 import { usePathContext, useSearchState } from "@hazae41/chemin";
 import { Address } from "@hazae41/cubane";
@@ -19,6 +21,7 @@ import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
 
 export function WalletSendScreenTarget(props: {}) {
+  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
@@ -182,7 +185,7 @@ export function WalletSendScreenTarget(props: {}) {
         Recents
       </button>
       <div className="grow" />
-      <button className="text-default-contrast font-medium text-default-contrast data-[active=true]:text-default"
+      <button className="text-lg font-medium text-default-contrast data-[active=true]:text-default"
         onClick={onContactsClick}
         data-active={mode === "contacts"}>
         Contacts
@@ -206,7 +209,7 @@ export function WalletSendScreenTarget(props: {}) {
       </div>
     </div>
     <div className="grow flex flex-col items-center justify-center">
-      Coming soon...
+      {Locale.get(Locale.ComingSoon, lang)}...
     </div>
   </>
 }

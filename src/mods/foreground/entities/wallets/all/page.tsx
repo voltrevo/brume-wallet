@@ -8,6 +8,8 @@ import { Menu } from "@/libs/ui/menu"
 import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale"
+import { Locale } from "@/mods/foreground/locale"
 import { UserGuardBody } from "@/mods/foreground/user/mods/guard"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Nullable } from "@hazae41/option"
@@ -20,13 +22,14 @@ import { ReadonlyWalletCreatorDialog } from "./create/readonly"
 import { StandaloneWalletCreatorDialog } from "./create/standalone"
 
 export function WalletsPage() {
+  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
 
   const subpath = useHashSubpath(path)
   const creator = useCoords(subpath, "/create")
 
   return <UserPage>
-    <PageHeader title="Wallets">
+    <PageHeader title={Locale.get(Locale.Wallets, lang)}>
       <PaddedRoundedClickableNakedAnchor
         onKeyDown={creator.onKeyDown}
         onClick={creator.onClick}

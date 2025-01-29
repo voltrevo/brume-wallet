@@ -1,11 +1,15 @@
 import { OkProps } from "@/libs/react/props/promise";
 import { Dialog } from "@/libs/ui/dialog";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 
 export type WalletNonceDialogState = {
   readonly chain?: string
 }
 
 export function WalletNonceDialog(props: OkProps<void>) {
+  const lang = useLocaleContext().getOrThrow()
+
   return <>
     <Dialog.Title>
       Select nonce
@@ -15,7 +19,7 @@ export function WalletNonceDialog(props: OkProps<void>) {
       Pending transactions
     </div>
     <div className="grow flex flex-col items-center justify-center">
-      Coming soon...
+      {Locale.get(Locale.ComingSoon, lang)}...
     </div>
   </>
 }

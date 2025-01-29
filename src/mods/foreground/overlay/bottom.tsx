@@ -99,21 +99,21 @@ export function OmniDialog(props: {
         href="#/wallets">
         <Outline.WalletIcon className="size-5" />
         <div className="h-4" />
-        Wallets
+        {Locale.get(Locale.Wallets, lang)}
       </a>
       <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/seeds"}
         href="#/seeds">
         <Outline.SparklesIcon className="size-5" />
         <div className="h-4" />
-        Seeds
+        {Locale.get(Locale.Seeds, lang)}
       </a>
       <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/sessions"}
         href="#/sessions">
         <Outline.GlobeAltIcon className="size-5" />
         <div className="h-4" />
-        Sessions
+        {Locale.get(Locale.Sessions, lang)}
       </a>
       <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/requests"}
@@ -130,7 +130,7 @@ export function OmniDialog(props: {
             <Outline.CheckIcon className="size-5" />
           </div>
           <div className="h-4" />
-          Requests
+          {Locale.get(Locale.Requests, lang)}
         </ClickerInAnchorDiv>
       </a>
       <a className="po-2 bg-default-contrast rounded-xl"

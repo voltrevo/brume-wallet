@@ -497,7 +497,7 @@ export function FullLandingPage(props: { next?: string }) {
           </DownloadCard>
           <InstallCard
             highlighted={navigator.userAgent.includes("Safari") && !navigator.userAgent.includes("Chrome") && !navigator.userAgent.includes("Android")}
-            icon={Outline.ArrowTopRightOnSquareIcon}
+            icon={Outline.PlusIcon}
             title="Safari"
             src="/assets/browsers/safari.svg"
             href="/install/iphone">
@@ -505,7 +505,7 @@ export function FullLandingPage(props: { next?: string }) {
           </InstallCard>
           <InstallCard
             highlighted={navigator.userAgent.includes("Android")}
-            icon={Outline.ArrowDownTrayIcon}
+            icon={Outline.PlusIcon}
             title="Android"
             src="/assets/browsers/android.svg"
             href="/install/android">
