@@ -17,7 +17,7 @@ import { Two } from "@/mods/foreground/landing/2";
 import { Three } from "@/mods/foreground/landing/3";
 import { Four } from "@/mods/foreground/landing/4";
 import { Five } from "@/mods/foreground/landing/5";
-import { SixDisplay } from "@/mods/foreground/landing/6/6";
+import { Six } from "@/mods/foreground/landing/6";
 import { UserAvatar } from "@/mods/foreground/user/mods/avatar";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Fragment, useCallback } from "react";
@@ -118,6 +118,7 @@ export function FullLandingPage(props: { next?: string }) {
   const LocalizedThree = Locale.get(Three, lang)
   const LocalizedFour = Locale.get(Four, lang)
   const LocalizedFive = Locale.get(Five, lang)
+  const LocalizedSix = Locale.get(Six, lang)
 
   return <>
     <HashSubpathProvider>
@@ -436,8 +437,39 @@ export function FullLandingPage(props: { next?: string }) {
           <InfoCard
             title="MIT"
             href="/6"
-            subtitle={`All our code is MIT-licensed reproducible open-source. You can build it yourself.`}>
-            <SixDisplay />
+            subtitle={Locale.get({
+              en: `All our code is MIT-licensed reproducible open-source. You can build it yourself.`,
+              zh: `我们的所有代码都是 MIT 许可的可重现开源。您可以自己构建它。`,
+              hi: `हमारा सभी कोड MIT-लाइसेंस नकली ओपन-सोर्स है। आप इसे खुद बना सकते हैं।`,
+              es: `Todo nuestro código es de código abierto reproducible con licencia MIT. Puedes construirlo tú mismo.`,
+              ar: `جميع رموزنا مرخصة بـ MIT ومفتوحة المصدر يمكن إعادة إنتاجها. يمكنك بناؤه بنفسك.`,
+              fr: `Tout notre code est open source reproductible sous licence MIT. Vous pouvez le construire vous-même.`,
+              de: `Unser gesamter Code ist MIT-lizenziert und reproduzierbarer Open Source. Sie können es selbst erstellen.`,
+              ru: `Весь наш код лицензирован MIT, воспроизводимый с открытым исходным кодом. Вы можете построить его самостоятельно.`,
+              pt: `Todo o nosso código é de código aberto reproduzível com licença MIT. Você pode construí-lo você mesmo.`,
+              ja: `すべてのコードは MIT ライセンスの再現可能なオープンソースです。自分でビルドできます。`,
+              pa: `ਸਾਰਾ ਸਾਡਾ ਕੋਡ MIT-ਲਾਇਸੈਂਸਡ ਪੁਨਰਾਵਰਤਨੀਯ ਓਪਨ-ਸੋਰਸ ਹੈ। ਤੁਸੀਂ ਇਸਨੂੰ ਆਪਣੇ ਆਪ ਬਣਾ ਸਕਦੇ ਹੋ।`,
+              bn: `আমাদের সমস্ত কোড MIT-লাইসেন্সযুক্ত পুনরাবৃত্তিযোগ্য ওপেন-সোর্স। আপনি এটি নিজে তৈরি করতে পারেন।`,
+              id: `Semua kode kami adalah open source yang dapat direproduksi dengan lisensi MIT. Anda dapat membangunnya sendiri.`,
+              ur: `ہمارا تمام کوڈ MIT-لائسنس کی نقلی اوپن سورس ہے۔ آپ اسے خود بنا سکتے ہیں۔`,
+              ms: `Semua kod kami adalah sumber terbuka boleh diterbitkan semula dengan lesen MIT. Anda boleh membina sendiri.`,
+              it: `Tutto il nostro codice è open source riproducibile con licenza MIT. Puoi costruirlo tu stesso.`,
+              tr: `Tüm kodumuz MIT lisanslı çoğaltılabilir açık kaynaktır. Kendiniz oluşturabilirsiniz.`,
+              ta: `எங்கள் அனைத்து குறியீடுகளும் MIT-லைசன்ஸ் பொருளாதாரமான திறந்த மூலக்கூறுகளாகும். நீங்களே அதை உருவாக்கலாம்.`,
+              te: `మా అన్ని కోడ్ లు MIT-లైసెన్స్ తో పునరుత్పాదన యోగ్యమైన ఓపెన్-సోర్స్. మీరు అది స్వయం నిర్మించవచ్చు.`,
+              ko: `우리 모든 코드는 MIT 라이선스가 부여된 재현 가능한 오픈 소스입니다. 직접 빌드할 수 있습니다.`,
+              vi: `Tất cả mã nguồn của chúng tôi đều được cấp phép MIT có thể tái tạo. Bạn có thể xây dựng nó.`,
+              pl: `Cały nasz kod jest otwartym źródłem, który można odtworzyć z licencją MIT. Możesz go zbudować samodzielnie.`,
+              ro: `Tot codul nostru este open source reproductibil cu licență MIT. Puteți construi singuri.`,
+              nl: `Al onze code is MIT-licentie reproduceerbare open source. U kunt het zelf bouwen.`,
+              el: `Ολόκληρος ο κώδικάς μας είναι αναπαράσταση ανοικτού κώδικα με άδεια MIT. Μπορείτε να το χτίσετε μόνοι σας.`,
+              th: `โค้ดของเราทั้งหมดเป็นโอเพนซอร์สที่สามารถทำซ้ำได้ด้วย MIT-licensed คุณสามารถสร้างมันเอง`,
+              cs: `Veškerý náš kód je MIT-licencován reprodukovatelný open source. Můžete si jej postavit sami.`,
+              hu: `Az összes kódunk MIT-licencű reprodukálható nyílt forráskódú. Maga is felépítheti.`,
+              sv: `All vår kod är MIT-licensierad reproducerbar öppen källkod. Du kan bygga det själv.`,
+              da: `Alt vores kode er MIT-licenseret reproducerbar open source. Du kan bygge det selv.`,
+            }, lang)}>
+            <LocalizedSix />
           </InfoCard>
         </div>
         <div className="h-16" />
