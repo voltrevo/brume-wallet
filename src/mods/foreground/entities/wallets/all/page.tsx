@@ -141,7 +141,6 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets: Nullable
 }
 
 export function SelectableWalletGrid(props: OkProps<Wallet> & { wallets: Nullable<Wallet[]> } & { selecteds: Nullable<Wallet>[] } & { disableNew?: boolean }) {
-  const locale = useLocaleContext().getOrThrow()
   const { wallets, ok, selecteds, disableNew } = props
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
@@ -167,7 +166,7 @@ export function CheckableWalletCard(props: WalletProps & OkProps<Wallet> & { ind
     ok(wallet)
   }, [ok, wallet])
 
-  return <div className={`w-full aspect-video rounded-xl overflow-hidden cursor-pointer aria-checked:outline aria-checked:outline-2 aria-checked:outline-blue-600 animate-vibrate-loop`}
+  return <div className={`w-full aspect-video rounded-xl overflow-hidden cursor-pointer aria-checked:outline-2 aria-checked:outline-blue-600 animate-vibrate-loop`}
     role="checkbox"
     aria-checked={checked}
     onClick={onClick}>
