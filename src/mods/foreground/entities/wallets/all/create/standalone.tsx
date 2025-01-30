@@ -191,7 +191,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       <WideClickableContrastButton
         onClick={generateOrAlert}>
         <Outline.KeyIcon className="size-5" />
-        Generate
+        {Locale.get(Locale.Generate, locale)}
       </WideClickableContrastButton>
     </div>
 

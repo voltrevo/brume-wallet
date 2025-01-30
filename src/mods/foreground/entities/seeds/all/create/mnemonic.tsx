@@ -163,7 +163,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     <div className="po-2 flex flex-col bg-default-contrast rounded-xl">
       <div className="flex items-start">
         <div className="flex-none">
-          Seed phrase
+          {Locale.get(Locale.MnemonicPhrase, locale)}
         </div>
         <div className="w-4" />
         <SimpleTextarea
@@ -177,19 +177,19 @@ export function StandaloneSeedCreatorDialog(props: {}) {
         <WideClickableContrastButton
           onClick={generate12OrAlert}>
           <Outline.KeyIcon className="size-5" />
-          Generate 12 words
+          {Locale.get(Locale.Generate12Words, locale)}
         </WideClickableContrastButton>
         <WideClickableContrastButton
           onClick={generate24OrAlert}>
           <Outline.KeyIcon className="size-5" />
-          Generate 24 words
+          {Locale.get(Locale.Generate24Words, locale)}
         </WideClickableContrastButton>
       </div>
     </div>
 
   const error = useMemo(() => {
     if (!validateMnemonic(defPhraseInput, wordlist))
-      return Locale.get(Locale.ValidSeedPhraseRequired, locale)
+      return Locale.get(Locale.ValidMnemonicPhraseRequired, locale)
     return
   }, [defPhraseInput])
 
