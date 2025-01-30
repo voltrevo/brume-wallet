@@ -8,7 +8,7 @@ export type WalletNonceDialogState = {
 }
 
 export function WalletNonceDialog(props: OkProps<void>) {
-  const lang = useLocaleContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
 
   return <>
     <Dialog.Title>
@@ -19,7 +19,7 @@ export function WalletNonceDialog(props: OkProps<void>) {
       Pending transactions
     </div>
     <div className="grow flex flex-col items-center justify-center">
-      {Locale.get(Locale.ComingSoon, lang)}...
+      {Locale.get(Locale.ComingSoon, locale)}...
     </div>
   </>
 }

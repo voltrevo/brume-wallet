@@ -125,8 +125,8 @@ export namespace Messages {
 }
 
 export function UserCreateDialog(props: { next?: string }) {
-  const lang = useLocaleContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
   const { next } = props
 
@@ -198,21 +198,21 @@ export function UserCreateDialog(props: { next?: string }) {
 
   const error = useMemo(() => {
     if (defPasswordInput.length < 1)
-      return Locale.get(Messages.PasswordRequired, lang)
+      return Locale.get(Messages.PasswordRequired, locale)
     if (defPasswordInput.length < 3)
-      return Locale.get(Messages.PasswordTooShort, lang)
+      return Locale.get(Messages.PasswordTooShort, locale)
     if (defConfirmPasswordInput.length < 1)
-      return Locale.get(Messages.PasswordRequired, lang)
+      return Locale.get(Messages.PasswordRequired, locale)
     if (defConfirmPasswordInput.length < 3)
-      return Locale.get(Messages.PasswordTooShort, lang)
+      return Locale.get(Messages.PasswordTooShort, locale)
     if (defPasswordInput !== defConfirmPasswordInput)
-      return Locale.get(Messages.PasswordsDontMatch, lang)
-  }, [lang, defConfirmPasswordInput, defPasswordInput])
+      return Locale.get(Messages.PasswordsDontMatch, locale)
+  }, [locale, defConfirmPasswordInput, defPasswordInput])
 
   const NameInput =
     <ContrastLabel>
       <div className="flex-none">
-        {Locale.get(Locale.Name, lang)}
+        {Locale.get(Locale.Name, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput
@@ -224,7 +224,7 @@ export function UserCreateDialog(props: { next?: string }) {
   const PasswordInput =
     <ContrastLabel>
       <div className="flex-none">
-        {Locale.get(Locale.Password, lang)}
+        {Locale.get(Locale.Password, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput
@@ -237,7 +237,7 @@ export function UserCreateDialog(props: { next?: string }) {
   const PasswordInput2 =
     <ContrastLabel>
       <div className="flex-none">
-        {Locale.get(Locale.Password, lang)}
+        {Locale.get(Locale.Password, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput
@@ -259,7 +259,7 @@ export function UserCreateDialog(props: { next?: string }) {
 
   return <>
     <Dialog.Title>
-      {Locale.get(Locale.NewUser, lang)}
+      {Locale.get(Locale.NewUser, locale)}
     </Dialog.Title>
     <div className="h-4" />
     <div className="grow flex flex-col items-center justify-center h-[200px]">

@@ -6,7 +6,7 @@ import { GlobalBottomNavigation, UserBottomNavigation } from "@/mods/foreground/
 import { useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 
 export function UserPage(props: ChildrenProps) {
-  const lang = useLocaleContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
   const subpath = useHashSubpath(path)
   const { children } = props
@@ -34,7 +34,7 @@ export function UserPage(props: ChildrenProps) {
             <Outline.SparklesIcon className="size-4" />
             <div className="w-2" />
             <input className="w-full bg-transparent outline-none"
-              placeholder={Locale.get(Locale.tellMeWhatYouWant, lang)}
+              placeholder={Locale.get(Locale.tellMeWhatYouWant, locale)}
               onKeyDown={omnidialog.onKeyDown}
               onClick={omnidialog.onClick} />
           </div>
@@ -51,10 +51,11 @@ export function UserPage(props: ChildrenProps) {
 }
 
 export function GlobalPage(props: ChildrenProps) {
-  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
-  const subpath = useHashSubpath(path)
+  const locale = useLocaleContext().getOrThrow()
   const { children } = props
+
+  const subpath = useHashSubpath(path)
 
   const omnidialog = useCoords(subpath, "/...")
 
@@ -79,7 +80,7 @@ export function GlobalPage(props: ChildrenProps) {
             <Outline.SparklesIcon className="size-4" />
             <div className="w-2" />
             <input className="w-full bg-transparent outline-none"
-              placeholder={Locale.get(Locale.tellMeWhatYouWant, lang)}
+              placeholder={Locale.get(Locale.tellMeWhatYouWant, locale)}
               onKeyDown={omnidialog.onKeyDown}
               onClick={omnidialog.onClick} />
           </div>

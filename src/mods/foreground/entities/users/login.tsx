@@ -18,9 +18,9 @@ import { UserAvatar } from "../../user/mods/avatar";
 import { useCurrentUser, useUser } from "./data";
 
 export function UserLoginDialog(props: { next?: string }) {
-  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
   const { next } = props
 
@@ -116,7 +116,7 @@ export function UserLoginDialog(props: { next?: string }) {
         onChange={onPasswordInputChange}
         disabled={loginOrAlert.loading}
         data-invalid={invalid}
-        placeholder={Locale.get(Locale.Password, lang)}
+        placeholder={Locale.get(Locale.Password, locale)}
         onKeyDown={onKeyDown}
         autoFocus />
     </ContrastLabel>
@@ -126,7 +126,7 @@ export function UserLoginDialog(props: { next?: string }) {
         disabled={defPasswordInput.length < 3 || loginOrAlert.loading}
         onClick={onLogin}>
         <Outline.LockOpenIcon className="size-5" />
-        {Locale.get(Locale.Enter, lang)}
+        {Locale.get(Locale.Enter, locale)}
       </WideClickableOppositeButton>
     </div>
   </>

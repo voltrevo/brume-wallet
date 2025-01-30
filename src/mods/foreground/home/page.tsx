@@ -12,7 +12,7 @@ import { useLocaleContext } from "../global/mods/locale"
 import { Locale } from "../locale"
 
 export function HomePage() {
-  const lang = useLocaleContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const userData = useUserContext().getOrThrow().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
@@ -49,9 +49,9 @@ export function HomePage() {
       <div className="h-[max(24rem,100dvh_-_16rem)] flex-none flex flex-col items-center">
         <div className="grow" />
         <h1 className="flex flex-col gap-2 text-center text-6xl font-medium"
-          data-dir={Locale.get(Locale.direction, lang)}>
+          data-dir={Locale.get(Locale.direction, locale)}>
           <div>
-            {Locale.get(Locale.Hello, lang)}
+            {Locale.get(Locale.Hello, locale)}
           </div>
           <div className="text-default-contrast">
             {userData.name}
@@ -93,7 +93,7 @@ export function HomePage() {
                 hu: "Az adataid nem lesznek mentve",
                 sv: "Dina data kommer inte att sparas",
                 da: "Dine data vil ikke blive gemt"
-              }, lang)}
+              }, locale)}
             </h3>
             <div className="h-2" />
             <p className="text-default-contrast text-center">
@@ -128,13 +128,13 @@ export function HomePage() {
                 hu: `Ha meg akarja őrizni az adatait, adja hozzá ezt a webhelyet a kedvenceihez vagy a kezdőképernyőjéhez`,
                 sv: `Lägg till denna webbplats i dina favoriter eller på din startsida om du vill behålla dina data`,
                 da: `Hvis du vil beholde dine data, skal du tilføje dette websted til dine favoritter eller din startskærm`
-              }, lang)}
+              }, locale)}
             </p>
             <div className="h-4" />
             <div className="flex items-center flex-wrap-reverse gap-2">
               <WideClickableContrastButton
                 onClick={onIgnoreClick}>
-                {Locale.get(Locale.IDontCare, lang)}
+                {Locale.get(Locale.IDontCare, locale)}
               </WideClickableContrastButton>
             </div>
           </div>
@@ -175,7 +175,7 @@ export function HomePage() {
           hu: "Teljes egyenleg",
           sv: "Totalt saldo",
           da: "Total balance"
-        }, lang)}
+        }, locale)}
       </div>
       <div className="text-2xl font-bold">
         {totalPricedBalanceDisplay}
@@ -184,7 +184,7 @@ export function HomePage() {
       <div className="p-4 bg-default-contrast flex-none h-[300px] rounded-xl flex flex-col items-center justify-center">
         <img src="/favicon.png" alt="logo" className="h-24 w-auto" />
         <div className="">
-          {Locale.get(Locale.ComingSoon, lang)}...
+          {Locale.get(Locale.ComingSoon, locale)}...
         </div>
       </div>
     </PageBody >

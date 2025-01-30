@@ -22,14 +22,14 @@ import { ReadonlyWalletCreatorDialog } from "./create/readonly"
 import { StandaloneWalletCreatorDialog } from "./create/standalone"
 
 export function WalletsPage() {
-  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
 
   const subpath = useHashSubpath(path)
   const creator = useCoords(subpath, "/create")
 
   return <UserPage>
-    <PageHeader title={Locale.get(Locale.Wallets, lang)}>
+    <PageHeader title={Locale.get(Locale.Wallets, locale)}>
       <PaddedRoundedClickableNakedAnchor
         onKeyDown={creator.onKeyDown}
         onClick={creator.onClick}

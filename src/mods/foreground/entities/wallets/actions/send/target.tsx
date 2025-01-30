@@ -13,7 +13,6 @@ import { useContractToken } from "@/mods/universal/ethereum/mods/tokens/mods/cor
 import { usePathContext, useSearchState } from "@hazae41/chemin";
 import { Address } from "@hazae41/cubane";
 import { Option } from "@hazae41/option";
-import { useCloseContext } from "@hazae41/react-close-context";
 import { SyntheticEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { SimpleInput } from ".";
 import { useEnsLookup } from "../../../names/data";
@@ -21,10 +20,9 @@ import { useWalletDataContext } from "../../context";
 import { useEthereumContext } from "../../data";
 
 export function WalletSendScreenTarget(props: {}) {
-  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
-  const close = useCloseContext().getOrThrow()
 
   const [maybeStep, setStep] = useSearchState(path, "step")
   const [maybeChain, setChain] = useSearchState(path, "chain")
@@ -209,7 +207,7 @@ export function WalletSendScreenTarget(props: {}) {
       </div>
     </div>
     <div className="grow flex flex-col items-center justify-center">
-      {Locale.get(Locale.ComingSoon, lang)}...
+      {Locale.get(Locale.ComingSoon, locale)}...
     </div>
   </>
 }

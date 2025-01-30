@@ -28,7 +28,7 @@ export function asUrlOrNull(text: string) {
 export function OmniDialog(props: {
   readonly path: PathHandle
 }) {
-  const lang = useLocaleContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const { path } = props
 
   const requestsQuery = useAppRequests()
@@ -64,7 +64,7 @@ export function OmniDialog(props: {
         <Outline.SparklesIcon className="size-4" />
         <div className="w-2" />
         <input className="w-full bg-transparent outline-none"
-          placeholder={Locale.get(Locale.tellMeWhatYouWant, lang)}
+          placeholder={Locale.get(Locale.tellMeWhatYouWant, locale)}
           value={rawInput}
           onChange={onInputChange}
           onKeyDown={onKeyDown} />
@@ -83,7 +83,7 @@ export function OmniDialog(props: {
     </div>
     <div className="h-4" />
     <ContrastTitleDiv>
-      User
+      {Locale.get(Locale.User, locale)}
     </ContrastTitleDiv>
     <div className="h-4" />
     <div className="grid place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
@@ -92,28 +92,28 @@ export function OmniDialog(props: {
         href="#/home">
         <Outline.HomeIcon className="size-5" />
         <div className="h-4" />
-        {Locale.get(Locale.Home, lang)}
+        {Locale.get(Locale.Home, locale)}
       </a>
       <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/wallets"}
         href="#/wallets">
         <Outline.WalletIcon className="size-5" />
         <div className="h-4" />
-        {Locale.get(Locale.Wallets, lang)}
+        {Locale.get(Locale.Wallets, locale)}
       </a>
       <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/seeds"}
         href="#/seeds">
         <Outline.SparklesIcon className="size-5" />
         <div className="h-4" />
-        {Locale.get(Locale.Seeds, lang)}
+        {Locale.get(Locale.Seeds, locale)}
       </a>
       <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/sessions"}
         href="#/sessions">
         <Outline.GlobeAltIcon className="size-5" />
         <div className="h-4" />
-        {Locale.get(Locale.Sessions, lang)}
+        {Locale.get(Locale.Sessions, locale)}
       </a>
       <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/requests"}
@@ -130,7 +130,7 @@ export function OmniDialog(props: {
             <Outline.CheckIcon className="size-5" />
           </div>
           <div className="h-4" />
-          {Locale.get(Locale.Requests, lang)}
+          {Locale.get(Locale.Requests, locale)}
         </ClickerInAnchorDiv>
       </a>
       <a className="po-2 bg-default-contrast rounded-xl"
@@ -138,12 +138,12 @@ export function OmniDialog(props: {
         href="#/settings">
         <Outline.CogIcon className="size-5" />
         <div className="h-4" />
-        {Locale.get(Locale.Settings, lang)}
+        {Locale.get(Locale.Settings, locale)}
       </a>
     </div>
     <div className="h-4" />
     <ContrastTitleDiv>
-      Global
+      {Locale.get(Locale.Global, locale)}
     </ContrastTitleDiv>
     <div className="h-4" />
     <div className="grid place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
@@ -152,7 +152,7 @@ export function OmniDialog(props: {
         href="#/">
         <Outline.BuildingStorefrontIcon className="size-5" />
         <div className="h-4" />
-        {Locale.get(Locale.Showcase, lang)}
+        {Locale.get(Locale.Showcase, locale)}
       </a>
       {/* <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/apps"}

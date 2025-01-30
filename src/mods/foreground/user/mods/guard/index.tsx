@@ -32,8 +32,8 @@ export function UserGuardBody(props: ChildrenProps) {
 }
 
 export function LockedBody() {
-  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
 
   const hash = useHashSubpath(path)
   const users = useCoords(hash, "/users")
@@ -59,7 +59,7 @@ export function LockedBody() {
         onClick={users.onClick}
         href={users.href}>
         <Outline.LockOpenIcon className="size-5" />
-        {Locale.get(Locale.Enter, lang)}
+        {Locale.get(Locale.Enter, locale)}
       </ClickableOppositeAnchor>
     </div>
   </PageBody>

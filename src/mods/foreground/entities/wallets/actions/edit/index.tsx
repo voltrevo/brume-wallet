@@ -17,9 +17,9 @@ import { useWallet } from "../../data";
 import { SimpleInput } from "../send";
 
 export function WalletEditDialog(props: {}) {
-  const lang = useLocaleContext().getOrThrow()
-  const wallet = useWalletDataContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
+  const wallet = useWalletDataContext().getOrThrow()
 
   const query = useWallet(wallet.uuid)
   const color = Color.get(wallet.color)
@@ -54,7 +54,7 @@ export function WalletEditDialog(props: {}) {
   const NameInput =
     <ContrastLabel>
       <div className="flex-none">
-        {Locale.get(Locale.Name, lang)}
+        {Locale.get(Locale.Name, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput

@@ -632,8 +632,9 @@ export function WalletAndChainSelectPage() {
 }
 
 export function DonePage() {
-  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
+
   const requests = useAppRequests().current?.getOrNull()
 
   useEffect(() => {
@@ -657,7 +658,7 @@ export function DonePage() {
         <ClickableOppositeAnchor
           href="#/home">
           <Outline.HomeIcon className="size-5" />
-          {Locale.get(Locale.Home, lang)}
+          {Locale.get(Locale.Home, locale)}
         </ClickableOppositeAnchor>
       </div>
     </PageBody>

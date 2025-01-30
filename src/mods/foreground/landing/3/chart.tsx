@@ -2,7 +2,7 @@ import { useLocaleContext } from "../../global/mods/locale"
 import { Locale } from "../../locale"
 
 export function ThreeChart() {
-  const lang = useLocaleContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
 
   return <div className="p-4 bg-default-contrast rounded-xl">
     <div className="font-medium text-xl">
@@ -37,7 +37,7 @@ export function ThreeChart() {
         hu: "Külső függőségek száma",
         sv: "Antal externa beroenden",
         da: "Antal eksterne afhængigheder"
-      }, lang)}
+      }, locale)}
     </div>
     <div className="text-default-contrast">
       {Locale.get({
@@ -71,7 +71,7 @@ export function ThreeChart() {
         hu: `Vett a package.json-ból — Minél alacsonyabb, annál jobb`,
         sv: `Tog från package.json — Lägre är bättre`,
         da: `Taget fra package.json — Jo lavere, jo bedre`
-      }, lang)}
+      }, locale)}
     </div>
     <div className="h-4" />
     <div className="w-full">

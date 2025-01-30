@@ -20,14 +20,14 @@ import { LedgerSeedCreatorDialog } from "./create/hardware"
 import { StandaloneSeedCreatorDialog } from "./create/mnemonic"
 
 export function SeedsPage() {
-  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
 
   const subpath = useHashSubpath(path)
   const creator = useCoords(subpath, "/create")
 
   return <UserPage>
-    <PageHeader title={Locale.get(Locale.Seeds, lang)}>
+    <PageHeader title={Locale.get(Locale.Seeds, locale)}>
       <PaddedRoundedClickableNakedAnchor
         onKeyDown={creator.onKeyDown}
         onClick={creator.onClick}

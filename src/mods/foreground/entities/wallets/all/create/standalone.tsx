@@ -29,8 +29,8 @@ import { SimpleInput, SimpleTextarea } from "../../actions/send";
 import { RawWalletCard } from "../../card";
 
 export function StandaloneWalletCreatorDialog(props: {}) {
-  const lang = useLocaleContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
   const uuid = useConstant(() => randomUUID())
@@ -169,7 +169,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
   const NameInput =
     <ContrastLabel>
       <div className="flex-none">
-        {Locale.get(Locale.Name, lang)}
+        {Locale.get(Locale.Name, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput

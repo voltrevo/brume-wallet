@@ -25,7 +25,7 @@ import { useOrigin } from "../../origins/data"
 import { useAppRequest, useAppRequests } from "../data"
 
 export function RequestsPage() {
-  const lang = useLocaleContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
   const requestsQuery = useAppRequests()
@@ -47,7 +47,7 @@ export function RequestsPage() {
   }), [background, maybeRequests])
 
   return <UserPage>
-    <PageHeader title={Locale.get(Locale.Requests, lang)}>
+    <PageHeader title={Locale.get(Locale.Requests, locale)}>
       <PaddedRoundedClickableNakedButton
         disabled={rejectAllOrAlert.loading || !Boolean(maybeRequests?.length)}
         onClick={rejectAllOrAlert.run}>

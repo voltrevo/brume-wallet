@@ -25,12 +25,12 @@ import { UserCreateDialog } from "../entities/users/all/create";
 import { useCurrentUser, useUser, useUsers } from "../entities/users/data";
 import { UserLoginDialog } from "../entities/users/login";
 import { useLocaleContext } from "../global/mods/locale";
-import { Locale, Localized } from "../locale";
+import { Locale } from "../locale";
 import { One } from "./1";
 
 export function EmptyLandingPage(props: { next?: string }) {
-  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const { next } = props
 
   const currentUserQuery = useCurrentUser()
@@ -63,9 +63,9 @@ export function EmptyLandingPage(props: { next?: string }) {
         <div className="h-[max(24rem,100dvh_-_16rem)] flex-none flex flex-col items-center">
           <div className="grow" />
           <h1 className="flex flex-col gap-2 text-center text-6xl font-medium"
-            data-dir={Locale.get(Locale.direction, lang)}>
+            data-dir={Locale.get(Locale.direction, locale)}>
             <div>
-              {Locale.get(Locale.Hello, lang)}
+              {Locale.get(Locale.Hello, locale)}
             </div>
             <div className="text-default-contrast">
               {maybeUser?.name || "Anon"}
@@ -85,13 +85,13 @@ export function EmptyLandingPage(props: { next?: string }) {
                 onClick={users.onClick}
                 href={users.href}>
                 <Outline.LockOpenIcon className="size-5" />
-                {Locale.get(Locale.Enter, lang)}
+                {Locale.get(Locale.Enter, locale)}
               </ClickableOppositeAnchor>}
             {!currentUserLoading && maybeCurrentUser != null &&
               <ClickableOppositeAnchor
                 href="#/home">
                 <Outline.HomeIcon className="size-5" />
-                {Locale.get(Locale.Home, lang)}
+                {Locale.get(Locale.Home, locale)}
               </ClickableOppositeAnchor>}
           </div>
           <div className="grow" />
@@ -102,8 +102,8 @@ export function EmptyLandingPage(props: { next?: string }) {
 }
 
 export function FullLandingPage(props: { next?: string }) {
-  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const { next } = props
 
   const currentUserQuery = useCurrentUser()
@@ -113,12 +113,12 @@ export function FullLandingPage(props: { next?: string }) {
   const hash = useHashSubpath(path)
   const users = useCoords(hash, "/users")
 
-  const LocalizedOne = Locale.get(One, lang)
-  const LocalizedTwo = Locale.get(Two, lang)
-  const LocalizedThree = Locale.get(Three, lang)
-  const LocalizedFour = Locale.get(Four, lang)
-  const LocalizedFive = Locale.get(Five, lang)
-  const LocalizedSix = Locale.get(Six, lang)
+  const LocalizedOne = Locale.get(One, locale)
+  const LocalizedTwo = Locale.get(Two, locale)
+  const LocalizedThree = Locale.get(Three, locale)
+  const LocalizedFour = Locale.get(Four, locale)
+  const LocalizedFive = Locale.get(Five, locale)
+  const LocalizedSix = Locale.get(Six, locale)
 
   return <>
     <HashSubpathProvider>
@@ -149,72 +149,72 @@ export function FullLandingPage(props: { next?: string }) {
           <div className="grow" />
           <h1 className="text-center text-6xl font-medium">
             {Locale.get({
-              "en": "The private Ethereum wallet",
-              "zh": "私人以太坊钱包",
-              "hi": "निजी ईथेरियम वॉलेट",
-              "es": "La billetera Ethereum privada",
-              "ar": "محفظة إيثريوم الخاصة",
-              "fr": "Le portefeuille Ethereum confidentiel",
-              "de": "Die private Ethereum-Brieftasche",
-              "ru": "Частный кошелек Ethereum",
-              "pt": "A carteira Ethereum privada",
-              "ja": "プライベートイーサリアムウォレット",
-              "pa": "ਨਿਜੀ ਇਥੇਰੀਅਮ ਵਾਲੇਟ",
-              "bn": "ব্যক্তিগত ইথেরিয়াম ওয়ালেট",
-              "id": "Dompet Ethereum pribadi",
-              "ur": "نجی ایتھیریم والیٹ",
-              "ms": "Dompet Ethereum peribadi",
-              "it": "Il portafoglio Ethereum privato",
-              "tr": "Özel Ethereum cüzdanı",
-              "ta": "தனிப்பட்ட எதீரியம் வாலட்",
-              "te": "ప్రైవేట్ ఎథిరియం వాలెట్",
-              "ko": "개인 이더리움 지갑",
-              "vi": "Ví Ethereum riêng",
-              "pl": "Prywatny portfel Ethereum",
-              "ro": "Portofelul privat Ethereum",
-              "nl": "De privé Ethereum-portemonnee",
-              "el": "Το ιδιωτικό πορτοφόλι Ethereum",
-              "th": "กระเป๋าเงิน Ethereum ส่วนตัว",
-              "cs": "Soukromá peněženka Ethereum",
-              "hu": "A privát Ethereum tárca",
-              "sv": "Den privata Ethereum-plånboken",
-              "da": "Den private Ethereum-tegnebog",
-            } satisfies Localized<string>, lang)}
+              en: "The private Ethereum wallet",
+              zh: "私人以太坊钱包",
+              hi: "निजी ईथेरियम वॉलेट",
+              es: "La billetera Ethereum privada",
+              ar: "محفظة إيثريوم الخاصة",
+              fr: "Le portefeuille Ethereum confidentiel",
+              de: "Die private Ethereum-Brieftasche",
+              ru: "Частный кошелек Ethereum",
+              pt: "A carteira Ethereum privada",
+              ja: "プライベートイーサリアムウォレット",
+              pa: "ਨਿਜੀ ਇਥੇਰੀਅਮ ਵਾਲੇਟ",
+              bn: "ব্যক্তিগত ইথেরিয়াম ওয়ালেট",
+              id: "Dompet Ethereum pribadi",
+              ur: "نجی ایتھیریم والیٹ",
+              ms: "Dompet Ethereum peribadi",
+              it: "Il portafoglio Ethereum privato",
+              tr: "Özel Ethereum cüzdanı",
+              ta: "தனிப்பட்ட எதீரியம் வாலட்",
+              te: "ప్రైవేట్ ఎథిరియం వాలెట్",
+              ko: "개인 이더리움 지갑",
+              vi: "Ví Ethereum riêng",
+              pl: "Prywatny portfel Ethereum",
+              ro: "Portofelul privat Ethereum",
+              nl: "De privé Ethereum-portemonnee",
+              el: "Το ιδιωτικό πορτοφόλι Ethereum",
+              th: "กระเป๋าเงิน Ethereum ส่วนตัว",
+              cs: "Soukromá peněženka Ethereum",
+              hu: "A privát Ethereum tárca",
+              sv: "Den privata Ethereum-plånboken",
+              da: "Den private Ethereum-tegnebog",
+            }, locale)}
           </h1>
           <div className="h-4" />
           <div className="text-center text-default-contrast text-2xl">
             {Locale.get({
-              "en": "Meet the only Ethereum wallet with maximum privacy and security.",
-              "zh": "了解唯一具有最大隐私和安全性的以太坊钱包。",
-              "hi": "अधिकतम गोपनीयता और सुरक्षा के साथ एकमात्र ईथेरियम वॉलेट से मिलें।",
-              "es": "Conozca la única billetera Ethereum con máxima privacidad y seguridad.",
-              "ar": "تعرف على المحفظة الوحيدة للإيثريوم بأقصى درجات الخصوصية والأمان.",
-              "fr": "Découvrez le seul portefeuille Ethereum avec une confidentialité et une sécurité maximales.",
-              "de": "Lernen Sie die einzige Ethereum-Brieftasche mit maximaler Privatsphäre und Sicherheit kennen.",
-              "ru": "Познакомьтесь с единственным кошельком Ethereum с максимальной конфиденциальностью и безопасностью.",
-              "pt": "Conheça a única carteira Ethereum com máxima privacidade e segurança.",
-              "ja": "最大限のプライバシーとセキュリティを備えた唯一のイーサリアムウォレットに会いましょう。",
-              "pa": "ਸਭ ਤੋਂ ਜ਼ਿਆਦਾ ਗੁਪਤਤਾ ਅਤੇ ਸੁਰੱਖਿਆ ਵਾਲਾ ਇਕ ਮਾਤਰ ਇਥੇਰੀਅਮ ਵਾਲੇਟ ਨਾਲ ਮਿਲੋ।",
-              "bn": "সর্বোচ্চ গোপনীয়তা এবং নিরাপত্তা সহ একমাত্র ইথেরিয়াম ওয়ালেট সাথে পরিচিত হন।",
-              "id": "Temui satu-satunya dompet Ethereum dengan privasi dan keamanan maksimum.",
-              "ur": "سب سے زیادہ رازداری اور حفاظت کے ساتھ ایک ہی ایتھیریم والیٹ سے ملیں۔",
-              "ms": "Kenali dompet Ethereum tunggal dengan privasi dan keselamatan maksimum.",
-              "it": "Incontra l'unico portafoglio Ethereum con massima privacy e sicurezza.",
-              "tr": "Maksimum gizlilik ve güvenlikle tek Ethereum cüzdanıyla tanışın.",
-              "ta": "அதிகப் பிரைவசி மற்றும் பாதுகாப்புடன் ஒரு இதீரியம் வாலட் சந்திக்கவும்.",
-              "te": "అత్యధిక గోప్యత మరియు భద్రతతో ఒకే ఎథిరియం వాలెట్తో కలిగించుకోండి.",
-              "ko": "최대 개인 정보 보호 및 보안을 갖춘 유일한 이더리움 지갑을 만나보세요.",
-              "vi": "Hãy gặp ví Ethereum duy nhất với độ riêng tư và bảo mật tối đa.",
-              "pl": "Poznaj jedyny portfel Ethereum z maksymalną prywatnością i bezpieczeństwem.",
-              "ro": "Întâlniți singurul portofel Ethereum cu maximă confidențialitate și securitate.",
-              "nl": "Maak kennis met de enige Ethereum-portemonnee met maximale privacy en veiligheid.",
-              "el": "Γνωρίστε το μοναδικό πορτοφόλι Ethereum με μέγιστη απορρήτου και ασφάλεια.",
-              "th": "พบกับกระเป๋าเงิน Ethereum เพียงหนึ่งเดียวที่มีความเป็นส่วนตัวและปลอดภัยสูงสุด",
-              "cs": "Seznamte se s jedinou peněženkou Ethereum s maximální soukromí a bezpečností.",
-              "hu": "Ismerje meg az egyetlen Ethereum pénztárcát maximális adatvédelemmel és biztonsággal.",
-              "sv": "Möt den enda Ethereum-plånboken med maximal integritet och säkerhet.",
-              "da": "Mød den eneste Ethereum-tegnebog med maksimal privatliv og sikkerhed.",
-            } satisfies Localized<string>, lang)}
+              en: "Meet the only Ethereum wallet with maximum privacy and security.",
+              zh: "了解唯一具有最大隐私和安全性的以太坊钱包。",
+              hi: "अधिकतम गोपनीयता और सुरक्षा के साथ एकमात्र ईथेरियम वॉलेट से मिलें।",
+              es: "Conozca la única billetera Ethereum con máxima privacidad y seguridad.",
+              ar: "تعرف على المحفظة الوحيدة للإيثريوم بأقصى درجات الخصوصية والأمان.",
+              fr: "Découvrez le seul portefeuille Ethereum avec une confidentialité et une sécurité maximales.",
+              de: "Lernen Sie die einzige Ethereum-Brieftasche mit maximaler Privatsphäre und Sicherheit kennen.",
+              ru: "Познакомьтесь с единственным кошельком Ethereum с максимальной конфиденциальностью и безопасностью.",
+              pt: "Conheça a única carteira Ethereum com máxima privacidade e segurança.",
+              ja: "最大限のプライバシーとセキュリティを備えた唯一のイーサリアムウォレットに会いましょう。",
+              pa: "ਸਭ ਤੋਂ ਜ਼ਿਆਦਾ ਗੁਪਤਤਾ ਅਤੇ ਸੁਰੱਖਿਆ ਵਾਲਾ ਇਕ ਮਾਤਰ ਇਥੇਰੀਅਮ ਵਾਲੇਟ ਨਾਲ ਮਿਲੋ।",
+              bn: "সর্বোচ্চ গোপনীয়তা এবং নিরাপত্তা সহ একমাত্র ইথেরিয়াম ওয়ালেট সাথে পরিচিত হন।",
+              id: "Temui satu-satunya dompet Ethereum dengan privasi dan keamanan maksimum.",
+              ur: "سب سے زیادہ رازداری اور حفاظت کے ساتھ ایک ہی ایتھیریم والیٹ سے ملیں۔",
+              ms: "Kenali dompet Ethereum tunggal dengan privasi dan keselamatan maksimum.",
+              it: "Incontra l'unico portafoglio Ethereum con massima privacy e sicurezza.",
+              tr: "Maksimum gizlilik ve güvenlikle tek Ethereum cüzdanıyla tanışın.",
+              ta: "அதிகப் பிரைவசி மற்றும் பாதுகாப்புடன் ஒரு இதீரியம் வாலட் சந்திக்கவும்.",
+              te: "అత్యధిక గోప్యత మరియు భద్రతతో ఒకే ఎథిరియం వాలెట్తో కలిగించుకోండి.",
+              ko: "최대 개인 정보 보호 및 보안을 갖춘 유일한 이더리움 지갑을 만나보세요.",
+              vi: "Hãy gặp ví Ethereum duy nhất với độ riêng tư và bảo mật tối đa.",
+              pl: "Poznaj jedyny portfel Ethereum z maksymalną prywatnością i bezpieczeństwem.",
+              ro: "Întâlniți singurul portofel Ethereum cu maximă confidențialitate și securitate.",
+              nl: "Maak kennis met de enige Ethereum-portemonnee met maximale privacy en veiligheid.",
+              el: "Γνωρίστε το μοναδικό πορτοφόλι Ethereum με μέγιστη απορρήτου και ασφάλεια.",
+              th: "พบกับกระเป๋าเงิน Ethereum เพียงหนึ่งเดียวที่มีความเป็นส่วนตัวและปลอดภัยสูงสุด",
+              cs: "Seznamte se s jedinou peněženkou Ethereum s maximální soukromí a bezpečností.",
+              hu: "Ismerje meg az egyetlen Ethereum pénztárcát maximális adatvédelemmel és biztonsággal.",
+              sv: "Möt den enda Ethereum-plånboken med maximal integritet och säkerhet.",
+              da: "Mød den eneste Ethereum-tegnebog med maksimal privatliv og sikkerhed.",
+            }, locale)}
           </div>
           <div className="grow" />
           <div className="flex items-center">
@@ -222,7 +222,7 @@ export function FullLandingPage(props: { next?: string }) {
               <ClickableOppositeAnchor
                 aria-disabled>
                 <Loading className="size-5" />
-                {Locale.get(Locale.Loading, lang)}
+                {Locale.get(Locale.Loading, locale)}
               </ClickableOppositeAnchor>}
             {!currentUserLoading && maybeCurrentUser == null &&
               <ClickableOppositeAnchor
@@ -230,19 +230,19 @@ export function FullLandingPage(props: { next?: string }) {
                 onClick={users.onClick}
                 href={users.href}>
                 <Outline.LockOpenIcon className="size-5" />
-                {Locale.get(Locale.Enter, lang)}
+                {Locale.get(Locale.Enter, locale)}
               </ClickableOppositeAnchor>}
             {!currentUserLoading && maybeCurrentUser != null &&
               <ClickableOppositeAnchor
                 href="#/home">
                 <Outline.HomeIcon className="size-5" />
-                {Locale.get(Locale.Home, lang)}
+                {Locale.get(Locale.Home, locale)}
               </ClickableOppositeAnchor>}
             <div className="w-2" />
             <ClickableContrastAnchor
               href={hash.go("/download").href}>
               <Outline.ArrowDownTrayIcon className="size-5" />
-              {Locale.get(Locale.Download, lang)}
+              {Locale.get(Locale.Download, locale)}
             </ClickableContrastAnchor>
           </div>
           <div className="grow" />
@@ -283,7 +283,7 @@ export function FullLandingPage(props: { next?: string }) {
               hu: `Teljesen közösségi finanszírozás a közösség számára. Nincs támogatás. Nincs VC.`,
               sv: `Helt finansierad av gemenskapen för gemenskapen. Inga bidrag. Inga VC.`,
               da: `Fuldt finansieret af samfundet for samfundet. Ingen bevillinger. Ingen VC.`,
-            } satisfies Localized<string>, lang)}>
+            }, locale)}>
             <LocalizedOne />
           </InfoCard>
           <InfoCard
@@ -320,7 +320,7 @@ export function FullLandingPage(props: { next?: string }) {
               hu: `Beépített Tor az IP-cím elrejtéséhez harmadik fél elől. Minden fióknak saját IP-címe van.`,
               sv: `Inbyggd Tor för att dölja din IP-adress från tredje part. Varje konto har sin egen IP.`,
               da: `Indbygget Tor til at skjule din IP-adresse fra tredjeparter. Hver konto har sin egen IP.`,
-            }, lang)}>
+            }, locale)}>
             <LocalizedTwo />
           </InfoCard>
           <InfoCard
@@ -357,7 +357,7 @@ export function FullLandingPage(props: { next?: string }) {
               hu: `Külső függőségek száma. Ez körülbelül 20-szor kevesebb, mint a versenytársaknál.`,
               sv: `Antal externa beroenden. Det är cirka 20 gånger mindre än konkurrenterna.`,
               da: `Antal eksterne afhængigheder. Det er cirka 20 gange mindre end konkurrenterne.`,
-            }, lang)}>
+            }, locale)}>
             <LocalizedThree />
           </InfoCard>
           <InfoCard
@@ -394,7 +394,7 @@ export function FullLandingPage(props: { next?: string }) {
               hu: `WebAuthn-t használhat az azonosításhoz és a tranzakciók aláírásához. Az összes kulcs titkosítva van tárolva.`,
               sv: `Du kan använda WebAuthn för att autentisera och signera transaktioner. Alla dina nycklar lagras krypterade.`,
               da: `Du kan bruge WebAuthn til at autentificere og signere transaktioner. Alle dine nøgler er gemt krypteret.`,
-            }, lang)}>
+            }, locale)}>
             <LocalizedFour />
           </InfoCard>
           <InfoCard
@@ -431,7 +431,7 @@ export function FullLandingPage(props: { next?: string }) {
               hu: `Minden kérés több szerverre van küldve annak érdekében, hogy senki se hazudjon a blokklánc állapotáról.`,
               sv: `Varje begäran skickas till flera servrar för att säkerställa att ingen ljuger om blockkedjans tillstånd.`,
               da: `Hver anmodning sendes til flere servere for at sikre, at ingen lyver om blockchain-tilstanden.`,
-            }, lang)}>
+            }, locale)}>
             <LocalizedFive />
           </InfoCard>
           <InfoCard
@@ -468,14 +468,14 @@ export function FullLandingPage(props: { next?: string }) {
               hu: `Az összes kódunk MIT-licencű reprodukálható nyílt forráskódú. Maga is felépítheti.`,
               sv: `All vår kod är MIT-licensierad reproducerbar öppen källkod. Du kan bygga det själv.`,
               da: `Alt vores kode er MIT-licenseret reproducerbar open source. Du kan bygge det selv.`,
-            }, lang)}>
+            }, locale)}>
             <LocalizedSix />
           </InfoCard>
         </div>
         <div className="h-16" />
         <div className="text-center text-2xl font-medium"
           id={hash.go("/download").hash.slice(1)}>
-          {Locale.get(Locale.Download, lang)}
+          {Locale.get(Locale.Download, locale)}
         </div>
         <div className="h-8" />
         <div className="grid place-items-stretch gap-4 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
@@ -517,14 +517,14 @@ export function FullLandingPage(props: { next?: string }) {
           target="_blank" rel="noreferrer"
           href="https://github.com/brumewallet/wallet#usage">
           <Outline.ArrowTopRightOnSquareIcon className="size-5" />
-          {Locale.get(Locale.MoreDownloads, lang)}
+          {Locale.get(Locale.MoreDownloads, locale)}
         </WideClickableContrastAnchor>
         <div className="h-[50vh]" />
         <div className="p-4 flex items-center justify-center gap-2">
           <TextAnchor
             target="_blank" rel="noreferrer"
             href="https://brume.money">
-            {Locale.get(Locale.MadeByCypherpunks, lang)}
+            {Locale.get(Locale.MadeByCypherpunks, locale)}
           </TextAnchor>
           <span>
             ·
@@ -539,8 +539,8 @@ export function FullLandingPage(props: { next?: string }) {
 }
 
 export function UsersMenu() {
-  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
 
   const usersQuery = useUsers()
   const maybeUsers = usersQuery.current?.getOrNull()
@@ -559,7 +559,7 @@ export function UsersMenu() {
       <div className="rounded-full size-7 flex justify-center items-center border border-default-contrast border-dashed">
         <Outline.PlusIcon className="size-4" />
       </div>
-      {Locale.get(Locale.NewUser, lang)}
+      {Locale.get(Locale.NewUser, locale)}
     </WideClickableNakedMenuAnchor>
   </div>
 }
@@ -587,8 +587,8 @@ export function UsersMenuRow(props: { user: User }) {
 }
 
 export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & AnchorProps & { href: string }) {
-  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const { children, title, subtitle, href, ...rest } = props
 
   const subpath = useHashSubpath(path)
@@ -659,7 +659,7 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
             hu: "Tudj meg többet.",
             sv: "Lär dig mer.",
             da: "Lær mere.",
-          }, lang)}
+          }, locale)}
         </TextAnchor>
       </div>
     </div>
@@ -667,7 +667,7 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
 }
 
 export function DownloadCard(props: TitleProps & ChildrenProps & { src: string } & { highlighted?: boolean } & { icon: any } & { href: string }) {
-  const lang = useLocaleContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const { href, src, children, title, highlighted = false, icon: Icon } = props
 
   const onClick = useCallback(() => {
@@ -700,15 +700,15 @@ export function DownloadCard(props: TitleProps & ChildrenProps & { src: string }
         onClick={Events.keep}
         href={href}>
         <Icon className="size-5" />
-        {Locale.get(Locale.Download, lang)}
+        {Locale.get(Locale.Download, locale)}
       </WideClickableContrastAnchor>
     </div>
   </div>
 }
 
 export function InstallCard(props: TitleProps & ChildrenProps & { src: string } & { highlighted?: boolean } & { icon: any } & { href: string }) {
-  const lang = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const { href, src, children, title, highlighted = false, icon: Icon } = props
 
   const hash = useHashSubpath(path)
@@ -740,7 +740,7 @@ export function InstallCard(props: TitleProps & ChildrenProps & { src: string } 
         onClick={Events.keep}
         href={coords.href}>
         <Icon className="size-5" />
-        {Locale.get(Locale.Install, lang)}
+        {Locale.get(Locale.Install, locale)}
       </WideClickableContrastAnchor>
     </div>
   </div>

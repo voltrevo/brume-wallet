@@ -29,8 +29,8 @@ import { SimpleInput } from "../../actions/send";
 import { EmptyRectangularCard } from "./standalone";
 
 export function SeededWalletCreatorDialog(props: {}) {
-  const lang = useLocaleContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
   const seedData = useSeedDataContext().getOrThrow()
 
@@ -179,7 +179,7 @@ export function SeededWalletCreatorDialog(props: {}) {
   const NameInput =
     <ContrastLabel>
       <div className="flex-none">
-        {Locale.get(Locale.Name, lang)}
+        {Locale.get(Locale.Name, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput

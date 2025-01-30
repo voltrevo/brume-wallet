@@ -14,7 +14,7 @@ import { Option, Some } from "@hazae41/option";
 import { useChain } from "../../../../../entities/settings/data";
 
 export function UserSettingsPage() {
-  const lang = useLocaleContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
 
   const chain = useChain()
 
@@ -23,7 +23,7 @@ export function UserSettingsPage() {
   }), [])
 
   return <UserPage>
-    <PageHeader title={Locale.get(Locale.Settings, lang)} />
+    <PageHeader title={Locale.get(Locale.Settings, locale)} />
     <PageBody>
       <ContrastSubtitleDiv>
         Compatibility

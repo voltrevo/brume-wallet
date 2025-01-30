@@ -28,7 +28,7 @@ import { useStatus } from "../status/data"
 import { usePersistentSessions, useTemporarySessions } from "./data"
 
 export function SessionsPage() {
-  const lang = useLocaleContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
   const tempSessionsQuery = useTemporarySessions()
@@ -63,7 +63,7 @@ export function SessionsPage() {
   }), [background, maybePersSessions])
 
   return <UserPage>
-    <PageHeader title={Locale.get(Locale.Sessions, lang)}>
+    <PageHeader title={Locale.get(Locale.Sessions, locale)}>
       <PaddedRoundedClickableNakedButton
         disabled={disconnectAllOrAlert.loading || !length}
         onClick={disconnectAllOrAlert.run}>
