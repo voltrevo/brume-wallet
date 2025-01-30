@@ -40,20 +40,20 @@ export function EmptyLandingPage(props: { next?: string }) {
   const userQuery = useUser(maybeCurrentUser?.uuid)
   const maybeUser = userQuery.current?.getOrNull()
 
-  const subpath = useHashSubpath(path)
-  const users = useCoords(subpath, "/users")
+  const hash = useHashSubpath(path)
+  const users = useCoords(hash, "/users")
 
   return <>
     <HashSubpathProvider>
-      {subpath.url.pathname === "/users/login" &&
+      {hash.url.pathname === "/users/login" &&
         <Dialog>
           <UserLoginDialog next={next} />
         </Dialog>}
-      {subpath.url.pathname === "/users/create" &&
+      {hash.url.pathname === "/users/create" &&
         <Dialog>
           <UserCreateDialog next={next} />
         </Dialog>}
-      {subpath.url.pathname === "/users" &&
+      {hash.url.pathname === "/users" &&
         <Menu>
           <UsersMenu />
         </Menu>}
@@ -591,12 +591,12 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
   const locale = useLocaleContext().getOrThrow()
   const { children, title, subtitle, href, ...rest } = props
 
-  const subpath = useHashSubpath(path)
-  const genius = useCoords(subpath, href)
+  const hash = useHashSubpath(path)
+  const coords = useCoords(hash, href)
 
   return <>
     <HashSubpathProvider>
-      {subpath.url.pathname === href &&
+      {hash.url.pathname === href &&
         <Dialog hesitant>
           <div className="text-6xl rtl:text-right"
             dir="ltr">
@@ -624,9 +624,9 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
         </span>
         <span>{` `}</span>
         <TextAnchor
-          onClick={genius.onClick}
-          onKeyDown={genius.onKeyDown}
-          href={genius.href}
+          onClick={coords.onClick}
+          onKeyDown={coords.onKeyDown}
+          href={coords.href}
           {...rest}>
           {Locale.get({
             en: "Learn more.",

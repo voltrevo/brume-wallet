@@ -25,8 +25,8 @@ export function RawSeedCard(props: { type?: SeedData["type"] } & { name: string 
   const path = usePathContext().getOrThrow()
   const { type, name, color, href, index, flip, unflip } = props
 
-  const subpath = useHashSubpath(path)
-  const genius = useCoords(subpath, href)
+  const hash = useHashSubpath(path)
+  const coords = useCoords(hash, href)
 
   const [preflip = false, setPreflip] = useState(flip)
   const [postflip, setPostflip] = useState(false)
@@ -52,9 +52,9 @@ export function RawSeedCard(props: { type?: SeedData["type"] } & { name: string 
       <div className="w-2 grow" />
       {index == null && href != null &&
         <CircularWhiteAnchorInColoredCard
-          onKeyDown={genius.onKeyDown}
-          onClick={genius.onClick}
-          href={genius.href}
+          onKeyDown={coords.onKeyDown}
+          onClick={coords.onClick}
+          href={coords.href}
           color={color}>
           <Outline.EllipsisHorizontalIcon className="size-4" />
         </CircularWhiteAnchorInColoredCard>}
@@ -82,13 +82,13 @@ export function RawSeedCard(props: { type?: SeedData["type"] } & { name: string 
       style={{ transform: preflip && postflip ? `rotateY(180deg)` : "", transformStyle: "preserve-3d" }}
       onAnimationEnd={onFlipTransitionEnd}>
       <div className="po-2 absolute w-full h-full flex flex-col [backface-visibility:hidden]"
-        onContextMenu={genius.onContextMenu}>
+        onContextMenu={coords.onContextMenu}>
         {First}
         <div className="grow" />
         {Name}
       </div>
       <div className="po-2 absolute w-full h-full flex flex-col [backface-visibility:hidden] [transform:rotateY(180deg)]"
-        onContextMenu={genius.onContextMenu}>
+        onContextMenu={coords.onContextMenu}>
         <div className="flex items-center">
           <div className="w-2 grow" />
           <CircularWhiteButtonInColoredCard

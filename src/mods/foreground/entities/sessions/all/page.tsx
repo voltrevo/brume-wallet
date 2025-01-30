@@ -105,8 +105,8 @@ export function SessionRow(props: { session: Session }) {
   const { session } = props
   const path = usePathContext().getOrThrow()
 
-  const subpath = useHashSubpath(path)
-  const menu = useCoords(subpath, `/${session.id}/menu`)
+  const hash = useHashSubpath(path)
+  const menu = useCoords(hash, `/${session.id}/menu`)
 
   const sessionQuery = useSession(session.id)
   const maybeSessionData = sessionQuery.data?.get()
@@ -136,11 +136,11 @@ export function SessionRow(props: { session: Session }) {
     onKeyDown={menu.onKeyDown}
     onClick={menu.onClick}>
     <HashSubpathProvider>
-      {subpath.url.pathname === `/${session.id}/menu` &&
+      {hash.url.pathname === `/${session.id}/menu` &&
         <Menu>
           <SessionMenu sessionData={maybeSessionData} />
         </Menu>}
-      {subpath.url.pathname === `/${session.id}/chains` && maybeSessionData.type !== "wc" &&
+      {hash.url.pathname === `/${session.id}/chains` && maybeSessionData.type !== "wc" &&
         <Menu>
           <ChainsMenu sessionData={maybeSessionData} />
         </Menu>}

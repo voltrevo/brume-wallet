@@ -36,7 +36,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   const wallet = useWalletDataContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
 
-  const subpath = useHashSubpath(path)
+  const hash = useHashSubpath(path)
 
   const [maybeStep, setStep] = useSearchState(path, "step")
   const [maybeChain, setChain] = useSearchState(path, "chain")
@@ -258,8 +258,8 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
   }, [maybeFinalValue, password])
 
   const onSendTransactionClick = useCallback(() => {
-    location.replace(subpath.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.getOrNull(), disableData: true, disableSign: true })))
-  }, [subpath, trial0Uuid, chainData, maybeContract, rawValue, maybeTriedMaybeFinalData])
+    location.replace(hash.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: maybeContract, value: rawValue, data: maybeTriedMaybeFinalData?.getOrNull(), disableData: true, disableSign: true })))
+  }, [hash, trial0Uuid, chainData, maybeContract, rawValue, maybeTriedMaybeFinalData])
 
   const trial0Query = useTransactionTrial(trial0Uuid)
   const maybeTrial0Data = trial0Query.current?.getOrNull()
@@ -299,7 +299,7 @@ export function WalletPeanutSendScreenNativeValue(props: {}) {
 
   return <>
     <HashSubpathProvider>
-      {subpath.url.pathname === "/eth_sendTransaction" &&
+      {hash.url.pathname === "/eth_sendTransaction" &&
         <Dialog>
           <WalletTransactionDialog />
         </Dialog>}

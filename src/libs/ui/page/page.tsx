@@ -8,10 +8,11 @@ import { useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 export function UserPage(props: ChildrenProps) {
   const locale = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
-  const subpath = useHashSubpath(path)
   const { children } = props
 
-  const omnidialog = useCoords(subpath, "/...")
+  const hash = useHashSubpath(path)
+
+  const omnidialog = useCoords(hash, "/...")
 
   return <>
     <div className="grow w-full flex flex-col overflow-y-scroll">
@@ -55,9 +56,9 @@ export function GlobalPage(props: ChildrenProps) {
   const locale = useLocaleContext().getOrThrow()
   const { children } = props
 
-  const subpath = useHashSubpath(path)
+  const hash = useHashSubpath(path)
 
-  const omnidialog = useCoords(subpath, "/...")
+  const omnidialog = useCoords(hash, "/...")
 
   return <>
     <div className="grow w-full flex flex-col overflow-y-scroll">

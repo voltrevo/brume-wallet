@@ -139,7 +139,7 @@ export function TransactPage() {
   const path = usePathContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
-  const subpath = useHashSubpath(path)
+  const hash = useHashSubpath(path)
 
   const id = Option.wrap(path.url.searchParams.get("id")).getOrThrow()
 
@@ -206,8 +206,8 @@ export function TransactPage() {
   }), [background, id, path])
 
   const onSendTransactionClick = useCallback(() => {
-    location.replace(subpath.go(urlOf("/eth_sendTransaction", { trial: id, chain: chainId, target: maybeTo, value: maybeValue, nonce: maybeNonce, data: maybeData, gas: maybeGas, gasMode: "custom", gasPrice: maybeGasPrice, maxFeePerGas: maybeMaxFeePerGas, maxPriorityFeePerGas: maybeMaxPriorityFeePerGas, disableData: true, disableSign: true })))
-  }, [subpath, id, chainId, maybeTo, maybeValue, maybeNonce, maybeData, maybeGas, maybeGasPrice, maybeMaxFeePerGas, maybeMaxPriorityFeePerGas])
+    location.replace(hash.go(urlOf("/eth_sendTransaction", { trial: id, chain: chainId, target: maybeTo, value: maybeValue, nonce: maybeNonce, data: maybeData, gas: maybeGas, gasMode: "custom", gasPrice: maybeGasPrice, maxFeePerGas: maybeMaxFeePerGas, maxPriorityFeePerGas: maybeMaxPriorityFeePerGas, disableData: true, disableSign: true })))
+  }, [hash, id, chainId, maybeTo, maybeValue, maybeNonce, maybeData, maybeGas, maybeGasPrice, maybeMaxFeePerGas, maybeMaxPriorityFeePerGas])
 
   useEffect(() => {
     if (maybeTransaction == null)
@@ -218,7 +218,7 @@ export function TransactPage() {
   return <WalletDataContext value={maybeWallet}>
     <UserPage>
       <HashSubpathProvider>
-        {subpath.url.pathname === "/eth_sendTransaction" &&
+        {hash.url.pathname === "/eth_sendTransaction" &&
           <Dialog>
             <WalletTransactionDialog />
           </Dialog>}
@@ -520,8 +520,8 @@ export function WalletAndChainSelectPage() {
   const path = usePathContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
-  const subpath = useHashSubpath(path)
-  const creator = useCoords(subpath, "/create")
+  const hash = useHashSubpath(path)
+  const create = useCoords(hash, "/create")
 
   const id = Option.wrap(path.url.searchParams.get("id")).getOrThrow()
 
@@ -570,9 +570,9 @@ export function WalletAndChainSelectPage() {
   const Header =
     <PageHeader title="Connect">
       <PaddedRoundedClickableNakedAnchor
-        onKeyDown={creator.onKeyDown}
-        onClick={creator.onClick}
-        href={creator.href}>
+        onKeyDown={create.onKeyDown}
+        onClick={create.onClick}
+        href={create.href}>
         <Outline.PlusIcon className="size-5" />
       </PaddedRoundedClickableNakedAnchor>
     </PageHeader>
@@ -613,15 +613,15 @@ export function WalletAndChainSelectPage() {
 
   return <UserPage>
     <HashSubpathProvider>
-      {subpath.url.pathname === "/create" &&
+      {hash.url.pathname === "/create" &&
         <Menu>
           <WalletCreatorMenu />
         </Menu>}
-      {subpath.url.pathname === "/create/standalone" &&
+      {hash.url.pathname === "/create/standalone" &&
         <Dialog>
           <StandaloneWalletCreatorDialog />
         </Dialog>}
-      {subpath.url.pathname === "/create/readonly" &&
+      {hash.url.pathname === "/create/readonly" &&
         <Dialog>
           <ReadonlyWalletCreatorDialog />
         </Dialog>}

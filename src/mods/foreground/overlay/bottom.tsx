@@ -167,16 +167,17 @@ export function OmniDialog(props: {
 
 export function UserBottomNavigation() {
   const path = usePathContext().getOrThrow()
-  const subpath = useHashSubpath(path)
+
+  const hash = useHashSubpath(path)
 
   const requestsQuery = useAppRequests()
   const requestsData = requestsQuery.data?.get()
 
-  const omnidialog = useCoords(subpath, "/...")
+  const omnidialog = useCoords(hash, "/...")
 
   return <nav className="md:hidden h-16 w-full flex-none border-t border-t-default-contrast">
     <HashSubpathProvider>
-      {subpath.url.pathname === "/..." &&
+      {hash.url.pathname === "/..." &&
         <OmniDialog path={path} />}
     </HashSubpathProvider>
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">
@@ -247,13 +248,14 @@ export function UserBottomNavigation() {
 
 export function GlobalBottomNavigation() {
   const path = usePathContext().getOrThrow()
-  const subpath = useHashSubpath(path)
 
-  const omnidialog = useCoords(subpath, "/...")
+  const hash = useHashSubpath(path)
+
+  const omnidialog = useCoords(hash, "/...")
 
   return <nav className="md:hidden h-16 w-full flex-none border-t border-t-default-contrast">
     <HashSubpathProvider>
-      {subpath.url.pathname === "/..." &&
+      {hash.url.pathname === "/..." &&
         <OmniDialog path={path} />}
     </HashSubpathProvider>
     <div className="w-full h-16 px-4 m-auto max-w-3xl flex items-center">

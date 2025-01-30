@@ -38,8 +38,8 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
   const path = usePathContext().getOrThrow()
   const { type, uuid, address, name, color, index, href, privateKey, flip, unflip } = props
 
-  const subpath = useHashSubpath(path)
-  const genius = useCoords(subpath, href)
+  const hash = useHashSubpath(path)
+  const coords = useCoords(hash, href)
 
   const finalAddress = useMemo(() => {
     return Address.fromOrThrow(address)
@@ -89,9 +89,9 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
       <div className="w-2 grow" />
       {index == null && href != null &&
         <CircularWhiteAnchorInColoredCard
-          onKeyDown={genius.onKeyDown}
-          onClick={genius.onClick}
-          href={genius.href}
+          onKeyDown={coords.onKeyDown}
+          onClick={coords.onClick}
+          href={coords.href}
           color={color}>
           <Outline.EllipsisHorizontalIcon className="size-4" />
         </CircularWhiteAnchorInColoredCard>}
@@ -136,14 +136,14 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
       style={{ transform: preflip && postflip ? `rotateY(180deg)` : "", transformStyle: "preserve-3d" }}
       onAnimationEnd={onAnimationEnd}>
       <div className="po-2 absolute w-full h-full flex flex-col [backface-visibility:hidden]"
-        onContextMenu={genius.onContextMenu}>
+        onContextMenu={coords.onContextMenu}>
         {First}
         <div className="grow" />
         {Name}
         {AddressDisplay}
       </div>
       <div className="po-2 absolute w-full h-full flex flex-col [backface-visibility:hidden] [transform:rotateY(180deg)]"
-        onContextMenu={genius.onContextMenu}>
+        onContextMenu={coords.onContextMenu}>
         <div className="flex items-center">
           <div className="w-2 grow" />
           <CircularWhiteButtonInColoredCard

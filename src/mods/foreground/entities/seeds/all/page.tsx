@@ -23,15 +23,16 @@ export function SeedsPage() {
   const path = usePathContext().getOrThrow()
   const locale = useLocaleContext().getOrThrow()
 
-  const subpath = useHashSubpath(path)
-  const creator = useCoords(subpath, "/create")
+  const hash = useHashSubpath(path)
+
+  const create = useCoords(hash, "/create")
 
   return <UserPage>
     <PageHeader title={Locale.get(Locale.Seeds, locale)}>
       <PaddedRoundedClickableNakedAnchor
-        onKeyDown={creator.onKeyDown}
-        onClick={creator.onClick}
-        href={creator.href}>
+        onKeyDown={create.onKeyDown}
+        onClick={create.onClick}
+        href={create.href}>
         <Outline.PlusIcon className="size-5" />
       </PaddedRoundedClickableNakedAnchor>
     </PageHeader>
@@ -52,7 +53,7 @@ export function SeedsBody() {
   const seedsQuery = useSeeds()
   const maybeSeeds = seedsQuery.data?.get()
 
-  const subpath = useHashSubpath(path)
+  const hash = useHashSubpath(path)
 
   const onSeedClick = useCallback((seed: Seed) => {
     location.assign(`#/seed/${seed.uuid}`)
@@ -60,15 +61,15 @@ export function SeedsBody() {
 
   return <PageBody>
     <HashSubpathProvider>
-      {subpath.url.pathname === "/create" &&
+      {hash.url.pathname === "/create" &&
         <Menu>
           <SeedCreatorMenu />
         </Menu>}
-      {subpath.url.pathname === "/create/mnemonic" &&
+      {hash.url.pathname === "/create/mnemonic" &&
         <Dialog>
           <StandaloneSeedCreatorDialog />
         </Dialog>}
-      {subpath.url.pathname === "/create/hardware" &&
+      {hash.url.pathname === "/create/hardware" &&
         <Dialog>
           <LedgerSeedCreatorDialog />
         </Dialog>}

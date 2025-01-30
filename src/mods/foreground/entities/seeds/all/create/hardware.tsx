@@ -28,7 +28,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
   const locale = useLocaleContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
-  const subpath = useHashSubpath(path)
+  const hash = useHashSubpath(path)
 
   const uuid = useConstant(() => randomUUID())
 
@@ -95,7 +95,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
 
   return <>
     <HashSubpathProvider>
-      {subpath.url.pathname === "/connect" &&
+      {hash.url.pathname === "/connect" &&
         <Dialog>
           <HardwareSelectDialog />
         </Dialog>}

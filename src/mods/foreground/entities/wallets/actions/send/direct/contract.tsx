@@ -30,7 +30,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   const wallet = useWalletDataContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
 
-  const subpath = useHashSubpath(path)
+  const hash = useHashSubpath(path)
 
   const [maybeStep, setStep] = useSearchState(path, "step")
   const [maybeChain, setChain] = useSearchState(path, "chain")
@@ -237,8 +237,8 @@ export function WalletDirectSendScreenContractValue(props: {}) {
   }, [maybeFinalTarget, maybeFinalValue])
 
   const onSendTransactionClick = useCallback(() => {
-    location.replace(subpath.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData?.getOrNull(), disableData: true })))
-  }, [subpath, trial0Uuid, chainData, tokenData, maybeTriedMaybeFinalData])
+    location.replace(hash.go(urlOf("/eth_sendTransaction", { trial: trial0Uuid, chain: chainData.chainId, target: tokenData.address, data: maybeTriedMaybeFinalData?.getOrNull(), disableData: true })))
+  }, [hash, trial0Uuid, chainData, tokenData, maybeTriedMaybeFinalData])
 
   const trialQuery = useTransactionTrial(trial0Uuid)
   const maybeTrialData = trialQuery.current?.getOrNull()
@@ -252,7 +252,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
 
   return <>
     <HashSubpathProvider>
-      {subpath.url.pathname === "/eth_sendTransaction" &&
+      {hash.url.pathname === "/eth_sendTransaction" &&
         <Dialog>
           <WalletTransactionDialog />
         </Dialog>}

@@ -27,7 +27,7 @@ function SeedDataPage() {
   const walletsQuery = useWalletsBySeed(seed.uuid)
   const maybeWallets = walletsQuery.data?.get()
 
-  const subpath = useHashSubpath(path)
+  const hash = useHashSubpath(path)
 
   const onBackClick = useCallback(() => {
     location.assign("#/seeds")
@@ -58,7 +58,7 @@ function SeedDataPage() {
 
   return <UserPage>
     <HashSubpathProvider>
-      {subpath.url.pathname === "/create" &&
+      {hash.url.pathname === "/create" &&
         <Dialog>
           <SeededWalletCreatorDialog />
         </Dialog>}

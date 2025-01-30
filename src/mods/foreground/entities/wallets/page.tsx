@@ -67,7 +67,7 @@ function WalletDataPage() {
   const path = usePathContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
 
-  const subpath = useHashSubpath(path)
+  const hash = useHashSubpath(path)
 
   const mainnet = useEthereumContext(wallet.uuid, chainDataByChainId[1]).getOrThrow()
 
@@ -104,8 +104,8 @@ function WalletDataPage() {
     return [wallets, users, builtins].map(x => x.sort(sorter))
   }, [userTokensQuery.data, walletTokensQuery.data])
 
-  const connect = useCoords(subpath, "/connect")
-  const receive = useCoords(subpath, "/receive")
+  const connect = useCoords(hash, "/connect")
+  const receive = useCoords(hash, "/receive")
 
   const $flip = useState(false)
   const [flip, setFlip] = $flip
@@ -243,23 +243,23 @@ function WalletDataPage() {
 
   return <UserPage>
     <HashSubpathProvider>
-      {subpath.url.pathname === "/connect" &&
+      {hash.url.pathname === "/connect" &&
         <Menu>
           <WalletConnectMenu />
         </Menu>}
-      {subpath.url.pathname === "/send" &&
+      {hash.url.pathname === "/send" &&
         <Dialog>
           <WalletSendScreen />
         </Dialog>}
-      {subpath.url.pathname === "/edit" &&
+      {hash.url.pathname === "/edit" &&
         <Dialog>
           <WalletEditDialog />
         </Dialog>}
-      {subpath.url.pathname === "/receive" &&
+      {hash.url.pathname === "/receive" &&
         <Dialog dark>
           <WalletDataReceiveScreen />
         </Dialog>}
-      {subpath.url.pathname === "/menu" &&
+      {hash.url.pathname === "/menu" &&
         <Menu>
           <WalletMenu
             $privateKey={$privateKey}
@@ -475,8 +475,8 @@ function OnlineNativeTokenRow(props: { token: NativeTokenInfo }) {
   const chainData = chainDataByChainId[token.chainId]
   const tokenData = chainData.token
 
-  const subpath = useHashSubpath(path)
-  const menu = useCoords(subpath, `/token/${tokenData.chainId}`)
+  const hash = useHashSubpath(path)
+  const menu = useCoords(hash, `/token/${tokenData.chainId}`)
 
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
@@ -485,7 +485,7 @@ function OnlineNativeTokenRow(props: { token: NativeTokenInfo }) {
 
   return <>
     <HashSubpathProvider>
-      {subpath.url.pathname === `/token/${tokenData.chainId}` &&
+      {hash.url.pathname === `/token/${tokenData.chainId}` &&
         <Menu>
           <NativeTokenMenu
             tokenData={tokenData}
@@ -511,8 +511,8 @@ function OfflineNativeTokenRow(props: { token: NativeTokenInfo }) {
   const chainData = chainDataByChainId[token.chainId]
   const tokenData = chainData.token
 
-  const subpath = useHashSubpath(path)
-  const menu = useCoords(subpath, `/token/${tokenData.chainId}`)
+  const hash = useHashSubpath(path)
+  const menu = useCoords(hash, `/token/${tokenData.chainId}`)
 
   const context = useEthereumContext(wallet.uuid, chainData).getOrThrow()
 
@@ -521,7 +521,7 @@ function OfflineNativeTokenRow(props: { token: NativeTokenInfo }) {
 
   return <>
     <HashSubpathProvider>
-      {subpath.url.pathname === `/token/${tokenData.chainId}` &&
+      {hash.url.pathname === `/token/${tokenData.chainId}` &&
         <Menu>
           <NativeTokenMenu
             tokenData={tokenData}
@@ -551,8 +551,8 @@ function OnlineContractTokenRow(props: { token: ContractTokenInfo }) {
   const tokenQuery = useContractToken(context, token.address, "latest")
   const maybeTokenData = tokenQuery.data?.get()
 
-  const subpath = useHashSubpath(path)
-  const menu = useCoords(subpath, `/token/${token.chainId}/${token.address}`)
+  const hash = useHashSubpath(path)
+  const menu = useCoords(hash, `/token/${token.chainId}/${token.address}`)
 
   const valuedBalanceQuery = useContractTokenBalance(context, token.address, wallet.address as Address, "latest")
   const pricedBalanceQuery = useContractTokenPricedBalance(context, token.address, wallet.address as Address, "latest")
@@ -562,7 +562,7 @@ function OnlineContractTokenRow(props: { token: ContractTokenInfo }) {
 
   return <>
     <HashSubpathProvider>
-      {subpath.url.pathname === `/token/${token.chainId}/${token.address}` &&
+      {hash.url.pathname === `/token/${token.chainId}/${token.address}` &&
         <Menu>
           <ContractTokenMenu
             tokenData={maybeTokenData}
@@ -592,8 +592,8 @@ function OfflineContractTokenRow(props: { token: ContractTokenInfo }) {
   const tokenQuery = useContractToken(context, token.address, "latest")
   const maybeTokenData = tokenQuery.data?.get()
 
-  const subpath = useHashSubpath(path)
-  const menu = useCoords(subpath, `/token/${token.chainId}/${token.address}`)
+  const hash = useHashSubpath(path)
+  const menu = useCoords(hash, `/token/${token.chainId}/${token.address}`)
 
   const valuedBalanceQuery = useOfflineContractTokenBalance(context, token.address, wallet.address as Address, "latest")
   const pricedBalanceQuery = useOfflineContractTokenPricedBalance(context, token.address, wallet.address as Address, "latest")
@@ -603,7 +603,7 @@ function OfflineContractTokenRow(props: { token: ContractTokenInfo }) {
 
   return <>
     <HashSubpathProvider>
-      {subpath.url.pathname === `/token/${token.chainId}/${token.address}` &&
+      {hash.url.pathname === `/token/${token.chainId}/${token.address}` &&
         <Menu>
           <ContractTokenMenu
             tokenData={maybeTokenData}

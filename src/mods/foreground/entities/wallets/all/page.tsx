@@ -25,15 +25,15 @@ export function WalletsPage() {
   const path = usePathContext().getOrThrow()
   const locale = useLocaleContext().getOrThrow()
 
-  const subpath = useHashSubpath(path)
-  const creator = useCoords(subpath, "/create")
+  const hash = useHashSubpath(path)
+  const create = useCoords(hash, "/create")
 
   return <UserPage>
     <PageHeader title={Locale.get(Locale.Wallets, locale)}>
       <PaddedRoundedClickableNakedAnchor
-        onKeyDown={creator.onKeyDown}
-        onClick={creator.onClick}
-        href={creator.href}>
+        onKeyDown={create.onKeyDown}
+        onClick={create.onClick}
+        href={create.href}>
         <Outline.PlusIcon className="size-5" />
       </PaddedRoundedClickableNakedAnchor>
     </PageHeader>
@@ -55,7 +55,7 @@ export function WalletsBody() {
   const trashedWalletsQuery = useTrashedWallets()
   const maybeTrashedWallets = trashedWalletsQuery.current?.getOrNull()
 
-  const subpath = useHashSubpath(path)
+  const hash = useHashSubpath(path)
 
   const onWalletClick = useCallback((wallet: Wallet) => {
     location.assign(path.go(`/wallet/${wallet.uuid}`))
@@ -63,15 +63,15 @@ export function WalletsBody() {
 
   return <PageBody>
     <HashSubpathProvider>
-      {subpath.url.pathname === "/create" &&
+      {hash.url.pathname === "/create" &&
         <Menu>
           <WalletCreatorMenu />
         </Menu>}
-      {subpath.url.pathname === "/create/standalone" &&
+      {hash.url.pathname === "/create/standalone" &&
         <Dialog>
           <StandaloneWalletCreatorDialog />
         </Dialog>}
-      {subpath.url.pathname === "/create/readonly" &&
+      {hash.url.pathname === "/create/readonly" &&
         <Dialog>
           <ReadonlyWalletCreatorDialog />
         </Dialog>}
@@ -165,14 +165,14 @@ export function NewRectangularAnchorCard(props: ChildrenProps) {
   const path = usePathContext().getOrThrow()
   const { children } = props
 
-  const subpath = useHashSubpath(path)
-  const creator = useCoords(subpath, "/create")
+  const hash = useHashSubpath(path)
+  const create = useCoords(hash, "/create")
 
   return <a className="po-2 w-full aspect-video rounded-xl flex gap-2 justify-center items-center border border-default-contrast border-dashed active:scale-90 transition-transform"
-    onContextMenu={creator.onContextMenu}
-    onKeyDown={creator.onKeyDown}
-    onClick={creator.onClick}
-    href={creator.href}>
+    onContextMenu={create.onContextMenu}
+    onKeyDown={create.onKeyDown}
+    onClick={create.onClick}
+    href={create.href}>
     <Outline.PlusIcon className="size-5" />
     <div className="font-medium">
       {children}
