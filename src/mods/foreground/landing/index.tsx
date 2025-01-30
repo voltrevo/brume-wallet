@@ -606,7 +606,9 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
             {subtitle}
           </div>
           <div className="h-8" />
-          {children}
+          <div className="[&_p]:text-default-contrast [&_h2]:font-medium">
+            {children}
+          </div>
         </Dialog>}
     </HashSubpathProvider>
     <div className="p-6 aspect-square bg-default-contrast rounded-xl flex flex-col">
