@@ -598,7 +598,8 @@ export function InfoCard(props: TitleProps & SubtitleProps & ChildrenProps & Anc
     <HashSubpathProvider>
       {subpath.url.pathname === href &&
         <Dialog hesitant>
-          <div className="text-6xl">
+          <div className="text-6xl rtl:text-right"
+            dir="ltr">
             {title}
           </div>
           <div className="h-2" />
