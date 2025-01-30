@@ -10,7 +10,7 @@ import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
 import { Locale } from "@/mods/foreground/locale";
 import { None, Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { RawWalletCard } from "../../card";
 import { useWalletDataContext } from "../../context";
 import { useWallet } from "../../data";
@@ -32,10 +32,6 @@ export function WalletEditDialog(props: {}) {
     setRawNameInput(e.currentTarget.value)
   }, [])
 
-  const finalNameInput = useMemo(() => {
-    return defNameInput || "Holder"
-  }, [defNameInput])
-
   const saveOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     await query.mutateOrThrow((s) => {
       const current = s.real?.current
@@ -45,11 +41,11 @@ export function WalletEditDialog(props: {}) {
       if (current.isErr())
         return new None()
 
-      return new Some(current.mapSync(w => ({ ...w, name: finalNameInput })))
+      return new Some(current.mapSync(w => ({ ...w, name: defNameInput })))
     })
 
     close()
-  }), [query, finalNameInput])
+  }), [query, defNameInput])
 
   const NameInput =
     <ContrastLabel>
@@ -83,7 +79,7 @@ export function WalletEditDialog(props: {}) {
           <RawWalletCard
             type={wallet.type}
             uuid={wallet.uuid}
-            name={finalNameInput}
+            name={defNameInput}
             address={wallet.address}
             color={color} />
         </div>
