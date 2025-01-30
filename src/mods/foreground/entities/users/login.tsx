@@ -3,7 +3,7 @@ import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
-import { WideClickableContrastButton, WideClickableOppositeButton } from "@/libs/ui/button";
+import { WideClickableOppositeButton } from "@/libs/ui/button";
 import { ContrastLabel } from "@/libs/ui/label";
 import { UserRef } from "@/mods/background/service_worker/entities/users/data";
 import { usePathContext } from "@hazae41/chemin";
@@ -98,45 +98,36 @@ export function UserLoginDialog(props: { next?: string }) {
     return null
 
   return <>
-    <div className="grow flex justify-center items-center">
-      <div className="">
-        <div className="flex flex-col items-center">
-          <UserAvatar className="size-16 text-2xl"
-            color={Color.get(maybeUser.color)}
-            name={maybeUser.name} />
-          <div className="h-2" />
-          <div className="font-medium">
-            {maybeUser.name}
-          </div>
-        </div>
-        <div className="h-4" />
-        <ContrastLabel>
-          <input className="bg-transparent outline-none min-w-0 disabled:text-default-contrast data-[invalid=true]:border-red-400 data-[invalid=true]:text-red-400 dark:data-[invalid=true]:border-red-500 dark:data-[invalid=true]:text-red-500"
-            ref={passwordInputRef}
-            type="password"
-            value={rawPasswordInput}
-            onChange={onPasswordInputChange}
-            disabled={loginOrAlert.loading}
-            data-invalid={invalid}
-            placeholder={Locale.get(Locale.Password, lang)}
-            onKeyDown={onKeyDown}
-            autoFocus />
-        </ContrastLabel>
-        <div className="h-2" />
-        <div className="flex items-center flex-wrap-reverse gap-2">
-          <WideClickableContrastButton
-            onClick={onCancel}>
-            <Outline.ChevronLeftIcon className="size-5" />
-            Cancel
-          </WideClickableContrastButton>
-          <WideClickableOppositeButton
-            disabled={defPasswordInput.length < 3 || loginOrAlert.loading}
-            onClick={onLogin}>
-            <Outline.LockOpenIcon className="size-5" />
-            {Locale.get(Locale.Enter, lang)}
-          </WideClickableOppositeButton>
-        </div>
+    <div className="grow flex flex-col items-center justify-center h-[200px]">
+      <UserAvatar className="size-16 text-2xl"
+        color={Color.get(maybeUser.color)}
+        name={maybeUser.name} />
+      <div className="h-2" />
+      <div className="font-medium">
+        {maybeUser.name}
       </div>
+    </div>
+    <div className="h-2" />
+    <ContrastLabel>
+      <input className="bg-transparent outline-none min-w-0 disabled:text-default-contrast data-[invalid=true]:border-red-400 data-[invalid=true]:text-red-400 dark:data-[invalid=true]:border-red-500 dark:data-[invalid=true]:text-red-500"
+        ref={passwordInputRef}
+        type="password"
+        value={rawPasswordInput}
+        onChange={onPasswordInputChange}
+        disabled={loginOrAlert.loading}
+        data-invalid={invalid}
+        placeholder={Locale.get(Locale.Password, lang)}
+        onKeyDown={onKeyDown}
+        autoFocus />
+    </ContrastLabel>
+    <div className="h-4" />
+    <div className="flex items-center flex-wrap-reverse gap-2">
+      <WideClickableOppositeButton
+        disabled={defPasswordInput.length < 3 || loginOrAlert.loading}
+        onClick={onLogin}>
+        <Outline.LockOpenIcon className="size-5" />
+        {Locale.get(Locale.Enter, lang)}
+      </WideClickableOppositeButton>
     </div>
   </>
 }
