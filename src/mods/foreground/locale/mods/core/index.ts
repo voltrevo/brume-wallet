@@ -804,3 +804,36 @@ export const IDontCare: Localized<string> = {
   sv: "Det spelar ingen roll",
   da: "Det er jeg ligeglad med"
 }
+
+export const Compatibility: Localized<string> = {
+  en: "Compatibility",
+  zh: "兼容性",
+  hi: "संगतता",
+  es: "Compatibilidad",
+  ar: "التوافق",
+  fr: "Compatibilité",
+  de: "Kompatibilität",
+  ru: "Совместимость",
+  pt: "Compatibilidade",
+  ja: "互換性",
+  pa: "ਸੰਗਤੀ",
+  bn: "সাথে সাথে",
+  id: "Kompatibilitas",
+  ur: "ہم آہنگی",
+  ms: "Keserasian",
+  it: "Compatibilità",
+  tr: "Uyumluluk",
+  ta: "ஒத்திசைவு",
+  te: "అనుకూలత",
+  ko: "호환성",
+  vi: "Tương thích",
+  pl: "Zgodność",
+  ro: "Compatibilitate",
+  nl: "Compatibiliteit",
+  el: "Συμβατότητα",
+  th: "ความเข้ากันได้",
+  cs: "Kompatibilita",
+  hu: "Kompatibilitás",
+  sv: "Kompatibilitet",
+  da: "Kompatibilitet"
+}
