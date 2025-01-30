@@ -72,7 +72,38 @@ export function SessionsPage() {
     </PageHeader>
     <div className="po-2 flex items-center">
       <div className="text-default-contrast">
-        {`Sessions allow you to connect to applications. These applications can then make requests for you to approve.`}
+        {Locale.get({
+          en: `Sessions allow you to connect to applications. These apps can then send you requests to approve.`,
+          zh: `会话允许您连接到应用程序。然后，这些应用程序可以向您发送请求以供批准。`,
+          hi: `सत्र आपको एप्लिकेशन से कनेक्ट करने की अनुमति देते हैं। ये ऐप्स फिर आपसे मंजूरी के लिए अनुरोध भेज सकते हैं।`,
+          es: `Las sesiones le permiten conectarse a aplicaciones. Estas aplicaciones pueden enviarle solicitudes para aprobar.`,
+          ar: `الجلسات تتيح لك الاتصال بالتطبيقات. يمكن لهذه التطبيقات بعد ذلك إرسال طلبات لك للموافقة عليها.`,
+          fr: `Les sessions vous permettent de vous connecter à des applications. Ces applications peuvent ensuite vous envoyer des demandes à approuver.`,
+          de: `Sitzungen ermöglichen es Ihnen, sich mit Anwendungen zu verbinden. Diese Apps können Ihnen dann Anfragen senden, die Sie genehmigen können.`,
+          ru: `Сеансы позволяют вам подключаться к приложениям. Затем эти приложения могут отправлять вам запросы на утверждение.`,
+          pt: `As sessões permitem que você se conecte a aplicativos. Esses aplicativos podem então enviar-lhe pedidos para aprovar.`,
+          ja: `セッションを使用すると、アプリケーションに接続できます。これらのアプリは、その後、承認するためのリクエストを送信できます。`,
+          pa: `ਸੈਸ਼ਨ ਤੁਹਾਨੂੰ ਐਪਲੀਕੇਸਾਂ ਨਾਲ ਕੁਨੈਕਟ ਕਰਨ ਦੀ ਆਗਿਆ ਦਿੰਦੇ ਹਨ। ਇਹ ਐਪਸ ਫਿਰ ਤੁਹਾਨੂੰ ਮੰਜੂਰੀ ਦੇ ਲਈ ਬੇਨਤੀ ਭੇਜ ਸਕਦੇ ਹਨ।`,
+          bn: `সেশনগুলি আপনাকে অ্যাপ্লিকেশনগুলার সাথে সংযোগ করার অনুমতি দেয়। এই অ্যাপগুলি তারপরে আপনাকে অনুমোদনের জন্য অনুরোধ প্রেরণ করতে পারে।`,
+          id: `Sesi memungkinkan Anda terhubung ke aplikasi. Aplikasi ini kemudian dapat mengirimkan permintaan kepada Anda untuk menyetujui.`,
+          ur: `سیشن آپ کو ایپلیکیشنز سے منسلک ہونے کی اجازت دیتے ہیں۔ پھر یہ ایپس آپ کو منظوری کے لیے درخواست بھیج سکتے ہیں۔`,
+          ms: `Sesi membolehkan anda menyambung ke aplikasi. Aplikasi ini kemudian boleh menghantar permintaan kepada anda untuk diluluskan.`,
+          it: `Le sessioni ti consentono di connetterti alle applicazioni. Queste app possono quindi inviarti richieste da approvare.`,
+          tr: `Oturumlar, uygulamalara bağlanmanıza olanak tanır. Bu uygulamalar daha sonra onaylamanız için size istekler gönderebilir.`,
+          ta: `அமர்வுகளுக்கு உங்களை இணைக்க அனுமதிக்கும் அமர்வுகள். இந்த பயன்பாடுகள் பின்னர் உங்களுக்கு அனுமோனம் கேட்க கோரிக்கைகளை அனுப்பலாம்.`,
+          te: `సెషన్లు మీరు అప్లికేషన్లతో కనెక్ట్ అవుటుకు అనుమతిస్తాయి. ఈ యాప్స్ తరువాట మీకు అనుమోదన కోసం అభ్యర్థనలను పంపవచ్చు.`,
+          ko: `세션을 사용하면 응용 프로그램에 연결할 수 있습니다. 그런 다음이 응용 프로그램은 승인 요청을 보낼 수 있습니다.`,
+          vi: `Các phiên cho phép bạn kết nối với ứng dụng. Những ứng dụng này sau đó có thể gửi yêu cầu cho bạn phê duyệt.`,
+          pl: `Sesje pozwalają na połączenie z aplikacjami. Następnie te aplikacje mogą wysłać Ci prośby o zatwierdzenie.`,
+          ro: `Sesiunile vă permit să vă conectați la aplicații. Aceste aplicații vă pot trimite apoi cereri de aprobare.`,
+          nl: `Sessies stellen u in staat om verbinding te maken met applicaties. Deze apps kunnen u vervolgens verzoeken sturen om goed te keuren.`,
+          el: `Οι συνεδρίες σας επιτρέπουν να συνδεθείτε σε εφαρμογές. Αυτές οι εφαρμογές μπορούν στη συνέχεια να σας στείλουν αιτήματα για έγκριση.`,
+          th: `เซสชันช่วยให้คุณเชื่อมต่อกับแอปพลิเคชัน แอปพลิเคชันเหล่านี้จึงสามารถส่งคำขอให้คุณอนุมัติ`,
+          cs: `Relace vám umožňují připojit se k aplikacím. Tyto aplikace vám pak mohou poslat žádosti o schválení.`,
+          hu: `A munkamenetek lehetővé teszik az alkalmazásokhoz való csatlakozást. Ezek az alkalmazások kérhetik az engedélyezését.`,
+          sv: `Sessioner låter dig ansluta till appar. Dessa appar kan sedan skicka dig förfrågningar att godkänna.`,
+          da: `Sessioner giver dig mulighed for at oprette forbindelse til applikationer. Disse apps kan derefter sende dig anmodninger om godkendelse.`,
+        }, locale)}
       </div>
     </div>
     <UserGuardBody>
