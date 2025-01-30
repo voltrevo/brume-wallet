@@ -91,7 +91,7 @@ export function UserLoginDialog(props: { next?: string }) {
     if (defPasswordInput.length < 3)
       return Locale.get(Locale.PasswordTooShort, locale)
     return
-  }, [defPasswordInput])
+  }, [locale, defPasswordInput])
 
   if (maybeUser == null)
     return null

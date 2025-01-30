@@ -43,12 +43,8 @@ export function LedgerSeedCreatorDialog(props: {}) {
     setRawNameInput(e.currentTarget.value)
   }, [])
 
-  const finalNameInput = useMemo(() => {
-    return defNameInput || "Holder"
-  }, [defNameInput])
-
   const addOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    if (!finalNameInput)
+    if (!defNameInput)
       throw new Panic()
 
     const device = await Ledger.USB.getOrRequestDeviceOrThrow()
@@ -56,7 +52,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
 
     const { address } = await Ledger.Ethereum.getAddressOrThrow(connector, "44'/60'/0'/0/0")
 
-    const seed: SeedData = { type: "ledger", uuid, name: finalNameInput, color: Color.all.indexOf(color), address }
+    const seed: SeedData = { type: "ledger", uuid, name: defNameInput, color: Color.all.indexOf(color), address }
 
     await background.requestOrThrow<void>({
       method: "brume_createSeed",
@@ -64,7 +60,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
     }).then(r => r.getOrThrow())
 
     close()
-  }), [finalNameInput, uuid, color, background, close])
+  }), [defNameInput, uuid, color, background, close])
 
   const NameInput =
     <ContrastLabel>
@@ -79,10 +75,10 @@ export function LedgerSeedCreatorDialog(props: {}) {
     </ContrastLabel>
 
   const error = useMemo(() => {
-    if (!finalNameInput)
-      return "Please enter a name"
+    if (!defNameInput)
+      return Locale.get(Locale.NameRequired, locale)
     return
-  }, [finalNameInput])
+  }, [locale, defNameInput])
 
   const AddButton =
     <WideClickableGradientButton
@@ -108,7 +104,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
       <div className="w-full max-w-sm">
         <div className="w-full aspect-video rounded-xl">
           <RawSeedCard
-            name={finalNameInput}
+            name={defNameInput}
             color={color} />
         </div>
       </div>

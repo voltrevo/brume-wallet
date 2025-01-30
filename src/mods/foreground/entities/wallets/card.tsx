@@ -13,6 +13,8 @@ import { useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Address, ZeroHexString } from "@hazae41/cubane"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { flushSync } from "react-dom"
+import { useLocaleContext } from "../../global/mods/locale"
+import { Locale } from "../../locale"
 import { useEnsReverseNoFetch } from "../names/data"
 import { useWalletDataContext } from "./context"
 import { useEthereumContext } from "./data"
@@ -36,6 +38,7 @@ export function RawWalletDataCard(props: { index?: number } & { href?: string } 
 
 export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: string } & { name: string } & { color: Color } & { address: ZeroHexString } & { index?: number } & { href?: string } & { privateKey?: string } & { flip?: boolean } & { unflip?: () => void }) {
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const { type, uuid, address, name, color, index, href, privateKey, flip, unflip } = props
 
   const hash = useHashSubpath(path)
@@ -154,7 +157,7 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
         </div>
         <div className="grow" />
         <div className="text-white">
-          Private key
+          {Locale.get(Locale.PrivateKey, locale)}
         </div>
         <div className="text-white-half-contrast break-all"
           onContextMenu={Events.keep}>

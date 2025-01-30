@@ -47,10 +47,6 @@ export function SeededWalletCreatorDialog(props: {}) {
     setRawNameInput(e.currentTarget.value)
   }, [])
 
-  const finalNameInput = useMemo(() => {
-    return defNameInput || "Holder"
-  }, [defNameInput])
-
   const [rawPathInput = "", setRawPathInput] = useState<string>()
 
   const defPathInput = useDeferredValue(rawPathInput)
@@ -90,15 +86,15 @@ export function SeededWalletCreatorDialog(props: {}) {
   }, [rawDerivation, defIndexInput])
 
   const error = useMemo(() => {
-    if (!finalNameInput)
-      return "Please enter a name"
+    if (!defNameInput)
+      return Locale.get(Locale.NameRequired, locale)
     if (!defPathInput)
       return "Please enter a derivation path"
     return
-  }, [finalNameInput, defPathInput])
+  }, [locale, defNameInput, defPathInput])
 
   const addOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    if (!finalNameInput)
+    if (!defNameInput)
       throw new Panic()
 
     if (seedData.type === "ledger") {
@@ -125,7 +121,7 @@ export function SeededWalletCreatorDialog(props: {}) {
 
       const seed = SeedRef.from(seedData)
 
-      const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: finalNameInput, color: Color.all.indexOf(color), address, seed, path: defPathInput }
+      const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: defNameInput, color: Color.all.indexOf(color), address, seed, path: defPathInput }
 
       await background.requestOrThrow<Wallet[]>({
         method: "brume_createWallet",
@@ -163,7 +159,7 @@ export function SeededWalletCreatorDialog(props: {}) {
       const address = Address.computeOrThrow(uncompressedPublicKeyBytes)
       const seed = SeedRef.from(seedData)
 
-      const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: finalNameInput, color: Color.all.indexOf(color), address, seed, path: defPathInput }
+      const wallet: WalletData = { coin: "ethereum", type: "seeded", uuid, name: defNameInput, color: Color.all.indexOf(color), address, seed, path: defPathInput }
 
       await background.requestOrThrow<Wallet[]>({
         method: "brume_createWallet",
@@ -174,7 +170,7 @@ export function SeededWalletCreatorDialog(props: {}) {
     }
 
     close()
-  }), [finalNameInput, defPathInput, seedData, defPathInput, uuid, color, background, close])
+  }), [defNameInput, defPathInput, seedData, defPathInput, uuid, color, background, close])
 
   const NameInput =
     <ContrastLabel>

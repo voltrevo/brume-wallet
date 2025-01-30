@@ -45,10 +45,6 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
     setRawNameInput(e.currentTarget.value)
   }, [])
 
-  const finalNameInput = useMemo(() => {
-    return defNameInput || "Vitalik"
-  }, [defNameInput])
-
   const [rawAddressInput = "", setRawAddressInput] = useState<string>()
 
   const defAddressInput = useDeferredValue(rawAddressInput)
@@ -75,14 +71,14 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   }, [defAddressInput, maybeEnsAddress])
 
   const addOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    if (!finalNameInput)
+    if (!defNameInput)
       throw new Panic()
 
     const address = Option.wrap(maybeAddress).okOrElseSync(() => {
       return new UIError(`Could not fetch or parse address`)
     }).mapSync(x => Address.fromOrThrow(x) as ZeroHexString).getOrThrow()
 
-    const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: finalNameInput, color: Color.all.indexOf(color), address }
+    const wallet: WalletData = { coin: "ethereum", type: "readonly", uuid, name: defNameInput, color: Color.all.indexOf(color), address }
 
     await background.requestOrThrow<Wallet[]>({
       method: "brume_createWallet",
@@ -90,17 +86,15 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
     }).then(r => r.getOrThrow())
 
     close()
-  }), [finalNameInput, maybeAddress, uuid, color, background, close])
+  }), [defNameInput, maybeAddress, uuid, color, background, close])
 
   const error = useMemo(() => {
-    if (addOrAlert.loading)
-      return "Loading..."
-    if (!finalNameInput)
-      return "Please enter a name"
+    if (!defNameInput)
+      return Locale.get(Locale.NameRequired, locale)
     if (!defAddressInput)
       return "Please enter an address"
     return undefined
-  }, [addOrAlert.loading, finalNameInput, defAddressInput])
+  }, [locale, defNameInput, defAddressInput])
 
   const NameInput =
     <ContrastLabel>
@@ -147,7 +141,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
           <div className="w-full aspect-video rounded-xl">
             <RawWalletCard
               uuid={uuid}
-              name={finalNameInput}
+              name={defNameInput}
               address={maybeAddress}
               color={color} />
           </div>}

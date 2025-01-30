@@ -46,10 +46,6 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     setRawNameInput(e.currentTarget.value)
   }, [])
 
-  const finalNameInput = useMemo(() => {
-    return defNameInput || "Holder"
-  }, [defNameInput])
-
   const [rawKeyInput = "", setRawKeyInput] = useState<string>()
 
   const defKeyInput = useDeferredValue(rawKeyInput)
@@ -76,7 +72,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
   }), [zeroHexKey])
 
   const addUnauthenticatedOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    if (!finalNameInput)
+    if (!defNameInput)
       throw new Panic()
     if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
       throw new Panic()
@@ -84,7 +80,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       return
 
     const address = triedAddress.getOrThrow()
-    const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), address, privateKey: zeroHexKey }
+    const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: defNameInput, color: Color.all.indexOf(color), address, privateKey: zeroHexKey }
 
     await background.requestOrThrow<void>({
       method: "brume_createWallet",
@@ -92,10 +88,10 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     }).then(r => r.getOrThrow())
 
     close()
-  }), [finalNameInput, zeroHexKey, uuid, color, background, close])
+  }), [defNameInput, zeroHexKey, uuid, color, background, close])
 
   const triedEncryptedPrivateKey = useAsyncReplaceMemo(() => Result.runAndWrap(async () => {
-    if (!finalNameInput)
+    if (!defNameInput)
       throw new Panic()
     if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
       throw new Panic()
@@ -109,7 +105,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     }).then(r => r.getOrThrow())
 
     return [ivBase64, cipherBase64]
-  }), [finalNameInput, zeroHexKey, background])
+  }), [defNameInput, zeroHexKey, background])
 
   const [id, setId] = useState<Uint8Array>()
 
@@ -118,7 +114,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
   }, [zeroHexKey])
 
   const addAuthenticatedOrAlert1 = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    if (!finalNameInput)
+    if (!defNameInput)
       throw new Panic()
     if (triedEncryptedPrivateKey == null)
       throw new Panic()
@@ -129,15 +125,15 @@ export function StandaloneWalletCreatorDialog(props: {}) {
 
     using cipher = Base64.get().getOrThrow().decodePaddedOrThrow(cipherBase64)
 
-    const id = await WebAuthnStorage.createOrThrow(finalNameInput, cipher.bytes)
+    const id = await WebAuthnStorage.createOrThrow(defNameInput, cipher.bytes)
 
     setId(id)
-  }), [finalNameInput, triedEncryptedPrivateKey])
+  }), [defNameInput, triedEncryptedPrivateKey])
 
   const addAuthenticatedOrAlert2 = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (id == null)
       throw new Panic()
-    if (!finalNameInput)
+    if (!defNameInput)
       throw new Panic()
     if (triedEncryptedPrivateKey == null)
       throw new Panic()
@@ -156,7 +152,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
 
     const privateKey = { ivBase64, idBase64 }
 
-    const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: finalNameInput, color: Color.all.indexOf(color), address, privateKey }
+    const wallet: WalletData = { coin: "ethereum", type: "authPrivateKey", uuid, name: defNameInput, color: Color.all.indexOf(color), address, privateKey }
 
     await background.requestOrThrow<void>({
       method: "brume_createWallet",
@@ -164,7 +160,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     }).then(r => r.getOrThrow())
 
     close()
-  }), [id, finalNameInput, triedAddress, triedEncryptedPrivateKey, uuid, color, background, close])
+  }), [id, defNameInput, triedAddress, triedEncryptedPrivateKey, uuid, color, background, close])
 
   const NameInput =
     <ContrastLabel>
@@ -182,7 +178,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     <div className="po-2 flex flex-col bg-default-contrast rounded-xl">
       <div className="flex items-start">
         <div className="flex-none">
-          Private key
+          {Locale.get(Locale.PrivateKey, locale)}
         </div>
         <div className="w-4" />
         <SimpleTextarea
@@ -200,12 +196,12 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     </div>
 
   const error = useMemo(() => {
-    if (!finalNameInput)
-      return "Please enter a name"
+    if (!defNameInput)
+      return Locale.get(Locale.NameRequired, locale)
     if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
       return "Please enter a valid private key"
     return
-  }, [finalNameInput, zeroHexKey])
+  }, [locale, defNameInput, zeroHexKey])
 
   const AddUnauthButton =
     <WideClickableContrastButton
@@ -244,7 +240,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
           <div className="w-full aspect-video rounded-xl">
             <RawWalletCard
               uuid={uuid}
-              name={finalNameInput}
+              name={defNameInput}
               address={triedAddress.get()}
               color={color} />
           </div>}
