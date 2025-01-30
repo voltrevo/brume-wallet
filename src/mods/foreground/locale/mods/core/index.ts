@@ -640,6 +640,39 @@ export const Settings: Localized<string> = {
   da: "Indstillinger",
 }
 
+export const Showcase: Localized<string> = {
+  en: "Showcase",
+  zh: "展示",
+  hi: "प्रदर्शन",
+  es: "Vitrina",
+  ar: "عرض",
+  fr: "Vitrine",
+  de: "Vitrine",
+  ru: "Витрина",
+  pt: "Vitrine",
+  ja: "ショーケース",
+  pa: "ਦਿਖਾਵਾ",
+  bn: "দেখান",
+  id: "Pameran",
+  ur: "نمائش",
+  ms: "Pameran",
+  it: "Mostra",
+  tr: "Vitrin",
+  ta: "காட்சி",
+  te: "షోకేస్",
+  ko: "쇼케이스",
+  vi: "Trưng bày",
+  pl: "Wystawa",
+  ro: "Prezentare",
+  nl: "Showcase",
+  el: "Βιτρίνα",
+  th: "แสดง",
+  cs: "Vitrína",
+  hu: "Showcase",
+  sv: "Showcase",
+  da: "Showcase"
+}
+
 export const ComingSoon: Localized<string> = {
   en: "Coming soon",
   zh: "即将推出",

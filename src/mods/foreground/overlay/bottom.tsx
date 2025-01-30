@@ -150,9 +150,9 @@ export function OmniDialog(props: {
       <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/"}
         href="#/">
-        <Outline.RocketLaunchIcon className="size-5" />
+        <Outline.BuildingStorefrontIcon className="size-5" />
         <div className="h-4" />
-        Landing
+        {Locale.get(Locale.Showcase, lang)}
       </a>
       {/* <a className="po-2 bg-default-contrast rounded-xl"
         data-selected={path.url.pathname === "/apps"}
