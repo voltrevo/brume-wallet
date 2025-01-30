@@ -44,10 +44,6 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     setRawNameInput(e.currentTarget.value)
   }, [])
 
-  const finalNameInput = useMemo(() => {
-    return defNameInput || "Holder"
-  }, [defNameInput])
-
   const [rawPhraseInput = "", setRawPhraseInput] = useState<string>()
 
   const defPhraseInput = useDeferredValue(rawPhraseInput)
@@ -65,14 +61,14 @@ export function StandaloneSeedCreatorDialog(props: {}) {
   }), [])
 
   const addUnauthenticatedOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    if (!finalNameInput)
+    if (!defNameInput)
       throw new Panic()
     if (!defPhraseInput)
       throw new Panic()
     if (!isSafariExtension() && confirm("Did you backup your seed phrase?") === false)
       return
 
-    const seed: SeedData = { type: "mnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), mnemonic: defPhraseInput }
+    const seed: SeedData = { type: "mnemonic", uuid, name: defNameInput, color: Color.all.indexOf(color), mnemonic: defPhraseInput }
 
     await background.requestOrThrow<void>({
       method: "brume_createSeed",
@@ -80,10 +76,10 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     }).then(r => r.getOrThrow())
 
     close()
-  }), [finalNameInput, defPhraseInput, uuid, color, background, close])
+  }), [defNameInput, defPhraseInput, uuid, color, background, close])
 
   const triedEncryptedPhrase = useAsyncReplaceMemo(() => Result.runAndWrap(async () => {
-    if (!finalNameInput)
+    if (!defNameInput)
       throw new Panic()
     if (!defPhraseInput)
       throw new Panic()
@@ -97,7 +93,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     }).then(r => r.getOrThrow())
 
     return [ivBase64, cipherBase64]
-  }), [finalNameInput, defPhraseInput, background])
+  }), [defNameInput, defPhraseInput, background])
 
   const [id, setId] = useState<Uint8Array>()
 
@@ -106,7 +102,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
   }, [defPhraseInput])
 
   const addAuthenticatedOrAlert1 = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
-    if (!finalNameInput)
+    if (!defNameInput)
       throw new Panic()
     if (triedEncryptedPhrase == null)
       throw new Panic()
@@ -117,15 +113,15 @@ export function StandaloneSeedCreatorDialog(props: {}) {
 
     using cipherMemory = Base64.get().getOrThrow().decodePaddedOrThrow(cipherBase64)
 
-    const idBytes = await WebAuthnStorage.createOrThrow(finalNameInput, cipherMemory.bytes)
+    const idBytes = await WebAuthnStorage.createOrThrow(defNameInput, cipherMemory.bytes)
 
     setId(idBytes)
-  }), [finalNameInput, triedEncryptedPhrase])
+  }), [defNameInput, triedEncryptedPhrase])
 
   const addAuthenticatedOrAlert2 = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
     if (id == null)
       throw new Panic()
-    if (!finalNameInput)
+    if (!defNameInput)
       throw new Panic()
     if (triedEncryptedPhrase == null)
       throw new Panic()
@@ -141,7 +137,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     const idBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(id)
     const mnemonic = { ivBase64, idBase64 }
 
-    const seed: SeedData = { type: "authMnemonic", uuid, name: finalNameInput, color: Color.all.indexOf(color), mnemonic }
+    const seed: SeedData = { type: "authMnemonic", uuid, name: defNameInput, color: Color.all.indexOf(color), mnemonic }
 
     await background.requestOrThrow<void>({
       method: "brume_createSeed",
@@ -149,7 +145,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
     }).then(r => r.getOrThrow())
 
     close()
-  }), [id, finalNameInput, triedEncryptedPhrase, uuid, color, background, close])
+  }), [id, defNameInput, triedEncryptedPhrase, uuid, color, background, close])
 
   const NameInput =
     <ContrastLabel>
@@ -193,7 +189,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
 
   const error = useMemo(() => {
     if (!validateMnemonic(defPhraseInput, wordlist))
-      return "Please enter a valid seed phrase"
+      return Locale.get(Locale.ValidSeedPhraseRequired, locale)
     return
   }, [defPhraseInput])
 
@@ -232,7 +228,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       <div className="w-full max-w-sm">
         <div className="w-full aspect-video rounded-xl">
           <RawSeedCard
-            name={finalNameInput}
+            name={defNameInput}
             color={color} />
         </div>
       </div>

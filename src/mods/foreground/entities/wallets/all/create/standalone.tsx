@@ -199,7 +199,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
     if (!defNameInput)
       return Locale.get(Locale.NameRequired, locale)
     if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
-      return "Please enter a valid private key"
+      return Locale.get(Locale.ValidPrivateKeyRequired, locale)
     return
   }, [locale, defNameInput, zeroHexKey])
 

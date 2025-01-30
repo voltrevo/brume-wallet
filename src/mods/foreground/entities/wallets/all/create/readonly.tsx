@@ -92,7 +92,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
     if (!defNameInput)
       return Locale.get(Locale.NameRequired, locale)
     if (!defAddressInput)
-      return "Please enter an address"
+      return Locale.get(Locale.ValidAddressRequired, locale)
     return undefined
   }, [locale, defNameInput, defAddressInput])
 

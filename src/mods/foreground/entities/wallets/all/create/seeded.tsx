@@ -89,7 +89,7 @@ export function SeededWalletCreatorDialog(props: {}) {
     if (!defNameInput)
       return Locale.get(Locale.NameRequired, locale)
     if (!defPathInput)
-      return "Please enter a derivation path"
+      return Locale.get(Locale.ValidDerivationPathRequired, locale)
     return
   }, [locale, defNameInput, defPathInput])
 
