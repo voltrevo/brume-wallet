@@ -199,38 +199,38 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       </WideClickableContrastButton>
     </div>
 
-  const canAdd = useMemo(() => {
+  const error = useMemo(() => {
     if (!finalNameInput)
-      return false
+      return "Please enter a name"
     if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
-      return false
-    return true
+      return "Please enter a valid private key"
+    return
   }, [finalNameInput, zeroHexKey])
 
   const AddUnauthButton =
     <WideClickableContrastButton
-      disabled={!canAdd}
+      disabled={error != null || addUnauthenticatedOrAlert.loading}
       onClick={addUnauthenticatedOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
-      Add without authentication
+      {error || "Add without authentication"}
     </WideClickableContrastButton>
 
   const AddAuthButton1 =
     <WideClickableGradientButton
       color={color}
-      disabled={!canAdd}
+      disabled={error != null || addAuthenticatedOrAlert1.loading}
       onClick={addAuthenticatedOrAlert1.run}>
       <Outline.LockClosedIcon className="size-5" />
-      Add with authentication
+      {error || "Add with authentication"}
     </WideClickableGradientButton>
 
   const AddAuthButton2 =
     <WideClickableGradientButton
       color={color}
-      disabled={!canAdd}
+      disabled={error != null || addAuthenticatedOrAlert2.loading}
       onClick={addAuthenticatedOrAlert2.run}>
       <Outline.LockClosedIcon className="size-5" />
-      Add with authentication (1/2)
+      {error || "Add with authentication (1/2)"}
     </WideClickableGradientButton>
 
   return <>

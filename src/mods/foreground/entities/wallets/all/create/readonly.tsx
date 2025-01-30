@@ -92,7 +92,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
     close()
   }), [finalNameInput, maybeAddress, uuid, color, background, close])
 
-  const addDisabled = useMemo(() => {
+  const error = useMemo(() => {
     if (addOrAlert.loading)
       return "Loading..."
     if (!finalNameInput)
@@ -117,7 +117,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   const AddressInput =
     <ContrastLabel>
       <div className="flex-none">
-        Address
+        {Locale.get(Locale.Address, locale)}
       </div>
       <div className="w-4" />
       <SimpleTextarea
@@ -130,10 +130,10 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
   const AddButon =
     <WideClickableGradientButton
       color={color}
-      disabled={Boolean(addDisabled)}
+      disabled={error != null || addOrAlert.loading}
       onClick={addOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
-      {addDisabled || "Add"}
+      {error || "Add"}
     </WideClickableGradientButton>
 
   return <>

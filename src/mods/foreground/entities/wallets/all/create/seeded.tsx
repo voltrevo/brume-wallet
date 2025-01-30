@@ -89,12 +89,12 @@ export function SeededWalletCreatorDialog(props: {}) {
       return setRawPathInput(`m/44'/61'/${i}'/0/0`)
   }, [rawDerivation, defIndexInput])
 
-  const canAdd = useMemo(() => {
+  const error = useMemo(() => {
     if (!finalNameInput)
-      return false
+      return "Please enter a name"
     if (!defPathInput)
-      return false
-    return true
+      return "Please enter a derivation path"
+    return
   }, [finalNameInput, defPathInput])
 
   const addOrAlert = useAsyncUniqueCallback(() => Errors.runOrLogAndAlert(async () => {
@@ -217,10 +217,10 @@ export function SeededWalletCreatorDialog(props: {}) {
   const AddButon =
     <WideClickableGradientButton
       color={color}
-      disabled={!finalNameInput || !canAdd}
+      disabled={error != null || addOrAlert.loading}
       onClick={addOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
-      Add
+      {error || "Add"}
     </WideClickableGradientButton>
 
   return <>

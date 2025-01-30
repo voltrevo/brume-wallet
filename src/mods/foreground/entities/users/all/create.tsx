@@ -12,7 +12,7 @@ import { randomUUID } from "@/libs/uuid/uuid";
 import { User, UserInit, UserRef } from "@/mods/background/service_worker/entities/users/data";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
 import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
-import { Locale, Localized } from "@/mods/foreground/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { UserAvatar } from "@/mods/foreground/user/mods/avatar";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
@@ -20,109 +20,6 @@ import { useCloseContext } from "@hazae41/react-close-context";
 import { KeyboardEvent, useCallback, useDeferredValue, useMemo, useState } from "react";
 import { SimpleInput } from "../../wallets/actions/send";
 import { useCurrentUser } from "../data";
-
-export namespace Messages {
-
-  export const PasswordRequired: Localized<string> = {
-    en: "Password required",
-    zh: "需要密码",
-    hi: "पासवर्ड आवश्यक है",
-    es: "Se requiere contraseña",
-    ar: "كلمة المرور مطلوبة",
-    fr: "Mot de passe requis",
-    de: "Passwort erforderlich",
-    ru: "Требуется пароль",
-    pt: "Senha necessária",
-    ja: "パスワードが必要です",
-    pa: "ਪਾਸਵਰਡ ਦੀ ਲੋੜ ਹੈ",
-    bn: "পাসওয়ার্ড প্রয়োজন",
-    id: "Kata sandi diperlukan",
-    ur: "پاس ورڈ درکار ہے",
-    ms: "Kata laluan diperlukan",
-    it: "Password richiesta",
-    tr: "Parola gerekli",
-    ta: "கடவுச்சொல் தேவை",
-    te: "పాస్వర్డ్ అవసరం",
-    ko: "비밀번호 필요",
-    vi: "Yêu cầu mật khẩu",
-    pl: "Wymagane hasło",
-    ro: "Parolă necesară",
-    nl: "Wachtwoord vereist",
-    el: "Απαιτείται κωδικός",
-    th: "ต้องการรหัสผ่าน",
-    cs: "Vyžadováno heslo",
-    hu: "Jelszó szükséges",
-    sv: "Lösenord krävs",
-    da: "Adgangskode påkrævet",
-  }
-
-  export const PasswordTooShort: Localized<string> = {
-    en: "Password too short",
-    zh: "密码太短",
-    hi: "पासवर्ड बहुत छोटा है",
-    es: "Contraseña demasiado corta",
-    ar: "كلمة السر قصيرة جدا",
-    fr: "Mot de passe trop court",
-    de: "Passwort zu kurz",
-    ru: "Пароль слишком короткий",
-    pt: "Senha muito curta",
-    ja: "パスワードが短すぎます",
-    pa: "ਪਾਸਵਰਡ ਬਹੁਤ ਛੋਟਾ ਹੈ",
-    bn: "পাসওয়ার্ড খুব ছোট",
-    id: "Kata sandi terlalu pendek",
-    ur: "پاس ورڈ بہت چھوٹا ہے",
-    ms: "Kata laluan terlalu pendek",
-    it: "Password troppo corta",
-    tr: "Parola çok kısa",
-    ta: "கடவுச்சொல் மிகவும் குறைந்தது",
-    te: "పాస్వర్డ్ చాలా చిన్నది",
-    ko: "비밀번호가 너무 짧습니다",
-    vi: "Mật khẩu quá ngắn",
-    pl: "Hasło jest za krótkie",
-    ro: "Parola prea scurtă",
-    nl: "Wachtwoord te kort",
-    el: "Ο κωδικός είναι πολύ μικρός",
-    th: "รหัสผ่านสั้นเกินไป",
-    cs: "Heslo je příliš krátké",
-    hu: "A jelszó túl rövid",
-    sv: "Lösenordet är för kort",
-    da: "Adgangskoden er for kort",
-  }
-
-  export const PasswordsDontMatch: Localized<string> = {
-    en: "Passwords don't match",
-    zh: "密码不匹配",
-    hi: "पासवर्ड मेल नहीं खाते",
-    es: "Las contraseñas no coinciden",
-    ar: "كلمات السر غير متطابقة",
-    fr: "Les mots de passe ne correspondent pas",
-    de: "Passwörter stimmen nicht überein",
-    ru: "Пароли не совпадают",
-    pt: "Senhas não correspondem",
-    ja: "パスワードが一致しません",
-    pa: "ਪਾਸਵਰਡ ਮੈਚ ਨਹੀਂ ਕਰਦੇ",
-    bn: "পাসওয়ার্ড মিলছে না",
-    id: "Kata sandi tidak cocok",
-    ur: "پاس ورڈ میچ نہیں ہوتے",
-    ms: "Kata laluan tidak sepadan",
-    it: "Le password non corrispondono",
-    tr: "Parolalar uyuşmuyor",
-    ta: "கடவுச்சொல்கள் பொருந்தவில்லை",
-    te: "పాస్వర్డ్లు పొరపడవు",
-    ko: "비밀번호가 일치하지 않습니다",
-    vi: "Mật khẩu không khớp",
-    pl: "Hasła nie pasują",
-    ro: "Parolele nu se potrivesc",
-    nl: "Wachtwoorden komen niet overeen",
-    el: "Οι κωδικοί δεν ταιριάζουν",
-    th: "รหัสผ่านไม่ตรงกัน",
-    cs: "Hesla se neshodují",
-    hu: "A jelszavak nem egyeznek",
-    sv: "Lösenorden matchar inte",
-    da: "Adgangskoderne stemmer ikke overens",
-  }
-
-}
 
 export function UserCreateDialog(props: { next?: string }) {
   const close = useCloseContext().getOrThrow()
@@ -198,15 +95,15 @@ export function UserCreateDialog(props: { next?: string }) {
 
   const error = useMemo(() => {
     if (defPasswordInput.length < 1)
-      return Locale.get(Messages.PasswordRequired, locale)
+      return Locale.get(Locale.PasswordRequired, locale)
     if (defPasswordInput.length < 3)
-      return Locale.get(Messages.PasswordTooShort, locale)
+      return Locale.get(Locale.PasswordTooShort, locale)
     if (defConfirmPasswordInput.length < 1)
-      return Locale.get(Messages.PasswordRequired, locale)
+      return Locale.get(Locale.PasswordRequired, locale)
     if (defConfirmPasswordInput.length < 3)
-      return Locale.get(Messages.PasswordTooShort, locale)
+      return Locale.get(Locale.PasswordTooShort, locale)
     if (defPasswordInput !== defConfirmPasswordInput)
-      return Locale.get(Messages.PasswordsDontMatch, locale)
+      return Locale.get(Locale.PasswordsDontMatch, locale)
   }, [locale, defConfirmPasswordInput, defPasswordInput])
 
   const NameInput =
@@ -250,11 +147,11 @@ export function UserCreateDialog(props: { next?: string }) {
 
   const DoneButton =
     <WideClickableGradientButton
-      disabled={error != null}
+      disabled={error != null || createOrAlert.loading}
       onClick={createOrAlert.run}
       color={color}>
       <Outline.PlusIcon className="size-5" />
-      {error || "Add"}
+      {error || Locale.get(Locale.Add, locale)}
     </WideClickableGradientButton>
 
   return <>

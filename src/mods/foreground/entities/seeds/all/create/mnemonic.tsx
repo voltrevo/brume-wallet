@@ -191,7 +191,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       </div>
     </div>
 
-  const disabled = useMemo(() => {
+  const error = useMemo(() => {
     if (!validateMnemonic(defPhraseInput, wordlist))
       return "Please enter a valid seed phrase"
     return
@@ -199,28 +199,28 @@ export function StandaloneSeedCreatorDialog(props: {}) {
 
   const AddUnauthButton =
     <WideClickableContrastButton
-      disabled={Boolean(disabled) || addUnauthenticatedOrAlert.loading}
+      disabled={error != null || addUnauthenticatedOrAlert.loading}
       onClick={addUnauthenticatedOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
-      {disabled || "Add without authentication"}
+      {error || "Add without authentication"}
     </WideClickableContrastButton>
 
   const AddAuthButton1 =
     <WideClickableGradientButton
       color={color}
-      disabled={Boolean(disabled) || addAuthenticatedOrAlert1.loading}
+      disabled={error != null || addAuthenticatedOrAlert1.loading}
       onClick={addAuthenticatedOrAlert1.run}>
       <Outline.LockClosedIcon className="size-5" />
-      {disabled || "Add with authentication"}
+      {error || "Add with authentication"}
     </WideClickableGradientButton>
 
   const AddAuthButton2 =
     <WideClickableGradientButton
       color={color}
-      disabled={Boolean(disabled) || addAuthenticatedOrAlert2.loading}
+      disabled={error != null || addAuthenticatedOrAlert2.loading}
       onClick={addAuthenticatedOrAlert2.run}>
       <Outline.LockClosedIcon className="size-5" />
-      {disabled || "Add with authentication (1/2)"}
+      {error || "Add with authentication (1/2)"}
     </WideClickableGradientButton>
 
   return <>

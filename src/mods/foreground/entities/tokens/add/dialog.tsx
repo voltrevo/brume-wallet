@@ -63,7 +63,7 @@ export function TokenAddDialog(props: {}) {
     close()
   }), [tokenQuery.data, close])
 
-  const addDisabled = useMemo(() => {
+  const error = useMemo(() => {
     if (!defAddress)
       return `Please enter an address`
     if (maybeAddress == null)
@@ -110,12 +110,12 @@ export function TokenAddDialog(props: {}) {
     <div className="h-4 grow" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       <WideClickableOppositeButton
-        disabled={Boolean(addDisabled)}
+        disabled={error != null || addOrAlert.loading}
         onClick={addOrAlert.run}>
         {tokenQuery.fetching
           ? <Loading className="size-5" />
           : <Outline.PlusIcon className="size-5" />}
-        {addDisabled || "Add"}
+        {error || "Add"}
       </WideClickableOppositeButton>
     </div>
   </>

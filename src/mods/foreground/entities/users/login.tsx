@@ -10,7 +10,7 @@ import { usePathContext } from "@hazae41/chemin";
 import { Data } from "@hazae41/glacier";
 import { Some } from "@hazae41/option";
 import { useCloseContext } from "@hazae41/react-close-context";
-import { KeyboardEvent, useCallback, useDeferredValue, useRef, useState } from "react";
+import { KeyboardEvent, useCallback, useDeferredValue, useMemo, useRef, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
 import { useLocaleContext } from "../../global/mods/locale";
 import { Locale } from "../../locale";
@@ -85,14 +85,13 @@ export function UserLoginDialog(props: { next?: string }) {
     loginOrAlert.run()
   }, [loginOrAlert])
 
-  const onCancel = useCallback(() => {
-    close()
-  }, [close])
-
-  const onLogin = useCallback(() => {
-    loginOrAlert.run()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loginOrAlert.run])
+  const error = useMemo(() => {
+    if (defPasswordInput.length < 1)
+      return Locale.get(Locale.PasswordRequired, locale)
+    if (defPasswordInput.length < 3)
+      return Locale.get(Locale.PasswordTooShort, locale)
+    return
+  }, [defPasswordInput])
 
   if (maybeUser == null)
     return null
@@ -123,10 +122,10 @@ export function UserLoginDialog(props: { next?: string }) {
     <div className="h-4" />
     <div className="flex items-center flex-wrap-reverse gap-2">
       <WideClickableOppositeButton
-        disabled={defPasswordInput.length < 3 || loginOrAlert.loading}
-        onClick={onLogin}>
+        disabled={error != null || loginOrAlert.loading}
+        onClick={loginOrAlert.run}>
         <Outline.LockOpenIcon className="size-5" />
-        {Locale.get(Locale.Enter, locale)}
+        {error || Locale.get(Locale.Enter, locale)}
       </WideClickableOppositeButton>
     </div>
   </>

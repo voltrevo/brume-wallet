@@ -78,19 +78,19 @@ export function LedgerSeedCreatorDialog(props: {}) {
         onChange={onNameInputChange} />
     </ContrastLabel>
 
-  const canAdd = useMemo(() => {
+  const error = useMemo(() => {
     if (!finalNameInput)
-      return false
-    return true
+      return "Please enter a name"
+    return
   }, [finalNameInput])
 
   const AddButton =
     <WideClickableGradientButton
       color={color}
-      disabled={!canAdd}
+      disabled={error != null || addOrAlert.loading}
       onClick={addOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
-      Add
+      {error || "Add"}
     </WideClickableGradientButton>
 
   return <>
