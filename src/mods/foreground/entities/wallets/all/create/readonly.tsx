@@ -103,7 +103,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
       </div>
       <div className="w-4" />
       <SimpleInput
-        placeholder="Vitalik"
+        placeholder="My wallet"
         value={rawNameInput}
         onChange={onNameInputChange} />
     </ContrastLabel>
@@ -115,7 +115,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
       </div>
       <div className="w-4" />
       <SimpleTextarea
-        placeholder="vitalik.eth"
+        placeholder="mywallet.eth"
         value={rawAddressInput}
         onChange={onAddressInputChange}
         rows={4} />

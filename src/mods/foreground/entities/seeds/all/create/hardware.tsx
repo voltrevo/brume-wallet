@@ -69,7 +69,7 @@ export function LedgerSeedCreatorDialog(props: {}) {
       </div>
       <div className="w-4" />
       <SimpleInput
-        placeholder="Holder"
+        placeholder="My seed"
         value={rawNameInput}
         onChange={onNameInputChange} />
     </ContrastLabel>

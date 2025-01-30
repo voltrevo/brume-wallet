@@ -113,7 +113,7 @@ export function UserCreateDialog(props: { next?: string }) {
       </div>
       <div className="w-4" />
       <SimpleInput
-        placeholder="John Doe"
+        placeholder="Myself"
         value={rawNameInput}
         onChange={onNameInputChange} />
     </ContrastLabel>

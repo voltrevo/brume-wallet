@@ -169,7 +169,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       </div>
       <div className="w-4" />
       <SimpleInput
-        placeholder="Holder"
+        placeholder="My wallet"
         value={rawNameInput}
         onChange={onNameInputChange} />
     </ContrastLabel>

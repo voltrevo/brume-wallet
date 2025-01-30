@@ -131,7 +131,7 @@ export function WalletSendScreenTarget(props: {}) {
         value={rawTargetInput}
         onChange={onTargetInputChange}
         onKeyDown={onEnter}
-        placeholder="brume.eth" />
+        placeholder="someone.eth" />
       <div className="w-1" />
       <div className="flex items-center">
         {rawTargetInput.length === 0
