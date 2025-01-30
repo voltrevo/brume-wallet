@@ -11,7 +11,7 @@ import { UserGuardBody } from "@/mods/foreground/user/mods/guard"
 import { Seed } from "@/mods/universal/entities/seeds"
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin"
 import { Fragment, useCallback } from "react"
-import { NewRectangularAnchorCard } from "../../wallets/all/page"
+import { RectangularAnchorCard } from "../../wallets/all/page"
 import { RawSeedDataCard } from "../card"
 import { SeedDataProvider } from "../context"
 import { useSeeds } from "../data"
@@ -122,9 +122,9 @@ export function ClickableSeedGrid(props: OkProps<Seed> & { maybeSeeds?: Seed[] }
           ok={ok} />
       </Fragment>)}
     {!disableNew &&
-      <NewRectangularAnchorCard>
-        New seed
-      </NewRectangularAnchorCard>}
+      <RectangularAnchorCard>
+        <Outline.PlusIcon className="size-5" />
+      </RectangularAnchorCard>}
   </div>
 }
 

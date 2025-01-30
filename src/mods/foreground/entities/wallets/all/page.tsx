@@ -123,6 +123,7 @@ export function WalletsBody() {
 }
 
 export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets: Nullable<Wallet[]> } & { selected?: Wallet } & { disableNew?: boolean }) {
+  const locale = useLocaleContext().getOrThrow()
   const { wallets, ok, disableNew } = props
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
@@ -133,13 +134,14 @@ export function ClickableWalletGrid(props: OkProps<Wallet> & { wallets: Nullable
           ok={ok} />
       </Fragment>)}
     {!disableNew &&
-      <NewRectangularAnchorCard>
-        New wallet
-      </NewRectangularAnchorCard>}
+      <RectangularAnchorCard>
+        <Outline.PlusIcon className="size-5" />
+      </RectangularAnchorCard>}
   </div>
 }
 
 export function SelectableWalletGrid(props: OkProps<Wallet> & { wallets: Nullable<Wallet[]> } & { selecteds: Nullable<Wallet>[] } & { disableNew?: boolean }) {
+  const locale = useLocaleContext().getOrThrow()
   const { wallets, ok, selecteds, disableNew } = props
 
   return <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
@@ -151,9 +153,9 @@ export function SelectableWalletGrid(props: OkProps<Wallet> & { wallets: Nullabl
           ok={ok} />
       </Fragment>)}
     {!disableNew &&
-      <NewRectangularAnchorCard>
-        New wallet
-      </NewRectangularAnchorCard>}
+      <RectangularAnchorCard>
+        <Outline.PlusIcon className="size-5" />
+      </RectangularAnchorCard>}
   </div>
 }
 
@@ -192,7 +194,7 @@ export function ClickableWalletCard(props: WalletProps & OkProps<Wallet>) {
 
 }
 
-export function NewRectangularAnchorCard(props: ChildrenProps) {
+export function RectangularAnchorCard(props: ChildrenProps) {
   const path = usePathContext().getOrThrow()
   const { children } = props
 
@@ -204,9 +206,6 @@ export function NewRectangularAnchorCard(props: ChildrenProps) {
     onKeyDown={create.onKeyDown}
     onClick={create.onClick}
     href={create.href}>
-    <Outline.PlusIcon className="size-5" />
-    <div className="font-medium">
-      {children}
-    </div>
+    {children}
   </a>
 }

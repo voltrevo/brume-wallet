@@ -235,7 +235,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
 
   return <>
     <Dialog.Title>
-      New wallet
+      {Locale.get(Locale.NewWallet, locale)}
     </Dialog.Title>
     <div className="h-4" />
     <div className="flex-1 flex flex-col items-center justify-center">
