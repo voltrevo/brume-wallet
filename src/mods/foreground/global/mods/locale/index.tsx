@@ -21,14 +21,21 @@ export function Localizer(props: ValueProps<Nullable<string>> & ChildrenProps) {
     return value || browser
   }, [value, browser])
 
+  return <LocaleContext value={locale}>
+    {children}
+  </LocaleContext>
+}
+
+export function Director(props: ChildrenProps) {
+  const locale = useLocaleContext().getOrThrow()
+  const { children } = props
+
   const direction = useMemo(() => {
     return Locale.get(Locale.direction, locale)
   }, [locale])
 
-  return <LocaleContext value={locale}>
-    <div className="h-full w-full overflow-hidden"
-      dir={direction}>
-      {children}
-    </div>
-  </LocaleContext>
+  return <div className="h-full w-full overflow-hidden"
+    dir={direction}>
+    {children}
+  </div>
 }

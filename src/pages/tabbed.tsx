@@ -1,6 +1,6 @@
 import { browser, BrowserError } from "@/libs/browser/browser";
 import { isSafariExtension } from "@/libs/platform/platform";
-import { Localizer } from "@/mods/foreground/global/mods/locale";
+import { Director, Localizer } from "@/mods/foreground/global/mods/locale";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Nullable } from "@hazae41/option";
 import { useEffect, useMemo, useState } from "react";
@@ -43,12 +43,14 @@ export default function Main() {
   }, [subwindow])
 
   return <Localizer value={undefined}>
-    <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
-      {isSafariExtension() && <NavBar />}
-      <iframe className="grow w-full"
-        ref={setIframe}
-        src={url.href}
-        seamless />
-    </main >
+    <Director>
+      <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
+        {isSafariExtension() && <NavBar />}
+        <iframe className="grow w-full"
+          ref={setIframe}
+          src={url.href}
+          seamless />
+      </main>
+    </Director>
   </Localizer>
 }

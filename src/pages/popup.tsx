@@ -26,7 +26,7 @@ import { StandaloneWalletCreatorDialog } from "@/mods/foreground/entities/wallet
 import { SelectableWalletGrid } from "@/mods/foreground/entities/wallets/all/page";
 import { WalletDataContext } from "@/mods/foreground/entities/wallets/context";
 import { EthereumWalletInstance, useEthereumContext, useWallet, useWallets } from "@/mods/foreground/entities/wallets/data";
-import { Localizer, useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Director, Localizer, useLocaleContext } from "@/mods/foreground/global/mods/locale";
 import { Locale } from "@/mods/foreground/locale";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Base16 } from "@hazae41/base16";
@@ -125,13 +125,15 @@ export default function Main() {
     return null
 
   return <Localizer value={undefined}>
-    <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
-      <NavBar />
-      <iframe className="grow w-full"
-        ref={setIframe}
-        src={url.href}
-        seamless />
-    </main>
+    <Director>
+      <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
+        <NavBar />
+        <iframe className="grow w-full"
+          ref={setIframe}
+          src={url.href}
+          seamless />
+      </main>
+    </Director>
   </Localizer>
 }
 

@@ -1,6 +1,6 @@
 import { browser, BrowserError } from "@/libs/browser/browser";
 import { useBackgroundContext } from "@/mods/foreground/background/context";
-import { Localizer } from "@/mods/foreground/global/mods/locale";
+import { Director, Localizer } from "@/mods/foreground/global/mods/locale";
 import { NavBar } from "@/mods/foreground/overlay/navbar";
 import { Nullable } from "@hazae41/option";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -87,12 +87,14 @@ export default function Main() {
     return null
 
   return <Localizer value={undefined}>
-    <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
-      <NavBar />
-      <iframe className="grow w-full"
-        ref={setIframe}
-        src={url.href}
-        seamless />
-    </main>
+    <Director>
+      <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
+        <NavBar />
+        <iframe className="grow w-full"
+          ref={setIframe}
+          src={url.href}
+          seamless />
+      </main>
+    </Director>
   </Localizer>
 }
