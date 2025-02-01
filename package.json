@@ -78,7 +78,7 @@
     "@hazae41/jsonrpc": "^1.1.6",
     "@hazae41/kcp": "^1.1.3",
     "@hazae41/keccak256": "^1.0.10",
-    "@hazae41/labase": "^1.0.10",
+    "@hazae41/labase": "^1.0.14",
     "@hazae41/latrine": "^1.1.4",
     "@hazae41/ledger": "^0.1.4",
     "@hazae41/mutex": "^2.1.0",

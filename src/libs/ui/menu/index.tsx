@@ -150,12 +150,12 @@ export function Menu(props: ChildrenProps & DarkProps) {
           data-theme={dark && "dark"}
           onMouseDown={onClickOutside}
           onClick={Events.keep}>
-          <div className={`absolute flex flex-col min-w-[min(calc(100vw-var(--l)),8rem)] max-w-[min(calc(100vw-var(--l)),32rem)] top-0 left-0 [translate:var(--l)_var(--t)] text-default bg-default border border-default-contrast rounded-2xl p-1 ${premount ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
+          <div className={`absolute flex flex-col min-w-[min(calc(100vw-var(--l)),8rem)] max-w-[min(calc(100vw-var(--l)),32rem)] top-0 left-0 [translate:var(--l)_var(--t)] text-default bg-default border border-default-contrast rounded-2xl p-2 ${premount ? "animate-scale-xywh-in" : "animate-scale-xywh-out"}`}
             ref={setMenu}
             aria-modal
             onAnimationEnd={onAnimationEnd}
             onMouseDown={Events.keep}>
-            <div className="p-1 grow flex flex-col max-h-[200px] overflow-y-auto scrollbar-default">
+            <div className="grow flex flex-col max-h-[200px] overflow-y-auto p-scroll">
               {children}
             </div>
           </div>
