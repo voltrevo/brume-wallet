@@ -208,7 +208,7 @@ function WalletDataPage() {
         <ClickableContrastButton
           onClick={add.enable}>
           <Outline.PlusIcon className="size-5" />
-          {"Add"}
+          {Locale.get(Locale.Add, locale)}
         </ClickableContrastButton>
       </div>
       <div className="h-4" />

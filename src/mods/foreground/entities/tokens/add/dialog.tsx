@@ -7,7 +7,8 @@ import { WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { ContrastLabel } from "@/libs/ui/label";
 import { Loading } from "@/libs/ui/loading";
-import { useBackgroundContext } from "@/mods/foreground/background/context";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { ContractTokenRef } from "@/mods/universal/ethereum/mods/tokens/mods/core";
 import { useContractToken, useUserTokens } from "@/mods/universal/ethereum/mods/tokens/mods/core/hooks";
 import { Address } from "@hazae41/cubane";
@@ -20,9 +21,9 @@ import { useWalletDataContext } from "../../wallets/context";
 import { useEthereumContext } from "../../wallets/data";
 
 export function TokenAddDialog(props: {}) {
+  const locale = useLocaleContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
-  const background = useBackgroundContext().getOrThrow()
 
   const [rawChainId, setRawChainId] = useState<string>("1")
   const defChainId = useDeferredValue(rawChainId)
@@ -115,7 +116,7 @@ export function TokenAddDialog(props: {}) {
         {tokenQuery.fetching
           ? <Loading className="size-5" />
           : <Outline.PlusIcon className="size-5" />}
-        {error || "Add"}
+        {error || Locale.get(Locale.Add, locale)}
       </WideClickableOppositeButton>
     </div>
   </>

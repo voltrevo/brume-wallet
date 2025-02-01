@@ -216,7 +216,7 @@ export function SeededWalletCreatorDialog(props: {}) {
       disabled={error != null || addOrAlert.loading}
       onClick={addOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
-      {error || "Add"}
+      {error || Locale.get(Locale.Add, locale)}
     </WideClickableGradientButton>
 
   return <>
