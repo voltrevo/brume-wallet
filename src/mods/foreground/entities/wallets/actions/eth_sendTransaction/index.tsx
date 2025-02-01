@@ -851,7 +851,7 @@ export function WalletTransactionDialog(props: {}) {
     <div className="h-2" />
     <ContrastLabel>
       <div className="flex-none">
-        Value
+        {Locale.get(Locale.Amount, locale)}
       </div>
       <div className="w-4" />
       <div className="grow flex flex-col overflow-hidden">

@@ -309,7 +309,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     {mode === "valued" &&
       <ContrastLabel>
         <div className="flex-none">
-          Value
+          {Locale.get(Locale.Amount, locale)}
         </div>
         <div className="w-4" />
         <div className="grow flex flex-col overflow-hidden">
@@ -358,7 +358,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     {mode === "priced" &&
       <ContrastLabel>
         <div className="flex-none">
-          Value
+          {Locale.get(Locale.Amount, locale)}
         </div>
         <div className="w-4" />
         <div className="grow flex flex-col overflow-hidden">
@@ -422,7 +422,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
         <WideClickableOppositeButton
           onClick={onSendTransactionClick}>
           <Outline.PaperAirplaneIcon className="size-5" />
-          Transact
+          {Locale.get(Locale.Send, locale)}
         </WideClickableOppositeButton>
       </div>}
     {maybeTransaction != null &&
@@ -430,7 +430,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
         <WideClickableOppositeButton
           onClick={onClose}>
           <Outline.CheckIcon className="size-5" />
-          Close
+          {Locale.get(Locale.Close, locale)}
         </WideClickableOppositeButton>
       </div>}
   </>

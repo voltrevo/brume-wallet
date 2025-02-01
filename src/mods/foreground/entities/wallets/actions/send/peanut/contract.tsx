@@ -402,7 +402,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
     {mode === "valued" &&
       <ContrastLabel>
         <div className="flex-none">
-          Value
+          {Locale.get(Locale.Amount, locale)}
         </div>
         <div className="w-4" />
         <div className="grow flex flex-col overflow-hidden">
@@ -451,7 +451,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
     {mode === "priced" &&
       <ContrastLabel>
         <div className="flex-none">
-          Value
+          {Locale.get(Locale.Amount, locale)}
         </div>
         <div className="w-4" />
         <div className="grow flex flex-col overflow-hidden">
@@ -559,7 +559,7 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         <WideClickableOppositeButton
           onClick={onClose}>
           <Outline.CheckIcon className="size-5" />
-          Close
+          {Locale.get(Locale.Close, locale)}
         </WideClickableOppositeButton>
       </div>
     </>}
@@ -568,7 +568,12 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         <WideClickableOppositeButton
           onClick={onSendTransaction1Click}>
           <Outline.PaperAirplaneIcon className="size-5" />
-          Transact (1/2)
+          <span>
+            {Locale.get(Locale.Send, locale)}
+          </span>
+          <span>
+            (1/2)
+          </span>
         </WideClickableOppositeButton>
       </div>}
     {maybeTransaction1?.type === "executed" && maybeTransaction0 == null &&
@@ -576,7 +581,12 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
         <WideClickableOppositeButton
           onClick={onSendTransaction0Click}>
           <Outline.PaperAirplaneIcon className="size-5" />
-          Transact (2/2)
+          <span>
+            {Locale.get(Locale.Send, locale)}
+          </span>
+          <span>
+            (2/2)
+          </span>
         </WideClickableOppositeButton>
       </div>}
   </>

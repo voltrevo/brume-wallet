@@ -139,6 +139,7 @@ export default function Main() {
 
 export function TransactPage() {
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
   const hash = useHashSubpath(path)
@@ -265,7 +266,7 @@ export function TransactPage() {
           <div className="h-2" />
           <ContrastLabel>
             <div className="flex-none">
-              Value
+              {Locale.get(Locale.Amount, locale)}
             </div>
             <div className="w-4" />
             <SimpleInput
@@ -353,7 +354,7 @@ export function TransactPage() {
           <WideClickableOppositeButton
             onClick={onSendTransactionClick}>
             <Outline.CheckIcon className="size-5" />
-            Transact
+            {Locale.get(Locale.Send, locale)}
           </WideClickableOppositeButton>
         </div>
       </PageBody>
