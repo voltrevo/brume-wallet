@@ -1,6 +1,8 @@
 import { strictChainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Dialog } from "@/libs/ui/dialog";
 import { Loading } from "@/libs/ui/loading";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { useSighash } from "@/mods/universal/ethereum/mods/sighash/hooks";
 import { usePathContext } from "@hazae41/chemin";
 import { Abi, ZeroHexAsInteger, ZeroHexString } from "@hazae41/cubane";
@@ -12,6 +14,7 @@ import { useEthereumContext } from "../../data";
 
 export function WalletDecodeDialog(props: {}) {
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
 
   const maybeData = path.url.searchParams.get("data") as Nullable<ZeroHexString>
@@ -30,7 +33,7 @@ export function WalletDecodeDialog(props: {}) {
 
   return <>
     <Dialog.Title>
-      Decode transaction data
+      {Locale.get(Locale.Decode, locale)}
     </Dialog.Title>
     <div className="h-4" />
     <div className="po-2 bg-default-contrast rounded-xl text-default-contrast whitespace-pre-wrap break-all">

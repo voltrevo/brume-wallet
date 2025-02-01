@@ -242,7 +242,7 @@ export function TransactPage() {
           <div className="h-2" />
           <ContrastLabel>
             <div className="flex-none">
-              From
+              {Locale.get(Locale.Sender, locale)}
             </div>
             <div className="w-4" />
             <SimpleInput
@@ -254,7 +254,7 @@ export function TransactPage() {
           <div className="h-2" />
           <ContrastLabel>
             <div className="flex-none">
-              To
+              {Locale.get(Locale.Recipient, locale)}
             </div>
             <div className="w-4" />
             <SimpleInput
@@ -278,7 +278,7 @@ export function TransactPage() {
           <div className="h-2" />
           <ContrastLabel>
             <div className="flex-none">
-              Nonce
+              {Locale.get(Locale.Number, locale)}
             </div>
             <div className="w-4" />
             <SimpleInput
@@ -290,7 +290,7 @@ export function TransactPage() {
           <div className="h-2" />
           <ContrastLabel>
             <div className="flex-none">
-              Data
+              {Locale.get(Locale.Data, locale)}
             </div>
             <div className="w-4" />
             <SimpleTextarea

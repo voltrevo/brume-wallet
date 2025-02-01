@@ -8,7 +8,7 @@ import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";
-import { ClickableContrastButtonInInputBox, WideClickableContrastButton, WideClickableNakedMenuButton, WideClickableOppositeButton } from "@/libs/ui/button";
+import { WideClickableContrastButton, WideClickableNakedMenuButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { ContrastSubtitleDiv } from "@/libs/ui/div";
 import { ContrastLabel } from "@/libs/ui/label";
@@ -883,7 +883,7 @@ export function WalletTransactionDialog(props: {}) {
     <div className="h-2" />
     <ContrastLabel>
       <div className="flex-none">
-        Nonce
+        {Locale.get(Locale.Number, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput
@@ -891,16 +891,16 @@ export function WalletTransactionDialog(props: {}) {
         onChange={onNonceInputChange}
         placeholder={maybePendingNonceBigInt?.toString()} />
       <div className="w-1" />
-      <ClickableContrastButtonInInputBox
+      {/* <ClickableContrastButtonInInputBox
         onClick={onNonceClick}>
         Select
-      </ClickableContrastButtonInInputBox>
+      </ClickableContrastButtonInInputBox> */}
     </ContrastLabel>
     <div className="h-2" />
     <div className="po-2 flex flex-col bg-default-contrast rounded-xl">
       <div className="flex items-start">
         <div className="flex-none">
-          Data
+          {Locale.get(Locale.Data, locale)}
         </div>
         <div className="w-4" />
         <SimpleTextarea
@@ -915,7 +915,7 @@ export function WalletTransactionDialog(props: {}) {
         disabled={maybeData == null}
         onClick={onDecodeClick}>
         <Outline.MagnifyingGlassIcon className="size-4" />
-        Decode
+        {Locale.get(Locale.Decode, locale)}
       </WideClickableContrastButton>
     </div>
     <div className="h-4" />
