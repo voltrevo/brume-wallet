@@ -19,6 +19,7 @@ import { GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
 import { useBlockByNumber } from "@/mods/universal/ethereum/mods/blocks/hooks";
 import { useNativeTokenPriceV3 } from "@/mods/universal/ethereum/mods/tokens/mods/price/hooks";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
@@ -41,6 +42,7 @@ import { WalletNonceDialog } from "./nonce";
 
 export function WalletTransactionDialog(props: {}) {
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
 
@@ -410,20 +412,20 @@ export function WalletTransactionDialog(props: {}) {
     }, [gasMode, normal, fast, urgent, custom])
   }
 
-  function useGasDisplay(gasPrice: Nullable<bigint>) {
+  function useGasDisplay(gasPrice: Nullable<bigint>, locale: string) {
     return useMemo(() => {
       if (gasPrice == null)
         return "???"
-      return Number(new Fixed(gasPrice, 9).move(4).toString()).toLocaleString(undefined, { maximumSignificantDigits: 2 })
-    }, [gasPrice])
+      return Number(new Fixed(gasPrice, 9).move(4).toString()).toLocaleString(locale, { maximumSignificantDigits: 2 })
+    }, [gasPrice, locale])
   }
 
-  function useCompactUsdDisplay(fixed: Nullable<Fixed>) {
+  function useCompactUsdDisplay(fixed: Nullable<Fixed>, locale: string) {
     return useMemo(() => {
       if (fixed == null)
         return "???"
-      return Number(fixed.move(2).toString()).toLocaleString(undefined, { style: "currency", currency: "USD", notation: "compact" })
-    }, [fixed])
+      return Number(fixed.move(2).toString()).toLocaleString(locale, { style: "currency", currency: "USD", notation: "compact" })
+    }, [fixed, locale])
   }
 
   const maybeFinalGasPrice = useMode(maybeNormalGasPrice, maybeFastGasPrice, maybeUrgentGasPrice, maybeCustomGasPrice)
@@ -652,32 +654,32 @@ export function WalletTransactionDialog(props: {}) {
   const maybeFinalMinEip1559GasCost = useMode(maybeNormalMinEip1559GasCost, maybeFastMinEip1559GasCost, maybeUrgentMinEip1559GasCost, undefined)
   const maybeFinalMaxEip1559GasCost = useMode(maybeNormalMaxEip1559GasCost, maybeFastMaxEip1559GasCost, maybeUrgentMaxEip1559GasCost, maybeCustomMaxEip1559GasCost)
 
-  const normalLegacyGasCostDisplay = useCompactUsdDisplay(maybeNormalLegacyGasCost)
-  const fastLegacyGasCostDisplay = useCompactUsdDisplay(maybeFastLegacyGasCost)
-  const urgentLegacyGasCostDisplay = useCompactUsdDisplay(maybeUrgentLegacyGasCost)
-  const finalLegacyGasCostDisplay = useCompactUsdDisplay(maybeFinalLegacyGasCost)
+  const normalLegacyGasCostDisplay = useCompactUsdDisplay(maybeNormalLegacyGasCost, locale)
+  const fastLegacyGasCostDisplay = useCompactUsdDisplay(maybeFastLegacyGasCost, locale)
+  const urgentLegacyGasCostDisplay = useCompactUsdDisplay(maybeUrgentLegacyGasCost, locale)
+  const finalLegacyGasCostDisplay = useCompactUsdDisplay(maybeFinalLegacyGasCost, locale)
 
-  const normalMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalMinEip1559GasCost)
-  const fastMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastMinEip1559GasCost)
-  const urgentMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeUrgentMinEip1559GasCost)
-  const finalMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeFinalMinEip1559GasCost)
+  const normalMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalMinEip1559GasCost, locale)
+  const fastMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastMinEip1559GasCost, locale)
+  const urgentMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeUrgentMinEip1559GasCost, locale)
+  const finalMinEip1559GasCostDisplay = useCompactUsdDisplay(maybeFinalMinEip1559GasCost, locale)
 
-  const normalMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalMaxEip1559GasCost)
-  const fastMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastMaxEip1559GasCost)
-  const urgentMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeUrgentMaxEip1559GasCost)
-  const finalMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeFinalMaxEip1559GasCost)
+  const normalMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeNormalMaxEip1559GasCost, locale)
+  const fastMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeFastMaxEip1559GasCost, locale)
+  const urgentMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeUrgentMaxEip1559GasCost, locale)
+  const finalMaxEip1559GasCostDisplay = useCompactUsdDisplay(maybeFinalMaxEip1559GasCost, locale)
 
-  const normalGasPriceDisplay = useGasDisplay(maybeNormalGasPrice)
-  const fastGasPriceDisplay = useGasDisplay(maybeFastGasPrice)
-  const urgentGasPriceDisplay = useGasDisplay(maybeUrgentGasPrice)
+  const normalGasPriceDisplay = useGasDisplay(maybeNormalGasPrice, locale)
+  const fastGasPriceDisplay = useGasDisplay(maybeFastGasPrice, locale)
+  const urgentGasPriceDisplay = useGasDisplay(maybeUrgentGasPrice, locale)
 
-  const normalBaseFeePerGasDisplay = useGasDisplay(maybeNormalBaseFeePerGas)
-  const fastBaseFeePerGasDisplay = useGasDisplay(maybeFastBaseFeePerGas)
-  const urgentBaseFeePerGasDisplay = useGasDisplay(maybeUrgentBaseFeePerGas)
+  const normalBaseFeePerGasDisplay = useGasDisplay(maybeNormalBaseFeePerGas, locale)
+  const fastBaseFeePerGasDisplay = useGasDisplay(maybeFastBaseFeePerGas, locale)
+  const urgentBaseFeePerGasDisplay = useGasDisplay(maybeUrgentBaseFeePerGas, locale)
 
-  const normalMaxPriorityFeePerGasDisplay = useGasDisplay(maybeNormalMaxPriorityFeePerGas)
-  const fastMaxPriorityFeePerGasDisplay = useGasDisplay(maybeFastMaxPriorityFeePerGas)
-  const urgentMaxPriorityFeePerGasDisplay = useGasDisplay(maybeUrgentMaxPriorityFeePerGas)
+  const normalMaxPriorityFeePerGasDisplay = useGasDisplay(maybeNormalMaxPriorityFeePerGas, locale)
+  const fastMaxPriorityFeePerGasDisplay = useGasDisplay(maybeFastMaxPriorityFeePerGas, locale)
+  const urgentMaxPriorityFeePerGasDisplay = useGasDisplay(maybeUrgentMaxPriorityFeePerGas, locale)
 
   const signOrSendOrAlert = useCallback((action: "sign" | "send") => Errors.runOrLogAndAlert(async () => {
     if (maybeIsEip1559 == null)
