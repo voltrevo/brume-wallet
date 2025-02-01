@@ -65,15 +65,15 @@ export function WalletEditDialog(props: {}) {
       disabled={saveOrAlert.loading}
       onClick={saveOrAlert.run}>
       <Outline.CheckIcon className="size-5" />
-      Save
+      {Locale.get(Locale.Save, locale)}
     </WideClickableGradientButton>
 
   return <>
     <Dialog.Title>
-      Edit
+      {Locale.get(Locale.Edit, locale)}
     </Dialog.Title>
     <div className="h-4" />
-    <div className="flex-1 flex flex-col items-center justify-center">
+    <div className="grow flex flex-col items-center justify-center h-[400px]">
       <div className="w-full max-w-sm">
         <div className="w-full aspect-video rounded-xl">
           <RawWalletCard

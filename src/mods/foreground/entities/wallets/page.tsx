@@ -165,7 +165,7 @@ function WalletDataPage() {
         onClick={receive.onClick}
         href={receive.href}>
         <Outline.QrCodeIcon className="size-4" />
-        Receive
+        {Locale.get(Locale.Receive, locale)}
       </ClickableContrastAnchor>
     </div>
 
@@ -283,6 +283,7 @@ export function WalletMenu(props: {
   $privateKey: State<Optional<ZeroHexString>>
 }) {
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
@@ -347,34 +348,34 @@ export function WalletMenu(props: {
       onKeyDown={edit.onKeyDown}
       href={edit.href}>
       <Outline.PencilIcon className="size-4" />
-      Edit
+      {Locale.get(Locale.Edit, locale)}
     </WideClickableNakedMenuAnchor>
     {!privateKey &&
       <WideClickableNakedMenuButton
         disabled={flipOrAlert.loading}
         onClick={flipOrAlert.run}>
         <Outline.EyeIcon className="size-4" />
-        Flip
+        {Locale.get(Locale.Flip, locale)}
       </WideClickableNakedMenuButton>}
     {privateKey &&
       <WideClickableNakedMenuButton
         onClick={onUnflipClick}>
         <Outline.EyeSlashIcon className="size-4" />
-        Unflip
+        {Locale.get(Locale.Flip, locale)}
       </WideClickableNakedMenuButton>}
     {!wallet.trashed &&
       <WideClickableNakedMenuButton
         disabled={trashOrAlert.loading}
         onClick={trashOrAlert.run}>
         <Outline.TrashIcon className="size-4" />
-        Trash
+        {Locale.get(Locale.Delete, locale)}
       </WideClickableNakedMenuButton>}
     {wallet.trashed &&
       <WideClickableNakedMenuButton
         disabled={untrashOrAlert.loading}
         onClick={untrashOrAlert.run}>
         <Outline.TrashIcon className="size-4" />
-        Untrash
+        {Locale.get(Locale.Restore, locale)}
       </WideClickableNakedMenuButton>}
   </div>
 }

@@ -62,7 +62,7 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
   const onClickCopyEthereumAddress = useMouseCancel(copyEthereumAddress.run)
 
   const totalBalanceQuery = useWalletTotalPricedBalance(finalAddress)
-  const totalBalanceDisplay = useCompactDisplayUsd(totalBalanceQuery.data?.get())
+  const totalBalanceDisplay = useCompactDisplayUsd(totalBalanceQuery.data?.get(), locale)
 
   const [preflip = false, setPreflip] = useState(flip)
   const [postflip, setPostflip] = useState(false)
