@@ -11,7 +11,7 @@ import { AnchorProps } from "@/libs/react/props/html";
 import { UUIDProps } from "@/libs/react/props/uuid";
 import { State } from "@/libs/react/state";
 import { Records } from "@/libs/records";
-import { PaddedRoundedClickableNakedAnchor, WideClickableNakedMenuAnchor } from "@/libs/ui/anchor";
+import { ClickableContrastAnchor, PaddedRoundedClickableNakedAnchor, WideClickableNakedMenuAnchor } from "@/libs/ui/anchor";
 import { ClickableContrastButton, WideClickableNakedMenuButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { Loading, SmallUnflexLoading } from "@/libs/ui/loading";
@@ -34,6 +34,8 @@ import { Result } from "@hazae41/result";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Fragment, useCallback, useMemo, useState } from "react";
 import { useBackgroundContext } from "../../background/context";
+import { useLocaleContext } from "../../global/mods/locale";
+import { Locale } from "../../locale";
 import { useUserStorageContext } from "../../user/mods/storage";
 import { useEnsReverse } from "../names/data";
 import { TokenAddDialog } from "../tokens/add/dialog";
@@ -55,7 +57,7 @@ export function WalletPage(props: UUIDProps) {
 export function AnchorCard(props: AnchorProps) {
   const { children, ...rest } = props
 
-  return <a className="grow group p-4 bg-default-contrast rounded-xl cursor-pointer focus:outline-black focus:outline-1"
+  return <a className="group p-4 bg-default-contrast rounded-xl cursor-pointer focus:outline-black focus:outline-1"
     {...rest}>
     <GapperAndClickerInAnchorDiv>
       {children}
@@ -65,6 +67,7 @@ export function AnchorCard(props: AnchorProps) {
 
 function WalletDataPage() {
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
 
   const hash = useHashSubpath(path)
@@ -119,7 +122,7 @@ function WalletDataPage() {
   }, [setFlip, setPrivateKey])
 
   const Header =
-    <PageHeader title="Wallet">
+    <PageHeader title={Locale.get(Locale.Wallet, locale)}>
       <div className="flex items-center gap-2">
         <PaddedRoundedClickableNakedAnchor
           onKeyDown={connect.onKeyDown}
@@ -156,34 +159,14 @@ function WalletDataPage() {
     </div>
 
   const Apps =
-    <div className="po-2 grid place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
-      <AnchorCard>
-        <Outline.BanknotesIcon className="size-4" />
-        Tokens
-      </AnchorCard>
-      <AnchorCard>
-        <Outline.PaperAirplaneIcon className="size-4" />
-        Transactions
-      </AnchorCard>
-      <AnchorCard
+    <div className="po-2 flex items-center justify-center gap-2">
+      <ClickableContrastAnchor
         onKeyDown={receive.onKeyDown}
         onClick={receive.onClick}
         href={receive.href}>
         <Outline.QrCodeIcon className="size-4" />
         Receive
-      </AnchorCard>
-      <AnchorCard>
-        <Outline.TrophyIcon className="size-4" />
-        NFTs
-      </AnchorCard>
-      <AnchorCard>
-        <Outline.LinkIcon className="size-4" />
-        Links
-      </AnchorCard>
-      <AnchorCard>
-        <Outline.CheckIcon className="size-4" />
-        Approvals
-      </AnchorCard>
+      </ClickableContrastAnchor>
     </div>
 
   const Body =
@@ -793,6 +776,7 @@ export interface QueryLike<D, E> {
 }
 
 function TokenRowAnchor(props: { token: TokenData } & { chain: ChainData } & { balanceQuery: QueryLike<Fixed.From, Error> } & { balanceUsdQuery: QueryLike<Fixed.From, Error> } & AnchorProps) {
+  const locale = useLocaleContext().getOrThrow()
   const { token, chain, balanceQuery, balanceUsdQuery, ...others } = props
 
   const tokenId = token.type === "native"
@@ -802,8 +786,8 @@ function TokenRowAnchor(props: { token: TokenData } & { chain: ChainData } & { b
   const modhash = useModhash(tokenId)
   const color = Color.get(modhash)
 
-  const balanceDisplay = useDisplayRaw(balanceQuery.data?.get())
-  const balanceUsdDisplay = useDisplayUsd(balanceUsdQuery.data?.get())
+  const balanceDisplay = useDisplayRaw(balanceQuery.data?.get(), locale)
+  const balanceUsdDisplay = useDisplayUsd(balanceUsdQuery.data?.get(), locale)
 
   return <a className="po-1 group flex items-center text-left"
     {...others}>
