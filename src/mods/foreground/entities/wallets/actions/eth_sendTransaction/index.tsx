@@ -20,6 +20,7 @@ import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
 import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData, TransactionParametersData, TransactionTrialRef } from "@/mods/background/service_worker/entities/transactions/data";
 import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { useBlockByNumber } from "@/mods/universal/ethereum/mods/blocks/hooks";
 import { useNativeTokenPriceV3 } from "@/mods/universal/ethereum/mods/tokens/mods/price/hooks";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext, useSearchState } from "@hazae41/chemin";
@@ -1170,13 +1171,13 @@ export function WalletTransactionDialog(props: {}) {
           disabled={onSignClick.loading}
           onClick={onSignClick.run}>
           <Outline.PencilIcon className="size-5" />
-          Sign
+          {Locale.get(Locale.Sign, locale)}
         </WideClickableContrastButton>}
       <WideClickableOppositeButton
         disabled={onSendClick.loading}
         onClick={onSendClick.run}>
         <Outline.PaperAirplaneIcon className="size-5" />
-        Send
+        {Locale.get(Locale.Send, locale)}
       </WideClickableOppositeButton>
     </div>
   </>
@@ -1300,6 +1301,7 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
 }
 
 export function SignedTransactionCard(props: { data: SignedTransactionData } & { onSend: (data: TransactionData) => void }) {
+  const locale = useLocaleContext().getOrThrow()
   const { data, onSend } = props
 
   const onCopy = useCopy(data.data)
@@ -1332,7 +1334,7 @@ export function SignedTransactionCard(props: { data: SignedTransactionData } & {
         <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onSendClick}>
           <GapperAndClickerInAnchorDiv>
-            Send
+            {Locale.get(Locale.Send, locale)}
             <Outline.PaperAirplaneIcon className="size-4" />
           </GapperAndClickerInAnchorDiv>
         </button>

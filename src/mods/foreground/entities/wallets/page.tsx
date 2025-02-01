@@ -607,6 +607,7 @@ function OfflineContractTokenRow(props: { token: ContractTokenInfo }) {
 
 function NativeTokenMenu(props: { tokenData: NativeTokenData, chainData: ChainData }) {
   const close = useCloseContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const storage = useUserStorageContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const path = usePathContext().getOrThrow()
@@ -677,7 +678,7 @@ function NativeTokenMenu(props: { tokenData: NativeTokenData, chainData: ChainDa
       onKeyDown={send.onKeyDown}
       href={send.href}>
       <Outline.PaperAirplaneIcon className="size-4" />
-      Send
+      {Locale.get(Locale.Send, locale)}
     </WideClickableNakedMenuAnchor>
     <WideClickableNakedMenuAnchor
       aria-disabled>
@@ -689,6 +690,7 @@ function NativeTokenMenu(props: { tokenData: NativeTokenData, chainData: ChainDa
 
 function ContractTokenMenu(props: { tokenData: ContractTokenData, chainData: ChainData }) {
   const close = useCloseContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const storage = useUserStorageContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const path = usePathContext().getOrThrow()
@@ -759,7 +761,7 @@ function ContractTokenMenu(props: { tokenData: ContractTokenData, chainData: Cha
       onKeyDown={send.onKeyDown}
       href={send.href}>
       <Outline.PaperAirplaneIcon className="size-4" />
-      Send
+      {Locale.get(Locale.Send, locale)}
     </WideClickableNakedMenuAnchor>
     <WideClickableNakedMenuAnchor
       aria-disabled>
