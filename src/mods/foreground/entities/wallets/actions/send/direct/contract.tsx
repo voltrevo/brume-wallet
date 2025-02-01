@@ -297,7 +297,7 @@ export function WalletDirectSendScreenContractValue(props: {}) {
     <div className="h-4" />
     <ContrastLabel>
       <div className="flex-none">
-        Target
+        {Locale.get(Locale.Recipient, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput

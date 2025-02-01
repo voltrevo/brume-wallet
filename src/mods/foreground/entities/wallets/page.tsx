@@ -665,12 +665,12 @@ function NativeTokenMenu(props: { tokenData: NativeTokenData, chainData: ChainDa
     <WideClickableNakedMenuButton
       onClick={toggleOrLogAndAlert.run}>
       {favorited ? <Solid.StarIcon className="size-4" /> : <Outline.StarIcon className="size-4" />}
-      {favorited ? "Unfavorite" : "Favorite"}
+      {favorited ? Locale.get(Locale.Delete, locale) : Locale.get(Locale.Add, locale)}
     </WideClickableNakedMenuButton>
     <WideClickableNakedMenuButton
       onClick={fetchOrLogAndAlert.run}>
       <Outline.ArrowPathIcon className="size-4" />
-      Refresh
+      {Locale.get(Locale.Refresh, locale)}
     </WideClickableNakedMenuButton>
     <WideClickableNakedMenuAnchor
       aria-disabled={wallet.type === "readonly"}
@@ -748,12 +748,12 @@ function ContractTokenMenu(props: { tokenData: ContractTokenData, chainData: Cha
     <WideClickableNakedMenuButton
       onClick={toggleOrLogAndAlert.run}>
       {favorited ? <Solid.StarIcon className="size-4" /> : <Outline.StarIcon className="size-4" />}
-      {favorited ? "Unfavorite" : "Favorite"}
+      {favorited ? Locale.get(Locale.Delete, locale) : Locale.get(Locale.Add, locale)}
     </WideClickableNakedMenuButton>
     <WideClickableNakedMenuButton
       onClick={fetchOrLogAndAlert.run}>
       <Outline.ArrowPathIcon className="size-4" />
-      Refresh
+      {Locale.get(Locale.Refresh, locale)}
     </WideClickableNakedMenuButton>
     <WideClickableNakedMenuAnchor
       aria-disabled={wallet.type === "readonly"}
@@ -807,7 +807,7 @@ function TokenRowAnchor(props: { token: TokenData } & { chain: ChainData } & { b
     <div className="grow min-w-0">
       <div className="flex items-center">
         <div className="truncate">
-          {`${token.name} `}<span className="text-default-contrast">on</span>{` ${chain.name}`}
+          {`${token.name} `}<span className="text-default-contrast">—</span>{` ${chain.name}`}
         </div>
       </div>
       <div className="flex items-center text-default-contrast gap-1">

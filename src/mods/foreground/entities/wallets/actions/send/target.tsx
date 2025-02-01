@@ -4,7 +4,7 @@ import { Outline } from "@/libs/icons/icons";
 import { nto } from "@/libs/ntu";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";
-import { ClickableContrastButtonInInputBox, RoundedClickableNakedButton, WideClickableContrastButton } from "@/libs/ui/button";
+import { ClickableContrastButtonInInputBox, RoundedClickableNakedButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { ContrastLabel } from "@/libs/ui/label";
 import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
@@ -154,7 +154,7 @@ export function WalletSendScreenTarget(props: {}) {
     <div className="h-4" />
     <ContrastLabel>
       <div className="flex-none">
-        Target
+        {Locale.get(Locale.Recipient, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput
@@ -181,14 +181,6 @@ export function WalletSendScreenTarget(props: {}) {
         </ClickableContrastButtonInInputBox>
       </div>
     </ContrastLabel>
-    <div className="h-2" />
-    <div className="flex items-center flex-wrap-reverse gap-2">
-      <WideClickableContrastButton
-        onClick={onPeanutClick}>
-        <Outline.LinkIcon className="size-4" />
-        Create Peanut link (beta)
-      </WideClickableContrastButton>
-    </div>
     {maybeEns != null && <>
       <div className="h-2" />
       <div className="po-2 flex items-center bg-default-contrast rounded-xl cursor-pointer"

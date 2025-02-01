@@ -30,6 +30,7 @@ import { WalletTransactionDialog } from "../../eth_sendTransaction";
 
 export function WalletDirectSendScreenNativeValue(props: {}) {
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
 
@@ -239,7 +240,7 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
     <div className="h-4" />
     <ContrastLabel>
       <div className="flex-none">
-        Target
+        {Locale.get(Locale.Recipient, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput
