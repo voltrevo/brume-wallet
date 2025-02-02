@@ -501,7 +501,7 @@ export function FullLandingPage(props: { next?: string }) {
             title="Safari"
             src="/assets/browsers/safari.svg"
             href="/install/iphone">
-            iOS, iPadOS, macOS
+            iPhone, iPad, Mac
           </InstallCard>
           <InstallCard
             highlighted={navigator.userAgent.includes("Android")}
