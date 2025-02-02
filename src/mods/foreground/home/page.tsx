@@ -17,7 +17,7 @@ export function HomePage() {
   const background = useBackgroundContext().getOrThrow()
 
   const totalPricedBalanceQuery = useUserTotalPricedBalance()
-  const totalPricedBalanceDisplay = useDisplayUsd(totalPricedBalanceQuery.data?.get())
+  const totalPricedBalanceDisplay = useDisplayUsd(totalPricedBalanceQuery.data?.get(), locale)
 
   const [persisted, setPersisted] = useState<boolean>()
 
