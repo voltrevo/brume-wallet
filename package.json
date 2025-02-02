@@ -1,6 +1,6 @@
 {
   "name": "@brumeproject/wallet",
-  "version": "0.6.536",
+  "version": "0.7.537",
   "private": true,
   "scripts": {
     "dev": "next dev",

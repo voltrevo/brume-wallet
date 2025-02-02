@@ -7,8 +7,8 @@ android {
         applicationId "eth.brume.wallet"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 536
-        versionName "0.6.536"
+        versionCode 537
+        versionName "0.7.537"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
