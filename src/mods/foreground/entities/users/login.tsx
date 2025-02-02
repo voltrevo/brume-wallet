@@ -97,7 +97,7 @@ export function UserLoginDialog(props: { next?: string }) {
     return null
 
   return <>
-    <div className="grow flex flex-col items-center justify-center h-[300px]">
+    <div className="grow flex flex-col items-center justify-center h-[200px]">
       <UserAvatar className="size-16 text-2xl"
         color={Color.get(maybeUser.color)}
         name={maybeUser.name} />

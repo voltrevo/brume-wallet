@@ -15,7 +15,8 @@ export function NavBar() {
 
   return <div className="w-full po-2 border-b border-b-default-contrast flex items-center">
     <div className="bg-default-contrast rounded-xl po-1 grow flex items-center gap-2 min-w-0">
-      <div className="grow whitespace-nowrap overflow-hidden text-ellipsis text-sm">
+      <div className="grow whitespace-nowrap overflow-hidden text-ellipsis text-sm"
+        dir="ltr">
         <span className="text-default-contrast">
           {`brume:`}
         </span>
