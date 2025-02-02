@@ -1,5 +1,4 @@
 /* eslint-disable @next/next/no-img-element */
-import { useCopy } from "@/libs/copy/copy";
 import { Outline } from "@/libs/icons/icons";
 import { WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
@@ -31,8 +30,6 @@ export function WalletDataReceiveScreen(props: {}) {
     return () => URL.revokeObjectURL(url)
   }, [address])
 
-  const onCopyClick = useCopy(address)
-
   const onShareClick = useCallback(async () => {
     await Result.runAndWrap(() => navigator.share({ text: address }))
   }, [address])
@@ -46,15 +43,13 @@ export function WalletDataReceiveScreen(props: {}) {
       <div className="text-2xl font-medium">
         {wallet.name}
       </div>
-      <button className="text-default-contrast text-center outline-none"
-        onClick={onCopyClick.run}>
-        {onCopyClick.current
-          ? "Copied"
-          : Address.format(address)}
-      </button>
+      <div className="h-2" />
+      <div className="text-default-contrast text-center">
+        {address}
+      </div>
       <div className="h-4" />
       <div className="bg-white rounded-xl p-1">
-        <img className=""
+        <img className="h-[200px] w-auto"
           alt="QR code"
           src={url} />
       </div>
