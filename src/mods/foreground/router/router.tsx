@@ -1,5 +1,5 @@
 import { isWebsite } from "@/libs/platform/platform"
-import { DonePage, PersonalSignPage, TransactPage, TypedSignPage, WalletAndChainSelectPage } from "@/pages/popup"
+import { DonePage, PersonalSignPage, TransactPage, TypedSignPage, WalletSelectPage } from "@/pages/popup"
 import { usePathContext } from "@hazae41/chemin"
 import { Address } from "@hazae41/cubane"
 import { Nullable } from "@hazae41/option"
@@ -77,7 +77,7 @@ export function Router() {
 
   if (matches = path.url.pathname.match(/^\/eth_requestAccounts(\/)?$/))
     return <UserGuardPage>
-      <WalletAndChainSelectPage />
+      <WalletSelectPage />
     </UserGuardPage>
 
   if (matches = path.url.pathname.match(/^\/eth_sendTransaction(\/)?$/))
