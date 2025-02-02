@@ -31,15 +31,14 @@ export function SeedCreatorMenu(props: {}) {
       <Outline.DocumentTextIcon className="size-4" />
       {Locale.get(Locale.Mnemonic, locale)}
     </WideClickableNakedMenuAnchor>
-    {(location.pathname !== "/" && location.pathname !== "/tabbed.html") &&
-      <WideClickableNakedMenuButton
+    {(location.pathname.endsWith("/action.html") || location.pathname.endsWith("/popup.html"))
+      ? <WideClickableNakedMenuButton
         disabled={openHardwareOrAlert.loading}
         onClick={openHardwareOrAlert.run}>
         <Outline.SwatchIcon className="size-4" />
         {Locale.get(Locale.Hardware, locale)}
-      </WideClickableNakedMenuButton>}
-    {(location.pathname === "/" || location.pathname === "/tabbed.html") &&
-      <WideClickableNakedMenuAnchor
+      </WideClickableNakedMenuButton>
+      : <WideClickableNakedMenuAnchor
         onClick={hardware.onClick}
         onKeyDown={hardware.onKeyDown}
         href={hardware.href}>
