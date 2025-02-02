@@ -129,7 +129,7 @@ export function RawWalletCard(props: { type?: WalletData["type"] } & { uuid: str
       <div className="cursor-pointer text-white-half-contrast"
         onClick={onClickCopyEthereumAddress}>
         {copyEthereumAddress.current
-          ? "Copied"
+          ? Locale.get(Locale.Copied, locale)
           : ensOrAddressDisplay}
       </div>
     </div>
