@@ -37,8 +37,6 @@
 		9A4E099A2C6B320400DDEA09 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E09792C6B320400DDEA09 /* index.html */; };
 		9A4E099B2C6B320400DDEA09 /* injected_script.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E097A2C6B320400DDEA09 /* injected_script.js */; };
 		9A4E099C2C6B320400DDEA09 /* injected_script.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E097A2C6B320400DDEA09 /* injected_script.js */; };
-		9A4E099D2C6B320400DDEA09 /* themer.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E097B2C6B320400DDEA09 /* themer.js */; };
-		9A4E099E2C6B320400DDEA09 /* themer.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E097B2C6B320400DDEA09 /* themer.js */; };
 		9A4E099F2C6B320400DDEA09 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E097C2C6B320400DDEA09 /* popup.html */; };
 		9A4E09A02C6B320400DDEA09 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 9A4E097C2C6B320400DDEA09 /* popup.html */; };
 		C7C5EB3A2B7421CE005E8F8A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C5EB392B7421CE005E8F8A /* AppDelegate.swift */; };
@@ -123,7 +121,6 @@
 		9A4E09782C6B320400DDEA09 /* opener.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = opener.html; path = ../../../dist/safari/opener.html; sourceTree = "<group>"; };
 		9A4E09792C6B320400DDEA09 /* index.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = index.html; path = ../../../dist/safari/index.html; sourceTree = "<group>"; };
 		9A4E097A2C6B320400DDEA09 /* injected_script.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = injected_script.js; path = ../../../dist/safari/injected_script.js; sourceTree = "<group>"; };
-		9A4E097B2C6B320400DDEA09 /* themer.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = themer.js; path = ../../../dist/safari/themer.js; sourceTree = "<group>"; };
 		9A4E097C2C6B320400DDEA09 /* popup.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = popup.html; path = ../../../dist/safari/popup.html; sourceTree = "<group>"; };
 		C7C5EB2A2B7421CD005E8F8A /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = ../Base.lproj/Main.html; sourceTree = "<group>"; };
 		C7C5EB2B2B7421CD005E8F8A /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
@@ -201,7 +198,6 @@
 				9A4E09732C6B320300DDEA09 /* service_worker.js */,
 				9A4E096D2C6B320300DDEA09 /* maskicon.png */,
 				9A4E09702C6B320300DDEA09 /* tabbed.html */,
-				9A4E097B2C6B320400DDEA09 /* themer.js */,
 			);
 			name = Resources;
 			path = "all-ext";
@@ -460,7 +456,6 @@
 				9A4E09972C6B320400DDEA09 /* opener.html in Resources */,
 				9A4E09872C6B320400DDEA09 /* tabbed.html in Resources */,
 				9A4E099B2C6B320400DDEA09 /* injected_script.js in Resources */,
-				9A4E099D2C6B320400DDEA09 /* themer.js in Resources */,
 				9A4E098B2C6B320400DDEA09 /* _next in Resources */,
 				9A4E097F2C6B320400DDEA09 /* manifest.json in Resources */,
 				9A4E09892C6B320400DDEA09 /* offscreen.js in Resources */,
@@ -484,7 +479,6 @@
 				9A4E09982C6B320400DDEA09 /* opener.html in Resources */,
 				9A4E09882C6B320400DDEA09 /* tabbed.html in Resources */,
 				9A4E099C2C6B320400DDEA09 /* injected_script.js in Resources */,
-				9A4E099E2C6B320400DDEA09 /* themer.js in Resources */,
 				9A4E098C2C6B320400DDEA09 /* _next in Resources */,
 				9A4E09802C6B320400DDEA09 /* manifest.json in Resources */,
 				9A4E098A2C6B320400DDEA09 /* offscreen.js in Resources */,
