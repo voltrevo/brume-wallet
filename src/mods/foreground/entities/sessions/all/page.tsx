@@ -226,6 +226,7 @@ function IndexedBlobbyLoader(props: OkProps<[number, Nullable<BlobbyData>]> & { 
 export function SessionMenu(props: { sessionData: SessionData }) {
   const { sessionData } = props
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
 
   const chains = useCoords(path, `/${sessionData.id}/chains`)
@@ -252,7 +253,7 @@ export function SessionMenu(props: { sessionData: SessionData }) {
       disabled={disconnectOrAlert.loading}
       onClick={disconnectOrAlert.run}>
       <Outline.XMarkIcon className="size-4" />
-      Disconnect
+      {Locale.get(Locale.Disconnect, locale)}
     </WideClickableNakedMenuButton>
   </div>
 }
