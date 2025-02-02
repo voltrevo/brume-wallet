@@ -58,7 +58,7 @@ export function HomePage() {
           </div>
         </h1>
         <div className="grow" />
-        {!persisted && !ignored && <>
+        {(persisted === false) && !ignored && <>
           <div className="h-4" />
           <div className="p-4 bg-default-contrast rounded-xl max-w-sm">
             <h3 className="font-medium text-center text-lg">
