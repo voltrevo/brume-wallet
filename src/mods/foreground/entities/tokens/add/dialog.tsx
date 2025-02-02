@@ -65,25 +65,23 @@ export function TokenAddDialog(props: {}) {
   }), [tokenQuery.data, close])
 
   const error = useMemo(() => {
-    if (!defAddress)
-      return `Please enter an address`
     if (maybeAddress == null)
-      return `Invalid address`
+      return Locale.get(Locale.ValidAddressRequired, locale)
     if (tokenQuery.data != null)
-      return undefined
+      return
     if (tokenQuery.error != null)
-      return `Could not fetch token`
-    return `Loading...`
-  }, [defAddress, maybeAddress, tokenQuery.data, tokenQuery.error])
+      return Locale.get(Locale.AnErrorOccurred, locale)
+    return Locale.get(Locale.Loading, locale)
+  }, [locale, maybeAddress, tokenQuery.data, tokenQuery.error])
 
   return <>
     <Dialog.Title>
-      New token
+      {Locale.get(Locale.NewToken, locale)}
     </Dialog.Title>
     <div className="h-4" />
     <ContrastLabel>
       <div className="flex-none">
-        Chain
+        {Locale.get(Locale.Chain, locale)}
       </div>
       <div className="w-4 grow" />
       <select className="text-right bg-transparent outline-none text-ellipsis overflow-x-hidden appearance-none"
@@ -100,7 +98,7 @@ export function TokenAddDialog(props: {}) {
     <div className="h-2" />
     <ContrastLabel>
       <div className="flex-none">
-        Address
+        {Locale.get(Locale.Address, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput
