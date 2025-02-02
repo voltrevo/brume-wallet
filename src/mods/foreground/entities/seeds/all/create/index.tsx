@@ -4,11 +4,14 @@ import { Outline } from "@/libs/icons/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { WideClickableNakedMenuAnchor } from "@/libs/ui/anchor";
 import { WideClickableNakedMenuButton } from "@/libs/ui/button";
+import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
+import { Locale } from "@/mods/foreground/locale";
 import { useCoords, usePathContext } from "@hazae41/chemin";
 import { useCloseContext } from "@hazae41/react-close-context";
 import { MouseEvent } from "react";
 
 export function SeedCreatorMenu(props: {}) {
+  const locale = useLocaleContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
   const path = usePathContext().getOrThrow()
 
@@ -26,14 +29,14 @@ export function SeedCreatorMenu(props: {}) {
       onKeyDown={mnemonic.onKeyDown}
       href={mnemonic.href}>
       <Outline.DocumentTextIcon className="size-4" />
-      Mnemonic
+      {Locale.get(Locale.Mnemonic, locale)}
     </WideClickableNakedMenuAnchor>
     {(location.pathname !== "/" && location.pathname !== "/tabbed.html") &&
       <WideClickableNakedMenuButton
         disabled={openHardwareOrAlert.loading}
         onClick={openHardwareOrAlert.run}>
         <Outline.SwatchIcon className="size-4" />
-        Hardware
+        {Locale.get(Locale.Hardware, locale)}
       </WideClickableNakedMenuButton>}
     {(location.pathname === "/" || location.pathname === "/tabbed.html") &&
       <WideClickableNakedMenuAnchor
@@ -41,7 +44,7 @@ export function SeedCreatorMenu(props: {}) {
         onKeyDown={hardware.onKeyDown}
         href={hardware.href}>
         <Outline.SwatchIcon className="size-4" />
-        Hardware
+        {Locale.get(Locale.Hardware, locale)}
       </WideClickableNakedMenuAnchor>}
   </div>
 }

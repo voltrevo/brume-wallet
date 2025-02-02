@@ -224,13 +224,13 @@ export function SeededWalletCreatorDialog(props: {}) {
       {Locale.get(Locale.NewWallet, locale)}
     </Dialog.Title>
     <div className="h-4" />
-    <div className="flex-1 flex flex-col items-center justify-center">
+    <div className="grow flex flex-col items-center justify-center h-[300px]">
       <div className="w-full max-w-sm">
         <EmptyRectangularCard />
       </div>
     </div>
     <div className="h-2" />
-    <div className="flex-1 flex flex-col">
+    <div className="grow flex flex-col">
       <div className="grow" />
       {NameInput}
       <div className="h-2" />

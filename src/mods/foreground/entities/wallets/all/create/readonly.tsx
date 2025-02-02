@@ -135,7 +135,7 @@ export function ReadonlyWalletCreatorDialog(props: {}) {
       {Locale.get(Locale.NewWallet, locale)}
     </Dialog.Title>
     <div className="h-4" />
-    <div className="grow flex flex-col items-center justify-center h-[400px]">
+    <div className="grow flex flex-col items-center justify-center h-[300px]">
       <div className="w-full max-w-sm">
         {maybeAddress != null &&
           <div className="w-full aspect-video rounded-xl">

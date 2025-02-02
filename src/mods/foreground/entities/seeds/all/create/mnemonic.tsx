@@ -221,10 +221,10 @@ export function StandaloneSeedCreatorDialog(props: {}) {
 
   return <>
     <Dialog.Title>
-      New seed
+      {Locale.get(Locale.NewSeed, locale)}
     </Dialog.Title>
     <div className="h-4" />
-    <div className="flex-1 flex flex-col items-center justify-center">
+    <div className="grow flex flex-col items-center justify-center h-[300px]">
       <div className="w-full max-w-sm">
         <div className="w-full aspect-video rounded-xl">
           <RawSeedCard
