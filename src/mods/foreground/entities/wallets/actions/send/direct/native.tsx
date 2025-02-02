@@ -7,11 +7,10 @@ import { useConstant } from "@/libs/react/ref";
 import { ClickableContrastButtonInInputBox, RoundedClickableNakedButton, WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { ContrastLabel } from "@/libs/ui/label";
-import { SmallUnflexLoading } from "@/libs/ui/loading";
 import { GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";
 import { urlOf } from "@/libs/url/url";
 import { randomUUID } from "@/libs/uuid/uuid";
-import { ExecutedTransactionData, PendingTransactionData, SignedTransactionData, TransactionData } from "@/mods/background/service_worker/entities/transactions/data";
+import { ExecutedTransactionData } from "@/mods/background/service_worker/entities/transactions/data";
 import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
 import { Locale } from "@/mods/foreground/locale";
 import { useNativeTokenBalance, useNativeTokenPricedBalance } from "@/mods/universal/ethereum/mods/tokens/mods/balance/hooks";
@@ -26,7 +25,7 @@ import { useEnsLookup } from "../../../../names/data";
 import { useTransactionTrial, useTransactionWithReceipt } from "../../../../transactions/data";
 import { useWalletDataContext } from "../../../context";
 import { useEthereumContext } from "../../../data";
-import { WalletTransactionDialog } from "../../eth_sendTransaction";
+import { TransactionCard, WalletTransactionDialog } from "../../eth_sendTransaction";
 
 export function WalletDirectSendScreenNativeValue(props: {}) {
   const path = usePathContext().getOrThrow()
@@ -450,123 +449,6 @@ export function ExecutedTransactionCard(props: { data: ExecutedTransactionData }
             <Outline.ArrowTopRightOnSquareIcon className="size-4" />
           </GapperAndClickerInAnchorDiv>
         </a>
-      </div>
-    </div>
-  </div>
-}
-
-export function TransactionCard(props: { data: TransactionData } & { onSend: (data: TransactionData) => void } & { onRetry: (data: TransactionData) => void }) {
-  const { data, onSend, onRetry } = props
-
-  if (data?.type === "signed")
-    return <SignedTransactionCard
-      onSend={onSend}
-      data={data} />
-
-  if (data?.type === "pending")
-    return <PendingTransactionCard
-      onRetry={onRetry}
-      data={data} />
-
-  if (data?.type === "executed")
-    return <ExecutedTransactionCard
-      data={data} />
-
-  return null
-}
-
-export function PendingTransactionCard(props: { data: PendingTransactionData } & { onRetry: (data: TransactionData) => void }) {
-  const { data, onRetry } = props
-
-  const onCopy = useCopy(data.hash)
-
-  const onRetryClick = useCallback(() => {
-    onRetry(data)
-  }, [data, onRetry])
-
-  const chainData = chainDataByChainId[data.chainId]
-
-  return <div className="po-2 flex items-center bg-default-contrast rounded-xl">
-    <div className="flex flex-col truncate">
-      <div className="flex items-center">
-        <SmallUnflexLoading />
-        <div className="w-2" />
-        <div className="font-medium">
-          Transaction sent
-        </div>
-      </div>
-      <div className="text-default-contrast truncate">
-        {data.hash}
-      </div>
-      <div className="h-2" />
-      <div className="flex items-center gap-1">
-        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
-          onClick={onCopy.run}>
-          <GapperAndClickerInAnchorDiv>
-            Copy
-            {onCopy.current
-              ? <Outline.CheckIcon className="size-4" />
-              : <Outline.ClipboardIcon className="size-4" />}
-          </GapperAndClickerInAnchorDiv>
-        </button>
-        <a className="group px-2 bg-default-contrast rounded-full"
-          target="_blank" rel="noreferrer"
-          href={`${chainData.etherscan}/tx/${data.hash}`}>
-          <GapperAndClickerInAnchorDiv>
-            Open
-            <Outline.ArrowTopRightOnSquareIcon className="size-4" />
-          </GapperAndClickerInAnchorDiv>
-        </a>
-        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
-          onClick={onRetryClick}>
-          <GapperAndClickerInAnchorDiv>
-            Retry
-            <Outline.BoltIcon className="size-4" />
-          </GapperAndClickerInAnchorDiv>
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
-export function SignedTransactionCard(props: { data: SignedTransactionData } & { onSend: (data: TransactionData) => void }) {
-  const locale = useLocaleContext().getOrThrow()
-  const { data, onSend } = props
-
-  const onCopy = useCopy(data.data)
-
-  const onSendClick = useCallback(() => {
-    onSend(data)
-  }, [data, onSend])
-
-  return <div className="po-2 flex items-center bg-default-contrast rounded-xl">
-    <div className="flex flex-col truncate">
-      <div className="flex items-center">
-        <div className="font-medium">
-          Transaction signed
-        </div>
-      </div>
-      <div className="text-default-contrast truncate">
-        {data.data}
-      </div>
-      <div className="h-2" />
-      <div className="flex items-center gap-1">
-        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
-          onClick={onCopy.run}>
-          <GapperAndClickerInAnchorDiv>
-            Copy
-            {onCopy.current
-              ? <Outline.CheckIcon className="size-4" />
-              : <Outline.ClipboardIcon className="size-4" />}
-          </GapperAndClickerInAnchorDiv>
-        </button>
-        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
-          onClick={onSendClick}>
-          <GapperAndClickerInAnchorDiv>
-            {Locale.get(Locale.Send, locale)}
-            <Outline.PaperAirplaneIcon className="size-4" />
-          </GapperAndClickerInAnchorDiv>
-        </button>
       </div>
     </div>
   </div>

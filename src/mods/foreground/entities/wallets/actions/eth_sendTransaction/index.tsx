@@ -1156,19 +1156,112 @@ export function WalletTransactionDialog(props: {}) {
     {maybeIsEip1559 === false && maybeFinalLegacyGasCost != null && <>
       <div className="h-2" />
       <div className="text-default-contrast">
-        This transaction is expected to cost {finalLegacyGasCostDisplay}
+        {Locale.get({
+          en: `This transaction is expected to cost ${finalLegacyGasCostDisplay}`,
+          zh: `预计此交易将花费 ${finalLegacyGasCostDisplay}`,
+          hi: `इस लेन-देन की लागत ${finalLegacyGasCostDisplay} होने की संभावना है`,
+          es: `Se espera que esta transacción cueste ${finalLegacyGasCostDisplay}`,
+          ar: `من المتوقع أن تكلف هذه المعاملة ${finalLegacyGasCostDisplay}`,
+          fr: `Cette transaction devrait coûter ${finalLegacyGasCostDisplay}`,
+          de: `Diese Transaktion wird voraussichtlich ${finalLegacyGasCostDisplay} kosten`,
+          ru: `Ожидается, что эта транзакция обойдется в ${finalLegacyGasCostDisplay}`,
+          pt: `Esta transação deve custar ${finalLegacyGasCostDisplay}`,
+          ja: `このトランザクションの予想コストは ${finalLegacyGasCostDisplay} です`,
+          pa: `ਇਹ ਲੇਨ-ਦੇਨ ${finalLegacyGasCostDisplay} ਦਾ ਖਰਚ ਹੋਣ ਦੀ ਉਮੀਦ ਹੈ`,
+          bn: `এই লেনদেনটি খরচ করবে ${finalLegacyGasCostDisplay}`,
+          id: `Transaksi ini diperkirakan akan menghabiskan ${finalLegacyGasCostDisplay}`,
+          ur: `اس لین دین کی قیمت ${finalLegacyGasCostDisplay} ہونے کی توقع ہے`,
+          ms: `Transaksi ini dijangka akan menghabiskan ${finalLegacyGasCostDisplay}`,
+          it: `Questa transazione dovrebbe costare ${finalLegacyGasCostDisplay}`,
+          tr: `Bu işlemin maliyetinin ${finalLegacyGasCostDisplay} olması bekleniyor`,
+          ta: `இந்த பரிவர்த்தனையின் செலவு ${finalLegacyGasCostDisplay} ஆகும்`,
+          te: `ఈ లేనిదానికి ఖర్చు ${finalLegacyGasCostDisplay} అంశం ఉంది`,
+          ko: `이 거래는 ${finalLegacyGasCostDisplay}으로 예상됩니다`,
+          vi: `Giao dịch này dự kiến sẽ tốn ${finalLegacyGasCostDisplay}`,
+          pl: `Ta transakcja ma kosztować ${finalLegacyGasCostDisplay}`,
+          ro: `Se așteaptă ca această tranzacție să coste ${finalLegacyGasCostDisplay}`,
+          nl: `Deze transactie wordt naar verwachting ${finalLegacyGasCostDisplay}`,
+          el: `Αναμένεται ότι αυτή η συναλλαγή θα κοστίσει ${finalLegacyGasCostDisplay}`,
+          th: `คาดว่าธุรกรรมนี้จะต้องใช้ ${finalLegacyGasCostDisplay}`,
+          cs: `Tato transakce by měla stát ${finalLegacyGasCostDisplay}`,
+          hu: `Ez a tranzakció várhatóan ${finalLegacyGasCostDisplay}`,
+          sv: `Denna transaktion förväntas kosta ${finalLegacyGasCostDisplay}`,
+          da: `Denne transaktion forventes at koste ${finalLegacyGasCostDisplay}`,
+        }, locale)}
       </div>
     </>}
     {maybeIsEip1559 === true && maybeFinalMaxEip1559GasCost != null && maybeFinalMinEip1559GasCost == null && <>
       <div className="h-2" />
       <div className="text-default-contrast">
-        This transaction can cost up to {finalMaxEip1559GasCostDisplay}
+        {Locale.get({
+          en: `This transaction can cost up to ${finalMaxEip1559GasCostDisplay}`,
+          zh: `此交易最多可能花费 ${finalMaxEip1559GasCostDisplay}`,
+          hi: `इस लेन-देन की लागत अधिकतम ${finalMaxEip1559GasCostDisplay} हो सकती है`,
+          es: `Esta transacción puede costar hasta ${finalMaxEip1559GasCostDisplay}`,
+          ar: `يمكن أن تكلف هذه المعاملة حتى ${finalMaxEip1559GasCostDisplay}`,
+          fr: `Cette transaction peut coûter jusqu'à ${finalMaxEip1559GasCostDisplay}`,
+          de: `Diese Transaktion kann bis zu ${finalMaxEip1559GasCostDisplay} kosten`,
+          ru: `Эта транзакция может обойтись в ${finalMaxEip1559GasCostDisplay}`,
+          pt: `Esta transação pode custar até ${finalMaxEip1559GasCostDisplay}`,
+          ja: `このトランザクションの最大コストは ${finalMaxEip1559GasCostDisplay} です`,
+          pa: `ਇਹ ਲੇਨ-ਦੇਨ ${finalMaxEip1559GasCostDisplay} ਤੱਕ ਦਾ ਖਰਚ ਹੋ ਸਕਦਾ ਹੈ`,
+          bn: `এই লেনদেনটি সর্বাধিক ${finalMaxEip1559GasCostDisplay} খরচ করতে পারে`,
+          id: `Transaksi ini dapat menghabiskan hingga ${finalMaxEip1559GasCostDisplay}`,
+          ur: `اس لین دین کی قیمت ${finalMaxEip1559GasCostDisplay} تک ہو سکتی ہے`,
+          ms: `Transaksi ini boleh menghabiskan sehingga ${finalMaxEip1559GasCostDisplay}`,
+          it: `Questa transazione può costare fino a ${finalMaxEip1559GasCostDisplay}`,
+          tr: `Bu işlem ${finalMaxEip1559GasCostDisplay} 'e kadar mal olabilir`,
+          ta: `இந்த பரிவர்த்தனையின் அதிகபட்ச செலவு ${finalMaxEip1559GasCostDisplay}`,
+          te: `ఈ లేనిదానికి అధికంగా ${finalMaxEip1559GasCostDisplay} ఖర్చు అవచ్చు`,
+          ko: `이 거래는 최대 ${finalMaxEip1559GasCostDisplay}으로 비용이 발생할 수 있습니다`,
+          vi: `Giao dịch này có thể tốn tới ${finalMaxEip1559GasCostDisplay}`,
+          pl: `Ta transakcja może kosztować do ${finalMaxEip1559GasCostDisplay}`,
+          ro: `Această tranzacție poate costa până la ${finalMaxEip1559GasCostDisplay}`,
+          nl: `Deze transactie kan maximaal ${finalMaxEip1559GasCostDisplay} kosten`,
+          el: `Αυτή η συναλλαγή μπορεί να κοστίσει μέχρι ${finalMaxEip1559GasCostDisplay}`,
+          th: `ธุรกรรมนี้สามารถใช้ได้สูงสุด ${finalMaxEip1559GasCostDisplay}`,
+          cs: `Tato transakce může stát až ${finalMaxEip1559GasCostDisplay}`,
+          hu: `Ez a tranzakció legfeljebb ${finalMaxEip1559GasCostDisplay}`,
+          sv: `Denna transaktion kan kosta upp till ${finalMaxEip1559GasCostDisplay}`,
+          da: `Denne transaktion kan koste op til ${finalMaxEip1559GasCostDisplay}`,
+        }, locale)}
       </div>
     </>}
     {maybeIsEip1559 === true && maybeFinalMaxEip1559GasCost != null && maybeFinalMinEip1559GasCost != null && <>
       <div className="h-2" />
       <div className="text-default-contrast">
-        This transaction is expected to cost {finalMinEip1559GasCostDisplay} but can cost up to {finalMaxEip1559GasCostDisplay}
+        {Locale.get({
+          en: `This transaction is expected to cost ${finalMinEip1559GasCostDisplay} but can cost up to ${finalMaxEip1559GasCostDisplay}`,
+          zh: `预计此交易将花费 ${finalMinEip1559GasCostDisplay} 但最多可能花费 ${finalMaxEip1559GasCostDisplay}`,
+          hi: `इस लेन-देन की लागत ${finalMinEip1559GasCostDisplay} होने की संभावना है लेकिन अधिकतम ${finalMaxEip1559GasCostDisplay} हो सकती है`,
+          es: `Se espera que esta transacción cueste ${finalMinEip1559GasCostDisplay} pero puede costar hasta ${finalMaxEip1559GasCostDisplay}`,
+          ar: `من المتوقع أن تكلف هذه المعاملة ${finalMinEip1559GasCostDisplay} ولكن يمكن أن تكلف حتى ${finalMaxEip1559GasCostDisplay}`,
+          fr: `Cette transaction devrait coûter ${finalMinEip1559GasCostDisplay} mais peut coûter jusqu'à ${finalMaxEip1559GasCostDisplay}`,
+          de: `Diese Transaktion wird voraussichtlich ${finalMinEip1559GasCostDisplay} kosten, kann aber bis zu ${finalMaxEip1559GasCostDisplay} kosten`,
+          ru: `Ожидается, что эта транзакция обойдется в ${finalMinEip1559GasCostDisplay}, но может обойтись в ${finalMaxEip1559GasCostDisplay}`,
+          pt: `Esta transação deve custar ${finalMinEip1559GasCostDisplay} mas pode custar até ${finalMaxEip1559GasCostDisplay}`,
+          ja: `このトランザクションの予想コストは ${finalMinEip1559GasCostDisplay} ですが、最大で ${finalMaxEip1559GasCostDisplay} かかることがあります`,
+          pa: `ਇਹ ਲੇਨ-ਦੇਨ ${finalMinEip1559GasCostDisplay} ਦਾ ਖਰਚ ਕਰ ਸਕਦਾ ਹੈ ਪਰ ਅਧਿਕਤਮ ${finalMaxEip1559GasCostDisplay} ਤੱਕ ਖਰਚ ਹੋ ਸਕਦਾ ਹੈ`,
+          bn: `এই লেনদেনটি খরচ করতে পারে ${finalMinEip1559GasCostDisplay} তবে সর্বাধিক ${finalMaxEip1559GasCostDisplay}`,
+          id: `Transaksi ini diperkirakan akan menghabiskan ${finalMinEip1559GasCostDisplay} tetapi bisa menghabiskan hingga ${finalMaxEip1559GasCostDisplay}`,
+          ur: `اس لین دین کی قیمت ${finalMinEip1559GasCostDisplay} ہونے کی توقع ہے لیکن یہ ${finalMaxEip1559GasCostDisplay} تک ہو سکتی ہے`,
+          ms: `Transaksi ini dijangka akan menghabiskan ${finalMinEip1559GasCostDisplay} tetapi boleh menghabiskan sehingga ${finalMaxEip1559GasCostDisplay}`,
+          it: `Questa transazione dovrebbe costare ${finalMinEip1559GasCostDisplay} ma può costare fino a ${finalMaxEip1559GasCostDisplay}`,
+          tr: `Bu işlem ${finalMinEip1559GasCostDisplay} 'e mal olacak ama ${finalMaxEip1559GasCostDisplay} 'e kadar mal olabilir`,
+          ta: `இந்த பரிவர்த்தனையின் செலவு ${finalMinEip1559GasCostDisplay} ஆகும், ஆனால் அதிகபட்சம் ${finalMaxEip1559GasCostDisplay} ஆகும்`,
+          te: `ఈ లేనిదానికి ఖర్చు ${finalMinEip1559GasCostDisplay} అంశం ఉంది కానీ అధికంగా ${finalMaxEip1559GasCostDisplay} అంశం ఉంది`,
+          ko: `이 거래는 ${finalMinEip1559GasCostDisplay}으로 예상됩니다만 최대 ${finalMaxEip1559GasCostDisplay}으로 비용이 발생할 수 있습니다`,
+          vi: `Giao dịch này dự kiến sẽ tốn ${finalMinEip1559GasCostDisplay} nhưng có thể tốn tới ${finalMaxEip1559GasCostDisplay}`,
+          pl: `Ta transakcja ma kosztować ${finalMinEip1559GasCostDisplay} ale może kosztować do ${finalMaxEip1559GasCostDisplay}`,
+          ro: `Această tranzacție se așteaptă să coste ${finalMinEip1559GasCostDisplay} dar poate costa până la ${finalMaxEip1559GasCostDisplay}`,
+          nl: `Deze transactie wordt naar verwachting ${finalMinEip1559GasCostDisplay} maar kan maximaal ${finalMaxEip1559GasCostDisplay} kosten`,
+          el: `Αναμένεται αυτή η συναλλαγή να κοστίζει ${finalMinEip1559GasCostDisplay} αλλά μπορεί να κοστίσει μέχρι ${finalMaxEip1559GasCostDisplay}`,
+          th: `ธุรกรรมนี้คาดว่าจะใช้ ${finalMinEip1559GasCostDisplay} แต่สามารถใช้ได้สูงสุด ${finalMaxEip1559GasCostDisplay}`,
+          cs: `Tato transakce by měla stát ${finalMinEip1559GasCostDisplay} ale může stát až ${finalMaxEip1559GasCostDisplay}`,
+          hu: `Ez a tranzakció várhatóan ${finalMinEip1559GasCostDisplay} de legfeljebb ${finalMaxEip1559GasCostDisplay}`,
+          sv: `Denna transaktion förväntas kosta ${finalMinEip1559GasCostDisplay} men kan kosta upp till ${finalMaxEip1559GasCostDisplay}`,
+          da: `Denne transaktion forventes at koste ${finalMinEip1559GasCostDisplay}, men kan koste op til ${finalMaxEip1559GasCostDisplay}`
+        }, locale)}
       </div>
     </>}
     <div className="h-4 grow" />
@@ -1278,6 +1371,7 @@ export function TransactionCard(props: { data: TransactionData } & { onSend: (da
 }
 
 export function PendingTransactionCard(props: { data: PendingTransactionData } & { onRetry: (data: TransactionData) => void }) {
+  const locale = useLocaleContext().getOrThrow()
   const { data, onRetry } = props
 
   const onCopy = useCopy(data.hash)
@@ -1294,7 +1388,38 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
         <SmallUnflexLoading />
         <div className="w-2" />
         <div className="font-medium">
-          Transaction sent
+          {Locale.get({
+            en: "Transaction sent",
+            zh: "交易已发送",
+            hi: "लेन-देन भेजा गया",
+            es: "Transacción enviada",
+            ar: "تم إرسال المعاملة",
+            fr: "Transaction envoyée",
+            de: "Transaktion gesendet",
+            ru: "Транзакция отправлен",
+            pt: "Transação enviada",
+            ja: "トランザクションが送信されました",
+            pa: "ਲੇਨ-ਦੇਨ ਭੇਜਿਆ ਗਿਆ",
+            bn: "লেনদেন প্রেরিত",
+            id: "Transaksi dikirim",
+            ur: "لین دین بھیجا گیا",
+            ms: "Transaksi dihantar",
+            it: "Transazione inviata",
+            tr: "İşlem gönderildi",
+            ta: "பரிவர்த்தனை அனுப்பப்பட்டது",
+            te: "లేనిదానికి పంపబడింది",
+            ko: "거래가 전송되었습니다",
+            vi: "Giao dịch đã được gửi",
+            pl: "Transakcja wysłana",
+            ro: "Tranzacția a fost trimisă",
+            nl: "Transactie verzonden",
+            el: "Η συναλλαγή στάλθηκε",
+            th: "ธุรกรรมถูกส่ง",
+            cs: "Transakce odeslána",
+            hu: "Tranzakció elküldve",
+            sv: "Transaktionen skickad",
+            da: "Transaktion sendt",
+          }, locale)}
         </div>
       </div>
       <div className="text-default-contrast truncate">
@@ -1305,7 +1430,7 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
         <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
           <GapperAndClickerInAnchorDiv>
-            Copy
+            {Locale.get(Locale.Copy, locale)}
             {onCopy.current
               ? <Outline.CheckIcon className="size-4" />
               : <Outline.ClipboardIcon className="size-4" />}
@@ -1315,17 +1440,17 @@ export function PendingTransactionCard(props: { data: PendingTransactionData } &
           target="_blank" rel="noreferrer"
           href={`${chainData.etherscan}/tx/${data.hash}`}>
           <GapperAndClickerInAnchorDiv>
-            Open
+            {Locale.get(Locale.Open, locale)}
             <Outline.ArrowTopRightOnSquareIcon className="size-4" />
           </GapperAndClickerInAnchorDiv>
         </a>
-        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+        {/* <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onRetryClick}>
           <GapperAndClickerInAnchorDiv>
             Retry
             <Outline.BoltIcon className="size-4" />
           </GapperAndClickerInAnchorDiv>
-        </button>
+        </button> */}
       </div>
     </div>
   </div>
@@ -1345,7 +1470,38 @@ export function SignedTransactionCard(props: { data: SignedTransactionData } & {
     <div className="flex flex-col truncate">
       <div className="flex items-center">
         <div className="font-medium">
-          Transaction signed
+          {Locale.get({
+            en: "Transaction signed",
+            zh: "交易已签名",
+            hi: "लेन-देन हस्ताक्षरित",
+            es: "Transacción firmada",
+            ar: "تم توقيع المعاملة",
+            fr: "Transaction signée",
+            de: "Transaktion signiert",
+            ru: "Транзакция подписана",
+            pt: "Transação assinada",
+            ja: "トランザクションが署名されました",
+            pa: "ਲੇਨ-ਦੇਨ ਦਾ ਹਸਤਾਕਾਰ ਕੀਤਾ ਗਿਆ",
+            bn: "লেনদেন স্বাক্ষরিত",
+            id: "Transaksi ditandatangani",
+            ur: "لین دین کا دستخط کیا گیا",
+            ms: "Transaksi ditandatangani",
+            it: "Transazione firmata",
+            tr: "İşlem imzalandı",
+            ta: "பரிவர்த்தனை கையொப்பம் செய்யப்பட்டது",
+            te: "లేనిదానికి సంతకం చేయబడింది",
+            ko: "거래가 서명되었습니다",
+            vi: "Giao dịch đã được ký",
+            pl: "Transakcja podpisana",
+            ro: "Tranzacția semnată",
+            nl: "Transactie ondertekend",
+            el: "Η συναλλαγή υπογράφηκε",
+            th: "ธุรกรรมถูกลงลายมือ",
+            cs: "Transakce byla podepsána",
+            hu: "A tranzakció aláírva",
+            sv: "Transaktionen signerad",
+            da: "Transaktion underskrevet",
+          }, locale)}
         </div>
       </div>
       <div className="text-default-contrast truncate">
@@ -1356,19 +1512,19 @@ export function SignedTransactionCard(props: { data: SignedTransactionData } & {
         <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onCopy.run}>
           <GapperAndClickerInAnchorDiv>
-            Copy
+            {Locale.get(Locale.Copy, locale)}
             {onCopy.current
               ? <Outline.CheckIcon className="size-4" />
               : <Outline.ClipboardIcon className="size-4" />}
           </GapperAndClickerInAnchorDiv>
         </button>
-        <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
+        {/* <button className="group px-2 bg-default-contrast rounded-full outline-none disabled:opacity-50 transition-opacity"
           onClick={onSendClick}>
           <GapperAndClickerInAnchorDiv>
             {Locale.get(Locale.Send, locale)}
             <Outline.PaperAirplaneIcon className="size-4" />
           </GapperAndClickerInAnchorDiv>
-        </button>
+        </button> */}
       </div>
     </div>
   </div>

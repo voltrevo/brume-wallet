@@ -199,7 +199,7 @@ export function WalletSendScreenTarget(props: {}) {
       </div>
     </>}
     <div className="h-4" />
-    <div className="flex items-center">
+    {/* <div className="flex items-center">
       <button className="text-lg font-medium text-default-contrast data-[active=true]:text-default"
         onClick={onRecentsClick}
         data-active={mode === "recents"}>
@@ -212,7 +212,7 @@ export function WalletSendScreenTarget(props: {}) {
         Contacts
       </button>
     </div>
-    <div className="h-2" />
+    <div className="h-2" /> */}
     <div className="po-2 flex items-center bg-default-contrast rounded-xl cursor-pointer"
       role="button"
       onClick={onBrumeClick}>
@@ -228,9 +228,6 @@ export function WalletSendScreenTarget(props: {}) {
           brume.eth
         </div>
       </div>
-    </div>
-    <div className="grow flex flex-col items-center justify-center">
-      {Locale.get(Locale.ComingSoon, locale)}...
     </div>
   </>
 }
