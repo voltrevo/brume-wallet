@@ -79,6 +79,7 @@ export function WalletsPage() {
 
 export function WalletsBody() {
   const path = usePathContext().getOrThrow()
+  const locale = useLocaleContext().getOrThrow()
 
   const walletsQuery = useWallets()
   const maybeWallets = walletsQuery.current?.getOrNull()
@@ -116,7 +117,7 @@ export function WalletsBody() {
         <WideClickableContrastAnchor
           href="#/wallets/trash">
           <Outline.TrashIcon className="size-5" />
-          Trash ({maybeTrashedWallets.length})
+          {Locale.get(Locale.Trash, locale)} ({maybeTrashedWallets.length})
         </WideClickableContrastAnchor>
       </div>}
   </PageBody>
