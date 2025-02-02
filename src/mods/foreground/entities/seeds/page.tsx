@@ -6,6 +6,8 @@ import { UserPage } from "@/libs/ui/page/page";
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data";
 import { HashSubpathProvider, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { useCallback } from "react";
+import { useLocaleContext } from "../../global/mods/locale";
+import { Locale } from "../../locale";
 import { SeededWalletCreatorDialog } from "../wallets/all/create/seeded";
 import { ClickableWalletGrid } from "../wallets/all/page";
 import { useWalletsBySeed } from "../wallets/data";
@@ -21,6 +23,7 @@ export function SeedPage(props: UUIDProps) {
 }
 
 function SeedDataPage() {
+  const locale = useLocaleContext().getOrThrow()
   const path = usePathContext().getOrThrow()
   const seed = useSeedDataContext().getOrThrow()
 
@@ -38,7 +41,7 @@ function SeedDataPage() {
   }, [])
 
   const Header =
-    <PageHeader title="Seed" />
+    <PageHeader title={Locale.get(Locale.Seed, locale)} />
 
   const Card =
     <div className="p-4 flex justify-center">
