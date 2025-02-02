@@ -747,13 +747,77 @@ export function InstallCard(props: TitleProps & ChildrenProps & { src: string } 
 }
 
 export function IphoneInstallDialog() {
+  const locale = useLocaleContext().getOrThrow()
+
   return <>
     <Dialog.Title>
-      Installing on iPhone
+      {Locale.get({
+        en: "Installing on Safari",
+        zh: "在 Safari 上安装",
+        hi: "Safari पर स्थापित करना",
+        es: "Instalación en Safari",
+        ar: "التثبيت على Safari",
+        fr: "Installation sur Safari",
+        de: "Installation auf Safari",
+        ru: "Установка на Safari",
+        pt: "Instalando no Safari",
+        ja: "Safari にインストール",
+        pa: "Safari 'ਤੇ ਇੰਸਟਾਲ ਕਰੋ",
+        bn: "Safari এ ইনস্টল করুন",
+        id: "Instalasi di Safari",
+        ur: "سفاری پر انسٹال کریں",
+        ms: "Pasang di Safari",
+        it: "Installazione su Safari",
+        tr: "Safari'de Yükleme",
+        ta: "சபாரி இல் நிறுவுவது",
+        te: "సఫారిలో ఇన్‌స్టాల్ చేయండి",
+        ko: "Safari에 설치",
+        vi: "Cài đặt trên Safari",
+        pl: "Instalacja na Safari",
+        ro: "Instalare pe Safari",
+        nl: "Installeren op Safari",
+        el: "Εγκατάσταση σε Safari",
+        th: "ติดตั้งบน Safari",
+        cs: "Instalace na Safari",
+        hu: "Telepítés Safari-ban",
+        sv: "Installation på Safari",
+        da: "Installation på Safari",
+      }, locale)}
     </Dialog.Title>
     <div className="h-4" />
     <div className="text-default-contrast">
-      {`You can follow these steps to install Brume Wallet on your iPhone, iPad, or Mac. Use the share button and select "Add to Home Screen". Confirm the installation by clicking "Add".`}
+      {Locale.get({
+        en: `You can follow these steps to install Brume Wallet on your iPhone, iPad, or Mac. Use the share button and select "Add to Home Screen" on iPhone and iPad, or "Add to Dock" on Mac. Confirm the installation by clicking "Add".`,
+        zh: `您可以按照以下步骤在 iPhone、iPad 或 Mac 上安装 Brume Wallet。使用共享按钮，在 iPhone 和 iPad 上选择“添加到主屏幕”，在 Mac 上选择“添加到 Dock”。点击“添加”确认安装。`,
+        hi: `आप अपने iPhone, iPad या Mac पर Brume वॉलेट को स्थापित करने के लिए इन चरणों का पालन कर सकते हैं। शेयर बटन का उपयोग करें, और iPhone और iPad पर "होम स्क्रीन में जोड़ें" चुनें, या Mac पर "डॉक में जिला" चुनें। "जोड़ें" पर क्लिक करके स्थापना की पुष्टि करें।`,
+        es: `Puede seguir estos pasos para instalar Brume Wallet en su iPhone, iPad o Mac. Utilice el botón de compartir y seleccione "Agregar a la pantalla de inicio" en iPhone y iPad, o "Agregar al Dock" en Mac. Confirme la instalación haciendo clic en "Agregar".`,
+        ar: `يمكنك اتباع هذه الخطوات لتثبيت محفظة Brume على iPhone أو iPad أو Mac الخاص بك. استخدم زر المشاركة وحدد "إضافة إلى الشاشة الرئيسية" على iPhone و iPad، أو "إضافة إلى Dock" على Mac. قم بتأكيد التثبيت بالنقر فوق "إضافة".`,
+        fr: `Vous pouvez suivre ces étapes pour installer Brume Wallet sur votre iPhone, iPad ou Mac. Utilisez le bouton de partage et sélectionnez "Ajouter à l'écran d'accueil" sur iPhone et iPad, ou "Ajouter au Dock" sur Mac. Confirmez l'installation en cliquant sur "Ajouter".`,
+        de: `Sie können diesen Schritten folgen, um Brume Wallet auf Ihrem iPhone, iPad oder Mac zu installieren. Verwenden Sie die Schaltfläche "Teilen" und wählen Sie "Zum Startbildschirm hinzufügen" auf iPhone und iPad oder "Zum Dock hinzufügen" auf Mac. Bestätigen Sie die Installation durch Klicken auf "Hinzufügen".`,
+        ru: `Вы можете следовать этим шагам, чтобы установить Brume Wallet на свой iPhone, iPad или Mac. Используйте кнопку "Поделиться" и выберите "Добавить на домашний экран" на iPhone и iPad или "Добавить в док" на Mac. Подтвердите установку, нажав "Добавить".`,
+        pt: `Você pode seguir estas etapas para instalar o Brume Wallet no seu iPhone, iPad ou Mac. Use o botão de compartilhamento e selecione "Adicionar à tela inicial" no iPhone e iPad, ou "Adicionar ao Dock" no Mac. Confirme a instalação clicando em "Adicionar".`,
+        ja: `iPhone、iPad、または Mac に Brume Wallet をインストールする手順に従うことができます。共有ボタンを使用し、iPhone と iPad では「ホーム画面に追加」、Mac では「Dock に追加」を選択します。クリックして「追加」をクリックしてインストールを確認します。`,
+        pa: `ਆਪਣੇ iPhone, iPad ਜਾਂ Mac 'ਤੇ Brume ਵਾਲੇਟ ਨੂੰ ਸਥਾਪਿਤ ਕਰਨ ਲਈ ਇਹ ਕਦਮ ਕਰ ਸਕਦੇ ਹੋ। ਸਾਂਝਾ ਬਟਨ ਦੀ ਵਰਤੋਂ ਕਰੋ ਅਤੇ iPhone ਅਤੇ iPad 'ਤੇ "ਹੋਮ ਸਕ੍ਰੀਨ 'ਚ ਸ਼ਾਮਲ ਕਰੋ" ਚੁਣੋ, ਜਾਂ Mac 'ਤੇ "ਡਾਕ 'ਚ ਸ਼ਾਮਲ ਕਰੋ" ਚੁਣੋ। "ਸ਼ਾਮਲ ਕਰੋ" ਤੇ ਕਲਿੱਕ ਕਰਕੇ ਸਥਾਪਨਾ ਨੂੰ ਪੁਸ਼ਟੀ ਕਰੋ।`,
+        bn: `আপনি আপনার iPhone, iPad বা Mac এ Brume ওয়ালেট ইনস্টল করতে এই ধাপগুলি অনুসরণ করতে পারেন। শেয়ার বাটন ব্যবহার করুন এবং iPhone এবং iPad এ "হোম স্ক্রিনে যোগ করুন" বা Mac এ "ডকে যোগ করুন" নির্বাচন করুন। "যোগ করুন" ক্লিক করে ইনস্টলেশন নিশ্চিত করুন।`,
+        id: `Anda dapat mengikuti langkah-langkah ini untuk menginstal Brume Wallet di iPhone, iPad, atau Mac Anda. Gunakan tombol bagikan dan pilih "Tambahkan ke Layar Beranda" di iPhone dan iPad, atau "Tambahkan ke Dock" di Mac. Konfirmasi instalasi dengan mengklik "Tambahkan".`,
+        ur: `آپ اپنے iPhone، iPad یا Mac پر Brume Wallet کو انسٹال کرنے کے لیے یہ مراحل مکمل کر سکتے ہیں۔ شیئر بٹن استعمال کریں اور iPhone اور iPad پر "ہوم اسکرین میں شامل کریں" یا Mac پر "ڈاک میں شامل کریں" منتخب کریں۔ "شامل کریں" پر کلک کر کے انسٹالیشن کی تصدیق کریں۔`,
+        ms: `Anda boleh mengikuti langkah-langkah ini untuk memasang Brume Wallet di iPhone, iPad, atau Mac anda. Gunakan butang kongsi dan pilih "Tambah ke Skrin Utama" di iPhone dan iPad, atau "Tambah ke Dock" di Mac. Sahkan pemasangan dengan mengklik "Tambah".`,
+        it: `Puoi seguire questi passaggi per installare Brume Wallet sul tuo iPhone, iPad o Mac. Utilizza il pulsante di condivisione e seleziona "Aggiungi a schermata iniziale" su iPhone e iPad, o "Aggiungi a Dock" su Mac. Conferma l'installazione facendo clic su "Aggiungi".`,
+        tr: `iPhone, iPad veya Mac'inize Brume Wallet'i yüklemek için bu adımları izleyebilirsiniz. Paylaş düğmesini kullanın ve iPhone ve iPad'de "Ana Ekrana Ekle" veya Mac'te "Dock'a Ekle" seçeneğini belirleyin. "Ekle" yi tıklayarak kurulumu onaylayın.`,
+        ta: `உங்கள் iPhone, iPad அல்லது Mac இல் Brume வாலெட்டை நிறுவ இந்த படிகளை பின்பற்றலாம். பகிர்வு பொத்தானை பயன்படுத்தி iPhone மற்றும் iPad வில் "முதல் தளத்தில் சேர்க்க" அல்லது Mac வில் "டாக்கில் சேர்க்க" ஐத் தேர்ந்தெடுக்கவும். "சேர்க்க" ஐ கிளிக் செய்து நிறுவலை உறுதிசெய்க.`,
+        te: `మీ iPhone, iPad లేదా Mac లో Brume వాలెట్‌ను ఇన్‌స్టాల్ చేయడానికి ఈ చరిత్రలను అనుసరించవచ్చు. షేర్ బటన్‌ను ఉపయోగించి iPhone మరియు iPad లో "హోమ్ స్క్రీన్‌కు జోడించు" లేదా Mac లో "డాక్‌కు జోడించు" ఎంచుకోండి. "జోడించు" నొక్కి ఇన్‌స్టాలేషన్‌ను నిర్ధారించండి.`,
+        ko: `iPhone, iPad 또는 Mac에 Brume Wallet을 설치하려면 이 단계를 따를 수 있습니다. 공유 버튼을 사용하고 iPhone 및 iPad에서 "홈 화면에 추가" 또는 Mac에서 "도크에 추가"를 선택하십시오. "추가"를 클릭하여 설치를 확인하십시오.`,
+        vi: `Bạn có thể làm theo các bước này để cài đặt Brume Wallet trên iPhone, iPad hoặc Mac của bạn. Sử dụng nút chia sẻ và chọn "Thêm vào Màn hình chính" trên iPhone và iPad hoặc "Thêm vào Dock" trên Mac. Xác nhận cài đặt bằng cách nhấp vào "Thêm".`,
+        pl: `Możesz postępować zgodnie z tymi krokami, aby zainstalować portfel Brume na swoim iPhone'u, iPadzie lub Macu. Użyj przycisku udostępniania i wybierz "Dodaj do ekranu głównego" na iPhone'ie i iPadzie lub "Dodaj do Dock" na Macu. Potwierdź instalację, klikając "Dodaj".`,
+        ro: `Puteți urma acești pași pentru a instala portofelul Brume pe iPhone, iPad sau Mac. Utilizați butonul de partajare și selectați "Adăugare la ecranul de start" pe iPhone și iPad sau "Adăugare la Dock" pe Mac. Confirmați instalarea făcând clic pe "Adăugare".`,
+        nl: `U kunt deze stappen volgen om Brume Wallet te installeren op uw iPhone, iPad of Mac. Gebruik de deelknop en selecteer "Toevoegen aan startscherm" op iPhone en iPad, of "Toevoegen aan Dock" op Mac. Bevestig de installatie door op "Toevoegen" te klikken.`,
+        el: `Μπορείτε να ακολουθήσετε αυτά τα βήματα για να εγκαταστήσετε το Brume Wallet στο iPhone, iPad ή Mac σας. Χρησιμοποιήστε το κουμπί κοινοποίησης και επιλέξτε "Προσθήκη στην αρχική οθόνη" στο iPhone και iPad ή "Προσθήκη στο Dock" στο Mac. Επιβεβαιώστε την εγκατάσταση κάνοντας κλικ στο "Προσθήκη".`,
+        th: `คุณสามารถทำตามขั้นตอนเหล่านี้เพื่อติดตั้งบรัมวอลเล็ตบน iPhone, iPad หรือ Mac ของคุณ ใช้ปุ่มแชร์และเลือก "เพิ่มไปยังหน้าจอหลัก" บน iPhone และ iPad หรือ "เพิ่มไปยังด็อก" บน Mac ยืนยันการติดตั้งโดยคลิกที่ "เพิ่ม"`,
+        cs: `Můžete postupovat podle těchto kroků pro instalaci Brume Wallet na svém iPhone, iPadu nebo Macu. Použijte tlačítko sdílení a vyberte "Přidat na domovskou obrazovku" na iPhonu a iPadu nebo "Přidat do dokovací stanice" na Macu. Potvrďte instalaci kliknutím na "Přidat".`,
+        hu: `Ezeket a lépéseket követve telepítheti a Brume Wallet-et iPhone-jára, iPadjére vagy Mac gépére. Használja a megosztás gombot, és válassza ki az "Hozzáadás a kezdőképernyőhöz" lehetőséget iPhone-on és iPad-en, vagy az "Hozzáadás a dokkhoz" lehetőséget Mac-en. A telepítés megerősítéséhez kattintson az "Hozzáadás" gombra.`,
+        sv: `Du kan följa dessa steg för att installera Brume Wallet på din iPhone, iPad eller Mac. Använd dela-knappen och välj "Lägg till på startsidan" på iPhone och iPad eller "Lägg till i Dock" på Mac. Bekräfta installationen genom att klicka på "Lägg till".`,
+        da: `Du kan følge disse trin for at installere Brume Wallet på din iPhone, iPad eller Mac. Brug del-knappen og vælg "Føj til startskærm" på iPhone og iPad eller "Føj til Dock" på Mac. Bekræft installationen ved at klikke på "Tilføj".`,
+      }, locale)}
     </div>
     <div className="h-8" />
     <div className="flex flex-wrap items-center justify-center gap-2">
@@ -768,13 +832,77 @@ export function IphoneInstallDialog() {
 }
 
 export function AndroidInstallDialog() {
+  const locale = useLocaleContext().getOrThrow()
+
   return <>
     <Dialog.Title>
-      Installing on Android
+      {Locale.get({
+        en: "Installing on Android",
+        zh: "在 Android 上安装",
+        hi: "एंड्रॉयड पर स्थापित करना",
+        es: "Instalación en Android",
+        ar: "التثبيت على Android",
+        fr: "Installation sur Android",
+        de: "Installation auf Android",
+        ru: "Установка на Android",
+        pt: "Instalando no Android",
+        ja: "Android にインストール",
+        pa: "Android 'ਤੇ ਇੰਸਟਾਲ ਕਰੋ",
+        bn: "অ্যান্ড্রয়েডে ইনস্টল করুন",
+        id: "Instalasi di Android",
+        ur: "انڈرائیڈ پر انسٹال کریں",
+        ms: "Pasang di Android",
+        it: "Installazione su Android",
+        tr: "Android'de Yükleme",
+        ta: "ஆண்ட்ராய்டில் நிறுவுவது",
+        te: "ఆండ్రాయిడ్‌లో ఇన్‌స్టాల్ చేయండి",
+        ko: "Android에 설치",
+        vi: "Cài đặt trên Android",
+        pl: "Instalacja na Androidzie",
+        ro: "Instalare pe Android",
+        nl: "Installeren op Android",
+        el: "Εγκατάσταση σε Android",
+        th: "ติดตั้งบน Android",
+        cs: "Instalace na Androidu",
+        hu: "Telepítés Androidon",
+        sv: "Installation på Android",
+        da: "Installation på Android",
+      }, locale)}
     </Dialog.Title>
     <div className="h-4" />
     <div className="text-default-contrast">
-      {`You can follow these steps to install Brume Wallet on your Android. Open the browser menu and select "Add to Home screen". Confirm the installation by clicking "Install".`}
+      {Locale.get({
+        en: `You can follow these steps to install Brume Wallet on your Android. Open the browser menu and select "Add to Home screen". Confirm the installation by clicking "Install".`,
+        zh: `您可以按照以下步骤在 Android 上安装 Brume Wallet。打开浏览器菜单，然后选择“添加到主屏幕”。点击“安装”确认安装。`,
+        hi: `आप अपने Android पर Brume वॉलेट को स्थापित करने के लिए इन चरणों का पालन कर सकते हैं। ब्राउज़र मेनू खोलें और "होम स्क्रीन में जोड़ें" का चयन करें। "स्थापित" पर क्लिक करके स्थापना की पुष्टि करें।`,
+        es: `Puede seguir estos pasos para instalar Brume Wallet en su Android. Abra el menú del navegador y seleccione "Agregar a la pantalla de inicio". Confirme la instalación haciendo clic en "Instalar".`,
+        ar: `يمكنك اتباع هذه الخطوات لتثبيت محفظة Brume على جهاز Android الخاص بك. افتح قائمة المتصفح وحدد "إضافة إلى الشاشة الرئيسية". أكد التثبيت بالنقر فوق "تثبيت".`,
+        fr: `Vous pouvez suivre ces étapes pour installer Brume Wallet sur votre Android. Ouvrez le menu du navigateur et sélectionnez "Ajouter à l'écran d'accueil". Confirmez l'installation en cliquant sur "Installer".`,
+        de: `Sie können diesen Schritten folgen, um Brume Wallet auf Ihrem Android zu installieren. Öffnen Sie das Browsermenü und wählen Sie "Zum Startbildschirm hinzufügen". Bestätigen Sie die Installation, indem Sie auf "Installieren" klicken.`,
+        ru: `Вы можете следовать этим шагам, чтобы установить Brume Wallet на своем Android. Откройте меню браузера и выберите "Добавить на домашний экран". Подтвердите установку, нажав "Установить".`,
+        pt: `Você pode seguir estas etapas para instalar o Brume Wallet no seu Android. Abra o menu do navegador e selecione "Adicionar à tela inicial". Confirme a instalação clicando em "Instalar".`,
+        ja: `Android に Brume Wallet をインストールするには、これらの手順に従うことができます。ブラウザメニューを開き、「ホーム画面に追加」を選択します。 "インストール"をクリックしてインストールを確認します。`,
+        pa: `ਤੁਸੀਂ ਆਪਣੇ Android ਉੱਤੇ Brume ਵਾਲੇਟ ਨੂੰ ਸਥਾਪਿਤ ਕਰਨ ਲਈ ਇਹ ਚੱਲਾਂ ਸਕਦੇ ਹੋ। ਬ੍ਰਾਉਜ਼ਰ ਮੀਨੂ ਖੋਲੋ ਅਤੇ "ਹੋਮ ਸਕ੍ਰੀਨ 'ਤੇ ਸ਼ਾਮਲ ਕਰੋ" ਚੁਣੋ। "ਸਥਾਪਿਤ" 'ਤੇ ਕਲਿੱਕ ਕਰਕੇ ਸਥਾਪਨਾ ਨੂੰ ਪੁਸ਼ਟੀ ਕਰੋ।`,
+        bn: `আপনি আপনার Android উপর Brume ওয়ালেট ইনস্টল করতে এই ধাপগুলি অনুসরণ করতে পারেন। ব্রাউজার মেনু খুলুন এবং "হোম স্ক্রিনে যোগ করুন" নির্বাচন করুন। "ইনস্টল" ক্লিক করে ইনস্টলেশন নিশ্চিত করুন।`,
+        id: `Anda dapat mengikuti langkah-langkah ini untuk menginstal Brume Wallet di Android Anda. Buka menu browser dan pilih "Tambahkan ke layar beranda". Konfirmasi instalasi dengan mengklik "Instal".`,
+        ur: `آپ اپنے Android پر Brume Wallet کو انسٹال کرنے کے لئے ان مراحل کا پیروی کر سکتے ہیں۔ براؤزر مینو کھولیں اور "ہوم اسکرین میں شامل کریں" منتخب کریں۔ "انسٹال" پر کلک کرکے انسٹالیشن کی تصدیق کریں۔`,
+        ms: `Anda boleh mengikuti langkah-langkah ini untuk memasang Brume Wallet di Android anda. Buka menu pelayar dan pilih "Tambah ke skrin utama". Sahkan pemasangan dengan mengklik "Pasang".`,
+        it: `Puoi seguire questi passaggi per installare Brume Wallet sul tuo Android. Apri il menu del browser e seleziona "Aggiungi alla schermata iniziale". Conferma l'installazione facendo clic su "Installa".`,
+        tr: `Android'de Brume Wallet'i yüklemek için bu adımları izleyebilirsiniz. Tarayıcı menüsünü açın ve "Ana ekrana ekle" yi seçin. "Yükle" yi tıklayarak kurulumu onaylayın.`,
+        ta: `உங்கள் Android உலாவியில் Brume Wallet ஐ நிறுவ இந்த படிகளை பின்பற்றலாம். உலாவி பட்டியலை திறக்கவும் மற்றும் "முகப்பு தளத்தில் சேர்க்க" ஐ தேர்வு செய்க. "நிறுவு" ஐ கிளிக் செய்து நிறுவலை உறுதிசெய்க.`,
+        te: `మీ Android లో Brume వాలెట్‌ను ఇన్‌స్టాల్ చేయడానికి ఈ చరిత్రలను అనుసరించవచ్చు. బ్రౌజర్ మెనూను తెరువండి "హోమ్ స్క్రీన్‌కు జోడించు" ఎంచుకోండి. "ఇన్‌స్టాల్" నొక్కడం ద్వారా ఇన్‌స్టాలేషన్‌ను నిర్ధారించండి.`,
+        ko: `Android에 Brume Wallet을 설치하려면 이 단계를 따를 수 있습니다. 브라우저 메뉴를 열고 "홈 화면에 추가"를 선택하십시오. "설치"를 클릭하여 설치를 확인하십시오.`,
+        vi: `Bạn có thể làm theo các bước này để cài đặt Brume Wallet trên Android của bạn. Mở menu trình duyệt và chọn "Thêm vào màn hình chính". Xác nhận cài đặt bằng cách nhấp vào "Cài đặt".`,
+        pl: `Możesz postępować zgodnie z tymi krokami, aby zainstalować portfel Brume na swoim urządzeniu z systemem Android. Otwórz menu przeglądarki i wybierz "Dodaj do ekranu głównego". Potwierdź instalację, klikając "Zainstaluj".`,
+        ro: `Puteți urma acești pași pentru a instala portofelul Brume pe Android. Deschideți meniul browserului și selectați "Adăugați la ecranul de start". Confirmați instalarea făcând clic pe "Instalare".`,
+        nl: `U kunt deze stappen volgen om Brume Wallet op uw Android te installeren. Open het browsermenu en selecteer "Toevoegen aan startscherm". Bevestig de installatie door op "Installeren" te klikken.`,
+        el: `Μπορείτε να ακολουθήσετε αυτά τα βήματα για να εγκαταστήσετε το πορτοφόλι Brume στο Android σας. Ανοίξτε το μενού του προγράμματος περιήγησης και επιλέξτε "Προσθήκη στην αρχική οθόνη". Επιβεβαιώστε την εγκατάσταση κάνοντας κλικ στο "Εγκατάσταση".`,
+        th: `คุณสามารถทำตามขั้นตอนเหล่านี้เพื่อติดตั้งกระเป๋าเงิน Brume บนอุปกรณ์ Android ของคุณ ให้เปิดเมนูเบราว์เซอร์และเลือก "เพิ่มไปยังหน้าจอหลัก" ยืนยันการติดตั้งโดยคลิก "ติดตั้ง"`,
+        cs: `Můžete postupovat podle těchto kroků pro instalaci peněženky Brume na svém zařízení Android. Otevřete nabídku prohlížeče a vyberte "Přidat na domovskou obrazovku". Potvrďte instalaci kliknutím na "Instalovat".`,
+        hu: `Ezeket a lépéseket követve telepítheti a Brume Wallet-et az Android készülékére. Nyissa meg a böngésző menüjét, majd válassza a "Hozzáadás a kezdőképernyőhöz" lehetőséget. A telepítés megerősítéséhez kattintson az "Install" gombra.`,
+        sv: `Du kan följa dessa steg för att installera Brume Wallet på din Android. Öppna webbläsarmenyn och välj "Lägg till på startskärmen". Bekräfta installationen genom att klicka på "Installera".`,
+        da: `Du kan følge disse trin for at installere Brume Wallet på din Android. Åbn browsermenuen og vælg "Føj til startskærm". Bekræft installationen ved at klikke på "Installer".`,
+      }, locale)}
     </div>
     <div className="h-8" />
     <div className="flex flex-wrap items-center justify-center gap-2">
