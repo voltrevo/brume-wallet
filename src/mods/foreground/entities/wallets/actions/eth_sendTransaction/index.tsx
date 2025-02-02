@@ -836,7 +836,38 @@ export function WalletTransactionDialog(props: {}) {
         </Dialog>}
     </HashSubpathProvider>
     <Dialog.Title>
-      Transact on {chainData.name}
+      {Locale.get({
+        en: `Transact on ${chainData.name}`,
+        zh: `在 ${chainData.name} 上交易`,
+        hi: `${chainData.name} पर लेन-देन करें`,
+        es: `Transactuar en ${chainData.name}`,
+        ar: `التعامل على ${chainData.name}`,
+        fr: `Transiger sur ${chainData.name}`,
+        de: `Transaktion auf ${chainData.name}`,
+        ru: `Транзакция на ${chainData.name}`,
+        pt: `Transacionar em ${chainData.name}`,
+        ja: `${chainData.name} で取引する`,
+        pa: `${chainData.name} 'ਤੇ ਲੇਨ-ਦੇਨ ਕਰੋ`,
+        bn: `${chainData.name} উপর লেনদেন করুন`,
+        id: `Transaksi di ${chainData.name}`,
+        ur: `${chainData.name} پر لین دین کریں`,
+        ms: `Transaksi di ${chainData.name}`,
+        it: `Transazione su ${chainData.name}`,
+        tr: `${chainData.name} üzerinde işlem yapın`,
+        ta: `${chainData.name} உடன் பரிவர்த்தனை செய்யவும்`,
+        te: `${chainData.name} లో లేనిదానికి చేరండి`,
+        ko: `${chainData.name}에서 거래`,
+        vi: `Giao dịch trên ${chainData.name}`,
+        pl: `Transakcja na ${chainData.name}`,
+        ro: `Tranzacționați pe ${chainData.name}`,
+        nl: `Transactie op ${chainData.name}`,
+        el: `Συναλλαγή στο ${chainData.name}`,
+        th: `ธุรกรรมใน ${chainData.name}`,
+        cs: `Transakce na ${chainData.name}`,
+        hu: `Tranzakció ${chainData.name} -n`,
+        sv: `Transaktion på ${chainData.name}`,
+        da: `Transaktion på ${chainData.name}`,
+      }, locale)}
     </Dialog.Title>
     <div className="h-4" />
     <ContrastLabel>
@@ -878,7 +909,7 @@ export function WalletTransactionDialog(props: {}) {
     </ContrastLabel>
     <div className="h-4" />
     <ContrastSubtitleDiv>
-      Advanced
+      {Locale.get(Locale.Advanced, locale)}
     </ContrastSubtitleDiv>
     <div className="h-2" />
     <ContrastLabel>
@@ -938,28 +969,28 @@ export function WalletTransactionDialog(props: {}) {
                     aria-selected={gasMode === "urgent"}
                     data-value="urgent">
                     <div className="truncate">
-                      {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
+                      {`${Locale.get(Locale.Urgent, locale)} — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
                     </div>
                   </WideClickableNakedMenuButton>
                   <WideClickableNakedMenuButton
                     aria-selected={gasMode === "fast"}
                     data-value="fast">
                     <div className="truncate">
-                      {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
+                      {`${Locale.get(Locale.Fast, locale)} — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
                     </div>
                   </WideClickableNakedMenuButton>
                   <WideClickableNakedMenuButton
                     aria-selected={gasMode === "normal"}
                     data-value="normal">
                     <div className="truncate">
-                      {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
+                      {`${Locale.get(Locale.Normal, locale)} — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
                     </div>
                   </WideClickableNakedMenuButton>
                   <WideClickableNakedMenuButton
                     aria-selected={gasMode === "custom"}
                     data-value="custom">
                     <div className="truncate">
-                      {`Custom`}
+                      {Locale.get(Locale.Custom, locale)}
                     </div>
                   </WideClickableNakedMenuButton>
                 </div>
@@ -971,28 +1002,28 @@ export function WalletTransactionDialog(props: {}) {
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
-            {`Urgent — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
+            {`${Locale.get(Locale.Urgent, locale)} — ${urgentBaseFeePerGasDisplay}:${urgentMaxPriorityFeePerGasDisplay} Gwei — ${urgentMinEip1559GasCostDisplay}-${urgentMaxEip1559GasCostDisplay}`}
           </a>}
         {gasMode === "fast" &&
           <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
-            {`Fast — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
+            {`${Locale.get(Locale.Fast, locale)} — ${fastBaseFeePerGasDisplay}:${fastMaxPriorityFeePerGasDisplay} Gwei — ${fastMinEip1559GasCostDisplay}-${fastMaxEip1559GasCostDisplay}`}
           </a>}
         {gasMode === "normal" &&
           <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
-            {`Normal — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
+            {`${Locale.get(Locale.Normal, locale)} — ${normalBaseFeePerGasDisplay}:${normalMaxPriorityFeePerGasDisplay} Gwei — ${normalMinEip1559GasCostDisplay}-${normalMaxEip1559GasCostDisplay}`}
           </a>}
         {gasMode === "custom" &&
           <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
-            {`Custom`}
+            {Locale.get(Locale.Custom, locale)}
           </a>}
       </>}
       {maybeIsEip1559 === false && <>
@@ -1005,28 +1036,28 @@ export function WalletTransactionDialog(props: {}) {
                     aria-selected={gasMode === "urgent"}
                     data-value="urgent">
                     <div className="truncate">
-                      {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
+                      {`${Locale.get(Locale.Urgent, locale)} — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
                     </div>
                   </WideClickableNakedMenuButton>
                   <WideClickableNakedMenuButton
                     aria-selected={gasMode === "fast"}
                     data-value="fast">
                     <div className="truncate">
-                      {`Fast — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
+                      {`${Locale.get(Locale.Fast, locale)} — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
                     </div>
                   </WideClickableNakedMenuButton>
                   <WideClickableNakedMenuButton
                     aria-selected={gasMode === "normal"}
                     data-value="normal">
                     <div className="truncate">
-                      {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
+                      {`${Locale.get(Locale.Normal, locale)} — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
                     </div>
                   </WideClickableNakedMenuButton>
                   <WideClickableNakedMenuButton
                     aria-selected={gasMode === "custom"}
                     data-value="custom">
                     <div className="truncate">
-                      {`Custom`}
+                      {Locale.get(Locale.Custom, locale)}
                     </div>
                   </WideClickableNakedMenuButton>
                 </div>
@@ -1038,28 +1069,28 @@ export function WalletTransactionDialog(props: {}) {
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
-            {`Urgent — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
+            {`${Locale.get(Locale.Urgent, locale)} — ${urgentGasPriceDisplay} Gwei — ${urgentLegacyGasCostDisplay}`}
           </a>}
         {gasMode === "fast" &&
           <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
-            {`Fast — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
+            {`${Locale.get(Locale.Fast, locale)} — ${fastGasPriceDisplay} Gwei — ${fastLegacyGasCostDisplay}`}
           </a>}
         {gasMode === "normal" &&
           <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
-            {`Normal — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
+            {`${Locale.get(Locale.Normal, locale)} — ${normalGasPriceDisplay} Gwei — ${normalLegacyGasCostDisplay}`}
           </a>}
         {gasMode === "custom" &&
           <a className="truncate"
             onClick={gasGenius.onClick}
             onKeyDown={gasGenius.onKeyDown}
             href={gasGenius.href}>
-            {`Custom`}
+            {Locale.get(Locale.Custom, locale)}
           </a>}
       </>}
     </ContrastLabel>

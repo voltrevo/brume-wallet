@@ -235,7 +235,40 @@ export function WalletDirectSendScreenNativeValue(props: {}) {
         </Dialog>}
     </HashSubpathProvider>
     <Dialog.Title>
-      Transact on {chainData.name}
+      <Dialog.Title>
+        {Locale.get({
+          en: `Send ${tokenData.symbol} on ${chainData.name}`,
+          zh: `在 ${chainData.name} 上发送 ${tokenData.symbol}`,
+          hi: `${chainData.name} पर ${tokenData.symbol} भेजें`,
+          es: `Enviar ${tokenData.symbol} en ${chainData.name}`,
+          ar: `إرسال ${tokenData.symbol} على ${chainData.name}`,
+          fr: `Envoyer ${tokenData.symbol} sur ${chainData.name}`,
+          de: `Senden ${tokenData.symbol} auf ${chainData.name}`,
+          ru: `Отправить ${tokenData.symbol} на ${chainData.name}`,
+          pt: `Enviar ${tokenData.symbol} em ${chainData.name}`,
+          ja: `${chainData.name} で ${tokenData.symbol} を送信する`,
+          pa: `${chainData.name} 'ਤੇ ${tokenData.symbol} ਭੇਜੋ`,
+          bn: `${chainData.name} তে ${tokenData.symbol} পাঠান`,
+          id: `Kirim ${tokenData.symbol} di ${chainData.name}`,
+          ur: `${chainData.name} پر ${tokenData.symbol} بھیجیں`,
+          ms: `Hantar ${tokenData.symbol} di ${chainData.name}`,
+          it: `Invia ${tokenData.symbol} su ${chainData.name}`,
+          tr: `${chainData.name} üzerinde ${tokenData.symbol} gönder`,
+          ta: `${chainData.name} உள்ளிட்டு ${tokenData.symbol} அனுப்பவும்`,
+          te: `${chainData.name} లో ${tokenData.symbol} పంపండి`,
+          ko: `${chainData.name} 에서 ${tokenData.symbol} 보내기`,
+          vi: `Gửi ${tokenData.symbol} trên ${chainData.name}`,
+          pl: `Wyślij ${tokenData.symbol} na ${chainData.name}`,
+          ro: `Trimite ${tokenData.symbol} pe ${chainData.name}`,
+          nl: `Verzend ${tokenData.symbol} op ${chainData.name}`,
+          el: `Στείλτε ${tokenData.symbol} στο ${chainData.name}`,
+          th: `ส่ง ${tokenData.symbol} ใน ${chainData.name}`,
+          cs: `Poslat ${tokenData.symbol} na ${chainData.name}`,
+          hu: `Küldj ${tokenData.symbol} a ${chainData.name} -on`,
+          sv: `Skicka ${tokenData.symbol} på ${chainData.name}`,
+          da: `Send ${tokenData.symbol} på ${chainData.name}`,
+        }, locale)}
+      </Dialog.Title>
     </Dialog.Title>
     <div className="h-4" />
     <ContrastLabel>

@@ -187,7 +187,7 @@ export function SeededWalletCreatorDialog(props: {}) {
   const PathInput =
     <ContrastLabel>
       <div className="flex-none">
-        Path
+        {Locale.get(Locale.Path, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput
@@ -199,7 +199,7 @@ export function SeededWalletCreatorDialog(props: {}) {
   const IndexInput =
     <ContrastLabel>
       <div className="flex-none">
-        Index
+        {Locale.get(Locale.Number, locale)}
       </div>
       <div className="w-4" />
       <SimpleInput
@@ -236,26 +236,150 @@ export function SeededWalletCreatorDialog(props: {}) {
       <div className="h-2" />
       <ContrastLabel>
         <div className="flex-none">
-          Derivation
+          {Locale.get(Locale.Mode, locale)}
         </div>
         <div className="w-4" />
         <select className="w-full bg-transparent outline-none text-ellipsis overflow-x-hidden appearance-none"
           value={rawDerivation}
           onChange={onDerivationChange}>
           <option value="eth-metamask">
-            {`Ethereum — MetaMask-like — m/44'/60'/0'/0/x`}
+            {Locale.get({
+              en: `Ethereum — MetaMask-like — m/44'/60'/0'/0/x`,
+              zh: `以太坊 — MetaMask 风格 — m/44'/60'/0'/0/x`,
+              hi: `इथेरियम — मेटामास्क जैसा — m/44'/60'/0'/0/x`,
+              es: `Ethereum — Estilo MetaMask — m/44'/60'/0'/0/x`,
+              ar: `إيثريوم — مثل MetaMask — m/44'/60'/0'/0/x`,
+              fr: `Ethereum — Style MetaMask — m/44'/60'/0'/0/x`,
+              de: `Ethereum — MetaMask-ähnlich — m/44'/60'/0'/0/x`,
+              ru: `Ethereum — похоже на MetaMask — m/44'/60'/0'/0/x`,
+              pt: `Ethereum — Estilo MetaMask — m/44'/60'/0'/0/x`,
+              ja: `Ethereum — MetaMask のよう — m/44'/60'/0'/0/x`,
+              pa: `ਇਥੇਰੀਅਮ — ਮੇਟਾਮਾਸਕ ਜਿਵੇਂ — m/44'/60'/0'/0/x`,
+              bn: `ইথেরিয়াম — মেটামাস্ক মত — m/44'/60'/0'/0/x`,
+              id: `Ethereum — Seperti MetaMask — m/44'/60'/0'/0/x`,
+              ur: `ایتھیریم — میٹا ماسک جیسا — m/44'/60'/0'/0/x`,
+              ms: `Ethereum — Seperti MetaMask — m/44'/60'/0'/0/x`,
+              it: `Ethereum — Stile MetaMask — m/44'/60'/0'/0/x`,
+              tr: `Ethereum — MetaMask Benzeri — m/44'/60'/0'/0/x`,
+              ta: `எதீரியம் — மெடாமாஸ்க் போன்ற — m/44'/60'/0'/0/x`,
+              te: `ఎథిరియం — మెటామాస్క్ లాంటి — m/44'/60'/0'/0/x`,
+              ko: `이더리움 — MetaMask와 유사 — m/44'/60'/0'/0/x`,
+              vi: `Ethereum — Giống MetaMask — m/44'/60'/0'/0/x`,
+              pl: `Ethereum — Podobnie jak MetaMask — m/44'/60'/0'/0/x`,
+              ro: `Ethereum — Asemănător cu MetaMask — m/44'/60'/0'/0/x`,
+              nl: `Ethereum — MetaMask-achtig — m/44'/60'/0'/0/x`,
+              el: `Ethereum — Στυλ MetaMask — m/44'/60'/0'/0/x`,
+              th: `Ethereum — แบบ MetaMask — m/44'/60'/0'/0/x`,
+              cs: `Ethereum — Podobné jako MetaMask — m/44'/60'/0'/0/x`,
+              hu: `Ethereum — MetaMask-szerű — m/44'/60'/0'/0/x`,
+              sv: `Ethereum — MetaMask-liknande — m/44'/60'/0'/0/x`,
+              da: `Ethereum — MetaMask-lignende — m/44'/60'/0'/0/x`,
+            }, locale)}
           </option>
           <option value="eth-ledger">
-            {`Ethereum — Ledger-like - m/44'/60'/x'/0/0`}
+            {Locale.get({
+              en: `Ethereum — Ledger-like - m/44'/60'/x'/0/0`,
+              zh: `以太坊 — 类似 Ledger — m/44'/60'/x'/0/0`,
+              hi: `इथेरियम — लेजर जैसा — m/44'/60'/x'/0/0`,
+              es: `Ethereum — Estilo Ledger — m/44'/60'/x'/0/0`,
+              ar: `إيثريوم — مثل ليدجر — m/44'/60'/x'/0/0`,
+              fr: `Ethereum — Style Ledger — m/44'/60'/x'/0/0`,
+              de: `Ethereum — Ledger-ähnlich — m/44'/60'/x'/0/0`,
+              ru: `Ethereum — похоже на Ledger — m/44'/60'/x'/0/0`,
+              pt: `Ethereum — Estilo Ledger — m/44'/60'/x'/0/0`,
+              ja: `Ethereum — Ledger のよう — m/44'/60'/x'/0/0`,
+              pa: `ਇਥੇਰੀਅਮ — ਲੈਜ਼ਰ ਜਿਵੇਂ — m/44'/60'/x'/0/0`,
+              bn: `ইথেরিয়াম — লেজার মত — m/44'/60'/x'/0/0`,
+              id: `Ethereum — Seperti Ledger — m/44'/60'/x'/0/0`,
+              ur: `ایتھیریم — لیجر جیسا — m/44'/60'/x'/0/0`,
+              ms: `Ethereum — Seperti Ledger — m/44'/60'/x'/0/0`,
+              it: `Ethereum — Stile Ledger — m/44'/60'/x'/0/0`,
+              tr: `Ethereum — Ledger Benzeri — m/44'/60'/x'/0/0`,
+              ta: `எதீரியம் — லெஜர் போன்ற — m/44'/60'/x'/0/0`,
+              te: `ఎథిరియం — లెజర్ లాంటి — m/44'/60'/x'/0/0`,
+              ko: `이더리움 — Ledger와 유사 — m/44'/60'/x'/0/0`,
+              vi: `Ethereum — Giống Ledger — m/44'/60'/x'/0/0`,
+              pl: `Ethereum — Podobnie jak Ledger — m/44'/60'/x'/0/0`,
+              ro: `Ethereum — Asemănător cu Ledger — m/44'/60'/x'/0/0`,
+              nl: `Ethereum — Ledger-achtig — m/44'/60'/x'/0/0`,
+              el: `Ethereum — Στυλ Ledger — m/44'/60'/x'/0/0`,
+              th: `Ethereum — แบบ Ledger — m/44'/60'/x'/0/0`,
+              cs: `Ethereum — Podobné jako Ledger — m/44'/60'/x'/0/0`,
+              hu: `Ethereum — Ledger-szerű — m/44'/60'/x'/0/0`,
+              sv: `Ethereum — Ledger-liknande — m/44'/60'/x'/0/0`,
+              da: `Ethereum — Ledger-lignende — m/44'/60'/x'/0/0`,
+            }, locale)}
           </option>
           <option value="etc-metamask">
-            {`Ethereum Classic — MetaMask-like — m/44'/61'/0'/0/x`}
+            {Locale.get({
+              en: `Ethereum Classic — MetaMask-like — m/44'/61'/0'/0/x`,
+              zh: `以太经典 — MetaMask 风格 — m/44'/61'/0'/0/x`,
+              hi: `इथेरियम क्लासिक — मेटामास्क जैसा — m/44'/61'/0'/0/x`,
+              es: `Ethereum Classic — Estilo MetaMask — m/44'/61'/0'/0/x`,
+              ar: `إيثريوم كلاسيك — مثل MetaMask — m/44'/61'/0'/0/x`,
+              fr: `Ethereum Classic — Style MetaMask — m/44'/61'/0'/0/x`,
+              de: `Ethereum Classic — MetaMask-ähnlich — m/44'/61'/0'/0/x`,
+              ru: `Ethereum Classic — похоже на MetaMask — m/44'/61'/0'/0/x`,
+              pt: `Ethereum Classic — Estilo MetaMask — m/44'/61'/0'/0/x`,
+              ja: `Ethereum Classic — MetaMask のよう — m/44'/61'/0'/0/x`,
+              pa: `ਇਥੇਰੀਅਮ ਕਲਾਸਿਕ — ਮੇਟਾਮਾਸਕ ਜਿਵੇਂ — m/44'/61'/0'/0/x`,
+              bn: `ইথেরিয়াম ক্লাসিক — মেটামাস্ক মত — m/44'/61'/0'/0/x`,
+              id: `Ethereum Classic — Seperti MetaMask — m/44'/61'/0'/0/x`,
+              ur: `ایتھیریم کلاسیک — میٹا ماسک جیسا — m/44'/61'/0'/0/x`,
+              ms: `Ethereum Classic — Seperti MetaMask — m/44'/61'/0'/0/x`,
+              it: `Ethereum Classic — Stile MetaMask — m/44'/61'/0'/0/x`,
+              tr: `Ethereum Classic — MetaMask Benzeri — m/44'/61'/0'/0/x`,
+              ta: `எதீரியம் கிளாசிக் — மெடாமாஸ்க் போன்ற — m/44'/61'/0'/0/x`,
+              te: `ఎథిరియం క్లాసిక్ — మెటామాస్క్ లాంటి — m/44'/61'/0'/0/x`,
+              ko: `이더리움 클래식 — MetaMask와 유사 — m/44'/61'/0'/0/x`,
+              vi: `Ethereum Classic — Giống MetaMask — m/44'/61'/0'/0/x`,
+              pl: `Ethereum Classic — Podobnie jak MetaMask — m/44'/61'/0'/0/x`,
+              ro: `Ethereum Classic — Asemănător cu MetaMask — m/44'/61'/0'/0/x`,
+              nl: `Ethereum Classic — MetaMask-achtig — m/44'/61'/0'/0/x`,
+              el: `Ethereum Classic — Στυλ MetaMask — m/44'/61'/0'/0/x`,
+              th: `Ethereum Classic — แบบ MetaMask — m/44'/61'/0'/0/x`,
+              cs: `Ethereum Classic — Podobné jako MetaMask — m/44'/61'/0'/0/x`,
+              hu: `Ethereum Classic — MetaMask-szerű — m/44'/61'/0'/0/x`,
+              sv: `Ethereum Classic — MetaMask-liknande — m/44'/61'/0'/0/x`,
+              da: `Ethereum Classic — MetaMask-lignende — m/44'/61'/0'/0/x`,
+            }, locale)}
           </option>
           <option value="etc-metamask">
-            {`Ethereum Classic — Ledger-like - m/44'/61'/x'/0/0`}
+            {Locale.get({
+              en: `Ethereum Classic — Ledger-like - m/44'/61'/x'/0/0`,
+              zh: `以太经典 — 类似 Ledger — m/44'/61'/x'/0/0`,
+              hi: `इथेरियम क्लासिक — लेजर जैसा — m/44'/61'/x'/0/0`,
+              es: `Ethereum Classic — Estilo Ledger — m/44'/61'/x'/0/0`,
+              ar: `إيثريوم كلاسيك — مثل ليدجر — m/44'/61'/x'/0/0`,
+              fr: `Ethereum Classic — Style Ledger — m/44'/61'/x'/0/0`,
+              de: `Ethereum Classic — Ledger-ähnlich — m/44'/61'/x'/0/0`,
+              ru: `Ethereum Classic — похоже на Ledger — m/44'/61'/x'/0/0`,
+              pt: `Ethereum Classic — Estilo Ledger — m/44'/61'/x'/0/0`,
+              ja: `Ethereum Classic — Ledger のよう — m/44'/61'/x'/0/0`,
+              pa: `ਇਥੇਰੀਅਮ ਕਲਾਸਿਕ — ਲੈਜ਼ਰ ਜਿਵੇਂ — m/44'/61'/x'/0/0`,
+              bn: `ইথেরিয়াম ক্লাসিক — লেজার মত — m/44'/61'/x'/0/0`,
+              id: `Ethereum Classic — Seperti Ledger — m/44'/61'/x'/0/0`,
+              ur: `ایتھیریم کلاسیک — لیجر جیسا — m/44'/61'/x'/0/0`,
+              ms: `Ethereum Classic — Seperti Ledger — m/44'/61'/x'/0/0`,
+              it: `Ethereum Classic — Stile Ledger — m/44'/61'/x'/0/0`,
+              tr: `Ethereum Classic — Ledger Benzeri — m/44'/61'/x'/0/0`,
+              ta: `எதீரியம் கிளாசிக் — லெஜர் போன்ற — m/44'/61'/x'/0/0`,
+              te: `ఎథిరియం క్లాసిక్ — లెజర్ లాంటి — m/44'/61'/x'/0/0`,
+              ko: `이더리움 클래식 — Ledger와 유사 — m/44'/61'/x'/0/0`,
+              vi: `Ethereum Classic — Giống Ledger — m/44'/61'/x'/0/0`,
+              pl: `Ethereum Classic — Podobnie jak Ledger — m/44'/61'/x'/0/0`,
+              ro: `Ethereum Classic — Asemănător cu Ledger — m/44'/61'/x'/0/0`,
+              nl: `Ethereum Classic — Ledger-achtig — m/44'/61'/x'/0/0`,
+              el: `Ethereum Classic — Στυλ Ledger — m/44'/61'/x'/0/0`,
+              th: `Ethereum Classic — แบบ Ledger — m/44'/61'/x'/0/0`,
+              cs: `Ethereum Classic — Podobné jako Ledger — m/44'/61'/x'/0/0`,
+              hu: `Ethereum Classic — Ledger-szerű — m/44'/61'/x'/0/0`,
+              sv: `Ethereum Classic — Ledger-liknande — m/44'/61'/x'/0/0`,
+              da: `Ethereum Classic — Ledger-lignende — m/44'/61'/x'/0/0`,
+            }, locale)}
           </option>
           <option value="custom">
-            Custom
+            {Locale.get(Locale.Custom, locale)}
           </option>
         </select>
       </ContrastLabel>
