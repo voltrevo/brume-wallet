@@ -179,7 +179,38 @@ function WalletDataPage() {
         </CloseContext>}
       {walletTokens.length > 0 && <>
         <div className="font-medium text-xl">
-          Favorite tokens
+          {Locale.get({
+            en: "Favorite tokens",
+            zh: "收藏代币",
+            hi: "पसंदीदा टोकन",
+            es: "Tokens favoritos",
+            ar: "الرموز المفضلة",
+            fr: "Jetons favoris",
+            de: "Lieblingstoken",
+            ru: "Любимые токены",
+            pt: "Tokens favoritos",
+            ja: "お気に入りのトークン",
+            pa: "ਪਸੰਦੀਦਾ ਟੋਕਨ",
+            bn: "প্রিয় টোকেন",
+            id: "Token favorit",
+            ur: "پسندیدہ ٹوکن",
+            ms: "Token kegemaran",
+            it: "Token preferiti",
+            tr: "Favori jetonlar",
+            ta: "பிடித்த டோக்கன்கள்",
+            te: "ఇష్టమైన టోకెన్లు",
+            ko: "선호하는 토큰",
+            vi: "Token yêu thích",
+            pl: "Ulubione tokeny",
+            ro: "Tokenuri preferate",
+            nl: "Favoriete tokens",
+            el: "Αγαπημένα τοκεν",
+            th: "โทเคนที่ชื่นชอบ",
+            cs: "Oblíbené tokeny",
+            hu: "Kedvenc tokenek",
+            sv: "Favorittokens",
+            da: "Foretrukne tokens",
+          }, locale)}
         </div>
         <div className="h-4" />
         <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
@@ -191,7 +222,38 @@ function WalletDataPage() {
         <div className="h-2" />
       </>}
       <div className="font-medium text-xl">
-        Top tokens
+        {Locale.get({
+          en: "Top-voted tokens",
+          zh: "投票最多的代币",
+          hi: "शीर्ष वोटेड टोकन",
+          es: "Tokens más votados",
+          ar: "أعلى الرموز المصوتة",
+          fr: "Jetons les plus votés",
+          de: "Am meisten gewählte Token",
+          ru: "Самые голосованные токены",
+          pt: "Tokens mais votados",
+          ja: "最も投票されたトークン",
+          pa: "ਸਭ ਤੋਂ ਵੱਧ ਵੋਟੇ ਟੋਕਨ",
+          bn: "সেরা ভোটেড টোকেন",
+          id: "Token yang paling banyak dipilih",
+          ur: "سب سے زیادہ ووٹ والے ٹوکن",
+          ms: "Token yang paling banyak diundi",
+          it: "Token più votati",
+          tr: "En çok oy alan jetonlar",
+          ta: "அதிக வாக்குகள் பெற்ற டோக்கன்கள்",
+          te: "అత్యధిక వోటు పొందిన టోకెన్లు",
+          ko: "가장 많이 투표된 토큰",
+          vi: "Token được bình chọn nhiều nhất",
+          pl: "Najbardziej głosowane tokeny",
+          ro: "Cele mai votate tokenuri",
+          nl: "Meest gestemde tokens",
+          el: "Τα πιο ψηφισμένα τοκεν",
+          th: "โทเคนที่ได้รับการโหวตมากที่สุด",
+          cs: "Nejvíce hlasované tokeny",
+          hu: "A legtöbb szavazatot kapott tokenek",
+          sv: "Mest röstade tokens",
+          da: "Mest stemte tokens",
+        }, locale)}
       </div>
       <div className="h-4" />
       <div className="grid grow place-content-start gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
@@ -202,7 +264,38 @@ function WalletDataPage() {
       <div className="h-2" />
       <div className="flex items-center gap-2">
         <div className="font-medium text-xl">
-          Other tokens
+          {Locale.get({
+            en: "Other tokens",
+            zh: "其他代币",
+            hi: "अन्य टोकन",
+            es: "Otros tokens",
+            ar: "الرموز الأخرى",
+            fr: "Autres jetons",
+            de: "Andere Token",
+            ru: "Другие токены",
+            pt: "Outros tokens",
+            ja: "その他のトークン",
+            pa: "ਹੋਰ ਟੋਕਨ",
+            bn: "অন্যান্য টোকেন",
+            id: "Token lain",
+            ur: "دوسرے ٹوکن",
+            ms: "Token lain",
+            it: "Altri token",
+            tr: "Diğer jetonlar",
+            ta: "பிற டோக்கன்கள்",
+            te: "ఇతర టోకెన్లు",
+            ko: "다른 토큰",
+            vi: "Các token khác",
+            pl: "Inne tokeny",
+            ro: "Alte tokenuri",
+            nl: "Andere tokens",
+            el: "Άλλα τοκεν",
+            th: "โทเคนอื่น ๆ",
+            cs: "Další tokeny",
+            hu: "Egyéb tokenek",
+            sv: "Andra tokens",
+            da: "Andre tokens",
+          }, locale)}
         </div>
         <div className="grow" />
         <ClickableContrastButton
