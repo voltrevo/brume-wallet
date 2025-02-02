@@ -390,32 +390,156 @@ export function WalletConnectMenu() {
     const clipboard = await Result.runAndWrap(async () => {
       return await navigator.clipboard.readText()
     }).then(r => r.orElseSync(() => {
-      return Option.wrap(prompt("Paste a WalletConnect link here")).ok()
+      return Option.wrap(prompt(Locale.get({
+        en: "Please paste a WalletConnect link",
+        zh: "请粘贴一个 WalletConnect 链接",
+        hi: "कृपया एक वॉलेट कनेक्ट लिंक पेस्ट करें",
+        es: "Por favor, pegue un enlace de WalletConnect",
+        ar: "يرجى لصق رابط WalletConnect",
+        fr: "Veuillez coller un lien WalletConnect",
+        de: "Bitte fügen Sie einen WalletConnect-Link ein",
+        ru: "Пожалуйста, вставьте ссылку WalletConnect",
+        pt: "Por favor, cole um link WalletConnect",
+        ja: "WalletConnect リンクを貼り付けてください",
+        pa: "ਕਿਰਪਾ ਕਰਕੇ ਇੱਕ ਵਾਲੇਟ ਕਨੈਕਟ ਲਿੰਕ ਚਿਪਕਾਓ",
+        bn: "দয়া করে একটি ওয়ালেট কানেক্ট লিঙ্ক পেস্ট করুন",
+        id: "Silakan tempelkan tautan WalletConnect",
+        ur: "براہ کرم ایک ویلٹ کنیکٹ لنک پیسٹ کریں",
+        ms: "Sila tampal pautan WalletConnect",
+        it: "Si prega di incollare un link WalletConnect",
+        tr: "Lütfen bir WalletConnect bağlantısı yapıştırın",
+        ta: "ஒரு வாலெட்ட் கனெக்ட் இணைப்பை பேஸ்ட் செய்யவும்",
+        te: "దయచేసి ఒక వాలెట్ కనెక్ట్ లింక్ పేస్ట్ చేయండి",
+        ko: "WalletConnect 링크를 붙여 넣으십시오",
+        vi: "Vui lòng dán liên kết WalletConnect",
+        pl: "Proszę wkleić link WalletConnect",
+        ro: "Vă rugăm să lipiți un link WalletConnect",
+        nl: "Plak een WalletConnect-link",
+        el: "Παρακαλώ επικολλήστε ένα σύνδεσμο WalletConnect",
+        th: "กรุณาวางลิงก์ WalletConnect",
+        cs: "Vložte odkaz WalletConnect",
+        hu: "Kérjük, illesszen be egy WalletConnect linket",
+        sv: "Klistra in en WalletConnect-länk",
+        da: "Indsæt et WalletConnect-link",
+      }, locale))).ok()
     }).getOrThrow())
 
     const url = Result.runAndWrapSync(() => {
       return new URL(clipboard)
     }).mapErrSync(() => {
-      return new UIError("You must copy a WalletConnect link")
+      return new UIError(Locale.get({
+        en: "You must copy a WalletConnect link",
+        zh: "您必须复制一个 WalletConnect 链接",
+        hi: "आपको एक वॉलेट कनेक्ट लिंक कॉपी करना होगा",
+        es: "Debe copiar un enlace de WalletConnect",
+        ar: "يجب عليك نسخ رابط WalletConnect",
+        fr: "Vous devez copier un lien WalletConnect",
+        de: "Sie müssen einen WalletConnect-Link kopieren",
+        ru: "Вы должны скопировать ссылку WalletConnect",
+        pt: "Você deve copiar um link WalletConnect",
+        ja: "WalletConnect リンクをコピーする必要があります",
+        pa: "ਤੁਹਾਨੂੰ ਇੱਕ ਵਾਲੇਟ ਕਨੈਕਟ ਲਿੰਕ ਕਾਪੀ ਕਰਨੀ ਚਾਹੀਦੀ ਹੈ",
+        bn: "আপনাকে একটি ওয়ালেট কানেক্ট লিঙ্ক কপি করতে হবে",
+        id: "Anda harus menyalin tautan WalletConnect",
+        ur: "آپ کو ایک ویلٹ کنیکٹ لنک کاپی کرنا ہوگا",
+        ms: "Anda perlu menyalin pautan WalletConnect",
+        it: "Devi copiare un link WalletConnect",
+        tr: "Bir WalletConnect bağlantısı kopyalamanız gerekiyor",
+        ta: "ஒரு வாலெட்ட் கனெக்ட் லிங்கை நகலெடுக்க வேண்டும்",
+        te: "మీరు ఒక వాలెట్ కనెక్ట్ లింక్ కాపీ చేయాలి",
+        ko: "WalletConnect 링크를 복사해야합니다",
+        vi: "Bạn phải sao chép một liên kết WalletConnect",
+        pl: "Musisz skopiować link WalletConnect",
+        ro: "Trebuie să copiați un link WalletConnect",
+        nl: "U moet een WalletConnect-link kopiëren",
+        el: "Πρέπει να αντιγράψετε ένα σύνδεσμο WalletConnect",
+        th: "คุณต้องคัดลอกลิงก์ WalletConnect",
+        cs: "Musíte zkopírovat odkaz WalletConnect",
+        hu: "Egy WalletConnect linket kell másolnia",
+        sv: "Du måste kopiera en WalletConnect-länk",
+        da: "Du skal kopiere et WalletConnect-link",
+      }, locale))
     }).getOrThrow()
 
     Result.runAndWrapSync(() => {
       return Wc.parseOrThrow(url)
     }).mapErrSync(() => {
-      return new UIError("You must copy a WalletConnect link")
+      return new UIError(Locale.get({
+        en: "You must copy a WalletConnect link",
+        zh: "您必须复制一个 WalletConnect 链接",
+        hi: "आपको एक वॉलेट कनेक्ट लिंक कॉपी करना होगा",
+        es: "Debe copiar un enlace de WalletConnect",
+        ar: "يجب عليك نسخ رابط WalletConnect",
+        fr: "Vous devez copier un lien WalletConnect",
+        de: "Sie müssen einen WalletConnect-Link kopieren",
+        ru: "Вы должны скопировать ссылку WalletConnect",
+        pt: "Você deve copiar um link WalletConnect",
+        ja: "WalletConnect リンクをコピーする必要があります",
+        pa: "ਤੁਹਾਨੂੰ ਇੱਕ ਵਾਲੇਟ ਕਨੈਕਟ ਲਿੰਕ ਕਾਪੀ ਕਰਨੀ ਚਾਹੀਦੀ ਹੈ",
+        bn: "আপনাকে একটি ওয়ালেট কানেক্ট লিঙ্ক কপি করতে হবে",
+        id: "Anda harus menyalin tautan WalletConnect",
+        ur: "آپ کو ایک ویلٹ کنیکٹ لنک کاپی کرنا ہوگا",
+        ms: "Anda perlu menyalin pautan WalletConnect",
+        it: "Devi copiare un link WalletConnect",
+        tr: "Bir WalletConnect bağlantısı kopyalamanız gerekiyor",
+        ta: "ஒரு வாலெட்ட் கனெக்ட் லிங்கை நகலெடுக்க வேண்டும்",
+        te: "మీరు ఒక వాలెట్ కనెక్ట్ లింక్ కాపీ చేయాలి",
+        ko: "WalletConnect 링크를 복사해야합니다",
+        vi: "Bạn phải sao chép một liên kết WalletConnect",
+        pl: "Musisz skopiować link WalletConnect",
+        ro: "Trebuie să copiați un link WalletConnect",
+        nl: "U moet een WalletConnect-link kopiëren",
+        el: "Πρέπει να αντιγράψετε ένα σύνδεσμο WalletConnect",
+        th: "คุณต้องคัดลอกลิงก์ WalletConnect",
+        cs: "Musíte zkopírovat odkaz WalletConnect",
+        hu: "Egy WalletConnect linket kell másolnia",
+        sv: "Du måste kopiera en WalletConnect-länk",
+        da: "Du skal kopiere et WalletConnect-link",
+      }, locale))
     }).getOrThrow()
 
-    alert(`Connecting...`)
+    alert(Locale.get(Locale.Connecting, locale))
 
     const metadata = await background.requestOrThrow<WcMetadata>({
       method: "brume_wc_connect",
       params: [clipboard, wallet.uuid]
     }).then(r => r.getOrThrow())
 
-    alert(`Connected to ${metadata.name}`)
+    alert(Locale.get({
+      en: `Connected to ${metadata.name}`,
+      zh: `连接到 ${metadata.name}`,
+      hi: `${metadata.name} से कनेक्ट किया गया`,
+      es: `Conectado a ${metadata.name}`,
+      ar: `متصل بـ ${metadata.name}`,
+      fr: `Connecté à ${metadata.name}`,
+      de: `Verbunden mit ${metadata.name}`,
+      ru: `Подключено к ${metadata.name}`,
+      pt: `Conectado a ${metadata.name}`,
+      ja: `${metadata.name} に接続しました`,
+      pa: `${metadata.name} ਨਾਲ ਕੁਨੈਕਟ ਕੀਤਾ`,
+      bn: `${metadata.name} এ সংযুক্ত হয়েছে`,
+      id: `Terhubung ke ${metadata.name}`,
+      ur: `${metadata.name} سے منسلک`,
+      ms: `Disambungkan ke ${metadata.name}`,
+      it: `Connesso a ${metadata.name}`,
+      tr: `${metadata.name} ile bağlandı`,
+      ta: `${metadata.name} உடன் இணைந்துள்ளது`,
+      te: `${metadata.name} నుండి కనెక్ట్`,
+      ko: `${metadata.name} 에 연결됨`,
+      vi: `Đã kết nối với ${metadata.name}`,
+      pl: `Połączono z ${metadata.name}`,
+      ro: `Conectat la ${metadata.name}`,
+      nl: `Verbonden met ${metadata.name}`,
+      el: `Συνδέθηκε στο ${metadata.name}`,
+      th: `เชื่อมต่อกับ ${metadata.name}`,
+      cs: `Připojeno k ${metadata.name}`,
+      hu: `Csatlakozva a ${metadata.name}hez`,
+      sv: `Ansluten till ${metadata.name}`,
+      da: `Tilsluttet til ${metadata.name}`,
+    }, locale))
 
     close()
-  }), [wallet, background, close])
+  }), [wallet, background, locale, close])
 
   return <div className="flex flex-col text-left gap-2">
     <WideClickableNakedMenuAnchor
