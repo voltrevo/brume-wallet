@@ -381,6 +381,7 @@ export function WalletMenu(props: {
 }
 
 export function WalletConnectMenu() {
+  const locale = useLocaleContext().getOrThrow()
   const wallet = useWalletDataContext().getOrThrow()
   const background = useBackgroundContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
@@ -420,13 +421,13 @@ export function WalletConnectMenu() {
     <WideClickableNakedMenuAnchor
       href={`#/wallet/${wallet.uuid}/camera`}>
       <Outline.QrCodeIcon className="size-4" />
-      Scan
+      {Locale.get(Locale.Scan, locale)}
     </WideClickableNakedMenuAnchor>
     <WideClickableNakedMenuButton
       disabled={connectOrAlert.loading}
       onClick={connectOrAlert.run}>
       <Outline.LinkIcon className="size-4" />
-      Paste
+      {Locale.get(Locale.Paste, locale)}
     </WideClickableNakedMenuButton>
   </div>
 }
