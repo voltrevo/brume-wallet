@@ -42,7 +42,7 @@ export function WalletDataReceiveScreen(props: {}) {
       {Locale.get(Locale.Receive, locale)}
     </Dialog.Title>
     <div className="h-4" />
-    <div className="grow flex flex-col items-center justify-center h-[300px]">
+    <div className="grow flex flex-col items-center justify-center">
       <div className="text-2xl font-medium">
         {wallet.name}
       </div>
@@ -94,7 +94,7 @@ export function WalletDataReceiveScreen(props: {}) {
         }, locale)}
       </div>
     </div>
-    <div className="h-4 grow" />
+    <div className="h-8 grow" />
     {typeof navigator.share === "function" &&
       <div className="flex items-center flex-wrap-reverse gap-2">
         <WideClickableOppositeButton
