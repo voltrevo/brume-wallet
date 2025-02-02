@@ -2,7 +2,6 @@ import { Color } from "@/libs/colors/colors";
 import { Errors } from "@/libs/errors/errors";
 import { Outline } from "@/libs/icons/icons";
 import { useModhash } from "@/libs/modhash/modhash";
-import { isSafariExtension } from "@/libs/platform/platform";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange, useTextAreaChange } from "@/libs/react/events";
 import { useAsyncReplaceMemo } from "@/libs/react/memo";
@@ -76,8 +75,6 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       throw new Panic()
     if (!secp256k1.utils.isValidPrivateKey(zeroHexKey.slice(2)))
       throw new Panic()
-    if (!isSafariExtension() && confirm("Did you backup your private key?") === false)
-      return
 
     const address = triedAddress.getOrThrow()
     const wallet: WalletData = { coin: "ethereum", type: "privateKey", uuid, name: defNameInput, color: Color.all.indexOf(color), address, privateKey: zeroHexKey }
@@ -118,8 +115,6 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       throw new Panic()
     if (triedEncryptedPrivateKey == null)
       throw new Panic()
-    if (!isSafariExtension() && confirm("Did you backup your private key?") === false)
-      return
 
     const [_, cipherBase64] = triedEncryptedPrivateKey.getOrThrow()
 
@@ -208,7 +203,7 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       disabled={error != null || addUnauthenticatedOrAlert.loading}
       onClick={addUnauthenticatedOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
-      {error || "Add without authentication"}
+      {error || Locale.get(Locale.AddWithoutAuthentication, locale)}
     </WideClickableContrastButton>
 
   const AddAuthButton1 =
@@ -217,7 +212,18 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       disabled={error != null || addAuthenticatedOrAlert1.loading}
       onClick={addAuthenticatedOrAlert1.run}>
       <Outline.LockClosedIcon className="size-5" />
-      {error || "Add with authentication"}
+      {error && error}
+      {!error && <>
+        <span>
+          {Locale.get(Locale.AddWithAuthentication, locale)}
+        </span>
+        <span className="rtl:hidden">
+          (1/2)
+        </span>
+        <span className="ltr:hidden">
+          (2/1)
+        </span>
+      </>}
     </WideClickableGradientButton>
 
   const AddAuthButton2 =
@@ -226,7 +232,15 @@ export function StandaloneWalletCreatorDialog(props: {}) {
       disabled={error != null || addAuthenticatedOrAlert2.loading}
       onClick={addAuthenticatedOrAlert2.run}>
       <Outline.LockClosedIcon className="size-5" />
-      {error || "Add with authentication (1/2)"}
+      {error && error}
+      {!error && <>
+        <span>
+          {Locale.get(Locale.AddWithAuthentication, locale)}
+        </span>
+        <span>
+          (2/2)
+        </span>
+      </>}
     </WideClickableGradientButton>
 
   return <>

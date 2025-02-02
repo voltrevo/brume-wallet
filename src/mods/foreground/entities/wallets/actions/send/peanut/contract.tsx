@@ -571,8 +571,11 @@ export function WalletPeanutSendScreenContractValue(props: {}) {
           <span>
             {Locale.get(Locale.Send, locale)}
           </span>
-          <span>
+          <span className="rtl:hidden">
             (1/2)
+          </span>
+          <span className="ltr:hidden">
+            (2/1)
           </span>
         </WideClickableOppositeButton>
       </div>}

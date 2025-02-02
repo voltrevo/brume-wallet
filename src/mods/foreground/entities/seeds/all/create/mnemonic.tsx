@@ -198,7 +198,7 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       disabled={error != null || addUnauthenticatedOrAlert.loading}
       onClick={addUnauthenticatedOrAlert.run}>
       <Outline.PlusIcon className="size-5" />
-      {error || "Add without authentication"}
+      {error || Locale.get(Locale.AddWithoutAuthentication, locale)}
     </WideClickableContrastButton>
 
   const AddAuthButton1 =
@@ -207,7 +207,18 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       disabled={error != null || addAuthenticatedOrAlert1.loading}
       onClick={addAuthenticatedOrAlert1.run}>
       <Outline.LockClosedIcon className="size-5" />
-      {error || "Add with authentication"}
+      {error && error}
+      {!error && <>
+        <span>
+          {Locale.get(Locale.AddWithAuthentication, locale)}
+        </span>
+        <span className="rtl:hidden">
+          (1/2)
+        </span>
+        <span className="ltr:hidden">
+          (2/1)
+        </span>
+      </>}
     </WideClickableGradientButton>
 
   const AddAuthButton2 =
@@ -216,7 +227,15 @@ export function StandaloneSeedCreatorDialog(props: {}) {
       disabled={error != null || addAuthenticatedOrAlert2.loading}
       onClick={addAuthenticatedOrAlert2.run}>
       <Outline.LockClosedIcon className="size-5" />
-      {error || "Add with authentication (1/2)"}
+      {error && error}
+      {!error && <>
+        <span>
+          {Locale.get(Locale.AddWithAuthentication, locale)}
+        </span>
+        <span>
+          (2/2)
+        </span>
+      </>}
     </WideClickableGradientButton>
 
   return <>
