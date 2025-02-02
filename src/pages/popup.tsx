@@ -377,7 +377,7 @@ export function TransactPage() {
           <div className="text-red-400 dark:text-red-500">
             {currentSimulation.getErr().message}
           </div>}
-        {currentSimulation?.isOk() &&
+        {currentSimulation?.isOk() && currentSimulation.get() != null &&
           <div className="flex flex-col gap-2">
             {currentSimulation.get().logs.map((log, i) =>
               <Fragment key={i}>
