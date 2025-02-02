@@ -44,7 +44,7 @@ export function WalletDataReceiveScreen(props: {}) {
         {wallet.name}
       </div>
       <div className="h-2" />
-      <div className="text-default-contrast text-center">
+      <div className="text-default-contrast text-center break-all">
         {address}
       </div>
       <div className="h-4" />
