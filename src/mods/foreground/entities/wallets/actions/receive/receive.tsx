@@ -49,7 +49,7 @@ export function WalletDataReceiveScreen(props: {}) {
       </div>
       <div className="h-4" />
       <div className="bg-white rounded-xl p-1">
-        <img className="max-h-[300px] w-auto"
+        <img className="max-h-[280px] w-auto"
           alt="QR code"
           src={url} />
       </div>
