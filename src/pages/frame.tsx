@@ -1,14 +1,11 @@
 import { Director, Localizer } from "@/mods/foreground/global/mods/locale";
-import { Overlay } from "@/mods/foreground/overlay/overlay";
 import { Router } from "@/mods/foreground/router/router";
 
 export default function Main() {
   return <Localizer value={undefined}>
     <Director>
-      <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
-        <Overlay>
-          <Router />
-        </Overlay>
+      <main id="root" className="h-full w-full flex flex-col overflow-hidden animate-opacity-in">
+        <Router />
       </main>
     </Director>
   </Localizer>

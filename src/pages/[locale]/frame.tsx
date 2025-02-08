@@ -1,6 +1,5 @@
 import { Director, Localizer } from "@/mods/foreground/global/mods/locale"
 import { Locale } from "@/mods/foreground/locale"
-import { Overlay } from "@/mods/foreground/overlay/overlay"
 import { Router } from "@/mods/foreground/router/router"
 
 export interface Params {
@@ -25,10 +24,8 @@ export default function Main(props: Params) {
 
   return <Localizer value={locale}>
     <Director>
-      <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
-        <Overlay>
-          <Router />
-        </Overlay>
+      <main id="root" className="h-full w-full flex flex-col overflow-hidden animate-opacity-in">
+        <Router />
       </main>
     </Director>
   </Localizer>

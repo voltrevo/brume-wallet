@@ -1,7 +1,9 @@
 import { Director, Localizer } from "@/mods/foreground/global/mods/locale"
 import { Locale } from "@/mods/foreground/locale"
+import { UserBottomNavigation } from "@/mods/foreground/overlay/bottom"
 import { Nullable } from "@hazae41/option"
 import { useEffect, useMemo, useState } from "react"
+import { Topbar } from ".."
 
 export interface Params {
   readonly locale: string
@@ -62,10 +64,12 @@ export default function Main(props: Params) {
   return <Localizer value={locale}>
     <Director>
       <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
+        <Topbar />
         <iframe className="grow w-full"
           ref={setIframe}
           src={url.href}
           seamless />
+        <UserBottomNavigation />
       </main>
     </Director>
   </Localizer>
