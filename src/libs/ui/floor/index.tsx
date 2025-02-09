@@ -193,14 +193,6 @@ export function Floor(props: ChildrenProps & DarkProps & { hesitant?: boolean })
     return
   }, [hide])
 
-  const [focus, setFocus] = useState(false)
-
-  useEffect(() => {
-    if (!premount && !postmount)
-      return
-    setFocus(true)
-  }, [premount, postmount])
-
   /**
    * Only unmount when transition is finished
    */
