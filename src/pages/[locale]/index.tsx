@@ -1,9 +1,8 @@
 import { Director, Localizer } from "@/mods/foreground/global/mods/locale"
 import { Locale } from "@/mods/foreground/locale"
-import { UserBottomNavigation } from "@/mods/foreground/overlay/bottom"
+import { RpcRequestPreinit } from "@hazae41/jsonrpc"
 import { Nullable } from "@hazae41/option"
 import { useEffect, useMemo, useState } from "react"
-import { Topbar } from ".."
 
 export interface Params {
   readonly locale: string
@@ -29,6 +28,7 @@ export default function Main(props: Params) {
 
   useEffect(() => {
     const onHashChange = () => setHash(location.hash)
+
     addEventListener("hashchange", onHashChange, { passive: true })
     return () => removeEventListener("hashchange", onHashChange)
   }, [])
@@ -57,19 +57,51 @@ export default function Main(props: Params) {
     if (subwindow == null)
       return
     const onSubwindowHashChange = () => setHash(subwindow.location.hash)
+
     subwindow.addEventListener("hashchange", onSubwindowHashChange, { passive: true })
     return () => subwindow.removeEventListener("hashchange", onSubwindowHashChange)
+  }, [subwindow])
+
+  const [stack, setStack] = useState<string[]>([])
+  const [track, setTrack] = useState<Record<string, () => void>>({})
+
+  useEffect(() => {
+    if (subwindow == null)
+      return
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== subwindow)
+        return
+      const [request] = event.data as [RpcRequestPreinit]
+
+      if (request.method === "dialog_open") {
+        const [uuid] = request.params as [string]
+
+        setStack(stack => [...stack, uuid])
+        return
+      }
+
+      if (request.method === "dialog_close") {
+        const [uuid] = request.params as [string]
+
+        setStack(stack => stack.filter(x => x !== uuid))
+        return
+      }
+
+      return
+    }
+
+    addEventListener("message", onMessage)
+    return () => removeEventListener("message", onMessage)
   }, [subwindow])
 
   return <Localizer value={locale}>
     <Director>
       <main id="root" className="p-safe h-full w-full flex flex-col overflow-hidden animate-opacity-in">
-        <Topbar />
-        <iframe className="grow w-full"
+        <iframe className="grow w-full z-50"
           ref={setIframe}
           src={url.href}
           seamless />
-        <UserBottomNavigation />
       </main>
     </Director>
   </Localizer>

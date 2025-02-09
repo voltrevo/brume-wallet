@@ -7,6 +7,7 @@ import { AnchorProps } from "@/libs/react/props/html";
 import { SubtitleProps, TitleProps } from "@/libs/react/props/title";
 import { ClickableContrastAnchor, ClickableOppositeAnchor, TextAnchor, WideClickableContrastAnchor, WideClickableNakedMenuAnchor } from "@/libs/ui/anchor";
 import { Dialog } from "@/libs/ui/dialog";
+import { Floor } from "@/libs/ui/floor";
 import { Loading } from "@/libs/ui/loading";
 import { Menu } from "@/libs/ui/menu";
 import { PageBody } from "@/libs/ui/page/header";
@@ -19,6 +20,7 @@ import { Four } from "@/mods/foreground/landing/4";
 import { Five } from "@/mods/foreground/landing/5";
 import { Six } from "@/mods/foreground/landing/6";
 import { UserAvatar } from "@/mods/foreground/user/mods/avatar";
+import { Topbar } from "@/pages";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Fragment, useCallback } from "react";
 import { UserCreateDialog } from "../entities/users/all/create";
@@ -26,6 +28,7 @@ import { useCurrentUser, useUser, useUsers } from "../entities/users/data";
 import { UserLoginDialog } from "../entities/users/login";
 import { useLocaleContext } from "../global/mods/locale";
 import { Locale } from "../locale";
+import { GlobalBottomNavigation } from "../overlay/bottom";
 import { One } from "./1";
 
 export function EmptyLandingPage(props: { next?: string }) {
@@ -127,9 +130,9 @@ export function FullLandingPage(props: { next?: string }) {
           <UserLoginDialog next={next} />
         </Dialog>}
       {hash.url.pathname === "/users/create" &&
-        <Dialog>
+        <Floor>
           <UserCreateDialog next={next} />
-        </Dialog>}
+        </Floor>}
       {hash.url.pathname === "/users" &&
         <Menu>
           <UsersMenu />
@@ -143,6 +146,7 @@ export function FullLandingPage(props: { next?: string }) {
           <AndroidInstallDialog />
         </Dialog>}
     </HashSubpathProvider>
+    <Topbar />
     <GlobalPage>
       <PageBody>
         <div className="h-[max(24rem,100dvh_-_16rem)] flex-none flex flex-col items-center">
@@ -535,6 +539,7 @@ export function FullLandingPage(props: { next?: string }) {
         </div>
       </PageBody>
     </GlobalPage>
+    <GlobalBottomNavigation />
   </>
 }
 

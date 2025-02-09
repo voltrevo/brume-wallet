@@ -1,4 +1,6 @@
 import { DarkProps } from "@/libs/react/props/dark"
+import { UserBottomNavigation } from "@/mods/foreground/overlay/bottom"
+import { Topbar } from "@/pages"
 import { usePathContext } from "@hazae41/chemin"
 import { CloseContext, useCloseContext } from "@hazae41/react-close-context"
 import { AnimationEvent, KeyboardEvent, MouseEvent, SyntheticEvent, UIEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
@@ -191,6 +193,14 @@ export function Floor(props: ChildrenProps & DarkProps & { hesitant?: boolean })
     return
   }, [hide])
 
+  const [focus, setFocus] = useState(false)
+
+  useEffect(() => {
+    if (!premount && !postmount)
+      return
+    setFocus(true)
+  }, [premount, postmount])
+
   /**
    * Only unmount when transition is finished
    */
@@ -206,38 +216,48 @@ export function Floor(props: ChildrenProps & DarkProps & { hesitant?: boolean })
         <div className={`fixed inset-0 bg-backdrop ${premount ? "animate-opacity-in" : "animate-opacity-out"}`}
           aria-hidden="true"
           role="backdrop" />
-        <div className={`fixed inset-0 md:p-safe flex flex-col [scrollbar-gutter:stable] ${postmount && premount ? "overflow-y-scroll" : "overflow-y-hidden"} ${premount ? "animate-slideup-in" : "animate-slideup-out"}`}
-          data-theme={dark && "dark"}
-          onAnimationEnd={onAnimationEnd}
-          onMouseDown={onClickOutside}
-          onScroll={onScroll}
-          onTouchMove={onTouchStart}
-          onTouchEnd={onTouchEnd}
-          onClick={Events.keep}>
-          <div className={`grow flex flex-col items-center w-full`}>
-            {hesitant &&
-              <input className="h-0 -z-10 opacity-0"
-                aria-hidden
-                readOnly />}
-            <div className="h-[50vh] grow" />
-            <div className={`flex flex-col w-full text-default bg-default rounded-t-3xl`}
-              aria-modal
-              onMouseDown={Events.keep}>
-              <div className="p-4 flex items-center justify-center">
-                <div className="w-16 h-2 bg-backdrop rounded-full" />
-              </div>
-              <div className="relative grow flex flex-col basis-[100dvh]">
-                {!hesitant &&
-                  <input className="absolute h-[100dvh] -z-10 opacity-0"
-                    aria-hidden
-                    readOnly />}
-                <div className="grow flex flex-col p-6">
-                  <div className="grow flex flex-col p-safe">
-                    {children}
+        <div className={`fixed inset-0 md:p-safe flex flex-col`}>
+          <div className="z-10 bg-default"
+            inert={!postmount}>
+            <Topbar />
+          </div>
+          <div className={`[container-type:size] grow flex flex-col [scrollbar-gutter:stable] ${postmount && premount ? "overflow-y-scroll" : "overflow-y-hidden"} ${premount ? "animate-slideup-in" : "animate-slideup-out"}`}
+            data-theme={dark && "dark"}
+            onAnimationEnd={onAnimationEnd}
+            onMouseDown={onClickOutside}
+            onScroll={onScroll}
+            onTouchMove={onTouchStart}
+            onTouchEnd={onTouchEnd}
+            onClick={Events.keep}>
+            <div className={`grow flex flex-col items-center w-full`}>
+              {hesitant &&
+                <input className="h-0 -z-10 opacity-0"
+                  aria-hidden
+                  readOnly />}
+              <div className="h-[50cqh] grow" />
+              <div className={`flex flex-col w-full text-default bg-default rounded-t-3xl`}
+                aria-modal
+                onMouseDown={Events.keep}>
+                <div className="p-4 flex items-center justify-center">
+                  <div className="w-16 h-2 bg-backdrop rounded-full" />
+                </div>
+                <div className="relative grow flex flex-col basis-[100cqh]">
+                  {!hesitant &&
+                    <input className="absolute h-[100cqh] -z-10 opacity-0"
+                      aria-hidden
+                      readOnly />}
+                  <div className="grow flex flex-col p-6">
+                    <div className="grow flex flex-col p-safe">
+                      {children}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+          <div className="z-10 bg-default"
+            inert={!postmount}>
+            <UserBottomNavigation />
           </div>
         </div>
       </dialog>
