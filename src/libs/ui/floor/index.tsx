@@ -1,7 +1,6 @@
 import { DarkProps } from "@/libs/react/props/dark"
 import { UserBottomNavigation } from "@/mods/foreground/overlay/bottom"
 import { Topbar } from "@/pages"
-import { usePathContext } from "@hazae41/chemin"
 import { CloseContext, useCloseContext } from "@hazae41/react-close-context"
 import { AnimationEvent, KeyboardEvent, MouseEvent, SyntheticEvent, UIEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
@@ -10,7 +9,6 @@ import { Events } from "../../react/events"
 import { ChildrenProps } from "../../react/props/children"
 
 export function Floor(props: ChildrenProps & DarkProps & { hesitant?: boolean }) {
-  const { url } = usePathContext().getOrThrow()
   const close = useCloseContext().getOrThrow()
   const { dark, children, hesitant } = props
 
