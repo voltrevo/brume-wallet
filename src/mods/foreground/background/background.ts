@@ -45,7 +45,7 @@ export async function getServiceWorkerOrThrow(background: ServiceWorkerBackgroun
   if (isProdWebsite()) {
     navigator.serviceWorker.addEventListener("controllerchange", () => location.reload())
 
-    const update = await Immutable.register("./service_worker.latest.js")
+    const update = await Immutable.register("/service_worker.latest.js")
 
     if (update != null)
       await background.serviceWorker.emit("update", update)
@@ -61,7 +61,7 @@ export async function getServiceWorkerOrThrow(background: ServiceWorkerBackgroun
   } else {
     navigator.serviceWorker.addEventListener("controllerchange", () => location.reload())
 
-    await navigator.serviceWorker.register("./service_worker.js")
+    await navigator.serviceWorker.register("/service_worker.js")
 
     const serviceWorker = await navigator.serviceWorker.ready.then(r => r.active)
 
