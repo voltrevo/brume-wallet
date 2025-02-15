@@ -4,17 +4,10 @@ import { usePathContext } from "@hazae41/chemin"
 import { Address } from "@hazae41/cubane"
 import { Nullable } from "@hazae41/option"
 import { useEffect, useMemo, useState } from "react"
-import { RequestsPage } from "../entities/requests/all/page"
-import { SeedsPage } from "../entities/seeds/all/page"
 import { SeedPage } from "../entities/seeds/page"
-import { SessionsPage } from "../entities/sessions/all/page"
-import { SnapsPage } from "../entities/snaps/all/page"
 import { UserGuardPage } from "../entities/users/context"
-import { WalletsPage } from "../entities/wallets/all/page"
-import { TrashedWalletsPage } from "../entities/wallets/all/trash/page"
 import { WalletCameraPage } from "../entities/wallets/camera/page"
 import { WalletPage } from "../entities/wallets/page"
-import { HomePage } from "../home/page"
 import { EmptyLandingPage, FullLandingPage } from "../landing"
 import { UserSettingsPage } from "../user/mods/settings/mods/page"
 
@@ -31,29 +24,6 @@ export function Router() {
 
   if ((matches = path.url.pathname.match(/^(\/)?$/)) && !isWebsite())
     return <EmptyLandingPage next="#/home" />
-
-  if (matches = path.url.pathname.match(/^\/home(\/)?$/))
-    return <UserGuardPage>
-      <HomePage />
-    </UserGuardPage>
-
-  if (matches = path.url.pathname.match(/^\/wallets(\/)?$/))
-    return <WalletsPage />
-
-  if (matches = path.url.pathname.match(/^\/wallets\/trash(\/)?$/))
-    return <TrashedWalletsPage />
-
-  if (matches = path.url.pathname.match(/^\/seeds(\/)?$/))
-    return <SeedsPage />
-
-  if (matches = path.url.pathname.match(/^\/sessions(\/)?$/))
-    return <SessionsPage />
-
-  if (matches = path.url.pathname.match(/^\/requests(\/)?$/))
-    return <RequestsPage />
-
-  if (matches = path.url.pathname.match(/^\/plugins(\/)?$/))
-    return <SnapsPage />
 
   if (matches = path.url.pathname.match(/^\/wallet\/([^\/]+)(\/)?$/))
     return <UserGuardPage>

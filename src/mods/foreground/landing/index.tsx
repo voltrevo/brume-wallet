@@ -24,12 +24,29 @@ import { Topbar } from "@/pages";
 import { HashSubpathProvider, useCoords, useHashSubpath, usePathContext } from "@hazae41/chemin";
 import { Fragment, useCallback } from "react";
 import { UserCreateDialog } from "../entities/users/all/create";
+import { UserGuardPage } from "../entities/users/context";
 import { useCurrentUser, useUser, useUsers } from "../entities/users/data";
 import { UserLoginDialog } from "../entities/users/login";
 import { useLocaleContext } from "../global/mods/locale";
+import { HomePage } from "../home/page";
 import { Locale } from "../locale";
 import { GlobalBottomNavigation } from "../overlay/bottom";
 import { One } from "./1";
+
+export function Router() {
+  const path = usePathContext().getOrThrow()
+
+  let matches: RegExpMatchArray | null
+
+  if (matches = path.url.pathname.match(/^\/home(\/)?$/))
+    return <Floor>
+      <UserGuardPage>
+        <HomePage />
+      </UserGuardPage>
+    </Floor>
+
+  return null
+}
 
 export function EmptyLandingPage(props: { next?: string }) {
   const path = usePathContext().getOrThrow()
@@ -48,6 +65,7 @@ export function EmptyLandingPage(props: { next?: string }) {
 
   return <>
     <HashSubpathProvider>
+      <Router />
       {hash.url.pathname === "/users/login" &&
         <Dialog>
           <UserLoginDialog next={next} />
@@ -125,6 +143,7 @@ export function FullLandingPage(props: { next?: string }) {
 
   return <>
     <HashSubpathProvider>
+      <Router />
       {hash.url.pathname === "/users/login" &&
         <Dialog>
           <UserLoginDialog next={next} />
