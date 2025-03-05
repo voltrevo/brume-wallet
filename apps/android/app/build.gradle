@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "eth.brume.wallet"
+    namespace "money.brume.wallet"
     compileSdkVersion rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "eth.brume.wallet"
+        applicationId "money.brume.wallet"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 537

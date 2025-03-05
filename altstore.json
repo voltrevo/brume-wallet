@@ -1,5 +1,5 @@
 {
-  "name": "Brume",
+  "name": "Brume Foundation",
   "subtitle": "Brume for iOS and iPadOS",
   "description": "Brume for iOS and iPadOS",
   "website": "https://brume.money",
@@ -9,8 +9,8 @@
   "apps": [
     {
       "name": "Brume Wallet",
-      "bundleIdentifier": "eth.brume.wallet",
-      "developerName": "hazae41",
+      "bundleIdentifier": "money.brume.wallet",
+      "developerName": "Brume Foundation",
       "subtitle": "The private Ethereum wallet",
       "localizedDescription": "The private Ethereum wallet",
       "iconURL": "https://raw.githubusercontent.com/brumewallet/wallet/main/public/appicon.png",

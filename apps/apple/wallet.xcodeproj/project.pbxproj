@@ -717,7 +717,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet.extension;
+				PRODUCT_BUNDLE_IDENTIFIER = money.brume.wallet.extension;
 				PRODUCT_NAME = "Brume Wallet Extension";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -748,7 +748,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet.extension;
+				PRODUCT_BUNDLE_IDENTIFIER = money.brume.wallet.extension;
 				PRODUCT_NAME = "Brume Wallet Extension";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -788,7 +788,7 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet;
+				PRODUCT_BUNDLE_IDENTIFIER = money.brume.wallet;
 				PRODUCT_NAME = "Brume Wallet";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -826,7 +826,7 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet;
+				PRODUCT_BUNDLE_IDENTIFIER = money.brume.wallet;
 				PRODUCT_NAME = "Brume Wallet";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -861,7 +861,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet.extension;
+				PRODUCT_BUNDLE_IDENTIFIER = money.brume.wallet.extension;
 				PRODUCT_NAME = "Brume Wallet Extension";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -895,7 +895,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet.extension;
+				PRODUCT_BUNDLE_IDENTIFIER = money.brume.wallet.extension;
 				PRODUCT_NAME = "Brume Wallet Extension";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -934,7 +934,7 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet;
+				PRODUCT_BUNDLE_IDENTIFIER = money.brume.wallet;
 				PRODUCT_NAME = "Brume Wallet";
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -972,7 +972,7 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = eth.brume.wallet;
+				PRODUCT_BUNDLE_IDENTIFIER = money.brume.wallet;
 				PRODUCT_NAME = "Brume Wallet";
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;

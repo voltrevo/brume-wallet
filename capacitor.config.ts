@@ -1,7 +1,7 @@
 import { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = process.env.PLATFORM === "android" ? {
-  appId: "eth.brume.wallet",
+  appId: "money.brume.wallet",
   appName: "Brume Wallet",
   webDir: "dist/android",
   android: {
@@ -11,7 +11,7 @@ const config: CapacitorConfig = process.env.PLATFORM === "android" ? {
     androidScheme: "https",
   }
 } : {
-  appId: "eth.brume.wallet",
+  appId: "money.brume.wallet",
   appName: "Brume Wallet",
   webDir: "dist/apple",
   ios: {

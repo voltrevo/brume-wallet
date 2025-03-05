@@ -1,4 +1,4 @@
-package eth.brume.wallet
+package money.brume.wallet
 
 import android.os.Bundle
 import android.util.Log

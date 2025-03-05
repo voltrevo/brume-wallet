@@ -9,7 +9,7 @@ import SafariServices
 typealias PlatformViewController = NSViewController
 #endif
 
-let extensionBundleIdentifier = "eth.brume.wallet.extension"
+let extensionBundleIdentifier = "money.brume.wallet.extension"
 
 class ViewController: PlatformViewController, WKNavigationDelegate, WKScriptMessageHandler {
 
