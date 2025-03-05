@@ -700,7 +700,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 537;
+				CURRENT_PROJECT_VERSION = 540;
 				DEVELOPMENT_TEAM = 28VHR75NMY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ios-ext/Info.plist";
@@ -712,7 +712,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 0.7.537;
+				MARKETING_VERSION = 0.7.540;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -731,7 +731,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 537;
+				CURRENT_PROJECT_VERSION = 540;
 				DEVELOPMENT_TEAM = 28VHR75NMY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ios-ext/Info.plist";
@@ -743,7 +743,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 0.7.537;
+				MARKETING_VERSION = 0.7.540;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -765,7 +765,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 537;
+				CURRENT_PROJECT_VERSION = 540;
 				DEVELOPMENT_TEAM = 28VHR75NMY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ios-app/Info.plist";
@@ -781,7 +781,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.7.537;
+				MARKETING_VERSION = 0.7.540;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -803,7 +803,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 537;
+				CURRENT_PROJECT_VERSION = 540;
 				DEVELOPMENT_TEAM = 28VHR75NMY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ios-app/Info.plist";
@@ -819,7 +819,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.7.537;
+				MARKETING_VERSION = 0.7.540;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -842,7 +842,7 @@
 				CODE_SIGN_ENTITLEMENTS = "mac-ext/Brume Wallet.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 537;
+				CURRENT_PROJECT_VERSION = 540;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 28VHR75NMY;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -856,7 +856,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.7.537;
+				MARKETING_VERSION = 0.7.540;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -876,7 +876,7 @@
 				CODE_SIGN_ENTITLEMENTS = "mac-ext/Brume Wallet.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 537;
+				CURRENT_PROJECT_VERSION = 540;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 28VHR75NMY;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -890,7 +890,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.7.537;
+				MARKETING_VERSION = 0.7.540;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -912,7 +912,7 @@
 				CODE_SIGN_ENTITLEMENTS = "mac-app/Brume Wallet.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 537;
+				CURRENT_PROJECT_VERSION = 540;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 28VHR75NMY;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -927,7 +927,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.7.537;
+				MARKETING_VERSION = 0.7.540;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -950,7 +950,7 @@
 				CODE_SIGN_ENTITLEMENTS = "mac-app/Brume Wallet.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 537;
+				CURRENT_PROJECT_VERSION = 540;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 28VHR75NMY;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -965,7 +965,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.7.537;
+				MARKETING_VERSION = 0.7.540;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
