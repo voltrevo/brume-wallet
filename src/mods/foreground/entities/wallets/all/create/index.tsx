@@ -1,4 +1,4 @@
-import { Outline } from "@/libs/icons/icons";
+import { Outline } from "@/libs/icons";
 import { WideClickableNakedMenuAnchor } from "@/libs/ui/anchor";
 import { useLocaleContext } from "@/mods/foreground/global/mods/locale";
 import { Locale } from "@/mods/foreground/locale";

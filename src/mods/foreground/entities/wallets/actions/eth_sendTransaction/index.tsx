@@ -2,7 +2,7 @@ import { BigIntToHex, ZeroHexBigInt } from "@/libs/bigints/bigints";
 import { useCopy } from "@/libs/copy/copy";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
-import { Outline } from "@/libs/icons/icons";
+import { Outline } from "@/libs/icons";
 import { nto } from "@/libs/ntu";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";

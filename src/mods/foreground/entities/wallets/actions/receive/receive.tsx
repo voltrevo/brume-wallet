@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Outline } from "@/libs/icons/icons";
+import { Outline } from "@/libs/icons";
 import { WideClickableOppositeButton } from "@/libs/ui/button";
 import { Dialog } from "@/libs/ui/dialog";
 import { useLocaleContext } from "@/mods/foreground/global/mods/locale";

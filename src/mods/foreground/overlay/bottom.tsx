@@ -1,4 +1,4 @@
-import { Outline } from "@/libs/icons/icons";
+import { Outline } from "@/libs/icons";
 import { Dialog } from "@/libs/ui/dialog";
 import { ContrastTitleDiv } from "@/libs/ui/div";
 import { ClickerInAnchorDiv, GapperAndClickerInAnchorDiv } from "@/libs/ui/shrinker";

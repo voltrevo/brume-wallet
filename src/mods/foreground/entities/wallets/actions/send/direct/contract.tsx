@@ -1,6 +1,6 @@
 import { ERC20Abi } from "@/libs/abi/erc20.abi";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
-import { Outline } from "@/libs/icons/icons";
+import { Outline } from "@/libs/icons";
 import { nto } from "@/libs/ntu";
 import { useInputChange } from "@/libs/react/events";
 import { useConstant } from "@/libs/react/ref";

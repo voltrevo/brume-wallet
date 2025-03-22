@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { Color } from "@/libs/colors/colors";
-import { Outline } from "@/libs/icons/icons";
+import { Outline } from "@/libs/icons";
 import { Events } from "@/libs/react/events";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { AnchorProps } from "@/libs/react/props/html";

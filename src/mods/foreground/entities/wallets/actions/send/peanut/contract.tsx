@@ -2,7 +2,7 @@ import { ERC20Abi } from "@/libs/abi/erc20.abi";
 import { PeanutAbi } from "@/libs/abi/peanut.abi";
 import { useCopy } from "@/libs/copy/copy";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
-import { Outline } from "@/libs/icons/icons";
+import { Outline } from "@/libs/icons";
 import { nto } from "@/libs/ntu";
 import { Peanut } from "@/libs/peanut";
 import { useInputChange } from "@/libs/react/events";

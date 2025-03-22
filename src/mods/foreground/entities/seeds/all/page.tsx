@@ -1,4 +1,4 @@
-import { Outline } from "@/libs/icons/icons"
+import { Outline } from "@/libs/icons"
 import { OkProps } from "@/libs/react/props/promise"
 import { PaddedRoundedClickableNakedAnchor } from "@/libs/ui/anchor"
 import { Dialog } from "@/libs/ui/dialog"

@@ -1,3 +1,3 @@
-import { Outline } from "../icons/icons";
+import { Outline } from "../icons";
 
 export type Icon = typeof Outline.PlusIcon

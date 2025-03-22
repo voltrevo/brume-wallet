@@ -1,6 +1,6 @@
 import { Color } from "@/libs/colors/colors";
 import { Errors, UIError } from "@/libs/errors/errors";
-import { Outline } from "@/libs/icons/icons";
+import { Outline } from "@/libs/icons";
 import { useModhash } from "@/libs/modhash/modhash";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";

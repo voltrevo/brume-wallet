@@ -1,4 +1,4 @@
-import { Outline } from "@/libs/icons/icons";
+import { Outline } from "@/libs/icons";
 import { isWebsite } from "@/libs/platform/platform";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { OkProps } from "@/libs/react/props/promise";

@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Outline } from "@/libs/icons/icons"
+import { Outline } from "@/libs/icons"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { OkProps } from "@/libs/react/props/promise"
 import { PaddedRoundedClickableNakedAnchor, WideClickableContrastAnchor } from "@/libs/ui/anchor"

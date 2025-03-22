@@ -1,7 +1,7 @@
 import { browser, BrowserError } from "@/libs/browser/browser";
 import { Errors, UIError } from "@/libs/errors/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
-import { Outline } from "@/libs/icons/icons";
+import { Outline } from "@/libs/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";
 import { useInputChange } from "@/libs/react/events";
 import { UserRejectedError } from "@/libs/rpc/mods/errors";

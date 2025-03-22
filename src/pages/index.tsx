@@ -1,4 +1,4 @@
-import { Outline } from "@/libs/icons/icons";
+import { Outline } from "@/libs/icons";
 import { Director, Localizer, useLocaleContext } from "@/mods/foreground/global/mods/locale";
 import { Locale } from "@/mods/foreground/locale";
 import { Router } from "@/mods/foreground/router/router";

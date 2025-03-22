@@ -1,4 +1,4 @@
-import { Outline } from "@/libs/icons/icons"
+import { Outline } from "@/libs/icons"
 import { PaddedRoundedClickableNakedButton } from "@/libs/ui/button"
 import { PageBody, PageHeader } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"

@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
-import { Outline } from "@/libs/icons/icons";
+import { Outline } from "@/libs/icons";
 import { nto } from "@/libs/ntu";
 import { useEffectButNotFirstTime } from "@/libs/react/effect";
 import { useInputChange, useKeyboardEnter } from "@/libs/react/events";

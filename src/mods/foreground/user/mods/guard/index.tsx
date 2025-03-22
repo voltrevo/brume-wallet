@@ -1,4 +1,4 @@
-import { Outline } from "@/libs/icons/icons"
+import { Outline } from "@/libs/icons"
 import { ChildrenProps } from "@/libs/react/props/children"
 import { ClickableOppositeAnchor } from "@/libs/ui/anchor"
 import { Dialog } from "@/libs/ui/dialog"
