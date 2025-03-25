@@ -1,6 +1,6 @@
 import { useBooleanHandle } from "@/libs/react/handles/boolean";
 import { Result } from "@hazae41/result";
-import { Errors } from "../errors/errors";
+import { Errors } from "../errors";
 import { useAsyncUniqueCallback } from "../react/callback";
 
 export function useCopy(text?: string) {

@@ -3,7 +3,7 @@ import "@hazae41/symbol-dispose-polyfill";
 import "@/styles/index.css";
 
 import { Console } from "@/libs/console";
-import { Errors } from "@/libs/errors/errors";
+import { Errors } from "@/libs/errors";
 import { Catcher, PromiseCatcher } from "@/libs/react/error";
 import { ChildrenProps } from "@/libs/react/props/children";
 import { ErrorProps } from "@/libs/react/props/error";

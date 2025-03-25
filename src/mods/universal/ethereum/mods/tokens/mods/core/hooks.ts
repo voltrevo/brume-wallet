@@ -1,4 +1,4 @@
-import { Errors } from "@/libs/errors/errors"
+import { Errors } from "@/libs/errors"
 import { Wallet } from "@/mods/background/service_worker/entities/wallets/data"
 import { useUserStorageContext } from "@/mods/foreground/user/mods/storage"
 import { Address } from "@hazae41/cubane"

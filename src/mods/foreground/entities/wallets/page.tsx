@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { Color } from "@/libs/colors/colors";
-import { Errors, UIError } from "@/libs/errors/errors";
+import { Errors, UIError } from "@/libs/errors";
 import { ChainData, chainDataByChainId, strictChainDataByChainId, tokenByAddress } from "@/libs/ethereum/mods/chain";
 import { useDisplayRaw, useDisplayUsd } from "@/libs/fixed";
 import { Outline, Solid } from "@/libs/icons";

@@ -1,5 +1,5 @@
 import { BrowserError, browser } from "@/libs/browser/browser"
-import { Errors } from "@/libs/errors/errors"
+import { Errors } from "@/libs/errors"
 import { Outline } from "@/libs/icons"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { RoundedClickableNakedButton } from "@/libs/ui/button"

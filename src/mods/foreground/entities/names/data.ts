@@ -1,4 +1,4 @@
-import { Errors } from "@/libs/errors/errors"
+import { Errors } from "@/libs/errors"
 import { BgEns } from "@/mods/background/service_worker/entities/names/data"
 import { Address, ZeroHexString } from "@hazae41/cubane"
 import { createQuery, useError, useFetch, useQuery, useVisible } from "@hazae41/glacier"

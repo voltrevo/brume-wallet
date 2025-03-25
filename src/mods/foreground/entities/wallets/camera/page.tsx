@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Errors } from "@/libs/errors/errors"
+import { Errors } from "@/libs/errors"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"
 import { UUIDProps } from "@/libs/react/props/uuid"
 import { WcMetadata } from "@hazae41/latrine"

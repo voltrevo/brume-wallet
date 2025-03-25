@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Errors } from "@/libs/errors/errors"
+import { Errors } from "@/libs/errors"
 import { ChainData, chainDataByChainId } from "@/libs/ethereum/mods/chain"
 import { Outline } from "@/libs/icons"
 import { isSafariExtension } from "@/libs/platform/platform"

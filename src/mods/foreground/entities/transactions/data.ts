@@ -1,4 +1,4 @@
-import { Errors } from "@/libs/errors/errors"
+import { Errors } from "@/libs/errors"
 import { useWait } from "@/libs/glacier/hooks"
 import { BgTransaction, BgTransactionReceipt, BgTransactionTrial, TransactionRef } from "@/mods/background/service_worker/entities/transactions/data"
 import { ZeroHexString } from "@hazae41/cubane"

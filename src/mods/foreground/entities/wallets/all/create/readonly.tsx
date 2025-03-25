@@ -1,5 +1,5 @@
 import { Color } from "@/libs/colors/colors";
-import { Errors, UIError } from "@/libs/errors/errors";
+import { Errors, UIError } from "@/libs/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons";
 import { useModhash } from "@/libs/modhash/modhash";

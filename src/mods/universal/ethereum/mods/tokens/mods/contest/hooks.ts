@@ -1,4 +1,4 @@
-import { Errors } from "@/libs/errors/errors";
+import { Errors } from "@/libs/errors";
 import { useUserStorageContext } from "@/mods/foreground/user/mods/storage";
 import { useError, useFetch, useInterval, useQuery, useVisible } from "@hazae41/glacier";
 import { Nullable } from "@hazae41/option";

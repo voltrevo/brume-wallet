@@ -1,4 +1,4 @@
-import { Errors } from "@/libs/errors/errors";
+import { Errors } from "@/libs/errors";
 import { BgSimulation, SimulationData } from "@/mods/background/service_worker/entities/simulations/data";
 import { BlockNumber } from "@/mods/universal/ethereum/mods";
 import { createQuery, useError, useFetch, useQuery } from "@hazae41/glacier";

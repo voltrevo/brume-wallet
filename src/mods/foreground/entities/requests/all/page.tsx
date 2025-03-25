@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Errors } from "@/libs/errors/errors"
+import { Errors } from "@/libs/errors"
 import { Outline } from "@/libs/icons"
 import { isSafariExtension } from "@/libs/platform/platform"
 import { useAsyncUniqueCallback } from "@/libs/react/callback"

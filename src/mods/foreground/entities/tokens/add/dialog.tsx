@@ -1,4 +1,4 @@
-import { Errors } from "@/libs/errors/errors";
+import { Errors } from "@/libs/errors";
 import { chainDataByChainId } from "@/libs/ethereum/mods/chain";
 import { Outline } from "@/libs/icons";
 import { useAsyncUniqueCallback } from "@/libs/react/callback";

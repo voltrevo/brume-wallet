@@ -1,5 +1,5 @@
 import { ZeroHexBigInt } from "@/libs/bigints/bigints";
-import { Errors } from "@/libs/errors/errors";
+import { Errors } from "@/libs/errors";
 import { ChainData } from "@/libs/ethereum/mods/chain";
 import { BgEthereum } from "@/mods/background/service_worker/entities/unknown/data";
 import { EthereumChainfulRpcRequestPreinit, EthereumChainlessRpcRequestPreinit } from "@/mods/background/service_worker/entities/wallets/data";
