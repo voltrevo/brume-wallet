@@ -13,17 +13,17 @@
       "developerName": "Brume Foundation",
       "subtitle": "The private Ethereum wallet",
       "localizedDescription": "The private Ethereum wallet",
-      "iconURL": "https://raw.githubusercontent.com/brumewallet/wallet/main/public/appicon.png",
+      "iconURL": "https://raw.githubusercontent.com/brumeproject/wallet/main/public/appicon.png",
       "tintColor": "FFFFFF",
       "category": null,
       "screenshots": [
         {
-          "imageURL": "https://raw.githubusercontent.com/brumewallet/wallet/main/fastlane/metadata/apple/en-US/images/phoneScreenshots/1.png",
+          "imageURL": "https://raw.githubusercontent.com/brumeproject/wallet/main/fastlane/metadata/apple/en-US/images/phoneScreenshots/1.png",
           "width": 1284,
           "height": 2778
         },
         {
-          "imageURL": "https://raw.githubusercontent.com/brumewallet/wallet/main/fastlane/metadata/apple/en-US/images/phoneScreenshots/2.png",
+          "imageURL": "https://raw.githubusercontent.com/brumeproject/wallet/main/fastlane/metadata/apple/en-US/images/phoneScreenshots/2.png",
           "width": 1284,
           "height": 2778
         }
@@ -33,7 +33,7 @@
           "version": "0.7.537",
           "date": "2025-02-02T21:02:47.174Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.7.537/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.7.537/dist/ios-and-ipados.ipa",
           "size": 4833784,
           "sha256": "541738632d2c5ecfeb9543f556955514aaff5f3b402c4c36b9b7e3ff30ea9bba",
           "minOSVersion": "15.0"
@@ -42,7 +42,7 @@
           "version": "0.6.536",
           "date": "2025-01-23T11:51:34.835Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.536/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.536/dist/ios-and-ipados.ipa",
           "size": 4688721,
           "sha256": "ac6ef371eefb57b8ed2e2ec22d4dd2b5ec270d51f10088b9b8766858cfd60b19",
           "minOSVersion": "15.0"
@@ -51,7 +51,7 @@
           "version": "0.6.535",
           "date": "2024-12-16T21:37:37.066Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.535/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.535/dist/ios-and-ipados.ipa",
           "size": 3207118,
           "sha256": "82b906bc5fb0ac6d1a781353111c16776361b3e8a047ba0d127eedaa4237b2fb",
           "minOSVersion": "15.0"
@@ -60,7 +60,7 @@
           "version": "0.6.534",
           "date": "2024-12-16T21:27:54.440Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.534/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.534/dist/ios-and-ipados.ipa",
           "size": 3207114,
           "sha256": "562ccb575bdf7692f2025b9f03992dde79f07ed359707ef855923df6b4296e07",
           "minOSVersion": "15.0"
@@ -69,7 +69,7 @@
           "version": "0.6.533",
           "date": "2024-12-16T21:09:27.051Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.533/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.533/dist/ios-and-ipados.ipa",
           "size": 3207124,
           "sha256": "26416fe5bfb4d760f466885ca7a7de2f85f573a3b90e55bf24f7ec43636f98dc",
           "minOSVersion": "15.0"
@@ -78,7 +78,7 @@
           "version": "0.6.532",
           "date": "2024-12-16T21:02:02.055Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.532/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.532/dist/ios-and-ipados.ipa",
           "size": 3207104,
           "sha256": "0581908e0ef7eaae7dda2a9ff2b4dd2c68c77febfbf7a962b00f19002f7af9f8",
           "minOSVersion": "15.0"
@@ -87,7 +87,7 @@
           "version": "0.6.531",
           "date": "2024-11-26T17:35:36.674Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.531/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.531/dist/ios-and-ipados.ipa",
           "size": 2665807,
           "sha256": "c464833d3905b6723f0a2ab2b474a8163e7e89f30128f7e0804a12576734e65e",
           "minOSVersion": "15.0"
@@ -96,7 +96,7 @@
           "version": "0.6.530",
           "date": "2024-11-12T06:41:20.363Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.530/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.530/dist/ios-and-ipados.ipa",
           "size": 2664047,
           "sha256": "a512b1ac0fa2dc0e5bbd24065b3b5a875b672f29cbb6c6d1768d2c0ea500ffe7",
           "minOSVersion": "15.0"
@@ -105,7 +105,7 @@
           "version": "0.6.529",
           "date": "2024-11-04T15:24:53.908Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.529/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.529/dist/ios-and-ipados.ipa",
           "size": 2654649,
           "sha256": "e7ee59813ad943af8ab3e30e3d19d41ba6bd636e2e1265ff6db6d4e80ad06a9d",
           "minOSVersion": "15.0"
@@ -114,7 +114,7 @@
           "version": "0.6.528",
           "date": "2024-11-01T16:33:34.506Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.528/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.528/dist/ios-and-ipados.ipa",
           "size": 2654540,
           "sha256": "38afd0e6aeaa8baee16ef2f584eb7eb5846dc9e7fdde78736aaf2eb885aed6c8",
           "minOSVersion": "15.0"
@@ -123,7 +123,7 @@
           "version": "0.6.527",
           "date": "2024-10-23T14:57:47.354Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.527/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.527/dist/ios-and-ipados.ipa",
           "size": 2654481,
           "sha256": "b93c6c50b083482898e982c6a2caf524bae4c32537619e6b729ac3dbce6e6872",
           "minOSVersion": "15.0"
@@ -132,7 +132,7 @@
           "version": "0.6.526",
           "date": "2024-10-23T14:50:30.502Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.526/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.526/dist/ios-and-ipados.ipa",
           "size": 2654463,
           "sha256": "f886d2e90a852b71764cadea190ea238a36e84ab835f865d95ab2c5f484298a2",
           "minOSVersion": "15.0"
@@ -141,7 +141,7 @@
           "version": "0.6.526",
           "date": "2024-10-23T14:47:57.486Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.526/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.526/dist/ios-and-ipados.ipa",
           "size": 2654463,
           "sha256": "f886d2e90a852b71764cadea190ea238a36e84ab835f865d95ab2c5f484298a2",
           "minOSVersion": "15.0"
@@ -150,7 +150,7 @@
           "version": "0.6.525",
           "date": "2024-09-07T16:35:25.093Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.525/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.525/dist/ios-and-ipados.ipa",
           "size": 2648671,
           "sha256": "13bf949de3e46b30d15a8bf675a35e70757b2f974ee2ec3845c33a783d973d85",
           "minOSVersion": "15.0"
@@ -159,7 +159,7 @@
           "version": "0.6.524",
           "date": "2024-08-16T06:38:35.736Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.524/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.524/dist/ios-and-ipados.ipa",
           "size": 2714971,
           "sha256": "cde1346b9e31438266de600a7a657cbb376b239419ced31805f6d287861b492c",
           "minOSVersion": "15.0"
@@ -168,7 +168,7 @@
           "version": "0.6.523",
           "date": "2024-08-14T16:22:25.956Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.523/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.523/dist/ios-and-ipados.ipa",
           "size": 2715300,
           "sha256": "b1ae844238de2a5af2a5a07a26f4336c31b9c867151c6ab380a4d24b3d9fcd31",
           "minOSVersion": "15.0"
@@ -177,7 +177,7 @@
           "version": "0.6.522",
           "date": "2024-08-13T06:35:58.573Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.522/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.522/dist/ios-and-ipados.ipa",
           "size": 2713994,
           "sha256": "83f8269c8438ca255e781367378192f600b68f9b9f1885a9fb33b160b2c84190",
           "minOSVersion": "15.0"
@@ -186,7 +186,7 @@
           "version": "0.6.521",
           "date": "2024-08-12T06:28:57.616Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.521/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.521/dist/ios-and-ipados.ipa",
           "size": 2679662,
           "sha256": "b58692a89657ea738040643ff21971f2d43c5153cd64d48d35ee23e223dff125",
           "minOSVersion": "15.0"
@@ -195,7 +195,7 @@
           "version": "0.6.520",
           "date": "2024-08-04T06:12:53.414Z",
           "localizedDescription": "See GitHub for changelogs.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.6.520/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.6.520/dist/ios-and-ipados.ipa",
           "size": 2678544,
           "sha256": "79cdb8b7348255ff6a7593c28ff02c5125901580c74d13272227070703f13ad1",
           "minOSVersion": "15.0"
@@ -204,7 +204,7 @@
           "version": "0.5.19",
           "date": "2024-07-11T06:26:59.098Z",
           "localizedDescription": "Improvements and fixes. See GitHub for more details.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.5.19/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.5.19/dist/ios-and-ipados.ipa",
           "size": 2724218,
           "sha256": "6a32eba40e507bf283e3ff61b7b3cc8ada06765f422530391fc7d5eaf9e4abbc",
           "minOSVersion": "15.0"
@@ -213,7 +213,7 @@
           "version": "0.5.17",
           "date": "2024-07-07T15:52:59.235Z",
           "localizedDescription": "Improvements and fixes. See GitHub for more details.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.5.17/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.5.17/dist/ios-and-ipados.ipa",
           "size": 2723413,
           "sha256": "d583ba7dc31af532d163b61a30194050ef01efff6877fad6750aa16982bfeb9e",
           "minOSVersion": "15.0"
@@ -222,7 +222,7 @@
           "version": "0.5.16",
           "date": "2024-05-08T12:03:45.435Z",
           "localizedDescription": "Improvements and fixes. See GitHub for more details.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.5.16/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.5.16/dist/ios-and-ipados.ipa",
           "size": 2858343,
           "sha256": "743fbbd9e1c8f9097a7cd80edfeb93ae60a309b41bb083eaf1cc98e1c9595594",
           "minOSVersion": "15.0"
@@ -231,7 +231,7 @@
           "version": "0.5.15",
           "date": "2024-05-08T11:41:40.840Z",
           "localizedDescription": "Improvements and fixes. See GitHub for more details.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.5.15/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.5.15/dist/ios-and-ipados.ipa",
           "size": 3355794,
           "sha256": "6734d549892b2aa5130ce8478757553bcd7f7431d86fb4a1d88266e691f81565",
           "minOSVersion": "15.0"
@@ -240,7 +240,7 @@
           "version": "0.5.14",
           "date": "2024-05-08T10:08:03.753Z",
           "localizedDescription": "Improvements and fixes. See GitHub for more details.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.5.14/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.5.14/dist/ios-and-ipados.ipa",
           "size": 3354013,
           "sha256": "e0cc9504f6a2ff12e47dd751de3b58021dbbb2de6a826613dad4213c5ac68d7d",
           "minOSVersion": "15.0"
@@ -249,7 +249,7 @@
           "version": "0.5.13",
           "date": "2024-05-08T09:32:39.084Z",
           "localizedDescription": "Improvements and fixes. See GitHub for more details.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.5.13/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.5.13/dist/ios-and-ipados.ipa",
           "size": 3354005,
           "sha256": "d02ccda2a6816dafb4ab66b43d8261fec99f922f46e9c509d8eabf9ac100f0a9",
           "minOSVersion": "15.0"
@@ -258,7 +258,7 @@
           "version": "0.5.12",
           "date": "2024-03-07T20:14:25.145Z",
           "localizedDescription": "Improvements and fixes. See GitHub for more details.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.5.12/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.5.12/dist/ios-and-ipados.ipa",
           "size": 3130368,
           "sha256": "de0429d1d85e504e2d7cd0fdfda18021aa9bbd61a7cd15426d7479b391cc0e82",
           "minOSVersion": "15.0"
@@ -267,7 +267,7 @@
           "version": "0.5.11",
           "date": "2024-02-27T16:12:33.160Z",
           "localizedDescription": "Improvements and fixes. See GitHub for more details.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.5.11/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.5.11/dist/ios-and-ipados.ipa",
           "size": 2568698,
           "sha256": "c478271ec406510faa7a41937d29a34c5b6aecf760f5cb78c9f6db96d2c52e97",
           "minOSVersion": "15.0"
@@ -276,7 +276,7 @@
           "version": "0.5.9",
           "date": "2024-02-22T23:52:51+01:00",
           "localizedDescription": "Bug fixes and improvements.",
-          "downloadURL": "https://github.com/brumewallet/wallet/raw/v0.5.9/dist/ios-and-ipados.ipa",
+          "downloadURL": "https://github.com/brumeproject/wallet/raw/v0.5.9/dist/ios-and-ipados.ipa",
           "size": 2565415,
           "sha256": "82063b3b24e76b638f13b1930bf622d8f46e475e528a6bf5e64fe5a36cb0b2bb",
           "minOSVersion": "15.0"
