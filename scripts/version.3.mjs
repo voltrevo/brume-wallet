@@ -12,7 +12,7 @@ config({ path: dirname(new URL(import.meta.url).pathname) + "/.env.local" })
     "version": process.env.npm_package_version,
     "date": new Date().toISOString(),
     "localizedDescription": "See GitHub for changelogs.",
-    "downloadURL": `https://github.com/brumewallet/wallet/raw/v${process.env.npm_package_version}/dist/ios-and-ipados.ipa`,
+    "downloadURL": `https://github.com/brumeproject/wallet/raw/v${process.env.npm_package_version}/dist/ios-and-ipados.ipa`,
     "size": statSync("./dist/ios-and-ipados.ipa").size,
     "sha256": Buffer.from(await crypto.subtle.digest("SHA-256", readFileSync("./dist/ios-and-ipados.ipa"))).toString("hex"),
     "minOSVersion": "15.0"
