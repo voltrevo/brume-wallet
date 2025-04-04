@@ -14,7 +14,7 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 
 ### Website (ipfs)
 
-- [Go to latest version](https://github.com/brumewallet/wallet/blob/main/dist/.website.ipfs.md)
+- [Go to latest version](https://github.com/brumeproject/wallet/blob/main/dist/.website.ipfs.md)
 
 ### Chrome-like extension (official store)
 
@@ -30,7 +30,7 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 
 ### Android application (signed .apk)
 
-- [Download .apk](https://github.com/brumewallet/wallet/raw/main/dist/android.apk)
+- [Download .apk](https://github.com/brumeproject/wallet/raw/main/dist/android.apk)
 
 ### Android application (alternative store)
 
@@ -38,17 +38,17 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 
 ### Safari extension on macOS only (signed .app)
 
-- [Download .zip](https://github.com/brumewallet/wallet/raw/main/dist/macos.zip)
+- [Download .zip](https://github.com/brumeproject/wallet/raw/main/dist/macos.zip)
 
 ### Safari extension on iOS only (alternative store)
 
 - Copy the link to the [AltStore](https://altstore.io) source
 
-`https://raw.githubusercontent.com/brumewallet/wallet/main/altstore.json`
+`https://raw.githubusercontent.com/brumeproject/wallet/main/altstore.json`
 
 ### Safari extension on iOS only (signed .ipa)
 
-- [Download .ipa](https://github.com/brumewallet/wallet/raw/main/dist/ios-and-ipados.ipa)
+- [Download .ipa](https://github.com/brumeproject/wallet/raw/main/dist/ios-and-ipados.ipa)
 
 ### Website (reproducible cloud-hosting)
 
@@ -57,13 +57,13 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 
 ### Website (reproducible self-hosting)
 
-- [Download .zip](https://github.com/brumewallet/wallet/raw/main/dist/website.zip)
+- [Download .zip](https://github.com/brumeproject/wallet/raw/main/dist/website.zip)
 - Extract `website.zip` in a new folder
 - Serve using `npx serve`
 
 ### Chrome-like extension (reproducible self-installation)
 
-- [Download .zip](https://github.com/brumewallet/wallet/raw/main/dist/chrome.zip)
+- [Download .zip](https://github.com/brumeproject/wallet/raw/main/dist/chrome.zip)
 - Extract `chrome.zip` in a new folder
 - Open Chrome, open settings, left panel, bottom, click `Extensions`
 - Top bar, right, enable `Developer mode`
@@ -71,7 +71,7 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 
 ### Firefox-like extension (reproducible temporary self-installation)
 
-- [Download .zip](https://github.com/brumewallet/wallet/raw/main/dist/firefox.zip)
+- [Download .zip](https://github.com/brumeproject/wallet/raw/main/dist/firefox.zip)
 - Extract `firefox.zip` in a new folder
 - Open Firefox, navigate to `about:debugging`
 - Left panel, click `This Firefox`
@@ -80,7 +80,7 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 - Open the folder where `firefox.zip` was extracted
 - Select the `manifest.json` file
 
-### [All builds (ipfs)](https://github.com/brumewallet/wallet/blob/main/dist/.ipfs.md)
+### [All builds (ipfs)](https://github.com/brumeproject/wallet/blob/main/dist/.ipfs.md)
 
 ## Reproducible building
 
@@ -91,7 +91,7 @@ You can use Brume Wallet on a website, as a browser extension, and as a mobile a
 - Clone the repository
 
 ```bash
-git clone https://github.com/brumewallet/wallet && cd wallet
+git clone https://github.com/brumeproject/wallet && cd wallet
 ```
 
 - Build the website and extension
@@ -106,7 +106,7 @@ npm install && npm run build && npm run zip
 
 GitHub Actions automatically rebuilds each release and checks that the committed files are the same as the built ones
 
-https://github.com/brumewallet/wallet/actions/workflows/release.yml
+https://github.com/brumeproject/wallet/actions/workflows/release.yml
 
 You can check the comparison yourself by running the following
 
