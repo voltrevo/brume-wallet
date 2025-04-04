@@ -538,7 +538,7 @@ export function FullLandingPage(props: { next?: string }) {
         <div className="h-4" />
         <WideClickableContrastAnchor
           target="_blank" rel="noreferrer"
-          href="https://github.com/brumewallet/wallet#usage">
+          href="https://github.com/brumeproject/wallet#usage">
           <Outline.ArrowTopRightOnSquareIcon className="size-5" />
           {Locale.get(Locale.MoreDownloads, locale)}
         </WideClickableContrastAnchor>
