@@ -2,54 +2,14 @@
 import { useDisplayUsd } from "@/libs/fixed"
 import { isWebsite } from "@/libs/platform/platform"
 import { WideClickableContrastButton } from "@/libs/ui/button"
-import { Floor } from "@/libs/ui/floor"
 import { PageBody } from "@/libs/ui/page/header"
 import { UserPage } from "@/libs/ui/page/page"
 import { useBackgroundContext } from "@/mods/foreground/background/context"
 import { useUserTotalPricedBalance } from "@/mods/universal/user/mods/balances/hooks"
-import { HashSubpathProvider, usePathContext } from "@hazae41/chemin"
 import { useCallback, useEffect, useState } from "react"
-import { RequestsPage } from "../entities/requests/all/page"
-import { SeedsPage } from "../entities/seeds/all/page"
-import { SessionsPage } from "../entities/sessions/all/page"
 import { useUserContext } from "../entities/users/context"
-import { WalletsPage } from "../entities/wallets/all/page"
-import { TrashedWalletsPage } from "../entities/wallets/all/trash/page"
 import { useLocaleContext } from "../global/mods/locale"
 import { Locale } from "../locale"
-
-export function Router() {
-  const path = usePathContext().getOrThrow()
-
-  let matches: RegExpMatchArray | null
-
-  if (matches = path.url.pathname.match(/^\/wallets(\/)?$/))
-    return <Floor>
-      <WalletsPage />
-    </Floor>
-
-  if (matches = path.url.pathname.match(/^\/wallets\/trash(\/)?$/))
-    return <Floor>
-      <TrashedWalletsPage />
-    </Floor>
-
-  if (matches = path.url.pathname.match(/^\/seeds(\/)?$/))
-    return <Floor>
-      <SeedsPage />
-    </Floor>
-
-  if (matches = path.url.pathname.match(/^\/sessions(\/)?$/))
-    return <Floor>
-      <SessionsPage />
-    </Floor>
-
-  if (matches = path.url.pathname.match(/^\/requests(\/)?$/))
-    return <Floor>
-      <RequestsPage />
-    </Floor>
-
-  return null
-}
 
 export function HomePage() {
   const locale = useLocaleContext().getOrThrow()
@@ -230,9 +190,6 @@ export function HomePage() {
     </PageBody >
 
   return <UserPage>
-    <HashSubpathProvider>
-      <Router />
-    </HashSubpathProvider>
     {Body}
   </UserPage>
 }
