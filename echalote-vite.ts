@@ -12,31 +12,24 @@ declare global {
 
 window.Buffer = Buffer
 
-// Import the actual Echalote libraries
-import { TorClientDuplex, Echalote, createSnowflakeStream, Circuit } from "@hazae41/echalote"
-import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
-import { fetch } from "@hazae41/fleche"
-
 // Import the WebSocketDuplex from the wallet's implementation
 import { WebSocketDuplex } from './src/libs/streams/websocket.js'
 
-import * as walletWasm from '@brumewallet/wallet.wasm'
-
-// import * as aesWasm from '@hazae41/aes.wasm'
-// import * as base16Wasm from '@hazae41/base16.wasm'
-// import * as base58Wasm from '@hazae41/base58.wasm'
-// import * as base64Wasm from '@hazae41/base64.wasm'
-// import * as bitwiseWasm from '@hazae41/bitwise.wasm'
-// import * as chacha20poly1305Wasm from '@hazae41/chacha20poly1305.wasm'
-// import * as ed25519Wasm from '@hazae41/ed25519.wasm'
-// import * as memoryWasm from '@hazae41/memory.wasm'
-// import * as networkWasm from '@hazae41/network.wasm'
-// import * as ripemdWasm from '@hazae41/ripemd.wasm'
-// import * as rsaWasm from '@hazae41/rsa.wasm'
-// import * as secp256k1Wasm from '@hazae41/secp256k1.wasm'
-// import * as sha1Wasm from '@hazae41/sha1.wasm'
-// import * as sha3Wasm from '@hazae41/sha3.wasm'
-// import * as x25519Wasm from '@hazae41/x25519.wasm'
+import { WalletWasm } from "@brumewallet/wallet.wasm";
+import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
+import { Base16 } from "@hazae41/base16";
+import { Base58 } from "@hazae41/base58";
+import { Base64 } from "@hazae41/base64";
+import { Base64Url } from "@hazae41/base64url";
+import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
+import { Circuit, Echalote, TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote";
+import { Ed25519 } from "@hazae41/ed25519";
+import { fetch } from "@hazae41/fleche";
+import { Keccak256 } from "@hazae41/keccak256";
+import { Ripemd160 } from "@hazae41/ripemd160";
+import { Secp256k1 } from "@hazae41/secp256k1";
+import { Sha1 } from "@hazae41/sha1";
+import { X25519 } from "@hazae41/x25519";
 
 type LogType = 'info' | 'success' | 'error'
 
@@ -60,25 +53,27 @@ function clearOutput(): void {
   }
 }
 
-// async function initAllWasm() {
-//   await Promise.all([
-//     aesWasm.initBundled(),
-//     base16Wasm.initBundled(),
-//     base58Wasm.initBundled(),
-//     base64Wasm.initBundled(),
-//     bitwiseWasm.initBundled(),
-//     chacha20poly1305Wasm.initBundled(),
-//     ed25519Wasm.initBundled(),
-//     memoryWasm.initBundled(),
-//     networkWasm.initBundled(),
-//     ripemdWasm.initBundled(),
-//     rsaWasm.initBundled(),
-//     secp256k1Wasm.initBundled(),
-//     sha1Wasm.initBundled(),
-//     sha3Wasm.initBundled(),
-//     x25519Wasm.initBundled(),
-//   ]);
-// }
+async function initOrThrow() {
+  await WalletWasm.initBundled()
+
+  Sha1.set(Sha1.fromWasm(WalletWasm))
+
+  Keccak256.set(Keccak256.fromWasm(WalletWasm))
+  Ripemd160.set(Ripemd160.fromWasm(WalletWasm))
+
+  Base16.set(Base16.fromWasm(WalletWasm))
+  Base64.set(Base64.fromWasm(WalletWasm))
+  Base58.set(Base58.fromWasm(WalletWasm))
+
+  Base64Url.set(Base64Url.fromWasm(WalletWasm))
+
+  Secp256k1.set(Secp256k1.fromWasm(WalletWasm))
+
+  Ed25519.set(await Ed25519.fromNativeOrWasm(WalletWasm))
+  X25519.set(X25519.fromWasm(WalletWasm))
+
+  ChaCha20Poly1305.set(ChaCha20Poly1305.fromWasm(WalletWasm))
+}
 
 async function waitForWebSocket(
   socket: WebSocket,
@@ -129,8 +124,7 @@ async function startExample(): Promise<void> {
     log("🚀 Starting REAL Echalote example with Vite...")
 
     log('init wasm')
-    // await initAllWasm();
-    await walletWasm.initBundled();
+    await initOrThrow()
     log('wasm initialized')
 
     log("📚 Libraries imported successfully!")
