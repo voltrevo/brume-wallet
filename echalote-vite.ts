@@ -20,6 +20,24 @@ import { fetch } from "@hazae41/fleche"
 // Import the WebSocketDuplex from the wallet's implementation
 import { WebSocketDuplex } from './src/libs/streams/websocket.js'
 
+import * as walletWasm from '@brumewallet/wallet.wasm'
+
+// import * as aesWasm from '@hazae41/aes.wasm'
+// import * as base16Wasm from '@hazae41/base16.wasm'
+// import * as base58Wasm from '@hazae41/base58.wasm'
+// import * as base64Wasm from '@hazae41/base64.wasm'
+// import * as bitwiseWasm from '@hazae41/bitwise.wasm'
+// import * as chacha20poly1305Wasm from '@hazae41/chacha20poly1305.wasm'
+// import * as ed25519Wasm from '@hazae41/ed25519.wasm'
+// import * as memoryWasm from '@hazae41/memory.wasm'
+// import * as networkWasm from '@hazae41/network.wasm'
+// import * as ripemdWasm from '@hazae41/ripemd.wasm'
+// import * as rsaWasm from '@hazae41/rsa.wasm'
+// import * as secp256k1Wasm from '@hazae41/secp256k1.wasm'
+// import * as sha1Wasm from '@hazae41/sha1.wasm'
+// import * as sha3Wasm from '@hazae41/sha3.wasm'
+// import * as x25519Wasm from '@hazae41/x25519.wasm'
+
 type LogType = 'info' | 'success' | 'error'
 
 let isRunning: boolean = false
@@ -41,6 +59,26 @@ function clearOutput(): void {
     output.textContent = ''
   }
 }
+
+// async function initAllWasm() {
+//   await Promise.all([
+//     aesWasm.initBundled(),
+//     base16Wasm.initBundled(),
+//     base58Wasm.initBundled(),
+//     base64Wasm.initBundled(),
+//     bitwiseWasm.initBundled(),
+//     chacha20poly1305Wasm.initBundled(),
+//     ed25519Wasm.initBundled(),
+//     memoryWasm.initBundled(),
+//     networkWasm.initBundled(),
+//     ripemdWasm.initBundled(),
+//     rsaWasm.initBundled(),
+//     secp256k1Wasm.initBundled(),
+//     sha1Wasm.initBundled(),
+//     sha3Wasm.initBundled(),
+//     x25519Wasm.initBundled(),
+//   ]);
+// }
 
 async function waitForWebSocket(
   socket: WebSocket,
@@ -89,6 +127,12 @@ async function startExample(): Promise<void> {
 
   try {
     log("🚀 Starting REAL Echalote example with Vite...")
+
+    log('init wasm')
+    // await initAllWasm();
+    await walletWasm.initBundled();
+    log('wasm initialized')
+
     log("📚 Libraries imported successfully!")
 
     // Test basic WebSocket connectivity first
