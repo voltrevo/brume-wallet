@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echalote Vite Example</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            background-color: #000;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #00ff00;
+            background-color: #0a0a0a;
+        }
+        
+        .error {
+            border-left-color: #ff0000;
+            color: #ff6666;
+        }
+        
+        .success {
+            border-left-color: #00ff00;
+            color: #66ff66;
+        }
+        
+        .info {
+            border-left-color: #0099ff;
+            color: #66ccff;
+        }
+        
+        button {
+            background-color: #333;
+            color: #00ff00;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            margin: 10px 5px 10px 0;
+        }
+        
+        button:hover {
+            background-color: #444;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #output {
+            white-space: pre-wrap;
+            background-color: #0a0a0a;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        
+        .warning {
+            background-color: #332200;
+            border: 1px solid #665500;
+            color: #ffcc00;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧅 Echalote Vite Example</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Note:</strong> This runs the actual Echalote library in a proper browser environment with Vite.
+            This should work much better than the Node.js version!
+        </div>
+        
+        <div class="status info">
+            <strong>Real Echalote API:</strong> This uses the actual @hazae41/echalote library with proper ES modules.
+        </div>
+        
+        <button id="startBtn" onclick="startExample()">🚀 Start Full Echalote Example</button>
+        <button id="clearBtn" onclick="clearOutput()">🗑️ Clear Output</button>
+        
+        <h3>Output:</h3>
+        <div id="output"></div>
+    </div>
+
+    <script type="module" src="/echalote-vite.ts"></script>
+</body>
+</html>
